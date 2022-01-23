@@ -1066,11 +1066,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public boolean isFlushBeforeCompletionEnabled() {
-		return delegate.isFlushBeforeCompletionEnabled();
-	}
-
-	@Override
 	public ActionQueue getActionQueue() {
 		return delegate.getActionQueue();
 	}

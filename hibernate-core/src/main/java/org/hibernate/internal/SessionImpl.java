@@ -2191,11 +2191,6 @@ public class SessionImpl
 	}
 
 	@Override
-	public boolean isFlushBeforeCompletionEnabled() {
-		return getHibernateFlushMode() != FlushMode.MANUAL;
-	}
-
-	@Override
 	public SessionImplementor getSession() {
 		return this;
 	}

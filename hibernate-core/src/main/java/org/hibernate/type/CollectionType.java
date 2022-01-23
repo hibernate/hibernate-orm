@@ -469,7 +469,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	@Override
 	public Joinable getAssociatedJoinable(SessionFactoryImplementor factory)
 			throws MappingException {
-		return (Joinable) factory.getCollectionPersister( role );
+		return (Joinable) factory.getMetamodel().collectionPersister(role);
 	}
 
 	@Override
@@ -482,8 +482,7 @@ public abstract class CollectionType extends AbstractType implements Association
 			throws MappingException {
 		try {
 
-			QueryableCollection collectionPersister = (QueryableCollection) factory
-					.getCollectionPersister( role );
+			QueryableCollection collectionPersister = (QueryableCollection) factory.getMetamodel().collectionPersister(role);
 
 			if ( !collectionPersister.getElementType().isEntityType() ) {
 				throw new MappingException(
@@ -716,7 +715,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @throws MappingException Indicates the underlying persister could not be located.
 	 */
 	public final Type getElementType(SessionFactoryImplementor factory) throws MappingException {
-		return factory.getCollectionPersister( getRole() ).getElementType();
+		return factory.getMetamodel().collectionPersister(getRole()).getElementType();
 	}
 
 	@Override

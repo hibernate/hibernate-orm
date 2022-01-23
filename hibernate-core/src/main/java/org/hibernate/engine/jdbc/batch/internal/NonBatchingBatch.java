@@ -13,9 +13,6 @@ import java.util.Map;
 import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.internal.CoreMessageLogger;
-
-import org.jboss.logging.Logger;
 
 /**
  * An implementation of {@link org.hibernate.engine.jdbc.batch.spi.Batch} which does not perform batching.  It simply
@@ -24,12 +21,8 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class NonBatchingBatch extends AbstractBatchImpl {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			NonBatchingBatch.class.getName()
-	);
 
-	private JdbcCoordinator jdbcCoordinator;
+	private final JdbcCoordinator jdbcCoordinator;
 	
 	protected NonBatchingBatch(BatchKey key, JdbcCoordinator jdbcCoordinator) {
 		super( key, jdbcCoordinator );
@@ -45,7 +38,7 @@ public class NonBatchingBatch extends AbstractBatchImpl {
 				final PreparedStatement statement = entry.getValue();
 				final int rowCount = jdbcCoordinator.getResultSetReturn().executeUpdate( statement );
 				getKey().getExpectation().verifyOutcome( rowCount, statement, 0, statementSQL );
-                jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( statement );
+				jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( statement );
 				jdbcCoordinator.afterStatementExecution();
 			}
 			catch ( SQLException e ) {

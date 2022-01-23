@@ -26,7 +26,7 @@ import static org.junit.Assert.assertThat;
 public class PooledTableTest {
 	@Test
 	public void testNormalBoundary(SessionFactoryScope scope) {
-		final EntityPersister persister = scope.getSessionFactory().getEntityPersister( Entity.class.getName() );
+        final EntityPersister persister = scope.getSessionFactory().getMetamodel().entityPersister(Entity.class.getName());
 		assertThat( persister.getIdentifierGenerator(), instanceOf( TableGenerator.class ) );
 
 		final TableGenerator generator = (TableGenerator) persister.getIdentifierGenerator();

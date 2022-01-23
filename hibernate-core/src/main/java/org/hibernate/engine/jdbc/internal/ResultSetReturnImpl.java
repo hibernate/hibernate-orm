@@ -227,7 +227,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 
 	private void postExtract(ResultSet rs, Statement st) {
 		if ( rs != null ) {
-            jdbcCoordinator.getLogicalConnection().getResourceRegistry().register( rs, st );
+			jdbcCoordinator.getLogicalConnection().getResourceRegistry().register( rs, st );
 		}
 	}
 

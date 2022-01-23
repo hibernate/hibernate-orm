@@ -94,8 +94,8 @@ public class UnversionedNoCascadeDereferencedCollectionTest extends AbstractDere
 					CollectionEntry ceManiesOrig = getCollectionEntry( session, maniesEEOneStateOrig );
 					assertNotNull( ceManiesOrig );
 					assertEquals( role, ceManiesOrig.getRole() );
-					assertSame(
-							scope.getSessionFactory().getCollectionPersister( role ),
+                    assertSame(
+                            scope.getSessionFactory().getMetamodel().collectionPersister(role),
 							ceManiesOrig.getLoadedPersister()
 					);
 					assertEquals( one.getId(), ceManiesOrig.getKey() );
@@ -174,8 +174,8 @@ public class UnversionedNoCascadeDereferencedCollectionTest extends AbstractDere
 					CollectionEntry ceManies = getCollectionEntry( session, maniesEEOneStateOrig );
 					assertNotNull( ceManies );
 					assertEquals( role, ceManies.getRole() );
-					assertSame(
-							scope.getSessionFactory().getCollectionPersister( role ),
+                    assertSame(
+                            scope.getSessionFactory().getMetamodel().collectionPersister(role),
 							ceManies.getLoadedPersister()
 					);
 					assertEquals( one.getId(), ceManies.getKey() );
@@ -257,8 +257,8 @@ public class UnversionedNoCascadeDereferencedCollectionTest extends AbstractDere
 					CollectionEntry ceManiesOrig = getCollectionEntry( session, maniesEEOneStateOrig );
 					assertNotNull( ceManiesOrig );
 					assertEquals( role, ceManiesOrig.getRole() );
-					assertSame(
-							scope.getSessionFactory().getCollectionPersister( role ),
+                    assertSame(
+                            scope.getSessionFactory().getMetamodel().collectionPersister(role),
 							ceManiesOrig.getLoadedPersister()
 					);
 					assertEquals( one.getId(), ceManiesOrig.getKey() );
@@ -300,8 +300,8 @@ public class UnversionedNoCascadeDereferencedCollectionTest extends AbstractDere
 					);
 					assertNotNull( ceManiesAfterReplace );
 					assertEquals( role, ceManiesAfterReplace.getRole() );
-					assertSame(
-							scope.getSessionFactory().getCollectionPersister( role ),
+                    assertSame(
+                            scope.getSessionFactory().getMetamodel().collectionPersister(role),
 							ceManiesAfterReplace.getLoadedPersister()
 					);
 					assertEquals( one.getId(), ceManiesAfterReplace.getKey() );

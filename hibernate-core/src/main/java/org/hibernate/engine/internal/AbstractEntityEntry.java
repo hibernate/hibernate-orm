@@ -108,7 +108,6 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	/**
 	 * This for is used during custom deserialization handling
 	 */
-	@SuppressWarnings( {"JavaDoc"})
 	protected AbstractEntityEntry(
 			final SessionFactoryImplementor factory,
 			final String entityName,
@@ -122,7 +121,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			final boolean existsInDatabase,
 			final boolean isBeingReplicated,
 			final PersistenceContext persistenceContext) {
-		this.persister = ( factory == null ? null : factory.getEntityPersister( entityName ) );
+		this.persister = ( factory == null ? null : factory.getMetamodel().entityPersister(entityName));
 		this.id = id;
 		setCompressedValue( EnumState.STATUS, status );
 		setCompressedValue( EnumState.PREVIOUS_STATUS, previousStatus );
@@ -328,10 +327,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 				final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
 				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 					EnhancementAsProxyLazinessInterceptor enhancementAsProxyLazinessInterceptor = (EnhancementAsProxyLazinessInterceptor) interceptor;
-					if ( enhancementAsProxyLazinessInterceptor.hasWrittenFieldNames() ) {
-						return false;
-					}
-					return true;
+					return !enhancementAsProxyLazinessInterceptor.hasWrittenFieldNames();
 				}
 			}
 			else if ( entity instanceof HibernateProxy ) {
@@ -472,10 +468,10 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	 * Saves the value for the given enum property.
 	 *
 	 * @param state
-	 *            identifies the value to store
+	 *			identifies the value to store
 	 * @param value
-	 *            the value to store; The caller must make sure that it matches
-	 *            the given identifier
+	 *			the value to store; The caller must make sure that it matches
+	 *			the given identifier
 	 */
 	protected <E extends Enum<E>> void setCompressedValue(EnumState<E> state, E value) {
 		// reset the bits for the given property to 0
@@ -488,7 +484,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	 * Gets the current value of the given enum property.
 	 *
 	 * @param state
-	 *            identifies the value to store
+	 *			identifies the value to store
 	 * @return the current value of the specified property
 	 */
 	protected <E extends Enum<E>> E getCompressedValue(EnumState<E> state) {
@@ -501,9 +497,9 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	 * Saves the value for the given boolean flag.
 	 *
 	 * @param state
-	 *            identifies the value to store
+	 *			identifies the value to store
 	 * @param value
-	 *            the value to store
+	 *			the value to store
 	 */
 	protected void setCompressedValue(BooleanState state, boolean value) {
 		compressedState &= state.getUnsetMask();
@@ -514,7 +510,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	 * Gets the current value of the given boolean flag.
 	 *
 	 * @param state
-	 *            identifies the value to store
+	 *			identifies the value to store
 	 * @return the current value of the specified flag
 	 */
 	protected boolean getCompressedValue(BooleanState state) {
@@ -607,7 +603,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 		private final int mask;
 		private final int unsetMask;
 
-		private BooleanState(int offset) {
+		BooleanState(int offset) {
 			this.offset = offset;
 			this.mask = 0x1 << offset;
 			this.unsetMask = 0xFFFF & ~mask;

@@ -17,7 +17,6 @@ import jakarta.persistence.Id;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.id.enhanced.HiLoOptimizer;
@@ -94,7 +93,7 @@ public class HiLoSequenceMismatchStrategyTest {
 
 	@Test
 	public void testSequenceMismatchStrategyNotApplied(SessionFactoryScope scope) {
-		final EntityPersister persister = scope.getSessionFactory().getEntityPersister( TestEntity.class.getName() );
+        final EntityPersister persister = scope.getSessionFactory().getMetamodel().entityPersister(TestEntity.class.getName());
 		assertThat( persister.getIdentifierGenerator(), instanceOf( SequenceStyleGenerator.class ) );
 
 		final SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getIdentifierGenerator();

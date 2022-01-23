@@ -39,7 +39,7 @@ public final class EntityPrinter {
 	 * @return the entity rendered to a string
 	 */
 	public String toString(String entityName, Object entity) throws HibernateException {
-		EntityPersister entityPersister = factory.getEntityPersister( entityName );
+		EntityPersister entityPersister = factory.getMetamodel().entityPersister(entityName);
 
 		if ( entityPersister == null || !entityPersister.isInstance( entity ) ) {
 			return entity.getClass().getName();

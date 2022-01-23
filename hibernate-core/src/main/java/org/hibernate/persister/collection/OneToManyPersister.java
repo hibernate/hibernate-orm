@@ -276,7 +276,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 							}
 							finally {
 								if ( !useBatch ) {
-                                    session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
+									session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 									session.getJdbcCoordinator().afterStatementExecution();
 								}
 							}
@@ -389,7 +389,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				}
 				finally {
 					if ( !useBatch ) {
-                        session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
+						session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 						session.getJdbcCoordinator().afterStatementExecution();
 					}
 				}
@@ -461,7 +461,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				}
 				finally {
 					if ( !useBatch ) {
-                        session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
+						session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 						session.getJdbcCoordinator().afterStatementExecution();
 					}
 				}

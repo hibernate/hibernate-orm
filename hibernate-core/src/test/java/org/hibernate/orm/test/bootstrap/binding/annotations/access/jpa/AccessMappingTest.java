@@ -12,20 +12,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
-import org.hibernate.orm.test.bootstrap.binding.annotations.access.jpa.Animal;
-import org.hibernate.orm.test.bootstrap.binding.annotations.access.jpa.Being;
-import org.hibernate.orm.test.bootstrap.binding.annotations.access.jpa.Course1;
-import org.hibernate.orm.test.bootstrap.binding.annotations.access.jpa.Course2;
-import org.hibernate.orm.test.bootstrap.binding.annotations.access.jpa.Course3;
-import org.hibernate.orm.test.bootstrap.binding.annotations.access.jpa.Course4;
-import org.hibernate.orm.test.bootstrap.binding.annotations.access.jpa.Course5;
-import org.hibernate.orm.test.bootstrap.binding.annotations.access.jpa.Course6;
-import org.hibernate.orm.test.bootstrap.binding.annotations.access.jpa.Course7;
-import org.hibernate.orm.test.bootstrap.binding.annotations.access.jpa.Course8;
-import org.hibernate.orm.test.bootstrap.binding.annotations.access.jpa.Horse;
-import org.hibernate.orm.test.bootstrap.binding.annotations.access.jpa.Person;
-import org.hibernate.orm.test.bootstrap.binding.annotations.access.jpa.Student;
-import org.hibernate.orm.test.bootstrap.binding.annotations.access.jpa.User;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.GetterFieldImpl;
 import org.hibernate.property.access.spi.GetterMethodImpl;
@@ -90,7 +76,7 @@ public class AccessMappingTest {
 		cfg.addAnnotatedClass( Student.class );
 		SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 		try {
-			final EntityPersister entityPersister = factory.getEntityPersister( classUnderTest.getName() );
+            final EntityPersister entityPersister = factory.getMetamodel().entityPersister(classUnderTest.getName());
 			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
 
 			assertTrue(
@@ -111,7 +97,7 @@ public class AccessMappingTest {
 		cfg.addAnnotatedClass( Student.class );
 		SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 		try {
-			final EntityPersister entityPersister = factory.getEntityPersister( classUnderTest.getName() );
+            final EntityPersister entityPersister = factory.getMetamodel().entityPersister(classUnderTest.getName());
 			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
 
 			assertTrue(
@@ -132,7 +118,7 @@ public class AccessMappingTest {
 		cfg.addAnnotatedClass( Student.class );
 		SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 		try {
-			final EntityPersister entityPersister = factory.getEntityPersister( classUnderTest.getName() );
+            final EntityPersister entityPersister = factory.getMetamodel().entityPersister(classUnderTest.getName());
 			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
 
 			assertTrue(
@@ -173,7 +159,7 @@ public class AccessMappingTest {
 		cfg.addAnnotatedClass( Student.class );
 		SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 		try {
-			final EntityPersister entityPersister = factory.getEntityPersister( classUnderTest.getName() );
+            final EntityPersister entityPersister = factory.getMetamodel().entityPersister(classUnderTest.getName());
 			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
 
 			assertTrue(
@@ -199,7 +185,7 @@ public class AccessMappingTest {
 		cfg.addAnnotatedClass( Student.class );
 		SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 		try {
-			final EntityPersister entityPersister = factory.getEntityPersister( classUnderTest.getName() );
+            final EntityPersister entityPersister = factory.getMetamodel().entityPersister(classUnderTest.getName());
 			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
 
 			assertTrue(
@@ -226,7 +212,7 @@ public class AccessMappingTest {
 		cfg.addAnnotatedClass( Being.class );
 		SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 		try {
-			final EntityPersister entityPersister = factory.getEntityPersister( classUnderTest.getName() );
+            final EntityPersister entityPersister = factory.getMetamodel().entityPersister(classUnderTest.getName());
 			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
 
 			assertTrue(
@@ -247,7 +233,7 @@ public class AccessMappingTest {
 
 		SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 		try {
-			EntityPersister entityPersister = factory.getEntityPersister( Animal.class.getName() );
+            EntityPersister entityPersister = factory.getMetamodel().entityPersister(Animal.class.getName());
 			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
 
 			assertTrue(
@@ -255,7 +241,7 @@ public class AccessMappingTest {
 					identifierMapping.getPropertyAccess().getGetter() instanceof GetterMethodImpl
 			);
 
-			entityPersister = factory.getEntityPersister( Horse.class.getName() );
+            entityPersister = factory.getMetamodel().entityPersister(Horse.class.getName());
 
 			assertTrue(
 					"Field access should be used since the default access mode gets inherited",

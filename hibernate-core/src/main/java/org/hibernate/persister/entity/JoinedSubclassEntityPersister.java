@@ -175,8 +175,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				}
 				else {
 					final Column column = (Column) selectable;
-                    explicitDiscriminatorColumnName = column.getQuotedName(factory.getJdbcServices().getDialect());
-                    discriminatorAlias = column.getAlias(factory.getJdbcServices().getDialect(), persistentClass.getRootTable() );
+					explicitDiscriminatorColumnName = column.getQuotedName(factory.getJdbcServices().getDialect());
+					discriminatorAlias = column.getAlias(factory.getJdbcServices().getDialect(), persistentClass.getRootTable() );
 				}
 				discriminatorType = (BasicType<?>) persistentClass.getDiscriminator().getType();
 				if ( persistentClass.isDiscriminatorValueNull() ) {
@@ -646,16 +646,16 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	 * <p/>
 	 * For the persister for JoinedEntity, we'd have:
 	 * <pre>
-	 *     subclassClosure[0] = "JoinedEntitySubSubclass"
-	 *     subclassClosure[1] = "JoinedEntitySubclass"
-	 *     subclassClosure[2] = "JoinedEntity"
+	 *	 subclassClosure[0] = "JoinedEntitySubSubclass"
+	 *	 subclassClosure[1] = "JoinedEntitySubclass"
+	 *	 subclassClosure[2] = "JoinedEntity"
 	 *
-	 *     subclassTableNameClosure[0] = "T_JoinedEntity"
-	 *     subclassTableNameClosure[1] = "T_JoinedEntitySubclass"
-	 *     subclassTableNameClosure[2] = "T_JoinedEntitySubSubclass"
+	 *	 subclassTableNameClosure[0] = "T_JoinedEntity"
+	 *	 subclassTableNameClosure[1] = "T_JoinedEntitySubclass"
+	 *	 subclassTableNameClosure[2] = "T_JoinedEntitySubSubclass"
 	 *
-	 *     subclassNameClosureBySubclassTable[0] = ["JoinedEntitySubSubclass", "JoinedEntitySubclass"]
-	 *     subclassNameClosureBySubclassTable[1] = ["JoinedEntitySubSubclass"]
+	 *	 subclassNameClosureBySubclassTable[0] = ["JoinedEntitySubSubclass", "JoinedEntitySubclass"]
+	 *	 subclassNameClosureBySubclassTable[1] = ["JoinedEntitySubSubclass"]
 	 * </pre>
 	 * Note that there are only 2 entries in subclassNameClosureBySubclassTable.  That is because there are really only
 	 * 2 tables here that make up the subclass mapping, the others make up the class/superclass table mappings.  We

@@ -25,7 +25,6 @@ import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheImplementor;
-import org.hibernate.cfg.Settings;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -202,24 +201,24 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.getProperties();
 	}
 
-	@Override @Deprecated
+	@Deprecated
 	public EntityPersister getEntityPersister(String entityName) throws MappingException {
-		return delegate.getEntityPersister( entityName );
+		return delegate.getMetamodel().entityPersister(entityName);
 	}
 
-	@Override @Deprecated
+	@Deprecated
 	public Map<String, EntityPersister> getEntityPersisters() {
-		return delegate.getEntityPersisters();
+		return delegate.getMetamodel().entityPersisters();
 	}
 
-	@Override @Deprecated
+	@Deprecated
 	public CollectionPersister getCollectionPersister(String role) throws MappingException {
-		return delegate.getCollectionPersister( role );
+		return delegate.getMetamodel().collectionPersister(role);
 	}
 
-	@Override @Deprecated
+	@Deprecated
 	public Map<String, CollectionPersister> getCollectionPersisters() {
-		return delegate.getCollectionPersisters();
+		return delegate.getMetamodel().collectionPersisters();
 	}
 
 	@Override
@@ -232,19 +231,14 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.getSqlStringGenerationContext();
 	}
 
-	@Override @Deprecated
-	public Dialect getDialect() {
-		return delegate.getJdbcServices().getDialect();
-	}
-
-	@Override @Deprecated
+	@Deprecated
 	public String[] getImplementors(String className) throws MappingException {
-		return delegate.getImplementors( className );
+		return delegate.getMetamodel().getImplementors(className);
 	}
 
-	@Override @Deprecated
+	@Deprecated
 	public String getImportedClassName(String name) {
-		return delegate.getImportedClassName( name );
+		return delegate.getMetamodel().getImportedClassName(name);
 	}
 
 	@Override
@@ -257,34 +251,14 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.bestGuessEntityName( object );
 	}
 
-	@Override @Deprecated
-	public StatisticsImplementor getStatisticsImplementor() {
-		return delegate.getStatistics();
-	}
-
-	@Override @Deprecated
-	public SQLExceptionConverter getSQLExceptionConverter() {
-		return delegate.getSQLExceptionConverter();
-	}
-
-	@Override @Deprecated
-	public SqlExceptionHelper getSQLExceptionHelper() {
-		return delegate.getJdbcServices().getSqlExceptionHelper();
-	}
-
-	@Override @Deprecated
-	public Settings getSettings() {
-		return delegate.getSettings();
-	}
-
 	@Override
 	public Session openTemporarySession() throws HibernateException {
 		return delegate.openTemporarySession();
 	}
 
-	@Override @Deprecated
+	@Deprecated
 	public Set<String> getCollectionRolesByEntityParticipant(String entityName) {
-		return delegate.getCollectionRolesByEntityParticipant( entityName );
+		return delegate.getMetamodel().getCollectionRolesByEntityParticipant(entityName);
 	}
 
 	@Override
@@ -327,24 +301,9 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.getCurrentTenantIdentifierResolver();
 	}
 
-	@Override @Deprecated
-	public Iterable<EntityNameResolver> iterateEntityNameResolvers() {
-		return delegate.iterateEntityNameResolvers();
-	}
-
 	@Override
 	public FastSessionServices getFastSessionServices() {
 		return delegate.getFastSessionServices();
-	}
-
-	@Override @Deprecated
-	public EntityPersister locateEntityPersister(Class<?> byClass) {
-		return delegate.locateEntityPersister( byClass );
-	}
-
-	@Override @Deprecated
-	public EntityPersister locateEntityPersister(String byName) {
-		return delegate.locateEntityPersister( byName );
 	}
 
 	@Override
@@ -390,11 +349,6 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public Reference getReference() throws NamingException {
 		return delegate.getReference();
-	}
-
-	@Override
-	public <T> List<RootGraphImplementor<? super T>> findEntityGraphsByJavaType(Class<T> entityClass) {
-		return delegate.findEntityGraphsByJavaType( entityClass );
 	}
 
 	@Override
@@ -445,5 +399,10 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public WrapperOptions getWrapperOptions() {
 		return delegate.getWrapperOptions();
+	}
+
+	@Override
+	public <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
+		return delegate.findEntityGraphsByType(entityClass);
 	}
 }

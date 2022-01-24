@@ -5,13 +5,23 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate;
+
 import java.util.Collection;
 
 import org.hibernate.engine.spi.FilterDefinition;
 
 /**
- * Type definition of Filter.  Filter defines the user's view into enabled dynamic filters,
- * allowing them to set filter parameter values.
+ * Allows control over an enabled filter at runtime. In particular, allows
+ * {@linkplain #setParameter(String, Object) arguments} to be assigned to
+ * parameters declared by the filter.
+ * <p>
+ * A filter may be defined using {@link org.hibernate.annotations.FilterDef}
+ * and {@link org.hibernate.annotations.Filter}, and must be explicitly
+ * enabled at runtime by calling {@link Session#enableFilter(String)}.
+ *
+ * @see org.hibernate.annotations.FilterDef
+ * @see Session#enableFilter(String)
+ * @see FilterDefinition
  *
  * @author Steve Ebersole
  */
@@ -25,8 +35,8 @@ public interface Filter {
 	String getName();
 
 	/**
-	 * Get the filter definition containing additional information about the
-	 * filter (such as default-condition and expected parameter names/types).
+	 * Get the associated {@link FilterDefinition definition} of
+	 * this named filter.
 	 *
 	 * @return The filter definition
 	 */
@@ -63,8 +73,8 @@ public interface Filter {
 	Filter setParameterList(String name, Object[] values);
 
 	/**
-	 * Perform validation of the filter state.  This is used to verify the
-	 * state of the filter after its enablement and before its use.
+	 * Perform validation of the filter state.  This is used to verify
+	 * the state of the filter after its enablement and before its use.
 	 *
 	 * @throws HibernateException If the state is not currently valid.
 	 */

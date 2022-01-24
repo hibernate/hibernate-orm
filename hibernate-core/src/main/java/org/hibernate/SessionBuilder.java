@@ -13,7 +13,7 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 /**
- * Represents a consolidation of all session creation options into a builder style delegate.
+ * Allows creation of a new {@link Session} with specific options.
  * 
  * @author Steve Ebersole
  */
@@ -37,18 +37,18 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	/**
 	 * Signifies that no {@link Interceptor} should be used.
 	 * <p/>
-	 * By default the {@link Interceptor} associated with the {@link SessionFactory} is passed to the
-	 * {@link Session} whenever we open one without the user having specified a specific interceptor to
-	 * use.
+	 * By default, if no {@code Interceptor} is explicitly specified, the
+	 * {@code Interceptor} associated with the {@link SessionFactory} is
+	 * inherited by the new {@link Session}.
 	 * <p/>
-	 * Calling {@link #interceptor(Interceptor)} with null has the same net effect.
+	 * Calling {@link #interceptor(Interceptor)} with null has the same effect.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
 	T noInterceptor();
 
 	/**
-	 * Applies a specific StatementInspector to the session options.
+	 * Applies the given {@link StatementInspector} to the session.
 	 *
 	 * @param statementInspector The StatementInspector to use.
 	 *
@@ -66,7 +66,8 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	T connection(Connection connection);
 
 	/**
-	 * Signifies that the connection release mode from the original session should be used to create the new session.
+	 * Signifies that the connection release mode from the original session
+	 * should be used to create the new session.
 	 *
 	 * @param mode The connection handling mode to use.
 	 *
@@ -116,7 +117,8 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	T tenantIdentifier(String tenantIdentifier);
 
 	/**
-	 * Apply one or more SessionEventListener instances to the listeners for the Session to be built.
+	 * Add one or more {@link SessionEventListener} instances to the list of
+	 * listeners for the new session to be built.
 	 *
 	 * @param listeners The listeners to incorporate into the built Session
 	 *
@@ -125,8 +127,8 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	T eventListeners(SessionEventListener... listeners);
 
 	/**
-	 * Remove all listeners intended for the built Session currently held here, including any auto-apply ones; in other
-	 * words, start with a clean slate.
+	 * Remove all listeners intended for the built session currently held here,
+	 * including any auto-apply ones; in other words, start with a clean slate.
 	 *
 	 * {@code this}, for method chaining
 	 */
@@ -143,8 +145,8 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @see jakarta.persistence.PersistenceContextType
 	 *
-	 * @deprecated Only integrations can specify autoClosing behavior of individual sessions.  See
-	 * {@link org.hibernate.engine.spi.SessionOwner}
+	 * @deprecated Only integrations can specify autoClosing behavior of
+	 * individual sessions. See {@link org.hibernate.engine.spi.SessionOwner}.
 	 */
 	@Deprecated
 	T autoClose(boolean autoClose);
@@ -162,7 +164,8 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	T connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode);
 
 	/**
-	 * Should the session be automatically flushed during the "before completion" phase of transaction handling.
+	 * Should the session be automatically flushed during the "before completion"
+	 * phase of transaction handling.
 	 *
 	 * @param flushBeforeCompletion Should the session be automatically flushed
 	 *

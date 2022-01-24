@@ -68,7 +68,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	SessionFactoryOptions getSessionFactoryOptions();
 
 	/**
-	 * Obtain a {@link Session} builder.
+	 * Obtain a {@linkplain SessionBuilder session builder} for creating
+	 * new {@link Session}s with certain customized options.
 	 *
 	 * @return The session builder
 	 */
@@ -77,9 +78,9 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	/**
 	 * Open a {@link Session}.
 	 * <p/>
-	 * JDBC {@link Connection connection(s} will be obtained from the
-	 * configured {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider} as needed
-	 * to perform requested work.
+	 * Any JDBC {@link Connection connection} will be obtained lazily from the
+	 * {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider}
+	 * as needed to perform requested work.
 	 *
 	 * @return The created session.
 	 *
@@ -88,14 +89,21 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	Session openSession() throws HibernateException;
 
 	/**
-	 * Obtains the current session.  The definition of what exactly "current"
-	 * means controlled by the {@link org.hibernate.context.spi.CurrentSessionContext} impl configured
-	 * for use.
-	 * <p/>
-	 * Note that for backwards compatibility, if a {@link org.hibernate.context.spi.CurrentSessionContext}
-	 * is not configured but JTA is configured this will default to the
-	 * {@link org.hibernate.context.internal.JTASessionContext}
-	 * impl.
+	 * Obtains the <em>current session</em>, an instance of {@link Session}
+	 * implicitly associated with some context. For example, the session
+	 * might be associated with the current thread, or with the current
+	 * JTA transaction.
+	 * <p>
+	 * The context used for scoping the current session (that is, the
+	 * definition of what precisely "current" means here) is determined
+	 * by an implementation of
+	 * {@link org.hibernate.context.spi.CurrentSessionContext}. An
+	 * implementation may be selected using the configuration property
+	 * {@value org.hibernate.cfg.AvailableSettings#CURRENT_SESSION_CONTEXT_CLASS}.
+	 * <p>
+	 * If no {@link org.hibernate.context.spi.CurrentSessionContext} is
+	 * explicitly configured, but JTA is configured, then
+	 * {@link org.hibernate.context.internal.JTASessionContext} is used.
 	 *
 	 * @return The current session.
 	 *
@@ -137,7 +145,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	}
 
 	/**
-	 * Open a Session and perform a action using it within the bounds of a transaction
+	 * Open a {@link Session} and perform an action using the session
+	 * within the bounds of a transaction.
 	 */
 	default void inTransaction(Consumer<Session> action) {
 		inSession(
@@ -148,7 +157,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 						action.accept( session );
 
 						if ( !txn.isActive() ) {
-							throw new TransactionManagementException( "Execution of action caused managed transaction to be completed" );
+							throw new TransactionManagementException(
+									"Execution of action caused managed transaction to be completed" );
 						}
 					}
 					catch (RuntimeException e) {
@@ -180,7 +190,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	}
 
 	/**
-	 * Open a Session and perform a action using it
+	 * Open a Session and perform an action using it.
 	 */
 	default <R> R fromSession(Function<Session,R> action) {
 		try (Session session = openSession()) {
@@ -189,7 +199,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	}
 
 	/**
-	 * Open a Session and perform a action using it within the bounds of a transaction
+	 * Open a {@link Session} and perform an action using the session
+	 * within the bounds of a transaction.
 	 */
 	default <R> R fromTransaction(Function<Session,R> action) {
 		return fromSession(
@@ -199,7 +210,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 						R result = action.apply( session );
 
 						if ( !txn.isActive() ) {
-							throw new TransactionManagementException( "Execution of action caused managed transaction to be completed" );
+							throw new TransactionManagementException(
+									"Execution of action caused managed transaction to be completed" );
 						}
 
 						// action completed with no errors - attempt to commit the transaction allowing
@@ -227,19 +239,19 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	}
 
 	/**
-	 * Retrieve the statistics for this factory.
+	 * Retrieve the {@linkplain Statistics statistics} for this factory.
 	 *
 	 * @return The statistics.
 	 */
 	Statistics getStatistics();
 
 	/**
-	 * Destroy this {@code SessionFactory} and release all resources (caches,
-	 * connection pools, etc).
+	 * Destroy this {@code SessionFactory} and release all its resources,
+	 * including caches and connection pools.
 	 * <p/>
-	 * It is the responsibility of the application to ensure that there are no
-	 * open {@linkplain Session sessions} before calling this method as the impact
-	 * on those {@linkplain Session sessions} is indeterminate.
+	 * It is the responsibility of the application to ensure that there are
+	 * no open {@linkplain Session sessions} before calling this method as
+	 * the impact on those {@linkplain Session sessions} is indeterminate.
 	 * <p/>
 	 * No-ops if already {@linkplain #isClosed() closed}.
 	 *
@@ -263,14 +275,14 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	Cache getCache();
 
 	/**
-	 * Get all EntityGraphs registered for a particular entity type
+	 * Return all {@link EntityGraph}s registered for the given entity type.
 	 * 
 	 * @see #addNamedEntityGraph 
 	 */
 	<T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass);
 
 	/**
-	 * Obtain a set of the names of all filters defined on this SessionFactory.
+	 * Obtain the set of names of all {@link FilterDefinition defined filters}.
 	 *
 	 * @return The set of filter names.
 	 */

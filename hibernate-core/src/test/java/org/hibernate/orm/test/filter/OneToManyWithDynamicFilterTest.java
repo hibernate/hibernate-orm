@@ -102,7 +102,7 @@ public class OneToManyWithDynamicFilterTest {
 					name = "aliveOnly",
 					parameters = {
 						@ParamDef(name = "aliveTimestamp", type = Timestamp.class),
-						@ParamDef(name = "deleted", type = NumericBooleanConverter.class)
+						@ParamDef(name = "deleted", type = Boolean.class)
 					},
 					defaultCondition = "DELETION_TIMESTAMP = :aliveTimestamp and DELETED = :deleted")
 	})

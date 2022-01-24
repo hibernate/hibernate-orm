@@ -6,8 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import java.util.List;
-
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.ComparisonOperator;
@@ -76,5 +74,10 @@ public class DB2zSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTran
 		tableReference.getFunctionExpression().accept( this );
 		append( CLOSE_PARENTHESIS );
 		renderDerivedTableReference( tableReference );
+	}
+
+	@Override
+	public DatabaseVersion getDB2Version() {
+		return DatabaseVersion.make(9, 0);
 	}
 }

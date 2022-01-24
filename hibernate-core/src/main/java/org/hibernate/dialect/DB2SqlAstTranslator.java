@@ -51,7 +51,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 
 	@Override
 	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		if ( getDialectVersion().isSameOrAfter( 11 ) ) {
+		if ( getDB2Version().isSameOrAfter( 11 ) ) {
 			booleanExpressionPredicate.getExpression().accept( this );
 		}
 		else {
@@ -132,12 +132,12 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 		// Check if current query part is already row numbering to avoid infinite recursion
 		return getQueryPartForRowNumbering() != queryPart && (
 				useOffsetFetchClause( queryPart ) && !isRowsOnlyFetchClauseType( queryPart )
-						|| getDialectVersion().isBefore( 11, 1 ) && ( queryPart.isRoot() && hasLimit() || !( queryPart.getFetchClauseExpression() instanceof Literal ) )
+						|| getDB2Version().isBefore( 11, 1 ) && ( queryPart.isRoot() && hasLimit() || !( queryPart.getFetchClauseExpression() instanceof Literal ) )
 		);
 	}
 
 	protected boolean supportsOffsetClause() {
-		return getDialectVersion().isSameOrAfter( 11, 1 );
+		return getDB2Version().isSameOrAfter( 11, 1 );
 	}
 
 	@Override
@@ -228,7 +228,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
-		if ( getDialectVersion().isSameOrAfter( 11, 1 ) ) {
+		if ( getDB2Version().isSameOrAfter( 11, 1 ) ) {
 			renderComparisonStandard( lhs, operator, rhs );
 		}
 		else {
@@ -296,12 +296,8 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 		// For DB2 we use #renderReturningClause to render a wrapper around the DML statement
 	}
 
-	private DatabaseVersion getDialectVersion() {
-		final var dialect = getDialect();
-		if (dialect instanceof DB2Dialect) {
-			return ((DB2Dialect) dialect).getDB2Version();
-		}
-		return dialect.getVersion();
+	public DatabaseVersion getDB2Version() {
+		return this.getDialect().getVersion();
 	}
 
 }

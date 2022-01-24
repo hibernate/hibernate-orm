@@ -33,6 +33,8 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  */
 public class DB2iDialect extends DB2Dialect {
 
+	final static DatabaseVersion DB2_LUW_VERSION9 = DatabaseVersion.make(9, 0);
+
 	public DB2iDialect(DialectResolutionInfo info) {
 		this( info.makeCopy() );
 		registerKeywords( info );
@@ -48,7 +50,7 @@ public class DB2iDialect extends DB2Dialect {
 
 	@Override
 	public DatabaseVersion getDB2Version() {
-		return DatabaseVersion.make(9, 0);
+		return DB2_LUW_VERSION9;
 	}
 
 	@Override

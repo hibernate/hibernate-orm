@@ -75,4 +75,9 @@ public class DB2zSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTran
 		append( CLOSE_PARENTHESIS );
 		renderDerivedTableReference( tableReference );
 	}
+
+	@Override
+	public DatabaseVersion getDB2Version() {
+		return DatabaseVersion.make(9, 0);
+	}
 }

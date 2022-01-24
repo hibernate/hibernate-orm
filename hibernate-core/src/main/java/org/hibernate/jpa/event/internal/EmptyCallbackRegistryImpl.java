@@ -12,7 +12,7 @@ import org.hibernate.jpa.event.spi.CallbackType;
 final class EmptyCallbackRegistryImpl implements CallbackRegistryImplementor {
 
 	@Override
-	public boolean hasRegisteredCallbacks(final Class entityClass, final CallbackType callbackType) {
+	public boolean hasRegisteredCallbacks(final Class<?> entityClass, final CallbackType callbackType) {
 		return false;
 	}
 
@@ -52,32 +52,12 @@ final class EmptyCallbackRegistryImpl implements CallbackRegistryImplementor {
 	}
 
 	@Override
-	public boolean hasPostCreateCallbacks(final Class entityClass) {
-		return false;
-	}
-
-	@Override
-	public boolean hasPostUpdateCallbacks(final Class entityClass) {
-		return false;
-	}
-
-	@Override
-	public boolean hasPostRemoveCallbacks(final Class entityClass) {
-		return false;
-	}
-
-	@Override
-	public boolean hasRegisteredCallbacks(final Class entityClass, final Class annotationClass) {
-		return false;
-	}
-
-	@Override
 	public void release() {
 		//no-op
 	}
 
 	@Override
-	public void registerCallbacks(Class entityClass, Callback[] callbacks) {
+	public void registerCallbacks(Class<?> entityClass, Callback[] callbacks) {
 		//no-op
 	}
 

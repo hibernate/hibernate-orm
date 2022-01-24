@@ -28,7 +28,7 @@ public enum CallbackType {
 	POST_LOAD( PostLoad.class )
 	;
 
-	private Class<? extends Annotation> callbackAnnotation;
+	private final Class<? extends Annotation> callbackAnnotation;
 
 	CallbackType(Class<? extends Annotation> callbackAnnotation) {
 		this.callbackAnnotation = callbackAnnotation;

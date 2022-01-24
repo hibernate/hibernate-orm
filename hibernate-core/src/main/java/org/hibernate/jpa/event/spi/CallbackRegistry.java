@@ -23,7 +23,7 @@ public interface CallbackRegistry extends Serializable {
 	 * @return {@code true} indicates there are already registered callbacks of
 	 * that type for that class; {@code false} indicates there are not.
 	 */
-	boolean hasRegisteredCallbacks(Class entityClass, CallbackType callbackType);
+	boolean hasRegisteredCallbacks(Class<?> entityClass, CallbackType callbackType);
 
 	void preCreate(Object entity);
 	void postCreate(Object entity);
@@ -35,31 +35,4 @@ public interface CallbackRegistry extends Serializable {
 	void postRemove(Object entity);
 
 	boolean postLoad(Object entity);
-
-	/**
-	 * @deprecated Use {@link #hasRegisteredCallbacks(Class, CallbackType)} instead passing
-	 * {@link CallbackType#POST_PERSIST}
-	 */
-	@Deprecated
-	boolean hasPostCreateCallbacks(Class entityClass);
-
-	/**
-	 * @deprecated Use {@link #hasRegisteredCallbacks(Class, CallbackType)} instead passing
-	 * {@link CallbackType#POST_UPDATE}
-	 */
-	@Deprecated
-	boolean hasPostUpdateCallbacks(Class entityClass);
-
-	/**
-	 * @deprecated Use {@link #hasRegisteredCallbacks(Class, CallbackType)} instead passing
-	 * {@link CallbackType#POST_REMOVE}
-	 */
-	@Deprecated
-	boolean hasPostRemoveCallbacks(Class entityClass);
-
-	/**
-	 * @deprecated Use {@link #hasRegisteredCallbacks(Class, CallbackType)} instead.
-	 */
-	@Deprecated
-	boolean hasRegisteredCallbacks(Class entityClass, Class annotationClass);
 }

@@ -14,6 +14,6 @@ public interface CallbackRegistrar extends CallbackRegistry {
 	 * @param entityClass The entity Class to register the Callbacks against
 	 * @param callbacks The Callbacks to register against the given entity Class
 	 */
-	void registerCallbacks(Class entityClass, Callback[] callbacks);
+	void registerCallbacks(Class<?> entityClass, Callback[] callbacks);
 
 }

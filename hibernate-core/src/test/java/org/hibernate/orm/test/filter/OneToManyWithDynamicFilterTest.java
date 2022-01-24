@@ -27,7 +27,7 @@ import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.query.Query;
-import org.hibernate.type.YesNoConverter;
+import org.hibernate.type.NumericBooleanConverter;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -102,7 +102,7 @@ public class OneToManyWithDynamicFilterTest {
 					name = "aliveOnly",
 					parameters = {
 						@ParamDef(name = "aliveTimestamp", type = Timestamp.class),
-						@ParamDef(name = "deleted", type = YesNoConverter.class)
+						@ParamDef(name = "deleted", type = NumericBooleanConverter.class)
 					},
 					defaultCondition = "DELETION_TIMESTAMP = :aliveTimestamp and DELETED = :deleted")
 	})

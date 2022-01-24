@@ -20,7 +20,7 @@ import org.hibernate.annotations.ParamDef;
  * @author Steve Ebersole
  */
 @Entity
-@FilterDef( name="byRegion", parameters = {@ParamDef(name = "region", type = "string")})
+@FilterDef( name="byRegion", parameters = {@ParamDef(name = "region", type = String.class)})
 @Filter( name = "byRegion", condition = "region_cd = :region" )
 public class Account {
 	private Long id;

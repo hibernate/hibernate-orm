@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 
 /**
  * Represents the definition of a {@link org.hibernate.Filter filter}.
@@ -28,18 +28,18 @@ import org.hibernate.type.Type;
 public class FilterDefinition implements Serializable {
 	private final String filterName;
 	private final String defaultFilterCondition;
-	private final Map<String, Type> parameterTypes = new HashMap<>();
+	private final Map<String, JdbcMapping> explicitParamJaMappings = new HashMap<>();
 
 	/**
 	 * Construct a new FilterDefinition instance.
 	 *
 	 * @param name The name of the filter for which this configuration is in effect.
 	 */
-	public FilterDefinition(String name, String defaultCondition, Map<String, Type> parameterTypes) {
+	public FilterDefinition(String name, String defaultCondition, Map<String, JdbcMapping> explicitParamJaMappings) {
 		this.filterName = name;
 		this.defaultFilterCondition = defaultCondition;
-		if ( parameterTypes != null ) {
-			this.parameterTypes.putAll( parameterTypes );
+		if ( explicitParamJaMappings != null ) {
+			this.explicitParamJaMappings.putAll( explicitParamJaMappings );
 		}
 	}
 
@@ -58,7 +58,7 @@ public class FilterDefinition implements Serializable {
 	 * @return The parameters named by this configuration.
 	 */
 	public Set<String> getParameterNames() {
-		return parameterTypes.keySet();
+		return explicitParamJaMappings.keySet();
 	}
 
 	/**
@@ -68,16 +68,12 @@ public class FilterDefinition implements Serializable {
 	 *
 	 * @return The type of the named parameter.
 	 */
-	public Type getParameterType(String parameterName) {
-		return parameterTypes.get( parameterName );
+	public JdbcMapping getParameterJdbcMapping(String parameterName) {
+		return explicitParamJaMappings.get( parameterName );
 	}
 
 	public String getDefaultFilterCondition() {
 		return defaultFilterCondition;
-	}
-
-	public Map<String, Type> getParameterTypes() {
-		return parameterTypes;
 	}
 
 }

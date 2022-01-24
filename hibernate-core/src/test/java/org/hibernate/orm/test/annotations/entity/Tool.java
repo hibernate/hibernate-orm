@@ -17,7 +17,7 @@ import org.hibernate.annotations.ParamDef;
 /**
  * @author Sharath Reddy
  */
-@FilterDef(name = "byCategory", parameters = {@ParamDef(name = "category", type = "string")})
+@FilterDef(name = "byCategory", parameters = {@ParamDef(name = "category", type = String.class)})
 @Filter(name = "byCategory", condition = ":category = `CATEGORY`")
 @MappedSuperclass
 public class Tool extends Widget {

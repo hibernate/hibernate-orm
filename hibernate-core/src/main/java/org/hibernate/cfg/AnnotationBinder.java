@@ -39,6 +39,7 @@ import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.annotations.CollectionTypeRegistrations;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Comment;
+import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.DialectOverride.OverridesAnnotation;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.DiscriminatorOptions;
@@ -51,7 +52,6 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
-import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
@@ -94,6 +94,7 @@ import org.hibernate.annotations.common.reflection.XPackage;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.InFlightMetadataCollector.EntityTableXref;
@@ -108,6 +109,7 @@ import org.hibernate.cfg.annotations.Nullability;
 import org.hibernate.cfg.annotations.PropertyBinder;
 import org.hibernate.cfg.annotations.QueryBinder;
 import org.hibernate.cfg.annotations.TableBinder;
+import org.hibernate.cfg.internal.ConvertedJdbcMapping;
 import org.hibernate.cfg.internal.NullableDiscriminatorColumnSecondPass;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -137,10 +139,18 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.metamodel.EmbeddableInstantiator;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.java.BasicJavaType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.UserType;
 
+import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Basic;
@@ -1506,20 +1516,96 @@ public final class AnnotationBinder {
 	}
 
 	private static void bindFilterDef(FilterDef defAnn, MetadataBuildingContext context) {
-		Map<String, org.hibernate.type.Type> params = new HashMap<>();
-		for ( ParamDef param : defAnn.parameters() ) {
-			params.put(
-					param.name(),
-					context.getMetadataCollector()
-							.getTypeConfiguration()
-							.getBasicTypeRegistry()
-							.getRegisteredType( param.type() )
-			);
+		final Map<String, JdbcMapping> explicitParamJaMappings;
+		if ( defAnn.parameters().length == 0 ) {
+			explicitParamJaMappings = null;
+		}
+		else {
+			explicitParamJaMappings = new HashMap<>();
 		}
 
-		final FilterDefinition def = new FilterDefinition( defAnn.name(), defAnn.defaultCondition(), params );
+		for ( ParamDef param : defAnn.parameters() ) {
+			final JdbcMapping jdbcMapping = resolveFilterParamType( param.type(), context );
+
+			if ( jdbcMapping == null ) {
+				throw new MappingException(
+						String.format(
+								Locale.ROOT,
+								"Unable to resolve type specified for parameter (%s) defined for @FilterDef (%s)",
+								param.name(),
+								defAnn.name()
+						)
+				);
+			}
+
+			explicitParamJaMappings.put( param.name(), jdbcMapping );
+		}
+
+		final FilterDefinition def = new FilterDefinition( defAnn.name(), defAnn.defaultCondition(), explicitParamJaMappings );
 		LOG.debugf( "Binding filter definition: %s", def.getFilterName() );
 		context.getMetadataCollector().addFilterDefinition( def );
+	}
+
+	private static JdbcMapping resolveFilterParamType(Class<?> type, MetadataBuildingContext context) {
+		if ( UserType.class.isAssignableFrom( type ) ) {
+			return resolveUserType( (Class<UserType<?>>) type, context );
+		}
+
+		if ( AttributeConverter.class.isAssignableFrom( type ) ) {
+			return resolveAttributeConverter( (Class<AttributeConverter<?,?>>) type, context );
+		}
+
+		if ( JavaType.class.isAssignableFrom( type ) ) {
+			return resolveJavaType( (Class<JavaType<?>>) type, context );
+		}
+
+		final TypeConfiguration typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
+
+		final JavaType<Object> jtd = typeConfiguration.getJavaTypeRegistry().findDescriptor( type );
+		if ( jtd != null ) {
+			final JdbcType jdbcType = jtd.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
+			return typeConfiguration.getBasicTypeRegistry().resolve( jtd, jdbcType );
+		}
+
+		return null;
+	}
+
+	private static JdbcMapping resolveUserType(Class<UserType<?>> type, MetadataBuildingContext context) {
+		final StandardServiceRegistry serviceRegistry = context.getBootstrapContext().getServiceRegistry();
+		final ManagedBeanRegistry beanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
+		final ManagedBean<UserType<?>> bean = beanRegistry.getBean( type );
+		final UserType<?> userType = bean.getBeanInstance();
+
+		//noinspection rawtypes
+		return new CustomType( userType, context.getBootstrapContext().getTypeConfiguration() );
+	}
+
+	private static JdbcMapping resolveAttributeConverter(Class<AttributeConverter<?, ?>> type, MetadataBuildingContext context) {
+		final StandardServiceRegistry serviceRegistry = context.getBootstrapContext().getServiceRegistry();
+		final ManagedBeanRegistry beanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
+		final ManagedBean<AttributeConverter<?, ?>> bean = beanRegistry.getBean( type );
+
+		return new ConvertedJdbcMapping<>( bean, context.getBootstrapContext().getTypeConfiguration() );
+	}
+
+	private static JdbcMapping resolveJavaType(Class<JavaType<?>> type, MetadataBuildingContext context) {
+		final TypeConfiguration typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
+		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
+		final JavaType<?> registeredJtd = javaTypeRegistry.findDescriptor( type );
+
+		final JavaType<?> jtd;
+		if ( registeredJtd != null ) {
+			jtd = registeredJtd;
+		}
+		else {
+			final StandardServiceRegistry serviceRegistry = context.getBootstrapContext().getServiceRegistry();
+			final ManagedBeanRegistry beanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
+			final ManagedBean<JavaType<?>> bean = beanRegistry.getBean( type );
+			jtd = bean.getBeanInstance();
+		}
+
+		final JdbcType jdbcType = jtd.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
+		return typeConfiguration.getBasicTypeRegistry().resolve( jtd, jdbcType );
 	}
 
 	private static void bindCallbacks(XClass entityClass, PersistentClass persistentClass,

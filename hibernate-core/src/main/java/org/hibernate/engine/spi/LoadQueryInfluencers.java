@@ -11,18 +11,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import jakarta.persistence.EntityGraph;
-
 import org.hibernate.Filter;
 import org.hibernate.UnknownProfileException;
-import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
-import org.hibernate.type.Type;
 
 /**
  * Centralize all options which can influence the SQL query needed to load an
@@ -76,13 +72,6 @@ public class LoadQueryInfluencers implements Serializable {
 
 	// internal fetch profile support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public void withInternalFetchProfile(CascadingFetchProfile profile, InternalFetchProfileAction action) {
-		final CascadingFetchProfile previous = this.enabledCascadingFetchProfile;
-		this.enabledCascadingFetchProfile = profile;
-		action.performAction();
-		this.enabledCascadingFetchProfile = previous;
-	}
-
 	public <T> T fromInternalFetchProfile(CascadingFetchProfile profile, Supplier<T> supplier) {
 		final CascadingFetchProfile previous = this.enabledCascadingFetchProfile;
 		this.enabledCascadingFetchProfile = profile;
@@ -92,11 +81,6 @@ public class LoadQueryInfluencers implements Serializable {
 		finally {
 			this.enabledCascadingFetchProfile = previous;
 		}
-	}
-
-	@FunctionalInterface
-	public interface InternalFetchProfileAction {
-		void performAction();
 	}
 
 	public CascadingFetchProfile getEnabledCascadingFetchProfile() {
@@ -116,7 +100,7 @@ public class LoadQueryInfluencers implements Serializable {
 	/**
 	 * @deprecated Use {@link #getEnabledCascadingFetchProfile} instead
 	 */
-	@Deprecated
+	@Deprecated( since = "6.0" )
 	public String getInternalFetchProfile() {
 		return getEnabledCascadingFetchProfile().getLegacyName();
 	}
@@ -124,7 +108,7 @@ public class LoadQueryInfluencers implements Serializable {
 	/**
 	 * @deprecated Use {@link #setEnabledCascadingFetchProfile} instead
 	 */
-	@Deprecated
+	@Deprecated( since = "6.0" )
 	public void setInternalFetchProfile(String internalFetchProfile) {
 		setEnabledCascadingFetchProfile( CascadingFetchProfile.fromLegacyName( internalFetchProfile ) );
 	}
@@ -138,7 +122,7 @@ public class LoadQueryInfluencers implements Serializable {
 
 	public Map<String,Filter> getEnabledFilters() {
 		if ( enabledFilters == null ) {
-			return Collections.EMPTY_MAP;
+			return Collections.emptyMap();
 		}
 		else {
 			// First, validate all the enabled filters...
@@ -156,7 +140,7 @@ public class LoadQueryInfluencers implements Serializable {
 	 */
 	public Set<String> getEnabledFilterNames() {
 		if ( enabledFilters == null ) {
-			return Collections.EMPTY_SET;
+			return Collections.emptySet();
 		}
 		else {
 			return Collections.unmodifiableSet( enabledFilters.keySet() );
@@ -199,20 +183,6 @@ public class LoadQueryInfluencers implements Serializable {
 		return filter.getParameter( parsed[1] );
 	}
 
-	public Type getFilterParameterType(String filterParameterName) {
-		final String[] parsed = parseFilterParameterName( filterParameterName );
-		final FilterDefinition filterDef = sessionFactory.getFilterDefinition( parsed[0] );
-		if ( filterDef == null ) {
-			throw new IllegalArgumentException( "Filter [" + parsed[0] + "] not defined" );
-		}
-		final Type type = filterDef.getParameterType( parsed[1] );
-		if ( type == null ) {
-			// this is an internal error of some sort...
-			throw new InternalError( "Unable to locate type for filter parameter" );
-		}
-		return type;
-	}
-
 	public static String[] parseFilterParameterName(String filterParameterName) {
 		int dot = filterParameterName.lastIndexOf( '.' );
 		if ( dot <= 0 ) {
@@ -233,12 +203,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public Set<String> getEnabledFetchProfileNames() {
-		if ( enabledFetchProfileNames == null ) {
-			return Collections.EMPTY_SET;
-		}
-		else {
-			return enabledFetchProfileNames;
-		}
+		return Objects.requireNonNullElse( enabledFetchProfileNames, Collections.emptySet() );
 	}
 
 	private void checkFetchProfileName(String name) {
@@ -269,66 +234,6 @@ public class LoadQueryInfluencers implements Serializable {
 
 	public EffectiveEntityGraph getEffectiveEntityGraph() {
 		return effectiveEntityGraph;
-	}
-
-	/**
-	 * @deprecated (since 5.4) {@link #getFetchGraph}, {@link #getLoadGraph}, {@link #setFetchGraph}
-	 * and {@link #setLoadGraph} (as well as JPA itself honestly) all make it very unclear that
-	 * there can be only one graph applied at any one time and that graph is *either* a load or
-	 * a fetch graph.  These have all been replaced with {@link #getEffectiveEntityGraph()}.
-	 *
-	 * @see EffectiveEntityGraph
-	 */
-	@Deprecated
-	public EntityGraph getFetchGraph() {
-		if ( effectiveEntityGraph.getSemantic() != GraphSemantic.FETCH ) {
-			return null;
-		}
-
-		return effectiveEntityGraph.getGraph();
-	}
-
-	/**
-	 * @deprecated (since 5.4) {@link #getFetchGraph}, {@link #getLoadGraph}, {@link #setFetchGraph}
-	 * and {@link #setLoadGraph} (as well as JPA itself honestly) all make it very unclear that
-	 * there can be only one graph applied at any one time and that graph is *either* a load or
-	 * a fetch graph.  These have all been replaced with {@link #getEffectiveEntityGraph()}.
-	 *
-	 * @see EffectiveEntityGraph
-	 */
-	@Deprecated
-	public void setFetchGraph(EntityGraph fetchGraph) {
-		effectiveEntityGraph.applyGraph( (RootGraphImplementor<?>) fetchGraph, GraphSemantic.FETCH );
-	}
-
-	/**
-	 * @deprecated (since 5.4) {@link #getFetchGraph}, {@link #getLoadGraph}, {@link #setFetchGraph}
-	 * and {@link #setLoadGraph} (as well as JPA itself honestly) all make it very unclear that
-	 * there can be only one graph applied at any one time and that graph is *either* a load or
-	 * a fetch graph.  These have all been replaced with {@link #getEffectiveEntityGraph()}.
-	 *
-	 * @see EffectiveEntityGraph
-	 */
-	@Deprecated
-	public EntityGraph getLoadGraph() {
-		if ( effectiveEntityGraph.getSemantic() != GraphSemantic.LOAD ) {
-			return null;
-		}
-
-		return effectiveEntityGraph.getGraph();
-	}
-
-	/**
-	 * @deprecated (since 5.4) {@link #getFetchGraph}, {@link #getLoadGraph}, {@link #setFetchGraph}
-	 * and {@link #setLoadGraph} (as well as JPA itself honestly) all make it very unclear that
-	 * there can be only one graph applied at any one time and that that graph is *either* a load or
-	 * a fetch graph.  These have all been replaced with {@link #getEffectiveEntityGraph()}.
-	 *
-	 * @see EffectiveEntityGraph
-	 */
-	@Deprecated
-	public void setLoadGraph(final EntityGraph loadGraph) {
-		effectiveEntityGraph.applyGraph( (RootGraphImplementor<?>) loadGraph, GraphSemantic.LOAD );
 	}
 
 	public Boolean getReadOnly() {

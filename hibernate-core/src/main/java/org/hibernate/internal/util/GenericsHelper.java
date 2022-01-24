@@ -16,6 +16,7 @@ import java.util.List;
 import jakarta.persistence.AttributeConverter;
 
 public class GenericsHelper {
+
 	public static ParameterizedType extractParameterizedType(Type base) {
 		if ( base == null ) {
 			return null;

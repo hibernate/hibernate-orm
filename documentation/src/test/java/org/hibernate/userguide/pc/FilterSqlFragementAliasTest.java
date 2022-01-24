@@ -104,7 +104,7 @@ public class FilterSqlFragementAliasTest extends BaseEntityManagerFunctionalTest
 		name="activeAccount",
 		parameters = @ParamDef(
 			name="active",
-			type="boolean"
+			type=Boolean.class
 		)
 	)
 	@Filter(

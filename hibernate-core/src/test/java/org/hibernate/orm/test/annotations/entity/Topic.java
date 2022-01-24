@@ -22,7 +22,7 @@ import org.hibernate.annotations.ParamDef;
  * @author Sharath Reddy
  */
 @FilterDef(name="byState", defaultCondition=":state = state",
-		parameters=@ParamDef(name="state",type="string"))
+		parameters=@ParamDef(name="state",type=String.class))
 @Entity
 public class Topic {
 

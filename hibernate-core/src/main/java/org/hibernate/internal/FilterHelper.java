@@ -27,7 +27,6 @@ import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.type.Type;
 
 import static org.hibernate.internal.util.StringHelper.safeInterning;
 
@@ -167,12 +166,9 @@ public class FilterHelper {
 				if ( CollectionHelper.isNotEmpty( filterParameterNames ) ) {
 					for ( int paramPos = 0; paramPos < filterParameterNames.size(); paramPos++ ) {
 						final String parameterName = filterParameterNames.get( paramPos );
-						final Type parameterType = enabledFilter.getFilterDefinition().getParameterType( parameterName );
-						if ( ! (parameterType instanceof JdbcMapping) ) {
-							throw new MappingException( String.format( "parameter [%s] for filter [%s] is not of JdbcMapping type", parameterName, filterName ) );
-						}
-
-						final JdbcMapping jdbcMapping = (JdbcMapping) parameterType;
+						final JdbcMapping jdbcMapping = enabledFilter
+								.getFilterDefinition()
+								.getParameterJdbcMapping( parameterName );
 						final Object parameterValue = enabledFilter.getParameter( parameterName );
 						if ( parameterValue == null ) {
 							throw new MappingException( String.format( "unknown parameter [%s] for filter [%s]", parameterName, filterName ) );

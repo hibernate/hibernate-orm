@@ -74,7 +74,7 @@ public class BasicFilteredBulkManipulationTest {
 			name = "sex",
 			parameters = @ParamDef(
 				name= "sexCode",
-				type = "char"
+				type = Character.class
 			)
 	)
 	@Filter( name = "sex", condition = "SEX_CODE = :sexCode" )

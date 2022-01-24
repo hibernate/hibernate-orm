@@ -11,13 +11,15 @@ import org.hibernate.annotations.TenantId;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
@@ -38,11 +40,15 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 			MetadataBuildingContext buildingContext,
 			PersistentClass persistentClass,
 			Property property) {
-		InFlightMetadataCollector collector = buildingContext.getMetadataCollector();
-		BasicType<Object> tenantIdType =
-				collector.getTypeConfiguration().getBasicTypeRegistry()
-						.getRegisteredType( property.getReturnedClassName() );
-		FilterDefinition filterDefinition = collector.getFilterDefinition(FILTER_NAME);
+		final InFlightMetadataCollector collector = buildingContext.getMetadataCollector();
+		final TypeConfiguration typeConfiguration = collector.getTypeConfiguration();
+
+		final String returnedClassName = property.getReturnedClassName();
+		final BasicType<Object> tenantIdType = typeConfiguration
+				.getBasicTypeRegistry()
+				.getRegisteredType( returnedClassName );
+
+		final FilterDefinition filterDefinition = collector.getFilterDefinition( FILTER_NAME );
 		if ( filterDefinition == null ) {
 			collector.addFilterDefinition(
 					new FilterDefinition(
@@ -53,13 +59,16 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 			);
 		}
 		else {
-			Type parameterType = filterDefinition.getParameterTypes().get(PARAMETER_NAME);
-			if ( !parameterType.getName().equals( tenantIdType.getName() ) ) {
+			final JavaType<?> tenantIdTypeJtd = tenantIdType.getJavaTypeDescriptor();
+			final JavaType<?> parameterJtd = filterDefinition
+					.getParameterJdbcMapping( PARAMETER_NAME )
+					.getJavaTypeDescriptor();
+			if ( !parameterJtd.getJavaTypeClass().equals( tenantIdTypeJtd.getJavaTypeClass() ) ) {
 				throw new MappingException(
 						"all @TenantId fields must have the same type: "
-								+ parameterType.getName()
+								+ parameterJtd.getJavaType().getTypeName()
 								+ " differs from "
-								+ tenantIdType.getName()
+								+ tenantIdTypeJtd.getJavaType().getTypeName()
 				);
 			}
 		}

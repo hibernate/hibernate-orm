@@ -20,7 +20,7 @@ import org.hibernate.annotations.ParamDef;
  * @author Emmanuel Bernard
  */
 @Entity
-@FilterDef(name="selectedLocale", parameters={ @ParamDef( name="param", type="string" ) } )
+@FilterDef(name="selectedLocale", parameters={ @ParamDef( name="param", type=String.class ) } )
 public class TestCourse {
 
 	private Long testCourseId;

@@ -243,7 +243,7 @@ public class CriteriaQueryWithAppliedFilterTest {
 		name = "statusFilter",
 		parameters = {
 			@ParamDef(
-				name = "status", type = "string"
+				name = "status", type = String.class
 			)
 		}
 	)

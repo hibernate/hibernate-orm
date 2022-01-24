@@ -58,26 +58,4 @@ public final class FilterKey implements Serializable {
 		return "FilterKey[" + filterName + filterParameters + ']';
 	}
 
-	/**
-	 * Constructs a number of FilterKey instances, given the currently enabled filters
-	 *
-	 * @param enabledFilters The currently enabled filters
-	 *
-	 * @return The filter keys, one per enabled filter
-	 */
-	public static Set<FilterKey> createFilterKeys(Map<String,Filter> enabledFilters) {
-		if ( enabledFilters.size() == 0 ) {
-			return null;
-		}
-		final Set<FilterKey> result = new HashSet<>();
-		for ( Filter filter : enabledFilters.values() ) {
-			final FilterKey key = new FilterKey(
-					filter.getName(),
-					( (FilterImpl) filter ).getParameters(),
-					filter.getFilterDefinition().getParameterTypes()
-			);
-			result.add( key );
-		}
-		return result;
-	}
 }

@@ -16,7 +16,7 @@ import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 
 @MappedSuperclass
-@FilterDef(name = "nameFilter", parameters = @ParamDef(name = "name", type = "string"))
+@FilterDef(name = "nameFilter", parameters = @ParamDef(name = "name", type = String.class))
 @Filter(name = "nameFilter", condition = ":name = ANIMAL_NAME")
 public abstract class Animal {
 	@Id

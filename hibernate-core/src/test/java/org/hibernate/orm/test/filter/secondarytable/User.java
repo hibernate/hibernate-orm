@@ -23,8 +23,8 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name="T_USER")
 @SecondaryTable(name="SECURITY_USER")
-@FilterDef(name="ageFilter", parameters=@ParamDef(name="age", type="integer"))
-@Filter(name="ageFilter", condition="{u}.AGE < :age AND {s}.LOCKED_OUT <> 1", 
+@FilterDef(name="ageFilter", parameters=@ParamDef(name="age", type=Integer.class))
+@Filter(name="ageFilter", condition="{u}.AGE < :age AND {s}.LOCKED_OUT <> 1",
 				aliases={@SqlFragmentAlias(alias="u", table="T_USER"), @SqlFragmentAlias(alias="s", table="SECURITY_USER")})
 public class User {
 	

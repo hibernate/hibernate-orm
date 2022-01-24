@@ -46,7 +46,7 @@ import jakarta.persistence.Lob;
 @OptimisticLocking(type = OptimisticLockType.ALL)
 @Polymorphism(type = PolymorphismType.EXPLICIT)
 @Where(clause = "1=1")
-@FilterDef(name = "minLength", parameters = {@ParamDef(name = "minLength", type = "integer")})
+@FilterDef(name = "minLength", parameters = {@ParamDef(name = "minLength", type = Integer.class)})
 @Filter(name = "betweenLength")
 @Filter(name = "minLength", condition = ":minLength <= length")
 @org.hibernate.annotations.Table(appliesTo = "Forest",

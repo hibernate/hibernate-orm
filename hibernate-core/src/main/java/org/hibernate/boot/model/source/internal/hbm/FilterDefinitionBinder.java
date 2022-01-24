@@ -9,16 +9,17 @@ package org.hibernate.boot.model.source.internal.hbm;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import jakarta.xml.bind.JAXBElement;
 
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterDefinitionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterParameterType;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 
 import org.jboss.logging.Logger;
+
+import jakarta.xml.bind.JAXBElement;
 
 /**
  * @author Steve Ebersole
@@ -36,7 +37,7 @@ class FilterDefinitionBinder {
 	static void processFilterDefinition(
 			HbmLocalMetadataBuildingContext context,
 			JaxbHbmFilterDefinitionType jaxbFilterDefinitionMapping) {
-		Map<String,Type> parameterMap = null;
+		Map<String, JdbcMapping> parameterMap = null;
 		String condition = jaxbFilterDefinitionMapping.getCondition();
 
 		for ( Serializable content : jaxbFilterDefinitionMapping.getContent() ) {

@@ -20,7 +20,7 @@ import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.SqlFragmentAlias;
 
 @Entity
-@FilterDef(name="iqMin", parameters={@ParamDef(name="min", type="integer")})
+@FilterDef(name="iqMin", parameters={@ParamDef(name="min", type=Integer.class)})
 @FilterDef(name="pregnantMembers")
 public class Club {
 	@Id

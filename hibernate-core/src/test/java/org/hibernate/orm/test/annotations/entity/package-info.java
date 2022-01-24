@@ -13,8 +13,8 @@
 		name = "betweenLength",
 		defaultCondition = ":minLength <= length and :maxLength >= length",
 		parameters = {
-				@ParamDef(name = "minLength", type = "integer"),
-				@ParamDef(name = "maxLength", type = "integer")
+				@ParamDef(name = "minLength", type = Integer.class),
+				@ParamDef(name = "maxLength", type = Integer.class)
 		}
 ) package org.hibernate.orm.test.annotations.entity;
 

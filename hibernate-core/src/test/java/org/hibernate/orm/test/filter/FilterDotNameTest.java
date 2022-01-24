@@ -9,12 +9,6 @@ package org.hibernate.orm.test.filter;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
@@ -26,13 +20,18 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -117,10 +116,10 @@ public class FilterDotNameTest {
 
 	@Entity(name = "PurchaseOrder")
 	@FilterDefs({
-			@FilterDef(name = "customerIdFilter", parameters = @ParamDef(name = "customerId", type = "long")),
-			@FilterDef(name = "PurchaseOrder.customerIdFilter", parameters = @ParamDef(name = "customerId", type = "long")),
-			@FilterDef(name = "itemIdFilter", parameters = @ParamDef(name = "itemId", type = "long")),
-			@FilterDef(name = "PurchaseOrder.itemIdFilter", parameters = @ParamDef(name = "itemId", type = "long"))
+			@FilterDef(name = "customerIdFilter", parameters = @ParamDef(name = "customerId", type = Long.class)),
+			@FilterDef(name = "PurchaseOrder.customerIdFilter", parameters = @ParamDef(name = "customerId", type = Long.class)),
+			@FilterDef(name = "itemIdFilter", parameters = @ParamDef(name = "itemId", type = Long.class)),
+			@FilterDef(name = "PurchaseOrder.itemIdFilter", parameters = @ParamDef(name = "itemId", type = Long.class))
 	})
 	@Filters({
 			@Filter(name = "customerIdFilter", condition = "customerId = :customerId"),

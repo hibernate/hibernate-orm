@@ -275,7 +275,7 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
         name="activeAccount",
         parameters = @ParamDef(
             name="active",
-            type="boolean"
+            type=Boolean.class
        )
    )
     @Filter(

@@ -112,7 +112,7 @@ public class FilterJoinTableTest extends BaseEntityManagerFunctionalTestCase {
         name="firstAccounts",
         parameters=@ParamDef(
             name="maxOrderId",
-            type="int"
+            type=int.class
        )
    )
     public static class Client {

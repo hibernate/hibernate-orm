@@ -21,7 +21,7 @@ import org.hibernate.annotations.ParamDef;
 @Entity
 @Inheritance(strategy=InheritanceType.SINGLE_TABLE)
 @Table(name="ZOOLOGY_ANIMAL")
-@FilterDef(name="ignoreSome", parameters={@ParamDef(name="name", type="string")})
+@FilterDef(name="ignoreSome", parameters={@ParamDef(name="name", type=String.class)})
 @Filter(name="ignoreSome", deduceAliasInjectionPoints=false, condition=":name <> {alias}.ANIMAL_NAME")
 public class Animal {
 	@Id

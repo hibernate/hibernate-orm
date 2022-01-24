@@ -16,8 +16,7 @@ import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 
 /**
  * Implementation of FilterImpl.  FilterImpl implements the user's
@@ -75,7 +74,7 @@ public class FilterImpl implements Filter, Serializable {
 	 */
 	public Filter setParameter(String name, Object value) throws IllegalArgumentException {
 		// Make sure this is a defined parameter and check the incoming value type
-		BasicType<?> type = (BasicType<?>) definition.getParameterType( name );
+		JdbcMapping type = definition.getParameterJdbcMapping( name );
 		if ( type == null ) {
 			throw new IllegalArgumentException( "Undefined filter parameter [" + name + "]" );
 		}
@@ -99,13 +98,13 @@ public class FilterImpl implements Filter, Serializable {
 		if ( values == null ) {
 			throw new IllegalArgumentException( "Collection must be not null!" );
 		}
-		Type type = definition.getParameterType( name );
+		JdbcMapping type = definition.getParameterJdbcMapping( name );
 		if ( type == null ) {
 			throw new HibernateException( "Undefined filter parameter [" + name + "]" );
 		}
 		if ( !values.isEmpty() ) {
-			Class<?> elementClass = values.iterator().next().getClass();
-			if ( !type.getReturnedClass().isAssignableFrom( elementClass ) ) {
+			final Object element = values.iterator().next();
+			if ( !type.getJavaTypeDescriptor().isInstance( element ) ) {
 				throw new HibernateException( "Incorrect type for parameter [" + name + "]" );
 			}
 		}

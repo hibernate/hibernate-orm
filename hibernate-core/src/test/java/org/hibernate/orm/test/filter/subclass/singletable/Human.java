@@ -18,8 +18,8 @@ import org.hibernate.annotations.ParamDef;
 @Table(name="ZOOLOGY_HUMAN")
 @FilterDef(name="iqRange", parameters=
 {
-		@ParamDef(name="min", type="integer"),
-		@ParamDef(name="max", type="integer")
+		@ParamDef(name="min", type=Integer.class),
+		@ParamDef(name="max", type=Integer.class)
 })
 @Filter(name="iqRange", condition="HUMAN_IQ BETWEEN :min AND :max")
 public class Human extends Mammal {

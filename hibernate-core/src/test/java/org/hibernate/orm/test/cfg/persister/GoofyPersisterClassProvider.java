@@ -111,11 +111,6 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public EntityTuplizer getEntityTuplizer() {
-			return null;
-		}
-
-		@Override
 		public BytecodeEnhancementMetadata getInstrumentationMetadata() {
 			return new BytecodeEnhancementMetadataNonPojoImpl( null );
 		}

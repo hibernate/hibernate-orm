@@ -140,12 +140,6 @@ public class ParameterParserTest {
     public void testParseColonCharacterEscaped() {
         final StringBuilder captured = new StringBuilder();
         ParameterRecognizer recognizer = new ParameterRecognizer() {
-            @SuppressWarnings("deprecation")
-			@Override
-            public void outParameter(int position) {
-                fail();
-            }
-
             @Override
             public void ordinalParameter(int position) {
                 fail();

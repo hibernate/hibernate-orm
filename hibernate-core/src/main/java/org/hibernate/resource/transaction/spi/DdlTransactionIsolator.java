@@ -21,22 +21,11 @@ public interface DdlTransactionIsolator {
 	JdbcContext getJdbcContext();
 
 	/**
-	 * In general a DdlTransactionIsolator should be returned from
-	 * {@link TransactionCoordinatorBuilder#buildDdlTransactionIsolator}
-	 * already prepared for use (until {@link #release} is called).
-	 *
-	 * @deprecated Instances should be returned from
-	 * {@link TransactionCoordinatorBuilder#buildDdlTransactionIsolator}
-	 * already prepared for use
-	 */
-	@Deprecated
-	void prepare();
-
-	/**
 	 * Returns a Connection that is usable within the bounds of the
-	 * {@link #prepare} and {@link #release} calls.  Further, this
-	 * Connection will be isolated (transactionally) from any
-	 * transaction in effect prior to the call to {@link #prepare}.
+	 * {@link TransactionCoordinatorBuilder#buildDdlTransactionIsolator}
+	 * and {@link #release} calls.  Further, this Connection will be 
+	 * isolated (transactionally) from any transaction in effect prior 
+	 * to the call to {@code buildDdlTransactionIsolator}.
 	 *
 	 * @return The Connection.
 	 */

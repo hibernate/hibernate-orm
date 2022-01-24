@@ -180,34 +180,7 @@ public final class IdentifierGeneratorHelper {
 		}
 	}
 
-	/**
-	 * Wrap the given value in the given Java numeric class.
-	 *
-	 * @param value The primitive value to wrap.
-	 * @param clazz The Java numeric type in which to wrap the value.
-	 *
-	 * @return The wrapped type.
-	 *
-	 * @throws IdentifierGenerationException Indicates an unhandled 'clazz'.
-	 * @deprecated Use the {@linkplain #getIntegralDataTypeHolder holders} instead.
-	 */
-	@Deprecated
-	public static Number createNumber(long value, Class clazz) throws IdentifierGenerationException {
-		if ( clazz == Long.class ) {
-			return value;
-		}
-		else if ( clazz == Integer.class ) {
-			return (int) value;
-		}
-		else if ( clazz == Short.class ) {
-			return (short) value;
-		}
-		else {
-			throw new IdentifierGenerationException( "unrecognized id type : " + clazz.getName() );
-		}
-	}
-
-	public static IntegralDataTypeHolder getIntegralDataTypeHolder(Class integralType) {
+	public static IntegralDataTypeHolder getIntegralDataTypeHolder(Class<?> integralType) {
 		if ( integralType == Long.class
 				|| integralType == Integer.class
 				|| integralType == Short.class ) {

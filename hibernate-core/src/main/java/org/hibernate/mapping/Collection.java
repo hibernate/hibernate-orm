@@ -258,16 +258,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return owner;
 	}
 
-	/**
-	 * @param owner The owner
-	 *
-	 * @deprecated Inject the owner into constructor.
-	 */
-	@Deprecated
-	public void setOwner(PersistentClass owner) {
-		this.owner = owner;
-	}
-
 	public String getWhere() {
 		return where;
 	}

@@ -88,7 +88,7 @@ import static org.hibernate.event.spi.EventType.UPDATE;
  *
  * @author Steve Ebersole
  */
-public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppable {
+public class EventListenerRegistryImpl implements EventListenerRegistry {
 	@SuppressWarnings("rawtypes")
 	private final EventListenerGroup[] eventListeners;
 	private final Map<Class<?>,Object> listenerClassToInstanceMap = new HashMap<>();
@@ -196,13 +196,6 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 	public final <T> void prependListeners(EventType<T> type, T... listeners) {
 		getEventListenerGroup( type ).prependListeners( listeners );
 	}
-
-	@Deprecated
-	@Override
-	public void stop() {
-		// legacy - no longer used
-	}
-
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

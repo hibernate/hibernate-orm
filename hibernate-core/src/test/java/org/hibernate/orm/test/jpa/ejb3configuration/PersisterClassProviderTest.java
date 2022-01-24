@@ -131,11 +131,6 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public EntityTuplizer getEntityTuplizer() {
-			return null;
-		}
-
-		@Override
 		public BytecodeEnhancementMetadata getInstrumentationMetadata() {
 			return new BytecodeEnhancementMetadataNonPojoImpl( getEntityName() );
 		}

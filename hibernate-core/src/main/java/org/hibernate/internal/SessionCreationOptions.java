@@ -16,7 +16,6 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
-import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ManagedFlushChecker;
 
 /**
  * @author Steve Ebersole
@@ -55,6 +54,4 @@ public interface SessionCreationOptions {
 	// deprecations
 
 	ExceptionMapper getExceptionMapper();
-
-	ManagedFlushChecker getManagedFlushChecker();
 }

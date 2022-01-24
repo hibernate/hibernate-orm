@@ -29,7 +29,7 @@ import org.jboss.logging.Logger;
  * @deprecated Use {@link SessionFactoryOptions} instead.
  */
 @SuppressWarnings("unused")
-@Deprecated
+@Deprecated(since = "6.0")
 public final class Settings {
 	private static final Logger LOG = Logger.getLogger( Settings.class );
 

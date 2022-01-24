@@ -50,10 +50,6 @@ class DdlTransactionIsolatorProvidedConnectionImpl implements DdlTransactionIsol
 	}
 
 	@Override
-	public void prepare() {
-	}
-
-	@Override
 	public void release() {
 		JdbcConnectionAccess connectionAccess = jdbcContext.getJdbcConnectionAccess();
 		if( !( connectionAccess instanceof JdbcConnectionAccessProvidedConnectionImpl ) ) {

@@ -74,7 +74,6 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 		return target !=null ? target : defaultValue;
 	}
 
-	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T cast(Class<T> expected, Object candidate){
 		if (candidate == null) {
@@ -86,8 +85,8 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 		}
 
 		Class<T> target;
-		if ( Class.class.isInstance( candidate ) ) {
-			target = Class.class.cast( candidate );
+		if (candidate instanceof Class) {
+			target = (Class) candidate;
 		}
 		else {
 			try {

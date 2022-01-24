@@ -29,25 +29,6 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 
 	private final CompositeType componentIdType;
 
-	/**
-	 * @deprecated use {@link #SerializableProxy(String, Class, Class[], Object, Boolean, String, boolean, Method, Method, CompositeType)} instead.
-	 */
-	@Deprecated
-	public SerializableProxy(
-			String entityName,
-			Class<?> persistentClass,
-			Class<?>[] interfaces,
-			Serializable id,
-			Boolean readOnly,
-			Method getIdentifierMethod,
-			Method setIdentifierMethod,
-			CompositeType componentIdType) {
-		this(
-				entityName, persistentClass, interfaces, id, readOnly, null, false,
-				getIdentifierMethod, setIdentifierMethod, componentIdType
-		);
-	}
-
 	public SerializableProxy(
 			String entityName,
 			Class<?> persistentClass,

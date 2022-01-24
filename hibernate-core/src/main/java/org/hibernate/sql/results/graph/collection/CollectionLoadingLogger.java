@@ -24,12 +24,6 @@ public interface CollectionLoadingLogger extends BasicLogger {
 	 */
 	Logger COLL_LOAD_LOGGER = LoadingLogger.subLogger( LOCAL_NAME );
 
-	/**
-	 * @deprecated Use {@link #COLL_LOAD_LOGGER}
-	 */
-	@Deprecated
-	Logger INSTANCE = COLL_LOAD_LOGGER;
-
-	boolean TRACE_ENABLED = INSTANCE.isTraceEnabled();
-	boolean DEBUG_ENABLED = INSTANCE.isDebugEnabled();
+	boolean TRACE_ENABLED = COLL_LOAD_LOGGER.isTraceEnabled();
+	boolean DEBUG_ENABLED = COLL_LOAD_LOGGER.isDebugEnabled();
 }

@@ -361,10 +361,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			sessionEventsManager.end();
 		}
 
-		if ( currentHibernateTransaction != null ) {
-			currentHibernateTransaction.invalidate();
-		}
-
 		if ( transactionCoordinator != null ) {
 			removeSharedSessionTransactionObserver( transactionCoordinator );
 		}

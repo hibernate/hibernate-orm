@@ -18,7 +18,7 @@ import org.hibernate.type.Type;
  *
  * @deprecated implement {@link Interceptor} directly
  */
-@Deprecated
+@Deprecated(since = "6.0")
 public class EmptyInterceptor implements Interceptor, Serializable {
 	/**
 	 * The singleton reference.

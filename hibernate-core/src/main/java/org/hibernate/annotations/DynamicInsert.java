@@ -29,6 +29,6 @@ public @interface DynamicInsert {
 	/**
 	 * @deprecated When {@code false}, this annotation has no effect.
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	boolean value() default true;
 }

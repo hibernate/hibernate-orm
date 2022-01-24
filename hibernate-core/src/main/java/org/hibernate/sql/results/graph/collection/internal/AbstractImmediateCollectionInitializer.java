@@ -158,7 +158,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 
 					if ( collectionInstance.wasInitialized() ) {
 						if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
-							CollectionLoadingLogger.INSTANCE.debugf(
+							COLL_LOAD_LOGGER.debugf(
 									"(%s) Found existing unowned collection instance [%s] in Session; skipping processing - [%s]",
 									getSimpleConcreteImplName(),
 									LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
@@ -285,7 +285,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 		if ( collectionValueKey != null ) {
 			// the row contains an element in the collection...
 			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
-				CollectionLoadingLogger.INSTANCE.debugf(
+				COLL_LOAD_LOGGER.debugf(
 						"(%s) Reading element from row for collection [%s] -> %s",
 						getSimpleConcreteImplName(),
 						LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),

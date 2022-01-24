@@ -42,9 +42,6 @@ import jakarta.persistence.metamodel.SingularAttribute;
 @Incubating
 public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQuery<R>, NameableQuery {
 
-	//TODO: this method is no longer used. Can it be deleted?
-	NativeQueryImplementor<R> setCollectionKey(Object key);
-
 	@Override
 	default LockOptions getLockOptions() {
 		return null;

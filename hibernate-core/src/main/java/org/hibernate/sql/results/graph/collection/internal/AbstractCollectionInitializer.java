@@ -76,7 +76,7 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 			);
 
 			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
-				CollectionLoadingLogger.INSTANCE.debugf(
+				CollectionLoadingLogger.COLL_LOAD_LOGGER.debugf(
 						"(%s) Current row collection key : %s",
 						DelayedCollectionInitializer.class.getSimpleName(),
 						LoggingHelper.toLoggableString( getNavigablePath(), this.collectionKey.getKey() )

@@ -920,10 +920,14 @@ public interface EntityPersister
 	}
 
 	/**
+	 * Returns {@code null}.
+	 *
 	 * @deprecated Use {@link #getRepresentationStrategy()}
 	 */
-	@Deprecated
-	EntityTuplizer getEntityTuplizer();
+	@Deprecated(since = "6.0")
+	default EntityTuplizer getEntityTuplizer() {
+		return null;
+	}
 
 	BytecodeEnhancementMetadata getInstrumentationMetadata();
 
@@ -965,12 +969,4 @@ public interface EntityPersister
 	}
 
 	boolean canUseReferenceCacheEntries();
-
-	/**
-	 * @deprecated Since 5.4.1, this is no longer used.
-	 */
-	@Deprecated
-	default boolean canIdentityInsertBeDelayed() {
-		return false;
-	}
 }

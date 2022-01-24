@@ -30,10 +30,6 @@ public class DdlTransactionIsolatorNonJtaImpl implements DdlTransactionIsolator 
 	}
 
 	@Override
-	public void prepare() {
-	}
-
-	@Override
 	public JdbcContext getJdbcContext() {
 		return jdbcContext;
 	}

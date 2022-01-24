@@ -27,7 +27,7 @@ import org.hibernate.tuple.Tuplizer;
  *
  * @deprecated See {@link org.hibernate.metamodel.spi.EntityRepresentationStrategy}
  */
-@Deprecated
+@Deprecated(since = "6.0")
 public interface EntityTuplizer extends Tuplizer {
 
 	/**

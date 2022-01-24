@@ -5324,11 +5324,6 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public EntityTuplizer getEntityTuplizer() {
-		return null;
-	}
-
-	@Override
 	public BytecodeEnhancementMetadata getInstrumentationMetadata() {
 		return getBytecodeEnhancementMetadata();
 	}

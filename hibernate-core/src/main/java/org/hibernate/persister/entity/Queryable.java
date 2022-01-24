@@ -14,7 +14,7 @@ package org.hibernate.persister.entity;
  *
  * @deprecated See {@link org.hibernate.metamodel.mapping.Queryable}
  */
-@Deprecated
+@Deprecated(since = "6.0")
 public interface Queryable extends Loadable, PropertyMapping, Joinable {
 
 	/**

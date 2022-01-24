@@ -12,19 +12,6 @@ package org.hibernate.query.sql.spi;
  * @see org.hibernate.engine.query.spi.NativeQueryInterpreter#recognizeParameters
  */
 public interface ParameterRecognizer {
-	/**
-	 * Called when an output parameter is recognized.  This should only ever be
-	 * called once for a query in cases where the JDBC "function call" escape syntax is
-	 * recognized, i.e. {@code "{?=call...}"}
-	 *
-	 * @param sourcePosition The position within the query
-	 *
-	 * @deprecated Application should use {@link org.hibernate.procedure.ProcedureCall} instead
-	 */
-	@Deprecated(since = "5.2")
-	default void outParameter(int sourcePosition) {
-		throw new UnsupportedOperationException( "Recognizing native query as a function call is no longer supported" );
-	}
 
 	/**
 	 * Called when an ordinal parameter is recognized

@@ -519,7 +519,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Second-level cache region stats
 
-	@Override @Deprecated
+	@Override
 	public String[] getSecondLevelCacheRegionNames() {
 		return cache.getSecondLevelCacheRegionNames();
 	}
@@ -558,11 +558,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 				regionName,
 				this::createCacheRegionStatistics
 		);
-	}
-
-	@Deprecated
-	public CacheRegionStatisticsImpl getSecondLevelCacheStatistics(String regionName) {
-		return getCacheRegionStatistics( cache.unqualifyRegionName( regionName ) );
 	}
 
 	@Override

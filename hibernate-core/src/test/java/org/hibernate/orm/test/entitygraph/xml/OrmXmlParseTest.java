@@ -22,7 +22,6 @@ public class OrmXmlParseTest {
 	void parseNamedAttributeNode() {
 		final Configuration cfg = new Configuration();
 		cfg.addURL( getClass().getResource( "orm.xml" ) );
-		cfg.buildMappings();
 	}
 
 }

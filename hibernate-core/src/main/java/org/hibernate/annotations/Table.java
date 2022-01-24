@@ -38,7 +38,7 @@ public @interface Table {
 	 * @deprecated use {@link jakarta.persistence.Table#indexes()} or
 	 *             {@link jakarta.persistence.SecondaryTable#indexes()}
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	Index[] indexes() default {};
 
 	/**
@@ -60,7 +60,7 @@ public @interface Table {
 	 *
 	 * @deprecated use {@link jakarta.persistence.SecondaryTable#foreignKey()}
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	ForeignKey foreignKey() default @ForeignKey( name="" );
 
 	/**

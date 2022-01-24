@@ -53,7 +53,6 @@ import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.xml.XmlDocument;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.service.ServiceRegistry;
@@ -308,15 +307,6 @@ public class Configuration {
 		return this;
 	}
 
-	/**
-	 * @deprecated No longer supported.
-	 */
-	@Deprecated
-	public Configuration configure(org.w3c.dom.Document document) throws HibernateException {
-		return this;
-	}
-
-
 	// MetadataSources ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public Configuration registerTypeContributor(TypeContributor typeContributor) {
@@ -382,13 +372,6 @@ public class Configuration {
 	}
 
 	/**
-	 * @deprecated No longer supported.
-	 */
-	@Deprecated
-	public void add(XmlDocument metadataXml) {
-	}
-
-	/**
 	 * Read mappings that were parsed using {@link #getXmlMappingBinderAccess()}.
 	 *
 	 * @param binding the parsed mapping
@@ -450,15 +433,6 @@ public class Configuration {
 	 */
 	public Configuration addCacheableFile(String xmlFile) throws MappingException {
 		metadataSources.addCacheableFile( xmlFile );
-		return this;
-	}
-
-
-	/**
-	 * @deprecated No longer supported
-	 */
-	@Deprecated
-	public Configuration addXML(String xml) throws MappingException {
 		return this;
 	}
 
@@ -549,7 +523,6 @@ public class Configuration {
 	 *
 	 * @return this (for method chaining)
 	 */
-	@SuppressWarnings({ "unchecked" })
 	public Configuration addAnnotatedClass(Class annotatedClass) {
 		metadataSources.addAnnotatedClass( annotatedClass );
 		return this;
@@ -881,13 +854,6 @@ public class Configuration {
 
 	public Map<String, NamedProcedureCallDefinition> getNamedProcedureCallMap() {
 		return namedProcedureCallMap;
-	}
-
-	/**
-	 * @deprecated Does nothing
-	 */
-	@Deprecated
-	public void buildMappings() {
 	}
 
 	/**

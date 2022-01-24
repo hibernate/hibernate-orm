@@ -13,8 +13,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.QueryException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.QueryParameterNamedImpl;
 import org.hibernate.query.internal.QueryParameterPositionalImpl;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -41,7 +39,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 	private List<ParameterOccurrence> parameterList;
 	private final StringBuilder sqlStringBuffer = new StringBuilder();
 
-	public ParameterRecognizerImpl(SessionFactoryImplementor factory) {
+	public ParameterRecognizerImpl() {
 		ordinalParameterImplicitPosition = 1;
 	}
 

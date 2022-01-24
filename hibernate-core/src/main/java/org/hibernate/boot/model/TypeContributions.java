@@ -45,7 +45,7 @@ public interface TypeContributions {
 	 * @deprecated See user-guide section `2.2.46. TypeContributor` for details - `basic_types.adoc`
 	 */
 	@Deprecated(since = "6.0")
-	void contributeType(BasicType type);
+	void contributeType(BasicType<?> type);
 
 	/**
 	 * @deprecated Use {@link #contributeType(BasicType)} instead.  Basic
@@ -58,7 +58,7 @@ public interface TypeContributions {
 	 * registration keys and call {@link #contributeType(BasicType)} instead
 	 */
 	@Deprecated(since = "5.3")
-	void contributeType(BasicType type, String... keys);
+	void contributeType(BasicType<?> type, String... keys);
 
 	/**
 	 * @deprecated Use {@link #contributeType(BasicType)} instead.
@@ -71,5 +71,5 @@ public interface TypeContributions {
 	 * and call {@link #contributeType(BasicType)} instead
 	 */
 	@Deprecated(since = "5.3")
-	void contributeType(UserType type, String... keys);
+	void contributeType(UserType<?> type, String... keys);
 }

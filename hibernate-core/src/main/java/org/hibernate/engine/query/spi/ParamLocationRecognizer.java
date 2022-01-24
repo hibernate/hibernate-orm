@@ -166,12 +166,6 @@ public class ParamLocationRecognizer implements ParameterRecognizer {
 		// don't care...
 	}
 
-	@Override
-	public void outParameter(int position) {
-		// don't care...
-	}
-
-
 	/**
 	 * Internal in-flight representation of a recognized named parameter
 	 */

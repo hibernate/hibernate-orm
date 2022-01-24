@@ -122,9 +122,6 @@ public class NativeQueryImpl<R>
 	private Set<String> querySpaces;
 	private Callback callback;
 
-	private Object collectionKey;
-
-
 	/**
 	 * Constructs a NativeQueryImpl given a sql query defined in the mappings.
 	 */
@@ -243,7 +240,7 @@ public class NativeQueryImpl<R>
 						);
 						return true;
 					}
-					if ( resultJavaType != null && resultJavaType != Tuple.class ) {
+//					if ( resultJavaType != null && resultJavaType != Tuple.class ) {
 						// todo (6.0): in 5.x we didn't add implicit result builders and by doing so,
 						//  the result type check at the end of the constructor will fail like in 5.x
 //						final JpaMetamodel jpaMetamodel = context.getSessionFactory().getJpaMetamodel();
@@ -264,7 +261,7 @@ public class NativeQueryImpl<R>
 //						}
 //
 //						return true;
-					}
+//					}
 
 					return false;
 				},
@@ -348,7 +345,7 @@ public class NativeQueryImpl<R>
 		return interpretationCache.resolveNativeQueryParameters(
 					sqlString,
 					s -> {
-						final ParameterRecognizerImpl parameterRecognizer = new ParameterRecognizerImpl( session.getFactory() );
+						final ParameterRecognizerImpl parameterRecognizer = new ParameterRecognizerImpl();
 
 						session.getFactory().getServiceRegistry()
 								.getService( NativeQueryInterpreter.class )
@@ -800,7 +797,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
+	protected ScrollableResultsImplementor<R> doScroll(ScrollMode scrollMode) {
 		return resolveSelectQueryPlan().performScroll( scrollMode, this );
 	}
 
@@ -838,12 +835,6 @@ public class NativeQueryImpl<R>
 				getQueryString(),
 				getSynchronizedQuerySpaces()
 		);
-	}
-
-	@Override
-	public NativeQueryImplementor<R> setCollectionKey(Object key) {
-		this.collectionKey = key;
-		return this;
 	}
 
 	@Override
@@ -1438,7 +1429,7 @@ public class NativeQueryImpl<R>
 		return this;
 	}
 
-	@Override @Deprecated @SuppressWarnings("deprecation")
+	@Override @Deprecated
 	public <S> NativeQueryImplementor<S> setResultTransformer(ResultTransformer<S> transformer) {
 		return setTupleTransformer( transformer ).setResultListTransformer( transformer );
 	}

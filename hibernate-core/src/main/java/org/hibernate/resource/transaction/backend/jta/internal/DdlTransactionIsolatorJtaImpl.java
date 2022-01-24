@@ -76,10 +76,6 @@ public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
 	}
 
 	@Override
-	public void prepare() {
-	}
-
-	@Override
 	public Connection getIsolatedConnection() {
 		return jdbcConnection;
 	}

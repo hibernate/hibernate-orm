@@ -226,8 +226,9 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 	/**
 	 * @deprecated currently used by Hibernate Reactive
-	 * This version of the constructor should handle the case in which we do actually have the option to access the DatabaseMetaData,
-	 * but since Hibernate Reactive is currently not making use of it we take a shortcut.
+	 * This version of the constructor should handle the case in which we do actually have
+	 * the option to access the DatabaseMetaData, but since Hibernate Reactive is currently
+	 * not making use of it we take a shortcut.
 	 */
 	@Deprecated
 	public JdbcEnvironmentImpl(

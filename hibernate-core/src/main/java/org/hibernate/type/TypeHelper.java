@@ -26,7 +26,7 @@ import org.hibernate.tuple.NonIdentifierAttribute;
  *
  * @deprecated with no real replacement.  this was always intended as an internal class
  */
-@Deprecated
+@Deprecated(since = "6.0")
 public class TypeHelper {
 	/**
 	 * Disallow instantiation

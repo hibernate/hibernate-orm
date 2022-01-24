@@ -17,14 +17,6 @@ import org.hibernate.service.Service;
  * @author Steve Ebersole
  */
 public interface EventListenerRegistry extends Service {
-	/**
-	 * @deprecated this method was only ever used to initialize the CallbackRegistry
-	 * which is now managed as part of the EventEngine
-	 */
-	@Deprecated
-	default void prepare(MetadataImplementor metadata) {
-		// by default do nothing now
-	}
 
 	<T> EventListenerGroup<T> getEventListenerGroup(EventType<T> eventType);
 

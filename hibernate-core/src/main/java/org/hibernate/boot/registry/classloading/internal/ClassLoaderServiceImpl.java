@@ -99,7 +99,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	 * @deprecated No longer used/supported!
 	 */
 	@Deprecated
-	@SuppressWarnings({"UnusedDeclaration", "unchecked", "deprecation"})
+	@SuppressWarnings({"unchecked"})
 	public static ClassLoaderServiceImpl fromConfigSettings(Map configValues) {
 		final List<ClassLoader> providedClassLoaders = new ArrayList<>();
 
@@ -109,13 +109,6 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		}
 
 		return new ClassLoaderServiceImpl( providedClassLoaders,TcclLookupPrecedence.AFTER );
-	}
-
-	private static void addIfSet(List<ClassLoader> providedClassLoaders, String name, Map configVales) {
-		final ClassLoader providedClassLoader = (ClassLoader) configVales.get( name );
-		if ( providedClassLoader != null ) {
-			providedClassLoaders.add( providedClassLoader );
-		}
 	}
 
 	@Override

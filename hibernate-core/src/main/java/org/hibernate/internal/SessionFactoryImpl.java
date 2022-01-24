@@ -88,7 +88,6 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.internal.ExceptionMapperLegacyJpaImpl;
-import org.hibernate.jpa.internal.ManagedFlushCheckerLegacyJpaImpl;
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
@@ -118,7 +117,6 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
-import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ManagedFlushChecker;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
@@ -1207,13 +1205,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
-		public ManagedFlushChecker getManagedFlushChecker() {
-			return sessionOwnerBehavior == SessionOwnerBehavior.LEGACY_JPA
-					? ManagedFlushCheckerLegacyJpaImpl.INSTANCE
-					: null;
-		}
-
-		@Override
 		public boolean shouldAutoJoinTransactions() {
 			return autoJoinTransactions;
 		}
@@ -1484,11 +1475,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		@Override
 		public ExceptionMapper getExceptionMapper() {
-			return null;
-		}
-
-		@Override
-		public ManagedFlushChecker getManagedFlushChecker() {
 			return null;
 		}
 	}

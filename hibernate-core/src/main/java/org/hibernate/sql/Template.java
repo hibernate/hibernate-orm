@@ -99,25 +99,6 @@ public final class Template {
 	}
 
 	/**
-	 * Same functionality as {@link #renderWhereStringTemplate(String, String, Dialect, SqmFunctionRegistry)},
-	 * except that a SQLFunctionRegistry is not provided (i.e., only the dialect-defined functions are
-	 * considered).  This is only intended for use by the annotations project until the
-	 * many-to-many/map-key-from-target-table feature is pulled into core.
-	 *
-	 * @deprecated Only intended for annotations usage; use {@link #renderWhereStringTemplate(String, String, Dialect, SqmFunctionRegistry)} instead
-	 */
-	@Deprecated
-	public static String renderWhereStringTemplate(String sqlWhereString, String placeholder, Dialect dialect) {
-		final SqmFunctionRegistry sqmFunctionRegistry = new SqmFunctionRegistry();
-		return renderWhereStringTemplate(
-				sqlWhereString,
-				placeholder,
-				dialect,
-				sqmFunctionRegistry
-		);
-	}
-
-	/**
 	 * Takes the where condition provided in the mapping attribute and interpolates the alias.
 	 * Handles sub-selects, quoted identifiers, quoted strings, expressions, SQL functions,
 	 * named parameters.

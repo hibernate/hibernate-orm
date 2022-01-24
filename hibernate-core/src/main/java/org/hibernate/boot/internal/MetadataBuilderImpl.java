@@ -104,10 +104,10 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			throw new HibernateException( "ServiceRegistry passed to MetadataBuilder cannot be null" );
 		}
 
-		if ( StandardServiceRegistry.class.isInstance( serviceRegistry ) ) {
-			return ( StandardServiceRegistry ) serviceRegistry;
+		if ( serviceRegistry instanceof StandardServiceRegistry ) {
+			return (StandardServiceRegistry) serviceRegistry;
 		}
-		else if ( BootstrapServiceRegistry.class.isInstance( serviceRegistry ) ) {
+		else if ( serviceRegistry instanceof BootstrapServiceRegistry ) {
 			log.debug(
 					"ServiceRegistry passed to MetadataBuilder was a BootstrapServiceRegistry; this likely won't end well " +
 							"if attempt is made to build SessionFactory"
@@ -258,19 +258,19 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(BasicType type) {
+	public MetadataBuilder applyBasicType(BasicType<?> type) {
 		options.basicTypeRegistrations.add( new BasicTypeRegistration( type ) );
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(BasicType type, String... keys) {
+	public MetadataBuilder applyBasicType(BasicType<?> type, String... keys) {
 		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(UserType type, String... keys) {
+	public MetadataBuilder applyBasicType(UserType<?> type, String... keys) {
 		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys, getTypeConfiguration() ) );
 		return this;
 	}
@@ -282,17 +282,17 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public void contributeType(BasicType type) {
+	public void contributeType(BasicType<?> type) {
 		options.basicTypeRegistrations.add( new BasicTypeRegistration( type ) );
 	}
 
 	@Override
-	public void contributeType(BasicType type, String... keys) {
+	public void contributeType(BasicType<?> type, String... keys) {
 		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
 	}
 
 	@Override
-	public void contributeType(UserType type, String[] keys) {
+	public void contributeType(UserType<?> type, String[] keys) {
 		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys, getTypeConfiguration() ) );
 	}
 
@@ -394,7 +394,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(AttributeConverter attributeConverter, boolean autoApply) {
+	public MetadataBuilder applyAttributeConverter(AttributeConverter<?,?> attributeConverter, boolean autoApply) {
 		bootstrapContext.addAttributeConverterDescriptor(
 				new InstanceBasedConverterDescriptor( attributeConverter, autoApply, bootstrapContext.getClassmateContext() )
 		);
@@ -571,25 +571,25 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		// todo (6.0) : remove bootstrapContext property along with the deprecated methods
 		private BootstrapContext bootstrapContext;
 
-		private ArrayList<BasicTypeRegistration> basicTypeRegistrations = new ArrayList<>();
+		private final ArrayList<BasicTypeRegistration> basicTypeRegistrations = new ArrayList<>();
 
 		private ImplicitNamingStrategy implicitNamingStrategy;
 		private PhysicalNamingStrategy physicalNamingStrategy;
 
 		private SharedCacheMode sharedCacheMode;
-		private AccessType defaultCacheAccessType;
-		private boolean multiTenancyEnabled;
+		private final AccessType defaultCacheAccessType;
+		private final boolean multiTenancyEnabled;
 		private boolean explicitDiscriminatorsForJoinedInheritanceSupported;
 		private boolean implicitDiscriminatorsForJoinedInheritanceSupported;
 		private boolean implicitlyForceDiscriminatorInSelect;
 		private boolean useNationalizedCharacterData;
 		private boolean specjProprietarySyntaxEnabled;
 		private boolean noConstraintByDefault;
-		private ArrayList<MetadataSourceType> sourceProcessOrdering;
+		private final ArrayList<MetadataSourceType> sourceProcessOrdering;
 
-		private IdGeneratorInterpreterImpl idGenerationTypeInterpreter = new IdGeneratorInterpreterImpl();
+		private final IdGeneratorInterpreterImpl idGenerationTypeInterpreter = new IdGeneratorInterpreterImpl();
 
-		private String schemaCharset;
+		private final String schemaCharset;
 		private final boolean xmlMappingEnabled;
 
 		public MetadataBuildingOptionsImpl(StandardServiceRegistry serviceRegistry) {
@@ -665,23 +665,20 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 			this.defaultCacheAccessType = configService.getSetting(
 					AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY,
-					new ConfigurationService.Converter<AccessType>() {
-						@Override
-						public AccessType convert(Object value) {
-							if ( value == null ) {
-								return null;
-							}
-
-							if ( CacheConcurrencyStrategy.class.isInstance( value ) ) {
-								return ( (CacheConcurrencyStrategy) value ).toAccessType();
-							}
-
-							if ( AccessType.class.isInstance( value ) ) {
-								return (AccessType) value;
-							}
-
-							return AccessType.fromExternalName( value.toString() );
+					value -> {
+						if ( value == null ) {
+							return null;
 						}
+
+						if ( value instanceof CacheConcurrencyStrategy ) {
+							return ( (CacheConcurrencyStrategy) value ).toAccessType();
+						}
+
+						if ( value instanceof AccessType ) {
+							return (AccessType) value;
+						}
+
+						return AccessType.fromExternalName( value.toString() );
 					},
 					// by default, see if the defined RegionFactory (if one) defines a default
 					serviceRegistry.getService( RegionFactory.class ) == null
@@ -704,7 +701,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			this.implicitNamingStrategy = strategySelector.resolveDefaultableStrategy(
 					ImplicitNamingStrategy.class,
 					configService.getSettings().get( AvailableSettings.IMPLICIT_NAMING_STRATEGY ),
-					new Callable<ImplicitNamingStrategy>() {
+					new Callable<>() {
 						@Override
 						public ImplicitNamingStrategy call() {
 							return strategySelector.resolveDefaultableStrategy(

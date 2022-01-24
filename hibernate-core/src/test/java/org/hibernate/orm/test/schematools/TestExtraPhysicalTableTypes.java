@@ -201,11 +201,6 @@ public class TestExtraPhysicalTableTypes {
 		}
 
 		@Override
-		public void prepare() {
-
-		}
-
-		@Override
 		public Connection getIsolatedConnection() {
 			return null;
 		}

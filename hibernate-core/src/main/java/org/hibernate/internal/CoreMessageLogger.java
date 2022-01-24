@@ -305,14 +305,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Fetching database metadata", id = 102)
 	void fetchingDatabaseMetadata();
 
-	/**
-	 * @deprecated See {@link QueryLogging#firstOrMaxResultsSpecifiedWithCollectionFetch()}
-	 */
-	@Deprecated
-	@LogMessage(level = WARN)
-	@Message(value = "firstResult/maxResults specified with collection fetch; applying in memory!", id = 104)
-	void firstOrMaxResultsSpecifiedWithCollectionFetch();
-
 	@LogMessage(level = INFO)
 	@Message(value = "Flushes: %s", id = 105)
 	void flushes(long flushCount);
@@ -370,14 +362,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Ignoring unique constraints specified on table generator [%s]", id = 120)
 	void ignoringTableGeneratorConstraints(String name);
-
-	/**
-	 * @deprecated See {@link org.hibernate.query.QueryLogging#ignoringUnrecognizedQueryHint}
-	 */
-	@LogMessage(level = INFO)
-	@Message(value = "Ignoring unrecognized query hint [%s]", id = 121)
-	@Deprecated
-	void ignoringUnrecognizedQueryHint(String hintName);
 
 	@LogMessage(level = ERROR)
 	@Message(value = "IllegalArgumentException in class: %s, getter method of property: %s", id = 122)
@@ -1027,16 +1011,6 @@ public interface CoreMessageLogger extends BasicLogger {
 			String region,
 			String message);
 
-	/**
-	 * @deprecated see {@link org.hibernate.query.QueryLogging#unableToDetermineLockModeValue}
-	 */
-	@LogMessage(level = INFO)
-	@Message(value = "Unable to determine lock mode value : %s -> %s", id = 311)
-	@Deprecated
-	void unableToDetermineLockModeValue(
-			String hintName,
-			Object value);
-
 	@Message(value = "Could not determine transaction status", id = 312)
 	String unableToDetermineTransactionStatus();
 
@@ -1330,14 +1304,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Unsuccessful: %s", id = 388)
 	void unsuccessful(String sql);
 
-	/**
-	 * @deprecated Use {@link #unsuccessfulSchemaManagementCommand} instead
-	 */
-	@LogMessage(level = ERROR)
-	@Message(value = "Unsuccessful: %s", id = 389)
-	@Deprecated
-	void unsuccessfulCreate(String string);
-
 	@LogMessage(level = WARN)
 	@Message(value = "Overriding release mode as connection provider does not support 'after_statement'", id = 390)
 	void unsupportedAfterStatement();
@@ -1613,22 +1579,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Exception while discovering OSGi service implementations : %s", id = 453)
 	void unableToDiscoverOsgiService(String service, @Cause Exception e);
-
-	/**
-	 * @deprecated Use {@link org.hibernate.internal.log.DeprecationLogger#deprecatedManyToManyOuterJoin} instead
-	 */
-	@Deprecated
-	@LogMessage(level = WARN)
-	@Message(value = "The outer-join attribute on <many-to-many> has been deprecated. Instead of outer-join=\"false\", use lazy=\"extra\" with <map>, <set>, <bag>, <idbag>, or <list>, which will only initialize entities (not as a proxy) as needed.", id = 454)
-	void deprecatedManyToManyOuterJoin();
-
-	/**
-	 * @deprecated Use {@link org.hibernate.internal.log.DeprecationLogger#deprecatedManyToManyFetch} instead
-	 */
-	@Deprecated
-	@LogMessage(level = WARN)
-	@Message(value = "The fetch attribute on <many-to-many> has been deprecated. Instead of fetch=\"select\", use lazy=\"extra\" with <map>, <set>, <bag>, <idbag>, or <list>, which will only initialize entities (not as a proxy) as needed.", id = 455)
-	void deprecatedManyToManyFetch();
 
 	@LogMessage(level = WARN)
 	@Message(value = "Named parameters are used for a callable statement, but database metadata indicates named parameters are not supported.", id = 456)

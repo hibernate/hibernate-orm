@@ -66,20 +66,6 @@ public interface ConfigurationService extends Service {
 	<T> T getSetting(String name, Class<T> expected, T defaultValue);
 
 	/**
-	 * Cast {@code candidate} to the instance of {@code expected} type.
-	 *
-	 * @param expected The type of instance expected to return.
-	 * @param candidate The candidate object to be casted.
-	 * @param <T> The java type of the expected return
-	 *
-	 * @return The instance of expected type or null if this cast fail.
-	 *
-	 * @deprecated No idea why this is exposed here...
-	 */
-	@Deprecated
-	<T> T cast(Class<T> expected, Object candidate);
-
-	/**
 	 * Simple conversion contract for converting an untyped object to a specified type.
 	 *
 	 * @param <T> The Java type of the converted value

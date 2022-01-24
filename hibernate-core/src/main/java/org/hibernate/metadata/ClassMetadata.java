@@ -121,8 +121,7 @@ public interface ClassMetadata {
 	/**
 	 * Return the values of the mapped properties of the object
 	 *
-	 * @deprecated Use the form accepting SharedSessionContractImplementor
-	 * instead
+	 * @deprecated Use the form accepting SharedSessionContractImplementor instead
 	 */
 	@Deprecated(since = "5.3")
 	@SuppressWarnings({"UnusedDeclaration"})
@@ -155,8 +154,7 @@ public interface ClassMetadata {
 	 *
 	 * @return The instantiated entity.
 	 *
-	 * @deprecated Use the form accepting SharedSessionContractImplementor
-	 * instead
+	 * @deprecated Use the form accepting SharedSessionContractImplementor instead
 	 */
 	@Deprecated(since = "5.3")
 	default Object instantiate(Object id, SessionImplementor session) {
@@ -200,10 +198,8 @@ public interface ClassMetadata {
 	 * Get the identifier of an instance (throw an exception if no identifier property)
 	 *
 	 * @deprecated Use {@link #getIdentifier(Object,SharedSessionContractImplementor)} instead
-	 * @return
 	 */
 	@Deprecated
-	@SuppressWarnings( {"JavaDoc"})
 	Object getIdentifier(Object object) throws HibernateException;
 
 	/**

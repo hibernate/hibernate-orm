@@ -11,7 +11,7 @@ import java.util.List;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.query.CastType;
+import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
@@ -100,7 +100,7 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 	private void renderArgument(SqlAppender sqlAppender, SqlAstTranslator<?> translator, Expression realArg) {
 		final JdbcMapping sourceMapping = realArg.getExpressionType().getJdbcMappings().get( 0 );
 		// Only cast to float/double if this is an integer
-		if ( sourceMapping.getJdbcTypeDescriptor().isInteger() ) {
+		if ( sourceMapping.getJdbcType().isInteger() ) {
 			final String cast = dialect.castPattern( sourceMapping.getCastType(), CastType.DOUBLE );
 			new PatternRenderer( cast.replace( "?2", doubleCastType ) )
 					.render( sqlAppender, Collections.singletonList( realArg ), translator );

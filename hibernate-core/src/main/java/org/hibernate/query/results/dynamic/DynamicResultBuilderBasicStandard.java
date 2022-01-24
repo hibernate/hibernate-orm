@@ -36,7 +36,7 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 	private final String resultAlias;
 
 	private final BasicType<?> explicitType;
-	private final JavaType<?> explicitJavaTypeDescriptor;
+	private final JavaType<?> explicitJavaType;
 
 	public DynamicResultBuilderBasicStandard(String columnName, String resultAlias) {
 		assert columnName != null;
@@ -45,7 +45,7 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 		this.resultAlias = resultAlias != null ? resultAlias : columnName;
 
 		this.explicitType = null;
-		this.explicitJavaTypeDescriptor = null;
+		this.explicitJavaType = null;
 	}
 
 	public DynamicResultBuilderBasicStandard(int columnPosition) {
@@ -55,17 +55,17 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 		this.resultAlias = columnName;
 
 		this.explicitType = null;
-		this.explicitJavaTypeDescriptor = null;
+		this.explicitJavaType = null;
 	}
 
-	public DynamicResultBuilderBasicStandard(String columnName, String resultAlias, JavaType<?> explicitJavaTypeDescriptor) {
+	public DynamicResultBuilderBasicStandard(String columnName, String resultAlias, JavaType<?> explicitJavaType) {
 		assert columnName != null;
 		this.columnName = columnName;
 		this.columnPosition = 0;
 		this.resultAlias = resultAlias != null ? resultAlias : columnName;
 
-		assert explicitJavaTypeDescriptor != null;
-		this.explicitJavaTypeDescriptor = explicitJavaTypeDescriptor;
+		assert explicitJavaType != null;
+		this.explicitJavaType = explicitJavaType;
 
 		this.explicitType = null;
 	}
@@ -79,7 +79,7 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 		assert explicitType != null;
 		this.explicitType = explicitType;
 
-		this.explicitJavaTypeDescriptor = null;
+		this.explicitJavaType = null;
 	}
 
 	public DynamicResultBuilderBasicStandard(int columnPosition, BasicType<?> explicitType) {
@@ -91,13 +91,13 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 		assert explicitType != null;
 		this.explicitType = explicitType;
 
-		this.explicitJavaTypeDescriptor = null;
+		this.explicitJavaType = null;
 	}
 
 	@Override
 	public Class<?> getJavaType() {
-		if ( explicitJavaTypeDescriptor != null ) {
-			return explicitJavaTypeDescriptor.getJavaTypeClass();
+		if ( explicitJavaType != null ) {
+			return explicitJavaType.getJavaTypeClass();
 		}
 		if ( explicitType != null ) {
 			return explicitType.getJavaType();
@@ -145,7 +145,7 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 					else {
 						basicType = jdbcResultsMetadata.resolveType(
 								jdbcPosition,
-								explicitJavaTypeDescriptor,
+								explicitJavaType,
 								sessionFactory
 						);
 					}
@@ -153,24 +153,24 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 				}
 		);
 
-		final JavaType<?> javaTypeDescriptor;
+		final JavaType<?> javaType;
 
-		if ( explicitJavaTypeDescriptor != null ) {
-			javaTypeDescriptor = explicitJavaTypeDescriptor;
+		if ( explicitJavaType != null ) {
+			javaType = explicitJavaType;
 		}
 		else {
-			javaTypeDescriptor = expression.getExpressionType().getJdbcMappings().get( 0 ).getMappedJavaTypeDescriptor();
+			javaType = expression.getExpressionType().getJdbcMappings().get( 0 ).getMappedJavaType();
 		}
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				expression,
-				javaTypeDescriptor,
+				javaType,
 				sessionFactory.getTypeConfiguration()
 		);
 
-		// StandardRowReader expects there to be a JavaTypeDescriptor as part of the ResultAssembler.
-		assert javaTypeDescriptor != null;
+		// StandardRowReader expects there to be a JavaType as part of the ResultAssembler.
+		assert javaType != null;
 
-		return new BasicResult<>( sqlSelection.getValuesArrayPosition(), resultAlias, javaTypeDescriptor );
+		return new BasicResult<>( sqlSelection.getValuesArrayPosition(), resultAlias, javaType );
 	}
 
 	@Override
@@ -196,7 +196,7 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 		if ( !Objects.equals( explicitType, that.explicitType ) ) {
 			return false;
 		}
-		return Objects.equals( explicitJavaTypeDescriptor, that.explicitJavaTypeDescriptor );
+		return Objects.equals( explicitJavaType, that.explicitJavaType );
 	}
 
 	@Override
@@ -205,7 +205,7 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 		result = 31 * result + columnPosition;
 		result = 31 * result + resultAlias.hashCode();
 		result = 31 * result + ( explicitType != null ? explicitType.hashCode() : 0 );
-		result = 31 * result + ( explicitJavaTypeDescriptor != null ? explicitJavaTypeDescriptor.hashCode() : 0 );
+		result = 31 * result + ( explicitJavaType != null ? explicitJavaType.hashCode() : 0 );
 		return result;
 	}
 }

@@ -9,7 +9,6 @@ package org.hibernate.metamodel.model.domain;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 import jakarta.persistence.metamodel.EmbeddableType;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.ManagedType;

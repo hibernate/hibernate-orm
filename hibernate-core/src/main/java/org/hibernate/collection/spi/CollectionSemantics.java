@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -24,6 +24,9 @@ import org.hibernate.sql.results.graph.FetchParent;
  * understands how to use it - create one, handle elements, etc.
  *
  * @apiNote The described collection need not be part of the "Java Collection Framework"
+ *
+ * @param <E> the collection element or map key type
+ * @param <CE> the type of the collection
  *
  * @author Steve Ebersole
  * @author Gavin King

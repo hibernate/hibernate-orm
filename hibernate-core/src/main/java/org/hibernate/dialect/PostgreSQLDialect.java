@@ -50,10 +50,10 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.PostgresCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
-import org.hibernate.query.FetchClauseType;
-import org.hibernate.query.IntervalType;
+import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy;
@@ -67,8 +67,7 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.JavaObjectType;
-import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -79,20 +78,19 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.query.TemporalUnit.DAY;
-import static org.hibernate.query.TemporalUnit.EPOCH;
-import static org.hibernate.query.TemporalUnit.MONTH;
-import static org.hibernate.query.TemporalUnit.QUARTER;
-import static org.hibernate.query.TemporalUnit.YEAR;
+import static org.hibernate.query.sqm.TemporalUnit.DAY;
+import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
+import static org.hibernate.query.sqm.TemporalUnit.MONTH;
+import static org.hibernate.query.sqm.TemporalUnit.QUARTER;
+import static org.hibernate.query.sqm.TemporalUnit.YEAR;
 
-import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import static org.hibernate.type.SqlTypes.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
 
 /**
- * An SQL dialect for Postgres 8 and above.
+ * A {@linkplain Dialect SQL dialect} for PostgreSQL 8 and above.
  *
  * @author Gavin King
  */
@@ -449,13 +447,7 @@ public class PostgreSQLDialect extends Dialect {
 		CommonFunctionFactory.overlay( queryEngine );
 		CommonFunctionFactory.soundex( queryEngine ); //was introduced in Postgres 9 apparently
 
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
-				"locate",
-				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
-				"position(?1 in ?2)",
-				"(position(?1 in substring(?2 from ?3))+(?3)-1)",
-				FunctionParameterType.STRING, FunctionParameterType.STRING, FunctionParameterType.INTEGER
-		).setArgumentListSignature("(pattern, string[, start])");
+		CommonFunctionFactory.locate_positionSubstring( queryEngine );
 
 		if ( getVersion().isSameOrAfter( 9, 4 ) ) {
 			CommonFunctionFactory.makeDateTimeTimestamp( queryEngine );
@@ -850,7 +842,7 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		appender.appendSql( "bytea '\\x" );
-		PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.appendString( appender, bytes );
+		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
 		appender.appendSql( '\'' );
 	}
 
@@ -1059,7 +1051,7 @@ public class PostgreSQLDialect extends Dialect {
 		super.contributeTypes(typeContributions, serviceRegistry);
 
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
-				.getJdbcTypeDescriptorRegistry();
+				.getJdbcTypeRegistry();
 		// For discussion of BLOB support in Postgres, as of 8.4, have a peek at
 		// <a href="http://jdbc.postgresql.org/documentation/84/binary-data.html">http://jdbc.postgresql.org/documentation/84/binary-data.html</a>.
 		// For the effects in regards to Hibernate see <a href="http://in.relation.to/15492.lace">http://in.relation.to/15492.lace</a>
@@ -1085,14 +1077,14 @@ public class PostgreSQLDialect extends Dialect {
 		}
 
 		// PostgreSQL requires a custom binder for binding untyped nulls as VARBINARY
-		typeContributions.contributeJdbcTypeDescriptor( ObjectNullAsBinaryTypeJdbcType.INSTANCE );
+		typeContributions.contributeJdbcType( ObjectNullAsBinaryTypeJdbcType.INSTANCE );
 
 		// Until we remove StandardBasicTypes, we have to keep this
 		typeContributions.contributeType(
 				new JavaObjectType(
 						ObjectNullAsBinaryTypeJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
-								.getJavaTypeDescriptorRegistry()
+								.getJavaTypeRegistry()
 								.getDescriptor( Object.class )
 				)
 		);

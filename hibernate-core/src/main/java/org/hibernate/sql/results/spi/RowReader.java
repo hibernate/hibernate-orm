@@ -30,9 +30,9 @@ public interface RowReader<R> {
 	Class<R> getResultJavaType();
 
 	/**
-	 *  The JavaTypeDescriptors of the result
+	 *  The JavaTypes of the result
 	 */
-	List<JavaType> getResultJavaTypeDescriptors();
+	List<JavaType> getResultJavaTypes();
 
 	/**
 	 * The initializers associated with this reader

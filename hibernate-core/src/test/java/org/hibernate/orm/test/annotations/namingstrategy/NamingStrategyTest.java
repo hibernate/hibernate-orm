@@ -68,8 +68,8 @@ public class NamingStrategyTest extends BaseUnitTestCase {
 				.applyPhysicalNamingStrategy( new PhysicalNamingStrategyStandardImpl() {
 					@Override
 					public Identifier toPhysicalColumnName(
-							Identifier name, JdbcEnvironment context) {
-						return new Identifier( name.getText().toUpperCase(), name.isQuoted() );
+							Identifier logicalName, JdbcEnvironment context) {
+						return new Identifier( logicalName.getText().toUpperCase(), logicalName.isQuoted() );
 					}
 				} )
 				.build();

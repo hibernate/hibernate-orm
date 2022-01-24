@@ -17,5 +17,5 @@ public interface ExportableProducer {
 	 *
 	 * @param database The database instance
 	 */
-	public void registerExportables(Database database);
+	void registerExportables(Database database);
 }

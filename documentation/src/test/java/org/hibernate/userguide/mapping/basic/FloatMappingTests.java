@@ -43,24 +43,24 @@ public class FloatMappingTests {
 
 		{
 			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
-			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Float.class));
+			assertThat( attribute.getJavaType().getJavaTypeClass(), equalTo( Float.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Float.class));
 			assertThat(
-					jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(),
+					jdbcMapping.getJdbcType().getJdbcTypeCode(),
 					isOneOf(Types.FLOAT, Types.REAL, Types.NUMERIC)
 			);
 		}
 
 		{
 			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitive");
-			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Float.class));
+			assertThat( attribute.getJavaType().getJavaTypeClass(), equalTo( Float.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Float.class));
 			assertThat(
-					jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(),
+					jdbcMapping.getJdbcType().getJdbcTypeCode(),
 					isOneOf(Types.FLOAT, Types.REAL, Types.NUMERIC)
 			);
 		}

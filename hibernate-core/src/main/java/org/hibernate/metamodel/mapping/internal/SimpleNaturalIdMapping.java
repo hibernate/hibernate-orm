@@ -26,7 +26,7 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -118,14 +118,14 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 			}
 		}
 
-		if ( ! getJavaTypeDescriptor().getJavaTypeClass().isInstance( naturalIdValue ) ) {
+		if ( ! getJavaType().getJavaTypeClass().isInstance( naturalIdValue ) ) {
 			throw new IllegalArgumentException(
 					String.format(
 							Locale.ROOT,
 							"Incoming natural-id value [%s (`%s`)] is not of expected type [`%s`] and could not be coerced",
 							naturalIdValue,
 							naturalIdValue.getClass().getName(),
-							getJavaTypeDescriptor().getJavaType().getTypeName()
+							getJavaType().getJavaType().getTypeName()
 					)
 			);
 		}
@@ -134,7 +134,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	@Override
 	public int calculateHashCode(Object value, SharedSessionContractImplementor session) {
 		//noinspection unchecked
-		return value == null ? 0 : ( (JavaType<Object>) getJavaTypeDescriptor() ).extractHashCode( value );
+		return value == null ? 0 : ( (JavaType<Object>) getJavaType() ).extractHashCode( value );
 	}
 
 	@Override
@@ -163,7 +163,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 		if ( getTypeConfiguration().getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
 			return normalizedValue;
 		}
-		return getJavaTypeDescriptor().coerce( normalizedValue, this );
+		return getJavaType().coerce( normalizedValue, this );
 	}
 
 	public SingularAttributeMapping getAttribute() {
@@ -181,8 +181,8 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
-		return attribute.getJavaTypeDescriptor();
+	public JavaType<?> getJavaType() {
+		return attribute.getJavaType();
 	}
 
 	@Override

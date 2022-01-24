@@ -9,9 +9,11 @@ package org.hibernate;
 import org.hibernate.type.BasicType;
 
 /**
- * Represents a replication strategy.
+ * Represents a replication strategy used by
+ * {@link Session#replicate(Object, ReplicationMode)}.
  *
  * @author Gavin King
+ *
  * @see Session#replicate(Object, ReplicationMode)
  */
 public enum ReplicationMode {
@@ -20,7 +22,10 @@ public enum ReplicationMode {
 	 */
 	EXCEPTION {
 		@Override
-		public boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, BasicType<Object> versionType) {
+		public boolean shouldOverwriteCurrentVersion(
+				Object entity,
+				Object currentVersion, Object newVersion,
+				BasicType<Object> versionType) {
 			throw new AssertionFailure( "should not be called" );
 		}
 	},
@@ -29,7 +34,10 @@ public enum ReplicationMode {
 	 */
 	IGNORE {
 		@Override
-		public boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, BasicType<Object> versionType) {
+		public boolean shouldOverwriteCurrentVersion(
+				Object entity,
+				Object currentVersion, Object newVersion,
+				BasicType<Object> versionType) {
 			return false;
 		}
 	},
@@ -38,7 +46,10 @@ public enum ReplicationMode {
 	 */
 	OVERWRITE {
 		@Override
-		public boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, BasicType<Object> versionType) {
+		public boolean shouldOverwriteCurrentVersion(
+				Object entity,
+				Object currentVersion, Object newVersion,
+				BasicType<Object> versionType) {
 			return true;
 		}
 	},
@@ -47,10 +58,14 @@ public enum ReplicationMode {
 	 */
 	LATEST_VERSION {
 		@Override
-		@SuppressWarnings("unchecked")
-		public boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, BasicType<Object> versionType) {
+		public boolean shouldOverwriteCurrentVersion(
+				Object entity,
+				Object currentVersion, Object newVersion,
+				BasicType<Object> versionType) {
 			// always overwrite non-versioned data (because we don't know which is newer)
-			return versionType == null || versionType.getJavaTypeDescriptor().getComparator().compare( currentVersion, newVersion ) <= 0;
+			return versionType == null
+				|| versionType.getJavaTypeDescriptor().getComparator()
+					.compare( currentVersion, newVersion ) <= 0;
 		}
 	};
 
@@ -64,6 +79,9 @@ public enum ReplicationMode {
 	 *
 	 * @return {@code true} indicates the data should be overwritten; {@code false} indicates it should not.
 	 */
-	public abstract boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, BasicType<Object> versionType);
+	public abstract boolean shouldOverwriteCurrentVersion(
+			Object entity,
+			Object currentVersion, Object newVersion,
+			BasicType<Object> versionType);
 
 }

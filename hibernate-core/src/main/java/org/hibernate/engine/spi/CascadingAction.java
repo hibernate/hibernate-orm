@@ -31,7 +31,6 @@ public interface CascadingAction {
 	 * @param anything Anything ;)  Typically some form of cascade-local cache
 	 * which is specific to each CascadingAction type
 	 * @param isCascadeDeleteEnabled Are cascading deletes enabled.
-	 * @throws HibernateException
 	 */
 	void cascade(
 			EventSource session,
@@ -49,7 +48,7 @@ public interface CascadingAction {
 	 * @param collection The collection instance.
 	 * @return The children iterator.
 	 */
-	Iterator getCascadableChildrenIterator(
+	Iterator<?> getCascadableChildrenIterator(
 			EventSource session,
 			CollectionType collectionType,
 			Object collection);

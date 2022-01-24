@@ -43,13 +43,13 @@ public class EntityTypeImpl<J>
 	private final SqmPathSource<?> discriminatorPathSource;
 
 	public EntityTypeImpl(
-			JavaType<J> javaTypeDescriptor,
+			JavaType<J> javaType,
 			IdentifiableDomainType<? super J> superType,
 			PersistentClass persistentClass,
 			JpaMetamodel jpaMetamodel) {
 		super(
 				persistentClass.getEntityName(),
-				javaTypeDescriptor,
+				javaType,
 				superType,
 				persistentClass.getDeclaredIdentifierMapper() != null || ( superType != null && superType.hasIdClass() ),
 				persistentClass.hasIdentifierProperty(),

@@ -15,7 +15,6 @@ import java.util.Objects;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -27,9 +26,9 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.ClassJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.ClassJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
@@ -56,7 +55,7 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 	}
 
 	@Override
-	public Class getReturnedClass() {
+	public Class<?> getReturnedClass() {
 		return Class.class;
 	}
 
@@ -114,7 +113,7 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 		}
 		final EntityPersister entityPersister = session.getEntityPersister( entityName, null );
 		return entityPersister.getRepresentationStrategy().getMode() == RepresentationMode.POJO
-				? entityPersister.getJavaTypeDescriptor().getJavaTypeClass()
+				? entityPersister.getJavaType().getJavaTypeClass()
 				: entityName;
 	}
 
@@ -134,24 +133,24 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 			Object value,
 			int index,
 			SharedSessionContractImplementor session) throws HibernateException, SQLException {
-		String entityName = session.getFactory().getClassMetadata((Class) value).getEntityName();
-		Loadable entityPersister = (Loadable) session.getFactory().getEntityPersister(entityName);
+		String entityName = session.getFactory().getClassMetadata((Class<?>) value).getEntityName();
+		Loadable entityPersister = (Loadable) session.getFactory().getMetamodel().entityPersister(entityName);
 		underlyingType.nullSafeSet(st, entityPersister.getDiscriminatorValue(), index, session);
 	}
 
 	@Override
 	public void bind(PreparedStatement st, T value, int index, WrapperOptions options) throws SQLException {
 		final SessionFactoryImplementor factory = options.getSession().getFactory();
-		final String entityName = factory.getClassMetadata( (Class) value).getEntityName();
-		final Loadable entityPersister = (Loadable) factory.getEntityPersister( entityName);
+		final String entityName = factory.getClassMetadata( (Class<?>) value).getEntityName();
+		final Loadable entityPersister = (Loadable) factory.getMetamodel().entityPersister(entityName);
 		underlyingType.getJdbcValueBinder().bind( st, entityPersister.getDiscriminatorValue(), index, options );
 	}
 
 	@Override
 	public void bind(CallableStatement st, T value, String name, WrapperOptions options) throws SQLException {
 		final SessionFactoryImplementor factory = options.getSession().getFactory();
-		final String entityName = factory.getClassMetadata( (Class) value).getEntityName();
-		final Loadable entityPersister = (Loadable) factory.getEntityPersister( entityName);
+		final String entityName = factory.getClassMetadata( (Class<?>) value).getEntityName();
+		final Loadable entityPersister = (Loadable) factory.getMetamodel().entityPersister(entityName);
 		underlyingType.getJdbcValueBinder().bind( st, entityPersister.getDiscriminatorValue(), name, options );
 	}
 
@@ -194,16 +193,6 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 	}
 
 	@Override
-	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		return underlyingType.dictatedSizes( mapping );
-	}
-
-	@Override
-	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		return underlyingType.defaultSizes( mapping );
-	}
-
-	@Override
 	public int getColumnSpan(Mapping mapping) throws MappingException {
 		return underlyingType.getColumnSpan( mapping );
 	}
@@ -215,25 +204,25 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public JavaType<T> getExpressableJavaTypeDescriptor() {
+	public JavaType<T> getExpressibleJavaType() {
 		return (JavaType<T>) (persister.getRepresentationStrategy().getMode() == RepresentationMode.POJO
-				? ClassJavaTypeDescriptor.INSTANCE
-				: StringJavaTypeDescriptor.INSTANCE);
+				? ClassJavaType.INSTANCE
+				: StringJavaType.INSTANCE);
 	}
 
 	@Override
 	public JavaType<T> getJavaTypeDescriptor() {
-		return getExpressableJavaTypeDescriptor();
+		return this.getExpressibleJavaType();
 	}
 
 	@Override
-	public JavaType<T> getMappedJavaTypeDescriptor() {
-		return getExpressableJavaTypeDescriptor();
+	public JavaType<T> getMappedJavaType() {
+		return this.getExpressibleJavaType();
 	}
 
 	@Override
-	public JdbcType getJdbcTypeDescriptor() {
-		return underlyingType.getJdbcTypeDescriptor();
+	public JdbcType getJdbcType() {
+		return underlyingType.getJdbcType();
 	}
 
 	@Override

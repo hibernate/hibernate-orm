@@ -33,10 +33,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.query.CastType;
-import org.hibernate.query.FetchClauseType;
-import org.hibernate.query.IntervalType;
-import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.sqm.CastType;
+import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -51,7 +51,7 @@ import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
 
 import java.sql.DatabaseMetaData;
@@ -67,7 +67,7 @@ import java.util.TimeZone;
 
 import jakarta.persistence.TemporalType;
 
-import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 import static org.hibernate.type.SqlTypes.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
@@ -194,7 +194,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
-		typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
+		typeContributions.getTypeConfiguration().getJdbcTypeRegistry().addDescriptor(
 				Types.TINYINT,
 				SmallIntJdbcType.INSTANCE
 		);
@@ -731,7 +731,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				//D no equivalent
 
 				//am pm
-				.replace("aa", "tt")
 				.replace("a", "tt")
 
 				//h nothing to do
@@ -752,7 +751,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		appender.appendSql( "0x" );
-		PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.appendString( appender, bytes );
+		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
 	}
 
 	@Override

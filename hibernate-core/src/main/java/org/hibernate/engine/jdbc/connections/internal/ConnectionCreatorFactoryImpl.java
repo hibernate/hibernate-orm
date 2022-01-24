@@ -13,7 +13,7 @@ import java.util.Properties;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
- * The default factory for ConnectionCreator instances
+ * The default factory for {@link ConnectionCreator} instances.
  *
  * @author Christian Beikov
  */

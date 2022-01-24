@@ -109,10 +109,9 @@ import org.hibernate.persister.entity.SessionFactoryBasedWrapperOptions;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.proxy.HibernateProxyHelper;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.QueryLogging;
-import org.hibernate.query.hql.spi.HqlQueryImplementor;
+import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryImplementor;
@@ -273,7 +272,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		LOG.debugf( "Instantiating session factory with properties: %s", properties );
 
 		class IntegratorObserver implements SessionFactoryObserver {
-			private ArrayList<Integrator> integrators = new ArrayList<>();
+			private final ArrayList<Integrator> integrators = new ArrayList<>();
 
 			@Override
 			public void sessionFactoryCreated(SessionFactory factory) {
@@ -608,17 +607,10 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		);
 	}
 
-	@SuppressWarnings("deprecation")
-	public Settings getSettings() {
-		return settings;
-	}
-
 	@Override
-	public <T> List<RootGraphImplementor<? super T>> findEntityGraphsByJavaType(Class<T> entityClass) {
-		return getMetamodel().findEntityGraphsByJavaType( entityClass );
+	public <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
+		return (List) getMetamodel().findEntityGraphsByJavaType( entityClass );
 	}
-
-
 
 	// todo : (5.2) review synchronizationType, persistenceContextType, transactionType usage
 
@@ -709,7 +701,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public RootGraphImplementor findEntityGraphByName(String name) {
+	public RootGraphImplementor<?> findEntityGraphByName(String name) {
 		return getMetamodel().findEntityGraphByName( name );
 	}
 
@@ -755,7 +747,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return getMetamodel().entityPersister( className ).getIdentifierPropertyName();
 	}
 
-	public ClassMetadata getClassMetadata(Class persistentClass) throws HibernateException {
+	public ClassMetadata getClassMetadata(@SuppressWarnings("rawtypes") Class persistentClass) throws HibernateException {
 		return getClassMetadata( persistentClass.getName() );
 	}
 
@@ -876,7 +868,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		// first, handle StoredProcedureQuery
 		final NamedObjectRepository namedObjectRepository = getQueryEngine().getNamedObjectRepository();
 		try {
-			final ProcedureCallImplementor unwrapped = query.unwrap( ProcedureCallImplementor.class );
+			final ProcedureCallImplementor<?> unwrapped = query.unwrap( ProcedureCallImplementor.class );
 			if ( unwrapped != null ) {
 				namedObjectRepository.registerCallableQueryMemento(
 						name,
@@ -897,14 +889,14 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				if ( hibernateQuery instanceof NativeQueryImplementor ) {
 					namedObjectRepository.registerNativeQueryMemento(
 							name,
-							( (NativeQueryImplementor) hibernateQuery ).toMemento( name )
+							( (NativeQueryImplementor<?>) hibernateQuery ).toMemento( name )
 					);
 
 				}
 				else {
 					namedObjectRepository.registerHqlQueryMemento(
 							name,
-							( ( HqlQueryImplementor ) hibernateQuery ).toMemento( name )
+							( (SqmQueryImplementor<?>) hibernateQuery ).toMemento( name )
 					);
 				}
 				return;
@@ -1028,29 +1020,27 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			}
 		}
 
-		if ( "jta".equals( impl ) ) {
+		switch (impl) {
+			case "jta":
 //			if ( ! transactionFactory().compatibleWithJtaSynchronization() ) {
 //				LOG.autoFlushWillNotWork();
 //			}
-			return new JTASessionContext( this );
-		}
-		else if ( "thread".equals( impl ) ) {
-			return new ThreadLocalSessionContext( this );
-		}
-		else if ( "managed".equals( impl ) ) {
-			return new ManagedSessionContext( this );
-		}
-		else {
-			try {
-				Class implClass = serviceRegistry.getService( ClassLoaderService.class ).classForName( impl );
-				return (CurrentSessionContext)
-						implClass.getConstructor( new Class[] { SessionFactoryImplementor.class } )
-						.newInstance( this );
-			}
-			catch( Throwable t ) {
-				LOG.unableToConstructCurrentSessionContext( impl, t );
-				return null;
-			}
+				return new JTASessionContext(this);
+			case "thread":
+				return new ThreadLocalSessionContext(this);
+			case "managed":
+				return new ManagedSessionContext(this);
+			default:
+				try {
+					Class<?> implClass = serviceRegistry.getService(ClassLoaderService.class).classForName(impl);
+					return (CurrentSessionContext)
+							implClass.getConstructor( new Class[]{SessionFactoryImplementor.class} )
+									.newInstance(this);
+				}
+				catch (Throwable t) {
+					LOG.unableToConstructCurrentSessionContext(impl, t);
+					return null;
+				}
 		}
 	}
 
@@ -1085,13 +1075,25 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public <T> BindableType<T> resolveParameterBindType(T bindValue) {
+	public <T> BindableType<? extends T> resolveParameterBindType(T bindValue) {
 		if ( bindValue == null ) {
 			// we can't guess
 			return null;
 		}
 
-		return resolveParameterBindType( HibernateProxyHelper.getClassWithoutInitializingProxy( bindValue ) );
+		Class<?> clazz;
+		if (bindValue instanceof HibernateProxy) {
+			HibernateProxy proxy = (HibernateProxy) bindValue;
+			LazyInitializer li = proxy.getHibernateLazyInitializer();
+			clazz = li.getPersistentClass();
+		}
+		else {
+			clazz = bindValue.getClass();
+		}
+
+		@SuppressWarnings("unchecked")
+		Class<? extends T> c = (Class<? extends T>) clazz;
+		return resolveParameterBindType( c );
 	}
 
 	@Override
@@ -1138,7 +1140,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 		else if ( statelessInterceptorImplementor != null ) {
 			try {
-				/**
+				/*
 				 * We could remove the getStatelessInterceptorImplementor method and use just the getStatelessInterceptorImplementorSupplier
 				 * since it can cover both cases when the user has given a Supplier<? extends Interceptor> or just the
 				 * Class<? extends Interceptor>, in which case, we simply instantiate the Interceptor when calling the Supplier.
@@ -1170,7 +1172,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		private boolean autoClear;
 		private String tenantIdentifier;
 		private TimeZone jdbcTimeZone;
-		private boolean queryParametersValidationEnabled;
 		private boolean explicitNoInterceptor;
 
 		// Lazy: defaults can be built by invoking the builder in fastSessionServices.defaultSessionEventListeners
@@ -1195,7 +1196,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				tenantIdentifier = currentTenantIdentifierResolver.resolveCurrentTenantIdentifier();
 			}
 			this.jdbcTimeZone = sessionFactoryOptions.getJdbcTimeZone();
-			this.queryParametersValidationEnabled = sessionFactoryOptions.isQueryParametersValidationEnabled();
 		}
 
 
@@ -1226,11 +1226,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			return sessionOwnerBehavior == SessionOwnerBehavior.LEGACY_JPA
 					? ManagedFlushCheckerLegacyJpaImpl.INSTANCE
 					: null;
-		}
-
-		@Override
-		public boolean isQueryParametersValidationEnabled() {
-			return this.queryParametersValidationEnabled;
 		}
 
 		@Override
@@ -1298,7 +1293,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T owner(SessionOwner sessionOwner) {
 			throw new UnsupportedOperationException( "SessionOwner was long deprecated and this method should no longer be invoked" );
 		}
@@ -1414,15 +1408,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			return (T) this;
 		}
 
-		@Override
+		@Override @SuppressWarnings("unchecked")
 		public T jdbcTimeZone(TimeZone timeZone) {
 			jdbcTimeZone = timeZone;
-			return (T) this;
-		}
-
-		@Override
-		public T setQueryParameterValidation(boolean enabled) {
-			queryParametersValidationEnabled = enabled;
 			return (T) this;
 		}
 	}
@@ -1431,7 +1419,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		private final SessionFactoryImpl sessionFactory;
 		private Connection connection;
 		private String tenantIdentifier;
-		private boolean queryParametersValidationEnabled;
 
 		public StatelessSessionBuilderImpl(SessionFactoryImpl sessionFactory) {
 			this.sessionFactory = sessionFactory;
@@ -1440,7 +1427,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			if ( tenantIdentifierResolver != null ) {
 				tenantIdentifier = tenantIdentifierResolver.resolveCurrentTenantIdentifier();
 			}
-			queryParametersValidationEnabled = sessionFactory.getSessionFactoryOptions().isQueryParametersValidationEnabled();
 		}
 
 		@Override
@@ -1534,17 +1520,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		@Override
 		public ManagedFlushChecker getManagedFlushChecker() {
 			return null;
-		}
-
-		@Override
-		public boolean isQueryParametersValidationEnabled() {
-			return queryParametersValidationEnabled;
-		}
-
-		@Override
-		public StatelessSessionBuilder setQueryParameterValidation(boolean enabled) {
-			queryParametersValidationEnabled = enabled;
-			return this;
 		}
 	}
 
@@ -1699,6 +1674,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private enum Status {
 		OPEN,
 		CLOSING,
-		CLOSED;
+		CLOSED
 	}
 }

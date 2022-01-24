@@ -9,27 +9,28 @@ package org.hibernate.orm.test.envers.performance;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Properties;
-import jakarta.persistence.EntityManager;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
-import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.boot.internal.EnversIntegrator;
-import org.hibernate.orm.test.envers.AbstractEnversTest;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
+import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
+import org.hibernate.orm.test.envers.AbstractEnversTest;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.junit.Before;
+
+import jakarta.persistence.EntityManager;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -40,7 +41,7 @@ public abstract class AbstractEntityManagerTest extends AbstractEnversTest {
 
 	private EntityManagerFactoryBuilderImpl entityManagerFactoryBuilder;
 	private StandardServiceRegistryImpl serviceRegistry;
-	private HibernateEntityManagerFactory emf;
+	private SessionFactoryImplementor emf;
 	private EntityManager entityManager;
 	private AuditReader auditReader;
 	private boolean audited;
@@ -100,7 +101,7 @@ public abstract class AbstractEntityManagerTest extends AbstractEnversTest {
 				configurationProperties
 		);
 
-		emf = entityManagerFactoryBuilder.build().unwrap( HibernateEntityManagerFactory.class );
+		emf = entityManagerFactoryBuilder.build().unwrap( SessionFactoryImplementor.class );
 
 		serviceRegistry = (StandardServiceRegistryImpl) emf.getSessionFactory()
 				.getServiceRegistry()

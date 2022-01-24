@@ -27,16 +27,13 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.NonUniqueResultException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.ScrollMode;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
-import org.hibernate.jpa.QueryHints;
-import org.hibernate.jpa.internal.util.ConfigurationHelper;
+import org.hibernate.jpa.AvailableHints;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
@@ -52,58 +49,47 @@ import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.TypedParameterValue;
 import org.hibernate.query.internal.ScrollableResultsIterator;
 import org.hibernate.query.named.NamedQueryMemento;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
 
-import static org.hibernate.LockMode.UPGRADE;
-import static org.hibernate.LockOptions.NONE;
-import static org.hibernate.LockOptions.READ;
 import static org.hibernate.LockOptions.WAIT_FOREVER;
-import static org.hibernate.annotations.QueryHints.NATIVE_LOCKMODE;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
-import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
-import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
-import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
-import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
-import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
-import static org.hibernate.jpa.QueryHints.HINT_CACHEABLE;
-import static org.hibernate.jpa.QueryHints.HINT_CACHE_MODE;
-import static org.hibernate.jpa.QueryHints.HINT_CACHE_REGION;
-import static org.hibernate.jpa.QueryHints.HINT_COMMENT;
-import static org.hibernate.jpa.QueryHints.HINT_FETCHGRAPH;
-import static org.hibernate.jpa.QueryHints.HINT_FETCH_SIZE;
-import static org.hibernate.jpa.QueryHints.HINT_FLUSH_MODE;
-import static org.hibernate.jpa.QueryHints.HINT_FOLLOW_ON_LOCKING;
-import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
-import static org.hibernate.jpa.QueryHints.HINT_NATIVE_SPACES;
-import static org.hibernate.jpa.QueryHints.HINT_READONLY;
-import static org.hibernate.jpa.QueryHints.HINT_TIMEOUT;
-import static org.hibernate.jpa.QueryHints.JAKARTA_HINT_FETCH_GRAPH;
-import static org.hibernate.jpa.QueryHints.JAKARTA_HINT_LOAD_GRAPH;
-import static org.hibernate.jpa.QueryHints.SPEC_HINT_TIMEOUT;
+import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
+import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
+import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
+import static org.hibernate.jpa.HibernateHints.HINT_COMMENT;
+import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
+import static org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE;
+import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
+import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
+import static org.hibernate.jpa.HibernateHints.HINT_TIMEOUT;
+import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_RETRIEVE_MODE;
+import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_STORE_MODE;
+import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_SCOPE;
+import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
+import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_STORE_MODE;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_SCOPE;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractQuery<R> implements QueryImplementor<R> {
+public abstract class AbstractQuery<R>
+		extends AbstractSelectionQuery<R>
+		implements QueryImplementor<R> {
 	protected static final EntityManagerMessageLogger log = HEMLogging.messageLogger( AbstractQuery.class );
 
-	private final SharedSessionContractImplementor session;
-
 	public AbstractQuery(SharedSessionContractImplementor session) {
-		this.session = session;
+		super( session );
 	}
 
 	protected void applyOptions(NamedQueryMemento memento) {
@@ -144,22 +130,20 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		}
 	}
 
-	@Override
-	public SharedSessionContractImplementor getSession() {
-		return session;
-	}
-
-	protected abstract QueryParameterBindings getQueryParameterBindings();
-
-	@Override
-	public abstract ParameterMetadataImplementor getParameterMetadata();
-
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// QueryOptions handling
 
+
 	@Override
-	public abstract MutableQueryOptions getQueryOptions();
+	public QueryImplementor<R> setHint(String hintName, Object value) {
+		super.setHint( hintName, value );
+		return this;
+	}
+
+	@Override
+	public MutableQueryOptions getQueryOptions() {
+		return super.getQueryOptions();
+	}
 
 
 	@Override
@@ -214,13 +198,8 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public FlushMode getHibernateFlushMode() {
-		return getQueryOptions().getFlushMode();
-	}
-
-	@Override
 	public QueryImplementor<R> setHibernateFlushMode(FlushMode flushMode) {
-		getQueryOptions().setFlushMode( flushMode );
+		super.setHibernateFlushMode( flushMode );
 		return this;
 	}
 
@@ -241,70 +220,43 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public CacheMode getCacheMode() {
-		return getQueryOptions().getCacheMode();
-	}
-
-	@Override
 	public QueryImplementor<R> setCacheMode(CacheMode cacheMode) {
-		getQueryOptions().setCacheMode( cacheMode );
+		super.setCacheMode( cacheMode );
 		return this;
 	}
 
 	@Override
 	public boolean isCacheable() {
-		return getQueryOptions().isResultCachingEnabled() == Boolean.TRUE;
+		return super.isCacheable();
 	}
 
 	@Override
 	public QueryImplementor<R> setCacheable(boolean cacheable) {
-		getQueryOptions().setResultCachingEnabled( cacheable );
+		super.setCacheable( cacheable );
 		return this;
-	}
-
-	@Override
-	public String getCacheRegion() {
-		return getQueryOptions().getResultCacheRegionName();
 	}
 
 	@Override
 	public QueryImplementor<R> setCacheRegion(String cacheRegion) {
-		getQueryOptions().setResultCacheRegionName( cacheRegion );
+		super.setCacheRegion( cacheRegion );
 		return this;
-	}
-
-	@Override
-	public Integer getTimeout() {
-		return getQueryOptions().getTimeout();
 	}
 
 	@Override
 	public QueryImplementor<R> setTimeout(int timeout) {
-		getQueryOptions().setTimeout( timeout );
+		super.setTimeout( timeout );
 		return this;
-	}
-
-	@Override
-	public Integer getFetchSize() {
-		return getQueryOptions().getFetchSize();
 	}
 
 	@Override
 	public QueryImplementor<R> setFetchSize(int fetchSize) {
-		getQueryOptions().setFetchSize( fetchSize );
+		super.setFetchSize( fetchSize );
 		return this;
 	}
 
 	@Override
-	public boolean isReadOnly() {
-		return getQueryOptions().isReadOnly() == null
-				? getSession().isDefaultReadOnly()
-				: getQueryOptions().isReadOnly();
-	}
-
-	@Override
 	public QueryImplementor<R> setReadOnly(boolean readOnly) {
-		getQueryOptions().setReadOnly( readOnly );
+		super.setReadOnly( readOnly );
 		return this;
 	}
 
@@ -366,7 +318,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@SuppressWarnings( {"UnusedDeclaration"})
 	public Set<String> getSupportedHints() {
-		return QueryHints.getDefinedHints();
+		return AvailableHints.getDefinedHints();
 	}
 
 	@Override
@@ -380,27 +332,27 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		return hints;
 	}
 
-	@SuppressWarnings("deprecation")
 	protected void collectHints(Map<String, Object> hints) {
 		if ( getQueryOptions().getTimeout() != null ) {
 			hints.put( HINT_TIMEOUT, getQueryOptions().getTimeout() );
-			hints.put( SPEC_HINT_TIMEOUT, getQueryOptions().getTimeout() * 1000 );
+			hints.put( HINT_SPEC_QUERY_TIMEOUT, getQueryOptions().getTimeout() * 1000 );
+			hints.put( HINT_JAVAEE_QUERY_TIMEOUT, getQueryOptions().getTimeout() * 1000 );
 		}
 
 		if ( getLockOptions().getTimeOut() != WAIT_FOREVER ) {
-			hints.put( JPA_LOCK_TIMEOUT, getLockOptions().getTimeOut() );
-			hints.put( JAKARTA_LOCK_TIMEOUT, getLockOptions().getTimeOut() );
+			hints.put( HINT_SPEC_LOCK_TIMEOUT, getLockOptions().getTimeOut() );
+			hints.put( HINT_JAVAEE_LOCK_TIMEOUT, getLockOptions().getTimeOut() );
 		}
 
 		if ( getLockOptions().getScope() ) {
-			hints.put( JPA_LOCK_SCOPE, getLockOptions().getScope() );
-			hints.put( JAKARTA_LOCK_SCOPE, getLockOptions().getScope() );
+			hints.put( HINT_SPEC_LOCK_SCOPE, getLockOptions().getScope() );
+			hints.put( HINT_JAVAEE_LOCK_SCOPE, getLockOptions().getScope() );
 		}
 
 		if ( getLockOptions().hasAliasSpecificLockModes() ) {
 			for ( Map.Entry<String, LockMode> entry : getLockOptions().getAliasSpecificLocks() ) {
 				hints.put(
-						NATIVE_LOCKMODE + '.' + entry.getKey(),
+						HINT_NATIVE_LOCK_MODE + '.' + entry.getKey(),
 						entry.getValue().name()
 				);
 			}
@@ -412,10 +364,10 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 		if ( getCacheMode() != null ) {
 			putIfNotNull( hints, HINT_CACHE_MODE, getCacheMode() );
-			putIfNotNull( hints, JAKARTA_SHARED_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
-			putIfNotNull( hints, JAKARTA_SHARED_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
-			putIfNotNull( hints, JPA_SHARED_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
-			putIfNotNull( hints, JPA_SHARED_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
+			putIfNotNull( hints, HINT_SPEC_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
+			putIfNotNull( hints, HINT_SPEC_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
+			putIfNotNull( hints, HINT_JAVAEE_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
+			putIfNotNull( hints, HINT_JAVAEE_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
 		}
 
 		if ( isCacheable() ) {
@@ -424,7 +376,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		}
 
 		if ( isReadOnly() ) {
-			hints.put( HINT_READONLY, true );
+			hints.put( HINT_READ_ONLY, true );
 		}
 	}
 
@@ -441,307 +393,6 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		if ( hintValue != null ) {
 			hints.put( hintName, hintValue );
 		}
-	}
-
-	@Override @SuppressWarnings("deprecation")
-	public QueryImplementor<R> setHint(String hintName, Object value) {
-		getSession().checkOpen( true );
-
-		boolean applied = false;
-		try {
-			if ( HINT_TIMEOUT.equals( hintName ) ) {
-				applied = applyTimeoutHint( ConfigurationHelper.getInteger( value ) );
-			}
-			else if ( SPEC_HINT_TIMEOUT.equals( hintName ) ) {
-				// convert milliseconds to seconds
-				int timeout = (int)Math.round( ConfigurationHelper.getInteger( value ).doubleValue() / 1000.0 );
-				applied = applyTimeoutHint( timeout );
-			}
-			else if ( JPA_LOCK_TIMEOUT.equals( hintName ) ) {
-				applied = applyLockTimeoutHint( ConfigurationHelper.getInteger( value ) );
-			}
-			else if ( HINT_COMMENT.equals( hintName ) ) {
-				applied = applyCommentHint( (String) value );
-			}
-			else if ( HINT_FETCH_SIZE.equals( hintName ) ) {
-				applied = applyFetchSizeHint( ConfigurationHelper.getInteger( value ) );
-			}
-			else if ( HINT_CACHEABLE.equals( hintName ) ) {
-				applied = applyCacheableHint( ConfigurationHelper.getBoolean( value ) );
-			}
-			else if ( HINT_CACHE_REGION.equals( hintName ) ) {
-				applied = applyCacheRegionHint( (String) value );
-			}
-			else if ( HINT_READONLY.equals( hintName ) ) {
-				applied = applyReadOnlyHint( ConfigurationHelper.getBoolean( value ) );
-			}
-			else if ( HINT_FLUSH_MODE.equals( hintName ) ) {
-				applied = applyFlushModeHint( ConfigurationHelper.getFlushMode( value ) );
-			}
-			else if ( HINT_CACHE_MODE.equals( hintName ) ) {
-				applied = applyCacheModeHint( ConfigurationHelper.getCacheMode( value ) );
-			}
-			else if ( JAKARTA_SHARED_CACHE_RETRIEVE_MODE.equals( hintName ) ) {
-				final CacheRetrieveMode retrieveMode = value != null ? CacheRetrieveMode.valueOf( value.toString() ) : null;
-				applied = applyJpaCacheRetrieveMode( retrieveMode );
-			}
-			else if ( JAKARTA_SHARED_CACHE_STORE_MODE.equals( hintName ) ) {
-				final CacheStoreMode storeMode = value != null ? CacheStoreMode.valueOf( value.toString() ) : null;
-				applied = applyJpaCacheStoreMode( storeMode );
-			}
-			else if ( JPA_SHARED_CACHE_RETRIEVE_MODE.equals( hintName ) ) {
-				final CacheRetrieveMode retrieveMode = value != null ? CacheRetrieveMode.valueOf( value.toString() ) : null;
-				applied = applyJpaCacheRetrieveMode( retrieveMode );
-			}
-			else if ( JPA_SHARED_CACHE_STORE_MODE.equals( hintName ) ) {
-				final CacheStoreMode storeMode = value != null ? CacheStoreMode.valueOf( value.toString() ) : null;
-				applied = applyJpaCacheStoreMode( storeMode );
-			}
-			else if ( QueryHints.HINT_NATIVE_LOCKMODE.equals( hintName ) ) {
-				applied = applyNativeQueryLockMode( value );
-			}
-			else if ( hintName.startsWith( NATIVE_LOCKMODE ) ) {
-				// extract the alias
-				final String alias = hintName.substring( NATIVE_LOCKMODE.length() + 1 );
-				// determine the LockMode
-				try {
-					final LockMode lockMode = LockModeTypeHelper.interpretLockMode( value );
-					applyAliasSpecificLockModeHint( alias, lockMode );
-					applied = true;
-				}
-				catch ( Exception e ) {
-					log.unableToDetermineLockModeValue( hintName, value );
-					applied = false;
-				}
-			}
-			else if ( JAKARTA_HINT_FETCH_GRAPH.equals( hintName ) || JAKARTA_HINT_LOAD_GRAPH.equals( hintName ) ) {
-				if ( value instanceof RootGraphImplementor ) {
-					applyEntityGraphQueryHint( hintName, (RootGraphImplementor<?>) value );
-				}
-				else {
-					// https://hibernate.atlassian.net/browse/HHH-14855 - accepting a String parseable
-					// via the Graph Language parser here would be a nice feature
-					log.warnf( "The %s hint was set, but the value was not an EntityGraph!", hintName );
-				}
-				applied = true;
-			}
-			else if ( HINT_FETCHGRAPH.equals( hintName ) || HINT_LOADGRAPH.equals( hintName ) ) {
-				if ( HINT_FETCHGRAPH.equals( hintName ) ) {
-					DEPRECATION_LOGGER.deprecatedSetting( HINT_FETCHGRAPH, JAKARTA_HINT_FETCH_GRAPH );
-				}
-				else {
-					DEPRECATION_LOGGER.deprecatedSetting( HINT_FETCHGRAPH, JAKARTA_HINT_FETCH_GRAPH );
-				}
-
-				if ( value instanceof RootGraphImplementor ) {
-					applyEntityGraphQueryHint( hintName, (RootGraphImplementor<?>) value );
-				}
-				else {
-					// https://hibernate.atlassian.net/browse/HHH-14855 - accepting a String parseable
-					// via the Graph Language parser here would be a nice feature
-					log.warnf( "The %s hint was set, but the value was not an EntityGraph!", hintName );
-				}
-				applied = true;
-			}
-
-
-			else if ( HINT_FOLLOW_ON_LOCKING.equals( hintName ) ) {
-				applied = applyFollowOnLockingHint( ConfigurationHelper.getBoolean( value ) );
-			}
-			else if ( HINT_NATIVE_SPACES.equals( hintName ) ) {
-				applied = applySynchronizeSpacesHint( value );
-			}
-			else {
-				log.ignoringUnrecognizedQueryHint( hintName );
-			}
-		}
-		catch ( ClassCastException e ) {
-			throw new IllegalArgumentException( "Value for hint" );
-		}
-
-		if ( !applied ) {
-			log.debugf( "Skipping unsupported query hint [%s]", hintName );
-		}
-
-		return this;
-	}
-
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyJpaCacheRetrieveMode(CacheRetrieveMode retrieveMode) {
-		getQueryOptions().setCacheRetrieveMode( retrieveMode );
-		return true;
-	}
-
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyJpaCacheStoreMode(CacheStoreMode storeMode) {
-		getQueryOptions().setCacheStoreMode( storeMode );
-		return true;
-	}
-
-	protected boolean applyNativeQueryLockMode(Object value) {
-		return false;
-	}
-
-	protected boolean applySynchronizeSpacesHint(Object value) {
-		return false;
-	}
-
-	/**
-	 * Apply the query timeout hint.
-	 *
-	 * @param timeout The timeout (in seconds!) specified as a hint
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyTimeoutHint(int timeout) {
-		setTimeout( timeout );
-		return true;
-	}
-
-	/**
-	 * Apply the lock timeout (in seconds!) hint
-	 *
-	 * @param timeout The timeout (in seconds!) specified as a hint
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyLockTimeoutHint(int timeout) {
-		getLockOptions().setTimeOut( timeout );
-		return true;
-	}
-
-	/**
-	 * Apply the comment hint.
-	 *
-	 * @param comment The comment specified as a hint
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyCommentHint(String comment) {
-		setComment( comment );
-		return true;
-	}
-
-	/**
-	 * Apply the fetch size hint
-	 *
-	 * @param fetchSize The fetch size specified as a hint
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyFetchSizeHint(int fetchSize) {
-		setFetchSize( fetchSize );
-		return true;
-	}
-
-	/**
-	 * Apply the cacheable (true/false) hint.
-	 *
-	 * @param isCacheable The value specified as hint
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyCacheableHint(boolean isCacheable) {
-		setCacheable( isCacheable );
-		return true;
-	}
-
-	/**
-	 * Apply the cache region hint
-	 *
-	 * @param regionName The name of the cache region specified as a hint
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyCacheRegionHint(String regionName) {
-		setCacheRegion( regionName );
-		return true;
-	}
-
-	/**
-	 * Apply the read-only (true/false) hint.
-	 *
-	 * @param isReadOnly The value specified as hint
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyReadOnlyHint(boolean isReadOnly) {
-		setReadOnly( isReadOnly );
-		return true;
-	}
-
-	/**
-	 * Apply the CacheMode hint.
-	 *
-	 * @param cacheMode The CacheMode value specified as a hint.
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyCacheModeHint(CacheMode cacheMode) {
-		setCacheMode( cacheMode );
-		return true;
-	}
-
-	/**
-	 * Apply the FlushMode hint.
-	 *
-	 * @param flushMode The FlushMode value specified as hint
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyFlushModeHint(FlushMode flushMode) {
-		setHibernateFlushMode( flushMode );
-		return true;
-	}
-
-	@SuppressWarnings( "UnusedReturnValue" )
-	protected boolean applyLockModeTypeHint(LockModeType lockModeType) {
-		getLockOptions().setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
-		return true;
-	}
-
-	@SuppressWarnings({"UnusedReturnValue", "deprecation"})
-	protected boolean applyHibernateLockModeHint(LockMode lockMode) {
-		//TODO: this method is a noop. Delete it?
-		final LockOptions lockOptions;
-		if ( lockMode == LockMode.NONE ) {
-			lockOptions = NONE;
-		}
-		else if ( lockMode == LockMode.READ ) {
-			lockOptions = READ;
-		}
-		else if ( lockMode == UPGRADE || lockMode == LockMode.PESSIMISTIC_WRITE ) {
-			lockOptions = LockOptions.UPGRADE;
-		}
-
-		return true;
-	}
-
-	@SuppressWarnings("WeakerAccess")
-	protected void applyAliasSpecificLockModeHint(String alias, LockMode lockMode) {
-		setLockMode( alias, lockMode );
-	}
-
-	protected abstract void applyEntityGraphQueryHint(String hintName, RootGraphImplementor<?> entityGraph);
-
-	/**
-	 * Apply the follow-on-locking hint.
-	 *
-	 * @param followOnLocking The follow-on-locking strategy.
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyFollowOnLockingHint(Boolean followOnLocking) {
-		getLockOptions().setFollowOnLocking( followOnLocking );
-		return true;
 	}
 
 
@@ -761,7 +412,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public Parameter<?> getParameter(String name) {
+	public QueryParameterImplementor<?> getParameter(String name) {
 		getSession().checkOpen( false );
 
 		try {
@@ -774,12 +425,12 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> Parameter<T> getParameter(String name, Class<T> type) {
+	public <T> QueryParameterImplementor<T> getParameter(String name, Class<T> type) {
 		getSession().checkOpen( false );
 
 		try {
 			//noinspection rawtypes
-			final QueryParameter parameter = getParameterMetadata().getQueryParameter( name );
+			final QueryParameterImplementor parameter = getParameterMetadata().getQueryParameter( name );
 			if ( !parameter.getParameterType().isAssignableFrom( type ) ) {
 				throw new IllegalArgumentException(
 						"The type [" + parameter.getParameterType().getName() +
@@ -795,7 +446,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public Parameter<?> getParameter(int position) {
+	public QueryParameterImplementor<?> getParameter(int position) {
 		getSession().checkOpen( false );
 
 		try {
@@ -808,11 +459,11 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	@SuppressWarnings( {"unchecked", "rawtypes"} )
-	public <T> Parameter<T> getParameter(int position, Class<T> type) {
+	public <T> QueryParameterImplementor<T> getParameter(int position, Class<T> type) {
 		getSession().checkOpen( false );
 
 		try {
-			final QueryParameter parameter = getParameterMetadata().getQueryParameter( position );
+			final QueryParameterImplementor parameter = getParameterMetadata().getQueryParameter( position );
 			if ( !parameter.getParameterType().isAssignableFrom( type ) ) {
 				throw new IllegalArgumentException(
 						"The type [" + parameter.getParameterType().getName() +
@@ -902,7 +553,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		return qp != null && getQueryParameterBindings().isBound( qp );
 	}
 
-	@SuppressWarnings( {"WeakerAccess", "unchecked", "rawtypes"} )
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	protected <P> QueryParameterBinding<P> locateBinding(Parameter<P> parameter) {
 		if ( parameter instanceof QueryParameterImplementor ) {
 			return locateBinding( (QueryParameterImplementor) parameter );
@@ -919,19 +570,16 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		);
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected <P> QueryParameterBinding<P> locateBinding(QueryParameterImplementor<P> parameter) {
 		getSession().checkOpen();
 		return getQueryParameterBindings().getBinding( parameter );
 	}
 
-	@SuppressWarnings( {"WeakerAccess"} )
 	protected <P> QueryParameterBinding<P> locateBinding(String name) {
 		getSession().checkOpen();
 		return getQueryParameterBindings().getBinding( name );
 	}
 
-	@SuppressWarnings( {"WeakerAccess"} )
 	protected <P> QueryParameterBinding<P> locateBinding(int position) {
 		getSession().checkOpen();
 		return getQueryParameterBindings().getBinding( position );
@@ -987,24 +635,24 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	private boolean isInstance(BindableType<?> parameterType, Object value) {
-		final SqmExpressable<?> sqmExpressable = parameterType.resolveExpressable( session.getFactory() );
-		assert sqmExpressable != null;
+		final SqmExpressible<?> sqmExpressible = parameterType.resolveExpressible( getSession().getFactory() );
+		assert sqmExpressible != null;
 
-		return sqmExpressable.getExpressableJavaTypeDescriptor().isInstance( value );
+		return sqmExpressible.getExpressibleJavaType().isInstance( value );
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameter(String name, P value, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
+	public <P> QueryImplementor<R> setParameter(String name, P value, Class<P> javaTypeClass) {
+		final JavaType<P> javaType = getSession().getFactory()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( javaType );
-		if ( javaDescriptor == null ) {
+				.getJavaTypeRegistry()
+				.getDescriptor( javaTypeClass );
+		if ( javaType == null ) {
 			setParameter( name, value );
 		}
 		else {
 			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaTypeClass );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
@@ -1012,12 +660,12 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
 						.getRuntimeMetamodels()
 						.getJpaMetamodel()
-						.managedType( javaType );
+						.managedType( javaTypeClass );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaTypeClass.getName() );
 				}
 			}
 
@@ -1074,17 +722,17 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameter(int position, P value, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
+	public <P> QueryImplementor<R> setParameter(int position, P value, Class<P> javaTypeClass) {
+		final JavaType<P> javaType = getSession().getFactory()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( javaType );
-		if ( javaDescriptor == null ) {
+				.getJavaTypeRegistry()
+				.getDescriptor( javaTypeClass );
+		if ( javaType == null ) {
 			setParameter( position, value );
 		}
 		else {
 			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaTypeClass );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
@@ -1092,12 +740,12 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
 						.getRuntimeMetamodels()
 						.getJpaMetamodel()
-						.managedType( javaType );
+						.managedType( javaTypeClass );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaTypeClass.getName() );
 				}
 			}
 
@@ -1128,17 +776,17 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
+	public <P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Class<P> javaTypeClass) {
+		final JavaType<P> javaType = getSession().getFactory()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( javaType );
-		if ( javaDescriptor == null ) {
+				.getJavaTypeRegistry()
+				.getDescriptor( javaTypeClass );
+		if ( javaType == null ) {
 			setParameter( parameter, value );
 		}
 		else {
 			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaTypeClass );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
@@ -1146,12 +794,12 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
 						.getRuntimeMetamodels()
 						.getJpaMetamodel()
-						.managedType( javaType );
+						.managedType( javaTypeClass );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaTypeClass.getName() );
 				}
 			}
 
@@ -1217,17 +865,17 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		return this;
 	}
 
-	public <P> QueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
+	public <P> QueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaTypeClass) {
+		final JavaType<P> javaType = getSession().getFactory()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( javaType );
-		if ( javaDescriptor == null ) {
+				.getJavaTypeRegistry()
+				.getDescriptor( javaTypeClass );
+		if ( javaType == null ) {
 			setParameterList( name, values );
 		}
 		else {
 			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaTypeClass );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
@@ -1235,12 +883,12 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
 						.getRuntimeMetamodels()
 						.getJpaMetamodel()
-						.managedType( javaType );
+						.managedType( javaTypeClass );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaTypeClass.getName() );
 				}
 			}
 
@@ -1264,17 +912,17 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameterList(String name, P[] values, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
+	public <P> QueryImplementor<R> setParameterList(String name, P[] values, Class<P> javaTypeClass) {
+		final JavaType<P> javaType = getSession().getFactory()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( javaType );
-		if ( javaDescriptor == null ) {
+				.getJavaTypeRegistry()
+				.getDescriptor( javaTypeClass );
+		if ( javaType == null ) {
 			setParameterList( name, values );
 		}
 		else {
 			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaTypeClass );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
@@ -1282,12 +930,12 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
 						.getRuntimeMetamodels()
 						.getJpaMetamodel()
-						.managedType( javaType );
+						.managedType( javaTypeClass );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaTypeClass.getName() );
 				}
 			}
 
@@ -1309,17 +957,17 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
+	public <P> QueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaTypeClass) {
+		final JavaType<P> javaType = getSession().getFactory()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( javaType );
-		if ( javaDescriptor == null ) {
+				.getJavaTypeRegistry()
+				.getDescriptor( javaTypeClass );
+		if ( javaType == null ) {
 			setParameterList( position, values );
 		}
 		else {
 			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaTypeClass );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
@@ -1327,12 +975,12 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
 						.getRuntimeMetamodels()
 						.getJpaMetamodel()
-						.managedType( javaType );
+						.managedType( javaTypeClass );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaTypeClass.getName() );
 				}
 			}
 
@@ -1355,17 +1003,17 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameterList(int position, P[] values, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
+	public <P> QueryImplementor<R> setParameterList(int position, P[] values, Class<P> javaTypeClass) {
+		final JavaType<P> javaType = getSession().getFactory()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( javaType );
-		if ( javaDescriptor == null ) {
+				.getJavaTypeRegistry()
+				.getDescriptor( javaTypeClass );
+		if ( javaType == null ) {
 			setParameterList( position, values );
 		}
 		else {
 			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaTypeClass );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
@@ -1373,12 +1021,12 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
 						.getRuntimeMetamodels()
 						.getJpaMetamodel()
-						.managedType( javaType );
+						.managedType( javaTypeClass );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaTypeClass.getName() );
 				}
 			}
 
@@ -1408,17 +1056,17 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
+	public <P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaTypeClass) {
+		final JavaType<P> javaType = getSession().getFactory()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( javaType );
-		if ( javaDescriptor == null ) {
+				.getJavaTypeRegistry()
+				.getDescriptor( javaTypeClass );
+		if ( javaType == null ) {
 			setParameterList( parameter, values );
 		}
 		else {
 			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaTypeClass );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
@@ -1426,12 +1074,12 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
 						.getRuntimeMetamodels()
 						.getJpaMetamodel()
-						.managedType( javaType );
+						.managedType( javaTypeClass );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaTypeClass.getName() );
 				}
 			}
 
@@ -1454,17 +1102,17 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
+	public <P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaTypeClass) {
+		final JavaType<P> javaType = getSession().getFactory()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( javaType );
-		if ( javaDescriptor == null ) {
+				.getJavaTypeRegistry()
+				.getDescriptor( javaTypeClass );
+		if ( javaType == null ) {
 			setParameterList( parameter, values );
 		}
 		else {
 			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaTypeClass );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
@@ -1472,12 +1120,12 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
 						.getRuntimeMetamodels()
 						.getJpaMetamodel()
-						.managedType( javaType );
+						.managedType( javaTypeClass );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaTypeClass.getName() );
 				}
 			}
 
@@ -1595,7 +1243,6 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		return this;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected BindableType<Object> determineType(String namedParam, Class<?> retType) {
 		BindableType<?> type = locateBinding( namedParam ).getBindType();
 		if ( type == null ) {
@@ -1632,7 +1279,6 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		return this;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void afterQuery(boolean success) {
 		if ( sessionFlushMode != null ) {
 			getSession().setHibernateFlushMode( sessionFlushMode );
@@ -1642,10 +1288,10 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			getSession().setCacheMode( sessionCacheMode );
 			sessionCacheMode = null;
 		}
-		if ( !session.isTransactionInProgress() ) {
-			session.getJdbcCoordinator().getLogicalConnection().afterTransaction();
+		if ( !getSession().isTransactionInProgress() ) {
+			getSession().getJdbcCoordinator().getLogicalConnection().afterTransaction();
 		}
-		session.afterOperation( success );
+		getSession().afterOperation( success );
 	}
 
 	@Override
@@ -1675,7 +1321,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public R uniqueResult() {
-		return uniqueElement( list() );
+		return (R) uniqueElement( list() );
 	}
 
 	@Override
@@ -1685,27 +1331,11 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			if ( list.isEmpty() ) {
 				throw new NoResultException( "No entity found for query" );
 			}
-			return uniqueElement( list );
+			return (R) uniqueElement( list );
 		}
 		catch ( HibernateException e ) {
 			throw getSession().getExceptionConverter().convert( e, getLockOptions() );
 		}
-	}
-
-	@SuppressWarnings("WeakerAccess")
-	public static <R> R uniqueElement(List<R> list) throws NonUniqueResultException {
-		int size = list.size();
-		if ( size == 0 ) {
-			return null;
-		}
-		R first = list.get( 0 );
-		// todo (6.0) : add a setting here to control whether to perform this validation or not
-		for ( int i = 1; i < size; i++ ) {
-			if ( list.get( i ) != first ) {
-				throw new NonUniqueResultException( list.size() );
-			}
-		}
-		return first;
 	}
 
 	@Override

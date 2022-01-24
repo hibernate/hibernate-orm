@@ -21,7 +21,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public abstract class AbstractEmbeddableRepresentationStrategy implements EmbeddableRepresentationStrategy {
-	private final JavaType<?> embeddableJavaTypeDescriptor;
+	private final JavaType<?> embeddableJavaType;
 
 	private final int propertySpan;
 	private final PropertyAccess[] propertyAccesses;
@@ -31,10 +31,10 @@ public abstract class AbstractEmbeddableRepresentationStrategy implements Embedd
 
 	public AbstractEmbeddableRepresentationStrategy(
 			Component bootDescriptor,
-			JavaType<?> embeddableJavaTypeDescriptor,
+			JavaType<?> embeddableJavaType,
 			RuntimeModelCreationContext creationContext) {
 		this.propertySpan = bootDescriptor.getPropertySpan();
-		this.embeddableJavaTypeDescriptor = embeddableJavaTypeDescriptor;
+		this.embeddableJavaType = embeddableJavaType;
 
 		this.propertyAccesses = new PropertyAccess[ propertySpan ];
 		this.attributeNameToPositionMap = new ConcurrentHashMap<>( propertySpan );
@@ -59,13 +59,13 @@ public abstract class AbstractEmbeddableRepresentationStrategy implements Embedd
 
 	protected abstract PropertyAccess buildPropertyAccess(Property bootAttributeDescriptor);
 
-	public JavaType<?> getEmbeddableJavaTypeDescriptor() {
-		return embeddableJavaTypeDescriptor;
+	public JavaType<?> getEmbeddableJavaType() {
+		return embeddableJavaType;
 	}
 
 	@Override
-	public JavaType<?> getMappedJavaTypeDescriptor() {
-		return getEmbeddableJavaTypeDescriptor();
+	public JavaType<?> getMappedJavaType() {
+		return getEmbeddableJavaType();
 	}
 
 	public int getPropertySpan() {

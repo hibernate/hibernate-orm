@@ -27,6 +27,7 @@ import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.named.NameableQuery;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.transform.ResultTransformer;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.FlushModeType;
@@ -54,9 +55,23 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 		return null;
 	}
 
+	/**
+	 * Best guess whether this is a select query.  {@code null}
+	 * indicates unknown
+	 */
+	Boolean isSelectQuery();
+
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// covariant overrides - NativeQuery
 
+
+	@Override
+	default <T> NativeQueryImplementor<T> setResultTransformer(ResultTransformer<T> transformer) {
+		QueryImplementor.super.setResultTransformer( transformer );
+		//noinspection unchecked
+		return (NativeQueryImplementor<T>) this;
+	}
 
 	@Override
 	NamedNativeQueryMemento toMemento(String name);

@@ -28,7 +28,7 @@ import org.hibernate.testing.DialectCheck;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings({"WeakerAccess", "unused"})
+@SuppressWarnings("unused")
 public class ConnectionProviderBuilder implements DialectCheck {
 	public static final String DRIVER = "org.h2.Driver";
 	public static final String DATA_SOURCE = "org.h2.jdbcx.JdbcDataSource";

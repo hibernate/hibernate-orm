@@ -19,10 +19,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Simplified form for describing the discriminator value mapping as a discrete
  * set.  Follows the pattern of JPA's {@link DiscriminatorColumn#discriminatorType()}.
- *
+ * <p/>
  * Can be used in conjunction with {@link JdbcType} or {@link JdbcTypeCode} to
  * further describe the underlying mapping.  {@link JdbcType} or {@link JdbcTypeCode}
  * can also be used without AnyDiscriminator.
+ *
+ * @see Any
  *
  * @since 6.0
  */

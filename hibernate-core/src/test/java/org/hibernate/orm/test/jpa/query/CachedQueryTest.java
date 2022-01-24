@@ -12,7 +12,6 @@ import java.util.Map;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.jpa.QueryHints;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.TestForIssue;
@@ -26,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.TypedQuery;
 
+import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
@@ -86,7 +86,7 @@ public class CachedQueryTest {
 		scope.inTransaction(
 				em -> {
 					TypedQuery<Employee> query = em.createQuery( "select e from Employee e", Employee.class )
-							.setHint( QueryHints.HINT_CACHEABLE, true );
+							.setHint( HINT_CACHEABLE, true );
 					List<Employee> employees = query.getResultList();
 					assertEquals( 10, employees.size() );
 					assertEquals( 0, stats.getQueryCacheHitCount() );
@@ -109,7 +109,7 @@ public class CachedQueryTest {
 		scope.inTransaction(
 				em -> {
 					TypedQuery<Employee> query = em.createQuery( "select e from Employee e", Employee.class )
-							.setHint( QueryHints.HINT_CACHEABLE, true );
+							.setHint( HINT_CACHEABLE, true );
 					List<Employee> employees = query.getResultList();
 					assertEquals( 10, employees.size() );
 					assertEquals( 1, stats.getQueryCacheHitCount() );
@@ -133,7 +133,7 @@ public class CachedQueryTest {
 		scope.inTransaction(
 				em -> {
 					TypedQuery<Employee> query = em.createQuery( "select e from Employee e", Employee.class )
-							.setHint( QueryHints.HINT_CACHEABLE, true );
+							.setHint( HINT_CACHEABLE, true );
 					List<Employee> employees = query.getResultList();
 					assertEquals( 10, employees.size() );
 					// query is still found in the cache
@@ -164,7 +164,7 @@ public class CachedQueryTest {
 					em.getTransaction().begin();
 					try {
 						TypedQuery<Employee> query = em.createQuery( "select e from Employee e", Employee.class )
-								.setHint( QueryHints.HINT_CACHEABLE, true );
+								.setHint( HINT_CACHEABLE, true );
 						List<Employee> employees = query.getResultList();
 						assertEquals( 10, employees.size() );
 						// query is no longer found in the cache

@@ -8,7 +8,6 @@ package org.hibernate.orm.test.bootstrap.binding.annotations.basics;
 
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.Date;
 import java.util.Iterator;
 
 import jakarta.persistence.TemporalType;
@@ -17,7 +16,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.type.descriptor.java.IntegerJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.IntegerJavaType;
 import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
 
 import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
@@ -45,8 +44,8 @@ public class SimpleEntityTypeResolutionsTests {
 			final BasicValue identifier = (BasicValue) simpleEntityBinding.getIdentifier();
 			assertThat( identifier.isValid( scope.getDomainModel() ), is( true ) );
 			final BasicValue.Resolution<?> resolution = identifier.resolve();
-			assertSame( IntegerJavaTypeDescriptor.INSTANCE, resolution.getDomainJavaDescriptor() );
-			assertSame( IntegerJdbcType.INSTANCE, resolution.getJdbcTypeDescriptor() );
+			assertSame( IntegerJavaType.INSTANCE, resolution.getDomainJavaType() );
+			assertSame( IntegerJdbcType.INSTANCE, resolution.getJdbcType() );
 			assertThat( resolution.getJdbcMapping(), sameInstance( resolution.getLegacyResolvedBasicType() ) );
 		}
 
@@ -61,7 +60,7 @@ public class SimpleEntityTypeResolutionsTests {
 			switch ( property.getName() ) {
 				case "someDate": {
 					assertThat(
-							propertyResolution.getDomainJavaDescriptor().getJavaTypeClass(),
+							propertyResolution.getDomainJavaType().getJavaTypeClass(),
 							sameInstance( Timestamp.class )
 					);
 					assertThat( propertyValue.getTemporalPrecision(), is( TemporalType.TIMESTAMP ) );
@@ -69,7 +68,7 @@ public class SimpleEntityTypeResolutionsTests {
 				}
 				case "someInstant": {
 					assertThat(
-							propertyResolution.getDomainJavaDescriptor().getJavaTypeClass(),
+							propertyResolution.getDomainJavaType().getJavaTypeClass(),
 							sameInstance( Instant.class )
 					);
 					assertThat( propertyValue.getTemporalPrecision(), nullValue() );
@@ -77,21 +76,21 @@ public class SimpleEntityTypeResolutionsTests {
 				}
 				case "someInteger": {
 					assertThat(
-							propertyResolution.getDomainJavaDescriptor().getJavaTypeClass(),
+							propertyResolution.getDomainJavaType().getJavaTypeClass(),
 							sameInstance( Integer.class )
 					);
 					break;
 				}
 				case "someLong": {
 					assertThat(
-							propertyResolution.getDomainJavaDescriptor().getJavaTypeClass(),
+							propertyResolution.getDomainJavaType().getJavaTypeClass(),
 							sameInstance( Long.class )
 					);
 					break;
 				}
 				case "someString": {
 					assertThat(
-							propertyResolution.getDomainJavaDescriptor().getJavaTypeClass(),
+							propertyResolution.getDomainJavaType().getJavaTypeClass(),
 							sameInstance( String.class )
 					);
 					break;

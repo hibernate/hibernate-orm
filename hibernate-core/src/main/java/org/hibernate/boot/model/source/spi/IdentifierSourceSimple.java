@@ -7,8 +7,8 @@
 package org.hibernate.boot.model.source.spi;
 
 /**
- * Additional contract describing the source of an identifier mapping whose {@link #getNature() nature} is
- * {@link org.hibernate.id.EntityIdentifierNature#SIMPLE simple}.
+ * Additional contract describing the source of an identifier mapping whose {@linkplain #getNature() nature} is
+ * {@linkplain org.hibernate.id.EntityIdentifierNature#SIMPLE simple}.
  *
  * @author Steve Ebersole
  */
@@ -18,13 +18,13 @@ public interface IdentifierSourceSimple extends IdentifierSource {
 	 *
 	 * @return The identifier attribute source.
 	 */
-	public SingularAttributeSource getIdentifierAttributeSource();
+	SingularAttributeSource getIdentifierAttributeSource();
 
 	/**
 	 *  Returns the "unsaved" entity identifier value.
 	 *
 	 *  @return the "unsaved" entity identifier value
 	 */
-	public String getUnsavedValue();
+	String getUnsavedValue();
 
 }

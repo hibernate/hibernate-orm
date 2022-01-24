@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -39,7 +40,6 @@ import org.hibernate.internal.AbstractSharedSessionContract;
 import org.hibernate.internal.util.MathHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.BindableType;
@@ -99,7 +99,7 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.metamodel.SingularAttribute;
 
-import static org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE;
+import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
 
 /**
  * @author Steve Ebersole
@@ -118,10 +118,12 @@ public class NativeQueryImpl<R>
 
 	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
 
+	private Boolean startsWithSelect;
 	private Set<String> querySpaces;
 	private Callback callback;
 
 	private Object collectionKey;
+
 
 	/**
 	 * Constructs a NativeQueryImpl given a sql query defined in the mappings.
@@ -190,11 +192,7 @@ public class NativeQueryImpl<R>
 		this.sqlString = parameterInterpretation.getAdjustedSqlString();
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		this.parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
-		this.parameterBindings = QueryParameterBindingsImpl.from(
-				parameterMetadata,
-				session.getFactory(),
-				session.isQueryParametersValidationEnabled()
-		);
+		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
 		this.querySpaces = new HashSet<>();
 
 		this.resultSetMapping = resultSetMappingCreator.get();
@@ -327,11 +325,7 @@ public class NativeQueryImpl<R>
 		this.sqlString = parameterInterpretation.getAdjustedSqlString();
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		this.parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
-		this.parameterBindings = QueryParameterBindingsImpl.from(
-				parameterMetadata,
-				session.getFactory(),
-				session.isQueryParametersValidationEnabled()
-		);
+		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
 		this.querySpaces = new HashSet<>();
 
 		this.resultSetMapping = new ResultSetMappingImpl( resultSetMappingMemento.getName() );
@@ -386,11 +380,7 @@ public class NativeQueryImpl<R>
 		this.sqlString = parameterInterpretation.getAdjustedSqlString();
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		this.parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
-		this.parameterBindings = QueryParameterBindingsImpl.from(
-				parameterMetadata,
-				session.getFactory(),
-				session.isQueryParametersValidationEnabled()
-		);
+		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
 
 		this.resultSetMapping = new ResultSetMappingImpl( sqlString, true );
 		this.resultMappingSuppliedToCtor = false;
@@ -497,8 +487,23 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	protected void applyGraph(String graphString, GraphSemantic graphSemantic) {
+		throw new HibernateException( "A native SQL query cannot use EntityGraphs" );
+	}
+
+	@Override
+	protected void applyGraph(RootGraphImplementor<?> entityGraph, GraphSemantic graphSemantic) {
+		throw new HibernateException( "A native SQL query cannot use EntityGraphs" );
+	}
+
+	@Override
 	public Query<R> applyGraph(@SuppressWarnings("rawtypes") RootGraph graph, GraphSemantic semantic) {
 		throw new HibernateException( "A native SQL query cannot use EntityGraphs" );
+	}
+
+	@Override
+	protected void applyEntityGraphHint(String hintName, Object value) {
+		super.applyEntityGraphHint( hintName, value );
 	}
 
 	@Override
@@ -511,15 +516,29 @@ public class NativeQueryImpl<R>
 		return (NativeQueryImplementor<R>) super.setResultListTransformer( transformer );
 	}
 
-	protected Boolean isSelectQuery() {
+	@Override
+	public Boolean isSelectQuery() {
 		if ( resultMappingSuppliedToCtor
 				|| resultSetMapping.getNumberOfResultBuilders() > 0
 				|| isReadOnly() ) {
 			return true;
 		}
 
+		if ( startsWithSelect() ) {
+			// as a last resort, see if the SQL starts with "select"
+			return true;
+		}
+
 		return null;
 	}
+
+	private boolean startsWithSelect() {
+		if ( startsWithSelect == null ) {
+			startsWithSelect = sqlString.toLowerCase( Locale.ROOT ).startsWith( "select " );
+		}
+		return startsWithSelect;
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Execution
@@ -781,7 +800,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
+	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
 		return resolveSelectQueryPlan().performScroll( scrollMode, this );
 	}
 
@@ -1014,6 +1033,7 @@ public class NativeQueryImpl<R>
 		return querySpaces;
 	}
 
+
 	@Override
 	public NativeQueryImplementor<R> addSynchronizedQuerySpace(String querySpace) {
 		addQuerySpaces( querySpace );
@@ -1140,17 +1160,20 @@ public class NativeQueryImpl<R>
 	protected void collectHints(Map<String, Object> hints) {
 		super.collectHints( hints );
 
-		putIfNotNull( hints, HINT_NATIVE_LOCKMODE, getLockOptions().getLockMode() );
+		putIfNotNull( hints, HINT_NATIVE_LOCK_MODE, getLockOptions().getLockMode() );
 	}
 
-	@Override
-	protected boolean applySynchronizeSpacesHint(Object value) {
+	protected void applySynchronizeSpacesHint(Object value) {
+		applySynchronizeSpace( value );
+	}
+
+	protected void applySynchronizeSpace(Object value) {
 		if ( value instanceof String ) {
 			addSynchronizedQuerySpace( (String) value );
 		}
 		else if ( value instanceof String[] ) {
 			for (String string : (String[]) value) {
-				addSynchronizedQuerySpace(string);
+				addSynchronizedQuerySpace( string );
 			}
 		}
 		else if ( value instanceof Class ) {
@@ -1158,53 +1181,20 @@ public class NativeQueryImpl<R>
 		}
 		else if ( value instanceof Class[] ) {
 			for (Class<?> aClass : (Class<?>[]) value) {
-				addSynchronizedEntityClass(aClass);
+				addSynchronizedEntityClass( aClass );
 			}
 		}
 		else if ( value instanceof List ) {
 			final List<?> list = (List<?>) value;
-			list.forEach( this::applySynchronizeSpacesHint );
+			list.forEach( this::applySynchronizeSpace );
 		}
 		else if ( value instanceof Collection ) {
 			final Collection<?> values = (Collection<?>) value;
 			for ( Object element : values ) {
-				applySynchronizeSpacesHint( element );
+				applySynchronizeSpace( element );
 			}
 		}
-		else {
-			return false;
-		}
-
-		return true;
 	}
-
-	@Override
-	protected boolean applyNativeQueryLockMode(Object value) {
-		if ( value instanceof LockMode ) {
-			applyHibernateLockModeHint( (LockMode) value );
-		}
-		else if ( value instanceof LockModeType ) {
-			applyLockModeTypeHint( (LockModeType) value );
-		}
-		else if ( value instanceof String ) {
-			applyHibernateLockModeHint( LockModeTypeHelper.interpretLockMode( value ) );
-		}
-		else {
-			throw new IllegalArgumentException(
-					String.format(
-							"Native lock-mode hint [%s] must specify %s or %s.  Encountered type : %s",
-							HINT_NATIVE_LOCKMODE,
-							LockMode.class.getName(),
-							LockModeType.class.getName(),
-							value.getClass().getName()
-					)
-			);
-		}
-
-		return true;
-	}
-
-
 
 
 	@Override
@@ -1214,8 +1204,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameter(String name, P value, Class<P> javaType) {
-		super.setParameter( name, value, javaType );
+	public <P> NativeQueryImplementor<R> setParameter(String name, P value, Class<P> javaTypeClass) {
+		super.setParameter( name, value, javaTypeClass );
 		return this;
 	}
 
@@ -1250,8 +1240,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameter(int position, P value, Class<P> javaType) {
-		super.setParameter( position, value, javaType );
+	public <P> NativeQueryImplementor<R> setParameter(int position, P value, Class<P> javaTypeClass) {
+		super.setParameter( position, value, javaTypeClass );
 		return this;
 	}
 
@@ -1286,8 +1276,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Class<P> javaType) {
-		super.setParameter( parameter, value, javaType );
+	public <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Class<P> javaTypeClass) {
+		super.setParameter( parameter, value, javaTypeClass );
 		return this;
 	}
 
@@ -1330,8 +1320,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType) {
-		super.setParameterList( name, values, javaType );
+	public <P> NativeQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaTypeClass) {
+		super.setParameterList( name, values, javaTypeClass );
 		return this;
 	}
 
@@ -1348,8 +1338,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(String name, P[] values, Class<P> javaType) {
-		super.setParameterList( name, values, javaType );
+	public <P> NativeQueryImplementor<R> setParameterList(String name, P[] values, Class<P> javaTypeClass) {
+		super.setParameterList( name, values, javaTypeClass );
 		return this;
 	}
 
@@ -1369,8 +1359,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType) {
-		super.setParameterList( position, values, javaType );
+	public <P> NativeQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaTypeClass) {
+		super.setParameterList( position, values, javaTypeClass );
 		return this;
 	}
 
@@ -1387,8 +1377,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(int position, P[] values, Class<P> javaType) {
-		super.setParameterList( position, values, javaType );
+	public <P> NativeQueryImplementor<R> setParameterList(int position, P[] values, Class<P> javaTypeClass) {
+		super.setParameterList( position, values, javaTypeClass );
 		return this;
 	}
 
@@ -1407,8 +1397,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType) {
-		super.setParameterList( parameter, values, javaType );
+	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaTypeClass) {
+		super.setParameterList( parameter, values, javaTypeClass );
 		return this;
 	}
 
@@ -1425,8 +1415,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType) {
-		super.setParameterList( parameter, values, javaType );
+	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaTypeClass) {
+		super.setParameterList( parameter, values, javaTypeClass );
 		return this;
 	}
 
@@ -1476,10 +1466,6 @@ public class NativeQueryImpl<R>
 		return this;
 	}
 
-	@Override
-	protected void applyEntityGraphQueryHint(String hintName, @SuppressWarnings("rawtypes") RootGraphImplementor entityGraph) {
-		throw new HibernateException( "A native SQL query cannot use EntityGraphs" );
-	}
 
 	private static class ParameterInterpretationImpl implements ParameterInterpretation {
 		private final String sqlString;

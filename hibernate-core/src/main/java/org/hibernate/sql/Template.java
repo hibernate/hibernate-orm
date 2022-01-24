@@ -124,7 +124,7 @@ public final class Template {
 	 * named parameters.
 	 *
 	 * @param sqlWhereString The string into which to interpolate the placeholder value
-	 * @param placeholder The value to be interpolated into the the sqlWhereString
+	 * @param placeholder The value to be interpolated into the sqlWhereString
 	 * @param dialect The dialect to apply
 	 * @param functionRegistry The registry of all sql functions
 	 * @return The rendered sql fragment
@@ -372,7 +372,7 @@ public final class Template {
 //	 * named parameters.
 //	 *
 //	 * @param sqlWhereString The string into which to interpolate the placeholder value
-//	 * @param placeholder The value to be interpolated into the the sqlWhereString
+//	 * @param placeholder The value to be interpolated into the sqlWhereString
 //	 * @param dialect The dialect to apply
 //	 * @param functionRegistry The registry of all sql functions
 //	 *

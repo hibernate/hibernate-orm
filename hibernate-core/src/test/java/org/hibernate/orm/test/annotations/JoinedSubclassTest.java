@@ -15,10 +15,6 @@ import org.hibernate.orm.test.annotations.inheritance.Tomato;
 import org.hibernate.orm.test.annotations.inheritance.Vegetable;
 import org.hibernate.orm.test.annotations.inheritance.VegetablePk;
 
-import org.hibernate.test.annotations.AmericaCupClass;
-import org.hibernate.test.annotations.Boat;
-import org.hibernate.test.annotations.Country;
-import org.hibernate.test.annotations.Ferry;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

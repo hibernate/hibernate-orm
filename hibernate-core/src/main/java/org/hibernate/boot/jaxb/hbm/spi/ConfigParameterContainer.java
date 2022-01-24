@@ -12,5 +12,5 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public interface ConfigParameterContainer {
-	public List<JaxbHbmConfigParameterType> getConfigParameters();
+	List<JaxbHbmConfigParameterType> getConfigParameters();
 }

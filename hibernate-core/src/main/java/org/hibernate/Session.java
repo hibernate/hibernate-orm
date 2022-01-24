@@ -7,15 +7,17 @@
 package org.hibernate;
 
 import java.util.List;
+
+import org.hibernate.graph.RootGraph;
+import org.hibernate.query.Query;
+import org.hibernate.stat.SessionStatistics;
+
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
-import org.hibernate.graph.RootGraph;
-import org.hibernate.query.Query;
-import org.hibernate.stat.SessionStatistics;
 
 /**
  * The main runtime interface between a Java application and Hibernate. Represents the
@@ -45,17 +47,17 @@ import org.hibernate.stat.SessionStatistics;
  * flushed to the database. This process of automatic change detection is called
  * <em>dirty checking</em> and can be expensive in some circumstances. Dirty checking
  * may be disabled by marking an entity as read-only using
- * {@link #setReadOnly(Object, boolean)} or simply by {@link #detach(Object) evicting}
+ * {@link #setReadOnly(Object, boolean)} or simply by {@linkplain #detach(Object) evicting}
  * it from the persistence context. A session may be set to load entities as read-only
- * {@link #setDefaultReadOnly(boolean) by default}, or this may be controlled at the
- * {@link Query#setReadOnly(boolean) query level}.
+ * {@linkplain #setDefaultReadOnly(boolean) by default}, or this may be controlled at the
+ * {@linkplain Query#setReadOnly(boolean) query level}.
  * <p>
  * The state of a transient or detached instance may be made persistent by copying it to
  * a persistent instance using {@link #merge(Object)}. All older operations which moved a
  * detached instance to the persistent state are now deprecated, and clients should now
  * migrate to the use of {@code merge()}.
  * <p>
- * From {@link FlushMode time to time}, the session performs a {@link #flush() flushing}
+ * From {@link FlushMode time to time}, the session performs a {@linkplain #flush() flushing}
  * operation, and synchronizes state held in memory with persistent state held in the
  * database by executing SQL {@code insert}, {@code update}, and {@code delete} statements.
  * Note that SQL statements are often not executed synchronously by the methods of the
@@ -79,7 +81,7 @@ import org.hibernate.stat.SessionStatistics;
  * use the following idiom:
  * <pre>
  * Session session = factory.openSession();
- * Transaction tx;
+ * Transaction tx = null;
  * try {
  *     tx = session.beginTransaction();
  *     //do some work
@@ -100,6 +102,10 @@ import org.hibernate.stat.SessionStatistics;
  * be consistent with the database after the exception occurs.
  * <p>
  * A {@code Session} instance is serializable if its entities are serializable.
+ * <p>
+ * Every {@code Session} is a JPA {@link EntityManager}. Furthermore, when Hibernate is
+ * acting as the JPA persistence provider, the method {@link EntityManager#unwrap(Class)}
+ * may be used to obtain the underlying {@code Session}.
  *
  * @see SessionFactory
  *
@@ -603,7 +609,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * For entities with a {@link jakarta.persistence.GeneratedValue generated id},
 	 * {@code persist()} ultimately results in generation of an identifier for the
 	 * given instance. But this may happen asynchronously, when the session is
-	 * {@link #flush() flushed}, depending on the identifier generation strategy.
+	 * {@linkplain #flush() flushed}, depending on the identifier generation strategy.
 	 *
 	 * @param object a transient instance to be made persistent
 	 */
@@ -617,7 +623,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * For entities with a {@link jakarta.persistence.GeneratedValue generated id},
 	 * {@code persist()} ultimately results in generation of an identifier for the
 	 * given instance. But this may happen asynchronously, when the session is
-	 * {@link #flush() flushed}, depending on the identifier generation strategy.
+	 * {@linkplain #flush() flushed}, depending on the identifier generation strategy.
 	 *
 	 * @param entityName the entity name
 	 * @param object a transient instance to be made persistent
@@ -701,10 +707,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * <ul>
 	 * <li>the {@link LockMode} to use,
 	 * <li>the pessimistic lock timeout, and
-	 * <li>the {@link LockRequest#setScope(boolean) scope} of the lock.
+	 * <li>the {@linkplain LockRequest#setScope(boolean) scope} of the lock.
 	 * </ul>
 	 * Timeout and scope are ignored if the specified {@code LockMode} represents a
-	 * form of {@link LockMode#OPTIMISTIC optimistic} locking.
+	 * form of {@linkplain LockMode#OPTIMISTIC optimistic} locking.
 	 * <p>
 	 * Call {@link LockRequest#lock(Object)} to actually obtain the requested lock
 	 * on a managed entity instance.
@@ -723,8 +729,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * from the underlying database. This may be useful:
 	 * <ul>
 	 * <li>when a database trigger alters the object state upon insert or update
-	 * <li>after {@link #createStatement(String) executing} any HQL update or delete statement
-	 * <li>after {@link #createNativeStatement(String) executing} a native SQL statement
+	 * <li>after {@linkplain #createMutationQuery(String) executing} any HQL update or delete statement
+	 * <li>after {@linkplain #createNativeMutationQuery(String) executing} a native SQL statement
 	 * <li>after inserting a {@link java.sql.Blob} or {@link java.sql.Clob}
 	 * </ul>
 	 * This operation cascades to associated instances if the association is mapped
@@ -739,8 +745,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * from the underlying database. This may be useful:
 	 * <ul>
 	 * <li>when a database trigger alters the object state upon insert or update
-	 * <li>after {@link #createStatement(String) executing} any HQL update or delete statement
-	 * <li>after {@link #createNativeStatement(String) executing} a native SQL statement
+	 * <li>after {@linkplain #createMutationQuery(String) executing} any HQL update or delete statement
+	 * <li>after {@linkplain #createNativeMutationQuery(String) executing} a native SQL statement
 	 * <li>after inserting a {@link java.sql.Blob} or {@link java.sql.Clob}
 	 * </ul>
 	 * This operation cascades to associated instances if the association is mapped
@@ -1070,7 +1076,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	<T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(String entityName);
 
 	/**
-	 * Enable the named {@link Filter filter} for this current session.
+	 * Enable the named {@linkplain Filter filter} for this current session.
 	 *
 	 * @param filterName the name of the filter to be enabled.
 	 *
@@ -1079,7 +1085,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	Filter enableFilter(String filterName);
 
 	/**
-	 * Retrieve a currently enabled {@link Filter filter} by name.
+	 * Retrieve a currently enabled {@linkplain Filter filter} by name.
 	 *
 	 * @param filterName the name of the filter to be retrieved.
 	 *
@@ -1088,14 +1094,14 @@ public interface Session extends SharedSessionContract, EntityManager {
 	Filter getEnabledFilter(String filterName);
 
 	/**
-	 * Disable the named {@link Filter filter} for the current session.
+	 * Disable the named {@linkplain Filter filter} for the current session.
 	 *
 	 * @param filterName the name of the filter to be disabled.
 	 */
 	void disableFilter(String filterName);
 	
 	/**
-	 * Get the {@link SessionStatistics statistics} for this session.
+	 * Get the {@linkplain SessionStatistics statistics} for this session.
 	 *
 	 * @return the session statistics being collected for this session
 	 */
@@ -1297,9 +1303,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	RootGraph<?> getEntityGraph(String graphName);
 
 	@Override
-	default <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
-		return getSessionFactory().findEntityGraphsByType( entityClass );
-	}
+	<T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass);
 
 	// The following overrides should not be necessary,
 	// and are only needed to work around a bug in IntelliJ
@@ -1319,9 +1323,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	@Override
 	<R> Query<R> createQuery(CriteriaQuery<R> criteriaQuery);
 
-	@Override
-	Query<Void> createQuery(CriteriaDelete deleteQuery);
+	@Override @Deprecated @SuppressWarnings("rawtypes")
+	Query createQuery(CriteriaDelete deleteQuery);
 
-	@Override
-	Query<Void> createQuery(CriteriaUpdate updateQuery);
+	@Override @Deprecated @SuppressWarnings("rawtypes")
+	Query createQuery(CriteriaUpdate updateQuery);
 }

@@ -25,5 +25,5 @@ public interface ImplicitMapKeyColumnNameSource extends ImplicitNameSource {
 	 *
 	 * @return The AttributePath for the Map attribute
 	 */
-	public AttributePath getPluralAttributePath();
+	AttributePath getPluralAttributePath();
 }

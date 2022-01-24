@@ -41,7 +41,7 @@ public class LocalTimeMappingTests {
 		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("localTime");
 		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
 		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(LocalTime.class));
-		assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo(Types.TIME));
+		assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), equalTo( Types.TIME));
 
 		scope.inTransaction(
 				(session) -> {

@@ -9,7 +9,7 @@ package org.hibernate.engine.jdbc.connections.internal;
 import java.sql.Connection;
 
 /**
- * Contract for creating JDBC Connections on demand
+ * Contract for creating JDBC {@linkplain Connection connections} on demand.
  *
  * @author Steve Ebersole
  */
@@ -19,12 +19,12 @@ interface ConnectionCreator {
 	 *
 	 * @return The connection URL.
 	 */
-	public String getUrl();
+	String getUrl();
 
 	/**
 	 * Create a Connection
 	 *
 	 * @return The created Connection
 	 */
-	public Connection createConnection();
+	Connection createConnection();
 }

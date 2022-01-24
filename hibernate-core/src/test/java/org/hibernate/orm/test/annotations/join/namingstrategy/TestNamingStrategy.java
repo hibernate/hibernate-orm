@@ -15,7 +15,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
  */
 public class TestNamingStrategy extends PhysicalNamingStrategyStandardImpl {
 	@Override
-	public Identifier toPhysicalTableName(Identifier name, JdbcEnvironment jdbcEnvironment) {
-		return Identifier.toIdentifier( "TAB_" + name.getText() );
+	public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+		return Identifier.toIdentifier( "TAB_" + logicalName.getText() );
 	}
 }

@@ -52,14 +52,14 @@ public class EntityNonEntityTest extends BaseCoreFunctionalTestCase {
 	@TestForIssue( jiraKey = "HHH-9856" )
 	public void testGetAndFindNonEntityThrowsIllegalArgumentException() {
 		try {
-			sessionFactory().locateEntityPersister( Cellular.class );
-		}
+            sessionFactory().getMetamodel().locateEntityPersister(Cellular.class);
+        }
 		catch (UnknownEntityTypeException ignore) {
 			// expected
 		}
 
 		try {
-			sessionFactory().locateEntityPersister( Cellular.class.getName() );
+			sessionFactory().getMetamodel().locateEntityPersister(Cellular.class.getName());
 		}
 		catch (UnknownEntityTypeException ignore) {
 			// expected

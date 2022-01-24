@@ -75,10 +75,10 @@ public class BasicJodaTimeConversionTest extends BaseNonConfigCoreFunctionalTest
 
 	@Test
 	public void testSimpleConvertUsage() throws MalformedURLException {
-		final EntityPersister ep = sessionFactory().getEntityPersister( TheEntity.class.getName() );
+        final EntityPersister ep = sessionFactory().getMetamodel().entityPersister(TheEntity.class.getName());
 		final Type theDatePropertyType = ep.getPropertyType( "theDate" );
 		final AttributeConverterTypeAdapter type = assertTyping( AttributeConverterTypeAdapter.class, theDatePropertyType );
-		assertTrue( JodaLocalDateConverter.class.isAssignableFrom( type.getAttributeConverter().getConverterJavaTypeDescriptor().getJavaTypeClass() ) );
+		assertTrue( JodaLocalDateConverter.class.isAssignableFrom( type.getAttributeConverter().getConverterJavaType().getJavaTypeClass() ) );
 
 		resetFlags();
 

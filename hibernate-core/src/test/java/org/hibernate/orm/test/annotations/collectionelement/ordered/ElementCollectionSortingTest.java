@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.Session;
-import org.hibernate.query.SortOrder;
+import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragmentImpl;
 import org.hibernate.metamodel.mapping.ordering.ast.OrderingSpecification;

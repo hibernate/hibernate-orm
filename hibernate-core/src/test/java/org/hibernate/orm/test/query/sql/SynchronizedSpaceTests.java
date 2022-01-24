@@ -10,6 +10,17 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
+
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.NamedNativeQuery;
+import org.hibernate.cache.spi.CacheImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.query.sql.spi.NativeQueryImplementor;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
+
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityResult;
@@ -19,19 +30,9 @@ import jakarta.persistence.QueryHint;
 import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.NamedNativeQuery;
-import org.hibernate.cache.spi.CacheImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.jpa.QueryHints;
-import org.hibernate.query.sql.spi.NativeQueryImplementor;
-
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_SPACES;
 
 /**
  * @author Steve Ebersole
@@ -178,7 +179,7 @@ public class SynchronizedSpaceTests extends BaseNonConfigCoreFunctionalTestCase 
 
 		checkUseCase(
 				tableName,
-				query -> query.setHint( QueryHints.HINT_NATIVE_SPACES, tableName ),
+				query -> query.setHint( HINT_NATIVE_SPACES, tableName ),
 				// the 2 CachedEntity entries should still be there
 				true
 		);
@@ -203,7 +204,7 @@ public class SynchronizedSpaceTests extends BaseNonConfigCoreFunctionalTestCase 
 
 		checkUseCase(
 				tableName,
-				query -> query.setHint( QueryHints.HINT_NATIVE_SPACES, spaces ),
+				query -> query.setHint( HINT_NATIVE_SPACES, spaces ),
 				// the 2 CachedEntity entries should still be there
 				true
 		);
@@ -227,7 +228,7 @@ public class SynchronizedSpaceTests extends BaseNonConfigCoreFunctionalTestCase 
 
 		checkUseCase(
 				tableName,
-				query -> query.setHint( QueryHints.HINT_NATIVE_SPACES, spaces ),
+				query -> query.setHint( HINT_NATIVE_SPACES, spaces ),
 				// the 2 CachedEntity entries should still be there
 				true
 		);
@@ -382,7 +383,7 @@ public class SynchronizedSpaceTests extends BaseNonConfigCoreFunctionalTestCase 
 			name = "NonCachedEntity_hint_jpa",
 			query = "select * from non_cached_entity",
 			hints = {
-					@QueryHint( name = QueryHints.HINT_NATIVE_SPACES, value = "non_cached_entity" )
+					@QueryHint( name = HINT_NATIVE_SPACES, value = "non_cached_entity" )
 			}
 	)
 	public static class NonCachedEntity {

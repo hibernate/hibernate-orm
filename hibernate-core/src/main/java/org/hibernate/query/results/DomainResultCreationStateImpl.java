@@ -31,8 +31,8 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
-import org.hibernate.query.EntityIdentifierNavigablePath;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.spi.EntityIdentifierNavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.query.results.dynamic.LegacyFetchResolver;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
@@ -292,7 +292,7 @@ public class DomainResultCreationStateImpl
 	@Override
 	public SqlSelection resolveSqlSelection(
 			Expression expression,
-			JavaType<?> javaTypeDescriptor,
+			JavaType<?> javaType,
 			TypeConfiguration typeConfiguration) {
 		if ( expression == null ) {
 			throw new IllegalArgumentException( "Expression cannot be null" );

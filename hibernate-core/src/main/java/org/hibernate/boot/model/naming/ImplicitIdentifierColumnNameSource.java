@@ -20,12 +20,12 @@ public interface ImplicitIdentifierColumnNameSource extends ImplicitNameSource {
 	 *
 	 * @return The entity name information
 	 */
-	public EntityNaming getEntityNaming();
+	EntityNaming getEntityNaming();
 
 	/**
 	 * Access to the AttributePath for the entity's identifier attribute.
 	 *
 	 * @return The AttributePath for the entity's identifier attribute.
 	 */
-	public AttributePath getIdentifierAttributePath();
+	AttributePath getIdentifierAttributePath();
 }

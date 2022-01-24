@@ -13,13 +13,11 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.ForeignKeys;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -85,18 +83,6 @@ public class OneToOneType extends EntityType {
 	@Override
 	public int[] getSqlTypeCodes(Mapping session) throws MappingException {
 		return ArrayHelper.EMPTY_INT_ARRAY;
-	}
-
-	private static final Size[] SIZES = new Size[0];
-
-	@Override
-	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		return SIZES;
-	}
-
-	@Override
-	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		return SIZES;
 	}
 
 	@Override
@@ -169,18 +155,6 @@ public class OneToOneType extends EntityType {
 
 	@Override
 	public Object assemble(Serializable oid, SharedSessionContractImplementor session, Object owner) throws HibernateException {
-
-		if ( oid == null ) {
-			if ( uniqueKeyPropertyName != null ) {
-				final EntityPersister associatedEntityPersister = getAssociatedEntityPersister( session.getFactory() );
-				return ( (UniqueKeyLoadable) associatedEntityPersister ).loadByUniqueKey(
-						uniqueKeyPropertyName,
-						session.getContextEntityIdentifier( owner ),
-						session
-				);
-			}
-			return null;
-		}
 
 		//the owner of the association is not the owner of the id
 		Object id = getIdentifierType( session ).assemble( oid, session, null );

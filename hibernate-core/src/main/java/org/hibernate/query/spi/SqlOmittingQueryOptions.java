@@ -7,7 +7,6 @@
 package org.hibernate.query.spi;
 
 import org.hibernate.LockOptions;
-import org.hibernate.query.Limit;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 
 /**

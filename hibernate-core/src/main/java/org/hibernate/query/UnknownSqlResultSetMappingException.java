@@ -8,7 +8,16 @@ package org.hibernate.query;
 
 import org.hibernate.MappingException;
 
+import jakarta.persistence.NamedNativeQuery;
+
 /**
+ * Indicates a request for named ResultSet mapping which could not be found
+ *
+ * @see NamedNativeQuery#resultSetMapping()
+ * @see org.hibernate.Session#createNativeQuery(String, String)
+ * @see org.hibernate.Session#createNativeQuery(String, String, Class)
+ * @see org.hibernate.Session#getNamedNativeQuery(String, String)
+ *
  * @author Steve Ebersole
  */
 public class UnknownSqlResultSetMappingException extends MappingException {

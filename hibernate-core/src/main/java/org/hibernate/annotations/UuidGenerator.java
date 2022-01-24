@@ -14,6 +14,13 @@ import java.util.UUID;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 
+/**
+ * Specifies that an entity identifier is generated as an RFC 4122 UUID.
+ * <p>
+ * The type of the identifier attribute may be {@link UUID} or {@link String}.
+ *
+ * @author Steve Ebersole
+ */
 @IdGeneratorType( org.hibernate.id.uuid.UuidGenerator.class )
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ FIELD, METHOD })

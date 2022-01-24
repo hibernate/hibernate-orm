@@ -20,7 +20,7 @@ import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
@@ -31,21 +31,21 @@ import jakarta.persistence.criteria.Expression;
 /**
  * @author Steve Ebersole
  */
-public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, SqmSelectableNode<T>, SemanticPathPart {
+public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, SqmSelectableNode<T>, SemanticPathPart {
 	private final T value;
-	private final JavaType<T> fieldJavaTypeDescriptor;
+	private final JavaType<T> fieldJavaType;
 	private final String fieldName;
 	private final NodeBuilder nodeBuilder;
 
-	private SqmExpressable<T> expressable;
+	private SqmExpressible<T> expressible;
 
 	public SqmFieldLiteral(
 			Field field,
-			JavaType<T> fieldJavaTypeDescriptor,
+			JavaType<T> fieldJavaType,
 			NodeBuilder nodeBuilder){
 		this(
 				extractValue( field ),
-				fieldJavaTypeDescriptor,
+				fieldJavaType,
 				field.getName(),
 				nodeBuilder
 		);
@@ -63,15 +63,15 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 
 	public SqmFieldLiteral(
 			T value,
-			JavaType<T> fieldJavaTypeDescriptor,
+			JavaType<T> fieldJavaType,
 			String fieldName,
 			NodeBuilder nodeBuilder) {
 		this.value = value;
-		this.fieldJavaTypeDescriptor = fieldJavaTypeDescriptor;
+		this.fieldJavaType = fieldJavaType;
 		this.fieldName = fieldName;
 		this.nodeBuilder = nodeBuilder;
 
-		this.expressable = this;
+		this.expressible = this;
 	}
 
 	public T getValue() {
@@ -87,26 +87,26 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 	}
 
 	@Override
-	public SqmExpressable<T> getNodeType() {
-		return expressable;
+	public SqmExpressible<T> getNodeType() {
+		return expressible;
 	}
 
 	@Override
-	public void applyInferableType(SqmExpressable<?> type) {
+	public void applyInferableType(SqmExpressible<?> type) {
 	}
 
 	@Override
-	public JavaType<T> getExpressableJavaTypeDescriptor() {
-		if ( expressable == this ) {
-			return fieldJavaTypeDescriptor;
+	public JavaType<T> getExpressibleJavaType() {
+		if ( expressible == this ) {
+			return fieldJavaType;
 		}
 
-		return expressable.getExpressableJavaTypeDescriptor();
+		return expressible.getExpressibleJavaType();
 	}
 
 	@Override
 	public JavaType<T> getJavaTypeDescriptor() {
-		return getExpressableJavaTypeDescriptor();
+		return getExpressibleJavaType();
 	}
 
 	@Override
@@ -214,7 +214,7 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 				String.format(
 						Locale.ROOT,
 						"Static field reference [%s#%s] cannot be de-referenced",
-						fieldJavaTypeDescriptor.getJavaType().getTypeName(),
+						fieldJavaType.getJavaType().getTypeName(),
 						fieldName
 				)
 		);
@@ -229,7 +229,7 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 				String.format(
 						Locale.ROOT,
 						"Static field reference [%s#%s] cannot be de-referenced",
-						fieldJavaTypeDescriptor.getJavaType().getTypeName(),
+						fieldJavaType.getJavaType().getTypeName(),
 						fieldName
 				)
 		);

@@ -14,8 +14,8 @@ import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.orm.test.mapping.SmokeTests.Gender;
 import org.hibernate.orm.test.mapping.SmokeTests.SimpleEntity;
-import org.hibernate.query.NavigablePath;
-import org.hibernate.query.hql.spi.HqlQueryImplementor;
+import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
@@ -56,7 +56,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 @DomainModel(
 		annotatedClasses = SimpleEntity.class
 )
@@ -76,7 +75,7 @@ public class SmokeTests {
 							"select e.name from SimpleEntity e",
 							String.class
 					);
-					final HqlQueryImplementor<String> hqlQuery = (HqlQueryImplementor<String>) query;
+					final SqmQueryImplementor<String> hqlQuery = (SqmQueryImplementor<String>) query;
 					final SqmSelectStatement<String> sqmStatement = (SqmSelectStatement<String>) hqlQuery.getSqmStatement();
 
 					final StandardSqmTranslator<SelectStatement> sqmConverter = new StandardSqmTranslator<>(
@@ -133,9 +132,9 @@ public class SmokeTests {
 				session -> {
 					final JdbcTypeRegistry jdbcTypeRegistry = session.getFactory()
 							.getTypeConfiguration()
-							.getJdbcTypeDescriptorRegistry();
+							.getJdbcTypeRegistry();
 					final QueryImplementor<Gender> query = session.createQuery( "select e.gender from SimpleEntity e", Gender.class );
-					final HqlQueryImplementor<Gender> hqlQuery = (HqlQueryImplementor<Gender>) query;
+					final SqmQueryImplementor<Gender> hqlQuery = (SqmQueryImplementor<Gender>) query;
 					final SqmSelectStatement<Gender> sqmStatement = (SqmSelectStatement<Gender>) hqlQuery.getSqmStatement();
 
 					final StandardSqmTranslator<SelectStatement> sqmConverter = new StandardSqmTranslator<>(
@@ -180,22 +179,22 @@ public class SmokeTests {
 					final ColumnReference columnReference = (ColumnReference) selectedExpression;
 					assertThat( columnReference.renderSqlFragment( scope.getSessionFactory() ), is( "s1_0.gender" ) );
 
-					final JdbcMappingContainer selectedExpressable = selectedExpression.getExpressionType();
-					assertThat( selectedExpressable, instanceOf( BasicTypeImpl.class ) );
-					final BasicTypeImpl basicType = (BasicTypeImpl) selectedExpressable;
+					final JdbcMappingContainer selectedExpressible = selectedExpression.getExpressionType();
+					assertThat( selectedExpressible, instanceOf( BasicTypeImpl.class ) );
+					final BasicTypeImpl<?> basicType = (BasicTypeImpl<?>) selectedExpressible;
 					assertThat( basicType.getJavaTypeDescriptor().getJavaTypeClass(), AssignableMatcher.assignableTo( Integer.class ) );
 					assertThat(
-							basicType.getJdbcTypeDescriptor(),
+							basicType.getJdbcType(),
 							is( jdbcTypeRegistry.getDescriptor( Types.TINYINT ) )
 					);
 
 
 					assertThat( sqlAst.getDomainResultDescriptors().size(), is( 1 ) );
-					final DomainResult domainResult = sqlAst.getDomainResultDescriptors().get( 0 );
+					final DomainResult<?> domainResult = sqlAst.getDomainResultDescriptors().get( 0 );
 					assertThat( domainResult, instanceOf( BasicResult.class ) );
-					final BasicResult scalarDomainResult = (BasicResult) domainResult;
+					final BasicResult<?> scalarDomainResult = (BasicResult<?>) domainResult;
 					assertThat( scalarDomainResult.getAssembler(), instanceOf( BasicResultAssembler.class ) );
-					final BasicResultAssembler<?> assembler = (BasicResultAssembler) scalarDomainResult.getAssembler();
+					final BasicResultAssembler<?> assembler = (BasicResultAssembler<?>) scalarDomainResult.getAssembler();
 					assertThat( assembler.getValueConverter(), notNullValue() );
 					assertThat( assembler.getValueConverter(), instanceOf( OrdinalEnumValueConverter.class ) );
 
@@ -208,10 +207,10 @@ public class SmokeTests {
 
 					// ScalarDomainResultImpl creates and caches the assembler at its creation.
 					// this just gets access to that cached one
-					final DomainResultAssembler resultAssembler = domainResult.createResultAssembler( null, null );
+					final DomainResultAssembler<?> resultAssembler = domainResult.createResultAssembler( null, null );
 
 					assertThat( resultAssembler, instanceOf( BasicResultAssembler.class ) );
-					final BasicValueConverter valueConverter = ( (BasicResultAssembler) resultAssembler ).getValueConverter();
+					final BasicValueConverter<?,?> valueConverter = ( (BasicResultAssembler<?>) resultAssembler ).getValueConverter();
 					assertThat( valueConverter, notNullValue() );
 					assertThat( valueConverter, instanceOf( OrdinalEnumValueConverter.class ) );
 

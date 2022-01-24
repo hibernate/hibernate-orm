@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.internal;
 
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 
 /**
@@ -18,7 +18,7 @@ public class QueryHelper {
 	}
 
 	@SafeVarargs
-	public static <T> SqmExpressable<? extends T> highestPrecedenceType(SqmExpressable<? extends T>... types) {
+	public static <T> SqmExpressible<? extends T> highestPrecedenceType(SqmExpressible<? extends T>... types) {
 		if ( types == null || types.length == 0 ) {
 			return null;
 		}
@@ -27,7 +27,7 @@ public class QueryHelper {
 			return types[0];
 		}
 
-		SqmExpressable<? extends T> highest = highestPrecedenceType2( types[0], types[1] );
+		SqmExpressible<? extends T> highest = highestPrecedenceType2( types[0], types[1] );
 		for ( int i = 2; i < types.length; i++ ) {
 			highest = highestPrecedenceType2( highest, types[i] );
 		}
@@ -35,9 +35,9 @@ public class QueryHelper {
 		return highest;
 	}
 
-	public static <X> SqmExpressable<? extends X> highestPrecedenceType2(
-			SqmExpressable<? extends X> type1,
-			SqmExpressable<? extends X> type2) {
+	public static <X> SqmExpressible<? extends X> highestPrecedenceType2(
+			SqmExpressible<? extends X> type1,
+			SqmExpressible<? extends X> type2) {
 		if ( type1 == null && type2 == null ) {
 			return null;
 		}
@@ -57,7 +57,7 @@ public class QueryHelper {
 		}
 
 		// any other precedence rules?
-		if ( type2.getExpressableJavaTypeDescriptor().isWider( type1.getExpressableJavaTypeDescriptor() ) ) {
+		if ( type2.getExpressibleJavaType().isWider( type1.getExpressibleJavaType() ) ) {
 			return type2;
 		}
 

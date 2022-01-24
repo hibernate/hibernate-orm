@@ -24,7 +24,6 @@ import java.util.stream.Stream;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
-import org.hibernate.annotations.QueryHints;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
@@ -48,7 +47,6 @@ import org.hibernate.query.BindableType;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.QueryOptionsImpl;
-import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.results.ResultSetMappingImpl;
@@ -60,7 +58,7 @@ import org.hibernate.query.spi.QueryOptionsAdapter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.result.NoMoreReturnsException;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
@@ -94,6 +92,8 @@ import jakarta.persistence.ParameterMode;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.TransactionRequiredException;
+
+import static org.hibernate.jpa.HibernateHints.HINT_CALLABLE_FUNCTION;
 
 /**
  * Standard implementation of {@link ProcedureCall}
@@ -294,10 +294,10 @@ public class ProcedureCallImpl<R>
 	}
 
 	protected void applyOptions(NamedCallableQueryMemento memento) {
-		applyOptions( (NamedQueryMemento) memento );
+		super.applyOptions( memento );
 
 		if ( memento.getHints() != null ) {
-			final Object callableFunction = memento.getHints().get( QueryHints.CALLABLE_FUNCTION );
+			final Object callableFunction = memento.getHints().get( HINT_CALLABLE_FUNCTION );
 			if ( callableFunction != null && Boolean.parseBoolean( callableFunction.toString() ) ) {
 				final List<Class<?>> resultTypes = new ArrayList<>();
 				resultSetMapping.visitResultBuilders(
@@ -309,7 +309,7 @@ public class ProcedureCallImpl<R>
 					markAsFunctionCall( Types.REF_CURSOR );
 				}
 				else {
-					markAsFunctionCall( type.getJdbcTypeDescriptor().getJdbcTypeCode() );
+					markAsFunctionCall( type.getJdbcType().getJdbcTypeCode() );
 				}
 			}
 		}
@@ -460,21 +460,21 @@ public class ProcedureCallImpl<R>
 				.getDomainModel()
 				.resolveQueryParameterType( javaType );
 
-		final Class<T> expressableJavaType;
+		final Class<T> expressibleJavaType;
 		if ( parameterType == null ) {
-			expressableJavaType = null;
+			expressibleJavaType = null;
 		}
 		else {
-			final SqmExpressable<T> sqmExpressable = parameterType.resolveExpressable( getSessionFactory() );
-			assert sqmExpressable != null;
+			final SqmExpressible<T> sqmExpressible = parameterType.resolveExpressible( getSessionFactory() );
+			assert sqmExpressible != null;
 
-			expressableJavaType = sqmExpressable.getExpressableJavaTypeDescriptor().getJavaTypeClass();
+			expressibleJavaType = sqmExpressible.getExpressibleJavaType().getJavaTypeClass();
 		}
 
 		final ProcedureParameterImpl<T> procedureParameter = new ProcedureParameterImpl<>(
 				position,
 				mode,
-				expressableJavaType,
+				expressibleJavaType,
 				parameterType
 		);
 		registerParameter( procedureParameter );
@@ -720,7 +720,6 @@ public class ProcedureCallImpl<R>
 	 *
 	 * @return The spaces
 	 */
-	@SuppressWarnings("WeakerAccess")
 	protected Set<String> synchronizedQuerySpaces() {
 		if ( synchronizedQuerySpaces == null ) {
 			synchronizedQuerySpaces = new HashSet<>();
@@ -750,7 +749,6 @@ public class ProcedureCallImpl<R>
 		return this;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void addSynchronizedQuerySpaces(EntityPersister persister) {
 		synchronizedQuerySpaces().addAll( Arrays.asList( (String[]) persister.getQuerySpaces() ) );
 	}
@@ -813,7 +811,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	protected void applyEntityGraphQueryHint(String hintName, @SuppressWarnings("rawtypes") RootGraphImplementor entityGraph) {
+	protected void applyGraph(RootGraphImplementor<?> entityGraph, GraphSemantic graphSemantic) {
 		throw new IllegalStateException( "EntityGraph hints are not supported for ProcedureCall/StoredProcedureQuery" );
 	}
 
@@ -958,6 +956,11 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
+		throw new UnsupportedOperationException( "Query#scroll is not valid for ProcedureCall/StoredProcedureQuery" );
+	}
+
+	@Override
+	protected ScrollableResultsImplementor<R> doScroll(ScrollMode scrollMode) {
 		throw new UnsupportedOperationException( "Query#scroll is not valid for ProcedureCall/StoredProcedureQuery" );
 	}
 

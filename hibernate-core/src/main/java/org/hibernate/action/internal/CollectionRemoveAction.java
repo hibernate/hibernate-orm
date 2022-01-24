@@ -10,8 +10,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostCollectionRemoveEvent;
 import org.hibernate.event.spi.PostCollectionRemoveEventListener;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
@@ -40,7 +38,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 	 * @throws AssertionFailure if collection is null.
 	 */
 	public CollectionRemoveAction(
-				final PersistentCollection collection,
+				final PersistentCollection<?> collection,
 				final CollectionPersister persister,
 				final Object id,
 				final boolean emptySnapshot,
@@ -97,7 +95,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 			getPersister().remove( getKey(), session);
 		}
 		
-		final PersistentCollection collection = getCollection();
+		final PersistentCollection<?> collection = getCollection();
 		if ( collection != null ) {
 			session.getPersistenceContextInternal().getCollectionEntry( collection ).afterAction( collection );
 		}

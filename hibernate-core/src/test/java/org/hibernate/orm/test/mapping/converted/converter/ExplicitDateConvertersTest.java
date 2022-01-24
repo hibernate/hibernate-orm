@@ -80,13 +80,13 @@ public class ExplicitDateConvertersTest extends BaseNonConfigCoreFunctionalTestC
 
 	@Test
 	public void testSimpleConvertUsage() throws MalformedURLException {
-		final EntityPersister ep = sessionFactory().getEntityPersister( Entity1.class.getName() );
+        final EntityPersister ep = sessionFactory().getMetamodel().entityPersister(Entity1.class.getName());
 		final Type theDatePropertyType = ep.getPropertyType( "theDate" );
 		final AttributeConverterTypeAdapter type = assertTyping(
 				AttributeConverterTypeAdapter.class,
 				theDatePropertyType
 		);
-		assertTrue( LongToDateConverter.class.isAssignableFrom( type.getAttributeConverter().getConverterJavaTypeDescriptor().getJavaTypeClass() ) );
+		assertTrue( LongToDateConverter.class.isAssignableFrom( type.getAttributeConverter().getConverterJavaType().getJavaTypeClass() ) );
 
 		resetFlags();
 

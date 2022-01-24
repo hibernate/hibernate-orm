@@ -11,7 +11,7 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.AbstractDomainPath;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 
 /**
  * A path relative to either a CollectionPartPath (element/index DomainPath) or another DomainPathContinuation

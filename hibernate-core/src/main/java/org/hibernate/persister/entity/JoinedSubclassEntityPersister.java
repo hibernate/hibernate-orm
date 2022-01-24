@@ -20,7 +20,6 @@ import java.util.function.Supplier;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
@@ -50,7 +49,7 @@ import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappin
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.ast.SqlAstJoinType;
@@ -65,15 +64,21 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.JavaType;
 
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.emptyMap;
 
 /**
- * An {@code EntityPersister} implementing the normalized "table-per-subclass"
- * mapping strategy
+ * An {@link EntityPersister} implementing the normalized
+ * {@link jakarta.persistence.InheritanceType#JOINED} inheritance
+ * mapping strategy for an entity and its inheritance hierarchy.
+ * <p>
+ * This is implemented as a separate table for each subclass,
+ * with only declared attributes persisted as columns of that table.
+ * Thus, each instance of a subclass has its state stored across
+ * rows of multiple tables.
  *
  * @author Gavin King
  */
@@ -160,7 +165,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 
 		final SessionFactoryImplementor factory = creationContext.getSessionFactory();
-		final Database database = creationContext.getMetadata().getDatabase();
 
 		// DISCRIMINATOR
 
@@ -175,8 +179,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				}
 				else {
 					final Column column = (Column) selectable;
-					explicitDiscriminatorColumnName = column.getQuotedName( factory.getDialect() );
-					discriminatorAlias = column.getAlias( factory.getDialect(), persistentClass.getRootTable() );
+					explicitDiscriminatorColumnName = column.getQuotedName(factory.getJdbcServices().getDialect());
+					discriminatorAlias = column.getAlias(factory.getJdbcServices().getDialect(), persistentClass.getRootTable() );
 				}
 				discriminatorType = (BasicType<?>) persistentClass.getDiscriminator().getType();
 				if ( persistentClass.isDiscriminatorValueNull() ) {
@@ -189,13 +193,15 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				}
 				else {
 					try {
-						discriminatorValue = discriminatorType.getJavaTypeDescriptor().fromString( persistentClass.getDiscriminatorValue() );
-						discriminatorSQLString = discriminatorType.getJdbcTypeDescriptor().getJdbcLiteralFormatter( (JavaType) discriminatorType.getJavaTypeDescriptor() )
-								.toJdbcLiteral(
-										discriminatorValue,
-										factory.getJdbcServices().getDialect(),
-										factory.getWrapperOptions()
-								);
+						discriminatorValue = discriminatorType.getJavaTypeDescriptor()
+								.fromString( persistentClass.getDiscriminatorValue() );
+						JdbcLiteralFormatter literalFormatter = discriminatorType.getJdbcType()
+								.getJdbcLiteralFormatter( discriminatorType.getJavaTypeDescriptor() );
+						discriminatorSQLString = literalFormatter.toJdbcLiteral(
+								discriminatorValue,
+								factory.getJdbcServices().getDialect(),
+								factory.getWrapperOptions()
+						);
 					}
 					catch (ClassCastException cce) {
 						throw new MappingException("Illegal discriminator type: " + discriminatorType.getName() );
@@ -646,16 +652,16 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	 * <p/>
 	 * For the persister for JoinedEntity, we'd have:
 	 * <pre>
-	 *     subclassClosure[0] = "JoinedEntitySubSubclass"
-	 *     subclassClosure[1] = "JoinedEntitySubclass"
-	 *     subclassClosure[2] = "JoinedEntity"
+	 *	 subclassClosure[0] = "JoinedEntitySubSubclass"
+	 *	 subclassClosure[1] = "JoinedEntitySubclass"
+	 *	 subclassClosure[2] = "JoinedEntity"
 	 *
-	 *     subclassTableNameClosure[0] = "T_JoinedEntity"
-	 *     subclassTableNameClosure[1] = "T_JoinedEntitySubclass"
-	 *     subclassTableNameClosure[2] = "T_JoinedEntitySubSubclass"
+	 *	 subclassTableNameClosure[0] = "T_JoinedEntity"
+	 *	 subclassTableNameClosure[1] = "T_JoinedEntitySubclass"
+	 *	 subclassTableNameClosure[2] = "T_JoinedEntitySubSubclass"
 	 *
-	 *     subclassNameClosureBySubclassTable[0] = ["JoinedEntitySubSubclass", "JoinedEntitySubclass"]
-	 *     subclassNameClosureBySubclassTable[1] = ["JoinedEntitySubSubclass"]
+	 *	 subclassNameClosureBySubclassTable[0] = ["JoinedEntitySubSubclass", "JoinedEntitySubclass"]
+	 *	 subclassNameClosureBySubclassTable[1] = ["JoinedEntitySubSubclass"]
 	 * </pre>
 	 * Note that there are only 2 entries in subclassNameClosureBySubclassTable.  That is because there are really only
 	 * 2 tables here that make up the subclass mapping, the others make up the class/superclass table mappings.  We

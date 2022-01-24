@@ -15,7 +15,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.query.CastType;
+import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -102,9 +102,9 @@ public abstract class AbstractCriteriaLiteralHandlingModeTest extends BaseEntity
 						getDialect().getTypeName(
 								SqlTypes.VARCHAR,
 								getDialect().getSizeStrategy().resolveSize(
-										typeConfiguration.getJdbcTypeDescriptorRegistry()
+										typeConfiguration.getJdbcTypeRegistry()
 												.getDescriptor(SqlTypes.VARCHAR ),
-										typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( String.class ),
+										typeConfiguration.getJavaTypeRegistry().getDescriptor( String.class ),
 										null,
 										null,
 										null

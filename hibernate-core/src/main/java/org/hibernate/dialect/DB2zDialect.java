@@ -6,19 +6,21 @@
  */
 package org.hibernate.dialect;
 
+
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.DB2zSequenceSupport;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.IntervalType;
-import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
@@ -34,7 +36,7 @@ import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
  */
 public class DB2zDialect extends DB2Dialect {
 
-	private final DatabaseVersion version;
+	final static DatabaseVersion DB2_LUW_VERSION9 = DatabaseVersion.make(9, 0);
 
 	public DB2zDialect(DialectResolutionInfo info) {
 		this( info.makeCopy() );
@@ -46,43 +48,45 @@ public class DB2zDialect extends DB2Dialect {
 	}
 
 	public DB2zDialect(DatabaseVersion version) {
-		super();
-		this.version = version;
+		super(version);
 	}
 
 	@Override
 	protected String columnType(int jdbcTypeCode) {
 		// See https://www.ibm.com/support/knowledgecenter/SSEPEK_10.0.0/wnew/src/tpc/db2z_10_timestamptimezone.html
-		if ( jdbcTypeCode==TIMESTAMP_WITH_TIMEZONE && version.isAfter(10) ) {
+		if ( jdbcTypeCode==TIMESTAMP_WITH_TIMEZONE && getVersion().isAfter(10) ) {
 			return "timestamp with time zone";
 		}
 		return super.columnType(jdbcTypeCode);
 	}
 
 	@Override
-	public TimeZoneSupport getTimeZoneSupport() {
-		return getZVersion().isAfter(10) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
+	public DatabaseVersion getDB2Version() {
+		return DB2_LUW_VERSION9;
 	}
 
-	DatabaseVersion getZVersion() {
-		return version;
+	@Override
+	public TimeZoneSupport getTimeZoneSupport() {
+		return getVersion().isAfter(10) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
 	}
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return getZVersion().isBefore(8)
+		return getVersion().isBefore(8)
 				? NoSequenceSupport.INSTANCE
 				: DB2zSequenceSupport.INSTANCE;
 	}
 
 	@Override
 	public String getQuerySequencesString() {
-		return getZVersion().isBefore(8) ? null : "select * from sysibm.syssequences";
+		return getVersion().isBefore(8) ? null : "select * from sysibm.syssequences";
 	}
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return FetchLimitHandler.INSTANCE;
+		return getVersion().isBefore(12)
+				? FetchLimitHandler.INSTANCE
+				: OffsetFetchLimitHandler.INSTANCE;
 	}
 
 	@Override
@@ -157,7 +161,7 @@ public class DB2zDialect extends DB2Dialect {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new DB2zSqlAstTranslator<>( sessionFactory, statement, version );
+				return new DB2zSqlAstTranslator<>( sessionFactory, statement, getVersion() );
 			}
 		};
 	}

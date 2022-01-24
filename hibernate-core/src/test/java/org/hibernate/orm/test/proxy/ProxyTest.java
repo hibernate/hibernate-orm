@@ -483,9 +483,9 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		s.delete( container );
 		// force a snapshot retrieval of the proxied container
 		SessionImpl sImpl = ( SessionImpl ) s;
-		sImpl.getPersistenceContext().getDatabaseSnapshot(
+        sImpl.getPersistenceContext().getDatabaseSnapshot(
 				lastContainerId,
-		        sImpl.getFactory().getEntityPersister( Container.class.getName() )
+                sImpl.getFactory().getMetamodel().entityPersister(Container.class.getName())
 		);
 		assertFalse( Hibernate.isInitialized( proxy ) );
 		t.commit();

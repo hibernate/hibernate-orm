@@ -6,7 +6,7 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.query.CastType;
+import org.hibernate.query.sqm.CastType;
 
 /**
  * Utility for decoding boolean representations.

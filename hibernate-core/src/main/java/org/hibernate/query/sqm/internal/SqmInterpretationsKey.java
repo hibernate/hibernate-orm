@@ -6,65 +6,72 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import java.util.function.Supplier;
+
 import org.hibernate.LockOptions;
-import org.hibernate.query.QueryParameter;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.QueryInterpretationCache;
+import org.hibernate.query.spi.QueryOptions;
+
+import static java.lang.Boolean.TRUE;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
-	@SuppressWarnings("WeakerAccess")
-	public static SqmInterpretationsKey generateFrom(QuerySqmImpl<?> query) {
-		if ( ! isCacheable( query ) ) {
+	public interface CacheabilityInfluencers {
+		String getQueryString();
+		QueryOptions getQueryOptions();
+		LoadQueryInfluencers getLoadQueryInfluencers();
+		Supplier<Boolean> hasMultiValuedParameterBindingsChecker();
+	}
+
+	public interface InterpretationsKeySource extends CacheabilityInfluencers {
+		Class<?> getResultType();
+	}
+
+	public static SqmInterpretationsKey createInterpretationsKey(InterpretationsKeySource keySource) {
+		if ( ! isCacheable( keySource ) ) {
 			return null;
 		}
 
 		return new SqmInterpretationsKey(
-				query.getQueryString(),
-				query.getResultType(),
-				query.getLockOptions(),
-				query.getQueryOptions().getTupleTransformer(),
-				query.getQueryOptions().getResultListTransformer()
+				keySource.getQueryString(),
+				keySource.getResultType(),
+				keySource.getQueryOptions().getLockOptions(),
+				keySource.getQueryOptions().getTupleTransformer(),
+				keySource.getQueryOptions().getResultListTransformer()
 		);
 	}
-
-	@SuppressWarnings("WeakerAccess")
-	public static QueryInterpretationCache.Key generateNonSelectKey(QuerySqmImpl<?> query) {
-		// todo (6.0) : do we want to cache non-select plans?  If so, what requirements?
-		//		- very minimum is that it be a "simple" (non-multi-table) statement
-		//
-		// for now... no caching of non-select plans
-		return null;
-	}
-
 	@SuppressWarnings("RedundantIfStatement")
-	private static boolean isCacheable(QuerySqmImpl<?> query) {
-		assert query.getQueryOptions().getAppliedGraph() != null;
+	private static boolean isCacheable(InterpretationsKeySource keySource) {
+		assert keySource.getQueryOptions().getAppliedGraph() != null;
 
-		if ( QuerySqmImpl.CRITERIA_HQL_STRING.equals( query.getQueryString() ) ) {
+		if ( QuerySqmImpl.CRITERIA_HQL_STRING.equals( keySource.getQueryString() ) ) {
 			// for now at least, skip caching Criteria-based plans
 			//		- especially wrt parameters atm; this works with HQL because the parameters
 			//			are part of the query string; with Criteria, they are not.
 			return false;
 		}
 
-		if ( query.getSession().getLoadQueryInfluencers().hasEnabledFilters() ) {
+		if ( keySource.getLoadQueryInfluencers().hasEnabledFilters() ) {
 			// At the moment we cannot cache query plan if there is filter enabled.
 			return false;
 		}
 
-		if ( query.getQueryOptions().getAppliedGraph().getSemantic() != null ) {
+		if ( keySource.getQueryOptions().getAppliedGraph().getSemantic() != null ) {
 			// At the moment we cannot cache query plan if there is an
 			// EntityGraph enabled.
 			return false;
 		}
 
-		if ( query.getQueryParameterBindings().hasAnyMultiValuedBindings()
-				|| query.getParameterMetadata().hasAnyMatching( QueryParameter::allowsMultiValuedBinding ) ) {
+		if ( keySource.hasMultiValuedParameterBindingsChecker().get() ) {
 			// cannot cache query plans if there are multi-valued param bindings
+			return false;
+		}
+		if ( keySource.hasMultiValuedParameterBindingsChecker().get() == TRUE ) {
 			// todo (6.0) : this one may be ok because of how I implemented multi-valued param handling
 			//		- the expansion is done per-execution based on the "static" SQM
 			//  - Note from Christian: The call to domainParameterXref.clearExpansions() in ConcreteSqmSelectQueryPlan is a concurrency issue when cached
@@ -74,6 +81,15 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 
 		return true;
 	}
+
+	public static QueryInterpretationCache.Key generateNonSelectKey(InterpretationsKeySource keyDetails) {
+		// todo (6.0) : do we want to cache non-select plans?  If so, what requirements?
+		//		- very minimum is that it be a "simple" (non-multi-table) statement
+		//
+		// for now... no caching of non-select plans
+		return null;
+	}
+
 
 	private final String query;
 	private final Class<?> resultType;

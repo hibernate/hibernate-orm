@@ -23,7 +23,7 @@ public interface Lockable extends EntityPersister {
 	 *
 	 * @return The root table name
 	 */
-	public String getRootTableName();
+	String getRootTableName();
 
 	/**
 	 * Get the SQL alias this persister would use for the root table
@@ -33,14 +33,14 @@ public interface Lockable extends EntityPersister {
 	 * mapped by this persister in the hierarchy.
 	 * @return The root table alias.
 	 */
-	public String getRootTableAlias(String drivingAlias);
+	String getRootTableAlias(String drivingAlias);
 
 	/**
 	 * Get the names of columns on the root table used to persist the identifier.
 	 *
 	 * @return The root table identifier column names.
 	 */
-	public String[] getRootTableIdentifierColumnNames();
+	String[] getRootTableIdentifierColumnNames();
 
 	/**
 	 * For versioned entities, get the name of the column (again, expected on the
@@ -48,5 +48,5 @@ public interface Lockable extends EntityPersister {
 	 *
 	 * @return The version column name.
 	 */
-	public String getVersionColumnName();
+	String getVersionColumnName();
 }

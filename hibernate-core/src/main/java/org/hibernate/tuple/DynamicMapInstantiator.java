@@ -18,7 +18,7 @@ public class DynamicMapInstantiator implements Instantiator {
 	public static final String KEY = "$type$";
 
 	private final String roleName;
-	private Set<String> isInstanceEntityNames = new HashSet<>();
+	private final Set<String> isInstanceEntityNames = new HashSet<>();
 
 	public DynamicMapInstantiator() {
 		this.roleName = null;

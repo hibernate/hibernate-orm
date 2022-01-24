@@ -33,10 +33,10 @@ public class UserTypeSupport<T> extends BaseUserTypeSupport<T> implements TypeCo
 
 		resolutionConsumer.accept(
 				(BasicJavaType<T>) typeConfiguration
-						.getJavaTypeDescriptorRegistry()
+						.getJavaTypeRegistry()
 						.getDescriptor( returnedClass ),
 				typeConfiguration
-						.getJdbcTypeDescriptorRegistry()
+						.getJdbcTypeRegistry()
 						.getDescriptor( jdbcTypeCode )
 		);
 	}

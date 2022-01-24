@@ -11,14 +11,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
-import jakarta.persistence.EntityGraph;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.criteria.CriteriaDelete;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.CriteriaUpdate;
-import jakarta.persistence.metamodel.Metamodel;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
@@ -50,6 +42,8 @@ import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.query.MutationQuery;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryProducerImplementor;
@@ -57,6 +51,15 @@ import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.stat.SessionStatistics;
+
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.metamodel.Metamodel;
 
 /**
  * This class is meant to be extended.
@@ -185,11 +188,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public Object instantiate(String entityName, Object id) throws HibernateException {
 		return delegate.instantiate( entityName, id );
-	}
-
-	@Override
-	public int getDontFlushFromFind() {
-		return delegate.getDontFlushFromFind();
 	}
 
 	@Override
@@ -328,11 +326,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public boolean isQueryParametersValidationEnabled() {
-		return delegate.isQueryParametersValidationEnabled();
-	}
-
-	@Override
 	public boolean shouldAutoJoinTransaction() {
 		return delegate.shouldAutoJoinTransaction();
 	}
@@ -452,17 +445,27 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery) {
+		return delegate().createMutationQuery( updateQuery );
+	}
+
+	@Override
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery) {
+		return delegate().createMutationQuery( deleteQuery );
+	}
+
+	@Override
 	public <T> QueryImplementor<T> createQuery(CriteriaQuery<T> criteriaQuery) {
 		return queryDelegate().createQuery( criteriaQuery );
 	}
 
-	@Override
-	public QueryImplementor<Void> createQuery(CriteriaUpdate updateQuery) {
+	@Override @SuppressWarnings("rawtypes")
+	public QueryImplementor createQuery(CriteriaUpdate updateQuery) {
 		return queryDelegate().createQuery( updateQuery );
 	}
 
-	@Override
-	public QueryImplementor<Void> createQuery(CriteriaDelete deleteQuery) {
+	@Override @SuppressWarnings("rawtypes")
+	public QueryImplementor createQuery(CriteriaDelete deleteQuery) {
 		return queryDelegate().createQuery( deleteQuery );
 	}
 
@@ -487,6 +490,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public SelectionQuery<?> createSelectQuery(String hqlString) {
+		return queryDelegate().createSelectQuery( hqlString );
+	}
+
+	@Override
+	public <R> SelectionQuery<R> createSelectQuery(String hqlString, Class<R> resultType) {
+		return queryDelegate().createSelectQuery( hqlString, resultType );
+	}
+
+	@Override
 	public <T> QueryImplementor<T> createQuery(String queryString, Class<T> resultType) {
 		return queryDelegate().createQuery( queryString, resultType );
 	}
@@ -507,12 +520,14 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	//note: we're doing something a bit funny here to work around
+	//      the clashing signatures declared by the supertypes
 	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass) {
 		return queryDelegate().createNativeQuery( sqlString, resultClass );
 	}
 
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass, String tableAlias) {
+	@Override
+	public <T> NativeQueryImplementor<T> createNativeQuery(String sqlString, Class<T> resultClass, String tableAlias) {
 		return queryDelegate().createNativeQuery( sqlString, resultClass, tableAlias );
 	}
 
@@ -521,24 +536,24 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return queryDelegate().createNativeQuery( sqlString, resultSetMappingName );
 	}
 
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	public NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName, Class resultClass) {
+	@Override
+	public <T> NativeQueryImplementor<T> createNativeQuery(String sqlString, String resultSetMappingName, Class<T> resultClass) {
 		return queryDelegate().createNativeQuery( sqlString, resultSetMappingName, resultClass );
 	}
 
 	@Override
-	public QueryImplementor<Void> createStatement(String statementString) {
-		return delegate.createStatement( statementString );
+	public MutationQuery createMutationQuery(String statementString) {
+		return delegate.createMutationQuery( statementString );
 	}
 
 	@Override
-	public QueryImplementor<Void> createNamedStatement(String name) {
-		return delegate.createNamedStatement( name );
+	public MutationQuery createNamedMutationQuery(String name) {
+		return delegate.createNamedMutationQuery( name );
 	}
 
 	@Override
-	public NativeQueryImplementor<Void> createNativeStatement(String sqlString) {
-		return delegate.createNativeStatement( sqlString );
+	public MutationQuery createNativeMutationQuery(String sqlString) {
+		return delegate.createNativeMutationQuery( sqlString );
 	}
 
 	@Override
@@ -1048,11 +1063,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void addEventListeners(SessionEventListener... listeners) {
 		delegate.addEventListeners( listeners );
-	}
-
-	@Override
-	public boolean isFlushBeforeCompletionEnabled() {
-		return delegate.isFlushBeforeCompletionEnabled();
 	}
 
 	@Override

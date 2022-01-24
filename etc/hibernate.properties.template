@@ -2,11 +2,6 @@
 ### Query Language ###
 ######################
 
-## define query language constants / function names
-
-hibernate.query.substitutions true 1, false 0, yes 'Y', no 'N'
-
-
 ## Query translator factory class
 
 hibernate.query.factory_class @QUERY_TRANSLATOR_FACTORY@
@@ -67,7 +62,6 @@ hibernate.connection.url @DB_URL@
 #hibernate.connection.url jdbc:postgresql:template1
 #hibernate.connection.username pg
 #hibernate.connection.password
-#hibernate.query.substitutions yes 'Y', no 'N'
 
 
 ## DB2
@@ -126,7 +120,6 @@ hibernate.connection.url @DB_URL@
 #hibernate.connection.url jdbc:sapdb://localhost/TST
 #hibernate.connection.username TEST
 #hibernate.connection.password TEST
-#hibernate.query.substitutions yes 'Y', no 'N'
 
 
 ## MS SQL Server
@@ -369,11 +362,6 @@ hibernate.jdbc.batch_versioned_data true
 #hibernate.jdbc.use_scrollable_resultset true
 
 
-## use streams when writing binary types to / from JDBC
-
-hibernate.jdbc.use_streams_for_binary true
-
-
 ## use JDBC 3 PreparedStatement.getGeneratedKeys() to get the identifier of an inserted row
 
 #hibernate.jdbc.use_get_generated_keys false
@@ -382,11 +370,6 @@ hibernate.jdbc.use_streams_for_binary true
 ## choose a custom JDBC batcher
 
 # hibernate.jdbc.factory_class
-
-
-## choose a custom SQL exception converter
-
-#hibernate.jdbc.sql_exception_converter
 
 
 

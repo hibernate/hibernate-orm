@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.ComparisonOperator;
+import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;

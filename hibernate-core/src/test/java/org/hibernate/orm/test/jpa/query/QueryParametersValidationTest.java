@@ -15,8 +15,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.annotations.Type;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -56,20 +54,6 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 		}
 		finally {
 			entityManager.close();
-		}
-	}
-
-	@Test
-	@TestForIssue(jiraKey = "HHH-11579")
-	public void setParameterWithWrongTypeShouldNotThrowIllegalArgumentExceptionWhenValidationIsDisabled() {
-		final SessionFactory sessionFactory = entityManagerFactory().unwrap( SessionFactory.class );
-		final Session session = sessionFactory.withOptions().setQueryParameterValidation( false ).openSession();
-		try {
-			session.createQuery( "select e from TestEntity e where e.id = :id" ).setParameter( "id", 1 );
-		}
-		finally {
-			session.close();
-			sessionFactory.close();
 		}
 	}
 
@@ -116,7 +100,7 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 	}
 
 	@Entity(name = "TestEntity")
-	public class TestEntity {
+	public static class TestEntity {
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.AUTO)

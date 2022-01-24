@@ -27,9 +27,8 @@ public class TransactionExceptionHandlingTest extends BaseExceptionHandlingTest 
 
 	public TransactionExceptionHandlingTest(
 			BootstrapMethod bootstrapMethod,
-			ExceptionHandlingSetting exceptionHandlingSetting,
 			ExceptionExpectations exceptionExpectations) {
-		super( bootstrapMethod, exceptionHandlingSetting, exceptionExpectations );
+		super( bootstrapMethod, exceptionExpectations );
 	}
 
 	@Override

@@ -14,7 +14,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -190,7 +190,7 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 	}
 
 	@Override
-	public JavaType<?> getResultJavaTypeDescriptor() {
-		return getFetchedMapping().getJavaTypeDescriptor();
+	public JavaType<?> getResultJavaType() {
+		return getFetchedMapping().getJavaType();
 	}
 }

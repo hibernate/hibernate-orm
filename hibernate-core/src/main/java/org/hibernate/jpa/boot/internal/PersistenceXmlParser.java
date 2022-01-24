@@ -91,7 +91,6 @@ public class PersistenceXmlParser {
 	 *
 	 * @return The single persistence-unit descriptor
 	 */
-	@SuppressWarnings("WeakerAccess")
 	public static ParsedPersistenceXmlDescriptor locateIndividualPersistenceUnit(URL persistenceXmlUrl, Map integration) {
 		return locateIndividualPersistenceUnit( persistenceXmlUrl, PersistenceUnitTransactionType.RESOURCE_LOCAL, integration );
 	}
@@ -106,7 +105,6 @@ public class PersistenceXmlParser {
 	 *
 	 * @return The single persistence-unit descriptor
 	 */
-	@SuppressWarnings("WeakerAccess")
 	public static ParsedPersistenceXmlDescriptor locateIndividualPersistenceUnit(
 			URL persistenceXmlUrl,
 			PersistenceUnitTransactionType transactionType,
@@ -144,7 +142,6 @@ public class PersistenceXmlParser {
 	 *
 	 * @return The matching persistence-unit descriptor
 	 */
-	@SuppressWarnings("WeakerAccess")
 	public static ParsedPersistenceXmlDescriptor locateNamedPersistenceUnit(URL persistenceXmlUrl, String name, Map integration) {
 		return locateNamedPersistenceUnit( persistenceXmlUrl, name, PersistenceUnitTransactionType.RESOURCE_LOCAL, integration );
 	}
@@ -159,7 +156,6 @@ public class PersistenceXmlParser {
 	 *
 	 * @return The matching persistence-unit descriptor
 	 */
-	@SuppressWarnings("WeakerAccess")
 	public static ParsedPersistenceXmlDescriptor locateNamedPersistenceUnit(
 			URL persistenceXmlUrl,
 			String name,
@@ -502,7 +498,6 @@ public class PersistenceXmlParser {
 
 	/**
 	 * Validate the document using the
-	 * @param document
 	 */
 	private void validate(Document document) {
 		// todo : add ability to disable validation...

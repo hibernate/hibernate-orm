@@ -7,8 +7,8 @@
 package org.hibernate.type;
 
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.type.descriptor.java.BooleanJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.CharacterJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BooleanJavaType;
+import org.hibernate.type.descriptor.java.CharacterJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.AttributeConverter;
@@ -62,12 +62,12 @@ public class TrueFalseConverter implements AttributeConverter<Boolean, Character
 	}
 
 	@Override
-	public JavaType<Boolean> getDomainJavaDescriptor() {
-		return BooleanJavaTypeDescriptor.INSTANCE;
+	public JavaType<Boolean> getDomainJavaType() {
+		return BooleanJavaType.INSTANCE;
 	}
 
 	@Override
-	public JavaType<Character> getRelationalJavaDescriptor() {
-		return CharacterJavaTypeDescriptor.INSTANCE;
+	public JavaType<Character> getRelationalJavaType() {
+		return CharacterJavaType.INSTANCE;
 	}
 }

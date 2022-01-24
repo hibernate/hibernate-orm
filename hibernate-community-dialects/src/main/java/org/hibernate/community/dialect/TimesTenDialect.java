@@ -22,8 +22,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Lockable;
-import org.hibernate.query.IntervalType;
-import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
@@ -111,11 +111,6 @@ public class TimesTenDialect extends Dialect {
 	@Override
 	public int getDefaultStatementBatchSize() {
 		return 15;
-	}
-
-	@Override
-	public boolean getDefaultUseStreamsForBinary() {
-		return true;
 	}
 
 	@Override

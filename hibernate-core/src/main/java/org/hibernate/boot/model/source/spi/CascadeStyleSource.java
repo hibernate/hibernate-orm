@@ -17,5 +17,5 @@ public interface CascadeStyleSource {
 	 *
 	 * @return The cascade styles.
 	 */
-	public String getCascadeStyleName();
+	String getCascadeStyleName();
 }

@@ -17,7 +17,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specify an explicit BasicJavaDescriptor to use for a particular
+ * Specify an explicit BasicJavaType to use for a particular
  * column mapping.  <ul>
  *     <li>
  *         When applied to a Map-valued attribute, describes the Map value. Use

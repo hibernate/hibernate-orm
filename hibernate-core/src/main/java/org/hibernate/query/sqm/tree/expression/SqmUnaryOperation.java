@@ -6,9 +6,9 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.query.UnaryArithmeticOperator;
+import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
 /**
@@ -27,7 +27,7 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 	public SqmUnaryOperation(
 			UnaryArithmeticOperator operation,
 			SqmExpression<T> operand,
-			SqmExpressable<T> inherentType) {
+			SqmExpressible<T> inherentType) {
 		super( inherentType, operand.nodeBuilder() );
 		this.operation = operation;
 		this.operand = operand;

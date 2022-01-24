@@ -43,7 +43,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.PropertyMapping;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
@@ -87,7 +87,6 @@ public class EntityCollectionPart
 	private ModelPart fkTargetModelPart;
 	private ForeignKeyDescriptor fkDescriptor;
 
-	@SuppressWarnings("WeakerAccess")
 	public EntityCollectionPart(
 			CollectionPersister collectionDescriptor,
 			Nature nature,
@@ -198,7 +197,6 @@ public class EntityCollectionPart
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public void finishInitialization(
 			CollectionPersister collectionDescriptor,
 			Collection bootValueMapping,
@@ -377,13 +375,13 @@ public class EntityCollectionPart
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
-		return getEntityMappingType().getJavaTypeDescriptor();
+	public JavaType<?> getJavaType() {
+		return getEntityMappingType().getJavaType();
 	}
 
 	@Override
-	public JavaType<?> getExpressableJavaTypeDescriptor() {
-		return getJavaTypeDescriptor();
+	public JavaType<?> getExpressibleJavaType() {
+		return getJavaType();
 	}
 
 	@Override

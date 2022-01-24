@@ -12,7 +12,6 @@ import java.lang.reflect.Method;
 import java.util.Locale;
 
 import org.hibernate.PropertyAccessException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.internal.AbstractFieldSerialForm;
 import org.hibernate.proxy.HibernateProxy;
@@ -23,19 +22,19 @@ import org.hibernate.proxy.HibernateProxy;
  * @author Steve Ebersole
  */
 public class SetterFieldImpl implements Setter {
-	private final Class containerClass;
+	private final Class<?> containerClass;
 	private final String propertyName;
 	private final Field field;
 	private final Method setterMethod;
 
-	public SetterFieldImpl(Class containerClass, String propertyName, Field field) {
+	public SetterFieldImpl(Class<?> containerClass, String propertyName, Field field) {
 		this.containerClass = containerClass;
 		this.propertyName = propertyName;
 		this.field = field;
 		this.setterMethod = ReflectHelper.setterMethodOrNull( containerClass, propertyName, field.getType() );
 	}
 
-	public Class getContainerClass() {
+	public Class<?> getContainerClass() {
 		return containerClass;
 	}
 
@@ -105,11 +104,11 @@ public class SetterFieldImpl implements Setter {
 	}
 
 	private static class SerialForm extends AbstractFieldSerialForm implements Serializable {
-		private final Class containerClass;
+		private final Class<?> containerClass;
 		private final String propertyName;
 
 
-		private SerialForm(Class containerClass, String propertyName, Field field) {
+		private SerialForm(Class<?> containerClass, String propertyName, Field field) {
 			super( field );
 			this.containerClass = containerClass;
 			this.propertyName = propertyName;

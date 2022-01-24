@@ -14,7 +14,7 @@ package org.hibernate.tool.schema.spi;
  */
 public interface ScriptTargetOutput {
 	/**
-	 * Prepare the script target to {@link #accept(String) accept} commands
+	 * Prepare the script target to {@linkplain #accept(String) accept} commands
 	 */
 	void prepare();
 

@@ -37,7 +37,6 @@ public class LocalSchemaLocator {
 	 *
 	 * @param schemaResourceName The local resource name to the schema
 	 *
-	 * @return
 	 */
 	public static URL resolveLocalSchemaUrl(String schemaResourceName) {
 		URL url = LocalSchemaLocator.class.getClassLoader().getResource( schemaResourceName );

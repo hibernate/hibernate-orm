@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Nationalized;
@@ -40,10 +39,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.descriptor.java.BigDecimalJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BigDecimalJavaType;
 import org.hibernate.type.descriptor.java.FloatTypeDescriptor;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.BinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.CharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NumericJdbcType;
@@ -590,7 +589,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 		public static final String NAME = "big_decimal_as_decimal";
 
 		public BigDecimalAsDecimalType() {
-			super( NumericJdbcType.INSTANCE, BigDecimalJavaTypeDescriptor.INSTANCE );
+			super( NumericJdbcType.INSTANCE, BigDecimalJavaType.INSTANCE );
 		}
 
 		@Override
@@ -603,7 +602,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 		public static final String NAME = "string_as_nonvar_char_array";
 
 		public StringAsNonVarCharType() {
-			super( CharJdbcType.INSTANCE, StringJavaTypeDescriptor.INSTANCE );
+			super( CharJdbcType.INSTANCE, StringJavaType.INSTANCE );
 		}
 
 		@Override
@@ -616,7 +615,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 		public static final String NAME = "byte_array_as_nonvar_binary";
 
 		public ByteArrayAsNonVarBinaryType() {
-			super( BinaryJdbcType.INSTANCE, PrimitiveByteArrayJavaTypeDescriptor.INSTANCE );
+			super( BinaryJdbcType.INSTANCE, PrimitiveByteArrayJavaType.INSTANCE );
 		}
 
 		@Override

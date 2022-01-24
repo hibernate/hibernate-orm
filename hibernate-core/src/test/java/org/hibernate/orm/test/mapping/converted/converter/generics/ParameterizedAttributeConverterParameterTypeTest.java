@@ -68,7 +68,7 @@ public class ParameterizedAttributeConverterParameterTypeTest {
 					prop.getType()
 			);
 
-			assertTrue( StringListConverter.class.isAssignableFrom( type.getAttributeConverter().getConverterJavaTypeDescriptor().getJavaTypeClass() ) );
+			assertTrue( StringListConverter.class.isAssignableFrom( type.getAttributeConverter().getConverterJavaType().getJavaTypeClass() ) );
 		}
 
 		{
@@ -78,7 +78,7 @@ public class ParameterizedAttributeConverterParameterTypeTest {
 					prop.getType()
 			);
 
-			assertTrue( IntegerListConverter.class.isAssignableFrom( type.getAttributeConverter().getConverterJavaTypeDescriptor().getJavaTypeClass() ) );
+			assertTrue( IntegerListConverter.class.isAssignableFrom( type.getAttributeConverter().getConverterJavaType().getJavaTypeClass() ) );
 		}
 	}
 

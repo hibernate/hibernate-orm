@@ -12,7 +12,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.Limit;
+import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryParameterBindings;
 
 /**

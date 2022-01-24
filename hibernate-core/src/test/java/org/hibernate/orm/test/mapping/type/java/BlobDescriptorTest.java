@@ -18,9 +18,9 @@ import java.sql.SQLException;
 import org.hibernate.engine.jdbc.BlobImplementer;
 import org.hibernate.engine.jdbc.BlobProxy;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.type.descriptor.java.BlobJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BlobJavaType;
 import org.hibernate.type.descriptor.java.DataHelper;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.junit.Test;
 
 /**
@@ -32,7 +32,7 @@ public class BlobDescriptorTest extends AbstractDescriptorTest<Blob> {
 	final Blob different = BlobProxy.generateProxy( new byte[] { 3, 2, 1 } );
 
 	public BlobDescriptorTest() {
-		super( BlobJavaTypeDescriptor.INSTANCE );
+		super( BlobJavaType.INSTANCE );
 	}
 
 	@Override
@@ -50,19 +50,19 @@ public class BlobDescriptorTest extends AbstractDescriptorTest<Blob> {
 	public void testEquality() {
 		// blobs of the same internal value are not really comparable
 		assertFalse( original == copy );
-		assertTrue( BlobJavaTypeDescriptor.INSTANCE.areEqual( original, original ) );
-		assertFalse( BlobJavaTypeDescriptor.INSTANCE.areEqual( original, copy ) );
-		assertFalse( BlobJavaTypeDescriptor.INSTANCE.areEqual( original, different ) );
+		assertTrue( BlobJavaType.INSTANCE.areEqual( original, original ) );
+		assertFalse( BlobJavaType.INSTANCE.areEqual( original, copy ) );
+		assertFalse( BlobJavaType.INSTANCE.areEqual( original, different ) );
 	}
 
 	@Test
 	@Override
 	public void testExternalization() {
 		// blobs of the same internal value are not really comparable
-		String externalized = BlobJavaTypeDescriptor.INSTANCE.toString( original );
-		Blob consumed = BlobJavaTypeDescriptor.INSTANCE.fromString( externalized );
+		String externalized = BlobJavaType.INSTANCE.toString( original );
+		Blob consumed = BlobJavaType.INSTANCE.fromString( externalized );
 		try {
-			PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.areEqual(
+			PrimitiveByteArrayJavaType.INSTANCE.areEqual(
 					DataHelper.extractBytes( original.getBinaryStream() ),
 					DataHelper.extractBytes( consumed.getBinaryStream() )
 			);

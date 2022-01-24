@@ -312,9 +312,6 @@ public final class CollectionHelper {
 	 * The returned Set might be immutable, but there is no guarantee of this:
 	 * consider it immutable but don't rely on this.
 	 * The goal is to save memory.
-	 * @param set
-	 * @param <T>
-	 * @return
 	 */
 	public static <T> Set<T> toSmallSet(Set<T> set) {
 		switch ( set.size() ) {
@@ -334,10 +331,6 @@ public final class CollectionHelper {
 	 * The returned Map might be immutable, but there is no guarantee of this:
 	 * consider it immutable but don't rely on this.
 	 * The goal is to save memory.
-	 * @param map
-	 * @param <K>
-	 * @param <V>
-	 * @return
 	 */
 	public static <K, V> Map<K, V> toSmallMap(final Map<K, V> map) {
 		switch ( map.size() ) {
@@ -358,9 +351,6 @@ public final class CollectionHelper {
 	 * The returned List might be immutable, but there is no guarantee of this:
 	 * consider it immutable but don't rely on this.
 	 * The goal is to save memory.
-	 * @param arrayList
-	 * @param <V>
-	 * @return
 	 */
 	public static <V> List<V> toSmallList(ArrayList<V> arrayList) {
 		switch ( arrayList.size() ) {

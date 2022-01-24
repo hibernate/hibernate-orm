@@ -8,7 +8,7 @@ package org.hibernate.internal.util;
 
 /**
  * Represents a "final" value that is initialized either {@link #ValueHolder(Object) up front} or once at some point
- * {@link #ValueHolder(DeferredInitializer) after} declaration.
+ * {@linkplain #ValueHolder(DeferredInitializer) after} declaration.
  * 
  * Note: If a Serializable class has a {@link ValueHolder} property, that property should be declared transient!
  *
@@ -21,7 +21,7 @@ public class ValueHolder<T> {
 	 *
 	 * @param <T>
 	 */
-	public static interface DeferredInitializer<T> {
+	public interface DeferredInitializer<T> {
 		/**
 		 * Build the initialization value.
 		 * <p/>
@@ -29,7 +29,7 @@ public class ValueHolder<T> {
 		 *
 		 * @return The initialization value.
 		 */
-		public T initialize();
+		T initialize();
 	}
 
 	private final DeferredInitializer<T> valueInitializer;

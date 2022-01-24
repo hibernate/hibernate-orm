@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
 /**
@@ -29,8 +29,8 @@ public class SqmParameterizedEntityType<T> extends AbstractSqmExpression<T> impl
 	}
 
 	@Override
-	public void internalApplyInferableType(SqmExpressable<?> type) {
-		setExpressableType( type );
+	public void internalApplyInferableType(SqmExpressible<?> type) {
+		setExpressibleType( type );
 
 		//noinspection unchecked
 		discriminatorSource.applyInferableType( type );

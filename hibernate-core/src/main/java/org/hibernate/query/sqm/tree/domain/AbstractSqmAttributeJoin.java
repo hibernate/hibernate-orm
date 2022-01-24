@@ -11,7 +11,7 @@ import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -41,7 +41,6 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 
 	private SqmPredicate onClausePredicate;
 
-	@SuppressWarnings("WeakerAccess")
 	public AbstractSqmAttributeJoin(
 			SqmFrom<?,O> lhs,
 			SqmJoinable joinedNavigable,
@@ -87,7 +86,7 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 	}
 
 	@Override
-	public JavaType<T> getNodeJavaTypeDescriptor() {
+	public JavaType<T> getNodeJavaType() {
 		return getJavaTypeDescriptor();
 	}
 

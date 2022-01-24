@@ -18,7 +18,7 @@ import org.hibernate.service.Service;
 public interface DialectResolver extends Service {
 	/**
 	 * Determine the {@link Dialect} to use based on the given information.  Implementations are expected to return
-	 * the {@link Dialect} instance to use, or {@code null} if the they did not locate a match.
+	 * the {@link Dialect} instance to use, or {@code null} if they did not locate a match.
 	 *
 	 * @param info Access to the information about the database/driver needed to perform the resolution
 	 *

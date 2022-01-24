@@ -36,10 +36,10 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.FetchClauseType;
-import org.hibernate.query.IntervalType;
-import org.hibernate.query.NullOrdering;
-import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.query.sqm.NullOrdering;
+import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
@@ -59,16 +59,17 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLe
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import jakarta.persistence.TemporalType;
 
-import static org.hibernate.query.TemporalUnit.SECOND;
+import static org.hibernate.query.sqm.TemporalUnit.SECOND;
 import static org.hibernate.type.SqlTypes.*;
 
 /**
- * A dialect compatible with the H2 database.
+ * A {@linkplain Dialect SQL dialect} for H2.
  *
  * @author Thomas Mueller
  */
@@ -81,7 +82,6 @@ public class H2Dialect extends Dialect {
 	private final boolean cascadeConstraints;
 	private final boolean useLocalTime;
 
-	private final boolean supportsTuplesInSubqueries;
 	private final SequenceInformationExtractor sequenceInformationExtractor;
 	private final String querySequenceString;
 
@@ -106,7 +106,7 @@ public class H2Dialect extends Dialect {
 			LOG.unsupportedMultiTableBulkHqlJpaql( version.getMajor(), version.getMinor(), version.getMicro() );
 		}
 
-		supportsTuplesInSubqueries = version.isSameOrAfter( 1, 4, 198 );
+//		supportsTuplesInSubqueries = version.isSameOrAfter( 1, 4, 198 );
 
 		// Prior to 1.4.200 there was no support for 'current value for sequence_name'
 		// After 2.0.202 there is no support for 'sequence_name.nextval' and 'sequence_name.currval'
@@ -190,7 +190,7 @@ public class H2Dialect extends Dialect {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
-				.getJdbcTypeDescriptorRegistry();
+				.getJdbcTypeRegistry();
 
 		if ( getVersion().isSameOrAfter( 1, 4, 197 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
@@ -207,7 +207,7 @@ public class H2Dialect extends Dialect {
 
 	public boolean hasOddDstBehavior() {
 		// H2 1.4.200 has a bug: https://github.com/h2database/h2database/issues/3184
-		return getVersion().isSame( 1, 4, 200 );
+		return getVersion().isSameOrAfter( 1, 4, 200 );
 	}
 
 	@Override
@@ -272,6 +272,27 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public void augmentPhysicalTableTypes(List<String> tableTypesList) {
+		if ( getVersion().isSameOrAfter( 2 ) ) {
+			tableTypesList.add( "BASE TABLE" );
+		}
+	}
+
+	@Override
+	public JdbcType resolveSqlTypeDescriptor(
+			String columnTypeName,
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			JdbcTypeRegistry jdbcTypeRegistry) {
+		// As of H2 2.0 we get a FLOAT type code even though it is a DOUBLE
+		if ( jdbcTypeCode == FLOAT && "DOUBLE PRECISION".equals( columnTypeName ) ) {
+			return jdbcTypeRegistry.getDescriptor( DOUBLE );
+		}
+		return super.resolveSqlTypeDescriptor( columnTypeName, jdbcTypeCode, precision, scale, jdbcTypeRegistry );
+	}
+
+	@Override
 	public int getMaxVarcharLength() {
 		return 1_048_576;
 	}
@@ -304,7 +325,7 @@ public class H2Dialect extends Dialect {
 
 	/**
 	 * In H2, the extract() function does not return
-	 * fractional seconds for the the field
+	 * fractional seconds for the field
 	 * {@link TemporalUnit#SECOND}. We work around
 	 * this here with two calls to extract().
 	 */
@@ -451,20 +472,20 @@ public class H2Dialect extends Dialect {
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				String constraintName = null;
 				// 23000: Check constraint violation: {0}
 				// 23001: Unique index or primary key violation: {0}
 				if ( sqle.getSQLState().startsWith( "23" ) ) {
 					final String message = sqle.getMessage();
 					final int idx = message.indexOf( "violation: " );
 					if ( idx > 0 ) {
-						constraintName = message.substring( idx + "violation: ".length() );
-					}
-					if ( sqle.getSQLState().equals( "23506" ) ) {
-						constraintName = constraintName.substring( 1, constraintName.indexOf( ":" ) );
+						String constraintName = message.substring( idx + "violation: ".length() );
+						if ( sqle.getSQLState().equals( "23506" ) ) {
+							constraintName = constraintName.substring( 1, constraintName.indexOf( ":" ) );
+						}
+						return constraintName;
 					}
 				}
-				return constraintName;
+				return null;
 			} );
 
 	@Override

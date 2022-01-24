@@ -6,8 +6,6 @@
  */
 package org.hibernate.cfg;
 
-import java.util.Map;
-
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.SchemaAutoTooling;
@@ -17,7 +15,7 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.loader.BatchFetchStyle;
-import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 import org.jboss.logging.Logger;
@@ -82,7 +80,6 @@ public final class Settings {
 
 			LOG.debugf( "JTA Track by Thread: %s", enabledDisabled( sessionFactoryOptions.isJtaTrackByThread() ) );
 
-			LOG.debugf( "Query language substitutions: %s", sessionFactoryOptions.getQuerySubstitutions() );
 			LOG.debugf( "Named query checking : %s", enabledDisabled( sessionFactoryOptions.isNamedQueryStartupCheckingEnabled() ) );
 
 			LOG.debugf( "Second-level cache: %s", enabledDisabled( sessionFactoryOptions.isSecondLevelCacheEnabled() ) );
@@ -97,7 +94,6 @@ public final class Settings {
 			LOG.debugf( "JDBC batch size: %s", sessionFactoryOptions.getJdbcBatchSize() );
 			LOG.debugf( "JDBC batch updates for versioned data: %s", enabledDisabled( sessionFactoryOptions.isJdbcBatchVersionedData() ) );
 			LOG.debugf( "Scrollable result sets: %s", enabledDisabled( sessionFactoryOptions.isScrollableResultSetsEnabled() ) );
-			LOG.debugf( "Wrap result sets: %s", enabledDisabled( sessionFactoryOptions.isWrapResultSetsEnabled() ) );
 			LOG.debugf( "JDBC3 getGeneratedKeys(): %s", enabledDisabled( sessionFactoryOptions.isGetGeneratedKeysEnabled() ) );
 			LOG.debugf( "JDBC result set fetch size: %s", sessionFactoryOptions.getJdbcFetchSize() );
 			LOG.debugf( "Connection release mode: %s", sessionFactoryOptions.getConnectionReleaseMode() );
@@ -201,10 +197,6 @@ public final class Settings {
 		return sessionFactoryOptions.isStrictJpaQueryLanguageCompliance();
 	}
 
-	public Map getQuerySubstitutions() {
-		return sessionFactoryOptions.getQuerySubstitutions();
-	}
-
 	public boolean isNamedQueryStartupCheckingEnabled() {
 		return sessionFactoryOptions.isNamedQueryStartupCheckingEnabled();
 	}
@@ -273,10 +265,6 @@ public final class Settings {
 
 	public boolean isScrollableResultSetsEnabled() {
 		return sessionFactoryOptions.isScrollableResultSetsEnabled();
-	}
-
-	public boolean isWrapResultSetsEnabled() {
-		return sessionFactoryOptions.isWrapResultSetsEnabled();
 	}
 
 	public boolean isGetGeneratedKeysEnabled() {

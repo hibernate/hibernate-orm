@@ -5,13 +5,23 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate;
+
 import java.util.Collection;
 
 import org.hibernate.engine.spi.FilterDefinition;
 
 /**
- * Type definition of Filter.  Filter defines the user's view into enabled dynamic filters,
- * allowing them to set filter parameter values.
+ * Allows control over an enabled filter at runtime. In particular, allows
+ * {@linkplain #setParameter(String, Object) arguments} to be assigned to
+ * parameters declared by the filter.
+ * <p>
+ * A filter may be defined using {@link org.hibernate.annotations.FilterDef}
+ * and {@link org.hibernate.annotations.Filter}, and must be explicitly
+ * enabled at runtime by calling {@link Session#enableFilter(String)}.
+ *
+ * @see org.hibernate.annotations.FilterDef
+ * @see Session#enableFilter(String)
+ * @see FilterDefinition
  *
  * @author Steve Ebersole
  */
@@ -22,15 +32,15 @@ public interface Filter {
 	 *
 	 * @return This filter's name.
 	 */
-	public String getName();
+	String getName();
 
 	/**
-	 * Get the filter definition containing additional information about the
-	 * filter (such as default-condition and expected parameter names/types).
+	 * Get the associated {@link FilterDefinition definition} of
+	 * this named filter.
 	 *
 	 * @return The filter definition
 	 */
-	public FilterDefinition getFilterDefinition();
+	FilterDefinition getFilterDefinition();
 
 
 	/**
@@ -40,7 +50,7 @@ public interface Filter {
 	 * @param value The value to be applied.
 	 * @return This FilterImpl instance (for method chaining).
 	 */
-	public Filter setParameter(String name, Object value);
+	Filter setParameter(String name, Object value);
 
 	/**
 	 * Set the named parameter's value list for this filter.  Used
@@ -50,7 +60,7 @@ public interface Filter {
 	 * @param values The values to be expanded into an SQL IN list.
 	 * @return This FilterImpl instance (for method chaining).
 	 */
-	public Filter setParameterList(String name, Collection values);
+	Filter setParameterList(String name, Collection<?> values);
 
 	/**
 	 * Set the named parameter's value list for this filter.  Used
@@ -60,13 +70,13 @@ public interface Filter {
 	 * @param values The values to be expanded into an SQL IN list.
 	 * @return This FilterImpl instance (for method chaining).
 	 */
-	public Filter setParameterList(String name, Object[] values);
+	Filter setParameterList(String name, Object[] values);
 
 	/**
-	 * Perform validation of the filter state.  This is used to verify the
-	 * state of the filter after its enablement and before its use.
+	 * Perform validation of the filter state.  This is used to verify
+	 * the state of the filter after its enablement and before its use.
 	 *
 	 * @throws HibernateException If the state is not currently valid.
 	 */
-	public void validate() throws HibernateException;
+	void validate() throws HibernateException;
 }

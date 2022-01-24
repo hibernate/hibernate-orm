@@ -11,9 +11,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.query.FetchClauseType;
+import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.SetOperator;
+import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
@@ -142,8 +142,8 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 				}
 				for ( int j = 0; j < firstSelectionSize; j++ ) {
 					final SqmTypedNode<?> firstSqmSelection = typedNodes.get( j );
-					final JavaType<?> firstJavaTypeDescriptor = firstSqmSelection.getNodeJavaTypeDescriptor();
-					if ( firstJavaTypeDescriptor != selections.get( j ).getNodeJavaTypeDescriptor() ) {
+					final JavaType<?> firstJavaType = firstSqmSelection.getNodeJavaType();
+					if ( firstJavaType != selections.get( j ).getNodeJavaType() ) {
 						throw new SemanticException(
 								"Select items of the same index must have the same java type across all query parts!"
 						);

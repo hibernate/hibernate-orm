@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
@@ -28,7 +28,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * @author Steve Ebersole
  */
 public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConverter<E,String>, Serializable {
-	private final EnumJavaTypeDescriptor<E> domainTypeDescriptor;
+	private final EnumJavaType<E> domainTypeDescriptor;
 	private final JdbcType jdbcType;
 	private final JavaType<String> relationalTypeDescriptor;
 
@@ -36,7 +36,7 @@ public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConv
 	private transient ValueBinder<String> valueBinder;
 
 	public NamedEnumValueConverter(
-			EnumJavaTypeDescriptor<E> domainTypeDescriptor,
+			EnumJavaType<E> domainTypeDescriptor,
 			JdbcType jdbcType,
 			JavaType<String> relationalTypeDescriptor) {
 		this.domainTypeDescriptor = domainTypeDescriptor;
@@ -48,12 +48,12 @@ public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConv
 	}
 
 	@Override
-	public EnumJavaTypeDescriptor<E> getDomainJavaDescriptor() {
+	public EnumJavaType<E> getDomainJavaType() {
 		return domainTypeDescriptor;
 	}
 
 	@Override
-	public JavaType<String> getRelationalJavaDescriptor() {
+	public JavaType<String> getRelationalJavaType() {
 		return relationalTypeDescriptor;
 	}
 

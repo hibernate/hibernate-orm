@@ -41,10 +41,10 @@ public class DurationIntervalSecondJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
 		return (appender, value, dialect, wrapperOptions) -> dialect.appendIntervalLiteral(
 				appender,
-				javaTypeDescriptor.unwrap(
+				javaType.unwrap(
 						value,
 						Duration.class,
 						wrapperOptions
@@ -53,39 +53,39 @@ public class DurationIntervalSecondJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
+		return new BasicBinder<X>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				st.setObject( index, javaTypeDescriptor.unwrap( value, Duration.class, options ) );
+				st.setObject( index, javaType.unwrap( value, Duration.class, options ) );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				st.setObject( name, javaTypeDescriptor.unwrap( value, Duration.class, options ) );
+				st.setObject( name, javaType.unwrap( value, Duration.class, options ) );
 			}
 		};
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor) {
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
+		return new BasicExtractor<X>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getObject( paramIndex, Duration.class ), options );
+				return javaType.wrap( rs.getObject( paramIndex, Duration.class ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getObject( index, Duration.class ), options );
+				return javaType.wrap( statement.getObject( index, Duration.class ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getObject( name, Duration.class ), options );
+				return javaType.wrap( statement.getObject( name, Duration.class ), options );
 			}
 		};
 	}

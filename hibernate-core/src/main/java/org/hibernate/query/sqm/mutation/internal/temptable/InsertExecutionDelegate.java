@@ -31,12 +31,12 @@ import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.query.ComparisonOperator;
+import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.SortOrder;
+import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.results.TableGroupImpl;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
@@ -90,7 +90,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 	private final JdbcParameterBindings jdbcParameterBindings;
 
 	private final Map<TableReference, List<Assignment>> assignmentsByTable;
-	private final Map<SqmParameter<?>, MappingModelExpressable<?>> paramTypeResolutions;
+	private final Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions;
 	private final SessionFactoryImplementor sessionFactory;
 
 	public InsertExecutionDelegate(
@@ -105,7 +105,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			List<Assignment> assignments,
 			InsertStatement insertStatement,
 			Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions,
-			Map<SqmParameter<?>, MappingModelExpressable<?>> paramTypeResolutions,
+			Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions,
 			DomainQueryExecutionContext executionContext) {
 		this.sqmInsert = sqmInsert;
 		this.sqmConverter = sqmConverter;
@@ -137,8 +137,8 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				navigablePath -> insertingTableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
-					public <T> MappingModelExpressable<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
-						return (MappingModelExpressable<T>) paramTypeResolutions.get(parameter);
+					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
+						return (MappingModelExpressible<T>) paramTypeResolutions.get(parameter);
 					}
 				}
 				,

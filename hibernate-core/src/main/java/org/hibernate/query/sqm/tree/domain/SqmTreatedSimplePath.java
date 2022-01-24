@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.PathException;
-import org.hibernate.query.TreatedNavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 
@@ -22,11 +21,11 @@ public class SqmTreatedSimplePath<T, S extends T>
 	private final EntityDomainType<S> treatTarget;
 	private final SqmPath<T> wrappedPath;
 
-	@SuppressWarnings({"unchecked", "WeakerAccess"})
 	public SqmTreatedSimplePath(
 			SqmPluralValuedSimplePath<T> wrappedPath,
 			EntityDomainType<S> treatTarget,
 			NodeBuilder nodeBuilder) {
+		//noinspection unchecked
 		super(
 				wrappedPath.getNavigablePath().treatAs(
 						treatTarget.getHibernateEntityName()
@@ -39,11 +38,11 @@ public class SqmTreatedSimplePath<T, S extends T>
 		this.wrappedPath = wrappedPath;
 	}
 
-	@SuppressWarnings({"unchecked", "WeakerAccess"})
 	public SqmTreatedSimplePath(
 			SqmPath<T> wrappedPath,
 			EntityDomainType<S> treatTarget,
 			NodeBuilder nodeBuilder) {
+		//noinspection unchecked
 		super(
 				wrappedPath.getNavigablePath().treatAs(
 						treatTarget.getHibernateEntityName()

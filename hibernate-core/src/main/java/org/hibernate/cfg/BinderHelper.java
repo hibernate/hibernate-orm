@@ -156,6 +156,7 @@ public class BinderHelper {
 					clone.setValueGenerationStrategy( property.getValueGenerationStrategy() );
 					embeddedComp.addProperty( clone );
 				}
+				embeddedComp.sortProperties();
 				synthProp = new SyntheticProperty();
 				synthProp.setName( syntheticPropertyName );
 				synthProp.setPersistentClass( ownerEntity );
@@ -815,7 +816,7 @@ public class BinderHelper {
 		value.setLazy( lazy );
 		value.setCascadeDeleteEnabled( cascadeOnDelete );
 
-		final BasicValueBinder discriminatorValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ANY_DISCRIMINATOR, context );
+		final BasicValueBinder<?> discriminatorValueBinder = new BasicValueBinder<>( BasicValueBinder.Kind.ANY_DISCRIMINATOR, context );
 
 		final AnnotatedColumn[] discriminatorColumns = AnnotatedColumn.buildColumnFromAnnotation(
 				new jakarta.persistence.Column[] { discriminatorColumn },
@@ -841,7 +842,7 @@ public class BinderHelper {
 
 		final JavaType<?> discriminatorJavaType = discriminatorDescriptor
 				.resolve()
-				.getRelationalJavaDescriptor();
+				.getRelationalJavaType();
 
 		final Map<Object,Class<?>> discriminatorValueMappings = new HashMap<>();
 		processAnyDiscriminatorValues(

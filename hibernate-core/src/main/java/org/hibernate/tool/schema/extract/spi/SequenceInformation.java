@@ -23,19 +23,6 @@ public interface SequenceInformation {
 	QualifiedSequenceName getSequenceName();
 
 	/**
-	 * Retrieve the extracted increment-size defined for the sequence.
-	 *
-	 * @return The extracted increment size; use a negative number to indicate the increment could not be extracted.
-	 *
-	 * @deprecated use {@link #getIncrementValue()} instead.
-	 */
-	@Deprecated
-	default int getIncrementSize() {
-		Long incrementSize = getIncrementValue();
-		return incrementSize != null ? incrementSize.intValue() : -1;
-	}
-
-	/**
 	 * Retrieve the extracted start value defined for the sequence.
 	 *
 	 * @return The extracted start value or null id the value could not be extracted.

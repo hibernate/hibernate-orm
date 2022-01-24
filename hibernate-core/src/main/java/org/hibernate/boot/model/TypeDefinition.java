@@ -33,7 +33,7 @@ import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
 import org.hibernate.usertype.UserType;
@@ -99,7 +99,7 @@ public class TypeDefinition implements Serializable {
 			Map localConfigParameters,
 			MutabilityPlan explicitMutabilityPlan,
 			MetadataBuildingContext context,
-			JdbcTypeDescriptorIndicators indicators) {
+			JdbcTypeIndicators indicators) {
 		if ( CollectionHelper.isEmpty( localConfigParameters ) ) {
 			// we can use the re-usable resolution...
 			if ( reusableResolution == null ) {
@@ -117,7 +117,7 @@ public class TypeDefinition implements Serializable {
 	private BasicValue.Resolution<?> createResolution(
 			String name,
 			Map<?,?> usageSiteProperties,
-			JdbcTypeDescriptorIndicators indicators,
+			JdbcTypeIndicators indicators,
 			MetadataBuildingContext context) {
 		return createResolution(
 				name,
@@ -134,7 +134,7 @@ public class TypeDefinition implements Serializable {
 			Class<?> typeImplementorClass,
 			Properties parameters,
 			Map<?,?> usageSiteProperties,
-			JdbcTypeDescriptorIndicators indicators,
+			JdbcTypeIndicators indicators,
 			MetadataBuildingContext context) {
 		final BootstrapContext bootstrapContext = context.getBootstrapContext();
 		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
@@ -202,18 +202,18 @@ public class TypeDefinition implements Serializable {
 					}
 
 					@Override
-					public JavaType<Object> getDomainJavaDescriptor() {
-						return resolvedBasicType.getMappedJavaTypeDescriptor();
+					public JavaType<Object> getDomainJavaType() {
+						return resolvedBasicType.getMappedJavaType();
 					}
 
 					@Override
-					public JavaType<?> getRelationalJavaDescriptor() {
-						return resolvedBasicType.getMappedJavaTypeDescriptor();
+					public JavaType<?> getRelationalJavaType() {
+						return resolvedBasicType.getMappedJavaType();
 					}
 
 					@Override
-					public JdbcType getJdbcTypeDescriptor() {
-						return resolvedBasicType.getJdbcTypeDescriptor();
+					public JdbcType getJdbcType() {
+						return resolvedBasicType.getJdbcType();
 					}
 
 					@Override
@@ -225,7 +225,7 @@ public class TypeDefinition implements Serializable {
 					public MutabilityPlan<Object> getMutabilityPlan() {
 						// a TypeDefinition does not explicitly provide a MutabilityPlan (yet?)
 						return resolvedBasicType.isMutable()
-								? getDomainJavaDescriptor().getMutabilityPlan()
+								? getDomainJavaType().getMutabilityPlan()
 								: ImmutableMutabilityPlan.instance();
 					}
 				};
@@ -236,9 +236,9 @@ public class TypeDefinition implements Serializable {
 
 		if ( Serializable.class.isAssignableFrom( typeImplementorClass ) ) {
 			final JavaType<Serializable> jtd = typeConfiguration
-					.getJavaTypeDescriptorRegistry()
+					.getJavaTypeRegistry()
 					.resolveDescriptor( typeImplementorClass );
-			final JdbcType jdbcType = typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( Types.VARBINARY );
+			final JdbcType jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.VARBINARY );
 			final BasicType<Serializable> resolved = typeConfiguration.getBasicTypeRegistry().resolve( jtd, jdbcType );
 			final SerializableType legacyType = new SerializableType( typeImplementorClass );
 
@@ -254,18 +254,18 @@ public class TypeDefinition implements Serializable {
 				}
 
 				@Override
-				public JavaType<Object> getDomainJavaDescriptor() {
-					return (JavaType) resolved.getMappedJavaTypeDescriptor();
+				public JavaType<Object> getDomainJavaType() {
+					return (JavaType) resolved.getMappedJavaType();
 				}
 
 				@Override
-				public JavaType<?> getRelationalJavaDescriptor() {
-					return resolved.getMappedJavaTypeDescriptor();
+				public JavaType<?> getRelationalJavaType() {
+					return resolved.getMappedJavaType();
 				}
 
 				@Override
-				public JdbcType getJdbcTypeDescriptor() {
-					return resolved.getJdbcTypeDescriptor();
+				public JdbcType getJdbcType() {
+					return resolved.getJdbcType();
 				}
 
 				@Override
@@ -277,7 +277,7 @@ public class TypeDefinition implements Serializable {
 				public MutabilityPlan<Object> getMutabilityPlan() {
 					// a TypeDefinition does not explicitly provide a MutabilityPlan (yet?)
 					return resolved.isMutable()
-							? getDomainJavaDescriptor().getMutabilityPlan()
+							? getDomainJavaType().getMutabilityPlan()
 							: ImmutableMutabilityPlan.instance();
 				}
 			};

@@ -11,8 +11,8 @@ import java.util.List;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.ordering.ast.OrderingExpression;
-import org.hibernate.query.NullPrecedence;
-import org.hibernate.query.SortOrder;
+import org.hibernate.query.sqm.NullPrecedence;
+import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;

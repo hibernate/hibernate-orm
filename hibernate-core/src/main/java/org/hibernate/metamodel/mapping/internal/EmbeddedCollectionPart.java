@@ -25,7 +25,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
@@ -68,7 +68,6 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	private final PropertyAccess parentInjectionAttributePropertyAccess;
 	private final String sqlAliasStem;
 
-	@SuppressWarnings("WeakerAccess")
 	public EmbeddedCollectionPart(
 			CollectionPersister collectionDescriptor,
 			Nature nature,
@@ -81,7 +80,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 		this.nature = nature;
 		if ( parentInjectionAttributeName != null ) {
 			parentInjectionAttributePropertyAccess = PropertyAccessStrategyBasicImpl.INSTANCE.buildPropertyAccess(
-					embeddableMappingType.getMappedJavaTypeDescriptor().getJavaTypeClass(),
+					embeddableMappingType.getMappedJavaType().getJavaTypeClass(),
 					parentInjectionAttributeName,
 					true );
 		}
@@ -298,13 +297,13 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
-		return getEmbeddableTypeDescriptor().getJavaTypeDescriptor();
+	public JavaType<?> getJavaType() {
+		return getEmbeddableTypeDescriptor().getJavaType();
 	}
 
 	@Override
-	public JavaType<?> getExpressableJavaTypeDescriptor() {
-		return getJavaTypeDescriptor();
+	public JavaType<?> getExpressibleJavaType() {
+		return getJavaType();
 	}
 
 	@Override

@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.query.sql;
 
-import org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl;
 import org.hibernate.engine.query.spi.ParamLocationRecognizer;
 import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
@@ -14,6 +13,7 @@ import org.hibernate.query.sql.spi.ParameterRecognizer;
 import org.hibernate.testing.TestForIssue;
 import org.junit.jupiter.api.Test;
 
+import static org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl.NATIVE_QUERY_INTERPRETER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -26,10 +26,42 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 public class ParameterParserTest {
 	@Test
-	public void testQuotedTextInComment() {
-		ParamLocationRecognizer recognizer = new ParamLocationRecognizer( 0 );
+	public void testFunctionAsNativeQuery() {
+		ParamLocationRecognizer recognizer = createRecognizer();
 
-		NativeQueryInterpreterStandardImpl.INSTANCE.recognizeParameters(
+		try {
+			NATIVE_QUERY_INTERPRETER.recognizeParameters(
+					"{? = call abc()}",
+					recognizer
+			);
+			fail( "Expecting exception" );
+		}
+		catch (UnsupportedOperationException expected) {
+		}
+
+		try {
+			NATIVE_QUERY_INTERPRETER.recognizeParameters(
+					"{?=call abc()}",
+					recognizer
+			);
+			fail( "Expecting exception" );
+		}
+		catch (UnsupportedOperationException expected) {
+		}
+
+		NATIVE_QUERY_INTERPRETER.recognizeParameters(
+				"{call abc()}",
+				recognizer
+		);
+
+		recognizer.validate();
+	}
+
+	@Test
+	public void testQuotedTextInComment() {
+		ParamLocationRecognizer recognizer = createRecognizer();
+
+		NATIVE_QUERY_INTERPRETER.recognizeParameters(
 				"-- 'This' should not fail the test.\n" + "SELECT column FROM Table WHERE column <> :param",
 				recognizer
 		);
@@ -39,11 +71,15 @@ public class ParameterParserTest {
 		assertTrue(recognizer.getNamedParameterDescriptionMap().containsKey("param"));
 	}
 
+	private ParamLocationRecognizer createRecognizer() {
+		return new ParamLocationRecognizer( 1 );
+	}
+
 	@Test
 	public void testContractionInComment() {
-		ParamLocationRecognizer recognizer = new ParamLocationRecognizer( 0 );
+		ParamLocationRecognizer recognizer = createRecognizer();
 
-		NativeQueryInterpreterStandardImpl.INSTANCE.recognizeParameters(
+		NATIVE_QUERY_INTERPRETER.recognizeParameters(
 				"-- This shouldn't fail the test.\n" + "SELECT column FROM Table WHERE column <> :param",
 				recognizer
 		);
@@ -56,9 +92,9 @@ public class ParameterParserTest {
 
 	@Test
 	public void testDoubleDashInCharLiteral() {
-		ParamLocationRecognizer recognizer = new ParamLocationRecognizer( 0 );
+		ParamLocationRecognizer recognizer = createRecognizer();
 
-		NativeQueryInterpreterStandardImpl.INSTANCE.recognizeParameters(
+		NATIVE_QUERY_INTERPRETER.recognizeParameters(
 				"select coalesce(i.name, '--NONE--') as itname  from Item i where i.intVal=? ",
 				recognizer
 		);
@@ -71,9 +107,9 @@ public class ParameterParserTest {
 
 	@Test
 	public void testSlashStarInCharLiteral() {
-		ParamLocationRecognizer recognizer = new ParamLocationRecognizer( 0 );
+		ParamLocationRecognizer recognizer = createRecognizer();
 
-		NativeQueryInterpreterStandardImpl.INSTANCE.recognizeParameters(
+		NATIVE_QUERY_INTERPRETER.recognizeParameters(
 				"select coalesce(i.name, '/*NONE') as itname  from Item i where i.intVal=? ",
 				recognizer
 		);
@@ -86,9 +122,9 @@ public class ParameterParserTest {
 
 	@Test
 	public void testApostropheInOracleAlias() {
-		ParamLocationRecognizer recognizer = new ParamLocationRecognizer( 0 );
+		ParamLocationRecognizer recognizer = createRecognizer();
 
-		NativeQueryInterpreterStandardImpl.INSTANCE.recognizeParameters(
+		NATIVE_QUERY_INTERPRETER.recognizeParameters(
 				"SELECT column as \"Table's column\" FROM Table WHERE column <> :param",
 				recognizer
 		);
@@ -141,8 +177,8 @@ public class ParameterParserTest {
     
     @Test
     public void testParseNamedParameter() {
-        ParamLocationRecognizer recognizer = new ParamLocationRecognizer( 0 );
-		NativeQueryInterpreterStandardImpl.INSTANCE.recognizeParameters("from Stock s where s.stockCode = :stockCode and s.xyz = :pxyz", recognizer);
+        ParamLocationRecognizer recognizer = createRecognizer();
+		NATIVE_QUERY_INTERPRETER.recognizeParameters("from Stock s where s.stockCode = :stockCode and s.xyz = :pxyz", recognizer);
 		recognizer.complete();
 		recognizer.validate();
 
@@ -153,8 +189,8 @@ public class ParameterParserTest {
     
     @Test
     public void testParseJPAPositionalParameter() {
-        ParamLocationRecognizer recognizer = new ParamLocationRecognizer( 0 );
-		NativeQueryInterpreterStandardImpl.INSTANCE.recognizeParameters("from Stock s where s.stockCode = ?1 and s.xyz = ?1", recognizer);
+        ParamLocationRecognizer recognizer = createRecognizer();
+		NATIVE_QUERY_INTERPRETER.recognizeParameters("from Stock s where s.stockCode = ?1 and s.xyz = ?1", recognizer);
 		recognizer.complete();
 		recognizer.validate();
 

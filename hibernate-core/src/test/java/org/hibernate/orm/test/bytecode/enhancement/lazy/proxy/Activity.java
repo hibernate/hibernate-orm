@@ -20,7 +20,6 @@ import jakarta.persistence.Table;
  */
 @Entity(name = "Activity")
 @Table(name = "activity")
-@SuppressWarnings("WeakerAccess")
 public class Activity extends BaseEntity {
 	private String description;
 	private Instruction instruction;

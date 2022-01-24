@@ -59,7 +59,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.Clause;
@@ -73,7 +73,7 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
 
@@ -535,7 +535,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	private static final BasicType<String> STRING_TYPE = new BasicTypeImpl<>(
-			StringJavaTypeDescriptor.INSTANCE,
+			StringJavaType.INSTANCE,
 			VarcharJdbcType.INSTANCE
 	);
 	private static final Type[] TYPES = new Type[] { STRING_TYPE };
@@ -914,7 +914,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public JavaType getMappedJavaTypeDescriptor() {
+	public JavaType getMappedJavaType() {
 		return null;
 	}
 }

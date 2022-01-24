@@ -44,24 +44,24 @@ public class DoubleMappingTests {
 
 		{
 			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
-			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Double.class));
+			assertThat( attribute.getJavaType().getJavaTypeClass(), equalTo( Double.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Double.class));
 			assertThat(
-					jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(),
+					jdbcMapping.getJdbcType().getJdbcTypeCode(),
 					isOneOf(Types.DOUBLE, Types.FLOAT, Types.REAL, Types.NUMERIC)
 			);
 		}
 
 		{
 			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitive");
-			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Double.class));
+			assertThat( attribute.getJavaType().getJavaTypeClass(), equalTo( Double.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Double.class));
 			assertThat(
-					jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(),
+					jdbcMapping.getJdbcType().getJdbcTypeCode(),
 					isOneOf(Types.DOUBLE, Types.FLOAT, Types.REAL, Types.NUMERIC)
 			);
 		}

@@ -24,16 +24,22 @@ public interface TypeContributions {
 	TypeConfiguration getTypeConfiguration();
 
 	/**
-	 * Add the JavaTypeDescriptor to the {@link TypeConfiguration}'s
+	 * Add the JavaType to the {@link TypeConfiguration}'s
 	 * {@link JavaTypeRegistry}
 	 */
-	void contributeJavaTypeDescriptor(JavaType descriptor);
+	void contributeJavaType(JavaType<?> descriptor);
 
 	/**
 	 * Add the JdbcType to the {@link TypeConfiguration}'s
 	 * {@link JdbcTypeRegistry}
 	 */
-	void contributeJdbcTypeDescriptor(JdbcType descriptor);
+	void contributeJdbcType(JdbcType descriptor);
+
+	/**
+	 * Registers a UserType as the implicit (auto-applied) type
+	 * for values of type {@link UserType#returnedClass()}
+	 */
+	<T> void contributeType(UserType<T> type);
 
 	/**
 	 * @deprecated (6.0) See user-guide section `2.2.46. TypeContributor` for details - `basic_types.adoc`

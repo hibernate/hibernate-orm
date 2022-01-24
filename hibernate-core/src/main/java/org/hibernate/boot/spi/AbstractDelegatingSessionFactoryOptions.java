@@ -26,7 +26,7 @@ import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
-import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -225,18 +225,8 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public Map getQuerySubstitutions() {
-		return delegate.getQuerySubstitutions();
-	}
-
-	@Override
 	public boolean isNamedQueryStartupCheckingEnabled() {
 		return delegate.isNamedQueryStartupCheckingEnabled();
-	}
-
-	@Override
-	public boolean isConventionalJavaConstants() {
-		return delegate.isConventionalJavaConstants();
 	}
 
 	@Override
@@ -307,11 +297,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public boolean isScrollableResultSetsEnabled() {
 		return delegate.isScrollableResultSetsEnabled();
-	}
-
-	@Override
-	public boolean isWrapResultSetsEnabled() {
-		return delegate.isWrapResultSetsEnabled();
 	}
 
 	@Override
@@ -401,11 +386,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public boolean isQueryParametersValidationEnabled() {
-		return delegate.isQueryParametersValidationEnabled();
-	}
-
-	@Override
 	public ValueHandlingMode getCriteriaValueHandlingMode() {
 		return delegate.getCriteriaValueHandlingMode();
 	}
@@ -441,11 +421,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public boolean nativeExceptionHandling51Compliance() {
-		return delegate.nativeExceptionHandling51Compliance();
-	}
-
-	@Override
 	public int getQueryStatisticsMaxSize() {
 		return delegate.getQueryStatisticsMaxSize();
 	}
@@ -468,11 +443,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public SqmFunctionRegistry getCustomSqmFunctionRegistry() {
 		return delegate().getCustomSqmFunctionRegistry();
-	}
-
-	@Override
-	public boolean isOmitJoinOfSuperclassTablesEnabled() {
-		return delegate.isOmitJoinOfSuperclassTablesEnabled();
 	}
 
 	@Override

@@ -20,7 +20,7 @@ public interface EntityHierarchySource {
 	 *
 	 * @return The root type source.
 	 */
-	public EntitySource getRoot();
+	EntitySource getRoot();
 
 	/**
 	 * The inheritance type/strategy for the hierarchy.
@@ -29,82 +29,82 @@ public interface EntityHierarchySource {
 	 *
 	 * @return The inheritance type.
 	 */
-	public InheritanceType getHierarchyInheritanceType();
+	InheritanceType getHierarchyInheritanceType();
 
 	/**
 	 * Obtain source information about this entity's identifier.
 	 *
 	 * @return Identifier source information.
 	 */
-	public IdentifierSource getIdentifierSource();
+	IdentifierSource getIdentifierSource();
 
 	/**
 	 * Obtain the source information about the attribute used for optimistic locking.
 	 *
 	 * @return the source information about the attribute used for optimistic locking
 	 */
-	public VersionAttributeSource getVersionAttributeSource();
+	VersionAttributeSource getVersionAttributeSource();
 
 	/**
 	 * Obtain the source information about the discriminator attribute for single table inheritance
 	 *
 	 * @return the source information about the discriminator attribute for single table inheritance
 	 */
-	public DiscriminatorSource getDiscriminatorSource();
+	DiscriminatorSource getDiscriminatorSource();
 
 	/**
 	 * Obtain the source information about the multi-tenancy discriminator for this entity
 	 *
 	 * @return the source information about the multi-tenancy discriminator for this entity
 	 */
-	public MultiTenancySource getMultiTenancySource();
+	MultiTenancySource getMultiTenancySource();
 
 	/**
 	 * Is this root entity mutable?
 	 *
 	 * @return {@code true} indicates mutable; {@code false} non-mutable.
 	 */
-	public boolean isMutable();
+	boolean isMutable();
 
 	/**
 	 * Should explicit polymorphism (querying) be applied to this entity?
 	 *
 	 * @return {@code true} indicates explicit polymorphism; {@code false} implicit.
 	 */
-	public boolean isExplicitPolymorphism();
+	boolean isExplicitPolymorphism();
 
 	/**
 	 * Obtain the specified extra where condition to be applied to this entity.
 	 *
 	 * @return The extra where condition
 	 */
-	public String getWhere();
+	String getWhere();
 
 	/**
 	 * Obtain the row-id name for this entity
 	 *
 	 * @return The row-id name
 	 */
-	public String getRowId();
+	String getRowId();
 
 	/**
 	 * Obtain the optimistic locking style for this entity.
 	 *
 	 * @return The optimistic locking style.
 	 */
-	public OptimisticLockStyle getOptimisticLockStyle();
+	OptimisticLockStyle getOptimisticLockStyle();
 
 	/**
 	 * Obtain the caching configuration for this entity.
 	 *
 	 * @return The caching configuration.
 	 */
-	public Caching getCaching();
+	Caching getCaching();
 
 	/**
 	 * Obtain the natural id caching configuration for this entity.
 	 *
 	 * @return The natural id caching configuration.
 	 */
-	public Caching getNaturalIdCaching();
+	Caching getNaturalIdCaching();
 }

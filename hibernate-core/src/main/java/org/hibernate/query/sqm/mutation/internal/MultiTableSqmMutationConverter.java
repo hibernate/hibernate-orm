@@ -14,7 +14,7 @@ import java.util.function.Function;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -57,7 +57,7 @@ import org.hibernate.sql.ast.tree.update.Assignment;
  */
 public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Statement> {
 	public interface SqmParameterResolutionConsumer {
-		void accept(SqmParameter<?> sqmParam, MappingModelExpressable<?> mappingType, List<JdbcParameter> jdbcParameters);
+		void accept(SqmParameter<?> sqmParam, MappingModelExpressible<?> mappingType, List<JdbcParameter> jdbcParameters);
 	}
 
 	private final EntityMappingType mutatingEntityDescriptor;
@@ -237,7 +237,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 		final Expression expression = super.consumeSingleSqmParameter( sqmParameter );
 
 		final List<List<JdbcParameter>> jdbcParameters = getJdbcParamsBySqmParam().get( sqmParameter );
-		final MappingModelExpressable<?> mappingType = getSqmParameterMappingModelExpressableResolutions().get( sqmParameter );
+		final MappingModelExpressible<?> mappingType = getSqmParameterMappingModelExpressibleResolutions().get( sqmParameter );
 		parameterResolutionConsumer.accept(
 				sqmParameter,
 				mappingType,

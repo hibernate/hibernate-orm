@@ -12,7 +12,8 @@ import jakarta.persistence.GenerationType;
 import org.hibernate.service.ServiceRegistry;
 
 /**
- * {@link java.util.ServiceLoader} contract for registering GenerationTypeStrategy impls
+ * A {@link java.util.ServiceLoader} contract for registering implementations
+ * of {@link GenerationTypeStrategy}.
  */
 public interface GenerationTypeStrategyRegistration {
 	void registerStrategies(BiConsumer<GenerationType, GenerationTypeStrategy> registry, ServiceRegistry serviceRegistry);

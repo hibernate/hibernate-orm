@@ -20,7 +20,7 @@ import org.hibernate.cache.spi.access.NaturalIdDataAccess;
  * @author Steve Ebersole
  */
 public class DomainDataRegionImpl extends DomainDataRegionTemplate {
-	@SuppressWarnings("WeakerAccess")
+
 	public DomainDataRegionImpl(
 			DomainDataRegionConfig regionConfig,
 			RegionFactoryTemplate regionFactory,

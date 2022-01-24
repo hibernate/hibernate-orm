@@ -7,20 +7,24 @@
 package org.hibernate.annotations;
 
 import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Support for {@code ROWID} mapping feature of Hibernate.
+ * Specifies that an Oracle-style {@code rowid} should be used in SQL
+ * {@code update} statements for an entity, instead of the primary key.
  *
  * @author Steve Ebersole
  */
-@java.lang.annotation.Target( { TYPE })
+@Target(TYPE)
 @Retention(RUNTIME)
 public @interface RowId {
 	/**
-	 * Names the {@code ROWID} identifier.
+	 * Specifies the {@code rowid} identifier.
+	 * <p>
+	 * For example, on Oracle, this should be just {@code "rowid"}.
 	 */
 	String value();
 }

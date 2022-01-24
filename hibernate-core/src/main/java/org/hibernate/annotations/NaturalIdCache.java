@@ -13,8 +13,8 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Used to specify that the natural id values associated with the annotated entity should be cached in Hibernate's
- * shared (L2) cache.  Can optionally name a custom cache region.
+ * Specifies that the natural id values associated with the annotated
+ * entity should be cached in the shared second-level cache.
  *
  * @author Eric Dalquist
  * @author Steve Ebersole
@@ -25,8 +25,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface NaturalIdCache {
 	/**
-	 * The cache region name.  {@code null} or empty-string (the default) are interpreted as
-	 * {@code {entity-name}##NaturalId}
+	 * Specifies an explicit cache region name.
+	 * <p>
+	 * By default, the region name is {@code EntityName##NaturalId}.
 	 */
 	String region() default "";
 }

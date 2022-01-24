@@ -58,15 +58,17 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
-		assert jtd.getJavaTypeClass().isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() );
+	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
+		assert javaType.getJavaTypeClass() == null
+				|| jtd.getJavaTypeClass().isAssignableFrom( javaType.getJavaTypeClass() );
 		return (ValueBinder<X>) valueBinder;
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor) {
-		assert javaTypeDescriptor.getJavaTypeClass().isAssignableFrom( jtd.getJavaTypeClass() );
+	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
+		assert javaType.getJavaTypeClass() == null
+				|| javaType.getJavaTypeClass().isAssignableFrom( jtd.getJavaTypeClass() );
 		return (ValueExtractor<X>) valueExtractor;
 	}
 
@@ -80,7 +82,7 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 	}
 
 	@Override
-	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
 		if ( !( userType instanceof EnhancedUserType<?> ) ) {
 			throw new HibernateException(
 					String.format(

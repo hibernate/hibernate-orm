@@ -7,7 +7,7 @@
 package org.hibernate.boot.model.source.spi;
 
 /**
- * Models a JDBC {@link java.sql.Types DATATYPE}.  Mainly breaks down into 3 pieces of information:<ul>
+ * Models a JDBC {@linkplain java.sql.Types data type}.  Mainly breaks down into 3 pieces of information:<ul>
  *     <li>
  *         {@link #getTypeCode() type code} - The JDBC type code; generally matches a code from {@link java.sql.Types}
  *         though not necessarily.

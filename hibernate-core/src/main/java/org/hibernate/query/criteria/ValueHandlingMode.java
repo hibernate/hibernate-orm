@@ -10,10 +10,12 @@ import org.hibernate.HibernateException;
 
 /**
  * This enum defines how values passed to JPA Criteria API are handled.
+ * <ul>
+ *     <li>The {@code BIND} mode (default) will use bind variables for any value.
+ *     <li> The {@code INLINE} mode inlines values as literals.
+ * </ul>
  *
- * The {@code BIND} mode (default) will use bind variables for any value.
- *
- * The {@code INLINE} mode will inline values as literals.
+ * @see org.hibernate.cfg.AvailableSettings#CRITERIA_VALUE_HANDLING_MODE
  *
  * @author Christian Beikov
  */

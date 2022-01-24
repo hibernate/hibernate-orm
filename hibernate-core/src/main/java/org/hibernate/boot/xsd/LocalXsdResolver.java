@@ -28,7 +28,6 @@ import org.xml.sax.SAXException;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public class LocalXsdResolver {
 
 	public static String latestJpaVerison() {

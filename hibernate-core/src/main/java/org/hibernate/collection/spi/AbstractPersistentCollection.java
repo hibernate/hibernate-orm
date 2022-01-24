@@ -245,7 +245,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			}
 
 			session.getPersistenceContextInternal().addUninitializedDetachedCollection(
-					session.getFactory().getCollectionPersister( getRole() ),
+					session.getFactory().getMetamodel().collectionPersister(getRole()),
 					this
 			);
 		}
@@ -480,7 +480,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	 * Replace entity instances with copy in {@code copyCache}/.
 	 *
 	 * @param copyCache - mapping from entity in the process of being
-	 *                    merged to managed copy.
+	 *					merged to managed copy.
 	 */
 	public final void replaceQueuedOperationValues(CollectionPersister persister, Map copyCache) {
 		for ( DelayedOperation<?> operation : operationQueue ) {
@@ -1214,7 +1214,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			return oldElements;
 		}
 
-		final EntityPersister entityPersister = session.getFactory().getEntityPersister( entityName );
+		final EntityPersister entityPersister = session.getFactory().getMetamodel().entityPersister(entityName);
 		final Type idType = entityPersister.getIdentifierType();
 		final boolean useIdDirect = mayUseIdDirect( idType );
 
@@ -1281,7 +1281,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			SharedSessionContractImplementor session) {
 
 		if ( entityInstance != null && ForeignKeys.isNotTransient( entityName, entityInstance, null, session ) ) {
-			final EntityPersister entityPersister = session.getFactory().getEntityPersister( entityName );
+			final EntityPersister entityPersister = session.getFactory().getMetamodel().entityPersister(entityName);
 			final Type idType = entityPersister.getIdentifierType();
 
 			final Object idOfCurrent = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, entityInstance, session );
@@ -1306,7 +1306,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	 * @param session The session
 	 *
 	 * @deprecated {@link #identityRemove(Collection, Object, String, SharedSessionContractImplementor)}
-	 *             should be used instead.
+	 *			   should be used instead.
 	 */
 	@Deprecated
 	public static void identityRemove(

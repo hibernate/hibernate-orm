@@ -38,13 +38,13 @@ public interface EntityRepresentationStrategy extends ManagedTypeRepresentationS
 		return false;
 	}
 
-	JavaType<?> getProxyJavaTypeDescriptor();
+	JavaType<?> getProxyJavaType();
 
 	/**
 	 * The Java type descriptor for the type returned when the entity is loaded
 	 */
-	default JavaType<?> getLoadJavaTypeDescriptor() {
-		return getMappedJavaTypeDescriptor();
+	default JavaType<?> getLoadJavaType() {
+		return getMappedJavaType();
 	}
 
 	default void visitEntityNameResolvers(Consumer<EntityNameResolver> consumer) {

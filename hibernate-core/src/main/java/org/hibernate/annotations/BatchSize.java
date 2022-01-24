@@ -15,22 +15,26 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Defines size for batch loading of collections or lazy entities.  For example...
- * <blockquote><pre>{@code
+ * Specifies a batch size for batch fetching of the annotated entity or
+ * collection.
+ * <p>
+ * For example:
+ * <pre>{@code
  * @Entity
- * @BatchSize(size=100)
+ * @BatchSize(size = 100)
  * class Product {
  *     ...
  * }
- * }</pre></blockquote>
- * will initialize up to 100 lazy Product entity proxies at a time.
- *
- * <blockquote><pre>{@code
+ * }</pre>
+ * will initialize up to 100 lazy Product entity proxies at a time, but:
+ * <pre>{@code
  * @OneToMany
  * @BatchSize(size = 5) /
  * Set<Product> getProducts() { ... };
- * }</pre></blockquote>
- * will initialize up to 5 lazy collections of products at a time
+ * }</pre>
+ * will initialize up to 5 lazy collections of products at a time.
+ *
+ * @see org.hibernate.cfg.AvailableSettings#DEFAULT_BATCH_FETCH_SIZE
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole

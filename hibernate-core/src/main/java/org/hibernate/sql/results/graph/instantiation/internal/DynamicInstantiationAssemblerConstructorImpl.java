@@ -34,7 +34,7 @@ public class DynamicInstantiationAssemblerConstructorImpl<R> implements DomainRe
 	}
 
 	@Override
-	public JavaType<R> getAssembledJavaTypeDescriptor() {
+	public JavaType<R> getAssembledJavaType() {
 		return resultType;
 	}
 

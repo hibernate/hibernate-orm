@@ -9,8 +9,11 @@ package org.hibernate.query.spi;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
 /**
- * A cache for QueryPlans used (and produced) by the translation
+ * A cache for {@link QueryPlan}s used (and produced) by the translation
  * and execution of a query.
+ *
+ * @see org.hibernate.cfg.AvailableSettings#QUERY_PLAN_CACHE_ENABLED
+ * @see org.hibernate.cfg.AvailableSettings#QUERY_PLAN_CACHE_MAX_SIZE
  *
  * @author Steve Ebersole
  */

@@ -23,7 +23,7 @@ public interface GenerationTypeStrategy {
 	IdentifierGenerator createIdentifierGenerator(
 			GenerationType generationType,
 			String generatorName,
-			JavaType<?> javaTypeDescriptor,
+			JavaType<?> javaType,
 			Properties config,
 			GeneratorDefinitionResolver definitionResolver,
 			ServiceRegistry serviceRegistry);

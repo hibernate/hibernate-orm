@@ -9,10 +9,9 @@ package org.hibernate.query.sqm.tree.domain;
 import jakarta.persistence.criteria.PluralJoin;
 
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaJoin;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
@@ -21,7 +20,6 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
  */
 public abstract class AbstractSqmPluralJoin<O,C,E> extends AbstractSqmAttributeJoin<O,E> implements JpaJoin<O,E>, PluralJoin<O,C,E> {
 
-	@SuppressWarnings("WeakerAccess")
 	public AbstractSqmPluralJoin(
 			SqmFrom<?, O> lhs,
 			PluralPersistentAttribute<O,C,E> joinedNavigable,

@@ -6,11 +6,9 @@
  */
 package org.hibernate.dialect;
 
-import java.util.List;
-
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.ComparisonOperator;
+import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
@@ -20,6 +18,8 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+
+import static org.hibernate.dialect.DB2zDialect.DB2_LUW_VERSION9;
 
 /**
  * A SQL AST translator for DB2z.
@@ -76,5 +76,10 @@ public class DB2zSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTran
 		tableReference.getFunctionExpression().accept( this );
 		append( CLOSE_PARENTHESIS );
 		renderDerivedTableReference( tableReference );
+	}
+
+	@Override
+	public DatabaseVersion getDB2Version() {
+		return DB2_LUW_VERSION9;
 	}
 }

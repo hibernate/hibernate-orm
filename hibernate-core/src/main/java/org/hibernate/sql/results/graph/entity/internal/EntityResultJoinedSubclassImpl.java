@@ -7,7 +7,7 @@
 package org.hibernate.sql.results.graph.entity.internal;
 
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -46,7 +46,7 @@ public class EntityResultJoinedSubclassImpl extends EntityResultImpl {
 				)
 		);
 
-		return new EntityAssembler( getResultJavaTypeDescriptor(), initializer );
+		return new EntityAssembler( this.getResultJavaType(), initializer );
 	}
 
 }

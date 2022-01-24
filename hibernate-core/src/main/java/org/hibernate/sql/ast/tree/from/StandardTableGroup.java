@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 
 /**
@@ -178,7 +178,6 @@ public class StandardTableGroup extends AbstractTableGroup {
 		return null;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected TableReference potentiallyCreateTableReference(String tableExpression) {
 		final TableReferenceJoin join = tableReferenceJoinCreator.apply( tableExpression, this );
 		if ( join != null ) {

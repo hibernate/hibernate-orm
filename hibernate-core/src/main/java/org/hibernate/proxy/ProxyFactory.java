@@ -37,7 +37,7 @@ public interface ProxyFactory {
 	 * @param setIdentifierMethod Reference to the identifier setter method;
 	 * invocation on this method should not force initialization
 	 * @param componentIdType For composite identifier types, a reference to
-	 * the {@link CompositeType type} of the identifier
+	 * the {@linkplain CompositeType type} of the identifier
 	 * property; again accessing the id should generally not cause
 	 * initialization - but need to bear in mind <key-many-to-one/>
 	 * mappings.
@@ -46,8 +46,8 @@ public interface ProxyFactory {
 	 */
 	void postInstantiate(
 			String entityName,
-			Class persistentClass,
-			Set<Class> interfaces,
+			Class<?> persistentClass,
+			Set<Class<?>> interfaces,
 			Method getIdentifierMethod,
 			Method setIdentifierMethod,
 			CompositeType componentIdType) throws HibernateException;

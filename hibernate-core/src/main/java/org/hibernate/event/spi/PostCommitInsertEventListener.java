@@ -17,5 +17,5 @@ public interface PostCommitInsertEventListener extends PostInsertEventListener {
 	 * 
 	 * @param event the insert event to be handled
 	 */
-	public void onPostInsertCommitFailed(PostInsertEvent event);
+	void onPostInsertCommitFailed(PostInsertEvent event);
 }

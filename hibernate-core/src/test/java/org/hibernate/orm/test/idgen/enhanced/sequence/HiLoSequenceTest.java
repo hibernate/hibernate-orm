@@ -31,7 +31,7 @@ public class HiLoSequenceTest {
 
 	@Test
 	public void testNormalBoundary(SessionFactoryScope scope) {
-		final EntityPersister persister = scope.getSessionFactory().getEntityPersister( Entity.class.getName() );
+        final EntityPersister persister = scope.getSessionFactory().getMetamodel().entityPersister(Entity.class.getName());
 		assertThat( persister.getIdentifierGenerator(), instanceOf( SequenceStyleGenerator.class ) );
 
 		final SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getIdentifierGenerator();

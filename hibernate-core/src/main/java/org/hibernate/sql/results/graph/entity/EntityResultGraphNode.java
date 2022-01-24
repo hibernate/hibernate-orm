@@ -10,7 +10,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.sql.results.graph.DomainResultGraphNode;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -30,8 +30,8 @@ public interface EntityResultGraphNode extends DomainResultGraphNode, FetchParen
 	}
 
 	@Override
-	default JavaType<?> getResultJavaTypeDescriptor() {
-		return getEntityValuedModelPart().getEntityMappingType().getMappedJavaTypeDescriptor();
+	default JavaType<?> getResultJavaType() {
+		return getEntityValuedModelPart().getEntityMappingType().getMappedJavaType();
 	}
 
 	@Override

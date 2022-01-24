@@ -65,7 +65,6 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	 *
 	 * @param event The delete event to be handled.
 	 *
-	 * @throws HibernateException
 	 */
 	public void onDelete(DeleteEvent event) throws HibernateException {
 		onDelete( event, new IdentitySet() );
@@ -77,7 +76,6 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	 * @param event The delete event.
 	 * @param transientEntities The cache of entities already deleted
 	 *
-	 * @throws HibernateException
 	 */
 	public void onDelete(DeleteEvent event, Set transientEntities) throws HibernateException {
 
@@ -159,7 +157,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 				transientEntities
 		);
 
-		if ( source.getFactory().getSettings().isIdentifierRollbackEnabled() ) {
+		if ( source.getFactory().getSessionFactoryOptions().isIdentifierRollbackEnabled() ) {
 			persister.resetIdentifier( entity, id, version, source );
 		}
 	}

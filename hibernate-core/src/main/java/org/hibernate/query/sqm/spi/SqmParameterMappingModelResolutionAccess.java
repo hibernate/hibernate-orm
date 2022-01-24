@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.spi;
 
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 
 /**
@@ -14,5 +14,5 @@ import org.hibernate.query.sqm.tree.expression.SqmParameter;
  */
 @FunctionalInterface
 public interface SqmParameterMappingModelResolutionAccess {
-	<T> MappingModelExpressable<T> getResolvedMappingModelType(SqmParameter<T> parameter);
+	<T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter);
 }

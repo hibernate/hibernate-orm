@@ -229,7 +229,7 @@ public class AttributeFactory {
 				assert type instanceof AnyType;
 				final AnyType anyType = (AnyType) type;
 				final JavaType<Y> baseJtd = context.getTypeConfiguration()
-						.getJavaTypeDescriptorRegistry()
+						.getJavaTypeRegistry()
 						.resolveDescriptor( anyType.getReturnedClass() );
 				return new AnyMappingDomainTypeImpl<>( anyType, baseJtd );
 			}
@@ -238,10 +238,10 @@ public class AttributeFactory {
 				final EmbeddableTypeImpl<Y> embeddableType;
 
 				if ( component.isDynamic() ) {
-					final JavaType<Y> javaTypeDescriptor = context.getJavaTypeDescriptorRegistry().getDescriptor( java.util.Map.class );
+					final JavaType<Y> javaType = context.getJavaTypeRegistry().getDescriptor( java.util.Map.class );
 
 					embeddableType = new EmbeddableTypeImpl<>(
-							javaTypeDescriptor,
+							javaType,
 							true,
 							context.getJpaMetamodel()
 					);
@@ -259,11 +259,11 @@ public class AttributeFactory {
 					}
 
 					final JavaTypeRegistry registry = context.getTypeConfiguration()
-							.getJavaTypeDescriptorRegistry();
-					final JavaType<Y> javaTypeDescriptor = registry.resolveManagedTypeDescriptor( embeddableClass );
+							.getJavaTypeRegistry();
+					final JavaType<Y> javaType = registry.resolveManagedTypeDescriptor( embeddableClass );
 
 					embeddableType = new EmbeddableTypeImpl<>(
-							javaTypeDescriptor,
+							javaType,
 							false,
 							context.getJpaMetamodel()
 					);
@@ -624,7 +624,7 @@ public class AttributeFactory {
 		final AttributeMapping attributeMapping = embeddable.findAttributeMapping( attributeName );
 		if ( attributeMapping == null ) {
 			throw new PropertyNotFoundException(
-					"Unable to locate property named " + attributeName + " on " + embeddable.getJavaTypeDescriptor().getJavaTypeClass().getName()
+					"Unable to locate property named " + attributeName + " on " + embeddable.getJavaType().getJavaTypeClass().getName()
 			);
 		}
 

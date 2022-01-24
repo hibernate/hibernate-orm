@@ -21,7 +21,6 @@ import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
-import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -61,7 +60,8 @@ import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.event.spi.ReplicateEventListener;
 import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.event.spi.SaveOrUpdateEventListener;
-import org.hibernate.jpa.QueryHints;
+import org.hibernate.jpa.LegacySpecHints;
+import org.hibernate.jpa.SpecHints;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.LockOptionsHelper;
@@ -218,11 +218,11 @@ public final class FastSessionServices {
 		//Other highly useful constants:
 		this.dialect = jdbcServices.getJdbcEnvironment().getDialect();
 		this.disallowOutOfTransactionUpdateOperations = !sessionFactoryOptions.isAllowOutOfTransactionUpdateOperations();
-		this.useStreamForLobBinding = Environment.useStreamsForBinary() || dialect.useInputStreamToInsertBlob();
+		this.useStreamForLobBinding = dialect.useInputStreamToInsertBlob();
 		this.preferredSqlTypeCodeForBoolean = sessionFactoryOptions.getPreferredSqlTypeCodeForBoolean();
 		this.defaultTimeZoneStorageStrategy = sessionFactoryOptions.getDefaultTimeZoneStorageStrategy();
 		this.defaultJdbcBatchSize = sessionFactoryOptions.getJdbcBatchSize();
-		this.requiresMultiTenantConnectionProvider = sf.getSettings().isMultiTenancyEnabled();
+		this.requiresMultiTenantConnectionProvider = sf.getSessionFactoryOptions().isMultiTenancyEnabled();
 
 		//Some "hot" services:
 		this.connectionProvider = requiresMultiTenantConnectionProvider ? null : sr.getService( ConnectionProvider.class );
@@ -263,12 +263,9 @@ public final class FastSessionServices {
 	private static boolean isTransactionAccessible(SessionFactoryImpl sf, TransactionCoordinatorBuilder transactionCoordinatorBuilder) {
 		// JPA requires that access not be provided to the transaction when using JTA.
 		// This is overridden when SessionFactoryOptions isJtaTransactionAccessEnabled() is true.
-		if ( sf.getSessionFactoryOptions().getJpaCompliance().isJpaTransactionComplianceEnabled() &&
-				transactionCoordinatorBuilder.isJta() &&
-				!sf.getSessionFactoryOptions().isJtaTransactionAccessEnabled() ) {
-			return false;
-		}
-		return true;
+		return !( sf.getSessionFactoryOptions().getJpaCompliance().isJpaTransactionComplianceEnabled()
+				&& transactionCoordinatorBuilder.isJta()
+				&& !sf.getSessionFactoryOptions().isJtaTransactionAccessEnabled() );
 	}
 
 	private static Map<String, Object> initializeDefaultSessionProperties(SessionFactoryImpl sf) {
@@ -287,17 +284,19 @@ public final class FastSessionServices {
 
 		//Defaults defined by SessionFactory configuration:
 		final String[] ENTITY_MANAGER_SPECIFIC_PROPERTIES = {
-				JPA_LOCK_SCOPE,
-				JAKARTA_LOCK_SCOPE,
-				JPA_LOCK_TIMEOUT,
-				JAKARTA_LOCK_TIMEOUT,
+				SpecHints.HINT_SPEC_LOCK_SCOPE,
+				SpecHints.HINT_SPEC_LOCK_TIMEOUT,
+				SpecHints.HINT_SPEC_QUERY_TIMEOUT,
+				SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE,
+				SpecHints.HINT_SPEC_CACHE_STORE_MODE,
+
 				AvailableSettings.FLUSH_MODE,
-				JPA_SHARED_CACHE_RETRIEVE_MODE,
-				JAKARTA_SHARED_CACHE_RETRIEVE_MODE,
-				JPA_SHARED_CACHE_STORE_MODE,
-				JAKARTA_SHARED_CACHE_STORE_MODE,
-				QueryHints.SPEC_HINT_TIMEOUT,
-				QueryHints.JAKARTA_SPEC_HINT_TIMEOUT
+
+				LegacySpecHints.HINT_JAVAEE_LOCK_SCOPE,
+				LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT,
+				LegacySpecHints.HINT_JAVAEE_CACHE_RETRIEVE_MODE,
+				LegacySpecHints.HINT_JAVAEE_CACHE_STORE_MODE,
+				LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT
 		};
 		final Map<String, Object> properties = sf.getProperties();
 		for ( String key : ENTITY_MANAGER_SPECIFIC_PROPERTIES ) {

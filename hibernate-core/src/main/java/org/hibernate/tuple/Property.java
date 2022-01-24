@@ -19,5 +19,5 @@ public interface Property extends Attribute {
 	 * @deprecated DOM4j entity mode is no longer supported
 	 */
 	@Deprecated
-	public String getNode();
+	String getNode();
 }

@@ -614,7 +614,7 @@ public class Configuration {
 	/**
 	 * Set the current {@link Interceptor}
 	 *
-	 * @param interceptor The {@link Interceptor} to use for the {@link #buildSessionFactory built}
+	 * @param interceptor The {@link Interceptor} to use for the {@linkplain #buildSessionFactory built}
 	 * {@link SessionFactory}.
 	 *
 	 * @return this for method chaining

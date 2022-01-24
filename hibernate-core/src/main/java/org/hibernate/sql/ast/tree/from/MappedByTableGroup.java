@@ -12,7 +12,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.ModelPartContainer;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 
 /**
  * @author Christian Beikov

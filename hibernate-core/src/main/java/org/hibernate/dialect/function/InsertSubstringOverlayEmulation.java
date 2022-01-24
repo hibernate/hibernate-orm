@@ -7,8 +7,8 @@
 package org.hibernate.dialect.function;
 
 import org.hibernate.query.ReturnableType;
-import org.hibernate.query.BinaryArithmeticOperator;
-import org.hibernate.query.ComparisonOperator;
+import org.hibernate.query.sqm.BinaryArithmeticOperator;
+import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;

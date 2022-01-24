@@ -25,7 +25,7 @@ public interface ClassLoaderAccess {
 	 *
 	 * @return The Class.
 	 */
-	public <T> Class<T> classForName(String name);
+	<T> Class<T> classForName(String name);
 
 	/**
 	 * Locate a resource by name
@@ -34,5 +34,5 @@ public interface ClassLoaderAccess {
 	 *
 	 * @return The located resource; may return {@code null} to indicate the resource was not found
 	 */
-	public URL locateResource(String resourceName);
+	URL locateResource(String resourceName);
 }

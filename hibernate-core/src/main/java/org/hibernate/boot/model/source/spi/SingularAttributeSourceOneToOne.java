@@ -12,7 +12,7 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public interface SingularAttributeSourceOneToOne extends SingularAttributeSourceToOne {
-	public List<DerivedValueSource> getFormulaSources();
+	List<DerivedValueSource> getFormulaSources();
 
 	boolean isConstrained();
 }

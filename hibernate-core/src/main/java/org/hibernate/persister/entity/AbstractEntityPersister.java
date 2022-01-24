@@ -158,6 +158,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -175,6 +176,7 @@ import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
+import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.CompoundNaturalIdMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
@@ -201,8 +203,8 @@ import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.Setter;
-import org.hibernate.query.ComparisonOperator;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sql.internal.SQLQueryParser;
@@ -454,8 +456,8 @@ public abstract class AbstractEntityPersister
 		 *  @JoinTable's.
 		 *
 		 *  Probably this method needs to be properly implemented for the various entity persisters,
-		 *  but this at least fixes the SingleTableEntityPersister, while maintaining the the
-		 *  previous behaviour for other persisters.
+		 *  but this at least fixes the SingleTableEntityPersister, while maintaining the previous
+		 *  behaviour for other persisters.
 		 */
 		return isClassOrSuperclassTable( j );
 	}
@@ -728,8 +730,8 @@ public abstract class AbstractEntityPersister
 		this.representationStrategy = creationContext.getBootstrapContext().getRepresentationStrategySelector()
 				.resolveStrategy( bootDescriptor, this, creationContext );
 
-		this.javaTypeDescriptor = representationStrategy.getLoadJavaTypeDescriptor();
-		assert javaTypeDescriptor != null;
+		this.javaType = representationStrategy.getLoadJavaType();
+		assert javaType != null;
 
 
 		final JdbcServices jdbcServices = factory.getServiceRegistry().getService( JdbcServices.class );
@@ -2087,10 +2089,6 @@ public abstract class AbstractEntityPersister
 		return new GeneratedValuesProcessor( this, timing, getFactory() );
 	}
 
-	protected interface InclusionChecker {
-		boolean includeProperty(int propertyNumber);
-	}
-
 	@Override
 	public Object forceVersionIncrement(Object id, Object currentVersion, SharedSessionContractImplementor session) {
 		if ( !isVersioned() ) {
@@ -2103,7 +2101,7 @@ public abstract class AbstractEntityPersister
 			throw new HibernateException( "LockMode.FORCE is currently not supported for generated version properties" );
 		}
 
-		Object nextVersion = getVersionJavaTypeDescriptor().next( currentVersion, session );
+		Object nextVersion = getVersionJavaType().next( currentVersion, session );
 		if ( LOG.isTraceEnabled() ) {
 			LOG.trace(
 					"Forcing version increment [" + MessageHelper.infoString( this, id, getFactory() ) + "; "
@@ -2779,7 +2777,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private void initDiscriminatorPropertyPath(Mapping mapping) throws MappingException {
+	private void initDiscriminatorPropertyPath() {
 		propertyMapping.initPropertyPaths(
 				ENTITY_CLASS,
 				getDiscriminatorType(),
@@ -2796,7 +2794,7 @@ public abstract class AbstractEntityPersister
 		initOrdinaryPropertyPaths( mapping ); //do two passes, for collection property-ref!
 		initIdentifierPropertyPaths( mapping );
 		if ( entityMetamodel.isPolymorphic() ) {
-			initDiscriminatorPropertyPath( mapping );
+			initDiscriminatorPropertyPath();
 		}
 	}
 
@@ -3259,7 +3257,7 @@ public abstract class AbstractEntityPersister
 				.getIdentitySelectString(
 						getTableName( 0 ),
 						getKeyColumns( 0 )[0],
-						getIdentifierType().getSqlTypeCodes( getFactory() )[0]
+						( (BasicType<?>) getIdentifierType() ).getJdbcType().getDefaultSqlTypeCode()
 				);
 	}
 
@@ -4090,11 +4088,7 @@ public abstract class AbstractEntityPersister
 		// subclass ought to be joined by outer-join.  However, TREAT-AS always requires that an inner-join be used
 		// so we give TREAT-AS higher precedence...
 
-		if ( isSubclassTableIndicatedByTreatAsDeclarations( subclassTableNumber, treatAsDeclarations ) ) {
-			return true;
-		}
-
-		return false;
+		return isSubclassTableIndicatedByTreatAsDeclarations(subclassTableNumber, treatAsDeclarations);
 	}
 
 	protected boolean isSubclassTableIndicatedByTreatAsDeclarations(
@@ -4338,7 +4332,7 @@ public abstract class AbstractEntityPersister
 	@Override
 	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers loadQueryInfluencers) {
 		if ( loadQueryInfluencers.hasEnabledFilters() && filterHelper != null ) {
-			if ( filterHelper != null && filterHelper.isAffectedBy( loadQueryInfluencers.getEnabledFilters() ) ) {
+			if ( filterHelper.isAffectedBy( loadQueryInfluencers.getEnabledFilters() ) ) {
 				return true;
 			}
 			// we still need to verify collection fields to be eagerly loaded by 'join'
@@ -4422,7 +4416,6 @@ public abstract class AbstractEntityPersister
 	 *
 	 * @return {@code null} or the indices of the dirty properties
 	 *
-	 * @throws HibernateException
 	 */
 	public int[] findDirty(Object[] currentState, Object[] previousState, Object entity, SharedSessionContractImplementor session)
 			throws HibernateException {
@@ -4452,7 +4445,6 @@ public abstract class AbstractEntityPersister
 	 *
 	 * @return {@code null} or the indices of the modified properties
 	 *
-	 * @throws HibernateException
 	 */
 	public int[] findModified(Object[] old, Object[] current, Object entity, SharedSessionContractImplementor session)
 			throws HibernateException {
@@ -4922,7 +4914,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public final Class<?> getMappedClass() {
-		return getMappedJavaTypeDescriptor().getJavaTypeClass();
+		return this.getMappedJavaType().getJavaTypeClass();
 	}
 
 	public boolean implementsLifecycle() {
@@ -4930,8 +4922,8 @@ public abstract class AbstractEntityPersister
 	}
 
 	public Class<?> getConcreteProxyClass() {
-		final JavaType<?> proxyJavaTypeDescriptor = getRepresentationStrategy().getProxyJavaTypeDescriptor();
-		return proxyJavaTypeDescriptor != null ? proxyJavaTypeDescriptor.getJavaTypeClass() : javaTypeDescriptor.getJavaTypeClass();
+		final JavaType<?> proxyJavaType = getRepresentationStrategy().getProxyJavaType();
+		return proxyJavaType != null ? proxyJavaType.getJavaTypeClass() : javaType.getJavaTypeClass();
 	}
 
 	@Override
@@ -5475,7 +5467,7 @@ public abstract class AbstractEntityPersister
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// org.hibernate.metamodel.mapping.EntityMappingType
 
-	private final JavaType<?> javaTypeDescriptor;
+	private final JavaType<?> javaType;
 	private final EntityRepresentationStrategy representationStrategy;
 
 	private EntityMappingType superMappingType;
@@ -5883,7 +5875,6 @@ public abstract class AbstractEntityPersister
 	@Override
 	public void linkWithSubType(EntityMappingType sub, MappingModelCreationProcess creationProcess) {
 		if ( subclassMappingTypes == null ) {
-			//noinspection unchecked
 			subclassMappingTypes = new TreeMap<>();
 		}
 		subclassMappingTypes.put( sub.getEntityName(), sub );
@@ -6037,7 +6028,6 @@ public abstract class AbstractEntityPersister
 			int stateArrayPosition,
 			MappingModelCreationProcess creationProcess) {
 		final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
-		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final Dialect dialect = jdbcEnvironment.getDialect();
@@ -6096,7 +6086,7 @@ public abstract class AbstractEntityPersister
 					assert selectableIterator.hasNext();
 					final Selectable selectable = selectableIterator.next();
 
-					assert attrColumnExpression.equals( selectable.getText( sessionFactory.getDialect() ) );
+					assert attrColumnExpression.equals( selectable.getText(sessionFactory.getJdbcServices().getDialect()) );
 
 					customReadExpr = selectable.getTemplate( dialect, sessionFactory.getQueryEngine().getSqmFunctionRegistry() );
 					customWriteExpr = selectable.getCustomWriteExpression();
@@ -6116,7 +6106,7 @@ public abstract class AbstractEntityPersister
 					stateArrayPosition,
 					bootProperty,
 					this,
-					(BasicType) attrType,
+					(BasicType<?>) attrType,
 					tableExpression,
 					attrColumnExpression,
 					isAttrColumnExpressionFormula,
@@ -6130,7 +6120,7 @@ public abstract class AbstractEntityPersister
 		else if ( attrType instanceof AnyType ) {
 			final JavaType<Object> baseAssociationJtd = sessionFactory
 					.getTypeConfiguration()
-					.getJavaTypeDescriptorRegistry()
+					.getJavaTypeRegistry()
 					.getDescriptor( Object.class );
 
 			final AnyType anyType = (AnyType) attrType;
@@ -6239,8 +6229,8 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public JavaType<?> getMappedJavaTypeDescriptor() {
-		return javaTypeDescriptor;
+	public JavaType<?> getMappedJavaType() {
+		return javaType;
 	}
 
 	@Override
@@ -6362,7 +6352,21 @@ public abstract class AbstractEntityPersister
 			}
 		}
 
-		return getIdentifierModelPart( name, treatTargetType );
+		final ModelPart identifierModelPart = getIdentifierModelPart( name, treatTargetType );
+		if ( identifierModelPart != null ) {
+			return identifierModelPart;
+		}
+
+		for ( AttributeMapping attribute : declaredAttributeMappings.values() ) {
+			if ( attribute instanceof EmbeddableValuedModelPart && attribute instanceof VirtualModelPart ) {
+				final ModelPart subPart = ( (EmbeddableValuedModelPart) attribute ).findSubPart( name, null );
+				if ( subPart != null ) {
+					return subPart;
+				}
+			}
+		}
+
+		return null;
 	}
 
 	@Override
@@ -6412,11 +6416,7 @@ public abstract class AbstractEntityPersister
 			return true;
 		}
 
-		if ( !entityMetamodel.hasNonIdentifierPropertyNamedId() && "id".equals( name ) ) {
-			return true;
-		}
-
-		return false;
+		return !entityMetamodel.hasNonIdentifierPropertyNamedId() && "id".equals( name );
 	}
 
 	@Override
@@ -6498,11 +6498,7 @@ public abstract class AbstractEntityPersister
 	public void visitSubTypeAttributeMappings(Consumer<? super AttributeMapping> action) {
 		visitAttributeMappings( action );
 		if ( subclassMappingTypes != null ) {
-			subclassMappingTypes.forEach(
-					(s, subType) -> {
-						subType.visitDeclaredAttributeMappings( action );
-					}
-			);
+			subclassMappingTypes.forEach( (s, subType) -> subType.visitDeclaredAttributeMappings( action ) );
 		}
 	}
 

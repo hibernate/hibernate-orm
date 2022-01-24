@@ -22,8 +22,8 @@ import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
 public class JdbcLiteralFormatterTemporal extends BasicJdbcLiteralFormatter {
 	private final TemporalType precision;
 
-	public JdbcLiteralFormatterTemporal(JavaType<?> javaTypeDescriptor, TemporalType precision) {
-		super( javaTypeDescriptor );
+	public JdbcLiteralFormatterTemporal(JavaType<?> javaType, TemporalType precision) {
+		super( javaType );
 		this.precision = precision;
 	}
 

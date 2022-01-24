@@ -18,8 +18,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
+import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -48,13 +47,13 @@ public class SimpleEmbeddableOverriddenConverterTest extends BaseNonConfigCoreFu
 	 */
 	@Test
 	public void testSimpleConvertOverrides() {
-		final EntityPersister ep = sessionFactory().getEntityPersister( Person.class.getName() );
+        final EntityPersister ep = sessionFactory().getMetamodel().entityPersister(Person.class.getName());
 		final JdbcTypeRegistry jdbcTypeRegistry = sessionFactory().getTypeConfiguration()
-				.getJdbcTypeDescriptorRegistry();
+				.getJdbcTypeRegistry();
 		CompositeType homeAddressType = assertTyping( CompositeType.class, ep.getPropertyType( "homeAddress" ) );
 		BasicType<?> homeAddressCityType = (BasicType<?>) findCompositeAttributeType( homeAddressType, "city" );
-		assertTyping( StringJavaTypeDescriptor.class, homeAddressCityType.getJavaTypeDescriptor() );
-		assertTyping( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ).getClass(), homeAddressCityType.getJdbcTypeDescriptor() );
+		assertTyping( StringJavaType.class, homeAddressCityType.getJavaTypeDescriptor() );
+		assertTyping( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ).getClass(), homeAddressCityType.getJdbcType() );
 	}
 
 	public Type findCompositeAttributeType(CompositeType compositeType, String attributeName) {

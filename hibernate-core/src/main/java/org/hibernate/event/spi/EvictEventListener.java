@@ -15,11 +15,10 @@ import org.hibernate.HibernateException;
  */
 public interface EvictEventListener {
 
-    /** 
-     * Handle the given evict event.
-     *
-     * @param event The evict event to be handled.
-     * @throws HibernateException
-     */
-	public void onEvict(EvictEvent event) throws HibernateException;
+	/** 
+	 * Handle the given evict event.
+	 *
+	 * @param event The evict event to be handled.
+	 */
+	void onEvict(EvictEvent event) throws HibernateException;
 }

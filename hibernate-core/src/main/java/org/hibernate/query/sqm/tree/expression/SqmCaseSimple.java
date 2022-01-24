@@ -16,7 +16,7 @@ import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSimpleCase;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -36,13 +36,13 @@ public class SqmCaseSimple<T, R>
 		this( fixture, null, nodeBuilder );
 	}
 
-	public SqmCaseSimple(SqmExpression<T> fixture, SqmExpressable<R> inherentType, NodeBuilder nodeBuilder) {
+	public SqmCaseSimple(SqmExpression<T> fixture, SqmExpressible<R> inherentType, NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.whenFragments = new ArrayList<>( );
 		this.fixture = fixture;
 	}
 
-	public SqmCaseSimple(SqmExpression<T> fixture, SqmExpressable<R> inherentType, int estimateWhenSize, NodeBuilder nodeBuilder) {
+	public SqmCaseSimple(SqmExpression<T> fixture, SqmExpressible<R> inherentType, int estimateWhenSize, NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.whenFragments = new ArrayList<>( estimateWhenSize );
 		this.fixture = fixture;
@@ -72,21 +72,21 @@ public class SqmCaseSimple<T, R>
 		applyInferableResultType( result.getNodeType() );
 	}
 
-	private void applyInferableResultType(SqmExpressable<?> type) {
+	private void applyInferableResultType(SqmExpressible<?> type) {
 		if ( type == null ) {
 			return;
 		}
 
-		final SqmExpressable<?> oldType = getNodeType();
+		final SqmExpressible<?> oldType = getNodeType();
 
-		final SqmExpressable<?> newType = QueryHelper.highestPrecedenceType2(oldType, type );
+		final SqmExpressible<?> newType = QueryHelper.highestPrecedenceType2(oldType, type );
 		if ( newType != null && newType != oldType ) {
 			internalApplyInferableType( newType );
 		}
 	}
 
 	@Override
-	protected void internalApplyInferableType(SqmExpressable newType) {
+	protected void internalApplyInferableType(SqmExpressible newType) {
 		super.internalApplyInferableType( newType );
 
 		if ( otherwise != null ) {

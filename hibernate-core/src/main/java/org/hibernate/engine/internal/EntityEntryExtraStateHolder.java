@@ -38,7 +38,7 @@ public class EntityEntryExtraStateHolder implements EntityEntryExtraState {
 		}
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	public <T extends EntityEntryExtraState> T getExtraState(Class<T> extraStateType) {
 		if ( next == null ) {
 			return null;

@@ -39,7 +39,7 @@ public interface JdbcEnvironment extends Service {
 
 	/**
 	 * Get the current database catalog.  Typically will come from either {@link java.sql.Connection#getCatalog()}
-	 * or {@link org.hibernate.cfg.AvailableSettings#DEFAULT_CATALOG}.
+	 * or {@value org.hibernate.cfg.AvailableSettings#DEFAULT_CATALOG}.
 	 *
 	 * @return The current catalog.
 	 */
@@ -48,7 +48,7 @@ public interface JdbcEnvironment extends Service {
 	/**
 	 * Get the current database catalog.  Typically will come from either
 	 * {@link SchemaNameResolver#resolveSchemaName(java.sql.Connection, Dialect)} or
-	 * {@link org.hibernate.cfg.AvailableSettings#DEFAULT_CATALOG}.
+	 * {@value org.hibernate.cfg.AvailableSettings#DEFAULT_CATALOG}.
 	 *
 	 * @return The current schema
 	 */

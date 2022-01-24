@@ -25,7 +25,7 @@ public class PostgisDialectContributor implements ContributorImplementor {
 	@Override
 	public void contributeJdbcTypes(TypeContributions typeContributions) {
 		HSMessageLogger.LOGGER.typeContributions( this.getClass().getCanonicalName() );
-		typeContributions.contributeJdbcTypeDescriptor( PGGeometryJdbcType.INSTANCE_WKB_2 );
+		typeContributions.contributeJdbcType( PGGeometryJdbcType.INSTANCE_WKB_2 );
 	}
 
 	@Override

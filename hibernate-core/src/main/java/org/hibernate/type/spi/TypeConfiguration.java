@@ -45,13 +45,13 @@ import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.model.domain.internal.ArrayTupleType;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
-import org.hibernate.query.BinaryArithmeticOperator;
-import org.hibernate.query.IntervalType;
+import org.hibernate.query.sqm.BinaryArithmeticOperator;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.internal.QueryHelper;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
@@ -61,14 +61,13 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
 
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
-import static org.hibernate.query.BinaryArithmeticOperator.DIVIDE;
 
 /**
  * Defines a set of available Type instances as isolated from other configurations.  The
@@ -123,15 +122,15 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 
-	public JavaTypeRegistry getJavaTypeDescriptorRegistry() {
+	public JavaTypeRegistry getJavaTypeRegistry() {
 		return javaTypeRegistry;
 	}
 
-	public JdbcTypeRegistry getJdbcTypeDescriptorRegistry() {
+	public JdbcTypeRegistry getJdbcTypeRegistry() {
 		return jdbcTypeRegistry;
 	}
 
-	public JdbcTypeDescriptorIndicators getCurrentBaseSqlTypeIndicators() {
+	public JdbcTypeIndicators getCurrentBaseSqlTypeIndicators() {
 		return scope.getCurrentBaseSqlTypeIndicators();
 	}
 
@@ -236,22 +235,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 					() -> basicType.getJavaTypeDescriptor()
 			);
 
-			try {
-				int[] jdbcTypes = basicType.getSqlTypeCodes( null );
-
-				if ( jdbcTypes.length == 1 ) {
-					int jdbcType = jdbcTypes[0];
-					Set<String> hibernateTypes = jdbcToHibernateTypeContributionMap.computeIfAbsent(
-						jdbcType,
-						k -> new HashSet<>()
-					);
-					hibernateTypes.add( basicType.getName() );
-				}
-			}
-			catch (Exception e) {
-				log.errorf( e, "Cannot register [%s] Hibernate Type contribution", basicType.getName() );
-			}
-
+			jdbcToHibernateTypeContributionMap.computeIfAbsent(
+				basicType.getJdbcType().getDefaultSqlTypeCode(),
+				k -> new HashSet<>()
+			).add( basicType.getName() );
 		}
 	}
 
@@ -354,7 +341,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		private String sessionFactoryName;
 		private String sessionFactoryUuid;
 
-		private final transient JdbcTypeDescriptorIndicators currentSqlTypeIndicators = new JdbcTypeDescriptorIndicators() {
+		private final transient JdbcTypeIndicators currentSqlTypeIndicators = new JdbcTypeIndicators() {
 			@Override
 			public TypeConfiguration getTypeConfiguration() {
 				return typeConfiguration;
@@ -370,7 +357,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			this.typeConfiguration = typeConfiguration;
 		}
 
-		public JdbcTypeDescriptorIndicators getCurrentBaseSqlTypeIndicators() {
+		public JdbcTypeIndicators getCurrentBaseSqlTypeIndicators() {
 			return currentSqlTypeIndicators;
 		}
 
@@ -472,12 +459,12 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	private final ConcurrentMap<ArrayCacheKey, ArrayTupleType> arrayTuples = new ConcurrentHashMap<>();
 
-	public SqmExpressable<?> resolveTupleType(List<? extends SqmTypedNode<?>> typedNodes) {
-		final SqmExpressable<?>[] components = new SqmExpressable<?>[typedNodes.size()];
+	public SqmExpressible<?> resolveTupleType(List<? extends SqmTypedNode<?>> typedNodes) {
+		final SqmExpressible<?>[] components = new SqmExpressible<?>[typedNodes.size()];
 		for ( int i = 0; i < typedNodes.size(); i++ ) {
-			final SqmExpressable<?> sqmExpressable = typedNodes.get( i ).getNodeType();
-			components[i] = sqmExpressable != null
-					? sqmExpressable
+			final SqmExpressible<?> sqmExpressible = typedNodes.get( i ).getNodeType();
+			components[i] = sqmExpressible != null
+					? sqmExpressible
 					: getBasicTypeForJavaType( Object.class );
 		}
 		return arrayTuples.computeIfAbsent(
@@ -487,9 +474,9 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	private static class ArrayCacheKey {
-		final SqmExpressable<?>[] components;
+		final SqmExpressible<?>[] components;
 
-		public ArrayCacheKey(SqmExpressable<?>[] components) {
+		public ArrayCacheKey(SqmExpressible<?>[] components) {
 			this.components = components;
 		}
 
@@ -507,23 +494,22 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	/**
 	 * @see QueryHelper#highestPrecedenceType2
 	 */
-	public SqmExpressable<?> resolveArithmeticType(
-			SqmExpressable<?> firstType,
-			SqmExpressable<?> secondType,
+	public SqmExpressible<?> resolveArithmeticType(
+			SqmExpressible<?> firstType,
+			SqmExpressible<?> secondType,
 			BinaryArithmeticOperator operator) {
-		return resolveArithmeticType( firstType, secondType, operator == DIVIDE );
+		return resolveArithmeticType( firstType, secondType );
 	}
 
 	/**
 	 * Determine the result type of an arithmetic operation as defined by the
-	 * rules in section 6.5.7.1.
+	 * rules in section 6.5.8.1.
 	 *
 	 * @see QueryHelper#highestPrecedenceType2
 	 */
-	public SqmExpressable<?> resolveArithmeticType(
-			SqmExpressable<?> firstType,
-			SqmExpressable<?> secondType,
-			boolean isDivision) {
+	public SqmExpressible<?> resolveArithmeticType(
+			SqmExpressible<?> firstType,
+			SqmExpressible<?> secondType) {
 
 		if ( getSqlTemporalType( firstType ) != null ) {
 			if ( secondType==null || getSqlTemporalType( secondType ) != null ) {
@@ -548,65 +534,16 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			return getBasicTypeRegistry().getRegisteredType( Duration.class );
 		}
 
-		if ( isDivision ) {
-			// covered under the note in 6.5.7.1 discussing the unportable
-			// "semantics of the SQL division operation"..
-			return getBasicTypeRegistry().getRegisteredType( Number.class.getName() );
-		}
-
-
-		// non-division
-
-		if ( matchesJavaType( firstType, Double.class ) ) {
+		if ( secondType == null || firstType != null
+				&& firstType.getExpressibleJavaType().isWider( secondType.getExpressibleJavaType() ) ) {
 			return firstType;
 		}
-		else if ( matchesJavaType( secondType, Double.class ) ) {
-			return secondType;
-		}
-		else if ( matchesJavaType( firstType, Float.class ) ) {
-			return firstType;
-		}
-		else if ( matchesJavaType( secondType, Float.class ) ) {
-			return secondType;
-		}
-		else if ( matchesJavaType( firstType, BigDecimal.class ) ) {
-			return firstType;
-		}
-		else if ( matchesJavaType( secondType, BigDecimal.class ) ) {
-			return secondType;
-		}
-		else if ( matchesJavaType( firstType, BigInteger.class ) ) {
-			return firstType;
-		}
-		else if ( matchesJavaType( secondType, BigInteger.class ) ) {
-			return secondType;
-		}
-		else if ( matchesJavaType( firstType, Long.class ) ) {
-			return firstType;
-		}
-		else if ( matchesJavaType( secondType, Long.class ) ) {
-			return secondType;
-		}
-		else if ( matchesJavaType( firstType, Integer.class ) ) {
-			return firstType;
-		}
-		else if ( matchesJavaType( secondType, Integer.class ) ) {
-			return secondType;
-		}
-		else if ( matchesJavaType( firstType, Short.class ) ) {
-			return getBasicTypeRegistry().getRegisteredType( Integer.class.getName() );
-		}
-		else if ( matchesJavaType( secondType, Short.class ) ) {
-			return getBasicTypeRegistry().getRegisteredType( Integer.class.getName() );
-		}
-		else {
-			return getBasicTypeRegistry().getRegisteredType( Number.class.getName() );
-		}
+		return secondType;
 	}
 
-	private static boolean matchesJavaType(SqmExpressable<?> type, Class<?> javaType) {
+	private static boolean matchesJavaType(SqmExpressible<?> type, Class<?> javaType) {
 		assert javaType != null;
-		return type != null && javaType.isAssignableFrom( type.getExpressableJavaTypeDescriptor().getJavaTypeClass() );
+		return type != null && javaType.isAssignableFrom( type.getExpressibleJavaType().getJavaTypeClass() );
 	}
 
 
@@ -659,31 +596,30 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 					}
 
 					// otherwise, apply the creator
-					final JavaType<J> javaTypeDescriptor = javaTypeRegistry.resolveDescriptor( javaType );
-					return creator.apply( javaTypeDescriptor );
+					return creator.apply( javaTypeRegistry.resolveDescriptor( javaType ) );
 				}
 		);
 	}
 
-	public TemporalType getSqlTemporalType(SqmExpressable<?> type) {
+	public TemporalType getSqlTemporalType(SqmExpressible<?> type) {
 		if ( type == null ) {
 			return null;
 		}
-		return getSqlTemporalType( type.getExpressableJavaTypeDescriptor().getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() ) );
+		return getSqlTemporalType( type.getExpressibleJavaType().getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() ) );
 	}
 
 	public static TemporalType getSqlTemporalType(JdbcMapping jdbcMapping) {
-		return getSqlTemporalType( jdbcMapping.getJdbcTypeDescriptor() );
+		return getSqlTemporalType( jdbcMapping.getJdbcType() );
 	}
 
 	public static TemporalType getSqlTemporalType(JdbcMappingContainer jdbcMappings) {
 		assert jdbcMappings.getJdbcTypeCount() == 1;
-		return getSqlTemporalType( jdbcMappings.getJdbcMappings().get( 0 ).getJdbcTypeDescriptor() );
+		return getSqlTemporalType( jdbcMappings.getJdbcMappings().get( 0 ).getJdbcType() );
 	}
 
-	public static TemporalType getSqlTemporalType(MappingModelExpressable<?> type) {
+	public static TemporalType getSqlTemporalType(MappingModelExpressible<?> type) {
 		if ( type instanceof BasicValuedMapping ) {
-			return getSqlTemporalType( ( (BasicValuedMapping) type ).getJdbcMapping().getJdbcTypeDescriptor() );
+			return getSqlTemporalType( ( (BasicValuedMapping) type ).getJdbcMapping().getJdbcType() );
 		}
 		return null;
 	}
@@ -708,7 +644,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	public static IntervalType getSqlIntervalType(JdbcMappingContainer jdbcMappings) {
 		assert jdbcMappings.getJdbcTypeCount() == 1;
-		return getSqlIntervalType( jdbcMappings.getJdbcMappings().get( 0 ).getJdbcTypeDescriptor() );
+		return getSqlIntervalType( jdbcMappings.getJdbcMappings().get( 0 ).getJdbcType() );
 	}
 
 	public static IntervalType getSqlIntervalType(JdbcType descriptor) {
@@ -723,11 +659,11 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return null;
 	}
 
-	public static boolean isJdbcTemporalType(SqmExpressable<?> type) {
+	public static boolean isJdbcTemporalType(SqmExpressible<?> type) {
 		return matchesJavaType( type, Date.class );
 	}
 
-	public static boolean isDuration(SqmExpressable<?> type) {
+	public static boolean isDuration(SqmExpressible<?> type) {
 		return matchesJavaType( type, Duration.class );
 	}
 

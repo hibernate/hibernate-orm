@@ -12,7 +12,7 @@ import java.util.Date;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.BindableType;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -56,8 +56,8 @@ public class QueryParameterBindingValidator {
 			parameterJavaType = paramType.getBindableJavaType();
 		}
 		else {
-			final SqmExpressable<?> sqmExpressable = paramType.resolveExpressable( sessionFactory );
-			parameterJavaType = sqmExpressable.getBindableJavaType();
+			final SqmExpressible<?> sqmExpressible = paramType.resolveExpressible( sessionFactory );
+			parameterJavaType = sqmExpressible.getBindableJavaType();
 		}
 
 		if ( parameterJavaType == null ) {
@@ -79,8 +79,9 @@ public class QueryParameterBindingValidator {
 			if ( !isValidBindValue( parameterJavaType, bind, temporalPrecision ) ) {
 				throw new IllegalArgumentException(
 						String.format(
-								"Parameter value [%s] did not match expected type [%s (%s)]",
+								"Argument [%s] of type [%s] did not match parameter type [%s (%s)]",
 								bind,
+								bind.getClass().getName(),
 								parameterJavaType.getName(),
 								extractName( temporalPrecision )
 						)

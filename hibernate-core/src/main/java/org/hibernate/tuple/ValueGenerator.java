@@ -22,7 +22,7 @@ public interface ValueGenerator<T> {
 	 *
 	 * @return The generated value
 	 */
-	public T generateValue(Session session, Object owner);
+	T generateValue(Session session, Object owner);
 
 	/**
 	 * Generate the value.
@@ -33,7 +33,7 @@ public interface ValueGenerator<T> {
 	 *
 	 * @return The generated value
 	 */
-	public default T generateValue(Session session, Object owner, Object currentValue) {
+	default T generateValue(Session session, Object owner, Object currentValue) {
 		return generateValue(session, owner);
 	}
 }

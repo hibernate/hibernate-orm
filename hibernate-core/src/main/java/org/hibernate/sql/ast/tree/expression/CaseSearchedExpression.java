@@ -12,8 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -22,7 +21,6 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.type.BasicType;
 
 /**
  * @author Steve Ebersole
@@ -33,11 +31,11 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 	private List<WhenFragment> whenFragments = new ArrayList<>();
 	private Expression otherwise;
 
-	public CaseSearchedExpression(MappingModelExpressable type) {
+	public CaseSearchedExpression(MappingModelExpressible type) {
 		this.type = (BasicValuedMapping) type;
 	}
 
-	public CaseSearchedExpression(MappingModelExpressable type, List<WhenFragment> whenFragments, Expression otherwise) {
+	public CaseSearchedExpression(MappingModelExpressible type, List<WhenFragment> whenFragments, Expression otherwise) {
 		this.type = (BasicValuedMapping) type;
 		this.whenFragments = whenFragments;
 		this.otherwise = otherwise;
@@ -69,7 +67,7 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 				.getSqlExpressionResolver()
 				.resolveSqlSelection(
 						this,
-						type.getExpressableJavaTypeDescriptor(),
+						type.getExpressibleJavaType(),
 						creationState.getSqlAstCreationState()
 								.getCreationContext()
 								.getSessionFactory()
@@ -80,7 +78,7 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				type.getExpressableJavaTypeDescriptor()
+				type.getExpressibleJavaType()
 		);
 	}
 
@@ -91,7 +89,7 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 		final SqlSelection sqlSelection = sqlExpressionResolver
 				.resolveSqlSelection(
 						this,
-						type.getExpressableJavaTypeDescriptor(),
+						type.getExpressibleJavaType(),
 						creationState.getSqlAstCreationState()
 								.getCreationContext()
 								.getSessionFactory()
@@ -99,7 +97,7 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 				);
 		sqlExpressionResolver.resolveSqlSelection(
 				this,
-				type.getExpressableJavaTypeDescriptor(),
+				type.getExpressibleJavaType(),
 				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 	}
@@ -110,7 +108,7 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 	}
 
 	@Override
-	public MappingModelExpressable getExpressionType() {
+	public MappingModelExpressible getExpressionType() {
 		return type;
 	}
 

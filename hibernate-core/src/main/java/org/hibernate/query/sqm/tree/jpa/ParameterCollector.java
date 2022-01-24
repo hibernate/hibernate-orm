@@ -12,9 +12,9 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.query.BindableType;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
-import org.hibernate.query.sqm.tree.SqmExpressableAccessor;
+import org.hibernate.query.sqm.tree.SqmExpressibleAccessor;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
@@ -98,9 +98,9 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 	private <T> BindableType<T> getInferredParameterType(JpaCriteriaParameter<?> expression) {
 		BindableType<?> parameterType = null;
 		if ( inferenceBasis != null ) {
-			final SqmExpressable<?> expressable = inferenceBasis.getExpressable();
-			if ( expressable instanceof BindableType<?> ) {
-				parameterType = (BindableType<?>) expressable;
+			final SqmExpressible<?> expressible = inferenceBasis.getExpressible();
+			if ( expressible != null ) {
+				parameterType = expressible;
 			}
 		}
 		if ( parameterType == null ) {
@@ -128,10 +128,10 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 		return param;
 	}
 
-	private SqmExpressableAccessor<?> inferenceBasis;
+	private SqmExpressibleAccessor<?> inferenceBasis;
 
-	private void withTypeInference(SqmExpressableAccessor<?> inferenceBasis, Runnable action) {
-		SqmExpressableAccessor<?> original = this.inferenceBasis;
+	private void withTypeInference(SqmExpressibleAccessor<?> inferenceBasis, Runnable action) {
+		SqmExpressibleAccessor<?> original = this.inferenceBasis;
 		this.inferenceBasis = inferenceBasis;
 		try {
 			action.run();
@@ -143,20 +143,20 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 
 	@Override
 	public Object visitSimpleCaseExpression(SqmCaseSimple<?, ?> expression) {
-		final SqmExpressableAccessor<?> inferenceSupplier = this.inferenceBasis;
+		final SqmExpressibleAccessor<?> inferenceSupplier = this.inferenceBasis;
 		withTypeInference(
 				() -> {
 					for ( SqmCaseSimple.WhenFragment<?, ?> whenFragment : expression.getWhenFragments() ) {
-						final SqmExpressable<?> resolved = whenFragment.getCheckValue().getExpressable();
-						if ( resolved instanceof BindableType<?> ) {
-							return (SqmExpressable<Object>) resolved;
+						final SqmExpressible<?> resolved = whenFragment.getCheckValue().getExpressible();
+						if ( resolved != null ) {
+							return (SqmExpressible<Object>) resolved;
 						}
 					}
 					return null;
 				},
 				() -> expression.getFixture().accept( this )
 		);
-		SqmExpressableAccessor<?> resolved = determineCurrentExpressable( expression );
+		SqmExpressibleAccessor<?> resolved = determineCurrentExpressible( expression );
 		for ( SqmCaseSimple.WhenFragment<?, ?> whenFragment : expression.getWhenFragments() ) {
 			withTypeInference(
 					expression.getFixture(),
@@ -181,8 +181,8 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 
 	@Override
 	public Object visitSearchedCaseExpression(SqmCaseSearched<?> expression) {
-		final SqmExpressableAccessor<?> inferenceSupplier = this.inferenceBasis;
-		SqmExpressableAccessor<?> resolved = determineCurrentExpressable( expression );
+		final SqmExpressibleAccessor<?> inferenceSupplier = this.inferenceBasis;
+		SqmExpressibleAccessor<?> resolved = determineCurrentExpressible( expression );
 
 		for ( SqmCaseSearched.WhenFragment<?> whenFragment : expression.getWhenFragments() ) {
 			withTypeInference(
@@ -206,7 +206,7 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 		return expression;
 	}
 
-	private SqmExpressableAccessor<?> highestPrecedence(SqmExpressableAccessor<?> type1, SqmExpressableAccessor<?> type2) {
+	private SqmExpressibleAccessor<?> highestPrecedence(SqmExpressibleAccessor<?> type1, SqmExpressibleAccessor<?> type2) {
 		if ( type1 == null ) {
 			return type2;
 		}
@@ -214,20 +214,20 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 			return type1;
 		}
 
-		if ( type1.getExpressable() instanceof BindableType<?> ) {
+		if ( type1.getExpressible() != null ) {
 			return type1;
 		}
 
-		if ( type2.getExpressable() instanceof BindableType<?> ) {
+		if ( type2.getExpressible() != null ) {
 			return type2;
 		}
 
 		return type1;
 	}
 
-	private SqmExpressableAccessor<?> determineCurrentExpressable(SqmExpression<?> expression) {
-		if ( expression.getExpressable() instanceof BindableType<?> ) {
-			return () -> (SqmExpressable<Object>) expression.getExpressable();
+	private SqmExpressibleAccessor<?> determineCurrentExpressible(SqmExpression<?> expression) {
+		if ( expression.getExpressible() != null ) {
+			return () -> (SqmExpressible<Object>) expression.getExpressible();
 		}
 		return null;
 	}

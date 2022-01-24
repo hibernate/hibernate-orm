@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;

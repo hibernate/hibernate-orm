@@ -32,17 +32,17 @@ import org.hibernate.type.Type;
  */
 public interface PropertyMapping {
 
-	/**
-	 * @asciidoc
-	 *
-	 * Resolve a sub-reference relative to this PropertyMapping.  E.g.,
-	 * given the PropertyMapping for an entity named `Person` with an embedded
-	 * property `#name` calling this method with `"name"` returns the
-	 * PropertyMapping for the `Name` embeddable
-	 * <p>
-	 * todo (6.0) : define an exception in the signature for cases where the PropertyMapping
-	 * cannot be de-referenced (basic values)
-	 */
+//	/**
+//	 * @asciidoc
+//	 *
+//	 * Resolve a sub-reference relative to this PropertyMapping.  E.g.,
+//	 * given the PropertyMapping for an entity named `Person` with an embedded
+//	 * property `#name` calling this method with `"name"` returns the
+//	 * PropertyMapping for the `Name` embeddable
+//	 * <p>
+//	 * todo (6.0) : define an exception in the signature for cases where the PropertyMapping
+//	 * cannot be de-referenced (basic values)
+//	 */
 	//	PropertyMapping resolveSubMapping(String name);
 
 	// todo (6.0) : add capability to create SqmPath, i.e.

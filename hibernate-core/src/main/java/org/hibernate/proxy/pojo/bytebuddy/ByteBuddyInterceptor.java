@@ -21,12 +21,12 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 public class ByteBuddyInterceptor extends BasicLazyInitializer implements ProxyConfiguration.Interceptor {
 	private static final CoreMessageLogger LOG = messageLogger( ByteBuddyInterceptor.class );
 
-	private final Class[] interfaces;
+	private final Class<?>[] interfaces;
 
 	public ByteBuddyInterceptor(
 			String entityName,
-			Class persistentClass,
-			Class[] interfaces,
+			Class<?> persistentClass,
+			Class<?>[] interfaces,
 			Object id,
 			Method getIdentifierMethod,
 			Method setIdentifierMethod,

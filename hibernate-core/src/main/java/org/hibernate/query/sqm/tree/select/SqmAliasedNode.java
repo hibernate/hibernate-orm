@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 
@@ -27,7 +27,7 @@ public interface SqmAliasedNode<T> extends SqmTypedNode<T> {
 	String getAlias();
 
 	@Override
-	default SqmExpressable<T> getNodeType() {
+	default SqmExpressible<T> getNodeType() {
 		return getSelectableNode().getNodeType();
 	}
 }

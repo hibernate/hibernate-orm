@@ -39,7 +39,6 @@ public class MapStorageAccessImpl implements DomainDataStorageAccess {
 		getOrMakeDataMap().put( key, value );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected ConcurrentMap getOrMakeDataMap() {
 		if ( data == null ) {
 			data = new ConcurrentHashMap();

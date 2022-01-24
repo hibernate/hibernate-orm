@@ -15,5 +15,5 @@ public interface PreDeleteEventListener {
 	/**
 	 * Return true if the operation should be vetoed
 	 */
-	public boolean onPreDelete(PreDeleteEvent event);
+	boolean onPreDelete(PreDeleteEvent event);
 }

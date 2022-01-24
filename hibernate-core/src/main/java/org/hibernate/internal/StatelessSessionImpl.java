@@ -45,7 +45,7 @@ import jakarta.transaction.SystemException;
 public class StatelessSessionImpl extends AbstractSharedSessionContract implements StatelessSession {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( StatelessSessionImpl.class );
 
-	private static LoadQueryInfluencers NO_INFLUENCERS = new LoadQueryInfluencers( null ) {
+	private static final LoadQueryInfluencers NO_INFLUENCERS = new LoadQueryInfluencers( null ) {
 		@Override
 		public String getInternalFetchProfile() {
 			return null;
@@ -88,7 +88,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			boolean substitute = Versioning.seedVersion(
 					state,
 					persister.getVersionProperty(),
-					persister.getVersionJavaTypeDescriptor(),
+					persister.getVersionJavaType(),
 					this
 			);
 			if ( substitute ) {
@@ -141,7 +141,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		Object oldVersion;
 		if ( persister.isVersioned() ) {
 			oldVersion = persister.getVersion( entity );
-			Object newVersion = Versioning.increment( oldVersion, persister.getVersionJavaTypeDescriptor(), this );
+			Object newVersion = Versioning.increment( oldVersion, persister.getVersionJavaType(), this );
 			Versioning.setVersion( state, newVersion, persister );
 			persister.setPropertyValues( entity, state );
 		}
@@ -154,14 +154,14 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	// loading ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	@Override
-	public Object get(Class entityClass, Object id) {
-		return get( entityClass.getName(), id );
+	@Override @SuppressWarnings("unchecked")
+	public <T> T get(Class<T> entityClass, Object id) {
+		return (T) get( entityClass.getName(), id );
 	}
 
-	@Override
-	public Object get(Class entityClass, Object id, LockMode lockMode) {
-		return get( entityClass.getName(), id, lockMode );
+	@Override @SuppressWarnings("unchecked")
+	public <T> T get(Class<T> entityClass, Object id, LockMode lockMode) {
+		return (T) get( entityClass.getName(), id, lockMode );
 	}
 
 	@Override
@@ -226,14 +226,14 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 		}
 
-		String previousFetchProfile = this.getLoadQueryInfluencers().getInternalFetchProfile();
-		Object result = null;
+		String previousFetchProfile = getLoadQueryInfluencers().getInternalFetchProfile();
+		Object result;
 		try {
-			this.getLoadQueryInfluencers().setInternalFetchProfile( "refresh" );
+			getLoadQueryInfluencers().setInternalFetchProfile( "refresh" );
 			result = persister.load( id, entity, getNullSafeLockMode( lockMode ), this );
 		}
 		finally {
-			this.getLoadQueryInfluencers().setInternalFetchProfile( previousFetchProfile );
+			getLoadQueryInfluencers().setInternalFetchProfile( previousFetchProfile );
 		}
 		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );
 		if ( temporaryPersistenceContext.isLoadFinished() ) {
@@ -504,11 +504,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public int getDontFlushFromFind() {
-		return 0;
-	}
-
-	@Override
 	public Object getContextEntityIdentifier(Object object) {
 		checkOpen();
 		return null;
@@ -680,7 +675,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public void flushBeforeTransactionCompletion() {
-		boolean flush = false;
+		boolean flush;
 		try {
 			flush = (
 					!isClosed()

@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -95,8 +95,8 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 	}
 
 	@Override
-	public JavaType<?> getResultJavaTypeDescriptor() {
-		return getReferencedMappingType().getJavaTypeDescriptor();
+	public JavaType<?> getResultJavaType() {
+		return getReferencedMappingType().getJavaType();
 	}
 
 	@Override

@@ -19,8 +19,8 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
-import org.hibernate.query.ComparisonOperator;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.sql.FromClauseIndex;
@@ -177,7 +177,7 @@ class DatabaseSnapshotExecutor {
 								new BasicResult(
 										0,
 										null,
-										contributorMapping.getJavaTypeDescriptor()
+										contributorMapping.getJavaType()
 								)
 						);
 					}

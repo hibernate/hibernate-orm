@@ -25,7 +25,7 @@ import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
@@ -92,8 +92,8 @@ public abstract class AbstractCompositeIdentifierMapping
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
-		return getPartMappingType().getMappedJavaTypeDescriptor();
+	public JavaType<?> getJavaType() {
+		return getPartMappingType().getMappedJavaType();
 	}
 
 	@Override

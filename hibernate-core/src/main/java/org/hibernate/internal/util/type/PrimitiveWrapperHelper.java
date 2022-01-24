@@ -18,9 +18,9 @@ public final class PrimitiveWrapperHelper {
 	/**
 	 * Describes a particular primitive/wrapper combo
 	 */
-	public static interface PrimitiveWrapperDescriptor<T> {
-		public Class<T> getPrimitiveClass();
-		public Class<T> getWrapperClass();
+	public interface PrimitiveWrapperDescriptor<T> {
+		Class<T> getPrimitiveClass();
+		Class<T> getWrapperClass();
 	}
 
 	public static class BooleanDescriptor implements PrimitiveWrapperDescriptor<Boolean> {

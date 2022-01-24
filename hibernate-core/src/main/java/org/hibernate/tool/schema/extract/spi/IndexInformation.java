@@ -22,12 +22,12 @@ public interface IndexInformation {
 	 *
 	 * @return The index identifier.
 	 */
-	public Identifier getIndexIdentifier();
+	Identifier getIndexIdentifier();
 
 	/**
 	 * Obtain the columns indexed under this index.  Returned in sequential order.
 	 *
 	 * @return The columns
 	 */
-	public List<ColumnInformation> getIndexedColumns();
+	List<ColumnInformation> getIndexedColumns();
 }

@@ -10,7 +10,7 @@ import java.util.function.IntFunction;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;

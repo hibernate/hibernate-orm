@@ -43,7 +43,7 @@ public class CustomSqlSchemaResolvingTest {
 
 		String className = CustomEntity.class.getName();
 
-		final AbstractEntityPersister persister = (AbstractEntityPersister) scope.getSessionFactory().getEntityPersister( className );
+        final AbstractEntityPersister persister = (AbstractEntityPersister) scope.getSessionFactory().getMetamodel().entityPersister(className);
 		String insertQuery = persister.getSQLInsertStrings()[0];
 		String updateQuery = persister.getSQLUpdateStrings()[0];
 		String deleteQuery = persister.getSQLDeleteStrings()[0];

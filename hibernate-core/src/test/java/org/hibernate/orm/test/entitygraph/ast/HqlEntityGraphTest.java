@@ -31,7 +31,7 @@ import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.hql.spi.HqlQueryImplementor;
+import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.sql.SqmTranslation;
@@ -301,7 +301,7 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 
 		final TableGroup joinedGroup = rootTableGroup.getTableGroupJoins().iterator().next().getJoinedGroup();
 		assertThat( joinedGroup.getModelPart().getPartName(), is( expectedAttributeName ) );
-		assertThat( joinedGroup.getModelPart().getJavaTypeDescriptor().getJavaTypeClass(), assignableTo( expectedEntityJpaClass ) );
+		assertThat( joinedGroup.getModelPart().getJavaType().getJavaTypeClass(), assignableTo( expectedEntityJpaClass ) );
 		assertThat( joinedGroup.getModelPart(), instanceOf( EntityValuedModelPart.class ) );
 
 		tableGroupConsumer.accept( joinedGroup );
@@ -342,7 +342,7 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 		assertThat( domainResult, instanceOf( EntityResult.class ) );
 
 		final EntityResult entityResult = (EntityResult) domainResult;
-		assertThat( entityResult.getReferencedModePart().getJavaTypeDescriptor().getJavaTypeClass(), assignableTo( expectedEntityJpaClass ) );
+		assertThat( entityResult.getReferencedModePart().getJavaType().getJavaTypeClass(), assignableTo( expectedEntityJpaClass ) );
 		assertThat( entityResult.getFetches(), hasSize( 1 ) );
 
 		final Fetch fetch = entityResult.getFetches().get( 0 );
@@ -350,7 +350,7 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 
 		final EntityFetch entityFetch = (EntityFetch) fetch;
 		assertThat( entityFetch.getFetchedMapping().getFetchableName(), is( expectedAttributeName ) );
-		assertThat( entityFetch.getReferencedModePart().getJavaTypeDescriptor().getJavaTypeClass(), assignableTo( expectedAttributeEntityJpaClass ) );
+		assertThat( entityFetch.getReferencedModePart().getJavaType().getJavaTypeClass(), assignableTo( expectedAttributeEntityJpaClass ) );
 
 		entityFetchConsumer.accept( entityFetch );
 	}
@@ -368,7 +368,7 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 				hql,
 				entityType
 		);
-		final HqlQueryImplementor<String> hqlQuery = (HqlQueryImplementor<String>) query;
+		final SqmQueryImplementor<String> hqlQuery = (SqmQueryImplementor<String>) query;
 		hqlQuery.applyGraph( entityGraph, mode );
 
 		final SqmSelectStatement<String> sqmStatement = (SqmSelectStatement<String>) hqlQuery.getSqmStatement();

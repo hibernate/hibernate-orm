@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.SqlExpressable;
+import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 
@@ -17,7 +17,7 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  *
  * @author Gavin King
  */
-public class Format implements SqlExpressable, SqlAstNode {
+public class Format implements SqlExpressible, SqlAstNode {
 	private String format;
 
 	public Format(String format) {

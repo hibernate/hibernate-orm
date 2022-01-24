@@ -8,7 +8,6 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.IntFunction;
 
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.sql.results.graph.FetchableContainer;
@@ -22,8 +21,8 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public interface ManagedMappingType extends MappingType, FetchableContainer {
 	@Override
-	default JavaType<?> getJavaTypeDescriptor() {
-		return getMappedJavaTypeDescriptor();
+	default JavaType<?> getJavaType() {
+		return getMappedJavaType();
 	}
 
 	@Override

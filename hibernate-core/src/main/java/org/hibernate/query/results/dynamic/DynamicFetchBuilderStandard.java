@@ -16,7 +16,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.ResultSetMappingSqlSelection;
@@ -106,7 +106,7 @@ public class DynamicFetchBuilderStandard
 								return new ResultSetMappingSqlSelection( valuesArrayPosition, selectableMapping.getJdbcMapping() );
 							}
 					),
-					selectableMapping.getJdbcMapping().getMappedJavaTypeDescriptor(),
+					selectableMapping.getJdbcMapping().getMappedJavaType(),
 					domainResultCreationState.getSqlAstCreationState()
 							.getCreationContext()
 							.getSessionFactory()

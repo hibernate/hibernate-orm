@@ -370,7 +370,7 @@ public class EntityWithBidirectionalOneToOneTest {
 				fetchablePath: AdoptedChild.biologicalMother.biologicalChild.mother --- Circular ---
 				fetchablePath: AdoptedChild.biologicalMother.adopted --- NO circular ---
 				fetchablePath: AdoptedChild.biologicalMother.adopted.biologicalMother --- NO circular ---
-				fetchablePath: AdoptedChild.biologicalMother.adopted.biologicalMother.biologicalChild --- NO circular --- [N.b is is not circular because adoped is an instance of AdoptedChild while biologicalChild is an instance of Child]
+				fetchablePath: AdoptedChild.biologicalMother.adopted.biologicalMother.biologicalChild --- NO circular --- [N.b is not circular because adopted is an instance of AdoptedChild while biologicalChild is an instance of Child]
 				fetchablePath: AdoptedChild.biologicalMother.adopted.biologicalMother.adopted --- NO circular ---
 				fetchablePath: AdoptedChild.biologicalMother.adopted.biologicalMother.adopted.biologicalMother --- NO circular ---
 				fetchablePath: AdoptedChild.biologicalMother.adopted.biologicalMother.adopted.biologicalMother.biologicalChild --- NO circular ---

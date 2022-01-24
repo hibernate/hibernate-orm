@@ -7,6 +7,22 @@
 package org.hibernate.orm.test.dialect.functional;
 
 import java.util.List;
+
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.Session;
+import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.jpa.AvailableHints;
+import org.hibernate.query.IllegalQueryOperationException;
+
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.jdbc.SQLStatementInterceptor;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Before;
+import org.junit.Test;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -15,21 +31,6 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.QueryHint;
-
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.Session;
-import org.hibernate.annotations.QueryHints;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.dialect.OracleDialect;
-import org.hibernate.query.IllegalQueryOperationException;
-
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.testing.jdbc.SQLStatementInterceptor;
-import org.junit.Before;
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -514,7 +515,7 @@ public class OracleFollowOnLockingTest extends
 			name = "product_by_name",
 			query = "select p from Product p where p.name is not null",
 			lockMode = LockModeType.PESSIMISTIC_WRITE,
-			hints = @QueryHint(name = QueryHints.FOLLOW_ON_LOCKING, value = "true")
+			hints = @QueryHint(name = AvailableHints.HINT_FOLLOW_ON_LOCKING, value = "true")
 	)
 	@Entity(name = "Product")
 	public static class Product {

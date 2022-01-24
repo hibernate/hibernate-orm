@@ -28,15 +28,15 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 
 	private final ByteBuddyProxyHelper byteBuddyProxyHelper;
 
-	private Class persistentClass;
+	private Class<?> persistentClass;
 	private String entityName;
-	private Class[] interfaces;
+	private Class<?>[] interfaces;
 	private Method getIdentifierMethod;
 	private Method setIdentifierMethod;
 	private CompositeType componentIdType;
 	private boolean overridesEquals;
 
-	private Class proxyClass;
+	private Class<?> proxyClass;
 
 	public ByteBuddyProxyFactory(ByteBuddyProxyHelper byteBuddyProxyHelper) {
 		this.byteBuddyProxyHelper = byteBuddyProxyHelper;
@@ -45,8 +45,8 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 	@Override
 	public void postInstantiate(
 			String entityName,
-			Class persistentClass,
-			Set<Class> interfaces,
+			Class<?> persistentClass,
+			Set<Class<?>> interfaces,
 			Method getIdentifierMethod,
 			Method setIdentifierMethod,
 			CompositeType componentIdType) throws HibernateException {
@@ -61,7 +61,7 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 		this.proxyClass = byteBuddyProxyHelper.buildProxy( persistentClass, this.interfaces );
 	}
 
-	private Class[] toArray(Set<Class> interfaces) {
+	private Class<?>[] toArray(Set<Class<?>> interfaces) {
 		if ( interfaces == null ) {
 			return ArrayHelper.EMPTY_CLASS_ARRAY;
 		}

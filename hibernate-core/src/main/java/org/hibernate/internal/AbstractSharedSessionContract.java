@@ -11,14 +11,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.TransactionRequiredException;
-import jakarta.persistence.Tuple;
-import jakarta.persistence.criteria.CriteriaDelete;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.CriteriaUpdate;
+import java.util.function.Function;
 
 import org.hibernate.CacheMode;
 import org.hibernate.EmptyInterceptor;
@@ -56,18 +52,30 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
+import org.hibernate.query.IllegalMutationQueryException;
+import org.hibernate.query.IllegalNamedQueryOptionsException;
+import org.hibernate.query.IllegalSelectQueryException;
+import org.hibernate.query.MutationQuery;
 import org.hibernate.query.Query;
+import org.hibernate.query.QueryTypeMismatchException;
+import org.hibernate.query.SelectionQuery;
+import org.hibernate.query.UnknownNamedQueryException;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
-import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
+import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
+import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.sql.internal.NativeQueryImpl;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
+import org.hibernate.query.sqm.SqmSelectionQuery;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
+import org.hibernate.query.sqm.internal.SqmSelectionQueryImpl;
+import org.hibernate.query.sqm.tree.SqmDmlStatement;
+import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
@@ -79,6 +87,15 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
+
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.TransactionRequiredException;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
+
+import static java.lang.Boolean.TRUE;
 
 /**
  * Base class for SharedSessionContract/SharedSessionContractImplementor
@@ -97,7 +114,6 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public abstract class AbstractSharedSessionContract implements SharedSessionContractImplementor {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( SessionImpl.class );
 
@@ -147,7 +163,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		this.flushMode = options.getInitialSessionFlushMode();
 
 		this.tenantIdentifier = options.getTenantIdentifier();
-		if ( factory.getSettings().isMultiTenancyEnabled() && tenantIdentifier == null ) {
+		if ( factory.getSessionFactoryOptions().isMultiTenancyEnabled() && tenantIdentifier == null ) {
 			throw new HibernateException( "SessionFactory configured for multi-tenancy, but no tenant identifier specified" );
 		}
 
@@ -509,7 +525,15 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	protected void pulseTransactionCoordinator() {
 		if ( !isClosed() ) {
-			transactionCoordinator.pulse();
+			try {
+				transactionCoordinator.pulse();
+			}
+			catch (HibernateException e) {
+				throw e;
+			}
+			catch (RuntimeException e) {
+				throw new HibernateException( "Exception pulsing TransactionCoordinator", e );
+			}
 		}
 	}
 
@@ -642,6 +666,58 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
+	public SelectionQuery<?> createSelectQuery(String hqlString) {
+		checkOpen();
+		pulseTransactionCoordinator();
+		delayedAfterCompletion();
+
+		try {
+			final QueryEngine queryEngine = getFactory().getQueryEngine();
+			final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
+			final HqlInterpretation hqlInterpretation = interpretationCache.resolveHqlInterpretation(
+					hqlString,
+					s -> queryEngine.getHqlTranslator().translate( hqlString )
+			);
+
+			if ( hqlInterpretation.getSqmStatement() instanceof SqmDmlStatement ) {
+				throw new IllegalSelectQueryException( "Expecting a selection query, but found `" + hqlString + "`" );
+			}
+
+			final SqmSelectionQuery<?> query = new SqmSelectionQueryImpl<>( hqlString, hqlInterpretation, this );
+			query.setComment( hqlString );
+
+			applyQuerySettingsAndHints( query );
+
+			return query;
+		}
+		catch (RuntimeException e) {
+			markForRollbackOnly();
+			throw getExceptionConverter().convert( e );
+		}
+	}
+
+	@Override
+	public <R> SelectionQuery<R> createSelectQuery(String hqlString, Class<R> expectedResultType) {
+		final SelectionQuery<?> selectQuery = createSelectQuery( hqlString );
+		//noinspection unchecked
+		final Class<?> resultType = ( (SqmSelectionQueryImpl<R>) selectQuery ).getResultType();
+		if ( resultType == null || expectedResultType.isAssignableFrom( resultType ) ) {
+			//noinspection unchecked
+			return (SelectionQuery<R>) selectQuery;
+		}
+
+		throw new QueryTypeMismatchException(
+				String.format(
+						Locale.ROOT,
+						"Query result-type error - expecting `%s`, but found `%s`",
+						expectedResultType.getName(),
+						resultType.getName()
+				)
+		);
+	}
+
+
+	@Override
 	public <T> QueryImplementor<T> createQuery(String queryString, Class<T> resultClass) {
 		checkOpen();
 		pulseTransactionCoordinator();
@@ -738,9 +814,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return query;
 	}
 
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass, String tableAlias) {
-		NativeQueryImplementor query = createNativeQuery( sqlString );
+	@Override
+	public <T> NativeQueryImplementor<T> createNativeQuery(String sqlString, Class<T> resultClass, String tableAlias) {
+		@SuppressWarnings("unchecked")
+		NativeQueryImplementor<T> query = createNativeQuery( sqlString );
 		if ( getFactory().getMetamodel().isEntityClass(resultClass) ) {
 			query.addEntity( tableAlias, resultClass.getName(), LockMode.READ );
 		}
@@ -750,9 +827,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return query;
 	}
 
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	public NativeQueryImplementor  createNativeQuery(String sqlString, String resultSetMappingName, Class resultClass) {
-		final NativeQueryImplementor query = createNativeQuery( sqlString, resultSetMappingName );
+	@Override
+	public <T> NativeQueryImplementor<T>  createNativeQuery(String sqlString, String resultSetMappingName, Class<T> resultClass) {
+		@SuppressWarnings("unchecked")
+		final NativeQueryImplementor<T> query = createNativeQuery( sqlString, resultSetMappingName );
 		if ( Tuple.class.equals( resultClass ) ) {
 			query.setTupleTransformer( new NativeQueryTupleTransformer() );
 		}
@@ -799,59 +877,89 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return getJdbcCoordinator().coordinateWork( work );
 	}
 
+	@SuppressWarnings({"rawtypes","unchecked"})
 	protected <T> QueryImplementor<T> buildNamedQuery(String queryName, Class<T> resultType) {
-		checkOpen();
 		try {
-			pulseTransactionCoordinator();
-			delayedAfterCompletion();
+			return buildNamedQuery(
+					queryName,
+					(memento) -> {
+						final SqmQueryImplementor query = memento.toQuery( this, resultType );
 
-			// this method can be called for either a named HQL query or a named native query
+						if ( StringHelper.isEmpty( query.getComment() ) ) {
+							query.setComment( "dynamic HQL query" );
+						}
+						applyQuerySettingsAndHints( query );
+						if ( memento.getLockOptions() != null ) {
+							query.setLockOptions( memento.getLockOptions() );
+						}
 
-			// first see if it is a named HQL query
-			final NamedHqlQueryMemento namedHqlDescriptor = getFactory().getQueryEngine()
-					.getNamedObjectRepository()
-					.getHqlQueryMemento( queryName );
+						return query;
+					},
+					(memento) -> {
+						final NativeQueryImplementor query;
+						if ( resultType == null ) {
+							query = memento.toQuery( this );
+						}
+						else {
+							query = memento.toQuery( this, resultType );
+						}
 
-			if ( namedHqlDescriptor != null ) {
-				HqlQueryImplementor<T> query = namedHqlDescriptor.toQuery( this, resultType );
-				if ( StringHelper.isEmpty( query.getComment() ) ) {
-					query.setComment( "dynamic HQL query" );
-				}
-				applyQuerySettingsAndHints( query );
-				if ( namedHqlDescriptor.getLockOptions() != null ) {
-					query.setLockOptions( namedHqlDescriptor.getLockOptions() );
-				}
-				return query;
-			}
+						if ( StringHelper.isEmpty( query.getComment() ) ) {
+							query.setComment( "dynamic native-SQL query" );
+						}
+						applyQuerySettingsAndHints( query );
 
-			// otherwise, see if it is a named native query
-			final NamedNativeQueryMemento namedNativeDescriptor = getFactory().getQueryEngine()
-					.getNamedObjectRepository()
-					.getNativeQueryMemento( queryName );
-
-			if ( namedNativeDescriptor != null ) {
-				final NativeQueryImplementor<T> query;
-				if ( resultType == null) {
-					query = namedNativeDescriptor.toQuery( this );
-				}
-				else {
-					query = namedNativeDescriptor.toQuery( this, resultType );
-				}
-				if ( StringHelper.isEmpty( query.getComment() ) ) {
-					query.setComment( "dynamic native SQL query" );
-				}
-				applyQuerySettingsAndHints( query );
-				return query;
-			}
-
-			// todo (6.0) : allow this for named stored procedures as well?
-			//		ultimately they are treated as a Query
-
-			throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + queryName + "]" ) );
+						return query;
+					}
+			);
+		}
+		catch (UnknownNamedQueryException e) {
+			// JPA expects this to mark the transaction for rollback only
+			transactionCoordinator.getTransactionDriverControl().markRollbackOnly();
+			// it also expects an IllegalArgumentException, so wrap UnknownNamedQueryException
+			throw new IllegalArgumentException( e.getMessage(), e );
+		}
+		catch (IllegalArgumentException e) {
+			throw e;
 		}
 		catch (RuntimeException e) {
-			throw !( e instanceof IllegalArgumentException ) ? new IllegalArgumentException( e ) : e;
+			throw getExceptionConverter().convert( e );
 		}
+	}
+
+	@SuppressWarnings("rawtypes")
+	protected QueryImplementor buildNamedQuery(
+			String queryName,
+			Function<NamedHqlQueryMemento, SqmQueryImplementor> namedHqlHandler,
+			Function<NamedNativeQueryMemento, NativeQueryImplementor> namedNativeHandler) {
+		checkOpen();
+		pulseTransactionCoordinator();
+		delayedAfterCompletion();
+
+		// this method can be called for either a named HQL query or a named native query
+
+		// first see if it is a named HQL query
+		final NamedHqlQueryMemento namedHqlDescriptor = getFactory().getQueryEngine()
+				.getNamedObjectRepository()
+				.getHqlQueryMemento( queryName );
+
+		if ( namedHqlDescriptor != null ) {
+			return namedHqlHandler.apply( namedHqlDescriptor );
+		}
+
+		// otherwise, see if it is a named native query
+		final NamedNativeQueryMemento namedNativeDescriptor = getFactory().getQueryEngine()
+				.getNamedObjectRepository()
+				.getNativeQueryMemento( queryName );
+
+		if ( namedNativeDescriptor != null ) {
+			return namedNativeHandler.apply( namedNativeDescriptor );
+		}
+
+		throw new UnknownNamedQueryException( queryName );
+	}
+
+	protected void applyQuerySettingsAndHints(SelectionQuery<?> query) {
 	}
 
 	protected void applyQuerySettingsAndHints(Query<?> query) {
@@ -883,19 +991,97 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + queryName + "]" ) );
 	}
 
-	@Override @SuppressWarnings("unchecked")
-	public QueryImplementor<Void> createStatement(String statementString) {
-		return createQuery(statementString);
+	@Override
+	public MutationQuery createMutationQuery(String hqlString) {
+		final QueryImplementor<?> query = createQuery( hqlString );
+		final SqmStatement<?> sqmStatement = ( (SqmQueryImplementor<?>) query ).getSqmStatement();
+		if ( !( sqmStatement instanceof SqmDmlStatement ) ) {
+			throw new IllegalMutationQueryException( "Expecting a mutation query, but found `" + hqlString + "`" );
+		}
+		return query;
 	}
 
-	@Override @SuppressWarnings("unchecked")
-	public QueryImplementor<Void> createNamedStatement(String name) {
-		return createNamedQuery(name);
+	@Override
+	public MutationQuery createNativeMutationQuery(String sqlString) {
+		final NativeQueryImplementor<?> query = createNativeQuery( sqlString );
+		if ( query.isSelectQuery() == TRUE ) {
+			throw new IllegalMutationQueryException( "Expecting a native mutation query, but found `" + sqlString + "`" );
+		}
+		return query;
 	}
 
-	@Override @SuppressWarnings("unchecked")
-	public NativeQueryImplementor<Void> createNativeStatement(String sqlString) {
-		return createNativeQuery(sqlString);
+	@Override
+	public MutationQuery createNamedMutationQuery(String queryName) {
+		return buildNamedQuery(
+				queryName,
+				(hqlMemento) -> {
+					final SqmQueryImplementor<?> query = hqlMemento.toQuery( this );
+
+					final SqmStatement<?> sqmStatement = query.getSqmStatement();
+					if ( !( sqmStatement instanceof SqmDmlStatement ) ) {
+						throw new IllegalMutationQueryException(
+								"Expecting a named mutation query (" + queryName + "), but found `" + hqlMemento.getHqlString() + "`"
+						);
+					}
+
+					if ( hqlMemento.getLockOptions() != null && ! hqlMemento.getLockOptions().isEmpty() ) {
+						throw new IllegalNamedQueryOptionsException(
+								"Named mutation query `" + queryName + "` specified lock-options"
+						);
+					}
+
+					if ( StringHelper.isEmpty( query.getComment() ) ) {
+						query.setComment( "dynamic HQL query" );
+					}
+					applyQuerySettingsAndHints( query );
+
+					return query;
+				},
+				(nativeMemento) -> {
+					final NativeQueryImplementor<?> query = nativeMemento.toQuery( this );
+
+					final Boolean isUnequivocallySelect = query.isSelectQuery();
+					if ( isUnequivocallySelect == TRUE ) {
+						throw new IllegalMutationQueryException(
+								"Expecting named native query (" + queryName + ") to be a mutation query, but found `" + nativeMemento.getSqlString() + "`"
+						);
+					}
+
+					if ( StringHelper.isEmpty( query.getComment() ) ) {
+						query.setComment( "dynamic native-SQL query" );
+					}
+
+					applyQuerySettingsAndHints( query );
+
+					return query;
+				}
+		);
+	}
+
+	@Override
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery) {
+		checkOpen();
+		try {
+			return new QuerySqmImpl<>(
+					(SqmUpdateStatement<?>) updateQuery,
+					null,
+					this
+			);
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
+	}
+
+	@Override
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery) {
+		checkOpen();
+		try {
+			return new QuerySqmImpl<>( (SqmDeleteStatement<?>) deleteQuery, null, this );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
 	}
 
 	@Override
@@ -1024,8 +1210,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	@Override @SuppressWarnings("unchecked")
-	public QueryImplementor<Void> createQuery(@SuppressWarnings("rawtypes") CriteriaUpdate criteriaUpdate) {
+	@Override @SuppressWarnings({"unchecked", "rawtypes"})
+	public QueryImplementor createQuery(@SuppressWarnings("rawtypes") CriteriaUpdate criteriaUpdate) {
 		checkOpen();
 		try {
 			return new QuerySqmImpl<>(
@@ -1039,8 +1225,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	@Override @SuppressWarnings("unchecked")
-	public QueryImplementor<Void> createQuery(@SuppressWarnings("rawtypes") CriteriaDelete criteriaDelete) {
+	@Override @SuppressWarnings({"unchecked", "rawtypes"})
+	public QueryImplementor createQuery(@SuppressWarnings("rawtypes") CriteriaDelete criteriaDelete) {
 		checkOpen();
 		try {
 			return new QuerySqmImpl<>(

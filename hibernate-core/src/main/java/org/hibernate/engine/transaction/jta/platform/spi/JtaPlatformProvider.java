@@ -7,8 +7,11 @@
 package org.hibernate.engine.transaction.jta.platform.spi;
 
 /**
- * A {@link java.util.ServiceLoader}-style provider of {@link JtaPlatform} instances.  Used when an
- * explicit JtaPlatform is not provided.
+ * A {@link java.util.ServiceLoader}-style provider of {@link JtaPlatform}
+ * instances. Used when an explicit {@code JtaPlatform} is not provided.
+ *
+ * @see JtaPlatform
+ * @see JtaPlatformResolver
  *
  * @author Steve Ebersole
  */
@@ -18,5 +21,5 @@ public interface JtaPlatformProvider {
 	 *
 	 * @return The provided JtaPlatform
 	 */
-	public JtaPlatform getProvidedJtaPlatform();
+	JtaPlatform getProvidedJtaPlatform();
 }

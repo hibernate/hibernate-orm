@@ -31,16 +31,16 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.metamodel.mapping.SqlExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.query.BinaryArithmeticOperator;
-import org.hibernate.query.ComparisonOperator;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.BinaryArithmeticOperator;
+import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.SortOrder;
+import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.results.TableGroupImpl;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
@@ -118,7 +118,6 @@ public class CteInsertHandler implements InsertHandler {
 	private final SqmCteTable cteTable;
 	private final DomainParameterXref domainParameterXref;
 
-	@SuppressWarnings("WeakerAccess")
 	public CteInsertHandler(
 			SqmCteTable cteTable,
 			SqmInsertStatement<?> sqmStatement,
@@ -189,7 +188,7 @@ public class CteInsertHandler implements InsertHandler {
 		final int size = sqmStatement.getInsertionTargetPaths().size();
 		final List<Map.Entry<SqmCteTableColumn, Assignment>> targetPathColumns = new ArrayList<>( size );
 		final List<SqmCteTableColumn> targetPathSqmCteColumns = new ArrayList<>( size );
-		final Map<SqmParameter<?>, MappingModelExpressable<?>> paramTypeResolutions = new LinkedHashMap<>();
+		final Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions = new LinkedHashMap<>();
 		final NamedTableReference entityTableReference = new NamedTableReference(
 				cteTable.getCteName(),
 				TemporaryTable.DEFAULT_ALIAS,
@@ -633,7 +632,7 @@ public class CteInsertHandler implements InsertHandler {
 				new BasicResult(
 						0,
 						null,
-						( (SqlExpressable) count).getJdbcMapping().getJavaTypeDescriptor()
+						( (SqlExpressible) count).getJdbcMapping().getJavaTypeDescriptor()
 				)
 		);
 		querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 1, 0, count ) );
@@ -662,8 +661,8 @@ public class CteInsertHandler implements InsertHandler {
 				navigablePath -> sqmConverter.getMutatingTableGroup(),
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
-					public <T> MappingModelExpressable<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
-						return (MappingModelExpressable<T>) paramTypeResolutions.get(parameter);
+					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
+						return (MappingModelExpressible<T>) paramTypeResolutions.get(parameter);
 					}
 				},
 				executionContext.getSession()

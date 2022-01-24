@@ -23,33 +23,32 @@ import jakarta.persistence.criteria.Root;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.junit.jupiter.api.Test;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Vlad Mihalcea
  */
+@Jpa(annotatedClasses = {
+		FetchingTest.Department.class,
+		FetchingTest.Employee.class,
+		FetchingTest.Project.class
+})
 @RequiresDialect(H2Dialect.class)
-public class FetchingTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Department.class,
-			Employee.class,
-			Project.class
-		};
-	}
+@SkipForDialect(dialectClass = H2Dialect.class, majorVersion = 2, matchSubTypes = true, reason = "See https://github.com/h2database/h2database/issues/3338")
+public class FetchingTest {
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Department department = new Department();
 			department.id = 1L;
 			entityManager.persist(department);
@@ -72,7 +71,7 @@ public class FetchingTest extends BaseEntityManagerFunctionalTestCase {
 
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			String username = "user1";
 			String password = "3fabb4de8f1ee2e97d7793bab2db1116";
 			//tag::fetching-strategies-no-fetching-example[]
@@ -90,7 +89,7 @@ public class FetchingTest extends BaseEntityManagerFunctionalTestCase {
 			assertNotNull(employee);
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			String username = "user1";
 			String password = "3fabb4de8f1ee2e97d7793bab2db1116";
 			//tag::fetching-strategies-no-fetching-scalar-example[]
@@ -108,7 +107,7 @@ public class FetchingTest extends BaseEntityManagerFunctionalTestCase {
 			assertEquals(Integer.valueOf(0), accessLevel);
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			String username = "user1";
 			String password = "3fabb4de8f1ee2e97d7793bab2db1116";
 			//tag::fetching-strategies-dynamic-fetching-jpql-example[]
@@ -127,7 +126,7 @@ public class FetchingTest extends BaseEntityManagerFunctionalTestCase {
 			assertNotNull(employee);
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			String username = "user1";
 			String password = "3fabb4de8f1ee2e97d7793bab2db1116";
 			//tag::fetching-strategies-dynamic-fetching-criteria-example[]
@@ -176,6 +175,12 @@ public class FetchingTest extends BaseEntityManagerFunctionalTestCase {
 			read = "decrypt('AES', '00', pswd )",
 			write = "encrypt('AES', '00', ?)"
 		)
+// For H2 2.0.202+ one must use the varbinary DDL type
+//		@Column(name = "pswd", columnDefinition = "varbinary")
+//		@ColumnTransformer(
+//			read = "trim(trailing u&'\\0000' from cast(decrypt('AES', '00', pswd ) as character varying))",
+//			write = "encrypt('AES', '00', ?)"
+//		)
 		private String password;
 
 		private int accessLevel;

@@ -36,7 +36,6 @@ import static org.hibernate.testing.hamcrest.CollectionMatchers.isEmpty;
  * @author Steve Ebersole
  * @author Andrea Boriero
  */
-@SuppressWarnings("WeakerAccess")
 public class AliasCollisionTest extends BaseSqmUnitTest {
 
 	@Override

@@ -15,6 +15,6 @@ public interface BasicValuedModelPart extends BasicValuedMapping, ModelPart, Fet
 
 	@Override
 	default MappingType getPartMappingType() {
-		return this::getJavaTypeDescriptor;
+		return this::getJavaType;
 	}
 }

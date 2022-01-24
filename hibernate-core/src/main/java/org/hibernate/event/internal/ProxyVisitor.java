@@ -39,14 +39,14 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 	 * was snapshotted and detached?
 	 */
 	protected static boolean isOwnerUnchanged(
-			final CollectionPersister persister, final Object id, final PersistentCollection snapshot
+			final CollectionPersister persister, final Object id, final PersistentCollection<?> snapshot
 	) {
 		return isCollectionSnapshotValid(snapshot) &&
 				persister.getRole().equals( snapshot.getRole() ) &&
 				id.equals( snapshot.getKey() );
 	}
 
-	private static boolean isCollectionSnapshotValid(PersistentCollection snapshot) {
+	private static boolean isCollectionSnapshotValid(PersistentCollection<?> snapshot) {
 		return snapshot != null &&
 				snapshot.getRole() != null &&
 				snapshot.getKey() != null;
@@ -57,12 +57,11 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 	 * collection wrapper, using a snapshot carried with the collection
 	 * wrapper
 	 */
-	protected void reattachCollection(PersistentCollection collection, CollectionType type)
+	protected void reattachCollection(PersistentCollection<?> collection, CollectionType type)
 	throws HibernateException {
 		final EventSource session = getSession();
 		if ( collection.wasInitialized() ) {
-			CollectionPersister collectionPersister = session.getFactory()
-			.getCollectionPersister( type.getRole() );
+			CollectionPersister collectionPersister = session.getFactory().getMetamodel().collectionPersister(type.getRole());
 			session.getPersistenceContext()
 				.addInitializedDetachedCollection( collectionPersister, collection );
 		}
@@ -70,8 +69,7 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 			if ( !isCollectionSnapshotValid( collection ) ) {
 				throw new HibernateException( "could not re-associate uninitialized transient collection" );
 			}
-			CollectionPersister collectionPersister = session.getFactory()
-					.getCollectionPersister( collection.getRole() );
+			CollectionPersister collectionPersister = session.getFactory().getMetamodel().collectionPersister(collection.getRole());
 			session.getPersistenceContext()
 				.addUninitializedDetachedCollection( collectionPersister, collection );
 		}

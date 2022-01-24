@@ -6,7 +6,7 @@
  */
 package org.hibernate.boot.query;
 
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.named.FetchMemento;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.named.NamedObjectRepository;

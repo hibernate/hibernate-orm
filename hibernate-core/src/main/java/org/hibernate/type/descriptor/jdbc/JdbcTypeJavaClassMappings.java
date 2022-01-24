@@ -44,7 +44,6 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public class JdbcTypeJavaClassMappings {
 	private static final Logger log = Logger.getLogger( JdbcTypeJavaClassMappings.class );
 

@@ -6,91 +6,138 @@
  */
 package org.hibernate.orm.test.cache.polymorphism;
 
-import org.hibernate.Session;
 import org.hibernate.WrongClassException;
+import org.hibernate.cache.spi.CacheImplementor;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Guillaume Smet
  * @author Brett Meyer
  */
-@TestForIssue(jiraKey = "HHH-9028")
-public class PolymorphicCacheTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { AbstractCachedItem.class, CachedItem1.class, CachedItem2.class };
+@JiraKey( "HHH-9028" )
+@JiraKey( "HHH-9107" )
+@DomainModel( annotatedClasses = { Cacheable.class, CachedItem1.class, CachedItem2.class } )
+@SessionFactory
+public class PolymorphicCacheTest {
+	@BeforeEach
+	public void prepareTestData(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			session.persist( new CachedItem1( 1, "name 1" ) );
+			session.persist( new CachedItem2( 2, "name 2" ) );
+		} );
+	}
+
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> session.createQuery( "delete Cacheable" ).executeUpdate() );
 	}
 
 	@Test
-	public void testPolymorphismAndCache() throws Exception {
-		final CachedItem1 item1 = new CachedItem1( "name 1" );
-		final CachedItem2 item2 = new CachedItem2( "name 2" );
+	public void testPolymorphismAndCache(SessionFactoryScope scope) {
+		final CacheImplementor cache = scope.getSessionFactory().getCache();
 
-		// create the 2 items
-		Session s = openSession();
-		s.beginTransaction();
-		s.save( item1 );
-		s.save( item2 );
-		s.getTransaction().commit();
-		s.close();
+		assertThat( cache.containsEntity( Cacheable.class, 1 ) ).isTrue();
+		assertThat( cache.containsEntity( Cacheable.class, 2 ) ).isTrue();
 
-		s = openSession();
-		s.beginTransaction();
-		// See HHH-9107
-		try {
-			final CachedItem2 tmp = s.get( CachedItem2.class, item1.getId() );
-			fail( "Expected a WrongClassException to be thrown." );
-		}
-		catch (WrongClassException e) {
-			//expected
-		}
-		s.getTransaction().commit();
-		s.close();
-		
+		assertThat( cache.containsEntity( CachedItem1.class, 1 ) ).isTrue();
+		assertThat( cache.containsEntity( CachedItem2.class, 2 ) ).isTrue();
+
+		// would be nice-to-have
+		//assertThat( cache.containsEntity( CachedItem2.class, 1 ) ).isFalse();
+
+		// test accessing the wrong class by id with a cache-hit
+		scope.inTransaction( (session) -> {
+			try {
+				final CachedItem2 loaded = session.get( CachedItem2.class, 1 );
+				assertThat( loaded ).isNull();
+			}
+			catch (WrongClassException legacyBehavior) {
+				// the legacy behavior for loading an entity from a
+				// cache hit when it is the wrong class was to throw
+				// a WrongClassException.
+				//
+				// this was inconsistent with cases where there is no
+				// cache hit - there we return null.
+				//
+				// 6.0 makes the behavior here consistent by always
+				// returning null in such cases
+				//
+				// make sure WrongClassException is not thrown here
+				Assertions.fail( "WrongClassException was thrown for but returning null was expected" );
+			}
+		} );
+
+		// test accessing the wrong class by id with no cache-hit
+		cache.evictEntityData( Cacheable.class, 1 );
+		cache.evictEntityData( Cacheable.class, 2 );
+		scope.inTransaction( (session) -> {
+			// the legacy behavior for no cache hit was to return null
+			try {
+				final CachedItem2 loaded = session.get( CachedItem2.class, 1 );
+				assertThat( loaded ).isNull();
+			}
+			catch (WrongClassException legacyBehavior) {
+				// as in the cache hit assertions above,  make sure
+				// WrongClassException is not thrown here
+				Assertions.fail( "WrongClassException was thrown for but returning null was expected" );
+			}
+		} );
+
+		// reload into cache
+		scope.inTransaction( (session) -> {
+			session.get( CachedItem1.class, 1 );
+			session.get( CachedItem2.class, 2 );
+		} );
+
+		assertThat( cache.containsEntity( CachedItem1.class, 1 ) ).isTrue();
+		assertThat( cache.containsEntity( CachedItem2.class, 2 ) ).isTrue();
+
+		final CachedItem1 detachedItem1 = scope.fromTransaction( (session) -> session.get( CachedItem1.class, 1 ) );
+
 		// test updating
-		s = openSession();
-		s.beginTransaction();
-		item1.setName( "updated" );
-		s.update( item1 );
-		s.getTransaction().commit();
-		s.clear();
-		s.beginTransaction();
-		CachedItem1 cachedItem1 = (CachedItem1) s.get( CachedItem1.class, item1.getId() );
-		CachedItem2 cachedItem2 = (CachedItem2) s.get( CachedItem2.class, item2.getId() );
-		assertEquals( "updated", cachedItem1.getName() );
-		assertEquals( item2.getName(), cachedItem2.getName() );
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession( (session) -> {
+			scope.inTransaction( session, (s) -> {
+				detachedItem1.setName( "updated" );
+				session.merge( detachedItem1 );
+			} );
+
+			assertThat( cache.containsEntity( CachedItem1.class, 1 ) ).isTrue();
+			assertThat( cache.containsEntity( CachedItem2.class, 2 ) ).isTrue();
+
+			scope.inTransaction( session, (s) -> {
+				final CachedItem1 loadedItem1 = s.get( CachedItem1.class, 1 );
+				assertThat( loadedItem1 ).isNotNull();
+				assertThat( loadedItem1.getName() ).isEqualTo( "updated" );
+
+				final CachedItem2 loadedItem2 = s.get( CachedItem2.class, 2 );
+				assertThat( loadedItem2 ).isNotNull();
+
+			} );
+		} );
 		
 		// test deleting
-		s = openSession();
-		s.beginTransaction();
-		s.delete( item1 );
-		s.getTransaction().commit();
-		s.clear();
-		s.beginTransaction();
-		cachedItem1 = (CachedItem1) s.get( CachedItem1.class, item1.getId() );
-		cachedItem2 = (CachedItem2) s.get( CachedItem2.class, item2.getId() );
-		assertNull( cachedItem1 );
-		assertNotNull( cachedItem2 );
-		assertEquals( item2.getName(), cachedItem2.getName() );
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession( (session) -> {
+			scope.inTransaction( session, (s) -> {
+				session.remove( session.getReference( CachedItem1.class, 1 ) );
+			} );
+			scope.inTransaction( session, (s) -> {
+				final CachedItem1 cachedItem1 = session.get( CachedItem1.class, 1 );
+				assertThat( cachedItem1 ).isNull();
 
-		// cleanup
-		s = openSession();
-		s.beginTransaction();
-		s.createQuery( "DELETE FROM AbstractCachedItem" ).executeUpdate();
-		s.getTransaction().commit();
-		s.close();
+				final CachedItem2 cachedItem2 = session.get( CachedItem2.class, 2 );
+				assertThat( cachedItem2 ).isNotNull();
+			} );
+		} );
 	}
 
 }

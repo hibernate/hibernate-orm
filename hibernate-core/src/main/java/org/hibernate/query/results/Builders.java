@@ -26,7 +26,7 @@ import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderAttribute;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderBasic;
@@ -79,13 +79,13 @@ public class Builders {
 	public static DynamicResultBuilderBasic scalar(
 			String columnAlias,
 			String resultAlias,
-			Class<?> javaType,
+			Class<?> javaTypeClass,
 			SessionFactoryImplementor factory) {
-		final JavaType<?> javaTypeDescriptor = factory.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( javaType );
+		final JavaType<?> javaType = factory.getTypeConfiguration()
+				.getJavaTypeRegistry()
+				.getDescriptor( javaTypeClass );
 
-		return new DynamicResultBuilderBasicStandard( columnAlias, resultAlias, javaTypeDescriptor );
+		return new DynamicResultBuilderBasicStandard( columnAlias, resultAlias, javaType );
 	}
 
 	public static <R> ResultBuilder converted(
@@ -134,7 +134,7 @@ public class Builders {
 
 	public static <J> DynamicResultBuilderInstantiation<J> instantiation(Class<J> targetJavaType, SessionFactoryImplementor factory) {
 		final JavaType<J> targetJtd = factory.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
+				.getJavaTypeRegistry()
 				.getDescriptor( targetJavaType );
 		return new DynamicResultBuilderInstantiation<>( targetJtd );
 	}
@@ -191,9 +191,6 @@ public class Builders {
 	/**
 	 * Creates a EntityResultBuilder allowing for further configuring of the mapping.
 	 *
-	 * @param tableAlias
-	 * @param entityName
-	 * @return
 	 */
 	public static DynamicResultBuilderEntityStandard entity(
 			String tableAlias,

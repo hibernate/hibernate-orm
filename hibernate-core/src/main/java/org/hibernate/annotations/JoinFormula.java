@@ -14,8 +14,8 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * To be used as a replacement for {@code @JoinColumn} in most places.  The formula has to be a valid
- * SQL fragment
+ * Specifies a join condition based on an arbitrary native SQL formula
+ * instead of a {@linkplain jakarta.persistence.JoinColumn column name}.
  *
  * @author Sharath Reddy
  */
@@ -23,7 +23,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface JoinFormula {
 	/**
-	 * The formula.
+	 * The formula, in native SQL.
 	 */
 	String value();
 

@@ -7,7 +7,7 @@
 package org.hibernate.persister.entity;
 
 /**
- * Extends the generic {@code EntityPersister} contract to add
+ * Extends the generic {@link EntityPersister} contract to add
  * operations required by the Hibernate Query Language
  *
  * @author Gavin King
@@ -20,26 +20,26 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	/**
 	 * Is this an abstract class?
 	 */
-	public boolean isAbstract();
+	boolean isAbstract();
 	/**
 	 * Is this class explicit polymorphism only?
 	 */
-	public boolean isExplicitPolymorphism();
+	boolean isExplicitPolymorphism();
 	/**
 	 * Get the class that this class is mapped as a subclass of -
 	 * not necessarily the direct superclass
 	 */
-	public String getMappedSuperclass();
+	String getMappedSuperclass();
 	/**
 	 * Get the discriminator value for this particular concrete subclass,
 	 * as a string that may be embedded in a select statement
 	 */
-	public String getDiscriminatorSQLValue();
+	String getDiscriminatorSQLValue();
 
 	/**
 	 * Get the names of columns used to persist the identifier
 	 */
-	public String[] getIdentifierColumnNames();
+	String[] getIdentifierColumnNames();
 
 	/**
 	 * Is the inheritance hierarchy described by this persister contained across
@@ -50,7 +50,7 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	 * @deprecated (since 6.0) Use {@link EntityPersister#getSqmMultiTableMutationStrategy} instead
 	 */
 	@Deprecated
-	public boolean isMultiTable();
+	boolean isMultiTable();
 
 	/**
 	 * Get the names of all tables used in the hierarchy (up and down) ordered such
@@ -58,7 +58,7 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	 *
 	 * @return The ordered array of table names.
 	 */
-	public String[] getConstraintOrderedTableNameClosure();
+	String[] getConstraintOrderedTableNameClosure();
 
 	/**
 	 * For each table specified in {@link #getConstraintOrderedTableNameClosure()}, get
@@ -71,7 +71,7 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	 * the first dimension.  If not, that would be a problem ;)
 	 *
 	 */
-	public String[][] getContraintOrderedTableKeyColumnClosure();
+	String[][] getContraintOrderedTableKeyColumnClosure();
 
 	/**
 	 * Given a property name, determine the number of the table which contains the column
@@ -84,7 +84,7 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	 * @param propertyPath The name of the property.
 	 * @return The number of the table to which the property is mapped.
 	 */
-	public int getSubclassPropertyTableNumber(String propertyPath);
+	int getSubclassPropertyTableNumber(String propertyPath);
 
 	/**
 	 * Determine whether the given property is declared by our
@@ -96,7 +96,7 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	 * @param propertyPath The property name.
 	 * @return The property declarer
 	 */
-	public Declarer getSubclassPropertyDeclarer(String propertyPath);
+	Declarer getSubclassPropertyDeclarer(String propertyPath);
 
 	/**
 	 * Get the name of the table with the given index from the internal
@@ -104,12 +104,12 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	 *
 	 * @param number The index into the internal array.
 	 */
-	public String getSubclassTableName(int number);
+	String getSubclassTableName(int number);
 
 	/**
 	 * Is the version property included in insert statements?
 	 */
-	public boolean isVersionPropertyInsertable();
+	boolean isVersionPropertyInsertable();
 
 	/**
 	 * The alias used for any filter conditions (mapped where-fragments or
@@ -121,7 +121,7 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	 * @param rootAlias The root alias
 	 * @return The alias used for "filter conditions" within the where clause.
 	 */
-	public String generateFilterConditionAlias(String rootAlias);
+	String generateFilterConditionAlias(String rootAlias);
 
 	/**
 	 * Retrieve the information needed to properly deal with this entity's discriminator
@@ -129,11 +129,11 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	 *
 	 * @return The entity discriminator metadata
 	 */
-	public DiscriminatorMetadata getTypeDiscriminatorMetadata();
+	DiscriminatorMetadata getTypeDiscriminatorMetadata();
 
 	String[][] getSubclassPropertyFormulaTemplateClosure();
 
-	public static class Declarer {
+	class Declarer {
 		public static final Declarer CLASS = new Declarer( "class" );
 		public static final Declarer SUBCLASS = new Declarer( "subclass" );
 		public static final Declarer SUPERCLASS = new Declarer( "superclass" );

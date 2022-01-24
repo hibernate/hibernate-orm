@@ -6,9 +6,6 @@
  */
 package org.hibernate.type;
 
-import java.util.Map;
-import java.util.Set;
-
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.Joinable;

@@ -41,7 +41,7 @@ public class DurationMappingTests {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityWithDuration.class);
 		final JdbcTypeRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
-				.getJdbcTypeDescriptorRegistry();
+				.getJdbcTypeRegistry();
 
 		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("duration");
 		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
@@ -57,7 +57,7 @@ public class DurationMappingTests {
 		else {
 			realType = intervalType;
 		}
-		assertThat(jdbcMapping.getJdbcTypeDescriptor(), is(realType));
+		assertThat( jdbcMapping.getJdbcType(), is( realType));
 
 		scope.inTransaction(
 				(session) -> {

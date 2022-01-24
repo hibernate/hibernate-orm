@@ -35,6 +35,7 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
 
 import org.junit.Assert;
@@ -585,7 +586,7 @@ public class TransactionUtil {
 	 * @param session Hibernate Session
 	 */
 	public static void setJdbcTimeout(Session session, long millis) {
-		final Dialect dialect = session.getSessionFactory().getSessionFactory().getJdbcServices().getDialect();
+		final Dialect dialect = session.getSessionFactory().unwrap( SessionFactoryImplementor.class ).getJdbcServices().getDialect();
 		session.doWork( connection -> {
 			if ( dialect instanceof PostgreSQLDialect ) {
 				try (Statement st = connection.createStatement()) {

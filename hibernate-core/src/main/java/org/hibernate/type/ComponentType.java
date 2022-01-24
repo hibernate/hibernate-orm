@@ -24,7 +24,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -38,7 +37,7 @@ import org.hibernate.metamodel.EmbeddableInstantiator;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.StandardProperty;
 import org.hibernate.tuple.ValueGeneration;
@@ -133,32 +132,6 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			}
 		}
 		return sqlTypes;
-	}
-
-	@Override
-	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		//Not called at runtime so doesn't matter if it's slow :)
-		final Size[] sizes = new Size[getColumnSpan( mapping )];
-		int soFar = 0;
-		for ( Type propertyType : propertyTypes ) {
-			final Size[] propertySizes = propertyType.dictatedSizes( mapping );
-			System.arraycopy( propertySizes, 0, sizes, soFar, propertySizes.length );
-			soFar += propertySizes.length;
-		}
-		return sizes;
-	}
-
-	@Override
-	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		//Not called at runtime so doesn't matter if it's slow :)
-		final Size[] sizes = new Size[getColumnSpan( mapping )];
-		int soFar = 0;
-		for ( Type propertyType : propertyTypes ) {
-			final Size[] propertySizes = propertyType.defaultSizes( mapping );
-			System.arraycopy( propertySizes, 0, sizes, soFar, propertySizes.length );
-			soFar += propertySizes.length;
-		}
-		return sizes;
 	}
 
 
@@ -472,7 +445,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 				result.put( propertyNames[i], propertyTypes[i].toLoggableString( values[i], factory ) );
 			}
 		}
-		return StringHelper.unqualify( getName() ) + result.toString();
+		return StringHelper.unqualify( getName() ) + result;
 	}
 
 	@Override
@@ -726,16 +699,16 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	}
 
 	@Override
-	public JdbcType getJdbcTypeDescriptor() {
+	public JdbcType getJdbcType() {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	private boolean determineIfProcedureParamExtractionCanBePerformed() {
 		for ( Type propertyType : propertyTypes ) {
-			if ( !ProcedureParameterExtractionAware.class.isInstance( propertyType ) ) {
+			if ( !(propertyType instanceof ProcedureParameterExtractionAware) ) {
 				return false;
 			}
-			if ( !( (ProcedureParameterExtractionAware) propertyType ).canDoExtraction() ) {
+			if ( !( (ProcedureParameterExtractionAware<?>) propertyType ).canDoExtraction() ) {
 				return false;
 			}
 		}
@@ -751,11 +724,8 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		for ( int i = 0; i < propertySpan; i++ ) {
 			// we know this cast is safe from canDoExtraction
 			final Type propertyType = propertyTypes[i];
-			final Object value = ((ProcedureParameterExtractionAware) propertyType).extract(
-					statement,
-					currentIndex,
-					session
-			);
+			final Object value = ( (ProcedureParameterExtractionAware<?>) propertyType )
+					.extract( statement, currentIndex, session );
 			if ( value == null ) {
 				if ( isKey ) {
 					return null; //different nullability rules for pk/fk
@@ -823,7 +793,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	}
 
 	@Override
-	public SqmExpressable resolveExpressable(SessionFactoryImplementor sessionFactory) {
+	public SqmExpressible<?> resolveExpressible(SessionFactoryImplementor sessionFactory) {
 		return sessionFactory.getRuntimeMetamodels().getJpaMetamodel().embeddable( getReturnedClass() );
 	}
 

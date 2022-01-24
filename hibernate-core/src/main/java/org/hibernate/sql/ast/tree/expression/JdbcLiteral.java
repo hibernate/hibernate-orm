@@ -14,7 +14,7 @@ import java.util.List;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstWalker;
@@ -27,17 +27,17 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.JavaTypedExpressable;
+import org.hibernate.type.descriptor.java.JavaTypedExpressible;
 
 /**
  * Represents a literal in the SQL AST.  This form accepts a {@link JdbcMapping} and acts
- * as its own MappingModelExpressable.
+ * as its own {@link MappingModelExpressible}.
  *
  * @see QueryLiteral
  *
  * @author Steve Ebersole
  */
-public class JdbcLiteral<T> implements Literal, MappingModelExpressable<T>, DomainResultProducer<T>, JavaTypedExpressable<T> {
+public class JdbcLiteral<T> implements Literal, MappingModelExpressible<T>, DomainResultProducer<T>, JavaTypedExpressible<T> {
 	private final T literalValue;
 	private final JdbcMapping jdbcMapping;
 
@@ -78,10 +78,10 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressable<T>, Doma
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// MappingModelExpressable
+	// MappingModelExpressible
 
 	@Override
-	public MappingModelExpressable getExpressionType() {
+	public MappingModelExpressible getExpressionType() {
 		return this;
 	}
 
@@ -160,7 +160,7 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressable<T>, Doma
 	}
 
 	@Override
-	public JavaType<T> getExpressableJavaTypeDescriptor() {
+	public JavaType<T> getExpressibleJavaType() {
 		return jdbcMapping.getJavaTypeDescriptor();
 	}
 }

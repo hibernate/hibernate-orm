@@ -15,8 +15,8 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
-import org.hibernate.query.EntityIdentifierNavigablePath;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.spi.EntityIdentifierNavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 
 /**
  * Contract for things that can be the parent of a fetch

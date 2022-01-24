@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 
 /**
  * Models a reference to a {@link org.hibernate.query.sqm.tree.select.SqmAliasedNode}
@@ -18,7 +18,7 @@ import org.hibernate.query.sqm.SqmExpressable;
 public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
 	private final int position;
 
-	public SqmAliasedNodeRef(int position, SqmExpressable<Integer> intType, NodeBuilder criteriaBuilder) {
+	public SqmAliasedNodeRef(int position, SqmExpressible<Integer> intType, NodeBuilder criteriaBuilder) {
 		super( intType, criteriaBuilder );
 		this.position = position;
 	}

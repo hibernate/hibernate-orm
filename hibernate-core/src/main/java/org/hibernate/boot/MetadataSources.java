@@ -101,8 +101,6 @@ public class MetadataSources implements Serializable {
 
 	/**
 	 * Consider this an SPI, used by Quarkus
-	 * @param serviceRegistry
-	 * @param disableXmlMappingBinders
 	 */
 	public MetadataSources(ServiceRegistry serviceRegistry, boolean disableXmlMappingBinders) {
 		Objects.requireNonNull( serviceRegistry );
@@ -389,7 +387,7 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
-	 * Add XML mapping bindings created from an arbitrary source by the {@link #getXmlMappingBinderAccess() binder}.
+	 * Add XML mapping bindings created from an arbitrary source by the {@linkplain #getXmlMappingBinderAccess() binder}.
 	 *
 	 * @param binding The binding.
 	 *

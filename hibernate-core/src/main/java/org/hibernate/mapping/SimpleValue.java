@@ -53,7 +53,7 @@ import org.hibernate.type.descriptor.converter.AttributeConverterJdbcTypeAdapter
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.LobTypeMappings;
 import org.hibernate.type.descriptor.jdbc.NationalizedTypeMappings;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -169,7 +169,7 @@ public abstract class SimpleValue implements KeyValue {
 		updatability.add( false );
 	}
 
-	protected void sortColumns(int[] originalOrder) {
+	public void sortColumns(int[] originalOrder) {
 		final Selectable[] originalColumns = columns.toArray(new Selectable[0]);
 		final boolean[] originalInsertability = ArrayHelper.toBooleanArray( insertability );
 		final boolean[] originalUpdatability = ArrayHelper.toBooleanArray( updatability );
@@ -642,8 +642,8 @@ public abstract class SimpleValue implements KeyValue {
 
 		if ( attributeConverterDescriptor == null ) {
 			// this is here to work like legacy.  This should change when we integrate with metamodel to
-			// look for SqlTypeDescriptor and JavaTypeDescriptor individually and create the BasicType (well, really
-			// keep a registry of [SqlTypeDescriptor,JavaTypeDescriptor] -> BasicType...)
+			// look for JdbcType and JavaType individually and create the BasicType (well, really
+			// keep a registry of [JdbcType,JavaType] -> BasicType...)
 			if ( className == null ) {
 				throw new MappingException( "Attribute types for a dynamic entity must be explicitly specified: " + propertyName );
 			}
@@ -657,7 +657,7 @@ public abstract class SimpleValue implements KeyValue {
 			).getName();
 			// todo : to fully support isNationalized here we need to do the process hinted at above
 			// 		essentially, much of the logic from #buildAttributeConverterTypeAdapter wrt resolving
-			//		a (1) SqlTypeDescriptor, a (2) JavaTypeDescriptor and dynamically building a BasicType
+			//		a (1) JdbcType, a (2) JavaType and dynamically building a BasicType
 			// 		combining them.
 			return;
 		}
@@ -719,7 +719,7 @@ public abstract class SimpleValue implements KeyValue {
 				}
 		);
 
-		final BasicJavaType<?> domainJtd = (BasicJavaType<?>) jpaAttributeConverter.getDomainJavaTypeDescriptor();
+		final BasicJavaType<?> domainJtd = (BasicJavaType<?>) jpaAttributeConverter.getDomainJavaType();
 
 
 		// build the SqlTypeDescriptor adapter ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -728,9 +728,9 @@ public abstract class SimpleValue implements KeyValue {
 		//		corresponding to the AttributeConverter's declared "databaseColumnJavaType" (how we read that value out
 		// 		of ResultSets).  See JdbcTypeJavaClassMappings for details.  Again, given example, this should return
 		// 		VARCHAR/CHAR
-		final JdbcType recommendedJdbcType = jpaAttributeConverter.getRelationalJavaTypeDescriptor().getRecommendedJdbcType(
+		final JdbcType recommendedJdbcType = jpaAttributeConverter.getRelationalJavaType().getRecommendedJdbcType(
 				// todo (6.0) : handle the other JdbcRecommendedSqlTypeMappingContext methods
-				new JdbcTypeDescriptorIndicators() {
+				new JdbcTypeIndicators() {
 					@Override
 					public TypeConfiguration getTypeConfiguration() {
 						return metadata.getTypeConfiguration();
@@ -768,7 +768,7 @@ public abstract class SimpleValue implements KeyValue {
 		}
 
 		final JdbcType jdbcType = metadata.getTypeConfiguration()
-								.getJdbcTypeDescriptorRegistry()
+								.getJdbcTypeRegistry()
 								.getDescriptor( jdbcTypeCode );
 
 		// and finally construct the adapter, which injects the AttributeConverter calls into the binding/extraction
@@ -776,24 +776,24 @@ public abstract class SimpleValue implements KeyValue {
 		final JdbcType jdbcTypeAdapter = new AttributeConverterJdbcTypeAdapter(
 				jpaAttributeConverter,
 				jdbcType,
-				jpaAttributeConverter.getRelationalJavaTypeDescriptor()
+				jpaAttributeConverter.getRelationalJavaType()
 		);
 
 		// todo : cache the AttributeConverterTypeAdapter in case that AttributeConverter is applied multiple times.
 
-		final String name = ConverterDescriptor.TYPE_NAME_PREFIX + jpaAttributeConverter.getConverterJavaTypeDescriptor().getJavaType().getTypeName();
+		final String name = ConverterDescriptor.TYPE_NAME_PREFIX + jpaAttributeConverter.getConverterJavaType().getJavaType().getTypeName();
 		final String description = String.format(
 				"BasicType adapter for AttributeConverter<%s,%s>",
-				jpaAttributeConverter.getDomainJavaTypeDescriptor().getJavaType().getTypeName(),
-				jpaAttributeConverter.getRelationalJavaTypeDescriptor().getJavaType().getTypeName()
+				jpaAttributeConverter.getDomainJavaType().getJavaType().getTypeName(),
+				jpaAttributeConverter.getRelationalJavaType().getJavaType().getTypeName()
 		);
 		return new AttributeConverterTypeAdapter<>(
 				name,
 				description,
 				jpaAttributeConverter,
 				jdbcTypeAdapter,
-				jpaAttributeConverter.getRelationalJavaTypeDescriptor(),
-				jpaAttributeConverter.getDomainJavaTypeDescriptor(),
+				jpaAttributeConverter.getRelationalJavaType(),
+				jpaAttributeConverter.getDomainJavaType(),
 				null
 		);
 	}

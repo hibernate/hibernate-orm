@@ -6,180 +6,121 @@
  */
 package org.hibernate.jpa;
 
-import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.graph.GraphSemantic;
-
-import static org.hibernate.annotations.QueryHints.CACHEABLE;
-import static org.hibernate.annotations.QueryHints.CACHE_MODE;
-import static org.hibernate.annotations.QueryHints.CACHE_REGION;
-import static org.hibernate.annotations.QueryHints.COMMENT;
-import static org.hibernate.annotations.QueryHints.FETCH_SIZE;
-import static org.hibernate.annotations.QueryHints.FLUSH_MODE;
-import static org.hibernate.annotations.QueryHints.FOLLOW_ON_LOCKING;
-import static org.hibernate.annotations.QueryHints.NATIVE_LOCKMODE;
-import static org.hibernate.annotations.QueryHints.NATIVE_SPACES;
-import static org.hibernate.annotations.QueryHints.READ_ONLY;
-import static org.hibernate.annotations.QueryHints.TIMEOUT_HIBERNATE;
-import static org.hibernate.annotations.QueryHints.TIMEOUT_JAKARTA_JPA;
-import static org.hibernate.annotations.QueryHints.TIMEOUT_JPA;
+import org.hibernate.jpa.internal.HintsCollector;
 
 /**
- * List of all supported hints that may be passed to {@link jakarta.persistence.Query#setHint(String, Object)},
- * including those defined by {@link org.hibernate.annotations.QueryHints}, and those defined by the enumerated
- * instances of {@link GraphSemantic}.
+ * List of all supported hints that may be passed to {@link jakarta.persistence.Query#setHint(String, Object)}.
  *
- * @see org.hibernate.annotations.QueryHints
+ * @see AvailableHints
+ *
+ * @deprecated (since 6.0) Use {@link AvailableHints} instead
  */
-public class QueryHints {
+@SuppressWarnings("unused")
+@Deprecated
+public final class QueryHints {
+	/**
+	 * @see SpecHints#HINT_SPEC_QUERY_TIMEOUT
+	 */
+	public static final String JAKARTA_SPEC_HINT_TIMEOUT = SpecHints.HINT_SPEC_QUERY_TIMEOUT;
+
+	/**
+	 * @see HibernateHints#HINT_COMMENT
+	 */
+	public static final String HINT_COMMENT = HibernateHints.HINT_COMMENT;
+
+	/**
+	 * @see HibernateHints#HINT_FETCH_SIZE
+	 */
+	public static final String HINT_FETCH_SIZE = HibernateHints.HINT_FETCH_SIZE;
+
+	/**
+	 * @see HibernateHints#HINT_CACHEABLE
+	 */
+	public static final String HINT_CACHEABLE = HibernateHints.HINT_CACHEABLE;
+
+	/**
+	 * @see HibernateHints#HINT_CACHE_REGION
+	 */
+	public static final String HINT_CACHE_REGION = HibernateHints.HINT_CACHE_REGION;
+
+	/**
+	 * @see HibernateHints#HINT_CACHE_MODE
+	 */
+	public static final String HINT_CACHE_MODE = HibernateHints.HINT_CACHE_MODE;
+
+	/**
+	 * @see HibernateHints#HINT_READ_ONLY
+	 */
+	public static final String HINT_READONLY = HibernateHints.HINT_READ_ONLY;
+
+	/**
+	 * @see HibernateHints#HINT_FLUSH_MODE
+	 */
+	public static final String HINT_FLUSH_MODE = HibernateHints.HINT_FLUSH_MODE;
+
+	/**
+	 * @see HibernateHints#HINT_NATIVE_LOCK_MODE
+	 */
+	public static final String HINT_NATIVE_LOCKMODE = HibernateHints.HINT_NATIVE_LOCK_MODE;
+
+	/**
+	 * @see SpecHints#HINT_SPEC_FETCH_GRAPH
+	 */
+	public static final String JAKARTA_HINT_FETCH_GRAPH = SpecHints.HINT_SPEC_FETCH_GRAPH;
+
+	/**
+	 * @see SpecHints#HINT_SPEC_LOAD_GRAPH
+	 */
+	public static final String JAKARTA_HINT_FETCHGRAPH = SpecHints.HINT_SPEC_FETCH_GRAPH;
+
+	/**
+	 * @see SpecHints#HINT_SPEC_LOAD_GRAPH
+	 */
+	public static final String JAKARTA_HINT_LOAD_GRAPH = SpecHints.HINT_SPEC_LOAD_GRAPH;
+
+	/**
+	 * @see SpecHints#HINT_SPEC_LOAD_GRAPH
+	 */
+	public static final String JAKARTA_HINT_LOADGRAPH = SpecHints.HINT_SPEC_LOAD_GRAPH;
+
+	/**
+	 * @see HibernateHints#HINT_FOLLOW_ON_LOCKING
+	 */
+	public static final String HINT_FOLLOW_ON_LOCKING = HibernateHints.HINT_FOLLOW_ON_LOCKING;
+
+	/**
+	 * @see HibernateHints#HINT_NATIVE_SPACES
+	 */
+	public static final String HINT_NATIVE_SPACES = HibernateHints.HINT_NATIVE_SPACES;
+
+	/**
+	 * @see LegacySpecHints#HINT_JAVAEE_FETCH_GRAPH
+	 */
+	public static final String HINT_FETCHGRAPH = LegacySpecHints.HINT_JAVAEE_FETCH_GRAPH;
+
+	/**
+	 * @see LegacySpecHints#HINT_JAVAEE_LOAD_GRAPH
+	 */
+	public static final String HINT_LOADGRAPH = LegacySpecHints.HINT_JAVAEE_LOAD_GRAPH;
+
 	/**
 	 * The hint key for specifying a query timeout per Hibernate O/RM, which defines the timeout in seconds.
 	 *
-	 * @deprecated use {@link #SPEC_HINT_TIMEOUT} instead
+	 * @see HibernateHints#HINT_TIMEOUT
 	 */
-	@Deprecated
-	public static final String HINT_TIMEOUT = TIMEOUT_HIBERNATE;
+	public static final String HINT_TIMEOUT = HibernateHints.HINT_TIMEOUT;
 
 	/**
-	 * The hint key for specifying a query timeout per JPA, which defines the timeout in milliseconds
+	 * @see LegacySpecHints#HINT_JAVAEE_QUERY_TIMEOUT
 	 */
-	public static final String SPEC_HINT_TIMEOUT = TIMEOUT_JPA;
-
-	/**
-	 * The hint key for specifying a query timeout per JPA, which defines the timeout in milliseconds
-	 */
-	public static final String JAKARTA_SPEC_HINT_TIMEOUT = TIMEOUT_JAKARTA_JPA;
-
-	/**
-	 * The hint key for specifying a comment which is to be embedded into the SQL sent to the database.
-	 */
-	public static final String HINT_COMMENT = COMMENT;
-
-	/**
-	 * The hint key for specifying a JDBC fetch size, used when executing the resulting SQL.
-	 */
-	public static final String HINT_FETCH_SIZE = FETCH_SIZE;
-
-	/**
-	 * The hint key for specifying whether the query results should be cached for the next (cached) execution
-	 * of the "same query".
-	 */
-	public static final String HINT_CACHEABLE = CACHEABLE;
-
-	/**
-	 * The hint key for specifying the name of the cache region (within Hibernate's query result cache region)
-	 * to use for storing the query results.
-	 */
-	public static final String HINT_CACHE_REGION = CACHE_REGION;
-
-	/**
-	 * The hint key for specifying that objects loaded into the persistence context as a result of this query
-	 * execution should be associated with the persistence context as read-only.
-	 */
-	public static final String HINT_READONLY = READ_ONLY;
-
-	/**
-	 * The hint key for specifying the cache mode ({@link org.hibernate.CacheMode}) to be in effect for the
-	 * execution of the hinted query.
-	 */
-	public static final String HINT_CACHE_MODE = CACHE_MODE;
-
-	/**
-	 * The hint key for specifying the flush mode ({@link org.hibernate.FlushMode}) to be in effect for the
-	 * execution of the hinted query.
-	 */
-	public static final String HINT_FLUSH_MODE = FLUSH_MODE;
-
-	/**
-	 * The hint key for specifying the lock mode ({@link jakarta.persistence.LockModeType} or
-	 * {@link org.hibernate.LockMode}) to use for execution of a native query.
-	 */
-	public static final String HINT_NATIVE_LOCKMODE = NATIVE_LOCKMODE;
-	
-	/**
-	 * @deprecated Use {@link #JAKARTA_HINT_FETCH_GRAPH} instead
-	 */
-	@Deprecated
-	public static final String HINT_FETCHGRAPH = GraphSemantic.FETCH.getJpaHintName();
-
-	/**
-	 * Hint providing a {@link jakarta.persistence.EntityGraph} that should be interpreted as a "fetch graph".
-	 *
-	 * @see GraphSemantic#FETCH
-	 */
-	public static final String JAKARTA_HINT_FETCH_GRAPH = GraphSemantic.FETCH.getJakartaJpaHintName();
-
-	/**
-	 * @deprecated Use {@link #JAKARTA_HINT_LOAD_GRAPH} instead
-	 */
-	@Deprecated
-	public static final String HINT_LOADGRAPH = GraphSemantic.LOAD.getJpaHintName();
-
-	/**
-	 * Hint providing a {@link jakarta.persistence.EntityGraph} that should be interpreted as a "load graph".
-	 *
-	 * @see GraphSemantic#LOAD
-	 */
-	public static final String JAKARTA_HINT_LOAD_GRAPH = GraphSemantic.LOAD.getJakartaJpaHintName();
-
-	/**
-	 * Hint providing a "fetchgraph" EntityGraph.  Attributes explicitly specified as AttributeNodes are treated as
-	 * FetchType.EAGER (via join fetch or subsequent select).
-	 *
-	 * Note: Currently, attributes that are not specified are treated as FetchType.LAZY or FetchType.EAGER depending
-	 * on the attribute's definition in metadata, rather than forcing FetchType.LAZY.
-	 */
-	public static final String JAKARTA_HINT_FETCHGRAPH = GraphSemantic.FETCH.getJakartaJpaHintName();
-
-	/**
-	 * Hint providing a "loadgraph" EntityGraph.  Attributes explicitly specified as AttributeNodes are treated as
-	 * FetchType.EAGER (via join fetch or subsequent select).  Attributes that are not specified are treated as
-	 * FetchType.LAZY or FetchType.EAGER depending on the attribute's definition in metadata
-	 */
-	public static final String JAKARTA_HINT_LOADGRAPH = GraphSemantic.LOAD.getJakartaJpaHintName();
-
-	/**
-	 * The hint key to enable or disable the default follow-on-locking mechanism provided by
-	 * {@link org.hibernate.dialect.Dialect#useFollowOnLocking(String, org.hibernate.query.spi.QueryOptions)}.
-	 */
-	public static final String HINT_FOLLOW_ON_LOCKING = FOLLOW_ON_LOCKING;
-
-	/**
-	 * Hint key for specifying query spaces to be applied to a native (SQL) query.
-	 *
-	 * @see org.hibernate.annotations.QueryHints#NATIVE_SPACES
-	 */
-	public static final String HINT_NATIVE_SPACES = NATIVE_SPACES;
-
-
-	private static final Set<String> HINTS = buildHintsSet();
-
-	private static Set<String> buildHintsSet() {
-		HashSet<String> hints = new HashSet<>();
-		hints.add( HINT_TIMEOUT );
-		hints.add( SPEC_HINT_TIMEOUT );
-		hints.add( JAKARTA_SPEC_HINT_TIMEOUT );
-		hints.add( HINT_COMMENT );
-		hints.add( HINT_FETCH_SIZE );
-		hints.add( HINT_CACHE_REGION );
-		hints.add( HINT_CACHEABLE );
-		hints.add( HINT_READONLY );
-		hints.add( HINT_CACHE_MODE );
-		hints.add( HINT_FLUSH_MODE );
-		hints.add( HINT_NATIVE_LOCKMODE );
-		hints.add( HINT_FETCHGRAPH );
-		hints.add( HINT_LOADGRAPH );
-		hints.add( JAKARTA_HINT_FETCHGRAPH );
-		hints.add( JAKARTA_HINT_LOADGRAPH );
-		hints.add( HINT_NATIVE_SPACES );
-		return java.util.Collections.unmodifiableSet( hints );
-	}
+	public static final String SPEC_HINT_TIMEOUT = LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
 
 	public static Set<String> getDefinedHints() {
-		return HINTS;
+		return HintsCollector.getDefinedHints();
 	}
 
-	protected QueryHints() {
+	private QueryHints() {
 	}
 }

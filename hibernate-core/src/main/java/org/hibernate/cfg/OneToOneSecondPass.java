@@ -28,6 +28,7 @@ import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.mapping.SortableValue;
 import org.hibernate.type.ForeignKeyDirection;
 
 /**
@@ -258,6 +259,7 @@ public class OneToOneSecondPass implements SecondPass {
 				);
 			}
 		}
+		value.sortProperties();
 	}
 
 	/**
@@ -278,7 +280,7 @@ public class OneToOneSecondPass implements SecondPass {
 		//no check constraints available on joins
 		join.setTable( originalJoin.getTable() );
 		join.setInverse( true );
-		SimpleValue key = new DependantValue( buildingContext, join.getTable(), persistentClass.getIdentifier() );
+		DependantValue key = new DependantValue( buildingContext, join.getTable(), persistentClass.getIdentifier() );
 		//TODO support @ForeignKey
 		join.setKey( key );
 		join.setSequentialSelect( false );
@@ -302,6 +304,10 @@ public class OneToOneSecondPass implements SecondPass {
 			copy.setDefaultValue( column.getDefaultValue() );
 			column.setGeneratedAs( column.getGeneratedAs() );
 			key.addColumn( copy );
+		}
+		if ( otherSideProperty.getValue() instanceof SortableValue
+				&& !( (SortableValue) otherSideProperty.getValue() ).isSorted() ) {
+			key.sortProperties();
 		}
 		persistentClass.addJoin( join );
 		return join;

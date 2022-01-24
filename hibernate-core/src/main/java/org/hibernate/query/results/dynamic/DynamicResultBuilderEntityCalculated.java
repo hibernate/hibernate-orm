@@ -12,7 +12,7 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
@@ -51,7 +51,7 @@ public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilde
 
 	@Override
 	public Class<?> getJavaType() {
-		return entityMapping.getJavaTypeDescriptor().getJavaTypeClass();
+		return entityMapping.getJavaType().getJavaTypeClass();
 	}
 
 	@Override

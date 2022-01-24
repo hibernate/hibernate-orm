@@ -24,6 +24,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.UnknownParameterException;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -214,7 +215,11 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 			return (QueryParameterImplementor<P>) param;
 		}
 
-		throw new IllegalArgumentException( "Could not resolve jakarta.persistence.Parameter to org.hibernate.query.QueryParameter" );
+		final String errorMessage = "Could not resolve jakarta.persistence.Parameter `" + param + "` to org.hibernate.query.QueryParameter";
+		throw new IllegalArgumentException(
+				errorMessage,
+				new UnknownParameterException( errorMessage )
+		);
 	}
 
 
@@ -232,20 +237,32 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 	}
 
 	@Override
-	public QueryParameterImplementor<?> getQueryParameter(String name) {
+	public QueryParameterImplementor<?> findQueryParameter(String name) {
 		for ( QueryParameterImplementor<?> queryParameter : queryParameters.keySet() ) {
 			if ( name.equals( queryParameter.getName() ) ) {
 				return queryParameter;
 			}
 		}
+		return null;
+	}
 
+	@Override
+	public QueryParameterImplementor<?> getQueryParameter(String name) {
+		final QueryParameterImplementor<?> parameter = findQueryParameter( name );
+
+		if ( parameter != null ) {
+			return parameter;
+		}
+
+		final String errorMessage = String.format(
+				Locale.ROOT,
+				"Could not locate named parameter [%s], expecting one of [%s]",
+				name,
+				String.join( ", ", names )
+		);
 		throw new IllegalArgumentException(
-				String.format(
-						Locale.ROOT,
-						"Could not locate named parameter [%s], expecting one of [%s]",
-						name,
-						String.join( ", ", names )
-				)
+				errorMessage,
+				new UnknownParameterException( errorMessage )
 		);
 	}
 
@@ -264,20 +281,32 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 	}
 
 	@Override
-	public QueryParameterImplementor<?> getQueryParameter(int positionLabel) {
+	public QueryParameterImplementor<?> findQueryParameter(int positionLabel) {
 		for ( QueryParameterImplementor<?> queryParameter : queryParameters.keySet() ) {
 			if ( queryParameter.getPosition() != null && queryParameter.getPosition() == positionLabel ) {
 				return queryParameter;
 			}
 		}
+		return null;
+	}
 
+	@Override
+	public QueryParameterImplementor<?> getQueryParameter(int positionLabel) {
+		final QueryParameterImplementor<?> queryParameter = findQueryParameter( positionLabel );
+
+		if ( queryParameter != null ) {
+			return queryParameter;
+		}
+
+		final String errorMessage = String.format(
+				Locale.ROOT,
+				"Could not locate ordinal parameter [%s], expecting one of [%s]",
+				positionLabel,
+				StringHelper.join( ", ", labels )
+		);
 		throw new IllegalArgumentException(
-				String.format(
-						Locale.ROOT,
-						"Could not locate ordinal parameter [%s], expecting one of [%s]",
-						positionLabel,
-						StringHelper.join( ", ", labels)
-				)
+				errorMessage,
+				new UnknownParameterException( errorMessage )
 		);
 	}
 }

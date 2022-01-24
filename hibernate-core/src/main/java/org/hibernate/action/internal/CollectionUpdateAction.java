@@ -35,7 +35,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 	 * @param session The session
 	 */
 	public CollectionUpdateAction(
-				final PersistentCollection collection,
+				final PersistentCollection<?> collection,
 				final CollectionPersister persister,
 				final Object id,
 				final boolean emptySnapshot,
@@ -49,7 +49,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 		final Object id = getKey();
 		final SharedSessionContractImplementor session = getSession();
 		final CollectionPersister persister = getPersister();
-		final PersistentCollection collection = getCollection();
+		final PersistentCollection<?> collection = getCollection();
 		final boolean affectedByFilters = persister.isAffectedByEnabledFilters( session );
 
 		preUpdate();

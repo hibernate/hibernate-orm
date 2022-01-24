@@ -15,9 +15,9 @@ import java.util.Calendar;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.BindableType;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.TemporalJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.TemporalJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
@@ -39,19 +39,19 @@ public class BindingTypeHelper {
 			BindableType<T> declaredParameterType,
 			SessionFactoryImplementor sessionFactory) {
 		if ( precision != null ) {
-			final SqmExpressable<T> sqmExpressable = declaredParameterType.resolveExpressable( sessionFactory );
-			if ( !( sqmExpressable.getExpressableJavaTypeDescriptor() instanceof TemporalJavaTypeDescriptor ) ) {
+			final SqmExpressible<T> sqmExpressible = declaredParameterType.resolveExpressible( sessionFactory );
+			if ( !( sqmExpressible.getExpressibleJavaType() instanceof TemporalJavaType ) ) {
 				throw new UnsupportedOperationException(
 						"Cannot treat non-temporal parameter type with temporal precision"
 				);
 			}
 
-			final TemporalJavaTypeDescriptor<T> temporalJtd = (TemporalJavaTypeDescriptor<T>) sqmExpressable.getExpressableJavaTypeDescriptor();
+			final TemporalJavaType<T> temporalJtd = (TemporalJavaType<T>) sqmExpressible.getExpressibleJavaType();
 			if ( temporalJtd.getPrecision() != precision ) {
 				final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 				return typeConfiguration.getBasicTypeRegistry().resolve(
 						temporalJtd.resolveTypeForPrecision( precision, typeConfiguration ),
-						TemporalJavaTypeDescriptor.resolveJdbcTypeCode( precision )
+						TemporalJavaType.resolveJdbcTypeCode( precision )
 				);
 			}
 		}
@@ -63,12 +63,12 @@ public class BindingTypeHelper {
 			Object value,
 			JdbcMapping baseType,
 			TypeConfiguration typeConfiguration) {
-		if ( value == null || !( baseType.getJavaTypeDescriptor() instanceof TemporalJavaTypeDescriptor<?> ) ) {
+		if ( value == null || !( baseType.getJavaTypeDescriptor() instanceof TemporalJavaType<?> ) ) {
 			return baseType;
 		}
 
 		final Class<?> javaType = value.getClass();
-		final TemporalType temporalType = ( (TemporalJavaTypeDescriptor<?>) baseType.getJavaTypeDescriptor() ).getPrecision();
+		final TemporalType temporalType = ( (TemporalJavaType<?>) baseType.getJavaTypeDescriptor() ).getPrecision();
 		switch ( temporalType ) {
 			case TIMESTAMP: {
 				return (JdbcMapping) resolveTimestampTemporalTypeVariant( javaType, (BindableType<?>) baseType, typeConfiguration );

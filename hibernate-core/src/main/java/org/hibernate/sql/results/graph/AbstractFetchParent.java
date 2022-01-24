@@ -9,7 +9,7 @@ package org.hibernate.sql.results.graph;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -41,8 +41,8 @@ public abstract class AbstractFetchParent implements FetchParent {
 	}
 
 	@Override
-	public JavaType<?> getResultJavaTypeDescriptor() {
-		return fetchContainer.getJavaTypeDescriptor();
+	public JavaType<?> getResultJavaType() {
+		return fetchContainer.getJavaType();
 	}
 
 	@Override

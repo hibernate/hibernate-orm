@@ -9,8 +9,6 @@ package org.hibernate.mapping;
 import java.util.function.Supplier;
 
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.collection.internal.StandardArraySemantics;
-import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.usertype.UserCollectionType;
 
@@ -28,11 +26,6 @@ public class PrimitiveArray extends Array {
 
 	public boolean isPrimitiveArray() {
 		return true;
-	}
-
-	@Override
-	public CollectionSemantics getDefaultCollectionSemantics() {
-		return StandardArraySemantics.INSTANCE;
 	}
 
 	public Object accept(ValueVisitor visitor) {

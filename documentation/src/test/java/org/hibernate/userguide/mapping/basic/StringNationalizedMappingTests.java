@@ -45,7 +45,7 @@ public class StringNationalizedMappingTests {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityOfStrings.class);
 		final JdbcTypeRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
-				.getJdbcTypeDescriptorRegistry();
+				.getJdbcTypeRegistry();
 
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final NationalizationSupport nationalizationSupport = dialect.getNationalizationSupport();
@@ -54,14 +54,14 @@ public class StringNationalizedMappingTests {
 			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("nstring");
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(String.class));
-			assertThat(jdbcMapping.getJdbcTypeDescriptor(), is(jdbcTypeRegistry.getDescriptor(nationalizationSupport.getVarcharVariantCode())));
+			assertThat( jdbcMapping.getJdbcType(), is( jdbcTypeRegistry.getDescriptor( nationalizationSupport.getVarcharVariantCode())));
 		}
 
 		{
 			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("nclobString");
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(String.class));
-			assertThat(jdbcMapping.getJdbcTypeDescriptor(), is(jdbcTypeRegistry.getDescriptor(nationalizationSupport.getClobVariantCode())));
+			assertThat( jdbcMapping.getJdbcType(), is( jdbcTypeRegistry.getDescriptor( nationalizationSupport.getClobVariantCode())));
 		}
 
 

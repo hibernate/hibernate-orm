@@ -32,13 +32,11 @@ import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gail Badner
  */
-@SuppressWarnings({"unused", "WeakerAccess","ResultOfMethodCallIgnored"})
 @TestForIssue( jiraKey = "HHH-13607" )
 @RunWith( BytecodeEnhancerRunner.class )
 @EnhancementOptions( lazyLoading = true, extendedEnhancement = true )

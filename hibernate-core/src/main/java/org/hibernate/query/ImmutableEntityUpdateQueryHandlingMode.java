@@ -9,15 +9,17 @@ package org.hibernate.query;
 import org.hibernate.HibernateException;
 
 /**
- * This enum defines how {@link org.hibernate.annotations.Immutable} entities are handled when executing a
- * bulk update statement.
+ * This enum defines how {@link org.hibernate.annotations.Immutable} entities are handled when
+ * executing a bulk update statement.
+ * <ul>
+ *     <li>By default, the {@link ImmutableEntityUpdateQueryHandlingMode#WARNING} mode is used,
+ *         and a warning log message is issued when an {@link org.hibernate.annotations.Immutable}
+ *         entity is to be updated via a bulk update statement.
+ *     <li>If the {@link ImmutableEntityUpdateQueryHandlingMode#EXCEPTION} mode is used, then a
+ *         {@link HibernateException} is thrown instead.
+ * </ul>
  *
- * By default, the ({@link ImmutableEntityUpdateQueryHandlingMode#WARNING}) mode is used, meaning that
- * a warning log message is issued when an {@link org.hibernate.annotations.Immutable} entity
- * is to be updated via a bulk update statement.
- *
- * If the ({@link ImmutableEntityUpdateQueryHandlingMode#EXCEPTION}) mode is used, then a
- * {@link HibernateException} is thrown instead.
+ * @see org.hibernate.cfg.AvailableSettings#IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE
  *
  * @author Vlad Mihalcea
  */
@@ -28,9 +30,9 @@ public enum ImmutableEntityUpdateQueryHandlingMode {
 
 	/**
 	 * Interpret the configured {@link ImmutableEntityUpdateQueryHandlingMode} value.
-	 * Valid values are either a {@link ImmutableEntityUpdateQueryHandlingMode} object or its String representation.
-	 * For string values, the matching is case insensitive,
-	 * so you can use either {@code warning} or {@code exception} (case insensitive).
+	 * Valid values are either a {@link ImmutableEntityUpdateQueryHandlingMode} object or
+	 * its string representation. For string values, the matching is case-insensitive,
+	 * so you can use either {@code warning} or {@code exception}.
 	 *
 	 * @param mode configured {@link ImmutableEntityUpdateQueryHandlingMode} representation
 	 * @return associated {@link ImmutableEntityUpdateQueryHandlingMode} object

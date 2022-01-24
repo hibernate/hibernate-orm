@@ -47,7 +47,7 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 	Object processCollection(Object collection, CollectionType type) throws HibernateException {
 		if ( collection != null ) {
 			final SessionImplementor session = getSession();
-			final PersistentCollection persistentCollection;
+			final PersistentCollection<?> persistentCollection;
 			if ( type.isArrayType() ) {
 				persistentCollection = session.getPersistenceContextInternal().getCollectionHolder( collection );
 				// if no array holder we found an unwrapped array (this can't occur,

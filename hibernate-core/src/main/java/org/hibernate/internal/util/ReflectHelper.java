@@ -254,28 +254,6 @@ public final class ReflectHelper {
 		return PropertyAccessStrategyMixedImpl.INSTANCE.buildPropertyAccess( clazz, name, true ).getGetter();
 	}
 
-	public static Object getConstantValue(String name, SessionFactoryImplementor factory) {
-		boolean conventionalJavaConstants = factory.getSessionFactoryOptions().isConventionalJavaConstants();
-		Class clazz;
-		try {
-			if ( conventionalJavaConstants &&
-				!JAVA_CONSTANT_PATTERN.matcher( name ).find() ) {
-				return null;
-			}
-			ClassLoaderService classLoaderService = factory.getServiceRegistry().getService( ClassLoaderService.class );
-			clazz = classLoaderService.classForName( StringHelper.qualifier( name ) );
-		}
-		catch ( Throwable t ) {
-			return null;
-		}
-		try {
-			return clazz.getField( StringHelper.unqualify( name ) ).get( null );
-		}
-		catch ( Throwable t ) {
-			return null;
-		}
-	}
-
 	/**
 	 * Retrieve the default (no arg) constructor from the given class.
 	 *
@@ -322,8 +300,8 @@ public final class ReflectHelper {
 	}
 
 	/**
-	 * Retrieve a constructor for the given class, with arguments matching the specified Hibernate mapping
-	 * {@link Type types}.
+	 * Retrieve a constructor for the given class, with arguments matching
+	 * the specified Hibernate mapping {@linkplain Type types}.
 	 *
 	 * @param clazz The class needing instantiation
 	 * @param types The types representing the required ctor param signature

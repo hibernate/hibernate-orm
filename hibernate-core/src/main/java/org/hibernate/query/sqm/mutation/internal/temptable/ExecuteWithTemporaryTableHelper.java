@@ -23,8 +23,8 @@ import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.query.ComparisonOperator;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -47,7 +47,6 @@ import org.hibernate.sql.results.internal.SqlSelectionImpl;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public final class ExecuteWithTemporaryTableHelper {
 	private ExecuteWithTemporaryTableHelper() {
 	}

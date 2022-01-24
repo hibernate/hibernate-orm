@@ -28,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.Matchers.is;
+import static org.hibernate.internal.util.collections.CollectionHelper.toMap;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -58,8 +59,7 @@ public class LegacyParameterTests {
 
 		scope.inTransaction(
 				(s) -> {
-					Map<String,String> parameters = new HashMap<>();
-					parameters.put( "nickName", null );
+					Map<String,String> parameters = toMap( "nickName", null );
 
 					Query<Human> q = s.createQuery(
 							"from Human h where h.nickName = :nickName or (h.nickName is null and :nickName is null)",
@@ -99,8 +99,7 @@ public class LegacyParameterTests {
 	public void testSetPropertiesMapNotContainingAllTheParameters(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(s) -> {
-					Map<String,String> parameters = new HashMap<>();
-					parameters.put( "nickNames", "nick" );
+					Map<String,String> parameters = toMap( "nickNames", "nick" );
 
 					List<Integer> intValues = new ArrayList<>();
 					intValues.add( 1 );

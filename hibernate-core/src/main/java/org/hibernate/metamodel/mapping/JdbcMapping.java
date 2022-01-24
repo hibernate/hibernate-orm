@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.mapping.IndexedConsumer;
-import org.hibernate.query.CastType;
+import org.hibernate.query.sqm.CastType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -24,34 +24,34 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	/**
 	 * The descriptor for the Java type represented by this
-	 * expressable type
+	 * expressible type
 	 */
 	JavaType getJavaTypeDescriptor();
 
 	/**
 	 * The descriptor for the SQL type represented by this
-	 * expressable type
+	 * expressible type
 	 */
-	JdbcType getJdbcTypeDescriptor();
+	JdbcType getJdbcType();
 
 	default CastType getCastType() {
-		return getJdbcTypeDescriptor().getCastType();
+		return getJdbcType().getCastType();
 	}
 
 	/**
-	 * The strategy for extracting values of this expressable
+	 * The strategy for extracting values of this expressible
 	 * type from JDBC ResultSets, CallableStatements, etc
 	 */
-	ValueExtractor getJdbcValueExtractor();
+	ValueExtractor<?> getJdbcValueExtractor();
 
 	/**
-	 * The strategy for binding values of this expressable
-	 * type to JDBC PreparedStatements, CallableStatements, etc
+	 * The strategy for binding values of this expressible type to
+	 * JDBC {@code PreparedStatement}s and {@code CallableStatement}s.
 	 */
 	ValueBinder getJdbcValueBinder();
 
 	@Override
-	default JavaType getMappedJavaTypeDescriptor() {
+	default JavaType<?> getMappedJavaType() {
 		return getJavaTypeDescriptor();
 	}
 

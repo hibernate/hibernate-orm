@@ -53,7 +53,6 @@ public class JtaPlatformInitiator implements StandardServiceInitiator<JtaPlatfor
 		return platform;
 	}
 
-	@SuppressWarnings({"WeakerAccess", "unused"})
 	protected JtaPlatform getFallbackProvider(Map configurationValues, ServiceRegistryImplementor registry) {
 		return null;
 	}

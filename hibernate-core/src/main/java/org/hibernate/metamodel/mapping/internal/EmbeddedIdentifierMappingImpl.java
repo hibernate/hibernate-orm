@@ -15,7 +15,7 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -33,7 +33,6 @@ public class EmbeddedIdentifierMappingImpl
 	private final EmbeddableMappingType embeddableDescriptor;
 	private final PropertyAccess propertyAccess;
 
-	@SuppressWarnings("WeakerAccess")
 	public EmbeddedIdentifierMappingImpl(
 			EntityMappingType entityMapping,
 			String name,

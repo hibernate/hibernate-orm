@@ -45,20 +45,20 @@ public class HANAGeometryType implements JdbcType {
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
+		return new BasicBinder<X>( javaType, this ) {
 
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				final Geometry<?> geometry = getJavaTypeDescriptor().unwrap( value, Geometry.class, options );
+				final Geometry<?> geometry = getJavaType().unwrap( value, Geometry.class, options );
 				st.setObject( index, HANASpatialUtils.toEWKB( geometry ) );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				final Geometry<?> geometry = getJavaTypeDescriptor().unwrap( value, Geometry.class, options );
+				final Geometry<?> geometry = getJavaType().unwrap( value, Geometry.class, options );
 				st.setObject( name, HANASpatialUtils.toEWKB( geometry ) );
 			}
 
@@ -66,8 +66,8 @@ public class HANAGeometryType implements JdbcType {
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+		return new BasicExtractor<X>( javaType, this ) {
 
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
@@ -76,19 +76,19 @@ public class HANAGeometryType implements JdbcType {
 					//return getJavaTypeDescriptor().wrap( HANASpatialUtils.toGeometry( rs, paramIndex ), options );
 				}
 				else {
-					return getJavaTypeDescriptor().wrap( HANASpatialUtils.toGeometry( rs.getObject( paramIndex ) ), options );
+					return getJavaType().wrap( HANASpatialUtils.toGeometry( rs.getObject( paramIndex ) ), options );
 				}
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return getJavaTypeDescriptor().wrap( HANASpatialUtils.toGeometry( statement.getObject( index ) ), options );
+				return getJavaType().wrap( HANASpatialUtils.toGeometry( statement.getObject( index ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
-				return getJavaTypeDescriptor().wrap( HANASpatialUtils.toGeometry( statement.getObject( name ) ), options );
+				return getJavaType().wrap( HANASpatialUtils.toGeometry( statement.getObject( name ) ), options );
 			}
 		};
 	}

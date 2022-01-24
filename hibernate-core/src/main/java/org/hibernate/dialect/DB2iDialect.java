@@ -33,7 +33,7 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  */
 public class DB2iDialect extends DB2Dialect {
 
-	private final DatabaseVersion version;
+	final static DatabaseVersion DB2_LUW_VERSION9 = DatabaseVersion.make(9, 0);
 
 	public DB2iDialect(DialectResolutionInfo info) {
 		this( info.makeCopy() );
@@ -45,17 +45,17 @@ public class DB2iDialect extends DB2Dialect {
 	}
 
 	public DB2iDialect(DatabaseVersion version) {
-		super();
-		this.version = version;
+		super(version);
 	}
 
-	public DatabaseVersion getIVersion() {
-		return version;
+	@Override
+	public DatabaseVersion getDB2Version() {
+		return DB2_LUW_VERSION9;
 	}
 
 	@Override
 	protected UniqueDelegate createUniqueDelegate() {
-		return getIVersion().isSameOrAfter(7, 3)
+		return getVersion().isSameOrAfter(7, 3)
 				? new DefaultUniqueDelegate(this)
 				: super.createUniqueDelegate();
 	}
@@ -65,13 +65,13 @@ public class DB2iDialect extends DB2Dialect {
 	 */
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return getIVersion().isSameOrAfter(7, 3)
+		return getVersion().isSameOrAfter(7, 3)
 				? DB2iSequenceSupport.INSTANCE : NoSequenceSupport.INSTANCE;
 	}
 
 	@Override
 	public String getQuerySequencesString() {
-		if ( getIVersion().isSameOrAfter(7,3) ) {
+		if ( getVersion().isSameOrAfter(7,3) ) {
 			return "select distinct sequence_name from qsys2.syssequences " +
 					"where current_schema='*LIBL' and sequence_schema in (select schema_name from qsys2.library_list_info) " +
 					"or sequence_schema=current_schema";
@@ -83,13 +83,13 @@ public class DB2iDialect extends DB2Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return getIVersion().isSameOrAfter(7, 3)
+		return getVersion().isSameOrAfter(7, 3)
 				? FetchLimitHandler.INSTANCE : LegacyDB2LimitHandler.INSTANCE;
 	}
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return getIVersion().isSameOrAfter(7, 3)
+		return getVersion().isSameOrAfter(7, 3)
 				? new DB2IdentityColumnSupport()
 				: new DB2390IdentityColumnSupport();
 	}
@@ -101,7 +101,7 @@ public class DB2iDialect extends DB2Dialect {
 
 	@Override
 	public boolean supportsLateral() {
-		return getIVersion().isSameOrAfter( 7, 1 );
+		return getVersion().isSameOrAfter( 7, 1 );
 	}
 
 	@Override
@@ -110,7 +110,7 @@ public class DB2iDialect extends DB2Dialect {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new DB2iSqlAstTranslator<>( sessionFactory, statement, version );
+				return new DB2iSqlAstTranslator<>( sessionFactory, statement, getVersion() );
 			}
 		};
 	}

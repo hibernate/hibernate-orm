@@ -35,19 +35,6 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	private static final Logger log = QueryLogging.subLogger( "plan.cache" );
 
 	/**
-	 * The default strong reference count.
-	 *
-	 * @deprecated No longer used
-	 */
-	@Deprecated
-	public static final int DEFAULT_PARAMETER_METADATA_MAX_COUNT = 128;
-
-	/**
-	 * The default soft reference count.
-	 */
-	public static final int DEFAULT_QUERY_PLAN_MAX_COUNT = 2048;
-
-	/**
 	 * the cache of the actual plans...
 	 */
 	private final BoundedConcurrentHashMap<Key, QueryPlan> queryPlanCache;

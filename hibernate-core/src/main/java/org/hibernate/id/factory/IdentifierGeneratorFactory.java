@@ -36,7 +36,7 @@ public interface IdentifierGeneratorFactory {
 			GenerationType generationType,
 			String generatedValueGeneratorName,
 			String generatorName,
-			JavaType<?> javaTypeDescriptor,
+			JavaType<?> javaType,
 			Properties config,
 			GeneratorDefinitionResolver definitionResolver);
 

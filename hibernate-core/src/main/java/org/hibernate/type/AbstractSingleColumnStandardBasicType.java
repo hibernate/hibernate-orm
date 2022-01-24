@@ -23,8 +23,8 @@ public abstract class AbstractSingleColumnStandardBasicType<T>
 		extends AbstractStandardBasicType<T>
 		implements Type {
 
-	public AbstractSingleColumnStandardBasicType(JdbcType jdbcType, JavaType<T> javaTypeDescriptor) {
-		super( jdbcType, javaTypeDescriptor );
+	public AbstractSingleColumnStandardBasicType(JdbcType jdbcType, JavaType<T> javaType) {
+		super( jdbcType, javaType );
 	}
 
 	@Override

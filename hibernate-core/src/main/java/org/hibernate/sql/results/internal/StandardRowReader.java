@@ -29,16 +29,14 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 @SuppressWarnings("rawtypes")
 public class StandardRowReader<T> implements RowReader<T> {
-	private final List<DomainResultAssembler> resultAssemblers;
+	private final List<DomainResultAssembler<?>> resultAssemblers;
 	private final List<Initializer> initializers;
 	private final RowTransformer<T> rowTransformer;
 
 	private final int assemblerCount;
 
-
-	@SuppressWarnings("WeakerAccess")
 	public StandardRowReader(
-			List<DomainResultAssembler> resultAssemblers,
+			List<DomainResultAssembler<?>> resultAssemblers,
 			List<Initializer> initializers,
 			RowTransformer<T> rowTransformer) {
 		this.resultAssemblers = resultAssemblers;
@@ -66,19 +64,19 @@ public class StandardRowReader<T> implements RowReader<T> {
 	@SuppressWarnings("unchecked")
 	public Class<T> getResultJavaType() {
 		if ( resultAssemblers.size() == 1 ) {
-			return (Class<T>) resultAssemblers.get( 0 ).getAssembledJavaTypeDescriptor().getJavaTypeClass();
+			return (Class<T>) resultAssemblers.get( 0 ).getAssembledJavaType().getJavaTypeClass();
 		}
 
 		return (Class<T>) Object[].class;
 	}
 
 	@Override
-	public List<JavaType> getResultJavaTypeDescriptors() {
-		List<JavaType> javaTypeDescriptors = new ArrayList<>( resultAssemblers.size() );
+	public List<JavaType> getResultJavaTypes() {
+		List<JavaType> javaTypes = new ArrayList<>( resultAssemblers.size() );
 		for ( DomainResultAssembler resultAssembler : resultAssemblers ) {
-			javaTypeDescriptors.add( resultAssembler.getAssembledJavaTypeDescriptor() );
+			javaTypes.add( resultAssembler.getAssembledJavaType() );
 		}
-		return javaTypeDescriptors;
+		return javaTypes;
 	}
 
 	@Override
@@ -90,7 +88,7 @@ public class StandardRowReader<T> implements RowReader<T> {
 	public T readRow(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
 		LoadingLogger.LOGGER.trace( "StandardRowReader#readRow" );
 
-		coordinateInitializers( rowProcessingState, options );
+		coordinateInitializers( rowProcessingState );
 
 		final Object[] resultRow = new Object[ assemblerCount ];
 
@@ -100,23 +98,19 @@ public class StandardRowReader<T> implements RowReader<T> {
 			resultRow[i] = assembler.assemble( rowProcessingState, options );
 		}
 
-		afterRow( rowProcessingState, options );
+		afterRow( rowProcessingState );
 
 		return rowTransformer.transformRow( resultRow );
 	}
 
-	private void afterRow(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
+	private void afterRow(RowProcessingState rowProcessingState) {
 		LoadingLogger.LOGGER.trace( "StandardRowReader#afterRow" );
 
-		initializers.forEach( (initializer) -> {
-			initializer.finishUpRow( rowProcessingState );
-		} );
+		initializers.forEach( initializer -> initializer.finishUpRow( rowProcessingState ) );
 	}
 
 	@SuppressWarnings("ForLoopReplaceableByForEach")
-	private void coordinateInitializers(
-			RowProcessingState rowProcessingState,
-			JdbcValuesSourceProcessingOptions options) {
+	private void coordinateInitializers(RowProcessingState rowProcessingState) {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// todo (6.0) : we may want to split handling of initializers into specific sub-type handling

@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.spi;
 
-import java.util.Map;
 import java.util.TimeZone;
 import java.util.function.Supplier;
 
@@ -28,7 +27,7 @@ import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
-import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.spi.QueryEngineOptions;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -179,8 +178,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	boolean isJtaTrackByThread();
 
-	Map getQuerySubstitutions();
-
 	/**
 	 * @deprecated Use {@link JpaCompliance#isJpaQueryComplianceEnabled()} instead
 	 * via {@link #getJpaCompliance()}
@@ -191,8 +188,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	}
 
 	boolean isNamedQueryStartupCheckingEnabled();
-
-	boolean isConventionalJavaConstants();
 
 	boolean isSecondLevelCacheEnabled();
 
@@ -217,12 +212,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	boolean isJdbcBatchVersionedData();
 
 	boolean isScrollableResultSetsEnabled();
-
-	/**
-	 * @deprecated (since 5.5) Scheduled for removal in 6.0 as ResultSet wrapping is no longer needed
-	 */
-	@Deprecated
-	boolean isWrapResultSetsEnabled();
 
 	boolean isGetGeneratedKeysEnabled();
 
@@ -263,10 +252,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	TimeZone getJdbcTimeZone();
 
-	default boolean isQueryParametersValidationEnabled(){
-		return isJpaBootstrap();
-	}
-
 	default ValueHandlingMode getCriteriaValueHandlingMode() {
 		return ValueHandlingMode.BIND;
 	}
@@ -300,10 +285,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	}
 
 	default boolean inClauseParameterPaddingEnabled() {
-		return false;
-	}
-
-	default boolean nativeExceptionHandling51Compliance() {
 		return false;
 	}
 
@@ -362,8 +343,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	default boolean isCollectionsInDefaultFetchGroupEnabled() {
 		return false;
 	}
-
-	boolean isOmitJoinOfSuperclassTablesEnabled();
 
 	int getPreferredSqlTypeCodeForBoolean();
 

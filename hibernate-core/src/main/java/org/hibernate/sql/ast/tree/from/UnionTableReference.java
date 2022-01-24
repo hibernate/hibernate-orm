@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.tree.from;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 
 /**
  * @author Andrea Boriero

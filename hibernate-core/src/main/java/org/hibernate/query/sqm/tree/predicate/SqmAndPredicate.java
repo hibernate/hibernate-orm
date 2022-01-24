@@ -24,7 +24,7 @@ public class SqmAndPredicate extends AbstractSqmPredicate implements SqmJunctive
 			SqmPredicate leftHandPredicate,
 			SqmPredicate rightHandPredicate,
 			NodeBuilder nodeBuilder) {
-		super( leftHandPredicate.getExpressable(), nodeBuilder );
+		super( leftHandPredicate.getExpressible(), nodeBuilder );
 		this.leftHandPredicate = leftHandPredicate;
 		this.rightHandPredicate = rightHandPredicate;
 	}

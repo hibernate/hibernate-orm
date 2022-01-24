@@ -10,7 +10,7 @@ import java.sql.Types;
 
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.engine.jdbc.Size;
-import org.hibernate.query.Limit;
+import org.hibernate.query.spi.Limit;
 
 import org.junit.Test;
 

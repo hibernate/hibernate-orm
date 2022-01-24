@@ -32,11 +32,11 @@ import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
-import org.hibernate.metamodel.mapping.SqlExpressable;
+import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.persister.entity.Lockable;
-import org.hibernate.query.IntervalType;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -55,7 +55,7 @@ import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 import static org.hibernate.type.SqlTypes.*;
 
 /**
- * Hibernate Dialect implementation for Cloud Spanner.
+ * A {@linkplain Dialect SQL dialect} for Cloud Spanner.
  *
  * @author Mike Eltsufin
  * @author Chengyuan Zhao
@@ -133,7 +133,8 @@ public class SpannerDialect extends Dialect {
 		return 2_621_440;
 	}
 
-	public int getMaxBytesLength() {
+	@Override
+	public int getMaxVarbinaryLength() {
 		//max is equivalent to 10_485_760
 		return 10_485_760;
 	}
@@ -423,7 +424,7 @@ public class SpannerDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder("format", "format_timestamp(?2,?1)")
 				.setInvariantType( stringType )
-				.setExactArgumentCount( 2 )
+				.setArgumentsValidator( CommonFunctionFactory.formatValidator() )
 				.setArgumentListSignature("(TIMESTAMP datetime as STRING pattern)")
 				.register();
 	}
@@ -798,9 +799,9 @@ public class SpannerDialect extends Dialect {
 	/* Type conversion and casting */
 
 	@Override
-	public String getCastTypeName(SqlExpressable type, Long length, Integer precision, Integer scale) {
+	public String getCastTypeName(SqlExpressible type, Long length, Integer precision, Integer scale) {
 		//Spanner doesn't let you specify a length in cast() types
-		return super.getRawTypeName( type.getJdbcMapping().getJdbcTypeDescriptor() );
+		return super.getRawTypeName( type.getJdbcMapping().getJdbcType() );
 	}
 
 	/**

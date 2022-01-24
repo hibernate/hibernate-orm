@@ -34,7 +34,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Steve Ebersole
  * @author Fabio Massimo Ercoli
  */
-@SuppressWarnings("WeakerAccess")
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
 @ServiceRegistry
 @SessionFactory

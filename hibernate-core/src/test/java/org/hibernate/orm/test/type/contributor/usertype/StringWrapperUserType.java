@@ -1,0 +1,113 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+package org.hibernate.orm.test.type.contributor.usertype;
+
+import java.io.Serializable;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Objects;
+
+import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.usertype.UserType;
+
+import org.jboss.logging.Logger;
+
+/**
+ * @author Christian Beikov
+ */
+public class StringWrapperUserType implements UserType<StringWrapper> {
+
+	public static final StringWrapperUserType INSTANCE = new StringWrapperUserType();
+
+    private static final Logger log = Logger.getLogger( StringWrapperUserType.class );
+
+    @Override
+    public int[] sqlTypes() {
+        return new int[] { Types.VARCHAR };
+    }
+
+    @Override
+    public Class<StringWrapper> returnedClass() {
+        return StringWrapper.class;
+    }
+
+    @Override
+    public boolean equals(Object x, Object y)
+			throws HibernateException {
+        return Objects.equals( x, y );
+    }
+
+    @Override
+    public int hashCode(Object x)
+			throws HibernateException {
+        return Objects.hashCode( x );
+    }
+
+    @Override
+    public StringWrapper nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+        String columnValue = (String) rs.getObject( position );
+        log.debugv( "Result set column {0} value is {1}", position, columnValue );
+        return columnValue == null ? null : fromString( columnValue );
+    }
+
+    @Override
+    public void nullSafeSet(
+            PreparedStatement st, StringWrapper value, int index, SharedSessionContractImplementor session)
+            throws HibernateException, SQLException {
+        if ( value == null ) {
+            log.debugv("Binding null to parameter {0} ",index);
+            st.setNull( index, Types.VARCHAR );
+        }
+        else {
+            String stringValue = toString( (StringWrapper) value );
+            log.debugv("Binding {0} to parameter {1} ", stringValue, index);
+            st.setString( index, stringValue );
+        }
+    }
+    public String toString(StringWrapper value) {
+        return value.getValue();
+    }
+
+    public StringWrapper fromString(String string) {
+        if ( string == null || string.isEmpty() ) {
+            return null;
+        }
+        return new StringWrapper( string );
+    }
+
+    @Override
+    public Object deepCopy(Object value)
+			throws HibernateException {
+        return value;
+    }
+
+    @Override
+    public boolean isMutable() {
+        return false;
+    }
+
+    @Override
+    public Serializable disassemble(Object value)
+			throws HibernateException {
+        return (StringWrapper) deepCopy( value );
+    }
+
+    @Override
+    public Object assemble(Serializable cached, Object owner)
+			throws HibernateException {
+        return deepCopy( cached );
+    }
+
+    @Override
+    public Object replace(Object original, Object target, Object owner)
+			throws HibernateException {
+        return deepCopy( original );
+    }
+}

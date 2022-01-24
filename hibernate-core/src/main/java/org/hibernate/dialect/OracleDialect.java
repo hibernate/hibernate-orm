@@ -48,11 +48,11 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
-import org.hibernate.query.CastType;
-import org.hibernate.query.FetchClauseType;
-import org.hibernate.query.IntervalType;
+import org.hibernate.query.sqm.CastType;
+import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
@@ -74,7 +74,7 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
@@ -84,18 +84,18 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.query.TemporalUnit.DAY;
-import static org.hibernate.query.TemporalUnit.HOUR;
-import static org.hibernate.query.TemporalUnit.MINUTE;
-import static org.hibernate.query.TemporalUnit.MONTH;
-import static org.hibernate.query.TemporalUnit.SECOND;
-import static org.hibernate.query.TemporalUnit.YEAR;
+import static org.hibernate.query.sqm.TemporalUnit.DAY;
+import static org.hibernate.query.sqm.TemporalUnit.HOUR;
+import static org.hibernate.query.sqm.TemporalUnit.MINUTE;
+import static org.hibernate.query.sqm.TemporalUnit.MONTH;
+import static org.hibernate.query.sqm.TemporalUnit.SECOND;
+import static org.hibernate.query.sqm.TemporalUnit.YEAR;
 
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import static org.hibernate.type.SqlTypes.*;
 
 /**
- * A dialect for Oracle 8i and above.
+ * A {@linkplain Dialect SQL dialect} for Oracle 8i and above.
  *
  * @author Steve Ebersole
  * @author Gavin King
@@ -610,11 +610,6 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public boolean getDefaultUseStreamsForBinary() {
-		return true;
-	}
-
-	@Override
 	public boolean getDefaultUseGetGeneratedKeys() {
 		// Oracle driver reports to support getGeneratedKeys(), but they only
 		// support the version taking an array of the names of the columns to
@@ -692,19 +687,19 @@ public class OracleDialect extends Dialect {
 					BlobJdbcType.PRIMITIVE_ARRAY_BINDING :
 					BlobJdbcType.DEFAULT;
 
-			typeContributions.contributeJdbcTypeDescriptor( descriptor );
+			typeContributions.contributeJdbcType( descriptor );
 		}
 
 		// Oracle requires a custom binder for binding untyped nulls with the NULL type
-		typeContributions.contributeJdbcTypeDescriptor( NullJdbcType.INSTANCE );
-		typeContributions.contributeJdbcTypeDescriptor( ObjectNullAsNullTypeJdbcType.INSTANCE );
+		typeContributions.contributeJdbcType( NullJdbcType.INSTANCE );
+		typeContributions.contributeJdbcType( ObjectNullAsNullTypeJdbcType.INSTANCE );
 
 		// Until we remove StandardBasicTypes, we have to keep this
 		typeContributions.contributeType(
 				new NullType(
 						NullJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
-								.getJavaTypeDescriptorRegistry()
+								.getJavaTypeRegistry()
 								.getDescriptor( Object.class )
 				)
 		);
@@ -712,7 +707,7 @@ public class OracleDialect extends Dialect {
 				new JavaObjectType(
 						ObjectNullAsNullTypeJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
-								.getJavaTypeDescriptorRegistry()
+								.getJavaTypeRegistry()
 								.getDescriptor( Object.class )
 						)
 		);
@@ -1201,7 +1196,6 @@ public class OracleDialect extends Dialect {
 				.replace("D", fm + "DDD" + fmReset)
 
 				//am pm
-				.replace("aa", "AM")
 				.replace("a", "AM")
 
 				//hour
@@ -1241,7 +1235,7 @@ public class OracleDialect extends Dialect {
 	@Override
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		appender.appendSql( "hextoraw('" );
-		PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.appendString( appender, bytes );
+		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
 		appender.appendSql( "')" );
 	}
 

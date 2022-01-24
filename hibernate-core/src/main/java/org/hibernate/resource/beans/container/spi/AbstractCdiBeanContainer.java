@@ -134,7 +134,6 @@ public abstract class AbstractCdiBeanContainer implements CdiBasedBeanContainer 
 			BeanInstanceProducer fallbackProducer);
 
 
-	@SuppressWarnings("WeakerAccess")
 	protected final void forEachBean(Consumer<ContainedBeanImplementor<?>> consumer) {
 		registeredBeans.forEach( consumer );
 	}

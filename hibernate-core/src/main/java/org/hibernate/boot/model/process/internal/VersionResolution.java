@@ -21,7 +21,7 @@ import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -45,11 +45,11 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 		// todo (6.0) : add support for Dialect-specific interpretation?
 
 		final java.lang.reflect.Type implicitJavaType = implicitJavaTypeAccess.apply( typeConfiguration );
-		final JavaType registered = typeConfiguration.getJavaTypeDescriptorRegistry().resolveDescriptor( implicitJavaType );
+		final JavaType registered = typeConfiguration.getJavaTypeRegistry().resolveDescriptor( implicitJavaType );
 		final BasicJavaType jtd = (BasicJavaType) registered;
 
 		final JdbcType recommendedJdbcType = jtd.getRecommendedJdbcType(
-				new JdbcTypeDescriptorIndicators() {
+				new JdbcTypeIndicators() {
 					@Override
 					public TypeConfiguration getTypeConfiguration() {
 						return typeConfiguration;
@@ -81,23 +81,23 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 		final BasicType<?> basicType = typeConfiguration.getBasicTypeRegistry().resolve( jtd, recommendedJdbcType );
 		final BasicType legacyType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( jtd.getJavaType() );
 
-		assert legacyType.getJdbcTypeDescriptor().equals( recommendedJdbcType );
+		assert legacyType.getJdbcType().equals( recommendedJdbcType );
 
 		return new VersionResolution<>( jtd, recommendedJdbcType, basicType, legacyType );
 	}
 
-	private final JavaType jtd;
+	private final JavaType javaType;
 	private final JdbcType jdbcType;
 
 	private final JdbcMapping jdbcMapping;
 	private final BasicType legacyType;
 
 	public VersionResolution(
-			JavaType javaTypeDescriptor,
+			JavaType javaType,
 			JdbcType jdbcType,
 			JdbcMapping jdbcMapping,
 			BasicType legacyType) {
-		this.jtd = javaTypeDescriptor;
+		this.javaType = javaType;
 		this.jdbcType = jdbcType;
 		this.jdbcMapping = jdbcMapping;
 		this.legacyType = legacyType;
@@ -116,17 +116,17 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public JavaType<E> getDomainJavaDescriptor() {
-		return jtd;
+	public JavaType<E> getDomainJavaType() {
+		return javaType;
 	}
 
 	@Override
-	public JavaType<?> getRelationalJavaDescriptor() {
-		return jtd;
+	public JavaType<?> getRelationalJavaType() {
+		return javaType;
 	}
 
 	@Override
-	public JdbcType getJdbcTypeDescriptor() {
+	public JdbcType getJdbcType() {
 		return jdbcType;
 	}
 

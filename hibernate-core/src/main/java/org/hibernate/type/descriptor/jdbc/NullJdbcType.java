@@ -33,13 +33,13 @@ public class NullJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor) {
+	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
 		return null;
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
+		return new BasicBinder<X>( javaType, this ) {
 
 			@Override
 			protected void doBindNull(PreparedStatement st, int index, WrapperOptions options) throws SQLException {

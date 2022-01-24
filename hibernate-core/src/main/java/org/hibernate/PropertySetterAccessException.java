@@ -24,9 +24,9 @@ public class PropertySetterAccessException extends PropertyAccessException {
 	 */
 	public PropertySetterAccessException(
 			Throwable cause,
-			Class persistentClass,
+			Class<?> persistentClass,
 			String propertyName,
-			Class expectedType,
+			Class<?> expectedType,
 			Object target,
 			Object value) {
 		super(

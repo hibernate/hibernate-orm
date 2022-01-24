@@ -69,7 +69,7 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 		if ( configValue == null ) {
 			statisticsFactory = null; //We'll use the default
 		}
-		else if ( StatisticsFactory.class.isInstance( configValue ) ) {
+		else if ( configValue instanceof StatisticsFactory ) {
 			statisticsFactory = (StatisticsFactory) configValue;
 		}
 		else {
@@ -83,7 +83,7 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 			}
 			catch (Exception e) {
 				throw new HibernateException(
-						"Unable to instantiate specified StatisticsFactory implementation [" + configValue.toString() + "]",
+						"Unable to instantiate specified StatisticsFactory implementation [" + configValue + "]",
 						e
 				);
 			}
@@ -96,7 +96,7 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 		else {
 			statistics = statisticsFactory.buildStatistics( sessionFactory );
 		}
-		final boolean enabled = sessionFactory.getSettings().isStatisticsEnabled();
+		final boolean enabled = sessionFactory.getSessionFactoryOptions().isStatisticsEnabled();
 		statistics.setStatisticsEnabled( enabled );
 		LOG.debugf( "Statistics initialized [enabled=%s]", enabled );
 		return statistics;

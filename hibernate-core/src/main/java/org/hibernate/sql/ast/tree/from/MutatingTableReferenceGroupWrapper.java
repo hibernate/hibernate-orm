@@ -12,7 +12,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 
 /**
  * Acts as a TableGroup for DML query operations.  It is used to simply

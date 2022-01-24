@@ -34,7 +34,7 @@ public final class IdentifierGeneratorHelper {
 	/**
 	 * Marker object returned from {@link IdentifierGenerator#generate} to indicate that we should short-circuit any
 	 * continued generated id checking.  Currently this is only used in the case of the
-	 * {@link ForeignGenerator foreign} generator as a way to signal that we should use the associated
+	 * {@linkplain ForeignGenerator foreign} generator as a way to signal that we should use the associated
 	 * entity's id value.
 	 */
 	public static final Serializable SHORT_CIRCUIT_INDICATOR = new Serializable() {
@@ -59,7 +59,7 @@ public final class IdentifierGeneratorHelper {
 	/**
 	 * Get the generated identifier when using identity columns
 	 *
-	 * @param rs The result set from which to extract the the generated identity.
+	 * @param rs The result set from which to extract the generated identity.
 	 * @param identifier The name of the identifier column
 	 * @param type The expected type mapping for the identity value.
 	 * @param dialect The current database dialect.
@@ -189,7 +189,7 @@ public final class IdentifierGeneratorHelper {
 	 * @return The wrapped type.
 	 *
 	 * @throws IdentifierGenerationException Indicates an unhandled 'clazz'.
-	 * @deprecated Use the {@link #getIntegralDataTypeHolder holders} instead.
+	 * @deprecated Use the {@linkplain #getIntegralDataTypeHolder holders} instead.
 	 */
 	@Deprecated
 	public static Number createNumber(long value, Class clazz) throws IdentifierGenerationException {

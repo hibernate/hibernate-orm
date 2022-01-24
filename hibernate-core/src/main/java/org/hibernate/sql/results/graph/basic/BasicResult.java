@@ -8,7 +8,7 @@ package org.hibernate.sql.results.graph.basic;
 
 import org.hibernate.Internal;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -22,7 +22,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public class BasicResult<T> implements DomainResult<T>, BasicResultGraphNode<T> {
 	private final String resultVariable;
-	private final JavaType<T> javaTypeDescriptor;
+	private final JavaType<T> javaType;
 
 	private final NavigablePath navigablePath;
 
@@ -31,42 +31,42 @@ public class BasicResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 	public BasicResult(
 			int jdbcValuesArrayPosition,
 			String resultVariable,
-			JavaType<T> javaTypeDescriptor) {
-		this( jdbcValuesArrayPosition, resultVariable, javaTypeDescriptor, (NavigablePath) null );
+			JavaType<T> javaType) {
+		this( jdbcValuesArrayPosition, resultVariable, javaType, (NavigablePath) null );
 	}
 
 	public BasicResult(
 			int jdbcValuesArrayPosition,
 			String resultVariable,
-			JavaType<T> javaTypeDescriptor,
+			JavaType<T> javaType,
 			NavigablePath navigablePath) {
 		this.resultVariable = resultVariable;
-		this.javaTypeDescriptor = javaTypeDescriptor;
+		this.javaType = javaType;
 
 		this.navigablePath = navigablePath;
 
-		this.assembler = new BasicResultAssembler<>( jdbcValuesArrayPosition, javaTypeDescriptor );
+		this.assembler = new BasicResultAssembler<>( jdbcValuesArrayPosition, javaType );
 	}
 
 	public BasicResult(
 			int valuesArrayPosition,
 			String resultVariable,
-			JavaType<T> javaTypeDescriptor,
+			JavaType<T> javaType,
 			BasicValueConverter<T,?> valueConverter) {
-		this( valuesArrayPosition, resultVariable, javaTypeDescriptor, valueConverter, null );
+		this( valuesArrayPosition, resultVariable, javaType, valueConverter, null );
 	}
 
 	public BasicResult(
 			int valuesArrayPosition,
 			String resultVariable,
-			JavaType<T> javaTypeDescriptor,
+			JavaType<T> javaType,
 			BasicValueConverter<T,?> valueConverter,
 			NavigablePath navigablePath) {
 		this.resultVariable = resultVariable;
-		this.javaTypeDescriptor = javaTypeDescriptor;
+		this.javaType = javaType;
 		this.navigablePath = navigablePath;
 
-		this.assembler = new BasicResultAssembler<>( valuesArrayPosition, javaTypeDescriptor, valueConverter );
+		this.assembler = new BasicResultAssembler<>( valuesArrayPosition, javaType, valueConverter );
 	}
 
 	@Override
@@ -75,8 +75,8 @@ public class BasicResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 	}
 
 	@Override
-	public JavaType<T> getResultJavaTypeDescriptor() {
-		return javaTypeDescriptor;
+	public JavaType<T> getResultJavaType() {
+		return javaType;
 	}
 
 	@Override

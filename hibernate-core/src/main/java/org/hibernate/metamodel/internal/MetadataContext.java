@@ -47,6 +47,7 @@ import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.spi.EntityJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -78,6 +79,7 @@ public class MetadataContext {
 	private final Set<MappedSuperclass> knownMappedSuperclasses;
 	private final TypeConfiguration typeConfiguration;
 	private final JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting;
+	private final JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting;
 	private final AttributeFactory attributeFactory = new AttributeFactory( this );
 
 	private final Map<Class<?>, EntityDomainType<?>> entityTypes = new HashMap<>();
@@ -105,12 +107,14 @@ public class MetadataContext {
 			MappingMetamodel mappingMetamodel,
 			MetadataImplementor bootMetamodel,
 			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting,
+			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		this.jpaMetamodel = jpaMetamodel;
 		this.metamodel = mappingMetamodel;
 		this.knownMappedSuperclasses = bootMetamodel.getMappedSuperclassMappingsCopy();
 		this.typeConfiguration = runtimeModelCreationContext.getTypeConfiguration();
 		this.jpaStaticMetaModelPopulationSetting = jpaStaticMetaModelPopulationSetting;
+		this.jpaMetaModelPopulationSetting = jpaMetaModelPopulationSetting;
 		this.runtimeModelCreationContext = runtimeModelCreationContext;
 	}
 
@@ -126,8 +130,8 @@ public class MetadataContext {
 		return typeConfiguration;
 	}
 
-	public JavaTypeRegistry getJavaTypeDescriptorRegistry(){
-		return typeConfiguration.getJavaTypeDescriptorRegistry();
+	public JavaTypeRegistry getJavaTypeRegistry(){
+		return typeConfiguration.getJavaTypeRegistry();
 	}
 
 	MappingMetamodel getMetamodel() {
@@ -213,7 +217,6 @@ public class MetadataContext {
 	 *
 	 * @return Tne corresponding JPA {@link org.hibernate.type.EntityType}, or null if not yet processed.
 	 */
-	@SuppressWarnings("WeakerAccess")
 	public EntityDomainType<?> locateEntityType(PersistentClass persistentClass) {
 		return entityTypesByPersistentClass.get( persistentClass );
 	}
@@ -238,17 +241,16 @@ public class MetadataContext {
 	 *
 	 * @return The corresponding JPA {@link org.hibernate.type.EntityType}, or null.
 	 */
-	@SuppressWarnings({"unchecked", "WeakerAccess"})
+	@SuppressWarnings("unchecked")
 	public <E> EntityDomainType<E> locateEntityType(String entityName) {
 		return (EntityDomainType<E>) entityTypesByEntityName.get( entityName );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public Map<String, EntityDomainType<?>> getEntityTypesByEntityName() {
 		return Collections.unmodifiableMap( entityTypesByEntityName );
 	}
 
-	@SuppressWarnings({"unchecked", "WeakerAccess"})
+	@SuppressWarnings("unchecked")
 	public void wrapUp() {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Wrapping up metadata context..." );
@@ -287,13 +289,12 @@ public class MetadataContext {
 								property
 						);
 						if ( attribute != null ) {
-							( (AttributeContainer<Object>) jpaMapping ).getInFlightAccess().addAttribute( attribute );
+							addAttribute( jpaMapping, attribute );
 							if ( property.isNaturalIdentifier() ) {
 								( ( AttributeContainer<Object>) jpaMapping ).getInFlightAccess()
 										.applyNaturalIdAttribute( attribute );
 							}
 						}
-
 					}
 
 					( (AttributeContainer<?>) jpaMapping ).getInFlightAccess().finishUp();
@@ -329,7 +330,7 @@ public class MetadataContext {
 						}
 						final PersistentAttribute<Object, ?> attribute = attributeFactory.buildAttribute( jpaType, property );
 						if ( attribute != null ) {
-							( (AttributeContainer<Object>) jpaType ).getInFlightAccess().addAttribute( attribute );
+							addAttribute( jpaType, attribute );
 							if ( property.isNaturalIdentifier() ) {
 								( ( AttributeContainer<Object>) jpaType ).getInFlightAccess()
 										.applyNaturalIdAttribute( attribute );
@@ -370,7 +371,7 @@ public class MetadataContext {
 					final Property property = propertyItr.next();
 					final PersistentAttribute<Object, ?> attribute = attributeFactory.buildAttribute( (ManagedDomainType<Object>) embeddable, property );
 					if ( attribute != null ) {
-						( ( AttributeContainer<Object>) embeddable ).getInFlightAccess().addAttribute( attribute );
+						addAttribute( embeddable, attribute );
 					}
 				}
 
@@ -384,6 +385,27 @@ public class MetadataContext {
 		}
 	}
 
+	private void addAttribute(ManagedDomainType<?> type, PersistentAttribute<Object, ?> attribute) {
+		final AttributeContainer.InFlightAccess<Object> inFlightAccess = ( (AttributeContainer<Object>) type ).getInFlightAccess();
+		final boolean virtual = attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED
+				&& attribute.getAttributeJavaType() instanceof EntityJavaType<?>;
+		if ( virtual ) {
+			final EmbeddableDomainType<?> embeddableDomainType = (EmbeddableDomainType<?>) attribute.getValueGraphType();
+			final Component component = componentByEmbeddable.get( embeddableDomainType );
+			final Iterator<Property> propertyItr = component.getPropertyIterator();
+			while ( propertyItr.hasNext() ) {
+				final Property property = propertyItr.next();
+				final PersistentAttribute<Object, ?> subAttribute = attributeFactory.buildAttribute( (ManagedDomainType<Object>) embeddableDomainType, property );
+				if ( subAttribute != null ) {
+					inFlightAccess.addAttribute( subAttribute );
+				}
+			}
+			if ( jpaMetaModelPopulationSetting != JpaMetaModelPopulationSetting.ENABLED ) {
+				return;
+			}
+		}
+		inFlightAccess.addAttribute( attribute );
+	}
 
 	// 1) create the part
 	// 2) register the part (mapping role)
@@ -451,12 +473,12 @@ public class MetadataContext {
 
 	private EmbeddableTypeImpl<?> applyIdClassMetadata(Component idClassComponent) {
 		final JavaTypeRegistry registry = getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry();
+				.getJavaTypeRegistry();
 		final Class<?> componentClass = idClassComponent.getComponentClass();
-		final JavaType<?> javaTypeDescriptor = registry.resolveManagedTypeDescriptor( componentClass );
+		final JavaType<?> javaType = registry.resolveManagedTypeDescriptor( componentClass );
 
 		final EmbeddableTypeImpl<?> embeddableType = new EmbeddableTypeImpl<>(
-				javaTypeDescriptor,
+				javaType,
 				false,
 				getJpaMetamodel()
 		);
@@ -682,7 +704,7 @@ public class MetadataContext {
 				jt -> {
 					final JavaTypeRegistry registry =
 							getTypeConfiguration()
-							.getJavaTypeDescriptorRegistry();
+							.getJavaTypeRegistry();
 					return new BasicTypeImpl<>( registry.resolveDescriptor( javaType ) );
 				}
 		);

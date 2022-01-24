@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
-import org.hibernate.query.TreatedNavigablePath;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -23,7 +22,6 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 	private final SqmListJoin<O,T> wrappedPath;
 	private final EntityDomainType<S> treatTarget;
 
-	@SuppressWarnings("WeakerAccess")
 	public SqmTreatedListJoin(
 			SqmListJoin<O, T> wrappedPath,
 			EntityDomainType<S> treatTarget,

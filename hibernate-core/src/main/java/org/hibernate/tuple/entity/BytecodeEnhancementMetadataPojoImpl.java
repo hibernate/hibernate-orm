@@ -40,7 +40,7 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 			CompositeType nonAggregatedCidMapper,
 			boolean collectionsInDefaultFetchGroupEnabled,
 			PersisterCreationContext creationContext) {
-		final Class mappedClass = persistentClass.getMappedClass();
+		final Class<?> mappedClass = persistentClass.getMappedClass();
 		final boolean enhancedForLazyLoading = PersistentAttributeInterceptable.class.isAssignableFrom( mappedClass );
 		final LazyAttributesMetadata lazyAttributesMetadata = enhancedForLazyLoading
 				? LazyAttributesMetadata.from( persistentClass, true, collectionsInDefaultFetchGroupEnabled, creationContext )
@@ -57,16 +57,15 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 	}
 
 	private final String entityName;
-	private final Class entityClass;
+	private final Class<?> entityClass;
 	private final Set<String> identifierAttributeNames;
 	private final CompositeType nonAggregatedCidMapper;
 	private final boolean enhancedForLazyLoading;
 	private final LazyAttributesMetadata lazyAttributesMetadata;
 
-	@SuppressWarnings("WeakerAccess")
-	protected BytecodeEnhancementMetadataPojoImpl(
+	BytecodeEnhancementMetadataPojoImpl(
 			String entityName,
-			Class entityClass,
+			Class<?> entityClass,
 			Set<String> identifierAttributeNames,
 			CompositeType nonAggregatedCidMapper,
 			boolean enhancedForLazyLoading,
@@ -105,7 +104,7 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 
 		final BytecodeLazyAttributeInterceptor interceptor = extractLazyInterceptor( entity );
 		if ( interceptor instanceof LazyAttributeLoadingInterceptor ) {
-			return ( (LazyAttributeLoadingInterceptor) interceptor ).hasAnyUninitializedAttributes();
+			return interceptor.hasAnyUninitializedAttributes();
 		}
 
 		//noinspection RedundantIfStatement
@@ -124,7 +123,7 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 
 		final BytecodeLazyAttributeInterceptor interceptor = extractLazyInterceptor( entity );
 		if ( interceptor instanceof LazyAttributeLoadingInterceptor ) {
-			return ( (LazyAttributeLoadingInterceptor) interceptor ).isAttributeLoaded( attributeName );
+			return interceptor.isAttributeLoaded( attributeName );
 		}
 
 		return true;

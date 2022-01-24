@@ -22,7 +22,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -99,8 +99,8 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
-		return jdbcMapping.getMappedJavaTypeDescriptor();
+	public JavaType<?> getJavaType() {
+		return jdbcMapping.getMappedJavaType();
 	}
 
 	@Override
@@ -170,7 +170,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				columnReference,
-				getJavaTypeDescriptor(),
+				getJavaType(),
 				sessionFactory.getTypeConfiguration()
 		);
 

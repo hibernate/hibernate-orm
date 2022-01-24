@@ -40,7 +40,7 @@ public final class MessageHelper {
 	public static String infoString(String entityName, Object id) {
 		StringBuilder s = new StringBuilder();
 		s.append( '[' );
-		if( entityName == null ) {
+		if ( entityName == null ) {
 			s.append( "<null entity name>" );
 		}
 		else {
@@ -237,7 +237,7 @@ public final class MessageHelper {
 	 */
 	public static String collectionInfoString(
 			CollectionPersister persister,
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			Object collectionKey,
 			SharedSessionContractImplementor session ) {
 		
@@ -360,7 +360,7 @@ public final class MessageHelper {
 		else {
 			// TODO: This is a crappy backup if a property-ref is used.
 			// If the reference is an object w/o toString(), this isn't going to work.
-			s.append( id.toString() );
+			s.append( id );
 		}
 	}
 

@@ -19,7 +19,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -53,7 +53,7 @@ public class StandardArraySemantics<E> implements CollectionSemantics<E[], E> {
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
 //		return (Object[]) Array.newInstance(
-//				collectionDescriptor.getJavaTypeDescriptor().getJavaType().getComponentType(),
+//				collectionDescriptor.getJavaType().getJavaType().getComponentType(),
 //				anticipatedSize
 //		);
 		throw new UnsupportedOperationException();

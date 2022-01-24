@@ -84,7 +84,6 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 		);
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected Cache<Object, Object> getOrCreateCache(String unqualifiedRegionName, SessionFactoryImplementor sessionFactory) {
 		verifyStarted();
 		assert !RegionNameQualifier.INSTANCE.isQualified( unqualifiedRegionName, sessionFactory.getSessionFactoryOptions() );
@@ -101,7 +100,6 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 		return cache;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected Cache<Object, Object> createCache(String regionName) {
 		switch ( missingCacheStrategy ) {
 			case CREATE_WARN:
@@ -195,7 +193,6 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 		);
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected CacheManager resolveCacheManager(SessionFactoryOptions settings, Map properties) {
 		final Object explicitCacheManager = properties.get( ConfigSettings.CACHE_MANAGER );
 		if ( explicitCacheManager != null ) {
@@ -214,7 +211,6 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 		return cacheManager;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected ClassLoader getClassLoader(CachingProvider cachingProvider) {
 		// todo (5.3) : shouldn't this use Hibernate's AggregatedClassLoader?
 		return cachingProvider.getDefaultClassLoader();
@@ -246,7 +242,6 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 		return properties != null ? (String) properties.get( prop ) : null;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected CachingProvider getCachingProvider(final Map properties){
 		final CachingProvider cachingProvider;
 		final String provider = getProp( properties, ConfigSettings.PROVIDER );

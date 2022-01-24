@@ -109,17 +109,17 @@ import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.SqlExpressable;
+import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
-import org.hibernate.query.CastType;
-import org.hibernate.query.FetchClauseType;
-import org.hibernate.query.IntervalType;
-import org.hibernate.query.NullOrdering;
-import org.hibernate.query.TemporalUnit;
-import org.hibernate.query.TrimSpec;
+import org.hibernate.query.sqm.CastType;
+import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.query.sqm.NullOrdering;
+import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
@@ -152,7 +152,7 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.LongNVarcharJdbcType;
@@ -176,16 +176,43 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
 
 /**
- * Represents a dialect of SQL implemented by a particular RDBMS. Subclasses
- * implement Hibernate compatibility with different database platforms.
+ * Represents a dialect of SQL implemented by a particular RDBMS. Every
+ * subclass of this class implements support for a certain database
+ * platform. For example, {@link PostgreSQLDialect} implements support
+ * for PostgreSQL, and {@link MySQLDialect} implements support for MySQL.
  * <p>
- * Subclasses must provide a public constructor that registers a set of type
- * mappings from JDBC type codes to database native type names, along with
- * default Hibernate properties. This constructor may have no parameters, or
- * it may have a single parameter of type
- * {@link org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo}.
+ * A subclass must provide a public constructor with a single parameter
+ * of type {@link DialectResolutionInfo}. Alternatively, for purposes of
+ * backward compatibility with older versions of Hibernate, a constructor
+ * with no parameters is also allowed.
  * <p>
- * Subclasses should be immutable.
+ * Almost every subclass must, as a bare minimum, override at least:
+ * <ul>
+ *     <li>{@link #columnType(int)} to define a mapping from JDBC
+ *     {@linkplain Types type codes} to database column types, and
+ *     <li>{@link #initializeFunctionRegistry(QueryEngine)} to register
+ *     mappings for standard HQL functions with the
+ *     {@link org.hibernate.query.sqm.function.SqmFunctionRegistry}.
+ * </ul>
+ * A subclass representing a dialect of SQL which deviates significantly
+ * from ANSI SQL will certainly override many additional operations.
+ * <p>
+ * Subclasses should be threadsafe and immutable.
+ * <p>
+ * Since Hibernate 6, a single subclass of {@code Dialect} represents all
+ * releases of a given product-specific SQL dialect. The version of the
+ * database is exposed at runtime via the {@link DialectResolutionInfo}
+ * passed to the constructor, and by the {@link #getVersion()} property.
+ * <p>
+ * Programs using Hibernate should migrate away from the use of versioned
+ * dialect classes like, for example, {@link PostgreSQL95Dialect}. These
+ * classes are now deprecated and will be removed in a future release.
+ * <p>
+ * A custom {@code Dialect} may be specified using the configuration
+ * property {@value org.hibernate.cfg.AvailableSettings#DIALECT}, but
+ * for supported databases this property is unnecessary, and Hibernate
+ * will select the correct {@code Dialect} based on the JDBC URL and
+ * {@link DialectResolutionInfo}.
  *
  * @author Gavin King, David Channon
  */
@@ -254,8 +281,6 @@ public abstract class Dialect implements ConversionContext {
 	protected void initDefaultProperties() {
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE,
 				Integer.toString( getDefaultStatementBatchSize() ) );
-		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY,
-				Boolean.toString( getDefaultUseStreamsForBinary() ) );
 		getDefaultProperties().setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION,
 				Boolean.toString( getDefaultNonContextualLobCreation() ) );
 		getDefaultProperties().setProperty( Environment.USE_GET_GENERATED_KEYS,
@@ -1243,7 +1268,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * The default value to use for the configuration property
-	 * {@link Environment#STATEMENT_BATCH_SIZE}.
+	 * {@value Environment#STATEMENT_BATCH_SIZE}.
 	 */
 	public int getDefaultStatementBatchSize() {
 		return 1;
@@ -1251,15 +1276,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * The default value to use for the configuration property
-	 * {@link Environment#USE_STREAMS_FOR_BINARY}.
-	 */
-	public boolean getDefaultUseStreamsForBinary() {
-		return false;
-	}
-
-	/**
-	 * The default value to use for the configuration property
-	 * {@link Environment#NON_CONTEXTUAL_LOB_CREATION}.
+	 * {@value Environment#NON_CONTEXTUAL_LOB_CREATION}.
 	 */
 	public boolean getDefaultNonContextualLobCreation() {
 		return false;
@@ -1267,7 +1284,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * The default value to use for the configuration property
-	 * {@link Environment#USE_GET_GENERATED_KEYS}.
+	 * {@value Environment#USE_GET_GENERATED_KEYS}.
 	 */
 	public boolean getDefaultUseGetGeneratedKeys() {
 		return true;
@@ -1292,14 +1309,14 @@ public abstract class Dialect implements ConversionContext {
 
 		final NationalizationSupport nationalizationSupport = getNationalizationSupport();
 		if ( nationalizationSupport == NationalizationSupport.EXPLICIT ) {
-			typeContributions.contributeJdbcTypeDescriptor( NCharJdbcType.INSTANCE );
-			typeContributions.contributeJdbcTypeDescriptor( NVarcharJdbcType.INSTANCE );
-			typeContributions.contributeJdbcTypeDescriptor( LongNVarcharJdbcType.INSTANCE );
-			typeContributions.contributeJdbcTypeDescriptor( NClobJdbcType.DEFAULT );
+			typeContributions.contributeJdbcType( NCharJdbcType.INSTANCE );
+			typeContributions.contributeJdbcType( NVarcharJdbcType.INSTANCE );
+			typeContributions.contributeJdbcType( LongNVarcharJdbcType.INSTANCE );
+			typeContributions.contributeJdbcType( NClobJdbcType.DEFAULT );
 		}
 
 		if ( useInputStreamToInsertBlob() ) {
-			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
+			typeContributions.getTypeConfiguration().getJdbcTypeRegistry().addDescriptor(
 					Types.CLOB,
 					ClobJdbcType.STREAM_BINDING
 			);
@@ -1404,14 +1421,14 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Get the name of the database type appropriate for casting operations
-	 * (via the CAST() SQL function) for the given {@link SqlExpressable}
+	 * (via the CAST() SQL function) for the given {@link SqlExpressible}
 	 * SQL type.
 	 *
 	 * @return The database type name
 	 */
-	public String getCastTypeName(SqlExpressable type, Long length, Integer precision, Integer scale) {
+	public String getCastTypeName(SqlExpressible type, Long length, Integer precision, Integer scale) {
 		final JdbcMapping jdbcMapping = type.getJdbcMapping();
-		final JdbcType jdbcType = jdbcMapping.getJdbcTypeDescriptor();
+		final JdbcType jdbcType = jdbcMapping.getJdbcType();
 		final JavaType<?> javaType = jdbcMapping.getJavaTypeDescriptor();
 		Size size;
 		if ( length == null && precision == null ) {
@@ -1501,7 +1518,8 @@ public abstract class Dialect implements ConversionContext {
 					return target;
 				}
 				catch (SQLException e ) {
-					throw session.getFactory().getSQLExceptionHelper().convert( e, "unable to merge BLOB data" );
+					throw session.getFactory().getJdbcServices().getSqlExceptionHelper()
+							.convert( e, "unable to merge BLOB data" );
 				}
 			}
 			else {
@@ -1521,7 +1539,7 @@ public abstract class Dialect implements ConversionContext {
 					return target;
 				}
 				catch (SQLException e ) {
-					throw session.getFactory().getSQLExceptionHelper().convert( e, "unable to merge CLOB data" );
+					throw session.getFactory().getJdbcServices().getSqlExceptionHelper().convert( e, "unable to merge CLOB data" );
 				}
 			}
 			else {
@@ -1541,7 +1559,7 @@ public abstract class Dialect implements ConversionContext {
 					return target;
 				}
 				catch (SQLException e ) {
-					throw session.getFactory().getSQLExceptionHelper().convert( e, "unable to merge NCLOB data" );
+					throw session.getFactory().getJdbcServices().getSqlExceptionHelper().convert( e, "unable to merge NCLOB data" );
 				}
 			}
 			else {
@@ -1568,7 +1586,7 @@ public abstract class Dialect implements ConversionContext {
 						: lobCreator.createBlob( original.getBinaryStream(), original.length() );
 			}
 			catch (SQLException e) {
-				throw session.getFactory().getSQLExceptionHelper().convert( e, "unable to merge BLOB data" );
+				throw session.getFactory().getJdbcServices().getSqlExceptionHelper().convert( e, "unable to merge BLOB data" );
 			}
 		}
 
@@ -1584,7 +1602,7 @@ public abstract class Dialect implements ConversionContext {
 						: lobCreator.createClob( original.getCharacterStream(), original.length() );
 			}
 			catch (SQLException e) {
-				throw session.getFactory().getSQLExceptionHelper().convert( e, "unable to merge CLOB data" );
+				throw session.getFactory().getJdbcServices().getSqlExceptionHelper().convert( e, "unable to merge CLOB data" );
 			}
 		}
 
@@ -1600,7 +1618,7 @@ public abstract class Dialect implements ConversionContext {
 						: lobCreator.createNClob( original.getCharacterStream(), original.length() );
 			}
 			catch (SQLException e) {
-				throw session.getFactory().getSQLExceptionHelper().convert( e, "unable to merge NCLOB data" );
+				throw session.getFactory().getJdbcServices().getSqlExceptionHelper().convert( e, "unable to merge NCLOB data" );
 			}
 		}
 	};
@@ -3409,7 +3427,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect support window functions like `row_number() over (..)`
+	 * Does this dialect support window functions like {@code row_number() over (..)}?
 	 *
 	 * @return {@code true} if the underlying database supports window functions,
 	 * {@code false} otherwise.  The default is {@code false}.
@@ -3419,7 +3437,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect support the SQL lateral keyword or a proprietary alternative=
+	 * Does this dialect support the SQL lateral keyword or a proprietary alternative?
 	 *
 	 * @return {@code true} if the underlying database supports lateral,
 	 * {@code false} otherwise.  The default is {@code false}.
@@ -3477,9 +3495,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does the fetching JDBC statement warning for logging is enabled by default
-	 *
-	 * @return boolean
+	 * Is JDBC statement warning logging enabled by default?
 	 *
 	 * @since 5.1
 	 */
@@ -3487,14 +3503,16 @@ public abstract class Dialect implements ConversionContext {
 		return true;
 	}
 
+	public void augmentPhysicalTableTypes(List<String> tableTypesList) {
+		// nothing to do
+	}
+
 	public void augmentRecognizedTableTypes(List<String> tableTypesList) {
 		// nothing to do
 	}
 
 	/**
-	 * Does the underlying database support partition by
-	 *
-	 * @return boolean
+	 * Does the underlying database support partition by?
 	 *
 	 * @since 5.2
 	 */
@@ -3513,6 +3531,14 @@ public abstract class Dialect implements ConversionContext {
 		return databaseMetaData != null && databaseMetaData.supportsNamedParameters();
 	}
 
+	/**
+	 * Determines whether this database requires the use
+	 * of explicit nationalized character data types.
+	 * <p>
+	 * That is, whether the use of {@link Types#NCHAR},
+	 * {@link Types#NVARCHAR}, and {@link Types#NCLOB} is
+	 * required for nationalized character data (Unicode).
+	 */
 	public NationalizationSupport getNationalizationSupport() {
 		return NationalizationSupport.EXPLICIT;
 	}
@@ -3833,7 +3859,7 @@ public abstract class Dialect implements ConversionContext {
 
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		appender.appendSql( "X'" );
-		PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.appendString( appender, bytes );
+		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
 		appender.appendSql( '\'' );
 	}
 
@@ -4027,7 +4053,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Return the name used to identify the given field
 	 * as an argument to the {@code extract()} function,
-	 * or of this dialect's {@link #extractPattern equivalent}
+	 * or of this dialect's {@linkplain #extractPattern equivalent}
 	 * function.
 	 * <p>
 	 * This method does not need to handle
@@ -4067,8 +4093,8 @@ public abstract class Dialect implements ConversionContext {
 	 * Return the name used to identify the given unit of
 	 * duration as an argument to {@code #timestampadd()}
 	 * or {@code #timestampdiff()}, or of this dialect's
-	 * {@link #timestampaddPattern equivalent}
-	 * {@link #timestampdiffPattern functions}.
+	 * {@linkplain #timestampaddPattern equivalent}
+	 * {@linkplain #timestampdiffPattern functions}.
 	 * <p>
 	 * This method does not need to handle
 	 * {@link TemporalUnit#NANOSECOND},

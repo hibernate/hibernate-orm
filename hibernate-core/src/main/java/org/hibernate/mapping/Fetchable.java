@@ -12,8 +12,8 @@ import org.hibernate.FetchMode;
  * @author Gavin King
  */
 public interface Fetchable {
-	public FetchMode getFetchMode();
-	public void setFetchMode(FetchMode joinedFetch);
-	public boolean isLazy();
-	public void setLazy(boolean lazy);
+	FetchMode getFetchMode();
+	void setFetchMode(FetchMode joinedFetch);
+	boolean isLazy();
+	void setLazy(boolean lazy);
 }

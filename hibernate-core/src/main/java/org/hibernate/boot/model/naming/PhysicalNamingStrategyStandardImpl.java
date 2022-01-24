@@ -22,27 +22,27 @@ public class PhysicalNamingStrategyStandardImpl implements PhysicalNamingStrateg
 	public static final PhysicalNamingStrategyStandardImpl INSTANCE = new PhysicalNamingStrategyStandardImpl();
 
 	@Override
-	public Identifier toPhysicalCatalogName(Identifier name, JdbcEnvironment context) {
-		return name;
+	public Identifier toPhysicalCatalogName(Identifier logicalName, JdbcEnvironment context) {
+		return logicalName;
 	}
 
 	@Override
-	public Identifier toPhysicalSchemaName(Identifier name, JdbcEnvironment context) {
-		return name;
+	public Identifier toPhysicalSchemaName(Identifier logicalName, JdbcEnvironment context) {
+		return logicalName;
 	}
 
 	@Override
-	public Identifier toPhysicalTableName(Identifier name, JdbcEnvironment context) {
-		return name;
+	public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment context) {
+		return logicalName;
 	}
 
 	@Override
-	public Identifier toPhysicalSequenceName(Identifier name, JdbcEnvironment context) {
-		return name;
+	public Identifier toPhysicalSequenceName(Identifier logicalName, JdbcEnvironment context) {
+		return logicalName;
 	}
 
 	@Override
-	public Identifier toPhysicalColumnName(Identifier name, JdbcEnvironment context) {
-		return name;
+	public Identifier toPhysicalColumnName(Identifier logicalName, JdbcEnvironment context) {
+		return logicalName;
 	}
 }

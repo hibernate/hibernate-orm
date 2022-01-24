@@ -36,9 +36,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		annotatedClasses = LobEntity.class
 )
 @SessionFactory
-@ServiceRegistry(
-		settings = @Setting(name = Environment.USE_STREAMS_FOR_BINARY, value = "true")
-)
 public class JpaLargeBlobTest {
 
 	protected Class<?>[] getAnnotatedClasses() {

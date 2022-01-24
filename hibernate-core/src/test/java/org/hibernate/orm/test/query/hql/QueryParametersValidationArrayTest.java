@@ -25,7 +25,7 @@ import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractClassJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.AbstractClassJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
@@ -35,6 +35,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -42,6 +43,7 @@ import org.junit.jupiter.api.Test;
  */
 @TestForIssue( jiraKey = "HHH-12292")
 @RequiresDialect(H2Dialect.class)
+@SkipForDialect(dialectClass = H2Dialect.class, majorVersion = 2, reason = "Array support was changed to now be typed")
 @Jpa(
 		annotatedClasses = QueryParametersValidationArrayTest.Event.class
 )
@@ -101,11 +103,11 @@ public class QueryParametersValidationArrayTest {
 		}
 
 		@Override
-		public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
-			return new BasicBinder<X>( javaTypeDescriptor, this) {
+		public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
+			return new BasicBinder<X>( javaType, this) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-					StringArrayTypeDescriptor arrayTypeDescriptor = (StringArrayTypeDescriptor) javaTypeDescriptor;
+					StringArrayTypeDescriptor arrayTypeDescriptor = (StringArrayTypeDescriptor) javaType;
 					st.setArray(index, st.getConnection().createArrayOf(
 							arrayTypeDescriptor.getSqlArrayType(),
 							arrayTypeDescriptor.unwrap((String[]) value, Object[].class, options)
@@ -121,21 +123,21 @@ public class QueryParametersValidationArrayTest {
 		}
 
 		@Override
-		public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-			return new BasicExtractor<X>( javaTypeDescriptor, this) {
+		public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+			return new BasicExtractor<X>( javaType, this) {
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-					return javaTypeDescriptor.wrap( rs.getArray( paramIndex ), options);
+					return javaType.wrap( rs.getArray( paramIndex ), options);
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-					return javaTypeDescriptor.wrap(statement.getArray(index), options);
+					return javaType.wrap( statement.getArray( index), options);
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-					return javaTypeDescriptor.wrap(statement.getArray(name), options);
+					return javaType.wrap( statement.getArray( name), options);
 				}
 			};
 		}
@@ -143,7 +145,7 @@ public class QueryParametersValidationArrayTest {
 	}
 
 	public static class StringArrayTypeDescriptor
-			extends AbstractClassJavaTypeDescriptor<String[]> {
+			extends AbstractClassJavaType<String[]> {
 
 		public static final StringArrayTypeDescriptor INSTANCE = new StringArrayTypeDescriptor();
 

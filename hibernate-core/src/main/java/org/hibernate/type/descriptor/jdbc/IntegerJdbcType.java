@@ -51,47 +51,47 @@ public class IntegerJdbcType implements JdbcType {
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Integer.class );
+		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( Integer.class );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
-		return new JdbcLiteralFormatterNumericData( javaTypeDescriptor, Integer.class );
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
+		return new JdbcLiteralFormatterNumericData( javaType, Integer.class );
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
+		return new BasicBinder<X>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				st.setInt( index, javaTypeDescriptor.unwrap( value, Integer.class, options ) );
+				st.setInt( index, javaType.unwrap( value, Integer.class, options ) );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				st.setInt( name, javaTypeDescriptor.unwrap( value, Integer.class, options ) );
+				st.setInt( name, javaType.unwrap( value, Integer.class, options ) );
 			}
 		};
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+		return new BasicExtractor<X>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getInt( paramIndex ), options );
+				return javaType.wrap( rs.getInt( paramIndex ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getInt( index ), options );
+				return javaType.wrap( statement.getInt( index ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getInt( name ), options );
+				return javaType.wrap( statement.getInt( name ), options );
 			}
 		};
 	}

@@ -15,7 +15,6 @@ import org.hamcrest.Matcher;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public class InitializationCheckMatcher<T> extends BaseMatcher<T> {
 	public static final InitializationCheckMatcher INITIALIZED_MATCHER = new InitializationCheckMatcher();
 	public static final InitializationCheckMatcher UNINITIALIZED_MATCHER = new InitializationCheckMatcher( false );

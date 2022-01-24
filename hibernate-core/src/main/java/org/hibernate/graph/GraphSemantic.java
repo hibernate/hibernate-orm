@@ -6,9 +6,16 @@
  */
 package org.hibernate.graph;
 
+import java.util.Locale;
+
+import org.hibernate.jpa.LegacySpecHints;
+
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_FETCH_GRAPH;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
+
 /**
- * JPA specifies two distinct ways to apply an {@link jakarta.persistence.EntityGraph},
- * as a {@link #FETCH "fetch graph"}, or as a {@link #LOAD "load graph"}.
+ * JPA specifies two distinct ways to apply an {@link jakarta.persistence.EntityGraph} -
+ * as a {@link #FETCH "fetch graph"} or as a {@link #LOAD "load graph"}.
  *
  * @author Steve Ebersole
  */
@@ -22,7 +29,7 @@ public enum GraphSemantic {
 	 * are not fetched.
 	 * </ul>
 	 */
-	FETCH( "javax.persistence.fetchgraph", "jakarta.persistence.fetchgraph" ),
+	FETCH( HINT_SPEC_FETCH_GRAPH, LegacySpecHints.HINT_JAVAEE_FETCH_GRAPH ),
 
 	/**
 	 * Indicates that an {@link jakarta.persistence.EntityGraph} should be interpreted as a JPA "load graph".
@@ -33,48 +40,69 @@ public enum GraphSemantic {
 	 * depending on the mapping of the attribute, instead of forcing {@code FetchType.LAZY}.
 	 * </ul>
 	 */
-	LOAD( "javax.persistence.loadgraph", "jakarta.persistence.loadgraph" );
+	LOAD( HINT_SPEC_LOAD_GRAPH, LegacySpecHints.HINT_JAVAEE_LOAD_GRAPH );
 
-	private final String jpaHintName;
-	private final String jakartaJpaHintName;
+	private final String jakartaHintName;
+	private final String javaeeHintName;
 
-	GraphSemantic(String jpaHintName, String jakartaJpaHintName) {
-		this.jpaHintName = jpaHintName;
-		this.jakartaJpaHintName = jakartaJpaHintName;
+	GraphSemantic(String jakartaHintName, String javaeeHintName) {
+		this.jakartaHintName = jakartaHintName;
+		this.javaeeHintName = javaeeHintName;
 	}
 
 	/**
-	 * The hint name that should be used with JPA.
+	 * The corresponding Jakarta Persistence hint name.
 	 *
-	 * @see jakarta.persistence.Query#setHint(String, Object)
+	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_FETCH_GRAPH
+	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_LOAD_GRAPH
 	 */
+	public String getJakartaHintName() {
+		return jakartaHintName;
+	}
+
+	/**
+	 * The hint name that should be used with Java Persistence.
+	 *
+	 * @see org.hibernate.jpa.LegacySpecHints#HINT_JAVAEE_FETCH_GRAPH
+	 * @see org.hibernate.jpa.LegacySpecHints#HINT_JAVAEE_LOAD_GRAPH
+	 *
+	 * @deprecated (since 6.0) Use {@link #getJakartaHintName} instead
+	 */
+	@Deprecated
 	public String getJpaHintName() {
-		return jpaHintName;
+		return javaeeHintName;
 	}
 
-	/**
-	 * The hint name that should be used with Jakarta Persistence.
-	 *
-	 * @see jakarta.persistence.Query#setHint(String, Object)
-	 */
-	public String getJakartaJpaHintName() {
-		return jakartaJpaHintName;
-	}
-
-	public static GraphSemantic fromJpaHintName(String hintName) {
+	public static GraphSemantic fromHintName(String hintName) {
 		assert hintName != null;
 
-		if ( FETCH.getJpaHintName().equals( hintName ) || FETCH.getJakartaJpaHintName().equals( hintName ) ) {
+		if ( FETCH.getJakartaHintName().equals( hintName ) || FETCH.getJpaHintName().equals( hintName ) ) {
 			return FETCH;
 		}
 
-		if ( LOAD.getJpaHintName().equalsIgnoreCase( hintName ) || LOAD.getJakartaJpaHintName().equalsIgnoreCase( hintName ) ) {
+		if ( LOAD.getJakartaHintName().equalsIgnoreCase( hintName ) || LOAD.getJpaHintName().equalsIgnoreCase( hintName ) ) {
 			return LOAD;
 		}
 
 		throw new IllegalArgumentException(
-				"Unknown EntityGraph hint name [" + hintName + "]; " +
-						"expecting `" + FETCH.jpaHintName + "` or `" + LOAD.jpaHintName + "`."
+				String.format(
+						Locale.ROOT,
+						"Unknown EntityGraph hint name - `%s`.  " +
+								"Expecting `%s` or `%s` (or `%s` and `%s`).",
+								hintName,
+						FETCH.jakartaHintName,
+						LOAD.jakartaHintName,
+						FETCH.javaeeHintName,
+						LOAD.javaeeHintName
+				)
 		);
+	}
+
+	/**
+	 * @deprecated (since 6.0) Use {@link #fromHintName} instead
+	 */
+	@Deprecated
+	public static GraphSemantic fromJpaHintName(String hintName) {
+		return fromHintName( hintName );
 	}
 }

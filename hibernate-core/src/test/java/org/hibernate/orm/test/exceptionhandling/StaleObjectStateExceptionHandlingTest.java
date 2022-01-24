@@ -25,9 +25,8 @@ public class StaleObjectStateExceptionHandlingTest extends BaseExceptionHandling
 
 	public StaleObjectStateExceptionHandlingTest(
 			BootstrapMethod bootstrapMethod,
-			ExceptionHandlingSetting exceptionHandlingSetting,
 			ExceptionExpectations exceptionExpectations) {
-		super( bootstrapMethod, exceptionHandlingSetting, exceptionExpectations );
+		super( bootstrapMethod, exceptionExpectations );
 	}
 
 	@Override

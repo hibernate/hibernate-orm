@@ -9,6 +9,19 @@ package org.hibernate.userguide.caching;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.hibernate.CacheMode;
+import org.hibernate.Session;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.NaturalId;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.stat.CacheRegionStatistics;
+import org.hibernate.stat.Statistics;
+
+import org.junit.Ignore;
+import org.junit.Test;
+
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.Cacheable;
@@ -18,19 +31,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
-import org.hibernate.CacheMode;
-import org.hibernate.Session;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.NaturalId;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.QueryHints;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.stat.CacheRegionStatistics;
-import org.hibernate.stat.Statistics;
-
-import org.junit.Ignore;
-import org.junit.Test;
-
+import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
+import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertNotNull;
 
@@ -131,8 +133,8 @@ public class SecondLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
 					"from Person p " +
 					"where p.id > :id", Person.class)
 					.setParameter("id", 0L)
-					.setHint(QueryHints.HINT_CACHEABLE, "true")
-					.setHint(QueryHints.HINT_CACHE_REGION, "query.cache.person")
+					.setHint(HINT_CACHEABLE, "true")
+					.setHint(HINT_CACHE_REGION, "query.cache.person")
 					.getResultList();
 			//end::caching-query-region-jpa-example[]
 		});
@@ -159,8 +161,8 @@ public class SecondLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
 				"from Person p " +
 				"where p.id > :id", Person.class)
 			.setParameter("id", 0L)
-			.setHint(QueryHints.HINT_CACHEABLE, "true")
-			.setHint(QueryHints.HINT_CACHE_REGION, "query.cache.person")
+			.setHint(HINT_CACHEABLE, "true")
+			.setHint(HINT_CACHE_REGION, "query.cache.person")
 			.setHint("jakarta.persistence.cache.storeMode", CacheStoreMode.REFRESH)
 			.getResultList();
 			//end::caching-query-region-store-mode-jpa-example[]
@@ -223,7 +225,7 @@ public class SecondLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
 			//tag::caching-management-cache-mode-query-jpa-example[]
 			List<Person> persons = entityManager.createQuery(
 				"select p from Person p", Person.class)
-			.setHint(QueryHints.HINT_CACHEABLE, "true")
+			.setHint(HINT_CACHEABLE, "true")
 			.setHint("jakarta.persistence.cache.retrieveMode" , CacheRetrieveMode.USE)
 			.setHint("jakarta.persistence.cache.storeMode" , CacheStoreMode.REFRESH)
 			.getResultList();

@@ -51,7 +51,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 @ServiceRegistry(
 		settings = {
 				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" ),

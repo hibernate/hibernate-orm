@@ -75,10 +75,8 @@ public class FilterConfiguration {
 		}
 		if ( aliasEntityMap != null ) {
 			for ( Map.Entry<String, String> entry : aliasEntityMap.entrySet() ) {
-				ret.put(
-						entry.getKey(),
-						Joinable.class.cast( factory.getEntityPersister( entry.getValue() ) ).getTableName()
-				);
+				Joinable joinable = (Joinable) factory.getMetamodel().entityPersister(entry.getValue());
+				ret.put( entry.getKey(), joinable.getTableName() );
 			}
 		}
 		return ret;

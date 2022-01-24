@@ -13,7 +13,7 @@
  * manipulation and execution
  *
  * @see org.hibernate.query.hql.HqlTranslator
- * @see org.hibernate.query.hql.spi.HqlQueryImplementor
+ * @see org.hibernate.query.hql.spi.SqmQueryImplementor
  * @see org.hibernate.query.hql.spi.NamedHqlQueryMemento
  */
 package org.hibernate.query.hql;

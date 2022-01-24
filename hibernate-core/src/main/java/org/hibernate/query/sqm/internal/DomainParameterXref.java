@@ -30,7 +30,6 @@ import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public class DomainParameterXref {
 	/**
 	 * Create a DomainParameterXref for the parameters defined in the passed

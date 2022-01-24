@@ -11,14 +11,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import jakarta.persistence.EntityGraph;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
-import jakarta.persistence.Subgraph;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
-import org.hibernate.jpa.QueryHints;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.orm.test.jpa.graphs.Company;
@@ -31,10 +26,20 @@ import org.hibernate.orm.test.jpa.graphs.Market;
 import org.hibernate.orm.test.jpa.graphs.Student;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.Before;
 import org.junit.Test;
 
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.persistence.Subgraph;
+import jakarta.persistence.TypedQuery;
+
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
+import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_FETCH_GRAPH;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_FETCH_GRAPH;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -55,7 +60,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		entityGraph.addAttributeNodes( "location" );
 		entityGraph.addAttributeNodes( "markets" );
 		Query query = entityManager.createQuery( "from " + Company.class.getName() );
-		query.setHint( QueryHints.HINT_LOADGRAPH, entityGraph );
+		query.setHint( HINT_SPEC_LOAD_GRAPH, entityGraph );
 		Company company = (Company) query.getSingleResult();
 
 		entityManager.getTransaction().commit();
@@ -79,7 +84,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		subSubgraph.addAttributeNodes( "friends" );
 		
 		query = entityManager.createQuery( "from " + Company.class.getName() );
-		query.setHint( QueryHints.HINT_LOADGRAPH, entityGraph );
+		query.setHint( HINT_SPEC_LOAD_GRAPH, entityGraph );
 		company = (Company) query.getSingleResult();
 		
 		entityManager.getTransaction().commit();
@@ -112,6 +117,32 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "https://hibernate.atlassian.net/browse/HHH-14855")
+	public void testEntityGraphStringQueryHint() {
+		TransactionUtil2.inTransaction( entityManagerFactory(), (session) -> {
+			final String hql = "from Company c";
+			final String graphString = "Company( location, markets )";
+
+			{
+				TypedQuery<Company> query = session.createQuery( hql, Company.class );
+				final Company company = query.getSingleResult();
+				assertFalse( Hibernate.isInitialized( company.employees ) );
+				assertFalse( Hibernate.isInitialized( company.location ) );
+				assertFalse( Hibernate.isInitialized( company.markets ) );
+			}
+
+			{
+				TypedQuery<Company> query = session.createQuery( hql, Company.class );
+				query.setHint( HINT_SPEC_FETCH_GRAPH, graphString );
+				final Company company = query.getSingleResult();
+				assertFalse( Hibernate.isInitialized( company.employees ) );
+				assertTrue( Hibernate.isInitialized( company.location ) );
+				assertTrue( Hibernate.isInitialized( company.markets ) );
+			}
+		} );
+	}
+
+	@Test
 	@TestForIssue(jiraKey = "HHH-8776")
 	public void testFetchGraph() {
 		EntityManager entityManager = getOrCreateEntityManager();
@@ -121,7 +152,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		entityGraph.addAttributeNodes( "location" );
 		entityGraph.addAttributeNodes( "markets" );
 		Query query = entityManager.createQuery( "from " + Company.class.getName() );
-		query.setHint( QueryHints.HINT_FETCHGRAPH, entityGraph );
+		query.setHint( HINT_JAVAEE_FETCH_GRAPH, entityGraph );
 		Company company = (Company) query.getSingleResult();
 
 		entityManager.getTransaction().commit();
@@ -145,7 +176,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		subSubgraph.addAttributeNodes( "friends" );
 
 		query = entityManager.createQuery( "from " + Company.class.getName() );
-		query.setHint( QueryHints.HINT_FETCHGRAPH, entityGraph );
+		query.setHint( HINT_JAVAEE_FETCH_GRAPH, entityGraph );
 		company = (Company) query.getSingleResult();
 
 		entityManager.getTransaction().commit();
@@ -188,7 +219,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		EntityGraph<CompanyFetchProfile> entityGraph = entityManager.createEntityGraph( CompanyFetchProfile.class );
 		entityGraph.addAttributeNodes( "markets" );
 		Query query = entityManager.createQuery( "from " + CompanyFetchProfile.class.getName() );
-		query.setHint( QueryHints.HINT_FETCHGRAPH, entityGraph );
+		query.setHint( HINT_JAVAEE_FETCH_GRAPH, entityGraph );
 		CompanyFetchProfile company = (CompanyFetchProfile) query.getSingleResult();
 
 		entityManager.getTransaction().commit();
@@ -212,7 +243,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		subSubgraph.addAttributeNodes( "friends" );
 
 		query = entityManager.createQuery( "from " + CompanyFetchProfile.class.getName() );
-		query.setHint( QueryHints.HINT_FETCHGRAPH, entityGraph );
+		query.setHint( HINT_JAVAEE_FETCH_GRAPH, entityGraph );
 		company = (CompanyFetchProfile) query.getSingleResult();
 
 		entityManager.getTransaction().commit();
@@ -268,7 +299,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		//entityGraph.addAttributeNodes( "location" );
 		entityGraph.addAttributeNodes( "markets" );
 		Query query = entityManager.createQuery( "from " + Company.class.getName() + " c order by c.location.zip, c.id" );
-		query.setHint( QueryHints.HINT_LOADGRAPH, entityGraph );
+		query.setHint( HINT_SPEC_LOAD_GRAPH, entityGraph );
 		List results = query.getResultList();
 
 		// - 1st will be the Company with location.zip == 11234 with an empty markets collection
@@ -318,7 +349,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		entityGraph.addAttributeNodes( "markets" );
 		Query query = entityManager.createQuery( "from " + Company.class.getName() + " where location.zip = :zip")
 				.setParameter( "zip", 12345 );
-		query.setHint( QueryHints.HINT_LOADGRAPH, entityGraph );
+		query.setHint( HINT_SPEC_LOAD_GRAPH, entityGraph );
 		Company company = (Company) query.getSingleResult();
 
 		entityManager.getTransaction().commit();
@@ -343,7 +374,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 
 		query = entityManager.createQuery( "from " + Company.class.getName()  + " where location.zip = :zip" )
 				.setParameter( "zip", 12345 );
-		query.setHint( QueryHints.HINT_LOADGRAPH, entityGraph );
+		query.setHint( HINT_SPEC_LOAD_GRAPH, entityGraph );
 		company = (Company) query.getSingleResult();
 
 		entityManager.getTransaction().commit();
@@ -386,7 +417,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		// Ensure the EntityGraph and explicit fetches do not conflict.
 		Query query = entityManager.createQuery( "from " + Company.class.getName()
 				+ " as c left join fetch c.location left join fetch c.employees" );
-		query.setHint( QueryHints.HINT_LOADGRAPH, entityGraph );
+		query.setHint( HINT_SPEC_LOAD_GRAPH, entityGraph );
 		Company company = (Company) query.getSingleResult();
 		
 		entityManager.getTransaction().commit();
@@ -414,7 +445,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		Query query = entityManager.createQuery( "from " + Company.class.getName()
 						+ " as c left join fetch c.location left join fetch c.employees where c.location.zip = :zip")
 				.setParameter("zip", 12345);
-		query.setHint( QueryHints.HINT_LOADGRAPH, entityGraph );
+		query.setHint( HINT_SPEC_LOAD_GRAPH, entityGraph );
 		Company company = (Company) query.getSingleResult();
 
 		entityManager.getTransaction().commit();
@@ -437,7 +468,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		EntityGraph<Company> entityGraph = entityManager.createEntityGraph(Company.class);
 		entityGraph.addAttributeNodes("location");
 		Query query = entityManager.createQuery("select c from " + Company.class.getName() + " c where c.employees IS EMPTY");
-		query.setHint(QueryHints.HINT_LOADGRAPH, entityGraph);
+		query.setHint(HINT_SPEC_LOAD_GRAPH, entityGraph);
 		query.getResultList();
 
 		entityManager.getTransaction().commit();
@@ -479,7 +510,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 			EntityGraph<?> graph = entityManager.getEntityGraph( "Student.Full" );
 
 			List<Student> students = entityManager.createNamedQuery( "LIST_OF_STD", Student.class )
-					.setHint( QueryHints.HINT_FETCHGRAPH, graph )
+					.setHint( HINT_JAVAEE_FETCH_GRAPH, graph )
 					.getResultList();
 
 			assertEquals( 2, students.size() );

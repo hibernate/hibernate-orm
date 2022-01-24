@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
 /**
@@ -42,7 +42,7 @@ public class SqmModifiedSubQueryExpression<T> extends AbstractSqmExpression<T> {
 	public SqmModifiedSubQueryExpression(
 			SqmSubQuery<T> subQuery,
 			Modifier modifier,
-			SqmExpressable<T> resultType,
+			SqmExpressible<T> resultType,
 			NodeBuilder builder) {
 		super( resultType, builder );
 		this.subQuery = subQuery;

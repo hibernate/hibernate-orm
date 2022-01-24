@@ -53,49 +53,49 @@ public class FloatJdbcType implements JdbcType {
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
 		if ( length != null && length <= typeConfiguration.getServiceRegistry().getService( JdbcServices.class ).getDialect().getFloatPrecision() ) {
-			return (BasicJavaType<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Float.class );
+			return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( Float.class );
 		}
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Double.class );
+		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( Double.class );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
-		return new JdbcLiteralFormatterNumericData( javaTypeDescriptor, Float.class );
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
+		return new JdbcLiteralFormatterNumericData( javaType, Float.class );
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
+		return new BasicBinder<X>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				st.setFloat( index, javaTypeDescriptor.unwrap( value, Float.class, options ) );
+				st.setFloat( index, javaType.unwrap( value, Float.class, options ) );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				st.setFloat( name, javaTypeDescriptor.unwrap( value, Float.class, options ) );
+				st.setFloat( name, javaType.unwrap( value, Float.class, options ) );
 			}
 		};
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+		return new BasicExtractor<X>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getFloat( paramIndex ), options );
+				return javaType.wrap( rs.getFloat( paramIndex ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getFloat( index ), options );
+				return javaType.wrap( statement.getFloat( index ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getFloat( name ), options );
+				return javaType.wrap( statement.getFloat( name ), options );
 			}
 		};
 	}

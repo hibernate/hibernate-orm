@@ -43,6 +43,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Resolvable;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.mapping.SortableValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
@@ -58,7 +59,6 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.GeneratedValueResolver;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -256,22 +256,22 @@ public class MappingModelCreationHelper {
 
 		if ( valueConverter != null ) {
 			// we want to "decompose" the "type" into its various pieces as expected by the mapping
-			assert valueConverter.getRelationalJavaDescriptor() == resolution.getRelationalJavaDescriptor();
+			assert valueConverter.getRelationalJavaType() == resolution.getRelationalJavaType();
 
 			//noinspection unchecked
 			final BasicType<?> mappingBasicType = creationProcess.getCreationContext()
 					.getDomainModel()
 					.getTypeConfiguration()
 					.getBasicTypeRegistry()
-					.resolve( valueConverter.getRelationalJavaDescriptor(), resolution.getJdbcTypeDescriptor() );
+					.resolve( valueConverter.getRelationalJavaType(), resolution.getJdbcType() );
 
-			final GeneratedValueResolver generatedValueResolver;
-			if ( valueGeneration == null ) {
-				generatedValueResolver = NoGeneratedValueResolver.INSTANCE;
-			}
-			else if ( valueGeneration.getValueGenerator() == null ) {
-				// in-db generation
-			}
+//			final GeneratedValueResolver generatedValueResolver;
+//			if ( valueGeneration == null ) {
+//				generatedValueResolver = NoGeneratedValueResolver.INSTANCE;
+//			}
+//			else if ( valueGeneration.getValueGenerator() == null ) {
+//				// in-db generation
+//			}
 
 			return new BasicAttributeMapping(
 					attrName,
@@ -555,7 +555,7 @@ public class MappingModelCreationHelper {
 		final String sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( bootProperty.getName() );
 
 		final CollectionMappingType<?> collectionMappingType;
-		final JavaTypeRegistry jtdRegistry = creationContext.getJavaTypeDescriptorRegistry();
+		final JavaTypeRegistry jtdRegistry = creationContext.getJavaTypeRegistry();
 
 		final CollectionPart elementDescriptor = interpretElement(
 				bootValueMapping,
@@ -569,7 +569,7 @@ public class MappingModelCreationHelper {
 		final CollectionPart indexDescriptor;
 		CollectionIdentifierDescriptor identifierDescriptor = null;
 
-		final CollectionSemantics collectionSemantics = collectionDescriptor.getCollectionSemantics();
+		final CollectionSemantics<?,?> collectionSemantics = collectionDescriptor.getCollectionSemantics();
 		switch ( collectionSemantics.getCollectionClassification() ) {
 			case ARRAY: {
 				collectionMappingType = new CollectionMappingTypeImpl(
@@ -1011,7 +1011,11 @@ public class MappingModelCreationHelper {
 				}
 				else {
 					declaringKeyPart = simpleFkTarget;
-					declaringKeyPropertyAccess = ( (PropertyBasedMapping) declaringKeyPart ).getPropertyAccess();
+//					declaringKeyPropertyAccess = ( (PropertyBasedMapping) declaringKeyPart ).getPropertyAccess();
+					declaringKeyPropertyAccess = new ChainedPropertyAccessImpl(
+							attributeMapping.getPropertyAccess(),
+							( (PropertyBasedMapping) declaringKeyPart ).getPropertyAccess()
+					);
 				}
 			}
 			else {
@@ -1220,7 +1224,8 @@ public class MappingModelCreationHelper {
 		if ( bootValueMapping instanceof Collection ) {
 			final Collection collectionBootValueMapping = (Collection) bootValueMapping;
 			componentType = (ComponentType) collectionBootValueMapping.getKey().getType();
-			sorted = false;
+			assert ( (SortableValue) collectionBootValueMapping.getKey() ).isSorted();
+			sorted = ( (SortableValue) collectionBootValueMapping.getKey() ).isSorted();
 		}
 		else {
 			final EntityType entityType = (EntityType) bootValueMapping.getType();
@@ -1230,6 +1235,7 @@ public class MappingModelCreationHelper {
 			if ( identifierOrUniqueKeyType instanceof ComponentType ) {
 				componentType = (ComponentType) identifierOrUniqueKeyType;
 				if ( bootValueMapping instanceof ToOne ) {
+					assert ( (ToOne) bootValueMapping ).isSorted();
 					sorted = ( (ToOne) bootValueMapping ).isSorted();
 				}
 				else {
@@ -1438,7 +1444,7 @@ public class MappingModelCreationHelper {
 
 			final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 			final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
-			final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
+			final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
 			final JavaType<Object> baseJtd = jtdRegistry.getDescriptor(Object.class);
 
 			return new DiscriminatedCollectionPart(
@@ -1520,26 +1526,24 @@ public class MappingModelCreationHelper {
 		}
 	}
 
-	@SuppressWarnings("rawtypes")
 	private static class CollectionMappingTypeImpl implements CollectionMappingType {
-		private final JavaType collectionJtd;
-		private final CollectionSemantics semantics;
+		private final JavaType<?> collectionJtd;
+		private final CollectionSemantics<?,?> semantics;
 
-		@SuppressWarnings("WeakerAccess")
 		public CollectionMappingTypeImpl(
-				JavaType collectionJtd,
-				CollectionSemantics semantics) {
+				JavaType<?> collectionJtd,
+				CollectionSemantics<?,?> semantics) {
 			this.collectionJtd = collectionJtd;
 			this.semantics = semantics;
 		}
 
 		@Override
-		public CollectionSemantics getCollectionSemantics() {
+		public CollectionSemantics<?,?> getCollectionSemantics() {
 			return semantics;
 		}
 
 		@Override
-		public JavaType getMappedJavaTypeDescriptor() {
+		public JavaType<?> getMappedJavaType() {
 			return collectionJtd;
 		}
 	}

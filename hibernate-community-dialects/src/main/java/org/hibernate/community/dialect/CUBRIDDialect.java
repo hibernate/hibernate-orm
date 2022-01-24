@@ -24,9 +24,9 @@ import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.IntervalType;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -40,11 +40,11 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import jakarta.persistence.TemporalType;
 
-import static org.hibernate.query.TemporalUnit.HOUR;
-import static org.hibernate.query.TemporalUnit.MINUTE;
-import static org.hibernate.query.TemporalUnit.NANOSECOND;
-import static org.hibernate.query.TemporalUnit.NATIVE;
-import static org.hibernate.query.TemporalUnit.SECOND;
+import static org.hibernate.query.sqm.TemporalUnit.HOUR;
+import static org.hibernate.query.sqm.TemporalUnit.MINUTE;
+import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
+import static org.hibernate.query.sqm.TemporalUnit.SECOND;
 
 /**
  * An SQL dialect for CUBRID (8.3.x and later).
@@ -119,11 +119,6 @@ public class CUBRIDDialect extends Dialect {
 	@Override
 	public int getDefaultStatementBatchSize() {
 		return 15;
-	}
-
-	@Override
-	public boolean getDefaultUseStreamsForBinary() {
-		return true;
 	}
 
 	@Override

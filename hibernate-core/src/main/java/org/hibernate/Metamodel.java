@@ -6,8 +6,6 @@
  */
 package org.hibernate;
 
-import jakarta.persistence.metamodel.EntityType;
-
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 
 /**
@@ -27,16 +25,6 @@ public interface Metamodel extends JpaMetamodel {
 	SessionFactory getSessionFactory();
 
 	/**
-	 * @deprecated since 5.2
-	 */
-	@Deprecated
-	default EntityType getEntityTypeByName(String entityName) {
-		return entity( entityName );
-	}
-
-	String getImportedClassName(String className);
-
-	/**
 	 * Given the name of an entity class, determine all the class and interface names by which it can be
 	 * referenced in an HQL query.
 	 *
@@ -45,7 +33,6 @@ public interface Metamodel extends JpaMetamodel {
 	 * @return the names of all persistent (mapped) classes that extend or implement the
 	 *     given class or interface, accounting for implicit/explicit polymorphism settings
 	 *     and excluding mapped subclasses/joined-subclasses of other classes in the result.
-	 * @throws MappingException
 	 */
 	String[] getImplementors(String entityName);
 

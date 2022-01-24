@@ -33,7 +33,7 @@ public interface Expression extends SqlAstNode, SqlSelectionProducer {
 	default SqlSelection createSqlSelection(
 			int jdbcPosition,
 			int valuesArrayPosition,
-			JavaType javaTypeDescriptor,
+			JavaType javaType,
 			TypeConfiguration typeConfiguration) {
 		return new SqlSelectionImpl(
 				jdbcPosition,

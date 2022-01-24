@@ -11,11 +11,12 @@ import java.io.Closeable;
 import org.hibernate.query.Query;
 
 /**
- * A result iterator that allows moving around within the results
- * by arbitrary increments. The {@code Query} / {@code ScrollableResults}
- * pattern is very similar to the JDBC {@code PreparedStatement}/
- * {@code ResultSet} pattern and the semantics of methods of this interface
- * are similar to the similarly named methods on {@code ResultSet}.
+ * A result iterator that allows moving around within the results by
+ * arbitrary increments. The {@link Query} / {@link ScrollableResults}
+ * pattern is very similar to the JDBC {@link java.sql.PreparedStatement}/
+ * {@link java.sql.ResultSet} pattern and so the semantics of methods
+ * of this interface are similar to the similarly-named methods of
+ * {@code ResultSet}.
  * <p>
  * Contrary to JDBC, columns of results are numbered from zero.
  *
@@ -51,9 +52,11 @@ public interface ScrollableResults<R> extends AutoCloseable, Closeable {
 	boolean previous();
 
 	/**
-	 * Scroll the specified number of positions from the current position.
+	 * Scroll the specified number of positions from the current
+	 * position.
 	 *
-	 * @param positions a positive (forward) or negative (backward) number of rows
+	 * @param positions a positive (forward) or negative (backward)
+	 *                  number of rows
 	 *
 	 * @return {@code true} if there is a result at the new location
 	 */
@@ -81,7 +84,9 @@ public interface ScrollableResults<R> extends AutoCloseable, Closeable {
 	boolean first();
 
 	/**
-	 * Go to a location just before first result,  This is the location of the cursor on a newly returned
+	 * Go to a location just before first result.
+	 * <p>
+	 * This is the location of the cursor on a newly returned
 	 * scrollable result.
 	 */
 	void beforeFirst();
@@ -94,7 +99,8 @@ public interface ScrollableResults<R> extends AutoCloseable, Closeable {
 	/**
 	 * Is this the first result?
 	 *
-	 * @return {@code true} if this is the first row of results, otherwise {@code false}
+	 * @return {@code true} if this is the first row of results,
+	 *         otherwise {@code false}
 	 */
 	boolean isFirst();
 
@@ -106,18 +112,25 @@ public interface ScrollableResults<R> extends AutoCloseable, Closeable {
 	boolean isLast();
 
 	/**
-	 * Get the current position in the results. The first position is number 0 (unlike JDBC).
+	 * Get the current position in the results.
+	 * <p>
+	 * The first position is number 0 (unlike JDBC).
 	 *
-	 * @return The current position number, numbered from 0; -1 indicates that there is no current row
+	 * @return The current position number, numbered from 0;
+	 *         -1 indicates that there is no current row
 	 */
 	int getRowNumber();
 
 	/**
-	 * Set the current position in the result set.  Can be numbered from the first position (positive number) or
-	 * the last row (negative number).
+	 * Set the current position in the result set.
+	 * <p>
+	 * Can be numbered from the first result (positive number)
+	 * or backward from the last result (negative number).
 	 *
-	 * @param rowNumber the row number.  A positive number indicates a value numbered from the first row; a
-	 * negative number indicates a value numbered from the last row.
+	 * @param rowNumber the row number. A positive number indicates
+	 *                  a value numbered from the first row; a
+	 *                  negative number indicates a value numbered
+	 *                  from the last row.
 	 *
 	 * @return true if there is a row at that row number
 	 */

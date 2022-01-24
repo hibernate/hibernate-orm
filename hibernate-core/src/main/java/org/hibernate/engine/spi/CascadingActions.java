@@ -54,11 +54,11 @@ public class CascadingActions {
 				Object anything,
 				boolean isCascadeDeleteEnabled) {
 			LOG.tracev( "Cascading to delete: {0}", entityName );
-			session.delete( entityName, child, isCascadeDeleteEnabled, (Set) anything );
+			session.delete( entityName, child, isCascadeDeleteEnabled, (Set<?>) anything );
 		}
 
 		@Override
-		public Iterator getCascadableChildrenIterator(
+		public Iterator<?> getCascadableChildrenIterator(
 				EventSource session,
 				CollectionType collectionType,
 				Object collection) {
@@ -106,7 +106,7 @@ public class CascadingActions {
 		}
 
 		@Override
-		public Iterator getCascadableChildrenIterator(
+		public Iterator<?> getCascadableChildrenIterator(
 				EventSource session,
 				CollectionType collectionType,
 				Object collection) {
@@ -139,11 +139,11 @@ public class CascadingActions {
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
 			LOG.tracev( "Cascading to refresh: {0}", entityName );
-			session.refresh( entityName, child, (Map) anything );
+			session.refresh( entityName, child, (Map<?,?>) anything );
 		}
 
 		@Override
-		public Iterator getCascadableChildrenIterator(
+		public Iterator<?> getCascadableChildrenIterator(
 				EventSource session,
 				CollectionType collectionType,
 				Object collection) {
@@ -179,7 +179,7 @@ public class CascadingActions {
 		}
 
 		@Override
-		public Iterator getCascadableChildrenIterator(
+		public Iterator<?> getCascadableChildrenIterator(
 				EventSource session,
 				CollectionType collectionType,
 				Object collection) {
@@ -220,7 +220,7 @@ public class CascadingActions {
 		}
 
 		@Override
-		public Iterator getCascadableChildrenIterator(
+		public Iterator<?> getCascadableChildrenIterator(
 				EventSource session,
 				CollectionType collectionType,
 				Object collection) {
@@ -258,11 +258,11 @@ public class CascadingActions {
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
 			LOG.tracev( "Cascading to merge: {0}", entityName );
-			session.merge( entityName, child, (Map) anything );
+			session.merge( entityName, child, (Map<?,?>) anything );
 		}
 
 		@Override
-		public Iterator getCascadableChildrenIterator(
+		public Iterator<?> getCascadableChildrenIterator(
 				EventSource session,
 				CollectionType collectionType,
 				Object collection) {
@@ -295,11 +295,11 @@ public class CascadingActions {
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
 			LOG.tracev( "Cascading to persist: {0}", entityName );
-			session.persist( entityName, child, (Map) anything );
+			session.persist( entityName, child, (Map<?,?>) anything );
 		}
 
 		@Override
-		public Iterator getCascadableChildrenIterator(
+		public Iterator<?> getCascadableChildrenIterator(
 				EventSource session,
 				CollectionType collectionType,
 				Object collection) {
@@ -338,11 +338,11 @@ public class CascadingActions {
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
 			LOG.tracev( "Cascading to persist on flush: {0}", entityName );
-			session.persistOnFlush( entityName, child, (Map) anything );
+			session.persistOnFlush( entityName, child, (Map<?,?>) anything );
 		}
 
 		@Override
-		public Iterator getCascadableChildrenIterator(
+		public Iterator<?> getCascadableChildrenIterator(
 				EventSource session,
 				CollectionType collectionType,
 				Object collection) {
@@ -425,7 +425,7 @@ public class CascadingActions {
 		}
 
 		@Override
-		public Iterator getCascadableChildrenIterator(
+		public Iterator<?> getCascadableChildrenIterator(
 				EventSource session,
 				CollectionType collectionType,
 				Object collection) {
@@ -470,7 +470,7 @@ public class CascadingActions {
 	 *
 	 * @return The children iterator.
 	 */
-	public static Iterator getAllElementsIterator(
+	public static Iterator<?> getAllElementsIterator(
 			EventSource session,
 			CollectionType collectionType,
 			Object collection) {
@@ -481,7 +481,7 @@ public class CascadingActions {
 	 * Iterate just the elements of the collection that are already there. Don't load
 	 * any new elements from the database.
 	 */
-	public static Iterator getLoadedElementsIterator(
+	public static Iterator<?> getLoadedElementsIterator(
 			SharedSessionContractImplementor session,
 			CollectionType collectionType,
 			Object collection) {
@@ -492,11 +492,12 @@ public class CascadingActions {
 		else {
 			// does not handle arrays (thats ok, cos they can't be lazy)
 			// or newly instantiated collections, so we can do the cast
-			return ((PersistentCollection) collection).queuedAdditionIterator();
+			return ((PersistentCollection<?>) collection).queuedAdditionIterator();
 		}
 	}
 
 	private static boolean collectionIsInitialized(Object collection) {
-		return !(collection instanceof PersistentCollection) || ((PersistentCollection) collection).wasInitialized();
+		return !(collection instanceof PersistentCollection)
+			|| ((PersistentCollection<?>) collection).wasInitialized();
 	}
 }

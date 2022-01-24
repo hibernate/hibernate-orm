@@ -22,19 +22,19 @@ public class PostgreSQLJsonJdbcType extends PostgreSQLPGObjectJdbcType {
 	}
 
 	@Override
-	protected <X> X fromString(String string, JavaType<X> javaTypeDescriptor, WrapperOptions options) {
+	protected <X> X fromString(String string, JavaType<X> javaType, WrapperOptions options) {
 		return options.getSessionFactory().getFastSessionServices().getJsonFormatMapper().fromString(
 				string,
-				javaTypeDescriptor,
+				javaType,
 				options
 		);
 	}
 
 	@Override
-	protected <X> String toString(X value, JavaType<X> javaTypeDescriptor, WrapperOptions options) {
+	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) {
 		return options.getSessionFactory().getFastSessionServices().getJsonFormatMapper().toString(
 				value,
-				javaTypeDescriptor,
+				javaType,
 				options
 		);
 	}

@@ -12,11 +12,8 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import org.hibernate.collection.spi.CollectionInitializerProducer;
-import org.hibernate.collection.spi.InitializerProducerBuilder;
-import org.hibernate.collection.spi.MapSemantics;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;

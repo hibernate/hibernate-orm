@@ -11,7 +11,7 @@ import java.util.function.BiFunction;
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.results.BasicValuedFetchBuilder;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.complete.EntityResultImpl;
@@ -47,7 +47,7 @@ public class EntityDomainResultBuilder implements ResultBuilder {
 
 	@Override
 	public Class<?> getJavaType() {
-		return entityDescriptor.getJavaTypeDescriptor().getJavaTypeClass();
+		return entityDescriptor.getJavaType().getJavaTypeClass();
 	}
 
 	@Override

@@ -25,19 +25,19 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 	private static final String BIND_MSG_TEMPLATE = "binding parameter [%s] as [%s] - [%s]";
 	private static final String NULL_BIND_MSG_TEMPLATE = "binding parameter [%s] as [%s] - [null]";
 
-	private final JavaType<J> javaDescriptor;
+	private final JavaType<J> javaType;
 	private final JdbcType jdbcType;
 
-	public JavaType<J> getJavaTypeDescriptor() {
-		return javaDescriptor;
+	public JavaType<J> getJavaType() {
+		return javaType;
 	}
 
-	public JdbcType getJdbcTypeDescriptor() {
+	public JdbcType getJdbcType() {
 		return jdbcType;
 	}
 
-	public BasicBinder(JavaType<J> javaDescriptor, JdbcType jdbcType) {
-		this.javaDescriptor = javaDescriptor;
+	public BasicBinder(JavaType<J> javaType, JdbcType jdbcType) {
+		this.javaType = javaType;
 		this.jdbcType = jdbcType;
 	}
 
@@ -57,7 +57,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 				JdbcBindingLogging.logBinding(
 						index,
 						jdbcType.getDefaultSqlTypeCode(),
-						getJavaTypeDescriptor().extractLoggableRepresentation( value )
+						getJavaType().extractLoggableRepresentation( value )
 				);
 			}
 			doBind( st, value, index, options );
@@ -80,7 +80,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 				JdbcBindingLogging.logBinding(
 						name,
 						jdbcType.getDefaultSqlTypeCode(),
-						getJavaTypeDescriptor().extractLoggableRepresentation( value )
+						getJavaType().extractLoggableRepresentation( value )
 				);
 			}
 			doBind( st, value, name, options );

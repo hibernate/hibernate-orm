@@ -14,8 +14,14 @@ import java.util.Set;
 import org.hibernate.type.Type;
 
 /**
- * A FilterDefinition defines the global attributes of a dynamic filter.  This
- * information includes its name as well as its defined parameters (name and type).
+ * Represents the definition of a {@link org.hibernate.Filter filter}.
+ * This information includes the {@linkplain #filterName name} of the
+ * filter, along with the {@linkplain #parameterTypes name and type}
+ * of every parameter of the filter. A filter may optionally have a
+ * {@linkplain #defaultFilterCondition default condition}.
+ *
+ * @see org.hibernate.annotations.FilterDef
+ * @see org.hibernate.Filter
  *
  * @author Steve Ebersole
  */

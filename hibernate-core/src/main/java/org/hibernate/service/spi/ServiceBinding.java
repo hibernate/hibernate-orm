@@ -18,14 +18,14 @@ import org.jboss.logging.Logger;
 public final class ServiceBinding<R extends Service> {
 	private static final Logger log = Logger.getLogger( ServiceBinding.class );
 
-	public static interface ServiceLifecycleOwner {
-		public <R extends Service> R initiateService(ServiceInitiator<R> serviceInitiator);
+	public interface ServiceLifecycleOwner {
+		<R extends Service> R initiateService(ServiceInitiator<R> serviceInitiator);
 
-		public <R extends Service> void configureService(ServiceBinding<R> binding);
-		public <R extends Service> void injectDependencies(ServiceBinding<R> binding);
-		public <R extends Service> void startService(ServiceBinding<R> binding);
+		<R extends Service> void configureService(ServiceBinding<R> binding);
+		<R extends Service> void injectDependencies(ServiceBinding<R> binding);
+		<R extends Service> void startService(ServiceBinding<R> binding);
 
-		public <R extends Service> void stopService(ServiceBinding<R> binding);
+		<R extends Service> void stopService(ServiceBinding<R> binding);
 	}
 
 	private final ServiceLifecycleOwner lifecycleOwner;

@@ -14,7 +14,7 @@ import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
 
 /**
@@ -36,7 +36,7 @@ public class SqmTuple<T>
 		this( Arrays.asList( groupedExpressions ), nodeBuilder );
 	}
 
-	public SqmTuple(NodeBuilder nodeBuilder, SqmExpressable<T> type, SqmExpression<?>... groupedExpressions) {
+	public SqmTuple(NodeBuilder nodeBuilder, SqmExpressible<T> type, SqmExpression<?>... groupedExpressions) {
 		this( Arrays.asList( groupedExpressions ), type, nodeBuilder );
 	}
 
@@ -44,14 +44,14 @@ public class SqmTuple<T>
 		this( groupedExpressions, null, nodeBuilder );
 	}
 
-	public SqmTuple(List<SqmExpression<?>> groupedExpressions, SqmExpressable<T> type, NodeBuilder nodeBuilder) {
+	public SqmTuple(List<SqmExpression<?>> groupedExpressions, SqmExpressible<T> type, NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
 		if ( groupedExpressions.isEmpty() ) {
 			throw new QueryException( "tuple grouping cannot be constructed over zero expressions" );
 		}
 		this.groupedExpressions = groupedExpressions;
 		if ( type == null ) {
-			setExpressableType( nodeBuilder.getTypeConfiguration().resolveTupleType( groupedExpressions ) );
+			setExpressibleType( nodeBuilder.getTypeConfiguration().resolveTupleType( groupedExpressions ) );
 		}
 	}
 

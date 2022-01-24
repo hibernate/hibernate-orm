@@ -17,15 +17,15 @@ public interface TableSpecificationSource {
 	 *
 	 * @return The schema name. If {@code null}, the binder will apply the default.
 	 */
-	public String getExplicitSchemaName();
+	String getExplicitSchemaName();
 
 	/**
 	 * Obtain the supplied catalog name
 	 *
 	 * @return The catalog name. If {@code null}, the binder will apply the default.
 	 */
-	public String getExplicitCatalogName();
+	String getExplicitCatalogName();
 
-	public String getComment();
+	String getComment();
 
 }

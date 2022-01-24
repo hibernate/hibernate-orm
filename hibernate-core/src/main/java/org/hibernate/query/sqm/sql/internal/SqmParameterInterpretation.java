@@ -13,12 +13,12 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -36,7 +36,7 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 public class SqmParameterInterpretation implements Expression, DomainResultProducer, SqlTupleContainer {
 	private final SqmParameter<?> sqmParameter;
 	private final QueryParameterImplementor<?> queryParameter;
-	private final MappingModelExpressable<?> valueMapping;
+	private final MappingModelExpressible<?> valueMapping;
 	private final Function<QueryParameterImplementor<?>, QueryParameterBinding<?>> queryParameterBindingResolver;
 
 	private final Expression resolvedExpression;
@@ -45,7 +45,7 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 			SqmParameter<?> sqmParameter,
 			QueryParameterImplementor<?> queryParameter,
 			List<JdbcParameter> jdbcParameters,
-			MappingModelExpressable<?> valueMapping,
+			MappingModelExpressible<?> valueMapping,
 			Function<QueryParameterImplementor<?>, QueryParameterBinding<?>> queryParameterBindingResolver) {
 		this.sqmParameter = sqmParameter;
 		this.queryParameter = queryParameter;
@@ -64,7 +64,7 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 		this.resolvedExpression = determineResolvedExpression( jdbcParameters, this.valueMapping );
 	}
 
-	private Expression determineResolvedExpression(List<JdbcParameter> jdbcParameters, MappingModelExpressable<?> valueMapping) {
+	private Expression determineResolvedExpression(List<JdbcParameter> jdbcParameters, MappingModelExpressible<?> valueMapping) {
 		if ( valueMapping instanceof EmbeddableValuedModelPart
 				|| valueMapping instanceof DiscriminatedAssociationModelPart ) {
 			return new SqlTuple( jdbcParameters, valueMapping );
@@ -84,7 +84,7 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 	}
 
 	@Override
-	public MappingModelExpressable<?> getExpressionType() {
+	public MappingModelExpressible<?> getExpressionType() {
 		return valueMapping;
 	}
 
@@ -105,18 +105,18 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 				.getCreationContext()
 				.getSessionFactory();
 
-		final SqmExpressable<?> sqmExpressable = nodeType.resolveExpressable( sessionFactory );
+		final SqmExpressible<?> sqmExpressible = nodeType.resolveExpressible( sessionFactory );
 
 		final SqlSelection sqlSelection = creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 				resolvedExpression,
-				sqmExpressable.getExpressableJavaTypeDescriptor(),
+				sqmExpressible.getExpressibleJavaType(),
 				sessionFactory.getTypeConfiguration()
 		);
 
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				sqmExpressable.getExpressableJavaTypeDescriptor()
+				sqmExpressible.getExpressibleJavaType()
 		);
 	}
 
@@ -147,11 +147,11 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 				.getCreationContext()
 				.getSessionFactory();
 
-		final SqmExpressable<?> sqmExpressable = nodeType.resolveExpressable( sessionFactory );
+		final SqmExpressible<?> sqmExpressible = nodeType.resolveExpressible( sessionFactory );
 
 		return creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 				resolvedExpression,
-				sqmExpressable.getExpressableJavaTypeDescriptor(),
+				sqmExpressible.getExpressibleJavaType(),
 				sessionFactory.getTypeConfiguration()
 		);
 	}

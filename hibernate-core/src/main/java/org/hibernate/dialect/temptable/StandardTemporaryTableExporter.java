@@ -14,7 +14,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public class StandardTemporaryTableExporter implements TemporaryTableExporter {
 	private final Dialect dialect;
 
@@ -46,7 +45,7 @@ public class StandardTemporaryTableExporter implements TemporaryTableExporter {
 
 		for ( TemporaryTableColumn column : temporaryTable.getColumns() ) {
 			buffer.append( column.getColumnName() ).append( ' ' );
-			final int sqlTypeCode = column.getJdbcMapping().getJdbcTypeDescriptor().getDefaultSqlTypeCode();
+			final int sqlTypeCode = column.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode();
 			final String databaseTypeName = column.getSqlTypeDefinition();
 
 			buffer.append( databaseTypeName );

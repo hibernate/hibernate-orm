@@ -15,7 +15,7 @@ import java.util.function.Consumer;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -31,7 +31,7 @@ import jakarta.persistence.criteria.Predicate;
  * @author Steve Ebersole
  */
 public class SqmMapEntryReference<K,V>
-		implements SqmSelectableNode<Map.Entry<K,V>>, Expression<Map.Entry<K,V>>, SqmExpressable<Map.Entry<K,V>> {
+		implements SqmSelectableNode<Map.Entry<K,V>>, Expression<Map.Entry<K,V>>, SqmExpressible<Map.Entry<K,V>> {
 	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	private final SqmPath<?> mapPath;
 	private final NodeBuilder nodeBuilder;
@@ -48,7 +48,7 @@ public class SqmMapEntryReference<K,V>
 
 		this.mapEntryTypeDescriptor = nodeBuilder.getDomainModel()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
+				.getJavaTypeRegistry()
 				.getDescriptor( Map.Entry.class );
 	}
 
@@ -73,12 +73,12 @@ public class SqmMapEntryReference<K,V>
 	}
 
 	@Override
-	public JavaType<Map.Entry<K, V>> getNodeJavaTypeDescriptor() {
+	public JavaType<Map.Entry<K, V>> getNodeJavaType() {
 		return mapEntryTypeDescriptor;
 	}
 
 	@Override
-	public JavaType<Map.Entry<K, V>> getExpressableJavaTypeDescriptor() {
+	public JavaType<Map.Entry<K, V>> getExpressibleJavaType() {
 		return mapEntryTypeDescriptor;
 	}
 
@@ -103,7 +103,7 @@ public class SqmMapEntryReference<K,V>
 	}
 
 	@Override
-	public SqmExpressable<Map.Entry<K, V>> getNodeType() {
+	public SqmExpressible<Map.Entry<K, V>> getNodeType() {
 		return this;
 	}
 

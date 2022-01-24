@@ -13,6 +13,7 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.geolatte.geom.codec.db.oracle.OracleJDBCTypeFactory;
@@ -25,14 +26,17 @@ import org.geolatte.geom.codec.db.oracle.OracleJDBCTypeFactory;
 public class SDOGeometryType implements JdbcType {
 
 	private final OracleJDBCTypeFactory typeFactory;
+	private final boolean useSTGeometry;
 
 	/**
 	 * Constructs a {@code SqlTypeDescriptor} for the Oracle SDOGeometry type.
 	 *
 	 * @param typeFactory the type factory to use.
+	 * @param useSTGeometry
 	 */
-	public SDOGeometryType(OracleJDBCTypeFactory typeFactory) {
+	public SDOGeometryType(OracleJDBCTypeFactory typeFactory, boolean useSTGeometry) {
 		this.typeFactory = typeFactory;
+		this.useSTGeometry = useSTGeometry;
 	}
 
 	@Override
@@ -45,14 +49,20 @@ public class SDOGeometryType implements JdbcType {
 		return SqlTypes.GEOMETRY;
 	}
 
+
+	@Override
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
+		return new OracleJdbcLiteralFormatter<>( javaTypeDescriptor );
+	}
+
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
 		return (ValueBinder<X>) new SDOGeometryValueBinder( javaTypeDescriptor, this, typeFactory );
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-		return (ValueExtractor<X>) new SDOGeometryValueExtractor( javaTypeDescriptor, this );
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+		return (ValueExtractor<X>) new SDOGeometryValueExtractor( javaType, this );
 	}
 
 	/**

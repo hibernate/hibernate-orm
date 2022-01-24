@@ -38,7 +38,7 @@ import org.hibernate.type.Type;
 
 /**
  * Delegate responsible for, in conjunction with the various
- * {@link CascadingAction actions}, implementing cascade processing.
+ * {@linkplain CascadingAction actions}, implementing cascade processing.
  *
  * @author Gavin King
  * @see CascadingAction
@@ -55,7 +55,6 @@ public final class Cascade {
 	 *
 	 * @param persister The parent's entity persister
 	 * @param parent The parent reference.
-	 * @throws HibernateException
 	 */
 	public static void cascade(
 			final CascadingAction action, final CascadePoint cascadePoint,
@@ -356,7 +355,7 @@ public final class Cascade {
 							}
 							else {
 								// Else, we must delete after the updates.
-								eventSource.delete( entityName, loadedValue, isCascadeDeleteEnabled, new HashSet() );
+								eventSource.delete( entityName, loadedValue, isCascadeDeleteEnabled, new HashSet<>() );
 							}
 						}
 					}
@@ -461,7 +460,7 @@ public final class Cascade {
 			final CascadeStyle style,
 			final Object anything,
 			final CollectionType type) {
-		final CollectionPersister persister = eventSource.getFactory().getCollectionPersister( type.getRole() );
+		final CollectionPersister persister = eventSource.getFactory().getMetamodel().collectionPersister(type.getRole());
 		final Type elemType = persister.getElementType();
 
 		CascadePoint elementsCascadePoint = cascadePoint;
@@ -538,7 +537,7 @@ public final class Cascade {
 				LOG.tracev( "Cascade {0} for collection: {1}", action, collectionType.getRole() );
 			}
 
-			final Iterator itr = action.getCascadableChildrenIterator( eventSource, collectionType, child );
+			final Iterator<?> itr = action.getCascadableChildrenIterator( eventSource, collectionType, child );
 			while ( itr.hasNext() ) {
 				cascadeProperty(
 						action,
@@ -565,7 +564,7 @@ public final class Cascade {
 				&& elemType.isEntityType()
 				&& child instanceof PersistentCollection
 				// a newly instantiated collection can't have orphans
-				&& ! ( (PersistentCollection) child ).isNewlyInstantiated();
+				&& ! ( (PersistentCollection<?>) child ).isNewlyInstantiated();
 
 		if ( deleteOrphans ) {
 			final boolean traceEnabled = LOG.isTraceEnabled();
@@ -576,7 +575,7 @@ public final class Cascade {
 			// 1. newly instantiated collections
 			// 2. arrays (we can't track orphans for detached arrays)
 			final String entityName = collectionType.getAssociatedEntityName( eventSource.getFactory() );
-			deleteOrphans( eventSource, entityName, (PersistentCollection) child );
+			deleteOrphans( eventSource, entityName, (PersistentCollection<?>) child );
 
 			if ( traceEnabled ) {
 				LOG.tracev( "Done deleting orphans for collection: {0}", collectionType.getRole() );
@@ -587,9 +586,9 @@ public final class Cascade {
 	/**
 	 * Delete any entities that were removed from the collection
 	 */
-	private static void deleteOrphans(EventSource eventSource, String entityName, PersistentCollection pc) throws HibernateException {
+	private static void deleteOrphans(EventSource eventSource, String entityName, PersistentCollection<?> pc) {
 		//TODO: suck this logic into the collection!
-		final Collection orphans;
+		final Collection<?> orphans;
 		if ( pc.wasInitialized() ) {
 			final CollectionEntry ce = eventSource.getPersistenceContextInternal().getCollectionEntry( pc );
 			orphans = ce==null
@@ -603,7 +602,7 @@ public final class Cascade {
 		for ( Object orphan : orphans ) {
 			if ( orphan != null ) {
 				LOG.tracev( "Deleting orphaned entity instance: {0}", entityName );
-				eventSource.delete( entityName, orphan, false, new HashSet() );
+				eventSource.delete( entityName, orphan, false, new HashSet<>() );
 			}
 		}
 	}

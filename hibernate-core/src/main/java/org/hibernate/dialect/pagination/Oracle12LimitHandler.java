@@ -10,7 +10,7 @@ import java.util.Locale;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.query.Limit;
+import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 
 /**

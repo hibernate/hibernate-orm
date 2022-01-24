@@ -9,7 +9,7 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
@@ -80,7 +80,7 @@ public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>
 	}
 
 	@Override
-	public SqmExpressable getNodeType() {
+	public SqmExpressible getNodeType() {
 		return type;
 	}
 

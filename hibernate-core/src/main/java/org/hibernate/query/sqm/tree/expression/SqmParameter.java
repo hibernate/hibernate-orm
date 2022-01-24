@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.BindableType;
 import org.hibernate.query.criteria.JpaParameterExpression;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 
 /**
  * Models a parameter expression declared in the query.
@@ -41,7 +41,8 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 	/**
 	 * Can a collection/array of values be bound to this parameter?
 	 * <P/>
-	 * This is allowed in very limited contexts within the query:<ol>
+	 * This is allowed in very limited contexts within the query:
+	 * <ol>
 	 *     <li>as the value of an IN predicate if the only value is a single param</li>
 	 *     <li>(in non-strict JPA mode) as the final vararg to a function</li>
 	 * </ol>
@@ -63,10 +64,10 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 	BindableType<T> getAnticipatedType();
 
 	@Override
-	SqmExpressable<T> getNodeType();
+	SqmExpressible<T> getNodeType();
 
 	/**
 	 * Make a copy
 	 */
-	SqmParameter copy();
+	SqmParameter<T> copy();
 }

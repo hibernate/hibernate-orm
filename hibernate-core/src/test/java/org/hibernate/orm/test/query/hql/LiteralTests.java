@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
+import org.hibernate.testing.orm.domain.animal.Classification;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -23,7 +24,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
+import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+
+import org.assertj.core.api.Assertions;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
@@ -32,9 +36,9 @@ import static org.hamcrest.Matchers.is;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings({"deprecation","WeakerAccess"})
+@SuppressWarnings("deprecation")
 @ServiceRegistry
-@DomainModel( standardModels = StandardDomainModel.GAMBIT )
+@DomainModel( standardModels = {StandardDomainModel.GAMBIT, StandardDomainModel.ANIMAL} )
 @SessionFactory
 public class LiteralTests {
 
@@ -43,14 +47,14 @@ public class LiteralTests {
 		scope.inTransaction(
 				session -> {
 					byte[] bytes1 = (byte[]) session.createQuery( "select X'DEADBEEF'" ).getSingleResult();
-					assertThat( PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.toString( bytes1), is( "deadbeef") );
+					assertThat( PrimitiveByteArrayJavaType.INSTANCE.toString( bytes1), is( "deadbeef") );
 					byte[] bytes2 = (byte[]) session.createQuery( "select X'deadbeef'" ).getSingleResult();
-					assertThat( PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.toString(bytes2), is("deadbeef") );
+					assertThat( PrimitiveByteArrayJavaType.INSTANCE.toString( bytes2), is( "deadbeef") );
 
 					byte[] bytes3 = (byte[]) session.createQuery( "select {0xDE, 0xAD, 0xBE, 0xEF}" ).getSingleResult();
-					assertThat( PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.toString(bytes3), is("deadbeef") );
+					assertThat( PrimitiveByteArrayJavaType.INSTANCE.toString( bytes3), is( "deadbeef") );
 					byte[] bytes4 = (byte[]) session.createQuery( "select {0xde, 0xad, 0xbe, 0xef}" ).getSingleResult();
-					assertThat( PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.toString(bytes4), is("deadbeef") );
+					assertThat( PrimitiveByteArrayJavaType.INSTANCE.toString( bytes4), is( "deadbeef") );
 				}
 		);
 	}
@@ -265,4 +269,48 @@ public class LiteralTests {
 				}
 		);
 	}
+
+	@Test
+	public void testEnumLiteralInPredicate(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "from Zoo where classification=COOL" ).getResultList();
+					session.createQuery( "from Zoo where classification=Classification.COOL" ).getResultList();
+					session.createQuery( "from Zoo where classification=org.hibernate.testing.orm.domain.animal.Classification.COOL" ).getResultList();
+				}
+		);
+	}
+
+	@Test
+	public void testIntegerLiteralInSelect(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery( "select 1" ).getSingleResult(), is( 1 ) );
+				}
+		);
+	}
+
+	@Test
+	public void testEnumLiteralInSelect(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					{
+						final QueryImplementor<Object[]> query = session.createQuery( "select 1, org.hibernate.testing.orm.domain.animal.Classification.LAME" );
+						final Object[] result = query.getSingleResult();
+						final Object classification = result[ 1 ];
+
+						Assertions.assertThat( classification ).isEqualTo( Classification.LAME );
+					}
+
+					{
+						final QueryImplementor<Classification> query = session.createQuery( "select org.hibernate.testing.orm.domain.animal.Classification.LAME" );
+						final Classification result = query.getSingleResult();
+
+						Assertions.assertThat( result ).isEqualTo( Classification.LAME );
+					}
+				}
+		);
+	}
+
+
 }

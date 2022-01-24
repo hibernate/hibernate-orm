@@ -30,10 +30,10 @@ public class EmbeddableTypeImpl<J>
 	private final boolean isDynamic;
 
 	public EmbeddableTypeImpl(
-			JavaType<J> javaTypeDescriptor,
+			JavaType<J> javaType,
 			boolean isDynamic,
 			JpaMetamodel domainMetamodel) {
-		super( javaTypeDescriptor.getJavaType().getTypeName(), javaTypeDescriptor, null, domainMetamodel );
+		super( javaType.getJavaType().getTypeName(), javaType, null, domainMetamodel );
 		this.isDynamic = isDynamic;
 	}
 

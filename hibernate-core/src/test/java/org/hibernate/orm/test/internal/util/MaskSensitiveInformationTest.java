@@ -12,7 +12,6 @@ import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,12 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Bruno P. Kinoshita
  */
-@Jpa(
-		integrationSettings = {
-				@Setting( name = AvailableSettings.USER, value = "user" ),
-				@Setting( name = AvailableSettings.PASS, value = "pass" )
-		}
-)
+@Jpa
 public class MaskSensitiveInformationTest {
 	private static final String EXPECTED_MASKED_VALUE = "****";
 

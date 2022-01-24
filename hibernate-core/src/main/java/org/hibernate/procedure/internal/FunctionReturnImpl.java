@@ -42,7 +42,7 @@ public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 
 	public FunctionReturnImpl(ProcedureCallImplementor<T> procedureCall, OutputableType<T> ormType) {
 		this.procedureCall = procedureCall;
-		this.jdbcTypeCode = ormType.getJdbcTypeDescriptor().getJdbcTypeCode();
+		this.jdbcTypeCode = ormType.getJdbcType().getJdbcTypeCode();
 		this.ormType = ormType;
 	}
 
@@ -59,7 +59,7 @@ public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 		}
 		else {
 			final TypeConfiguration typeConfiguration = persistenceContext.getFactory().getMetamodel().getTypeConfiguration();
-			final JdbcType sqlTypeDescriptor = typeConfiguration.getJdbcTypeDescriptorRegistry()
+			final JdbcType sqlTypeDescriptor = typeConfiguration.getJdbcTypeRegistry()
 					.getDescriptor( getJdbcTypeCode() );
 			final BasicJavaType<?> javaTypeMapping = sqlTypeDescriptor
 					.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration );

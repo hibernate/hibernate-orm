@@ -20,7 +20,10 @@ import org.hibernate.query.ReturnableType;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
+import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -1580,7 +1583,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 						"locate",
 						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
-						"position(?1 in ?2)", "(position(?1 in substring(?2 from ?3))+?3)",
+						"position(?1 in ?2)", "(position(?1 in substring(?2 from ?3))+(?3)-1)",
 						STRING, STRING, INTEGER
 				)
 				.setArgumentListSignature( "(STRING pattern, STRING string[, INTEGER start])" );
@@ -1914,7 +1917,7 @@ public class CommonFunctionFactory {
 										return impliedType;
 									}
 								}
-								switch ( basicType.getJdbcTypeDescriptor().getJdbcTypeCode() ) {
+								switch ( basicType.getJdbcType().getJdbcTypeCode() ) {
 									case Types.SMALLINT:
 									case Types.TINYINT:
 									case Types.INTEGER:
@@ -1951,7 +1954,7 @@ public class CommonFunctionFactory {
 										arguments,
 										1
 								);
-								switch ( specifiedArgType.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode() ) {
+								switch ( specifiedArgType.getJdbcMapping().getJdbcType().getJdbcTypeCode() ) {
 									case Types.SMALLINT:
 									case Types.TINYINT:
 									case Types.INTEGER:
@@ -2331,8 +2334,7 @@ public class CommonFunctionFactory {
 				.setInvariantType(
 						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
 				)
-				.setExactArgumentCount( 2 )
-				.setParameterTypes(TEMPORAL, STRING)
+				.setArgumentsValidator( formatValidator() )
 				.setArgumentListSignature( "(TEMPORAL datetime as STRING pattern)" )
 				.register();
 	}
@@ -2347,8 +2349,7 @@ public class CommonFunctionFactory {
 				.setInvariantType(
 						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
 				)
-				.setExactArgumentCount( 2 )
-				.setParameterTypes(TEMPORAL, STRING)
+				.setArgumentsValidator( formatValidator() )
 				.setArgumentListSignature( "(TEMPORAL datetime as STRING pattern)" )
 				.register();
 	}
@@ -2363,8 +2364,7 @@ public class CommonFunctionFactory {
 				.setInvariantType(
 						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
 				)
-				.setExactArgumentCount( 2 )
-				.setParameterTypes(TEMPORAL, STRING)
+				.setArgumentsValidator( formatValidator() )
 				.setArgumentListSignature( "(TEMPORAL datetime as STRING pattern)" )
 				.register();
 	}
@@ -2379,10 +2379,13 @@ public class CommonFunctionFactory {
 				.setInvariantType(
 						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
 				)
-				.setExactArgumentCount( 2 )
-				.setParameterTypes(TEMPORAL, STRING)
+				.setArgumentsValidator( formatValidator() )
 				.setArgumentListSignature( "(TEMPORAL datetime as STRING pattern)" )
 				.register();
+	}
+
+	public static ArgumentsValidator formatValidator() {
+		return new ArgumentTypesValidator( StandardArgumentsValidators.exactly( 2 ), TEMPORAL, STRING );
 	}
 
 	/**
@@ -2444,10 +2447,10 @@ public class CommonFunctionFactory {
 			final JdbcMapping powerType = StandardFunctionReturnTypeResolvers
 					.extractArgumentJdbcMapping( typeConfiguration, arguments, 2 );
 
-			if ( baseType.getJdbcTypeDescriptor().isDecimal() ) {
+			if ( baseType.getJdbcType().isDecimal() ) {
 				return (ReturnableType<?>) arguments.get( 0 ).getNodeType();
 			}
-			else if ( powerType.getJdbcTypeDescriptor().isDecimal() ) {
+			else if ( powerType.getJdbcType().isDecimal() ) {
 				return (ReturnableType<?>) arguments.get( 1 ).getNodeType();
 			}
 			return typeConfiguration.getBasicTypeForJavaType( Double.class );
@@ -2464,10 +2467,10 @@ public class CommonFunctionFactory {
 					arguments,
 					2
 			);
-			if ( baseMapping.getJdbcMapping().getJdbcTypeDescriptor().isDecimal() ) {
+			if ( baseMapping.getJdbcMapping().getJdbcType().isDecimal() ) {
 				return baseMapping;
 			}
-			else if ( powerMapping.getJdbcMapping().getJdbcTypeDescriptor().isDecimal() ) {
+			else if ( powerMapping.getJdbcMapping().getJdbcType().isDecimal() ) {
 				return powerMapping;
 			}
 			return doubleType;

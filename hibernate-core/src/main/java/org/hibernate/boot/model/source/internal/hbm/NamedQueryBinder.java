@@ -26,7 +26,6 @@ import org.hibernate.internal.util.StringHelper;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public class NamedQueryBinder {
 	public static void processNamedQuery(
 			HbmLocalMetadataBuildingContext context,

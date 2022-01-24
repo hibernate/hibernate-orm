@@ -10,7 +10,10 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.service.Service;
 
 /**
- * A builder for {@link Batch} instances
+ * A builder for {@link Batch} instances.
+ * <p>
+ * A custom {@code BatchBuilder} may be selected using the configuration property
+ * {@value org.hibernate.cfg.AvailableSettings#BATCH_STRATEGY}.
  *
  * @author Steve Ebersole
  */

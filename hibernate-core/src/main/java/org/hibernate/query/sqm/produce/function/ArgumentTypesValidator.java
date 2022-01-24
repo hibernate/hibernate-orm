@@ -10,7 +10,7 @@ import org.hibernate.QueryException;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmCollation;
 import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
@@ -23,7 +23,7 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 import java.lang.reflect.Type;
 import java.util.List;
@@ -61,11 +61,11 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 		delegate.validate(arguments, functionName, queryEngine);
 		int count = 0;
 		for (SqmTypedNode<?> argument : arguments) {
-			JdbcTypeDescriptorIndicators indicators = queryEngine.getTypeConfiguration().getCurrentBaseSqlTypeIndicators();
-			SqmExpressable<?> nodeType = argument.getNodeType();
+			JdbcTypeIndicators indicators = queryEngine.getTypeConfiguration().getCurrentBaseSqlTypeIndicators();
+			SqmExpressible<?> nodeType = argument.getNodeType();
 			FunctionParameterType type = count < types.length ? types[count++] : types[types.length - 1];
 			if ( nodeType!=null ) {
-				JavaType<?> javaType = nodeType.getExpressableJavaTypeDescriptor();
+				JavaType<?> javaType = nodeType.getExpressibleJavaType();
 				if (javaType != null) {
 					try {
 						JdbcType jdbcType = javaType.getRecommendedJdbcType(indicators);
@@ -143,7 +143,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			if (type != null) {
 				checkType(
 						count, functionName, type,
-						mapping.getJdbcTypeDescriptor().getJdbcTypeCode(),
+						mapping.getJdbcType().getJdbcTypeCode(),
 						mapping.getJavaTypeDescriptor().getJavaType()
 				);
 			}

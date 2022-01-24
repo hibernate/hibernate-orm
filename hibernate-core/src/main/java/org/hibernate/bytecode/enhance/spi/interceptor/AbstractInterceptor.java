@@ -18,7 +18,6 @@ public abstract class AbstractInterceptor implements SessionAssociableIntercepto
 	private boolean allowLoadOutsideTransaction;
 	private String sessionFactoryUuid;
 
-	@SuppressWarnings("WeakerAccess")
 	public AbstractInterceptor(String entityName) {
 		this.entityName = entityName;
 	}

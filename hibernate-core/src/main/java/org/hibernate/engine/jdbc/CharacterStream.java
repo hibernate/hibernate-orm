@@ -20,24 +20,24 @@ public interface CharacterStream {
 	 *
 	 * @return The reader.
 	 */
-	public Reader asReader();
+	Reader asReader();
 
 	/**
 	 * Provides access to the underlying data as a String.
 	 *
 	 * @return The underlying String data
 	 */
-	public String asString();
+	String asString();
 
 	/**
 	 * Retrieve the number of characters.
 	 *
 	 * @return The number of characters.
 	 */
-	public long getLength();
+	long getLength();
 
 	/**
 	 * Release any underlying resources.
 	 */
-	public void release();
+	void release();
 }

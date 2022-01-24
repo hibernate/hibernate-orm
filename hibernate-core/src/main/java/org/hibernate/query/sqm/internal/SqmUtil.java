@@ -29,12 +29,12 @@ import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -64,13 +64,20 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public class SqmUtil {
 	private SqmUtil() {
 	}
 
+	public static boolean isSelect(SqmStatement<?> sqm) {
+		return sqm instanceof SqmSelectStatement;
+	}
+
+	public static boolean isMutation(SqmStatement<?> sqm) {
+		return sqm instanceof SqmDmlStatement;
+	}
+
 	public static void verifyIsSelectStatement(SqmStatement<?> sqm, String hqlString) {
-		if ( !(sqm instanceof SqmSelectStatement) ) {
+		if ( ! isSelect( sqm ) ) {
 			throw new IllegalQueryOperationException(
 					String.format(
 							Locale.ROOT,
@@ -85,18 +92,22 @@ public class SqmUtil {
 	}
 
 	public static void verifyIsNonSelectStatement(SqmStatement<?> sqm, String hqlString) {
-		if ( !(sqm instanceof SqmDmlStatement) ) {
-			throw new IllegalQueryOperationException(
-					String.format(
-							Locale.ROOT,
-							"Expecting a non-SELECT Query [%s], but found %s",
-							SqmDmlStatement.class.getName(),
-							sqm.getClass().getName()
-					),
-					hqlString,
-					null
-			);
+		if ( ! isMutation( sqm ) ) {
+			throw expectingNonSelect( sqm, hqlString );
 		}
+	}
+
+	public static IllegalQueryOperationException expectingNonSelect(SqmStatement<?> sqm, String hqlString) {
+		return new IllegalQueryOperationException(
+				String.format(
+						Locale.ROOT,
+						"Expecting a non-SELECT Query [%s], but found %s",
+						SqmDmlStatement.class.getName(),
+						sqm.getClass().getName()
+				),
+				hqlString,
+				null
+		);
 	}
 
 	public static Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> generateJdbcParamsXref(
@@ -210,14 +221,14 @@ public class SqmUtil {
 					continue;
 				}
 				if ( !domainParamBinding.isBound() ) {
-					final MappingModelExpressable<?> mappingExpressable = SqmMappingModelHelper.resolveMappingModelExpressable(
+					final MappingModelExpressible<?> mappingExpressible = SqmMappingModelHelper.resolveMappingModelExpressible(
 							sqmParameter,
 							domainModel,
 							tableGroupLocator
 					);
 					for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
 						final List<JdbcParameter> jdbcParams = jdbcParamsBinds.get( i );
-						mappingExpressable.forEachJdbcType(
+						mappingExpressible.forEachJdbcType(
 								(position, jdbcType) -> {
 									jdbcParameterBindings.addBinding(
 											jdbcParams.get( position ),
@@ -409,7 +420,7 @@ public class SqmUtil {
 		}
 
 		for ( int i = 0; i < sqmParameters.size(); i++ ) {
-			final MappingModelExpressable<?> mappingModelType = mappingModelResolutionAccess
+			final MappingModelExpressible<?> mappingModelType = mappingModelResolutionAccess
 					.getResolvedMappingModelType( sqmParameters.get( i ) );
 			if ( mappingModelType != null ) {
 				return mappingModelType;

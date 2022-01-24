@@ -17,7 +17,7 @@ import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Selection;
 
-import org.hibernate.query.FetchClauseType;
+import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSelection;
@@ -26,7 +26,6 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.SqmStatement;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.jpa.ParameterCollector;

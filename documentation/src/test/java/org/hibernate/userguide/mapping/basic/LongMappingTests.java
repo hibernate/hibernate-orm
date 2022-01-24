@@ -43,20 +43,20 @@ public class LongMappingTests {
 
 		{
 			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
-			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Long.class));
+			assertThat( attribute.getJavaType().getJavaTypeClass(), equalTo( Long.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Long.class));
-			assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), is(Types.BIGINT));
+			assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), is( Types.BIGINT));
 		}
 
 		{
 			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitive");
-			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Long.class));
+			assertThat( attribute.getJavaType().getJavaTypeClass(), equalTo( Long.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Long.class));
-			assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), is(Types.BIGINT));
+			assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), is( Types.BIGINT));
 		}
 
 

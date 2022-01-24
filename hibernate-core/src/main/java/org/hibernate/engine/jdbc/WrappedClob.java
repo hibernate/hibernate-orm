@@ -19,5 +19,5 @@ public interface WrappedClob {
 	 *
 	 * @return The wrapped {@link java.sql.Blob} reference
 	 */
-	public Clob getWrappedClob();
+	Clob getWrappedClob();
 }

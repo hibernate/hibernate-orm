@@ -926,11 +926,12 @@ public class EntityBinder {
 	}
 
 	private void bindJoinToPersistentClass(Join join, AnnotatedJoinColumn[] annotatedJoinColumns, MetadataBuildingContext buildingContext) {
-		SimpleValue key = new DependantValue( buildingContext, join.getTable(), persistentClass.getIdentifier() );
+		DependantValue key = new DependantValue( buildingContext, join.getTable(), persistentClass.getIdentifier() );
 		join.setKey( key );
 		setFKNameIfDefined( join );
 		key.setCascadeDeleteEnabled( false );
 		TableBinder.bindFk( persistentClass, null, annotatedJoinColumns, key, false, buildingContext );
+		key.sortProperties();
 		join.createPrimaryKey();
 		join.createForeignKey();
 		persistentClass.addJoin( join );

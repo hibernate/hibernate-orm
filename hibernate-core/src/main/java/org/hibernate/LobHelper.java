@@ -26,7 +26,7 @@ public interface LobHelper {
 	 *
 	 * @return the created Blob
 	 */
-	public Blob createBlob(byte[] bytes);
+	Blob createBlob(byte[] bytes);
 
 	/**
 	 * Create a new {@link Blob} from stream data.
@@ -36,7 +36,7 @@ public interface LobHelper {
 
 	 * @return the create Blob
 	 */
-	public Blob createBlob(InputStream stream, long length);
+	Blob createBlob(InputStream stream, long length);
 
 	/**
 	 * Create a new {@link Clob} from content.
@@ -45,7 +45,7 @@ public interface LobHelper {
 	 *
 	 * @return The created {@link Clob}
 	 */
-	public Clob createClob(String string);
+	Clob createClob(String string);
 
 	/**
 	 * Create a new {@link Clob} from character reader.
@@ -55,7 +55,7 @@ public interface LobHelper {
 	 *
 	 * @return The created {@link Clob}
 	 */
-	public Clob createClob(Reader reader, long length);
+	Clob createClob(Reader reader, long length);
 
 	/**
 	 * Create a new {@link NClob} from content.
@@ -64,7 +64,7 @@ public interface LobHelper {
 	 *
 	 * @return The created {@link NClob}
 	 */
-	public NClob createNClob(String string);
+	NClob createNClob(String string);
 
 	/**
 	 * Create a new {@link NClob} from character reader.
@@ -74,5 +74,5 @@ public interface LobHelper {
 	 *
 	 * @return The created {@link NClob}
 	 */
-	public NClob createNClob(Reader reader, long length);
+	NClob createNClob(Reader reader, long length);
 }

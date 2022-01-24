@@ -14,7 +14,7 @@ import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -36,14 +36,13 @@ public abstract class AbstractPluralAttribute<D, C, E>
 	private final CollectionClassification classification;
 	private final SqmPathSource<E> elementPathSource;
 
-	@SuppressWarnings("WeakerAccess")
 	protected AbstractPluralAttribute(
 			PluralAttributeBuilder<D,C,E,?> builder,
 			MetadataContext metadataContext) {
 		super(
 				builder.getDeclaringType(),
 				builder.getProperty().getName(),
-				builder.getCollectionJavaTypeDescriptor(),
+				builder.getCollectionJavaType(),
 				builder.getAttributeClassification(),
 				builder.getValueType(),
 				builder.getMember(),
@@ -93,8 +92,8 @@ public abstract class AbstractPluralAttribute<D, C, E>
 	}
 
 	@Override
-	public JavaType<E> getExpressableJavaTypeDescriptor() {
-		return getElementType().getExpressableJavaTypeDescriptor();
+	public JavaType<E> getExpressibleJavaType() {
+		return getElementType().getExpressibleJavaType();
 	}
 
 	@Override

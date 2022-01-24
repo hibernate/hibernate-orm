@@ -12,6 +12,6 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public interface ImplicitForeignKeyNameSource extends ImplicitConstraintNameSource {
-	public Identifier getReferencedTableName();
-	public List<Identifier> getReferencedColumnNames();
+	Identifier getReferencedTableName();
+	List<Identifier> getReferencedColumnNames();
 }

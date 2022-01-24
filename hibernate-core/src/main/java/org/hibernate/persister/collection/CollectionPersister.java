@@ -38,38 +38,52 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 
 /**
- * A strategy for persisting a collection role. Defines a contract between
- * the persistence strategy and the actual persistent collection framework
- * and session. Does not define operations that are required for querying
- * collections, or loading by outer join.
+ * A strategy for persisting a mapped collection role. A
+ * {@code CollectionPersister} orchestrates rendering of SQL statements
+ * corresponding to basic lifecycle events, including {@code insert},
+ * {@code update}, and {@code delete} statements, and their execution via
+ * JDBC.
  * <p>
- * Implements persistence of a collection instance while the instance is
- * referenced in a particular role.
+ * Concrete implementations of this interface handle
+ * {@linkplain OneToManyPersister one-to-many},
+ * {@linkplain BasicCollectionPersister many-to-many}, association
+ * cardinalities, and to a certain extent abstract the details of those
+ * mappings from collaborators.
  * <p>
- * This class is highly coupled to the {@code PersistentCollection}
- * hierarchy, since double dispatch is used to load and update collection
- * elements.
+ * Note that an instance of {@link PersistentCollection} may change roles.
+ * This object implements persistence of a collection instance while the
+ * instance is referenced in a particular role.
  * <p>
- * May be considered an immutable view of the mapping object
+ * This interface defines a contract between the persistence strategy and
+ * the actual {@linkplain PersistentCollection persistent collection framework}
+ * and {@link org.hibernate.engine.spi.SessionImplementor session}. It does
+ * not define operations that are required for querying collections, nor
+ * for loading by outer join. Implementations are highly coupled to the
+ * {@link PersistentCollection} hierarchy, since double dispatch is used to
+ * load and update collection elements.
  * <p>
- * Unless a customer {@link org.hibernate.persister.spi.PersisterFactory} is used, it is expected
- * that implementations of CollectionDefinition define a constructor accepting the following arguments:
+ * Unless a custom {@link org.hibernate.persister.spi.PersisterFactory} is
+ * used, it is expected that implementations of {@link CollectionDefinition}
+ * define a constructor accepting the following arguments:
  * <ol>
  *     <li>
- *         {@link org.hibernate.mapping.Collection} - The metadata about the collection to be handled
- *         by the persister
+ *         {@link org.hibernate.mapping.Collection} - The metadata about
+ *         the collection to be handled by the persister,
  *     </li>
  *     <li>
- *         {@link CollectionDataAccess} - the second level caching strategy for this collection
+ *         {@link CollectionDataAccess} - the second level caching strategy
+ *         for this collection, and
  *     </li>
  *     <li>
- *         {@link org.hibernate.persister.spi.PersisterCreationContext} - access to additional
- *         information useful while constructing the persister.
+ *         {@link org.hibernate.persister.spi.PersisterCreationContext} -
+ *         access to additional information useful while constructing the
+ *         persister.
  *     </li>
  * </ol>
  *
  * @see QueryableCollection
  * @see PersistentCollection
+ *
  * @author Gavin King
  */
 public interface CollectionPersister extends CollectionDefinition, Restrictable {
@@ -113,7 +127,7 @@ public interface CollectionPersister extends CollectionDefinition, Restrictable 
 	/**
 	 * Return the element class of an array, or null otherwise
 	 */
-	Class getElementClass();
+	Class<?> getElementClass();
 
 	/**
 	 * The value converter for the element values of this collection
@@ -173,7 +187,7 @@ public interface CollectionPersister extends CollectionDefinition, Restrictable 
 	 * (Re)create the collection's persistent state
 	 */
 	void recreate(
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			Object key,
 			SharedSessionContractImplementor session);
 
@@ -182,7 +196,7 @@ public interface CollectionPersister extends CollectionDefinition, Restrictable 
 	 * the collection
 	 */
 	void deleteRows(
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			Object key,
 			SharedSessionContractImplementor session);
 
@@ -190,7 +204,7 @@ public interface CollectionPersister extends CollectionDefinition, Restrictable 
 	 * Update the persistent state of any elements that were modified
 	 */
 	void updateRows(
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			Object key,
 			SharedSessionContractImplementor session);
 
@@ -198,7 +212,7 @@ public interface CollectionPersister extends CollectionDefinition, Restrictable 
 	 * Insert the persistent state of any new collection elements
 	 */
 	void insertRows(
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			Object key,
 			SharedSessionContractImplementor session);
 	
@@ -206,7 +220,7 @@ public interface CollectionPersister extends CollectionDefinition, Restrictable 
 	 * Process queued operations within the PersistentCollection.
 	 */
 	void processQueuedOps(
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			Object key,
 			SharedSessionContractImplementor session);
 	
@@ -355,7 +369,7 @@ public interface CollectionPersister extends CollectionDefinition, Restrictable 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// mapping model
 
-	CollectionSemantics getCollectionSemantics();
+	CollectionSemantics<?,?> getCollectionSemantics();
 
 
 	void applyBaseManyToManyRestrictions(

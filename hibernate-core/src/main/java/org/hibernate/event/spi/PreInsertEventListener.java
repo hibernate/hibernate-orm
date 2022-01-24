@@ -15,5 +15,5 @@ public interface PreInsertEventListener {
 	/**
 	 * Return true if the operation should be vetoed
 	 */
-	public boolean onPreInsert(PreInsertEvent event);
+	boolean onPreInsert(PreInsertEvent event);
 }

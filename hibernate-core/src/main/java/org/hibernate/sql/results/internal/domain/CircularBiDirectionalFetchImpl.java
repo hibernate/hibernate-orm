@@ -28,7 +28,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -100,8 +100,8 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 	}
 
 	@Override
-	public JavaType<?> getResultJavaTypeDescriptor() {
-		return fetchable.getJavaTypeDescriptor();
+	public JavaType<?> getResultJavaType() {
+		return fetchable.getJavaType();
 	}
 
 	@Override
@@ -111,7 +111,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 		return new CircularFetchAssembler(
 				fetchable,
 				getReferencedPath(),
-				fetchable.getJavaTypeDescriptor(),
+				fetchable.getJavaType(),
 				keyDomainResult == null ? null : keyDomainResult.createResultAssembler( parentAccess, creationState )
 		);
 	}
@@ -152,8 +152,8 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
-		return fetchable.getJavaTypeDescriptor();
+	public JavaType<?> getJavaType() {
+		return fetchable.getJavaType();
 	}
 
 	@Override
@@ -209,18 +209,18 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 
 	private static class CircularFetchAssembler implements DomainResultAssembler<Object> {
 		private final NavigablePath circularPath;
-		private final JavaType<?> javaTypeDescriptor;
+		private final JavaType<?> javaType;
 		private final ToOneAttributeMapping fetchable;
 		private final DomainResultAssembler<?> keyDomainResultAssembler;
 
 		public CircularFetchAssembler(
 				ToOneAttributeMapping fetchable,
 				NavigablePath circularPath,
-				JavaType<?> javaTypeDescriptor,
+				JavaType<?> javaType,
 				DomainResultAssembler<?> keyDomainResultAssembler) {
 			this.fetchable = fetchable;
 			this.circularPath = circularPath;
-			this.javaTypeDescriptor = javaTypeDescriptor;
+			this.javaType = javaType;
 			this.keyDomainResultAssembler = keyDomainResultAssembler;
 		}
 
@@ -262,7 +262,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 						final Object proxy = persistenceContext.getProxy( entityKey );
 						// it is conceivable there is a proxy, so check that first
 						if ( proxy == null || !( proxy.getClass()
-								.isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() ) ) ) {
+								.isAssignableFrom( javaType.getJavaTypeClass() ) ) ) {
 							// otherwise look for an initialized version
 							return persistenceContext.getEntity( entityKey );
 						}
@@ -276,7 +276,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 			}
 			final Object initializedInstance = initializer.getInitializedInstance();
 			if ( initializedInstance instanceof HibernateProxy ) {
-				if ( initializedInstance.getClass().isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() ) ) {
+				if ( initializedInstance.getClass().isAssignableFrom( javaType.getJavaTypeClass() ) ) {
 					return initializedInstance;
 				}
 				initializer.initializeInstance( rowProcessingState );
@@ -344,8 +344,8 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 		}
 
 		@Override
-		public JavaType getAssembledJavaTypeDescriptor() {
-			return javaTypeDescriptor;
+		public JavaType getAssembledJavaType() {
+			return javaType;
 		}
 	}
 

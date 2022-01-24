@@ -22,7 +22,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 
 	protected static final Object INVOKE_IMPLEMENTATION = new MarkerObject( "INVOKE_IMPLEMENTATION" );
 
-	protected final Class persistentClass;
+	protected final Class<?> persistentClass;
 	protected final Method getIdentifierMethod;
 	protected final Method setIdentifierMethod;
 	protected final boolean overridesEquals;
@@ -32,7 +32,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 
 	protected BasicLazyInitializer(
 			String entityName,
-			Class persistentClass,
+			Class<?> persistentClass,
 			Object id,
 			Method getIdentifierMethod,
 			Method setIdentifierMethod,
@@ -108,7 +108,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 
 	}
 
-	public final Class getPersistentClass() {
+	public final Class<?> getPersistentClass() {
 		return persistentClass;
 	}
 

@@ -35,8 +35,8 @@ public interface RuntimeModelCreationContext extends PersisterCreationContext {
 		return getSessionFactory().getServiceRegistry().getService( ManagedBeanRegistry.class );
 	}
 
-	default JavaTypeRegistry getJavaTypeDescriptorRegistry() {
-		return getTypeConfiguration().getJavaTypeDescriptorRegistry();
+	default JavaTypeRegistry getJavaTypeRegistry() {
+		return getTypeConfiguration().getJavaTypeRegistry();
 	}
 
 	@Override

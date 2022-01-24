@@ -6,25 +6,36 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import java.io.Serializable;
 import java.sql.Types;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
+import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
+import org.hibernate.TypeMismatchException;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
+import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -33,20 +44,24 @@ import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.BindableType;
+import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.Query;
+import org.hibernate.query.QueryLogging;
+import org.hibernate.query.QueryParameter;
 import org.hibernate.query.QueryTypeMismatchException;
+import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.hql.internal.QuerySplitter;
-import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
+import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
 import org.hibernate.query.internal.ParameterMetadataImpl;
-import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
-import org.hibernate.query.spi.AbstractQuery;
+import org.hibernate.query.spi.AbstractSelectionQuery;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.MutableQueryOptions;
@@ -59,18 +74,17 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
-import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
@@ -83,17 +97,28 @@ import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.sql.exec.internal.CallbackImpl;
-import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
+import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PersistenceException;
+import jakarta.persistence.TemporalType;
 import jakarta.persistence.Tuple;
 
+import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
+import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
+import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
+import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
+import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_LOCKING;
+import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
+import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_RETRIEVE_MODE;
+import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_STORE_MODE;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_STORE_MODE;
 import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptions;
+import static org.hibernate.query.sqm.internal.SqmUtil.isSelect;
 
 /**
  * {@link Query} implementation based on an SQM
@@ -101,8 +126,8 @@ import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOption
  * @author Steve Ebersole
  */
 public class QuerySqmImpl<R>
-		extends AbstractQuery<R>
-		implements HqlQueryImplementor<R>, DomainQueryExecutionContext {
+		extends AbstractSelectionQuery<R>
+		implements SqmQueryImplementor<R>, InterpretationsKeySource, DomainQueryExecutionContext {
 
 	/**
 	 * The value used for {@link #getQueryString} for Criteria-based queries
@@ -110,60 +135,44 @@ public class QuerySqmImpl<R>
 	public static final String CRITERIA_HQL_STRING = "<criteria>";
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( QuerySqmImpl.class );
 
-	private final String hqlString;
-	private final SqmStatement<R> sqmStatement;
-	private final Class<R> resultType;
+	private final String hql;
+	private final SqmStatement<?> sqm;
 
 	private final ParameterMetadataImplementor parameterMetadata;
 	private final DomainParameterXref domainParameterXref;
 
 	private final QueryParameterBindingsImpl parameterBindings;
 
-	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
-	private Callback callback;
+	private final Class<R> resultType;
 
 	/**
 	 * Creates a Query instance from a named HQL memento
 	 */
-	@SuppressWarnings("unchecked")
 	public QuerySqmImpl(
 			NamedHqlQueryMemento memento,
 			Class<R> resultType,
-			SharedSessionContractImplementor producer) {
-		super( producer );
+			SharedSessionContractImplementor session) {
+		super( session );
 
-		this.hqlString = memento.getHqlString();
+		this.hql = memento.getHqlString();
+		this.resultType = resultType;
 
-		final SessionFactoryImplementor factory = producer.getFactory();
+		final SessionFactoryImplementor factory = session.getFactory();
 		final QueryEngine queryEngine = factory.getQueryEngine();
 		final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
 		final HqlInterpretation hqlInterpretation = interpretationCache.resolveHqlInterpretation(
-				hqlString,
-				s -> queryEngine.getHqlTranslator().translate( hqlString )
+				hql,
+				(s) -> queryEngine.getHqlTranslator().translate( hql )
 		);
 
-		this.sqmStatement = hqlInterpretation.getSqmStatement();
+		this.sqm = hqlInterpretation.getSqmStatement();
 
-		if ( resultType != null ) {
-			if ( sqmStatement instanceof SqmDmlStatement ) {
-				throw new IllegalArgumentException( "Non-select queries cannot be typed" );
-			}
-		}
-		else if ( sqmStatement instanceof SqmUpdateStatement<?> ) {
-			verifyImmutableEntityUpdate( hqlString, (SqmUpdateStatement<R>) sqmStatement, producer.getFactory() );
-		}
-		else if ( sqmStatement instanceof SqmInsertStatement<?> ) {
-			verifyInsertTypesMatch( hqlString, (SqmInsertStatement<R>) sqmStatement );
-		}
-		this.resultType = resultType;
-		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
 		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
+		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
 
-		this.parameterBindings = QueryParameterBindingsImpl.from(
-				parameterMetadata,
-				producer.getFactory(),
-				producer.isQueryParametersValidationEnabled()
-		);
+		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
+
+		setComment( hql );
 
 		applyOptions( memento );
 	}
@@ -181,7 +190,7 @@ public class QuerySqmImpl<R>
 
 		if ( memento.getParameterTypes() != null ) {
 			for ( Map.Entry<String, String> entry : memento.getParameterTypes().entrySet() ) {
-				final QueryParameterImplementor<?> parameter = parameterMetadata.getQueryParameter( entry.getKey() );
+				final QueryParameterImplementor<?> parameter = getParameterMetadata().getQueryParameter( entry.getKey() );
 				final BasicType<?> type = getSessionFactory().getTypeConfiguration()
 						.getBasicTypeRegistry()
 						.getRegisteredType( entry.getValue() );
@@ -195,79 +204,55 @@ public class QuerySqmImpl<R>
 	 */
 	@SuppressWarnings("unchecked")
 	public QuerySqmImpl(
-			String hqlString,
+			String hql,
 			HqlInterpretation hqlInterpretation,
 			Class<R> resultType,
-			SharedSessionContractImplementor producer) {
-		super( producer );
-
-		this.hqlString = hqlString;
+			SharedSessionContractImplementor session) {
+		super( session );
+		this.hql = hql;
 		this.resultType = resultType;
 
-		this.sqmStatement = hqlInterpretation.getSqmStatement();
-
-		if ( resultType != null ) {
-			SqmUtil.verifyIsSelectStatement( sqmStatement, hqlString );
-			visitQueryReturnType(
-					( (SqmSelectStatement<R>) sqmStatement ).getQueryPart(),
-					resultType,
-					producer.getFactory()
-			);
-		}
-		else if ( sqmStatement instanceof SqmUpdateStatement<?> ) {
-			verifyImmutableEntityUpdate( hqlString, (SqmUpdateStatement<R>) sqmStatement, producer.getFactory() );
-		}
-		else if ( sqmStatement instanceof SqmInsertStatement<?> ) {
-			verifyInsertTypesMatch( hqlString, (SqmInsertStatement<R>) sqmStatement );
-		}
+		this.sqm = hqlInterpretation.getSqmStatement();
 
 		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
 		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
 
-		this.parameterBindings = QueryParameterBindingsImpl.from(
-				parameterMetadata,
-				producer.getFactory(),
-				producer.isQueryParametersValidationEnabled()
-		);
+		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
+
+		setComment( hql );
+
+		//noinspection rawtypes
+		final SqmStatement sqmStatement = hqlInterpretation.getSqmStatement();
+		if ( resultType != null ) {
+			SqmUtil.verifyIsSelectStatement( sqmStatement, hql );
+			visitQueryReturnType(
+					( (SqmSelectStatement<R>) sqmStatement ).getQueryPart(),
+					resultType,
+					session.getFactory()
+			);
+		}
+		else if ( sqmStatement instanceof SqmUpdateStatement<?> ) {
+			verifyImmutableEntityUpdate( hql, (SqmUpdateStatement<R>) sqmStatement, session.getFactory() );
+		}
+		else if ( sqmStatement instanceof SqmInsertStatement<?> ) {
+			verifyInsertTypesMatch( hql, (SqmInsertStatement<R>) sqmStatement );
+		}
 	}
 
 	/**
 	 * Form used for criteria queries
 	 */
-	@SuppressWarnings("unchecked")
 	public QuerySqmImpl(
-			SqmStatement<R> sqmStatement,
+			SqmStatement<R> criteria,
 			Class<R> resultType,
 			SharedSessionContractImplementor producer) {
 		super( producer );
+		this.hql = CRITERIA_HQL_STRING;
+		this.sqm = criteria;
 
-		if ( resultType != null ) {
-			SqmUtil.verifyIsSelectStatement( sqmStatement, null );
-			final SqmQueryPart<R> queryPart = ( (SqmSelectStatement<R>) sqmStatement ).getQueryPart();
-			// For criteria queries, we have to validate the fetch structure here
-			queryPart.validateQueryStructureAndFetchOwners();
-			visitQueryReturnType(
-					queryPart,
-					resultType,
-					producer.getFactory()
-			);
-		}
-		else if ( sqmStatement instanceof SqmUpdateStatement<?> ) {
-			final SqmUpdateStatement<R> updateStatement = (SqmUpdateStatement<R>) sqmStatement;
-			verifyImmutableEntityUpdate( CRITERIA_HQL_STRING, updateStatement, producer.getFactory() );
-			if ( updateStatement.getSetClause() == null || updateStatement.getSetClause().getAssignments().isEmpty() ) {
-				throw new IllegalArgumentException( "No assignments specified as part of UPDATE criteria" );
-			}
-		}
-		else if ( sqmStatement instanceof SqmInsertStatement<?> ) {
-			verifyInsertTypesMatch( CRITERIA_HQL_STRING, (SqmInsertStatement<R>) sqmStatement );
-		}
+		setComment( hql );
 
-		this.hqlString = CRITERIA_HQL_STRING;
-		this.sqmStatement = sqmStatement;
-		this.resultType = resultType;
-
-		this.domainParameterXref = DomainParameterXref.from( sqmStatement );
+		this.domainParameterXref = DomainParameterXref.from( criteria );
 		if ( ! domainParameterXref.hasParameters() ) {
 			this.parameterMetadata = ParameterMetadataImpl.EMPTY;
 		}
@@ -275,11 +260,8 @@ public class QuerySqmImpl<R>
 			this.parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
 		}
 
-		this.parameterBindings = QueryParameterBindingsImpl.from(
-				parameterMetadata,
-				producer.getFactory(),
-				producer.isQueryParametersValidationEnabled()
-		);
+		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, producer.getFactory() );
+
 		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
 		for ( SqmParameter<?> sqmParameter : this.domainParameterXref.getParameterResolutions().getSqmParameters() ) {
 			if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> ) {
@@ -293,6 +275,30 @@ public class QuerySqmImpl<R>
 				}
 			}
 		}
+
+		if ( resultType != null ) {
+			SqmUtil.verifyIsSelectStatement( sqm, null );
+			final SqmQueryPart<R> queryPart = ( (SqmSelectStatement<R>) sqm ).getQueryPart();
+			// For criteria queries, we have to validate the fetch structure here
+			queryPart.validateQueryStructureAndFetchOwners();
+			visitQueryReturnType(
+					queryPart,
+					resultType,
+					producer.getFactory()
+			);
+		}
+		else if ( sqm instanceof SqmUpdateStatement<?> ) {
+			final SqmUpdateStatement<R> updateStatement = (SqmUpdateStatement<R>) sqm;
+			verifyImmutableEntityUpdate( CRITERIA_HQL_STRING, updateStatement, producer.getFactory() );
+			if ( updateStatement.getSetClause() == null || updateStatement.getSetClause().getAssignments().isEmpty() ) {
+				throw new IllegalArgumentException( "No assignments specified as part of UPDATE criteria" );
+			}
+		}
+		else if ( sqm instanceof SqmInsertStatement<?> ) {
+			verifyInsertTypesMatch( CRITERIA_HQL_STRING, (SqmInsertStatement<R>) sqm );
+		}
+
+		this.resultType = resultType;
 	}
 
 	private void visitQueryReturnType(
@@ -366,7 +372,7 @@ public class QuerySqmImpl<R>
 				final SqmParameter<?> sqmParameter = (SqmParameter<?>) sqmSelection.getSelectableNode();
 
 				// we may not yet know a selection type
-				if ( sqmParameter.getNodeType() == null || sqmParameter.getNodeType().getExpressableJavaTypeDescriptor() == null ) {
+				if ( sqmParameter.getNodeType() == null || sqmParameter.getNodeType().getExpressibleJavaType() == null ) {
 					// we can't verify the result type up front
 					return;
 				}
@@ -378,24 +384,24 @@ public class QuerySqmImpl<R>
 
 	private static <T> void verifyResultType(
 			Class<T> resultClass,
-			SqmExpressable<?> sqmExpressable,
+			SqmExpressible<?> sqmExpressible,
 			SessionFactoryImplementor sessionFactory) {
-		assert sqmExpressable != null;
-		assert sqmExpressable.getExpressableJavaTypeDescriptor() != null;
+		assert sqmExpressible != null;
+		assert sqmExpressible.getExpressibleJavaType() != null;
 
-		final Class<?> javaTypeClass = sqmExpressable.getExpressableJavaTypeDescriptor().getJavaTypeClass();
+		final Class<?> javaTypeClass = sqmExpressible.getExpressibleJavaType().getJavaTypeClass();
 		if ( ! resultClass.isAssignableFrom( javaTypeClass ) ) {
 			// Special case for date because we always report java.util.Date as expression type
 			// But the expected resultClass could be a subtype of that, so we need to check the JdbcType
 			if ( javaTypeClass == Date.class ) {
 				JdbcType jdbcType = null;
-				if ( sqmExpressable instanceof BasicDomainType<?> ) {
-					jdbcType = ( (BasicDomainType<?>) sqmExpressable ).getJdbcTypeDescriptor();
+				if ( sqmExpressible instanceof BasicDomainType<?> ) {
+					jdbcType = ( (BasicDomainType<?>) sqmExpressible).getJdbcType();
 				}
-				else if ( sqmExpressable instanceof SqmPathSource<?> ) {
-					final DomainType<?> domainType = ( (SqmPathSource<?>) sqmExpressable ).getSqmPathType();
+				else if ( sqmExpressible instanceof SqmPathSource<?> ) {
+					final DomainType<?> domainType = ( (SqmPathSource<?>) sqmExpressible).getSqmPathType();
 					if ( domainType instanceof BasicDomainType<?> ) {
-						jdbcType = ( (BasicDomainType<?>) domainType ).getJdbcTypeDescriptor();
+						jdbcType = ( (BasicDomainType<?>) domainType ).getJdbcType();
 					}
 				}
 				if ( jdbcType != null ) {
@@ -421,7 +427,7 @@ public class QuerySqmImpl<R>
 			final String errorMessage = String.format(
 					"Specified result type [%s] did not match Query selection type [%s] - multiple selections: use Tuple or array",
 					resultClass.getName(),
-					sqmExpressable.getExpressableJavaTypeDescriptor().getJavaType().getTypeName()
+					sqmExpressible.getExpressibleJavaType().getJavaType().getTypeName()
 			);
 
 			if ( sessionFactory.getSessionFactoryOptions().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
@@ -501,15 +507,15 @@ public class QuerySqmImpl<R>
 		}
 		for ( int i = 0; i < expressionsSize; i++ ) {
 			final SqmTypedNode<?> expression = expressions.get( i );
-			if ( expression.getNodeJavaTypeDescriptor() == null ) {
+			if ( expression.getNodeJavaType() == null ) {
 				continue;
 			}
-			if ( insertionTargetPaths.get( i ).getJavaTypeDescriptor() != expression.getNodeJavaTypeDescriptor() ) {
+			if ( insertionTargetPaths.get( i ).getJavaTypeDescriptor() != expression.getNodeJavaType() ) {
 				throw new SemanticException(
 						String.format(
 								"Expected insert attribute type [%s] did not match Query selection type [%s] at selection index [%d]",
 								insertionTargetPaths.get( i ).getJavaTypeDescriptor().getJavaType().getTypeName(),
-								expression.getNodeJavaTypeDescriptor().getJavaType().getTypeName(),
+								expression.getNodeJavaType().getJavaType().getTypeName(),
 								i
 						),
 						hqlString,
@@ -520,53 +526,17 @@ public class QuerySqmImpl<R>
 	}
 
 
-	public SessionFactoryImplementor getSessionFactory() {
-		return getSession().getFactory();
-	}
-
-	@Override
-	public QueryParameterBindings getParameterBindings() {
-		return parameterBindings;
-	}
-
-	protected Boolean isSelectQuery() {
-		return sqmStatement instanceof SqmSelectStatement;
-	}
-
 	@Override
 	public String getQueryString() {
-		return hqlString;
+		return hql;
+	}
+
+	public SqmStatement getSqmStatement() {
+		return sqm;
 	}
 
 	public DomainParameterXref getDomainParameterXref() {
 		return domainParameterXref;
-	}
-
-	@Override
-	public HqlQueryImplementor<R> applyGraph(@SuppressWarnings("rawtypes") RootGraph graph, GraphSemantic semantic) {
-		queryOptions.applyGraph( (RootGraphImplementor<?>) graph, semantic );
-		return this;
-	}
-
-	@Override
-	protected void applyEntityGraphQueryHint(String hintName, @SuppressWarnings("rawtypes") RootGraphImplementor entityGraph) {
-		final GraphSemantic graphSemantic = GraphSemantic.fromJpaHintName( hintName );
-
-		applyGraph( entityGraph, graphSemantic );
-	}
-
-	@Override
-	public SqmStatement<R> getSqmStatement() {
-		return sqmStatement;
-	}
-
-	public Class<R> getResultType() {
-		return resultType;
-	}
-
-	@Override
-	public MutableQueryOptions getQueryOptions() {
-		return queryOptions;
 	}
 
 	@Override
@@ -579,12 +549,22 @@ public class QuerySqmImpl<R>
 		return parameterBindings;
 	}
 
+	public SessionFactoryImplementor getSessionFactory() {
+		return getSession().getFactory();
+	}
+
 	@Override
-	public Set<Parameter<?>> getParameters() {
-		getSession().checkOpen( false );
-		Set<Parameter<?>> parameters = new HashSet<>();
-		parameterMetadata.collectAllParameters( parameters::add );
-		return parameters;
+	public QueryParameterBindings getParameterBindings() {
+		return getQueryParameterBindings();
+	}
+
+	public Class<R> getResultType() {
+		return resultType;
+	}
+
+	@Override
+	public LoadQueryInfluencers getLoadQueryInfluencers() {
+		return getSession().getLoadQueryInfluencers();
 	}
 
 	@Override
@@ -594,98 +574,44 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public LockModeType getLockMode() {
-		if ( ! isSelectQuery() ) {
-			throw new IllegalStateException( "Illegal attempt to access lock-mode for non-select query" );
-		}
-
-		return super.getLockMode();
+	public Supplier<Boolean> hasMultiValuedParameterBindingsChecker() {
+		return this::hasMultiValuedParameterBindings;
 	}
 
-	@Override
-	public HqlQueryImplementor<R> setLockMode(LockModeType lockModeType) {
-		if ( ! LockModeType.NONE.equals( lockModeType ) ) {
-			if ( ! isSelectQuery() ) {
-				throw new IllegalStateException( "Illegal attempt to access lock-mode for non-select query" );
-			}
-		}
-
-		return (HqlQueryImplementor<R>) super.setLockMode( lockModeType );
+	protected boolean hasMultiValuedParameterBindings() {
+		return getQueryParameterBindings().hasAnyMultiValuedBindings()
+				|| getParameterMetadata().hasAnyMatching( QueryParameter::allowsMultiValuedBinding );
 	}
 
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// select execution
+
 	@Override
-	@SuppressWarnings("unchecked")
-	public <T> T unwrap(Class<T> cls) {
-		if ( cls.isInstance( this ) ) {
-			return (T) this;
-		}
-
-		if ( cls.isInstance( parameterMetadata ) ) {
-			return (T) parameterMetadata;
-		}
-
-		if ( cls.isInstance( parameterBindings ) ) {
-			return (T) parameterBindings;
-		}
-
-		if ( cls.isInstance( sqmStatement ) ) {
-			return (T) sqmStatement;
-		}
-
-		if ( cls.isInstance( queryOptions ) ) {
-			return (T) queryOptions;
-		}
-
-		if ( cls.isInstance( queryOptions.getAppliedGraph() ) ) {
-			return (T) queryOptions.getAppliedGraph();
-		}
-
-		if ( EntityGraphQueryHint.class.isAssignableFrom( cls ) ) {
-			return (T) new EntityGraphQueryHint( queryOptions.getAppliedGraph() );
-		}
-
-		throw new PersistenceException( "Unrecognized unwrap type [" + cls.getName() + "]" );
+	protected void prepareForExecution() {
+		// Reset the callback before every execution
+		resetCallback();
 	}
 
-	@Override
-	protected boolean applyNativeQueryLockMode(Object value) {
-		throw new IllegalStateException(
-				"Illegal attempt to set lock mode on non-native query via hint; use Query#setLockMode instead"
-		);
-	}
-
-	@Override
-	protected boolean applySynchronizeSpacesHint(Object value) {
-		throw new IllegalStateException(
-				"Illegal attempt to set synchronized spaces on non-native query via hint"
-		);
-	}
-
-	@Override
-	protected void collectHints(Map<String, Object> hints) {
-		super.collectHints( hints );
-
-		if ( queryOptions.getAppliedGraph() != null && queryOptions.getAppliedGraph().getSemantic() != null ) {
-			hints.put(
-					queryOptions.getAppliedGraph().getSemantic().getJpaHintName(),
-					queryOptions.getAppliedGraph().getGraph()
-			);
+	protected void verifySelect() {
+		try {
+			SqmUtil.verifyIsSelectStatement( getSqmStatement(), hql );
+		}
+		catch (IllegalQueryOperationException e) {
+			// per JPA
+			throw new IllegalStateException( "Expecting a SELECT query : `" + hql + "`", e );
 		}
 	}
 
-	@Override
 	protected List<R> doList() {
-		SqmUtil.verifyIsSelectStatement( getSqmStatement(), hqlString );
-		final SqmSelectStatement<?> selectStatement = (SqmSelectStatement<?>) getSqmStatement();
+		verifySelect();
+		getSession().prepareForQueryExecution( requiresTxn( getQueryOptions().getLockOptions().findGreatestLockMode() ) );
 
-		getSession().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
-		final boolean containsCollectionFetches = selectStatement.containsCollectionFetches();
-		final boolean hasLimit = queryOptions.hasLimit() || selectStatement.getFetch() != null || selectStatement.getOffset() != null;
-		final boolean needsDistincting = containsCollectionFetches && (
-				selectStatement.usesDistinct() ||
-						queryOptions.getGraph() != null ||
-						hasLimit
-		);
+		final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) getSqmStatement();
+		final boolean containsCollectionFetches = sqmStatement.containsCollectionFetches();
+		final boolean hasLimit = hasLimit( sqmStatement, getQueryOptions() );
+		final boolean needsDistinct = containsCollectionFetches
+				&& ( sqmStatement.usesDistinct() || hasAppliedGraph( getQueryOptions() ) || hasLimit );
 
 		final DomainQueryExecutionContext executionContextToUse;
 		if ( hasLimit && containsCollectionFetches ) {
@@ -698,7 +624,7 @@ public class QuerySqmImpl<R>
 				);
 			}
 			else {
-				LOG.firstOrMaxResultsSpecifiedWithCollectionFetch();
+				QueryLogging.QUERY_MESSAGE_LOGGER.firstOrMaxResultsSpecifiedWithCollectionFetch();
 			}
 
 			final MutableQueryOptions originalQueryOptions = getQueryOptions();
@@ -721,17 +647,17 @@ public class QuerySqmImpl<R>
 
 		final List<R> list = resolveSelectQueryPlan().performList( executionContextToUse );
 
-		if ( needsDistincting ) {
+		if ( needsDistinct ) {
 			int includedCount = -1;
 			// NOTE : firstRow is zero-based
-			final int first = !hasLimit || queryOptions.getLimit().getFirstRow() == null
-					? getIntegerLiteral( selectStatement.getOffset(), 0 )
-					: queryOptions.getLimit().getFirstRow();
-			final int max = !hasLimit || queryOptions.getLimit().getMaxRows() == null
-					? getMaxRows( selectStatement, list.size() )
-					: queryOptions.getLimit().getMaxRows();
+			final int first = !hasLimit || getQueryOptions().getLimit().getFirstRow() == null
+					? getIntegerLiteral( sqmStatement.getOffset(), 0 )
+					: getQueryOptions().getLimit().getFirstRow();
+			final int max = !hasLimit || getQueryOptions().getLimit().getMaxRows() == null
+					? getMaxRows( sqmStatement, list.size() )
+					: getQueryOptions().getLimit().getMaxRows();
 			final List<R> tmp = new ArrayList<>( list.size() );
-			final IdentitySet<R> distinction = new IdentitySet<>( list.size() );
+			final IdentitySet<Object> distinction = new IdentitySet<>( list.size() );
 			for ( final R result : list ) {
 				if ( !distinction.add( result ) ) {
 					continue;
@@ -751,64 +677,18 @@ public class QuerySqmImpl<R>
 		return list;
 	}
 
-	private int getMaxRows(SqmSelectStatement<?> selectStatement, int size) {
-		final JpaExpression<Number> expression = selectStatement.getFetch();
-		if ( expression == null ) {
-			return -1;
-		}
-
-		final Number fetchValue;
-		if ( expression instanceof SqmLiteral<?> ) {
-			fetchValue = ( (SqmLiteral<Number>) expression ).getLiteralValue();
-		}
-		else if ( expression instanceof SqmParameter<?> ) {
-			fetchValue = getParameterValue( (Parameter<Number>) expression );
-			if ( fetchValue == null ) {
-				return -1;
-			}
-		}
-		else {
-			throw new IllegalArgumentException( "Can't get max rows value from: " + expression );
-		}
-		// Note that we can never have ties because this is only used when we de-duplicate results
-		switch ( selectStatement.getFetchClauseType() ) {
-			case ROWS_ONLY:
-			case ROWS_WITH_TIES:
-				return fetchValue.intValue();
-			case PERCENT_ONLY:
-			case PERCENT_WITH_TIES:
-				return (int) Math.ceil( ( ( (double) size ) * fetchValue.doubleValue() ) / 100d );
-		}
-		throw new UnsupportedOperationException( "Unsupported fetch clause type: " + selectStatement.getFetchClauseType() );
+	@Override
+	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
+		getSession().prepareForQueryExecution( requiresTxn( getQueryOptions().getLockOptions().findGreatestLockMode() ) );
+		return resolveSelectQueryPlan().performScroll( scrollMode, this );
 	}
 
-	private int getIntegerLiteral(JpaExpression<Number> expression, int defaultValue) {
-		if ( expression == null ) {
-			return defaultValue;
-		}
 
-		if ( expression instanceof SqmLiteral<?> ) {
-			return ( (SqmLiteral<Number>) expression ).getLiteralValue().intValue();
-		}
-		else if ( expression instanceof SqmParameter<?> ) {
-			final Number parameterValue = getParameterValue( (Parameter<Number>) expression );
-			return parameterValue == null ? defaultValue : parameterValue.intValue();
-		}
-		throw new IllegalArgumentException( "Can't get integer literal value from: " + expression );
-	}
-
-	private boolean requiresTxn(LockMode lockMode) {
-		return lockMode != null && lockMode.greaterThan( LockMode.READ );
-	}
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Select query plan
 
 	private SelectQueryPlan<R> resolveSelectQueryPlan() {
-		// resolve (or make) the QueryPlan.  This QueryPlan might be an aggregation of multiple plans.
-		//
-		// QueryPlans can be cached, except for in certain circumstances
-		// 		- the determination of these circumstances occurs in SqmInterpretationsKey#generateFrom.
-		//		If SqmInterpretationsKey#generateFrom returns null the query is not cacheable
-
-		final QueryInterpretationCache.Key cacheKey = SqmInterpretationsKey.generateFrom( this );
+		final QueryInterpretationCache.Key cacheKey = SqmInterpretationsKey.createInterpretationsKey( this );
 		if ( cacheKey != null ) {
 			return getSession().getFactory().getQueryEngine().getInterpretationCache().resolveSelectQueryPlan(
 					cacheKey,
@@ -823,23 +703,19 @@ public class QuerySqmImpl<R>
 	private SelectQueryPlan<R> buildSelectQueryPlan() {
 		final SqmSelectStatement<R>[] concreteSqmStatements = QuerySplitter.split(
 				(SqmSelectStatement<R>) getSqmStatement(),
-				getSessionFactory()
+				getSession().getFactory()
 		);
 
 		if ( concreteSqmStatements.length > 1 ) {
 			return buildAggregatedSelectQueryPlan( concreteSqmStatements );
 		}
 		else {
-			return buildConcreteSelectQueryPlan(
-					concreteSqmStatements[0],
-					getResultType(),
-					getQueryOptions()
-			);
+			return buildConcreteSelectQueryPlan( concreteSqmStatements[0], getResultType(), getQueryOptions() );
 		}
 	}
 
-	private SelectQueryPlan<R> buildAggregatedSelectQueryPlan(SqmSelectStatement<R>[] concreteSqmStatements) {
-		@SuppressWarnings("unchecked")
+	private SelectQueryPlan<R> buildAggregatedSelectQueryPlan(SqmSelectStatement<?>[] concreteSqmStatements) {
+		//noinspection unchecked
 		final SelectQueryPlan<R>[] aggregatedQueryPlans = new SelectQueryPlan[ concreteSqmStatements.length ];
 
 		// todo (6.0) : we want to make sure that certain thing (ResultListTransformer, etc) only get applied at the aggregator-level
@@ -855,32 +731,60 @@ public class QuerySqmImpl<R>
 		return new AggregatedSelectQueryPlanImpl<>( aggregatedQueryPlans );
 	}
 
-	private SelectQueryPlan<R> buildConcreteSelectQueryPlan(
-			SqmSelectStatement<R> concreteSqmStatement,
-			Class<R> resultType,
+	private <T> SelectQueryPlan<T> buildConcreteSelectQueryPlan(
+			SqmSelectStatement<?> concreteSqmStatement,
+			Class<T> resultType,
 			QueryOptions queryOptions) {
 		return new ConcreteSqmSelectQueryPlan<>(
 				concreteSqmStatement,
-				hqlString,
-				domainParameterXref,
+				getQueryString(),
+				getDomainParameterXref(),
 				resultType,
 				queryOptions
 		);
 	}
 
-	@Override
-	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
-		SqmUtil.verifyIsSelectStatement( getSqmStatement(), hqlString );
-		getSession().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
 
-		return resolveSelectQueryPlan().performScroll( scrollMode, this );
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Update / delete / insert query execution
+
+	@Override
+	public int executeUpdate() {
+		verifyUpdate();
+		getSession().checkTransactionNeededForUpdateOperation( "Executing an update/delete query" );
+		beforeQuery();
+		boolean success = false;
+		try {
+			final int result = doExecuteUpdate();
+			success = true;
+			return result;
+		}
+		catch (IllegalQueryOperationException e) {
+			throw new IllegalStateException( e );
+		}
+		catch (TypeMismatchException e) {
+			throw new IllegalArgumentException( e );
+		}
+		catch (HibernateException e) {
+			throw getSession().getExceptionConverter().convert( e );
+		}
+		finally {
+			afterQuery( success );
+		}
 	}
 
-	@Override
-	protected int doExecuteUpdate() {
-		SqmUtil.verifyIsNonSelectStatement( getSqmStatement(), hqlString );
-		getSession().prepareForQueryExecution( true );
+	private void verifyUpdate() {
+		try {
+			SqmUtil.verifyIsNonSelectStatement( getSqmStatement(), hql );
+		}
+		catch (IllegalQueryOperationException e) {
+			// per JPA
+			throw new IllegalStateException( "Expecting a non-SELECT query : `" + hql + "`", e );
+		}
+	}
 
+	protected int doExecuteUpdate() {
+		getSession().prepareForQueryExecution( true );
 		return resolveNonSelectQueryPlan().executeUpdate( this );
 	}
 
@@ -922,9 +826,10 @@ public class QuerySqmImpl<R>
 		throw new NotYetImplementedException( "Query#executeUpdate for Statements of type [" + getSqmStatement() + "not yet supported" );
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private NonSelectQueryPlan buildDeleteQueryPlan() {
-		final SqmDeleteStatement<R>[] concreteSqmStatements = QuerySplitter.split(
-				(SqmDeleteStatement<R>) getSqmStatement(),
+		final SqmDeleteStatement[] concreteSqmStatements = QuerySplitter.split(
+				(SqmDeleteStatement) getSqmStatement(),
 				getSessionFactory()
 		);
 
@@ -936,7 +841,7 @@ public class QuerySqmImpl<R>
 		}
 	}
 
-	private NonSelectQueryPlan buildConcreteDeleteQueryPlan(SqmDeleteStatement<R> sqmDelete) {
+	private NonSelectQueryPlan buildConcreteDeleteQueryPlan(@SuppressWarnings("rawtypes") SqmDeleteStatement sqmDelete) {
 		final EntityDomainType<?> entityDomainType = sqmDelete.getTarget().getReferencedPathSource();
 		final String entityNameToDelete = entityDomainType.getHibernateEntityName();
 		final EntityPersister entityDescriptor = getSessionFactory().getDomainModel().findEntityDescriptor( entityNameToDelete );
@@ -949,7 +854,7 @@ public class QuerySqmImpl<R>
 		}
 	}
 
-	private NonSelectQueryPlan buildAggregatedDeleteQueryPlan(SqmDeleteStatement<R>[] concreteSqmStatements) {
+	private NonSelectQueryPlan buildAggregatedDeleteQueryPlan(@SuppressWarnings("rawtypes") SqmDeleteStatement[] concreteSqmStatements) {
 		final NonSelectQueryPlan[] aggregatedQueryPlans = new NonSelectQueryPlan[ concreteSqmStatements.length ];
 
 		for ( int i = 0, x = concreteSqmStatements.length; i < x; i++ ) {
@@ -960,7 +865,8 @@ public class QuerySqmImpl<R>
 	}
 
 	private NonSelectQueryPlan buildUpdateQueryPlan() {
-		final SqmUpdateStatement<R> sqmUpdate = (SqmUpdateStatement<R>) getSqmStatement();
+		//noinspection rawtypes
+		final SqmUpdateStatement sqmUpdate = (SqmUpdateStatement) getSqmStatement();
 
 		final String entityNameToUpdate = sqmUpdate.getTarget().getReferencedPathSource().getHibernateEntityName();
 		final EntityPersister entityDescriptor = getSessionFactory().getDomainModel().findEntityDescriptor( entityNameToUpdate );
@@ -975,7 +881,8 @@ public class QuerySqmImpl<R>
 	}
 
 	private NonSelectQueryPlan buildInsertQueryPlan() {
-		final SqmInsertStatement<R> sqmInsert = (SqmInsertStatement<R>) getSqmStatement();
+		//noinspection rawtypes
+		final SqmInsertStatement sqmInsert = (SqmInsertStatement) getSqmStatement();
 
 		final String entityNameToInsert = sqmInsert.getTarget().getReferencedPathSource().getHibernateEntityName();
 		final EntityPersister entityDescriptor = getSessionFactory().getDomainModel().findEntityDescriptor( entityNameToInsert );
@@ -989,7 +896,7 @@ public class QuerySqmImpl<R>
 		}
 	}
 
-	private boolean isSimpleValuesInsert(SqmInsertStatement<R> sqmInsert, EntityPersister entityDescriptor) {
+	private boolean isSimpleValuesInsert(@SuppressWarnings("rawtypes") SqmInsertStatement sqmInsert, EntityPersister entityDescriptor) {
 		// Simple means that we can translate the statement to a single plain insert
 		return sqmInsert instanceof SqmInsertValuesStatement
 				// An insert is only simple if no SqmMultiTableMutation strategy is available,
@@ -998,26 +905,240 @@ public class QuerySqmImpl<R>
 				&& entityDescriptor.getSqmMultiTableMutationStrategy() == null;
 	}
 
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// QueryOptions
+
 	@Override
-	protected void prepareForExecution() {
-		super.prepareForExecution();
-		// Reset the callback before every execution
-		callback = null;
+	public SqmQueryImplementor<R> addQueryHint(String hint) {
+		getQueryOptions().addDatabaseHint( hint );
+		return this;
 	}
 
 	@Override
-	public Callback getCallback() {
-		if ( callback == null ) {
-			callback = new CallbackImpl();
-		}
-		return callback;
+	public LockOptions getLockOptions() {
+		return getQueryOptions().getLockOptions();
 	}
+
+	@Override
+	public SqmQueryImplementor<R> setLockOptions(LockOptions lockOptions) {
+		verifySelect();
+		getQueryOptions().getLockOptions().overlay( lockOptions );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
+		verifySelect();
+		getQueryOptions().getLockOptions().setAliasSpecificLockMode( alias, lockMode );
+		return this;
+	}
+
+	@Override
+	public <T> SqmQueryImplementor<T> setTupleTransformer(TupleTransformer<T> transformer) {
+		applyTupleTransformer( transformer );
+		//noinspection unchecked
+		return (SqmQueryImplementor<T>) this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setResultListTransformer(ResultListTransformer transformer) {
+		applyResultListTransformer( transformer );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setMaxResults(int maxResult) {
+		applyMaxResults( maxResult );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setFirstResult(int startPosition) {
+		applyFirstResult( startPosition );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setHibernateFlushMode(FlushMode flushMode) {
+		super.setHibernateFlushMode( flushMode );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setFlushMode(FlushModeType flushMode) {
+		applyJpaFlushMode( flushMode );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setLockMode(LockModeType lockMode) {
+		if ( lockMode != LockModeType.NONE ) {
+			verifySelect();
+		}
+		getSession().checkOpen( false );
+		getQueryOptions().getLockOptions().setLockMode( LockMode.fromJpaLockMode( lockMode ) );
+		return this;
+	}
+
+	@Override
+	public LockModeType getLockMode() {
+		verifySelect();
+		getSession().checkOpen( false );
+		return getLockOptions().getLockMode().toJpaLockMode();
+	}
+
+	@Override
+	public FlushModeType getFlushMode() {
+		return getJpaFlushMode();
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// hints
+
+	protected void collectHints(Map<String, Object> hints) {
+		super.collectHints( hints );
+
+		if ( isReadOnly() ) {
+			hints.put( HINT_READ_ONLY, true );
+		}
+
+		putIfNotNull( hints, HINT_FETCH_SIZE, getFetchSize() );
+
+		if ( isCacheable() ) {
+			hints.put( HINT_CACHEABLE, true );
+			putIfNotNull( hints, HINT_CACHE_REGION, getCacheRegion() );
+			putIfNotNull( hints, HINT_CACHE_MODE, getCacheMode() );
+
+			putIfNotNull( hints, HINT_SPEC_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
+			putIfNotNull( hints, HINT_SPEC_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
+			putIfNotNull( hints, HINT_JAVAEE_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
+			putIfNotNull( hints, HINT_JAVAEE_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
+		}
+
+		final AppliedGraph appliedGraph = getQueryOptions().getAppliedGraph();
+		if ( appliedGraph != null && appliedGraph.getSemantic() != null ) {
+			hints.put( appliedGraph.getSemantic().getJakartaHintName(), appliedGraph );
+			hints.put( appliedGraph.getSemantic().getJpaHintName(), appliedGraph );
+		}
+
+		putIfNotNull( hints, HINT_FOLLOW_ON_LOCKING, getQueryOptions().getLockOptions().getFollowOnLocking() );
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setHint(String hintName, Object value) {
+		applyHint( hintName, value );
+		return this;
+	}
+
+	@Override
+	protected void applyLockTimeoutHint(Integer timeout) {
+		if ( isSelect( sqm ) ) {
+			super.applyLockTimeoutHint( timeout );
+		}
+	}
+
+	@Override
+	protected void applyLockTimeoutHint(int timeout) {
+		if ( isSelect( sqm ) ) {
+			super.applyLockTimeoutHint( timeout );
+		}
+	}
+
+	@Override
+	protected void applyHibernateLockMode(LockMode value) {
+		if ( isSelect( sqm ) ) {
+			super.applyHibernateLockMode( value );
+		}
+	}
+
+	@Override
+	protected void applyLockModeType(LockModeType value) {
+		if ( isSelect( sqm ) ) {
+			super.applyLockModeType( value );
+		}
+	}
+
+	@Override
+	protected void applyAliasSpecificLockModeHint(String hintName, Object value) {
+		if ( isSelect( sqm ) ) {
+			super.applyAliasSpecificLockModeHint( hintName, value );
+		}
+	}
+
+	@Override
+	protected void applyFollowOnLockingHint(Boolean followOnLocking) {
+		if ( isSelect( sqm ) ) {
+			super.applyFollowOnLockingHint( followOnLocking );
+		}
+	}
+
+	@Override
+	public SqmQueryImplementor<R> applyGraph(@SuppressWarnings("rawtypes") RootGraph graph, GraphSemantic semantic) {
+		getQueryOptions().applyGraph( (RootGraphImplementor<?>) graph, semantic );
+		return this;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// select execution
+
+	@Override
+	public List<R> list() {
+		//noinspection unchecked
+		return super.list();
+	}
+
+	@Override
+	public ScrollableResultsImplementor<R> scroll() {
+		//noinspection unchecked
+		return super.scroll();
+	}
+
+	@Override
+	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
+		//noinspection unchecked
+		return super.scroll( scrollMode );
+	}
+
+	@Override
+	public Stream<R> stream() {
+		//noinspection unchecked
+		return super.stream();
+	}
+
+	@Override
+	public R uniqueResult() {
+		//noinspection unchecked
+		return (R) super.uniqueResult();
+	}
+
+	@Override
+	public R getSingleResult() {
+		//noinspection unchecked
+		return (R) super.getSingleResult();
+	}
+
+	@Override
+	public Optional<R> uniqueResultOptional() {
+		//noinspection unchecked
+		return super.uniqueResultOptional();
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Named query externalization
 
 	@Override
 	public NamedHqlQueryMemento toMemento(String name) {
+		if ( CRITERIA_HQL_STRING.equals( getQueryString() ) ) {
+			throw new UnsupportedOperationException( "Criteria-based Query cannot be saved as a named query" );
+		}
+
 		return new NamedHqlQueryMementoImpl(
 				name,
-				hqlString,
+				getQueryString(),
 				getFirstResult(),
 				getMaxResults(),
 				isCacheable(),
@@ -1034,4 +1155,334 @@ public class QuerySqmImpl<R>
 		);
 	}
 
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// unwrap
+
+	@SuppressWarnings("unchecked")
+	public <T> T unwrap(Class<T> cls) {
+		if ( cls.isInstance( this ) ) {
+			return (T) this;
+		}
+
+		if ( cls.isInstance( parameterMetadata ) ) {
+			return (T) parameterMetadata;
+		}
+
+		if ( cls.isInstance( parameterBindings ) ) {
+			return (T) parameterBindings;
+		}
+
+		if ( cls.isInstance( sqm ) ) {
+			return (T) sqm;
+		}
+
+		if ( cls.isInstance( getQueryOptions() ) ) {
+			return (T) getQueryOptions();
+		}
+
+		if ( cls.isInstance( getQueryOptions().getAppliedGraph() ) ) {
+			return (T) getQueryOptions().getAppliedGraph();
+		}
+
+		if ( EntityGraphQueryHint.class.isAssignableFrom( cls ) ) {
+			return (T) new EntityGraphQueryHint( getQueryOptions().getAppliedGraph() );
+		}
+
+		throw new PersistenceException( "Unrecognized unwrap type [" + cls.getName() + "]" );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// covariance
+
+
+	@Override
+	public SqmQueryImplementor<R> setComment(String comment) {
+		super.setComment( comment );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setCacheMode(CacheMode cacheMode) {
+		super.setCacheMode( cacheMode );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setCacheable(boolean cacheable) {
+		super.setCacheable( cacheable );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setCacheRegion(String cacheRegion) {
+		super.setCacheRegion( cacheRegion );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setTimeout(int timeout) {
+		super.setTimeout( timeout );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setFetchSize(int fetchSize) {
+		super.setFetchSize( fetchSize );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setReadOnly(boolean readOnly) {
+		super.setReadOnly( readOnly );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setProperties(Object bean) {
+		super.setProperties( bean );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setProperties(Map bean) {
+		super.setProperties( bean );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setParameter(String name, Object value) {
+		super.setParameter( name, value );
+		return this;
+	}
+
+	@Override
+	public <P> SqmQueryImplementor<R> setParameter(String name, P value, Class<P> javaType) {
+		super.setParameter( name, value, javaType );
+		return this;
+	}
+
+	@Override
+	public <P> SqmQueryImplementor<R> setParameter(String name, P value, BindableType<P> type) {
+		super.setParameter( name, value, type );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType) {
+		super.setParameter( name, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setParameter(int position, Object value) {
+		super.setParameter( position, value );
+		return this;
+	}
+
+	@Override
+	public <P> SqmQueryImplementor<R> setParameter(int position, P value, Class<P> javaType) {
+		super.setParameter( position, value, javaType );
+		return this;
+	}
+
+	@Override
+	public <P> SqmQueryImplementor<R> setParameter(int position, P value, BindableType<P> type) {
+		super.setParameter( position, value, type );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setParameter(int position, Instant value, TemporalType temporalType) {
+		super.setParameter( position, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public <P> SqmQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value) {
+		super.setParameter( parameter, value );
+		return this;
+	}
+
+	@Override
+	public <P> SqmQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Class<P> javaType) {
+		super.setParameter( parameter, value, javaType );
+		return this;
+	}
+
+	@Override
+	public <P> SqmQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, BindableType<P> type) {
+		super.setParameter( parameter, value, type );
+		return this;
+	}
+
+	@Override
+	public <P> SqmQueryImplementor<R> setParameter(Parameter<P> parameter, P value) {
+		super.setParameter( parameter, value );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
+		super.setParameter( param, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
+		super.setParameter( param, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType) {
+		super.setParameter( name, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setParameter(String name, Date value, TemporalType temporalType) {
+		super.setParameter( name, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType) {
+		super.setParameter( position, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setParameter(int position, Date value, TemporalType temporalType) {
+		super.setParameter( position, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setParameterList(String name, Collection values) {
+		super.setParameterList( name, values );
+		return this;
+	}
+
+	@Override
+	public <P> SqmQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType) {
+		super.setParameterList( name, values, javaType );
+		return this;
+	}
+
+	@Override
+	public <P> SqmQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, BindableType<P> type) {
+		super.setParameterList( name, values, type );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setParameterList(String name, Object[] values) {
+		super.setParameterList( name, values );
+		return this;
+	}
+
+	@Override
+	public <P> SqmQueryImplementor<R> setParameterList(String name, P[] values, Class<P> javaType) {
+		super.setParameterList( name, values, javaType );
+		return this;
+	}
+
+	@Override
+	public <P> SqmQueryImplementor<R> setParameterList(String name, P[] values, BindableType<P> type) {
+		super.setParameterList( name, values, type );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setParameterList(int position, Collection values) {
+		super.setParameterList( position, values );
+		return this;
+	}
+
+	@Override
+	public <P> SqmQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType) {
+		super.setParameterList( position, values, javaType );
+		return this;
+	}
+
+	@Override
+	public <P> SqmQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, BindableType<P> type) {
+		super.setParameterList( position, values, type );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setParameterList(int position, Object[] values) {
+		super.setParameterList( position, values );
+		return this;
+	}
+
+	@Override
+	public <P> SqmQueryImplementor<R> setParameterList(int position, P[] values, Class<P> javaType) {
+		super.setParameterList( position, values, javaType );
+		return this;
+	}
+
+	@Override
+	public <P> SqmQueryImplementor<R> setParameterList(int position, P[] values, BindableType<P> type) {
+		super.setParameterList( position, values, type );
+		return this;
+	}
+
+	@Override
+	public <P> SqmQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values) {
+		super.setParameterList( parameter, values );
+		return this;
+	}
+
+	@Override
+	public <P> SqmQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType) {
+		super.setParameterList( parameter, values, javaType );
+		return this;
+	}
+
+	@Override
+	public <P> SqmQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type) {
+		super.setParameterList( parameter, values, type );
+		return this;
+	}
+
+	@Override
+	public <P> SqmQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values) {
+		super.setParameterList( parameter, values );
+		return this;
+	}
+
+	@Override
+	public <P> SqmQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType) {
+		super.setParameterList( parameter, values, javaType );
+		return this;
+	}
+
+	@Override
+	public <P> SqmQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type) {
+		super.setParameterList( parameter, values, type );
+		return this;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// optional object loading
+
+	@Override
+	public void setOptionalId(Serializable id) {
+		throw new UnsupportedOperationException( "Not sure yet how to handle this in SQM based queries, but for sure it will be different" );
+	}
+
+	@Override
+	public void setOptionalEntityName(String entityName) {
+		throw new UnsupportedOperationException( "Not sure yet how to handle this in SQM based queries, but for sure it will be different" );
+	}
+
+	@Override
+	public void setOptionalObject(Object optionalObject) {
+		throw new UnsupportedOperationException( "Not sure yet how to handle this in SQM based queries, but for sure it will be different" );
+	}
 }

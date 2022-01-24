@@ -13,5 +13,5 @@ package org.hibernate.sql;
  * @author Steve Ebersole
  */
 public interface AliasGenerator {
-	public String generateAlias(String sqlExpression);
+	String generateAlias(String sqlExpression);
 }

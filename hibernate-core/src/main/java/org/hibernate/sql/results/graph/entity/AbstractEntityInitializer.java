@@ -42,7 +42,7 @@ import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.proxy.map.MapProxy;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -98,7 +98,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	// todo (6.0) : ^^ need a better way to track whether we are loading the entity state or if something else is/has
 
-	@SuppressWarnings("WeakerAccess")
 	protected AbstractEntityInitializer(
 			EntityResultGraphNode resultDescriptor,
 			NavigablePath navigablePath,
@@ -177,7 +176,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					final DomainResultAssembler<?> stateAssembler;
 					if ( fetch == null ) {
 						stateAssembler = new NullValueAssembler<>(
-								attributeMapping.getMappedType().getMappedJavaTypeDescriptor()
+								attributeMapping.getMappedType().getMappedJavaType()
 						);
 					}
 					else {
@@ -329,7 +328,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		return concreteType;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void resolveEntityKey(RowProcessingState rowProcessingState) {
 		if ( entityKey != null ) {
 			// its already been resolved
@@ -368,7 +366,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState) {
 		final Object id = jdbcValuesSourceProcessingState.getProcessingOptions().getEffectiveOptionalId();
 		final boolean useEmbeddedIdentifierInstanceAsEntity = id != null && id.getClass()
-				.equals( concreteDescriptor.getJavaTypeDescriptor().getJavaType() );
+				.equals( concreteDescriptor.getJavaType().getJavaType() );
 		if ( useEmbeddedIdentifierInstanceAsEntity ) {
 			entityInstance = id;
 			return id;
@@ -422,7 +420,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				.getExecutionContext()
 				.getEntityInstance();
 		if ( proxy != null && ( proxy instanceof MapProxy
-				|| entityDescriptor.getJavaTypeDescriptor().getJavaTypeClass().isInstance( proxy ) ) ) {
+				|| entityDescriptor.getJavaType().getJavaTypeClass().isInstance( proxy ) ) ) {
 			if ( this instanceof EntityResultInitializer && entityInstanceFromExecutionContext != null ) {
 				this.entityInstance = entityInstanceFromExecutionContext;
 				registerLoadingEntity( rowProcessingState, entityInstance );

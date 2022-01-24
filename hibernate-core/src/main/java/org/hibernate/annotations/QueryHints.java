@@ -6,8 +6,10 @@
  */
 package org.hibernate.annotations;
 
-import org.hibernate.FlushMode;
-import org.hibernate.query.NativeQuery;
+import org.hibernate.jpa.AvailableHints;
+import org.hibernate.jpa.HibernateHints;
+import org.hibernate.jpa.LegacySpecHints;
+import org.hibernate.jpa.SpecHints;
 import org.hibernate.query.Query;
 
 /**
@@ -16,9 +18,13 @@ import org.hibernate.query.Query;
  * the {@link Query} interface, and so hints are only necessary for programs
  * working with the JPA APIs.
  *
- * @see org.hibernate.jpa.QueryHints
+ * @see AvailableHints
+ *
+ * @deprecated (since 6.0) Use {@link AvailableHints} instead
  */
-public class QueryHints {
+@SuppressWarnings("unused")
+@Deprecated
+public final class QueryHints {
 	/**
 	 * Disallow instantiation.
 	 */
@@ -26,124 +32,78 @@ public class QueryHints {
 	}
 
 	/**
-	 * The cache mode to use.
+	 * @see HibernateHints#HINT_READ_ONLY
+	 */
+	public static final String READ_ONLY = HibernateHints.HINT_READ_ONLY;
+
+	/**
+	 * @see HibernateHints#HINT_CACHEABLE
+	 */
+	public static final String CACHEABLE = HibernateHints.HINT_CACHEABLE;
+
+	/**
+	 * @see HibernateHints#HINT_CACHE_MODE
+	 */
+	public static final String CACHE_MODE = HibernateHints.HINT_CACHE_MODE;
+
+	/**
+	 * @see HibernateHints#HINT_CACHE_REGION
+	 */
+	public static final String CACHE_REGION = HibernateHints.HINT_CACHE_REGION;
+
+	/**
+	 * @see HibernateHints#HINT_COMMENT
+	 */
+	public static final String COMMENT = HibernateHints.HINT_COMMENT;
+
+	/**
+	 * @see HibernateHints#HINT_FETCH_SIZE
+	 */
+	public static final String FETCH_SIZE = HibernateHints.HINT_FETCH_SIZE;
+
+	/**
+	 * @see HibernateHints#HINT_FLUSH_MODE
+	 */
+	public static final String FLUSH_MODE = HibernateHints.HINT_FLUSH_MODE;
+
+	/**
+	 * @see HibernateHints#HINT_TIMEOUT
+	 */
+	public static final String TIMEOUT_HIBERNATE = HibernateHints.HINT_TIMEOUT;
+
+	/**
+	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_QUERY_TIMEOUT
+	 */
+	public static final String TIMEOUT_JAKARTA_JPA = SpecHints.HINT_SPEC_QUERY_TIMEOUT;
+
+	/**
+	 * @see HibernateHints#HINT_NATIVE_LOCK_MODE
+	 */
+	public static final String NATIVE_LOCKMODE = HibernateHints.HINT_NATIVE_LOCK_MODE;
+
+	/**
+	 * @see HibernateHints#HINT_FOLLOW_ON_LOCKING
+	 */
+	public static final String FOLLOW_ON_LOCKING = HibernateHints.HINT_FOLLOW_ON_LOCKING;
+
+	/**
+	 * @see HibernateHints#HINT_NATIVE_SPACES
+	 */
+	public static final String NATIVE_SPACES = HibernateHints.HINT_NATIVE_SPACES;
+
+	/**
+	 * @see HibernateHints#HINT_CALLABLE_FUNCTION
 	 *
-	 * @see Query#setCacheMode
-	 * @see NativeQuery#setCacheMode
+	 * @deprecated Calling stored-procedures and functions via
+	 * {@link org.hibernate.query.NativeQuery} is no longer supported.
+	 * Use {@link org.hibernate.procedure.ProcedureCall} or
+	 * {@link jakarta.persistence.StoredProcedureQuery} instead.
 	 */
-	public static final String CACHE_MODE = "org.hibernate.cacheMode";
+	@Deprecated
+	public static final String CALLABLE_FUNCTION = HibernateHints.HINT_CALLABLE_FUNCTION;
 
 	/**
-	 * The cache region to use.
-	 *
-	 * @see Query#setCacheRegion
-	 * @see NativeQuery#setCacheRegion
+	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_QUERY_TIMEOUT
 	 */
-	public static final String CACHE_REGION = "org.hibernate.cacheRegion";
-
-	/**
-	 * Are the query results cacheable?
-	 *
-	 * @see Query#setCacheable
-	 * @see NativeQuery#setCacheable
-	 */
-	public static final String CACHEABLE = "org.hibernate.cacheable";
-
-	/**
-	 * Is the named stored procedure a function?
-	 */
-	public static final String CALLABLE_FUNCTION = "org.hibernate.callableFunction";
-
-	/**
-	 * Defines a comment to be applied to the SQL sent to the database.
-	 *
-	 * @see Query#setComment
-	 * @see NativeQuery#setComment
-	 */
-	public static final String COMMENT = "org.hibernate.comment";
-
-	/**
-	 * Defines the JDBC fetch size to use.
-	 *
-	 * @see Query#setFetchSize
-	 * @see NativeQuery#setFetchSize
-	 */
-	public static final String FETCH_SIZE = "org.hibernate.fetchSize";
-
-	/**
-	 * The flush mode to associate with the execution of the query.
-	 *
-	 * @see Query#setHibernateFlushMode
-	 * @see NativeQuery#setHibernateFlushMode
-	 * @see org.hibernate.Session#setHibernateFlushMode
-	 */
-	public static final String FLUSH_MODE = "org.hibernate.flushMode";
-
-	/**
-	 * Should entities returned from the query be set in read only mode?
-	 *
-	 * @see Query#setReadOnly
-	 * @see NativeQuery#setReadOnly
-	 * @see org.hibernate.Session#setReadOnly
-	 */
-	public static final String READ_ONLY = "org.hibernate.readOnly";
-
-	/**
-	 * Apply a Hibernate query timeout, which is defined in <b>seconds</b>.
-	 *
-	 * @see Query#setTimeout
-	 * @see NativeQuery#setTimeout
-	 */
-	public static final String TIMEOUT_HIBERNATE = "org.hibernate.timeout";
-
-	/**
-	 * Apply a JPA query timeout, which is defined in <b>milliseconds</b>.
-	 */
-	public static final String TIMEOUT_JPA = "javax.persistence.query.timeout";
-
-	/**
-	 * Apply a JPA query timeout, which is defined in <b>milliseconds</b>.
-	 */
-	public static final String TIMEOUT_JAKARTA_JPA = "jakarta.persistence.query.timeout";
-
-	/**
-	 * Apply lock mode to a native SQL query since JPA requires that
-	 * {@link jakarta.persistence.Query#setLockMode} throw an {@code IllegalStateException}
-	 * if called for a native query.
-	 * <p/>
-	 * Accepts a {@link jakarta.persistence.LockModeType} or a {@link org.hibernate.LockMode}
-	 */
-	public static final String NATIVE_LOCKMODE = "org.hibernate.lockMode";
-
-	/**
-	 * Hint to enable/disable the follow-on-locking mechanism provided by
-	 * {@link org.hibernate.dialect.Dialect#useFollowOnLocking(String, org.hibernate.query.spi.QueryOptions)}.
-	 * A value of {@code true} enables follow-on-locking, whereas a value of
-	 * {@code false} disables it. If the value is {@code null}, the
-	 * {@code Dialect}'s default strategy is used.
-	 *
-	 * @since 5.2
-	 */
-	public static final String FOLLOW_ON_LOCKING = "hibernate.query.followOnLocking";
-
-	/**
-	 * Hint for specifying query spaces to be applied to a native (SQL) query.
-	 *
-	 * Passed value can be any of:<ul>
-	 *     <li>List of the spaces</li>
-	 *     <li>array of the spaces</li>
-	 *     <li>String as "whitespace"-separated list of the spaces</li>
-	 * </ul>
-	 *
-	 * Note that the passed space need not match any real spaces/tables in
-	 * the underlying query.  This can be used to completely circumvent
-	 * the auto-flush checks as well as any cache invalidation that might
-	 * occur as part of a flush.  See {@link org.hibernate.query.SynchronizeableQuery}
-	 * and {@link FlushMode#MANUAL} for more information.
-	 *
-	 * @see org.hibernate.SynchronizeableQuery
-	 * @see #FLUSH_MODE
-	 */
-	public static final String NATIVE_SPACES = "org.hibernate.query.native.spaces";
-
+	public static final String TIMEOUT_JPA = LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
 }

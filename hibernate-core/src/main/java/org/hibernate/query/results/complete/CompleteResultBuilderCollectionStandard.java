@@ -17,7 +17,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FromClauseAccessImpl;
 import org.hibernate.query.results.ResultBuilder;
@@ -68,7 +68,7 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 
 	@Override
 	public Class<?> getJavaType() {
-		return pluralAttributeDescriptor.getExpressableJavaTypeDescriptor().getJavaTypeClass();
+		return pluralAttributeDescriptor.getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	@Override
@@ -164,7 +164,7 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 								return new ResultSetMappingSqlSelection( valuesArrayPosition, basicType );
 							}
 					),
-					selectableMapping.getJdbcMapping().getMappedJavaTypeDescriptor(),
+					selectableMapping.getJdbcMapping().getMappedJavaType(),
 					creationStateImpl.getSessionFactory().getTypeConfiguration()
 			);
 		};

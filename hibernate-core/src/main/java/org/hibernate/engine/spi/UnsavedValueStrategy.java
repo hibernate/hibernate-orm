@@ -21,7 +21,7 @@ public interface UnsavedValueStrategy {
 	 * indicates the value does not corresponds to unsaved data (aka, detached state); {@code null} indicates that
 	 * this strategy was not able to determine conclusively.
 	 */
-	public Boolean isUnsaved(Object test);
+	Boolean isUnsaved(Object test);
 
 	/**
 	 * Get a default value meant to indicate transience.
@@ -30,5 +30,5 @@ public interface UnsavedValueStrategy {
 	 *
 	 * @return The default transience value.
 	 */
-	public Object getDefaultValue(Object currentValue);
+	Object getDefaultValue(Object currentValue);
 }

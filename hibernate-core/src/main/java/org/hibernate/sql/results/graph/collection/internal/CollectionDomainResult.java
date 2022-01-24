@@ -13,7 +13,7 @@ import org.hibernate.LockMode;
 import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -59,7 +59,7 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 				creationState
 		);
 
-		final CollectionSemantics collectionSemantics = loadingAttribute.getCollectionDescriptor().getCollectionSemantics();
+		final CollectionSemantics<?,?> collectionSemantics = loadingAttribute.getCollectionDescriptor().getCollectionSemantics();
 		initializerProducer = collectionSemantics.createInitializerProducer(
 				loadingPath,
 				loadingAttribute,
@@ -81,8 +81,8 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 	}
 
 	@Override
-	public JavaType<?> getResultJavaTypeDescriptor() {
-		return loadingAttribute.getJavaTypeDescriptor();
+	public JavaType<?> getResultJavaType() {
+		return loadingAttribute.getJavaType();
 	}
 
 	@Override

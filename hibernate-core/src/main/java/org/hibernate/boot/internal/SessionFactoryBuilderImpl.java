@@ -30,7 +30,7 @@ import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -45,7 +45,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	private final MetadataImplementor metadata;
 	private final SessionFactoryOptionsBuilder optionsBuilder;
 
-	@SuppressWarnings("WeakerAccess")
 	public SessionFactoryBuilderImpl(MetadataImplementor metadata, BootstrapContext bootstrapContext) {
 		this(
 				metadata,
@@ -56,7 +55,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		);
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public SessionFactoryBuilderImpl(MetadataImplementor metadata, SessionFactoryOptionsBuilder optionsBuilder) {
 		this.metadata = metadata;
 		this.optionsBuilder = optionsBuilder;
@@ -262,12 +260,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyQuerySubstitutions(@SuppressWarnings("rawtypes") Map substitutions) {
-		this.optionsBuilder.applyQuerySubstitutions( substitutions );
-		return this;
-	}
-
-	@Override
 	public SessionFactoryBuilder applyNamedQueryCheckingOnStartup(boolean enabled) {
 		this.optionsBuilder.enableNamedQueryCheckingOnStartup( enabled );
 		return this;
@@ -336,12 +328,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder applyScrollableResultsSupport(boolean enabled) {
 		this.optionsBuilder.enableScrollableResultSupport( enabled );
-		return this;
-	}
-
-	@Override
-	public SessionFactoryBuilder applyResultSetsWrapping(boolean enabled) {
-		this.optionsBuilder.enableResultSetWrappingSupport( enabled );
 		return this;
 	}
 

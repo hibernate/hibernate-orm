@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.sql.ast.SqlAstWalker;
 
 /**
@@ -19,7 +19,7 @@ public class Star implements Expression {
 	public static final Star INSTANCE = new Star();
 
 	@Override
-	public MappingModelExpressable getExpressionType() {
+	public MappingModelExpressible getExpressionType() {
 		return null;
 	}
 

@@ -8,7 +8,7 @@ package org.hibernate.orm.test.mapping.type.java;
 
 import java.util.Date;
 
-import org.hibernate.type.descriptor.java.JdbcTimeJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
 
 /**
  * @author Owen Farrell
@@ -19,7 +19,7 @@ public class JdbcTimeJavaTypeDescriptorTest extends AbstractDescriptorTest<Date>
 	final Date different = new Date( original.getTime() + 500L);
 
 	public JdbcTimeJavaTypeDescriptorTest() {
-		super( JdbcTimeJavaTypeDescriptor.INSTANCE );
+		super( JdbcTimeJavaType.INSTANCE );
 	}
 
 	@Override

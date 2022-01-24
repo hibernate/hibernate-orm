@@ -8,6 +8,15 @@ package org.hibernate.orm.test.jpa.transaction;
 
 import java.util.List;
 import java.util.Map;
+
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.stat.Statistics;
+
+import org.junit.Test;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.OptimisticLockException;
@@ -15,14 +24,6 @@ import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Query;
 import jakarta.persistence.RollbackException;
 import jakarta.persistence.TransactionRequiredException;
-
-import org.hibernate.Session;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.stat.Statistics;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -66,7 +67,7 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 		Book book = new Book();
 		book.name = "Le petit prince";
 		EntityManager em = getOrCreateEntityManager();
-		Statistics stats = ( ( HibernateEntityManagerFactory ) entityManagerFactory() ).getSessionFactory().getStatistics();
+		Statistics stats = entityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
 		stats.clear();
 		stats.setStatisticsEnabled( true );
 
@@ -110,7 +111,7 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 		Book book = new Book();
 		book.name = "Le petit prince";
 		EntityManager em = getOrCreateEntityManager();
-		Statistics stats = ( ( HibernateEntityManagerFactory ) entityManagerFactory() ).getSessionFactory().getStatistics();
+		Statistics stats = entityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
 
 		em.getTransaction().begin();
 		em.persist( book );

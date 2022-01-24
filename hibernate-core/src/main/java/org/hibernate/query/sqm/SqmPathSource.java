@@ -12,7 +12,8 @@ import jakarta.persistence.metamodel.Bindable;
 
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.sqm.tree.SqmExpressableAccessor;
+import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.sqm.tree.SqmExpressibleAccessor;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
 /**
@@ -24,10 +25,10 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
  *
  * @author Steve Ebersole
  */
-public interface SqmPathSource<J> extends SqmExpressable<J>, Bindable<J>, SqmExpressableAccessor<J> {
+public interface SqmPathSource<J> extends SqmExpressible<J>, Bindable<J>, SqmExpressibleAccessor<J> {
 	/**
 	 * The name of this thing.  Mainly used in logging and when creating a
-	 * {@link org.hibernate.query.NavigablePath}
+	 * {@link NavigablePath}
 	 */
 	String getPathName();
 
@@ -61,7 +62,7 @@ public interface SqmPathSource<J> extends SqmExpressable<J>, Bindable<J>, SqmExp
 									Locale.ROOT,
 									"Could not resolve attribute '%s' of '%s'",
 									name,
-									getExpressable().getExpressableJavaTypeDescriptor().getJavaType().getTypeName()
+									getExpressible().getExpressibleJavaType().getJavaType().getTypeName()
 							)
 					)
 			);
@@ -82,7 +83,7 @@ public interface SqmPathSource<J> extends SqmExpressable<J>, Bindable<J>, SqmExp
 	SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource);
 
 	@Override
-	default SqmExpressable<J> getExpressable() {
-		return (SqmExpressable<J>) getSqmPathType();
+	default SqmExpressible<J> getExpressible() {
+		return (SqmExpressible<J>) getSqmPathType();
 	}
 }

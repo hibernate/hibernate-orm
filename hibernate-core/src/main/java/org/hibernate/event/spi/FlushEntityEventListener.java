@@ -12,5 +12,5 @@ import org.hibernate.HibernateException;
  * @author Gavin King
  */
 public interface FlushEntityEventListener {
-	public void onFlushEntity(FlushEntityEvent event) throws HibernateException;
+	void onFlushEntity(FlushEntityEvent event) throws HibernateException;
 }

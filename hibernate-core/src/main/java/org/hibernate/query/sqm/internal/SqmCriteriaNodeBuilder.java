@@ -38,13 +38,13 @@ import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.BindableType;
-import org.hibernate.query.BinaryArithmeticOperator;
-import org.hibernate.query.ComparisonOperator;
-import org.hibernate.query.NullPrecedence;
-import org.hibernate.query.SetOperator;
-import org.hibernate.query.SortOrder;
-import org.hibernate.query.TrimSpec;
-import org.hibernate.query.UnaryArithmeticOperator;
+import org.hibernate.query.sqm.BinaryArithmeticOperator;
+import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.NullPrecedence;
+import org.hibernate.query.sqm.SetOperator;
+import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.sqm.TrimSpec;
+import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
@@ -55,7 +55,7 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -331,6 +331,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	@SafeVarargs
 	public final SqmPredicate wrap(Expression<Boolean>... expressions) {
+		if ( expressions.length == 1 ) {
+			return wrap( expressions[0] );
+		}
+
 		final SqmPredicate lhs = wrap( expressions[0] );
 		final SqmPredicate rhs = wrap( expressions[1] );
 		SqmPredicate predicate = new SqmAndPredicate( lhs, rhs, this );
@@ -430,7 +434,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		//noinspection unchecked
 		return new SqmJpaCompoundSelection<>(
 				(List<SqmSelectableNode<?>>) selections,
-				getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( Tuple.class ),
+				getTypeConfiguration().getJavaTypeRegistry().getDescriptor( Tuple.class ),
 				this
 		);
 	}
@@ -445,24 +449,24 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		final TypeConfiguration typeConfiguration = getTypeConfiguration();
 		@SuppressWarnings("unchecked")
 		final List<SqmExpression<?>> sqmExpressions = (List<SqmExpression<?>>) expressions;
-		final SqmExpressable<R> expressableType;
+		final SqmExpressible<R> expressibleType;
 		if ( tupleType == null || tupleType == Object[].class ) {
 			//noinspection unchecked
-			expressableType = (DomainType<R>) typeConfiguration.resolveTupleType( sqmExpressions );
+			expressibleType = (DomainType<R>) typeConfiguration.resolveTupleType( sqmExpressions );
 		}
 		else {
-			expressableType = typeConfiguration.getSessionFactory().getMetamodel().embeddable( tupleType );
+			expressibleType = typeConfiguration.getSessionFactory().getMetamodel().embeddable( tupleType );
 		}
-		return tuple( expressableType, sqmExpressions );
+		return tuple( expressibleType, sqmExpressions );
 	}
 
 	@Override
-	public <R> SqmTuple<R> tuple(SqmExpressable<R> tupleType, SqmExpression<?>... expressions) {
+	public <R> SqmTuple<R> tuple(SqmExpressible<R> tupleType, SqmExpression<?>... expressions) {
 		return tuple( tupleType, asList( expressions ) );
 	}
 
 	@Override
-	public <R> SqmTuple<R> tuple(SqmExpressable<R> tupleType, List<? extends SqmExpression<?>> sqmExpressions) {
+	public <R> SqmTuple<R> tuple(SqmExpressible<R> tupleType, List<? extends SqmExpression<?>> sqmExpressions) {
 		if ( tupleType == null ) {
 			//noinspection unchecked
 			tupleType = (DomainType<R>) getTypeConfiguration().resolveTupleType( sqmExpressions );
@@ -497,7 +501,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		//noinspection unchecked
 		return new SqmJpaCompoundSelection<>(
 				(List<SqmSelectableNode<?>>) selections,
-				getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( resultClass ),
+				getTypeConfiguration().getJavaTypeRegistry().getDescriptor( resultClass ),
 				this
 		);
 	}
@@ -700,7 +704,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 				operator,
 				leftHandExpression,
 				rightHandExpression,
-				(SqmExpressable<N>) getDomainModel().getTypeConfiguration().resolveArithmeticType(
+				(SqmExpressible<N>) getDomainModel().getTypeConfiguration().resolveArithmeticType(
 						leftHandExpression.getNodeType(),
 						rightHandExpression.getNodeType(),
 						operator
@@ -710,21 +714,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <N extends Number> SqmExpression<N> sum(Expression<? extends N> x, N y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.ADD,
 				(SqmExpression<?>) x,
-				value( y, (SqmExpression) x )
+				value( y )
 		);
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <N extends Number> SqmExpression<N> sum(N x, Expression<? extends N> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.ADD,
-				value( x, (SqmExpression) y ),
+				value( x ),
 				(SqmExpression<?>) y
 		);
 	}
@@ -743,7 +745,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.MULTIPLY,
 				(SqmExpression<?>) x,
-				value( y, (SqmExpression<?>) x )
+				value( y )
 		);
 	}
 
@@ -751,7 +753,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <N extends Number> SqmExpression<N> prod(N x, Expression<? extends N> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.MULTIPLY,
-				value( x, (SqmExpression<?>) y ),
+				value( x ),
 				(SqmExpression<?>) y
 		);
 	}
@@ -766,12 +768,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <N extends Number> SqmExpression<N> diff(Expression<? extends N> x, N y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.SUBTRACT,
-				(SqmExpression) x,
-				value( y, (SqmExpression) x )
+				(SqmExpression<?>) x,
+				value( y )
 		);
 	}
 
@@ -779,7 +780,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <N extends Number> SqmExpression<N> diff(N x, Expression<? extends N> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.SUBTRACT,
-				value( x, (SqmExpression<?>) y ),
+				value( x ),
 				(SqmExpression<?>) y
 		);
 	}
@@ -798,7 +799,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.QUOT,
 				(SqmExpression<?>) x,
-				value( y, (SqmExpression<?>) x )
+				value( y )
 		);
 	}
 
@@ -807,7 +808,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public SqmExpression<Number> quot(Number x, Expression<? extends Number> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.QUOT,
-				value( x, (SqmExpression<? extends Number>) y ),
+				value( x ),
 				(SqmExpression<? extends Number>) y
 		);
 	}
@@ -826,7 +827,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.MODULO,
 				(SqmExpression<Integer>) x,
-				value( y, (SqmExpression<Integer>) x )
+				value( y )
 		);
 	}
 
@@ -834,7 +835,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public SqmExpression<Integer> mod(Integer x, Expression<Integer> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.MODULO,
-				value( x, (SqmExpression<Integer>) y ),
+				value( x ),
 				(SqmExpression<Integer>) y
 		);
 	}
@@ -890,17 +891,17 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return new SqmLiteralNull<>( this );
 		}
 
-		final SqmExpressable<T> expressable = resolveInferredType( value, typeInferenceSource, getTypeConfiguration() );
-		return new SqmLiteral<>( value, expressable, this );
+		final SqmExpressible<T> expressible = resolveInferredType( value, typeInferenceSource, getTypeConfiguration() );
+		return new SqmLiteral<>( value, expressible, this );
 	}
 
-	private static <T> SqmExpressable<T> resolveInferredType(
+	private static <T> SqmExpressible<T> resolveInferredType(
 			T value,
 			SqmExpression<? extends T> typeInferenceSource,
 			TypeConfiguration typeConfiguration) {
 		if ( typeInferenceSource != null ) {
 			//noinspection unchecked
-			return (SqmExpressable<T>) typeInferenceSource.getNodeType();
+			return (SqmExpressible<T>) typeInferenceSource.getNodeType();
 		}
 
 		if ( value == null ) {
@@ -920,14 +921,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return new SqmLiteralNull<>( this );
 		}
 
-		final BindableType<T> valueParamType = queryEngine.getTypeConfiguration()
+		final BindableType<? extends T> valueParamType = queryEngine.getTypeConfiguration()
 				.getSessionFactory()
 				.resolveParameterBindType( value );
-		final SqmExpressable<T> sqmExpressable = valueParamType == null
+		final SqmExpressible<? extends T> sqmExpressible = valueParamType == null
 				? null
-				: valueParamType.resolveExpressable( getTypeConfiguration().getSessionFactory() );
+				: valueParamType.resolveExpressible( getTypeConfiguration().getSessionFactory() );
 
-		return new SqmLiteral<>( value, sqmExpressable, this );
+		return new SqmLiteral<>( value, sqmExpressible, this );
 	}
 
 	@Override
@@ -960,36 +961,36 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <T> SqmExpression<T> nullLiteral(Class<T> resultClass) {
 		final TypeConfiguration typeConfiguration = getTypeConfiguration();
 		final BasicType<T> basicTypeForJavaType = typeConfiguration.getBasicTypeForJavaType( resultClass );
-		final SqmExpressable<T> sqmExpressable;
+		final SqmExpressible<T> sqmExpressible;
 		if ( basicTypeForJavaType == null ) {
-			sqmExpressable = typeConfiguration.getSessionFactory()
+			sqmExpressible = typeConfiguration.getSessionFactory()
 					.getMetamodel()
 					.managedType( resultClass );
 		}
 		else {
-			sqmExpressable = basicTypeForJavaType;
+			sqmExpressible = basicTypeForJavaType;
 		}
-		return new SqmLiteralNull<>( sqmExpressable, this );
+		return new SqmLiteralNull<>(sqmExpressible, this );
 	}
 
-	class MultiValueParameterType<T> implements SqmExpressable<T> {
-		private final JavaType<T> javaTypeDescriptor;
+	class MultiValueParameterType<T> implements SqmExpressible<T> {
+		private final JavaType<T> javaType;
 
 		public MultiValueParameterType(Class<T> type) {
-			this.javaTypeDescriptor = domainModelAccess.get()
+			this.javaType = domainModelAccess.get()
 					.getTypeConfiguration()
-					.getJavaTypeDescriptorRegistry()
+					.getJavaTypeRegistry()
 					.getDescriptor( type );
 		}
 
 		@Override
-		public JavaType<T> getExpressableJavaTypeDescriptor() {
-			return javaTypeDescriptor;
+		public JavaType<T> getExpressibleJavaType() {
+			return javaType;
 		}
 
 		@Override
 		public Class<T> getBindableJavaType() {
-			return javaTypeDescriptor.getJavaTypeClass();
+			return javaType.getJavaTypeClass();
 		}
 	}
 
@@ -1255,14 +1256,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		final List<SqmTypedNode<?>> arguments;
 		if ( startPosition == null ) {
 			arguments = asList(
-					source,
-					pattern
-			);
+					pattern,
+					source
+					);
 		}
 		else {
 			arguments = asList(
-					source,
 					pattern,
+					source,
 					startPosition
 			);
 		}
@@ -1419,10 +1420,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	 */
 	@Override
 	public <T> SqmExpression<T> value(T value, SqmExpression<? extends T> typeInferenceSource) {
-		if ( typeInferenceSource == null ) {
-			return value( value );
-		}
-
 		if ( criteriaValueHandlingMode == ValueHandlingMode.INLINE ) {
 			return literal( value, typeInferenceSource );
 		}
@@ -1504,12 +1501,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public <Y> JpaCoalesce<Y> coalesce(Expression<? extends Y> x, Expression<? extends Y> y) {
 		@SuppressWarnings("unchecked")
-		final SqmExpressable<Y> sqmExpressable = (SqmExpressable<Y>) highestPrecedenceType(
+		final SqmExpressible<Y> sqmExpressible = (SqmExpressible<Y>) highestPrecedenceType(
 				( (SqmExpression<? extends Y>) x ).getNodeType(),
 				( (SqmExpression<? extends Y>) y ).getNodeType()
 		);
 		return new SqmCoalesce<>(
-				sqmExpressable,
+				sqmExpressible,
 				2,
 				this
 		)

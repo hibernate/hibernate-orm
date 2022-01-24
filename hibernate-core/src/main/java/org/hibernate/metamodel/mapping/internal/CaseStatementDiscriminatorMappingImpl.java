@@ -15,7 +15,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.persister.entity.DiscriminatorType;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;

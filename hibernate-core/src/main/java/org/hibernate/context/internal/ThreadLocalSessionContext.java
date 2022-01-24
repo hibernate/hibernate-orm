@@ -151,7 +151,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	/**
 	 * Mainly for subclass usage.  This impl always returns true.
 	 *
-	 * @return Whether or not the the session should be closed by transaction completion.
+	 * @return Whether the session should be closed by transaction completion.
 	 */
 	protected boolean isAutoCloseEnabled() {
 		return true;
@@ -160,7 +160,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	/**
 	 * Mainly for subclass usage.  This impl always returns true.
 	 *
-	 * @return Whether or not the the session should be flushed prior to transaction completion.
+	 * @return Whether the session should be flushed prior to transaction completion.
 	 */
 	protected boolean isAutoFlushEnabled() {
 		return true;
@@ -172,7 +172,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	 * @return The connection release mode for any built sessions.
 	 */
 	protected ConnectionReleaseMode getConnectionReleaseMode() {
-		return factory().getSettings().getConnectionReleaseMode();
+		return factory().getSessionFactoryOptions().getPhysicalConnectionHandlingMode().getReleaseMode();
 	}
 
 	protected Session wrap(Session session) {

@@ -28,7 +28,6 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@SuppressWarnings("WeakerAccess")
 @TestForIssue(jiraKey = "HHH-10893")
 public class MultiValuedParameterTest extends BaseSessionFactoryFunctionalTest {
 

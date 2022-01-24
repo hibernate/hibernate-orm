@@ -33,7 +33,6 @@ public abstract class AbstractConverterDescriptor implements ConverterDescriptor
 
 	private final AutoApplicableConverterDescriptor autoApplicableDescriptor;
 
-	@SuppressWarnings("WeakerAccess")
 	public AbstractConverterDescriptor(
 			Class<? extends AttributeConverter> converterClass,
 			Boolean forceAutoApply,
@@ -105,7 +104,7 @@ public abstract class AbstractConverterDescriptor implements ConverterDescriptor
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public JpaAttributeConverter createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
 		final JavaType<Object> converterJtd = context
-				.getJavaTypeDescriptorRegistry()
+				.getJavaTypeRegistry()
 				.getDescriptor( getAttributeConverterClass() );
 
 		final Class<?> domainJavaType = getDomainValueResolvedType().getErasedType();

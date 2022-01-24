@@ -6,18 +6,18 @@
  */
 package org.hibernate.test.resulttransformer;
 
-import java.util.List;
 
-import org.junit.Test;
-
-import org.hibernate.query.Query;
 import org.hibernate.ScrollableResults;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.query.Query;
 import org.hibernate.transform.ResultTransformer;
+
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -25,62 +25,59 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Sharath Reddy
  */
-public class ResultTransformerTest extends BaseCoreFunctionalTestCase {
-	@Override
-	public String[] getMappings() {
-		return new String[] { "resulttransformer/Contract.hbm.xml" };
-	}
+@DomainModel(
+		xmlMappings = "org/hibernate/test/resulttransformer/Contract.hbm.xml"
+)
+@SessionFactory
+public class ResultTransformerTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-3694" )
-	public void testResultTransformerIsAppliedToScrollableResults() throws Exception
-	{
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
+	@JiraKey( "HHH-3694" )
+	@NotImplementedYet( strict = false, reason = "More problems with hbm.xml sql resultset mappings" )
+	public void testResultTransformerIsAppliedToScrollableResults(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			final PartnerA a = new PartnerA();
+			a.setName("Partner A");
 
-		PartnerA a = new PartnerA();
-		a.setName("Partner A");
-		PartnerB b = new PartnerB();
-		b.setName("Partner B");
-		Contract obj1 = new Contract();
-		obj1.setName("Contract");
-		obj1.setA(a);
-		obj1.setB(b);
-		s.save(a);
-		s.save(b);
-		s.save(obj1);
+			final PartnerB b = new PartnerB();
+			b.setName("Partner B");
 
-		tx.commit();
-		s.close();
+			final Contract obj1 = new Contract();
+			obj1.setName("Contract");
+			obj1.setA(a);
+			obj1.setB(b);
 
-		s = openSession();
+			session.persist(a);
+			session.persist(b);
+			session.persist(obj1);
+		} );
 
-		Query q = s.getNamedQuery(Contract.class.getName() + ".testQuery");
-		q.setFetchSize(100);
-		q.setResultTransformer(new ResultTransformer() {
+		scope.inSession( (session) -> {
+			Query q = session.getNamedQuery(Contract.class.getName() + ".testQuery");
+			q.setFetchSize(100);
+			q.setResultTransformer(
+					(ResultTransformer) (arg0, arg1) -> {
+						// return only the PartnerA object from the query
+						return arg0[1];
+					}
+			);
 
-			private static final long serialVersionUID = -5815434828170704822L;
-
-			public Object transformTuple(Object[] arg0, String[] arg1)
-			{
-				// return only the PartnerA object from the query
-				return arg0[1];
+			ScrollableResults sr = q.scroll();
+			// HANA supports only ResultSet.TYPE_FORWARD_ONLY and
+			// does not support java.sql.ResultSet.first()
+            if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof AbstractHANADialect ) {
+				sr.next();
 			}
-		});
-		ScrollableResults sr = q.scroll();
-		// HANA supports only ResultSet.TYPE_FORWARD_ONLY and
-		// does not support java.sql.ResultSet.first()
-		if (getDialect() instanceof AbstractHANADialect) {
-			sr.next();
-		} else {
-			sr.first();
-		}
+			else {
+				sr.first();
+			}
 
-		Object obj = sr.get();
-		assertTrue(obj instanceof PartnerA);
-		PartnerA obj2 = (PartnerA) obj;
-		assertEquals("Partner A", obj2.getName());
-		s.close();
+			Object obj = sr.get();
+			assertTrue(obj instanceof PartnerA);
+			PartnerA obj2 = (PartnerA) obj;
+			assertEquals("Partner A", obj2.getName());
+
+		} );
 	}
 }
 

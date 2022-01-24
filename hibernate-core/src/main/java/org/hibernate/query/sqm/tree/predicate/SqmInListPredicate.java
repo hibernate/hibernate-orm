@@ -45,7 +45,6 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 		this( testExpression, listExpressions, false, nodeBuilder );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public SqmInListPredicate(
 			SqmExpression<T> testExpression,
 			List<? extends SqmExpression<T>> listExpressions,

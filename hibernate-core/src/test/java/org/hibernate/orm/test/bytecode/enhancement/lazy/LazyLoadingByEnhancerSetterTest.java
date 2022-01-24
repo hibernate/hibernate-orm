@@ -123,7 +123,7 @@ public class LazyLoadingByEnhancerSetterTest extends BaseCoreFunctionalTestCase 
         @ElementCollection( fetch = FetchType.EAGER )
         @MapKeyColumn( name = "NAME" )
         @Lob
-        @Column( name = "VALUE", length = 65535 )
+        @Column( name = "PARAM_VAL", length = 65535 )
         private Map<String, String> parameters = new HashMap<>();
 
         @Override
@@ -153,7 +153,7 @@ public class LazyLoadingByEnhancerSetterTest extends BaseCoreFunctionalTestCase 
         @ElementCollection( fetch = FetchType.EAGER )
         @MapKeyColumn( name = "NAME" )
         @Lob
-        @Column( name = "VALUE", length = 65535 )
+        @Column( name = "PARAM_VAL", length = 65535 )
         @Override
         public Map<String, String> getParameters() {
             return parameterMap;

@@ -9,7 +9,7 @@ package org.hibernate.query.results.implicit;
 import java.util.function.BiFunction;
 
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultBuilderBasicValued;
@@ -35,7 +35,7 @@ public class ImplicitModelPartResultBuilderBasic
 
 	@Override
 	public Class<?> getJavaType() {
-		return modelPart.getExpressableJavaTypeDescriptor().getJavaTypeClass();
+		return modelPart.getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	@Override

@@ -9,7 +9,7 @@ package org.hibernate.query;
 import org.hibernate.HibernateException;
 
 /**
- * Indicates a problem with requested typed-Query result-type (e.g., JPA's {@link jakarta.persistence.TypedQuery})
+ * Indicates a mismatch between a Query's expected and actual result types
  *
  * @author Steve Ebersole
  */

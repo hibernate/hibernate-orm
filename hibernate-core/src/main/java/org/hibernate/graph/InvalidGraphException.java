@@ -14,7 +14,6 @@ import org.hibernate.HibernateException;
  * @author asusnjar
  *
  */
-@SuppressWarnings("WeakerAccess")
 public class InvalidGraphException extends HibernateException {
 	private static final long serialVersionUID = 1L;
 

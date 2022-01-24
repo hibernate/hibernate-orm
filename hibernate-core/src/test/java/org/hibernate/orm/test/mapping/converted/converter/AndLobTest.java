@@ -49,7 +49,7 @@ public class AndLobTest {
 
 		assertThat( typeAdapter.getDomainJtd().getJavaTypeClass(), equalTo( String.class ) );
 		assertThat( typeAdapter.getRelationalJtd().getJavaTypeClass(), equalTo( Integer.class ) );
-		assertThat( typeAdapter.getJdbcTypeDescriptor().getJdbcTypeCode(), is( Types.INTEGER ) );
+		assertThat( typeAdapter.getJdbcType().getJdbcTypeCode(), is( Types.INTEGER ) );
 	}
 
 	@Converter

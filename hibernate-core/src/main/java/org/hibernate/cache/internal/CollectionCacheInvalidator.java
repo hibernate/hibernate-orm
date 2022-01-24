@@ -40,7 +40,7 @@ import org.jboss.logging.Logger;
  * Allows the collection cache to be automatically evicted if an element is inserted/removed/updated *without* properly
  * managing both sides of the association (ie, the ManyToOne collection is changed w/o properly managing the OneToMany).
  * 
- * For this functionality to be used, {@link org.hibernate.cfg.AvailableSettings#AUTO_EVICT_COLLECTION_CACHE} must be
+ * For this functionality to be used, {@value org.hibernate.cfg.AvailableSettings#AUTO_EVICT_COLLECTION_CACHE} must be
  * enabled.  For performance reasons, it's disabled by default.
  * 
  * @author Andreas Berger
@@ -188,9 +188,9 @@ public class CollectionCacheInvalidator
 
 	//execute the same process as invalidation with collection operations
 	private static final class CollectionEvictCacheAction extends CollectionAction {
-		protected CollectionEvictCacheAction(
+		CollectionEvictCacheAction(
 				CollectionPersister persister,
-				PersistentCollection collection,
+				PersistentCollection<?> collection,
 				Object key,
 				SharedSessionContractImplementor session) {
 			super( persister, collection, key, session );

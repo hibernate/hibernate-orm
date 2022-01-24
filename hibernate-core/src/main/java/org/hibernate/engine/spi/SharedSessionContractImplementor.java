@@ -326,8 +326,6 @@ public interface SharedSessionContractImplementor
 	 */
 	Object instantiate(EntityPersister persister, Object id) throws HibernateException;
 
-	int getDontFlushFromFind();
-
 	boolean isDefaultReadOnly();
 
 	CacheMode getCacheMode();
@@ -395,10 +393,6 @@ public interface SharedSessionContractImplementor
 	boolean shouldAutoClose();
 
 	boolean isAutoCloseSessionEnabled();
-
-	default boolean isQueryParametersValidationEnabled(){
-		return getFactory().getSessionFactoryOptions().isQueryParametersValidationEnabled();
-	}
 
 	/**
 	 * Get the load query influencers associated with this session.

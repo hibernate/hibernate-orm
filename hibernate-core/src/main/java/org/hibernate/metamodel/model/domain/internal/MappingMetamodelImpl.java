@@ -17,7 +17,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import jakarta.persistence.EntityGraph;
 import jakarta.persistence.metamodel.EmbeddableType;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.ManagedType;
@@ -49,7 +48,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.query.BindableType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
@@ -65,8 +64,8 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterFactory;
-import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -91,7 +90,6 @@ import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetti
  * @author Emmanuel Bernard
  * @author Andrea Boriero
  */
-@SuppressWarnings("deprecation")
 public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplementor, Serializable {
 	// todo : Integrate EntityManagerLogger into CoreMessageLogger
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( MappingMetamodelImpl.class );
@@ -157,7 +155,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	private final TypeConfiguration typeConfiguration;
 
 	private final Map<String, String[]> implementorsCache = new ConcurrentHashMap<>();
-	private final Map<TupleType<?>, MappingModelExpressable<?>> tupleTypeCache = new ConcurrentHashMap<>();
+	private final Map<TupleType<?>, MappingModelExpressible<?>> tupleTypeCache = new ConcurrentHashMap<>();
 
 	public MappingMetamodelImpl(SessionFactoryImplementor sessionFactory, TypeConfiguration typeConfiguration) {
 		this.sessionFactory = sessionFactory;
@@ -365,7 +363,6 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 		return entityNameResolvers;
 	}
 
-
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
@@ -515,12 +512,6 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	}
 
 	@Override
-	public String getImportedClassName(String className) {
-		throw new UnsupportedOperationException(  );
-	}
-
-
-	@Override
 	public String[] getImplementors(String className) throws MappingException {
 		// computeIfAbsent() can be a contention point and we expect all the values to be in the map at some point so
 		// let's do an optimistic check first
@@ -645,11 +636,6 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	}
 
 	@Override
-	public <T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph) {
-		addNamedEntityGraph( graphName, (RootGraphImplementor<T>) entityGraph );
-	}
-
-	@Override
 	public <T> RootGraphImplementor<T> findEntityGraphByName(String name) {
 		return jpaMetamodel.findEntityGraphByName( name );
 	}
@@ -717,55 +703,53 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	private String[] doGetImplementors(Class<?> clazz) throws MappingException {
 		ArrayList<String> results = new ArrayList<>();
 		for ( EntityPersister checkPersister : entityPersisters().values() ) {
-			if ( !Queryable.class.isInstance( checkPersister ) ) {
-				continue;
-			}
-			final Queryable checkQueryable = Queryable.class.cast( checkPersister );
-			final String checkQueryableEntityName = checkQueryable.getEntityName();
-			final boolean isMappedClass = clazz.getName().equals( checkQueryableEntityName );
-			if ( checkQueryable.isExplicitPolymorphism() ) {
-				if ( isMappedClass ) {
-					return new String[] { clazz.getName() }; // NOTE EARLY EXIT
-				}
-			}
-			else {
-				if ( isMappedClass ) {
-					results.add( checkQueryableEntityName );
+			if ( checkPersister instanceof Queryable ) {
+				final Queryable checkQueryable = (Queryable) checkPersister;
+				final String checkQueryableEntityName = checkQueryable.getEntityName();
+				final boolean isMappedClass = clazz.getName().equals( checkQueryableEntityName );
+				if ( checkQueryable.isExplicitPolymorphism() ) {
+					if ( isMappedClass ) {
+						return new String[] { clazz.getName() }; // NOTE EARLY EXIT
+					}
 				}
 				else {
-					final Class<?> mappedClass = checkQueryable.getMappedClass();
-					if ( mappedClass != null && clazz.isAssignableFrom( mappedClass ) ) {
-						final boolean assignableSuperclass;
-						if ( checkQueryable.isInherited() ) {
-							Class<?> mappedSuperclass = entityPersister( checkQueryable.getMappedSuperclass() ).getMappedClass();
-							assignableSuperclass = clazz.isAssignableFrom( mappedSuperclass );
-						}
-						else {
-							assignableSuperclass = false;
-						}
-						if ( !assignableSuperclass ) {
-							results.add( checkQueryableEntityName );
+					if ( isMappedClass ) {
+						results.add( checkQueryableEntityName );
+					}
+					else {
+						final Class<?> mappedClass = checkQueryable.getMappedClass();
+						if ( mappedClass != null && clazz.isAssignableFrom( mappedClass ) ) {
+							final boolean assignableSuperclass;
+							if ( checkQueryable.isInherited() ) {
+								Class<?> mappedSuperclass = entityPersister( checkQueryable.getMappedSuperclass() ).getMappedClass();
+								assignableSuperclass = clazz.isAssignableFrom( mappedSuperclass );
+							}
+							else {
+								assignableSuperclass = false;
+							}
+							if ( !assignableSuperclass ) {
+								results.add( checkQueryableEntityName );
+							}
 						}
 					}
 				}
 			}
 		}
 
-		return results.toArray( new String[results.size()] );
+		return results.toArray( ArrayHelper.EMPTY_STRING_ARRAY );
 	}
 
 	@Override
-	public MappingModelExpressable lenientlyResolveMappingExpressable(
-			SqmExpressable<?> sqmExpressable,
+	public MappingModelExpressible<?> lenientlyResolveMappingExpressible(
+			SqmExpressible<?> sqmExpressible,
 			Function<NavigablePath, TableGroup> tableGroupLocator) {
-		return resolveMappingExpressable( sqmExpressable, tableGroupLocator );
+		return resolveMappingExpressible(sqmExpressible, tableGroupLocator );
 	}
 
-
 	@Override
-	public MappingModelExpressable resolveMappingExpressable(SqmExpressable<?> sqmExpressable, Function<NavigablePath, TableGroup> tableGroupLocator) {
-		if ( sqmExpressable instanceof SqmPath ) {
-			final SqmPath sqmPath = (SqmPath) sqmExpressable;
+	public MappingModelExpressible<?> resolveMappingExpressible(SqmExpressible<?> sqmExpressible, Function<NavigablePath, TableGroup> tableGroupLocator) {
+		if ( sqmExpressible instanceof SqmPath ) {
+			final SqmPath<?> sqmPath = (SqmPath<?>) sqmExpressible;
 			final NavigablePath navigablePath = sqmPath.getNavigablePath();
 			if ( navigablePath.getParent() != null ) {
 				final TableGroup parentTableGroup = tableGroupLocator.apply( navigablePath.getParent() );
@@ -774,48 +758,48 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 			return tableGroupLocator.apply( navigablePath.getParent() ).getModelPart();
 		}
 
-		if ( sqmExpressable instanceof BasicType<?> ) {
-			return (BasicType) sqmExpressable;
+		if ( sqmExpressible instanceof BasicType<?> ) {
+			return (BasicType<?>) sqmExpressible;
 		}
 
-		if ( sqmExpressable instanceof BasicSqmPathSource<?> ) {
-			return getTypeConfiguration().getBasicTypeForJavaType(((BasicSqmPathSource<?>) sqmExpressable).getJavaType());
+		if ( sqmExpressible instanceof BasicSqmPathSource<?> ) {
+			return getTypeConfiguration().getBasicTypeForJavaType(((BasicSqmPathSource<?>) sqmExpressible).getJavaType());
 		}
 
-		if ( sqmExpressable instanceof SqmFieldLiteral ) {
-			return getTypeConfiguration().getBasicTypeForJavaType( ( (SqmFieldLiteral<?>) sqmExpressable ).getJavaType() );
+		if ( sqmExpressible instanceof SqmFieldLiteral ) {
+			return getTypeConfiguration().getBasicTypeForJavaType( ( (SqmFieldLiteral<?>) sqmExpressible).getJavaType() );
 		}
 
-		if ( sqmExpressable instanceof CompositeSqmPathSource ) {
-			throw new NotYetImplementedFor6Exception( "Resolution of embedded-valued SqmExpressable nodes not yet implemented" );
+		if ( sqmExpressible instanceof CompositeSqmPathSource ) {
+			throw new NotYetImplementedFor6Exception( "Resolution of embedded-valued SqmExpressible nodes not yet implemented" );
 		}
 
-		if ( sqmExpressable instanceof EmbeddableTypeImpl ) {
-			return (MappingModelExpressable) sqmExpressable;
+		if ( sqmExpressible instanceof EmbeddableTypeImpl ) {
+			return (MappingModelExpressible<?>) sqmExpressible;
 		}
 
-		if ( sqmExpressable instanceof EntityDomainType<?> ) {
-			return getEntityDescriptor( ( (EntityDomainType<?>) sqmExpressable ).getHibernateEntityName() );
+		if ( sqmExpressible instanceof EntityDomainType<?> ) {
+			return getEntityDescriptor( ( (EntityDomainType<?>) sqmExpressible).getHibernateEntityName() );
 		}
 
-		if ( sqmExpressable instanceof TupleType<?> ) {
-			final MappingModelExpressable<?> mappingModelExpressable = tupleTypeCache.get( sqmExpressable );
-			if ( mappingModelExpressable != null ) {
-				return mappingModelExpressable;
+		if ( sqmExpressible instanceof TupleType<?> ) {
+			final MappingModelExpressible<?> mappingModelExpressible = tupleTypeCache.get(sqmExpressible);
+			if ( mappingModelExpressible != null ) {
+				return mappingModelExpressible;
 			}
-			final TupleType<?> tupleType = (TupleType<?>) sqmExpressable;
-			final MappingModelExpressable<?>[] components = new MappingModelExpressable<?>[tupleType.componentCount()];
+			final TupleType<?> tupleType = (TupleType<?>) sqmExpressible;
+			final MappingModelExpressible<?>[] components = new MappingModelExpressible<?>[tupleType.componentCount()];
 			for ( int i = 0; i < components.length; i++ ) {
-				components[i] = resolveMappingExpressable( tupleType.get( i ), tableGroupLocator );
+				components[i] = resolveMappingExpressible( tupleType.get( i ), tableGroupLocator );
 			}
-			final MappingModelExpressable createdMappingModelExpressable = new TupleMappingModelExpressable( components );
-			final MappingModelExpressable<?> existingMappingModelExpressable = tupleTypeCache.putIfAbsent(
+			final MappingModelExpressible<?> createdMappingModelExpressible = new TupleMappingModelExpressible( components );
+			final MappingModelExpressible<?> existingMappingModelExpressible = tupleTypeCache.putIfAbsent(
 					tupleType,
-					createdMappingModelExpressable
+					createdMappingModelExpressible
 			);
-			return existingMappingModelExpressable == null
-					? createdMappingModelExpressable
-					: existingMappingModelExpressable;
+			return existingMappingModelExpressible == null
+					? createdMappingModelExpressible
+					: existingMappingModelExpressible;
 		}
 		return null;
 	}
@@ -833,7 +817,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 			return managedType;
 		}
 
-		final JavaType<T> javaType = getTypeConfiguration().getJavaTypeDescriptorRegistry()
+		final JavaType<T> javaType = getTypeConfiguration().getJavaTypeRegistry()
 				.findDescriptor( javaClass );
 		if ( javaType != null ) {
 			final JdbcType recommendedJdbcType = javaType.getRecommendedJdbcType( getTypeConfiguration().getCurrentBaseSqlTypeIndicators() );

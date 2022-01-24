@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -46,12 +46,12 @@ public abstract class DelegatingTableGroup implements TableGroup {
 	public SqlSelection createSqlSelection(
 			int jdbcPosition,
 			int valuesArrayPosition,
-			JavaType javaTypeDescriptor,
+			JavaType javaType,
 			TypeConfiguration typeConfiguration) {
 		return getTableGroup().createSqlSelection(
 				jdbcPosition,
 				valuesArrayPosition,
-				javaTypeDescriptor,
+				javaType,
 				typeConfiguration
 		);
 	}

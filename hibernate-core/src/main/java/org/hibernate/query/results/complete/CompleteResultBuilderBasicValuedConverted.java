@@ -60,7 +60,7 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 
 	@Override
 	public Class<?> getJavaType() {
-		return valueConverter.getDomainJavaDescriptor().getJavaTypeClass();
+		return valueConverter.getDomainJavaType().getJavaTypeClass();
 	}
 
 	@Override
@@ -99,7 +99,7 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 //			basicType = explicitType;
 //		}
 //		else {
-//			basicType = jdbcResultsMetadata.resolveType( jdbcPosition, explicitJavaTypeDescriptor );
+//			basicType = jdbcResultsMetadata.resolveType( jdbcPosition, explicitJavaType );
 //		}
 //
 //		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
@@ -110,7 +110,7 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 //							return new SqlSelectionImpl( valuesArrayPosition, basicType );
 //						}
 //				),
-//				basicType.getExpressableJavaTypeDescriptor(),
+//				basicType.getExpressibleJavaType(),
 //				sessionFactory.getTypeConfiguration()
 //		);
 
@@ -131,14 +131,14 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 							return new ResultSetMappingSqlSelection( valuesArrayPosition, underlyingMapping );
 						}
 				),
-				valueConverter.getDomainJavaDescriptor(),
+				valueConverter.getDomainJavaType(),
 				sessionFactory.getTypeConfiguration()
 		);
 
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				columnName,
-				valueConverter.getDomainJavaDescriptor(),
+				valueConverter.getDomainJavaType(),
 				valueConverter
 		);
 	}

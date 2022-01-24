@@ -6,16 +6,11 @@
  */
 package org.hibernate.persister.entity;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.Type;
 
 /**
- * Implemented by a {@code EntityPersister} that may be loaded
- * using {@code Loader}.
+ * Implemented by any {@link EntityPersister} that may be loaded
+ * using a {@link org.hibernate.loader.ast.spi.Loader}.
  *
  * @author Gavin King
  */

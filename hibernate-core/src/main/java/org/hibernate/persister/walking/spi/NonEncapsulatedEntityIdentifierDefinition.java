@@ -13,7 +13,7 @@ import org.hibernate.type.Type;
  */
 public interface NonEncapsulatedEntityIdentifierDefinition extends EntityIdentifierDefinition, CompositionDefinition {
 
-	public Type getCompositeType();
+	Type getCompositeType();
 
-	public Class getSeparateIdentifierMappingClass();
+	Class getSeparateIdentifierMappingClass();
 }

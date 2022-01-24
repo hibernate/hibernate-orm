@@ -57,7 +57,7 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 
 	@Override
 	public Class<?> getJavaType() {
-		return attributeMapping.getExpressableJavaTypeDescriptor().getJavaTypeClass();
+		return attributeMapping.getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	@Override
@@ -88,7 +88,7 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 							return new ResultSetMappingSqlSelection( valuesArrayPosition, attributeMapping );
 						}
 				),
-				attributeMapping.getJavaTypeDescriptor(),
+				attributeMapping.getJavaType(),
 				domainResultCreationState.getSqlAstCreationState()
 						.getCreationContext()
 						.getSessionFactory()
@@ -98,7 +98,7 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				columnAlias,
-				attributeMapping.getJavaTypeDescriptor(),
+				attributeMapping.getJavaType(),
 				attributeMapping.getValueConverter()
 		);
 	}

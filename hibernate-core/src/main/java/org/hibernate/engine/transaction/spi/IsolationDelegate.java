@@ -27,7 +27,7 @@ public interface IsolationDelegate {
 	 *
 	 * @throws HibernateException Indicates a problem performing the work.
 	 */
-	public <T> T delegateWork(WorkExecutorVisitable<T> work, boolean transacted) throws HibernateException;
+	<T> T delegateWork(WorkExecutorVisitable<T> work, boolean transacted) throws HibernateException;
 
 	/**
 	 * Invoke the given callable in isolation from current transaction.
@@ -39,5 +39,5 @@ public interface IsolationDelegate {
 	 *
 	 * @throws HibernateException Indicates a problem performing the work.
 	 */
-	public <T> T delegateCallable(Callable<T> callable, boolean transacted) throws HibernateException;
+	<T> T delegateCallable(Callable<T> callable, boolean transacted) throws HibernateException;
 }

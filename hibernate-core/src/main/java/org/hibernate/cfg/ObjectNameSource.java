@@ -17,7 +17,7 @@ public interface ObjectNameSource {
 	 *
 	 * @return The explicit name.
 	 */
-	public String getExplicitName();
+	String getExplicitName();
 
 	/**
 	 * Retrieve the logical name for this object.  Usually this is the name under which
@@ -25,5 +25,5 @@ public interface ObjectNameSource {
 	 * 
 	 * @return The logical name.
 	 */
-	public String getLogicalName();
+	String getLogicalName();
 }

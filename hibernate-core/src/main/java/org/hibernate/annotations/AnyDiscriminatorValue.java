@@ -18,6 +18,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Specifies the mapping for a single any-valued discriminator value
  * to the corresponding entity
  *
+ * @see Any
+ * @see AnyDiscriminator
+ *
  * @since 6.0
  */
 @java.lang.annotation.Target({METHOD, FIELD, ANNOTATION_TYPE})

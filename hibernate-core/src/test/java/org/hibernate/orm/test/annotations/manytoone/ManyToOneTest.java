@@ -19,11 +19,11 @@ import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.orm.test.annotations.Company;
-import org.hibernate.test.annotations.Customer;
-import org.hibernate.test.annotations.Discount;
+import org.hibernate.orm.test.annotations.Customer;
+import org.hibernate.orm.test.annotations.Discount;
 import org.hibernate.orm.test.annotations.Flight;
-import org.hibernate.test.annotations.Passport;
-import org.hibernate.test.annotations.Ticket;
+import org.hibernate.orm.test.annotations.Passport;
+import org.hibernate.orm.test.annotations.Ticket;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

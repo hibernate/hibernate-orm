@@ -112,12 +112,12 @@ public class SqmJpaCriteriaParameterWrapper<T>
 //			SqmToSqlAstConverter walker,
 //			SqlAstCreationState sqlAstCreationState) {
 //
-//		final MappingModelExpressable mappingModelExpressable = DomainModelHelper.resolveMappingModelExpressable(
+//		final MappingModelExpressible mappingModelExpressible = DomainModelHelper.resolveMappingModelExpressible(
 //				jpaCriteriaParameter,
 //				sqlAstCreationState
 //		);
 //
-//		final List<JdbcMapping> jdbcMappings = mappingModelExpressable.getJdbcMappings(
+//		final List<JdbcMapping> jdbcMappings = mappingModelExpressible.getJdbcMappings(
 //				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
 //		);
 //
@@ -125,7 +125,7 @@ public class SqmJpaCriteriaParameterWrapper<T>
 //			return new JdbcParameterImpl( jdbcMappings.get( 0 ) );
 //		}
 //
-//		final SqlTuple.Builder tupleBuilder = new SqlTuple.Builder( mappingModelExpressable );
+//		final SqlTuple.Builder tupleBuilder = new SqlTuple.Builder( mappingModelExpressible );
 //		for ( JdbcMapping jdbcMapping : jdbcMappings ) {
 //			tupleBuilder.addSubExpression( new JdbcParameterImpl( jdbcMapping ) );
 //		}

@@ -9,7 +9,7 @@ package org.hibernate.query.results;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlExpressionAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -51,7 +51,7 @@ public class ResultSetMappingSqlSelection implements SqlSelection, Expression, S
 	public SqlSelection createSqlSelection(
 			int jdbcPosition,
 			int valuesArrayPosition,
-			JavaType javaTypeDescriptor,
+			JavaType javaType,
 			TypeConfiguration typeConfiguration) {
 		return this;
 	}
@@ -77,7 +77,7 @@ public class ResultSetMappingSqlSelection implements SqlSelection, Expression, S
 	}
 
 	@Override
-	public MappingModelExpressable getExpressionType() {
+	public MappingModelExpressible getExpressionType() {
 		return valueMapping;
 	}
 

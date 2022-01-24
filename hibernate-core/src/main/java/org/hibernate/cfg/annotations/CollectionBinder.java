@@ -131,6 +131,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 
 import static jakarta.persistence.AccessType.PROPERTY;
+import static org.hibernate.cfg.AnnotationBinder.getOverridableAnnotation;
 import static org.hibernate.cfg.BinderHelper.toAliasEntityMap;
 import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
 
@@ -140,7 +141,7 @@ import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
  * @author inger
  * @author Emmanuel Bernard
  */
-@SuppressWarnings({"unchecked", "WeakerAccess", "deprecation"})
+@SuppressWarnings({"unchecked", "deprecation"})
 public abstract class CollectionBinder {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionBinder.class.getName());
 
@@ -1175,7 +1176,7 @@ public abstract class CollectionBinder {
 						toAliasTableMap(simpleFilter.aliases()), toAliasEntityMap(simpleFilter.aliases()));
 			}
 		}
-		Filters filters = property.getAnnotation( Filters.class );
+		Filters filters = getOverridableAnnotation( property, Filters.class, buildingContext );
 		if ( filters != null ) {
 			for (Filter filter : filters.value()) {
 				if ( hasAssociationTable ) {
@@ -1237,12 +1238,12 @@ public abstract class CollectionBinder {
 		//    for many-to-many e.g., @ManyToMany @Where(clause="...") public Set<Rating> getRatings();
 		String whereOnClassClause = null;
 		if ( useEntityWhereClauseForCollections && property.getElementClass() != null ) {
-			Where whereOnClass = property.getElementClass().getAnnotation( Where.class );
+			Where whereOnClass = getOverridableAnnotation( property.getElementClass(), Where.class, getBuildingContext() );
 			if ( whereOnClass != null ) {
 				whereOnClassClause = whereOnClass.clause();
 			}
 		}
-		Where whereOnCollection = property.getAnnotation( Where.class );
+		Where whereOnCollection = getOverridableAnnotation( property, Where.class, getBuildingContext() );
 		String whereOnCollectionClause = null;
 		if ( whereOnCollection != null ) {
 			whereOnCollectionClause = whereOnCollection.clause();
@@ -1387,7 +1388,7 @@ public abstract class CollectionBinder {
 		return orderByFragment;
 	}
 
-	private static SimpleValue buildCollectionKey(
+	private static DependantValue buildCollectionKey(
 			Collection collValue,
 			AnnotatedJoinColumn[] joinColumns,
 			boolean cascadeDeleteEnabled,
@@ -1720,8 +1721,9 @@ public abstract class CollectionBinder {
 					buildingContext.getBootstrapContext().getReflectionManager()
 			);
 
-			final jakarta.persistence.Column discriminatorColumnAnn = inferredData.getProperty().getAnnotation( jakarta.persistence.Column.class );
-			final Formula discriminatorFormulaAnn = inferredData.getProperty().getAnnotation( Formula.class );
+			XProperty prop = inferredData.getProperty();
+			final jakarta.persistence.Column discriminatorColumnAnn = prop.getAnnotation( jakarta.persistence.Column.class );
+			final Formula discriminatorFormulaAnn = getOverridableAnnotation( prop, Formula.class, buildingContext );
 
 			//override the table
 			for (AnnotatedColumn column : inverseJoinColumns) {
@@ -1976,12 +1978,13 @@ public abstract class CollectionBinder {
 		catch (AnnotationException ex) {
 			throw new AnnotationException( "Unable to map collection " + collValue.getOwner().getClassName() + "." + property.getName(), ex );
 		}
-		SimpleValue key = buildCollectionKey( collValue, joinColumns, cascadeDeleteEnabled,
+		DependantValue key = buildCollectionKey( collValue, joinColumns, cascadeDeleteEnabled,
 				buildingContext.getBuildingOptions().isNoConstraintByDefault(), property, propertyHolder, buildingContext );
 		if ( property.isAnnotationPresent( ElementCollection.class ) && joinColumns.length > 0 ) {
 			joinColumns[0].setJPA2ElementCollection( true );
 		}
 		TableBinder.bindFk( collValue.getOwner(), collectionEntity, joinColumns, key, false, buildingContext );
+		key.sortProperties();
 	}
 
 	public void setCascadeDeleteEnabled(boolean onDeleteCascade) {

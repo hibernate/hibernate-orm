@@ -21,7 +21,7 @@ import java.util.Objects;
  * A simple-point association (ie. a reference to another entity).
  * @author Gavin King
  */
-public abstract class ToOne extends SimpleValue implements Fetchable {
+public abstract class ToOne extends SimpleValue implements Fetchable, SortableValue {
 	private FetchMode fetchMode;
 	protected String referencedPropertyName;
 	private String referencedEntityName;
@@ -145,6 +145,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 		this.referenceToPrimaryKey = referenceToPrimaryKey;
 	}
 
+	@Override
 	public boolean isSorted() {
 		return sorted;
 	}
@@ -153,11 +154,8 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 		this.sorted = sorted;
 	}
 
-	public void sortProperties() {
-		if ( sorted ) {
-			return;
-		}
-		sorted = true;
+	@Override
+	public int[] sortProperties() {
 		final PersistentClass entityBinding = getMetadata().getEntityBinding( getReferencedEntityName() );
 		final Value value;
 		if ( getReferencedPropertyName() == null ) {
@@ -169,9 +167,15 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 		if ( value instanceof Component ) {
 			final Component component = (Component) value;
 			final int[] originalPropertyOrder = component.sortProperties();
-			if ( originalPropertyOrder != null ) {
-				sortColumns( originalPropertyOrder );
+			if ( !sorted ) {
+				sorted = true;
+				if ( originalPropertyOrder != null ) {
+					sortColumns( originalPropertyOrder );
+				}
 			}
+			return originalPropertyOrder;
 		}
+		sorted = true;
+		return null;
 	}
 }

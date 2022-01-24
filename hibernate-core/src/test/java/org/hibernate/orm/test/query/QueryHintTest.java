@@ -10,8 +10,6 @@ import java.time.LocalDate;
 import java.util.Collections;
 
 import org.hibernate.graph.GraphParser;
-import org.hibernate.jpa.QueryHints;
-import org.hibernate.query.IllegalQueryOperationException;
 
 import org.hibernate.testing.orm.assertj.HibernateInitializedCondition;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -25,8 +23,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_FETCH_GRAPH;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
 
 /**
  * @author Steve Ebersole
@@ -38,7 +36,7 @@ public class QueryHintTest {
 	public void testFetchGraphHint(SessionFactoryScope scope) {
 		final Contact queried = scope.fromTransaction( (session) -> {
 			return session.createQuery( "from Contact", Contact.class )
-					.setHint( QueryHints.HINT_FETCHGRAPH, GraphParser.parse( Contact.class, "phoneNumbers", session ) )
+					.setHint( HINT_SPEC_FETCH_GRAPH, GraphParser.parse( Contact.class, "phoneNumbers", session ) )
 					.uniqueResult();
 		} );
 
@@ -50,7 +48,7 @@ public class QueryHintTest {
 	public void testLoadGraphHint(SessionFactoryScope scope) {
 		final Contact queried = scope.fromTransaction( (session) -> {
 			return session.createQuery( "from Contact", Contact.class )
-					.setHint( QueryHints.HINT_LOADGRAPH, GraphParser.parse( Contact.class, "phoneNumbers", session ) )
+					.setHint( HINT_SPEC_LOAD_GRAPH, GraphParser.parse( Contact.class, "phoneNumbers", session ) )
 					.uniqueResult();
 		} );
 

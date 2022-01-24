@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.query.SetOperator;
+import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;

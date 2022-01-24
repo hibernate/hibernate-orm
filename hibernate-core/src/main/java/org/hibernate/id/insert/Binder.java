@@ -12,6 +12,6 @@ import java.sql.SQLException;
  * @author Steve Ebersole
  */
 public interface Binder {
-	public void bindValues(PreparedStatement ps) throws SQLException;
-	public Object getEntity();
+	void bindValues(PreparedStatement ps) throws SQLException;
+	Object getEntity();
 }

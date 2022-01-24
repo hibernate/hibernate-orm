@@ -9,7 +9,7 @@ package org.hibernate.query.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.named.ModelPartResultMementoBasic;
 import org.hibernate.query.results.ResultBuilderBasicValued;
 import org.hibernate.query.results.complete.CompleteResultBuilderBasicModelPart;

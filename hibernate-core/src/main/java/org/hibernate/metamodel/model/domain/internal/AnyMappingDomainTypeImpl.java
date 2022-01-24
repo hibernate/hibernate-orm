@@ -29,25 +29,23 @@ public class AnyMappingDomainTypeImpl<T> implements AnyMappingDomainType<T> {
 		return PersistenceType.ENTITY;
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	public Class<T> getJavaType() {
-		return anyType.getReturnedClass();
+		return (Class<T>) anyType.getReturnedClass();
 	}
 
 	@Override
-	public JavaType<T> getExpressableJavaTypeDescriptor() {
+	public JavaType<T> getExpressibleJavaType() {
 		return baseJtd;
 	}
 
 	@Override
-	@SuppressWarnings("rawtypes")
 	public SimpleDomainType<?> getDiscriminatorType() {
-		return (BasicType) anyType.getDiscriminatorType();
+		return (BasicType<?>) anyType.getDiscriminatorType();
 	}
 
 	@Override
-	@SuppressWarnings("rawtypes")
 	public SimpleDomainType<?> getKeyType() {
-		return (BasicType) anyType.getIdentifierType();
+		return (BasicType<?>) anyType.getIdentifierType();
 	}
 }

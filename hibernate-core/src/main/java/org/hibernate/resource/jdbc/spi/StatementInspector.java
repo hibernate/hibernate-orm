@@ -9,7 +9,10 @@ package org.hibernate.resource.jdbc.spi;
 import java.io.Serializable;
 
 /**
- * Contract to allow inspection (and swapping) of SQL to be prepared
+ * Contract to allow inspection (and swapping) of SQL to be prepared.
+ * <p>
+ * An implementation may be specified via the configuration property
+ * {@value org.hibernate.cfg.AvailableSettings#STATEMENT_INSPECTOR}.
  *
  * @author Steve Ebersole
  */
@@ -22,5 +25,5 @@ public interface StatementInspector extends Serializable {
 	 *
 	 * @return The SQL to use; may be {@code null}
 	 */
-	public String inspect(String sql);
+	String inspect(String sql);
 }

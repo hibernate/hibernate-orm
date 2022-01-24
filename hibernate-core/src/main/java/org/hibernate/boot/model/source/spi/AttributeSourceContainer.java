@@ -18,20 +18,20 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public interface AttributeSourceContainer extends ToolingHintContextContainer {
-	public AttributePath getAttributePathBase();
-	public AttributeRole getAttributeRoleBase();
+	AttributePath getAttributePathBase();
+	AttributeRole getAttributeRoleBase();
 
 	/**
 	 * Obtain this container's attribute sources.
 	 *
 	 * @return The attribute sources.
 	 */
-	public List<AttributeSource> attributeSources();
+	List<AttributeSource> attributeSources();
 
 	/**
 	 * Obtain the local binding context associated with this container.
 	 *
 	 * @return The local binding context
 	 */
-	public LocalMetadataBuildingContext getLocalMetadataBuildingContext();
+	LocalMetadataBuildingContext getLocalMetadataBuildingContext();
 }

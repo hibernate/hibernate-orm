@@ -116,9 +116,6 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 	/**
 	 * Special case: we have several old fully qualified classnames which need to
 	 * be remapped to their new names for backwards compatibility reasons.
-	 * @param name
-	 * @param defaultJtaPlatformSelector
-	 * @return
 	 */
 	private static Class<? extends JtaPlatform> caseLegacy(
 			final String name,

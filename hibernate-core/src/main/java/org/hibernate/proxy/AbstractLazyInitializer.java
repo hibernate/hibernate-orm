@@ -135,7 +135,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 				session = s;
 				if ( readOnlyBeforeAttachedToSession == null ) {
 					// use the default read-only/modifiable setting
-					final EntityPersister persister = s.getFactory().getEntityPersister( entityName );
+					final EntityPersister persister = s.getFactory().getMetamodel().entityPersister(entityName);
 					setReadOnly( s.getPersistenceContext().isDefaultReadOnly() || !persister.isMutable() );
 				}
 				else {
@@ -151,7 +151,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		if ( id == null || s == null || entityName == null ) {
 			return null;
 		}
-		return s.generateEntityKey( id, s.getFactory().getEntityPersister( entityName ) );
+		return s.generateEntityKey( id, s.getFactory().getMetamodel().entityPersister(entityName));
 	}
 
 	@Override
@@ -371,7 +371,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		errorIfReadOnlySettingNotAvailable();
 		// only update if readOnly is different from current setting
 		if ( this.readOnly != readOnly ) {
-			final EntityPersister persister = session.getFactory().getEntityPersister( entityName );
+			final EntityPersister persister = session.getFactory().getMetamodel().entityPersister(entityName);
 			if ( !persister.isMutable() && !readOnly ) {
 				throw new IllegalStateException( "cannot make proxies [" + entityName + "#" + id + "] for immutable entities modifiable" );
 			}
@@ -394,8 +394,8 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 * is not available (i.e., isReadOnlySettingAvailable() == false)
 	 *
 	 * @return null, if the default setting should be used;
-	 *         true, for read-only;
-	 *         false, for modifiable
+	 *		 true, for read-only;
+	 *		 false, for modifiable
 	 *
 	 * @throws IllegalStateException if isReadOnlySettingAvailable() == true
 	 */

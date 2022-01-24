@@ -11,7 +11,7 @@ import org.hibernate.query.sqm.tree.SqmNode;
 import org.hibernate.query.sqm.tree.SqmQuery;
 
 /**
- * Common contract between a {@link SqmSelectStatement root} and a
+ * Common contract between a {@linkplain SqmSelectStatement root} and a
  * {@link SqmSubQuery sub-query}
  *
  * @author Steve Ebersole

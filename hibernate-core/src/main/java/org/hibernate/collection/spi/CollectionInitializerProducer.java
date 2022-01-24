@@ -9,7 +9,7 @@ package org.hibernate.collection.spi;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;

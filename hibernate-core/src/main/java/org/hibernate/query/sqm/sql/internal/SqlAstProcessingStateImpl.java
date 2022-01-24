@@ -106,7 +106,6 @@ public class SqlAstProcessingStateImpl
 		return normalize( expression );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected Expression normalize(Expression expression) {
 		final Clause currentClause = currentClauseAccess.get();
 		if ( currentClause == Clause.ORDER
@@ -128,7 +127,7 @@ public class SqlAstProcessingStateImpl
 	}
 
 //	@Override
-//	public Expression resolveSqlExpression(NonQualifiableSqlExpressable sqlSelectable) {
+//	public Expression resolveSqlExpression(NonQualifiableSqlExpressible sqlSelectable) {
 //		final Expression expression = normalize( sqlSelectable.createExpression() );
 //		final Consumer<Expression> expressionConsumer = resolvedExpressionConsumerAccess.get();
 //		if ( expressionConsumer != null ) {
@@ -140,7 +139,7 @@ public class SqlAstProcessingStateImpl
 	@Override
 	public SqlSelection resolveSqlSelection(
 			Expression expression,
-			JavaType<?> javaTypeDescriptor,
+			JavaType<?> javaType,
 			TypeConfiguration typeConfiguration) {
 		throw new ConversionException( "Unexpected call to resolve SqlSelection outside of QuerySpec processing" );
 	}

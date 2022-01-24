@@ -21,23 +21,8 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class BasicFormatterImpl implements Formatter {
 
-	private static final Set<String> BEGIN_CLAUSES = Set.of(
-			"left",	"right", "inner", "outer", "group", "order"
-	);
-	private static final Set<String> END_CLAUSES = Set.of(
-			"where", "set", "having", "from", "by", "join", "into", "union"
-	);
-	private static final Set<String> LOGICAL = Set.of(
-			"and", "or", "when", "else", "end"
-	);
-	private static final Set<String> QUANTIFIERS = Set.of(
-			"in", "all", "exists", "some", "any"
-	);
-	private static final Set<String> DML = Set.of(
-			"insert", "update", "delete"
-	);
-	private static final Set<String> MISC = Set.of(
-			"select", "on"
+	private static final Set<String> NON_FUNCTION_NAMES = Set.of(
+			"select", "from", "on", "set", "and", "or", "where", "having", "by"
 	);
 
 	private static final String INDENT_STRING = "    ";
@@ -54,11 +39,12 @@ public class BasicFormatterImpl implements Formatter {
 		boolean afterByOrSetOrFromOrSelect;
 		boolean afterOn;
 		boolean afterBetween;
+		boolean afterExtract;
 		boolean afterInsert;
 		int inFunction;
 		int parensSinceSelect;
-		private LinkedList<Integer> parenCounts = new LinkedList<>();
-		private LinkedList<Boolean> afterByOrFromOrSelects = new LinkedList<>();
+		private final LinkedList<Integer> parenCounts = new LinkedList<>();
+		private final LinkedList<Boolean> afterByOrFromOrSelects = new LinkedList<>();
 
 		int indent = 1;
 
@@ -86,87 +72,135 @@ public class BasicFormatterImpl implements Formatter {
 				token = tokens.nextToken();
 				lcToken = token.toLowerCase(Locale.ROOT);
 
-				if ( "'".equals( token ) ) {
-					String t;
-					do {
-						t = tokens.nextToken();
-						token += t;
-					}
-					// cannot handle single quotes
-					while ( !"'".equals( t ) && tokens.hasMoreTokens() );
-				}
-				else if ( "\"".equals( token ) ) {
-					String t;
-					do {
-						t = tokens.nextToken();
-						token += t;
-					}
-					while ( !"\"".equals( t )  && tokens.hasMoreTokens() );
-				}
-				// SQL Server uses "[" and "]" to escape reserved words
-				// see SQLServerDialect.openQuote and SQLServerDialect.closeQuote
-				else if ( "[".equals( token ) ) {
-					String t;
-					do {
-						t = tokens.nextToken();
-						token += t;
-					}
-					while ( !"]".equals( t ) && tokens.hasMoreTokens());
-				}
+				switch (lcToken) {
 
-				if ( afterByOrSetOrFromOrSelect && ",".equals( token ) ) {
-					commaAfterByOrFromOrSelect();
-				}
-				else if ( afterOn && ",".equals( token ) ) {
-					commaAfterOn();
-				}
+					case "'":
+					case "\"":
+						String t;
+						do {
+							t = tokens.nextToken();
+							token += t;
+						}
+						while ( !lcToken.equals( t ) && tokens.hasMoreTokens() );
+						lcToken = token;
+						misc();
+						break;
+					// SQL Server uses "[" and "]" to escape reserved words
+					// see SQLServerDialect.openQuote and SQLServerDialect.closeQuote
+					case "[":
+						String tt;
+						do {
+							tt = tokens.nextToken();
+							token += tt;
+						}
+						while ( !"]".equals( tt ) && tokens.hasMoreTokens() );
+						lcToken = token;
+						misc();
+						break;
 
-				else if ( "(".equals( token ) ) {
-					openParen();
-				}
-				else if ( ")".equals( token ) ) {
-					closeParen();
-				}
+					case ",":
+						if ( afterByOrSetOrFromOrSelect && inFunction==0 ) {
+							commaAfterByOrFromOrSelect();
+						}
+						else if ( afterOn && inFunction==0 ) {
+							commaAfterOn();
+						}
+						else {
+							misc();
+						}
+						break;
 
-				else if ( BEGIN_CLAUSES.contains( lcToken ) ) {
-					beginNewClause();
-				}
+					case "(":
+						openParen();
+						break;
+					case ")":
+						closeParen();
+						break;
 
-				else if ( END_CLAUSES.contains( lcToken ) ) {
-					endNewClause();
-				}
+					case "select":
+						select();
+						break;
+					case "insert":
+					case "update":
+					case "delete":
+						updateOrInsertOrDelete();
+						break;
 
-				else if ( "select".equals( lcToken ) ) {
-					select();
-				}
+					case "values":
+						values();
+						break;
 
-				else if ( DML.contains( lcToken ) ) {
-					updateOrInsertOrDelete();
-				}
+					case "on":
+						on();
+						break;
 
-				else if ( "values".equals( lcToken ) ) {
-					values();
-				}
+					case "between":
+						afterBetween = true;
+						misc();
+						break;
+					case "trim":
+					case "extract":
+						afterExtract = true;
+						misc();
+						break;
 
-				else if ( "on".equals( lcToken ) ) {
-					on();
-				}
+					//TODO: detect when 'left', 'right' are function names
+					case "left":
+					case "right":
+					case "full":
+					case "inner":
+					case "outer":
+					case "cross":
+					case "group":
+					case "order":
+						beginNewClause();
+						break;
 
-				else if ( afterBetween && lcToken.equals( "and" ) ) {
-					misc();
-					afterBetween = false;
-				}
+					case "from":
+						if ( afterExtract ) {
+							misc();
+							afterExtract = false;
+							break;
+						}
+						//else fall through:
+					case "where":
+					case "set":
+					case "having":
+					case "by":
+					case "join":
+					case "into":
+					case "union":
+					case "intersect":
+						endNewClause();
+						break;
 
-				else if ( LOGICAL.contains( lcToken ) ) {
-					logical();
-				}
+					case "case":
+						beginCase();
+						break;
+					case "end":
+						endCase();
+						break;
 
-				else if ( isWhitespace( token ) ) {
-					white();
-				}
+					case "and":
+						if ( afterBetween ) {
+							misc();
+							afterBetween = false;
+							break;
+						}
+						//else fall through:
+					case "or":
+					case "when":
+					case "else":
+						logical();
+						break;
+					default:
+						if ( isWhitespace( token ) ) {
+							white();
+						}
 
-				else {
-					misc();
+						else {
+							misc();
+						}
 				}
 
 				if ( !isWhitespace( token ) ) {
@@ -191,12 +225,14 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private void logical() {
-			if ( "end".equals( lcToken ) ) {
-				indent--;
-			}
 			newline();
 			out();
 			beginLine = false;
+		}
+
+		private void endCase() {
+			indent--;
+			logical();
 		}
 
 		private void on() {
@@ -207,20 +243,20 @@ public class BasicFormatterImpl implements Formatter {
 			beginLine = false;
 		}
 
+		private void beginCase() {
+			out();
+			beginLine = false;
+			indent++;
+		}
+
 		private void misc() {
 			out();
-			if ( "between".equals( lcToken ) ) {
-				afterBetween = true;
-			}
-			if ( afterInsert ) {
+			if ( afterInsert && inFunction==0 ) {
 				newline();
 				afterInsert = false;
 			}
 			else {
 				beginLine = false;
-				if ( "case".equals( lcToken ) ) {
-					indent++;
-				}
 			}
 		}
 
@@ -231,14 +267,20 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private void updateOrInsertOrDelete() {
-			out();
-			indent++;
-			beginLine = false;
-			if ( "update".equals( lcToken ) ) {
-				newline();
+			if ( indent>1  ) {
+				//probably just the insert SQL function
+				out();
 			}
-			if ( "insert".equals( lcToken ) ) {
-				afterInsert = true;
+			else {
+				out();
+				indent++;
+				beginLine = false;
+				if ( "update".equals( lcToken ) ) {
+					newline();
+				}
+				if ( "insert".equals( lcToken ) ) {
+					afterInsert = true;
+				}
 			}
 		}
 
@@ -266,7 +308,7 @@ public class BasicFormatterImpl implements Formatter {
 				newline();
 			}
 			out();
-			if ( !"union".equals( lcToken ) ) {
+			if ( !"union".equals( lcToken ) && !"intersect".equals( lcToken ) ) {
 				indent++;
 			}
 			newline();
@@ -291,11 +333,16 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private void values() {
-			indent--;
-			newline();
-			out();
-			indent++;
-			newline();
+			if ( parensSinceSelect == 0 ) {
+				indent--;
+				newline();
+				out();
+				indent++;
+				newline();
+			}
+			else {
+				out();
+			}
 		}
 
 		private void closeParen() {
@@ -345,12 +392,7 @@ public class BasicFormatterImpl implements Formatter {
 
 			final char begin = tok.charAt( 0 );
 			final boolean isIdentifier = Character.isJavaIdentifierStart( begin ) || '"' == begin;
-			return isIdentifier &&
-					!LOGICAL.contains( tok ) &&
-					!END_CLAUSES.contains( tok ) &&
-					!QUANTIFIERS.contains( tok ) &&
-					!DML.contains( tok ) &&
-					!MISC.contains( tok );
+			return isIdentifier && !NON_FUNCTION_NAMES.contains( tok );
 		}
 
 		private static boolean isWhitespace(String token) {
@@ -358,10 +400,8 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private void newline() {
-			result.append( System.lineSeparator() );
-			for ( int i = 0; i < indent; i++ ) {
-				result.append( INDENT_STRING );
-			}
+			result.append( System.lineSeparator() )
+					.append( INDENT_STRING.repeat(indent) );
 			beginLine = true;
 		}
 	}

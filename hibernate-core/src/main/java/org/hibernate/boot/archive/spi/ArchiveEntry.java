@@ -17,7 +17,7 @@ public interface ArchiveEntry {
 	 *
 	 * @return The name
 	 */
-	public String getName();
+	String getName();
 
 	/**
 	 * Get the relative name of the entry within the archive.  Typically what we are looking for here is
@@ -25,12 +25,12 @@ public interface ArchiveEntry {
 	 *
 	 * @return The name relative to the archive root
 	 */
-	public String getNameWithinArchive();
+	String getNameWithinArchive();
 
 	/**
 	 * Get access to the stream for the entry
 	 *
 	 * @return Obtain stream access to the entry
 	 */
-	public InputStreamAccess getStreamAccess();
+	InputStreamAccess getStreamAccess();
 }

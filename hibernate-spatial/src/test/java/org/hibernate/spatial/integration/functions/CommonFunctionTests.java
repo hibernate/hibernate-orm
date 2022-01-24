@@ -14,6 +14,7 @@
 
 package org.hibernate.spatial.integration.functions;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -52,8 +53,8 @@ public class CommonFunctionTests extends SpatialTestBase {
 
 	public final static TestSupport.TestDataPurpose PURPOSE = TestSupport.TestDataPurpose.SpatialFunctionsData;
 
-	List received;
-	List expected;
+	List received = new ArrayList();
+	List expected = new ArrayList();
 
 	@Override
 	public TestSupport.TestDataPurpose purpose() {
@@ -97,6 +98,8 @@ public class CommonFunctionTests extends SpatialTestBase {
 
 	protected Executable executableTest(FunctionTestTemplate template, String fnName) {
 		return () -> {
+			expected.clear();
+			received.clear();
 			expected = template.executeNativeQuery( scope );
 			received = template.executeHQL( scope, fnName );
 			if ( !expected.equals( received ) ) {

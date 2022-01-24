@@ -40,7 +40,6 @@ public interface SelectableMappings {
 	/**
 	 * Same as {@link #forEachSelectable(int, SelectableConsumer)}, with
 	 * an implicit offset of `0`
-	 * @return
 	 */
 	default int forEachSelectable(SelectableConsumer consumer) {
 		return forEachSelectable( 0, consumer );

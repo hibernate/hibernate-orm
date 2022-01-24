@@ -25,7 +25,7 @@ import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -62,7 +62,6 @@ public class BasicAttributeMapping
 
 	private final JavaType domainTypeDescriptor;
 
-	@SuppressWarnings("WeakerAccess")
 	public BasicAttributeMapping(
 			String attributeName,
 			NavigableRole navigableRole,
@@ -92,7 +91,7 @@ public class BasicAttributeMapping
 			domainTypeDescriptor = jdbcMapping.getJavaTypeDescriptor();
 		}
 		else {
-			domainTypeDescriptor = valueConverter.getDomainJavaDescriptor();
+			domainTypeDescriptor = valueConverter.getDomainJavaType();
 		}
 
 		this.customReadExpression = customReadExpression;
@@ -160,7 +159,7 @@ public class BasicAttributeMapping
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
+	public JavaType<?> getJavaType() {
 		return domainTypeDescriptor;
 	}
 
@@ -216,7 +215,7 @@ public class BasicAttributeMapping
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				getMappedType().getMappedJavaTypeDescriptor(),
+				getMappedType().getMappedJavaType(),
 				valueConverter,
 				navigablePath
 		);
@@ -245,7 +244,7 @@ public class BasicAttributeMapping
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)
 				),
-				valueConverter == null ? getMappedType().getMappedJavaTypeDescriptor() : valueConverter.getRelationalJavaDescriptor(),
+				valueConverter == null ? getMappedType().getMappedJavaType() : valueConverter.getRelationalJavaType(),
 				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 	}

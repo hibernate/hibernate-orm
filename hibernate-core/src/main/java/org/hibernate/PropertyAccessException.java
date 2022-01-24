@@ -21,7 +21,7 @@ import org.hibernate.internal.util.StringHelper;
  * @author Gavin King
  */
 public class PropertyAccessException extends HibernateException {
-	private final Class persistentClass;
+	private final Class<?> persistentClass;
 	private final String propertyName;
 	private final boolean wasSetter;
 
@@ -38,7 +38,7 @@ public class PropertyAccessException extends HibernateException {
 			Throwable cause,
 			String message,
 			boolean wasSetter,
-			Class persistentClass,
+			Class<?> persistentClass,
 			String propertyName) {
 		super( message, cause );
 		this.persistentClass = persistentClass;
@@ -46,7 +46,7 @@ public class PropertyAccessException extends HibernateException {
 		this.propertyName = propertyName;
 	}
 
-	public Class getPersistentClass() {
+	public Class<?> getPersistentClass() {
 		return persistentClass;
 	}
 

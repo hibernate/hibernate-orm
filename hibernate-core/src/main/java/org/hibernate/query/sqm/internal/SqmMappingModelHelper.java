@@ -12,7 +12,7 @@ import jakarta.persistence.metamodel.Bindable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
@@ -22,13 +22,12 @@ import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.internal.AnyMappingSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
-import org.hibernate.metamodel.model.domain.internal.DomainModelHelper;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -113,17 +112,17 @@ public class SqmMappingModelHelper {
 		);
 	}
 
-	public static MappingModelExpressable resolveMappingModelExpressable(
+	public static MappingModelExpressible<?> resolveMappingModelExpressible(
 			SqmTypedNode<?> sqmNode,
 			MappingMetamodel domainModel,
 			Function<NavigablePath,TableGroup> tableGroupLocator) {
 		if ( sqmNode instanceof SqmPath ) {
-			return resolveSqmPath( (SqmPath) sqmNode, domainModel, tableGroupLocator );
+			return resolveSqmPath( (SqmPath<?>) sqmNode, domainModel, tableGroupLocator );
 		}
 
-		final SqmExpressable<?> nodeType = sqmNode.getNodeType();
+		final SqmExpressible<?> nodeType = sqmNode.getNodeType();
 		if ( nodeType instanceof BasicType ) {
-			return ( (BasicType) nodeType );
+			return (BasicType<?>) nodeType;
 		}
 
 		return null;

@@ -41,7 +41,7 @@ public final class Collections {
 	 * @param coll The collection to be updated by un-reachability.
 	 * @param session The session
 	 */
-	public static void processUnreachableCollection(PersistentCollection coll, SessionImplementor session) {
+	public static void processUnreachableCollection(PersistentCollection<?> coll, SessionImplementor session) {
 		if ( coll.getOwner() == null ) {
 			processNeverReferencedCollection( coll, session );
 		}
@@ -50,7 +50,7 @@ public final class Collections {
 		}
 	}
 
-	private static void processDereferencedCollection(PersistentCollection coll, SessionImplementor session) {
+	private static void processDereferencedCollection(PersistentCollection<?> coll, SessionImplementor session) {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final CollectionEntry entry = persistenceContext.getCollectionEntry( coll );
 		final CollectionPersister loadedPersister = entry.getLoadedPersister();
@@ -107,7 +107,7 @@ public final class Collections {
 
 	}
 
-	private static void processNeverReferencedCollection(PersistentCollection coll, SessionImplementor session)
+	private static void processNeverReferencedCollection(PersistentCollection<?> coll, SessionImplementor session)
 			throws HibernateException {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final CollectionEntry entry = persistenceContext.getCollectionEntry( coll );
@@ -140,7 +140,7 @@ public final class Collections {
 	 * @param session The session from which this request originates
      */
 	public static void processReachableCollection(
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			CollectionType type,
 			Object entity,
 			SessionImplementor session) {
@@ -234,9 +234,8 @@ public final class Collections {
 	 * 2. decide if the collection needs deleting/creating/updating (but
 	 *	don't actually schedule the action yet)
 	 */
-	@SuppressWarnings( {"JavaDoc"})
 	private static void prepareCollectionForUpdate(
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			CollectionEntry entry,
 			SessionFactoryImplementor factory) {
 		if ( entry.isProcessed() ) {

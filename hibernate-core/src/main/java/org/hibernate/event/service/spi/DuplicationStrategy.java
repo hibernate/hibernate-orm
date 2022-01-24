@@ -16,7 +16,7 @@ public interface DuplicationStrategy {
 	/**
 	 * The enumerated list of actions available on duplication match
 	 */
-	public static enum Action {
+	enum Action {
 		ERROR,
 		KEEP_ORIGINAL,
 		REPLACE_ORIGINAL
@@ -30,12 +30,12 @@ public interface DuplicationStrategy {
 	 *
 	 * @return {@literal true} if the two instances are considered a duplication; {@literal false} otherwise
 	 */
-	public boolean areMatch(Object listener, Object original);
+	boolean areMatch(Object listener, Object original);
 
 	/**
 	 * How should a duplication be handled?
 	 *
 	 * @return The strategy for handling duplication
 	 */
-	public Action getAction();
+	Action getAction();
 }

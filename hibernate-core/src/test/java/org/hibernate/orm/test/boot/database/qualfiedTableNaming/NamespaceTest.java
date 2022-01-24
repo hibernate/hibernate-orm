@@ -55,32 +55,32 @@ public class NamespaceTest {
 	public static class TestNamingStrategy implements PhysicalNamingStrategy {
 		@Override
 		public Identifier toPhysicalCatalogName(
-				Identifier name, JdbcEnvironment jdbcEnvironment) {
+				Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
 			return new Identifier( EXPECTED_CATALOG_PHYSICAL_NAME, false );
 		}
 
 		@Override
 		public Identifier toPhysicalSchemaName(
-				Identifier name, JdbcEnvironment jdbcEnvironment) {
+				Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
 			return new Identifier( EXPECTED_SCHEMA_PHYSICAL_NAME, false );
 		}
 
 		@Override
 		public Identifier toPhysicalTableName(
-				Identifier name, JdbcEnvironment jdbcEnvironment) {
-			return name;
+				Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+			return logicalName;
 		}
 
 		@Override
 		public Identifier toPhysicalSequenceName(
-				Identifier name, JdbcEnvironment jdbcEnvironment) {
+				Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
 			return null;
 		}
 
 		@Override
 		public Identifier toPhysicalColumnName(
-				Identifier name, JdbcEnvironment jdbcEnvironment) {
-			return name;
+				Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+			return logicalName;
 		}
 	}
 }

@@ -9,7 +9,7 @@ package org.hibernate.sql.results.graph;
 import org.hibernate.Incubating;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**

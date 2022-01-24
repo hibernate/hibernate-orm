@@ -13,7 +13,7 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Map an immutable and read-only entity to a given SQL select expression.
+ * Maps an immutable and read-only entity to a given SQL {@code select} expression.
  *
  * @see Synchronize
  *

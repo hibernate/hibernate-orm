@@ -233,7 +233,16 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			return false;
 		}
 
-		final Object key = cacheAccess.generateCacheKey( identifier, entityDescriptor, sessionFactory, null );
+		final Object idValue = entityDescriptor.getIdentifierMapping().getJavaType().coerce(
+				identifier,
+				sessionFactory::getTypeConfiguration
+		);
+		final Object key = cacheAccess.generateCacheKey(
+				idValue,
+				entityDescriptor.getRootEntityDescriptor().getEntityPersister(),
+				sessionFactory,
+				null
+		);
 		return cacheAccess.contains( key );
 	}
 

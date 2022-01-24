@@ -16,7 +16,7 @@ import org.hibernate.service.ServiceRegistry;
 public class StringArrayTypeContributor implements TypeContributor {
 	@Override
 	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		typeContributions.contributeJavaTypeDescriptor( StringArrayJavaType.INSTANCE );
-		typeContributions.contributeJdbcTypeDescriptor( new StringArrayJdbcType() );
+		typeContributions.contributeJavaType( StringArrayJavaType.INSTANCE );
+		typeContributions.contributeJdbcType( new StringArrayJdbcType() );
 	}
 }

@@ -25,7 +25,7 @@ public class H2GisDialectContributor implements ContributorImplementor {
 
 	public void contributeJdbcTypes(TypeContributions typeContributions) {
 		HSMessageLogger.LOGGER.typeContributions( this.getClass().getCanonicalName() );
-		typeContributions.contributeJdbcTypeDescriptor( H2GISGeometryType.INSTANCE );
+		typeContributions.contributeJdbcType( H2GISGeometryType.INSTANCE );
 	}
 
 	@Override

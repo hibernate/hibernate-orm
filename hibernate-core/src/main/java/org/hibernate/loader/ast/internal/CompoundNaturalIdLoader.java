@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.CompoundNaturalIdMapping;
-import org.hibernate.query.ComparisonOperator;
+import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;

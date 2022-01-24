@@ -25,8 +25,8 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.query.EntityIdentifierNavigablePath;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.spi.EntityIdentifierNavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -111,7 +111,7 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
+	public JavaType<?> getJavaType() {
 		return selectableMapping.getJdbcMapping().getJavaTypeDescriptor();
 	}
 
@@ -137,7 +137,7 @@ public class BasicValuedCollectionPart
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				getJavaTypeDescriptor(),
+				getJavaType(),
 				valueConverter,
 				navigablePath
 		);
@@ -176,7 +176,7 @@ public class BasicValuedCollectionPart
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)
 				),
-				getJavaTypeDescriptor(),
+				getJavaType(),
 				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 	}
@@ -208,7 +208,7 @@ public class BasicValuedCollectionPart
 
 	@Override
 	public MappingType getMappedType() {
-		return this::getJavaTypeDescriptor;
+		return this::getJavaType;
 	}
 
 	@Override

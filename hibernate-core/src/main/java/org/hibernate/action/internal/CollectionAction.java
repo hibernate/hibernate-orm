@@ -16,10 +16,7 @@ import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.FastSessionServices;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -30,17 +27,17 @@ import org.hibernate.pretty.MessageHelper;
  *
  * @author Gavin King
  */
-public abstract class CollectionAction implements Executable, Serializable, Comparable {
+public abstract class CollectionAction implements Executable, Serializable, Comparable<CollectionAction> {
 	private transient CollectionPersister persister;
 	private transient SharedSessionContractImplementor session;
-	private final PersistentCollection collection;
+	private final PersistentCollection<?> collection;
 
 	private final Object key;
 	private final String collectionRole;
 
 	protected CollectionAction(
 			final CollectionPersister persister,
-			final PersistentCollection collection, 
+			final PersistentCollection<?> collection,
 			final Object key,
 			final SharedSessionContractImplementor session) {
 		this.persister = persister;
@@ -50,7 +47,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		this.collection = collection;
 	}
 
-	protected PersistentCollection getCollection() {
+	protected PersistentCollection<?> getCollection() {
 		return collection;
 	}
 
@@ -147,9 +144,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 	}
 
 	@Override
-	public int compareTo(Object other) {
-		final CollectionAction action = (CollectionAction) other;
-
+	public int compareTo(CollectionAction action) {
 		// sort first by role name
 		final int roleComparison = collectionRole.compareTo( action.collectionRole );
 		if ( roleComparison != 0 ) {
@@ -183,19 +178,6 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 			);
 			cache.unlockItem( session, ck, lock );
 		}
-	}
-
-	/**
-	 * @deprecated This will be removed as it's not very efficient. If you need access to EventListenerGroup(s),
-	 * use the direct references from {@link #getFastSessionServices()}.
-	 */
-	@Deprecated
-	protected <T> EventListenerGroup<T> listenerGroup(EventType<T> eventType) {
-		return getSession()
-				.getFactory()
-				.getServiceRegistry()
-				.getService( EventListenerRegistry.class )
-				.getEventListenerGroup( eventType );
 	}
 
 	protected EventSource eventSource() {

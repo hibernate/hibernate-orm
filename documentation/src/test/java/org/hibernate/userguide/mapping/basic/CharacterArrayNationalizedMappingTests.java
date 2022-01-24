@@ -44,7 +44,7 @@ public class CharacterArrayNationalizedMappingTests {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityWithCharArrays.class);
 		final JdbcTypeRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
-				.getJdbcTypeDescriptorRegistry();
+				.getJdbcTypeRegistry();
 
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final NationalizationSupport nationalizationSupport = dialect.getNationalizationSupport();
@@ -52,26 +52,26 @@ public class CharacterArrayNationalizedMappingTests {
 		{
 			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitiveNVarchar");
 			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-			assertThat(jdbcMapping.getJdbcTypeDescriptor(), is(jdbcTypeRegistry.getDescriptor(nationalizationSupport.getVarcharVariantCode())));
+			assertThat( jdbcMapping.getJdbcType(), is( jdbcTypeRegistry.getDescriptor( nationalizationSupport.getVarcharVariantCode())));
 		}
 
 		{
 			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapperNVarchar");
 			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-			assertThat(jdbcMapping.getJdbcTypeDescriptor(), is(jdbcTypeRegistry.getDescriptor(nationalizationSupport.getVarcharVariantCode())));
+			assertThat( jdbcMapping.getJdbcType(), is( jdbcTypeRegistry.getDescriptor( nationalizationSupport.getVarcharVariantCode())));
 		}
 
 
 		{
 			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitiveNClob");
 			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-			assertThat(jdbcMapping.getJdbcTypeDescriptor(), is(jdbcTypeRegistry.getDescriptor(nationalizationSupport.getClobVariantCode())));
+			assertThat( jdbcMapping.getJdbcType(), is( jdbcTypeRegistry.getDescriptor( nationalizationSupport.getClobVariantCode())));
 		}
 
 		{
 			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapperNClob");
 			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-			assertThat(jdbcMapping.getJdbcTypeDescriptor(), is(jdbcTypeRegistry.getDescriptor(nationalizationSupport.getClobVariantCode())));
+			assertThat( jdbcMapping.getJdbcType(), is( jdbcTypeRegistry.getDescriptor( nationalizationSupport.getClobVariantCode())));
 		}
 	}
 

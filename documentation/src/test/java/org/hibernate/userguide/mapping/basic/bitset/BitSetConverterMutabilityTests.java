@@ -50,7 +50,7 @@ public class BitSetConverterMutabilityTests {
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(Product.class);
 		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("bitSet");
 
-		assertThat(attributeMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(BitSet.class));
+		assertThat( attributeMapping.getJavaType().getJavaTypeClass(), equalTo( BitSet.class));
 
 		assertThat(attributeMapping.getValueConverter(), instanceOf(JpaAttributeConverter.class));
 		final JpaAttributeConverter converter = (JpaAttributeConverter) attributeMapping.getValueConverter();
@@ -59,7 +59,7 @@ public class BitSetConverterMutabilityTests {
 		Assertions.assertThat(attributeMapping.getExposedMutabilityPlan()).isInstanceOf(BitSetMutabilityPlan.class);
 
 		assertThat(
-				attributeMapping.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode(),
+				attributeMapping.getJdbcMapping().getJdbcType().getJdbcTypeCode(),
 				isOneOf(Types.VARCHAR, Types.NVARCHAR)
 		);
 

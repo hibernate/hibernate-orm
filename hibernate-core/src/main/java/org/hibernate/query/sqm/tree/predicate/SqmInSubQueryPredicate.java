@@ -11,7 +11,7 @@ import jakarta.persistence.criteria.Expression;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
@@ -30,7 +30,6 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 		this( testExpression, subQueryExpression, false, nodeBuilder );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public SqmInSubQueryPredicate(
 			SqmExpression<T> testExpression,
 			SqmSubQuery<T> subQueryExpression,
@@ -40,13 +39,13 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 		this.testExpression = testExpression;
 		this.subQueryExpression = subQueryExpression;
 
-		final SqmExpressable<?> expressableType = QueryHelper.highestPrecedenceType2(
+		final SqmExpressible<?> expressibleType = QueryHelper.highestPrecedenceType2(
 				testExpression.getNodeType(),
 				subQueryExpression.getNodeType()
 		);
 
-		testExpression.applyInferableType( expressableType );
-		subQueryExpression.applyInferableType( expressableType );
+		testExpression.applyInferableType( expressibleType );
+		subQueryExpression.applyInferableType( expressibleType );
 	}
 
 	@Override

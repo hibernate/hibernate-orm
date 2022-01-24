@@ -8,7 +8,7 @@ package org.hibernate.query;
 
 /**
  * Represents an error in the semantics (meaning) of the passed query.  Generally
- * speaking, this is a "user error".
+ * speaking, this is a user error of some sort.
  *
  * @author Steve Ebersole
  */

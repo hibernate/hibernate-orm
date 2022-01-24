@@ -15,7 +15,6 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.graph.spi.AppliedGraph;
-import org.hibernate.query.Limit;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 
@@ -55,13 +54,13 @@ public interface QueryOptions {
 	 * Transformer applied to the query to transform the structure of each "row"
 	 * in the results
 	 */
-	TupleTransformer getTupleTransformer();
+	TupleTransformer<?> getTupleTransformer();
 
 	/**
 	 * Transformer applied to the query to transform the structure of the
 	 * overall results
 	 */
-	ResultListTransformer getResultListTransformer();
+	ResultListTransformer<?> getResultListTransformer();
 
 	/**
 	 * Should results from the query be cached?
@@ -168,13 +167,8 @@ public interface QueryOptions {
 	 */
 	default boolean hasLimit() {
 		final Limit limit = getLimit();
-		if ( limit != null ) {
-			if ( limit.getFirstRow() != null || limit.getMaxRows() != null ) {
-				return true;
-			}
-		}
-
-		return false;
+		return limit != null
+			&& (limit.getFirstRow() != null || limit.getMaxRows() != null);
 	}
 
 	/**

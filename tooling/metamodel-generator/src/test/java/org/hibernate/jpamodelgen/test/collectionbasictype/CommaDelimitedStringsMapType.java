@@ -21,14 +21,14 @@ import org.hibernate.usertype.StaticUserTypeSupport;
 public class CommaDelimitedStringsMapType extends StaticUserTypeSupport<Map<String,String>> {
     public CommaDelimitedStringsMapType() {
         super(
-                new CommaDelimitedStringMapJavaTypeDescriptor(),
+                new CommaDelimitedStringMapJavaType(),
                 VarcharJdbcType.INSTANCE
         );
     }
 
     @Override
-    public CommaDelimitedStringMapJavaTypeDescriptor getJavaType() {
-        return (CommaDelimitedStringMapJavaTypeDescriptor) super.getJavaType();
+    public CommaDelimitedStringMapJavaType getJavaType() {
+        return (CommaDelimitedStringMapJavaType) super.getJavaType();
     }
 
     @Override

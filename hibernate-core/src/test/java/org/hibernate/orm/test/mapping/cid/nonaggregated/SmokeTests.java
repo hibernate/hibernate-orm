@@ -33,7 +33,6 @@ import org.junit.jupiter.api.Test;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 @DomainModel( annotatedClasses = {
 		SmokeTests.SystemAccess.class,
 		SmokeTests.Order.class,

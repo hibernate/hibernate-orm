@@ -10,8 +10,8 @@
 package org.hibernate.orm.test.jpa;
 
 import java.util.Map;
-import jakarta.persistence.Query;
 
+import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
@@ -20,6 +20,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
+import jakarta.persistence.PersistenceException;
 import org.mockito.Mockito;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -78,18 +79,19 @@ public class NamedQueryTransactionFailureTest extends BaseEntityManagerFunctiona
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-11997" )
-	public void testNamedQueryWithTransactionSynchStatus() {
+	public void testNamedQueryWithMarkForRollbackOnlyFailure() {
 		try {
 			doInJPA( this::entityManagerFactory, entityManager -> {
 				try {
 					Mockito.reset( transactionCoordinator );
-					doThrow(IllegalStateException.class).when( transactionCoordinator ).pulse();
+					doThrow(MarkedForRollbackException.class).when( transactionCoordinator ).pulse();
 
 					entityManager.createNamedQuery( "NamedQuery" );
 				}
 				catch (Exception e) {
-					assertEquals(IllegalArgumentException.class, e.getClass());
-					assertEquals(IllegalStateException.class, e.getCause().getClass());
+					assertEquals( PersistenceException.class, e.getClass() );
+					assertEquals( HibernateException.class, e.getCause().getClass() );
+					assertEquals( MarkedForRollbackException.class, e.getCause().getCause().getClass() );
 				}
 			});
 		}
@@ -97,25 +99,6 @@ public class NamedQueryTransactionFailureTest extends BaseEntityManagerFunctiona
 		}
 	}
 
-	@Test
-	@TestForIssue( jiraKey = "HHH-11997" )
-	public void testNamedQueryWithMarkForRollbackOnlyFailure() {
-		try {
-			doInJPA( this::entityManagerFactory, entityManager -> {
-				try {
-					Mockito.reset( transactionCoordinator );
-					doNothing().
-					doThrow(IllegalStateException.class).when( transactionCoordinator ).pulse();
-
-					entityManager.createNamedQuery( "NamedQuery" );
-				}
-				catch (Exception e) {
-					assertEquals(IllegalArgumentException.class, e.getClass());
-					assertEquals(IllegalStateException.class, e.getCause().getClass());
-				}
-			});
-		}
-		catch (Exception ignore) {
-		}
+	public static class MarkedForRollbackException extends RuntimeException {
 	}
 }

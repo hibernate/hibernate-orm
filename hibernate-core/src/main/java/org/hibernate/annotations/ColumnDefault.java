@@ -19,9 +19,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * {@code @ColumnDefault} may be used in combination with:
  * <ul>
  *     <li>{@code DynamicInsert}, to let the database fill in the value of
- *     a null entity attribute, or
+ *         a null entity attribute, or
  *     <li>{@code @Generated(INSERT)}, to populate an entity attribute with
- *     the defaulted value of a database column.
+ *         the defaulted value of a database column.
  * </ul>
  *
  * @author Steve Ebersole

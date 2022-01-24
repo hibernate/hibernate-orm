@@ -49,7 +49,7 @@ public final class NationalizedTypeMappings {
 
 	/**
 	 * @deprecated use {@link #toNationalizedTypeCode(int)}
-	 * @param jdbcCode
+	 *
 	 * @return corresponding nationalized code
 	 */
 	@Deprecated

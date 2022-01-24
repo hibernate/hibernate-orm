@@ -52,47 +52,47 @@ public class DecimalJdbcType implements JdbcType {
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( BigDecimal.class );
+		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( BigDecimal.class );
 	}
 
 	@Override
-	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
 		//noinspection unchecked
-		return new JdbcLiteralFormatterNumericData( javaTypeDescriptor, BigDecimal.class );
+		return new JdbcLiteralFormatterNumericData( javaType, BigDecimal.class );
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
+		return new BasicBinder<X>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				st.setBigDecimal( index, javaTypeDescriptor.unwrap( value, BigDecimal.class, options ) );
+				st.setBigDecimal( index, javaType.unwrap( value, BigDecimal.class, options ) );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				st.setBigDecimal( name, javaTypeDescriptor.unwrap( value, BigDecimal.class, options ) );
+				st.setBigDecimal( name, javaType.unwrap( value, BigDecimal.class, options ) );
 			}
 		};
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+		return new BasicExtractor<X>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getBigDecimal( paramIndex ), options );
+				return javaType.wrap( rs.getBigDecimal( paramIndex ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getBigDecimal( index ), options );
+				return javaType.wrap( statement.getBigDecimal( index ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getBigDecimal( name ), options );
+				return javaType.wrap( statement.getBigDecimal( name ), options );
 			}
 		};
 	}

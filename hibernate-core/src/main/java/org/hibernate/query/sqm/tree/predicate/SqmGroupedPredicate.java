@@ -20,7 +20,7 @@ public class SqmGroupedPredicate extends AbstractSqmPredicate {
 	private final SqmPredicate subPredicate;
 
 	public SqmGroupedPredicate(SqmPredicate subPredicate, NodeBuilder nodeBuilder) {
-		super( subPredicate.getExpressable(), nodeBuilder );
+		super( subPredicate.getExpressible(), nodeBuilder );
 		this.subPredicate = subPredicate;
 	}
 

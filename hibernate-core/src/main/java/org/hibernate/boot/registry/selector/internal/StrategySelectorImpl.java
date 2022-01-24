@@ -33,7 +33,6 @@ public class StrategySelectorImpl implements StrategySelector {
 
 	private static final Logger log = Logger.getLogger( StrategySelectorImpl.class );
 
-	@SuppressWarnings("WeakerAccess")
 	private static final StrategyCreator STANDARD_STRATEGY_CREATOR = strategyClass -> {
 		try {
 			return strategyClass.newInstance();

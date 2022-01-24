@@ -9,7 +9,7 @@ package org.hibernate.query.sqm.sql.internal;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -36,7 +36,7 @@ public class SqmTupleInterpretation<T> extends SqlTuple {
 		return new SqmTupleInterpretation<>(
 				sqmTuple,
 				groupedSqlExpressions,
-				SqmMappingModelHelper.resolveMappingModelExpressable(
+				SqmMappingModelHelper.resolveMappingModelExpressible(
 						sqmTuple,
 						sqlAstCreationState.getCreationContext().getDomainModel(),
 						sqlAstCreationState.getFromClauseAccess()::findTableGroup
@@ -49,7 +49,7 @@ public class SqmTupleInterpretation<T> extends SqlTuple {
 	public SqmTupleInterpretation(
 			SqmTuple<T> sqmTuple,
 			List<? extends Expression> expressions,
-			MappingModelExpressable valueMapping) {
+			MappingModelExpressible valueMapping) {
 
 		super( expressions, valueMapping );
 		interpretedSqmTuple = sqmTuple;

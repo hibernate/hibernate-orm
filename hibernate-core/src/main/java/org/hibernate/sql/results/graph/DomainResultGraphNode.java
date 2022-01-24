@@ -7,7 +7,7 @@
 package org.hibernate.sql.results.graph;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -28,7 +28,7 @@ public interface DomainResultGraphNode {
 
 	// todo (6.0) : result variable (selection alias)?  - even fetches can have alias
 
-	JavaType<?> getResultJavaTypeDescriptor();
+	JavaType<?> getResultJavaType();
 
 	/**
 	 * The NavigablePath for this node (if one!).  Certain nodes will not

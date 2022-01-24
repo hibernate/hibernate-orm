@@ -17,5 +17,5 @@ public interface Loggable {
 	 *
 	 * @return The loggable representation
 	 */
-	public String toLoggableString();
+	String toLoggableString();
 }

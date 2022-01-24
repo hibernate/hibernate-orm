@@ -17,7 +17,6 @@ import org.junit.jupiter.api.BeforeEach;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
 @ServiceRegistry
 @SessionFactory( exportSchema = true )

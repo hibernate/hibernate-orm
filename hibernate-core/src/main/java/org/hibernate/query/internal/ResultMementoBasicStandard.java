@@ -83,7 +83,7 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 					.getService( ManagedBeanRegistry.class )
 					.getBean( converterClass );
 			final JavaType<? extends AttributeConverter<?,?>> converterJtd = typeConfiguration
-					.getJavaTypeDescriptorRegistry()
+					.getJavaTypeRegistry()
 					.getDescriptor( converterClass );
 
 			final ParameterizedType parameterizedType = ConverterHelper.extractAttributeConverterParameterizedType( converterBean.getBeanClass() );
@@ -92,42 +92,42 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 					explicitColumnName,
 					converterBean,
 					converterJtd,
-					determineDomainJavaType( parameterizedType, typeConfiguration.getJavaTypeDescriptorRegistry() ),
+					determineDomainJavaType( parameterizedType, typeConfiguration.getJavaTypeRegistry() ),
 					resolveUnderlyingMapping( parameterizedType, typeConfiguration )
 			);
 		}
 		else {
 			final BasicType<?> explicitType;
-			final JavaType<?> explicitJavaTypeDescriptor;
+			final JavaType<?> explicitJavaType;
 
 			// see if this is a registered BasicType...
 			final BasicType<Object> registeredBasicType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( definition.type().getName() );
 			if ( registeredBasicType != null ) {
 				explicitType = registeredBasicType;
-				explicitJavaTypeDescriptor = registeredBasicType.getJavaTypeDescriptor();
+				explicitJavaType = registeredBasicType.getJavaTypeDescriptor();
 			}
 			else {
-				final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
+				final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
 				final JavaType<Object> registeredJtd = jtdRegistry.getDescriptor( definition.type() );
 				final ManagedBeanRegistry beanRegistry = sessionFactory.getServiceRegistry().getService( ManagedBeanRegistry.class );
 				if ( BasicType.class.isAssignableFrom( registeredJtd.getJavaTypeClass() ) ) {
 					final ManagedBean<BasicType<?>> typeBean = (ManagedBean) beanRegistry.getBean( registeredJtd.getJavaTypeClass() );
 					explicitType = typeBean.getBeanInstance();
-					explicitJavaTypeDescriptor = explicitType.getJavaTypeDescriptor();
+					explicitJavaType = explicitType.getJavaTypeDescriptor();
 				}
 				else if ( UserType.class.isAssignableFrom( registeredJtd.getJavaTypeClass() ) ) {
 					final ManagedBean<UserType<?>> userTypeBean = (ManagedBean) beanRegistry.getBean( registeredJtd.getJavaTypeClass() );
 					// todo (6.0) : is this the best approach?  or should we keep a Class<? extends UserType> -> @Type mapping somewhere?
 					explicitType = new CustomType<>( (UserType<Object>) userTypeBean.getBeanInstance(), typeConfiguration );
-					explicitJavaTypeDescriptor = explicitType.getJavaTypeDescriptor();
+					explicitJavaType = explicitType.getJavaTypeDescriptor();
 				}
 				else {
 					explicitType = null;
-					explicitJavaTypeDescriptor = jtdRegistry.getDescriptor( definition.type() );
+					explicitJavaType = jtdRegistry.getDescriptor( definition.type() );
 				}
 			}
 
-			builder = new CompleteResultBuilderBasicValuedStandard( explicitColumnName, explicitType, explicitJavaTypeDescriptor );
+			builder = new CompleteResultBuilderBasicValuedStandard( explicitColumnName, explicitType, explicitJavaType );
 		}
 	}
 

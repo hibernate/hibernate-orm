@@ -32,12 +32,12 @@ public class ObjectNullAsBinaryTypeJdbcType extends ObjectJdbcType {
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
-		if ( Serializable.class.isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() ) ) {
-			return VarbinaryJdbcType.INSTANCE.getBinder( javaTypeDescriptor );
+	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
+		if ( Serializable.class.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
+			return VarbinaryJdbcType.INSTANCE.getBinder( javaType );
 		}
 
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+		return new BasicBinder<X>( javaType, this ) {
 
 			@Override
 			protected void doBindNull(PreparedStatement st, int index, WrapperOptions options)

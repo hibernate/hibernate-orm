@@ -8,10 +8,16 @@ package org.hibernate;
 
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 
+import jakarta.persistence.FlushModeType;
+
 /**
  * Represents a flushing strategy. The flush process synchronizes
  * database state with session state by detecting state changes
- * and executing SQL statements.
+ * and executing SQL statements. A value of this enumeration
+ * specifies <em>when</em> the flush process occurs.
+ * <p>
+ * For example, {@link #COMMIT} specifies that the session flushes
+ * automatically when the transaction is about to commit.
  *
  * @see Session#setHibernateFlushMode
  * @see org.hibernate.query.CommonQueryContract#setHibernateFlushMode
@@ -82,5 +88,17 @@ public enum FlushMode {
 			default:
 				throw new AssertionFailure("Impossible FlushMode");
 		}
+	}
+
+	public static FlushMode fromJpaFlushMode(FlushModeType flushModeType) {
+		return FlushModeTypeHelper.getFlushMode( flushModeType );
+	}
+
+	public static FlushModeType toJpaFlushMode(FlushMode flushMode) {
+		return FlushModeTypeHelper.getFlushModeType( flushMode );
+	}
+
+	public FlushModeType toJpaFlushMode() {
+		return FlushModeTypeHelper.getFlushModeType( this );
 	}
 }

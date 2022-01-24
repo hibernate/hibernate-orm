@@ -35,10 +35,10 @@ public class OnLockVisitor extends ReattachVisitor {
 		}
 
 		final SessionImplementor session = getSession();
-		final CollectionPersister persister = session.getFactory().getCollectionPersister( type.getRole() );
+		final CollectionPersister persister = session.getFactory().getMetamodel().collectionPersister(type.getRole());
 
 		if ( collection instanceof PersistentCollection ) {
-			final PersistentCollection persistentCollection = (PersistentCollection) collection;
+			final PersistentCollection<?> persistentCollection = (PersistentCollection<?>) collection;
 			if ( persistentCollection.setCurrentSession( session ) ) {
 				if ( isOwnerUnchanged( persister, extractCollectionKeyFromOwner( persister ), persistentCollection ) ) {
 					// a "detached" collection that originally belonged to the same entity

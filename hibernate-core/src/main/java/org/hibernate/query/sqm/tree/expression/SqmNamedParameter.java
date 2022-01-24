@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 
 /**
  * Represents a named query parameter in the SQM tree.
@@ -25,7 +25,7 @@ public class SqmNamedParameter<T> extends AbstractSqmParameter<T> {
 	public SqmNamedParameter(
 			String name,
 			boolean canBeMultiValued,
-			SqmExpressable<T> inherentType,
+			SqmExpressible<T> inherentType,
 			NodeBuilder nodeBuilder) {
 		super( canBeMultiValued, inherentType, nodeBuilder );
 		this.name = name;

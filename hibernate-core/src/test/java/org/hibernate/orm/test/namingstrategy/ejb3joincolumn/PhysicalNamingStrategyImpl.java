@@ -21,17 +21,17 @@ public class PhysicalNamingStrategyImpl extends PhysicalNamingStrategyStandardIm
 	public static final PhysicalNamingStrategyImpl INSTANCE = new PhysicalNamingStrategyImpl();
 
 	@Override
-	public Identifier toPhysicalTableName(Identifier name, JdbcEnvironment jdbcEnvironment) {
-		return Identifier.toIdentifier(makeCleanIdentifier("tbl_" + name.getText()), name.isQuoted());
+	public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+		return Identifier.toIdentifier(makeCleanIdentifier("tbl_" + logicalName.getText()), logicalName.isQuoted());
 	}
 
 	@Override
-	public Identifier toPhysicalColumnName(Identifier name, JdbcEnvironment jdbcEnvironment) {
-		if ( name.getText().equals("DTYPE") ) {
-			return name;
+	public Identifier toPhysicalColumnName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+		if ( logicalName.getText().equals("DTYPE") ) {
+			return logicalName;
 		}
 
-		return Identifier.toIdentifier(makeCleanIdentifier("c_" + name.getText()), name.isQuoted());
+		return Identifier.toIdentifier(makeCleanIdentifier("c_" + logicalName.getText()), logicalName.isQuoted());
 	}
 
 	private String makeCleanIdentifier(String s) {

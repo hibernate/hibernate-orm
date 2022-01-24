@@ -14,14 +14,14 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.metamodel.model.domain.TupleType;
 import org.hibernate.query.BindableType;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.ObjectArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.ObjectArrayJavaType;
 
 /**
  * @author Christian Beikov
@@ -29,20 +29,20 @@ import org.hibernate.type.descriptor.java.ObjectArrayJavaTypeDescriptor;
 public class ArrayTupleType implements TupleType<Object[]>,
 		BindableType<Object[]>,
 		ReturnableType<Object[]>,
-		MappingModelExpressable<Object[]> {
+		MappingModelExpressible<Object[]> {
 
-	private final ObjectArrayJavaTypeDescriptor javaTypeDescriptor;
-	private final SqmExpressable<?>[] components;
+	private final ObjectArrayJavaType javaType;
+	private final SqmExpressible<?>[] components;
 
-	public ArrayTupleType(SqmExpressable<?>[] components) {
+	public ArrayTupleType(SqmExpressible<?>[] components) {
 		this.components = components;
-		this.javaTypeDescriptor = new ObjectArrayJavaTypeDescriptor( getTypeDescriptors( components ) );
+		this.javaType = new ObjectArrayJavaType( getTypeDescriptors( components ) );
 	}
 
-	private static JavaType<?>[] getTypeDescriptors(SqmExpressable<?>[] components) {
+	private static JavaType<?>[] getTypeDescriptors(SqmExpressible<?>[] components) {
 		final JavaType<?>[] typeDescriptors = new JavaType<?>[components.length];
 		for ( int i = 0; i < components.length; i++ ) {
-			typeDescriptors[i] = components[i].getExpressableJavaTypeDescriptor();
+			typeDescriptors[i] = components[i].getExpressibleJavaType();
 		}
 		return typeDescriptors;
 	}
@@ -63,18 +63,18 @@ public class ArrayTupleType implements TupleType<Object[]>,
 	}
 
 	@Override
-	public SqmExpressable<?> get(int index) {
+	public SqmExpressible<?> get(int index) {
 		return components[index];
 	}
 
 	@Override
-	public SqmExpressable<?> get(String componentName) {
+	public SqmExpressible<?> get(String componentName) {
 		throw new UnsupportedMappingException( "Array tuple has no component names" );
 	}
 
 	@Override
-	public JavaType<Object[]> getExpressableJavaTypeDescriptor() {
-		return javaTypeDescriptor;
+	public JavaType<Object[]> getExpressibleJavaType() {
+		return javaType;
 	}
 
 	@Override
@@ -84,7 +84,7 @@ public class ArrayTupleType implements TupleType<Object[]>,
 
 	@Override
 	public Class<Object[]> getJavaType() {
-		return getExpressableJavaTypeDescriptor().getJavaTypeClass();
+		return this.getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	@Override

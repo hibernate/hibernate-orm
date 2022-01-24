@@ -39,7 +39,6 @@ public class DefaultEvictEventListener implements EvictEventListener {
 	 *
 	 * @param event The evict event to be handled.
 	 *
-	 * @throws HibernateException
 	 */
 	public void onEvict(EvictEvent event) throws HibernateException {
 		final Object object = event.getObject();
@@ -57,7 +56,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 				throw new IllegalArgumentException( "Could not determine identifier of proxy passed to evict()" );
 			}
 
-			final EntityPersister persister = source.getFactory().getEntityPersister( li.getEntityName() );
+			final EntityPersister persister = source.getFactory().getMetamodel().entityPersister(li.getEntityName());
 			final EntityKey key = source.generateEntityKey( id, persister );
 			persistenceContext.removeProxy( key );
 
@@ -83,7 +82,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 				final String entityName = persistenceContext.getSession().guessEntityName( object );
 				if ( entityName != null ) {
 					try {
-						persister = persistenceContext.getSession().getFactory().getEntityPersister( entityName );
+						persister = persistenceContext.getSession().getFactory().getMetamodel().entityPersister(entityName);
 					}
 					catch (Exception ignore) {
 					}

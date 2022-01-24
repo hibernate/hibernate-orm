@@ -8,13 +8,13 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 
 /**
  * @author Christian Beikov
  */
 public class SqmCollation extends SqmLiteral<String> {
-	public SqmCollation(String value, SqmExpressable<String> inherentType, NodeBuilder nodeBuilder) {
+	public SqmCollation(String value, SqmExpressible<String> inherentType, NodeBuilder nodeBuilder) {
 		super(value, inherentType, nodeBuilder);
 	}
 

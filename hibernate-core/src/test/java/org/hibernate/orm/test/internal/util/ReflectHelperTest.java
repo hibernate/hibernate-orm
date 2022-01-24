@@ -123,82 +123,6 @@ public class ReflectHelperTest {
 	}
 
 	@Test
-	public void test_getConstantValue_simpleAlias() {
-		when( sessionFactoryOptionsMock.isConventionalJavaConstants() ).thenReturn( true );
-
-		Object value = ReflectHelper.getConstantValue( "alias.b", sessionFactoryImplementorMock);
-		assertNull(value);
-		verify(classLoaderServiceMock, never()).classForName( anyString() );
-	}
-
-	@Test
-	public void test_getConstantValue_simpleAlias_non_conventional() {
-		when( sessionFactoryOptionsMock.isConventionalJavaConstants() ).thenReturn( false );
-
-		Object value = ReflectHelper.getConstantValue( "alias.b", sessionFactoryImplementorMock);
-		assertNull(value);
-		verify(classLoaderServiceMock, times(1)).classForName( eq( "alias" ) );
-	}
-
-	@Test
-	public void test_getConstantValue_nestedAlias() {
-		when( sessionFactoryOptionsMock.isConventionalJavaConstants() ).thenReturn( true );
-
-		Object value = ReflectHelper.getConstantValue( "alias.b.c", sessionFactoryImplementorMock);
-		assertNull(value);
-		verify(classLoaderServiceMock, never()).classForName( anyString() );
-	}
-
-	@Test
-	public void test_getConstantValue_nestedAlias_non_conventional() {
-		when( sessionFactoryOptionsMock.isConventionalJavaConstants() ).thenReturn( false );
-
-		Object value = ReflectHelper.getConstantValue( "alias.b.c", sessionFactoryImplementorMock);
-		assertNull(value);
-		verify(classLoaderServiceMock, times(1)).classForName( eq( "alias.b" ) );
-	}
-
-	@Test
-	public void test_getConstantValue_outerEnum() {
-		when( sessionFactoryOptionsMock.isConventionalJavaConstants() ).thenReturn( true );
-
-		when( classLoaderServiceMock.classForName( "jakarta.persistence.FetchType" ) ).thenReturn( (Class) FetchType.class );
-		Object value = ReflectHelper.getConstantValue( "jakarta.persistence.FetchType.LAZY", sessionFactoryImplementorMock);
-		assertEquals( FetchType.LAZY, value );
-		verify(classLoaderServiceMock, times(1)).classForName( eq("jakarta.persistence.FetchType") );
-	}
-
-	@Test
-	public void test_getConstantValue_enumClass() {
-		when( sessionFactoryOptionsMock.isConventionalJavaConstants() ).thenReturn( true );
-
-		when( classLoaderServiceMock.classForName( "org.hibernate.orm.test.internal.util.ReflectHelperTest$Status" ) ).thenReturn( (Class) Status.class );
-		Object value = ReflectHelper.getConstantValue( "org.hibernate.orm.test.internal.util.ReflectHelperTest$Status", sessionFactoryImplementorMock);
-		assertNull(value);
-		verify(classLoaderServiceMock, never()).classForName( eq("org.hibernate.internal.util") );
-	}
-
-	@Test
-	public void test_getConstantValue_nestedEnum() {
-
-		when( sessionFactoryOptionsMock.isConventionalJavaConstants() ).thenReturn( true );
-		when( classLoaderServiceMock.classForName( "org.hibernate.orm.test.internal.util.ReflectHelperTest$Status" ) ).thenReturn( (Class) Status.class );
-		Object value = ReflectHelper.getConstantValue( "org.hibernate.orm.test.internal.util.ReflectHelperTest$Status.ON", sessionFactoryImplementorMock);
-		assertEquals( ON, value );
-		verify(classLoaderServiceMock, times(1)).classForName( eq("org.hibernate.orm.test.internal.util.ReflectHelperTest$Status") );
-	}
-
-	@Test
-	public void test_getConstantValue_constant_digits() {
-
-		when( sessionFactoryOptionsMock.isConventionalJavaConstants() ).thenReturn( true );
-		when( classLoaderServiceMock.classForName( "org.hibernate.orm.test.internal.util.hib3rnat3.C0nst4nts३" ) ).thenReturn( (Class) C0nst4nts३.class );
-		Object value = ReflectHelper.getConstantValue( "org.hibernate.orm.test.internal.util.hib3rnat3.C0nst4nts३.ABC_DEF", sessionFactoryImplementorMock);
-		assertEquals( C0nst4nts३.ABC_DEF, value );
-		verify(classLoaderServiceMock, times(1)).classForName( eq("org.hibernate.orm.test.internal.util.hib3rnat3.C0nst4nts३") );
-	}
-
-	@Test
 	public void test_getMethod_nestedInterfaces() {
 		assertNotNull( ReflectHelper.findGetterMethod( C.class, "id" ) );
 	}
@@ -230,16 +154,5 @@ public class ReflectHelperTest {
 	@Test
 	public void test_setMethod_nestedInterfaces_on_superclasses() {
 		assertNotNull( ReflectHelper.findSetterMethod( E.class, "id", String.class ) );
-	}
-
-	@TestForIssue(jiraKey = "HHH-14059")
-	@Test
-	public void test_getConstantValue_UpperCaseEnum() {
-		when( sessionFactoryOptionsMock.isConventionalJavaConstants() ).thenReturn( true );
-
-		when( classLoaderServiceMock.classForName( "com.example.UStatus" ) ).thenReturn( (Class) Status.class );
-		Object value = ReflectHelper.getConstantValue( "com.example.UStatus.OFF", sessionFactoryImplementorMock);
-		assertEquals( OFF, value );
-		verify(classLoaderServiceMock, times(1)).classForName( eq("com.example.UStatus") );
 	}
 }

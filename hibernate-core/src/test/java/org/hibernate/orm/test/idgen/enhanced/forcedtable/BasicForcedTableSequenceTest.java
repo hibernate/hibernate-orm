@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.idgen.enhanced.forcedtable;
 
 
-import org.hibernate.Session;
 import org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
 import org.hibernate.id.enhanced.NoopOptimizer;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
@@ -34,7 +33,7 @@ public class BasicForcedTableSequenceTest {
 
 	@Test
 	public void testNormalBoundary(SessionFactoryScope scope) {
-		final EntityPersister persister = scope.getSessionFactory().getEntityPersister( Entity.class.getName() );
+        final EntityPersister persister = scope.getSessionFactory().getMetamodel().entityPersister(Entity.class.getName());
 		assertThat( persister.getIdentifierGenerator(), instanceOf( SequenceStyleGenerator.class ) );
 
 		final SequenceStyleGenerator generator = ( SequenceStyleGenerator ) persister.getIdentifierGenerator();

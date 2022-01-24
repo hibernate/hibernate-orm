@@ -27,16 +27,16 @@ public interface EventListenerGroup<T> {
 	 *
 	 * @return The event type.
 	 */
-	public EventType<T> getEventType();
+	EventType<T> getEventType();
 
 	/**
 	 * Are there no listeners registered?
 	 *
 	 * @return {@literal true} if no listeners are registered; {@literal false} otherwise.
 	 */
-	public boolean isEmpty();
+	boolean isEmpty();
 
-	public int count();
+	int count();
 
 	/**
 	 * @deprecated this is not the most efficient way for iterating the event listeners.
@@ -44,7 +44,7 @@ public interface EventListenerGroup<T> {
 	 * @return The Iterable.
 	 */
 	@Deprecated
-	public Iterable<T> listeners();
+	Iterable<T> listeners();
 
 	/**
 	 * Mechanism to more finely control the notion of duplicates.
@@ -55,13 +55,13 @@ public interface EventListenerGroup<T> {
 	 *
 	 * @param strategy The duplication strategy
 	 */
-	public void addDuplicationStrategy(DuplicationStrategy strategy);
+	void addDuplicationStrategy(DuplicationStrategy strategy);
 
-	public void appendListener(T listener);
-	public void appendListeners(T... listeners);
+	void appendListener(T listener);
+	void appendListeners(T... listeners);
 
-	public void prependListener(T listener);
-	public void prependListeners(T... listeners);
+	void prependListener(T listener);
+	void prependListeners(T... listeners);
 
 	/**
 	 * Clears both the list of event listeners and all DuplicationStrategy,
@@ -70,12 +70,12 @@ public interface EventListenerGroup<T> {
 	 * also reset the registered DuplicationStrategy(ies).
 	 */
 	@Deprecated
-	public void clear();
+	void clear();
 
 	/**
 	 * Removes all registered listeners
 	 */
-	public void clearListeners();
+	void clearListeners();
 
 	/**
 	 * Fires an event on each registered event listener of this group.
@@ -84,8 +84,6 @@ public interface EventListenerGroup<T> {
 	 * the first argument is a supplier so that events can avoid being created when no listener is registered.
 	 * the second argument is specifically designed to avoid needing a capturing lambda.
 	 *
-	 * @param eventSupplier
-	 * @param actionOnEvent
 	 * @param <U> the kind of event
 	 */
 	@Incubating
@@ -94,8 +92,7 @@ public interface EventListenerGroup<T> {
 	/**
 	 * Similar as {@link #fireLazyEventOnEachListener(Supplier, BiConsumer)} except it doesn't use a {{@link Supplier}}:
 	 * useful when there is no need to lazily initialize the event.
-	 * @param event
-	 * @param actionOnEvent
+	 *
 	 * @param <U> the kind of event
 	 */
 	@Incubating
@@ -105,11 +102,6 @@ public interface EventListenerGroup<T> {
 	 * Similar to {@link #fireEventOnEachListener(Object, BiConsumer)}, but allows passing a third parameter
 	 * to the consumer; our code based occasionally needs a third parameter: having this additional variant
 	 * allows using the optimal iteration more extensively and reduce allocations.
-	 * @param event
-	 * @param param
-	 * @param actionOnEvent
-	 * @param <U>
-	 * @param <X>
 	 */
 	@Incubating
 	<U,X> void fireEventOnEachListener(final U event, X param, final EventActionWithParameter<T,U,X> actionOnEvent);
@@ -143,7 +135,7 @@ public interface EventListenerGroup<T> {
 	 * @return the composite completion stage of invoking fun(event) on each listener.
 	 */
 	@Incubating
-	public <R, U, RL, X> CompletionStage<R> fireEventOnEachListener(U event, X param, Function<RL, BiFunction<U, X, CompletionStage<R>>> fun);
+	<R, U, RL, X> CompletionStage<R> fireEventOnEachListener(U event, X param, Function<RL, BiFunction<U, X, CompletionStage<R>>> fun);
 
 	/**
 	 * Similar to {@link #fireLazyEventOnEachListener(Supplier, BiConsumer)}, but Reactive friendly: it chains

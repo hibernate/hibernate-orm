@@ -9,7 +9,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.metamodel.CollectionClassification;
-import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
@@ -66,10 +66,10 @@ abstract class BaseInsertOrderingTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	protected String literal(String value) {
-		final JdbcType jdbcType = sessionFactory().getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor(
+		final JdbcType jdbcType = sessionFactory().getTypeConfiguration().getJdbcTypeRegistry().getDescriptor(
 				Types.VARCHAR
 		);
-		return jdbcType.getJdbcLiteralFormatter( StringJavaTypeDescriptor.INSTANCE )
+		return jdbcType.getJdbcLiteralFormatter( StringJavaType.INSTANCE )
 				.toJdbcLiteral(
 						value,
 						sessionFactory().getJdbcServices().getDialect(),

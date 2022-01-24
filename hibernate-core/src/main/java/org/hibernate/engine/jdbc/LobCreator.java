@@ -24,7 +24,7 @@ public interface LobCreator {
 	 * @param blob The blob to be wrapped.
 	 * @return The wrapped blob which will be castable to {@link Blob} as well as {@link WrappedBlob}.
 	 */
-	public Blob wrap(Blob blob);
+	Blob wrap(Blob blob);
 
 	/**
 	 * Wrap the given clob in a serializable wrapper.
@@ -32,7 +32,7 @@ public interface LobCreator {
 	 * @param clob The clob to be wrapped.
 	 * @return The wrapped clob which will be castable to {@link Clob} as well as {@link WrappedClob}.
 	 */
-	public Clob wrap(Clob clob);
+	Clob wrap(Clob clob);
 
 	/**
 	 * Wrap the given nclob in a serializable wrapper.
@@ -40,7 +40,7 @@ public interface LobCreator {
 	 * @param nclob The nclob to be wrapped.
 	 * @return The wrapped nclob which will be castable to {@link NClob} as well as {@link WrappedNClob}.
 	 */
-	public NClob wrap(NClob nclob);
+	NClob wrap(NClob nclob);
 
 	/**
 	 * Create a BLOB reference encapsulating the given byte array.
@@ -48,7 +48,7 @@ public interface LobCreator {
 	 * @param bytes The byte array to wrap as a blob.
 	 * @return The created blob, castable to {@link Blob} as well as {@link BlobImplementer}
 	 */
-	public Blob createBlob(byte[] bytes);
+	Blob createBlob(byte[] bytes);
 
 	/**
 	 * Create a BLOB reference encapsulating the given binary stream.
@@ -57,7 +57,7 @@ public interface LobCreator {
 	 * @param length The length of the stream.
 	 * @return The created blob, castable to {@link Blob} as well as {@link BlobImplementer}
 	 */
-	public Blob createBlob(InputStream stream, long length);
+	Blob createBlob(InputStream stream, long length);
 
 	/**
 	 * Create a CLOB reference encapsulating the given String data.
@@ -65,7 +65,7 @@ public interface LobCreator {
 	 * @param string The String to wrap as a clob.
 	 * @return The created clob, castable to {@link Clob} as well as {@link ClobImplementer}
 	 */
-	public Clob createClob(String string);
+	Clob createClob(String string);
 
 	/**
 	 * Create a CLOB reference encapsulating the given character data.
@@ -74,7 +74,7 @@ public interface LobCreator {
 	 * @param length The length of the reader data.
 	 * @return The created clob, castable to {@link Clob} as well as {@link ClobImplementer}
 	 */
-	public Clob createClob(Reader reader, long length);
+	Clob createClob(Reader reader, long length);
 
 	/**
 	 * Create a NCLOB reference encapsulating the given String data.
@@ -83,7 +83,7 @@ public interface LobCreator {
 	 * @return The created NCLOB, castable as {@link Clob} as well as {@link NClobImplementer}.  In JDK 1.6
 	 * environments, also castable to java.sql.NClob
 	 */
-	public NClob createNClob(String string);
+	NClob createNClob(String string);
 
 	/**
 	 * Create a NCLOB reference encapsulating the given character data.
@@ -93,5 +93,5 @@ public interface LobCreator {
 	 * @return The created NCLOB, castable as {@link Clob} as well as {@link NClobImplementer}.  In JDK 1.6
 	 * environments, also castable to java.sql.NClob
 	 */
-	public NClob createNClob(Reader reader, long length);
+	NClob createNClob(Reader reader, long length);
 }

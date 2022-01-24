@@ -24,7 +24,7 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.EmbeddableRepresentationStrategy;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -69,8 +69,6 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	private Boolean stateInjected;
 	private Object compositeInstance;
 
-
-	@SuppressWarnings("WeakerAccess")
 	public AbstractEmbeddableInitializer(
 			EmbeddableResultGraphNode resultDescriptor,
 			FetchParentAccess fetchParentAccess,
@@ -99,7 +97,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 					final Fetch fetch = resultDescriptor.findFetch( stateArrayContributor );
 
 					final DomainResultAssembler<?> stateAssembler = fetch == null
-							? new NullValueAssembler<>( stateArrayContributor.getJavaTypeDescriptor() )
+							? new NullValueAssembler<>( stateArrayContributor.getJavaType() )
 							: fetch.createAssembler( this, creationState );
 
 					assemblers.add( stateAssembler );
@@ -120,7 +118,6 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		return embedded;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public FetchParentAccess getFetchParentAccess() {
 		return fetchParentAccess;
 	}
@@ -417,6 +414,6 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + "(" + navigablePath + ") : `" + getInitializedPart().getJavaTypeDescriptor().getJavaTypeClass() + "`";
+		return getClass().getSimpleName() + "(" + navigablePath + ") : `" + getInitializedPart().getJavaType().getJavaTypeClass() + "`";
 	}
 }

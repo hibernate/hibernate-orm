@@ -15,8 +15,8 @@ import org.hibernate.internal.util.MutableObject;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
-import org.hibernate.query.EntityIdentifierNavigablePath;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.spi.EntityIdentifierNavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -174,6 +174,6 @@ public class EntityResultImpl implements EntityResult {
 				)
 		);
 
-		return new EntityAssembler( getResultJavaTypeDescriptor(), initializer );
+		return new EntityAssembler( getResultJavaType(), initializer );
 	}
 }

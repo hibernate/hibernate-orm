@@ -37,7 +37,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public class AttributePathTests extends BaseSqmUnitTest {
 
 	@Override

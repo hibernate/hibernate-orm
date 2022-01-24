@@ -44,12 +44,12 @@ public class BitSetImplicitTests {
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(Product.class);
 		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("bitSet");
 
-		assertThat(attributeMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(BitSet.class));
+		assertThat( attributeMapping.getJavaType().getJavaTypeClass(), equalTo( BitSet.class));
 
 		assertThat(attributeMapping.getValueConverter(), nullValue());
 
 		assertThat(
-				attributeMapping.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode(),
+				attributeMapping.getJdbcMapping().getJdbcType().getJdbcTypeCode(),
 				is(Types.VARBINARY)
 		);
 

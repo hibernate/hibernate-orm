@@ -15,8 +15,16 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Where clause to add to the element Entity or target entity of a collection.  The clause is written in SQL.
- * A common use case here is for soft-deletes.
+ * Specifies a restriction written in native SQL to add to the generated
+ * SQL when querying an entity or collection.
+ * <p>
+ * For example, {@code @Where("deleted = false")} could be used to hide
+ * entity instances which have been soft-deleted.
+ * <p>
+ * Note that {@code Where} restrictions are always applied and cannot be
+ * disabled. They're therefore much less flexible than {@link Filter filters}.
+ *
+ * @see Filter
  *
  * @author Emmanuel Bernard
  */
@@ -24,7 +32,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface Where {
 	/**
-	 * The where-clause predicate.
+	 * A predicate, written in native SQL.
 	 */
 	String clause();
 }

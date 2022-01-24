@@ -16,7 +16,7 @@ import java.sql.Blob;
 import org.hibernate.HibernateException;
 
 /**
- * Manages aspects of proxying {@link Blob Blobs} to add serializability.
+ * Manages aspects of proxying {@link Blob}s to add serializability.
  *
  * @author Gavin King
  * @author Steve Ebersole

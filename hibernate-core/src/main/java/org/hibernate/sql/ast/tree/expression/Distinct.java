@@ -9,14 +9,14 @@ package org.hibernate.sql.ast.tree.expression;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.metamodel.mapping.SqlExpressable;
+import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 
 /**
  * @author Gavin King
  */
-public class Distinct implements Expression, SqlExpressable, SqlAstNode {
+public class Distinct implements Expression, SqlExpressible, SqlAstNode {
 	private final Expression expression;
 
 	public Distinct(Expression expression) {
@@ -29,12 +29,12 @@ public class Distinct implements Expression, SqlExpressable, SqlAstNode {
 
 	@Override
 	public JdbcMapping getJdbcMapping() {
-		if ( expression instanceof SqlExpressable ) {
-			return ( (SqlExpressable) expression ).getJdbcMapping();
+		if ( expression instanceof SqlExpressible) {
+			return ( (SqlExpressible) expression ).getJdbcMapping();
 		}
 
-		if ( getExpressionType() instanceof SqlExpressable ) {
-			return ( (SqlExpressable) getExpressionType() ).getJdbcMapping();
+		if ( getExpressionType() instanceof SqlExpressible) {
+			return ( (SqlExpressible) getExpressionType() ).getJdbcMapping();
 		}
 
 		if ( getExpressionType() != null ) {

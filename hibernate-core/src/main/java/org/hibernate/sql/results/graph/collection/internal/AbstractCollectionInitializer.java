@@ -11,7 +11,7 @@ import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
@@ -35,10 +35,9 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 	 */
 	protected final DomainResultAssembler<?> collectionKeyResultAssembler;
 
-	protected PersistentCollection collectionInstance;
+	protected PersistentCollection<?> collectionInstance;
 	protected CollectionKey collectionKey;
 
-	@SuppressWarnings("WeakerAccess")
 	protected AbstractCollectionInitializer(
 			NavigablePath collectionPath,
 			PluralAttributeMapping collectionAttributeMapping,
@@ -102,7 +101,7 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 	}
 
 	@Override
-	public PersistentCollection getCollectionInstance() {
+	public PersistentCollection<?> getCollectionInstance() {
 		return collectionInstance;
 	}
 

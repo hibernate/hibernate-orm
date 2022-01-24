@@ -7,7 +7,7 @@
 package org.hibernate.sql.results.graph.collection.internal;
 
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.results.graph.collection.CollectionResultGraphNode;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -20,7 +20,6 @@ public abstract class AbstractCollectionResultNode implements CollectionResultGr
 
 	private final String resultVariable;
 
-	@SuppressWarnings("WeakerAccess")
 	protected AbstractCollectionResultNode(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attributeMapping,
@@ -36,14 +35,13 @@ public abstract class AbstractCollectionResultNode implements CollectionResultGr
 	}
 
 
-	@SuppressWarnings("WeakerAccess")
 	protected PluralAttributeMapping getAttributeMapping() {
 		return attributeMapping;
 	}
 
 	@Override
-	public JavaType<?> getResultJavaTypeDescriptor() {
-		return attributeMapping.getJavaTypeDescriptor();
+	public JavaType<?> getResultJavaType() {
+		return attributeMapping.getJavaType();
 	}
 
 	public String getResultVariable() {

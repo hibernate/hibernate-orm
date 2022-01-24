@@ -34,8 +34,8 @@ public class SelfRenderingAggregateFunctionSqlAstExpression extends SelfRenderin
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
 			ReturnableType<?> type,
-			JdbcMappingContainer expressable) {
-		super( functionName, renderer, sqlAstArguments, type, expressable );
+			JdbcMappingContainer expressible) {
+		super( functionName, renderer, sqlAstArguments, type, expressible );
 		this.filter = filter;
 	}
 

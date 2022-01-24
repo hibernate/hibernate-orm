@@ -11,7 +11,7 @@ import org.hibernate.HibernateException;
 
 /**
  * Exception used to indicate that a query is attempting to simultaneously fetch multiple
- * {@link org.hibernate.type.BagType bags}
+ * {@linkplain org.hibernate.type.BagType bags}
 *
 * @author Steve Ebersole
 */

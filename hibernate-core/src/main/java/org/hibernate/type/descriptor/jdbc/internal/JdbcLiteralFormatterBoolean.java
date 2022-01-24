@@ -18,8 +18,8 @@ import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
  * @author Steve Ebersole
  */
 public class JdbcLiteralFormatterBoolean extends BasicJdbcLiteralFormatter {
-	public JdbcLiteralFormatterBoolean(JavaType<?> javaTypeDescriptor) {
-		super( javaTypeDescriptor );
+	public JdbcLiteralFormatterBoolean(JavaType<?> javaType) {
+		super( javaType );
 	}
 
 	@Override

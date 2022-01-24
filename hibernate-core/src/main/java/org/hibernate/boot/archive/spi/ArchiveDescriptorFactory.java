@@ -21,7 +21,7 @@ public interface ArchiveDescriptorFactory {
 	 *
 	 * @return The descriptor
 	 */
-	public ArchiveDescriptor buildArchiveDescriptor(URL url);
+	ArchiveDescriptor buildArchiveDescriptor(URL url);
 
 	/**
 	 * Build a descriptor of the archive indicated by the path relative to the given url
@@ -31,7 +31,7 @@ public interface ArchiveDescriptorFactory {
 	 *
 	 * @return The descriptor
 	 */
-	public ArchiveDescriptor buildArchiveDescriptor(URL url, String path);
+	ArchiveDescriptor buildArchiveDescriptor(URL url, String path);
 
 	/**
 	 * Given a URL which defines an entry within a JAR (really any "bundled archive" such as a jar file, zip, etc)
@@ -44,7 +44,7 @@ public interface ArchiveDescriptorFactory {
 	 *
 	 * @throws IllegalArgumentException Generally indicates a problem  with malformed urls.
 	 */
-	public URL getJarURLFromURLEntry(URL url, String entry) throws IllegalArgumentException;
+	URL getJarURLFromURLEntry(URL url, String entry) throws IllegalArgumentException;
 
 	/**
 	 * Not used!
@@ -57,5 +57,5 @@ public interface ArchiveDescriptorFactory {
 	 */
 	@Deprecated
 	@SuppressWarnings("UnusedDeclaration")
-	public URL getURLFromPath(String jarPath);
+	URL getURLFromPath(String jarPath);
 }

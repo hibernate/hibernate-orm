@@ -84,13 +84,19 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 						""
 				)
 		);
+		final List<String> physicalTableTypesList = new ArrayList<>();
 		if ( ! StringHelper.isBlank( extraPhysicalTableTypesConfig ) ) {
-			this.extraPhysicalTableTypes = StringHelper.splitTrimmingTokens(
-					",;",
-					extraPhysicalTableTypesConfig,
-					false
+			Collections.addAll(
+					physicalTableTypesList,
+					StringHelper.splitTrimmingTokens(
+							",;",
+							extraPhysicalTableTypesConfig,
+							false
+					)
 			);
 		}
+		extractionContext.getJdbcEnvironment().getDialect().augmentPhysicalTableTypes( physicalTableTypesList );
+		this.extraPhysicalTableTypes = physicalTableTypesList.toArray( new String[0] );
 
 		final List<String> tableTypesList = new ArrayList<>();
 		tableTypesList.add( "TABLE" );
@@ -98,9 +104,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		if ( ConfigurationHelper.getBoolean( AvailableSettings.ENABLE_SYNONYMS, configService.getSettings(), false ) ) {
 			tableTypesList.add( "SYNONYM" );
 		}
-		if ( extraPhysicalTableTypes != null ) {
-			Collections.addAll( tableTypesList, extraPhysicalTableTypes );
-		}
+		Collections.addAll( tableTypesList, extraPhysicalTableTypes );
 		extractionContext.getJdbcEnvironment().getDialect().augmentRecognizedTableTypes( tableTypesList );
 
 		this.tableTypes = tableTypesList.toArray( new String[0] );
@@ -1125,7 +1129,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 					true,        // DO require up-to-date results
 					resultSet -> {
 						while ( resultSet.next() ) {
-							if ( resultSet.getShort(getResultSetIndexTypeLabel() ) == DatabaseMetaData.tableIndexStatistic ) {
+							if ( resultSet.getShort( getResultSetIndexTypeLabel() ) == DatabaseMetaData.tableIndexStatistic ) {
 								continue;
 							}
 

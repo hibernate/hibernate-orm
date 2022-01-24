@@ -18,10 +18,8 @@ import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
 public class JdbcLiteralFormatterNumericData extends BasicJdbcLiteralFormatter {
 	private final Class<? extends Number> unwrapJavaType;
 
-	public JdbcLiteralFormatterNumericData(
-			JavaType<?> javaTypeDescriptor,
-			Class<? extends Number> unwrapJavaType) {
-		super( javaTypeDescriptor );
+	public JdbcLiteralFormatterNumericData(JavaType<?> javaType, Class<? extends Number> unwrapJavaType) {
+		super( javaType );
 		this.unwrapJavaType = unwrapJavaType;
 	}
 

@@ -53,7 +53,7 @@ public class CoercionTests {
 	@Test
 	public void testCoercibleDetection(SessionFactoryScope scope) {
 		final TypeConfiguration typeConfiguration = scope.getSessionFactory().getTypeConfiguration();
-		final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
+		final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
 
 		final JavaType<Integer> integerType = jtdRegistry.resolveDescriptor( Integer.class );
 		final JavaType<Long> longType = jtdRegistry.resolveDescriptor( Long.class );

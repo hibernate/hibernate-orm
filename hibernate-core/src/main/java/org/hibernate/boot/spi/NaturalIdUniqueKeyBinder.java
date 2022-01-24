@@ -17,7 +17,7 @@ public interface NaturalIdUniqueKeyBinder {
 	 *
 	 * @param attributeBinding The attribute binding that is part of the natural-id
 	 */
-	public void addAttributeBinding(Property attributeBinding);
+	void addAttributeBinding(Property attributeBinding);
 
-	public void process();
+	void process();
 }

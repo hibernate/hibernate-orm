@@ -45,6 +45,6 @@ public class RealJdbcType extends FloatJdbcType {
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Float.class );
+		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( Float.class );
 	}
 }

@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.TreatedNavigablePath;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
@@ -21,7 +20,6 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 	private final SqmBagJoin<O, T> wrappedPath;
 	private final EntityDomainType<S> treatTarget;
 
-	@SuppressWarnings("WeakerAccess")
 	public SqmTreatedBagJoin(
 			SqmBagJoin<O, T> wrappedPath,
 			EntityDomainType<S> treatTarget,

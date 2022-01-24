@@ -54,14 +54,14 @@ public class JoinedSubclassWithIgnoredExplicitDiscriminatorTest {
 
 	@Test
 	public void metadataAssertions(SessionFactoryScope scope) {
-		EntityPersister p = scope.getSessionFactory().getEntityPersister( Dog.class.getName() );
+        EntityPersister p = scope.getSessionFactory().getMetamodel().entityPersister(Dog.class.getName());
 		assertNotNull( p );
 		final JoinedSubclassEntityPersister dogPersister = assertTyping( JoinedSubclassEntityPersister.class, p );
 		assertEquals( "integer", dogPersister.getDiscriminatorType().getName() );
 		assertEquals( "clazz_", dogPersister.getDiscriminatorColumnName() );
 		assertTrue( Integer.class.isInstance( dogPersister.getDiscriminatorValue() ) );
 
-		p = scope.getSessionFactory().getEntityPersister( Cat.class.getName() );
+        p = scope.getSessionFactory().getMetamodel().entityPersister(Cat.class.getName());
 		assertNotNull( p );
 		final JoinedSubclassEntityPersister catPersister = assertTyping( JoinedSubclassEntityPersister.class, p );
 		assertEquals( "integer", catPersister.getDiscriminatorType().getName() );

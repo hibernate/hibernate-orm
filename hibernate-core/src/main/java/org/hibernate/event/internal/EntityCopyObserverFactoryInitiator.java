@@ -19,7 +19,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
- * Looks for the configuration property {@link AvailableSettings#MERGE_ENTITY_COPY_OBSERVER} and registers
+ * Looks for the configuration property {@value AvailableSettings#MERGE_ENTITY_COPY_OBSERVER} and registers
  * the matching {@link EntityCopyObserverFactory} based on the configuration value.
  * <p>
  * For known implementations some optimisations are possible, such as reusing a singleton for the stateless

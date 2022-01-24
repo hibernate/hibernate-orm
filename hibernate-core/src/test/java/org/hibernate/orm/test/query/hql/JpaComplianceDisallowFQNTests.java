@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Nahtan Xu
  */
-@SuppressWarnings("WeakerAccess")
 public class JpaComplianceDisallowFQNTests extends BaseSqmUnitTest {
 
 	@Override

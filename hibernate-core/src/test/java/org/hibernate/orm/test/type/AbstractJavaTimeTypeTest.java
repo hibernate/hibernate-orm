@@ -381,7 +381,7 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 		private final ZoneId defaultJvmTimeZone;
 
 		/**
-		 * The Hibernate setting, {@link AvailableSettings#JDBC_TIME_ZONE},
+		 * The Hibernate setting, {@value AvailableSettings#JDBC_TIME_ZONE},
 		 * may affect a lot of time-related types,
 		 * which is why we take it into account even with timezone-independent types such as Instant.
 		 */
@@ -421,9 +421,9 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 		public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 			super.contributeTypes( typeContributions, serviceRegistry );
 
-			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
+			typeContributions.getTypeConfiguration().getJdbcTypeRegistry().addDescriptor(
 					overriddenSqlTypeCode,
-					typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor(
+					typeContributions.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor(
 							overridingSqlTypeCode
 					)
 			);

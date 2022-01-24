@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 
 /**

@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.idgen.enhanced.sequence;
 
-import org.hibernate.Session;
 import org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.persister.entity.EntityPersister;
@@ -20,7 +19,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.Matchers.instanceOf;
-import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -39,7 +37,7 @@ public class BasicSequenceTest {
 
 	@Test
 	public void testNormalBoundary(SessionFactoryScope scope) {
-		final EntityPersister persister = scope.getSessionFactory().getEntityPersister( Entity.class.getName() );
+        final EntityPersister persister = scope.getSessionFactory().getMetamodel().entityPersister(Entity.class.getName());
 		assertThat( persister.getIdentifierGenerator(), instanceOf( SequenceStyleGenerator.class ) );
 
 		final SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getIdentifierGenerator();
@@ -68,7 +66,7 @@ public class BasicSequenceTest {
 	public void testSequencePerEntity(SessionFactoryScope scope) {
 		final String overriddenEntityName = "SpecialEntity";
 
-		final EntityPersister persister = scope.getSessionFactory().getEntityPersister( overriddenEntityName );
+        final EntityPersister persister = scope.getSessionFactory().getMetamodel().entityPersister(overriddenEntityName);
 		assertThat( persister.getIdentifierGenerator(), instanceOf( SequenceStyleGenerator.class ) );
 
 		final SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getIdentifierGenerator();

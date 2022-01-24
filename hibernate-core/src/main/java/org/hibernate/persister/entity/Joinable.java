@@ -20,21 +20,21 @@ public interface Joinable extends Restrictable {
 	/**
 	 * An identifying name; a class name or collection role name.
 	 */
-	public String getName();
+	String getName();
 	/**
 	 * The table to join to.
 	 */
-	public String getTableName();
+	String getTableName();
 
 	/**
 	 * The columns to join on
 	 */
-	public String[] getKeyColumnNames();
+	String[] getKeyColumnNames();
 
 	/**
 	 * Is this instance actually a CollectionPersister?
 	 */
-	public boolean isCollection();
+	boolean isCollection();
 
 	/**
 	 * Very, very, very ugly...
@@ -42,7 +42,7 @@ public interface Joinable extends Restrictable {
 	 * @return Does this persister "consume" entity column aliases in the result
 	 * set?
 	 */
-	public boolean consumesEntityAlias();
+	boolean consumesEntityAlias();
 
 	/**
 	 * Very, very, very ugly...
@@ -50,5 +50,5 @@ public interface Joinable extends Restrictable {
 	 * @return Does this persister "consume" collection column aliases in the result
 	 * set?
 	 */
-	public boolean consumesCollectionAlias();
+	boolean consumesCollectionAlias();
 }

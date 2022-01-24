@@ -10,7 +10,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.WrongClassException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
@@ -142,8 +141,7 @@ public class CacheEntityLoaderHelper {
 			}
 			if ( options.isAllowNulls() ) {
 				final EntityPersister persister = event.getSession()
-						.getFactory()
-						.getEntityPersister( keyToLoad.getEntityName() );
+						.getFactory().getMetamodel().entityPersister(keyToLoad.getEntityName());
 				if ( !persister.isInstance( old ) ) {
 					LOG.debug(
 							"Load request found matching entity in context, but the matched entity was of an inconsistent return type; returning null"
@@ -288,11 +286,12 @@ public class CacheEntityLoaderHelper {
 			Object entity = convertCacheEntryToEntity( entry, entityKey.getIdentifier(), source, persister, instanceToLoad, entityKey );
 
 			if ( !persister.isInstance( entity ) ) {
-				throw new WrongClassException(
-						"loaded object was of wrong class " + entity.getClass(),
-						entityKey.getIdentifier(),
-						persister.getEntityName()
-				);
+				return null;
+//				throw new WrongClassException(
+//						"loaded object was of wrong class " + entity.getClass(),
+//						entityKey.getIdentifier(),
+//						persister.getEntityName()
+//				);
 			}
 
 			return entity;
@@ -307,7 +306,9 @@ public class CacheEntityLoaderHelper {
 
 		if ( entity == null ) {
 			throw new IllegalStateException(
-					"Reference cache entry contained null : " + referenceCacheEntry.toString() );
+					"Reference cache entry contained null : "
+							+ referenceCacheEntry.toString()
+			);
 		}
 		else {
 			makeEntityCircularReferenceSafe( referenceCacheEntry, session, entity, entityKey );
@@ -364,11 +365,10 @@ public class CacheEntityLoaderHelper {
 
 		final Object entity;
 
-		subclassPersister = factory.getEntityPersister( entry.getSubclass() );
-		final Object optionalObject = instanceToLoad;
-		entity = optionalObject == null
+		subclassPersister = factory.getMetamodel().entityPersister(entry.getSubclass());
+		entity = instanceToLoad == null
 				? source.instantiate( subclassPersister, entityId )
-				: optionalObject;
+				: instanceToLoad;
 
 		// make it circular-reference safe
 		TwoPhaseLoad.addUninitializedCachedEntity(
@@ -436,7 +436,7 @@ public class CacheEntityLoaderHelper {
 
 	public static class PersistenceContextEntry {
 		private final Object entity;
-		private EntityStatus status;
+		private final EntityStatus status;
 
 		public PersistenceContextEntry(Object entity, EntityStatus status) {
 			this.entity = entity;

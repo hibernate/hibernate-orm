@@ -15,12 +15,11 @@ import org.hibernate.HibernateException;
  */
 public interface SaveOrUpdateEventListener {
 
-    /** 
-     * Handle the given update event.
-     *
-     * @param event The update event to be handled.
-     * @throws HibernateException
-     */
-	public void onSaveOrUpdate(SaveOrUpdateEvent event) throws HibernateException;
+	/** 
+	 * Handle the given update event.
+	 *
+	 * @param event The update event to be handled.
+	 */
+	void onSaveOrUpdate(SaveOrUpdateEvent event) throws HibernateException;
 
 }

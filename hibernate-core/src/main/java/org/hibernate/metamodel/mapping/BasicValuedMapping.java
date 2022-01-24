@@ -20,7 +20,7 @@ import java.util.List;
  *
  * @author Steve Ebersole
  */
-public interface BasicValuedMapping extends ValueMapping, SqlExpressable {
+public interface BasicValuedMapping extends ValueMapping, SqlExpressible {
 	@Override
 	default int getJdbcTypeCount() {
 		return 1;

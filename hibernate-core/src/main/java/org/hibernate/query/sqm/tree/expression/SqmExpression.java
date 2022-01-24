@@ -17,7 +17,7 @@ import org.hibernate.query.ReturnableType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
@@ -39,13 +39,13 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	 * Can change as a result of calls to {@link #applyInferableType}
 	 */
 	@Override
-	SqmExpressable<T> getNodeType();
+	SqmExpressible<T> getNodeType();
 
 	/**
 	 * Used to apply type information based on the expression's usage
 	 * within the query.
 	 *
-	 * @apiNote The SqmExpressable type parameter is dropped here because
+	 * @apiNote The SqmExpressible type parameter is dropped here because
 	 * the inference could technically cause a change in Java type (i.e.
 	 * an implicit cast)
 	 *
@@ -53,7 +53,7 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	 */
 	@Remove
 	@Deprecated
-	void applyInferableType(SqmExpressable<?> type);
+	void applyInferableType(SqmExpressible<?> type);
 
 	@Override
 	default void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer) {
@@ -103,8 +103,11 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	SqmPredicate in(Expression<Collection<?>> values);
 
 	default <X> SqmExpression<X> castAs(DomainType<X> type) {
-		QueryEngine queryEngine = nodeBuilder().getQueryEngine();
-		SqmCastTarget<T> target = new SqmCastTarget<>( (ReturnableType<T>) type, nodeBuilder() );
+		if ( getNodeType() == type ) {
+			return (SqmExpression<X>) this;
+		}
+		final QueryEngine queryEngine = nodeBuilder().getQueryEngine();
+		final SqmCastTarget<T> target = new SqmCastTarget<>( (ReturnableType<T>) type, nodeBuilder() );
 		return queryEngine.getSqmFunctionRegistry()
 				.findFunctionDescriptor("cast")
 					.generateSqmExpression(

@@ -11,10 +11,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.collection.internal.StandardOrderedSetSemantics;
-import org.hibernate.collection.internal.StandardSetSemantics;
-import org.hibernate.collection.internal.StandardSortedSetSemantics;
-import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.CollectionType;
@@ -60,36 +56,23 @@ public class Set extends Collection {
 		return true;
 	}
 
-	@Override
-	public CollectionSemantics getDefaultCollectionSemantics() {
-		if ( isSorted() ) {
-			return StandardSortedSetSemantics.INSTANCE;
-		}
-
-		if ( hasOrder() ) {
-			return StandardOrderedSetSemantics.INSTANCE;
-		}
-
-		return StandardSetSemantics.INSTANCE;
-	}
-
 	public CollectionType getDefaultCollectionType() {
 		if ( isSorted() ) {
-			return new SortedSetType( getTypeConfiguration(), getRole(), getReferencedPropertyName(), getComparator() );
+			return new SortedSetType( getRole(), getReferencedPropertyName(), getComparator() );
 		}
 
 		if ( hasOrder() ) {
-			return new OrderedSetType( getTypeConfiguration(), getRole(), getReferencedPropertyName() );
+			return new OrderedSetType( getRole(), getReferencedPropertyName() );
 		}
 
-		return new SetType( getTypeConfiguration(), getRole(), getReferencedPropertyName() );
+		return new SetType( getRole(), getReferencedPropertyName() );
 	}
 
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
 			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
 			pk.addColumns( getKey().getColumnIterator() );
-			Iterator iter = getElement().getColumnIterator();
+			Iterator<?> iter = getElement().getColumnIterator();
 			while ( iter.hasNext() ) {
 				Object selectable = iter.next();
 				if ( selectable instanceof Column ) {

@@ -18,7 +18,10 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Registers a custom instantiator implementation
+ * Registers a custom instantiator implementation to be used
+ * for all references to a particular {@link jakarta.persistence.Embeddable}.
+ * <p/>
+ * May be overridden for a specific embedded using {@link org.hibernate.annotations.EmbeddableInstantiator}
  */
 @Target( {TYPE, ANNOTATION_TYPE, PACKAGE} )
 @Retention( RUNTIME )

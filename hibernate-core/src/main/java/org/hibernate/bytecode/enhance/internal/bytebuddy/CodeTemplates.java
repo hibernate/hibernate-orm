@@ -178,7 +178,7 @@ class CodeTemplates {
 				}
 				else if ( collection != null ) {
 					// We only check sizes of non-persistent or initialized persistent collections
-					if ( ( !( collection instanceof PersistentCollection ) || ( (PersistentCollection) collection ).wasInitialized() )
+					if ( ( !( collection instanceof PersistentCollection ) || ( (PersistentCollection<?>) collection ).wasInitialized() )
 							&& size != collection.size() ) {
 						returned = true;
 					}
@@ -224,7 +224,7 @@ class CodeTemplates {
 				}
 				else if ( collection != null ) {
 					// We only check sizes of non-persistent or initialized persistent collections
-					if ( ( !( collection instanceof PersistentCollection ) || ( (PersistentCollection) collection ).wasInitialized() )
+					if ( ( !( collection instanceof PersistentCollection ) || ( (PersistentCollection<?>) collection ).wasInitialized() )
 							&& size != collection.size() ) {
 						tracker.add( fieldName );
 					}
@@ -247,7 +247,7 @@ class CodeTemplates {
 				}
 				else if ( map != null ) {
 					// We only check sizes of non-persistent or initialized persistent collections
-					if ( ( !( map instanceof PersistentCollection ) || ( (PersistentCollection) map ).wasInitialized() )
+					if ( ( !( map instanceof PersistentCollection ) || ( (PersistentCollection<?>) map ).wasInitialized() )
 							&& size != map.size() ) {
 						tracker.add( fieldName );
 					}
@@ -264,8 +264,7 @@ class CodeTemplates {
 				@Advice.Argument(value = 0, readOnly = false) LazyAttributeLoadingInterceptor lazyInterceptor,
 				@Advice.FieldValue(EnhancerConstants.TRACKER_COLLECTION_NAME) CollectionTracker $$_hibernate_collectionTracker) {
 			if ( lazyInterceptor == null || lazyInterceptor.isAttributeLoaded( fieldName ) ) {
-				if ( collection == null || collection instanceof PersistentCollection && !( (PersistentCollection) collection )
-						.wasInitialized() ) {
+				if ( collection == null || collection instanceof PersistentCollection && !( (PersistentCollection<?>) collection ).wasInitialized() ) {
 					$$_hibernate_collectionTracker.add( fieldName, -1 );
 				}
 				else {
@@ -283,8 +282,7 @@ class CodeTemplates {
 				@Advice.Argument(value = 0, readOnly = false) LazyAttributeLoadingInterceptor lazyInterceptor,
 				@Advice.FieldValue(EnhancerConstants.TRACKER_COLLECTION_NAME) CollectionTracker $$_hibernate_collectionTracker) {
 			if ( lazyInterceptor == null || lazyInterceptor.isAttributeLoaded( fieldName ) ) {
-				if ( map == null || map instanceof PersistentCollection && !( (PersistentCollection) map )
-						.wasInitialized() ) {
+				if ( map == null || map instanceof PersistentCollection && !( (PersistentCollection<?>) map ).wasInitialized() ) {
 					$$_hibernate_collectionTracker.add( fieldName, -1 );
 				}
 				else {

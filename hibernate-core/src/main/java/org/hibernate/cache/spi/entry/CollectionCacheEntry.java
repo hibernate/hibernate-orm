@@ -26,7 +26,7 @@ public class CollectionCacheEntry implements Serializable {
 	 * @param collection The persistent collection instance
 	 * @param persister The collection persister
 	 */
-	public CollectionCacheEntry(PersistentCollection collection, CollectionPersister persister) {
+	public CollectionCacheEntry(PersistentCollection<?> collection, CollectionPersister persister) {
 		this.state = collection.disassemble( persister );
 	}
 
@@ -52,7 +52,7 @@ public class CollectionCacheEntry implements Serializable {
 	 * @param owner The collection owner instance
 	 */
 	public void assemble(
-			final PersistentCollection collection,
+			final PersistentCollection<?> collection,
 			final CollectionPersister persister,
 			final Object owner) {
 		collection.initializeFromCache( persister, state, owner );

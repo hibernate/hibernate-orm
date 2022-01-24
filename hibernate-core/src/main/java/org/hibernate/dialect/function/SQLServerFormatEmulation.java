@@ -22,9 +22,6 @@ import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
-import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL;
-
 /**
  * SQL Server behaves strangely when the first argument to format is of the type time, so we cast to datetime.
  *
@@ -37,7 +34,7 @@ public class SQLServerFormatEmulation extends AbstractSqmSelfRenderingFunctionDe
 	public SQLServerFormatEmulation(SQLServerDialect dialect, TypeConfiguration typeConfiguration) {
 		super(
 				"format",
-				new ArgumentTypesValidator( StandardArgumentsValidators.exactly( 2 ), TEMPORAL, STRING ),
+				CommonFunctionFactory.formatValidator(),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
 				)

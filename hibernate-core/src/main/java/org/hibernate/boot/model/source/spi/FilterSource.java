@@ -20,7 +20,7 @@ public interface FilterSource {
 	 *
 	 * @return The name.
 	 */
-	public String getName();
+	String getName();
 
 	/**
 	 * Get the condition associated with the filter.  Can be {@code null} in the case of a filter described
@@ -30,7 +30,7 @@ public interface FilterSource {
 	 *
 	 * @see org.hibernate.boot.model.source.internal.hbm.FilterSourceImpl#getCondition()
 	 */
-	public String getCondition();
+	String getCondition();
 
 	/**
 	 * Should Hibernate perform automatic alias injection into the supplied condition string?  The default is to
@@ -38,19 +38,19 @@ public interface FilterSource {
 	 *
 	 * @return {@code true} indicates auto injection should occur; {@code false} that it should not
 	 */
-	public boolean shouldAutoInjectAliases();
+	boolean shouldAutoInjectAliases();
 
 	/**
 	 * Get the map of explicit alias to table name mappings.
 	 *
 	 * @return The alias to table map
 	 */
-	public Map<String, String> getAliasToTableMap();
+	Map<String, String> getAliasToTableMap();
 
 	/**
 	 * Get the map of explicit alias to entity name mappings.
 	 *
 	 * @return The alias to entity map
 	 */
-	public Map<String, String> getAliasToEntityMap();
+	Map<String, String> getAliasToEntityMap();
 }

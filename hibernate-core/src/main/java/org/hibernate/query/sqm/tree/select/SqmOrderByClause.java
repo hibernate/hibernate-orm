@@ -59,7 +59,6 @@ public class SqmOrderByClause implements Serializable {
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public void setSortSpecifications(List<SqmSortSpecification> sortSpecifications) {
 		this.sortSpecifications = new ArrayList<>();
 		this.sortSpecifications.addAll( sortSpecifications );

@@ -9,7 +9,7 @@ package org.hibernate.id;
 import org.hibernate.boot.model.relational.ExportableProducer;
 
 /**
- * Identifies {@link IdentifierGenerator generators} which potentially aggregate other
+ * Identifies {@linkplain IdentifierGenerator generators} which potentially aggregate other
  * {@link PersistentIdentifierGenerator} generators.
  * <p/>
  * Initially this is limited to {@link CompositeNestedGeneratedValueGenerator}

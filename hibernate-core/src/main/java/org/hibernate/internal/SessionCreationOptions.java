@@ -72,6 +72,4 @@ public interface SessionCreationOptions {
 	AfterCompletionAction getAfterCompletionAction();
 
 	ManagedFlushChecker getManagedFlushChecker();
-
-	boolean isQueryParametersValidationEnabled();
 }

@@ -9,11 +9,13 @@ package org.hibernate.dialect;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.ComparisonOperator;
+import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -90,7 +92,9 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 	@Override
 	public void visitInSubQueryPredicate(InSubQueryPredicate inSubQueryPredicate) {
 		final SqlTuple lhsTuple;
-		if ( ( lhsTuple = SqlTupleContainer.getSqlTuple( inSubQueryPredicate.getTestExpression() ) ) != null
+		// As of 1.4.200 this is supported
+		if ( getDialect().getVersion().isBefore( 1, 4, 200 )
+				&& ( lhsTuple = SqlTupleContainer.getSqlTuple( inSubQueryPredicate.getTestExpression() ) ) != null
 				&& lhsTuple.getExpressions().size() != 1 ) {
 			inSubQueryPredicate.getTestExpression().accept( this );
 			if ( inSubQueryPredicate.isNegated() ) {
@@ -134,6 +138,15 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 		else {
 			expression.accept( this );
 		}
+	}
+
+	@Override
+	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
+		appendSql( OPEN_PARENTHESIS );
+		render( arithmeticExpression.getLeftHandOperand(), SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
+		render( arithmeticExpression.getRightHandOperand(), SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+		appendSql( CLOSE_PARENTHESIS );
 	}
 
 	@Override

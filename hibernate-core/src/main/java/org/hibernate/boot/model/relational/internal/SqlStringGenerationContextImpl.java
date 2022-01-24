@@ -28,7 +28,7 @@ public class SqlStringGenerationContextImpl
 	/**
 	 * @param jdbcEnvironment The JDBC environment, to extract the dialect, identifier helper, etc.
 	 * @param database The database metadata, to retrieve the implicit namespace name configured through XML mapping.
-	 * @param configurationMap The configuration map, holding settings such as {@link AvailableSettings#DEFAULT_SCHEMA}.
+	 * @param configurationMap The configuration map, holding settings such as {@value AvailableSettings#DEFAULT_SCHEMA}.
 	 * @return An {@link SqlStringGenerationContext}.
 	 */
 	public static SqlStringGenerationContext fromConfigurationMap(

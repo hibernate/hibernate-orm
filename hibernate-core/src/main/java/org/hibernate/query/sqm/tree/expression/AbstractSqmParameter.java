@@ -10,7 +10,7 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 
 /**
  * Common support for SqmParameter impls
@@ -22,23 +22,23 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 
 	public AbstractSqmParameter(
 			boolean canBeMultiValued,
-			SqmExpressable<T> inherentType,
+			SqmExpressible<T> inherentType,
 			NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.canBeMultiValued = canBeMultiValued;
 	}
 
 	@Override
-	public void applyInferableType(SqmExpressable<?> type) {
+	public void applyInferableType(SqmExpressible<?> type) {
 		if ( type == null ) {
 			return;
 		}
 		else if ( type instanceof PluralPersistentAttribute<?, ?, ?> ) {
 			type = ( (PluralPersistentAttribute<?, ?, ?>) type ).getElementType();
 		}
-		final SqmExpressable<T> oldType = getNodeType();
+		final SqmExpressible<T> oldType = getNodeType();
 
-		final SqmExpressable<?> newType = QueryHelper.highestPrecedenceType( oldType, type );
+		final SqmExpressible<?> newType = QueryHelper.highestPrecedenceType( oldType, type );
 		if ( newType != null && newType != oldType ) {
 			internalApplyInferableType( newType );
 		}
@@ -66,6 +66,6 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 
 	@Override
 	public Class<T> getParameterType() {
-		return this.getNodeType().getExpressableJavaTypeDescriptor().getJavaTypeClass();
+		return this.getNodeType().getExpressibleJavaType().getJavaTypeClass();
 	}
 }

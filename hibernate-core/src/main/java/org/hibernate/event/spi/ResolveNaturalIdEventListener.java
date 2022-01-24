@@ -23,6 +23,6 @@ public interface ResolveNaturalIdEventListener {
 	 *
 	 * @throws HibernateException Indicates a problem resolving natural id to primary key
 	 */
-	public void onResolveNaturalId(ResolveNaturalIdEvent event) throws HibernateException;
+	void onResolveNaturalId(ResolveNaturalIdEvent event) throws HibernateException;
 
 }

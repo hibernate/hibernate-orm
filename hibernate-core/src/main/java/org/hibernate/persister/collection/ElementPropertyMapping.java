@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.persister.collection;
-import org.hibernate.MappingException;
+
 import org.hibernate.QueryException;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.type.Type;
@@ -18,8 +18,7 @@ public class ElementPropertyMapping implements PropertyMapping {
 	private final String[] elementColumns;
 	private final Type type;
 
-	public ElementPropertyMapping(String[] elementColumns, Type type)
-	throws MappingException {
+	public ElementPropertyMapping(String[] elementColumns, Type type) {
 		this.elementColumns = elementColumns;
 		this.type = type;
 	}
@@ -36,7 +35,7 @@ public class ElementPropertyMapping implements PropertyMapping {
 	/**
 	 * Given a property path, return the corresponding column name(s).
 	 */
-	public String[] toColumns(String propertyName) throws QueryException, UnsupportedOperationException {
+	public String[] toColumns(String propertyName) {
 		throw new UnsupportedOperationException( "References to collections must define an SQL alias" );
 	}
 

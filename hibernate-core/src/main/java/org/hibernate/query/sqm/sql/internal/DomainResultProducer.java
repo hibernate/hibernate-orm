@@ -21,7 +21,7 @@ public interface DomainResultProducer<T> {
 	/*
 	 * select p.name, p2.name from Person p, Person p2
 	 *
-	 * SqmPathSource (SqmExpressable) (unmapped)
+	 * SqmPathSource (SqmExpressible) (unmapped)
 	 *
 	 * DomainType
 	 * SimpleDomainType

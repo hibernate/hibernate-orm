@@ -19,8 +19,7 @@ import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.MutabilityPlanExposer;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
-import org.hibernate.usertype.Sized;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -32,7 +31,6 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 	private final MutabilityPlan<J> mutabilityPlan;
 
 	private final Comparator<J> comparator;
-	private final Sized sized;
 
 	public UserTypeJavaTypeWrapper(UserType<J> userType) {
 		this.userType = userType;
@@ -46,8 +44,10 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 
 		if ( resolvedMutabilityPlan == null ) {
 			final Class<J> jClass = userType.returnedClass();
-			if ( jClass.getAnnotation( Immutable.class ) != null ) {
-				resolvedMutabilityPlan = ImmutableMutabilityPlan.instance();
+			if ( jClass != null ) {
+				if ( jClass.getAnnotation( Immutable.class ) != null ) {
+					resolvedMutabilityPlan = ImmutableMutabilityPlan.instance();
+				}
 			}
 		}
 
@@ -64,13 +64,6 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 		else {
 			this.comparator = this::compare;
 		}
-
-		if ( userType instanceof Sized ) {
-			this.sized = (Sized) userType;
-		}
-		else {
-			this.sized = null;
-		}
 	}
 
 	private int compare(J first, J second) {
@@ -86,35 +79,23 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 	}
 
 	@Override
-	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( userType.sqlTypes()[0] );
+	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
+		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( userType.sqlTypes()[0] );
 	}
 
 	@Override
 	public long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
-		if ( sized != null ) {
-			return sized.defaultSizes()[0].getLength();
-		}
-
-		return Size.DEFAULT_LENGTH;
+		return userType.getDefaultSqlLength( dialect, jdbcType );
 	}
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
-		if ( sized != null ) {
-			return sized.defaultSizes()[0].getPrecision();
-		}
-
-		return Size.DEFAULT_PRECISION;
+		return userType.getDefaultSqlPrecision( dialect, jdbcType );
 	}
 
 	@Override
 	public int getDefaultSqlScale(Dialect dialect, JdbcType jdbcType) {
-		if ( sized != null ) {
-			return sized.defaultSizes()[0].getScale();
-		}
-
-		return Size.DEFAULT_SCALE;
+		return userType.getDefaultSqlScale( dialect, jdbcType );
 	}
 
 	@Override

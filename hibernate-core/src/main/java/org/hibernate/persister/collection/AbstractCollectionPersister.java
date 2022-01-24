@@ -28,7 +28,6 @@ import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.TransientObjectException;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
@@ -87,7 +86,6 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.PropertyMapping;
-import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.internal.CompositionSingularSubAttributesHelper;
@@ -102,7 +100,7 @@ import org.hibernate.persister.walking.spi.CompositeCollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.Alias;
@@ -169,7 +167,7 @@ public abstract class AbstractCollectionPersister
 
 	private final int baseIndex;
 
-	private String mappedByProperty;
+	private final String mappedByProperty;
 
 	protected final boolean indexContainsFormula;
 	protected final boolean elementIsPureFormula;
@@ -223,7 +221,7 @@ public abstract class AbstractCollectionPersister
 	private final boolean subselectLoadable;
 
 	// extra information about the element type
-	private final Class elementClass;
+	private final Class<?> elementClass;
 	private final String entityName;
 
 	private final Dialect dialect;
@@ -252,16 +250,16 @@ public abstract class AbstractCollectionPersister
 	private final boolean updateCallable;
 	private final boolean deleteCallable;
 	private final boolean deleteAllCallable;
-	private ExecuteUpdateResultCheckStyle insertCheckStyle;
-	private ExecuteUpdateResultCheckStyle updateCheckStyle;
-	private ExecuteUpdateResultCheckStyle deleteCheckStyle;
-	private ExecuteUpdateResultCheckStyle deleteAllCheckStyle;
+	private final ExecuteUpdateResultCheckStyle insertCheckStyle;
+	private final ExecuteUpdateResultCheckStyle updateCheckStyle;
+	private final ExecuteUpdateResultCheckStyle deleteCheckStyle;
+	private final ExecuteUpdateResultCheckStyle deleteAllCheckStyle;
 
 	private final Serializable[] spaces;
 
-	private Map collectionPropertyColumnAliases = new HashMap();
+	private final Map<String,String[]> collectionPropertyColumnAliases = new HashMap<>();
 
-	private final Comparator comparator;
+	private final Comparator<?> comparator;
 
 	private CollectionLoader collectionLoader;
 	private volatile CollectionLoader standardCollectionLoader;
@@ -270,12 +268,12 @@ public abstract class AbstractCollectionPersister
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// "mapping model"
 
-	private final CollectionSemantics collectionSemantics;
+	private final CollectionSemantics<?,?> collectionSemantics;
 
 	private final BasicValueConverter elementConverter;
 	private final BasicValueConverter indexConverter;
 
-	// temprary
+	// temporary
 	private final JdbcMapping convertedElementType;
 	private final JdbcMapping convertedIndexType;
 
@@ -292,8 +290,6 @@ public abstract class AbstractCollectionPersister
 				? ( (IndexedCollection) collectionBootDescriptor ).getIndex()
 				: null;
 
-		final Database database = creationContext.getMetadata().getDatabase();
-
 		this.factory = creationContext.getSessionFactory();
 		this.cacheAccessStrategy = cacheAccessStrategy;
 		if ( factory.getSessionFactoryOptions().isStructuredCacheEntriesEnabled() ) {
@@ -305,8 +301,8 @@ public abstract class AbstractCollectionPersister
 			cacheEntryStructure = UnstructuredCacheEntry.INSTANCE;
 		}
 
-		dialect = factory.getDialect();
-		sqlExceptionHelper = factory.getSQLExceptionHelper();
+		dialect = factory.getJdbcServices().getDialect();
+		sqlExceptionHelper = factory.getJdbcServices().getSqlExceptionHelper();
 		collectionType = collectionBootDescriptor.getCollectionType();
 		navigableRole = new NavigableRole( collectionBootDescriptor.getRole() );
 		entityName = collectionBootDescriptor.getOwnerEntityName();
@@ -329,15 +325,19 @@ public abstract class AbstractCollectionPersister
 		int spacesSize = 1 + collectionBootDescriptor.getSynchronizedTables().size();
 		spaces = new String[spacesSize];
 		spaces[0] = qualifiedTableName;
-		Iterator iter = collectionBootDescriptor.getSynchronizedTables().iterator();
+		Iterator<String> tables = collectionBootDescriptor.getSynchronizedTables().iterator();
 		for ( int i = 1; i < spacesSize; i++ ) {
-			spaces[i] = (String) iter.next();
+			spaces[i] = tables.next();
 		}
 
 		if ( StringHelper.isNotEmpty( collectionBootDescriptor.getWhere() ) ) {
 			hasWhere = true;
 			sqlWhereString = "(" + collectionBootDescriptor.getWhere() + ") ";
-			sqlWhereStringTemplate = Template.renderWhereStringTemplate( sqlWhereString, dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
+			sqlWhereStringTemplate = Template.renderWhereStringTemplate(
+					sqlWhereString,
+					dialect,
+					factory.getQueryEngine().getSqmFunctionRegistry()
+			);
 		}
 		else {
 			hasWhere = false;
@@ -358,16 +358,16 @@ public abstract class AbstractCollectionPersister
 		// KEY
 
 		keyType = collectionBootDescriptor.getKey().getType();
-		iter = collectionBootDescriptor.getKey().getColumnIterator();
+		Iterator<Selectable> columnIter = collectionBootDescriptor.getKey().getColumnIterator();
 		int keySpan = collectionBootDescriptor.getKey().getColumnSpan();
 		keyColumnNames = new String[keySpan];
 		keyColumnAliases = new String[keySpan];
 		int k = 0;
-		while ( iter.hasNext() ) {
+		while ( columnIter.hasNext() ) {
 			// NativeSQL: collect key column and auto-aliases
-			Column col = ( (Column) iter.next() );
-			keyColumnNames[k] = col.getQuotedName( dialect );
-			keyColumnAliases[k] = col.getAlias( dialect, table );
+			Column column = (Column) columnIter.next();
+			keyColumnNames[k] = column.getQuotedName( dialect );
+			keyColumnAliases[k] = column.getAlias( dialect, table );
 			k++;
 		}
 
@@ -404,9 +404,9 @@ public abstract class AbstractCollectionPersister
 			columnInsertability = elementBootDescriptor.getColumnInsertability();
 		}
 		int j = 0;
-		iter = elementBootDescriptor.getColumnIterator();
-		while ( iter.hasNext() ) {
-			Selectable selectable = (Selectable) iter.next();
+		columnIter = elementBootDescriptor.getColumnIterator();
+		while ( columnIter.hasNext() ) {
+			Selectable selectable = columnIter.next();
 			elementColumnAliases[j] = selectable.getAlias( dialect, table );
 			if ( selectable.isFormula() ) {
 				Formula form = (Formula) selectable;
@@ -455,7 +455,7 @@ public abstract class AbstractCollectionPersister
 			int indexSpan = indexedCollection.getIndex().getColumnSpan();
 			boolean[] indexColumnInsertability = indexedCollection.getIndex().getColumnInsertability();
 			boolean[] indexColumnUpdatability = indexedCollection.getIndex().getColumnUpdateability();
-			iter = indexedCollection.getIndex().getColumnIterator();
+			columnIter = indexedCollection.getIndex().getColumnIterator();
 			indexColumnNames = new String[indexSpan];
 			indexFormulaTemplates = new String[indexSpan];
 			indexFormulas = new String[indexSpan];
@@ -464,8 +464,8 @@ public abstract class AbstractCollectionPersister
 			indexColumnAliases = new String[indexSpan];
 			int i = 0;
 			boolean hasFormula = false;
-			while ( iter.hasNext() ) {
-				Selectable s = (Selectable) iter.next();
+			while ( columnIter.hasNext() ) {
+				Selectable s = columnIter.next();
 				indexColumnAliases[i] = s.getAlias( dialect );
 				if ( s.isFormula() ) {
 					Formula indexForm = (Formula) s;
@@ -516,14 +516,13 @@ public abstract class AbstractCollectionPersister
 			}
 			IdentifierCollection idColl = (IdentifierCollection) collectionBootDescriptor;
 			identifierType = idColl.getIdentifier().getType();
-			iter = idColl.getIdentifier().getColumnIterator();
-			Column col = (Column) iter.next();
+			columnIter = idColl.getIdentifier().getColumnIterator();
+			Column col = (Column) columnIter.next();
 			identifierColumnName = col.getQuotedName( dialect );
 			identifierColumnAlias = col.getAlias( dialect );
-			// unquotedIdentifierColumnName = identifierColumnAlias;
 			identifierGenerator = idColl.getIdentifier().createIdentifierGenerator(
 					persisterCreationContext.getBootstrapContext().getIdentifierGeneratorFactory(),
-					factory.getDialect(),
+					factory.getJdbcServices().getDialect(),
 					null
 			);
 			identifierGenerator.initialize( creationContext.getSessionFactory().getSqlStringGenerationContext() );
@@ -761,15 +760,15 @@ public abstract class AbstractCollectionPersister
 //		}
 //	}
 
-	private String[] formulaTemplates(String reference, int expectedSize) {
-		try {
-			final int propertyIndex = elementPersister.getEntityMetamodel().getPropertyIndex( reference );
-			return  ( (Queryable) elementPersister ).getSubclassPropertyFormulaTemplateClosure()[propertyIndex];
-		}
-		catch (Exception e) {
-			return new String[expectedSize];
-		}
-	}
+//	private String[] formulaTemplates(String reference, int expectedSize) {
+//		try {
+//			final int propertyIndex = elementPersister.getEntityMetamodel().getPropertyIndex( reference );
+//			return  ( (Queryable) elementPersister ).getSubclassPropertyFormulaTemplateClosure()[propertyIndex];
+//		}
+//		catch (Exception e) {
+//			return new String[expectedSize];
+//		}
+//	}
 
 	@Override
 	public void postInstantiate() throws MappingException {
@@ -880,7 +879,7 @@ public abstract class AbstractCollectionPersister
 		//noinspection RedundantCast
 		return new CollectionLoaderSubSelectFetch(
 				attributeMapping,
-				(DomainResult) null,
+				(DomainResult<?>) null,
 				subselect,
 				session
 		);
@@ -992,12 +991,12 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public BasicValueConverter getElementConverter() {
+	public BasicValueConverter<?,?> getElementConverter() {
 		return elementConverter;
 	}
 
 	@Override
-	public BasicValueConverter getIndexConverter() {
+	public BasicValueConverter<?,?> getIndexConverter() {
 		return indexConverter;
 	}
 
@@ -1005,7 +1004,7 @@ public abstract class AbstractCollectionPersister
 	 * Return the element class of an array, or null otherwise.  needed by arrays
 	 */
 	@Override
-	public Class getElementClass() {
+	public Class<?> getElementClass() {
 		return elementClass;
 	}
 
@@ -1089,7 +1088,6 @@ public abstract class AbstractCollectionPersister
 			getElementType().nullSafeSet( st, elt, i, elementColumnIsInPrimaryKey, session );
 		}
 		return i + elementColumnAliases.length;
-
 	}
 
 	/**
@@ -1437,7 +1435,7 @@ public abstract class AbstractCollectionPersister
 				}
 				finally {
 					if ( !useBatch ) {
-						session.getJdbcCoordinator().getResourceRegistry().release( st );
+						session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 						session.getJdbcCoordinator().afterStatementExecution();
 					}
 				}
@@ -1460,7 +1458,7 @@ public abstract class AbstractCollectionPersister
 	protected BasicBatchKey recreateBatchKey;
 
 	@Override
-	public void recreate(PersistentCollection collection, Object id, SharedSessionContractImplementor session)
+	public void recreate(PersistentCollection<?> collection, Object id, SharedSessionContractImplementor session)
 			throws HibernateException {
 
 		if ( isInverse ) {
@@ -1481,7 +1479,7 @@ public abstract class AbstractCollectionPersister
 
 		try {
 			// create all the new entries
-			Iterator entries = collection.entries( this );
+			Iterator<?> entries = collection.entries( this );
 			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 			if ( entries.hasNext() ) {
 				Expectation expectation = Expectations.appropriateExpectation( getInsertCheckStyle() );
@@ -1549,7 +1547,7 @@ public abstract class AbstractCollectionPersister
 						}
 						finally {
 							if ( !useBatch ) {
-								jdbcCoordinator.getResourceRegistry().release( st );
+								jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( st );
 								jdbcCoordinator.afterStatementExecution();
 							}
 						}
@@ -1582,7 +1580,7 @@ public abstract class AbstractCollectionPersister
 	private BasicBatchKey deleteBatchKey;
 
 	@Override
-	public void deleteRows(PersistentCollection collection, Object id, SharedSessionContractImplementor session)
+	public void deleteRows(PersistentCollection<?> collection, Object id, SharedSessionContractImplementor session)
 			throws HibernateException {
 
 		if ( isInverse ) {
@@ -1670,7 +1668,7 @@ public abstract class AbstractCollectionPersister
 					}
 					finally {
 						if ( !useBatch ) {
-							session.getJdbcCoordinator().getResourceRegistry().release( st );
+							session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 							session.getJdbcCoordinator().afterStatementExecution();
 						}
 					}
@@ -1699,7 +1697,7 @@ public abstract class AbstractCollectionPersister
 	private BasicBatchKey insertBatchKey;
 
 	@Override
-	public void insertRows(PersistentCollection collection, Object id, SharedSessionContractImplementor session)
+	public void insertRows(PersistentCollection<?> collection, Object id, SharedSessionContractImplementor session)
 			throws HibernateException {
 
 		if ( isInverse ) {
@@ -1720,7 +1718,7 @@ public abstract class AbstractCollectionPersister
 		try {
 			// insert all the new entries
 			collection.preInsert( this );
-			Iterator entries = collection.entries( this );
+			Iterator<?> entries = collection.entries( this );
 			Expectation expectation = Expectations.appropriateExpectation( getInsertCheckStyle() );
 			boolean callable = isInsertCallable();
 			boolean useBatch = expectation.canBeBatched();
@@ -1730,7 +1728,7 @@ public abstract class AbstractCollectionPersister
 			while ( entries.hasNext() ) {
 				int offset = 1;
 				Object entry = entries.next();
-				PreparedStatement st = null;
+				PreparedStatement st;
 				if ( collection.needsInserting( entry, i, elementType ) ) {
 
 					if ( useBatch ) {
@@ -1740,12 +1738,10 @@ public abstract class AbstractCollectionPersister
 									expectation
 									);
 						}
-						if ( st == null ) {
-							st = session
-									.getJdbcCoordinator()
-									.getBatch( insertBatchKey )
-									.getBatchStatement( sql, callable );
-						}
+						st = session
+								.getJdbcCoordinator()
+								.getBatch( insertBatchKey )
+								.getBatchStatement( sql, callable );
 					}
 					else {
 						st = session
@@ -1783,7 +1779,7 @@ public abstract class AbstractCollectionPersister
 					}
 					finally {
 						if ( !useBatch ) {
-							session.getJdbcCoordinator().getResourceRegistry().release( st );
+							session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 							session.getJdbcCoordinator().afterStatementExecution();
 						}
 					}
@@ -2020,7 +2016,7 @@ public abstract class AbstractCollectionPersister
 	protected abstract String generateInsertRowString();
 
 	@Override
-	public void updateRows(PersistentCollection collection, Object id, SharedSessionContractImplementor session)
+	public void updateRows(PersistentCollection<?> collection, Object id, SharedSessionContractImplementor session)
 			throws HibernateException {
 
 		if ( !isInverse && collection.isRowUpdatePossible() ) {
@@ -2034,34 +2030,32 @@ public abstract class AbstractCollectionPersister
 		}
 	}
 
-	protected abstract int doUpdateRows(Object key, PersistentCollection collection, SharedSessionContractImplementor session);
+	protected abstract int doUpdateRows(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session);
 
 	@Override
-	public void processQueuedOps(PersistentCollection collection, Object key, SharedSessionContractImplementor session) {
+	public void processQueuedOps(PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session) {
 		if ( collection.hasQueuedOperations() ) {
 			doProcessQueuedOps( collection, key, session );
 		}
 	}
 
-	/**
-	 * Process queued operations within the PersistentCollection.
-	 *
-	 * @param collection The collection
-	 * @param key The collection key
-	 * @param nextIndex The next index to write
-	 * @param session The session
-	 * @throws HibernateException
-	 *
-	 * @deprecated Use {@link #doProcessQueuedOps(PersistentCollection, Object, SharedSessionContractImplementor)}
-	 */
-	@Deprecated
-	protected void doProcessQueuedOps(PersistentCollection collection, Object key,
-			int nextIndex, SharedSessionContractImplementor session)
-			throws HibernateException {
-		doProcessQueuedOps( collection, key, session );
-	}
+//	/**
+//	 * Process queued operations within the PersistentCollection.
+//	 *
+//	 * @param collection The collection
+//	 * @param key The collection key
+//	 * @param nextIndex The next index to write
+//	 * @param session The session
+//	 * @deprecated Use {@link #doProcessQueuedOps(PersistentCollection, Object, SharedSessionContractImplementor)}
+//	 */
+//	@Deprecated
+//	protected void doProcessQueuedOps(PersistentCollection<?> collection, Object key,
+//			int nextIndex, SharedSessionContractImplementor session)
+//			throws HibernateException {
+//		doProcessQueuedOps( collection, key, session );
+//	}
 
-	protected abstract void doProcessQueuedOps(PersistentCollection collection, Object key, SharedSessionContractImplementor session)
+	protected abstract void doProcessQueuedOps(PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session)
 			throws HibernateException;
 
 	@Override
@@ -2147,7 +2141,7 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public String[] getCollectionPropertyColumnAliases(String propertyName, String suffix) {
-		String[] rawAliases = (String[]) collectionPropertyColumnAliases.get( propertyName );
+		String[] rawAliases = collectionPropertyColumnAliases.get( propertyName );
 
 		if ( rawAliases == null ) {
 			return null;
@@ -2164,30 +2158,27 @@ public abstract class AbstractCollectionPersister
 	// TODO: formulas ?
 	public void initCollectionPropertyMap() {
 
-		initCollectionPropertyMap( "key", keyType, keyColumnAliases, keyColumnNames );
-		initCollectionPropertyMap( "element", elementType, elementColumnAliases, elementColumnNames );
+		initCollectionPropertyMap( "key", keyType, keyColumnAliases );
+		initCollectionPropertyMap( "element", elementType, elementColumnAliases );
 		if ( hasIndex ) {
-			initCollectionPropertyMap( "index", indexType, indexColumnAliases, indexColumnNames );
+			initCollectionPropertyMap( "index", indexType, indexColumnAliases );
 		}
 		if ( hasIdentifier ) {
-			initCollectionPropertyMap(
-					"id",
-					identifierType,
-					new String[] { identifierColumnAlias },
-					new String[] { identifierColumnName } );
+			initCollectionPropertyMap( "id", identifierType, new String[] { identifierColumnAlias } );
 		}
 	}
 
-	private void initCollectionPropertyMap(String aliasName, Type type, String[] columnAliases, String[] columnNames) {
+	private void initCollectionPropertyMap(String aliasName, Type type, String[] columnAliases) {
 
 		collectionPropertyColumnAliases.put( aliasName, columnAliases );
 
+		//TODO: this code is almost certainly obsolete and can be removed
 		if ( type.isComponentType() ) {
 			CompositeType ct = (CompositeType) type;
 			String[] propertyNames = ct.getPropertyNames();
 			for ( int i = 0; i < propertyNames.length; i++ ) {
 				String name = propertyNames[i];
-				collectionPropertyColumnAliases.put( aliasName + "." + name, columnAliases[i] );
+				collectionPropertyColumnAliases.put( aliasName + "." + name, new String[] {columnAliases[i]} );
 			}
 		}
 
@@ -2207,11 +2198,11 @@ public abstract class AbstractCollectionPersister
 					return rs.next() ? rs.getInt( 1 ) - baseIndex : 0;
 				}
 				finally {
-					jdbcCoordinator.getResourceRegistry().release( rs, st );
+					jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( rs, st );
 				}
 			}
 			finally {
-				jdbcCoordinator.getResourceRegistry().release( st );
+				jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( st );
 				jdbcCoordinator.afterStatementExecution();
 			}
 		}
@@ -2249,14 +2240,14 @@ public abstract class AbstractCollectionPersister
 					return rs.next();
 				}
 				finally {
-					jdbcCoordinator.getResourceRegistry().release( rs, st );
+					jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( rs, st );
 				}
 			}
 			catch ( TransientObjectException e ) {
 				return false;
 			}
 			finally {
-				jdbcCoordinator.getResourceRegistry().release( st );
+				jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( st );
 				jdbcCoordinator.afterStatementExecution();
 			}
 		}
@@ -2525,7 +2516,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public CollectionSemantics getCollectionSemantics() {
+	public CollectionSemantics<?,?> getCollectionSemantics() {
 		return collectionSemantics;
 	}
 

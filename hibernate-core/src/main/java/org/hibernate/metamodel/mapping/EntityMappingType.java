@@ -24,7 +24,7 @@ import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.Clause;
@@ -88,8 +88,8 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	}
 
 	@Override
-	default JavaType<?> getJavaTypeDescriptor() {
-		return getMappedJavaTypeDescriptor();
+	default JavaType<?> getJavaType() {
+		return getMappedJavaType();
 	}
 
 	@Override
@@ -456,8 +456,8 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	}
 
 	@Override
-	default JavaType getMappedJavaTypeDescriptor() {
-		return getEntityPersister().getMappedJavaTypeDescriptor();
+	default JavaType getMappedJavaType() {
+		return getEntityPersister().getMappedJavaType();
 	}
 
 	@Override

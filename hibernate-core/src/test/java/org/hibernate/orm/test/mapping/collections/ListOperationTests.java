@@ -31,7 +31,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
 @ServiceRegistry
 @SessionFactory

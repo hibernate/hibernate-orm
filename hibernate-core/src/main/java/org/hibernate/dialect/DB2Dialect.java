@@ -29,8 +29,8 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.IntervalType;
-import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy;
@@ -50,7 +50,7 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNo
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.*;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
@@ -65,7 +65,7 @@ import jakarta.persistence.TemporalType;
 import static org.hibernate.type.SqlTypes.*;
 
 /**
- * An SQL dialect for DB2.
+ * A {@linkplain Dialect SQL dialect} for DB2.
  *
  * @author Gavin King
  */
@@ -80,7 +80,7 @@ public class DB2Dialect extends Dialect {
 	private static final String FOR_SHARE_SKIP_LOCKED_SQL = FOR_SHARE_SQL + SKIP_LOCKED_SQL;
 	private static final String FOR_UPDATE_SKIP_LOCKED_SQL = FOR_UPDATE_SQL + SKIP_LOCKED_SQL;
 
-	private final LimitHandler limitHandler = getVersion().isBefore( 11, 1 )
+	private final LimitHandler limitHandler = getDB2Version().isBefore( 11, 1 )
 			? LegacyDB2LimitHandler.INSTANCE
 			: DB2LimitHandler.INSTANCE;
 	private final UniqueDelegate uniqueDelegate = createUniqueDelegate();
@@ -112,6 +112,13 @@ public class DB2Dialect extends Dialect {
 		registerKeyword( "only" );
 	}
 
+	/**
+	 * DB2 LUW Version
+	 */
+	public DatabaseVersion getDB2Version() {
+		return this.getVersion();
+	}
+
 	@Override
 	public int getDefaultStatementBatchSize() {
 		return 0;
@@ -119,7 +126,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	protected String columnType(int jdbcTypeCode) {
-		if ( getVersion().isBefore( 11 ) ) {
+		if ( getDB2Version().isBefore( 11 ) ) {
 			switch (jdbcTypeCode) {
 				case BOOLEAN:
 					// prior to DB2 11, the 'boolean' type existed,
@@ -156,7 +163,7 @@ public class DB2Dialect extends Dialect {
 	protected void registerDefaultColumnTypes() {
 		// Note: the 'long varchar' data type was deprecated in DB2 and shouldn't be used anymore
 		super.registerDefaultColumnTypes();
-		if ( getVersion().isBefore( 11 ) ) {
+		if ( getDB2Version().isBefore( 11 ) ) {
 			// should use 'binary' since version 11
 			registerColumnType( BINARY, 254, "char($l) for bit data" );
 		}
@@ -365,7 +372,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public String getLowercaseFunction() {
-		return getVersion().isBefore( 9, 7 ) ? "lcase" : super.getLowercaseFunction();
+		return getDB2Version().isBefore( 9, 7 ) ? "lcase" : super.getLowercaseFunction();
 	}
 
 	@Override
@@ -375,7 +382,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return getVersion().isBefore( 9, 7 )
+		return getDB2Version().isBefore( 9, 7 )
 				? LegacyDB2SequenceSupport.INSTANCE
 				: DB2SequenceSupport.INSTANCE;
 	}
@@ -403,7 +410,7 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public boolean supportsSkipLocked() {
 		// Introduced in 11.5: https://www.ibm.com/docs/en/db2/11.5?topic=statement-concurrent-access-resolution-clause
-		return getVersion().isSameOrAfter( 11, 5 );
+		return getDB2Version().isSameOrAfter( 11, 5 );
 	}
 
 	@Override
@@ -558,13 +565,13 @@ public class DB2Dialect extends Dialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
-		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry();
+		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 
-		if ( getVersion().isBefore( 11 ) ) {
+		if ( getDB2Version().isBefore( 11 ) ) {
 			jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, SmallIntJdbcType.INSTANCE );
 			// Binary literals were only added in 11. See https://www.ibm.com/support/knowledgecenter/SSEPGG_11.1.0/com.ibm.db2.luw.sql.ref.doc/doc/r0000731.html#d79816e393
 			jdbcTypeRegistry.addDescriptor( Types.VARBINARY, VarbinaryJdbcType.INSTANCE_WITHOUT_LITERALS );
-			if ( getVersion().isBefore( 9, 7 ) ) {
+			if ( getDB2Version().isBefore( 9, 7 ) ) {
 				jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcType.INSTANCE );
 			}
 		}
@@ -584,14 +591,14 @@ public class DB2Dialect extends Dialect {
 		jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcType.INSTANCE );
 
 		// DB2 requires a custom binder for binding untyped nulls that resolves the type through the statement
-		typeContributions.contributeJdbcTypeDescriptor( ObjectNullResolvingJdbcType.INSTANCE );
+		typeContributions.contributeJdbcType( ObjectNullResolvingJdbcType.INSTANCE );
 
 		// Until we remove StandardBasicTypes, we have to keep this
 		typeContributions.contributeType(
 				new JavaObjectType(
 						ObjectNullResolvingJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
-								.getJavaTypeDescriptorRegistry()
+								.getJavaTypeRegistry()
 								.getDescriptor( Object.class )
 				)
 		);
@@ -600,7 +607,7 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		appender.appendSql( "BX'" );
-		PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.appendString( appender, bytes );
+		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
 		appender.appendSql( '\'' );
 	}
 
@@ -680,7 +687,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public boolean supportsLateral() {
-		return getVersion().isSameOrAfter( 9, 1 );
+		return getDB2Version().isSameOrAfter( 9, 1 );
 	}
 
 	@Override
@@ -702,7 +709,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
-		if ( getVersion().isBefore( 11 ) ) {
+		if ( getDB2Version().isBefore( 11 ) ) {
 			appender.appendSql( bool ? '1' : '0' );
 		}
 		else {

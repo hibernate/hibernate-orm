@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.tree.jpa;
 
 import org.hibernate.query.criteria.JpaTupleElement;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 
@@ -21,14 +21,13 @@ public abstract class AbstractJpaTupleElement<T>
 		extends AbstractSqmNode
 		implements SqmVisitableNode, JpaTupleElement<T> {
 
-	private SqmExpressable<T> expressableType;
+	private SqmExpressible<T> expressibleType;
 	private String alias;
 
-	@SuppressWarnings("WeakerAccess")
-	protected AbstractJpaTupleElement(SqmExpressable<T> expressableType, NodeBuilder criteriaBuilder) {
+	protected AbstractJpaTupleElement(SqmExpressible<? extends T> expressibleType, NodeBuilder criteriaBuilder) {
 		super( criteriaBuilder );
 
-		setExpressableType( expressableType );
+		setExpressibleType(expressibleType);
 	}
 
 	@Override
@@ -43,13 +42,13 @@ public abstract class AbstractJpaTupleElement<T>
 		this.alias = alias;
 	}
 
-	public SqmExpressable<T> getNodeType() {
-		return expressableType;
+	public SqmExpressible<T> getNodeType() {
+		return expressibleType;
 	}
 
-	protected final void setExpressableType(SqmExpressable<?> expressableType) {
+	protected final void setExpressibleType(SqmExpressible<?> expressibleType) {
 		//noinspection unchecked
-		this.expressableType = (SqmExpressable<T>) expressableType;
+		this.expressibleType = (SqmExpressible<T>) expressibleType;
 	}
 
 }

@@ -12,5 +12,5 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  * @author Steve Ebersole
  */
 public interface StatisticsFactory {
-	public StatisticsImplementor buildStatistics(SessionFactoryImplementor sessionFactory);
+	StatisticsImplementor buildStatistics(SessionFactoryImplementor sessionFactory);
 }

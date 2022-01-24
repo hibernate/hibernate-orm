@@ -12,7 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.hibernate.query.Query;
-import org.hibernate.query.Limit;
+import org.hibernate.query.spi.Limit;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.regex.Pattern.compile;

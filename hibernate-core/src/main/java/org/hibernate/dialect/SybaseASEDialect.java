@@ -25,8 +25,8 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.query.IntervalType;
-import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -46,8 +46,7 @@ import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtract
 import static org.hibernate.type.SqlTypes.*;
 
 /**
- * Dialect for Sybase Adaptive Server Enterprise for
- * Sybase 11.9.2 and above.
+ * A {@linkplain Dialect SQL dialect} for Sybase Adaptive Server Enterprise 11.9 and above.
  */
 public class SybaseASEDialect extends SybaseDialect {
 
@@ -213,7 +212,7 @@ public class SybaseASEDialect extends SybaseDialect {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
-				.getJdbcTypeDescriptorRegistry();
+				.getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, TinyIntJdbcType.INSTANCE );
 		// At least the jTDS driver does not support this type code
 		if ( jtdsDriver ) {
@@ -589,7 +588,6 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
 		//TODO: is this really correct?
 		return getVersion().isBefore( 15, 7 )

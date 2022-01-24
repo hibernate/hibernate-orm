@@ -34,9 +34,6 @@ public abstract class AbstractVisitor {
 	/**
 	 * Dispatch each property value to processValue().
 	 *
-	 * @param values
-	 * @param types
-	 * @throws HibernateException
 	 */
 	void processValues(Object[] values, Type[] types) throws HibernateException {
 		for ( int i=0; i<types.length; i++ ) {
@@ -49,9 +46,6 @@ public abstract class AbstractVisitor {
 	/**
 	 * Dispatch each property value to processValue().
 	 *
-	 * @param values
-	 * @param types
-	 * @throws HibernateException
 	 */
 	public void processEntityPropertyValues(Object[] values, Type[] types) throws HibernateException {
 		for ( int i=0; i<types.length; i++ ) {
@@ -76,9 +70,6 @@ public abstract class AbstractVisitor {
 	/**
 	 * Visit a component. Dispatch each property
 	 * to processValue().
-	 * @param component
-	 * @param componentType
-	 * @throws HibernateException
 	 */
 	Object processComponent(Object component, CompositeType componentType) throws HibernateException {
 		if (component!=null) {
@@ -93,9 +84,6 @@ public abstract class AbstractVisitor {
 	/**
 	 * Visit a property value. Dispatch to the
 	 * correct handler for the property type.
-	 * @param value
-	 * @param type
-	 * @throws HibernateException
 	 */
 	final Object processValue(Object value, Type type) throws HibernateException {
 
@@ -117,9 +105,6 @@ public abstract class AbstractVisitor {
 	/**
 	 * Walk the tree starting from the given entity.
 	 *
-	 * @param object
-	 * @param persister
-	 * @throws HibernateException
 	 */
 	public void process(Object object, EntityPersister persister)
 	throws HibernateException {
@@ -132,9 +117,6 @@ public abstract class AbstractVisitor {
 	/**
 	 * Visit a collection. Default superclass
 	 * implementation is a no-op.
-	 * @param collection
-	 * @param type
-	 * @throws HibernateException
 	 */
 	Object processCollection(Object collection, CollectionType type)
 	throws HibernateException {
@@ -145,9 +127,6 @@ public abstract class AbstractVisitor {
 	 * Visit a many-to-one or one-to-one associated
 	 * entity. Default superclass implementation is
 	 * a no-op.
-	 * @param value
-	 * @param entityType
-	 * @throws HibernateException
 	 */
 	Object processEntity(Object value, EntityType entityType)
 	throws HibernateException {

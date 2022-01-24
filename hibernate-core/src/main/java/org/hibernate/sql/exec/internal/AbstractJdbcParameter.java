@@ -12,8 +12,8 @@ import java.sql.SQLException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.metamodel.mapping.SqlExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.query.BindableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -31,7 +31,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public abstract class AbstractJdbcParameter
-		implements JdbcParameter, JdbcParameterBinder, MappingModelExpressable, SqlExpressable {
+		implements JdbcParameter, JdbcParameterBinder, MappingModelExpressible, SqlExpressible {
 
 	private final JdbcMapping jdbcMapping;
 
@@ -53,7 +53,7 @@ public abstract class AbstractJdbcParameter
 	public SqlSelection createSqlSelection(
 			int jdbcPosition,
 			int valuesArrayPosition,
-			JavaType javaTypeDescriptor,
+			JavaType javaType,
 			TypeConfiguration typeConfiguration) {
 		// todo (6.0) : investigate "virtual" or "static" selections
 		//		- anything that is the same for each row always - parameter, literal, etc;
@@ -85,7 +85,7 @@ public abstract class AbstractJdbcParameter
 		}
 
 		// If the parameter type is not known from the context i.e. null or Object, infer it from the bind value
-		if ( jdbcMapping == null || jdbcMapping.getMappedJavaTypeDescriptor().getJavaTypeClass() == Object.class ) {
+		if ( jdbcMapping == null || jdbcMapping.getMappedJavaType().getJavaTypeClass() == Object.class ) {
 			jdbcMapping = guessBindType( executionContext, bindValue, jdbcMapping );
 		}
 
@@ -122,7 +122,7 @@ public abstract class AbstractJdbcParameter
 	}
 
 	@Override
-	public MappingModelExpressable getExpressionType() {
+	public MappingModelExpressible getExpressionType() {
 		return this;
 	}
 

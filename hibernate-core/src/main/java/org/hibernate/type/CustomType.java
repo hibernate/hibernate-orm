@@ -9,14 +9,12 @@ package org.hibernate.type;
 import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -25,14 +23,13 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.JavaTypedExpressable;
+import org.hibernate.type.descriptor.java.JavaTypedExpressible;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.internal.UserTypeJavaTypeWrapper;
 import org.hibernate.type.internal.UserTypeSqlTypeAdapter;
 import org.hibernate.type.internal.UserTypeVersionJavaTypeWrapper;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.EnhancedUserType;
-import org.hibernate.usertype.Sized;
 import org.hibernate.usertype.UserType;
 import org.hibernate.usertype.UserVersionType;
 
@@ -59,14 +56,11 @@ public class CustomType<J>
 
 	private final String name;
 
-	private final BasicJavaType<J> mappedJavaTypeDescriptor;
+	private final BasicJavaType<J> mappedJavaType;
 	private final JdbcType jdbcType;
 
 	private final ValueExtractor<J> valueExtractor;
 	private final ValueBinder<J> valueBinder;
-
-	private final Size dictatedSize;
-	private final Size defaultSize;
 
 	public CustomType(UserType<J> userType, TypeConfiguration typeConfiguration) throws MappingException {
 		this( userType, ArrayHelper.EMPTY_STRING_ARRAY, typeConfiguration );
@@ -78,35 +72,24 @@ public class CustomType<J>
 
 		if ( userType instanceof BasicJavaType ) {
 			//noinspection unchecked
-			this.mappedJavaTypeDescriptor = ( (BasicJavaType<J>) userType );
+			this.mappedJavaType = ( (BasicJavaType<J>) userType );
 		}
-		else if ( userType instanceof JavaTypedExpressable ) {
+		else if ( userType instanceof JavaTypedExpressible) {
 			//noinspection unchecked
-			this.mappedJavaTypeDescriptor = (BasicJavaType<J>) ( (JavaTypedExpressable<J>) userType ).getExpressableJavaTypeDescriptor();
+			this.mappedJavaType = (BasicJavaType<J>) ( (JavaTypedExpressible<J>) userType ).getExpressibleJavaType();
 		}
 		else if ( userType instanceof UserVersionType ) {
-			this.mappedJavaTypeDescriptor = new UserTypeVersionJavaTypeWrapper<>( (UserVersionType<J>) userType );
+			this.mappedJavaType = new UserTypeVersionJavaTypeWrapper<>( (UserVersionType<J>) userType );
 		}
 		else {
-			this.mappedJavaTypeDescriptor = new UserTypeJavaTypeWrapper<>( userType );
+			this.mappedJavaType = new UserTypeJavaTypeWrapper<>( userType );
 		}
 
 		// create a JdbcType adapter that uses the UserType binder/extract handling
-		this.jdbcType = new UserTypeSqlTypeAdapter<>( userType, mappedJavaTypeDescriptor , typeConfiguration);
+		this.jdbcType = new UserTypeSqlTypeAdapter<>( userType, mappedJavaType, typeConfiguration);
 
-		this.valueExtractor = jdbcType.getExtractor( mappedJavaTypeDescriptor );
-		this.valueBinder = jdbcType.getBinder( mappedJavaTypeDescriptor );
-
-		if ( userType instanceof Sized ) {
-			final Sized sized = (Sized) userType;
-			this.dictatedSize = sized.dictatedSizes()[0];
-			this.defaultSize = sized.defaultSizes()[0];
-		}
-		else {
-			this.dictatedSize = null;
-			this.defaultSize = null;
-		}
-
+		this.valueExtractor = jdbcType.getExtractor( mappedJavaType );
+		this.valueBinder = jdbcType.getBinder( mappedJavaType );
 		this.registrationKeys = registrationKeys;
 	}
 
@@ -125,7 +108,7 @@ public class CustomType<J>
 	}
 
 	@Override
-	public JdbcType getJdbcTypeDescriptor() {
+	public JdbcType getJdbcType() {
 		return jdbcType;
 	}
 
@@ -137,16 +120,6 @@ public class CustomType<J>
 	@Override
 	public String[] getRegistrationKeys() {
 		return registrationKeys;
-	}
-
-	@Override
-	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		return new Size[] {dictatedSize};
-	}
-
-	@Override
-	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		return new Size[] {defaultSize};
 	}
 
 	@Override
@@ -167,22 +140,6 @@ public class CustomType<J>
 	@Override
 	public int getHashCode(Object x) {
 		return getUserType().hashCode( x);
-	}
-
-	private Object nullSafeGet(
-			ResultSet rs,
-			String[] names,
-			SharedSessionContractImplementor session,
-			Object owner) throws SQLException {
-		throw new UnsupportedOperationException( "Reading from ResultSet by name is no longer supported" );
-	}
-
-	private Object nullSafeGet(
-			ResultSet rs,
-			String columnName,
-			SharedSessionContractImplementor session,
-			Object owner) throws SQLException {
-		throw new UnsupportedOperationException( "Reading from ResultSet by name is no longer supported" );
 	}
 
 	@Override
@@ -213,6 +170,7 @@ public class CustomType<J>
 			boolean[] settable,
 			SharedSessionContractImplementor session) throws SQLException {
 		if ( settable[0] ) {
+			//noinspection unchecked
 			getUserType().nullSafeSet( st, (J) value, index, session );
 		}
 	}
@@ -223,6 +181,7 @@ public class CustomType<J>
 			Object value,
 			int index,
 			SharedSessionContractImplementor session) throws SQLException {
+		//noinspection unchecked
 		getUserType().nullSafeSet( st, (J) value, index, session );
 	}
 
@@ -272,7 +231,7 @@ public class CustomType<J>
 	@Override
 	public boolean canDoSetting() {
 		if ( getUserType() instanceof ProcedureParameterNamedBinder ) {
-			return ((ProcedureParameterNamedBinder) getUserType() ).canDoSetting();
+			return ((ProcedureParameterNamedBinder<?>) getUserType() ).canDoSetting();
 		}
 		return false;
 	}
@@ -337,21 +296,21 @@ public class CustomType<J>
 
 	@Override
 	public Class<J> getJavaType() {
-		return mappedJavaTypeDescriptor.getJavaTypeClass();
+		return mappedJavaType.getJavaTypeClass();
 	}
 
 	@Override
-	public JavaType<J> getMappedJavaTypeDescriptor() {
-		return mappedJavaTypeDescriptor;
+	public JavaType<J> getMappedJavaType() {
+		return mappedJavaType;
 	}
 
 	@Override
-	public JavaType<J> getExpressableJavaTypeDescriptor() {
-		return getMappedJavaTypeDescriptor();
+	public JavaType<J> getExpressibleJavaType() {
+		return this.getMappedJavaType();
 	}
 
 	@Override
 	public JavaType<J> getJavaTypeDescriptor() {
-		return getMappedJavaTypeDescriptor();
+		return this.getMappedJavaType();
 	}
 }

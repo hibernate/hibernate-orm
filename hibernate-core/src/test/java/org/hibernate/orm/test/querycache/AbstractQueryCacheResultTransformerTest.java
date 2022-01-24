@@ -31,7 +31,7 @@ import org.hibernate.transform.AliasToEntityMapResultTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.LongJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.LongJavaType;
 import org.hibernate.type.descriptor.jdbc.BigIntJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
 
@@ -3077,7 +3077,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 						Student.class,
 						new Type[] {
 								new BasicTypeImpl<>(
-										LongJavaTypeDescriptor.INSTANCE,
+										LongJavaType.INSTANCE,
 										BigIntJdbcType.INSTANCE
 								),
 								studentNametype

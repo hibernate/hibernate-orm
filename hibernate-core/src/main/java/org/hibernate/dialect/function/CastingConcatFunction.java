@@ -11,7 +11,7 @@ import java.util.List;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.query.CastType;
+import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
@@ -53,8 +53,8 @@ public class CastingConcatFunction extends AbstractSqmSelfRenderingFunctionDescr
 		this.concatArgumentCastType = dialect.getTypeName(
 				SqlTypes.VARCHAR,
 				dialect.getSizeStrategy().resolveSize(
-						typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( SqlTypes.VARCHAR ),
-						typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( String.class ),
+						typeConfiguration.getJdbcTypeRegistry().getDescriptor( SqlTypes.VARCHAR ),
+						typeConfiguration.getJavaTypeRegistry().getDescriptor( String.class ),
 						null,
 						null,
 						null

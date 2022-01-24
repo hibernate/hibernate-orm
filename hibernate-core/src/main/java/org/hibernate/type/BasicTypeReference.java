@@ -11,7 +11,7 @@ import java.io.Serializable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.BindableType;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 
 /**
  * A basic type reference.
@@ -83,7 +83,7 @@ public final class BasicTypeReference<T> implements BindableType<T>, Serializabl
 	}
 
 	@Override
-	public SqmExpressable<T> resolveExpressable(SessionFactoryImplementor sessionFactory) {
+	public SqmExpressible<T> resolveExpressible(SessionFactoryImplementor sessionFactory) {
 		return sessionFactory.getTypeConfiguration().getBasicTypeRegistry().resolve( this );
 	}
 }

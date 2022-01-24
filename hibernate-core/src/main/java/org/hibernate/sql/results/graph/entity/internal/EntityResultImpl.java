@@ -9,7 +9,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
@@ -107,7 +107,7 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode implements E
 				)
 		);
 
-		return new EntityAssembler( getResultJavaTypeDescriptor(), initializer );
+		return new EntityAssembler( this.getResultJavaType(), initializer );
 	}
 
 	@Override

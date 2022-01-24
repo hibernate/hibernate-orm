@@ -33,7 +33,11 @@ import org.hibernate.sql.Update;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 
 /**
- * Collection persister for collections of values and many-to-many associations.
+ * A {@link CollectionPersister} for {@linkplain jakarta.persistence.ElementCollection
+ * collections of values} and {@linkplain jakarta.persistence.ManyToMany many-to-many
+ * associations}.
+ *
+ * @see OneToManyPersister
  *
  * @author Gavin King
  */
@@ -126,7 +130,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	}
 
 	@Override
-	protected void doProcessQueuedOps(PersistentCollection collection, Object id, SharedSessionContractImplementor session) {
+	protected void doProcessQueuedOps(PersistentCollection<?> collection, Object id, SharedSessionContractImplementor session) {
 		// nothing to do
 	}
 
@@ -176,7 +180,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	private BasicBatchKey updateBatchKey;
 
 	@Override
-	protected int doUpdateRows(Object id, PersistentCollection collection, SharedSessionContractImplementor session)
+	protected int doUpdateRows(Object id, PersistentCollection<?> collection, SharedSessionContractImplementor session)
 			throws HibernateException {
 		if ( ArrayHelper.isAllFalse( elementColumnIsSettable ) ) {
 			return 0;
@@ -187,9 +191,9 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			final boolean callable = isUpdateCallable();
 			final int jdbcBatchSizeToUse = session.getConfiguredJdbcBatchSize();
 			boolean useBatch = expectation.canBeBatched() && jdbcBatchSizeToUse > 1;
-			final Iterator entries = collection.entries( this );
+			final Iterator<?> entries = collection.entries( this );
 
-			final List elements = new ArrayList();
+			final List<Object> elements = new ArrayList<>();
 			while ( entries.hasNext() ) {
 				elements.add( entries.next() );
 			}
@@ -247,9 +251,9 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 	private int doUpdateRow(
 			Object id,
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			SharedSessionContractImplementor session,
-			Expectation expectation, boolean callable, boolean useBatch, List elements, String sql, int count, int i)
+			Expectation expectation, boolean callable, boolean useBatch, List<?> elements, String sql, int count, int i)
 			throws SQLException {
 		PreparedStatement st;
 		Object entry = elements.get( i );

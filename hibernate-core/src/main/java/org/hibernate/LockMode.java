@@ -6,6 +6,10 @@
  */
 package org.hibernate;
 
+import org.hibernate.jpa.internal.util.LockModeTypeHelper;
+
+import jakarta.persistence.LockModeType;
+
 /**
  * Instances represent a lock mode for a row of a relational
  * database table. It is not intended that users spend much
@@ -75,7 +79,7 @@ public enum LockMode {
 	@Deprecated
 	FORCE( 15, "force" ),
 
-	/**
+	/*
 	 *  start of jakarta.persistence.LockModeType equivalent modes
 	 */
 
@@ -111,9 +115,21 @@ public enum LockMode {
 	private final int level;
 	private final String externalForm;
 
-	private LockMode(int level, String externalForm) {
+	LockMode(int level, String externalForm) {
 		this.level = level;
 		this.externalForm = externalForm;
+	}
+
+	public static LockMode fromJpaLockMode(LockModeType lockMode) {
+		return LockModeTypeHelper.getLockMode( lockMode );
+	}
+
+	public static LockModeType toJpaLockMode(LockMode lockMode) {
+		return LockModeTypeHelper.getLockModeType( lockMode );
+	}
+
+	public LockModeType toJpaLockMode() {
+		return LockModeTypeHelper.getLockModeType( this );
 	}
 
 	/**

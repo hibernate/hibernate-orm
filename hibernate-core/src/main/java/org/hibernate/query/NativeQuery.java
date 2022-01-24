@@ -26,6 +26,7 @@ import org.hibernate.MappingException;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.BasicTypeReference;
 

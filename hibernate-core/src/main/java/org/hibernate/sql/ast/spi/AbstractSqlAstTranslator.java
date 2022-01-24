@@ -35,11 +35,11 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.SetOperator;
+import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
-import org.hibernate.query.FetchClauseType;
+import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -55,14 +55,14 @@ import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.SqlExpressable;
+import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.Loadable;
-import org.hibernate.query.ComparisonOperator;
-import org.hibernate.query.Limit;
-import org.hibernate.query.NullPrecedence;
-import org.hibernate.query.SortOrder;
-import org.hibernate.query.UnaryArithmeticOperator;
+import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.spi.Limit;
+import org.hibernate.query.sqm.NullPrecedence;
+import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
@@ -87,6 +87,7 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Collation;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.ConvertedQueryLiteral;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
@@ -169,7 +170,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
-import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
 import static org.hibernate.sql.ast.SqlTreePrinter.logSqlAst;
 import static org.hibernate.sql.results.graph.DomainResultGraphPrinter.logDomainResultGraph;
 
@@ -227,7 +228,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return dialect;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected AbstractSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		this.sessionFactory = sessionFactory;
 		this.statement = statement;
@@ -346,7 +346,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		setLimitParameter( null );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public List<JdbcParameterBinder> getParameterBinders() {
 		return parameterBinders;
 	}
@@ -2277,7 +2276,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void renderOffset(Expression offsetExpression, boolean renderOffsetRowsKeyword) {
 		appendSql( " offset " );
 		clauseStack.push( Clause.OFFSET );
@@ -2292,7 +2290,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void renderFetch(
 			Expression fetchExpression,
 			Expression offsetExpressionToAdd,
@@ -3536,7 +3533,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		final JdbcMapping jdbcMapping = literal.getJdbcMapping();
 		final JdbcLiteralFormatter literalFormatter = jdbcMapping
-				.getJdbcTypeDescriptor()
+				.getJdbcType()
 				.getJdbcLiteralFormatter( jdbcMapping.getJavaTypeDescriptor() );
 
 		// If we encounter a plain literal in the select clause which has no literal formatter, we must render it as parameter
@@ -3590,7 +3587,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void renderRootTableGroup(TableGroup tableGroup, List<TableGroupJoin> tableGroupJoinCollector) {
 		final LockMode effectiveLockMode = getEffectiveLockMode( tableGroup.getSourceAlias() );
 		final boolean usesLockHint = renderPrimaryTableReference( tableGroup, effectiveLockMode );
@@ -3758,7 +3754,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return false;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected boolean renderNamedTableReference(NamedTableReference tableReference, LockMode lockMode) {
 		appendSql( tableReference.getTableExpression() );
 		registerAffectedTable( tableReference );
@@ -3874,7 +3869,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		affectedTableNames.add( tableExpression );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void renderTableReferenceJoins(TableGroup tableGroup) {
 		final List<TableReferenceJoin> joins = tableGroup.getTableReferenceJoins();
 		if ( joins == null || joins.isEmpty() ) {
@@ -3895,17 +3889,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void processTableGroupJoins(TableGroup source) {
 		source.visitTableGroupJoins( tableGroupJoin -> processTableGroupJoin( tableGroupJoin, null ) );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void processNestedTableGroupJoins(TableGroup source, List<TableGroupJoin> tableGroupJoinCollector) {
 		source.visitNestedTableGroupJoins( tableGroupJoin -> processTableGroupJoin( tableGroupJoin, tableGroupJoinCollector ) );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void processTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
 		final TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
 		final TableGroup realTableGroup;
@@ -4214,7 +4205,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitCastTarget(CastTarget castTarget) {
 		appendSql(
 				getDialect().getCastTypeName(
-						(SqlExpressable) castTarget.getExpressionType(),
+						(SqlExpressible) castTarget.getExpressionType(),
 						castTarget.getLength(),
 						castTarget.getPrecision(),
 						castTarget.getScale()
@@ -4556,6 +4547,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		visitLiteral( queryLiteral );
 	}
 
+	@Override
+	public void acceptConvertedQueryLiteral(ConvertedQueryLiteral<?, ?> convertedQueryLiteral) {
+		visitLiteral( convertedQueryLiteral );
+	}
+
 	private void visitLiteral(Literal literal) {
 		if ( literal.getLiteralValue() == null ) {
 			appendSql( SqlAppender.NULL_KEYWORD );
@@ -4572,7 +4568,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else {
 			assert jdbcParameter.getExpressionType().getJdbcTypeCount() == 1;
 			final JdbcMapping jdbcMapping = jdbcParameter.getExpressionType().getJdbcMappings().get( 0 );
-			final JdbcLiteralFormatter literalFormatter = jdbcMapping.getJdbcTypeDescriptor().getJdbcLiteralFormatter( jdbcMapping.getJavaTypeDescriptor() );
+			final JdbcLiteralFormatter literalFormatter = jdbcMapping.getJdbcType().getJdbcLiteralFormatter( jdbcMapping.getJavaTypeDescriptor() );
 			if ( literalFormatter == null ) {
 				throw new IllegalArgumentException( "Can't render parameter as literal, no literal formatter found" );
 			}
@@ -4968,7 +4964,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	protected static interface SubQueryRelationalRestrictionEmulationRenderer<X extends Expression> {
+	protected interface SubQueryRelationalRestrictionEmulationRenderer<X extends Expression> {
 		void renderComparison(final List<SqlSelection> lhsExpressions, X rhsExpression, ComparisonOperator operator);
 	}
 

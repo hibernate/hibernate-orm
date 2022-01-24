@@ -40,33 +40,33 @@ public class AcmeCorpPhysicalNamingStrategy extends PhysicalNamingStrategyStanda
 	}
 
 	@Override
-	public Identifier toPhysicalTableName(Identifier name, JdbcEnvironment jdbcEnvironment) {
-		final List<String> parts = splitAndReplace(name.getText());
+	public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+		final List<String> parts = splitAndReplace( logicalName.getText());
 		return jdbcEnvironment.getIdentifierHelper().toIdentifier(
 				StringUtils.join(parts, '_'),
-				name.isQuoted()
+				logicalName.isQuoted()
 		);
 	}
 
 	@Override
-	public Identifier toPhysicalSequenceName(Identifier name, JdbcEnvironment jdbcEnvironment) {
-		final List<String> parts = splitAndReplace(name.getText());
+	public Identifier toPhysicalSequenceName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+		final List<String> parts = splitAndReplace( logicalName.getText());
 		// Acme Corp says all sequences should end with _seq
 		if (!"seq".equals(parts.get(parts.size() - 1))) {
 			parts.add("seq");
 		}
 		return jdbcEnvironment.getIdentifierHelper().toIdentifier(
 				StringUtils.join(parts, '_'),
-				name.isQuoted()
+				logicalName.isQuoted()
 		);
 	}
 
 	@Override
-	public Identifier toPhysicalColumnName(Identifier name, JdbcEnvironment jdbcEnvironment) {
-		final List<String> parts = splitAndReplace(name.getText());
+	public Identifier toPhysicalColumnName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+		final List<String> parts = splitAndReplace( logicalName.getText());
 		return jdbcEnvironment.getIdentifierHelper().toIdentifier(
 				StringUtils.join(parts, '_'),
-				name.isQuoted()
+				logicalName.isQuoted()
 		);
 	}
 

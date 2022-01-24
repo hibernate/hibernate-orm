@@ -14,7 +14,8 @@ import java.util.Properties;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
- * A specialized ConnectionCreator which uses {@link Driver#connect} to generate Connections
+ * A specialized {@link ConnectionCreator} which uses {@link Driver#connect(String, Properties)}
+ * to obtain JDBC connections.
  *
  * @author Steve Ebersole
  */

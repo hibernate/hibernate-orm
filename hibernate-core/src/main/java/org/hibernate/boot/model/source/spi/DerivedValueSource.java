@@ -17,5 +17,5 @@ public interface DerivedValueSource extends RelationalValueSource {
 	 *
 	 * @return The derived value expression.
 	 */
-	public String getExpression();
+	String getExpression();
 }

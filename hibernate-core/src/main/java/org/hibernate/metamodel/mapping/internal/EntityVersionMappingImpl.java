@@ -22,7 +22,7 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -63,7 +63,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 			String attributeName,
 			String columnTableExpression,
 			String columnExpression,
-			BasicType versionBasicType,
+			BasicType<?> versionBasicType,
 			EntityMappingType declaringType,
 			MappingModelCreationProcess creationProcess) {
 		this.attributeName = attributeName;
@@ -76,13 +76,12 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 
 		unsavedValueStrategy = UnsavedValueFactory.getUnsavedVersionValue(
 				(KeyValue) bootEntityDescriptor.getVersion().getValue(),
-				(VersionJavaType) versionBasicType.getJavaTypeDescriptor(),
+				(VersionJavaType<?>) versionBasicType.getJavaTypeDescriptor(),
 				declaringType
 						.getRepresentationStrategy()
 						.resolvePropertyAccess( bootEntityDescriptor.getVersion() )
 						.getGetter(),
-				templateInstanceAccess,
-				creationProcess.getCreationContext().getSessionFactory()
+				templateInstanceAccess
 		);
 	}
 
@@ -137,7 +136,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
+	public JavaType<?> getJavaType() {
 		return versionBasicType.getJavaTypeDescriptor();
 	}
 
@@ -219,7 +218,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				getJavaTypeDescriptor(),
+				getJavaType(),
 				navigablePath
 		);
 	}

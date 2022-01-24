@@ -45,12 +45,12 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	private final Set<EntityDomainType<?>> implementors;
 	private final Map<String, PersistentAttribute> commonAttributes;
 
-	private final JavaType<T> polymorphicJavaDescriptor;
+	private final JavaType<T> polymorphicJavaType;
 
 	public SqmPolymorphicRootDescriptor(
-			JavaType<T> polymorphicJavaDescriptor,
+			JavaType<T> polymorphicJavaType,
 			Set<EntityDomainType<?>> implementors) {
-		this.polymorphicJavaDescriptor = polymorphicJavaDescriptor;
+		this.polymorphicJavaType = polymorphicJavaType;
 
 		this.implementors = implementors;
 
@@ -101,7 +101,7 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 
 	@Override
 	public String getName() {
-		return polymorphicJavaDescriptor.getJavaType().getTypeName();
+		return polymorphicJavaType.getJavaType().getTypeName();
 	}
 
 	@Override
@@ -131,7 +131,7 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 
 	@Override
 	public Class<T> getBindableJavaType() {
-		return polymorphicJavaDescriptor.getJavaTypeClass();
+		return polymorphicJavaType.getJavaTypeClass();
 	}
 
 	@Override
@@ -145,8 +145,8 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	}
 
 	@Override
-	public JavaType<T> getExpressableJavaTypeDescriptor() {
-		return polymorphicJavaDescriptor;
+	public JavaType<T> getExpressibleJavaType() {
+		return polymorphicJavaType;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

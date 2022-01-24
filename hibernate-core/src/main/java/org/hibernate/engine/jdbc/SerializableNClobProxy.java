@@ -23,7 +23,7 @@ public class SerializableNClobProxy extends SerializableClobProxy {
 	 *
 	 * @param clob The possible NClob reference
 	 *
-	 * @return {@code true} if the the Clob is a NClob as well
+	 * @return {@code true} if the Clob is a NClob as well
 	 *
 	 * @deprecated ORM baselines on JDK 1.6, so optional support for NClob (JDK 1,6 addition) is no longer needed.
 	 */

@@ -90,9 +90,9 @@ public class TemporaryTable implements Exportable, Contributable {
 					this,
 					uuidType,
 					dialect.getTypeName(
-							uuidType.getJdbcTypeDescriptor(),
+							uuidType.getJdbcType(),
 							dialect.getSizeStrategy().resolveSize(
-									uuidType.getJdbcTypeDescriptor(),
+									uuidType.getJdbcType(),
 									uuidType.getJavaTypeDescriptor(),
 									null,
 									null,
@@ -312,9 +312,9 @@ public class TemporaryTable implements Exportable, Contributable {
 						final String rowNumberType;
 						if ( dialect.supportsWindowFunctions() ) {
 							rowNumberType = dialect.getTypeName(
-									integerBasicType.getJdbcTypeDescriptor().getJdbcTypeCode(),
+									integerBasicType.getJdbcType().getJdbcTypeCode(),
 									dialect.getSizeStrategy().resolveSize(
-											integerBasicType.getJdbcTypeDescriptor(),
+											integerBasicType.getJdbcType(),
 											integerBasicType.getJavaTypeDescriptor(),
 											null,
 											null,
@@ -324,23 +324,23 @@ public class TemporaryTable implements Exportable, Contributable {
 						}
 						else if ( dialect.getIdentityColumnSupport().supportsIdentityColumns() ) {
 							rowNumberType = dialect.getTypeName(
-									integerBasicType.getJdbcTypeDescriptor().getJdbcTypeCode(),
+									integerBasicType.getJdbcType().getJdbcTypeCode(),
 									dialect.getSizeStrategy().resolveSize(
-											integerBasicType.getJdbcTypeDescriptor(),
+											integerBasicType.getJdbcType(),
 											integerBasicType.getJavaTypeDescriptor(),
 											null,
 											null,
 											null
 									)
 							) + " " +
-									dialect.getIdentityColumnSupport().getIdentityColumnString( integerBasicType.getJdbcTypeDescriptor().getJdbcTypeCode() );
+									dialect.getIdentityColumnSupport().getIdentityColumnString( integerBasicType.getJdbcType().getJdbcTypeCode() );
 						}
 						else {
 							LOG.multiTableInsertNotAvailable( entityBinding.getEntityName() );
 							rowNumberType = dialect.getTypeName(
-									integerBasicType.getJdbcTypeDescriptor().getJdbcTypeCode(),
+									integerBasicType.getJdbcType().getJdbcTypeCode(),
 									dialect.getSizeStrategy().resolveSize(
-											integerBasicType.getJdbcTypeDescriptor(),
+											integerBasicType.getJdbcType(),
 											integerBasicType.getJavaTypeDescriptor(),
 											null,
 											null,

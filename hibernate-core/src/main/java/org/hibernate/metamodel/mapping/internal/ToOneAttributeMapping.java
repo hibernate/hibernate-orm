@@ -51,9 +51,9 @@ import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.query.EntityIdentifierNavigablePath;
-import org.hibernate.query.NavigablePath;
-import org.hibernate.query.TreatedNavigablePath;
+import org.hibernate.query.sqm.spi.EntityIdentifierNavigablePath;
+import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.spi.TreatedNavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -242,7 +242,7 @@ public class ToOneAttributeMapping
 							if ( property.getValue() instanceof OneToOne
 									&& name.equals( ( (OneToOne) property.getValue() ).getMappedByProperty() )
 									&& ( (OneToOne) property.getValue() ).getReferencedEntityName().equals(
-									declaringType.getJavaTypeDescriptor().getJavaType().getTypeName() ) ) {
+									declaringType.getJavaType().getJavaType().getTypeName() ) ) {
 								bidirectionalAttributeName = property.getName();
 								break;
 							}
@@ -257,7 +257,7 @@ public class ToOneAttributeMapping
 						if ( value instanceof Collection
 								&& name.equals( ( (Collection) value ).getMappedByProperty() )
 								&& ( (Collection) value ).getElement().getType().getName()
-								.equals( declaringType.getJavaTypeDescriptor().getJavaType().getTypeName() ) ) {
+								.equals( declaringType.getJavaType().getJavaType().getTypeName() ) ) {
 							bidirectionalAttributeName = property.getName();
 							break;
 						}
@@ -1217,8 +1217,8 @@ public class ToOneAttributeMapping
 		}
 		else {
 			if ( parentTableGroup.canUseInnerJoins() ) {
-				final Class<?> attributeDeclaringType = declaringTableGroupProducer.getJavaTypeDescriptor().getJavaTypeClass();
-				final Class<?> parentTableGroupType = parentTableGroup.getModelPart().getJavaTypeDescriptor().getJavaTypeClass();
+				final Class<?> attributeDeclaringType = declaringTableGroupProducer.getJavaType().getJavaTypeClass();
+				final Class<?> parentTableGroupType = parentTableGroup.getModelPart().getJavaType().getJavaTypeClass();
 
 				// This attribute mapping must be declared on the parent table group type or one of its super types
 				// If not, this is a fetch for a subtype of the parent table group, which might be left joined

@@ -20,8 +20,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
-import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
+import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -64,7 +63,7 @@ public class SimpleXmlOverriddenTest extends BaseUnitTestCase {
 		PersistentClass pc = metadata.getEntityBinding( TheEntity.class.getName() );
 		Type type = pc.getProperty( "it" ).getType();
 		AttributeConverterTypeAdapter adapter = assertTyping( AttributeConverterTypeAdapter.class, type );
-		assertTrue( SillyStringConverter.class.isAssignableFrom( adapter.getAttributeConverter().getConverterJavaTypeDescriptor().getJavaTypeClass() ) );
+		assertTrue( SillyStringConverter.class.isAssignableFrom( adapter.getAttributeConverter().getConverterJavaType().getJavaTypeClass() ) );
 	}
 
 	/**
@@ -78,12 +77,12 @@ public class SimpleXmlOverriddenTest extends BaseUnitTestCase {
 				.addResource( "org/hibernate/test/converter/simple-override.xml" )
 				.buildMetadata();
 		final JdbcTypeRegistry jdbcTypeRegistry = metadata.getDatabase().getTypeConfiguration()
-				.getJdbcTypeDescriptorRegistry();
+				.getJdbcTypeRegistry();
 
 		PersistentClass pc = metadata.getEntityBinding( TheEntity.class.getName() );
 		BasicType<?> type = (BasicType<?>) pc.getProperty( "it" ).getType();
-		assertTyping( StringJavaTypeDescriptor.class, type.getJavaTypeDescriptor() );
-		assertTyping( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ).getClass(), type.getJdbcTypeDescriptor() );
+		assertTyping( StringJavaType.class, type.getJavaTypeDescriptor() );
+		assertTyping( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ).getClass(), type.getJdbcType() );
 	}
 
 	/**
@@ -97,12 +96,12 @@ public class SimpleXmlOverriddenTest extends BaseUnitTestCase {
 				.addResource( "org/hibernate/test/converter/simple-override2.xml" )
 				.buildMetadata();
 		final JdbcTypeRegistry jdbcTypeRegistry = metadata.getDatabase().getTypeConfiguration()
-				.getJdbcTypeDescriptorRegistry();
+				.getJdbcTypeRegistry();
 
 		PersistentClass pc = metadata.getEntityBinding( TheEntity2.class.getName() );
 		BasicType<?> type = (BasicType<?>) pc.getProperty( "it" ).getType();
-		assertTyping( StringJavaTypeDescriptor.class, type.getJavaTypeDescriptor() );
-		assertTyping( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ).getClass(), type.getJdbcTypeDescriptor() );
+		assertTyping( StringJavaType.class, type.getJavaTypeDescriptor() );
+		assertTyping( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ).getClass(), type.getJdbcType() );
 	}
 
 	@Entity(name="TheEntity")

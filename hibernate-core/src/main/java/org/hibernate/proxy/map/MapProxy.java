@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.proxy.map;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
@@ -20,7 +21,7 @@ import org.hibernate.proxy.LazyInitializer;
  */
 public class MapProxy implements HibernateProxy, Map, Serializable {
 
-	private MapLazyInitializer li;
+	private final MapLazyInitializer li;
 
 	private Object replacement;
 
@@ -58,22 +59,22 @@ public class MapProxy implements HibernateProxy, Map, Serializable {
 		return li.getMap().containsValue(value);
 	}
 
-	@Override
+	@Override @SuppressWarnings("rawtypes")
 	public Collection values() {
 		return li.getMap().values();
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	public void putAll(Map t) {
 		li.getMap().putAll(t);
 	}
 
-	@Override
+	@Override @SuppressWarnings("rawtypes")
 	public Set entrySet() {
 		return li.getMap().entrySet();
 	}
 
-	@Override
+	@Override @SuppressWarnings("rawtypes")
 	public Set keySet() {
 		return li.getMap().keySet();
 	}
@@ -88,7 +89,7 @@ public class MapProxy implements HibernateProxy, Map, Serializable {
 		return li.getMap().remove(key);
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	public Object put(Object key, Object value) {
 		return li.getMap().put(key, value);
 	}

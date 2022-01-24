@@ -58,10 +58,9 @@ public class SessionWithSharedConnectionTest {
 //		secondSession.createCriteria( IrrelevantEntity.class ).list();
 
 		//the list should have registered and then released a JDBC resource
-		assertFalse(
+        assertFalse(
 				((SessionImplementor) secondSession)
-						.getJdbcCoordinator()
-						.getResourceRegistry()
+                        .getJdbcCoordinator().getLogicalConnection().getResourceRegistry()
 						.hasRegisteredResources()
 		);
 

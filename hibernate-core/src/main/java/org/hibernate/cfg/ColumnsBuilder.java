@@ -28,6 +28,8 @@ import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.cfg.annotations.Nullability;
 import org.hibernate.internal.util.StringHelper;
 
+import static org.hibernate.cfg.AnnotationBinder.getOverridableAnnotation;
+
 /**
  * Do the initial discovery of columns metadata and apply defaults.
  * Also hosts some convenient methods related to column processing
@@ -76,7 +78,7 @@ class ColumnsBuilder {
 		Comment comment = property.getAnnotation(Comment.class);
 		if ( property.isAnnotationPresent( Column.class ) || property.isAnnotationPresent( Formula.class ) ) {
 			Column ann = property.getAnnotation( Column.class );
-			Formula formulaAnn = property.getAnnotation( Formula.class );
+			Formula formulaAnn = getOverridableAnnotation( property, Formula.class, buildingContext );
 			columns = AnnotatedColumn.buildColumnFromAnnotation(
 					new Column[] { ann },
 					formulaAnn,
@@ -249,7 +251,7 @@ class ColumnsBuilder {
 		}
 
 		if (property.isAnnotationPresent( JoinFormula.class)) {
-			JoinFormula ann = property.getAnnotation( JoinFormula.class );
+			JoinFormula ann = getOverridableAnnotation( property, JoinFormula.class, buildingContext );
 			AnnotatedJoinColumn[] annotatedJoinColumns = new AnnotatedJoinColumn[1];
 			annotatedJoinColumns[0] = AnnotatedJoinColumn.buildJoinFormula(
 					ann,

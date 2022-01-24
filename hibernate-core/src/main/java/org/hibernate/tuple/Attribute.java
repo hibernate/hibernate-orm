@@ -14,6 +14,6 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public interface Attribute {
-	public String getName();
-	public Type getType();
+	String getName();
+	Type getType();
 }

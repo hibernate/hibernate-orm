@@ -245,7 +245,6 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	 * @param dialect The resolved dialect
 	 * @param databaseMetaData The available DatabaseMetaData
 	 *
-	 * @throws SQLException
 	 */
 	public JdbcEnvironmentImpl(
 			ServiceRegistryImplementor serviceRegistry,

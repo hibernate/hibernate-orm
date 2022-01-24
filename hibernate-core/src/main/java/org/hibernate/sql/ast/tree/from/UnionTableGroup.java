@@ -6,15 +6,12 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 
 /**
  * @author Andrea Boriero

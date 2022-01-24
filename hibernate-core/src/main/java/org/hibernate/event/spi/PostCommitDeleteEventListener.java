@@ -17,5 +17,5 @@ public interface PostCommitDeleteEventListener extends PostDeleteEventListener {
 	 * 
 	 * @param event the delete event to be handled
 	 */
-	public void onPostDeleteCommitFailed(PostDeleteEvent event);
+	void onPostDeleteCommitFailed(PostDeleteEvent event);
 }

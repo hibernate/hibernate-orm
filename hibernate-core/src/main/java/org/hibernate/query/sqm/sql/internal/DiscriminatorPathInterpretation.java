@@ -9,7 +9,7 @@ package org.hibernate.query.sqm.sql.internal;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -53,7 +53,7 @@ public class DiscriminatorPathInterpretation extends AbstractSqmPathInterpretati
 	public SqlSelection createSqlSelection(
 			int jdbcPosition,
 			int valuesArrayPosition,
-			JavaType javaTypeDescriptor,
+			JavaType javaType,
 			TypeConfiguration typeConfiguration) {
 		return new ResultSetMappingSqlSelection( valuesArrayPosition, getDiscriminatorMapping() );
 	}

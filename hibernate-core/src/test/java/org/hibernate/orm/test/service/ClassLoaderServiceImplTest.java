@@ -10,21 +10,25 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Collection;
 import java.util.Enumeration;
 import jakarta.persistence.Entity;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 
@@ -68,20 +72,19 @@ public class ClassLoaderServiceImplTest {
     	final BootstrapServiceRegistryBuilder bootstrapBuilder = new BootstrapServiceRegistryBuilder();
     	bootstrapBuilder.applyClassLoader( new TestClassLoader() );
     	final ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder( bootstrapBuilder.build() ).build();
-    	final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-    	
-    	TestIntegrator testIntegrator1 = findTestIntegrator( classLoaderService );
-    	assertNotNull( testIntegrator1 );
-    	
-    	TestIntegrator testIntegrator2 = findTestIntegrator( classLoaderService );
-    	assertNotNull( testIntegrator2 );
-    	
-    	assertSame( testIntegrator1, testIntegrator2 );
-    	
+
+		final TypeContributor contributor1 = getTypeContributorServices( serviceRegistry );
+		assertThat( contributor1 ).isNotNull();
+
+		final TypeContributor contributor2 = getTypeContributorServices( serviceRegistry );
+		assertThat( contributor2 ).isNotNull();
+
+		assertThat( contributor1 ).isSameAs( contributor2 );
+
     	StandardServiceRegistryBuilder.destroy( serviceRegistry );
     	
     	try {
-    		findTestIntegrator( classLoaderService );
+			getTypeContributorServices( serviceRegistry );
     		Assert.fail("Should have thrown an HibernateException -- the ClassLoaderService instance was closed.");
     	}
     	catch (HibernateException e) {
@@ -90,16 +93,14 @@ public class ClassLoaderServiceImplTest {
     	}
     }
 
-	private TestIntegrator findTestIntegrator(ClassLoaderService classLoaderService) {
-		for ( Integrator integrator : classLoaderService.loadJavaServices( Integrator.class ) ) {
-			if ( integrator instanceof TestIntegrator ) {
-				return (TestIntegrator) integrator;
-			}
-		}
-		return null;
+	private TypeContributor getTypeContributorServices(ServiceRegistry serviceRegistry) {
+		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		final Collection<TypeContributor> typeContributors = classLoaderService.loadJavaServices( TypeContributor.class );
+		assertThat( typeContributors ).hasSize( 1 );
+		return typeContributors.iterator().next();
 	}
 
-    private static class TestClassLoader extends ClassLoader {
+	private static class TestClassLoader extends ClassLoader {
     	
     	/**
     	 * testStoppableClassLoaderService() needs a custom JDK service implementation.  Rather than using a real one
@@ -107,9 +108,9 @@ public class ClassLoaderServiceImplTest {
     	 */
     	@Override
         protected Enumeration<URL> findResources(String name) throws IOException {
-    		if (name.equals( "META-INF/services/org.hibernate.integrator.spi.Integrator" )) {
+    		if (name.equals( "META-INF/services/org.hibernate.boot.model.TypeContributor" )) {
     			final URL serviceUrl = ConfigHelper.findAsResource(
-						"org/hibernate/orm/test/service/org.hibernate.integrator.spi.Integrator" );
+						"org/hibernate/orm/test/service/org.hibernate.boot.model.TypeContributor" );
     			return new Enumeration<URL>() {
         			boolean hasMore = true;
         			

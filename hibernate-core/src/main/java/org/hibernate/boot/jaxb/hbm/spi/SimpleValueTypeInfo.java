@@ -10,6 +10,6 @@ package org.hibernate.boot.jaxb.hbm.spi;
  * @author Steve Ebersole
  */
 public interface SimpleValueTypeInfo {
-	public String getTypeAttribute();
-	public JaxbHbmTypeSpecificationType getType();
+	String getTypeAttribute();
+	JaxbHbmTypeSpecificationType getType();
 }

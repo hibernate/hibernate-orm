@@ -29,8 +29,8 @@ public abstract class AbstractEntityInstantiatorPojo extends AbstractPojoInstant
 	public AbstractEntityInstantiatorPojo(
 			EntityMetamodel entityMetamodel,
 			PersistentClass persistentClass,
-			JavaType<?> javaTypeDescriptor) {
-		super( javaTypeDescriptor.getJavaTypeClass() );
+			JavaType<?> javaType) {
+		super( javaType.getJavaTypeClass() );
 
 		this.entityMetamodel = entityMetamodel;
 		this.proxyInterface = persistentClass.getProxyInterface();

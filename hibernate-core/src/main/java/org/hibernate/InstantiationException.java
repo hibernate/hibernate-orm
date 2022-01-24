@@ -12,7 +12,7 @@ package org.hibernate;
  * @author Gavin King
  */
 public class InstantiationException extends HibernateException {
-	private final Class clazz;
+	private final Class<?> clazz;
 
 	/**
 	 * Constructs a InstantiationException.
@@ -21,7 +21,7 @@ public class InstantiationException extends HibernateException {
 	 * @param clazz The Class we are attempting to instantiate
 	 * @param cause The underlying exception
 	 */
-	public InstantiationException(String message, Class clazz, Throwable cause) {
+	public InstantiationException(String message, Class<?> clazz, Throwable cause) {
 		super( message, cause );
 		this.clazz = clazz;
 	}
@@ -32,7 +32,7 @@ public class InstantiationException extends HibernateException {
 	 * @param message A message explaining the exception condition
 	 * @param clazz The Class we are attempting to instantiate
 	 */
-	public InstantiationException(String message, Class clazz) {
+	public InstantiationException(String message, Class<?> clazz) {
 		this( message, clazz, null );
 	}
 
@@ -43,7 +43,7 @@ public class InstantiationException extends HibernateException {
 	 * @param clazz The Class we are attempting to instantiate
 	 * @param cause The underlying exception
 	 */
-	public InstantiationException(String message, Class clazz, Exception cause) {
+	public InstantiationException(String message, Class<?> clazz, Exception cause) {
 		super( message, cause );
 		this.clazz = clazz;
 	}
@@ -56,7 +56,7 @@ public class InstantiationException extends HibernateException {
 	 * @return The class we are unable to instantiate
 	 */
 	@Deprecated
-	public Class getPersistentClass() {
+	public Class<?> getPersistentClass() {
 		return clazz;
 	}
 
@@ -65,7 +65,7 @@ public class InstantiationException extends HibernateException {
 	 *
 	 * @return The class we are unable to instantiate
 	 */
-	public Class getUninstantiatableClass() {
+	public Class<?> getUninstantiatableClass() {
 		return clazz;
 	}
 

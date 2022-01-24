@@ -13,11 +13,10 @@ import java.util.UUID;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 import org.hibernate.id.factory.spi.StandardGenerator;
-import org.hibernate.type.descriptor.java.UUIDJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.UUIDJavaTypeDescriptor.ValueTransformer;
+import org.hibernate.type.descriptor.java.UUIDJavaType;
+import org.hibernate.type.descriptor.java.UUIDJavaType.ValueTransformer;
 
 import static org.hibernate.annotations.UuidGenerator.Style.TIME;
 
@@ -54,13 +53,13 @@ public class UuidGenerator implements StandardGenerator {
 		}
 
 		if ( UUID.class.isAssignableFrom( propertyType ) ) {
-			valueTransformer = UUIDJavaTypeDescriptor.PassThroughTransformer.INSTANCE;
+			valueTransformer = UUIDJavaType.PassThroughTransformer.INSTANCE;
 		}
 		else if ( String.class.isAssignableFrom( propertyType ) ) {
-			valueTransformer = UUIDJavaTypeDescriptor.ToStringTransformer.INSTANCE;
+			valueTransformer = UUIDJavaType.ToStringTransformer.INSTANCE;
 		}
 		else if ( byte[].class.isAssignableFrom( propertyType ) ) {
-			valueTransformer = UUIDJavaTypeDescriptor.ToBytesTransformer.INSTANCE;
+			valueTransformer = UUIDJavaType.ToBytesTransformer.INSTANCE;
 		}
 		else {
 			throw new HibernateException( "Unanticipated return type [" + propertyType.getName() + "] for UUID conversion" );

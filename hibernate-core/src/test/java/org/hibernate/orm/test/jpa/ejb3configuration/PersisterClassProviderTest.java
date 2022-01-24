@@ -59,7 +59,7 @@ import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.Clause;
@@ -813,7 +813,7 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public JavaType getMappedJavaTypeDescriptor() {
+		public JavaType getMappedJavaType() {
 			return null;
 		}
 	}

@@ -33,12 +33,12 @@ public class YesNoBinder implements AttributeBinder<YesNo> {
 
 		final BasicJavaType<?> javaType = (BasicJavaType<?>) buildingContext.getBootstrapContext()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
+				.getJavaTypeRegistry()
 				.getDescriptor( Boolean.class );
 
 		final JdbcType jdbcType = buildingContext.getBootstrapContext()
 				.getTypeConfiguration()
-				.getJdbcTypeDescriptorRegistry()
+				.getJdbcTypeRegistry()
 				.getDescriptor( Types.CHAR );
 
 		final InstanceBasedConverterDescriptor converter = new InstanceBasedConverterDescriptor(

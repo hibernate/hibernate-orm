@@ -11,7 +11,7 @@ import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -38,7 +38,7 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 	public SqmFunction(
 			String functionName,
 			SqmFunctionDescriptor functionDescriptor,
-			SqmExpressable<T> type,
+			SqmExpressible<T> type,
 			List<? extends SqmTypedNode<?>> arguments,
 			NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );

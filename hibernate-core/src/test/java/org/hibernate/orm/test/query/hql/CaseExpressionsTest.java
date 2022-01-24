@@ -30,7 +30,6 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public class CaseExpressionsTest extends BaseSqmUnitTest {
 
 	@Override

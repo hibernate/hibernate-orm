@@ -70,24 +70,24 @@ public class BasicTypeRegistry implements Serializable {
 				return basicType;
 			}
 		}
-		final JavaType<Object> javaTypeDescriptor = typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor(
+		final JavaType<Object> javaType = typeConfiguration.getJavaTypeRegistry().getDescriptor(
 				typeReference.getBindableJavaType()
 		);
-		final JdbcType jdbcType = typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor(
+		final JdbcType jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor(
 				typeReference.getSqlTypeCode()
 		);
 		final BasicType<?> type;
 		if ( typeReference.getConverter() == null ) {
 			if ( typeReference.isForceImmutable() ) {
 				type = new ImmutableNamedBasicTypeImpl<>(
-						javaTypeDescriptor,
+						javaType,
 						jdbcType,
 						typeReference.getName()
 				);
 			}
 			else {
 				type = new NamedBasicTypeImpl<>(
-						javaTypeDescriptor,
+						javaType,
 						jdbcType,
 						typeReference.getName()
 				);
@@ -97,7 +97,7 @@ public class BasicTypeRegistry implements Serializable {
 			if ( typeReference.isForceImmutable() ) {
 				//noinspection unchecked
 				type = new ImmutableConvertedBasicTypeImpl<>(
-						javaTypeDescriptor,
+						javaType,
 						jdbcType,
 						typeReference.getName(),
 						(BasicValueConverter<Object, ?>) typeReference.getConverter()
@@ -106,7 +106,7 @@ public class BasicTypeRegistry implements Serializable {
 			else {
 				//noinspection unchecked
 				type = new ConvertedBasicTypeImpl<>(
-						javaTypeDescriptor,
+						javaType,
 						jdbcType,
 						typeReference.getName(),
 						(BasicValueConverter<Object, ?>) typeReference.getConverter()
@@ -141,13 +141,13 @@ public class BasicTypeRegistry implements Serializable {
 	}
 
 	public <J> BasicType<J> resolve(java.lang.reflect.Type javaType, int sqlTypeCode) {
-		return resolve( typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( javaType ), sqlTypeCode );
+		return resolve( typeConfiguration.getJavaTypeRegistry().getDescriptor( javaType ), sqlTypeCode );
 	}
 
 	public <J> BasicType<J> resolve(JavaType<J> jtdToUse, int sqlTypeCode) {
 		return resolve(
 				jtdToUse,
-				typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( sqlTypeCode )
+				typeConfiguration.getJdbcTypeRegistry().getDescriptor( sqlTypeCode )
 		);
 	}
 
@@ -184,8 +184,8 @@ public class BasicTypeRegistry implements Serializable {
 	}
 
 	/**
-	 * Find an existing BasicType registration for the given JavaTypeDescriptor and
-	 * SqlTypeDescriptor combo or create (and register) one.
+	 * Find an existing BasicType registration for the given JavaType and
+	 * JdbcType combo or create (and register) one.
 	 */
 	public <J> BasicType<J> resolve(JavaType<J> jtdToUse, JdbcType stdToUse, Supplier<BasicType<J>> creator) {
 		final Map<JavaType<?>, BasicType<?>> typeByJtdForStd = registryValues.computeIfAbsent(
@@ -202,7 +202,7 @@ public class BasicTypeRegistry implements Serializable {
 		// and if so, if the jdbc type descriptor matches. Unless it does, we at least reuse the name
 		final BasicType<J> basicType = getRegisteredType( jtdToUse.getJavaType() );
 		if ( basicType != null ) {
-			if ( basicType.getJdbcTypeDescriptor() == stdToUse ) {
+			if ( basicType.getJdbcType() == stdToUse ) {
 				return basicType;
 			}
 			else {
@@ -248,30 +248,30 @@ public class BasicTypeRegistry implements Serializable {
 
 	private void applyOrOverwriteEntry(BasicType<?> type) {
 		final Map<JavaType<?>, BasicType<?>> mappingsForStdToUse = registryValues.computeIfAbsent(
-				type.getJdbcTypeDescriptor(),
+				type.getJdbcType(),
 				sqlTypeDescriptor -> new ConcurrentHashMap<>()
 		);
 
-		final BasicType<?> existing = mappingsForStdToUse.put( type.getMappedJavaTypeDescriptor(), type );
+		final BasicType<?> existing = mappingsForStdToUse.put( type.getMappedJavaType(), type );
 		if ( existing != null ) {
 			LOG.debugf(
 					"BasicTypeRegistry registration overwritten (%s + %s); previous =`%s`",
-					type.getJdbcTypeDescriptor().getFriendlyName(),
+					type.getJdbcType().getFriendlyName(),
 					type.getJavaTypeDescriptor(),
 					existing
 			);
 		}
 	}
 
-	public void register(UserType type, String... keys) {
-		register( new CustomType<Object>( type, keys, typeConfiguration ) );
+	public <T> CustomType<T> register(UserType<T> type, String... keys) {
+		final CustomType<T> customType = new CustomType<>( type, keys, typeConfiguration );
+		register( customType );
+		return customType;
 	}
 
 	public void unregister(String... keys) {
 		for ( String key : keys ) {
-			final BasicType<?> removed = typesByName.remove( key );
-
-
+			typesByName.remove( key );
 		}
 	}
 
@@ -337,22 +337,22 @@ public class BasicTypeRegistry implements Serializable {
 
 	private void primeRegistryEntry(BasicType<?> type) {
 		final Map<JavaType<?>, BasicType<?>> mappingsForStdToUse = registryValues.computeIfAbsent(
-				type.getJdbcTypeDescriptor(),
+				type.getJdbcType(),
 				sqlTypeDescriptor -> new ConcurrentHashMap<>()
 		);
 
-		final BasicType<?> existing = mappingsForStdToUse.get( type.getMappedJavaTypeDescriptor() );
+		final BasicType<?> existing = mappingsForStdToUse.get( type.getMappedJavaType() );
 
 		if ( existing != null ) {
 			LOG.debugf(
 					"Skipping registration of BasicType (%s + %s); still priming.  existing = %s",
-					type.getJdbcTypeDescriptor().getFriendlyName(),
+					type.getJdbcType().getFriendlyName(),
 					type.getJavaTypeDescriptor(),
 					existing
 			);
 		}
 		else {
-			mappingsForStdToUse.put( type.getMappedJavaTypeDescriptor(), type );
+			mappingsForStdToUse.put( type.getMappedJavaType(), type );
 		}
 	}
 
@@ -395,7 +395,7 @@ public class BasicTypeRegistry implements Serializable {
 
 			LOG.debugf( "Adding type registration %s -> %s", key, type );
 
-			final BasicTypeReference old = typeReferencesByName.put( key, type );
+			final BasicTypeReference<?> old = typeReferencesByName.put( key, type );
 			if ( old != null && old != type ) {
 				LOG.debugf(
 						"Type registration key [%s] overrode previous entry : `%s`",

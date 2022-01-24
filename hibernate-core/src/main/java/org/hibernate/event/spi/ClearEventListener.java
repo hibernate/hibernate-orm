@@ -17,5 +17,5 @@ public interface ClearEventListener {
 	 *
 	 * @param event The event representing the clear
 	 */
-	public void onClear(ClearEvent event);
+	void onClear(ClearEvent event);
 }

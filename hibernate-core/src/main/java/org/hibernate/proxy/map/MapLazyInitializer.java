@@ -23,11 +23,12 @@ public class MapLazyInitializer extends AbstractLazyInitializer implements Seria
 		super( entityName, id, session );
 	}
 
+	@SuppressWarnings("rawtypes")
 	public Map getMap() {
 		return (Map) getImplementation();
 	}
 
-	public Class getPersistentClass() {
+	public Class<?> getPersistentClass() {
 		throw new UnsupportedOperationException("dynamic-map entity representation");
 	}
 

@@ -9,7 +9,6 @@ package org.hibernate.type;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Map;
@@ -24,7 +23,6 @@ import org.hibernate.PropertyNotFoundException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.internal.ForeignKeys;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.Mapping;
@@ -35,7 +33,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.proxy.HibernateProxyHelper;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -74,23 +71,13 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	@Override
-	public Class getReturnedClass() {
+	public Class<?> getReturnedClass() {
 		return Object.class;
 	}
 
 	@Override
 	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
 		return ArrayHelper.join( discriminatorType.getSqlTypeCodes( mapping ), identifierType.getSqlTypeCodes( mapping ) );
-	}
-
-	@Override
-	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		return ArrayHelper.join( discriminatorType.dictatedSizes( mapping ), identifierType.dictatedSizes( mapping ) );
-	}
-
-	@Override
-	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		return ArrayHelper.join( discriminatorType.defaultSizes( mapping ), identifierType.defaultSizes( mapping ) );
 	}
 
 	@Override
@@ -276,11 +263,13 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		}
 
 		if ( value == LazyPropertyInitializer.UNFETCHED_PROPERTY || !Hibernate.isInitialized( value ) ) {
-			return  "<uninitialized>";
+			return "<uninitialized>";
 		}
 
-		final Class valueClass = HibernateProxyHelper.getClassWithoutInitializingProxy( value );
-		final EntityPersister descriptor = factory.getDomainModel().getEntityDescriptor( valueClass );
+		String entityName = factory.bestGuessEntityName(value);
+		final EntityPersister descriptor = entityName == null
+				? null
+				: factory.getDomainModel().getEntityDescriptor( entityName );
 		return MessageHelper.infoString( descriptor, value, factory );
 	}
 
@@ -318,10 +307,6 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 			final Object id = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, original, session );
 			return session.internalLoad( entityName, id, eager, false );
 		}
-	}
-
-	private Object nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session, Object owner) {
-		throw new UnsupportedOperationException( "object is a multicolumn type" );
 	}
 
 	// CompositeType implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

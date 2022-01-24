@@ -34,7 +34,7 @@ public abstract class AbstractCollectionAssembler implements DomainResultAssembl
 
 	@Override
 	public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
-		PersistentCollection collectionInstance = initializer.getCollectionInstance();
+		PersistentCollection<?> collectionInstance = initializer.getCollectionInstance();
 		if ( collectionInstance instanceof PersistentArrayHolder ) {
 			return collectionInstance.getValue();
 		}
@@ -42,7 +42,7 @@ public abstract class AbstractCollectionAssembler implements DomainResultAssembl
 	}
 
 	@Override
-	public JavaType getAssembledJavaTypeDescriptor() {
-		return fetchedMapping.getJavaTypeDescriptor();
+	public JavaType<?> getAssembledJavaType() {
+		return fetchedMapping.getJavaType();
 	}
 }

@@ -70,7 +70,7 @@ public class CompositeNestedGeneratedValueGenerator
 
 	/**
 	 * Contract for performing the actual sub-value generation, usually injecting it into the
-	 * determined {@link GenerationContextLocator#locateGenerationContext context}
+	 * determined {@linkplain GenerationContextLocator#locateGenerationContext context}
 	 */
 	public interface GenerationPlan extends ExportableProducer {
 

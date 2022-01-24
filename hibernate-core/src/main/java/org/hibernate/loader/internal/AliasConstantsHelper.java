@@ -19,8 +19,6 @@ public final class AliasConstantsHelper {
 	 * Strings might be returned from a pool of constants, when i
 	 * is within the range of expected most commonly requested elements.
 	 *
-	 * @param i
-	 * @return
 	 */
 	public static String get(final int i) {
 		if ( i < MAX_POOL_SIZE && i >= 0 ) {

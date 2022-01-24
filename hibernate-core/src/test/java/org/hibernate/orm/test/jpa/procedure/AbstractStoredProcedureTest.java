@@ -16,9 +16,9 @@ import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.IntegerJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.LongJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.IntegerJavaType;
+import org.hibernate.type.descriptor.java.LongJavaType;
+import org.hibernate.type.descriptor.java.StringJavaType;
 
 import org.junit.Test;
 
@@ -48,7 +48,7 @@ public abstract class AbstractStoredProcedureTest extends BaseEntityManagerFunct
 		assertEquals( "p11", parameterImplementor.getName() );
 		assertEquals( jakarta.persistence.ParameterMode.IN, parameterImplementor.getMode() );
 		BasicType hibernateType = (BasicType) parameterImplementor.getHibernateType();
-		assertEquals( IntegerJavaTypeDescriptor.INSTANCE, hibernateType.getJavaTypeDescriptor() );
+		assertEquals( IntegerJavaType.INSTANCE, hibernateType.getJavaTypeDescriptor() );
 		assertEquals( Integer.class, parameterImplementor.getParameterType() );
 
 		memento = list.get( 1 );
@@ -56,7 +56,7 @@ public abstract class AbstractStoredProcedureTest extends BaseEntityManagerFunct
 		assertEquals( "p12", parameterImplementor.getName() );
 		assertEquals( jakarta.persistence.ParameterMode.IN, parameterImplementor.getMode() );
 		hibernateType = (BasicType) parameterImplementor.getHibernateType();
-		assertEquals( IntegerJavaTypeDescriptor.INSTANCE, hibernateType.getJavaTypeDescriptor() );
+		assertEquals( IntegerJavaType.INSTANCE, hibernateType.getJavaTypeDescriptor() );
 		assertEquals( Integer.class, parameterImplementor.getParameterType() );
 
 
@@ -74,7 +74,7 @@ public abstract class AbstractStoredProcedureTest extends BaseEntityManagerFunct
 		assertEquals( jakarta.persistence.ParameterMode.INOUT, parameterImplementor.getMode() );
 		hibernateType = (BasicType) parameterImplementor.getHibernateType();
 
-		assertEquals( StringJavaTypeDescriptor.INSTANCE, hibernateType.getJavaTypeDescriptor() );
+		assertEquals( StringJavaType.INSTANCE, hibernateType.getJavaTypeDescriptor() );
 		assertEquals( String.class, parameterImplementor.getParameterType() );
 
 		memento = list.get( 1 );
@@ -84,7 +84,7 @@ public abstract class AbstractStoredProcedureTest extends BaseEntityManagerFunct
 		assertEquals( jakarta.persistence.ParameterMode.INOUT, parameterImplementor.getMode() );
 		hibernateType = (BasicType) parameterImplementor.getHibernateType();
 
-		assertEquals( LongJavaTypeDescriptor.INSTANCE, hibernateType.getJavaTypeDescriptor() );
+		assertEquals( LongJavaType.INSTANCE, hibernateType.getJavaTypeDescriptor() );
 		assertEquals( Long.class, parameterImplementor.getParameterType() );
 
 	}

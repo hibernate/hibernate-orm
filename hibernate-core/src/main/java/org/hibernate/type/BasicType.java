@@ -40,11 +40,11 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 
 	@Override
 	default JavaType<T> getJavaTypeDescriptor() {
-		return getMappedJavaTypeDescriptor();
+		return this.getMappedJavaType();
 	}
 
 	@Override
-	default JavaType<T> getExpressableJavaTypeDescriptor() {
+	default JavaType<T> getExpressibleJavaType() {
 		return getJavaTypeDescriptor();
 	}
 
@@ -72,18 +72,18 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	}
 
 	@Override
-	default JavaType<T> getMappedJavaTypeDescriptor() {
+	default JavaType<T> getMappedJavaType() {
 		return getJavaTypeDescriptor();
 	}
 
 	@Override
 	default ValueExtractor<T> getJdbcValueExtractor() {
-		return getJdbcTypeDescriptor().getExtractor( getMappedJavaTypeDescriptor() );
+		return getJdbcType().getExtractor( this.getMappedJavaType() );
 	}
 
 	@Override
 	default ValueBinder<T> getJdbcValueBinder() {
-		return getJdbcTypeDescriptor().getBinder( getMappedJavaTypeDescriptor() );
+		return getJdbcType().getBinder( this.getMappedJavaType() );
 	}
 
 	@Override

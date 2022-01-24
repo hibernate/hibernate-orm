@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.envers.entities.components;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 
 import org.hibernate.envers.Audited;
@@ -17,7 +18,9 @@ import org.hibernate.envers.NotAudited;
 @Embeddable
 @Audited
 public class Component4 {
+	@Column(name = "the_key")
 	private String key;
+	@Column(name = "val")
 	private String value;
 
 	@NotAudited

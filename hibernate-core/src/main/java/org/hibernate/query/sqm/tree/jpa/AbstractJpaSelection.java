@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
 /**
@@ -21,8 +21,8 @@ import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 public abstract class AbstractJpaSelection<T>
 		extends AbstractJpaTupleElement<T>
 		implements SqmSelectableNode<T>, JpaSelection<T> {
-	protected AbstractJpaSelection(SqmExpressable<T> sqmExpressable, NodeBuilder criteriaBuilder) {
-		super( sqmExpressable, criteriaBuilder );
+	protected AbstractJpaSelection(SqmExpressible<? extends T> sqmExpressible, NodeBuilder criteriaBuilder) {
+		super(sqmExpressible, criteriaBuilder );
 	}
 
 	@Override

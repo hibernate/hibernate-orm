@@ -55,10 +55,10 @@ public abstract class AbstractManagedType<J>
 
 	protected AbstractManagedType(
 			String hibernateTypeName,
-			JavaType<J> javaTypeDescriptor,
+			JavaType<J> javaType,
 			ManagedDomainType<? super J> superType,
 			JpaMetamodel domainMetamodel) {
-		super( javaTypeDescriptor, domainMetamodel );
+		super( javaType, domainMetamodel );
 		this.hibernateTypeName = hibernateTypeName;
 		this.superType = superType;
 		if ( superType != null ) {
@@ -240,7 +240,7 @@ public abstract class AbstractManagedType<J>
 		if ( attribute == null ) {
 			throw new IllegalArgumentException(
 					String.format(
-							"Unable to locate %s with the the given name [%s] on this ManagedType [%s]",
+							"Unable to locate %s with the given name [%s] on this ManagedType [%s]",
 							attributeType,
 							name,
 							getTypeName()
@@ -336,12 +336,11 @@ public abstract class AbstractManagedType<J>
 		}
 	}
 
-	@SuppressWarnings({"SimplifiableIfStatement", "WeakerAccess"})
 	protected <Y> boolean isPrimitiveVariant(SingularAttribute<?,?> attribute, Class<Y> javaType) {
 		if ( attribute == null ) {
 			return false;
 		}
-		Class declaredType = attribute.getBindableJavaType();
+		Class<?> declaredType = attribute.getBindableJavaType();
 
 		if ( declaredType.isPrimitive() ) {
 			return ( Boolean.class.equals( javaType ) && Boolean.TYPE.equals( declaredType ) )

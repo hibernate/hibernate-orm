@@ -13,8 +13,9 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Should the entity's current state be selected from the database when determining whether to perform an update when
- * re-attaching detached entities?
+ * Specifies that the current persistent state of a detached entity instance
+ * should be fetched from the database when the entity is reattached using
+ * {@link org.hibernate.Session#update(Object)}.
  *
  * @author Steve Ebersole
  */
@@ -22,9 +23,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention( RUNTIME )
 public @interface SelectBeforeUpdate {
 	/**
-	 * {@code true} (which is the default when this annotation is present) indicates that
-	 * {@code select-before-update} processing should occur.  {@code false} indicates
-	 * {@code select-before-update} processing should not occur.
+	 * @deprecated When {@code false}, this annotation has no effect.
 	 */
+	@Deprecated
 	boolean value() default true;
 }

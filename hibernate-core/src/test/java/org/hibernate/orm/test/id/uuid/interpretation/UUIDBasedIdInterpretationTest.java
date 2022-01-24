@@ -17,7 +17,7 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.UUIDJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.UUIDJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
@@ -74,8 +74,8 @@ public class UUIDBasedIdInterpretationTest {
 	private void checkUuidTypeUsed(DomainModelScope scope, Class<? extends JdbcType> jdbcTypeDescriptor) {
 		final PersistentClass entityBinding = scope.getDomainModel().getEntityBinding( UuidIdEntity.class.getName() );
 		final BasicType<?> idPropertyType = (BasicType<?>) entityBinding.getIdentifier().getType();
-		assertSame( UUIDJavaTypeDescriptor.INSTANCE, idPropertyType.getJavaTypeDescriptor() );
-		assertThat( idPropertyType.getJdbcTypeDescriptor(), instanceOf( jdbcTypeDescriptor ) );
+		assertSame( UUIDJavaType.INSTANCE, idPropertyType.getJavaTypeDescriptor() );
+		assertThat( idPropertyType.getJdbcType(), instanceOf( jdbcTypeDescriptor ) );
 	}
 
 	@Entity(name = "UuidIdEntity")

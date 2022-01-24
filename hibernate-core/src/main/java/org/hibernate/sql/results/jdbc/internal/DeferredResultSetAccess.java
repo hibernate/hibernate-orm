@@ -23,7 +23,7 @@ import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.query.Limit;
+import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.sql.exec.spi.ExecutionContext;

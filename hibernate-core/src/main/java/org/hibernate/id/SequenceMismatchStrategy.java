@@ -12,6 +12,8 @@ import org.hibernate.HibernateException;
  * Describes the strategy for handling the mismatch between a database sequence configuration and
  * the one defined by the entity mapping.
  *
+ * @see org.hibernate.cfg.AvailableSettings#SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY
+ *
  * @author Vlad Mihalcea
  */
 public enum SequenceMismatchStrategy {

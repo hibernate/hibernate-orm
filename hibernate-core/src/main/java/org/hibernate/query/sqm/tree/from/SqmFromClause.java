@@ -43,7 +43,6 @@ public class SqmFromClause implements Serializable {
 	/**
 	 * Inject the complete set of domain roots
 	 */
-	@SuppressWarnings({"WeakerAccess", "unused"})
 	public void setRoots(List<SqmRoot<?>> domainRoots) {
 		this.domainRoots = domainRoots;
 	}

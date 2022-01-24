@@ -9,7 +9,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -45,8 +45,8 @@ public class EntityDelayedResultImpl implements DomainResult {
 	}
 
 	@Override
-	public JavaType<?> getResultJavaTypeDescriptor() {
-		return entityValuedModelPart.getAssociatedEntityMappingType().getMappedJavaTypeDescriptor();
+	public JavaType<?> getResultJavaType() {
+		return entityValuedModelPart.getAssociatedEntityMappingType().getMappedJavaType();
 	}
 
 	@Override
@@ -75,7 +75,7 @@ public class EntityDelayedResultImpl implements DomainResult {
 				)
 		);
 
-		return new EntityAssembler( getResultJavaTypeDescriptor(), initializer );
+		return new EntityAssembler( getResultJavaType(), initializer );
 	}
 
 	@Override

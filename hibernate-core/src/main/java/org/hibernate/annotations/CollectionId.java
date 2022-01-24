@@ -18,10 +18,8 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Describe an identifier column for a bag (ie an idbag).
+ * Describe an identifier column for a bag.
  *
- * EXPERIMENTAL: the structure of this annotation might slightly change (generator() mix strategy and generator
- * 
  * @author Emmanuel Bernard
  */
 @Target({METHOD, FIELD})
@@ -42,10 +40,11 @@ public @interface CollectionId {
 	/**
 	 * The generator name.
 	 *
-	 * Can specify either a built-in strategy ("sequence", e.g.) or a named generatorIdentifierGenerator
+	 * Can specify either a built-in strategy ("sequence", e.g.)
+	 * or a named generatorIdentifierGenerator
 	 * ({@link jakarta.persistence.SequenceGenerator}, e.g.)
 	 *
-	 * @apiNote Mutually exclusive with {@link #generatorImplementation()} ()}
+	 * @apiNote Mutually exclusive with {@link #generatorImplementation()}
 	 */
 	String generator() default "";
 }

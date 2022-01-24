@@ -31,7 +31,7 @@ import static org.hibernate.spatial.testing.datareader.TestSupport.TestDataPurpo
 @Deprecated
 public class SpatialTestDataProvider {
 	protected final static String JTS = "jts";
-	protected final NativeSQLTemplates templates;
+	protected NativeSQLTemplates templates;
 	protected final PredicateRegexes predicateRegexes;
 	protected final Map<CommonSpatialFunction, String> hqlOverrides;
 	protected final Geometry<?> filterGeometry;

@@ -9,7 +9,7 @@ package org.hibernate.query.results.implicit;
 import java.util.function.BiFunction;
 
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultBuilderEmbeddable;
@@ -40,7 +40,7 @@ public class ImplicitModelPartResultBuilderEmbeddable
 
 	@Override
 	public Class<?> getJavaType() {
-		return modelPart.getJavaTypeDescriptor().getJavaTypeClass();
+		return modelPart.getJavaType().getJavaTypeClass();
 	}
 
 	@Override

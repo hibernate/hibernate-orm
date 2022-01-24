@@ -41,7 +41,7 @@ public class StructuredCacheEntry implements CacheEntryStructure {
 		final Map map = (Map) structured;
 		final String subclass = (String) map.get( SUBCLASS_KEY );
 		final Object version = map.get( VERSION_KEY );
-		final EntityPersister subclassPersister = factory.getEntityPersister( subclass );
+		final EntityPersister subclassPersister = factory.getMetamodel().entityPersister(subclass);
 		final String[] names = subclassPersister.getPropertyNames();
 		final Serializable[] disassembledState = new Serializable[names.length];
 		for ( int i = 0; i < names.length; i++ ) {

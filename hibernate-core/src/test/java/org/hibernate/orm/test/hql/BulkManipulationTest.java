@@ -523,7 +523,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	protected boolean supportsBulkInsertIdGeneration(Class entityClass) {
-		EntityPersister persister = sessionFactory().getEntityPersister( entityClass.getName() );
+        EntityPersister persister = sessionFactory().getMetamodel().entityPersister(entityClass.getName());
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
 		return BulkInsertionCapableIdentifierGenerator.class.isInstance( generator )
 				&& BulkInsertionCapableIdentifierGenerator.class.cast( generator )

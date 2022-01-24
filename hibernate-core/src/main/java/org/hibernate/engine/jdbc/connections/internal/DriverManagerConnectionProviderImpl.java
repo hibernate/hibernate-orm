@@ -43,15 +43,16 @@ import static org.hibernate.internal.log.ConnectionPoolingLogger.CONNECTIONS_MES
  * a very rudimentary connection pool.
  * <p/>
  * IMPL NOTE : not intended for production use!
- * <p/>
- * Thanks to Oleg Varaksin and his article on object pooling using the {@link java.util.concurrent} package, from
- * which much of the pooling code here is derived.  See http://ovaraksin.blogspot.com/2013/08/simple-and-lightweight-pool.html
  *
  * @author Gavin King
  * @author Steve Ebersole
  */
 public class DriverManagerConnectionProviderImpl
 		implements ConnectionProvider, Configurable, Stoppable, ServiceRegistryAwareService, ConnectionValidator {
+
+	//Thanks to Oleg Varaksin and his article on object pooling using the {@link java.util.concurrent}
+	//package, from which much of the pooling code here is derived.
+	//See http://ovaraksin.blogspot.com/2013/08/simple-and-lightweight-pool.html
 
 	public static final String MIN_SIZE = "hibernate.connection.min_pool_size";
 	public static final String INITIAL_SIZE = "hibernate.connection.initial_pool_size";

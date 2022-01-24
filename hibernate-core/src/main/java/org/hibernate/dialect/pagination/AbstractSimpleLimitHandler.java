@@ -6,7 +6,7 @@
  */
 package org.hibernate.dialect.pagination;
 
-import org.hibernate.query.Limit;
+import org.hibernate.query.spi.Limit;
 
 /**
  * Superclass for simple {@link LimitHandler}s that don't

@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot;
 
-import java.util.Map;
 import java.util.function.Supplier;
 
 import org.hibernate.ConnectionReleaseMode;
@@ -21,7 +20,7 @@ import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -397,21 +396,6 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyPreferUserTransactions(boolean preferUserTransactions);
 
 	/**
-	 * Apply query substitutions to use in HQL queries.  Note, this is a legacy feature and almost always
-	 * never needed anymore...
-	 *
-	 * @param substitutions The substitution map
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#QUERY_SUBSTITUTIONS
-	 *
-	 * @deprecated This is a legacy feature and should never be needed anymore...
-	 */
-	@Deprecated
-	SessionFactoryBuilder applyQuerySubstitutions(Map substitutions);
-
-	/**
 	 * Should we strictly adhere to JPA Query Language (JPQL) syntax, or more broadly support
 	 * all of Hibernate's superset (HQL)?
 	 * <p/>
@@ -597,21 +581,6 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyScrollableResultsSupport(boolean enabled);
 
 	/**
-	 * Hibernate currently accesses results from the JDBC ResultSet by name.  This is known
-	 * to be VERY slow on some drivers, especially older Oracle drivers.  This setting
-	 * allows Hibernate to wrap the ResultSet of the JDBC driver to manage the name->position
-	 * resolution itself.
-	 *
-	 * @param enabled {@code true} indicates Hibernate should wrap result sets; {@code false} indicates
-	 * it should not.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#WRAP_RESULT_SETS
-	 */
-	SessionFactoryBuilder applyResultSetsWrapping(boolean enabled);
-
-	/**
 	 * Should JDBC {@link java.sql.PreparedStatement#getGeneratedKeys()} feature be used for
 	 * retrieval of *insert-generated* ids?
 	 *
@@ -741,9 +710,6 @@ public interface SessionFactoryBuilder {
 
 	/**
 	 * Allows unwrapping this builder as another, more specific type.
-	 *
-	 * @param type
-	 * @param <T>
 	 *
 	 * @return The unwrapped builder.
 	 */

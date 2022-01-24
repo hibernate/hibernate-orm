@@ -57,7 +57,7 @@ public class UUIDBinaryTest {
 		final List<JdbcMapping> identifierJdbcMappings = entityDescriptor.getIdentifierMapping().getJdbcMappings();
 		assertThat( identifierJdbcMappings, hasSize( 1 ) );
 		final JdbcMapping jdbcMapping = identifierJdbcMappings.get( 0 );
-		assertThat( jdbcMapping.getJdbcTypeDescriptor().isBinary(), is( true ) );
+		assertThat( jdbcMapping.getJdbcType().isBinary(), is( true ) );
 
 		final UUIDPair uuidPair = scope.fromTransaction( session -> {
 			final Node root = new Node( "root" );

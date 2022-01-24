@@ -29,7 +29,7 @@ import org.hibernate.type.BasicTypeRegistry;
 public class BaseSqmFunctionDescriptors implements KeyedSqmFunctionDescriptors {
 	protected final Map<FunctionKey, SqmFunctionDescriptor> map = new HashMap<>();
 
-	public BaseSqmFunctionDescriptors(FunctionContributions functionContributions) {
+	public  BaseSqmFunctionDescriptors(FunctionContributions functionContributions) {
 		final BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 		for ( CommonSpatialFunction func : filter( CommonSpatialFunction.values() ) ) {
 			final FunctionReturnTypeResolver returnTypeResolver;

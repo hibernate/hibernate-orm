@@ -13,10 +13,11 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Used to apply a Hibernate formula (derived value) as the inheritance discriminator "column".  Used in place of
- * the JPA {@link jakarta.persistence.DiscriminatorColumn} when a formula is wanted.
- *
- * To be placed on the root entity.
+ * Specifies an expression written in native SQL as the discriminator for an
+ * entity inheritance hierarchy. Must be used to annotate the root entity of
+ * the hierarchy.
+ * <p>
+ * Used in place of the JPA {@link jakarta.persistence.DiscriminatorColumn}.
  *
  * @see Formula
  *

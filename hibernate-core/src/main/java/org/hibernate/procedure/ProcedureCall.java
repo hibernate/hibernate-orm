@@ -17,7 +17,7 @@ import jakarta.persistence.StoredProcedureQuery;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.MappingException;
-import org.hibernate.SynchronizeableQuery;
+import org.hibernate.query.SynchronizeableQuery;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.CommonQueryContract;
 import org.hibernate.query.procedure.ProcedureParameter;

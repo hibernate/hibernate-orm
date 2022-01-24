@@ -14,6 +14,18 @@ import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+
+import org.hibernate.FlushMode;
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Environment;
+import org.hibernate.stat.Statistics;
+
+import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
+
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
@@ -21,17 +33,7 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Query;
 
-import org.hibernate.FlushMode;
-import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
-import org.hibernate.jpa.QueryHints;
-import org.hibernate.stat.Statistics;
-import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
-
+import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -126,7 +128,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		res.setName( "Bruce" );
 		item.setDistributors( new HashSet<Distributor>() );
 		item.getDistributors().add( res );
-		Statistics stats = ( ( HibernateEntityManagerFactory ) entityManagerFactory() ).getSessionFactory().getStatistics();
+		Statistics stats = entityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
 		stats.clear();
 		stats.setStatisticsEnabled( true );
 
@@ -505,7 +507,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 
 		em = getOrCreateEntityManager();
 		Map<String, Object> hints = new HashMap<>();
-		hints.put(QueryHints.HINT_READONLY, true);
+		hints.put(HINT_READ_ONLY, true);
 
 		em.getTransaction().begin();
 

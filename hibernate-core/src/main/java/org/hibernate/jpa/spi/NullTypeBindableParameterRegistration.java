@@ -12,7 +12,11 @@ package org.hibernate.jpa.spi;
  * for that parameter.
  *
  * @author Gail Badner
+ *
+ * @deprecated (since 6.0) Not actually sure what the original intent of this
+ * was; but it is not used as of 6.0, so slating for removal
  */
+@Deprecated
 public interface NullTypeBindableParameterRegistration<T> extends ParameterRegistration<T> {
 
 	/**
@@ -25,5 +29,5 @@ public interface NullTypeBindableParameterRegistration<T> extends ParameterRegis
 	 * @throws IllegalArgumentException {@code parameterType} is null or if
 	 * {@link #getParameterType} does not return null.
 	 */
-	public void bindNullValue(Class<?> nullParameterType);
+	void bindNullValue(Class<?> nullParameterType);
 }

@@ -34,7 +34,6 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CustomCollectionType;
 import org.hibernate.type.Type;
-import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
@@ -73,7 +72,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	private boolean orphanDelete;
 	private int batchSize = -1;
 	private FetchMode fetchMode;
-	private boolean embedded = true;
 	private boolean optimisticLocked = true;
 
 	private String typeName;
@@ -131,9 +129,9 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return getBuildingContext().getMetadataCollector();
 	}
 
-	public TypeConfiguration getTypeConfiguration() {
-		return getBuildingContext().getBootstrapContext().getTypeConfiguration();
-	}
+//	public TypeConfiguration getTypeConfiguration() {
+//		return getBuildingContext().getBootstrapContext().getTypeConfiguration();
+//	}
 
 	@Override
 	public ServiceRegistry getServiceRegistry() {
@@ -447,8 +445,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 			collectionType = new CustomCollectionType(
 					customTypeBeanResolver.get(),
 					role,
-					referencedPropertyName,
-					getMetadata().getTypeConfiguration()
+					referencedPropertyName
 			);
 		}
 		else if ( typeName == null ) {
@@ -464,13 +461,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 			);
 		}
 		return collectionType;
-	}
-
-	public CollectionSemantics<?,?> getDefaultCollectionSemantics() {
-		throw new MappingException(
-				"Unexpected org.hibernate.mapping.Collection impl ["
-						+  this + "]; unknown CollectionSemantics"
-		);
 	}
 
 	public CollectionType getCollectionType() {
@@ -499,13 +489,14 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return false;
 	}
 
-	public boolean isValid(Mapping mapping) throws MappingException {
+	public boolean isValid(Mapping mapping) {
 		return true;
 	}
 
 	@Override
 	public boolean isSame(Value other) {
-		return this == other || other instanceof Collection && isSame( (Collection) other );
+		return this == other
+			|| other instanceof Collection && isSame( (Collection) other );
 	}
 
 	protected static boolean isSame(Value v1, Value v2) {

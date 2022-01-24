@@ -7,14 +7,12 @@
 package org.hibernate.type;
 
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -56,22 +54,12 @@ public class MetaType extends AbstractType {
 	}
 
 	@Override
-	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		return baseType.dictatedSizes( mapping );
-	}
-
-	@Override
-	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		return baseType.defaultSizes( mapping );
-	}
-
-	@Override
 	public int getColumnSpan(Mapping mapping) throws MappingException {
 		return baseType.getColumnSpan(mapping);
 	}
 
 	@Override
-	public Class getReturnedClass() {
+	public Class<?> getReturnedClass() {
 		return String.class;
 	}
 

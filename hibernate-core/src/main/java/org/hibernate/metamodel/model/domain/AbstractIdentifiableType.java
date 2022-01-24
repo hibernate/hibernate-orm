@@ -59,13 +59,13 @@ public abstract class AbstractIdentifiableType<J>
 
 	public AbstractIdentifiableType(
 			String typeName,
-			JavaType<J> javaTypeDescriptor,
+			JavaType<J> javaType,
 			IdentifiableDomainType<? super J> superType,
 			boolean hasIdClass,
 			boolean hasIdentifierProperty,
 			boolean versioned,
 			JpaMetamodel jpaMetamodel) {
-		super( typeName, javaTypeDescriptor, superType, jpaMetamodel );
+		super( typeName, javaType, superType, jpaMetamodel );
 		this.hasIdClass = hasIdClass;
 		this.hasIdentifierProperty = hasIdentifierProperty;
 		this.isVersioned = versioned;
@@ -147,8 +147,8 @@ public abstract class AbstractIdentifiableType<J>
 
 	private void checkType(SingularPersistentAttribute<?, ?> attribute, Class<?> javaType) {
 		if ( !javaType.isAssignableFrom( attribute.getType().getJavaType() ) ) {
-			final JavaType<?> attributeJavaTypeDescriptor = attribute.getAttributeJavaTypeDescriptor();
-			if ( !( attributeJavaTypeDescriptor instanceof PrimitiveJavaType ) || ( (PrimitiveJavaType) attributeJavaTypeDescriptor ).getPrimitiveClass() != javaType ) {
+			final JavaType<?> attributeJavaType = attribute.getAttributeJavaType();
+			if ( !( attributeJavaType instanceof PrimitiveJavaType ) || ( (PrimitiveJavaType) attributeJavaType ).getPrimitiveClass() != javaType ) {
 				throw new IllegalArgumentException(
 						String.format(
 								"Attribute [%s#%s : %s] not castable to requested type [%s]",

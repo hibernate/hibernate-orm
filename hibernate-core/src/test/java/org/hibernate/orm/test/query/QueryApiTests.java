@@ -31,40 +31,46 @@ public class QueryApiTests {
 
 	@Test
 	public void testInvalidExecuteUpdateCall(SessionFactoryScope scope) {
+		final String hql = "select c from Contact c";
 		try {
 			scope.inTransaction( (session) -> {
-				session.createQuery( "select c from Contact c" ).executeUpdate();
+				session.createQuery( hql ).executeUpdate();
 			} );
 			fail( "Expecting failure" );
 		}
 		catch (IllegalStateException ise) {
 			assertThat( ise.getCause() ).isNotNull();
 			assertThat( ise.getCause() ).isInstanceOf( IllegalQueryOperationException.class );
+			assertThat( ise.getMessage() ).endsWith( "`" + hql + "`" );
 		}
 	}
 
 	@Test
 	public void testInvalidSelectQueryCall(SessionFactoryScope scope) {
-		try {
-			scope.inTransaction( (session) -> {
-				session.createQuery( "delete Contact" ).list();
-			} );
-			fail( "Expecting failure" );
-		}
-		catch (IllegalStateException ise) {
-			assertThat( ise.getCause() ).isNotNull();
-			assertThat( ise.getCause() ).isInstanceOf( IllegalQueryOperationException.class );
-		}
+		final String hql = "delete Contact";
+
+		scope.inTransaction( (session) -> {
+			try {
+				session.createQuery( hql ).list();
+				fail( "Expecting failure" );
+			}
+			catch (IllegalStateException ise) {
+				assertThat( ise.getCause() ).isNotNull();
+				assertThat( ise.getCause() ).isInstanceOf( IllegalQueryOperationException.class );
+				assertThat( ise.getMessage() ).endsWith( "`" + hql + "`" );
+			}
+		} );
 
 		try {
 			scope.inTransaction( (session) -> {
-				session.createQuery( "delete Contact" ).uniqueResult();
+				session.createQuery( hql ).uniqueResult();
 			} );
 			fail( "Expecting failure" );
 		}
 		catch (IllegalStateException ise) {
 			assertThat( ise.getCause() ).isNotNull();
 			assertThat( ise.getCause() ).isInstanceOf( IllegalQueryOperationException.class );
+			assertThat( ise.getMessage() ).endsWith( "`" + hql + "`" );
 		}
 	}
 

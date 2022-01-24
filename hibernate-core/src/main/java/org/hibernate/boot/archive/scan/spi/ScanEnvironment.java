@@ -34,7 +34,7 @@ public interface ScanEnvironment {
 	 *
 	 * @see ScanOptions#canDetectUnlistedClassesInRoot()
 	 */
-	public URL getRootUrl();
+	URL getRootUrl();
 
 	/**
 	 * Returns any non-root URLs for scanning.  Can be null/empty to indicate
@@ -44,7 +44,7 @@ public interface ScanEnvironment {
 	 *
 	 * @see ScanOptions#canDetectUnlistedClassesInNonRoot()
 	 */
-	public List<URL> getNonRootUrls();
+	List<URL> getNonRootUrls();
 
 	/**
 	 * Returns any classes which are explicitly listed as part of the
@@ -52,7 +52,7 @@ public interface ScanEnvironment {
 	 *
 	 * @return The explicitly listed classes
 	 */
-	public List<String> getExplicitlyListedClassNames();
+	List<String> getExplicitlyListedClassNames();
 
 	/**
 	 * Returns the mapping files which are explicitly listed as part of the
@@ -60,5 +60,5 @@ public interface ScanEnvironment {
 	 *
 	 * @return The explicitly listed mapping files.
 	 */
-	public List<String> getExplicitlyListedMappingFiles();
+	List<String> getExplicitlyListedMappingFiles();
 }

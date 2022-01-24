@@ -13,5 +13,5 @@ package org.hibernate.event.spi;
  * @author Gavin King
  */
 public interface PreLoadEventListener {
-	public void onPreLoad(PreLoadEvent event);
+	void onPreLoad(PreLoadEvent event);
 }

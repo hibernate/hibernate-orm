@@ -17,15 +17,15 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.CompositeType;
 
 public final class SerializableProxy extends AbstractSerializableProxy {
-	private final Class persistentClass;
-	private final Class[] interfaces;
+	private final Class<?> persistentClass;
+	private final Class<?>[] interfaces;
 
 	private final String identifierGetterMethodName;
-	private final Class identifierGetterMethodClass;
+	private final Class<?> identifierGetterMethodClass;
 
 	private final String identifierSetterMethodName;
-	private final Class identifierSetterMethodClass;
-	private final Class[] identifierSetterMethodParams;
+	private final Class<?> identifierSetterMethodClass;
+	private final Class<?>[] identifierSetterMethodParams;
 
 	private final CompositeType componentIdType;
 
@@ -35,8 +35,8 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 	@Deprecated
 	public SerializableProxy(
 			String entityName,
-			Class persistentClass,
-			Class[] interfaces,
+			Class<?> persistentClass,
+			Class<?>[] interfaces,
 			Serializable id,
 			Boolean readOnly,
 			Method getIdentifierMethod,
@@ -50,8 +50,8 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 
 	public SerializableProxy(
 			String entityName,
-			Class persistentClass,
-			Class[] interfaces,
+			Class<?> persistentClass,
+			Class<?>[] interfaces,
 			Object id,
 			Boolean readOnly,
 			String sessionFactoryUuid,
@@ -95,35 +95,35 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 		return super.getId();
 	}
 
-	protected Class getPersistentClass() {
+	Class<?> getPersistentClass() {
 		return persistentClass;
 	}
 
-	protected Class[] getInterfaces() {
+	Class<?>[] getInterfaces() {
 		return interfaces;
 	}
 
-	protected String getIdentifierGetterMethodName() {
+	String getIdentifierGetterMethodName() {
 		return identifierGetterMethodName;
 	}
 
-	protected Class getIdentifierGetterMethodClass() {
+	Class<?> getIdentifierGetterMethodClass() {
 		return identifierGetterMethodClass;
 	}
 
-	protected String getIdentifierSetterMethodName() {
+	String getIdentifierSetterMethodName() {
 		return identifierSetterMethodName;
 	}
 
-	protected Class getIdentifierSetterMethodClass() {
+	Class<?> getIdentifierSetterMethodClass() {
 		return identifierSetterMethodClass;
 	}
 
-	protected Class[] getIdentifierSetterMethodParams() {
+	Class<?>[] getIdentifierSetterMethodParams() {
 		return identifierSetterMethodParams;
 	}
 
-	protected CompositeType getComponentIdType() {
+	CompositeType getComponentIdType() {
 		return componentIdType;
 	}
 

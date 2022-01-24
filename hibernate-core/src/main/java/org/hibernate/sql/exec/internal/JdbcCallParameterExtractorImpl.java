@@ -63,7 +63,7 @@ public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtra
 		final boolean useNamed = shouldUseJdbcNamedParameters
 				&& parameterName != null;
 
-		// todo (6.0) : we should just ask BasicValuedExpressableType for the JdbcValueExtractor...
+		// todo (6.0) : we should just ask BasicValuedExpressibleType for the JdbcValueExtractor...
 
 
 		try {

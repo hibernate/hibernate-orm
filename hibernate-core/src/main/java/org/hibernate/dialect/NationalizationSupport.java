@@ -9,25 +9,29 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 /**
- * Indicates how (if) the underlying database supports the use of nationalized data
+ * Indicates if and how a database supports the use of nationalized
+ * character data (Unicode).
+ *
+ * @see org.hibernate.cfg.AvailableSettings#USE_NATIONALIZED_CHARACTER_DATA
+ * @see Dialect#getNationalizationSupport()
  */
 public enum NationalizationSupport {
 	/**
-	 * The database's CHAR, VARCHAR, LONGVARCHAR and CLOB types
-	 * inherently handle nationalized data.  Generally speaking
-	 * this means the database will not have dedicated nationalized
-	 * data types (NCHAR, ...)
+	 * The {@code CHAR}, {@code VARCHAR}, and {@code CLOB}
+	 * types inherently handle nationalized character data.
+	 * Usually the database will not even define dedicated
+	 * nationalized data types like {@code NVARCHAR}.
 	 */
 	IMPLICIT( Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.CLOB ),
 	/**
-	 * The database does define/support distinct nationalized
-	 * data types (NCHAR, ...).
+	 * The database does define and support distinct SQL types
+	 * for representing nationalized character data, typically
+	 * named {@code NCHAR}, {@code NVARCHAR}, and {@code NCLOB}.
 	 */
 	EXPLICIT( Types.NCHAR, Types.NVARCHAR, Types.LONGNVARCHAR, Types.NCLOB ),
 	/**
-	 * The database does not define/support distinct nationalized
-	 * data types (NCHAR, ...) and its corresponding base data
-	 * types (CHAR, ...) do not support nationalized data
+	 * The database does not even have support for nationalized
+	 * character data.
 	 */
 	UNSUPPORTED;
 

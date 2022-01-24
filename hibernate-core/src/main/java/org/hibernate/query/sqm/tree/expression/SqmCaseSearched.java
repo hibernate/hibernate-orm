@@ -13,7 +13,7 @@ import org.hibernate.query.criteria.JpaSearchedCase;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 
 import jakarta.persistence.criteria.Expression;
@@ -31,12 +31,12 @@ public class SqmCaseSearched<R>
 		this( null, nodeBuilder );
 	}
 
-	public SqmCaseSearched(SqmExpressable<R> inherentType, NodeBuilder nodeBuilder) {
+	public SqmCaseSearched(SqmExpressible<R> inherentType, NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.whenFragments = new ArrayList<>();
 	}
 
-	public SqmCaseSearched(SqmExpressable<R> inherentType, int estimateWhenSize, NodeBuilder nodeBuilder) {
+	public SqmCaseSearched(SqmExpressible<R> inherentType, int estimateWhenSize, NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.whenFragments = new ArrayList<>( estimateWhenSize );
 	}
@@ -61,21 +61,21 @@ public class SqmCaseSearched<R>
 		return this;
 	}
 
-	private void applyInferableResultType(SqmExpressable<?> type) {
+	private void applyInferableResultType(SqmExpressible<?> type) {
 		if ( type == null ) {
 			return;
 		}
 
-		final SqmExpressable<?> oldType = getNodeType();
+		final SqmExpressible<?> oldType = getNodeType();
 
-		final SqmExpressable<?> newType = QueryHelper.highestPrecedenceType2( oldType, type );
+		final SqmExpressible<?> newType = QueryHelper.highestPrecedenceType2( oldType, type );
 		if ( newType != null && newType != oldType ) {
 			internalApplyInferableType( newType );
 		}
 	}
 
 	@Override
-	protected void internalApplyInferableType(SqmExpressable<?> newType) {
+	protected void internalApplyInferableType(SqmExpressible<?> newType) {
 		super.internalApplyInferableType( newType );
 
 		if ( otherwise != null ) {

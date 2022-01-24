@@ -18,42 +18,42 @@ import org.hibernate.query.BindableType;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.type.descriptor.java.JdbcDateJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JdbcTimeJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JdbcTimestampJavaTypeDescriptor;
+import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.type.descriptor.java.JdbcDateJavaType;
+import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
+import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmExpressionHelper {
-	public static <T> SqmExpressable<T> toSqmType(BindableType<T> parameterType, SqmCreationState creationState) {
+	public static <T> SqmExpressible<T> toSqmType(BindableType<T> parameterType, SqmCreationState creationState) {
 		return toSqmType( parameterType, creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration() );
 	}
 
-	public static <T> SqmExpressable<T> toSqmType(BindableType<T> anticipatedType, NodeBuilder nodeBuilder) {
+	public static <T> SqmExpressible<T> toSqmType(BindableType<T> anticipatedType, NodeBuilder nodeBuilder) {
 		return toSqmType( anticipatedType, nodeBuilder.getTypeConfiguration() );
 	}
 
-	public static <T> SqmExpressable<T> toSqmType(BindableType<T> anticipatedType, TypeConfiguration typeConfiguration) {
+	public static <T> SqmExpressible<T> toSqmType(BindableType<T> anticipatedType, TypeConfiguration typeConfiguration) {
 		return toSqmType( anticipatedType, typeConfiguration.getSessionFactory() );
 	}
 
-	public static <T> SqmExpressable<T> toSqmType(BindableType<T> anticipatedType, SessionFactoryImplementor sessionFactory) {
+	public static <T> SqmExpressible<T> toSqmType(BindableType<T> anticipatedType, SessionFactoryImplementor sessionFactory) {
 		if ( anticipatedType == null ) {
 			return null;
 		}
-		final SqmExpressable<T> sqmExpressable = anticipatedType.resolveExpressable( sessionFactory );
-		assert sqmExpressable != null;
+		final SqmExpressible<T> sqmExpressible = anticipatedType.resolveExpressible( sessionFactory );
+		assert sqmExpressible != null;
 
-		return sqmExpressable;
+		return sqmExpressible;
 
 	}
 
 	public static SqmLiteral<Timestamp> timestampLiteralFrom(String literalText, SqmCreationState creationState) {
 		final Timestamp literal = Timestamp.valueOf(
-				LocalDateTime.from( JdbcTimestampJavaTypeDescriptor.LITERAL_FORMATTER.parse( literalText ) )
+				LocalDateTime.from( JdbcTimestampJavaType.LITERAL_FORMATTER.parse( literalText ) )
 		);
 
 		return new SqmLiteral<>(
@@ -80,7 +80,7 @@ public class SqmExpressionHelper {
 	}
 
 	public static SqmLiteral<Date> dateLiteralFrom(String literalText, SqmCreationState creationState) {
-		final LocalDate localDate = LocalDate.from( JdbcDateJavaTypeDescriptor.LITERAL_FORMATTER.parse( literalText ) );
+		final LocalDate localDate = LocalDate.from( JdbcDateJavaType.LITERAL_FORMATTER.parse( literalText ) );
 		final Date literal = new Date( localDate.toEpochDay() );
 
 		return new SqmLiteral<>(
@@ -91,7 +91,7 @@ public class SqmExpressionHelper {
 	}
 
 	public static SqmLiteral<Time> timeLiteralFrom(String literalText, SqmCreationState creationState) {
-		final LocalTime localTime = LocalTime.from( JdbcTimeJavaTypeDescriptor.LITERAL_FORMATTER.parse( literalText ) );
+		final LocalTime localTime = LocalTime.from( JdbcTimeJavaType.LITERAL_FORMATTER.parse( literalText ) );
 		final Time literal = Time.valueOf( localTime );
 
 		return new SqmLiteral<>(

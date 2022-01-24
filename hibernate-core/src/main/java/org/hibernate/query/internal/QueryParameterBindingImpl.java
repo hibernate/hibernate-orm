@@ -12,15 +12,15 @@ import java.util.Iterator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingValidator;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.CoercionException;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.TemporalJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.TemporalJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
@@ -33,13 +33,12 @@ import jakarta.persistence.TemporalType;
 public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, JavaType.CoercionContext {
 	private final QueryParameter<T> queryParameter;
 	private final SessionFactoryImplementor sessionFactory;
-	private final boolean isBindingValidationRequired;
 
 	private boolean isBound;
 	private boolean isMultiValued;
 
-	private BindableType<T> bindType;
-	private MappingModelExpressable<T> type;
+	private BindableType<? extends T> bindType;
+	private MappingModelExpressible<T> type;
 	private TemporalType explicitTemporalPrecision;
 
 	private T bindValue;
@@ -50,11 +49,9 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	 */
 	protected QueryParameterBindingImpl(
 			QueryParameter<T> queryParameter,
-			SessionFactoryImplementor sessionFactory,
-			boolean isBindingValidationRequired) {
+			SessionFactoryImplementor sessionFactory) {
 		this.queryParameter = queryParameter;
 		this.sessionFactory = sessionFactory;
-		this.isBindingValidationRequired = isBindingValidationRequired;
 		this.bindType = queryParameter.getHibernateType();
 	}
 
@@ -64,16 +61,14 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	public QueryParameterBindingImpl(
 			QueryParameter<T> queryParameter,
 			SessionFactoryImplementor sessionFactory,
-			BindableType<T> bindType,
-			boolean isBindingValidationRequired) {
+			BindableType<T> bindType) {
 		this.queryParameter = queryParameter;
 		this.sessionFactory = sessionFactory;
-		this.isBindingValidationRequired = isBindingValidationRequired;
 		this.bindType = bindType;
 	}
 
 	@Override
-	public BindableType<T> getBindType() {
+	public BindableType<? extends T> getBindType() {
 		return bindType;
 	}
 
@@ -132,9 +127,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			}
 		}
 
-		if ( isBindingValidationRequired ) {
-			validate( value );
-		}
+		validate( value );
 
 		if ( resolveJdbcTypeIfNecessary && bindType == null && value == null ) {
 			bindType = getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( "null" );
@@ -142,15 +135,15 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		bindValue( value );
 	}
 
-	private T coerce(T value, BindableType<T> parameterType) {
+	private T coerce(T value, BindableType<? extends T> parameterType) {
 		if ( value == null ) {
 			return null;
 		}
 
-		final SqmExpressable<T> sqmExpressable = parameterType.resolveExpressable( sessionFactory );
-		assert sqmExpressable != null;
+		final SqmExpressible<? extends T> sqmExpressible = parameterType.resolveExpressible( sessionFactory );
+		assert sqmExpressible != null;
 
-		return sqmExpressable.getExpressableJavaTypeDescriptor().coerce( value, this );
+		return sqmExpressible.getExpressibleJavaType().coerce( value, this );
 	}
 
 	private boolean handleAsMultiValue(T value) {
@@ -203,9 +196,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			value = coerce( value, queryParameter.getHibernateType() );
 		}
 
-		if ( isBindingValidationRequired ) {
-			validate( value, clarifiedType );
-		}
+		validate( value, clarifiedType );
 
 		bindValue( value );
 	}
@@ -242,9 +233,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			}
 		}
 
-		if ( isBindingValidationRequired ) {
-			validate( value, temporalTypePrecision );
-		}
+		validate( value, temporalTypePrecision );
 
 		bindValue( value );
 		setExplicitTemporalPrecision( temporalTypePrecision );
@@ -301,7 +290,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	private void setExplicitTemporalPrecision(TemporalType temporalTypePrecision) {
-		if ( bindType == null || determineJavaType( bindType ) instanceof TemporalJavaTypeDescriptor<?> ) {
+		if ( bindType == null || determineJavaType( bindType ) instanceof TemporalJavaType<?> ) {
 			this.bindType = BindingTypeHelper.INSTANCE.resolveTemporalPrecision(
 					temporalTypePrecision,
 					bindType,
@@ -312,20 +301,20 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		this.explicitTemporalPrecision = temporalTypePrecision;
 	}
 
-	private JavaType<T> determineJavaType(BindableType<T> bindType) {
-		final SqmExpressable<T> sqmExpressable = bindType.resolveExpressable( sessionFactory );
-		assert sqmExpressable != null;
+	private JavaType<? extends T> determineJavaType(BindableType<? extends T> bindType) {
+		final SqmExpressible<? extends T> sqmExpressible = bindType.resolveExpressible( sessionFactory );
+		assert sqmExpressible != null;
 
-		return sqmExpressable.getExpressableJavaTypeDescriptor();
+		return sqmExpressible.getExpressibleJavaType();
 	}
 
 	@Override
-	public MappingModelExpressable<T> getType() {
+	public MappingModelExpressible<T> getType() {
 		return type;
 	}
 
 	@Override @SuppressWarnings("unchecked")
-	public boolean setType(MappingModelExpressable<T> type) {
+	public boolean setType(MappingModelExpressible<T> type) {
 		this.type = type;
 		if ( bindType == null || bindType.getBindableJavaType() == Object.class ) {
 			if ( type instanceof BindableType<?> ) {

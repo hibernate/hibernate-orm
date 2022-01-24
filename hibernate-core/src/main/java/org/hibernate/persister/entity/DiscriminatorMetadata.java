@@ -20,5 +20,5 @@ public interface DiscriminatorMetadata {
 	 *
 	 * @return The resolution type.
 	 */
-	public Type getResolutionType();
+	Type getResolutionType();
 }

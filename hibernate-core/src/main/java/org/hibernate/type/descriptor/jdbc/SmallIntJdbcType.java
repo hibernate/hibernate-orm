@@ -51,47 +51,47 @@ public class SmallIntJdbcType implements JdbcType {
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Short.class );
+		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( Short.class );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
-		return new JdbcLiteralFormatterNumericData( javaTypeDescriptor, Short.class );
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
+		return new JdbcLiteralFormatterNumericData( javaType, Short.class );
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
+		return new BasicBinder<X>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				st.setShort( index, javaTypeDescriptor.unwrap( value, Short.class, options ) );
+				st.setShort( index, javaType.unwrap( value, Short.class, options ) );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				st.setShort( name, javaTypeDescriptor.unwrap( value, Short.class, options ) );
+				st.setShort( name, javaType.unwrap( value, Short.class, options ) );
 			}
 		};
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+		return new BasicExtractor<X>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getShort( paramIndex ), options );
+				return javaType.wrap( rs.getShort( paramIndex ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getShort( index ), options );
+				return javaType.wrap( statement.getShort( index ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getShort( name ), options );
+				return javaType.wrap( statement.getShort( name ), options );
 			}
 		};
 	}

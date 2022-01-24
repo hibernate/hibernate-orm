@@ -35,9 +35,9 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SettingProvider;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.test.annotations.A320;
-import org.hibernate.test.annotations.A320b;
-import org.hibernate.test.annotations.Plane;
+import org.hibernate.orm.test.annotations.A320;
+import org.hibernate.orm.test.annotations.A320b;
+import org.hibernate.orm.test.annotations.Plane;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -94,8 +94,7 @@ public class QueryAndSQLTest {
 
 	@Test
 	public void testNativeQueryWithFormulaAttribute(SessionFactoryScope scope) {
-		final String dateFunctionRendered = scope.getSessionFactory()
-				.getDialect()
+        final String dateFunctionRendered = scope.getSessionFactory().getJdbcServices().getDialect()
 				.currentDate();
 
 		String sql = String.format(
@@ -129,8 +128,7 @@ public class QueryAndSQLTest {
 	public void testNativeQueryWithFormulaAttributeWithoutAlias(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					String sql = "select TABLE_NAME , " + scope.getSessionFactory()
-							.getDialect()
+                    String sql = "select TABLE_NAME , " + scope.getSessionFactory().getJdbcServices().getDialect()
 							.currentDate() + " as daysOld from ALL_TABLES  where TABLE_NAME = 'AUDIT_ACTIONS' ";
 					session.createNativeQuery( sql ).addEntity( "t", AllTables.class ).list();
 				}

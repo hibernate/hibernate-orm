@@ -12,7 +12,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.named.ModelPartResultMemento;
 import org.hibernate.query.results.implicit.ImplicitModelPartResultBuilderBasic;
 import org.hibernate.query.results.implicit.ImplicitModelPartResultBuilderEmbeddable;

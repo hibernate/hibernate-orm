@@ -442,7 +442,7 @@ public class HANAStoredProcedureTest extends BaseEntityManagerFunctionalTestCase
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12138")
-	public void testNamedNativeQueryStoredProcedureRefCursorWithJDBC() {
+	public void testFunctionCallWithJDBC() {
 		EntityManager entityManager = createEntityManager();
 		entityManager.getTransaction().begin();
 

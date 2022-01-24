@@ -70,8 +70,8 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 	}
 
 	@Override
-	public JavaType<?> getMappedJavaTypeDescriptor() {
-		return entityMappingType.getMappedJavaTypeDescriptor();
+	public JavaType<?> getMappedJavaType() {
+		return entityMappingType.getMappedJavaType();
 	}
 
 	@Override

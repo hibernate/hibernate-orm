@@ -63,20 +63,20 @@ public class NamedBasicTypeResolution<J> implements BasicValue.Resolution<J> {
 	}
 
 	@Override
-	public JavaType<J> getDomainJavaDescriptor() {
+	public JavaType<J> getDomainJavaType() {
 		return domainJtd;
 	}
 
 	@Override
-	public JavaType<?> getRelationalJavaDescriptor() {
+	public JavaType<?> getRelationalJavaType() {
 		return valueConverter == null
 				? basicType.getJavaTypeDescriptor()
-				: valueConverter.getRelationalJavaDescriptor();
+				: valueConverter.getRelationalJavaType();
 	}
 
 	@Override
-	public JdbcType getJdbcTypeDescriptor() {
-		return basicType.getJdbcTypeDescriptor();
+	public JdbcType getJdbcType() {
+		return basicType.getJdbcType();
 	}
 
 	@Override

@@ -15,7 +15,7 @@ import java.util.function.BiConsumer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.SemanticException;
@@ -45,7 +45,6 @@ import org.hibernate.sql.ast.tree.update.UpdateStatement;
  */
 public class CteUpdateHandler extends AbstractCteMutationHandler implements UpdateHandler {
 
-	@SuppressWarnings("WeakerAccess")
 	public CteUpdateHandler(
 			SqmCteTable cteTable,
 			SqmUpdateStatement sqmStatement,
@@ -82,7 +81,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 		// information about the assignments
 		final SqmSetClause setClause = updateStatement.getSetClause();
 		final List<Assignment> assignments = new ArrayList<>( setClause.getAssignments().size() );
-		final Map<SqmParameter, MappingModelExpressable> paramTypeResolutions = new LinkedHashMap<>();
+		final Map<SqmParameter, MappingModelExpressible> paramTypeResolutions = new LinkedHashMap<>();
 
 		sqmConverter.visitSetClause(
 				setClause,

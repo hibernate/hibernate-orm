@@ -20,7 +20,7 @@ public interface DiscriminatorSource extends ImplicitDiscriminatorColumnNameSour
 	 *
 	 * @return The column/formula information
 	 */
-	public RelationalValueSource getDiscriminatorRelationalValueSource();
+	RelationalValueSource getDiscriminatorRelationalValueSource();
 
 	/**
 	 * Obtain the discriminator type.  Unlike the type of attributes, implementors
@@ -29,7 +29,7 @@ public interface DiscriminatorSource extends ImplicitDiscriminatorColumnNameSour
 	 *
 	 * @return The discriminator type
 	 */
-	public String getExplicitHibernateTypeName();
+	String getExplicitHibernateTypeName();
 
 	/**
 	 * "Forces" Hibernate to specify the allowed discriminator values, even when retrieving

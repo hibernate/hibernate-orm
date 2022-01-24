@@ -24,6 +24,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+
 /**
  * @author Steve Ebersole
  */
@@ -32,7 +33,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 )
 @SessionFactory
 @SessionFactoryFunctionalTesting
-@SuppressWarnings("WeakerAccess")
 public class MultiIdEntityLoadTests {
 	@Test
 	public void testBasicEntitySimpleLoad(SessionFactoryScope scope) {

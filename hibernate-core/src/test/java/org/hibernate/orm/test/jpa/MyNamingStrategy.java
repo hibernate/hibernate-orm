@@ -15,7 +15,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
  */
 public class MyNamingStrategy extends PhysicalNamingStrategyStandardImpl {
 	@Override
-	public Identifier toPhysicalTableName(Identifier name, JdbcEnvironment jdbcEnvironment) {
-		return jdbcEnvironment.getIdentifierHelper().toIdentifier( "tbl_" + name.getText() );
+	public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+		return jdbcEnvironment.getIdentifierHelper().toIdentifier( "tbl_" + logicalName.getText() );
 	}
 }

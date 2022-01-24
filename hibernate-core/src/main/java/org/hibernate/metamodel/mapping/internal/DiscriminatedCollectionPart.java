@@ -22,7 +22,7 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
@@ -168,13 +168,13 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
-		return discriminatorMapping.getJavaTypeDescriptor();
+	public JavaType<?> getJavaType() {
+		return discriminatorMapping.getJavaType();
 	}
 
 	@Override
-	public JavaType<?> getExpressableJavaTypeDescriptor() {
-		return getJavaTypeDescriptor();
+	public JavaType<?> getExpressibleJavaType() {
+		return getJavaType();
 	}
 
 	@Override

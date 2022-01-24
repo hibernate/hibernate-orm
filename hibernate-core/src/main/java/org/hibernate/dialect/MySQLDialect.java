@@ -44,12 +44,12 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.SqlExpressable;
+import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.CastType;
-import org.hibernate.query.IntervalType;
-import org.hibernate.query.NullOrdering;
-import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.sqm.CastType;
+import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.query.sqm.NullOrdering;
+import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.temptable.AfterUseAction;
 import org.hibernate.dialect.temptable.TemporaryTable;
@@ -81,7 +81,7 @@ import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtract
 import static org.hibernate.type.SqlTypes.*;
 
 /**
- * An SQL dialect for MySQL (prior to 5.x).
+ * A {@linkplain Dialect SQL dialect} for MySQL 5 and above.
  *
  * @author Gavin King
  */
@@ -99,7 +99,7 @@ public class MySQLDialect extends Dialect {
 				Long length) {
 			switch ( jdbcType.getDefaultSqlTypeCode() ) {
 				case Types.BIT:
-					// MySQL allows BIT with a length up to 64 (less the the default length 255)
+					// MySQL allows BIT with a length up to 64 (less the default length 255)
 					if ( length != null ) {
 						return Size.length( Math.min( Math.max( length, 1 ), 64 ) );
 					}
@@ -453,21 +453,21 @@ public class MySQLDialect extends Dialect {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
-				.getJdbcTypeDescriptorRegistry();
+				.getJdbcTypeRegistry();
 
 		if ( getMySQLVersion().isSameOrAfter( 5, 7 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, JsonJdbcType.INSTANCE );
 		}
 
 		// MySQL requires a custom binder for binding untyped nulls with the NULL type
-		typeContributions.contributeJdbcTypeDescriptor( NullJdbcType.INSTANCE );
+		typeContributions.contributeJdbcType( NullJdbcType.INSTANCE );
 
 		// Until we remove StandardBasicTypes, we have to keep this
 		typeContributions.contributeType(
 				new NullType(
 						NullJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
-								.getJavaTypeDescriptorRegistry()
+								.getJavaTypeRegistry()
 								.getDescriptor( Object.class )
 				)
 		);
@@ -806,9 +806,9 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public String getCastTypeName(SqlExpressable type, Long length, Integer precision, Integer scale) {
+	public String getCastTypeName(SqlExpressible type, Long length, Integer precision, Integer scale) {
 		final JdbcMapping jdbcMapping = type.getJdbcMapping();
-		final JdbcType jdbcType = jdbcMapping.getJdbcTypeDescriptor();
+		final JdbcType jdbcType = jdbcMapping.getJdbcType();
 		final JavaType<?> javaType = jdbcMapping.getJavaTypeDescriptor();
 		switch ( jdbcType.getDefaultSqlTypeCode() ) {
 			case Types.INTEGER:
@@ -1066,7 +1066,6 @@ public class MySQLDialect extends Dialect {
 				.replace("D", "%j")
 
 				//am pm
-				.replace("aa", "%p")
 				.replace("a", "%p")
 
 				//hour

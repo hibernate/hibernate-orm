@@ -297,13 +297,21 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public void contributeJavaTypeDescriptor(JavaType descriptor) {
-		this.bootstrapContext.getTypeConfiguration().getJavaTypeDescriptorRegistry().addDescriptor( descriptor );
+	public void contributeJavaType(JavaType<?> descriptor) {
+		this.bootstrapContext.getTypeConfiguration().getJavaTypeRegistry().addDescriptor( descriptor );
 	}
 
 	@Override
-	public void contributeJdbcTypeDescriptor(JdbcType descriptor) {
-		this.bootstrapContext.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor( descriptor );
+	public void contributeJdbcType(JdbcType descriptor) {
+		this.bootstrapContext.getTypeConfiguration().getJdbcTypeRegistry().addDescriptor( descriptor );
+	}
+
+	@Override
+	public <T> void contributeType(UserType<T> descriptor) {
+		bootstrapContext.getTypeConfiguration().getBasicTypeRegistry().register(
+				descriptor,
+				descriptor.returnedClass().getName()
+		);
 	}
 
 	@Override

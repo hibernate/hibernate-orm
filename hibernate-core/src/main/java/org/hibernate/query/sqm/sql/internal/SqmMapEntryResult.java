@@ -23,18 +23,18 @@ public class SqmMapEntryResult<K, V, R extends Map.Entry<K, V>> implements Domai
 	private final DomainResult<K> keyResult;
 	private final DomainResult<V> valueResult;
 
-	private final JavaType<R> javaTypeDescriptor;
+	private final JavaType<R> javaType;
 	private final String alias;
 
 	public SqmMapEntryResult(
 			DomainResult<K> keyResult,
 			DomainResult<V> valueResult,
 			String alias,
-			JavaType<R> javaTypeDescriptor) {
+			JavaType<R> javaType) {
 		this.alias = alias;
 		this.keyResult = keyResult;
 		this.valueResult = valueResult;
-		this.javaTypeDescriptor = javaTypeDescriptor;
+		this.javaType = javaType;
 	}
 
 	@Override
@@ -59,15 +59,15 @@ public class SqmMapEntryResult<K, V, R extends Map.Entry<K, V>> implements Domai
 			}
 
 			@Override
-			public JavaType<R> getAssembledJavaTypeDescriptor() {
-				return javaTypeDescriptor;
+			public JavaType<R> getAssembledJavaType() {
+				return javaType;
 			}
 		};
 	}
 
 	@Override
-	public JavaType<R> getResultJavaTypeDescriptor() {
-		return javaTypeDescriptor;
+	public JavaType<R> getResultJavaType() {
+		return javaType;
 	}
 
 }

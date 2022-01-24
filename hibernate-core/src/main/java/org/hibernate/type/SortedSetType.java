@@ -14,14 +14,13 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.type.spi.TypeConfiguration;
 
 public class SortedSetType extends SetType {
 
-	private final Comparator comparator;
+	private final Comparator<?> comparator;
 
-	public SortedSetType(TypeConfiguration typeConfiguration, String role, String propertyRef, Comparator comparator) {
-		super( typeConfiguration, role, propertyRef );
+	public SortedSetType( String role, String propertyRef, Comparator<?> comparator) {
+		super( role, propertyRef );
 		this.comparator = comparator;
 	}
 
@@ -30,22 +29,21 @@ public class SortedSetType extends SetType {
 		return CollectionClassification.SORTED_SET;
 	}
 
-	public Class getReturnedClass() {
+	public Class<?> getReturnedClass() {
 		return java.util.SortedSet.class;
 	}
 
 	@Override
-	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key) {
-		return new PersistentSortedSet( session, comparator );
+	public PersistentCollection<?> instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key) {
+		return new PersistentSortedSet<>( session, comparator );
 	}
 
-	@SuppressWarnings( {"unchecked"})
 	public Object instantiate(int anticipatedSize) {
-		return new TreeSet(comparator);
+		return new TreeSet<>(comparator);
 	}
 
 	@Override
-	public PersistentCollection wrap(SharedSessionContractImplementor session, Object collection) {
-		return new PersistentSortedSet( session, (java.util.SortedSet) collection );
+	public PersistentCollection<?> wrap(SharedSessionContractImplementor session, Object collection) {
+		return new PersistentSortedSet<>( session, (java.util.SortedSet<?>) collection );
 	}
 }

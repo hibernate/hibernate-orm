@@ -26,5 +26,5 @@ public enum TimeZoneStorageStrategy {
 	/**
 	 * Doesn't store the time zone, but instead normalizes to UTC.
 	 */
-	NORMALIZE;
+	NORMALIZE
 }

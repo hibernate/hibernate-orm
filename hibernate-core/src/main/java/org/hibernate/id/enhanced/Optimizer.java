@@ -33,7 +33,7 @@ public interface Optimizer {
 	 * @param callback Callback to access the underlying value source.
 	 * @return The generated identifier value.
 	 */
-	public Serializable generate(AccessCallback callback);
+	Serializable generate(AccessCallback callback);
 
 	/**
 	 * A common means to access the last value obtained from the underlying
@@ -43,14 +43,14 @@ public interface Optimizer {
 	 * @return The last value we obtained from the underlying source;
 	 * null indicates we have not yet consulted with the source.
 	 */
-	public IntegralDataTypeHolder getLastSourceValue();
+	IntegralDataTypeHolder getLastSourceValue();
 
 	/**
 	 * Retrieves the defined increment size.
 	 *
 	 * @return The increment size.
 	 */
-	public int getIncrementSize();
+	int getIncrementSize();
 
 	/**
 	 * Are increments to be applied to the values stored in the underlying
@@ -60,5 +60,5 @@ public interface Optimizer {
 	 * according to the defined increment size; false otherwise, in which
 	 * case the increment is totally an in memory construct.
 	 */
-	public boolean applyIncrementSizeToSourceValues();
+	boolean applyIncrementSizeToSourceValues();
 }

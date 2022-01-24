@@ -52,29 +52,47 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.VersionJavaType;
 
 /**
- * Contract describing mapping information and persistence logic for a particular strategy of entity mapping.  A given
- * persister instance corresponds to a given mapped entity class.
- * <p/>
- * Implementations must be thread-safe (preferably immutable).
- * <p/>
- * Unless a custom {@link org.hibernate.persister.spi.PersisterFactory} is used, it is expected
- * that implementations of EntityPersister define a constructor accepting the following arguments:<ol>
+ * A strategy for persisting a mapped {@linkplain jakarta.persistence.Entity
+ * entity class}. An {@code EntityPersister} orchestrates rendering of the
+ * SQL statements corresponding to basic lifecycle events, including
+ * {@code insert}, {@code update}, and {@code delete} statements, and their
+ * execution via JDBC.
+ * <p>
+ * Concrete implementations of this interface handle the
+ * {@linkplain SingleTableEntityPersister single table},
+ * {@linkplain JoinedSubclassEntityPersister joined}, and
+ * {@linkplain UnionSubclassEntityPersister union} inheritance mapping
+ * strategies, and to a certain extent abstract the details of those
+ * mappings from collaborators.
+ * <p>
+ * This interface defines a contract between the persistence strategy and
+ * the {@link org.hibernate.engine.spi.SessionImplementor session}. It does
+ * not define operations that are required for querying, nor for loading by
+ * outer join.
+ * <p>
+ * Unless a custom {@link org.hibernate.persister.spi.PersisterFactory} is
+ * used, it is expected that implementations of {@code EntityPersister}
+ * define a constructor accepting the following arguments:
+ * <ol>
  *     <li>
- *         {@link org.hibernate.mapping.PersistentClass} - describes the metadata about the entity
- *         to be handled by the persister
+ *         {@link org.hibernate.mapping.PersistentClass} - describes the
+ *         metadata about the entity to be handled by the persister
  *     </li>
  *     <li>
- *         {@link EntityDataAccess} - the second level caching strategy for this entity
+ *         {@link EntityDataAccess} - the second level caching strategy for
+ *         this entity
  *     </li>
  *     <li>
- *         {@link NaturalIdDataAccess} - the second level caching strategy for the natural-id
- *         defined for this entity, if one
+ *         {@link NaturalIdDataAccess} - the second level caching strategy
+ *         for any natural id defined for this entity
  *     </li>
  *     <li>
- *         {@link org.hibernate.persister.spi.PersisterCreationContext} - access to additional
- *         information useful while constructing the persister.
+ *         {@link org.hibernate.persister.spi.PersisterCreationContext} -
+ *         access to additional information useful while constructing the
+ *         persister.
  *     </li>
  * </ol>
+ * Implementations must be thread-safe (and preferably immutable).
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -377,7 +395,7 @@ public interface EntityPersister
 	 */
 	BasicType<?> getVersionType();
 
-	default VersionJavaType<Object> getVersionJavaTypeDescriptor() {
+	default VersionJavaType<Object> getVersionJavaType() {
 		final BasicType<?> versionType = getVersionType();
 		//noinspection unchecked
 		return versionType == null
@@ -948,11 +966,9 @@ public interface EntityPersister
 	/**
 	 * Like {@link #resolveAttributeIndexes(String[])} but also always returns mutable attributes
 	 *
-	 *
 	 * @param values
 	 * @param loadedState
 	 * @param attributeNames Array of names to be resolved
-	 *
 	 * @param session
 	 * @return A set of unique indexes of the attribute names found in the metamodel
 	 */

@@ -18,5 +18,5 @@ public interface ImplicitTenantIdColumnNameSource extends ImplicitNameSource {
 	 *
 	 * @return The entity name information
 	 */
-	public EntityNaming getEntityNaming();
+	EntityNaming getEntityNaming();
 }

@@ -50,17 +50,17 @@ public class EnumeratedValueResolution<E extends Enum<E>> implements BasicValue.
 	}
 
 	@Override
-	public JavaType<E> getDomainJavaDescriptor() {
+	public JavaType<E> getDomainJavaType() {
 		return domainJtd;
 	}
 
 	@Override
-	public JavaType<?> getRelationalJavaDescriptor() {
+	public JavaType<?> getRelationalJavaType() {
 		return jdbcJtd;
 	}
 
 	@Override
-	public JdbcType getJdbcTypeDescriptor() {
+	public JdbcType getJdbcType() {
 		return jdbcType;
 	}
 

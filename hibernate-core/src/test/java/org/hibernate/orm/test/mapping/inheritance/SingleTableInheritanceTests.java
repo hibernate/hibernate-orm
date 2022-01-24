@@ -33,7 +33,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 @DomainModel(
 		annotatedClasses = {
 				SingleTableInheritanceTests.Customer.class,

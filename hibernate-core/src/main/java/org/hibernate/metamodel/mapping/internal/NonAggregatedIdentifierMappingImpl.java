@@ -25,7 +25,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -216,7 +216,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 				if ( o == null ) {
 					final AttributeMapping idClassAttributeMapping = idClassAttributeMappings.get( i );
 					if ( idClassAttributeMapping.getPropertyAccess().getGetter().getReturnTypeClass().isPrimitive() ) {
-						propertyValues[i] = idClassAttributeMapping.getExpressableJavaTypeDescriptor().getDefaultValue();
+						propertyValues[i] = idClassAttributeMapping.getExpressibleJavaType().getDefaultValue();
 					}
 					else {
 						propertyValues[i] = null;

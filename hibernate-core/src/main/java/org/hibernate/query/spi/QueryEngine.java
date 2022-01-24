@@ -56,6 +56,20 @@ import org.jboss.logging.Logger;
  */
 @Incubating
 public class QueryEngine {
+
+	/**
+	 * The default soft reference count.
+	 */
+	public static final int DEFAULT_QUERY_PLAN_MAX_COUNT = 2048;
+
+	/**
+	 * The default strong reference count.
+	 *
+	 * @deprecated No longer used
+	 */
+	@Deprecated
+	public static final int DEFAULT_PARAMETER_METADATA_MAX_COUNT = 128;
+
 	private static final Logger LOG_HQL_FUNCTIONS = CoreLogging.logger( "org.hibernate.HQL_FUNCTIONS" );
 
 	public static QueryEngine from(SessionFactoryImplementor sessionFactory, MetadataImplementor metadata) {
@@ -356,7 +370,7 @@ public class QueryEngine {
 		if ( explicitUseCache || ( explicitMaxPlanSize != null && explicitMaxPlanSize > 0 ) ) {
 			final int size = explicitMaxPlanSize != null
 					? explicitMaxPlanSize
-					: QueryInterpretationCacheStandardImpl.DEFAULT_QUERY_PLAN_MAX_COUNT;
+					: DEFAULT_QUERY_PLAN_MAX_COUNT;
 
 			return new QueryInterpretationCacheStandardImpl( size, statisticsSupplier );
 		}

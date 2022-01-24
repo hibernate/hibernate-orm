@@ -18,8 +18,7 @@ import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
-import org.hibernate.query.NavigablePath;
-import org.hibernate.query.SemanticException;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
@@ -39,7 +38,6 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	 */
 	private Map<String, SqmPath<?>> reusablePaths;
 
-	@SuppressWarnings("WeakerAccess")
 	protected AbstractSqmPath(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,

@@ -28,11 +28,11 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 public class GetterMethodImpl implements Getter {
 	private static final CoreMessageLogger LOG = messageLogger( GetterMethodImpl.class );
 
-	private final Class containerClass;
+	private final Class<?> containerClass;
 	private final String propertyName;
 	private final Method getterMethod;
 
-	public GetterMethodImpl(Class containerClass, String propertyName, Method getterMethod) {
+	public GetterMethodImpl(Class<?> containerClass, String propertyName, Method getterMethod) {
 		this.containerClass = containerClass;
 		this.propertyName = propertyName;
 		this.getterMethod = getterMethod;
@@ -109,13 +109,13 @@ public class GetterMethodImpl implements Getter {
 	}
 
 	private static class SerialForm implements Serializable {
-		private final Class containerClass;
+		private final Class<?> containerClass;
 		private final String propertyName;
 
-		private final Class declaringClass;
+		private final Class<?> declaringClass;
 		private final String methodName;
 
-		private SerialForm(Class containerClass, String propertyName, Method method) {
+		private SerialForm(Class<?> containerClass, String propertyName, Method method) {
 			this.containerClass = containerClass;
 			this.propertyName = propertyName;
 			this.declaringClass = method.getDeclaringClass();
@@ -126,7 +126,6 @@ public class GetterMethodImpl implements Getter {
 			return new GetterMethodImpl( containerClass, propertyName, resolveMethod() );
 		}
 
-		@SuppressWarnings("unchecked")
 		private Method resolveMethod() {
 			try {
 				final Method method = declaringClass.getDeclaredMethod( methodName );

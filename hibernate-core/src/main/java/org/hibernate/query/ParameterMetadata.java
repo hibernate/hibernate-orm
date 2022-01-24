@@ -29,22 +29,38 @@ public interface ParameterMetadata {
 	int getParameterCount();
 
 	/**
-	 * Resolve the QueryParameter reference registered here under the
-	 * given name, if one.
+	 * Find the QueryParameter registered under the given name, if one.
 	 *
-	 * @return The registered parameter
+	 * @return The registered match, or {@code null} is there is no match
+	 *
+	 * @see #getQueryParameter(String)
+	 */
+	QueryParameter<?> findQueryParameter(String name);
+
+	/**
+	 * Get the QueryParameter reference registered here under the given name.
+	 *
+	 * @return The registered match.  Never {@code null}
 	 *
 	 * @throws IllegalArgumentException if no parameter is registered under that name
 	 */
 	QueryParameter<?> getQueryParameter(String name);
 
 	/**
-	 * Resolve the QueryParameter reference registered here under the
-	 * given position/ordinal label, if one.
+	 * Find the QueryParameter registered under the given position-label, if one.
 	 *
-	 * @return The registered parameter
+	 * @return The registered match, or {@code null} is there is no match
 	 *
-	 * @throws IllegalArgumentException if no parameter is registered under that label
+	 * @see #getQueryParameter(int)
+	 */
+	QueryParameter<?> findQueryParameter(int positionLabel);
+
+	/**
+	 * Get the QueryParameter reference registered here under the given position-label.
+	 *
+	 * @return The registered match.  Never {@code null}
+	 *
+	 * @throws IllegalArgumentException if no parameter is registered under that position-label
 	 */
 	QueryParameter<?> getQueryParameter(int positionLabel);
 

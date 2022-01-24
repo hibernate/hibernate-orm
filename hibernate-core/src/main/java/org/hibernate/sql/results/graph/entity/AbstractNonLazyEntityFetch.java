@@ -8,7 +8,7 @@ package org.hibernate.sql.results.graph.entity;
 
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -63,7 +63,7 @@ public abstract class AbstractNonLazyEntityFetch extends AbstractFetchParent imp
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
 		final EntityInitializer entityInitializer = getEntityInitializer( parentAccess, creationState );
-		return new EntityAssembler( getFetchedMapping().getJavaTypeDescriptor(), entityInitializer );
+		return new EntityAssembler( getFetchedMapping().getJavaType(), entityInitializer );
 	}
 
 	protected abstract EntityInitializer getEntityInitializer(

@@ -45,8 +45,7 @@ public class PersistentListTest {
 	public void testInverseListIndex(SessionFactoryScope scope) {
 		// make sure no one changes the mapping
 		SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final CollectionPersister collectionPersister = sessionFactory
-				.getCollectionPersister( ListOwner.class.getName() + ".children" );
+        final CollectionPersister collectionPersister = sessionFactory.getMetamodel().collectionPersister(ListOwner.class.getName() + ".children");
 		assertTrue( collectionPersister.isInverse() );
 
 		// do some creations...
@@ -110,8 +109,7 @@ public class PersistentListTest {
 	public void testInverseListIndex2(SessionFactoryScope scope) {
 		// make sure no one changes the mapping
 		SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final CollectionPersister collectionPersister = sessionFactory
-				.getCollectionPersister( Order.class.getName() + ".lineItems" );
+        final CollectionPersister collectionPersister = sessionFactory.getMetamodel().collectionPersister(Order.class.getName() + ".lineItems");
 		assertTrue( collectionPersister.isInverse() );
 
 		// do some creations...

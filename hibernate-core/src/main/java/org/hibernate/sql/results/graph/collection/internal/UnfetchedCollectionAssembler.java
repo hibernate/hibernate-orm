@@ -8,7 +8,7 @@ package org.hibernate.sql.results.graph.collection.internal;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
@@ -44,7 +44,7 @@ public class UnfetchedCollectionAssembler implements DomainResultAssembler {
 	}
 
 	@Override
-	public JavaType getAssembledJavaTypeDescriptor() {
-		return fetchedMapping.getJavaTypeDescriptor();
+	public JavaType getAssembledJavaType() {
+		return fetchedMapping.getJavaType();
 	}
 }

@@ -51,7 +51,7 @@ public interface EntitySource extends IdentifiableTypeSource, ToolingHintContext
 	boolean isLazy();
 
 	/**
-	 * For {@link #isLazy() lazy} entities, obtain the interface to use in constructing its proxies.
+	 * For {@linkplain #isLazy() lazy} entities, obtain the interface to use in constructing its proxies.
 	 *
 	 * @return The proxy interface name
 	 */
@@ -60,7 +60,7 @@ public interface EntitySource extends IdentifiableTypeSource, ToolingHintContext
 	/**
 	 * Obtain the batch-size to be applied when initializing proxies of this entity.
 	 *
-	 * @return returns the the batch-size.
+	 * @return returns the batch-size.
 	 */
 	int getBatchSize();
 

@@ -21,7 +21,6 @@ import static org.hibernate.orm.test.query.sqm.BaseSqmUnitTest.interpretSelect;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 @DomainModel(
 		standardModels = StandardDomainModel.GAMBIT
 )

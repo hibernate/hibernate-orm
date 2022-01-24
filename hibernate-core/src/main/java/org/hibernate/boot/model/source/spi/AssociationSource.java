@@ -11,16 +11,16 @@ package org.hibernate.boot.model.source.spi;
  */
 public interface AssociationSource {
 
-	public AttributeSource getAttributeSource();
+	AttributeSource getAttributeSource();
 
 	/**
 	 * Obtain the name of the referenced entity.
 	 *
 	 * @return The name of the referenced entity
 	 */
-	public String getReferencedEntityName();
+	String getReferencedEntityName();
 
-	public boolean isIgnoreNotFound();
+	boolean isIgnoreNotFound();
 
-	public boolean isMappedBy();
+	boolean isMappedBy();
 }

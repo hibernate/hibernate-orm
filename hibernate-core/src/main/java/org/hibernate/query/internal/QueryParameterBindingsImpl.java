@@ -21,14 +21,14 @@ import org.hibernate.QueryParameterException;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.JavaTypedExpressable;
+import org.hibernate.type.descriptor.java.JavaTypedExpressible;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -41,57 +41,34 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	private final SessionFactoryImplementor sessionFactory;
 	private final ParameterMetadataImplementor parameterMetadata;
-	private final boolean queryParametersValidationEnabled;
 
 	private Map<QueryParameter<?>, QueryParameterBinding<?>> parameterBindingMap;
 
 	/**
 	 * Constructs a QueryParameterBindings based on the passed information
-	 *
-	 * @apiNote Calls {@link #from(ParameterMetadataImplementor,SessionFactoryImplementor,boolean)}
-	 * using {@link org.hibernate.boot.spi.SessionFactoryOptions#isQueryParametersValidationEnabled}
-	 * as `queryParametersValidationEnabled`
 	 */
 	public static QueryParameterBindingsImpl from(
 			ParameterMetadataImplementor parameterMetadata,
 			SessionFactoryImplementor sessionFactory) {
-		return from(
-				parameterMetadata,
-				sessionFactory,
-				sessionFactory.getSessionFactoryOptions().isQueryParametersValidationEnabled()
-		);
-	}
-
-	/**
-	 * Constructs a QueryParameterBindings based on the passed information
-	 */
-	public static QueryParameterBindingsImpl from(
-			ParameterMetadataImplementor parameterMetadata,
-			SessionFactoryImplementor sessionFactory,
-			boolean queryParametersValidationEnabled) {
 		if ( parameterMetadata == null ) {
 			throw new QueryParameterException( "Query parameter metadata cannot be null" );
 		}
 
 		return new QueryParameterBindingsImpl(
 				sessionFactory,
-				parameterMetadata,
-				queryParametersValidationEnabled
+				parameterMetadata
 		);
 	}
 
 	private QueryParameterBindingsImpl(
 			SessionFactoryImplementor sessionFactory,
-			ParameterMetadataImplementor parameterMetadata,
-			boolean queryParametersValidationEnabled) {
+			ParameterMetadataImplementor parameterMetadata) {
 		this.sessionFactory = sessionFactory;
 		this.parameterMetadata = parameterMetadata;
-		this.queryParametersValidationEnabled = queryParametersValidationEnabled;
 
 		this.parameterBindingMap = new ConcurrentHashMap<>( parameterMetadata.getParameterCount() );
 	}
 
-	@SuppressWarnings({"WeakerAccess" })
 	protected <T> QueryParameterBinding<T> makeBinding(QueryParameterImplementor<T> queryParameter) {
 		if ( parameterBindingMap == null ) {
 			parameterBindingMap = new IdentityHashMap<>();
@@ -109,8 +86,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		final QueryParameterBinding<T> binding = new QueryParameterBindingImpl<>(
 				queryParameter,
 				sessionFactory,
-				parameterMetadata.getInferredParameterType( queryParameter ),
-				queryParametersValidationEnabled
+				parameterMetadata.getInferredParameterType( queryParameter )
 		);
 		parameterBindingMap.put( queryParameter, binding );
 
@@ -194,10 +170,10 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		int hashCode = 0;
 
 		for ( QueryParameterBinding<?> binding : parameterBindingMap.values() ) {
-			final MappingModelExpressable<?> mappingType = determineMappingType( binding, persistenceContext );
-			assert mappingType instanceof JavaTypedExpressable;
+			final MappingModelExpressible<?> mappingType = determineMappingType( binding, persistenceContext );
+			assert mappingType instanceof JavaTypedExpressible;
 			//noinspection unchecked
-			final JavaType<Object> javaType = ( (JavaTypedExpressable<Object>) mappingType ).getExpressableJavaTypeDescriptor();
+			final JavaType<Object> javaType = ( (JavaTypedExpressible<Object>) mappingType ).getExpressibleJavaType();
 
 			if ( binding.isMultiValued() ) {
 				for ( Object bindValue : binding.getBindValues() ) {
@@ -230,11 +206,11 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		return new ParameterBindingsMementoImpl( allBindValues.toArray( new Object[0] ), hashCode );
 	}
 
-	private MappingModelExpressable<?> determineMappingType(QueryParameterBinding<?> binding, SharedSessionContractImplementor session) {
+	private MappingModelExpressible<?> determineMappingType(QueryParameterBinding<?> binding, SharedSessionContractImplementor session) {
 		if ( binding.getBindType() != null ) {
-			if ( binding.getBindType() instanceof MappingModelExpressable ) {
+			if ( binding.getBindType() instanceof MappingModelExpressible) {
 				//noinspection unchecked
-				return (MappingModelExpressable<Object>) binding.getBindType();
+				return (MappingModelExpressible<Object>) binding.getBindType();
 			}
 		}
 
@@ -244,9 +220,9 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 		final TypeConfiguration typeConfiguration = session.getFactory().getTypeConfiguration();
 
-		if ( binding.getBindType() instanceof JavaTypedExpressable ) {
-			final JavaTypedExpressable<?> javaTypedExpressable = (JavaTypedExpressable<?>) binding.getBindType();
-			final JavaType<?> jtd = javaTypedExpressable.getExpressableJavaTypeDescriptor();
+		if ( binding.getBindType() instanceof JavaTypedExpressible) {
+			final JavaTypedExpressible<?> javaTypedExpressible = (JavaTypedExpressible<?>) binding.getBindType();
+			final JavaType<?> jtd = javaTypedExpressible.getExpressibleJavaType();
 			if ( jtd.getJavaTypeClass() != null ) {
 				// avoid dynamic models
 				return typeConfiguration.getBasicTypeForJavaType( jtd.getJavaTypeClass() );

@@ -21,5 +21,5 @@ public interface LoggableUserType {
 	 * @param factory The factory.
 	 * @return The loggable string representation.
 	 */
-	public String toLoggableString(Object value, SessionFactoryImplementor factory);
+	String toLoggableString(Object value, SessionFactoryImplementor factory);
 }

@@ -20,7 +20,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.hql.HqlInterpretationException;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
@@ -28,7 +28,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
-import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -37,12 +37,11 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class FullyQualifiedReflectivePathTerminal
 		extends FullyQualifiedReflectivePath
 		implements SqmExpression {
-	private final SqmExpressable expressableType;
+	private final SqmExpressible expressibleType;
 	private final SqmCreationState creationState;
 
 	private final Function<SemanticQueryWalker,?> handler;
 
-	@SuppressWarnings("WeakerAccess")
 	public FullyQualifiedReflectivePathTerminal(
 			FullyQualifiedReflectivePathSource pathSource,
 			String subPathName,
@@ -53,7 +52,7 @@ public class FullyQualifiedReflectivePathTerminal
 		this.handler = resolveTerminalSemantic();
 
 		// todo (6.0) : how to calculate this?
-		this.expressableType = null;
+		this.expressibleType = null;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -94,9 +93,9 @@ public class FullyQualifiedReflectivePathTerminal
 					if ( namedClass.isEnum() ) {
 						return new SqmEnumLiteral(
 								Enum.valueOf( namedClass, getLocalName() ),
-								(EnumJavaTypeDescriptor) creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().getJavaTypeDescriptorRegistry().resolveDescriptor(
+								(EnumJavaType) creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor(
 										namedClass,
-										() -> new EnumJavaTypeDescriptor( namedClass )
+										() -> new EnumJavaType( namedClass )
 								),
 								getLocalName(),
 								nodeBuilder()
@@ -106,9 +105,9 @@ public class FullyQualifiedReflectivePathTerminal
 						final Field field = namedClass.getField( getLocalName() );
 						return new SqmFieldLiteral(
 								field,
-								creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().getJavaTypeDescriptorRegistry().resolveDescriptor(
+								creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor(
 										namedClass,
-										() -> new EnumJavaTypeDescriptor( namedClass )
+										() -> new EnumJavaType( namedClass )
 								),
 								nodeBuilder()
 						);
@@ -125,8 +124,8 @@ public class FullyQualifiedReflectivePathTerminal
 	}
 
 	@Override
-	public SqmExpressable getNodeType() {
-		return expressableType;
+	public SqmExpressible getNodeType() {
+		return expressibleType;
 	}
 
 	@Override
@@ -136,12 +135,12 @@ public class FullyQualifiedReflectivePathTerminal
 
 	@Override
 	public JavaType getJavaTypeDescriptor() {
-		return expressableType.getExpressableJavaTypeDescriptor();
+		return expressibleType.getExpressibleJavaType();
 	}
 
 
 	@Override
-	public void applyInferableType(SqmExpressable type) {
+	public void applyInferableType(SqmExpressible type) {
 	}
 
 	@Override

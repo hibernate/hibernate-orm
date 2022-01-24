@@ -41,8 +41,8 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	
 	/**
 	 * {@inheritDoc}
-	 * <p/>
-	 * Note: per-spec, the values passed as {@code properties} override values found in {@code persistence.xml}
+	 *
+	 * @implSpec Per the specification, the values passed as {@code properties} override values found in {@code persistence.xml}
 	 */
 	@Override
 	public EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map properties) {
@@ -52,9 +52,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 			log.trace( "Could not obtain matching EntityManagerFactoryBuilder, returning null" );
 			return null;
 		}
-		else {
-			return builder.build();
-		}
+		return builder.build();
 	}
 
 	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map properties) {

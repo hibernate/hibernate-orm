@@ -57,7 +57,6 @@ import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.boot.spi.InFlightMetadataCollector.CollectionTypeRegistrationDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
@@ -106,7 +105,6 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.usertype.UserCollectionType;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Embeddable;
@@ -386,12 +384,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	@Override
 	public void addJavaTypeRegistration(Class<?> javaType, JavaType<?> jtd) {
-		getTypeConfiguration().getJavaTypeDescriptorRegistry().addBaselineDescriptor( javaType, jtd );
+		getTypeConfiguration().getJavaTypeRegistry().addBaselineDescriptor( javaType, jtd );
 	}
 
 	@Override
 	public void addJdbcTypeRegistration(int typeCode, JdbcType jdbcType) {
-		getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor( typeCode, jdbcType );
+		getTypeConfiguration().getJdbcTypeRegistry().addDescriptor( typeCode, jdbcType );
 	}
 
 	private Map<Class<?>, Class<? extends EmbeddableInstantiator>> registeredInstantiators;
@@ -1868,7 +1866,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void secondPassCompileForeignKeys(
 			final Table table,
 			Set<ForeignKey> done,

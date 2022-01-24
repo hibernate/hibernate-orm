@@ -40,11 +40,11 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 		this.resolvedMapping = resolvedMapping;
 	}
 
-	public JdbcValuesCacheHit(List<Object> cachedResults, JdbcValuesMapping resolvedMapping) {
+	public JdbcValuesCacheHit(List<?> cachedResults, JdbcValuesMapping resolvedMapping) {
 		this( extractData( cachedResults ), resolvedMapping );
 	}
 
-	private static Object[][] extractData(List<Object> cachedResults) {
+	private static Object[][] extractData(List<?> cachedResults) {
 		if ( CollectionHelper.isEmpty( cachedResults ) ) {
 			return NO_DATA;
 		}

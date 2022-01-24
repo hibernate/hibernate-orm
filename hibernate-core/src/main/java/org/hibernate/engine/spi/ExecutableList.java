@@ -43,7 +43,7 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	 * 
 	 * @param <E>
 	 */
-	public static interface Sorter<E extends Executable> {
+	public interface Sorter<E extends Executable> {
 
 		/**
 		 * Sorts the list.

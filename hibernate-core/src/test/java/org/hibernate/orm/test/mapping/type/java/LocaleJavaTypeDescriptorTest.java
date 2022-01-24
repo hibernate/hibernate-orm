@@ -12,11 +12,11 @@ import java.util.Locale;
 
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.type.descriptor.java.LocaleJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.LocaleJavaType;
 import org.junit.Test;
 
 /**
- * Tests of the {@link LocaleJavaTypeDescriptor} class.
+ * Tests of the {@link LocaleJavaType} class.
  *
  * @author Christian Beikov
  * @author Steve Ebersole
@@ -25,15 +25,15 @@ public class LocaleJavaTypeDescriptorTest extends BaseUnitTestCase {
 
 	@Test
 	public void testConversionFromString() {
-		assertEquals( toLocale( "de", null, null ), LocaleJavaTypeDescriptor.INSTANCE.fromString( "de" ) );
-		assertEquals( toLocale( "de", "DE", null ), LocaleJavaTypeDescriptor.INSTANCE.fromString( "de_DE" ) );
-		assertEquals( toLocale( null, "DE", null ), LocaleJavaTypeDescriptor.INSTANCE.fromString( "_DE" ) );
-		assertEquals( toLocale( null, null, "ch123" ), LocaleJavaTypeDescriptor.INSTANCE.fromString( "__ch123" ) );
-		assertEquals( toLocale( null, "DE", "ch123" ), LocaleJavaTypeDescriptor.INSTANCE.fromString( "_DE_ch123" ) );
-		assertEquals( toLocale( "de", null, "ch123" ), LocaleJavaTypeDescriptor.INSTANCE.fromString( "de__ch123" ) );
-		assertEquals( toLocale( "de", "DE", "ch123" ), LocaleJavaTypeDescriptor.INSTANCE.fromString( "de_DE_ch123" ) );
-		assertEquals( toLocale( "", "", "" ), LocaleJavaTypeDescriptor.INSTANCE.fromString( "" ) );
-		assertEquals( Locale.ROOT, LocaleJavaTypeDescriptor.INSTANCE.fromString( "" ) );
+		assertEquals( toLocale( "de", null, null ), LocaleJavaType.INSTANCE.fromString( "de" ) );
+		assertEquals( toLocale( "de", "DE", null ), LocaleJavaType.INSTANCE.fromString( "de_DE" ) );
+		assertEquals( toLocale( null, "DE", null ), LocaleJavaType.INSTANCE.fromString( "_DE" ) );
+		assertEquals( toLocale( null, null, "ch123" ), LocaleJavaType.INSTANCE.fromString( "__ch123" ) );
+		assertEquals( toLocale( null, "DE", "ch123" ), LocaleJavaType.INSTANCE.fromString( "_DE_ch123" ) );
+		assertEquals( toLocale( "de", null, "ch123" ), LocaleJavaType.INSTANCE.fromString( "de__ch123" ) );
+		assertEquals( toLocale( "de", "DE", "ch123" ), LocaleJavaType.INSTANCE.fromString( "de_DE_ch123" ) );
+		assertEquals( toLocale( "", "", "" ), LocaleJavaType.INSTANCE.fromString( "" ) );
+		assertEquals( Locale.ROOT, LocaleJavaType.INSTANCE.fromString( "" ) );
 	}
 
 	public Locale toLocale(String lang, String region, String variant) {

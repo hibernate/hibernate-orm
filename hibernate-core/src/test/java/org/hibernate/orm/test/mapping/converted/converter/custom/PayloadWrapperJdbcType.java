@@ -46,11 +46,11 @@ public class PayloadWrapperJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
+		return new BasicBinder<X>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				final String valueStr = javaTypeDescriptor.unwrap( value, String.class, options );
+				final String valueStr = javaType.unwrap( value, String.class, options );
 				if ( StringHelper.isBlank( valueStr ) ) {
 					st.setNull( index, getJdbcTypeCode() );
 				}
@@ -61,7 +61,7 @@ public class PayloadWrapperJdbcType implements JdbcType {
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options) throws SQLException {
-				final String valueStr = javaTypeDescriptor.unwrap( value, String.class, options );
+				final String valueStr = javaType.unwrap( value, String.class, options );
 				if ( StringHelper.isBlank( valueStr ) ) {
 					st.setNull( name, getJdbcTypeCode() );
 				}
@@ -73,7 +73,7 @@ public class PayloadWrapperJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor) {
-		return VarcharJdbcType.INSTANCE.getExtractor( javaTypeDescriptor );
+	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
+		return VarcharJdbcType.INSTANCE.getExtractor( javaType );
 	}
 }

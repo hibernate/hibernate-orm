@@ -12,26 +12,26 @@ import java.util.function.Function;
 
 import org.hibernate.Incubating;
 import org.hibernate.graph.RootGraph;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.BindableType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Access to information about Hibernate's runtime relational mapping model
+ * Access to information about the runtime relational O/R mapping model
  *
  * @author Steve Ebersole
  */
 @Incubating
 public interface MappingMetamodel {
 	/**
-	 * The TypeConfiguration this metamodel is associated with
+	 * The {@link TypeConfiguration} this metamodel is associated with
 	 */
 	TypeConfiguration getTypeConfiguration();
 
@@ -41,8 +41,14 @@ public interface MappingMetamodel {
 	/**
 	 * todo (6.0) : POC!!!  Intended for use in SQM -> SQL translation
 	 */
-	MappingModelExpressable resolveMappingExpressable(SqmExpressable<?> sqmExpressable, Function<NavigablePath, TableGroup> tableGroupLocator);
-	MappingModelExpressable lenientlyResolveMappingExpressable(SqmExpressable<?> sqmExpressable, Function<NavigablePath, TableGroup> tableGroupLocator);
+	MappingModelExpressible<?> resolveMappingExpressible(
+			SqmExpressible<?> sqmExpressible,
+			Function<NavigablePath,
+			TableGroup> tableGroupLocator);
+
+	MappingModelExpressible<?> lenientlyResolveMappingExpressible(
+			SqmExpressible<?> sqmExpressible,
+			Function<NavigablePath, TableGroup> tableGroupLocator);
 
 	/**
 	 * Given a Java type, determine the corresponding BindableType to

@@ -18,5 +18,5 @@ public interface ArchiveEntryHandler {
 	 * @param entry The entry to handle
 	 * @param context The visitation context
 	 */
-	public void handleEntry(ArchiveEntry entry, ArchiveContext context);
+	void handleEntry(ArchiveEntry entry, ArchiveContext context);
 }

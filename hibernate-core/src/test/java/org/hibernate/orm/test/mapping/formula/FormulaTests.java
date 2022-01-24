@@ -12,8 +12,16 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
+import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.Formula;
 
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -22,7 +30,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -73,7 +80,8 @@ public class FormulaTests {
 			criteria.select( root );
 			criteria.where( criteriaBuilder.equal( root.get( "id" ), criteriaBuilder.literal( 1L ) ) );
 			Account account = session.createQuery( criteria ).uniqueResult();
-			assertThat( account.getInterest(), is( 62.5d ));
+			assertThat( account.getInterest(), is( 62.5d ) );
+			assertThat( account.getRatePercent(), is("1.25%") );
 		} );
 	}
 
@@ -96,6 +104,23 @@ public class FormulaTests {
 
 		@Formula(value = "credit * rate")
 		private Double interest;
+
+		@Formula(value = "rate * 100 || '%'")
+		@DialectOverride.Formula(dialect = MySQLDialect.class,
+				override = @Formula("concat(rate * 100, '%')"))
+		@DialectOverride.Formula(dialect = HSQLDialect.class,
+				override = @Formula("replace(cast(rate * 100 as varchar(10)),'E0','') || '%'"))
+		@DialectOverride.Formula(dialect = DerbyDialect.class,
+				override = @Formula("trim(cast(cast(rate * 100 as decimal(10,2)) as char(10))) || '%'")) //LOL, Derby
+		@DialectOverride.Formula(dialect = DB2Dialect.class,
+				override = @Formula("varchar_format(rate * 100) || '%'"))
+		@DialectOverride.Formula(dialect = OracleDialect.class,
+				override = @Formula("to_char(rate * 100) || '%'"))
+		@DialectOverride.Formula(dialect = SQLServerDialect.class,
+				override = @Formula("ltrim(str(rate * 100, 10, 2)) + '%'"))
+		@DialectOverride.Formula(dialect = SybaseDialect.class,
+				override = @Formula("ltrim(str(rate * 100, 10, 2)) + '%'"))
+		private String ratePercent;
 
 		public Long getId() {
 			return id;
@@ -129,5 +154,12 @@ public class FormulaTests {
 			this.interest = interest;
 		}
 
+		public String getRatePercent() {
+			return ratePercent;
+		}
+
+		public void setRatePercent(String ratePercent) {
+			this.ratePercent = ratePercent;
+		}
 	}
 }

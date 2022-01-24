@@ -36,11 +36,11 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Column;
-import org.hibernate.query.IntervalType;
-import org.hibernate.query.NullOrdering;
+import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.query.sqm.NullOrdering;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.TemporalUnit;
-import org.hibernate.query.TrimSpec;
+import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
@@ -61,11 +61,11 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.query.TemporalUnit.DAY;
-import static org.hibernate.query.TemporalUnit.EPOCH;
-import static org.hibernate.query.TemporalUnit.MONTH;
-import static org.hibernate.query.TemporalUnit.QUARTER;
-import static org.hibernate.query.TemporalUnit.YEAR;
+import static org.hibernate.query.sqm.TemporalUnit.DAY;
+import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
+import static org.hibernate.query.sqm.TemporalUnit.MONTH;
+import static org.hibernate.query.sqm.TemporalUnit.QUARTER;
+import static org.hibernate.query.sqm.TemporalUnit.YEAR;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
@@ -346,7 +346,7 @@ public class SQLiteDialect extends Dialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
-				.getJdbcTypeDescriptorRegistry();
+				.getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( Types.BLOB, BlobJdbcType.PRIMITIVE_ARRAY_BINDING );
 		jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcType.STRING_BINDING );
 	}
@@ -593,7 +593,6 @@ public class SQLiteDialect extends Dialect {
 				.replace("d", "%d") //?????
 
 				//am pm
-				.replace("aa", "%p") //?????
 				.replace("a", "%p") //?????
 
 				//hour

@@ -10,7 +10,12 @@ package org.hibernate.query;
 import org.hibernate.HibernateException;
 
 /**
- * Generally indicates an attempt to bind a parameter value for an unknown parameter.
+ * Indicates an attempt to find an unknown query parameter or an attempt to
+ * bind a value to an unknown query parameter
+ *
+ * @see Query#getParameter
+ * @see Query#setParameter
+ * @see Query#setParameterList
  *
  * @author Steve Ebersole
  */

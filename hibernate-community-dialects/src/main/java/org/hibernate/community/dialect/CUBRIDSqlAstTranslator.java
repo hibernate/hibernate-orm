@@ -9,7 +9,7 @@ package org.hibernate.community.dialect;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.ComparisonOperator;
+import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;

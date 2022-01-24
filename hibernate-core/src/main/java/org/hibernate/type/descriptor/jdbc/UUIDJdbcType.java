@@ -46,38 +46,38 @@ public class UUIDJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
+		return new BasicBinder<X>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				st.setObject( index, getJavaTypeDescriptor().unwrap( value, UUID.class, options ) );
+				st.setObject( index, getJavaType().unwrap( value, UUID.class, options ) );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				st.setObject( name, getJavaTypeDescriptor().unwrap( value, UUID.class, options ) );
+				st.setObject( name, getJavaType().unwrap( value, UUID.class, options ) );
 			}
 		};
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor) {
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
+		return new BasicExtractor<X>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return getJavaTypeDescriptor().wrap( rs.getObject( paramIndex, UUID.class ), options );
+				return getJavaType().wrap( rs.getObject( paramIndex, UUID.class ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return getJavaTypeDescriptor().wrap( statement.getObject( index, UUID.class ), options );
+				return getJavaType().wrap( statement.getObject( index, UUID.class ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return getJavaTypeDescriptor().wrap( statement.getObject( name, UUID.class ), options );
+				return getJavaType().wrap( statement.getObject( name, UUID.class ), options );
 			}
 		};
 	}

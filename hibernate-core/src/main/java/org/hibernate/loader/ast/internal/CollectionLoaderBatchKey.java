@@ -86,7 +86,7 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 	}
 
 	@Override
-	public PersistentCollection load(
+	public PersistentCollection<?> load(
 			Object key,
 			SharedSessionContractImplementor session) {
 		final Object[] batchIds = session.getPersistenceContextInternal()

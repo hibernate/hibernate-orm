@@ -8,8 +8,8 @@ package org.hibernate.query.sqm.tree.cte;
 
 import java.io.Serializable;
 
-import org.hibernate.query.NullPrecedence;
-import org.hibernate.query.SortOrder;
+import org.hibernate.query.sqm.NullPrecedence;
+import org.hibernate.query.sqm.SortOrder;
 
 /**
  * @author Christian Beikov

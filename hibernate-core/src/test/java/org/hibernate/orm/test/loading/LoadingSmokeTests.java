@@ -34,7 +34,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 )
 @SessionFactory
 @SessionFactoryFunctionalTesting
-@SuppressWarnings("WeakerAccess")
 public class LoadingSmokeTests {
 	@Test
 	public void testBasicLoad(SessionFactoryScope scope) {

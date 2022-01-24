@@ -50,7 +50,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public class SelectClauseTests extends BaseSqmUnitTest {
 
 	@Test

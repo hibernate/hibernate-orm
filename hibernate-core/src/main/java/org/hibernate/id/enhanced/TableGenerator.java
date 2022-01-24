@@ -141,7 +141,6 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	/**
 	 * The default {@link #TABLE_PARAM} value
 	 */
-	@SuppressWarnings("WeakerAccess")
 	public static final String DEF_TABLE = "hibernate_sequences";
 
 	/**
@@ -175,20 +174,17 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	/**
 	 * The default {@link #SEGMENT_VALUE_PARAM} value, unless {@link #CONFIG_PREFER_SEGMENT_PER_ENTITY} is specified
 	 */
-	@SuppressWarnings("WeakerAccess")
 	public static final String DEF_SEGMENT_VALUE = "default";
 
 	/**
 	 * Indicates the length of the column defined by {@link #SEGMENT_COLUMN_PARAM}.  Used in schema export.  The
 	 * default value is {@link #DEF_SEGMENT_LENGTH}
 	 */
-	@SuppressWarnings("WeakerAccess")
 	public static final String SEGMENT_LENGTH_PARAM = "segment_value_length";
 
 	/**
 	 * The default {@link #SEGMENT_LENGTH_PARAM} value
 	 */
-	@SuppressWarnings("WeakerAccess")
 	public static final int DEF_SEGMENT_LENGTH = 255;
 
 	private boolean storeLastUsedValue;
@@ -264,7 +260,6 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	 *
 	 * @return the column size.
 	 */
-	@SuppressWarnings({"UnusedDeclaration", "WeakerAccess"})
 	public final int getSegmentValueLength() {
 		return segmentValueLength;
 	}
@@ -290,7 +285,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 
 	/**
 	 * The amount of increment to use.  The exact implications of this
-	 * depends on the {@link #getOptimizer() optimizer} being used.
+	 * depends on the {@linkplain #getOptimizer() optimizer} being used.
 	 *
 	 * @return The increment amount.
 	 */
@@ -366,14 +361,13 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	/**
 	 * Determine the table name to use for the generator values.
 	 * <p/>
-	 * Called during {@link #configure configuration}.
+	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @see #getTableName()
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
 	 * @param jdbcEnvironment The JDBC environment
 	 * @return The table name to use.
 	 */
-	@SuppressWarnings({"UnusedParameters", "WeakerAccess"})
 	protected QualifiedName determineGeneratorTableName(Properties params, JdbcEnvironment jdbcEnvironment, ServiceRegistry serviceRegistry) {
 
 		String fallbackTableName = DEF_TABLE;
@@ -408,14 +402,13 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	 * Determine the name of the column used to indicate the segment for each
 	 * row.  This column acts as the primary key.
 	 * <p/>
-	 * Called during {@link #configure configuration}.
+	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @see #getSegmentColumnName()
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
 	 * @param jdbcEnvironment The JDBC environment
 	 * @return The name of the segment column
 	 */
-	@SuppressWarnings({"UnusedParameters", "WeakerAccess"})
 	protected String determineSegmentColumnName(Properties params, JdbcEnvironment jdbcEnvironment) {
 		final String name = ConfigurationHelper.getString( SEGMENT_COLUMN_PARAM, params, DEF_SEGMENT_COLUMN );
 		return jdbcEnvironment.getIdentifierHelper().toIdentifier( name ).render( jdbcEnvironment.getDialect() );
@@ -424,14 +417,13 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	/**
 	 * Determine the name of the column in which we will store the generator persistent value.
 	 * <p/>
-	 * Called during {@link #configure configuration}.
+	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @see #getValueColumnName()
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
 	 * @param jdbcEnvironment The JDBC environment
 	 * @return The name of the value column
 	 */
-	@SuppressWarnings({"UnusedParameters", "WeakerAccess"})
 	protected String determineValueColumnName(Properties params, JdbcEnvironment jdbcEnvironment) {
 		final String name = ConfigurationHelper.getString( VALUE_COLUMN_PARAM, params, DEF_VALUE_COLUMN );
 		return jdbcEnvironment.getIdentifierHelper().toIdentifier( name ).render( jdbcEnvironment.getDialect() );
@@ -440,13 +432,12 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	/**
 	 * Determine the segment value corresponding to this generator instance.
 	 * <p/>
-	 * Called during {@link #configure configuration}.
+	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @see #getSegmentValue()
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
 	 * @return The name of the value column
 	 */
-	@SuppressWarnings("WeakerAccess")
 	protected String determineSegmentValue(Properties params) {
 		String segmentValue = params.getProperty( SEGMENT_VALUE_PARAM );
 		if ( StringHelper.isEmpty( segmentValue ) ) {
@@ -462,7 +453,6 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
 	 * @return The default segment value to use.
 	 */
-	@SuppressWarnings("WeakerAccess")
 	protected String determineDefaultSegmentValue(Properties params) {
 		final boolean preferSegmentPerEntity = ConfigurationHelper.getBoolean( CONFIG_PREFER_SEGMENT_PER_ENTITY, params, false );
 		final String defaultToUse = preferSegmentPerEntity ? params.getProperty( TABLE ) : DEF_SEGMENT_VALUE;
@@ -473,28 +463,25 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	/**
 	 * Determine the size of the {@link #getSegmentColumnName segment column}
 	 * <p/>
-	 * Called during {@link #configure configuration}.
+	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @see #getSegmentValueLength()
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
 	 * @return The size of the segment column
 	 */
-	@SuppressWarnings("WeakerAccess")
 	protected int determineSegmentColumnSize(Properties params) {
 		return ConfigurationHelper.getInt( SEGMENT_LENGTH_PARAM, params, DEF_SEGMENT_LENGTH );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected int determineInitialValue(Properties params) {
 		return ConfigurationHelper.getInt( INITIAL_PARAM, params, DEFAULT_INITIAL_VALUE );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected int determineIncrementSize(Properties params) {
 		return ConfigurationHelper.getInt( INCREMENT_PARAM, params, DEFAULT_INCREMENT_SIZE );
 	}
 
-	@SuppressWarnings({"unchecked", "WeakerAccess"})
+	@SuppressWarnings("unchecked")
 	protected String buildSelectQuery(String formattedPhysicalTableName, SqlStringGenerationContext context) {
 		final String alias = "tbl";
 		final String query = "select " + StringHelper.qualify( alias, valueColumnName ) +
@@ -506,14 +493,12 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		return context.getDialect().applyLocksToSql( query, lockOptions, updateTargetColumnsMap );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected String buildUpdateQuery(String formattedPhysicalTableName, SqlStringGenerationContext context) {
 		return "update " + formattedPhysicalTableName +
 				" set " + valueColumnName + "=? " +
 				" where " + valueColumnName + "=? and " + segmentColumnName + "=?";
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected String buildInsertQuery(String formattedPhysicalTableName, SqlStringGenerationContext context) {
 		return "insert into " + formattedPhysicalTableName + " (" + segmentColumnName + ", " + valueColumnName + ") " + " values (?,?)";
 	}

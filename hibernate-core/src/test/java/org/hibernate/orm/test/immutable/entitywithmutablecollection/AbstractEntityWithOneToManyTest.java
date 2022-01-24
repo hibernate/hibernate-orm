@@ -6,29 +6,28 @@
  */
 package org.hibernate.orm.test.immutable.entitywithmutablecollection;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import jakarta.persistence.EntityGraph;
-import jakarta.persistence.PersistenceException;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
 
 import org.hibernate.QueryException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.jpa.QueryHints;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+
+import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_FETCH_GRAPH;
 import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -1199,7 +1198,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 		CriteriaQuery<Contract> criteria = criteriaBuilder.createQuery( Contract.class );
 		criteria.from( Contract.class );
 		return s.createQuery( criteria )
-				.setHint( QueryHints.HINT_FETCHGRAPH, s.createEntityGraph( Contract.class ) )
+				.setHint( HINT_JAVAEE_FETCH_GRAPH, s.createEntityGraph( Contract.class ) )
 				.uniqueResult();
 	}
 
@@ -1208,7 +1207,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 		CriteriaQuery<ContractVariation> criteria = criteriaBuilder.createQuery( ContractVariation.class );
 		criteria.from( ContractVariation.class );
 		return s.createQuery( criteria )
-				.setHint( QueryHints.HINT_FETCHGRAPH, s.createEntityGraph( ContractVariation.class ) )
+				.setHint( HINT_JAVAEE_FETCH_GRAPH, s.createEntityGraph( ContractVariation.class ) )
 				.uniqueResult();
 	}
 
@@ -1217,7 +1216,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 		CriteriaQuery<Party> criteria = criteriaBuilder.createQuery( Party.class );
 		criteria.from( Party.class );
 		return s.createQuery( criteria )
-				.setHint( QueryHints.HINT_FETCHGRAPH, s.createEntityGraph( Party.class ) )
+				.setHint( HINT_JAVAEE_FETCH_GRAPH, s.createEntityGraph( Party.class ) )
 				.uniqueResult();
 	}
 

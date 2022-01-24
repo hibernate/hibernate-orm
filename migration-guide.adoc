@@ -71,7 +71,7 @@ As discussed in <<type>> though, this change has a very big impact on Hibernate'
 
 
 
-[[identifier]]
+[[identifier-object]]
 == Identifier as Object
 
 Previous versions of Hibernate required that all identifier types implement `Serializable`.  6.0
@@ -201,11 +201,7 @@ See https://docs.jboss.org/hibernate/orm/6.0/userguide/html_single/Hibernate_Use
 
 === Plural attributes
 
-6.0 defines 2 main ways to influence collection mapping:
-
-`@CollectionType`:: see <<collection-type-ann>>
-`@CollectionTypeRegistration`:: see <<collection-type-reg-ann>>
-
+6.0 defines 2 main ways to influence collection mapping `@CollectionType` and `@CollectionTypeRegistration`
 
 [[collection-type-ann]]
 ==== `@CollectionType`
@@ -400,55 +396,87 @@ query.setParameter( 1, Arrays.asList( 0, 1, 2, 3 ) );
 [[proc-call-nativequery]]
 === Callable via NativeQuery
 
-Using `NativeQuery` to call SQL functions or procedures is no longer supported.
+Using `NativeQuery` to call SQL functions and procedures is no longer
+supported.  `org.hibernate.procedure.ProcedureCall` or
+`jakarta.persistence.StoredProcedureQuery` should be used instead.
 
-Given the `NamedNativeQuery`-
+`@NamedNativeQuery` references defining execution of procedure or
+functions should be migrated to use `@NamedStoredProcedureQuery`
+instead.
+
+E.g., the following `@NamedNativeQuery` -
 
 ```
 @NamedNativeQuery(
-    name = "fn_person_and_phones",
+    name = "personAndPhones",
     query = "{ ? = call fn_person_and_phones( ? ) }",
     callable = true,
-    resultSetMapping = "person_with_phones"
+    resultSetMapping = "personWithPhonesResultMapping"
 )
+
+...
+
+final List<Object[]> personAndPhones = entityManager
+        .createNamedQuery("personAndPhones" )
+        .setParameter( 1, 1L )
+        .getResultList();
 ```
 
-the code
-```
-scope.inTransaction(
-entityManager -> {
-try {
-List<Object[]> postAndComments = entityManager.createNamedQuery("fn_person_and_phones" ).setParameter( 1, 1L ).getResultList();
-```
-
-is going to throw an `IllegalArgumentException`.
-
-If you want to retain the named version, you can change the definition to
+should be changed to use `@NamedStoredProcedureQuery` instead -
 
 ```
 @NamedStoredProcedureQuery(
-    name = "fn_person_and_phones",
+    name = "personAndPhones",
     procedureName = "fn_person_and_phones",
-    resultSetMapping = "person_with_phones",
+    resultSetMapping = "personWithPhonesResultMapping",
     hints = @QueryHint(name = "org.hibernate.callableFunction", value = "true"),
-    parameters = {
-            @StoredProcedureParameter(type = Long.class)
-    }
+    parameters = @StoredProcedureParameter(type = Long.class)
 )
 ```
 
-and call this like
+Either `org.hibernate.procedure.ProcedureCall` or `jakarta.persistence.StoredProcedureQuery`
+can be used to execute the named query -
+
 ```
-List<Object[]> postAndComments = entityManager.createNamedStoredProcedureQuery( "fn_person_and_phones" ).setParameter( 1, 1L ).getResultList();
+// Use StoredProcedureQuery
+final List<Object[]> personAndPhones = entityManager
+        .createNamedStoredProcedureQuery( "personAndPhones" )
+        .setParameter( 1, 1L )
+        .getResultList();
+
+// Use ProcedureCall
+final List<Object[]> personAndPhones = entityManager
+        .unwrap( Session.class )
+        .getNamedProcedureCall( "personAndPhones" )
+        .setParameter( 1, 1L )
+        .getResultList();
 ```
 
-or not define the stored procedure and use this code
+
+It is also no longer supported to execute procedures and functions
+via a dynamic (unnamed) `NativeQuery`.  All such usages should be converted
+to use `ProcedureCall` or `StoredProcedureQuery` instead via
+`Session#createStoredProcedureCall` or `EntityManager#createStoredProcedureQuery`,
+respectively.
+
 ```
-List<Object[]> postAndComments = entityManager.createStoredProcedureQuery( "fn_person_and_phones", "person_with_phones" ).setParameter( 1, 1L ).getResultList();
+// Use StoredProcedureQuery
+final List<Object[]> personAndPhones = entityManager
+        .createStoredProcedureQuery( "fn_person_and_phones", "personWithPhonesResultMapping" )
+        .setParameter( 1, 1L )
+        .getResultList();
+
+// Use ProcedureCall
+final List<Object[]> personAndPhones = entityManager
+        .unwrap( Session.class )
+        .createStoredProcedureCall( "fn_person_and_phones", "personWithPhonesResultMapping" )
+        .setParameter( 1, 1L )
+        .getResultList();
 ```
+
 
 [[proc-call-param]]
-== ProcedureCall Parameters
+== ProcedureCall / StoredProcedureQuery Parameters
 
 For parameters defined on a ProcedureCall as accepting binding (IN and INOUT), a distinction is now
 made between whether `setParameter` is called or not.  If `setParameter` was called, whatever value
@@ -457,7 +485,6 @@ set any value which triggers the default value defined on the database procedure
 
 
 == Interceptor
-
 
 The signature of the `#onSave` method has been changed from
 ```
@@ -470,7 +497,13 @@ to
 boolean onSave(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
 ```
 
-to account
+to account for the general change in expected identifier type from `Serializable` to `Object`.
+See <<identifier-object>>.
+
+If custom Interceptor implementations do not use `@Override` on their implementations, this
+can lead to situations where a custom Interceptor no longer overrides this method.  Moral
+of the story... always use `@Override` - this is why it exists
+
 
 == Removals
 

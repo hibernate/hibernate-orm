@@ -20,7 +20,7 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -101,8 +101,8 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 	}
 
 	@Override
-	public JavaType<?> getResultJavaTypeDescriptor() {
-		return fetchable.getJavaTypeDescriptor();
+	public JavaType<?> getResultJavaType() {
+		return fetchable.getJavaType();
 	}
 
 	@Override
@@ -159,7 +159,7 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 
 		return new BiDirectionalFetchAssembler(
 				initializer,
-				fetchable.getJavaTypeDescriptor()
+				fetchable.getJavaType()
 		);
 	}
 
@@ -230,8 +230,8 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
-		return fetchable.getJavaTypeDescriptor();
+	public JavaType<?> getJavaType() {
+		return fetchable.getJavaType();
 	}
 
 	@Override
@@ -282,13 +282,13 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 
 	private static class BiDirectionalFetchAssembler implements DomainResultAssembler {
 		private EntityInitializer initializer;
-		private JavaType assembledJavaTypeDescriptor;
+		private JavaType assembledJavaType;
 
 		public BiDirectionalFetchAssembler(
 				EntityInitializer initializer,
-				JavaType assembledJavaTypeDescriptor) {
+				JavaType assembledJavaType) {
 			this.initializer = initializer;
-			this.assembledJavaTypeDescriptor = assembledJavaTypeDescriptor;
+			this.assembledJavaType = assembledJavaType;
 		}
 
 		@Override
@@ -298,8 +298,8 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 		}
 
 		@Override
-		public JavaType getAssembledJavaTypeDescriptor() {
-			return assembledJavaTypeDescriptor;
+		public JavaType getAssembledJavaType() {
+			return assembledJavaType;
 		}
 	}
 

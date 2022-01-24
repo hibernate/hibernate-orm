@@ -56,7 +56,6 @@ public class InitLazyToOneWithinPaddedCollectionInitializationAllowProxyTest
 	@Override
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, true );
 		ssrb.applySetting( AvailableSettings.BATCH_FETCH_STYLE, PADDED );
 		ssrb.applySetting( AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, 10 );
 	}

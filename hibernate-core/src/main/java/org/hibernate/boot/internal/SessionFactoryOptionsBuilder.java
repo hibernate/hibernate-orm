@@ -59,7 +59,7 @@ import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
-import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -90,7 +90,6 @@ import static org.hibernate.cfg.AvailableSettings.CACHE_REGION_PREFIX;
 import static org.hibernate.cfg.AvailableSettings.CALLABLE_NAMED_PARAMS_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.CHECK_NULLABILITY;
 import static org.hibernate.cfg.AvailableSettings.CONNECTION_HANDLING;
-import static org.hibernate.cfg.AvailableSettings.CONVENTIONAL_JAVA_CONSTANTS;
 import static org.hibernate.cfg.AvailableSettings.CRITERIA_VALUE_HANDLING_MODE;
 import static org.hibernate.cfg.AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_BATCH_FETCH_SIZE;
@@ -111,15 +110,12 @@ import static org.hibernate.cfg.AvailableSettings.JTA_TRACK_BY_THREAD;
 import static org.hibernate.cfg.AvailableSettings.LOG_SESSION_METRICS;
 import static org.hibernate.cfg.AvailableSettings.MAX_FETCH_DEPTH;
 import static org.hibernate.cfg.AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER;
-import static org.hibernate.cfg.AvailableSettings.NATIVE_EXCEPTION_HANDLING_51_COMPLIANCE;
-import static org.hibernate.cfg.AvailableSettings.OMIT_JOIN_OF_SUPERCLASS_TABLES;
 import static org.hibernate.cfg.AvailableSettings.ORDER_INSERTS;
 import static org.hibernate.cfg.AvailableSettings.ORDER_UPDATES;
 import static org.hibernate.cfg.AvailableSettings.PREFER_USER_TRANSACTION;
 import static org.hibernate.cfg.AvailableSettings.QUERY_CACHE_FACTORY;
 import static org.hibernate.cfg.AvailableSettings.QUERY_STARTUP_CHECKING;
 import static org.hibernate.cfg.AvailableSettings.QUERY_STATISTICS_MAX_SIZE;
-import static org.hibernate.cfg.AvailableSettings.QUERY_SUBSTITUTIONS;
 import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME;
 import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI;
 import static org.hibernate.cfg.AvailableSettings.SESSION_SCOPED_INTERCEPTOR;
@@ -135,8 +131,6 @@ import static org.hibernate.cfg.AvailableSettings.USE_SCROLLABLE_RESULTSET;
 import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
 import static org.hibernate.cfg.AvailableSettings.USE_SQL_COMMENTS;
 import static org.hibernate.cfg.AvailableSettings.USE_STRUCTURED_CACHE;
-import static org.hibernate.cfg.AvailableSettings.VALIDATE_QUERY_PARAMETERS;
-import static org.hibernate.cfg.AvailableSettings.WRAP_RESULT_SETS;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
@@ -151,7 +145,6 @@ import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private static final CoreMessageLogger log = messageLogger( SessionFactoryOptionsBuilder.class );
 
@@ -222,10 +215,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private SqmFunctionRegistry sqmFunctionRegistry;
 	private SqmTranslatorFactory sqmTranslatorFactory;
 	private Boolean useOfJdbcNamedParametersEnabled;
-	private Map querySubstitutions;
 	private boolean namedQueryStartupCheckingEnabled;
-	private boolean conventionalJavaConstants;
-	private final boolean omitJoinOfSuperclassTablesEnabled;
 	private final int preferredSqlTypeCodeForBoolean;
 	private final TimeZoneStorageStrategy defaultTimeZoneStorageStrategy;
 
@@ -251,9 +241,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean commentsEnabled;
 	private PhysicalConnectionHandlingMode connectionHandlingMode;
 	private boolean connectionProviderDisablesAutoCommit;
-	private boolean wrapResultSetsEnabled;
 	private TimeZone jdbcTimeZone;
-	private boolean queryParametersValidationEnabled;
 	private ValueHandlingMode criteriaValueHandlingMode;
 	private ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
 	// These two settings cannot be modified from the builder,
@@ -270,11 +258,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean failOnPaginationOverCollectionFetchEnabled;
 	private boolean inClauseParameterPaddingEnabled;
 
-	private boolean nativeExceptionHandling51Compliance;
 	private int queryStatisticsMaxSize;
 
 
-	@SuppressWarnings({"WeakerAccess", "deprecation"})
 	public SessionFactoryOptionsBuilder(StandardServiceRegistry serviceRegistry, BootstrapContext context) {
 		this.serviceRegistry = serviceRegistry;
 		this.jpaBootstrap = context.isJpaBootstrap();
@@ -388,13 +374,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		this.jtaTrackByThread = cfgService.getSetting( JTA_TRACK_BY_THREAD, BOOLEAN, true );
 
-		final String hqlTranslatorImplFqn = ConfigurationHelper.extractValue(
+		final String hqlTranslatorImplFqn = ConfigurationHelper.extractPropertyValue(
 				AvailableSettings.SEMANTIC_QUERY_PRODUCER,
-				configurationSettings,
-				() -> ConfigurationHelper.extractPropertyValue(
-						AvailableSettings.QUERY_TRANSLATOR,
-						configurationSettings
-				)
+				configurationSettings
 		);
 		this.hqlTranslator = resolveHqlTranslator(
 				hqlTranslatorImplFqn,
@@ -413,17 +395,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 
 
-		final String sqmMutationStrategyImplName = ConfigurationHelper.extractValue(
+		final String sqmMutationStrategyImplName = ConfigurationHelper.extractPropertyValue(
 				AvailableSettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY,
-				configurationSettings,
-				() -> ConfigurationHelper.extractValue(
-						AvailableSettings.ID_TABLE_STRATEGY,
-						configurationSettings,
-						() -> ConfigurationHelper.extractPropertyValue(
-								AvailableSettings.HQL_BULK_ID_STRATEGY,
-								configurationSettings
-						)
-				)
+				configurationSettings
 		);
 
 		this.sqmMultiTableMutationStrategy = resolveSqmMutationStrategy(
@@ -446,16 +420,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		this.useOfJdbcNamedParametersEnabled = cfgService.getSetting( CALLABLE_NAMED_PARAMS_ENABLED, BOOLEAN, true );
 
-		this.querySubstitutions = ConfigurationHelper.toMap( QUERY_SUBSTITUTIONS, " ,=;:\n\t\r\f", configurationSettings );
 		this.namedQueryStartupCheckingEnabled = cfgService.getSetting( QUERY_STARTUP_CHECKING, BOOLEAN, true );
-		this.conventionalJavaConstants = cfgService.getSetting(
-				CONVENTIONAL_JAVA_CONSTANTS, BOOLEAN, true );
-		this.omitJoinOfSuperclassTablesEnabled = cfgService.getSetting( OMIT_JOIN_OF_SUPERCLASS_TABLES, BOOLEAN, true );
 		this.preferredSqlTypeCodeForBoolean = ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry );
 		this.defaultTimeZoneStorageStrategy = context.getMetadataBuildingOptions().getDefaultTimeZoneStorage();
 
 		final RegionFactory regionFactory = serviceRegistry.getService( RegionFactory.class );
-		if ( !NoCachingRegionFactory.class.isInstance( regionFactory ) ) {
+		if ( !(regionFactory instanceof NoCachingRegionFactory) ) {
 			this.secondLevelCacheEnabled = cfgService.getSetting( USE_SECOND_LEVEL_CACHE, BOOLEAN, true );
 			this.queryCacheEnabled = cfgService.getSetting( USE_QUERY_CACHE, BOOLEAN, false );
 			this.timestampsCacheFactory = strategySelector.resolveDefaultableStrategy(
@@ -522,11 +492,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				configurationSettings,
 				meta.supportsScrollableResults()
 		);
-		this.wrapResultSetsEnabled = ConfigurationHelper.getBoolean(
-				WRAP_RESULT_SETS,
-				configurationSettings,
-				false
-		);
 		this.getGeneratedKeysEnabled = ConfigurationHelper.getBoolean(
 				USE_GET_GENERATED_KEYS,
 				configurationSettings,
@@ -574,12 +539,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			throw new IllegalArgumentException( "Configuration property " + JDBC_TIME_ZONE + " value [" + jdbcTimeZoneValue + "] is not supported!" );
 		}
 
-		this.queryParametersValidationEnabled = ConfigurationHelper.getBoolean(
-				VALIDATE_QUERY_PARAMETERS,
-				configurationSettings,
-				true
-		);
-
 		this.criteriaValueHandlingMode = ValueHandlingMode.interpret(
 				configurationSettings.get( CRITERIA_VALUE_HANDLING_MODE )
 		);
@@ -606,22 +565,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				false
 		);
 
-		this.nativeExceptionHandling51Compliance = ConfigurationHelper.getBoolean(
-				NATIVE_EXCEPTION_HANDLING_51_COMPLIANCE,
-				configurationSettings,
-				false
-		);
-
 		this.queryStatisticsMaxSize = ConfigurationHelper.getInt(
 				QUERY_STATISTICS_MAX_SIZE,
 				configurationSettings,
 				Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE
 		);
-
-		if ( context.isJpaBootstrap() && nativeExceptionHandling51Compliance ) {
-			log.nativeExceptionHandling51ComplianceJpaBootstrapping();
-			this.nativeExceptionHandling51Compliance = false;
-		}
 	}
 
 	private SqmMultiTableMutationStrategy resolveSqmMutationStrategy(
@@ -1066,18 +1014,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public Map getQuerySubstitutions() {
-		return querySubstitutions;
-	}
-
-	@Override
 	public boolean isNamedQueryStartupCheckingEnabled() {
 		return namedQueryStartupCheckingEnabled;
-	}
-
-	@Override
-	public boolean isConventionalJavaConstants() {
-		return conventionalJavaConstants;
 	}
 
 	@Override
@@ -1138,11 +1076,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean isScrollableResultSetsEnabled() {
 		return scrollableResultSetsEnabled;
-	}
-
-	@Override
-	public boolean isWrapResultSetsEnabled() {
-		return wrapResultSetsEnabled;
 	}
 
 	@Override
@@ -1211,11 +1144,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public boolean isQueryParametersValidationEnabled() {
-		return this.queryParametersValidationEnabled;
-	}
-
-	@Override
 	public ValueHandlingMode getCriteriaValueHandlingMode() {
 		return criteriaValueHandlingMode;
 	}
@@ -1251,11 +1179,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public boolean nativeExceptionHandling51Compliance() {
-		return nativeExceptionHandling51Compliance;
-	}
-
-	@Override
 	public int getQueryStatisticsMaxSize() {
 		return queryStatisticsMaxSize;
 	}
@@ -1268,11 +1191,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean isCollectionsInDefaultFetchGroupEnabled() {
 		return collectionsInDefaultFetchGroupEnabled;
-	}
-
-	@Override
-	public boolean isOmitJoinOfSuperclassTablesEnabled() {
-		return omitJoinOfSuperclassTablesEnabled;
 	}
 
 	@Override
@@ -1432,11 +1350,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.currentTenantIdentifierResolver = resolver;
 	}
 
-	@SuppressWarnings("unchecked")
-	public void applyQuerySubstitutions(Map substitutions) {
-		this.querySubstitutions.putAll( substitutions );
-	}
-
 	public void enableNamedQueryCheckingOnStartup(boolean enabled) {
 		this.namedQueryStartupCheckingEnabled = enabled;
 	}
@@ -1483,11 +1396,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void enableScrollableResultSupport(boolean enabled) {
 		this.scrollableResultSetsEnabled = enabled;
-	}
-
-	@Deprecated
-	public void enableResultSetWrappingSupport(boolean enabled) {
-		this.wrapResultSetsEnabled = enabled;
 	}
 
 	public void enableGeneratedKeysSupport(boolean enabled) {

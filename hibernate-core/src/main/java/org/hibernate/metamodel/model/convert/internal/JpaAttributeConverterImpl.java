@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.model.convert.internal;
 
 import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
@@ -48,7 +49,7 @@ public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R
 		this.attributeConverterBean = attributeConverterBean;
 		this.converterJtd = converterJtd;
 
-		final JavaTypeRegistry jtdRegistry = context.getJavaTypeDescriptorRegistry();
+		final JavaTypeRegistry jtdRegistry = context.getJavaTypeRegistry();
 
 		jdbcJtd = jtdRegistry.getDescriptor( jdbcJavaType );
 		//noinspection unchecked
@@ -81,36 +82,42 @@ public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R
 
 	@Override
 	public O toDomainValue(R relationalForm) {
-		return attributeConverterBean.getBeanInstance().convertToEntityAttribute( relationalForm );
+		try {
+			return attributeConverterBean.getBeanInstance().convertToEntityAttribute( relationalForm );
+		}
+		catch (PersistenceException pe) {
+			throw pe;
+		}
+		catch (RuntimeException re) {
+			throw new PersistenceException( "Error attempting to apply AttributeConverter", re );
+		}
 	}
 
 	@Override
 	public R toRelationalValue(O domainForm) {
-		return attributeConverterBean.getBeanInstance().convertToDatabaseColumn( domainForm );
+		try {
+			return attributeConverterBean.getBeanInstance().convertToDatabaseColumn( domainForm );
+		}
+		catch (PersistenceException pe) {
+			throw pe;
+		}
+		catch (RuntimeException re) {
+			throw new PersistenceException( "Error attempting to apply AttributeConverter", re );
+		}
 	}
 
 	@Override
-	public JavaType<? extends AttributeConverter<O, R>> getConverterJavaTypeDescriptor() {
+	public JavaType<? extends AttributeConverter<O, R>> getConverterJavaType() {
 		return converterJtd;
 	}
 
 	@Override
-	public JavaType<O> getDomainJavaDescriptor() {
-		return getDomainJavaTypeDescriptor();
-	}
-
-	@Override
-	public JavaType<R> getRelationalJavaDescriptor() {
-		return getRelationalJavaTypeDescriptor();
-	}
-
-	@Override
-	public JavaType<O> getDomainJavaTypeDescriptor() {
+	public JavaType<O> getDomainJavaType() {
 		return domainJtd;
 	}
 
 	@Override
-	public JavaType<R> getRelationalJavaTypeDescriptor() {
+	public JavaType<R> getRelationalJavaType() {
 		return jdbcJtd;
 	}
 

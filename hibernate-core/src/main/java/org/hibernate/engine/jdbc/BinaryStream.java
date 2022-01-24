@@ -19,24 +19,24 @@ public interface BinaryStream {
 	 *
 	 * @return The input stream
 	 */
-	public InputStream getInputStream();
+	InputStream getInputStream();
 
 	/**
 	 * Access to the bytes.
 	 *
 	 * @return The bytes.
 	 */
-	public byte[] getBytes();
+	byte[] getBytes();
 
 	/**
 	 * Retrieve the length of the input stream
 	 *
 	 * @return The input stream length
 	 */
-	public long getLength();
+	long getLength();
 
 	/**
 	 * Release any underlying resources.
 	 */
-	public void release();
+	void release();
 }

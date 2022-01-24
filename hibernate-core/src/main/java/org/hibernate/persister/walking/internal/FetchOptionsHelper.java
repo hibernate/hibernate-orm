@@ -33,13 +33,6 @@ public final class FetchOptionsHelper {
 	 * <p/>
 	 * Note that currently fetch profiles only allow specifying join fetching, so this method currently
 	 * returns either (a) FetchStyle.JOIN or (b) null
-	 *
-	 * @param loadQueryInfluencers
-	 * @param persister
-	 * @param path
-	 * @param propertyNumber
-	 *
-	 * @return
 	 */
 	public static FetchStyle determineFetchStyleByProfile(
 			LoadQueryInfluencers loadQueryInfluencers,

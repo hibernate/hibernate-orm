@@ -221,10 +221,6 @@ By default, Hibernate uses the https://docs.jboss.org/hibernate/orm/{majorMinorV
 You can customize how the schema name is resolved by providing a custom implementation of the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/env/spi/SchemaNameResolver.html[`SchemaNameResolver`] interface.
 
 ==== Identifier options
-`*hibernate.id.new_generator_mappings*` (e.g. `true` (default value) or `false`)::
-Setting which indicates whether or not the new https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/id/IdentifierGenerator.html[`IdentifierGenerator`] are used for `AUTO`, `TABLE` and `SEQUENCE`.
-+
-Existing applications may want to disable this (set it `false`) for upgrade compatibility from 3.x and 4.x to 5.x.
 
 `*hibernate.use_identifier_rollback*` (e.g. `true` or `false` (default value))::
 If true, generated identifier properties are reset to default values when objects are deleted.
@@ -441,9 +437,6 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 `*hibernate.bytecode.use_reflection_optimizer*` (e.g. `true` or `false` (default value))::
 Should we use reflection optimization? The reflection optimizer implements the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/bytecode/spi/ReflectionOptimizer.html[`ReflectionOptimizer`] interface and improves entity instantiation and property getter/setter calls.
 
-`*hibernate.bytecode.enforce_legacy_proxy_classnames*` (e.g. `true` or `false` (default value))::
-Some other libraries, such as Spring, used to depend on a specific naming pattern used for proxy classes generated at runtime. Set this to `true` to have proxy class names conform to the old pattern.
-
 [[configurations-query]]
 === Query settings
 
@@ -463,9 +456,6 @@ Defines precedence of null values in `ORDER BY` clause. Defaults to `none` which
 
 `*hibernate.discriminator.force_in_select*` (e.g. `true` or `false` (default value))::
 For entities which do not explicitly say, should we force discriminators into SQL selects?
-
-`*hibernate.query.substitutions*` (e.g. `true=1,false=0`)::
-A comma-separated list of token substitutions to use when translating a Hibernate query to SQL.
 
 `*hibernate.query.factory_class*` (e.g. `org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory` (default value) or `org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory`)::
 Chooses the HQL parser implementation.
@@ -498,10 +488,6 @@ Can reference a
 `StatementInspector` instance,
 `StatementInspector` implementation `Class` reference or
 `StatementInspector` implementation class name (fully-qualified class name).
-
-`*hibernate.query.validate_parameters*` (e.g. `true` (default value) or `false`)::
-This configuration property can be used to disable parameters validation performed by `org.hibernate.query.Query#setParameter` when the Session is bootstrapped via Jakarta Persistence
-`jakarta.persistence.EntityManagerFactory`.
 
 `*hibernate.criteria.value_handling_mode*` (e.g. `BIND` (default value) or `INLINE`)::
 By default, Criteria queries uses bind parameters for any value passed through the Jakarta Persistence Criteria API.
@@ -536,12 +522,6 @@ For this reason, we can expand the bind parameters to power-of-two: 4, 8, 16, 32
 This way, an IN clause with 5, 6, or 7 bind parameters will use the 8 IN clause,
 therefore reusing its execution plan.
 
-`*hibernate.query.omit_join_of_superclass_tables*` (e.g. `false` or `true` (default value))::
-When you use `jakarta.persistence.InheritanceType#JOINED` strategy for inheritance mapping and query
-a value from an entity, all superclass tables are joined in the query regardless you need them.
-+
-With this setting set to true only superclass tables which are really needed are joined.
-
 ==== Multi-table bulk HQL operations
 
 `*hibernate.hql.bulk_id_strategy*` (e.g. A fully-qualified class name, an instance, or a `Class` object reference)::
@@ -570,23 +550,6 @@ This configuration property is used by the https://docs.jboss.org/hibernate/orm/
 It follows a pattern similar to the ANSI SQL definition of the global temporary table using a "session id" column to segment rows from the various sessions.
 +
 This configuration property defines the database catalog used for storing the temporary tables used for bulk HQL operations.
-
-`*hibernate.legacy_limit_handler*` (e.g. `true` or `false` (default value))::
-Setting which indicates whether or not to use `org.hibernate.dialect.pagination.LimitHandler`
-implementations that sacrifices performance optimizations to allow legacy 4.x limit behavior.
-+
-Legacy 4.x behavior favored performing pagination in-memory by avoiding the use of the offset value, which is overall poor performance.
-In 5.x, the limit handler behavior favors performance, thus, if the dialect doesn't support offsets, an exception is thrown instead.
-
-`*hibernate.query.conventional_java_constants*` (e.g. `true` (default value) or `false`)::
-Setting which indicates whether or not Java constants follow the https://docs.oracle.com/javase/tutorial/java/nutsandbolts/variables.html[Java Naming conventions].
-+
-The default is `true`.
-Existing applications may want to disable this (set it `false`) if non-conventional Java constants are used.
-However, there is a significant performance overhead for using non-conventional Java constants
-since Hibernate cannot determine if aliases should be treated as Java constants or not.
-+
-Check out https://hibernate.atlassian.net/browse/HHH-4959[HHH-4959] for more details.
 
 [[configurations-batch]]
 === Batching properties
@@ -628,14 +591,8 @@ A non-zero value determines the JDBC fetch size, by calling `Statement.setFetchS
 `*hibernate.jdbc.use_scrollable_resultset*` (e.g. `true` or `false`)::
 Enables Hibernate to use JDBC2 scrollable resultsets. This property is only relevant for user-supplied JDBC connections. Otherwise, Hibernate uses connection metadata.
 
-`*hibernate.jdbc.use_streams_for_binary*` (e.g. `true` or `false` (default value))::
-Use streams when writing or reading `binary` or `serializable` types to or from JDBC. This is a system-level property.
-
 `*hibernate.jdbc.use_get_generated_keys*` (e.g. `true` or `false`)::
 Allows Hibernate to use JDBC3 `PreparedStatement.getGeneratedKeys()` to retrieve natively-generated keys after insert. You need the JDBC3+ driver and JRE1.4+. Disable this property if your driver has problems with the Hibernate identifier generators. By default, it tries to detect the driver capabilities from connection metadata.
-
-`*hibernate.jdbc.wrap_result_sets*` (e.g. `true` or `false` (default value))::
-Enable wrapping of JDBC result sets in order to speed up column name lookups for broken JDBC drivers.
 
 `*hibernate.enable_lazy_load_no_trans*` (e.g. `true` or `false` (default value))::
 Initialize Lazy Proxies or Collections outside a given Transactional Persistence Context.
@@ -708,11 +665,11 @@ Enables the automatic eviction of a bi-directional association's collection cach
 `*hibernate.cache.use_reference_entries*` (e.g. `true` or `false`)::
 Optimizes second-level cache operation to store immutable entities (aka "reference") which do not have associations into cache directly. In this case, disassembling and deep copy operations can be avoided. The default value of this property is `false`.
 
-`*hibernate.ejb.classcache*` (e.g. `hibernate.ejb.classcache.org.hibernate.ejb.test.Item` = `read-write`)::
-Sets the associated entity class cache concurrency strategy for the designated region. Caching configuration should follow the following pattern `hibernate.ejb.classcache.<fully.qualified.Classname> = usage[, region]` where usage is the cache strategy used and region the cache region name.
+`*hibernate.classcache*` (e.g. `hibernate.classcache.org.hibernate.ejb.test.Item` = `read-write`)::
+Sets the associated entity class cache concurrency strategy for the designated region. Caching configuration should follow the following pattern `hibernate.classcache.<fully.qualified.Classname> = usage[, region]` where usage is the cache strategy used and region the cache region name.
 
-`*hibernate.ejb.collectioncache*` (e.g. `hibernate.ejb.collectioncache.org.hibernate.ejb.test.Item.distributors` = `read-write, RegionName`)::
-Sets the associated collection cache concurrency strategy for the designated region. Caching configuration should follow the following pattern `hibernate.ejb.collectioncache.<fully.qualified.Classname>.<role> = usage[, region]` where usage is the cache strategy used and region the cache region name.
+`*hibernate.collectioncache*` (e.g. `hibernate.collectioncache.org.hibernate.ejb.test.Item.distributors` = `read-write, RegionName`)::
+Sets the associated collection cache concurrency strategy for the designated region. Caching configuration should follow the following pattern `hibernate.collectioncache.<fully.qualified.Classname>.<role> = usage[, region]` where usage is the cache strategy used and region the cache region name.
 
 [[configurations-infinispan]]
 === Infinispan properties
@@ -966,18 +923,6 @@ Defines the charset (encoding) used for all input/output schema generation resou
 `*hibernate.hbm2ddl.halt_on_error*` (e.g. `true` or `false` (default value))::
 Whether the schema migration tool should halt on error, therefore terminating the bootstrap process. By default, the `EntityManagerFactory` or `SessionFactory` are created even if the schema migration throws exceptions. To prevent this default behavior, set this property value to `true`.
 
-[[configurations-exception-handling]]
-=== Exception handling
-
-`*hibernate.jdbc.sql_exception_converter*` (e.g. fully-qualified name of class implementing `SQLExceptionConverter`)::
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/exception/spi/SQLExceptionConverter.html[`SQLExceptionConverter`] to use for converting `SQLExceptions` to Hibernate's `JDBCException` hierarchy. The default is to use the configured https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html[`Dialect`]'s preferred `SQLExceptionConverter`.
-
-`*hibernate.native_exception_handling_51_compliance*` (e.g. `true` or `false` (default value))::
-Indicates if exception handling for a `SessionFactory` built via Hibernate's native bootstrapping
-should behave the same as native exception handling in Hibernate ORM 5.1. When set to `true`,
-`HibernateException` will not be wrapped or converted according to the Jakarta Persistence specification. This
-setting will be ignored for a `SessionFactory` built via Jakarta Persistence bootstrapping.
-
 [[configurations-session-events]]
 === Session events
 
@@ -1027,39 +972,6 @@ Specifies a `SessionFactoryObserver` to be applied to the SessionFactory. The cl
 
 `*hibernate.ejb.event*` (e.g. `hibernate.ejb.event.pre-load` = `com.acme.SecurityListener,com.acme.AuditListener`)::
 Event listener list for a given event type. The list of event listeners is a comma separated fully qualified class name list.
-
-[[configurations-jmx]]
-=== JMX settings
-
-`*hibernate.jmx.enabled*` (e.g. `true` or `false` (default value))::
-Enable JMX.
-
-`*hibernate.jmx.usePlatformServer*` (e.g. `true` or `false` (default value))::
-Uses the platform MBeanServer as returned by `ManagementFactory#getPlatformMBeanServer()`.
-
-`*hibernate.jmx.agentId*`::
-The agent identifier of the associated `MBeanServer`.
-
-`*hibernate.jmx.defaultDomain*`::
-The domain name of the associated `MBeanServer`.
-
-`*hibernate.jmx.sessionFactoryName*`::
-The `SessionFactory` name appended to the object name the Manageable Bean is registered with. If null, the `hibernate.session_factory_name` configuration value is used.
-
-`*org.hibernate.core*`::
-The default object domain appended to the object name the Manageable Bean is registered with.
-
-[[configurations-jacc]]
-=== JACC settings
-
-`*hibernate.jacc.enabled*` (e.g. `true` or `false` (default value))::
-Is JACC enabled?
-
-`*hibernate.jacc*` (e.g. `hibernate.jacc.allowed.org.jboss.ejb3.test.jacc.AllEntity`)::
-The property name defines the role (e.g. `allowed`) and the entity class name (e.g. `org.jboss.ejb3.test.jacc.AllEntity`), while the property value defines the authorized actions (e.g. `insert,update,read`).
-
-`*hibernate.jacc_context_id*`::
-A String identifying the policy context whose PolicyConfiguration interface is to be returned. The value passed to this parameter must not be null.
 
 [[configurations-classloader]]
 === ClassLoaders property

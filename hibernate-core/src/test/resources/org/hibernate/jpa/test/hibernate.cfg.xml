@@ -17,7 +17,6 @@
         <property name="hibernate.connection.url">jdbc:hsqldb:.</property>
         <property name="hibernate.cache.use_query_cache">true</property>
         <property name="hibernate.cache.region_prefix">hibernate.test</property>
-        <property name="hibernate.jdbc.use_streams_for_binary">true</property>
         <property name="hibernate.jdbc.batch_size">0</property>
         <property name="hibernate.max_fetch_depth">3</property>
         <property name="hibernate.hbm2ddl.auto">create-drop</property>

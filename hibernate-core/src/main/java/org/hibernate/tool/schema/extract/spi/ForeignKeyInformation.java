@@ -17,29 +17,29 @@ public interface ForeignKeyInformation {
 	 *
 	 * @return The FK identifier.
 	 */
-	public Identifier getForeignKeyIdentifier();
+	Identifier getForeignKeyIdentifier();
 
 	/**
 	 * Get the column mappings that define the reference.  Returned in sequential order.
 	 *
 	 * @return The sequential column reference mappings.
 	 */
-	public Iterable<ColumnReferenceMapping> getColumnReferenceMappings();
+	Iterable<ColumnReferenceMapping> getColumnReferenceMappings();
 
-	public static interface ColumnReferenceMapping {
+	interface ColumnReferenceMapping {
 		/**
 		 * Obtain the information about the referencing column (the source column, which points to
 		 * the referenced column).
 		 *
 		 * @return The referencing column.
 		 */
-		public ColumnInformation getReferencingColumnMetadata();
+		ColumnInformation getReferencingColumnMetadata();
 
 		/**
 		 * Obtain the information about the referenced column (the target side).
 		 *
 		 * @return The referenced column
 		 */
-		public ColumnInformation getReferencedColumnMetadata();
+		ColumnInformation getReferencedColumnMetadata();
 	}
 }

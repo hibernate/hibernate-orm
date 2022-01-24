@@ -60,7 +60,7 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 				resolveSqlAstArguments( getArguments(), walker ),
 				filter == null ? null : (Predicate) filter.accept( walker ),
 				resultType,
-				getMappingModelExpressable( walker, resultType )
+				getMappingModelExpressible( walker, resultType )
 		);
 	}
 

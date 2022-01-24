@@ -172,7 +172,6 @@ public class MappedSuperclass {
 	 *
 	 * @return {@code true} if a property with that name exists; {@code false} if not
 	 */
-	@SuppressWarnings("WeakerAccess")
 	public boolean hasProperty(String name) {
 		final Iterator itr = getDeclaredPropertyIterator();
 		while ( itr.hasNext() ) {
@@ -193,7 +192,6 @@ public class MappedSuperclass {
 	 *
 	 * @return {@code true} if a property with that name exists; {@code false} if not
 	 */
-	@SuppressWarnings({"WeakerAccess", "RedundantIfStatement"})
 	public boolean isPropertyDefinedInHierarchy(String name) {
 		if ( hasProperty( name ) ) {
 			return true;

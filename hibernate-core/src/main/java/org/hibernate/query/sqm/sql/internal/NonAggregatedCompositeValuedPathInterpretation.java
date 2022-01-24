@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.sql.internal;
 
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
 import org.hibernate.sql.ast.SqlAstWalker;

@@ -41,7 +41,6 @@ public class DefaultUpdateEventListener extends DefaultSaveOrUpdateEventListener
 	/**
 	 * If the user specified an id, assign it to the instance and use that, 
 	 * otherwise use the id already assigned to the instance
-	 * @return
 	 */
 	protected Object getUpdateId(
 			Object entity,

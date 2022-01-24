@@ -21,10 +21,9 @@ public interface RefreshEventListener {
      * Handle the given refresh event.
      *
      * @param event The refresh event to be handled.
-     * @throws HibernateException
      */
-	public void onRefresh(RefreshEvent event) throws HibernateException;
+	void onRefresh(RefreshEvent event) throws HibernateException;
 	
-	public void onRefresh(RefreshEvent event, Map refreshedAlready) throws HibernateException;
+	void onRefresh(RefreshEvent event, Map refreshedAlready) throws HibernateException;
 
 }

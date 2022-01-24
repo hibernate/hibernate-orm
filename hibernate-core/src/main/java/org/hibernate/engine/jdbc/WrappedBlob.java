@@ -19,5 +19,5 @@ public interface WrappedBlob {
 	 *
 	 * @return The wrapped {@link Blob} reference
 	 */
-	public Blob getWrappedBlob();
+	Blob getWrappedBlob();
 }

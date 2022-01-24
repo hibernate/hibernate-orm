@@ -28,7 +28,7 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmQuery;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedBagJoin;
@@ -60,7 +60,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSelectQuery<T>, JpaSubQuery<T>, SqmExpression<T> {
 	private final SqmQuery<?> parent;
 
-	private SqmExpressable<T> expressableType;
+	private SqmExpressible<T> expressibleType;
 	private String alias;
 
 	public SqmSubQuery(
@@ -312,15 +312,15 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	@Override
-	public SqmExpressable<T> getNodeType() {
-		return expressableType;
+	public SqmExpressible<T> getNodeType() {
+		return expressibleType;
 	}
 
 	@Override
-	public void applyInferableType(SqmExpressable<?> type) {
+	public void applyInferableType(SqmExpressible<?> type) {
 		//noinspection unchecked
-		this.expressableType = (SqmExpressable<T>) type;
-		setResultType( type == null ? null : expressableType.getExpressableJavaTypeDescriptor().getJavaTypeClass() );
+		this.expressibleType = (SqmExpressible<T>) type;
+		setResultType( type == null ? null : expressibleType.getExpressibleJavaType().getJavaTypeClass() );
 	}
 
 	@Override
@@ -368,7 +368,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 		if ( getNodeType() == null ) {
 			return null;
 		}
-		return getNodeType().getExpressableJavaTypeDescriptor();
+		return getNodeType().getExpressibleJavaType();
 	}
 
 	@Override

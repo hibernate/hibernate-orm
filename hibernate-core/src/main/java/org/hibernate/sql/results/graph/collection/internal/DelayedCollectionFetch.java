@@ -8,7 +8,7 @@ package org.hibernate.sql.results.graph.collection.internal;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -67,7 +67,7 @@ public class DelayedCollectionFetch extends CollectionFetch {
 	}
 
 	@Override
-	public JavaType<?> getResultJavaTypeDescriptor() {
-		return getFetchedMapping().getJavaTypeDescriptor();
+	public JavaType<?> getResultJavaType() {
+		return getFetchedMapping().getJavaType();
 	}
 }

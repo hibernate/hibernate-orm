@@ -11,7 +11,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -39,7 +39,6 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 		this( navigablePath, referencedNavigable, lhs, null, nodeBuilder );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public SqmPluralValuedSimplePath(
 			NavigablePath navigablePath,
 			PluralPersistentAttribute<?, ?, E> referencedNavigable,

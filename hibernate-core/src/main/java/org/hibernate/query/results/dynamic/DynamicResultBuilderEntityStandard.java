@@ -21,7 +21,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.query.results.TableGroupImpl;
@@ -85,7 +85,7 @@ public class DynamicResultBuilderEntityStandard
 
 	@Override
 	public Class<?> getJavaType() {
-		return entityMapping.getJavaTypeDescriptor().getJavaTypeClass();
+		return entityMapping.getJavaType().getJavaTypeClass();
 	}
 
 	@Override
@@ -280,7 +280,7 @@ public class DynamicResultBuilderEntityStandard
 							return new ResultSetMappingSqlSelection( valuesArrayPosition, jdbcMapping );
 						}
 				),
-				jdbcMapping.getMappedJavaTypeDescriptor(),
+				jdbcMapping.getMappedJavaType(),
 				domainResultCreationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
 	}

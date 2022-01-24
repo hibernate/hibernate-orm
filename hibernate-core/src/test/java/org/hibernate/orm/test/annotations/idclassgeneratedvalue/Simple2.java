@@ -14,7 +14,7 @@ import jakarta.persistence.IdClass;
 import org.hibernate.annotations.GenericGenerator;
 
 /**
- * The {@link Simple} entity redone with a generated value {@link #id1} }as part of its
+ * The {@link Simple} entity redone with a generated value {@link #id1} as part of its
  * composite pk
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Stale W. Pedersen</a>

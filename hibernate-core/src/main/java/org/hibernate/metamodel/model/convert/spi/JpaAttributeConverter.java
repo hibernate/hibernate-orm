@@ -17,10 +17,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public interface JpaAttributeConverter<O,R> extends BasicValueConverter<O,R> {
-	JavaType<? extends AttributeConverter<O,R>> getConverterJavaTypeDescriptor();
+	JavaType<? extends AttributeConverter<O,R>> getConverterJavaType();
 
 	ManagedBean<? extends AttributeConverter<O,R>> getConverterBean();
-
-	JavaType<O> getDomainJavaTypeDescriptor();
-	JavaType<R> getRelationalJavaTypeDescriptor();
 }

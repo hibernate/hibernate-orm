@@ -14,31 +14,35 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Defines a formula (derived value) which is a SQL fragment that acts as a @Column alternative in most cases.
- * Represents read-only state.
+ * Specifies an expression written in native SQL that is used to read the value of
+ * an attribute instead of storing the value in a {@link jakarta.persistence.Column}.
+ * A {@code Formula} mapping defines a "derived" attribute, whose state is determined
+ * from other columns and functions when an entity is read from the database.
  *
- * In certain cases @ColumnTransformer might be a better option, especially as it leaves open the option of still
- * being writable.
- *
- * <blockquote><pre>
- *     // perform calculations
- *     &#064;Formula( "sub_total + (sub_total * tax)" )
+ * <pre><code>
+ *     // perform calculations using SQL operators
+ *     &#064;Formula("sub_total + (sub_total * tax)")
  *     long getTotalCost() { ... }
- * </pre></blockquote>
+ * </code></pre>
  *
- * <blockquote><pre>
- *     // call database functions ( e.g. MySQL upper() and substring() )
- *     &#064;Formula( "upper( substring( middle_name, 1 ) )" )
+ * <pre><code>
+ *     // call native SQL functions
+ *     &#064;Formula("upper(substring(middle_name, 1))")
  *     Character getMiddleInitial() { ... }
- * </pre></blockquote>
+ * </code></pre>
  *
- * <blockquote><pre>
- *     // this might be better handled through @ColumnTransformer
- *     &#064;Formula( "decrypt(credit_card_num)" )
+ * {@link ColumnTransformer} is an alternative, allowing the use of native SQL to
+ * read and write values.
+ *
+ * <pre><code>
+ *     // it might be better to use @ColumnTransformer in this case
+ *     &#064;Formula("decrypt(credit_card_num)")
  *     String getCreditCardNumber() { ... }
- * </pre></blockquote>
+ * </code></pre>
  *
  * @see ColumnTransformer
+ * @see DiscriminatorFormula
+ * @see JoinFormula
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
@@ -47,7 +51,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface Formula {
 	/**
-	 * The formula string.
+	 * The formula, written in native SQL.
 	 */
 	String value();
 }

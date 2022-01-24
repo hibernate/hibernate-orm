@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain;
 
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -25,7 +25,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  */
-public interface DomainType<J> extends SqmExpressable<J> {
+public interface DomainType<J> extends SqmExpressible<J> {
 	/**
 	 * The name of the type.
 	 *
@@ -35,7 +35,7 @@ public interface DomainType<J> extends SqmExpressable<J> {
 	 */
 	default String getTypeName() {
 		// default impl to handle the general case returning the Java type name
-		return getExpressableJavaTypeDescriptor().getJavaType().getTypeName();
+		return getExpressibleJavaType().getJavaType().getTypeName();
 	}
 
 	/**
@@ -44,5 +44,5 @@ public interface DomainType<J> extends SqmExpressable<J> {
 	 *
 	 * @see #getTypeName
 	 */
-	JavaType<J> getExpressableJavaTypeDescriptor();
+	JavaType<J> getExpressibleJavaType();
 }

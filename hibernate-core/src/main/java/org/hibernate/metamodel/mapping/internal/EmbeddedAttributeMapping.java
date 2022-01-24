@@ -15,7 +15,6 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -28,7 +27,7 @@ import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
@@ -69,7 +68,6 @@ public class EmbeddedAttributeMapping
 	private final EmbeddableMappingType embeddableMappingType;
 	private final PropertyAccess parentInjectionAttributePropertyAccess;
 
-	@SuppressWarnings("WeakerAccess")
 	public EmbeddedAttributeMapping(
 			String name,
 			NavigableRole navigableRole,
@@ -378,7 +376,7 @@ public class EmbeddedAttributeMapping
 		final PropertyAccess parentInjectionAttributePropertyAccess;
 		if ( parentInjectionAttributeName != null ) {
 			parentInjectionAttributePropertyAccess = PropertyAccessStrategyBasicImpl.INSTANCE.buildPropertyAccess(
-					embeddableMappingType.getMappedJavaTypeDescriptor().getJavaTypeClass(),
+					embeddableMappingType.getMappedJavaType().getJavaTypeClass(),
 					parentInjectionAttributeName,
 					true );
 		}

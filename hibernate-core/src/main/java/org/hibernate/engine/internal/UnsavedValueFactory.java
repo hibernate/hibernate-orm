@@ -12,12 +12,9 @@ import java.util.function.Supplier;
 import org.hibernate.InstantiationException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.IdentifierValue;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.property.access.spi.Getter;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.VersionJavaType;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
@@ -39,8 +36,7 @@ public class UnsavedValueFactory {
 			KeyValue bootIdMapping,
 			JavaType<?> idJtd,
 			Getter getter,
-			Supplier<?> templateInstanceAccess,
-			SessionFactoryImplementor sessionFactory) {
+			Supplier<?> templateInstanceAccess) {
 		final String unsavedValue = bootIdMapping.getNullValue();
 
 		if ( unsavedValue == null ) {
@@ -80,21 +76,20 @@ public class UnsavedValueFactory {
 	 * unsaved value by instantiating an instance of the entity and reading the value of its
 	 * version property, or if that is not possible, using the java default value for the type
 	 */
-	public static VersionValue getUnsavedVersionValue(
+	public static <T> VersionValue getUnsavedVersionValue(
 			KeyValue bootVersionMapping,
-			VersionJavaType jtd,
+			VersionJavaType<T> jtd,
 			Getter getter,
-			Supplier<?> templateInstanceAccess,
-			SessionFactoryImplementor sessionFactory) {
+			Supplier<?> templateInstanceAccess) {
 		final String unsavedValue = bootVersionMapping.getNullValue();
 		if ( unsavedValue == null ) {
 			if ( getter != null && templateInstanceAccess != null ) {
-				final Object templateInstance = templateInstanceAccess.get();
-				final Object defaultValue = getter.get( templateInstance );
+				@SuppressWarnings("unchecked")
+				final T defaultValue = (T) getter.get( templateInstanceAccess.get() );
 
 				// if the version of a newly instantiated object is not the same
 				// as the version seed value, use that as the unsaved-value
-				final Object seedValue = jtd.seed( null );
+				final T seedValue = jtd.seed( null );
 				return jtd.areEqual( seedValue, defaultValue )
 						? VersionValue.UNDEFINED
 						: new VersionValue( defaultValue );
@@ -128,7 +123,7 @@ public class UnsavedValueFactory {
 	 *
 	 * @throws InstantiationException if something went wrong
 	 */
-	private static Object instantiate(Constructor constructor) {
+	private static Object instantiate(Constructor<?> constructor) {
 		try {
 			return constructor.newInstance();
 		}
@@ -154,7 +149,7 @@ public class UnsavedValueFactory {
 			String versionUnsavedValue,
 			Getter versionGetter,
 			VersionJavaType<X> versionType,
-			Constructor constructor) {
+			Constructor<?> constructor) {
 		
 		if ( versionUnsavedValue == null ) {
 			if ( constructor!=null ) {

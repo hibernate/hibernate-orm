@@ -33,6 +33,7 @@ import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
+import org.hibernate.query.QueryLogging;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializationException;
 import org.hibernate.type.Type;
@@ -304,6 +305,10 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Fetching database metadata", id = 102)
 	void fetchingDatabaseMetadata();
 
+	/**
+	 * @deprecated See {@link QueryLogging#firstOrMaxResultsSpecifiedWithCollectionFetch()}
+	 */
+	@Deprecated
 	@LogMessage(level = WARN)
 	@Message(value = "firstResult/maxResults specified with collection fetch; applying in memory!", id = 104)
 	void firstOrMaxResultsSpecifiedWithCollectionFetch();
@@ -366,8 +371,12 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Ignoring unique constraints specified on table generator [%s]", id = 120)
 	void ignoringTableGeneratorConstraints(String name);
 
+	/**
+	 * @deprecated See {@link org.hibernate.query.QueryLogging#ignoringUnrecognizedQueryHint}
+	 */
 	@LogMessage(level = INFO)
 	@Message(value = "Ignoring unrecognized query hint [%s]", id = 121)
+	@Deprecated
 	void ignoringUnrecognizedQueryHint(String hintName);
 
 	@LogMessage(level = ERROR)
@@ -1018,8 +1027,12 @@ public interface CoreMessageLogger extends BasicLogger {
 			String region,
 			String message);
 
+	/**
+	 * @deprecated see {@link org.hibernate.query.QueryLogging#unableToDetermineLockModeValue}
+	 */
 	@LogMessage(level = INFO)
 	@Message(value = "Unable to determine lock mode value : %s -> %s", id = 311)
+	@Deprecated
 	void unableToDetermineLockModeValue(
 			String hintName,
 			Object value);
@@ -1376,9 +1389,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Using bytecode reflection optimizer", id = 406)
 	void usingReflectionOptimizer();
 
-	@LogMessage(level = INFO)
-	@Message(value = "Using java.io streams to persist binary types", id = 407)
-	void usingStreams();
+//	@LogMessage(level = INFO)
+//	@Message(value = "Using java.io streams to persist binary types", id = 407)
+//	void usingStreams();
 
 	@LogMessage(level = WARN)
 	@Message(value = "Using %s which does not generate IETF RFC 4122 compliant UUID values; consider using %s instead",
@@ -1697,10 +1710,10 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(
 			id = 481,
-			value = "Encountered Java type [%s] for which we could not locate a JavaTypeDescriptor and " +
+			value = "Encountered Java type [%s] for which we could not locate a JavaType and " +
 					"which does not appear to implement equals and/or hashCode.  This can lead to " +
 					"significant performance problems when performing equality/dirty checking involving " +
-					"this Java type.  Consider registering a custom JavaTypeDescriptor or at least " +
+					"this Java type.  Consider registering a custom JavaType or at least " +
 					"implementing equals/hashCode."
 	)
 	void unknownJavaTypeNoEqualsHashCode(Class javaType);
@@ -1746,10 +1759,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Bytecode enhancement failed for class: %1$s. It might be due to the Java module system preventing Hibernate ORM from defining an enhanced class "
 			+ "in the same package as class %1$s. In this case, the class should be opened and exported to Hibernate ORM.", id = 488)
 	String bytecodeEnhancementFailedUnableToGetPrivateLookupFor(String className);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Setting " + AvailableSettings.NATIVE_EXCEPTION_HANDLING_51_COMPLIANCE + "=true is not valid with JPA bootstrapping; setting will be ignored.", id = 489 )
-	void nativeExceptionHandling51ComplianceJpaBootstrapping();
 
 	@LogMessage(level = INFO)
 	@Message(value = "Using JtaPlatform implementation: [%s]", id = 490)

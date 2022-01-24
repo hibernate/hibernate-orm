@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 @DomainModel( annotatedClasses = SmokeTests.SimpleEntity.class )
 @ServiceRegistry
 @SessionFactory( exportSchema = true )

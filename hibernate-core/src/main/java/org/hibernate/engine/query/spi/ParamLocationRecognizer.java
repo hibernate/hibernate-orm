@@ -13,9 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.engine.query.ParameterRecognitionException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
 
 /**
@@ -26,8 +24,8 @@ import org.hibernate.query.sql.spi.ParameterRecognizer;
  */
 public class ParamLocationRecognizer implements ParameterRecognizer {
 
-	private Map<String, NamedParameterDescriptor> namedParameterDescriptors;
-	private Map<Integer, OrdinalParameterDescriptor> ordinalParameterDescriptors;
+	private Map<String, NamedParameterDescriptor<?>> namedParameterDescriptors;
+	private Map<Integer, OrdinalParameterDescriptor<?>> ordinalParameterDescriptors;
 
 	private Map<String, InFlightNamedParameterState> inFlightNamedStateMap;
 	private Map<Integer, InFlightOrdinalParameterState> inFlightOrdinalStateMap;
@@ -36,26 +34,22 @@ public class ParamLocationRecognizer implements ParameterRecognizer {
 	private final int jdbcStyleOrdinalCountBase;
 	private int jdbcStyleOrdinalCount;
 
-	public ParamLocationRecognizer() {
-		this( 1 );
-	}
-
 	public ParamLocationRecognizer(int jdbcStyleOrdinalCountBase) {
 		this.jdbcStyleOrdinalCountBase = jdbcStyleOrdinalCountBase;
 		this.jdbcStyleOrdinalCount = jdbcStyleOrdinalCountBase;
 	}
 
-	/**
-	 * Convenience method for creating a param location recognizer and
-	 * initiating the parse.
-	 */
-	public static ParamLocationRecognizer parseLocations(
-			String query,
-			SessionFactoryImplementor sessionFactory) {
-		final ParamLocationRecognizer recognizer = new ParamLocationRecognizer( 1 );
-		ParameterParser.parse( query, recognizer );
-		return recognizer;
-	}
+//	/**
+//	 * Convenience method for creating a param location recognizer and
+//	 * initiating the parse.
+//	 */
+//	public static ParamLocationRecognizer parseLocations(
+//			String query,
+//			SessionFactoryImplementor sessionFactory) {
+//		final ParamLocationRecognizer recognizer = new ParamLocationRecognizer( 1 );
+//		ParameterParser.parse( query, recognizer );
+//		return recognizer;
+//	}
 
 	public void validate() {
 		if ( inFlightNamedStateMap != null && ( inFlightOrdinalStateMap != null || inFlightJpaOrdinalStateMap != null ) ) {
@@ -69,7 +63,7 @@ public class ParamLocationRecognizer implements ParameterRecognizer {
 		}
 
 		if ( inFlightNamedStateMap != null ) {
-			final Map<String, NamedParameterDescriptor> tmp = new HashMap<>();
+			final Map<String, NamedParameterDescriptor<?>> tmp = new HashMap<>();
 			for ( InFlightNamedParameterState inFlightState : inFlightNamedStateMap.values() ) {
 				tmp.put( inFlightState.name, inFlightState.complete() );
 			}
@@ -83,7 +77,7 @@ public class ParamLocationRecognizer implements ParameterRecognizer {
 			ordinalParameterDescriptors = Collections.emptyMap();
 		}
 		else {
-			final Map<Integer, OrdinalParameterDescriptor> tmp = new HashMap<>();
+			final Map<Integer, OrdinalParameterDescriptor<?>> tmp = new HashMap<>();
 			if ( inFlightOrdinalStateMap != null ) {
 				for ( InFlightOrdinalParameterState state : inFlightOrdinalStateMap.values() ) {
 					tmp.put( state.identifier, state.complete() );
@@ -102,11 +96,11 @@ public class ParamLocationRecognizer implements ParameterRecognizer {
 		throw new ParameterRecognitionException( "Mixed parameter strategies - use just one of named, positional or JPA-ordinal strategy" );
 	}
 
-	public Map<String, NamedParameterDescriptor> getNamedParameterDescriptionMap() {
+	public Map<String, NamedParameterDescriptor<?>> getNamedParameterDescriptionMap() {
 		return namedParameterDescriptors;
 	}
 
-	public Map<Integer, OrdinalParameterDescriptor> getOrdinalParameterDescriptionMap() {
+	public Map<Integer, OrdinalParameterDescriptor<?>> getOrdinalParameterDescriptionMap() {
 		return ordinalParameterDescriptors;
 	}
 
@@ -193,8 +187,8 @@ public class ParamLocationRecognizer implements ParameterRecognizer {
 			sourcePositions.add( position );
 		}
 
-		private NamedParameterDescriptor complete() {
-			return new NamedParameterDescriptor(
+		private NamedParameterDescriptor<?> complete() {
+			return new NamedParameterDescriptor<>(
 					name,
 					null,
 					ArrayHelper.toIntArray( sourcePositions )
@@ -217,8 +211,8 @@ public class ParamLocationRecognizer implements ParameterRecognizer {
 			this.sourcePosition = sourcePosition;
 		}
 
-		private OrdinalParameterDescriptor complete() {
-			return new OrdinalParameterDescriptor(
+		private OrdinalParameterDescriptor<?> complete() {
+			return new OrdinalParameterDescriptor<>(
 					identifier,
 					valuePosition,
 					null,
@@ -243,8 +237,8 @@ public class ParamLocationRecognizer implements ParameterRecognizer {
 			sourcePositions.add( position );
 		}
 
-		private OrdinalParameterDescriptor complete() {
-			return new OrdinalParameterDescriptor(
+		private OrdinalParameterDescriptor<?> complete() {
+			return new OrdinalParameterDescriptor<>(
 					identifier,
 					identifier - 1,
 					null,

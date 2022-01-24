@@ -9,7 +9,7 @@ package org.hibernate.query.sqm.tree.domain;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.PathException;
 
 /**
@@ -19,7 +19,6 @@ public abstract class AbstractSqmSpecificPluralPartPath<T> extends AbstractSqmPa
 	private final SqmPath<?> pluralDomainPath;
 	private final PluralPersistentAttribute<?, ?, T> pluralAttribute;
 
-	@SuppressWarnings("WeakerAccess")
 	public AbstractSqmSpecificPluralPartPath(
 			NavigablePath navigablePath,
 			SqmPath<?> pluralDomainPath,
@@ -34,12 +33,10 @@ public abstract class AbstractSqmSpecificPluralPartPath<T> extends AbstractSqmPa
 		this.pluralAttribute = referencedAttribute;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public SqmPath<?> getPluralDomainPath() {
 		return pluralDomainPath;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public PluralPersistentAttribute<?, ?, T> getPluralAttribute() {
 		return pluralAttribute;
 	}

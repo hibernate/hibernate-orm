@@ -16,10 +16,10 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.CastType;
-import org.hibernate.query.IntervalType;
-import org.hibernate.query.TemporalUnit;
-import org.hibernate.query.TrimSpec;
+import org.hibernate.query.sqm.CastType;
+import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -161,7 +161,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes(typeContributions, serviceRegistry);
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
-				.getJdbcTypeDescriptorRegistry();
+				.getJdbcTypeRegistry();
 		if ( jtdsDriver ) {
 			jdbcTypeRegistry.addDescriptor( Types.TINYINT, SmallIntJdbcType.INSTANCE );
 
@@ -180,14 +180,14 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		jdbcTypeRegistry.addDescriptor( Types.BLOB, BlobJdbcType.PRIMITIVE_ARRAY_BINDING );
 
 		// Sybase requires a custom binder for binding untyped nulls with the NULL type
-		typeContributions.contributeJdbcTypeDescriptor( ObjectNullAsNullTypeJdbcType.INSTANCE );
+		typeContributions.contributeJdbcType( ObjectNullAsNullTypeJdbcType.INSTANCE );
 
 		// Until we remove StandardBasicTypes, we have to keep this
 		typeContributions.contributeType(
 				new JavaObjectType(
 						ObjectNullAsNullTypeJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
-								.getJavaTypeDescriptorRegistry()
+								.getJavaTypeRegistry()
 								.getDescriptor( Object.class )
 				)
 		);

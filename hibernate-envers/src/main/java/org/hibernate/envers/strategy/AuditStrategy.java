@@ -14,13 +14,13 @@ import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeD
 /**
  * Behaviours of different audit strategy for populating audit data.
  *
- * @deprecated (since 5.4), use {@link org.hibernate.envers.strategy.spi.AuditStrategy} instead.
+ * @deprecated use {@link org.hibernate.envers.strategy.spi.AuditStrategy} instead.
  *
  * @author Stephanie Pau
  * @author Adam Warski (adam at warski dot org)
  * @author Chris Cranford
  */
-@Deprecated
+@Deprecated(since = "5.4")
 public interface AuditStrategy extends org.hibernate.envers.strategy.spi.AuditStrategy {
 	/**
 	 * Perform the persistence of audited data for regular entities.
@@ -31,9 +31,9 @@ public interface AuditStrategy extends org.hibernate.envers.strategy.spi.AuditSt
 	 * @param id Id of the entity.
 	 * @param data Audit data to persist
 	 * @param revision Current revision data
-	 * @deprecated (since 5.2.1), use {@link org.hibernate.envers.strategy.spi.AuditStrategy#perform(Session, String, Configuration, Object, Object, Object)}
+	 * @deprecated use {@link org.hibernate.envers.strategy.spi.AuditStrategy#perform(Session, String, Configuration, Object, Object, Object)}
 	 */
-	@Deprecated
+	@Deprecated(since = "5.2.1")
 	default void perform(
 			Session session,
 			String entityName,
@@ -61,9 +61,9 @@ public interface AuditStrategy extends org.hibernate.envers.strategy.spi.AuditSt
 	 * @param enversService The EnversService
 	 * @param persistentCollectionChangeData Collection change data to be persisted.
 	 * @param revision Current revision data
-	 * @deprecated (since 5.2.1), use {@link #performCollectionChange(Session, String, String, Configuration, PersistentCollectionChangeData, Object)}
+	 * @deprecated use {@link #performCollectionChange(Session, String, String, Configuration, PersistentCollectionChangeData, Object)}
 	 */
-	@Deprecated
+	@Deprecated(since = "5.2.1")
 	default void performCollectionChange(
 			Session session,
 			String entityName,

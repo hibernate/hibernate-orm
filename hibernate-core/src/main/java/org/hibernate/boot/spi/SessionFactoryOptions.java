@@ -155,9 +155,9 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	TempTableDdlTransactionHandling getTempTableDdlTransactionHandling();
 
 	/**
-	 * @deprecated (since 6.0) : No longer used internally
+	 * @deprecated : No longer used internally
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	BatchFetchStyle getBatchFetchStyle();
 
 	boolean isDelayBatchFetchLoaderCreationsEnabled();

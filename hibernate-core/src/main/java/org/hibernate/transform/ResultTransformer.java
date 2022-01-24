@@ -21,9 +21,9 @@ import org.hibernate.query.TupleTransformer;
  *
  * @author Gavin King
  *
- * @deprecated (since 6.0) Use {@link TupleTransformer} and/or {@link ResultListTransformer} instead
+ * @deprecated Use {@link TupleTransformer} and/or {@link ResultListTransformer} instead
  */
-@Deprecated
+@Deprecated(since = "6.0")
 public interface ResultTransformer<T> extends TupleTransformer<T>, ResultListTransformer<T>, Serializable {
 	@Override
 	default List<T> transformList(List<T> resultList) {

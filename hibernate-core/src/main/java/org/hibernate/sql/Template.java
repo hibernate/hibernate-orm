@@ -107,7 +107,6 @@ public final class Template {
 	 * @deprecated Only intended for annotations usage; use {@link #renderWhereStringTemplate(String, String, Dialect, SqmFunctionRegistry)} instead
 	 */
 	@Deprecated
-	@SuppressWarnings({ "JavaDoc" })
 	public static String renderWhereStringTemplate(String sqlWhereString, String placeholder, Dialect dialect) {
 		final SqmFunctionRegistry sqmFunctionRegistry = new SqmFunctionRegistry();
 		return renderWhereStringTemplate(

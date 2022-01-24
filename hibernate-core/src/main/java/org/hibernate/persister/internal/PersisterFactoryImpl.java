@@ -223,9 +223,9 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	/**
 	 * The legacy constructor signature for {@link EntityPersister} implementations
 	 *
-	 * @deprecated (as of 6.0) - use {@link #ENTITY_PERSISTER_CONSTRUCTOR_ARGS} instead
+	 * @deprecated use {@link #ENTITY_PERSISTER_CONSTRUCTOR_ARGS} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	private static final Class<?>[] LEGACY_ENTITY_PERSISTER_CONSTRUCTOR_ARGS = new Class[] {
 			PersistentClass.class,
 			EntityDataAccess.class,
@@ -256,9 +256,9 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	/**
 	 * The constructor signature for {@link CollectionPersister} implementations
 	 *
-	 * @deprecated (as of 6.0) - use {@link #COLLECTION_PERSISTER_CONSTRUCTOR_ARGS} instead
+	 * @deprecated use {@link #COLLECTION_PERSISTER_CONSTRUCTOR_ARGS} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	private static final Class<?>[] LEGACY_COLLECTION_PERSISTER_CONSTRUCTOR_ARGS = new Class[] {
 			Collection.class,
 			CollectionDataAccess.class,

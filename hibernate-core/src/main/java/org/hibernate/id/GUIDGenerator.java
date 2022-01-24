@@ -21,9 +21,9 @@ import org.hibernate.internal.CoreMessageLogger;
  *
  * @author Joseph Fifield
  *
- * @deprecated (as of 6.0)
+ * @deprecated use {@link org.hibernate.id.uuid.UuidGenerator}
  */
-@Deprecated
+@Deprecated(since = "6.0")
 public class GUIDGenerator implements StandardGenerator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( GUIDGenerator.class );
 

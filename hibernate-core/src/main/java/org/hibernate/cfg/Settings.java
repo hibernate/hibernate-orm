@@ -159,9 +159,9 @@ public final class Settings {
 	}
 
 	/**
-	 * @deprecated (since 6.0) : No longer used internally
+	 * @deprecated No longer used internally
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	public BatchFetchStyle getBatchFetchStyle() {
 		return sessionFactoryOptions.getBatchFetchStyle();
 	}

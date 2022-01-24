@@ -14,10 +14,9 @@ import java.util.Map;
  *
  * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
  *
- * @deprecated (as of 6.0) supply a {@link org.hibernate.id.factory.spi.GenerationTypeStrategyRegistration}
- * instead
+ * @deprecated supply a {@link org.hibernate.id.factory.spi.GenerationTypeStrategyRegistration} instead
  */
-@Deprecated
+@Deprecated(since = "6.0")
 public interface IdentifierGeneratorStrategyProvider {
 	/**
 	 * set of strategy / generator class pairs to register as accepted strategies

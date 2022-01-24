@@ -25,14 +25,14 @@ package org.hibernate.envers.strategy;
  * </ul>
  * </p>
  *
- * @deprecated (since 5.4), use {@link org.hibernate.envers.strategy.internal.ValidityAuditStrategy} instead.
+ * @deprecated use {@link org.hibernate.envers.strategy.internal.ValidityAuditStrategy} instead.
  *
  * @author Stephanie Pau
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Chris Cranford
  */
-@Deprecated
+@Deprecated(since = "5.4")
 public class ValidityAuditStrategy extends org.hibernate.envers.strategy.internal.ValidityAuditStrategy {
 
 }

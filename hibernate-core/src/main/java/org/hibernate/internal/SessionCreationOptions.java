@@ -61,10 +61,10 @@ public interface SessionCreationOptions {
 	 *
 	 * @return Always returns null.
 	 *
-	 * @deprecated (since 5,2) SessionOwner is no longer pertinent due to the
+	 * @deprecated SessionOwner is no longer pertinent due to the
 	 * hibernate-entitymanager -> hibernate-core consolidation
 	 */
-	@Deprecated
+	@Deprecated(since = "5.2")
 	SessionOwner getSessionOwner();
 
 	ExceptionMapper getExceptionMapper();

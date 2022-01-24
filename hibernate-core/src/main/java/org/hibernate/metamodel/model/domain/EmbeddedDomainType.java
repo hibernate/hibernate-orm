@@ -9,13 +9,13 @@ package org.hibernate.metamodel.model.domain;
 /**
  * Hibernate extension to the JPA {@link jakarta.persistence.metamodel.EntityType} contract.
  *
- * @deprecated (since 6.0) Use {@link EmbeddableDomainType} instead.  Originally intended
+ * @deprecated Use {@link EmbeddableDomainType} instead.  Originally intended
  * to describe the actual usage of an embeddable (the embedded) because it was intended
  * to include the mapping (column, etc) information.  However, that causes us to need
  * multiple embeddable instances per embeddable class.
  *
  * @author Steve Ebersole
  */
-@Deprecated
+@Deprecated(since = "6.0")
 public interface EmbeddedDomainType<J> extends EmbeddableDomainType<J> {
 }

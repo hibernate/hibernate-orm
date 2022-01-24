@@ -16,11 +16,11 @@ package org.hibernate.jpa;
  *
  * @see SpecHints
  *
- * @deprecated (since 6.0) Use the {@link SpecHints} form instead
+ * @deprecated Use the {@link SpecHints} form instead
  *
  * @author Steve Ebersole
  */
-@Deprecated
+@Deprecated(since = "6.0")
 public interface LegacySpecHints {
 	/**
 	 * @see SpecHints#HINT_SPEC_FETCH_GRAPH

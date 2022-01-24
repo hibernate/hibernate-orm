@@ -133,9 +133,9 @@ public interface CacheImplementor extends Service, Cache, Serializable {
 	 *
 	 * @return All cache region names
 	 *
-	 * @deprecated (since 5.3) Use {@link CacheImplementor#getCacheRegionNames()} instead
+	 * @deprecated Use {@link CacheImplementor#getCacheRegionNames()} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "5.3")
 	String[] getSecondLevelCacheRegionNames();
 
 	/**
@@ -185,10 +185,10 @@ public interface CacheImplementor extends Service, Cache, Serializable {
 	//		- themselves deprecated
 
 	/**
-	 * @deprecated (since 5.3) No replacement - added just to continue some backwards compatibility
+	 * @deprecated No replacement - added just to continue some backwards compatibility
 	 * in supporting the newly deprecated methods expecting a qualified (prefix +) region name
 	 */
-	@Deprecated
+	@Deprecated(since = "5.3")
 	default String unqualifyRegionName(String name) {
 		if ( getSessionFactory().getSessionFactoryOptions().getCacheRegionPrefix() == null ) {
 			return name;

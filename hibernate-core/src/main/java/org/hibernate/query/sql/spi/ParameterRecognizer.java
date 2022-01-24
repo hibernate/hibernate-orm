@@ -19,9 +19,9 @@ public interface ParameterRecognizer {
 	 *
 	 * @param sourcePosition The position within the query
 	 *
-	 * @deprecated (since 5.2) Application should use {@link org.hibernate.procedure.ProcedureCall} instead
+	 * @deprecated Application should use {@link org.hibernate.procedure.ProcedureCall} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "5.2")
 	default void outParameter(int sourcePosition) {
 		throw new UnsupportedOperationException( "Recognizing native query as a function call is no longer supported" );
 	}

@@ -26,11 +26,11 @@ import org.hibernate.internal.util.GenericsHelper;
  *
  * @author Steve Ebersole
  *
- * @deprecated (since 5.3) forces the converter instance to be built too early,
+ * @deprecated forces the converter instance to be built too early,
  * which precludes the ability to resolve them from CDI, etc.  See
  * {@link ConverterDescriptor} instead
  */
-@Deprecated
+@Deprecated(since = "5.3")
 public class AttributeConverterDefinition implements AttributeConverterInfo {
 	private final AttributeConverter attributeConverter;
 	private final boolean autoApply;

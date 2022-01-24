@@ -428,9 +428,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	/**
-	 * @deprecated (since 5.2) use {@link #checkOpen()} instead
+	 * @deprecated use {@link #checkOpen()} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "5.2")
 	protected void errorIfClosed() {
 		checkOpen();
 	}

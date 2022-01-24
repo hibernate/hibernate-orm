@@ -158,9 +158,9 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 5.2) use {@link #connectionHandlingMode} instead
+	 * @deprecated use {@link #connectionHandlingMode} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "5.2")
 	T connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode);
 
 	/**
@@ -171,9 +171,9 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 5.2) use {@link #flushMode(FlushMode)} instead.
+	 * @deprecated use {@link #flushMode(FlushMode)} instead.
 	 */
-	@Deprecated
+	@Deprecated(since = "5.2")
 	@SuppressWarnings("unchecked")
 	default T flushBeforeCompletion(boolean flushBeforeCompletion) {
 		if ( flushBeforeCompletion ) {

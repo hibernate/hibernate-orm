@@ -47,9 +47,9 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	 *
 	 * @return True if the inheritance hierarchy is spread across multiple tables; false otherwise.
 	 *
-	 * @deprecated (since 6.0) Use {@link EntityPersister#getSqmMultiTableMutationStrategy} instead
+	 * @deprecated Use {@link EntityPersister#getSqmMultiTableMutationStrategy} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	boolean isMultiTable();
 
 	/**

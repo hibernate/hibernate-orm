@@ -46,9 +46,9 @@ public interface SharedSessionBuilder<T extends SharedSessionBuilder> extends Se
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (snce 6.0) use {@link #connectionHandlingMode} instead.
+	 * @deprecated use {@link #connectionHandlingMode} instead.
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	T connectionReleaseMode();
 
 	/**
@@ -84,9 +84,9 @@ public interface SharedSessionBuilder<T extends SharedSessionBuilder> extends Se
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 5.2) use {@link #flushMode()} instead.
+	 * @deprecated use {@link #flushMode()} instead.
 	 */
-	@Deprecated
+	@Deprecated(since = "5.2")
 	@SuppressWarnings("unchecked")
 	default T flushBeforeCompletion() {
 		flushMode();

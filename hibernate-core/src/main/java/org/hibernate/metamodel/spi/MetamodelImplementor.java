@@ -23,9 +23,9 @@ import org.hibernate.persister.entity.EntityPersister;
  *
  * @author Steve Ebersole
  *
- * @deprecated (since 6.0) - Prefer {@link MappingMetamodel}
+ * @deprecated - Prefer {@link MappingMetamodel}
  */
-@Deprecated
+@Deprecated(since = "6.0")
 public interface MetamodelImplementor extends MappingMetamodel, Metamodel {
 
 	@Override

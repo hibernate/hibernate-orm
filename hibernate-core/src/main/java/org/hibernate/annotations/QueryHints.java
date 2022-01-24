@@ -20,10 +20,10 @@ import org.hibernate.query.Query;
  *
  * @see AvailableHints
  *
- * @deprecated (since 6.0) Use {@link AvailableHints} instead
+ * @deprecated Use {@link AvailableHints} instead
  */
 @SuppressWarnings("unused")
-@Deprecated
+@Deprecated(since = "6.0")
 public final class QueryHints {
 	/**
 	 * Disallow instantiation.

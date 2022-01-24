@@ -15,10 +15,10 @@ import org.hibernate.jpa.internal.HintsCollector;
  *
  * @see AvailableHints
  *
- * @deprecated (since 6.0) Use {@link AvailableHints} instead
+ * @deprecated Use {@link AvailableHints} instead
  */
 @SuppressWarnings("unused")
-@Deprecated
+@Deprecated(since = "6.0")
 public final class QueryHints {
 	/**
 	 * @see SpecHints#HINT_SPEC_QUERY_TIMEOUT

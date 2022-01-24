@@ -19,11 +19,11 @@ import org.hibernate.type.Type;
  * @see org.hibernate.cfg.Configuration
  * @author Gavin King
  *
- * @deprecated (since 6.0) Use {@link org.hibernate.type.spi.TypeConfiguration},
+ * @deprecated Use {@link org.hibernate.type.spi.TypeConfiguration},
  * {@link org.hibernate.boot.Metadata} or {@link org.hibernate.metamodel.RuntimeMetamodels}
  * to access such information
  */
-@Deprecated
+@Deprecated(since = "6.0")
 public interface Mapping {
 	Type getIdentifierType(String className) throws MappingException;
 	String getIdentifierPropertyName(String className) throws MappingException;

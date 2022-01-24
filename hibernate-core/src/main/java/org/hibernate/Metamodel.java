@@ -11,11 +11,11 @@ import org.hibernate.metamodel.model.domain.JpaMetamodel;
 /**
  * @author Steve Ebersole
  *
- * @deprecated (since 6.0) Prefer {@link JpaMetamodel}
+ * @deprecated Prefer {@link JpaMetamodel}
  *
  * @see JpaMetamodel
  */
-@Deprecated
+@Deprecated(since = "6.0")
 public interface Metamodel extends JpaMetamodel {
 	/**
 	 * Access to the SessionFactory that this Metamodel instance is bound to.

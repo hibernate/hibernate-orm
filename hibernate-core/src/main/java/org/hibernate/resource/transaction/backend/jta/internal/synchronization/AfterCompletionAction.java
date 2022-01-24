@@ -17,10 +17,10 @@ import org.hibernate.engine.spi.SessionImplementor;
  *
  * @author Steve Ebersole
  *
- * @deprecated (since 5.2) - probably getting removed in 5.2 as well.  This was an SPI contract
+ * @deprecated probably getting removed in 5.2 as well.  This was an SPI contract
  * intended for HEM that is no longer needed.
  */
-@Deprecated
+@Deprecated(since = "5.2")
 public interface AfterCompletionAction extends Serializable {
 	void doAction(boolean successful, SessionImplementor session);
 }

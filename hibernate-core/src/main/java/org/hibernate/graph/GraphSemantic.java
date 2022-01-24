@@ -66,9 +66,9 @@ public enum GraphSemantic {
 	 * @see org.hibernate.jpa.LegacySpecHints#HINT_JAVAEE_FETCH_GRAPH
 	 * @see org.hibernate.jpa.LegacySpecHints#HINT_JAVAEE_LOAD_GRAPH
 	 *
-	 * @deprecated (since 6.0) Use {@link #getJakartaHintName} instead
+	 * @deprecated Use {@link #getJakartaHintName} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	public String getJpaHintName() {
 		return javaeeHintName;
 	}
@@ -99,9 +99,9 @@ public enum GraphSemantic {
 	}
 
 	/**
-	 * @deprecated (since 6.0) Use {@link #fromHintName} instead
+	 * @deprecated Use {@link #fromHintName} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	public static GraphSemantic fromJpaHintName(String hintName) {
 		return fromHintName( hintName );
 	}

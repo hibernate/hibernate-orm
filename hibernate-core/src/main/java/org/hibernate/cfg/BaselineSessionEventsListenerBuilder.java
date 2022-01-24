@@ -36,7 +36,6 @@ public class BaselineSessionEventsListenerBuilder {
 		return logSessionMetrics;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
 	/**
 	 * @deprecated this method will be removed as this builder should become immutable
 	 */
@@ -50,7 +49,6 @@ public class BaselineSessionEventsListenerBuilder {
 		return autoListener;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
 	/**
 	 * @deprecated this method will be removed as this builder should become immutable
 	 */

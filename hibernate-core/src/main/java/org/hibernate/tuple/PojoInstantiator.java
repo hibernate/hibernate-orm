@@ -20,9 +20,9 @@ import org.hibernate.mapping.Component;
 /**
  * Defines a POJO-based instantiator for use from the tuplizers.
  *
- * @deprecated (as of 6.0) Like {@link Instantiator} itself, deprecated.
+ * @deprecated Like {@link Instantiator} itself, deprecated.
  */
-@Deprecated
+@Deprecated(since = "6.0")
 public class PojoInstantiator implements Instantiator, Serializable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PojoInstantiator.class.getName() );
 
@@ -34,9 +34,9 @@ public class PojoInstantiator implements Instantiator, Serializable {
 	private final boolean isAbstract;
 
 	/**
-	 * @deprecated (as of 6.0) See {@link PojoInstantiator}
+	 * @deprecated See {@link PojoInstantiator}
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	public PojoInstantiator(
 			Class<?> mappedClass,
 			ReflectionOptimizer.InstantiationOptimizer optimizer,
@@ -56,17 +56,17 @@ public class PojoInstantiator implements Instantiator, Serializable {
 	}
 
 	/**
-	 * @deprecated (as of 6.0) See {@link PojoInstantiator}
+	 * @deprecated See {@link PojoInstantiator}
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	public PojoInstantiator(Component component, ReflectionOptimizer.InstantiationOptimizer optimizer) {
 		this( component.getComponentClass(), optimizer );
 	}
 
 	/**
-	 * @deprecated (as of 6.0) See {@link PojoInstantiator}
+	 * @deprecated See {@link PojoInstantiator}
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	public PojoInstantiator(Class<?> componentClass, ReflectionOptimizer.InstantiationOptimizer optimizer) {
 		this.mappedClass = componentClass;
 		this.isAbstract = ReflectHelper.isAbstractClass( mappedClass );

@@ -1307,9 +1307,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	/**
-	 * @deprecated (since 6.0) : No longer used internally
+	 * @deprecated : No longer used internally
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	public void applyBatchFetchStyle(BatchFetchStyle style) {
 		this.batchFetchStyle = style;
 	}

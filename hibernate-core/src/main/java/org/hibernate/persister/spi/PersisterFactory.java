@@ -70,10 +70,10 @@ public interface PersisterFactory extends Service {
 	 *
 	 * @return An appropriate entity persister instance.
 	 *
-	 * @deprecated (since 6.0) use {@link #createEntityPersister(PersistentClass, EntityDataAccess, NaturalIdDataAccess, RuntimeModelCreationContext)}
+	 * @deprecated use {@link #createEntityPersister(PersistentClass, EntityDataAccess, NaturalIdDataAccess, RuntimeModelCreationContext)}
 	 * instead
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	EntityPersister createEntityPersister(
 			PersistentClass entityBinding,
 			EntityDataAccess entityCacheAccessStrategy,
@@ -87,10 +87,10 @@ public interface PersisterFactory extends Service {
 	 * @param cacheAccessStrategy The cache access strategy for the collection region
 	 * @param creationContext Access to additional information needed to create an EntityPersister
 	 *
-	 * @deprecated (since 6.0) use {@link #createCollectionPersister(Collection, CollectionDataAccess, RuntimeModelCreationContext)}
+	 * @deprecated use {@link #createCollectionPersister(Collection, CollectionDataAccess, RuntimeModelCreationContext)}
 	 * instead
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	CollectionPersister createCollectionPersister(
 			Collection collectionBinding,
 			CollectionDataAccess cacheAccessStrategy,

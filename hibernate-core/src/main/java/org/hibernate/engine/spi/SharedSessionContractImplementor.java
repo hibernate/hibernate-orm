@@ -193,9 +193,9 @@ public interface SharedSessionContractImplementor
 	long getTransactionStartTimestamp();
 
 	/**
-	 * @deprecated (since 5.3) Use {@link #getTransactionStartTimestamp()} instead.
+	 * @deprecated Use {@link #getTransactionStartTimestamp()} instead.
 	 */
-	@Deprecated
+	@Deprecated(since = "5.3")
 	default long getTimestamp() {
 		return getTransactionStartTimestamp();
 	}
@@ -345,9 +345,9 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @param flushMode the new flush mode
 	 *
-	 * @deprecated (since 5.2) use {@link #setHibernateFlushMode(FlushMode)} instead
+	 * @deprecated  use {@link #setHibernateFlushMode(FlushMode)} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "5.2")
 	void setFlushMode(FlushMode flushMode);
 
 	/**

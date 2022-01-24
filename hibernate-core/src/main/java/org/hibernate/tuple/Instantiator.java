@@ -13,11 +13,11 @@ import org.hibernate.metamodel.ManagedTypeRepresentationStrategy;
 /**
  * Contract for implementors responsible for instantiating entity/component instances.
  *
- * @deprecated (as of 6.0) This contract is no longer used by Hibernate.  Implement/use
+ * @deprecated This contract is no longer used by Hibernate.  Implement/use
  * {@link org.hibernate.metamodel.spi.Instantiator} instead.  See
  * {@link ManagedTypeRepresentationStrategy}
  */
-@Deprecated
+@Deprecated(since = "6.0")
 public interface Instantiator extends Serializable {
 
 	/**

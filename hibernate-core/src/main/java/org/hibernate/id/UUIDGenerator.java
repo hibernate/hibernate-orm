@@ -37,10 +37,10 @@ import org.hibernate.type.descriptor.java.UUIDJavaType;
  * <li>{@link org.hibernate.id.uuid.CustomVersionOneStrategy}</li>
  * </ul>
  *
- * @deprecated (since 6.0) - use {@link org.hibernate.id.uuid.UuidGenerator} and
+ * @deprecated use {@link org.hibernate.id.uuid.UuidGenerator} and
  * {@link org.hibernate.annotations.UuidGenerator} instead
  */
-@Deprecated
+@Deprecated(since = "6.0")
 public class UUIDGenerator implements StandardGenerator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UUIDGenerator.class );
 

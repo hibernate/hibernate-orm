@@ -16,9 +16,9 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  *
- * @deprecated (since 6.0) : see {@link BatchLoadSizingStrategy} instead
+ * @deprecated see {@link BatchLoadSizingStrategy} instead
  */
-@Deprecated
+@Deprecated(since = "6.0")
 public enum BatchFetchStyle {
 	/**
 	 * The legacy algorithm where we keep a set of pre-built batch sizes based on

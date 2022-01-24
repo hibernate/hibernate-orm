@@ -38,11 +38,11 @@ public interface EntityTuplizer extends Tuplizer {
 	 *
      * @return The identifier value.
 	 *
-	 * @deprecated (as of 6.0) - no longer used internally and to be removed.
+	 * @deprecated no longer used internally and to be removed.
 	 * Use {@link org.hibernate.metamodel.mapping.EntityIdentifierMapping#getIdentifier}
 	 * instead
      */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	Object getIdentifier(Object entity, SharedSessionContractImplementor session);
 
 	/**

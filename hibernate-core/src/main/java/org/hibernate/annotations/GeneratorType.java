@@ -27,7 +27,7 @@ import org.hibernate.tuple.VmValueGeneration;
 @ValueGenerationType( generatedBy = VmValueGeneration.class )
 @Retention( RetentionPolicy.RUNTIME )
 @Target( value = { ElementType.FIELD, ElementType.METHOD } )
-@Deprecated
+@Deprecated(since = "6.0")
 public @interface GeneratorType {
 
 	/**

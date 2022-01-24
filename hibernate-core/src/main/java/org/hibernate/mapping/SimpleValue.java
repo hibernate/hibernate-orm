@@ -301,9 +301,9 @@ public abstract class SimpleValue implements KeyValue {
 	 * {@link #createIdentifierGenerator(IdentifierGeneratorFactory, Dialect, String, String, RootClass)} was never
 	 * completed.
 	 *
-	 * @deprecated (as of 6.0) - not used and no longer supported.
+	 * @deprecated not used and no longer supported.
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	public IdentifierGenerator getIdentifierGenerator() {
 		return identifierGenerator;
 	}

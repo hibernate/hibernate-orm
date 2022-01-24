@@ -49,10 +49,10 @@ public interface IdentifierGeneratorFactory {
 	 *
 	 * @return The appropriate generator instance.
 	 *
-	 * @deprecated (since 6.0) use {@link #createIdentifierGenerator(GenerationType, String, String, JavaType, Properties, GeneratorDefinitionResolver)}
+	 * @deprecated use {@link #createIdentifierGenerator(GenerationType, String, String, JavaType, Properties, GeneratorDefinitionResolver)}
 	 * instead
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	IdentifierGenerator createIdentifierGenerator(String strategy, Type type, Properties config);
 
 	/**
@@ -61,9 +61,9 @@ public interface IdentifierGeneratorFactory {
 	 * @param strategy The strategy
 	 * @return The generator class.
 	 *
-	 * @deprecated (since 6.0) with no replacement.  See
+	 * @deprecated with no replacement.  See
 	 * {@link #createIdentifierGenerator(GenerationType, String, String, JavaType, Properties, GeneratorDefinitionResolver)}
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	Class getIdentifierGeneratorClass(String strategy);
 }

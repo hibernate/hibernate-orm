@@ -29,9 +29,9 @@ public interface Integrator {
 	 * @param metadata The "compiled" representation of the mapping information
 	 * @param sessionFactory The session factory being created
 	 * @param serviceRegistry The session factory's service registry
-	 * @deprecated (since 6.0) - use
+	 * @deprecated - use
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	default void integrate(
 			Metadata metadata,
 			SessionFactoryImplementor sessionFactory,

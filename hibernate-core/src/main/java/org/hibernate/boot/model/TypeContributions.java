@@ -42,13 +42,13 @@ public interface TypeContributions {
 	<T> void contributeType(UserType<T> type);
 
 	/**
-	 * @deprecated (6.0) See user-guide section `2.2.46. TypeContributor` for details - `basic_types.adoc`
+	 * @deprecated See user-guide section `2.2.46. TypeContributor` for details - `basic_types.adoc`
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	void contributeType(BasicType type);
 
 	/**
-	 * @deprecated (since 5.3) Use {@link #contributeType(BasicType)} instead.  Basic
+	 * @deprecated Use {@link #contributeType(BasicType)} instead.  Basic
 	 * types will be defined and handled much differently in 6.0 based on a combination
 	 * of {@link JavaType}, {@link JdbcType} and a concept of a "value
 	 * converter" (a JPA AttributeConverter, an enum value resolver, etc).  To get as
@@ -57,11 +57,11 @@ public interface TypeContributions {
 	 * and use {@link StandardBasicTypeTemplate} to combine those with
 	 * registration keys and call {@link #contributeType(BasicType)} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "5.3")
 	void contributeType(BasicType type, String... keys);
 
 	/**
-	 * @deprecated (since 5.3) Use {@link #contributeType(BasicType)} instead.
+	 * @deprecated Use {@link #contributeType(BasicType)} instead.
 	 * {@link UserType}, as currently defined, will be done very differently in 6.0.
 	 * In most cases a {@link UserType} can be simply replaced with proper
 	 * {@link JavaType}.  To get as close as possible to 6.0 in 5.3 use
@@ -70,6 +70,6 @@ public interface TypeContributions {
 	 * {@link StandardBasicTypeTemplate} to combine those with registration keys
 	 * and call {@link #contributeType(BasicType)} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "5.3")
 	void contributeType(UserType type, String... keys);
 }

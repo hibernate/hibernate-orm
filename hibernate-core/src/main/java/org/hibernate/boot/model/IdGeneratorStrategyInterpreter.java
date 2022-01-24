@@ -14,10 +14,10 @@ import jakarta.persistence.TableGenerator;
 /**
  * Strategy for interpreting identifier generator related information.
  *
- * @deprecated (as of 6.0) see {@link org.hibernate.id.factory.spi.GenerationTypeStrategy}
+ * @deprecated see {@link org.hibernate.id.factory.spi.GenerationTypeStrategy}
  * and {@link org.hibernate.id.factory.spi.GenerationTypeStrategyRegistration}
  */
-@Deprecated
+@Deprecated(since = "6.0")
 public interface IdGeneratorStrategyInterpreter {
 	interface GeneratorNameDeterminationContext {
 		/**

@@ -160,9 +160,9 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	boolean isReadyForSerialization();
 
 	/**
-	 * @deprecated (since 5.2) access via {@link #getLogicalConnection} instead
+	 * @deprecated access via {@link #getLogicalConnection} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "5.2")
 	default ResourceRegistry getResourceRegistry() {
 		return getLogicalConnection().getResourceRegistry();
 	}

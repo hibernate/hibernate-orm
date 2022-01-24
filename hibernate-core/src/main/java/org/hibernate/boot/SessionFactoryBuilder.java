@@ -273,9 +273,9 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#BATCH_FETCH_STYLE
 	 *
-	 * @deprecated (since 6.0) : an appropriate style is selected
+	 * @deprecated : an appropriate style is selected
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	SessionFactoryBuilder applyBatchFetchStyle(BatchFetchStyle style);
 
 	/**

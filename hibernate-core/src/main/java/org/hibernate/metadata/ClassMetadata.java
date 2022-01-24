@@ -19,10 +19,9 @@ import org.hibernate.type.Type;
  * @see org.hibernate.SessionFactory#getClassMetadata(Class)
  * @author Gavin King
  *
- * @deprecated (since 6.0) Use Hibernate's mapping model {@link org.hibernate.metamodel.MappingMetamodel}
+ * @deprecated Use Hibernate's mapping model {@link org.hibernate.metamodel.MappingMetamodel}
  */
-@SuppressWarnings( {"JavaDoc"})
-@Deprecated
+@Deprecated(since = "6.0")
 public interface ClassMetadata {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -122,10 +121,10 @@ public interface ClassMetadata {
 	/**
 	 * Return the values of the mapped properties of the object
 	 *
-	 * @deprecated (since 5.3) Use the form accepting SharedSessionContractImplementor
+	 * @deprecated Use the form accepting SharedSessionContractImplementor
 	 * instead
 	 */
-	@Deprecated
+	@Deprecated(since = "5.3")
 	@SuppressWarnings({"UnusedDeclaration"})
 	default Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SessionImplementor session)
 			throws HibernateException {
@@ -156,10 +155,10 @@ public interface ClassMetadata {
 	 *
 	 * @return The instantiated entity.
 	 *
-	 * @deprecated (since 5.3) Use the form accepting SharedSessionContractImplementor
+	 * @deprecated Use the form accepting SharedSessionContractImplementor
 	 * instead
 	 */
-	@Deprecated
+	@Deprecated(since = "5.3")
 	default Object instantiate(Object id, SessionImplementor session) {
 		return instantiate( id, (SharedSessionContractImplementor) session );
 	}
@@ -184,7 +183,6 @@ public interface ClassMetadata {
 	 *
 	 * @param entity The entity from which to extract the property values.
 	 * @return The property values.
-	 * @throws HibernateException
 	 */
 	Object[] getPropertyValues(Object entity) throws HibernateException;
 

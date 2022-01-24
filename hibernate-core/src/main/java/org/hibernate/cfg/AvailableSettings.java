@@ -1877,9 +1877,9 @@ public interface AvailableSettings {
 	 * either the name of a {code BatchFetchStyle} instance, or an instance
 	 * of {@code BatchFetchStyle}.
 	 *
-	 * @deprecated (since 6.0) : An appropriate batch-fetch style is selected automatically
+	 * @deprecated An appropriate batch-fetch style is selected automatically
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	@SuppressWarnings("DeprecatedIsStillUsed")
 	String BATCH_FETCH_STYLE = "hibernate.batch_fetch_style";
 
@@ -2674,10 +2674,9 @@ public interface AvailableSettings {
 	 * Specifies a class which implements {@link org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider},
 	 * and has a constructor with no parameters.
 	 *
-	 * @deprecated (as of 6.0) use {@link org.hibernate.id.factory.spi.GenerationTypeStrategyRegistration}
-	 * instead
+	 * @deprecated use {@link org.hibernate.id.factory.spi.GenerationTypeStrategyRegistration} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	@SuppressWarnings("DeprecatedIsStillUsed")
 	String IDENTIFIER_GENERATOR_STRATEGY_PROVIDER = "hibernate.identifier_generator_strategy_provider";
 

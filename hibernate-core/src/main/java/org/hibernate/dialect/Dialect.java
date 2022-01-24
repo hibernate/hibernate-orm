@@ -251,7 +251,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * @deprecated provide a {@link DatabaseVersion}
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	protected Dialect() {
 		this( (DatabaseVersion) null );
 	}

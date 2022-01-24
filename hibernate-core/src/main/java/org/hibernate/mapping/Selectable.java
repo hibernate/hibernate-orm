@@ -47,22 +47,22 @@ public interface Selectable {
 	String getCustomWriteExpression();
 
 	/**
-	 * @deprecated (since 6.0) new read-by-position paradigm means that these generated
+	 * @deprecated new read-by-position paradigm means that these generated
 	 * aliases are no longer needed
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	String getAlias(Dialect dialect);
 
 	/**
-	 * @deprecated (since 6.0) new read-by-position paradigm means that these generated
+	 * @deprecated new read-by-position paradigm means that these generated
 	 * aliases are no longer needed
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	String getAlias(Dialect dialect, Table table);
 
 	/**
-	 * @deprecated (since 6.0) use {@link #getCustomWriteExpression()} instead
+	 * @deprecated use {@link #getCustomWriteExpression()} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	String getTemplate(Dialect dialect, SqmFunctionRegistry functionRegistry);
 }

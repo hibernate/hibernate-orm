@@ -321,9 +321,9 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	}
 
 	/**
-	 * @deprecated since 5.4 with no replacement.
+	 * @deprecated with no replacement.
 	 */
-	@Deprecated
+	@Deprecated(since = "5.4")
 	public void setRevisionTimestampGetter(Getter revisionTimestampGetter) {
 		this.revisionTimestampGetter = revisionTimestampGetter;
 	}

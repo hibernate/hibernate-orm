@@ -17,9 +17,9 @@ import org.hibernate.graph.spi.RootGraphImplementor;
  *
  * @author Brett Meyer
  *
- * @deprecated (6.0) - use {@link AppliedGraph} instead
+ * @deprecated use {@link AppliedGraph} instead
  */
-@Deprecated
+@Deprecated(since = "6.0")
 public class EntityGraphQueryHint implements AppliedGraph {
 	private final AppliedGraph delegate;
 

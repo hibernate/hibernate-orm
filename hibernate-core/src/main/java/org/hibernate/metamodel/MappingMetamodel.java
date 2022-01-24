@@ -126,9 +126,9 @@ public interface MappingMetamodel {
 	/**
 	 * @see #locateEntityDescriptor
 	 *
-	 * @deprecated (since 6.0) use {@link #locateEntityDescriptor(Class)} instead
+	 * @deprecated use {@link #locateEntityDescriptor(Class)} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	default EntityPersister locateEntityPersister(Class<?> byClass) {
 		return locateEntityDescriptor( byClass );
 	}
@@ -140,9 +140,9 @@ public interface MappingMetamodel {
 	 *
 	 * @throws org.hibernate.UnknownEntityTypeException If a matching EntityPersister cannot be located
 	 *
-	 * @deprecated (since 6.0) - use {@link #getEntityDescriptor(String)} instead
+	 * @deprecated - use {@link #getEntityDescriptor(String)} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	EntityPersister locateEntityPersister(String byName);
 
 	String getImportedName(String name);

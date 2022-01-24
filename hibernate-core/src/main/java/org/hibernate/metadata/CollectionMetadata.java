@@ -12,9 +12,9 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  *
- * @deprecated (since 6.0) Use Hibernate's mapping model {@link org.hibernate.metamodel.MappingMetamodel}
+ * @deprecated Use Hibernate's mapping model {@link org.hibernate.metamodel.MappingMetamodel}
  */
-@Deprecated
+@Deprecated(since = "6.0")
 public interface CollectionMetadata {
 	/**
 	 * The collection key type

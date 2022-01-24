@@ -21,12 +21,12 @@ public interface TransactionImplementor extends Transaction {
 	 *     <li>The session that owns the transaction is closed</li>
 	 * </ul>
 	 *
-	 * @deprecated (since 5.2) as part of effort to consolidate support for JPA and Hibernate SessionFactory, Session, etc
+	 * @deprecated as part of effort to consolidate support for JPA and Hibernate SessionFactory, Session, etc
 	 * natively, support for local Transaction delegates to remain "valid" after they are committed or rolled-back (and to a
 	 * degree after the owning Session is closed) to more closely comply with the JPA spec natively in terms
 	 * of allowing that extended access after Session is closed.  Hibernate impls have all been changed to no-op here.
 	 */
-	@Deprecated
+	@Deprecated(since = "5.2")
 	default void invalidate() {
 		// no-op : see @deprecated note
 	}

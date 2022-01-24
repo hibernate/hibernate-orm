@@ -17,16 +17,4 @@ import org.hibernate.SessionBuilder;
  * @author Gail Badner
  */
 public interface SessionBuilderImplementor<T extends SessionBuilder> extends SessionBuilder<T> {
-	/**
-	 * Adds the session owner to the session options
-	 *
-	 * @param sessionOwner The session owner.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated since consolidating hibernate-entitymanager into hibernate-core
-	 * I believe this is no longer needed.
-	 */
-	@Deprecated(since = "5.2")
-	T owner(SessionOwner sessionOwner);
 }

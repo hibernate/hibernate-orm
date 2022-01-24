@@ -14,27 +14,11 @@ import java.io.Serializable;
  * @author Gail Badner
  */
 public abstract class AbstractSerializableProxy implements Serializable {
-	private String entityName;
-	private Object id;
-	private Boolean readOnly;
-	private String sessionFactoryUuid;
-	private boolean allowLoadOutsideTransaction;
-
-	/**
-	 * @deprecated This constructor was initially intended for serialization only, and is not useful anymore.
-	 * In any case it should not be relied on by user code.
-	 */
-	@Deprecated
-	protected AbstractSerializableProxy() {
-	}
-
-	/**
-	 * @deprecated use {@link #AbstractSerializableProxy(String, Object, Boolean, String, boolean)} instead.
-	 */
-	@Deprecated
-	protected AbstractSerializableProxy(String entityName, Serializable id, Boolean readOnly) {
-		this( entityName, id, readOnly, null, false );
-	}
+	private final String entityName;
+	private final Object id;
+	private final Boolean readOnly;
+	private final String sessionFactoryUuid;
+	private final boolean allowLoadOutsideTransaction;
 
 	protected AbstractSerializableProxy(
 			String entityName,
@@ -55,23 +39,6 @@ public abstract class AbstractSerializableProxy implements Serializable {
 
 	protected Object getId() {
 		return id;
-	}
-
-	/**
-	 * Set the read-only/modifiable setting from this object in an AbstractLazyInitializer.
-	 *
-	 * This method should only be called during deserialization, before associating the
-	 * AbstractLazyInitializer with a session.
-	 *
-	 * @param li the read-only/modifiable setting to use when
-	 * associated with a session; null indicates that the default should be used.
-	 * @throws IllegalStateException if isReadOnlySettingAvailable() == true
-	 *
-	 * @deprecated Use {@link #afterDeserialization(AbstractLazyInitializer)} instead.
-	 */
-	@Deprecated
-	protected void setReadOnlyBeforeAttachedToSession(AbstractLazyInitializer li) {
-		li.afterDeserialization( readOnly, null, false );
 	}
 
 	/**

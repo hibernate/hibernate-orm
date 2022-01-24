@@ -21,8 +21,8 @@ public class BaselineSessionEventsListenerBuilder {
 
 	private static final SessionEventListener[] EMPTY = new SessionEventListener[0];
 
-	private boolean logSessionMetrics;
-	private Class<? extends SessionEventListener> autoListener;
+	private final boolean logSessionMetrics;
+	private final Class<? extends SessionEventListener> autoListener;
 
 	public BaselineSessionEventsListenerBuilder(
 			boolean logSessionMetrics,
@@ -36,25 +36,9 @@ public class BaselineSessionEventsListenerBuilder {
 		return logSessionMetrics;
 	}
 
-	/**
-	 * @deprecated this method will be removed as this builder should become immutable
-	 */
-	@Deprecated
-	public void setLogSessionMetrics(boolean logSessionMetrics) {
-		this.logSessionMetrics = logSessionMetrics;
-	}
-
 	@SuppressWarnings("UnusedDeclaration")
 	public Class<? extends SessionEventListener> getAutoListener() {
 		return autoListener;
-	}
-
-	/**
-	 * @deprecated this method will be removed as this builder should become immutable
-	 */
-	@Deprecated
-	public void setAutoListener(Class<? extends SessionEventListener> autoListener) {
-		this.autoListener = autoListener;
 	}
 
 	public List<SessionEventListener> buildBaselineList() {

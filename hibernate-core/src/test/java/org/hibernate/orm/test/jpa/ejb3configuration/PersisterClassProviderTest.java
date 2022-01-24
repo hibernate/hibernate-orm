@@ -456,16 +456,6 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public ValueInclusion[] getPropertyInsertGenerationInclusions() {
-			return new ValueInclusion[0];
-		}
-
-		@Override
-		public ValueInclusion[] getPropertyUpdateGenerationInclusions() {
-			return new ValueInclusion[0];
-		}
-
-		@Override
 		public boolean[] getPropertyUpdateability() {
 			return new boolean[0];
 		}

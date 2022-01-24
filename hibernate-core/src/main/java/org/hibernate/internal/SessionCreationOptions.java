@@ -13,10 +13,8 @@ import java.util.TimeZone;
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionEventListener;
-import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ManagedFlushChecker;
 
@@ -56,20 +54,7 @@ public interface SessionCreationOptions {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// deprecations
 
-	/**
-	 * Access to the SessionOwner, which defines the contract for things that can wrap a Session
-	 *
-	 * @return Always returns null.
-	 *
-	 * @deprecated SessionOwner is no longer pertinent due to the
-	 * hibernate-entitymanager -> hibernate-core consolidation
-	 */
-	@Deprecated(since = "5.2")
-	SessionOwner getSessionOwner();
-
 	ExceptionMapper getExceptionMapper();
-
-	AfterCompletionAction getAfterCompletionAction();
 
 	ManagedFlushChecker getManagedFlushChecker();
 }

@@ -146,7 +146,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 * @see jakarta.persistence.PersistenceContextType
 	 *
 	 * @deprecated Only integrations can specify autoClosing behavior of
-	 * individual sessions. See {@link org.hibernate.engine.spi.SessionOwner}.
+	 * individual sessions.
 	 */
 	@Deprecated
 	T autoClose(boolean autoClose);

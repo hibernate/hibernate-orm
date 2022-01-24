@@ -79,7 +79,6 @@ import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.event.spi.EventEngine;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -88,7 +87,6 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jpa.internal.AfterCompletionActionLegacyJpaImpl;
 import org.hibernate.jpa.internal.ExceptionMapperLegacyJpaImpl;
 import org.hibernate.jpa.internal.ManagedFlushCheckerLegacyJpaImpl;
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
@@ -119,7 +117,6 @@ import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ManagedFlushChecker;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -1203,21 +1200,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		// SessionCreationOptions
 
 		@Override
-		public SessionOwner getSessionOwner() {
-			return null;
-		}
-
-		@Override
 		public ExceptionMapper getExceptionMapper() {
 			return sessionOwnerBehavior == SessionOwnerBehavior.LEGACY_JPA
 					? ExceptionMapperLegacyJpaImpl.INSTANCE
-					: null;
-		}
-
-		@Override
-		public AfterCompletionAction getAfterCompletionAction() {
-			return sessionOwnerBehavior == SessionOwnerBehavior.LEGACY_JPA
-					? AfterCompletionActionLegacyJpaImpl.INSTANCE
 					: null;
 		}
 
@@ -1290,11 +1275,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		public Session openSession() {
 			log.tracef( "Opening Hibernate Session.  tenant=%s", tenantIdentifier );
 			return new SessionImpl( sessionFactory, this );
-		}
-
-		@Override
-		public T owner(SessionOwner sessionOwner) {
-			throw new UnsupportedOperationException( "SessionOwner was long deprecated and this method should no longer be invoked" );
 		}
 
 		@Override
@@ -1503,17 +1483,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
-		public SessionOwner getSessionOwner() {
-			return null;
-		}
-
-		@Override
 		public ExceptionMapper getExceptionMapper() {
-			return null;
-		}
-
-		@Override
-		public AfterCompletionAction getAfterCompletionAction() {
 			return null;
 		}
 

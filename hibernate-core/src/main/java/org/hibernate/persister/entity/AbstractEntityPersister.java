@@ -4885,22 +4885,6 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getPropertyInsertability();
 	}
 
-	/**
-	 * @deprecated no simple, direct replacement
-	 */
-	@Deprecated
-	public ValueInclusion[] getPropertyInsertGenerationInclusions() {
-		return null;
-	}
-
-	/**
-	 * @deprecated no simple, direct replacement
-	 */
-	@Deprecated
-	public ValueInclusion[] getPropertyUpdateGenerationInclusions() {
-		return null;
-	}
-
 	public boolean[] getPropertyNullability() {
 		return entityMetamodel.getPropertyNullability();
 	}

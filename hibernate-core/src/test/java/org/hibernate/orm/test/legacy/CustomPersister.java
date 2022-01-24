@@ -628,15 +628,6 @@ public class CustomPersister implements EntityPersister {
 		return MUTABILITY;
 	}
 
-	public ValueInclusion[] getPropertyInsertGenerationInclusions() {
-		return new ValueInclusion[0];
-	}
-
-	public ValueInclusion[] getPropertyUpdateGenerationInclusions() {
-		return new ValueInclusion[0];
-	}
-
-
 	public boolean canExtractIdOutOfEntity() {
 		return true;
 	}

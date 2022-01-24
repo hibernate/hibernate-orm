@@ -2039,22 +2039,6 @@ public abstract class AbstractCollectionPersister
 		}
 	}
 
-//	/**
-//	 * Process queued operations within the PersistentCollection.
-//	 *
-//	 * @param collection The collection
-//	 * @param key The collection key
-//	 * @param nextIndex The next index to write
-//	 * @param session The session
-//	 * @deprecated Use {@link #doProcessQueuedOps(PersistentCollection, Object, SharedSessionContractImplementor)}
-//	 */
-//	@Deprecated
-//	protected void doProcessQueuedOps(PersistentCollection<?> collection, Object key,
-//			int nextIndex, SharedSessionContractImplementor session)
-//			throws HibernateException {
-//		doProcessQueuedOps( collection, key, session );
-//	}
-
 	protected abstract void doProcessQueuedOps(PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session)
 			throws HibernateException;
 

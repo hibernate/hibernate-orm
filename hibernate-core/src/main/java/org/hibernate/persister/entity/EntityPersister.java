@@ -583,22 +583,6 @@ public interface EntityPersister
 	boolean[] getPropertyInsertability();
 
 	/**
-	 * Which of the properties of this class are database generated values on insert?
-	 *
-	 * @deprecated Replaced internally with InMemoryValueGenerationStrategy / InDatabaseValueGenerationStrategy
-	 */
-	@Deprecated
-	ValueInclusion[] getPropertyInsertGenerationInclusions();
-
-	/**
-	 * Which of the properties of this class are database generated values on update?
-	 *
-	 * @deprecated Replaced internally with InMemoryValueGenerationStrategy / InDatabaseValueGenerationStrategy
-	 */
-	@Deprecated
-	ValueInclusion[] getPropertyUpdateGenerationInclusions();
-
-	/**
 	 * Get the "updateability" of the properties of this class
 	 * (does the property appear in an SQL UPDATE)
 	 */

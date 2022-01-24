@@ -23,11 +23,4 @@ public abstract class AbstractDelegatingSessionBuilderImplementor<T extends Sess
 	protected SessionBuilderImplementor delegate() {
 		return (SessionBuilderImplementor) super.delegate();
 	}
-
-	@SuppressWarnings({ "unchecked", "deprecation" })
-	@Override
-	public T owner(SessionOwner sessionOwner) {
-		delegate().owner( sessionOwner );
-		return (T) this;
-	}
 }

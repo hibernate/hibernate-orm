@@ -50,7 +50,7 @@ public @interface AttributeAccessor {
 	 *
 	 * @deprecated use {@link #strategy()}
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	String value() default "";
 	/**
 	 * A class implementing {@link PropertyAccessStrategy}.

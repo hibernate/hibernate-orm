@@ -266,12 +266,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	private StatementInspector interpret(StatementInspector statementInspector) {
-		if ( statementInspector == null ) {
-			// If there is no StatementInspector specified, map to the call
-			//		to the (deprecated) Interceptor#onPrepareStatement method
-			return interceptor::onPrepareStatement;
-		}
-		return statementInspector;
+		return statementInspector == null
+				// If there is no StatementInspector specified, map to the call
+				// to the (deprecated) Interceptor#onPrepareStatement method
+				? interceptor::onPrepareStatement
+				: statementInspector;
 	}
 
 	@Override
@@ -425,14 +424,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		if ( !waitingForAutoClose ) {
 			checkOpen();
 		}
-	}
-
-	/**
-	 * @deprecated use {@link #checkOpen()} instead
-	 */
-	@Deprecated(since = "5.2")
-	protected void errorIfClosed() {
-		checkOpen();
 	}
 
 	@Override

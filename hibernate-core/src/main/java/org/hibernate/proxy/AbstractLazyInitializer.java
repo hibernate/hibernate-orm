@@ -44,23 +44,9 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	private boolean allowLoadOutsideTransaction;
 
 	/**
-	 * @deprecated This constructor was initially intended for serialization only, and is not useful anymore.
-	 * In any case it should not be relied on by user code.
-	 * Subclasses should rather implement Serializable with an {@code Object writeReplace()} method returning
-	 * a subclass of {@link AbstractSerializableProxy},
-	 * which in turn implements Serializable and an {@code Object readResolve()} method
-	 * instantiating the {@link AbstractLazyInitializer} subclass
-	 * and calling {@link AbstractSerializableProxy#afterDeserialization(AbstractLazyInitializer)} on it.
-	 * See {@link org.hibernate.proxy.pojo.bytebuddy.ByteBuddyInterceptor} and
-	 * {@link org.hibernate.proxy.pojo.bytebuddy.SerializableProxy} for examples.
-	 */
-	@Deprecated
-	protected AbstractLazyInitializer() {
-	}
-
-	/**
 	 * Main constructor.
-	 *  @param entityName The name of the entity being proxied.
+	 *
+	 * @param entityName The name of the entity being proxied.
 	 * @param id The identifier of the entity being proxied.
 	 * @param session The session owning the proxy.
 	 */

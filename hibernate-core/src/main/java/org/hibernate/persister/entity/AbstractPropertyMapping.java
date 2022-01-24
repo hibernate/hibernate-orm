@@ -127,22 +127,6 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 		}
 	}
 
-	/**
-	 * Only kept around for compatibility reasons since this seems to be API.
-	 *
-	 * @deprecated Use {@link #addPropertyPath(String, Type, String[], String[], String[], String[], Mapping)} instead
-	 */
-	@Deprecated
-	protected void addPropertyPath(
-			String path,
-			Type type,
-			String[] columns,
-			String[] columnReaders,
-			String[] columnReaderTemplates,
-			String[] formulaTemplates) {
-		addPropertyPath( path, type, columns, columnReaders, columnReaderTemplates, formulaTemplates, null );
-	}
-
 	protected void addPropertyPath(
 			String path,
 			Type type,

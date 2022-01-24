@@ -4,19 +4,18 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.metamodel.model.convert;
-
-import jakarta.persistence.AttributeConverter;
+package org.hibernate.metamodel.model.convert.spi;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.convert.internal.JpaAttributeConverterImpl;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.AttributeConverter;
 
 /**
  * Factory for converter instances
@@ -24,6 +23,9 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public class Converters {
+	/**
+	 * Generates a BasicValueConverter based on an {@link AttributeConverter}
+	 */
 	public static <O,R> BasicValueConverter<O,R> jpaAttributeConverter(
 			JavaType<R> relationalJtd,
 			JavaType<O> domainJtd,

@@ -39,7 +39,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
-import org.hibernate.metamodel.EmbeddableInstantiator;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.tuple.AnnotationValueGeneration;
 import org.hibernate.tuple.AttributeBinder;
 import org.hibernate.tuple.GenerationTiming;

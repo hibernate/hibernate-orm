@@ -46,7 +46,6 @@ import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CollectionType;
@@ -1256,27 +1255,24 @@ public class ActionQueue {
 		 * @param batchIdentifier The batch identifier of the entity affected by the action
 		 */
 		private void addParentChildEntityNames(AbstractEntityInsertAction action, BatchIdentifier batchIdentifier) {
-			Object[] propertyValues = action.getState();
-			ClassMetadata classMetadata = action.getPersister().getClassMetadata();
-			if ( classMetadata != null ) {
-				Type[] propertyTypes = classMetadata.getPropertyTypes();
-				Type identifierType = classMetadata.getIdentifierType();
+			final Object[] propertyValues = action.getState();
+			final Type[] propertyTypes = action.getPersister().getPropertyTypes();
+			final Type identifierType = action.getPersister().getIdentifierType();
 
-				for ( int i = 0; i < propertyValues.length; i++ ) {
-					Object value = propertyValues[i];
-					if ( value != null ) {
-						Type type = propertyTypes[i];
-						addParentChildEntityNameByPropertyAndValue( action, batchIdentifier, type, value );
-					}
+			for ( int i = 0; i < propertyValues.length; i++ ) {
+				Object value = propertyValues[i];
+				if ( value != null ) {
+					Type type = propertyTypes[i];
+					addParentChildEntityNameByPropertyAndValue( action, batchIdentifier, type, value );
 				}
+			}
 
-				if ( identifierType.isComponentType() ) {
-					CompositeType compositeType = (CompositeType) identifierType;
-					Type[] compositeIdentifierTypes = compositeType.getSubtypes();
+			if ( identifierType.isComponentType() ) {
+				CompositeType compositeType = (CompositeType) identifierType;
+				Type[] compositeIdentifierTypes = compositeType.getSubtypes();
 
-					for ( Type type : compositeIdentifierTypes ) {
-						addParentChildEntityNameByPropertyAndValue( action, batchIdentifier, type, null );
-					}
+				for ( Type type : compositeIdentifierTypes ) {
+					addParentChildEntityNameByPropertyAndValue( action, batchIdentifier, type, null );
 				}
 			}
 		}

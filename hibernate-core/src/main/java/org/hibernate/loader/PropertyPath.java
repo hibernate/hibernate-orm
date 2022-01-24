@@ -7,12 +7,13 @@
 package org.hibernate.loader;
 
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.spi.DotIdentifierSequence;
 import org.hibernate.query.spi.NavigablePath;
 
 /**
  * @author Steve Ebersole
  */
-public class PropertyPath {
+public class PropertyPath implements DotIdentifierSequence {
 	public static final String IDENTIFIER_MAPPER_PROPERTY = NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
 
 
@@ -63,6 +64,11 @@ public class PropertyPath {
 
 	public PropertyPath getParent() {
 		return parent;
+	}
+
+	@Override
+	public String getLocalName() {
+		return property;
 	}
 
 	public String getProperty() {

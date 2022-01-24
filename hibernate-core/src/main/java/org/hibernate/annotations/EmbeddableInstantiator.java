@@ -21,5 +21,5 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target( {TYPE, FIELD, METHOD, ANNOTATION_TYPE} )
 @Retention( RUNTIME )
 public @interface EmbeddableInstantiator {
-	Class<? extends org.hibernate.metamodel.EmbeddableInstantiator> value();
+	Class<? extends org.hibernate.metamodel.spi.EmbeddableInstantiator> value();
 }

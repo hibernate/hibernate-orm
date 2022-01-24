@@ -6,7 +6,7 @@
  */
 package org.hibernate.tuple;
 
-import org.hibernate.metamodel.ManagedTypeRepresentationStrategy;
+import org.hibernate.metamodel.spi.ManagedTypeRepresentationStrategy;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.property.access.spi.Getter;
 

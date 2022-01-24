@@ -18,7 +18,7 @@ import jakarta.persistence.Id;
 import org.hibernate.annotations.Table;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
@@ -98,9 +98,12 @@ public class TableCommentTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	private String getTableName() {
-		SessionFactoryImplementor sessionFactoryImplementor = sessionFactory();
-		ClassMetadata tableWithCommentMetadata = sessionFactoryImplementor.getClassMetadata( TableWithComment.class );
-		return ((AbstractEntityPersister) tableWithCommentMetadata).getTableName();
+		final SessionFactoryImplementor sessionFactory = sessionFactory();
+		final EntityMappingType entityMappingType = sessionFactory
+				.getRuntimeMetamodels()
+				.getEntityMappingType( TableWithComment.class );
+
+		return ( (AbstractEntityPersister) entityMappingType ).getTableName();
 	}
 
 	private void createSchema(Class[] annotatedClasses) {

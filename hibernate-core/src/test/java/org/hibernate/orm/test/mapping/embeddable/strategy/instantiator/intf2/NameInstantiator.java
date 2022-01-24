@@ -9,7 +9,7 @@ package org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.intf2;
 import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.EmbeddableInstantiator;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 
 /**
  * @author Steve Ebersole

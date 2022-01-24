@@ -25,6 +25,7 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
@@ -35,7 +36,8 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
-import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.RuntimeMetamodels;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -354,8 +356,11 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 	private boolean copyState(Object entity, Type[] types, Object[] state, SessionFactory sf) {
 		// copy the entity state into the state array and return true if the state has changed
-		ClassMetadata metadata = sf.getClassMetadata( entity.getClass() );
-		Object[] newState = metadata.getPropertyValues( entity );
+		final SessionFactoryImplementor sessionFactory = sf.unwrap( SessionFactoryImplementor.class );
+		final RuntimeMetamodels runtimeMetamodels = sessionFactory.getRuntimeMetamodels();
+		final EntityMappingType entityMappingType = runtimeMetamodels.getEntityMappingType( entity.getClass() );
+		final Object[] newState = entityMappingType.getEntityPersister().getValues( entity );
+
 		int size = newState.length;
 		boolean isDirty = false;
 		for ( int index = 0; index < size; index++ ) {

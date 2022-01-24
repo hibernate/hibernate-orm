@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.internal;
 
-import org.hibernate.metamodel.EmbeddableInstantiator;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 
 /**
  * Marker interface for standard EmbeddableInstantiator implementations.

@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.embeddable;
 
-import org.hibernate.metamodel.EmbeddableInstantiator;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;

@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.hql.internal;
 
-import org.hibernate.query.DotIdentifierSequence;
+import org.hibernate.spi.DotIdentifierSequence;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 
 /**

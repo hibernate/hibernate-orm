@@ -14,7 +14,8 @@ import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.query.Query;
 import org.hibernate.stat.Statistics;
 
@@ -22,9 +23,9 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Test case for NaturalId annotation
@@ -48,15 +49,19 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testMappingProperties() {
-		ClassMetadata metaData = sessionFactory().getClassMetadata(
-				Citizen.class
-		);
-		assertTrue(
-				"Class should have a natural key", metaData
-						.hasNaturalIdentifier()
-		);
-		int[] propertiesIndex = metaData.getNaturalIdentifierProperties();
-		assertTrue( "Wrong number of elements", propertiesIndex.length == 2 );
+		final EntityMappingType citizenEntityMapping = sessionFactory()
+				.getRuntimeMetamodels()
+				.getEntityMappingType( Citizen.class );
+
+		final NaturalIdMapping naturalIdMapping = citizenEntityMapping.getNaturalIdMapping();
+
+		assertThat( naturalIdMapping )
+				.withFailMessage( "Class should have a natural key" )
+				.isNotNull();
+
+		assertThat( naturalIdMapping.getNaturalIdAttributes() )
+				.withFailMessage( "Expecting 2 natural-id attributes, got " + naturalIdMapping.getNaturalIdAttributes().size() )
+				.hasSize( 2 );
 	}
 
 	@Test

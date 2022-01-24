@@ -11,7 +11,6 @@ import java.util.function.Supplier;
 import org.hibernate.Incubating;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 

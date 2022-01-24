@@ -8,7 +8,7 @@ package org.hibernate.tuple;
 
 import java.io.Serializable;
 
-import org.hibernate.metamodel.ManagedTypeRepresentationStrategy;
+import org.hibernate.metamodel.spi.ManagedTypeRepresentationStrategy;
 
 /**
  * Contract for implementors responsible for instantiating entity/component instances.

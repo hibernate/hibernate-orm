@@ -9,7 +9,7 @@ package org.hibernate.query.spi;
 import java.io.Serializable;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.query.DotIdentifierSequence;
+import org.hibernate.spi.DotIdentifierSequence;
 import org.hibernate.query.sqm.spi.EntityIdentifierNavigablePath;
 
 /**

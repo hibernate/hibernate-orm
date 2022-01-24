@@ -649,17 +649,23 @@ public interface AvailableSettings {
 	 *         {@link java.sql.PreparedStatement#setNString(int, String)}
 	 *         {@link java.sql.PreparedStatement#setNClob(int, java.sql.NClob)}
 	 *         to pass character data, and
-	 *     <li>when generating DDL, the schema export tool uses {@code nvarchar}
-	 *         and {@code nclob} as the generated column types when no column
-	 *         type is explicitly specified using
+	 *     <li>when generating DDL, the schema export tool uses {@code nchar},
+	 *         {@code nvarchar}, or {@code nclob} as the generated column
+	 *         type when no column type is explicitly specified using
 	 *         {@link jakarta.persistence.Column#columnDefinition()}.
 	 * </ol>
 	 * This setting is <em>disabled</em> by default, and so Unicode character data
 	 * may not be persisted correctly for databases with explicit nationalization
 	 * support.
+	 * <p>
+	 * This is a global setting applying to all mappings associated with a given
+	 * {@link org.hibernate.SessionFactory}.
+	 * The {@link org.hibernate.annotations.Nationalized} annotation may be used
+	 * to selectively enable nationalized character support for specific columns.
 	 *
 	 * @see org.hibernate.boot.MetadataBuilder#enableGlobalNationalizedCharacterDataSupport(boolean)
 	 * @see org.hibernate.dialect.NationalizationSupport
+	 * @see org.hibernate.annotations.Nationalized
 	 */
 	String USE_NATIONALIZED_CHARACTER_DATA = "hibernate.use_nationalized_character_data";
 

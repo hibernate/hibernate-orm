@@ -21,17 +21,18 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * {@link Dialect#getNationalizationSupport() the SQL dialect}.
  * <ul>
  *     <li>Some databases support storing nationalized data using their
- *         "normal" character data types
- *         ({@code CHAR, VARCHAR, LONGVARCHAR, CLOB}).
+ *         "normal" character data types ({@code CHAR, VARCHAR, CLOB}).
  *         For these dialects, this annotation is effectively ignored.
  *         See {@link org.hibernate.dialect.NationalizationSupport#IMPLICIT}.
  *     <li>Other databases support storing nationalized data only via the
- *         specialized, standard SQL variants
- *         ({@code NCHAR, NVARCHAR, LONGNVARCHAR, NCLOB)}.
+ *         specialized, standard SQL variants ({@code NCHAR, NVARCHAR, NCLOB)}.
  *         For these dialects, this annotation will adjust the JDBC type
  *         code to use the specialized variant.
  *         See {@link org.hibernate.dialect.NationalizationSupport#EXPLICIT}.
  * </ul>
+ *
+ * @see org.hibernate.dialect.NationalizationSupport
+ * @see org.hibernate.cfg.AvailableSettings#USE_NATIONALIZED_CHARACTER_DATA
  *
  * @author Steve Ebersole
  */

@@ -13,6 +13,7 @@ import java.sql.Types;
  * character data (Unicode).
  *
  * @see org.hibernate.cfg.AvailableSettings#USE_NATIONALIZED_CHARACTER_DATA
+ * @see org.hibernate.annotations.Nationalized
  * @see Dialect#getNationalizationSupport()
  */
 public enum NationalizationSupport {

@@ -419,18 +419,33 @@ There is only one delete statement executed because, this time, the association 
 [[associations-not-found]]
 ==== `@NotFound` association mapping
 
-When dealing with associations which are not enforced by a Foreign Key,
-it's possible to bump into inconsistencies if the child record cannot reference a parent entity.
+When dealing with associations which are not enforced by a physical foreign-key, it is possible
+for a non-null foreign-key to point to a non-existent value on the associated entity's table.
 
-By default, Hibernate will complain whenever a child association references a non-existing parent record.
-However, you can configure this behavior so that Hibernate can ignore such an Exception and simply assign `null` as a parent object referenced.
+By default, Hibernate will complain when this happens.
 
-To ignore non-existing parent entity references, even though not really recommended, it's possible to use the annotation `org.hibernate.annotation.NotFound` annotation with a value of `org.hibernate.annotations.NotFoundAction.IGNORE`.
+However, you can configure this behavior to instead assign `null` as the association reference.  This
+is accomplished using the `org.hibernate.annotation.NotFound` annotation with a value of
+`org.hibernate.annotations.NotFoundAction.IGNORE`.
 
 [NOTE]
 ====
-The `@ManyToOne` and `@OneToOne` associations that are annotated with `@NotFound(action = NotFoundAction.IGNORE)` are always fetched eagerly even if the `fetch` strategy is set to `FetchType.LAZY`.
+Not enforcing physical foreign-keys is very discouraged.
+
+`@ManyToOne` and `@OneToOne` associations annotated with `@NotFound(action = NotFoundAction.IGNORE)` are
+always fetched eagerly even if the `fetch` strategy is set to `FetchType.LAZY`.
+
+It also affects how the association are treated as "implicit joins"  in HQL.  Normally
+Hibernate would use INNER joins.  With `NotFoundAction.IGNORE`, a LEFT join is
+used instead.
+
+It also forces a join when Hibernate normally would not.  Consider the HQL `.. where root.notFoundAssoc.id`.
+Hibernate will normally use the foreign-key "referring" column(s) which does not require
+a join.  It does this because a physical foreign-key would prevent this column to refer to a non-existent
+associated primary-key.  With `NotFoundAction.IGNORE`, we need to look at the foreign-key "target" column(s)
+which requires the join.
 ====
+
 
 Considering the following `City` and `Person` entity mappings:
 

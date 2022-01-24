@@ -628,11 +628,38 @@ public interface AvailableSettings {
 	String IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS = "hibernate.discriminator.ignore_explicit_for_joined";
 
 	/**
-	 * Enables nationalized character support for mappings to {@code VARCHAR} and {@code CLOB}.
+	 * By default, Hibernate maps character data represented by {@link String}s and
+	 * {@link java.sql.Clob}s to the JDBC types {@link java.sql.Types#VARCHAR} and
+	 * {@link java.sql.Types#CLOB}. This setting, when enabled, turns on the use of
+	 * explicit nationalized character support for mappings involving character
+	 * data, specifying that the JDBC types {@link java.sql.Types#NVARCHAR} and
+	 * {@link java.sql.Types#NCLOB} should be used instead.
 	 * <p>
-	 * Default is {@code false}.
+	 * This setting is relevant for use with databases with
+	 * {@linkplain org.hibernate.dialect.NationalizationSupport#EXPLICIT explicit
+	 * nationalization support}, and it is not needed for databases whose native
+	 * {@code varchar} and {@code clob} types support Unicode data. (If you're not
+	 * sure how your database handles Unicode, check out the implementation of
+	 * {@link org.hibernate.dialect.Dialect#getNationalizationSupport()} for its
+	 * SQL dialect.)
+	 * <p>
+	 * Enabling this setting has two effects:
+	 * <ol>
+	 *     <li>when interacting with JDBC, Hibernate uses operations like
+	 *         {@link java.sql.PreparedStatement#setNString(int, String)}
+	 *         {@link java.sql.PreparedStatement#setNClob(int, java.sql.NClob)}
+	 *         to pass character data, and
+	 *     <li>when generating DDL, the schema export tool uses {@code nvarchar}
+	 *         and {@code nclob} as the generated column types when no column
+	 *         type is explicitly specified using
+	 *         {@link jakarta.persistence.Column#columnDefinition()}.
+	 * </ol>
+	 * This setting is <em>disabled</em> by default, and so Unicode character data
+	 * may not be persisted correctly for databases with explicit nationalization
+	 * support.
 	 *
 	 * @see org.hibernate.boot.MetadataBuilder#enableGlobalNationalizedCharacterDataSupport(boolean)
+	 * @see org.hibernate.dialect.NationalizationSupport
 	 */
 	String USE_NATIONALIZED_CHARACTER_DATA = "hibernate.use_nationalized_character_data";
 

@@ -3531,6 +3531,14 @@ public abstract class Dialect implements ConversionContext {
 		return databaseMetaData != null && databaseMetaData.supportsNamedParameters();
 	}
 
+	/**
+	 * Determines whether this database requires the use
+	 * of explicit nationalized character data types.
+	 * <p>
+	 * That is, whether the use of {@link Types#NCHAR},
+	 * {@link Types#NVARCHAR}, and {@link Types#NCLOB} is
+	 * required for nationalized character data (Unicode).
+	 */
 	public NationalizationSupport getNationalizationSupport() {
 		return NationalizationSupport.EXPLICIT;
 	}

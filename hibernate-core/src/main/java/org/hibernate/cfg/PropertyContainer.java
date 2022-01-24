@@ -240,14 +240,6 @@ class PropertyContainer {
 		return classLevelAccessType;
 	}
 
-	/**
-	 * @deprecated Use the {@link #propertyIterator()} method instead.
-	 */
-	@Deprecated
-	public Collection<XProperty> getProperties() {
-		return Collections.unmodifiableCollection( this.persistentAttributes );
-	}
-
 	public Iterable<XProperty> propertyIterator() {
 		return persistentAttributes;
 	}

@@ -450,22 +450,6 @@ public class Configuration {
 	}
 
 	/**
-	 * Read mappings from a DOM {@code Document}
-	 *
-	 * @param doc The DOM document
-	 * @return this (for method chaining purposes)
-	 * @throws MappingException Indicates problems reading the DOM or processing
-	 * the mapping document.
-	 *
-	 * @deprecated Use addURL, addResource, addFile, etc. instead
-	 */
-	@Deprecated
-	public Configuration addDocument(org.w3c.dom.Document doc) throws MappingException {
-		metadataSources.addDocument( doc );
-		return this;
-	}
-
-	/**
 	 * Read mappings from an {@link InputStream}.
 	 *
 	 * @param xmlInputStream The input stream containing a DOM.
@@ -476,15 +460,6 @@ public class Configuration {
 	public Configuration addInputStream(InputStream xmlInputStream) throws MappingException {
 		metadataSources.addInputStream( xmlInputStream );
 		return this;
-	}
-
-	/**
-	 * @deprecated This form (accepting a ClassLoader) is no longer supported.  Instead, add the ClassLoader
-	 * to the ClassLoaderService on the ServiceRegistry associated with this Configuration
-	 */
-	@Deprecated
-	public Configuration addResource(String resourceName, ClassLoader classLoader) throws MappingException {
-		return addResource( resourceName );
 	}
 
 	/**

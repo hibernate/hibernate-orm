@@ -17,7 +17,6 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -69,17 +68,6 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 	 * Constructs a PersistentIdentifierBag.
 	 *
 	 * @param session The session
-	 * @deprecated {@link #PersistentIdentifierBag(SharedSessionContractImplementor)} should be used instead.
-	 */
-	@Deprecated
-	public PersistentIdentifierBag(SessionImplementor session) {
-		this( (SharedSessionContractImplementor) session );
-	}
-
-	/**
-	 * Constructs a PersistentIdentifierBag.
-	 *
-	 * @param session The session
 	 * @param coll The base elements
 	 */
 	public PersistentIdentifierBag(SharedSessionContractImplementor session, Collection<E> coll) {
@@ -94,18 +82,6 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 		setInitialized();
 		setDirectlyAccessible( true );
 		identifiers = new HashMap<>();
-	}
-
-	/**
-	 * Constructs a PersistentIdentifierBag.
-	 *
-	 * @param session The session
-	 * @param coll The base elements
-	 * @deprecated {@link #PersistentIdentifierBag(SharedSessionContractImplementor, Collection)} should be used instead.
-	 */
-	@Deprecated
-	public PersistentIdentifierBag(SessionImplementor session, Collection<E> coll) {
-		this( (SharedSessionContractImplementor) session, coll );
 	}
 
 	@Override

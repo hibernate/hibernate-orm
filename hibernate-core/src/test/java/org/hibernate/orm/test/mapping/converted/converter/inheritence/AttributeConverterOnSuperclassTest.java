@@ -10,7 +10,6 @@ import java.util.List;
 import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
-import org.hibernate.cfg.AttributeConverterDefinition;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.boot.BootstrapContextImpl;
@@ -79,8 +78,18 @@ public class AttributeConverterOnSuperclassTest extends BaseUnitTestCase {
 
 	@Test
 	public void testAttributeConverterOnInterface() {
-		AttributeConverterDefinition def = AttributeConverterDefinition.from( StringLongAttributeConverterImpl.class );
-		assertEquals( String.class, def.getEntityAttributeType() );
+		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl();
+		try {
+			final ClassBasedConverterDescriptor converterDescriptor = new ClassBasedConverterDescriptor(
+					StringLongAttributeConverterImpl.class,
+					bootstrapContext.getClassmateContext()
+			);
+
+			assertEquals( String.class, converterDescriptor.getDomainValueResolvedType().getErasedType() );
+		}
+		finally {
+			bootstrapContext.close();
+		}
 	}
 
 	public static class NoopAttributeConverter<T> implements AttributeConverter<T, T> {
@@ -101,8 +110,18 @@ public class AttributeConverterOnSuperclassTest extends BaseUnitTestCase {
 
 	@Test
 	public void testTypeVariableAttributeConverterTypeArguments() {
-		AttributeConverterDefinition def = AttributeConverterDefinition.from( StringNoopAttributeConverter.class );
-		assertEquals( String.class, def.getEntityAttributeType() );
+		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl();
+		try {
+			final ClassBasedConverterDescriptor converterDescriptor = new ClassBasedConverterDescriptor(
+					StringNoopAttributeConverter.class,
+					bootstrapContext.getClassmateContext()
+			);
+
+			assertEquals( String.class, converterDescriptor.getDomainValueResolvedType().getErasedType() );
+		}
+		finally {
+			bootstrapContext.close();
+		}
 	}
 
 	public static class ListNoopAttributeConverter<T> extends NoopAttributeConverter<List<T>> {
@@ -113,8 +132,18 @@ public class AttributeConverterOnSuperclassTest extends BaseUnitTestCase {
 
 	@Test
 	public void testParameterizedTypeWithTypeVariableAttributeConverterTypeArguments() {
-		AttributeConverterDefinition def = AttributeConverterDefinition.from( StringListNoopAttributeConverter.class );
-		assertEquals( List.class, def.getEntityAttributeType() );
+		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl();
+		try {
+			final ClassBasedConverterDescriptor converterDescriptor = new ClassBasedConverterDescriptor(
+					StringListNoopAttributeConverter.class,
+					bootstrapContext.getClassmateContext()
+			);
+
+			assertEquals( List.class, converterDescriptor.getDomainValueResolvedType().getErasedType() );
+		}
+		finally {
+			bootstrapContext.close();
+		}
 	}
 	
 }

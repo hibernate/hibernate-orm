@@ -60,7 +60,6 @@ import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.cfg.Settings;
 import org.hibernate.context.internal.JTASessionContext;
 import org.hibernate.context.internal.ManagedSessionContext;
 import org.hibernate.context.internal.ThreadLocalSessionContext;
@@ -159,7 +158,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient SessionFactoryObserverChain observer = new SessionFactoryObserverChain();
 
 	private final transient SessionFactoryOptions sessionFactoryOptions;
-	private final transient Settings settings;
 	private final transient Map<String,Object> properties;
 
 	private final transient SessionFactoryServiceRegistry serviceRegistry;
@@ -200,7 +198,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		final BootstrapContext bootstrapContext = bootModelBuildingContext.getBootstrapContext();
 
 		this.sessionFactoryOptions = options;
-		this.settings = new Settings( options, bootMetamodel );
 
 		this.serviceRegistry = options
 				.getServiceRegistry()
@@ -213,7 +210,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		final CfgXmlAccessService cfgXmlAccessService = serviceRegistry.getService( CfgXmlAccessService.class );
 
-		String sfName = settings.getSessionFactoryName();
+		String sfName = sessionFactoryOptions.getSessionFactoryName();
 		if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
 			if ( sfName == null ) {
 				sfName = cfgXmlAccessService.getAggregatedConfig().getSessionFactoryName();
@@ -384,7 +381,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			SessionFactoryRegistry.INSTANCE.addSessionFactory(
 					getUuid(),
 					name,
-					settings.isSessionFactoryNameAlsoJndiName(),
+					sessionFactoryOptions.isSessionFactoryNameAlsoJndiName(),
 					this,
 					serviceRegistry.getService( JndiService.class )
 			);
@@ -815,7 +812,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			SessionFactoryRegistry.INSTANCE.removeSessionFactory(
 					getUuid(),
 					name,
-					settings.isSessionFactoryNameAlsoJndiName(),
+					sessionFactoryOptions.isSessionFactoryNameAlsoJndiName(),
 					serviceRegistry.getService( JndiService.class )
 			);
 		}

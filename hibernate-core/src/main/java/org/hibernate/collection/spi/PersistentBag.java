@@ -18,7 +18,6 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -65,18 +64,6 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 	 * Constructs a PersistentBag
 	 *
 	 * @param session The session
-	 *
-	 * @deprecated {@link #PersistentBag(SharedSessionContractImplementor)} should be used instead.
-	 */
-	@Deprecated
-	public PersistentBag(SessionImplementor session) {
-		this( (SharedSessionContractImplementor) session );
-	}
-
-	/**
-	 * Constructs a PersistentBag
-	 *
-	 * @param session The session
 	 * @param coll The base elements.
 	 */
 	public PersistentBag(SharedSessionContractImplementor session, Collection<E> coll) {
@@ -90,20 +77,6 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 		}
 		setInitialized();
 		setDirectlyAccessible( true );
-	}
-
-	/**
-	 * Constructs a PersistentBag
-	 *
-	 * @param session The session
-	 * @param coll The base elements.
-	 *
-	 * @deprecated {@link #PersistentBag(SharedSessionContractImplementor, Collection)}
-	 * should be used instead.
-	 */
-	@Deprecated
-	public PersistentBag(SessionImplementor session, Collection<E> coll) {
-		this( (SharedSessionContractImplementor) session, coll );
 	}
 
 	@Override

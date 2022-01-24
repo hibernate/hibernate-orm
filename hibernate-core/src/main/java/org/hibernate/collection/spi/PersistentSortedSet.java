@@ -13,7 +13,6 @@ import java.util.TreeMap;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 
@@ -52,34 +51,11 @@ public class PersistentSortedSet<E> extends PersistentSet<E> implements SortedSe
 	 * Constructs a PersistentSortedSet
 	 *
 	 * @param session The session
-	 * @deprecated {@link #PersistentSortedSet(SharedSessionContractImplementor, Comparator)} should be used instead.
-	 */
-	@Deprecated
-	public PersistentSortedSet(SessionImplementor session) {
-		this( session, (Comparator<E>) null );
-	}
-
-	/**
-	 * Constructs a PersistentSortedSet
-	 *
-	 * @param session The session
 	 * @param set The underlying set data
 	 */
 	public PersistentSortedSet(SharedSessionContractImplementor session, SortedSet<E> set) {
 		super( session, set );
 		comparator = set.comparator();
-	}
-
-	/**
-	 * Constructs a PersistentSortedSet
-	 *
-	 * @param session The session
-	 * @param set The underlying set data
-	 * @deprecated {@link #PersistentSortedSet(SharedSessionContractImplementor, SortedSet)} should be used instead.
-	 */
-	@Deprecated
-	public PersistentSortedSet(SessionImplementor session, SortedSet<E> set) {
-		this( (SharedSessionContractImplementor) session, set );
 	}
 
 	@SuppressWarnings("UnusedParameters")

@@ -16,8 +16,6 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
-import org.hibernate.collection.spi.AbstractPersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -60,39 +58,11 @@ public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 	 * Constructs a PersistentCollection instance for holding an array.
 	 *
 	 * @param session The session
-	 * @param array The array (the persistent "collection").
-	 *
-	 * @deprecated {@link #PersistentArrayHolder(SharedSessionContractImplementor, Object)}
-	 *             should be used instead.
-	 */
-	@Deprecated
-	public PersistentArrayHolder(SessionImplementor session, Object array) {
-		this( (SharedSessionContractImplementor) session, array );
-	}
-
-	/**
-	 * Constructs a PersistentCollection instance for holding an array.
-	 *
-	 * @param session The session
 	 * @param persister The persister for the array
 	 */
 	public PersistentArrayHolder(SharedSessionContractImplementor session, CollectionPersister persister) {
 		super( session );
 		elementClass = persister.getElementClass();
-	}
-
-	/**
-	 * Constructs a PersistentCollection instance for holding an array.
-	 *
-	 * @param session The session
-	 * @param persister The persister for the array
-	 *
-	 * @deprecated {@link #PersistentArrayHolder(SharedSessionContractImplementor, CollectionPersister)}
-	 *             should be used instead.
-	 */
-	@Deprecated
-	public PersistentArrayHolder(SessionImplementor session, CollectionPersister persister) {
-		this( (SharedSessionContractImplementor) session, persister );
 	}
 
 	@Override

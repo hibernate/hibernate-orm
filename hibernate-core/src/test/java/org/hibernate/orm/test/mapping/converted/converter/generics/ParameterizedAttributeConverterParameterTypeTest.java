@@ -16,13 +16,14 @@ import jakarta.persistence.Id;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.cfg.AttributeConverterDefinition;
+import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
@@ -44,8 +45,16 @@ public class ParameterizedAttributeConverterParameterTypeTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-8804")
 	public void testGenericTypeParameters() {
-		AttributeConverterDefinition def = AttributeConverterDefinition.from( CustomAttributeConverter.class );
-		assertEquals( List.class, def.getEntityAttributeType() );
+		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl();
+		try {
+			final ClassBasedConverterDescriptor converterDescriptor = new ClassBasedConverterDescriptor(
+					CustomAttributeConverter.class,
+					bootstrapContext.getClassmateContext()
+			);
+			assertEquals( List.class, converterDescriptor.getDomainValueResolvedType().getErasedType() );
+		} finally {
+			bootstrapContext.close();
+		}
 	}
 
 	@Test

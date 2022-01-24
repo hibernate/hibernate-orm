@@ -98,6 +98,7 @@ public class EntityManagerFactoryExtension
 		pui.getProperties().put( AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, emfAnn.generatorScopeComplianceEnabled() );
 		pui.getProperties().put( AvailableSettings.JPA_ORDER_BY_MAPPING_COMPLIANCE, emfAnn.orderByMappingComplianceEnabled() );
 		pui.getProperties().put( AvailableSettings.JPA_LOAD_BY_ID_COMPLIANCE, emfAnn.loadByIdComplianceEnabled() );
+		pui.getProperties().put( AvailableSettings.JPA_CRITERIA_COPY_COMPLIANCE, emfAnn.criteriaCopyComplianceEnabled() );
 
 		final Setting[] properties = emfAnn.properties();
 		for ( int i = 0; i < properties.length; i++ ) {

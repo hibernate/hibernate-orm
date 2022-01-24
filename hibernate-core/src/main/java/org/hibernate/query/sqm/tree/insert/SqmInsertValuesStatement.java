@@ -6,24 +6,69 @@
  */
 package org.hibernate.query.sqm.tree.insert;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Gavin King
  */
 public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> {
-	private final List<SqmValues> valuesList = new ArrayList<>();
+	private final List<SqmValues> valuesList;
 
 	public SqmInsertValuesStatement(SqmRoot<T> targetRoot, NodeBuilder nodeBuilder) {
 		super( targetRoot, SqmQuerySource.HQL, nodeBuilder );
+		this.valuesList = new ArrayList<>();
+	}
+
+	private SqmInsertValuesStatement(
+			NodeBuilder builder,
+			SqmQuerySource querySource,
+			Set<SqmParameter<?>> parameters,
+			Map<String, SqmCteStatement<?>> cteStatements,
+			boolean withRecursiveCte,
+			SqmRoot<T> target,
+			List<SqmPath<?>> insertionTargetPaths,
+			List<SqmValues> valuesList) {
+		super( builder, querySource, parameters, cteStatements, withRecursiveCte, target, insertionTargetPaths );
+		this.valuesList = valuesList;
+	}
+
+	@Override
+	public SqmInsertValuesStatement<T> copy(SqmCopyContext context) {
+		final SqmInsertValuesStatement<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final List<SqmValues> valuesList = new ArrayList<>( this.valuesList.size() );
+		for ( SqmValues sqmValues : this.valuesList ) {
+			valuesList.add( sqmValues.copy( context ) );
+		}
+		return context.registerCopy(
+				this,
+				new SqmInsertValuesStatement<>(
+						nodeBuilder(),
+						getQuerySource(),
+						copyParameters( context ),
+						copyCteStatements( context ),
+						isWithRecursive(),
+						getTarget().copy( context ),
+						copyInsertionTargetPaths( context ),
+						valuesList
+				)
+		);
 	}
 
 	public List<SqmValues> getValuesList() {

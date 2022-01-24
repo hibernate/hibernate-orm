@@ -26,6 +26,7 @@ import org.hibernate.query.criteria.JpaJoin;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
@@ -149,4 +150,7 @@ public interface SqmFrom<O,T> extends SqmVisitableNode, SqmPath<T>, JpaFrom<O, T
 
 	@Override
 	<X, K, V> SqmMapJoin<X, K, V> joinMap(String attributeName, JoinType jt);
+
+	@Override
+	SqmFrom<O, T> copy(SqmCopyContext context);
 }

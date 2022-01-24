@@ -16,6 +16,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -44,6 +45,27 @@ public class SqmEmbeddedValuedSimplePath<T>
 		super( navigablePath, referencedPathSource, lhs, explicitAlias, nodeBuilder );
 
 		assert referencedPathSource.getSqmPathType() instanceof EmbeddableDomainType;
+	}
+
+	@Override
+	public SqmEmbeddedValuedSimplePath<T> copy(SqmCopyContext context) {
+		final SqmEmbeddedValuedSimplePath<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		final SqmEmbeddedValuedSimplePath<T> path = context.registerCopy(
+				this,
+				new SqmEmbeddedValuedSimplePath<>(
+						getNavigablePath(),
+						getReferencedPathSource(),
+						getLhs().copy( context ),
+						getExplicitAlias(),
+						nodeBuilder()
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	@Override

@@ -16,6 +16,7 @@ import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedRoot;
@@ -54,6 +55,46 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, entityType, alias, nodeBuilder );
 		this.allowJoins = true;
+	}
+
+	protected SqmRoot(
+			NavigablePath navigablePath,
+			EntityDomainType<E> entityType,
+			String alias,
+			boolean allowJoins,
+			NodeBuilder nodeBuilder) {
+		super( navigablePath, entityType, alias, nodeBuilder );
+		this.allowJoins = allowJoins;
+	}
+
+	@Override
+	public SqmRoot<E> copy(SqmCopyContext context) {
+		final SqmRoot<E> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmRoot<E> path = context.registerCopy(
+				this,
+				new SqmRoot<>(
+						getNavigablePath(),
+						getReferencedPathSource(),
+						getExplicitAlias(),
+						allowJoins,
+						nodeBuilder()
+				)
+		);
+		copyTo( path, context );
+		return path;
+	}
+
+	protected void copyTo(SqmRoot<E> target, SqmCopyContext context) {
+		super.copyTo( target, context );
+		if ( orderedJoins != null ) {
+			target.orderedJoins = new ArrayList<>( orderedJoins.size() );
+			for ( SqmJoin<?, ?> orderedJoin : orderedJoins ) {
+				target.orderedJoins.add( orderedJoin.copy( context ) );
+			}
+		}
 	}
 
 	@Override

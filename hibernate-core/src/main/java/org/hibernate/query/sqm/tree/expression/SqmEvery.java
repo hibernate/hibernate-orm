@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
 /**
@@ -20,6 +21,20 @@ public class SqmEvery<T> extends AbstractSqmExpression<T> {
 	public SqmEvery(SqmSubQuery<T> subquery, NodeBuilder criteriaBuilder) {
 		super( subquery.getNodeType(), criteriaBuilder );
 		this.subquery = subquery;
+	}
+
+	@Override
+	public SqmEvery<T> copy(SqmCopyContext context) {
+		final SqmEvery<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmEvery<T> expression = context.registerCopy(
+				this,
+				new SqmEvery<>( subquery.copy( context ), nodeBuilder() )
+		);
+		copyTo( expression, context );
+		return expression;
 	}
 
 	public SqmSubQuery<T> getSubquery() {

@@ -21,6 +21,7 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.sql.internal.DiscriminatorPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.SelfInterpretingSqmPath;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
@@ -48,6 +49,18 @@ public class DiscriminatorSqmPath extends AbstractSqmPath implements SelfInterpr
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
 		this.entityDomainType = entityDomainType;
 		this.entityDescriptor = entityDescriptor;
+	}
+
+	@Override
+	public DiscriminatorSqmPath copy(SqmCopyContext context) {
+		final DiscriminatorSqmPath existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		return context.registerCopy(
+				this,
+				(DiscriminatorSqmPath) getLhs().copy( context ).type()
+		);
 	}
 
 	@Override

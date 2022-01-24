@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
@@ -55,6 +56,27 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> implements SqmQ
 				joinType,
 				nodeBuilder
 		);
+	}
+
+	@Override
+	public SqmPluralPartJoin<O, T> copy(SqmCopyContext context) {
+		final SqmPluralPartJoin<O, T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmPluralPartJoin<O, T> path = context.registerCopy(
+				this,
+				new SqmPluralPartJoin<>(
+						(SqmFrom<?, O>) getLhs().copy( context ),
+						getNavigablePath(),
+						getReferencedPathSource(),
+						getExplicitAlias(),
+						getSqmJoinType(),
+						nodeBuilder()
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	@Override

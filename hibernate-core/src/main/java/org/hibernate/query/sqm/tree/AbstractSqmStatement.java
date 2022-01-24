@@ -12,15 +12,16 @@ import java.util.Set;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.internal.ParameterCollector;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.internal.ParameterCollector;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements SqmStatement<T>, ParameterCollector {
 	private final SqmQuerySource querySource;
+	private Set<SqmParameter<?>> parameters;
 
 	public AbstractSqmStatement(
 			SqmQuerySource querySource,
@@ -29,7 +30,27 @@ public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements
 		this.querySource = querySource;
 	}
 
-	private Set<SqmParameter<?>> parameters;
+	protected AbstractSqmStatement(
+			NodeBuilder builder,
+			SqmQuerySource querySource,
+			Set<SqmParameter<?>> parameters) {
+		super( builder );
+		this.querySource = querySource;
+		this.parameters = parameters;
+	}
+
+	protected Set<SqmParameter<?>> copyParameters(SqmCopyContext context) {
+		if ( parameters == null ) {
+			return null;
+		}
+		else {
+			final Set<SqmParameter<?>> parameters = new HashSet<>( this.parameters.size() );
+			for ( SqmParameter<?> parameter : this.parameters ) {
+				parameters.add( parameter.copy( context ) );
+			}
+			return parameters;
+		}
+	}
 
 	@Override
 	public SqmQuerySource getQuerySource() {

@@ -11,6 +11,7 @@ import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
 /**
@@ -59,6 +60,26 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 		this.rhsOperand = rhsOperand;
 
 		applyInferableType( expressibleType );
+	}
+
+	@Override
+	public SqmBinaryArithmetic<T> copy(SqmCopyContext context) {
+		final SqmBinaryArithmetic<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmBinaryArithmetic<T> expression = context.registerCopy(
+				this,
+				new SqmBinaryArithmetic<>(
+						operator,
+						lhsOperand.copy( context ),
+						rhsOperand.copy( context ),
+						getNodeType(),
+						nodeBuilder()
+				)
+		);
+		copyTo( expression, context );
+		return expression;
 	}
 
 	@Override

@@ -148,6 +148,7 @@ import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
+import static org.hibernate.cfg.AvailableSettings.JPA_CRITERIA_COPY_COMPLIANCE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
@@ -2569,6 +2570,9 @@ public class SessionImpl
 								determineCacheRetrieveMode(properties)
 						)
 				);
+				break;
+			case JPA_CRITERIA_COPY_COMPLIANCE:
+				setJpaCriteriaCopyComplianceEnabled( Boolean.parseBoolean( value.toString() ) );
 				break;
 		}
 	}

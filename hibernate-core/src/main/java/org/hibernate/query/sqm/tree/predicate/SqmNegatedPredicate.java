@@ -8,10 +8,12 @@ package org.hibernate.query.sqm.tree.predicate;
 
 import java.util.Collections;
 import java.util.List;
-import jakarta.persistence.criteria.Expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
+
+import jakarta.persistence.criteria.Expression;
 
 /**
  * @author Steve Ebersole
@@ -22,6 +24,32 @@ public class SqmNegatedPredicate extends AbstractNegatableSqmPredicate {
 	public SqmNegatedPredicate(SqmPredicate wrappedPredicate, NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
 		this.wrappedPredicate = wrappedPredicate;
+	}
+
+	public SqmNegatedPredicate(
+			SqmPredicate wrappedPredicate,
+			boolean negated,
+			NodeBuilder nodeBuilder) {
+		super( negated, nodeBuilder );
+		this.wrappedPredicate = wrappedPredicate;
+	}
+
+	@Override
+	public SqmNegatedPredicate copy(SqmCopyContext context) {
+		final SqmNegatedPredicate existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmNegatedPredicate predicate = context.registerCopy(
+				this,
+				new SqmNegatedPredicate(
+						wrappedPredicate.copy( context ),
+						isNegated(),
+						nodeBuilder()
+				)
+		);
+		copyTo( predicate, context );
+		return predicate;
 	}
 
 	public SqmPredicate getWrappedPredicate() {

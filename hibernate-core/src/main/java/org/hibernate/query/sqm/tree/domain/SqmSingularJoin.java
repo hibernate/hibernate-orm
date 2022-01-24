@@ -14,6 +14,7 @@ import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmJoinable;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -51,6 +52,28 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> {
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
 		super( lhs, navigablePath, joinedNavigable, alias, joinType, fetched, nodeBuilder );
+	}
+
+	@Override
+	public SqmSingularJoin<O, T> copy(SqmCopyContext context) {
+		final SqmSingularJoin<O, T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmSingularJoin<O, T> path = context.registerCopy(
+				this,
+				new SqmSingularJoin<>(
+						getLhs().copy( context ),
+						getNavigablePath(),
+						getReferencedPathSource(),
+						getExplicitAlias(),
+						getSqmJoinType(),
+						isFetched(),
+						nodeBuilder()
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	@Override

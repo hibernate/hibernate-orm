@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * Models a positional parameter expression
@@ -32,6 +33,25 @@ public class SqmPositionalParameter<T> extends AbstractSqmParameter<T> {
 			NodeBuilder nodeBuilder) {
 		super( canBeMultiValued, expressibleType, nodeBuilder );
 		this.position = position;
+	}
+
+	@Override
+	public SqmPositionalParameter<T> copy(SqmCopyContext context) {
+		final SqmPositionalParameter<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmPositionalParameter<T> expression = context.registerCopy(
+				this,
+				new SqmPositionalParameter<>(
+						position,
+						allowMultiValuedBinding(),
+						getNodeType(),
+						nodeBuilder()
+				)
+		);
+		copyTo( expression, context );
+		return expression;
 	}
 
 	@Override

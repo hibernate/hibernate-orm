@@ -10,23 +10,40 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmElementAggregateFunction<T> extends AbstractSqmSpecificPluralPartPath<T> {
-	public static final String NAVIGABLE_NAME = "{max-element}";
-
 	private final String functionName;
 
 	public SqmElementAggregateFunction(SqmPath<?> pluralDomainPath, String functionName) {
 		//noinspection unchecked
 		super(
-				pluralDomainPath.getNavigablePath().getParent().append( pluralDomainPath.getNavigablePath().getLocalName(), NAVIGABLE_NAME ),
+				pluralDomainPath.getNavigablePath().getParent().append( pluralDomainPath.getNavigablePath().getLocalName(), "{" + functionName + "-element}" ),
 				pluralDomainPath,
 				(PluralPersistentAttribute<?, ?, T>) pluralDomainPath.getReferencedPathSource()
 		);
 		this.functionName = functionName;
+	}
+
+	@Override
+	public SqmElementAggregateFunction<T> copy(SqmCopyContext context) {
+		final SqmElementAggregateFunction<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		final SqmElementAggregateFunction<T> path = context.registerCopy(
+				this,
+				new SqmElementAggregateFunction<>(
+						getLhs().copy( context ),
+						functionName
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	public String getFunctionName() {

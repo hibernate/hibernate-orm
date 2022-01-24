@@ -109,6 +109,11 @@ public @interface Jpa {
 	 */
 	boolean loadByIdComplianceEnabled() default false;
 
+	/**
+	 * @see JpaCompliance#isLoadByIdComplianceEnabled()
+	 */
+	boolean criteriaCopyComplianceEnabled() default false;
+
 	boolean excludeUnlistedClasses() default false;
 
 	StandardDomainModel[] standardModels() default {};

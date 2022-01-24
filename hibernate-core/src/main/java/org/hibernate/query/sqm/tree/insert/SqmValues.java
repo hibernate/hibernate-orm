@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.insert;
 
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 import java.io.Serializable;
@@ -16,7 +17,22 @@ import java.util.List;
  * @author Gavin King
  */
 public class SqmValues implements Serializable {
-	private final List<SqmExpression<?>> expressions = new ArrayList<>();
+	private final List<SqmExpression<?>> expressions;
+
+	public SqmValues() {
+		this.expressions = new ArrayList<>();
+	}
+
+	private SqmValues(SqmValues original, SqmCopyContext context) {
+		this.expressions = new ArrayList<>( original.expressions.size() );
+		for ( SqmExpression<?> expression : original.expressions ) {
+			this.expressions.add( expression.copy( context ) );
+		}
+	}
+
+	public SqmValues copy(SqmCopyContext context) {
+		return new SqmValues( this, context );
+	}
 
 	public List<SqmExpression<?>> getExpressions() {
 		return expressions;

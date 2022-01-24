@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.domain;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
@@ -39,6 +40,26 @@ public class SqmCorrelatedCrossJoin<T> extends SqmCrossJoin<T> implements SqmCor
 		super( joinedEntityDescriptor, alias, sqmRoot );
 		this.correlatedRootJoin = correlatedRootJoin;
 		this.correlationParent = correlationParent;
+	}
+
+	@Override
+	public SqmCorrelatedCrossJoin<T> copy(SqmCopyContext context) {
+		final SqmCorrelatedCrossJoin<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmCorrelatedCrossJoin<T> path = context.registerCopy(
+				this,
+				new SqmCorrelatedCrossJoin<>(
+						getReferencedPathSource(),
+						getExplicitAlias(),
+						getRoot().copy( context ),
+						correlatedRootJoin.copy( context ),
+						correlationParent.copy( context )
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	@Override

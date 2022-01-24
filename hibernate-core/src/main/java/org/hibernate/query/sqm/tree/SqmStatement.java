@@ -33,6 +33,9 @@ public interface SqmStatement<T> extends SqmQuery<T>, JpaQueryableCriteria<T>, S
 
 	ParameterResolutions resolveParameters();
 
+	@Override
+	SqmStatement<T> copy(SqmCopyContext context);
+
 	interface ParameterResolutions {
 		ParameterResolutions EMPTY = new ParameterResolutions() {
 			@Override

@@ -10,6 +10,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * @author Steve Ebersole
@@ -56,9 +57,22 @@ public class SqmTreatedSimplePath<T, S extends T>
 	}
 
 	@Override
-	public void registerReusablePath(SqmPath<?> path) {
-		super.registerReusablePath( path );
-		wrappedPath.registerReusablePath( path );
+	public SqmTreatedSimplePath<T, S> copy(SqmCopyContext context) {
+		final SqmTreatedSimplePath<T, S> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		final SqmTreatedSimplePath<T, S> path = context.registerCopy(
+				this,
+				new SqmTreatedSimplePath<>(
+						wrappedPath.copy( context ),
+						getTreatTarget(),
+						nodeBuilder()
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	@Override

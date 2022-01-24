@@ -14,6 +14,7 @@ import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 
 import jakarta.persistence.criteria.Expression;
@@ -39,6 +40,35 @@ public class SqmCaseSearched<R>
 	public SqmCaseSearched(SqmExpressible<R> inherentType, int estimateWhenSize, NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.whenFragments = new ArrayList<>( estimateWhenSize );
+	}
+
+	@Override
+	public SqmCaseSearched<R> copy(SqmCopyContext context) {
+		final SqmCaseSearched<R> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmCaseSearched<R> caseSearched = context.registerCopy(
+				this,
+				new SqmCaseSearched<>(
+						getNodeType(),
+						whenFragments.size(),
+						nodeBuilder()
+				)
+		);
+		for ( WhenFragment<R> whenFragment : whenFragments ) {
+			caseSearched.whenFragments.add(
+					new WhenFragment<>(
+							whenFragment.predicate.copy( context ),
+							whenFragment.result.copy( context )
+					)
+			);
+		}
+		if ( otherwise != null ) {
+			caseSearched.otherwise = otherwise.copy( context );
+		}
+		copyTo( caseSearched, context );
+		return caseSearched;
 	}
 
 	public List<WhenFragment<R>> getWhenFragments() {

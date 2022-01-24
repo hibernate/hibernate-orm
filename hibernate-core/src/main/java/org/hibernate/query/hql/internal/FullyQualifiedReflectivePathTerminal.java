@@ -12,17 +12,17 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
-import jakarta.persistence.criteria.Expression;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.hql.HqlInterpretationException;
+import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
@@ -30,6 +30,8 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import jakarta.persistence.criteria.Expression;
 
 /**
  * @author Steve Ebersole
@@ -53,6 +55,11 @@ public class FullyQualifiedReflectivePathTerminal
 
 		// todo (6.0) : how to calculate this?
 		this.expressibleType = null;
+	}
+
+	@Override
+	public FullyQualifiedReflectivePathTerminal copy(SqmCopyContext context) {
+		return this;
 	}
 
 	@SuppressWarnings("unchecked")

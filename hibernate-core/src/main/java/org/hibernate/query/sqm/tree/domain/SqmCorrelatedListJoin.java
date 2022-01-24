@@ -10,6 +10,7 @@ import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -47,6 +48,29 @@ public class SqmCorrelatedListJoin<O, T> extends SqmListJoin<O, T> implements Sq
 		super( lhs, attribute, alias, sqmJoinType, fetched, nodeBuilder );
 		this.correlatedRootJoin = correlatedRootJoin;
 		this.correlationParent = correlationParent;
+	}
+
+	@Override
+	public SqmCorrelatedListJoin<O, T> copy(SqmCopyContext context) {
+		final SqmCorrelatedListJoin<O, T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmCorrelatedListJoin<O, T> path = context.registerCopy(
+				this,
+				new SqmCorrelatedListJoin<>(
+						getLhs().copy( context ),
+						getReferencedPathSource(),
+						getExplicitAlias(),
+						getSqmJoinType(),
+						isFetched(),
+						nodeBuilder(),
+						correlatedRootJoin.copy( context ),
+						correlationParent.copy( context )
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	@Override

@@ -9,7 +9,6 @@ package org.hibernate.query.sqm.tree.expression;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
-import jakarta.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSelection;
@@ -21,6 +20,8 @@ import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
 import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import jakarta.persistence.criteria.Expression;
 
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
 

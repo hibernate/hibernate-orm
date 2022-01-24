@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
 /**
@@ -16,7 +17,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
  */
 public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements SqmSelectableNode<T> {
 	private final UnaryArithmeticOperator operation;
-	private final SqmExpression operand;
+	private final SqmExpression<T> operand;
 
 	public SqmUnaryOperation(
 			UnaryArithmeticOperator operation,
@@ -31,6 +32,24 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 		super( inherentType, operand.nodeBuilder() );
 		this.operation = operation;
 		this.operand = operand;
+	}
+
+	@Override
+	public SqmUnaryOperation<T> copy(SqmCopyContext context) {
+		final SqmUnaryOperation<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmUnaryOperation<T> expression = context.registerCopy(
+				this,
+				new SqmUnaryOperation<>(
+						operation,
+						operand.copy( context ),
+						getNodeType()
+				)
+		);
+		copyTo( expression, context );
+		return expression;
 	}
 
 	public SqmExpression getOperand() {

@@ -9,10 +9,12 @@ package org.hibernate.query.sqm.tree;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
@@ -22,17 +24,39 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 public abstract class AbstractSqmDmlStatement<E>
 		extends AbstractSqmStatement<E>
 		implements SqmDmlStatement<E> {
-	private final Map<String, SqmCteStatement<?>> cteStatements = new LinkedHashMap<>();
+	private final Map<String, SqmCteStatement<?>> cteStatements;
 	private boolean withRecursiveCte;
 	private SqmRoot<E> target;
 
 	public AbstractSqmDmlStatement(SqmQuerySource querySource, NodeBuilder nodeBuilder) {
 		super( querySource, nodeBuilder );
+		this.cteStatements = new LinkedHashMap<>();
 	}
 
 	public AbstractSqmDmlStatement(SqmRoot<E> target, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
 		this( querySource, nodeBuilder );
 		this.target = target;
+	}
+
+	public AbstractSqmDmlStatement(
+			NodeBuilder builder,
+			SqmQuerySource querySource,
+			Set<SqmParameter<?>> parameters,
+			Map<String, SqmCteStatement<?>> cteStatements,
+			boolean withRecursiveCte,
+			SqmRoot<E> target) {
+		super( builder, querySource, parameters );
+		this.cteStatements = cteStatements;
+		this.withRecursiveCte = withRecursiveCte;
+		this.target = target;
+	}
+
+	protected Map<String, SqmCteStatement<?>> copyCteStatements(SqmCopyContext context) {
+		final Map<String, SqmCteStatement<?>> cteStatements = new LinkedHashMap<>( this.cteStatements.size() );
+		for ( Map.Entry<String, SqmCteStatement<?>> entry : this.cteStatements.entrySet() ) {
+			cteStatements.put( entry.getKey(), entry.getValue().copy( context ) );
+		}
+		return cteStatements;
 	}
 
 	@Override

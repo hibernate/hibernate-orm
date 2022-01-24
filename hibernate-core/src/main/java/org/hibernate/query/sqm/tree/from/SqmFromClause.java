@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * Contract representing a from clause.
@@ -30,6 +31,19 @@ public class SqmFromClause implements Serializable {
 
 	public SqmFromClause(int expectedNumberOfRoots) {
 		this.domainRoots = CollectionHelper.arrayList( expectedNumberOfRoots );
+	}
+
+	private SqmFromClause(SqmFromClause original, SqmCopyContext context) {
+		if ( original.domainRoots != null ) {
+			this.domainRoots = new ArrayList<>( original.domainRoots.size() );
+			for ( SqmRoot<?> domainRoot : original.domainRoots ) {
+				this.domainRoots.add( domainRoot.copy( context ) );
+			}
+		}
+	}
+
+	public SqmFromClause copy(SqmCopyContext context) {
+		return new SqmFromClause( this, context );
 	}
 
 	/**

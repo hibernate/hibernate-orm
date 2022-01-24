@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.select;
 
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * Represents an individual argument to a dynamic instantiation.
@@ -25,6 +26,15 @@ public class SqmDynamicInstantiationArgument<T> implements SqmAliasedNode<T> {
 		this.selectableNode = selectableNode;
 		this.alias = alias;
 		this.nodeBuilder = nodeBuilder;
+	}
+
+	@Override
+	public SqmDynamicInstantiationArgument<T> copy(SqmCopyContext context) {
+		return new SqmDynamicInstantiationArgument<>(
+				selectableNode.copy( context ),
+				alias,
+				nodeBuilder
+		);
 	}
 
 	@Override

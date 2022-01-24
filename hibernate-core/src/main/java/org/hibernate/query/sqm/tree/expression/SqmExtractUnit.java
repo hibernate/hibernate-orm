@@ -12,6 +12,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 
@@ -26,6 +27,11 @@ public class SqmExtractUnit<T> extends AbstractSqmNode implements SqmTypedNode<T
 		super( nodeBuilder );
 		this.unit = unit;
 		this.type = type;
+	}
+
+	@Override
+	public SqmExtractUnit<T> copy(SqmCopyContext context) {
+		return this;
 	}
 
 	public TemporalUnit getUnit() {

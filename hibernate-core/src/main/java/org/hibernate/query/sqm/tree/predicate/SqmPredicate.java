@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.predicate;
 
 import org.hibernate.query.criteria.JpaPredicate;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.type.descriptor.java.BooleanJavaType;
@@ -25,4 +26,6 @@ public interface SqmPredicate
 	@Override
 	SqmPredicate not();
 
+	@Override
+	SqmPredicate copy(SqmCopyContext context);
 }

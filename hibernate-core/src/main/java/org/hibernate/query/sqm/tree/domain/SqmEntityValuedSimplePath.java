@@ -13,6 +13,7 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * @author Steve Ebersole
@@ -24,6 +25,26 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 			SqmPath<?> lhs,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
+	}
+
+	@Override
+	public SqmEntityValuedSimplePath<T> copy(SqmCopyContext context) {
+		final SqmEntityValuedSimplePath<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		final SqmEntityValuedSimplePath<T> path = context.registerCopy(
+				this,
+				new SqmEntityValuedSimplePath<>(
+						getNavigablePath(),
+						getReferencedPathSource(),
+						getLhs().copy( context ),
+						nodeBuilder()
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	@Override

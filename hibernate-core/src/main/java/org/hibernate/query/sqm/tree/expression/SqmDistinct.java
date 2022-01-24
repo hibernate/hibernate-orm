@@ -10,6 +10,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 
@@ -21,8 +22,23 @@ public class SqmDistinct<T> extends AbstractSqmNode implements SqmTypedNode<T>, 
 	private final SqmExpression<T> expression;
 
 	public SqmDistinct(SqmExpression<T> expression, NodeBuilder builder) {
-		super(builder);
+		super( builder );
 		this.expression = expression;
+	}
+
+	@Override
+	public SqmDistinct<T> copy(SqmCopyContext context) {
+		final SqmDistinct<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		return context.registerCopy(
+				this,
+				new SqmDistinct<>(
+						expression.copy( context ),
+						nodeBuilder()
+				)
+		);
 	}
 
 	public SqmExpression<T> getExpression() {

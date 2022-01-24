@@ -14,6 +14,7 @@ import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaQueryPart;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
@@ -34,6 +35,36 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 	public SqmQueryPart(NodeBuilder nodeBuilder) {
 		this.nodeBuilder = nodeBuilder;
 	}
+
+	public SqmQueryPart(SqmQueryPart<T> original, SqmCopyContext context) {
+		this.nodeBuilder = original.nodeBuilder;
+		if ( original.orderByClause != null ) {
+			this.orderByClause = original.orderByClause.copy( context );
+		}
+		if ( original.offsetExpression != null ) {
+			this.offsetExpression = original.offsetExpression.copy( context );
+		}
+		if ( original.fetchExpression != null ) {
+			this.fetchExpression = original.fetchExpression.copy( context );
+		}
+		this.fetchClauseType = original.fetchClauseType;
+	}
+
+	protected void copyTo(SqmQueryPart<T> target, SqmCopyContext context) {
+		if ( orderByClause != null ) {
+			target.orderByClause = orderByClause.copy( context );
+		}
+		if ( offsetExpression != null ) {
+			target.offsetExpression = offsetExpression.copy( context );
+		}
+		if ( fetchExpression != null ) {
+			target.fetchExpression = fetchExpression.copy( context );
+		}
+		target.fetchClauseType = fetchClauseType;
+	}
+
+	@Override
+	public abstract SqmQueryPart<T> copy(SqmCopyContext context);
 
 	public abstract SqmQuerySpec<T> getFirstQuerySpec();
 

@@ -7,8 +7,6 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import java.util.List;
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
@@ -19,9 +17,13 @@ import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 
 /**
  * @author Steve Ebersole
@@ -48,6 +50,28 @@ public class SqmListJoin<O,E>
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
 		super( lhs, navigablePath, listAttribute, alias, joinType, fetched, nodeBuilder );
+	}
+
+	@Override
+	public SqmListJoin<O, E> copy(SqmCopyContext context) {
+		final SqmListJoin<O, E> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmListJoin<O, E> path = context.registerCopy(
+				this,
+				new SqmListJoin<>(
+						getLhs().copy( context ),
+						getNavigablePath(),
+						getReferencedPathSource(),
+						getExplicitAlias(),
+						getSqmJoinType(),
+						isFetched(),
+						nodeBuilder()
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	@Override

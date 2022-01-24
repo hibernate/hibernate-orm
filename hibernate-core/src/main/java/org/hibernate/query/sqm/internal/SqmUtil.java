@@ -34,6 +34,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -78,15 +79,14 @@ public class SqmUtil {
 
 	public static void verifyIsSelectStatement(SqmStatement<?> sqm, String hqlString) {
 		if ( ! isSelect( sqm ) ) {
-			throw new IllegalQueryOperationException(
+			throw new IllegalSelectQueryException(
 					String.format(
 							Locale.ROOT,
 							"Expecting a SELECT Query [%s], but found %s",
 							SqmSelectStatement.class.getName(),
 							sqm.getClass().getName()
 					),
-					hqlString,
-					null
+					hqlString
 			);
 		}
 	}

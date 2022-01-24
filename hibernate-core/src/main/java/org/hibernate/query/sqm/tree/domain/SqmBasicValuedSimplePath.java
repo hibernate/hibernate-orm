@@ -16,6 +16,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -40,6 +41,27 @@ public class SqmBasicValuedSimplePath<T>
 			String explicitAlias,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, explicitAlias, nodeBuilder );
+	}
+
+	@Override
+	public SqmBasicValuedSimplePath<T> copy(SqmCopyContext context) {
+		final SqmBasicValuedSimplePath<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		final SqmBasicValuedSimplePath<T> path = context.registerCopy(
+				this,
+				new SqmBasicValuedSimplePath<>(
+						getNavigablePath(),
+						getReferencedPathSource(),
+						getLhs().copy( context ),
+						getExplicitAlias(),
+						nodeBuilder()
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

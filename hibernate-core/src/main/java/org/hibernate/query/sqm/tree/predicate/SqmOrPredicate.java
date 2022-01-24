@@ -8,11 +8,13 @@ package org.hibernate.query.sqm.tree.predicate;
 
 import java.util.Arrays;
 import java.util.List;
-import jakarta.persistence.criteria.Expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
+
+import jakarta.persistence.criteria.Expression;
 
 /**
  * @author Steve Ebersole
@@ -28,6 +30,24 @@ public class SqmOrPredicate extends AbstractSqmExpression<Boolean> implements Sq
 		super( null, nodeBuilder );
 		this.leftHandPredicate = leftHandPredicate;
 		this.rightHandPredicate = rightHandPredicate;
+	}
+
+	@Override
+	public SqmOrPredicate copy(SqmCopyContext context) {
+		final SqmOrPredicate existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmOrPredicate predicate = context.registerCopy(
+				this,
+				new SqmOrPredicate(
+						leftHandPredicate.copy( context ),
+						rightHandPredicate.copy( context ),
+						nodeBuilder()
+				)
+		);
+		copyTo( predicate, context );
+		return predicate;
 	}
 
 	@Override

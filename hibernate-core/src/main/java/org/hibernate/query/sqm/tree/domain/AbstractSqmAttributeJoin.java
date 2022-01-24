@@ -6,19 +6,16 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Predicate;
-
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -26,6 +23,10 @@ import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import org.jboss.logging.Logger;
+
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
 
 /**
  * Models a join based on a mapped attribute reference.
@@ -77,6 +78,11 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 				nodeBuilder
 		);
 		this.fetched = fetched;
+	}
+
+	protected void copyTo(AbstractSqmAttributeJoin<O, T> target, SqmCopyContext context) {
+		super.copyTo( target, context );
+		this.onClausePredicate = onClausePredicate == null ? null : onClausePredicate.copy( context );
 	}
 
 	@Override

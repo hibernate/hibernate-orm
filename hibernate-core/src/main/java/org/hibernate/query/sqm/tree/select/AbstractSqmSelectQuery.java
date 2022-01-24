@@ -12,19 +12,21 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.metamodel.EntityType;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.metamodel.EntityType;
 
 /**
  * @author Steve Ebersole
@@ -33,21 +35,39 @@ import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 public abstract class AbstractSqmSelectQuery<T>
 		extends AbstractSqmNode
 		implements SqmSelectQuery<T>, SqmCteContainer {
-	private final Map<String, SqmCteStatement<?>> cteStatements = new LinkedHashMap<>();
+	private final Map<String, SqmCteStatement<?>> cteStatements;
 	private boolean withRecursive;
 	private SqmQueryPart<T> sqmQueryPart;
 	private Class<T> resultType;
 
 	public AbstractSqmSelectQuery(Class<T> resultType, NodeBuilder builder) {
-		super( builder );
-		this.sqmQueryPart = new SqmQuerySpec<>( builder );
-		this.resultType = resultType;
+		this( new SqmQuerySpec<>( builder ), resultType, builder );
 	}
 
 	public AbstractSqmSelectQuery(SqmQueryPart<T> queryPart, Class<T> resultType, NodeBuilder builder) {
 		super( builder );
+		this.cteStatements = new LinkedHashMap<>();
 		this.resultType = resultType;
 		setQueryPart( queryPart );
+	}
+
+	protected AbstractSqmSelectQuery(
+			NodeBuilder builder,
+			Map<String, SqmCteStatement<?>> cteStatements,
+			boolean withRecursive,
+			Class<T> resultType) {
+		super( builder );
+		this.cteStatements = cteStatements;
+		this.withRecursive = withRecursive;
+		this.resultType = resultType;
+	}
+
+	protected Map<String, SqmCteStatement<?>> copyCteStatements(SqmCopyContext context) {
+		final Map<String, SqmCteStatement<?>> cteStatements = new LinkedHashMap<>( this.cteStatements.size() );
+		for ( Map.Entry<String, SqmCteStatement<?>> entry : this.cteStatements.entrySet() ) {
+			cteStatements.put( entry.getKey(), entry.getValue().copy( context ) );
+		}
+		return cteStatements;
 	}
 
 	@Override

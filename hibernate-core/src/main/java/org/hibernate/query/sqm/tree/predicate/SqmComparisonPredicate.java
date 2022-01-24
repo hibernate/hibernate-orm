@@ -11,6 +11,7 @@ import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
@@ -26,7 +27,16 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 			ComparisonOperator operator,
 			SqmExpression<?> rightHandExpression,
 			NodeBuilder nodeBuilder) {
-		super( nodeBuilder );
+		this( leftHandExpression, operator, rightHandExpression, false, nodeBuilder );
+	}
+
+	private SqmComparisonPredicate(
+			SqmExpression<?> leftHandExpression,
+			ComparisonOperator operator,
+			SqmExpression<?> rightHandExpression,
+			boolean negated,
+			NodeBuilder nodeBuilder) {
+		super( negated, nodeBuilder );
 		this.leftHandExpression = leftHandExpression;
 		this.rightHandExpression = rightHandExpression;
 		this.operator = operator;
@@ -45,6 +55,26 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 		this.leftHandExpression = affirmativeForm.leftHandExpression;
 		this.rightHandExpression = affirmativeForm.rightHandExpression;
 		this.operator = affirmativeForm.operator;
+	}
+
+	@Override
+	public SqmComparisonPredicate copy(SqmCopyContext context) {
+		final SqmComparisonPredicate existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmComparisonPredicate predicate = context.registerCopy(
+				this,
+				new SqmComparisonPredicate(
+						leftHandExpression.copy( context ),
+						operator,
+						rightHandExpression.copy( context ),
+						isNegated(),
+						nodeBuilder()
+				)
+		);
+		copyTo( predicate, context );
+		return predicate;
 	}
 
 	public SqmExpression<?> getLeftHandExpression() {

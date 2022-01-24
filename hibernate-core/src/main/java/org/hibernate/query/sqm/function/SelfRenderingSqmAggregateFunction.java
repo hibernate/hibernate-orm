@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.function;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.query.ReturnableType;
@@ -13,6 +14,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmAggregateFunction;
 import org.hibernate.query.sqm.tree.expression.SqmDistinct;
@@ -41,6 +43,34 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 			String name) {
 		super( descriptor, renderingSupport, arguments, impliedResultType, argumentsValidator, returnTypeResolver, nodeBuilder, name );
 		this.filter = filter;
+	}
+
+	@Override
+	public SelfRenderingSqmAggregateFunction<T> copy(SqmCopyContext context) {
+		final SelfRenderingSqmAggregateFunction<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final List<SqmTypedNode<?>> arguments = new ArrayList<>( getArguments().size() );
+		for ( SqmTypedNode<?> argument : getArguments() ) {
+			arguments.add( argument.copy( context ) );
+		}
+		final SelfRenderingSqmAggregateFunction<T> expression = context.registerCopy(
+				this,
+				new SelfRenderingSqmAggregateFunction<>(
+						getFunctionDescriptor(),
+						getRenderingSupport(),
+						arguments,
+						filter == null ? null : filter.copy( context ),
+						getImpliedResultType(),
+						getArgumentsValidator(),
+						getReturnTypeResolver(),
+						nodeBuilder(),
+						getFunctionName()
+				)
+		);
+		copyTo( expression, context );
+		return expression;
 	}
 
 	@Override

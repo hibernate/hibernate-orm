@@ -206,6 +206,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public void setJpaCriteriaCopyComplianceEnabled(boolean jpaCriteriaCopyComplianceEnabled) {
+		delegate.setJpaCriteriaCopyComplianceEnabled( jpaCriteriaCopyComplianceEnabled );
+	}
+
+	@Override
+	public boolean isJpaCriteriaCopyComplianceEnabled() {
+		return delegate.isJpaCriteriaCopyComplianceEnabled();
+	}
+
+	@Override
 	public boolean isOpen() {
 		return delegate.isOpen();
 	}

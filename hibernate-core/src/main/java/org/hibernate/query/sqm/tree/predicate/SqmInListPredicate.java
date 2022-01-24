@@ -10,14 +10,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import jakarta.persistence.criteria.Expression;
-
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+
+import jakarta.persistence.criteria.Expression;
 
 /**
  * @author Steve Ebersole
@@ -57,7 +58,29 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 		for ( SqmExpression<T> listExpression : listExpressions ) {
 			implyListElementType( listExpression );
 		}
+	}
 
+	@Override
+	public SqmInListPredicate<T> copy(SqmCopyContext context) {
+		final SqmInListPredicate<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		List<SqmExpression<T>> listExpressions = new ArrayList<>( this.listExpressions.size() );
+		for ( SqmExpression<T> listExpression : this.listExpressions ) {
+			listExpressions.add( listExpression.copy( context ) );
+		}
+		final SqmInListPredicate<T> predicate = context.registerCopy(
+				this,
+				new SqmInListPredicate<>(
+						testExpression.copy( context ),
+						listExpressions,
+						isNegated(),
+						nodeBuilder()
+				)
+		);
+		copyTo( predicate, context );
+		return predicate;
 	}
 
 	@Override

@@ -6,19 +6,24 @@
  */
 package org.hibernate.query.sqm.tree;
 
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.metamodel.EntityType;
+import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCriteriaBase;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
+
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.metamodel.EntityType;
 
 /**
  * @author Christian Beikov
@@ -34,6 +39,27 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 
 	public AbstractSqmRestrictedDmlStatement(SqmRoot<T> target, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
 		super( target, querySource, nodeBuilder );
+	}
+
+	public AbstractSqmRestrictedDmlStatement(
+			NodeBuilder builder,
+			SqmQuerySource querySource,
+			Set<SqmParameter<?>> parameters,
+			Map<String, SqmCteStatement<?>> cteStatements,
+			boolean withRecursiveCte,
+			SqmRoot<T> target) {
+		super( builder, querySource, parameters, cteStatements, withRecursiveCte, target );
+	}
+
+	protected SqmWhereClause copyWhereClause(SqmCopyContext context) {
+		if ( getWhereClause() == null ) {
+			return null;
+		}
+		else {
+			final SqmWhereClause whereClause = new SqmWhereClause( nodeBuilder() );
+			whereClause.setPredicate( getWhereClause().getPredicate().copy( context ) );
+			return whereClause;
+		}
 	}
 
 	public Root<T> from(Class<T> entityClass) {

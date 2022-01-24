@@ -18,6 +18,7 @@ import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
@@ -101,6 +102,9 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 
 	@Override
 	SqmPredicate in(Expression<Collection<?>> values);
+
+	@Override
+	SqmExpression<T> copy(SqmCopyContext context);
 
 	default <X> SqmExpression<X> castAs(DomainType<X> type) {
 		if ( getNodeType() == type ) {

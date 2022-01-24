@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 import jakarta.persistence.criteria.Selection;
 
 import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 
@@ -29,4 +30,7 @@ public interface SqmSelectableNode<T> extends JpaSelection<T>, SqmTypedNode<T>, 
 	 * @see Selection#getCompoundSelectionItems()
 	 */
 	void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer);
+
+	@Override
+	SqmSelectableNode<T> copy(SqmCopyContext context);
 }

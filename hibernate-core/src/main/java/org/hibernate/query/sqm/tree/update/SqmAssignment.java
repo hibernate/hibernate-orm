@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.update;
 
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
@@ -22,6 +23,10 @@ public class SqmAssignment {
 
 		//noinspection unchecked
 		this.value.applyInferableType( targetPath.getNodeType() );
+	}
+
+	public SqmAssignment copy(SqmCopyContext context) {
+		return new SqmAssignment( targetPath.copy( context ), value.copy( context ) );
 	}
 
 	/**

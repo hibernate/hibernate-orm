@@ -11,10 +11,11 @@ import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.PathException;
-import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * @author Steve Ebersole
@@ -40,6 +41,27 @@ public class SqmAnyValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 		super( navigablePath, referencedPathSource, lhs, explicitAlias, nodeBuilder );
 
 		assert referencedPathSource.getSqmPathType() instanceof AnyMappingDomainType;
+	}
+
+	@Override
+	public SqmAnyValuedSimplePath<T> copy(SqmCopyContext context) {
+		final SqmAnyValuedSimplePath<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		final SqmAnyValuedSimplePath<T> path = context.registerCopy(
+				this,
+				new SqmAnyValuedSimplePath<>(
+						getNavigablePath(),
+						getReferencedPathSource(),
+						getLhs().copy( context ),
+						getExplicitAlias(),
+						nodeBuilder()
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	@Override

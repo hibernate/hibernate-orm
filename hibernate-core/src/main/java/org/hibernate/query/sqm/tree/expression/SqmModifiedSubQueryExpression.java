@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
 /**
@@ -47,6 +48,25 @@ public class SqmModifiedSubQueryExpression<T> extends AbstractSqmExpression<T> {
 		super( resultType, builder );
 		this.subQuery = subQuery;
 		this.modifier = modifier;
+	}
+
+	@Override
+	public SqmModifiedSubQueryExpression<T> copy(SqmCopyContext context) {
+		final SqmModifiedSubQueryExpression<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmModifiedSubQueryExpression<T> expression = context.registerCopy(
+				this,
+				new SqmModifiedSubQueryExpression<>(
+						subQuery.copy( context ),
+						modifier,
+						getNodeType(),
+						nodeBuilder()
+				)
+		);
+		copyTo( expression, context );
+		return expression;
 	}
 
 	public Modifier getModifier() {

@@ -10,6 +10,7 @@ import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -47,6 +48,29 @@ public class SqmCorrelatedMapJoin<O, K, V> extends SqmMapJoin<O, K, V> implement
 		super( lhs, attribute, alias, sqmJoinType, fetched, nodeBuilder );
 		this.correlatedRootJoin = correlatedRootJoin;
 		this.correlationParent = correlationParent;
+	}
+
+	@Override
+	public SqmCorrelatedMapJoin<O, K, V> copy(SqmCopyContext context) {
+		final SqmCorrelatedMapJoin<O, K, V> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmCorrelatedMapJoin<O, K, V> path = context.registerCopy(
+				this,
+				new SqmCorrelatedMapJoin<>(
+						getLhs().copy( context ),
+						getReferencedPathSource(),
+						getExplicitAlias(),
+						getSqmJoinType(),
+						isFetched(),
+						nodeBuilder(),
+						correlatedRootJoin.copy( context ),
+						correlationParent.copy( context )
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	@Override

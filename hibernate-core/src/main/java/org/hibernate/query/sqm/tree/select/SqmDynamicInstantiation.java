@@ -15,6 +15,8 @@ import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -96,6 +98,45 @@ public class SqmDynamicInstantiation<T>
 			NodeBuilder nodeBuilder) {
 		super( instantiationTarget, nodeBuilder );
 		this.instantiationTarget = instantiationTarget;
+	}
+
+	private SqmDynamicInstantiation(
+			SqmExpressible<T> sqmExpressible,
+			NodeBuilder criteriaBuilder,
+			SqmDynamicInstantiationTarget<T> instantiationTarget,
+			List<SqmDynamicInstantiationArgument<?>> arguments) {
+		super( sqmExpressible, criteriaBuilder );
+		this.instantiationTarget = instantiationTarget;
+		this.arguments = arguments;
+	}
+
+	@Override
+	public SqmDynamicInstantiation<T> copy(SqmCopyContext context) {
+		final SqmDynamicInstantiation<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		List<SqmDynamicInstantiationArgument<?>> arguments;
+		if ( this.arguments == null ) {
+			arguments = null;
+		}
+		else {
+			arguments = new ArrayList<>( this.arguments.size() );
+			for ( SqmDynamicInstantiationArgument<?> argument : this.arguments ) {
+				arguments.add( argument.copy( context ) );
+			}
+		}
+		final SqmDynamicInstantiation<T> instantiation = context.registerCopy(
+				this,
+				new SqmDynamicInstantiation<>(
+						getExpressible(),
+						nodeBuilder(),
+						instantiationTarget,
+						arguments
+				)
+		);
+		copyTo( instantiation, context );
+		return instantiation;
 	}
 
 	public SqmDynamicInstantiationTarget<T> getInstantiationTarget() {

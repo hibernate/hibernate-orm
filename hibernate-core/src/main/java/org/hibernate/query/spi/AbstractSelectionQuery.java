@@ -6,10 +6,12 @@
  */
 package org.hibernate.query.spi;
 
+import java.sql.Types;
 import java.time.Instant;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,6 +24,9 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.TupleElement;
+import jakarta.persistence.criteria.CompoundSelection;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -31,18 +36,36 @@ import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
 import org.hibernate.TypeMismatchException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
+import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.SelectionQuery;
+import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.internal.ScrollableResultsIterator;
 import org.hibernate.query.named.NamedQueryMemento;
+import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
+import org.hibernate.query.sqm.tree.select.SqmQueryPart;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.spi.Callback;
+import org.hibernate.sql.results.internal.TupleMetadata;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
@@ -66,6 +89,64 @@ public abstract class AbstractSelectionQuery<R>
 
 	public AbstractSelectionQuery(SharedSessionContractImplementor session) {
 		super( session );
+	}
+
+	protected TupleMetadata buildTupleMetadata(SqmStatement<?> statement, Class<R> resultType) {
+		if ( resultType != null && Tuple.class.isAssignableFrom( resultType ) ) {
+			final List<SqmSelection<?>> selections = ( (SqmSelectStatement<?>) statement ).getQueryPart()
+					.getFirstQuerySpec()
+					.getSelectClause()
+					.getSelections();
+			// resultType is Tuple..
+			if ( getQueryOptions().getTupleTransformer() == null ) {
+				final Map<TupleElement<?>, Integer> tupleElementMap;
+				if ( selections.size() == 1 && selections.get( 0 ).getSelectableNode() instanceof CompoundSelection<?> ) {
+					final List<? extends JpaSelection<?>> selectionItems = selections.get( 0 )
+							.getSelectableNode()
+							.getSelectionItems();
+					tupleElementMap = new IdentityHashMap<>( selectionItems.size() );
+					for ( int i = 0; i < selectionItems.size(); i++ ) {
+						tupleElementMap.put( selectionItems.get( i ), i );
+					}
+				}
+				else {
+					tupleElementMap = new IdentityHashMap<>( selections.size() );
+					for ( int i = 0; i < selections.size(); i++ ) {
+						final SqmSelection<?> selection = selections.get( i );
+						tupleElementMap.put( selection.getSelectableNode(), i );
+					}
+				}
+				return new TupleMetadata( tupleElementMap );
+			}
+
+			throw new IllegalArgumentException(
+					"Illegal combination of Tuple resultType and (non-JpaTupleBuilder) TupleTransformer : " +
+							getQueryOptions().getTupleTransformer()
+			);
+		}
+		return null;
+	}
+
+	protected void applyOptions(NamedHqlQueryMemento memento) {
+		applyOptions( (NamedQueryMemento) memento );
+
+		if ( memento.getFirstResult() != null ) {
+			setFirstResult( memento.getFirstResult() );
+		}
+
+		if ( memento.getMaxResults() != null ) {
+			setMaxResults( memento.getMaxResults() );
+		}
+
+		if ( memento.getParameterTypes() != null ) {
+			for ( Map.Entry<String, String> entry : memento.getParameterTypes().entrySet() ) {
+				final QueryParameterImplementor<?> parameter = getParameterMetadata().getQueryParameter( entry.getKey() );
+				final BasicType<?> type = getSessionFactory().getTypeConfiguration()
+						.getBasicTypeRegistry()
+						.getRegisteredType( entry.getValue() );
+				parameter.applyAnticipatedType( type );
+			}
+		}
 	}
 
 	protected void applyOptions(NamedQueryMemento memento) {
@@ -103,6 +184,143 @@ public abstract class AbstractSelectionQuery<R>
 
 		if ( memento.getComment() != null ) {
 			setComment( memento.getComment() );
+		}
+	}
+
+	protected void visitQueryReturnType(
+			SqmQueryPart<R> queryPart,
+			Class<R> resultType,
+			SessionFactoryImplementor factory) {
+		if ( queryPart instanceof SqmQuerySpec<?> ) {
+			final SqmQuerySpec<R> sqmQuerySpec = (SqmQuerySpec<R>) queryPart;
+			final List<SqmSelection<?>> sqmSelections = sqmQuerySpec.getSelectClause().getSelections();
+
+			if ( sqmSelections == null || sqmSelections.isEmpty() ) {
+				// make sure there is at least one root
+				final List<SqmRoot<?>> sqmRoots = sqmQuerySpec.getFromClause().getRoots();
+				if ( sqmRoots == null || sqmRoots.isEmpty() ) {
+					throw new IllegalArgumentException( "Criteria did not define any query roots" );
+				}
+				// if there is a single root, use that as the selection
+				if ( sqmRoots.size() == 1 ) {
+					final SqmRoot<?> sqmRoot = sqmRoots.get( 0 );
+					sqmQuerySpec.getSelectClause().add( sqmRoot, null );
+				}
+				else {
+					throw new IllegalArgumentException(  );
+				}
+			}
+
+			if ( resultType != null ) {
+				checkQueryReturnType( sqmQuerySpec, resultType, factory );
+			}
+		}
+		else {
+			final SqmQueryGroup<R> queryGroup = (SqmQueryGroup<R>) queryPart;
+			for ( SqmQueryPart<R> sqmQueryPart : queryGroup.getQueryParts() ) {
+				visitQueryReturnType( sqmQueryPart, resultType, factory );
+			}
+		}
+	}
+
+	protected static <T> void checkQueryReturnType(
+			SqmQuerySpec<T> querySpec,
+			Class<T> resultClass,
+			SessionFactoryImplementor sessionFactory) {
+		if ( resultClass == null ) {
+			// nothing to check
+			return;
+		}
+
+		final List<SqmSelection<?>> selections = querySpec.getSelectClause().getSelections();
+
+		if ( resultClass.isArray() ) {
+			// todo (6.0) : implement
+		}
+		else if ( Tuple.class.isAssignableFrom( resultClass ) ) {
+			// todo (6.0) : implement
+		}
+		else {
+			final boolean jpaQueryComplianceEnabled = sessionFactory.getSessionFactoryOptions()
+					.getJpaCompliance()
+					.isJpaQueryComplianceEnabled();
+			if ( selections.size() != 1 ) {
+				final String errorMessage = "Query result-type error - multiple selections: use Tuple or array";
+
+				if ( jpaQueryComplianceEnabled ) {
+					throw new IllegalArgumentException( errorMessage );
+				}
+				else {
+					throw new QueryTypeMismatchException( errorMessage );
+				}
+			}
+
+			final SqmSelection<?> sqmSelection = selections.get( 0 );
+
+			if ( sqmSelection.getSelectableNode() instanceof SqmParameter ) {
+				final SqmParameter<?> sqmParameter = (SqmParameter<?>) sqmSelection.getSelectableNode();
+
+				// we may not yet know a selection type
+				if ( sqmParameter.getNodeType() == null || sqmParameter.getNodeType().getExpressibleJavaType() == null ) {
+					// we can't verify the result type up front
+					return;
+				}
+			}
+
+			if ( jpaQueryComplianceEnabled ) {
+				return;
+			}
+			verifyResultType( resultClass, sqmSelection.getNodeType(), sessionFactory );
+		}
+	}
+
+	protected static <T> void verifyResultType(
+			Class<T> resultClass,
+			SqmExpressible<?> sqmExpressible,
+			SessionFactoryImplementor sessionFactory) {
+		assert sqmExpressible != null;
+		assert sqmExpressible.getExpressibleJavaType() != null;
+		final Class<?> javaTypeClass = sqmExpressible.getExpressibleJavaType().getJavaTypeClass();
+		if ( !resultClass.isAssignableFrom( javaTypeClass ) ) {
+			// Special case for date because we always report java.util.Date as expression type
+			// But the expected resultClass could be a subtype of that, so we need to check the JdbcType
+			if ( javaTypeClass == Date.class ) {
+				JdbcType jdbcType = null;
+				if ( sqmExpressible instanceof BasicDomainType<?> ) {
+					jdbcType = ( (BasicDomainType<?>) sqmExpressible).getJdbcType();
+				}
+				else if ( sqmExpressible instanceof SqmPathSource<?> ) {
+					final DomainType<?> domainType = ( (SqmPathSource<?>) sqmExpressible).getSqmPathType();
+					if ( domainType instanceof BasicDomainType<?> ) {
+						jdbcType = ( (BasicDomainType<?>) domainType ).getJdbcType();
+					}
+				}
+				if ( jdbcType != null ) {
+					switch ( jdbcType.getJdbcTypeCode() ) {
+						case Types.DATE:
+							if ( resultClass.isAssignableFrom( java.sql.Date.class ) ) {
+								return;
+							}
+							break;
+						case Types.TIME:
+							if ( resultClass.isAssignableFrom( java.sql.Time.class ) ) {
+								return;
+							}
+							break;
+						case Types.TIMESTAMP:
+							if ( resultClass.isAssignableFrom( java.sql.Timestamp.class ) ) {
+								return;
+							}
+							break;
+					}
+				}
+			}
+			final String errorMessage = String.format(
+					"Specified result type [%s] did not match Query selection type [%s] - multiple selections: use Tuple or array",
+					resultClass.getName(),
+					sqmExpressible.getExpressibleJavaType().getJavaType().getTypeName()
+			);
+			throw new QueryTypeMismatchException( errorMessage );
 		}
 	}
 
@@ -685,5 +903,9 @@ public abstract class AbstractSelectionQuery<R>
 	public SelectionQuery<R> setProperties(Object bean) {
 		super.setProperties( bean );
 		return this;
+	}
+
+	public SessionFactoryImplementor getSessionFactory() {
+		return getSession().getFactory();
 	}
 }

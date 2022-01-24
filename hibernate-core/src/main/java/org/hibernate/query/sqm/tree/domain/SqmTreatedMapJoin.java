@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.domain;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 
 /**
@@ -40,10 +41,21 @@ public class SqmTreatedMapJoin<O, K, V, S extends V> extends SqmMapJoin<O, K, S>
 	}
 
 	@Override
-	public void addSqmJoin(SqmJoin<S, ?> join) {
-		super.addSqmJoin( join );
-		//noinspection unchecked
-		wrappedPath.addSqmJoin( (SqmJoin<V, ?>) join );
+	public SqmTreatedMapJoin<O, K, V, S> copy(SqmCopyContext context) {
+		final SqmTreatedMapJoin<O, K, V, S> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmTreatedMapJoin<O, K, V, S> path = context.registerCopy(
+				this,
+				new SqmTreatedMapJoin<>(
+						wrappedPath.copy( context ),
+						treatTarget,
+						getExplicitAlias()
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	@Override

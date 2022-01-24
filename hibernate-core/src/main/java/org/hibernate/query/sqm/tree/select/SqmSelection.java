@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.select;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 
 /**
@@ -37,6 +38,11 @@ public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T
 		assert selectableNode != null;
 		this.selectableNode = selectableNode;
 		selectableNode.alias( alias );
+	}
+
+	@Override
+	public SqmSelection<T> copy(SqmCopyContext context) {
+		return new SqmSelection<>( selectableNode.copy( context ), nodeBuilder() );
 	}
 
 	@Override

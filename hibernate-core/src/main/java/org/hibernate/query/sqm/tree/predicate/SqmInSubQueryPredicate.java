@@ -6,15 +6,16 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
-import jakarta.persistence.criteria.Expression;
-
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
+
+import jakarta.persistence.criteria.Expression;
 
 /**
  * @author Steve Ebersole
@@ -46,6 +47,25 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 
 		testExpression.applyInferableType( expressibleType );
 		subQueryExpression.applyInferableType( expressibleType );
+	}
+
+	@Override
+	public SqmInSubQueryPredicate<T> copy(SqmCopyContext context) {
+		final SqmInSubQueryPredicate<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmInSubQueryPredicate<T> predicate = context.registerCopy(
+				this,
+				new SqmInSubQueryPredicate<T>(
+						testExpression.copy( context ),
+						subQueryExpression.copy( context ),
+						isNegated(),
+						nodeBuilder()
+				)
+		);
+		copyTo( predicate, context );
+		return predicate;
 	}
 
 	@Override

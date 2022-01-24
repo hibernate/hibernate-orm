@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 
@@ -34,10 +35,21 @@ public class SqmTreatedCrossJoin<T, S extends T> extends SqmCrossJoin<S> impleme
 	}
 
 	@Override
-	public void addSqmJoin(SqmJoin<S, ?> join) {
-		super.addSqmJoin( join );
-		//noinspection unchecked
-		wrappedPath.addSqmJoin( (SqmJoin<T, ?>) join );
+	public SqmTreatedCrossJoin<T, S> copy(SqmCopyContext context) {
+		final SqmTreatedCrossJoin<T, S> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmTreatedCrossJoin<T, S> path = context.registerCopy(
+				this,
+				new SqmTreatedCrossJoin<>(
+						wrappedPath.copy( context ),
+						treatTarget,
+						getExplicitAlias()
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	@Override

@@ -10,6 +10,7 @@ import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -24,6 +25,24 @@ public class SqmCorrelatedRootJoin<T> extends SqmRoot<T> implements SqmCorrelati
 			SqmPathSource<T> referencedNavigable,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedNavigable, nodeBuilder );
+	}
+
+	@Override
+	public SqmCorrelatedRootJoin<T> copy(SqmCopyContext context) {
+		final SqmCorrelatedRootJoin<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmCorrelatedRootJoin<T> path = context.registerCopy(
+				this,
+				new SqmCorrelatedRootJoin<>(
+						getNavigablePath(),
+						getReferencedPathSource(),
+						nodeBuilder()
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	@SuppressWarnings("unchecked")

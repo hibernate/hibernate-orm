@@ -20,6 +20,7 @@ import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
@@ -48,6 +49,28 @@ public class SqmMapJoin<O, K, V>
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
 		super( lhs, navigablePath, pluralValuedNavigable, alias, joinType, fetched, nodeBuilder );
+	}
+
+	@Override
+	public SqmMapJoin<O, K, V> copy(SqmCopyContext context) {
+		final SqmMapJoin<O, K, V> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmMapJoin<O, K, V> path = context.registerCopy(
+				this,
+				new SqmMapJoin<>(
+						getLhs().copy( context ),
+						getNavigablePath(),
+						getReferencedPathSource(),
+						getExplicitAlias(),
+						getSqmJoinType(),
+						isFetched(),
+						nodeBuilder()
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	@Override

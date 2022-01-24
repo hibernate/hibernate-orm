@@ -15,6 +15,7 @@ import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 
@@ -68,6 +69,55 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 		this.cycleMarkColumn = null;
 		this.cycleValue = '\0';
 		this.noCycleValue = '\0';
+	}
+
+	private SqmCteStatement(
+			NodeBuilder builder,
+			SqmCteContainer cteContainer,
+			SqmCteTable cteTable,
+			CteMaterialization materialization,
+			SqmStatement<?> cteDefinition,
+			CteSearchClauseKind searchClauseKind,
+			List<SqmSearchClauseSpecification> searchBySpecifications,
+			List<SqmCteTableColumn> cycleColumns,
+			SqmCteTableColumn cycleMarkColumn,
+			char cycleValue,
+			char noCycleValue) {
+		super( builder );
+		this.cteContainer = cteContainer;
+		this.cteTable = cteTable;
+		this.materialization = materialization;
+		this.cteDefinition = cteDefinition;
+		this.searchClauseKind = searchClauseKind;
+		this.searchBySpecifications = searchBySpecifications;
+		this.cycleColumns = cycleColumns;
+		this.cycleMarkColumn = cycleMarkColumn;
+		this.cycleValue = cycleValue;
+		this.noCycleValue = noCycleValue;
+	}
+
+	@Override
+	public SqmCteStatement<T> copy(SqmCopyContext context) {
+		final SqmCteStatement<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		return context.registerCopy(
+				this,
+				new SqmCteStatement<>(
+						nodeBuilder(),
+						cteContainer,
+						cteTable,
+						materialization,
+						cteDefinition.copy( context ),
+						searchClauseKind,
+						searchBySpecifications,
+						cycleColumns,
+						cycleMarkColumn,
+						cycleValue,
+						noCycleValue
+				)
+		);
 	}
 
 	public SqmCteTable getCteTable() {

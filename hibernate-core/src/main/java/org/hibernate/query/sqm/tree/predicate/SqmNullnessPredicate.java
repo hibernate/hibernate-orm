@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.predicate;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
@@ -23,6 +24,24 @@ public class SqmNullnessPredicate extends AbstractNegatableSqmPredicate {
 	public SqmNullnessPredicate(SqmExpression<?> expression, boolean negated, NodeBuilder nodeBuilder) {
 		super( negated, nodeBuilder );
 		this.expression = expression;
+	}
+
+	@Override
+	public SqmNullnessPredicate copy(SqmCopyContext context) {
+		final SqmNullnessPredicate existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmNullnessPredicate predicate = context.registerCopy(
+				this,
+				new SqmNullnessPredicate(
+						expression.copy( context ),
+						isNegated(),
+						nodeBuilder()
+				)
+		);
+		copyTo( predicate, context );
+		return predicate;
 	}
 
 	public SqmExpression<?> getExpression() {

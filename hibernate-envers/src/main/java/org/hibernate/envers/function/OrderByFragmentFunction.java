@@ -7,6 +7,7 @@
 
 package org.hibernate.envers.function;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -16,14 +17,21 @@ import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.FunctionRenderingSupport;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
+import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.sql.FromClauseIndex;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.expression.SqmAny;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
 import org.hibernate.sql.ast.tree.from.DelegatingTableGroup;
@@ -56,57 +64,7 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		return new SelfRenderingSqmFunction<T>(
-				this,
-				null,
-				arguments,
-				impliedResultType,
-				getArgumentsValidator(),
-				getReturnTypeResolver(),
-				queryEngine.getCriteriaBuilder(),
-				getName()
-		) {
-
-			@Override
-			public SelfRenderingFunctionSqlAstExpression convertToSqlAst(SqmToSqlAstConverter walker) {
-				final ReturnableType<?> resultType = resolveResultType(
-						walker.getCreationContext().getMappingMetamodel().getTypeConfiguration()
-				);
-				final String sqmAlias = ( (SqmLiteral<String>) getArguments().get( 0 ) ).getLiteralValue();
-				final String attributeRole = ( (SqmLiteral<String>) getArguments().get( 1 ) ).getLiteralValue();
-				final TableGroup tableGroup = ( (FromClauseIndex) walker.getFromClauseAccess() ).findTableGroup(
-						sqmAlias
-				);
-				final QueryableCollection collectionDescriptor = (QueryableCollection) walker.getCreationContext()
-						.getSessionFactory()
-						.getRuntimeMetamodels()
-						.getMappingMetamodel()
-						.findCollectionDescriptor( attributeRole );
-				final PluralAttributeMapping pluralAttribute = collectionDescriptor.getAttributeMapping();
-				final QuerySpec queryPart = (QuerySpec) ( (SqlAstQueryPartProcessingState) walker.getCurrentProcessingState() ).getInflightQueryPart();
-				final OrderByFragment fragment;
-				if ( pluralAttribute.getOrderByFragment() != null ) {
-					fragment = pluralAttribute.getOrderByFragment();
-				}
-				else {
-					fragment = pluralAttribute.getManyToManyOrderByFragment();
-				}
-				final String targetTableExpression;
-				if ( collectionDescriptor.getElementPersister() == null ) {
-					targetTableExpression = collectionDescriptor.getTableName();
-				}
-				else {
-					targetTableExpression = ( (Joinable) collectionDescriptor.getElementPersister() ).getTableName();
-				}
-				// We apply the fragment here and return null to signal that this is a no-op
-				fragment.apply(
-						queryPart,
-						new AuditingTableGroup( tableGroup, targetTableExpression ),
-						walker
-				);
-				return null;
-			}
-		};
+		return new OrderByFragmentSelfRenderingSqmFunction<>( this, arguments, impliedResultType, queryEngine );
 	}
 
 	private static class AuditingTableGroup extends DelegatingTableGroup {
@@ -147,6 +105,112 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 				tableExpression = auditTableExpression;
 			}
 			return super.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
+		}
+	}
+
+	private static class OrderByFragmentSelfRenderingSqmFunction<T> extends SelfRenderingSqmFunction<T> {
+
+		public OrderByFragmentSelfRenderingSqmFunction(
+				OrderByFragmentFunction orderByFragmentFunction,
+				List<? extends SqmTypedNode<?>> arguments,
+				ReturnableType<T> impliedResultType,
+				QueryEngine queryEngine) {
+			super(
+					orderByFragmentFunction,
+					null,
+					arguments,
+					impliedResultType,
+					orderByFragmentFunction.getArgumentsValidator(),
+					orderByFragmentFunction.getReturnTypeResolver(),
+					queryEngine.getCriteriaBuilder(),
+					orderByFragmentFunction.getName()
+			);
+		}
+
+		private OrderByFragmentSelfRenderingSqmFunction(
+				SqmFunctionDescriptor descriptor,
+				FunctionRenderingSupport renderingSupport,
+				List<? extends SqmTypedNode<?>> arguments,
+				ReturnableType<T> impliedResultType,
+				ArgumentsValidator argumentsValidator,
+				FunctionReturnTypeResolver returnTypeResolver,
+				NodeBuilder nodeBuilder,
+				String name) {
+			super(
+					descriptor,
+					renderingSupport,
+					arguments,
+					impliedResultType,
+					argumentsValidator,
+					returnTypeResolver,
+					nodeBuilder,
+					name
+			);
+		}
+
+		@Override
+		public OrderByFragmentSelfRenderingSqmFunction<T> copy(SqmCopyContext context) {
+			final OrderByFragmentSelfRenderingSqmFunction<T> existing = context.getCopy( this );
+			if ( existing != null ) {
+				return existing;
+			}
+			final List<SqmTypedNode<?>> arguments = new ArrayList<>( getArguments().size() );
+			for ( SqmTypedNode<?> argument : getArguments() ) {
+				arguments.add( argument.copy( context ) );
+			}
+			return context.registerCopy(
+					this,
+					new OrderByFragmentSelfRenderingSqmFunction<>(
+							getFunctionDescriptor(),
+							getRenderingSupport(),
+							arguments,
+							getImpliedResultType(),
+							getArgumentsValidator(),
+							getReturnTypeResolver(),
+							nodeBuilder(),
+							getFunctionName()
+					)
+			);
+		}
+
+		@Override
+		public SelfRenderingFunctionSqlAstExpression convertToSqlAst(SqmToSqlAstConverter walker) {
+			final ReturnableType<?> resultType = resolveResultType(
+					walker.getCreationContext().getMappingMetamodel().getTypeConfiguration()
+			);
+			final String sqmAlias = ( (SqmLiteral<String>) getArguments().get( 0 ) ).getLiteralValue();
+			final String attributeRole = ( (SqmLiteral<String>) getArguments().get( 1 ) ).getLiteralValue();
+			final TableGroup tableGroup = ( (FromClauseIndex) walker.getFromClauseAccess() ).findTableGroup(
+					sqmAlias
+			);
+			final QueryableCollection collectionDescriptor = (QueryableCollection) walker.getCreationContext()
+					.getSessionFactory()
+						.getRuntimeMetamodels()
+						.getMappingMetamodel()
+					.findCollectionDescriptor( attributeRole );
+			final PluralAttributeMapping pluralAttribute = collectionDescriptor.getAttributeMapping();
+			final QuerySpec queryPart = (QuerySpec) ( (SqlAstQueryPartProcessingState) walker.getCurrentProcessingState() ).getInflightQueryPart();
+			final OrderByFragment fragment;
+			if ( pluralAttribute.getOrderByFragment() != null ) {
+				fragment = pluralAttribute.getOrderByFragment();
+			}
+			else {
+				fragment = pluralAttribute.getManyToManyOrderByFragment();
+			}
+			final String targetTableExpression;
+			if ( collectionDescriptor.getElementPersister() == null ) {
+				targetTableExpression = collectionDescriptor.getTableName();
+			}
+			else {
+				targetTableExpression = ( (Joinable) collectionDescriptor.getElementPersister() ).getTableName();
+			}
+			// We apply the fragment here and return null to signal that this is a no-op
+			fragment.apply(
+					queryPart,
+					new AuditingTableGroup( tableGroup, targetTableExpression ),
+					walker
+			);
+			return null;
 		}
 	}
 }

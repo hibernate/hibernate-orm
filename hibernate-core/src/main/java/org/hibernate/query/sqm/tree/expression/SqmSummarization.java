@@ -6,11 +6,12 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.select.SqmSubQuery;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * @author Christian Beikov
@@ -24,6 +25,28 @@ public class SqmSummarization<T> extends AbstractSqmExpression<T> {
 		super( null, criteriaBuilder );
 		this.kind = kind;
 		this.groupings = groupings;
+	}
+
+	@Override
+	public SqmSummarization<T> copy(SqmCopyContext context) {
+		final SqmSummarization<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final List<SqmExpression<?>> groupings = new ArrayList<>( this.groupings.size() );
+		for ( SqmExpression<?> grouping : this.groupings ) {
+			groupings.add( grouping.copy( context ) );
+		}
+		final SqmSummarization<T> expression = context.registerCopy(
+				this,
+				new SqmSummarization<>(
+						kind,
+						groupings,
+						nodeBuilder()
+				)
+		);
+		copyTo( expression, context );
+		return expression;
 	}
 
 	public Kind getKind() {

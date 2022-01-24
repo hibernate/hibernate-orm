@@ -25,4 +25,6 @@ public interface SqmNode extends JpaCriteriaNode {
 	}
 
 	NodeBuilder nodeBuilder();
+
+	SqmNode copy(SqmCopyContext context);
 }

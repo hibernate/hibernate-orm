@@ -6,6 +6,9 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaExpression;
@@ -13,10 +16,9 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 import jakarta.persistence.criteria.Expression;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Steve Ebersole
@@ -40,6 +42,27 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 		super( type, nodeBuilder );
 		functionDescriptor = nodeBuilder.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( "coalesce" );
 		this.arguments = new ArrayList<>( numberOfArguments );
+	}
+
+	@Override
+	public SqmCoalesce<T> copy(SqmCopyContext context) {
+		final SqmCoalesce<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmCoalesce<T> coalesce = context.registerCopy(
+				this,
+				new SqmCoalesce<>(
+						getNodeType(),
+						arguments.size(),
+						nodeBuilder()
+				)
+		);
+		for ( SqmExpression<? extends T> argument : arguments ) {
+			coalesce.arguments.add( argument.copy( context ) );
+		}
+		copyTo( coalesce, context );
+		return coalesce;
 	}
 
 	public SqmFunctionDescriptor getFunctionDescriptor() {

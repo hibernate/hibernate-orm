@@ -21,8 +21,11 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
 
 /**
  * @author Steve Ebersole
@@ -46,6 +49,16 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		super( referencedPathSource, nodeBuilder );
 		this.navigablePath = navigablePath;
 		this.lhs = lhs;
+	}
+
+	protected void copyTo(AbstractSqmPath<T> target, SqmCopyContext context) {
+		super.copyTo( target, context );
+		if ( reusablePaths != null ) {
+			target.reusablePaths = new HashMap<>( reusablePaths.size() );
+			for ( Map.Entry<String, SqmPath<?>> entry : reusablePaths.entrySet() ) {
+				target.reusablePaths.put( entry.getKey(), entry.getValue().copy( context ) );
+			}
+		}
 	}
 
 	@Override

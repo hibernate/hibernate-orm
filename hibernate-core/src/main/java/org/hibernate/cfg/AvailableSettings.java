@@ -11,6 +11,10 @@ import java.util.function.Supplier;
 import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.query.spi.QueryPlan;
 
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
+
 /**
  * Enumerates the configuration properties supported by Hibernate, including
  * properties defined by the JPA specification.
@@ -2262,6 +2266,24 @@ public interface AvailableSettings {
 	 * @since 6.0
 	 */
 	String JPA_LOAD_BY_ID_COMPLIANCE = "hibernate.jpa.compliance.load_by_id";
+
+	/**
+	 * When enabled, specifies that {@linkplain org.hibernate.query.Query queries}
+	 * created through {@link jakarta.persistence.EntityManager#createQuery(CriteriaQuery)},
+	 * {@link jakarta.persistence.EntityManager#createQuery(CriteriaUpdate)} or
+	 * {@link jakarta.persistence.EntityManager#createQuery(CriteriaDelete)}
+	 * must create a copy of the passed object such that the resulting {@link jakarta.persistence.Query}
+	 * is not affected by any mutations to the original criteria query.
+	 * <p>
+	 * If disabled, it is assumed that users do not mutate the criteria query afterwards
+	 * and due to that, no copy will be created, which will improve performance.
+	 * <p>
+	 * By default, no copies are created to not hurt performance. When enabled,
+	 * criteria query objects are copied, as required by the JPA specification.
+	 *
+	 * @since 6.0
+	 */
+	String JPA_CRITERIA_COPY_COMPLIANCE = "hibernate.jpa.compliance.criteria_copy";
 
 	/**
 	 * Determines if the identifier value stored in the database table backing a

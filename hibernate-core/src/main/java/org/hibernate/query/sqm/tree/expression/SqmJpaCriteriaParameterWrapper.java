@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 
@@ -33,6 +34,22 @@ public class SqmJpaCriteriaParameterWrapper<T>
 			NodeBuilder criteriaBuilder) {
 		super( toSqmType( type, criteriaBuilder ), criteriaBuilder );
 		this.jpaCriteriaParameter = jpaCriteriaParameter;
+	}
+
+	@Override
+	public SqmJpaCriteriaParameterWrapper<T> copy(SqmCopyContext context) {
+		final SqmJpaCriteriaParameterWrapper<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		return context.registerCopy(
+				this,
+				new SqmJpaCriteriaParameterWrapper<>(
+						getNodeType(),
+						jpaCriteriaParameter.copy( context ),
+						nodeBuilder()
+				)
+		);
 	}
 
 	@Override

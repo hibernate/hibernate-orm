@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.predicate;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 
 /**
@@ -22,6 +23,24 @@ public class SqmEmptinessPredicate extends AbstractNegatableSqmPredicate {
 			NodeBuilder nodeBuilder) {
 		super( negated, nodeBuilder );
 		this.pluralPath = pluralPath;
+	}
+
+	@Override
+	public SqmEmptinessPredicate copy(SqmCopyContext context) {
+		final SqmEmptinessPredicate existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmEmptinessPredicate predicate = context.registerCopy(
+				this,
+				new SqmEmptinessPredicate(
+						pluralPath.copy( context ),
+						isNegated(),
+						nodeBuilder()
+				)
+		);
+		copyTo( predicate, context );
+		return predicate;
 	}
 
 	public SqmPluralValuedSimplePath<?> getPluralPath() {

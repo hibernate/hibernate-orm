@@ -317,6 +317,17 @@ todo (6.0) - cover new syntaxes
 todo (6.0) - cover bulk manipulation query handling
 
 
+[[query-criteria-copy]]
+== JPA Criteria behavior change
+
+Without JPA compliance (`hibernate.jpa.compliance`) or when the newly introduced `hibernate.jpa.compliance.criteria_copy` configuration property
+is disabled, it is expected that criteria queries passed to `jakarta.persistence.EntityManager#createQuery(CriteriaQuery)`,
+`jakarta.persistence.EntityManager#createQuery(CriteriaUpdate)` or `jakarta.persistence.EntityManager#createQuery(CriteriaDelete)`
+are not mutated afterwards to avoid the need for copying the criteria query.
+
+Prior to 6.0, mutations to criteria queries didn't affect `Query` instances created from that.
+To retain backwards compatibility, enable the `hibernate.jpa.compliance.criteria_copy` configuration property.
+
 [[query-sqm-rows]]
 ==== Result "rows"
 

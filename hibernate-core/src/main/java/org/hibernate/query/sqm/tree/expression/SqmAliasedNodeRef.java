@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * Models a reference to a {@link org.hibernate.query.sqm.tree.select.SqmAliasedNode}
@@ -21,6 +22,22 @@ public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
 	public SqmAliasedNodeRef(int position, SqmExpressible<Integer> intType, NodeBuilder criteriaBuilder) {
 		super( intType, criteriaBuilder );
 		this.position = position;
+	}
+
+	private SqmAliasedNodeRef(SqmAliasedNodeRef original) {
+		super( original.getNodeType(), original.nodeBuilder() );
+		this.position = original.position;
+	}
+
+	@Override
+	public SqmAliasedNodeRef copy(SqmCopyContext context) {
+		final SqmAliasedNodeRef existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmAliasedNodeRef expression = context.registerCopy( this, new SqmAliasedNodeRef( this ) );
+		copyTo( expression, context );
+		return expression;
 	}
 
 	public int getPosition() {

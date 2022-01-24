@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.predicate;
 import java.util.Collection;
 
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * @author Steve Ebersole
@@ -25,6 +26,13 @@ public class SqmWhereClause {
 	public SqmWhereClause(SqmPredicate predicate, NodeBuilder nodeBuilder) {
 		this.nodeBuilder = nodeBuilder;
 		this.predicate = predicate;
+	}
+
+	public SqmWhereClause copy(SqmCopyContext context) {
+		return new SqmWhereClause(
+				predicate == null ? null : predicate.copy( context ),
+				nodeBuilder
+		);
 	}
 
 	public SqmPredicate getPredicate() {

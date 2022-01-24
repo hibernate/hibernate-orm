@@ -9,8 +9,6 @@ package org.hibernate.query.sqm.tree.expression;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.persistence.criteria.Expression;
-
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSimpleCase;
@@ -19,8 +17,11 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+
+import jakarta.persistence.criteria.Expression;
 
 /**
  * @author Steve Ebersole
@@ -46,6 +47,36 @@ public class SqmCaseSimple<T, R>
 		super( inherentType, nodeBuilder );
 		this.whenFragments = new ArrayList<>( estimateWhenSize );
 		this.fixture = fixture;
+	}
+
+	@Override
+	public SqmCaseSimple<T, R> copy(SqmCopyContext context) {
+		final SqmCaseSimple<T, R> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmCaseSimple<T, R> caseSearched = context.registerCopy(
+				this,
+				new SqmCaseSimple<>(
+						fixture.copy( context ),
+						getNodeType(),
+						whenFragments.size(),
+						nodeBuilder()
+				)
+		);
+		for ( SqmCaseSimple.WhenFragment<T, R> whenFragment : whenFragments ) {
+			caseSearched.whenFragments.add(
+					new SqmCaseSimple.WhenFragment<>(
+							whenFragment.checkValue.copy( context ),
+							whenFragment.result.copy( context )
+					)
+			);
+		}
+		if ( otherwise != null ) {
+			caseSearched.otherwise = otherwise.copy( context );
+		}
+		copyTo( caseSearched, context );
+		return caseSearched;
 	}
 
 	public SqmExpression<T> getFixture() {
@@ -129,6 +160,11 @@ public class SqmCaseSimple<T, R>
 		public WhenFragment(SqmExpression<T> checkValue, SqmExpression<R> result) {
 			this.checkValue = checkValue;
 			this.result = result;
+		}
+
+		private WhenFragment(WhenFragment<T, R> original, SqmCopyContext context) {
+			this.checkValue = original.checkValue.copy( context );
+			this.result = original.result.copy( context );
 		}
 
 		public SqmExpression<T> getCheckValue() {

@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 
@@ -39,10 +40,21 @@ public class SqmTreatedPluralPartJoin<O,T, S extends T> extends SqmPluralPartJoi
 	}
 
 	@Override
-	public void addSqmJoin(SqmJoin<S, ?> join) {
-		super.addSqmJoin( join );
-		//noinspection unchecked
-		wrappedPath.addSqmJoin( (SqmJoin<T, ?>) join );
+	public SqmTreatedPluralPartJoin<O, T, S> copy(SqmCopyContext context) {
+		final SqmTreatedPluralPartJoin<O, T, S> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmTreatedPluralPartJoin<O, T, S> path = context.registerCopy(
+				this,
+				new SqmTreatedPluralPartJoin<>(
+						wrappedPath.copy( context ),
+						treatTarget,
+						getExplicitAlias()
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	@Override

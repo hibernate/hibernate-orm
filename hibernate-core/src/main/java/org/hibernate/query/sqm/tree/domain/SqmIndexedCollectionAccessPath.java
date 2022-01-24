@@ -12,6 +12,8 @@ import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
@@ -32,7 +34,25 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 				pluralDomainPath.nodeBuilder()
 		);
 		this.selectorExpression = selectorExpression;
+	}
 
+	@Override
+	public SqmIndexedCollectionAccessPath<T> copy(SqmCopyContext context) {
+		final SqmIndexedCollectionAccessPath<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		final SqmIndexedCollectionAccessPath<T> path = context.registerCopy(
+				this,
+				new SqmIndexedCollectionAccessPath<T>(
+						getNavigablePath(),
+						getLhs().copy( context ),
+						selectorExpression.copy( context )
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	public SqmExpression<?> getSelectorExpression() {

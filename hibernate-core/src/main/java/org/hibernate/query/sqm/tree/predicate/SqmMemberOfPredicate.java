@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.predicate;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
@@ -31,6 +32,25 @@ public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 
 		this.pluralPath = pluralPath;
 		this.leftHandExpression = leftHandExpression;
+	}
+
+	@Override
+	public SqmMemberOfPredicate copy(SqmCopyContext context) {
+		final SqmMemberOfPredicate existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmMemberOfPredicate predicate = context.registerCopy(
+				this,
+				new SqmMemberOfPredicate(
+						leftHandExpression.copy( context ),
+						pluralPath.copy( context ),
+						isNegated(),
+						nodeBuilder()
+				)
+		);
+		copyTo( predicate, context );
+		return predicate;
 	}
 
 	public SqmExpression getLeftHandExpression() {

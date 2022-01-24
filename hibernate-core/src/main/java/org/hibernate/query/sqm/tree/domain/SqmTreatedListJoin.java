@@ -11,6 +11,7 @@ import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
@@ -44,10 +45,21 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 	}
 
 	@Override
-	public void addSqmJoin(SqmJoin<S, ?> join) {
-		super.addSqmJoin( join );
-		//noinspection unchecked
-		wrappedPath.addSqmJoin( (SqmJoin<T, ?>) join );
+	public SqmTreatedListJoin<O, T, S> copy(SqmCopyContext context) {
+		final SqmTreatedListJoin<O, T, S> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmTreatedListJoin<O, T, S> path = context.registerCopy(
+				this,
+				new SqmTreatedListJoin<>(
+						wrappedPath.copy( context ),
+						treatTarget,
+						getExplicitAlias()
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	@Override

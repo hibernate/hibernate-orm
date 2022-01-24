@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * It is a JpaCriteriaParameter created from a value when ValueHandlingMode is equal to BIND
@@ -23,6 +24,20 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T>{
 			NodeBuilder nodeBuilder) {
 		super( null, type, false, nodeBuilder );
 		this.value = value;
+	}
+
+	private ValueBindJpaCriteriaParameter(ValueBindJpaCriteriaParameter<T> original) {
+		super( original );
+		this.value = original.value;
+	}
+
+	@Override
+	public ValueBindJpaCriteriaParameter<T> copy(SqmCopyContext context) {
+		final ValueBindJpaCriteriaParameter<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		return context.registerCopy( this, new ValueBindJpaCriteriaParameter<>( this ) );
 	}
 
 	public T getValue() {

@@ -56,11 +56,13 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.SqmSelectionQuery;
 import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
+import org.hibernate.sql.results.internal.TupleMetadata;
 
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
@@ -81,13 +83,14 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 	public static final String CRITERIA_HQL_STRING = "<criteria>";
 
 	private final String hql;
-	private final SqmSelectStatement<?> sqm;
+	private final SqmSelectStatement<R> sqm;
 
 	private final ParameterMetadataImplementor parameterMetadata;
 	private final DomainParameterXref domainParameterXref;
 	private final QueryParameterBindingsImpl parameterBindings;
 
 	private final Class<R> resultType;
+	private final TupleMetadata tupleMetadata;
 
 	public SqmSelectionQueryImpl(
 			String hql,
@@ -95,16 +98,19 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 			SharedSessionContractImplementor session) {
 		super( session );
 		this.hql = hql;
-		this.sqm = (SqmSelectStatement<?>) hqlInterpretation.getSqmStatement();
+		//noinspection unchecked
+		this.sqm = (SqmSelectStatement<R>) hqlInterpretation.getSqmStatement();
 
 		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
 		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
 
 		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
 
-		this.resultType = determineResultType( sqm );
+		visitQueryReturnType( sqm.getQueryPart(), null, getSessionFactory() );
+		this.resultType = null;
 
 		setComment( hql );
+		this.tupleMetadata = null;
 	}
 
 	public SqmSelectionQueryImpl(
@@ -123,51 +129,33 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 				(s) -> queryEngine.getHqlTranslator().translate( hql )
 		);
 
-		if ( !( hqlInterpretation.getSqmStatement() instanceof SqmSelectStatement ) ) {
-			throw new IllegalSelectQueryException( "Expecting a selection query, but found `" + hql + "`", hql );
-		}
-
-		this.sqm = (SqmSelectStatement<?>) hqlInterpretation.getSqmStatement();
+		SqmUtil.verifyIsSelectStatement( hqlInterpretation.getSqmStatement(), hql );
+		//noinspection unchecked
+		this.sqm = (SqmSelectStatement<R>) hqlInterpretation.getSqmStatement();
 
 		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
 		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
 
 		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
 
+		visitQueryReturnType( sqm.getQueryPart(), resultType, getSessionFactory() );
+		setComment( hql );
 
-		if ( resultType != null ) {
-			final Class<R> determinedResultType = determineResultType( sqm );
-			if ( !resultType.isAssignableFrom( determinedResultType ) ) {
-				throw new QueryTypeMismatchException(
-						String.format(
-								Locale.ROOT,
-								"SelectionQuery result-type error - expecting `%s`, but found `%s`",
-								resultType.getName(),
-								determinedResultType.getName()
-						)
-				);
-			}
-		}
-	}
-
-	private static <T> Class<T> determineResultType(SqmSelectStatement<?> sqm) {
-		final List<SqmSelection<?>> selections = sqm.getQuerySpec().getSelectClause().getSelections();
-		if ( selections.size() == 1 ) {
-			final SqmSelection<?> sqmSelection = selections.get( 0 );
-			//noinspection unchecked
-			return (Class<T>) sqmSelection.getNodeJavaType().getJavaTypeClass();
-		}
-
-		//noinspection unchecked
-		return (Class<T>) Object[].class;
+		applyOptions( memento );
+		this.tupleMetadata = buildTupleMetadata( sqm, resultType );
 	}
 
 	public SqmSelectionQueryImpl(
-			SqmSelectStatement<R> sqm,
+			SqmSelectStatement<R> criteria,
 			SharedSessionContractImplementor session) {
 		super( session );
 		this.hql = CRITERIA_HQL_STRING;
-		this.sqm = sqm;
+		if ( session.isJpaCriteriaCopyComplianceEnabled() ) {
+			this.sqm = criteria.copy( SqmCopyContext.simpleContext() );
+		}
+		else {
+			this.sqm = criteria;
+		}
 
 		this.domainParameterXref = DomainParameterXref.from( sqm );
 		if ( ! domainParameterXref.hasParameters() ) {
@@ -195,7 +183,21 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 
 		this.resultType = determineResultType( sqm );
 
+		visitQueryReturnType( sqm.getQueryPart(), resultType, getSessionFactory() );
 		setComment( hql );
+		this.tupleMetadata = buildTupleMetadata( sqm, resultType );
+	}
+
+	private static <T> Class<T> determineResultType(SqmSelectStatement<?> sqm) {
+		final List<SqmSelection<?>> selections = sqm.getQuerySpec().getSelectClause().getSelections();
+		if ( selections.size() == 1 ) {
+			final SqmSelection<?> sqmSelection = selections.get( 0 );
+			//noinspection unchecked
+			return (Class<T>) sqmSelection.getNodeJavaType().getJavaTypeClass();
+		}
+
+		//noinspection unchecked
+		return (Class<T>) Object[].class;
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -215,10 +217,6 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 	@Override
 	public QueryParameterBindings getQueryParameterBindings() {
 		return parameterBindings;
-	}
-
-	protected SessionFactoryImplementor getSessionFactory() {
-		return getSession().getSessionFactory();
 	}
 
 	@Override
@@ -373,6 +371,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 				getQueryString(),
 				getDomainParameterXref(),
 				resultType,
+				tupleMetadata,
 				queryOptions
 		);
 	}

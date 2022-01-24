@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -14,6 +15,7 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -67,6 +69,26 @@ public class SqmJpaCompoundSelection<T>
 		this.javaType = javaType;
 
 		setExpressibleType( this );
+	}
+
+	@Override
+	public SqmJpaCompoundSelection<T> copy(SqmCopyContext context) {
+		final SqmJpaCompoundSelection<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final List<SqmSelectableNode<?>> selectableNodes = new ArrayList<>( this.selectableNodes.size() );
+		for ( SqmSelectableNode<?> selectableNode : this.selectableNodes ) {
+			selectableNodes.add( selectableNode.copy( context ) );
+		}
+		return context.registerCopy(
+				this,
+				new SqmJpaCompoundSelection<>(
+						selectableNodes,
+						javaType,
+						nodeBuilder()
+				)
+		);
 	}
 
 	@Override

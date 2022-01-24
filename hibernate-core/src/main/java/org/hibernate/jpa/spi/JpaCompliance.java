@@ -154,4 +154,22 @@ public interface JpaCompliance {
 	 * @since 6.0
 	 */
 	boolean isLoadByIdComplianceEnabled();
+
+	/**
+	 * JPA says that mutations done to {@link jakarta.persistence.criteria.CriteriaQuery},
+	 * {@link jakarta.persistence.criteria.CriteriaUpdate} and {@link jakarta.persistence.criteria.CriteriaDelete}
+	 * after such objects were used to create a {@link jakarta.persistence.Query} may not affect that query.
+	 * This requirement makes it necessary to copy these objects because the APIs allow mutations.
+	 *
+	 * If disabled, it is assumed that users do not mutate the criteria query afterwards
+	 * and due to that, no copy will be created, which will improve performance.
+	 *
+	 * By default, no copies are created to not hurt performance. When enabled,
+	 * criteria query objects are copied, as required by the JPA specification.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JPA_CRITERIA_COPY_COMPLIANCE
+	 *
+	 * @since 6.0
+	 */
+	boolean isJpaCriteriaCopyComplianceEnabled();
 }

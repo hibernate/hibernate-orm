@@ -7,10 +7,8 @@
 package org.hibernate.query.sqm.tree.update;
 
 import java.util.List;
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Path;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.metamodel.SingularAttribute;
+import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.query.criteria.JpaCriteriaUpdate;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -18,10 +16,19 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmRestrictedDmlStatement;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
+import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
+
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 /**
  * @author Steve Ebersole
@@ -51,6 +58,41 @@ public class SqmUpdateStatement<T>
 				SqmQuerySource.CRITERIA,
 				nodeBuilder
 		);
+	}
+
+	public SqmUpdateStatement(
+			NodeBuilder builder,
+			SqmQuerySource querySource,
+			Set<SqmParameter<?>> parameters,
+			Map<String, SqmCteStatement<?>> cteStatements,
+			boolean withRecursiveCte,
+			SqmRoot<T> target) {
+		super( builder, querySource, parameters, cteStatements, withRecursiveCte, target );
+	}
+
+	@Override
+	public SqmUpdateStatement<T> copy(SqmCopyContext context) {
+		final SqmUpdateStatement<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmUpdateStatement<T> statement = context.registerCopy(
+				this,
+				new SqmUpdateStatement<T>(
+						nodeBuilder(),
+						getQuerySource(),
+						copyParameters( context ),
+						copyCteStatements( context ),
+						isWithRecursive(),
+						getTarget().copy( context )
+				)
+		);
+		statement.setWhereClause( copyWhereClause( context ) );
+		statement.versioned = versioned;
+		if ( setClause != null ) {
+			statement.setClause = setClause.copy( context );
+		}
+		return statement;
 	}
 
 	public SqmSetClause getSetClause() {

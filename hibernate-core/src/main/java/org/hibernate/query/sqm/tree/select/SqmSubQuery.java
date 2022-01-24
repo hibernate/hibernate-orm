@@ -11,25 +11,17 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import jakarta.persistence.criteria.AbstractQuery;
-import jakarta.persistence.criteria.CollectionJoin;
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.ListJoin;
-import jakarta.persistence.criteria.MapJoin;
-import jakarta.persistence.criteria.PluralJoin;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.Selection;
-import jakarta.persistence.criteria.SetJoin;
 
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmQuery;
+import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedBagJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedCrossJoin;
@@ -54,6 +46,18 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import jakarta.persistence.criteria.AbstractQuery;
+import jakarta.persistence.criteria.CollectionJoin;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.ListJoin;
+import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.PluralJoin;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Selection;
+import jakarta.persistence.criteria.SetJoin;
 
 /**
  * @author Steve Ebersole
@@ -86,6 +90,42 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 			NodeBuilder builder) {
 		super( null, builder );
 		this.parent = parent;
+	}
+
+	private SqmSubQuery(
+			NodeBuilder builder,
+			Map<String, SqmCteStatement<?>> cteStatements,
+			boolean withRecursive,
+			Class<T> resultType,
+			SqmQuery<?> parent,
+			SqmExpressible<T> expressibleType,
+			String alias) {
+		super( builder, cteStatements, withRecursive, resultType );
+		this.parent = parent;
+		this.expressibleType = expressibleType;
+		this.alias = alias;
+	}
+
+	@Override
+	public SqmSubQuery<T> copy(SqmCopyContext context) {
+		final SqmSubQuery<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmSubQuery<T> statement = context.registerCopy(
+				this,
+				new SqmSubQuery<>(
+						nodeBuilder(),
+						copyCteStatements( context ),
+						isWithRecursive(),
+						getResultType(),
+						parent.copy( context ),
+						getExpressible(),
+						getAlias()
+				)
+		);
+		statement.setQueryPart( getQueryPart().copy( context ) );
+		return statement;
 	}
 
 	@Override

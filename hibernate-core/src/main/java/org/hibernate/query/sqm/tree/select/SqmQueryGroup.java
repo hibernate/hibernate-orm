@@ -11,15 +11,16 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SetOperator;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaQueryGroup;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -47,6 +48,28 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 		super( nodeBuilder );
 		this.setOperator = setOperator;
 		this.queryParts = queryParts;
+	}
+
+	@Override
+	public SqmQueryPart<T> copy(SqmCopyContext context) {
+		final SqmQueryGroup<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final List<SqmQueryPart<T>> queryParts = new ArrayList<>( this.queryParts.size() );
+		for ( SqmQueryPart<T> queryPart : this.queryParts ) {
+			queryParts.add( queryPart.copy( context ) );
+		}
+		final SqmQueryGroup<T> queryGroup = context.registerCopy(
+				this,
+				new SqmQueryGroup<>(
+						nodeBuilder(),
+						setOperator,
+						queryParts
+				)
+		);
+		copyTo( queryGroup, context );
+		return queryGroup;
 	}
 
 	public List<SqmQueryPart<T>> queryParts() {

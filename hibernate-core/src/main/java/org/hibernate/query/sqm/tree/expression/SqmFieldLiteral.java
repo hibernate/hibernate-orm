@@ -21,6 +21,7 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
@@ -51,16 +52,6 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, 
 		);
 	}
 
-	private static <T> T extractValue(Field field) {
-		try {
-			//noinspection unchecked
-			return (T) field.get( null );
-		}
-		catch (IllegalAccessException e) {
-			throw new QueryException( "Could not access Field value for SqmFieldLiteral", e );
-		}
-	}
-
 	public SqmFieldLiteral(
 			T value,
 			JavaType<T> fieldJavaType,
@@ -72,6 +63,33 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, 
 		this.nodeBuilder = nodeBuilder;
 
 		this.expressible = this;
+	}
+
+	private static <T> T extractValue(Field field) {
+		try {
+			//noinspection unchecked
+			return (T) field.get( null );
+		}
+		catch (IllegalAccessException e) {
+			throw new QueryException( "Could not access Field value for SqmFieldLiteral", e );
+		}
+	}
+
+	@Override
+	public SqmFieldLiteral<T> copy(SqmCopyContext context) {
+		final SqmFieldLiteral<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		return context.registerCopy(
+				this,
+				new SqmFieldLiteral<>(
+						value,
+						fieldJavaType,
+						fieldName,
+						nodeBuilder()
+				)
+		);
 	}
 
 	public T getValue() {

@@ -24,6 +24,8 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -156,4 +158,7 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 
 	@Override
 	<Y> SqmPath<Y> get(String attributeName);
+
+	@Override
+	SqmPath<T> copy(SqmCopyContext context);
 }

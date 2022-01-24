@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.select;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -27,7 +28,9 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.internal.SqmUtil;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
@@ -75,6 +78,49 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 
 		getQuerySpec().setSelectClause( new SqmSelectClause( false, nodeBuilder ) );
 		getQuerySpec().setFromClause( new SqmFromClause() );
+	}
+
+	private SqmSelectStatement(
+			NodeBuilder builder,
+			Map<String, SqmCteStatement<?>> cteStatements,
+			boolean withRecursive,
+			Class<T> resultType,
+			SqmQuerySource querySource,
+			Set<SqmParameter<?>> parameters) {
+		super( builder, cteStatements, withRecursive, resultType );
+		this.querySource = querySource;
+		this.parameters = parameters;
+	}
+
+	@Override
+	public SqmSelectStatement<T> copy(SqmCopyContext context) {
+		final SqmSelectStatement<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final Set<SqmParameter<?>> parameters;
+		if ( this.parameters == null ) {
+			parameters = null;
+		}
+		else {
+			parameters = new HashSet<>( this.parameters.size() );
+			for ( SqmParameter<?> parameter : this.parameters ) {
+				parameters.add( parameter.copy( context ) );
+			}
+		}
+		final SqmSelectStatement<T> statement = context.registerCopy(
+				this,
+				new SqmSelectStatement<>(
+						nodeBuilder(),
+						copyCteStatements( context ),
+						isWithRecursive(),
+						getResultType(),
+						getQuerySource(),
+						parameters
+				)
+		);
+		statement.setQueryPart( getQueryPart().copy( context ) );
+		return statement;
 	}
 
 	@Override

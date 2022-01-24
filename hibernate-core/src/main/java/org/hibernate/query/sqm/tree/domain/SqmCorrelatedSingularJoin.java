@@ -10,6 +10,7 @@ import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -47,6 +48,29 @@ public class SqmCorrelatedSingularJoin<O, T> extends SqmSingularJoin<O, T> imple
 		super( lhs, joinedNavigable, alias, joinType, fetched, nodeBuilder );
 		this.correlatedRootJoin = correlatedRootJoin;
 		this.correlationParent = correlationParent;
+	}
+
+	@Override
+	public SqmCorrelatedSingularJoin<O, T> copy(SqmCopyContext context) {
+		final SqmCorrelatedSingularJoin<O, T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmCorrelatedSingularJoin<O, T> path = context.registerCopy(
+				this,
+				new SqmCorrelatedSingularJoin<>(
+						getLhs().copy( context ),
+						getReferencedPathSource(),
+						getExplicitAlias(),
+						getSqmJoinType(),
+						isFetched(),
+						nodeBuilder(),
+						correlatedRootJoin.copy( context ),
+						correlationParent.copy( context )
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	@Override

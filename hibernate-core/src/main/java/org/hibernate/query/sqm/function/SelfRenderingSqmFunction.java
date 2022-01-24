@@ -18,6 +18,7 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
@@ -52,12 +53,47 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		this.returnTypeResolver = returnTypeResolver;
 	}
 
+	@Override
+	public SelfRenderingSqmFunction<T> copy(SqmCopyContext context) {
+		final SelfRenderingSqmFunction<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final List<SqmTypedNode<?>> arguments = new ArrayList<>( getArguments().size() );
+		for ( SqmTypedNode<?> argument : getArguments() ) {
+			arguments.add( argument.copy( context ) );
+		}
+		final SelfRenderingSqmFunction<T> expression = context.registerCopy(
+				this,
+				new SelfRenderingSqmFunction<>(
+						getFunctionDescriptor(),
+						getRenderingSupport(),
+						arguments,
+						getImpliedResultType(),
+						getArgumentsValidator(),
+						getReturnTypeResolver(),
+						nodeBuilder(),
+						getFunctionName()
+				)
+		);
+		copyTo( expression, context );
+		return expression;
+	}
+
 	public FunctionRenderingSupport getRenderingSupport() {
 		return renderingSupport;
 	}
 
+	protected ReturnableType<T> getImpliedResultType() {
+		return impliedResultType;
+	}
+
 	protected ArgumentsValidator getArgumentsValidator() {
 		return argumentsValidator;
+	}
+
+	protected FunctionReturnTypeResolver getReturnTypeResolver() {
+		return returnTypeResolver;
 	}
 
 	protected static List<SqlAstNode> resolveSqlAstArguments(List<? extends SqmTypedNode<?>> sqmArguments, SqmToSqlAstConverter walker) {

@@ -6,8 +6,6 @@
  */
 package org.hibernate.query;
 
-import org.hibernate.QueryException;
-
 /**
  * Indicates an attempt to call {@link QueryProducer#createMutationQuery(String)},
  * {@link QueryProducer#createNamedMutationQuery(String)} or
@@ -16,8 +14,12 @@ import org.hibernate.QueryException;
  *
  * @author Steve Ebersole
  */
-public class IllegalMutationQueryException extends QueryException {
+public class IllegalMutationQueryException extends IllegalQueryOperationException {
 	public IllegalMutationQueryException(String message) {
 		super( message );
+	}
+
+	public IllegalMutationQueryException(String message, String queryString) {
+		super( message, queryString, null );
 	}
 }

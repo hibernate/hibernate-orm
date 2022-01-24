@@ -30,4 +30,7 @@ public interface SqmTypedNode<T> extends SqmNode, SqmExpressibleAccessor<T> {
 	}
 
 	SqmExpressible<T> getNodeType();
+
+	@Override
+	SqmTypedNode<T> copy(SqmCopyContext context);
 }

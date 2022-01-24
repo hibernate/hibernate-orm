@@ -10,7 +10,9 @@ import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 
@@ -26,6 +28,11 @@ public class SqmTrimSpecification extends AbstractSqmNode implements SqmTypedNod
 	public SqmTrimSpecification(TrimSpec specification, NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
 		this.specification = specification;
+	}
+
+	@Override
+	public SqmTrimSpecification copy(SqmCopyContext context) {
+		return this;
 	}
 
 	public TrimSpec getSpecification() {

@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * @author Steve Ebersole
@@ -24,6 +25,23 @@ public class SqmLiteralNull<T> extends SqmLiteral<T> {
 
 	public SqmLiteralNull(SqmExpressible<T> expressibleType, NodeBuilder nodeBuilder) {
 		super( expressibleType, nodeBuilder );
+	}
+
+	@Override
+	public SqmLiteralNull<T> copy(SqmCopyContext context) {
+		final SqmLiteralNull<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmLiteralNull<T> expression = context.registerCopy(
+				this,
+				new SqmLiteralNull<>(
+						getNodeType(),
+						nodeBuilder()
+				)
+		);
+		copyTo( expression, context );
+		return expression;
 	}
 
 	@Override

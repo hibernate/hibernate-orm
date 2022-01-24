@@ -10,6 +10,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 
@@ -42,10 +43,21 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 	}
 
 	@Override
-	public void addSqmJoin(SqmJoin<S, ?> join) {
-		super.addSqmJoin( join );
-		//noinspection unchecked
-		wrappedPath.addSqmJoin( (SqmJoin<T, ?>) join );
+	public SqmTreatedSingularJoin<O, T, S> copy(SqmCopyContext context) {
+		final SqmTreatedSingularJoin<O, T, S> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmTreatedSingularJoin<O, T, S> path = context.registerCopy(
+				this,
+				new SqmTreatedSingularJoin<>(
+						wrappedPath.copy( context ),
+						treatTarget,
+						getExplicitAlias()
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	@Override

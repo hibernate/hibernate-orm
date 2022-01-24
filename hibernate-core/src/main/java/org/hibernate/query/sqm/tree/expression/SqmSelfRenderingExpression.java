@@ -11,6 +11,7 @@ import java.util.function.Function;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
 /**
@@ -25,6 +26,20 @@ public class SqmSelfRenderingExpression<T> extends AbstractSqmExpression<T> {
 			NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );
 		this.renderer = renderer;
+	}
+
+	@Override
+	public SqmSelfRenderingExpression<T> copy(SqmCopyContext context) {
+		final SqmSelfRenderingExpression<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmSelfRenderingExpression<T> expression = context.registerCopy(
+				this,
+				new SqmSelfRenderingExpression<>( renderer, getNodeType(), nodeBuilder() )
+		);
+		copyTo( expression, context );
+		return expression;
 	}
 
 	@Override

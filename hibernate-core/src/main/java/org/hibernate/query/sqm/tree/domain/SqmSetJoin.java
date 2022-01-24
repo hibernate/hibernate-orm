@@ -7,9 +7,6 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import java.util.Set;
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
@@ -19,9 +16,14 @@ import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSetJoin;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
 
 /**
  * @author Steve Ebersole
@@ -47,6 +49,28 @@ public class SqmSetJoin<O, E>
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
 		super( lhs, navigablePath, pluralValuedNavigable, alias, joinType, fetched, nodeBuilder );
+	}
+
+	@Override
+	public SqmSetJoin<O, E> copy(SqmCopyContext context) {
+		final SqmSetJoin<O, E> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmSetJoin<O, E> path = context.registerCopy(
+				this,
+				new SqmSetJoin<>(
+						getLhs().copy( context ),
+						getNavigablePath(),
+						getReferencedPathSource(),
+						getExplicitAlias(),
+						getSqmJoinType(),
+						isFetched(),
+						nodeBuilder()
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	@Override

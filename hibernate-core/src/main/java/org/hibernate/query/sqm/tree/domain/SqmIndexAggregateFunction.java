@@ -12,20 +12,19 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmIndexAggregateFunction<T> extends AbstractSqmSpecificPluralPartPath<T> {
-	public static final String NAVIGABLE_NAME = "{max-index}";
-
 	private final SqmPathSource<T> indexPathSource;
 	private final String functionName;
 
 	public SqmIndexAggregateFunction(SqmPath<?> pluralDomainPath, String functionName) {
 		//noinspection unchecked
 		super(
-				pluralDomainPath.getNavigablePath().getParent().append( pluralDomainPath.getNavigablePath().getLocalName(), NAVIGABLE_NAME ),
+				pluralDomainPath.getNavigablePath().getParent().append( pluralDomainPath.getNavigablePath().getLocalName(), "{" + functionName + "-index}" ),
 				pluralDomainPath,
 				(PluralPersistentAttribute<?, ?, T>) pluralDomainPath.getReferencedPathSource()
 		);
@@ -42,6 +41,24 @@ public class SqmIndexAggregateFunction<T> extends AbstractSqmSpecificPluralPartP
 		else {
 			throw new UnsupportedOperationException( "Plural attribute [" + getPluralAttribute() + "] is not indexed" );
 		}
+	}
+
+	@Override
+	public SqmIndexAggregateFunction<T> copy(SqmCopyContext context) {
+		final SqmIndexAggregateFunction<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		final SqmIndexAggregateFunction<T> path = context.registerCopy(
+				this,
+				new SqmIndexAggregateFunction<>(
+						getLhs().copy( context ),
+						functionName
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	public String getFunctionName() {

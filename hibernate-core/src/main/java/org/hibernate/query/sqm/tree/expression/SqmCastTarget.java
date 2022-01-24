@@ -11,6 +11,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 
@@ -68,6 +69,11 @@ public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>
 		this.length = length;
 		this.precision = precision;
 		this.scale = scale;
+	}
+
+	@Override
+	public SqmCastTarget<T> copy(SqmCopyContext context) {
+		return this;
 	}
 
 	public ReturnableType<T> getType() {

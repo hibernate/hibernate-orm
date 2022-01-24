@@ -6,11 +6,19 @@
  */
 package org.hibernate.query.sqm.tree.insert;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
@@ -38,6 +46,40 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 				nodeBuilder
 		);
 		this.selectQueryPart = new SqmQuerySpec<>( nodeBuilder );
+	}
+
+	private SqmInsertSelectStatement(
+			NodeBuilder builder,
+			SqmQuerySource querySource,
+			Set<SqmParameter<?>> parameters,
+			Map<String, SqmCteStatement<?>> cteStatements,
+			boolean withRecursiveCte,
+			SqmRoot<T> target,
+			List<SqmPath<?>> insertionTargetPaths,
+			SqmQueryPart<T> selectQueryPart) {
+		super( builder, querySource, parameters, cteStatements, withRecursiveCte, target, insertionTargetPaths );
+		this.selectQueryPart = selectQueryPart;
+	}
+
+	@Override
+	public SqmInsertSelectStatement<T> copy(SqmCopyContext context) {
+		final SqmInsertSelectStatement<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		return context.registerCopy(
+				this,
+				new SqmInsertSelectStatement<>(
+						nodeBuilder(),
+						getQuerySource(),
+						copyParameters( context ),
+						copyCteStatements( context ),
+						isWithRecursive(),
+						getTarget().copy( context ),
+						copyInsertionTargetPaths( context ),
+						selectQueryPart.copy( context )
+				)
+		);
 	}
 
 	public SqmQueryPart<T> getSelectQueryPart() {

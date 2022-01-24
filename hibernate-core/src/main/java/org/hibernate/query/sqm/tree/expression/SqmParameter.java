@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * Models a parameter expression declared in the query.
@@ -70,4 +71,7 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 	 * Make a copy
 	 */
 	SqmParameter<T> copy();
+
+	@Override
+	SqmParameter<T> copy(SqmCopyContext context);
 }

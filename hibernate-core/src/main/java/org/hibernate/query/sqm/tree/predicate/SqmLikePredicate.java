@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.predicate;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
@@ -64,6 +65,27 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 			boolean isCaseSensitive,
 			NodeBuilder nodeBuilder) {
 		this( matchExpression, pattern, null, negated, isCaseSensitive, nodeBuilder );
+	}
+
+	@Override
+	public SqmLikePredicate copy(SqmCopyContext context) {
+		final SqmLikePredicate existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmLikePredicate predicate = context.registerCopy(
+				this,
+				new SqmLikePredicate(
+						matchExpression.copy( context ),
+						pattern.copy( context ),
+						escapeCharacter == null ? null : escapeCharacter.copy( context ),
+						isNegated(),
+						isCaseSensitive,
+						nodeBuilder()
+				)
+		);
+		copyTo( predicate, context );
+		return predicate;
 	}
 
 	public SqmExpression<?> getMatchExpression() {

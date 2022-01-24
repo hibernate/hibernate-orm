@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * @author Christian Beikov
@@ -16,6 +17,20 @@ import org.hibernate.query.sqm.SqmExpressible;
 public class SqmCollation extends SqmLiteral<String> {
 	public SqmCollation(String value, SqmExpressible<String> inherentType, NodeBuilder nodeBuilder) {
 		super(value, inherentType, nodeBuilder);
+	}
+
+	@Override
+	public SqmCollation copy(SqmCopyContext context) {
+		final SqmCollation existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmCollation expression = context.registerCopy(
+				this,
+				new SqmCollation( getLiteralValue(), getNodeType(), nodeBuilder() )
+		);
+		copyTo( expression, context );
+		return expression;
 	}
 
 	@Override

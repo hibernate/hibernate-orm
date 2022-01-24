@@ -12,6 +12,7 @@ import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedCrossJoin;
@@ -51,6 +52,25 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements SqmJoin<T,
 				sqmRoot.nodeBuilder()
 		);
 		this.sqmRoot = sqmRoot;
+	}
+
+	@Override
+	public SqmCrossJoin<T> copy(SqmCopyContext context) {
+		final SqmCrossJoin<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmCrossJoin<T> path = context.registerCopy(
+				this,
+				new SqmCrossJoin<>(
+						getNavigablePath(),
+						getReferencedPathSource(),
+						getExplicitAlias(),
+						sqmRoot.copy( context )
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	public SqmRoot<?> getRoot() {

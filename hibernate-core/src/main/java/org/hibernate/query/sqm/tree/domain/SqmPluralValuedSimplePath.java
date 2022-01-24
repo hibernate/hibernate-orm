@@ -18,6 +18,7 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -46,6 +47,27 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 			String explicitAlias,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedNavigable, lhs, explicitAlias, nodeBuilder );
+	}
+
+	@Override
+	public SqmPluralValuedSimplePath<E> copy(SqmCopyContext context) {
+		final SqmPluralValuedSimplePath<E> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		final SqmPluralValuedSimplePath<E> path = context.registerCopy(
+				this,
+				new SqmPluralValuedSimplePath<>(
+						getNavigablePath(),
+						getReferencedPathSource(),
+						getLhs().copy( context ),
+						getExplicitAlias(),
+						nodeBuilder()
+				)
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	@Override

@@ -11,8 +11,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
@@ -26,6 +24,7 @@ import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmNode;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
@@ -41,6 +40,9 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClauseContainer;
+
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 
 /**
  * Defines the commonality between a root query and a subquery.
@@ -59,6 +61,59 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 
 	public SqmQuerySpec(NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
+	}
+
+	public SqmQuerySpec(SqmQuerySpec<T> original, SqmCopyContext context) {
+		super( original, context );
+		if ( original.fromClause != null ) {
+			this.fromClause = original.fromClause.copy( context );
+		}
+		if ( original.selectClause != null ) {
+			this.selectClause = original.selectClause.copy( context );
+		}
+		if ( original.whereClause != null ) {
+			this.whereClause = original.whereClause.copy( context );
+		}
+		this.hasPositionalGroupItem = original.hasPositionalGroupItem;
+		if ( !original.groupByClauseExpressions.isEmpty() ) {
+			this.groupByClauseExpressions = new ArrayList<>( original.groupByClauseExpressions.size() );
+			for ( SqmExpression<?> groupByClauseExpression : original.groupByClauseExpressions ) {
+				this.groupByClauseExpressions.add( groupByClauseExpression.copy( context ) );
+			}
+		}
+		if ( original.havingClausePredicate != null ) {
+			this.havingClausePredicate = original.havingClausePredicate.copy( context );
+		}
+	}
+
+	@Override
+	public SqmQuerySpec<T> copy(SqmCopyContext context) {
+		final SqmQuerySpec<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmQuerySpec<T> querySpec = context.registerCopy( this, new SqmQuerySpec<>( nodeBuilder() ) );
+		if ( fromClause != null ) {
+			querySpec.fromClause = fromClause.copy( context );
+		}
+		if ( selectClause != null ) {
+			querySpec.selectClause = selectClause.copy( context );
+		}
+		if ( whereClause != null ) {
+			querySpec.whereClause = whereClause.copy( context );
+		}
+		querySpec.hasPositionalGroupItem = hasPositionalGroupItem;
+		if ( !groupByClauseExpressions.isEmpty() ) {
+			querySpec.groupByClauseExpressions = new ArrayList<>( groupByClauseExpressions.size() );
+			for ( SqmExpression<?> groupByClauseExpression : groupByClauseExpressions ) {
+				querySpec.groupByClauseExpressions.add( groupByClauseExpression.copy( context ) );
+			}
+		}
+		if ( havingClausePredicate != null ) {
+			querySpec.havingClausePredicate = havingClausePredicate.copy( context );
+		}
+		copyTo( querySpec, context );
+		return querySpec;
 	}
 
 	@Override

@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -15,6 +16,7 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
 
 /**
@@ -53,6 +55,24 @@ public class SqmTuple<T>
 		if ( type == null ) {
 			setExpressibleType( nodeBuilder.getTypeConfiguration().resolveTupleType( groupedExpressions ) );
 		}
+	}
+
+	@Override
+	public SqmTuple<T> copy(SqmCopyContext context) {
+		final SqmTuple<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final List<SqmExpression<?>> groupedExpressions = new ArrayList<>( this.groupedExpressions.size() );
+		for ( SqmExpression<?> groupedExpression : this.groupedExpressions ) {
+			groupedExpressions.add( groupedExpression.copy( context ) );
+		}
+		final SqmTuple<T> expression = context.registerCopy(
+				this,
+				new SqmTuple<>( groupedExpressions, getNodeType(), nodeBuilder() )
+		);
+		copyTo( expression, context );
+		return expression;
 	}
 
 	public List<SqmExpression<?>> getGroupedExpressions() {

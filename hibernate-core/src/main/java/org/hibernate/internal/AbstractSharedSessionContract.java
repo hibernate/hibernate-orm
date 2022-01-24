@@ -81,6 +81,7 @@ import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.sqm.SqmSelectionQuery;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.internal.SqmSelectionQueryImpl;
+import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -141,6 +142,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private final PhysicalConnectionHandlingMode connectionHandlingMode;
 
 	private CacheMode cacheMode;
+	private boolean jpaCriteriaCopyComplianceEnabled;
 
 	protected boolean closed;
 	protected boolean waitingForAutoClose;
@@ -158,7 +160,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		this.factory = factory;
 		this.fastSessionServices = factory.getFastSessionServices();
 		this.cacheTransactionSync = factory.getCache().getRegionFactory().createTransactionContext( this );
-
+		setJpaCriteriaCopyComplianceEnabled( factory.getJpaMetamodel().getJpaCompliance().isJpaCriteriaCopyComplianceEnabled() );
 
 		this.flushMode = options.getInitialSessionFlushMode();
 
@@ -643,6 +645,15 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		this.cacheMode = cacheMode;
 	}
 
+	@Override
+	public void setJpaCriteriaCopyComplianceEnabled(boolean jpaCriteriaCopyComplianceEnabled) {
+		this.jpaCriteriaCopyComplianceEnabled = jpaCriteriaCopyComplianceEnabled;
+	}
+
+	@Override
+	public boolean isJpaCriteriaCopyComplianceEnabled() {
+		return jpaCriteriaCopyComplianceEnabled;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// dynamic HQL handling
@@ -705,6 +716,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(CriteriaQuery<R> criteria) {
+		SqmUtil.verifyIsSelectStatement( (SqmStatement<?>) criteria, null );
 		return new SqmSelectionQueryImpl<>( (SqmSelectStatement<R>) criteria, this );
 	}
 

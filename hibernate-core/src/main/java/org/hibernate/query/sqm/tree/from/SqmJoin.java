@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.from;
 
 import jakarta.persistence.criteria.JoinType;
 
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 
 /**
@@ -21,4 +22,7 @@ public interface SqmJoin<O,T> extends SqmFrom<O,T> {
 
 	@Override
 	<X, Y> SqmAttributeJoin<X, Y> join(String attributeName, JoinType jt);
+
+	@Override
+	SqmJoin<O, T> copy(SqmCopyContext context);
 }

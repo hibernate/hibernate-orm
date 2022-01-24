@@ -8,12 +8,14 @@ package org.hibernate.query.sqm.tree.predicate;
 
 import java.util.Collections;
 import java.util.List;
-import jakarta.persistence.criteria.Expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
+
+import jakarta.persistence.criteria.Expression;
 
 /**
  * Represents an expression whose type is boolean, and can therefore be used as a predicate.
@@ -40,6 +42,24 @@ public class SqmBooleanExpressionPredicate extends AbstractNegatableSqmPredicate
 		assert boolean.class.equals( expressionJavaType ) || Boolean.class.equals( expressionJavaType );
 
 		this.booleanExpression = booleanExpression;
+	}
+
+	@Override
+	public SqmBooleanExpressionPredicate copy(SqmCopyContext context) {
+		final SqmBooleanExpressionPredicate existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmBooleanExpressionPredicate predicate = context.registerCopy(
+				this,
+				new SqmBooleanExpressionPredicate(
+						booleanExpression.copy( context ),
+						isNegated(),
+						nodeBuilder()
+				)
+		);
+		copyTo( predicate, context );
+		return predicate;
 	}
 
 	public SqmExpression<Boolean> getBooleanExpression() {

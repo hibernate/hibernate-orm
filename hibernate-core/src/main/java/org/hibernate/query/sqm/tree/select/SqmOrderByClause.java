@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
@@ -26,6 +27,25 @@ public class SqmOrderByClause implements Serializable {
 
 	public SqmOrderByClause(int estimateSize) {
 		this.sortSpecifications = new ArrayList<>( estimateSize );
+	}
+
+	private SqmOrderByClause(boolean hasPositionalSortItem, List<SqmSortSpecification> sortSpecifications) {
+		this.hasPositionalSortItem = hasPositionalSortItem;
+		this.sortSpecifications = sortSpecifications;
+	}
+
+	public SqmOrderByClause copy(SqmCopyContext context) {
+		final List<SqmSortSpecification> sortSpecifications;
+		if ( this.sortSpecifications == null ) {
+			sortSpecifications = null;
+		}
+		else {
+			sortSpecifications = new ArrayList<>( this.sortSpecifications.size() );
+			for ( SqmSortSpecification sortSpecification : this.sortSpecifications ) {
+				sortSpecifications.add( sortSpecification.copy( context ) );
+			}
+		}
+		return new SqmOrderByClause( hasPositionalSortItem, sortSpecifications );
 	}
 
 	public boolean hasPositionalSortItem() {

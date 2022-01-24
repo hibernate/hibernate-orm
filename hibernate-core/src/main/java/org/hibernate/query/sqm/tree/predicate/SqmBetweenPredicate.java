@@ -10,6 +10,7 @@ import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
@@ -40,6 +41,26 @@ public class SqmBetweenPredicate extends AbstractNegatableSqmPredicate {
 		expression.applyInferableType( expressibleType );
 		lowerBound.applyInferableType( expressibleType );
 		upperBound.applyInferableType( expressibleType );
+	}
+
+	@Override
+	public SqmBetweenPredicate copy(SqmCopyContext context) {
+		final SqmBetweenPredicate existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmBetweenPredicate predicate = context.registerCopy(
+				this,
+				new SqmBetweenPredicate(
+						expression.copy( context ),
+						lowerBound.copy( context ),
+						upperBound.copy( context ),
+						isNegated(),
+						nodeBuilder()
+				)
+		);
+		copyTo( predicate, context );
+		return predicate;
 	}
 
 	public SqmExpression<?> getExpression() {

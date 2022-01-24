@@ -10,6 +10,7 @@ import org.hibernate.query.criteria.JpaTupleElement;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 
 /**
@@ -28,6 +29,10 @@ public abstract class AbstractJpaTupleElement<T>
 		super( criteriaBuilder );
 
 		setExpressibleType(expressibleType);
+	}
+
+	protected void copyTo(AbstractJpaTupleElement<T> target, SqmCopyContext context) {
+		target.alias = alias;
 	}
 
 	@Override

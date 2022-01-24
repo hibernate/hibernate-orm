@@ -16,6 +16,7 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 
@@ -40,6 +41,25 @@ public class SqmEnumLiteral<E extends Enum<E>> extends AbstractSqmExpression<E> 
 		this.referencedEnumTypeDescriptor = referencedEnumTypeDescriptor;
 		this.enumValueName = enumValueName;
 		setExpressibleType( this );
+	}
+
+	@Override
+	public SqmEnumLiteral<E> copy(SqmCopyContext context) {
+		final SqmEnumLiteral<E> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmEnumLiteral<E> expression = context.registerCopy(
+				this,
+				new SqmEnumLiteral<>(
+						enumValue,
+						referencedEnumTypeDescriptor,
+						enumValueName,
+						nodeBuilder()
+				)
+		);
+		copyTo( expression, context );
+		return expression;
 	}
 
 	public E getEnumValue() {

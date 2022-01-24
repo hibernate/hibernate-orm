@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -77,7 +78,6 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.SqmExpressible;
@@ -85,6 +85,7 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -103,7 +104,7 @@ import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.type.BasicType;
+import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
@@ -135,7 +136,7 @@ public class QuerySqmImpl<R>
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( QuerySqmImpl.class );
 
 	private final String hql;
-	private final SqmStatement<?> sqm;
+	private final SqmStatement<R> sqm;
 
 	private final ParameterMetadataImplementor parameterMetadata;
 	private final DomainParameterXref domainParameterXref;
@@ -143,6 +144,7 @@ public class QuerySqmImpl<R>
 	private final QueryParameterBindingsImpl parameterBindings;
 
 	private final Class<R> resultType;
+	private final TupleMetadata tupleMetadata;
 
 	/**
 	 * Creates a Query instance from a named HQL memento
@@ -171,31 +173,11 @@ public class QuerySqmImpl<R>
 
 		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
 
+		validateStatement( sqm, resultType );
 		setComment( hql );
 
 		applyOptions( memento );
-	}
-
-	protected void applyOptions(NamedHqlQueryMemento memento) {
-		super.applyOptions( memento );
-
-		if ( memento.getFirstResult() != null ) {
-			setFirstResult( memento.getFirstResult() );
-		}
-
-		if ( memento.getMaxResults() != null ) {
-			setMaxResults( memento.getMaxResults() );
-		}
-
-		if ( memento.getParameterTypes() != null ) {
-			for ( Map.Entry<String, String> entry : memento.getParameterTypes().entrySet() ) {
-				final QueryParameterImplementor<?> parameter = getParameterMetadata().getQueryParameter( entry.getKey() );
-				final BasicType<?> type = getSessionFactory().getTypeConfiguration()
-						.getBasicTypeRegistry()
-						.getRegisteredType( entry.getValue() );
-				parameter.applyAnticipatedType( type );
-			}
-		}
+		this.tupleMetadata = buildTupleMetadata( sqm, resultType );
 	}
 
 	/**
@@ -218,24 +200,10 @@ public class QuerySqmImpl<R>
 
 		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
 
+		validateStatement( sqm, resultType );
 		setComment( hql );
 
-		//noinspection rawtypes
-		final SqmStatement sqmStatement = hqlInterpretation.getSqmStatement();
-		if ( resultType != null ) {
-			SqmUtil.verifyIsSelectStatement( sqmStatement, hql );
-			visitQueryReturnType(
-					( (SqmSelectStatement<R>) sqmStatement ).getQueryPart(),
-					resultType,
-					session.getFactory()
-			);
-		}
-		else if ( sqmStatement instanceof SqmUpdateStatement<?> ) {
-			verifyImmutableEntityUpdate( hql, (SqmUpdateStatement<R>) sqmStatement, session.getFactory() );
-		}
-		else if ( sqmStatement instanceof SqmInsertStatement<?> ) {
-			verifyInsertTypesMatch( hql, (SqmInsertStatement<R>) sqmStatement );
-		}
+		this.tupleMetadata = buildTupleMetadata( sqm, resultType );
 	}
 
 	/**
@@ -247,11 +215,16 @@ public class QuerySqmImpl<R>
 			SharedSessionContractImplementor producer) {
 		super( producer );
 		this.hql = CRITERIA_HQL_STRING;
-		this.sqm = criteria;
+		if ( producer.isJpaCriteriaCopyComplianceEnabled() ) {
+			this.sqm = criteria.copy( SqmCopyContext.simpleContext() );
+		}
+		else {
+			this.sqm = criteria;
+		}
 
 		setComment( hql );
 
-		this.domainParameterXref = DomainParameterXref.from( criteria );
+		this.domainParameterXref = DomainParameterXref.from( this.sqm );
 		if ( ! domainParameterXref.hasParameters() ) {
 			this.parameterMetadata = ParameterMetadataImpl.EMPTY;
 		}
@@ -275,7 +248,7 @@ public class QuerySqmImpl<R>
 			}
 		}
 
-		if ( resultType != null ) {
+		if ( sqm instanceof SqmSelectStatement<?> ) {
 			SqmUtil.verifyIsSelectStatement( sqm, null );
 			final SqmQueryPart<R> queryPart = ( (SqmSelectStatement<R>) sqm ).getQueryPart();
 			// For criteria queries, we have to validate the fetch structure here
@@ -286,154 +259,56 @@ public class QuerySqmImpl<R>
 					producer.getFactory()
 			);
 		}
-		else if ( sqm instanceof SqmUpdateStatement<?> ) {
-			final SqmUpdateStatement<R> updateStatement = (SqmUpdateStatement<R>) sqm;
-			verifyImmutableEntityUpdate( CRITERIA_HQL_STRING, updateStatement, producer.getFactory() );
-			if ( updateStatement.getSetClause() == null || updateStatement.getSetClause().getAssignments().isEmpty() ) {
-				throw new IllegalArgumentException( "No assignments specified as part of UPDATE criteria" );
+		else {
+			if ( resultType != null ) {
+				throw new IllegalQueryOperationException(
+						"Result type given for a non-SELECT Query",
+						hql,
+						null
+				);
 			}
-		}
-		else if ( sqm instanceof SqmInsertStatement<?> ) {
-			verifyInsertTypesMatch( CRITERIA_HQL_STRING, (SqmInsertStatement<R>) sqm );
+			if ( sqm instanceof SqmUpdateStatement<?> ) {
+				final SqmUpdateStatement<R> updateStatement = (SqmUpdateStatement<R>) sqm;
+				verifyImmutableEntityUpdate( CRITERIA_HQL_STRING, updateStatement, producer.getFactory() );
+				if ( updateStatement.getSetClause() == null || updateStatement.getSetClause()
+						.getAssignments()
+						.isEmpty() ) {
+					throw new IllegalArgumentException( "No assignments specified as part of UPDATE criteria" );
+				}
+			}
+			else if ( sqm instanceof SqmInsertStatement<?> ) {
+				verifyInsertTypesMatch( CRITERIA_HQL_STRING, (SqmInsertStatement<R>) sqm );
+			}
 		}
 
 		this.resultType = resultType;
+		this.tupleMetadata = buildTupleMetadata( criteria, resultType );
 	}
 
-	private void visitQueryReturnType(
-			SqmQueryPart<R> queryPart,
-			Class<R> resultType,
-			SessionFactoryImplementor factory) {
-		if ( queryPart instanceof SqmQuerySpec<?> ) {
-			final SqmQuerySpec<R> sqmQuerySpec = (SqmQuerySpec<R>) queryPart;
-			final List<SqmSelection<?>> sqmSelections = sqmQuerySpec.getSelectClause().getSelections();
-
-			if ( sqmSelections == null || sqmSelections.isEmpty() ) {
-				// make sure there is at least one root
-				final List<SqmRoot<?>> sqmRoots = sqmQuerySpec.getFromClause().getRoots();
-				if ( sqmRoots == null || sqmRoots.isEmpty() ) {
-					throw new IllegalArgumentException( "Criteria did not define any query roots" );
-				}
-				// if there is a single root, use that as the selection
-				if ( sqmRoots.size() == 1 ) {
-					final SqmRoot<?> sqmRoot = sqmRoots.get( 0 );
-					sqmQuerySpec.getSelectClause().add( sqmRoot, null );
-				}
-				else {
-					throw new IllegalArgumentException(  );
-				}
-			}
-
-			if ( resultType != null ) {
-				checkQueryReturnType( sqmQuerySpec, resultType, factory );
-			}
-		}
-		else {
-			final SqmQueryGroup<R> queryGroup = (SqmQueryGroup<R>) queryPart;
-			for ( SqmQueryPart<R> sqmQueryPart : queryGroup.getQueryParts() ) {
-				visitQueryReturnType( sqmQueryPart, resultType, factory );
-			}
-		}
-	}
-
-	private static <T> void checkQueryReturnType(
-			SqmQuerySpec<T> querySpec,
-			Class<T> resultClass,
-			SessionFactoryImplementor sessionFactory) {
-		if ( resultClass == null ) {
-			// nothing to check
-			return;
-		}
-
-		final List<SqmSelection<?>> selections = querySpec.getSelectClause().getSelections();
-
-		if ( resultClass.isArray() ) {
-			// todo (6.0) : implement
-		}
-		else if ( Tuple.class.isAssignableFrom( resultClass ) ) {
-			// todo (6.0) : implement
-		}
-		else {
-			final boolean jpaQueryComplianceEnabled = sessionFactory.getSessionFactoryOptions()
-					.getJpaCompliance()
-					.isJpaQueryComplianceEnabled();
-			if ( selections.size() != 1 ) {
-				final String errorMessage = "Query result-type error - multiple selections: use Tuple or array";
-
-				if ( jpaQueryComplianceEnabled ) {
-					throw new IllegalArgumentException( errorMessage );
-				}
-				else {
-					throw new QueryTypeMismatchException( errorMessage );
-				}
-			}
-
-			final SqmSelection<?> sqmSelection = selections.get( 0 );
-
-			if ( sqmSelection.getSelectableNode() instanceof SqmParameter ) {
-				final SqmParameter<?> sqmParameter = (SqmParameter<?>) sqmSelection.getSelectableNode();
-
-				// we may not yet know a selection type
-				if ( sqmParameter.getNodeType() == null || sqmParameter.getNodeType().getExpressibleJavaType() == null ) {
-					// we can't verify the result type up front
-					return;
-				}
-			}
-
-			if ( jpaQueryComplianceEnabled ) {
-				return;
-			}
-			verifyResultType( resultClass, sqmSelection.getNodeType(), sessionFactory );
-		}
-	}
-
-	private static <T> void verifyResultType(
-			Class<T> resultClass,
-			SqmExpressible<?> sqmExpressible,
-			SessionFactoryImplementor sessionFactory) {
-		assert sqmExpressible != null;
-		assert sqmExpressible.getExpressibleJavaType() != null;
-		final Class<?> javaTypeClass = sqmExpressible.getExpressibleJavaType().getJavaTypeClass();
-		if ( !resultClass.isAssignableFrom( javaTypeClass ) ) {
-			// Special case for date because we always report java.util.Date as expression type
-			// But the expected resultClass could be a subtype of that, so we need to check the JdbcType
-			if ( javaTypeClass == Date.class ) {
-				JdbcType jdbcType = null;
-				if ( sqmExpressible instanceof BasicDomainType<?> ) {
-					jdbcType = ( (BasicDomainType<?>) sqmExpressible).getJdbcType();
-				}
-				else if ( sqmExpressible instanceof SqmPathSource<?> ) {
-					final DomainType<?> domainType = ( (SqmPathSource<?>) sqmExpressible).getSqmPathType();
-					if ( domainType instanceof BasicDomainType<?> ) {
-						jdbcType = ( (BasicDomainType<?>) domainType ).getJdbcType();
-					}
-				}
-				if ( jdbcType != null ) {
-					switch ( jdbcType.getJdbcTypeCode() ) {
-						case Types.DATE:
-							if ( resultClass.isAssignableFrom( java.sql.Date.class ) ) {
-								return;
-							}
-							break;
-						case Types.TIME:
-							if ( resultClass.isAssignableFrom( java.sql.Time.class ) ) {
-								return;
-							}
-							break;
-						case Types.TIMESTAMP:
-							if ( resultClass.isAssignableFrom( java.sql.Timestamp.class ) ) {
-								return;
-							}
-							break;
-					}
-				}
-			}
-			final String errorMessage = String.format(
-					"Specified result type [%s] did not match Query selection type [%s] - multiple selections: use Tuple or array",
-					resultClass.getName(),
-					sqmExpressible.getExpressibleJavaType().getJavaType().getTypeName()
+	private void validateStatement(SqmStatement<R> sqmStatement, Class<R> resultType) {
+		if ( sqmStatement instanceof SqmSelectStatement<?> ) {
+			SqmUtil.verifyIsSelectStatement( sqmStatement, hql );
+			visitQueryReturnType(
+					( (SqmSelectStatement<R>) sqmStatement ).getQueryPart(),
+					resultType,
+					getSessionFactory()
 			);
-			throw new QueryTypeMismatchException( errorMessage );
+		}
+		else {
+			if ( resultType != null ) {
+				throw new IllegalQueryOperationException(
+						"Result type given for a non-SELECT Query",
+						hql,
+						null
+				);
+			}
+			if ( sqmStatement instanceof SqmUpdateStatement<?> ) {
+				SqmUpdateStatement<R> updateStatement = (SqmUpdateStatement<R>) sqmStatement;
+				verifyImmutableEntityUpdate( hql, updateStatement, getSessionFactory() );
+			}
+			else if ( sqmStatement instanceof SqmInsertStatement<?> ) {
+				verifyInsertTypesMatch( hql, (SqmInsertStatement<R>) sqmStatement );
+			}
 		}
 	}
 
@@ -546,10 +421,6 @@ public class QuerySqmImpl<R>
 	@Override
 	public QueryParameterBindings getQueryParameterBindings() {
 		return parameterBindings;
-	}
-
-	public SessionFactoryImplementor getSessionFactory() {
-		return getSession().getFactory();
 	}
 
 	@Override
@@ -739,6 +610,7 @@ public class QuerySqmImpl<R>
 				getQueryString(),
 				getDomainParameterXref(),
 				resultType,
+				tupleMetadata,
 				queryOptions
 		);
 	}

@@ -13,6 +13,7 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
@@ -33,6 +34,23 @@ public class SqmLiteralEntityType<T>
 	public SqmLiteralEntityType(EntityDomainType<T> entityType, NodeBuilder nodeBuilder) {
 		super( entityType, nodeBuilder );
 		this.entityType = entityType;
+	}
+
+	@Override
+	public SqmLiteralEntityType<T> copy(SqmCopyContext context) {
+		final SqmLiteralEntityType<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmLiteralEntityType<T> expression = context.registerCopy(
+				this,
+				new SqmLiteralEntityType<>(
+						entityType,
+						nodeBuilder()
+				)
+		);
+		copyTo( expression, context );
+		return expression;
 	}
 
 	@Override

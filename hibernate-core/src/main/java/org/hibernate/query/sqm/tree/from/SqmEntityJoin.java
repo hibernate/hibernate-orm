@@ -15,6 +15,7 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedEntityJoin;
@@ -52,6 +53,31 @@ public class SqmEntityJoin<T> extends AbstractSqmJoin<T, T> implements SqmQualif
 			SqmRoot<?> sqmRoot) {
 		super( navigablePath, joinedEntityDescriptor, sqmRoot, alias, joinType, sqmRoot.nodeBuilder() );
 		this.sqmRoot = sqmRoot;
+	}
+
+	@Override
+	public SqmEntityJoin<T> copy(SqmCopyContext context) {
+		final SqmEntityJoin<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmEntityJoin<T> path = context.registerCopy(
+				this,
+				new SqmEntityJoin<>(
+						getNavigablePath(),
+						getReferencedPathSource(),
+						getExplicitAlias(),
+						getSqmJoinType(),
+						getRoot().copy( context )
+				)
+		);
+		copyTo( path, context );
+		return path;
+	}
+
+	protected void copyTo(SqmEntityJoin<T> target, SqmCopyContext context) {
+		super.copyTo( target, context );
+		target.joinPredicate = joinPredicate == null ? null : joinPredicate.copy( context );
 	}
 
 	public SqmRoot<?> getRoot() {

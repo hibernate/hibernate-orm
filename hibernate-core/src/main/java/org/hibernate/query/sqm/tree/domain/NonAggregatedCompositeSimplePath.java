@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import jakarta.persistence.metamodel.EntityType;
-
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.PathException;
@@ -15,6 +13,9 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
+
+import jakarta.persistence.metamodel.EntityType;
 
 /**
  * @author Andrea Boriero
@@ -30,7 +31,27 @@ public class NonAggregatedCompositeSimplePath<T> extends SqmEntityValuedSimplePa
 
 		assert referencedPathSource.getSqmPathType() instanceof EntityType;
 	}
-	
+
+	@Override
+	public NonAggregatedCompositeSimplePath<T> copy(SqmCopyContext context) {
+		final NonAggregatedCompositeSimplePath<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		final NonAggregatedCompositeSimplePath<T> path = context.registerCopy(
+				this,
+				new NonAggregatedCompositeSimplePath<>(
+						getNavigablePath(),
+						getReferencedPathSource(),
+						getLhs().copy( context ),
+						nodeBuilder()
+				)
+		);
+		copyTo( path, context );
+		return path;
+	}
+
 	@Override
 	public SqmPath<?> resolvePathPart(
 			String name,

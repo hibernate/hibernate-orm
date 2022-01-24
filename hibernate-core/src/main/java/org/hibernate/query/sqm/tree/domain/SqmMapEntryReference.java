@@ -16,6 +16,7 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -50,6 +51,19 @@ public class SqmMapEntryReference<K,V>
 				.getTypeConfiguration()
 				.getJavaTypeRegistry()
 				.getDescriptor( Map.Entry.class );
+	}
+
+	@Override
+	public SqmMapEntryReference<K, V> copy(SqmCopyContext context) {
+		final SqmMapEntryReference<K, V> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmMapEntryReference<K, V> path = context.registerCopy(
+				this,
+				new SqmMapEntryReference<>( mapPath.copy( context ), nodeBuilder() )
+		);
+		return path;
 	}
 
 	@Override

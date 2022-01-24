@@ -12,6 +12,7 @@ import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * Effectively a query-literal but we want to handle it specially in the SQM -> SQL AST conversion
@@ -49,6 +50,24 @@ public class SqmFormat extends SqmLiteral<String> {
 		if (!FORMAT.matcher(value).matches()) {
 			throw new SemanticException("illegal format pattern '" + value + "'");
 		}
+	}
+
+	@Override
+	public SqmFormat copy(SqmCopyContext context) {
+		final SqmFormat existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmFormat expression = context.registerCopy(
+				this,
+				new SqmFormat(
+						getLiteralValue(),
+						getNodeType(),
+						nodeBuilder()
+				)
+		);
+		copyTo( expression, context );
+		return expression;
 	}
 
 	@Override

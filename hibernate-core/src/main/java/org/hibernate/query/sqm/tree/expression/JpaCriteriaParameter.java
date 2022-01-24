@@ -16,6 +16,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 
@@ -45,6 +46,12 @@ public class JpaCriteriaParameter<T>
 		this.allowsMultiValuedBinding = allowsMultiValuedBinding;
 	}
 
+	protected JpaCriteriaParameter(JpaCriteriaParameter<T> original) {
+		super( original.getNodeType(), original.nodeBuilder() );
+		this.name = original.name;
+		this.allowsMultiValuedBinding = original.allowsMultiValuedBinding;
+	}
+
 	private static <T> SqmExpressible<T> toSqmType(BindableType<T> type, NodeBuilder nodeBuilder) {
 		if ( type == null ) {
 			return null;
@@ -52,6 +59,12 @@ public class JpaCriteriaParameter<T>
 		return type.resolveExpressible(
 				nodeBuilder.getQueryEngine().getTypeConfiguration().getSessionFactory()
 		);
+	}
+
+	@Override
+	public JpaCriteriaParameter<T> copy(SqmCopyContext context) {
+		// Don't create a copy of regular parameters because identity is important here
+		return this;
 	}
 
 	@Override

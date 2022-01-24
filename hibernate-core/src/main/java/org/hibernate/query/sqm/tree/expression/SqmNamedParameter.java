@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * Represents a named query parameter in the SQM tree.
@@ -29,6 +30,25 @@ public class SqmNamedParameter<T> extends AbstractSqmParameter<T> {
 			NodeBuilder nodeBuilder) {
 		super( canBeMultiValued, inherentType, nodeBuilder );
 		this.name = name;
+	}
+
+	@Override
+	public SqmNamedParameter<T> copy(SqmCopyContext context) {
+		final SqmNamedParameter<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmNamedParameter<T> expression = context.registerCopy(
+				this,
+				new SqmNamedParameter<>(
+						name,
+						allowMultiValuedBinding(),
+						getNodeType(),
+						nodeBuilder()
+				)
+		);
+		copyTo( expression, context );
+		return expression;
 	}
 
 	@Override

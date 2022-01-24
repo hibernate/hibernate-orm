@@ -10,6 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * @author Christian Beikov
@@ -23,6 +24,14 @@ public class SqmSearchClauseSpecification implements Serializable {
 		this.cteColumn = cteColumn;
 		this.sortOrder = sortOrder;
 		this.nullPrecedence = nullPrecedence;
+	}
+
+	public SqmSearchClauseSpecification copy(SqmCopyContext context) {
+		return new SqmSearchClauseSpecification(
+				cteColumn,
+				sortOrder,
+				nullPrecedence
+		);
 	}
 
 	public SqmCteTableColumn getCteColumn() {

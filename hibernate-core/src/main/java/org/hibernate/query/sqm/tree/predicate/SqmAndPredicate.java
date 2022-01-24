@@ -8,10 +8,12 @@ package org.hibernate.query.sqm.tree.predicate;
 
 import java.util.Arrays;
 import java.util.List;
-import jakarta.persistence.criteria.Expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
+
+import jakarta.persistence.criteria.Expression;
 
 /**
  * @author Steve Ebersole
@@ -27,6 +29,24 @@ public class SqmAndPredicate extends AbstractSqmPredicate implements SqmJunctive
 		super( leftHandPredicate.getExpressible(), nodeBuilder );
 		this.leftHandPredicate = leftHandPredicate;
 		this.rightHandPredicate = rightHandPredicate;
+	}
+
+	@Override
+	public SqmAndPredicate copy(SqmCopyContext context) {
+		final SqmAndPredicate existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmAndPredicate predicate = context.registerCopy(
+				this,
+				new SqmAndPredicate(
+						leftHandPredicate.copy( context ),
+						rightHandPredicate.copy( context ),
+						nodeBuilder()
+				)
+		);
+		copyTo( predicate, context );
+		return predicate;
 	}
 
 	@Override

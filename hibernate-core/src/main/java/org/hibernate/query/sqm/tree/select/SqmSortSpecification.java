@@ -10,6 +10,7 @@ import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
@@ -36,6 +37,10 @@ public class SqmSortSpecification implements JpaOrder {
 
 	public SqmSortSpecification(SqmExpression sortExpression, SortOrder sortOrder) {
 		this( sortExpression, sortOrder, null );
+	}
+
+	public SqmSortSpecification copy(SqmCopyContext context) {
+		return new SqmSortSpecification( sortExpression.copy( context ), sortOrder, nullPrecedence );
 	}
 
 	public SqmExpression getSortExpression() {

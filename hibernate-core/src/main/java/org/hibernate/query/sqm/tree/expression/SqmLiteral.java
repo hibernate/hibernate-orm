@@ -10,6 +10,7 @@ import org.hibernate.query.internal.QueryLiteralHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -34,6 +35,24 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 	protected SqmLiteral(SqmExpressible<T> inherentType, NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.value = null;
+	}
+
+	@Override
+	public SqmLiteral<T> copy(SqmCopyContext context) {
+		final SqmLiteral<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmLiteral<T> expression = context.registerCopy(
+				this,
+				new SqmLiteral<>(
+						getLiteralValue(),
+						getNodeType(),
+						nodeBuilder()
+				)
+		);
+		copyTo( expression, context );
+		return expression;
 	}
 
 	public T getLiteralValue() {

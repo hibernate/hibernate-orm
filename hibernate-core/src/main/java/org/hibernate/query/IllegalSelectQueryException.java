@@ -6,20 +6,18 @@
  */
 package org.hibernate.query;
 
-import org.hibernate.QueryException;
-
 /**
  * Indicates an attempt to call {@link QueryProducer#createSelectionQuery(String)}
  * with a non-selection query (generally a mutation query)
  *
  * @author Steve Ebersole
  */
-public class IllegalSelectQueryException extends QueryException {
+public class IllegalSelectQueryException extends IllegalQueryOperationException {
 	public IllegalSelectQueryException(String message) {
 		super( message );
 	}
 
 	public IllegalSelectQueryException(String message, String queryString) {
-		super( message, queryString );
+		super( message, queryString, null );
 	}
 }

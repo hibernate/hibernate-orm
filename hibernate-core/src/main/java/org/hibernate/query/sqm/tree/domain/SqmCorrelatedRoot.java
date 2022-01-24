@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 /**
@@ -25,6 +26,20 @@ public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T
 				correlationParent.nodeBuilder()
 		);
 		this.correlationParent = correlationParent;
+	}
+
+	@Override
+	public SqmCorrelatedRoot<T> copy(SqmCopyContext context) {
+		final SqmCorrelatedRoot<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmCorrelatedRoot<T> path = context.registerCopy(
+				this,
+				new SqmCorrelatedRoot<>( correlationParent.copy( context ) )
+		);
+		copyTo( path, context );
+		return path;
 	}
 
 	@Override

@@ -85,12 +85,13 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			String hql,
 			DomainParameterXref domainParameterXref,
 			Class<R> resultType,
+			TupleMetadata tupleMetadata,
 			QueryOptions queryOptions) {
 		this.sqm = sqm;
 		this.hql = hql;
 		this.domainParameterXref = domainParameterXref;
 
-		this.rowTransformer = determineRowTransformer( sqm, resultType, queryOptions );
+		this.rowTransformer = determineRowTransformer( sqm, resultType, tupleMetadata, queryOptions );
 
 		this.listInterpreter = (unused, executionContext, sqmInterpretation, jdbcParameterBindings) -> {
 			final SharedSessionContractImplementor session = executionContext.getSession();
@@ -178,6 +179,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private RowTransformer<R> determineRowTransformer(
 			SqmSelectStatement<?> sqm,
 			Class<R> resultType,
+			TupleMetadata tupleMetadata,
 			QueryOptions queryOptions) {
 		if ( resultType == null || resultType.isArray() ) {
 			if ( queryOptions.getTupleTransformer() != null ) {
@@ -191,27 +193,10 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		// NOTE : if we get here, a result-type of some kind (other than Object[].class) was specified
 
 		final List<SqmSelection<?>> selections = sqm.getQueryPart().getFirstQuerySpec().getSelectClause().getSelections();
-		if ( Tuple.class.isAssignableFrom( resultType ) ) {
+		if ( tupleMetadata != null ) {
 			// resultType is Tuple..
 			if ( queryOptions.getTupleTransformer() == null ) {
-				final Map<TupleElement<?>, Integer> tupleElementMap;
-				if ( selections.size() == 1 && selections.get( 0 ).getSelectableNode() instanceof CompoundSelection<?> ) {
-					final List<? extends JpaSelection<?>> selectionItems = selections.get( 0 )
-							.getSelectableNode()
-							.getSelectionItems();
-					tupleElementMap = new IdentityHashMap<>( selectionItems.size() );
-					for ( int i = 0; i < selectionItems.size(); i++ ) {
-						tupleElementMap.put( selectionItems.get( i ), i );
-					}
-				}
-				else {
-					tupleElementMap = new IdentityHashMap<>( selections.size() );
-					for ( int i = 0; i < selections.size(); i++ ) {
-						final SqmSelection<?> selection = selections.get( i );
-						tupleElementMap.put( selection.getSelectableNode(), i );
-					}
-				}
-				return (RowTransformer<R>) new RowTransformerJpaTupleImpl( new TupleMetadata( tupleElementMap ) );
+				return (RowTransformer<R>) new RowTransformerJpaTupleImpl( tupleMetadata );
 			}
 
 			throw new IllegalArgumentException(

@@ -14,6 +14,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -40,6 +41,18 @@ public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpres
 		super( nodeBuilder );
 		this.distinct = distinct;
 		this.selections = CollectionHelper.arrayList( expectedNumberOfSelections );
+	}
+
+	@Override
+	public SqmSelectClause copy(SqmCopyContext context) {
+		final SqmSelectClause selectClause = new SqmSelectClause( distinct, nodeBuilder() );
+		if ( selections != null ) {
+			selectClause.selections = new ArrayList<>( selections.size() );
+			for ( SqmSelection<?> selection : selections ) {
+				selectClause.selections.add( selection.copy( context ) );
+			}
+		}
+		return selectClause;
 	}
 
 	public boolean isDistinct() {

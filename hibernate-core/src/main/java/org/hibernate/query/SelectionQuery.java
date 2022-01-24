@@ -413,7 +413,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	<P> SelectionQuery<R> setParameterList(String name, P[] values, BindableType<P> type);
 
 	@Override
-	SelectionQuery<R> setParameterList(int position, Collection values);
+	SelectionQuery<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
 
 	@Override
 	<P> SelectionQuery<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType);

@@ -194,7 +194,7 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	<P> SqmQueryImplementor<R> setParameterList(String name, P[] values, BindableType<P> type);
 
 	@Override
-	SqmQueryImplementor<R> setParameterList(int position, Collection values);
+	SqmQueryImplementor<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
 
 	@Override
 	<P> SqmQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType);

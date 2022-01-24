@@ -1396,7 +1396,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public SqmQueryImplementor<R> setParameterList(int position, Collection values) {
+	public SqmQueryImplementor<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values) {
 		super.setParameterList( position, values );
 		return this;
 	}

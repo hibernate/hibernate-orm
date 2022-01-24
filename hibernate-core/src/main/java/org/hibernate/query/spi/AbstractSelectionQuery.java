@@ -595,7 +595,7 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
-	public SelectionQuery<R> setParameterList(int position, Collection values) {
+	public SelectionQuery<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values) {
 		super.setParameterList( position, values );
 		return this;
 	}

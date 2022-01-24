@@ -212,13 +212,10 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		if ( mappings != null ) {
 			for ( String mapping : mappings ) {
 				if ( mapping.startsWith( "/" ) ) {
-					configuration.addResource( mapping, getClass().getClassLoader() );
+					configuration.addResource( mapping );
 				}
 				else {
-					configuration.addResource(
-							getBaseForMappings() + mapping,
-							getClass().getClassLoader()
-					);
+					configuration.addResource( getBaseForMappings() + mapping );
 				}
 			}
 		}

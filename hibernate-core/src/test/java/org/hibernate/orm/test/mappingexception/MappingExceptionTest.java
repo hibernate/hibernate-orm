@@ -112,15 +112,6 @@ public class MappingExceptionTest {
 		}
 
 		try {
-			cfg.addResource( "nothere", getClass().getClassLoader() );
-			fail();
-		}
-		catch (org.hibernate.boot.MappingNotFoundException e) {
-			assertEquals( SourceType.RESOURCE, e.getOrigin().getType() );
-			assertEquals( "nothere", e.getOrigin().getName() );
-		}
-
-		try {
 			cfg.addURL( new URL( "file://nothere" ) );
 			fail();
 		}
@@ -204,15 +195,6 @@ public class MappingExceptionTest {
 
 		try {
 			cfg.addResource( resourceName );
-			fail();
-		}
-		catch (InvalidMappingException inv) {
-			assertEquals( "resource", inv.getType() );
-			assertEquals( resourceName, inv.getPath() );
-		}
-
-		try {
-			cfg.addResource( resourceName, getClass().getClassLoader() );
 			fail();
 		}
 		catch (InvalidMappingException inv) {

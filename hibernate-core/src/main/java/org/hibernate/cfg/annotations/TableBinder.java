@@ -771,20 +771,6 @@ public class TableBinder {
 	}
 
 	/**
-	 * @deprecated Use {@link #buildUniqueConstraintHolders} instead
-	 */
-	@Deprecated
-	public static List<String[]> buildUniqueConstraints(UniqueConstraint[] constraintsArray) {
-		List<String[]> result = new ArrayList<>();
-		if ( constraintsArray.length != 0 ) {
-			for (UniqueConstraint uc : constraintsArray) {
-				result.add( uc.columnNames() );
-			}
-		}
-		return result;
-	}
-
-	/**
 	 * Build a list of {@link UniqueConstraintHolder} instances given a list of
 	 * {@link UniqueConstraint} annotations.
 	 *

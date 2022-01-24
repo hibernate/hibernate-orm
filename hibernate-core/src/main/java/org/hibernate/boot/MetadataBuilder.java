@@ -351,14 +351,14 @@ public interface MetadataBuilder {
 	MetadataBuilder applyAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject);
 
 	/**
-	 * Adds an AttributeConverter by an AttributeConverterDefinition
+	 * Adds an AttributeConverter by a {@link ConverterDescriptor}
 	 *
-	 * @param definition The definition
+	 * @param descriptor The descriptor
 	 *
 	 * @return {@code this} for method chaining
 	 *
 	 */
-	MetadataBuilder applyAttributeConverter(ConverterDescriptor definition);
+	MetadataBuilder applyAttributeConverter(ConverterDescriptor descriptor);
 
 	/**
 	 * Adds an AttributeConverter by its Class.

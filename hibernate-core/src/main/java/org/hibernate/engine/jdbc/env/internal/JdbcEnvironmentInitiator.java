@@ -55,7 +55,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		// not defined as an Environment constant...
 		//
 		// it is used to control whether we should consult the JDBC metadata to determine
-		// certain Settings default values; it is useful to *not* do this when the database
+		// certain default values; it is useful to *not* do this when the database
 		// may not be available (mainly in tools usage).
 		final boolean useJdbcMetadata = ConfigurationHelper.getBoolean(
 				"hibernate.temp.use_jdbc_metadata_defaults",

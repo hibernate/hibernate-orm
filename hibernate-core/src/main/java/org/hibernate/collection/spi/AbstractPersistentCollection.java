@@ -26,7 +26,6 @@ import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.spi.TypedValue;
@@ -82,14 +81,6 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 	protected AbstractPersistentCollection(SharedSessionContractImplementor session) {
 		this.session = session;
-	}
-
-	/**
-	 * @deprecated {@link #AbstractPersistentCollection(SharedSessionContractImplementor)} should be used instead.
-	 */
-	@Deprecated
-	protected AbstractPersistentCollection(SessionImplementor session) {
-		this( (SharedSessionContractImplementor) session );
 	}
 
 	@Override
@@ -1299,26 +1290,6 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			}
 
 		}
-	}
-
-	/**
-	 * Removes entity entries that have an equal identifier with the incoming entity instance
-	 *
-	 * @param list The list containing the entity instances
-	 * @param entityInstance The entity instance to match elements.
-	 * @param entityName The entity name
-	 * @param session The session
-	 *
-	 * @deprecated {@link #identityRemove(Collection, Object, String, SharedSessionContractImplementor)}
-	 *			   should be used instead.
-	 */
-	@Deprecated
-	public static void identityRemove(
-			Collection<?> list,
-			Object entityInstance,
-			String entityName,
-			SessionImplementor session) {
-		identityRemove( list, entityInstance, entityName, (SharedSessionContractImplementor) session );
 	}
 
 	@Override

@@ -24,6 +24,8 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 
 /**
+ * Mapping of a plural (collection-valued) attribute
+ *
  * @author Steve Ebersole
  */
 public interface PluralAttributeMapping

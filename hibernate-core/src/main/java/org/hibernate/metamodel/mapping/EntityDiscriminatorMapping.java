@@ -18,6 +18,9 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 
 /**
+ * @see jakarta.persistence.DiscriminatorColumn
+ * @see jakarta.persistence.DiscriminatorValue
+ *
  * @author Steve Ebersole
  */
 public interface EntityDiscriminatorMapping extends VirtualModelPart, BasicValuedModelPart, FetchOptions {

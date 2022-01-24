@@ -6,8 +6,6 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.tuple.ValueGeneration;
@@ -20,6 +18,9 @@ import org.hibernate.type.descriptor.java.MutabilityPlanExposer;
  * @author Steve Ebersole
  */
 public interface AttributeMapping extends ModelPart, ValueMapping, Fetchable, PropertyBasedMapping, MutabilityPlanExposer {
+	/**
+	 * The name of the mapped attribute
+	 */
 	String getAttributeName();
 
 	@Override
@@ -27,8 +28,14 @@ public interface AttributeMapping extends ModelPart, ValueMapping, Fetchable, Pr
 		return getAttributeName();
 	}
 
+	/**
+	 * Access to AttributeMetadata
+	 */
 	AttributeMetadataAccess getAttributeMetadataAccess();
 
+	/**
+	 * The managed type that declares this attribute
+	 */
 	ManagedMappingType getDeclaringType();
 
 	/**
@@ -37,12 +44,15 @@ public interface AttributeMapping extends ModelPart, ValueMapping, Fetchable, Pr
 	PropertyAccess getPropertyAccess();
 
 	/**
-	 * Convenient access to getting the value for this attribute from the "owner"
+	 * Convenient access to getting the value for this attribute from the declarer
 	 */
 	default Object getValue(Object container) {
 		return getPropertyAccess().getGetter().get( container );
 	}
 
+	/**
+	 * Convenient access to setting the value for this attribute on the declarer
+	 */
 	default void setValue(Object container, Object value) {
 		getPropertyAccess().getSetter().set( container, value );
 	}

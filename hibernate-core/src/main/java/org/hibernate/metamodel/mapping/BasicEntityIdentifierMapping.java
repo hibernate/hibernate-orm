@@ -9,6 +9,8 @@ package org.hibernate.metamodel.mapping;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 
 /**
+ * Mapping for a simple identifier
+ *
  * @author Steve Ebersole
  */
 public interface BasicEntityIdentifierMapping extends SingleAttributeIdentifierMapping, BasicValuedModelPart {

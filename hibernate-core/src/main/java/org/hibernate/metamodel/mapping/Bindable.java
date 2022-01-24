@@ -15,32 +15,13 @@ import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.sql.ast.Clause;
 
 /**
- * Contract for things at the domain/mapping level that can be bound into a JDBC
- * query.
- *
- * Notice that there may be more than one JDBC parameter involved here - an embedded value, e.g.
+ * Contract for things at the domain mapping level that can be bound
+ * into a JDBC {@link java.sql.PreparedStatement}.
  *
  * @author Steve Ebersole
  */
 @Incubating
 public interface Bindable extends JdbcMappingContainer {
-	/*
-	 * todo (6.0) : much of this contract uses Clause which (1) kludgy and (2) not always necessary
-	 *  		- e.g. see the note below wrt "2 forms of JDBC-type visiting"
-	 *
-	 * Instead, in keeping with the general shift away from the getter paradigm to a more functional (Consumer,
-	 * Function, etc) paradigm, I propose something more like:
-	 *
-	 * interface Bindable {
-	 * 		void apply(UpdateStatement sqlAst, ..., SqlAstCreationState creationState);
-	 * 		void apply(DeleteStatement sqlAst, ..., SqlAstCreationState creationState);
-	 *
-	 * 		Expression toSqlAst(..., SqlAstCreationState creationState);
-	 *
-	 * 		// plus the `DomainResult`, `Fetch` (via `DomainResultProducer` and `Fetchable`)
-	 * 		// handling most impls already provide
-	 * }
-	 */
 
 	/**
 	 * The number of JDBC mappings
@@ -57,8 +38,6 @@ public interface Bindable extends JdbcMappingContainer {
 		forEachJdbcType( (index, jdbcMapping) -> results.add( jdbcMapping ) );
 		return results;
 	}
-
-	// todo (6.0) : why did I do 2 forms of JDBC-type visiting?  in-flight change?
 
 	/**
 	 * Visit each of JdbcMapping
@@ -152,8 +131,6 @@ public interface Bindable extends JdbcMappingContainer {
 	 *
 	 * Short-hand form of calling {@link #disassemble} and piping its result to
 	 * {@link #forEachDisassembledJdbcValue}
-	 *
-	 * todo (6.0) : Would this would ever be used?
 	 */
 	default int forEachJdbcValue(
 			Object value,

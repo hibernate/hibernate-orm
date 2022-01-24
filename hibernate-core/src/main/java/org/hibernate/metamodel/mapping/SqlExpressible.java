@@ -10,8 +10,6 @@ package org.hibernate.metamodel.mapping;
  * Unifying contract for things that are capable of being an expression in
  * the SQL AST.
  *
- * todo (6.0) : consider adding `#toSqlExpression` returning a {@link org.hibernate.sql.ast.tree.expression.Expression}
- *
  * @author Steve Ebersole
  */
 public interface SqlExpressible extends JdbcMappingContainer {

@@ -9,6 +9,11 @@ package org.hibernate.metamodel.mapping;
 import org.hibernate.sql.results.graph.Fetchable;
 
 /**
+ * Describes a ModelPart which is a basic value, either<ul>
+ *     <li>a {@link jakarta.persistence.Basic} attribute</li>
+ *     <li>a basic-valued collection part</li>
+ * </ul>
+ *
  * @author Steve Ebersole
  */
 public interface BasicValuedModelPart extends BasicValuedMapping, ModelPart, Fetchable, SelectableMapping {

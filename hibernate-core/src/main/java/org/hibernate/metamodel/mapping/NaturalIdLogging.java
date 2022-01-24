@@ -12,6 +12,8 @@ import org.jboss.logging.Logger;
 
 /**
  * Logging related to natural-id operations
+ *
+ * @author Steve Ebersole
  */
 public interface NaturalIdLogging {
 	String LOGGER_NAME = CoreLogging.subsystemLoggerName( "mapping.natural_id" );

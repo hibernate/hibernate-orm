@@ -15,10 +15,6 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
  * Defines a mapping model contract for things that can be queried in the HQL,
  * Criteria, etc sense.  Generally this
  *
- * todo (6.0) : consider whether collections are Queryable
- * 		- depends how we envision Queryable being used.  E.g. does it make
- * 		sense to allow calls like `findSubPart( "index" )` or `findSubPart( "element" )`?
- *
  * @author Steve Ebersole
  */
 public interface Queryable extends ModelPart {

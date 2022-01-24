@@ -15,6 +15,8 @@ import org.hibernate.loader.ast.spi.NaturalIdLoader;
 
 /**
  * Mapping for an entity's natural-id, if one is defined
+ *
+ * @author Steve Ebersole
  */
 public interface NaturalIdMapping extends VirtualModelPart {
 	String PART_NAME = "{natural-id}";

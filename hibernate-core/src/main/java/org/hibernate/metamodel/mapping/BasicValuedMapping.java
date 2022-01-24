@@ -10,13 +10,11 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Any basic-typed ValueMapping - e.g. a basic-valued singular attribute or a
- * basic-valued collection element
- *
- * todo (6.0) : better to use {@link org.hibernate.metamodel.relational.Identifier} instead to handle quoting?
- *
- * todo (6.0) : expose {@link org.hibernate.metamodel.model.convert.spi.BasicValueConverter}?
- * 		- Or just handle internal to impl?
+ * Any basic-typed ValueMapping.  Generally this would be one of<ul>
+ *     <li>a {@link jakarta.persistence.Basic} attribute</li>
+ *     <li>a basic-valued collection part</li>
+ *     <li>a {@link org.hibernate.type.BasicType}</li>
+ * </ul>
  *
  * @author Steve Ebersole
  */

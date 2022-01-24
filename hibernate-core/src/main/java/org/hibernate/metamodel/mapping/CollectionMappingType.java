@@ -9,8 +9,7 @@ package org.hibernate.metamodel.mapping;
 import org.hibernate.collection.spi.CollectionSemantics;
 
 /**
- * MappingType for collections.  Not that this is the descriptor for
- * the collection Java type (List, Set, etc)
+ * MappingType descriptor for the collection Java type (List, Set, etc)
  *
  * @author Steve Ebersole
  */

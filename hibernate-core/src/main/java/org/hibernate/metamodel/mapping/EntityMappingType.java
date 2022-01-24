@@ -47,9 +47,9 @@ import org.hibernate.type.descriptor.java.JavaType;
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 
 /**
- * todo (6.0) : make this implement RootTableGroupProducer, etc instead of EntityPersister?
+ * Mapping of an entity
  *
- * todo (6.0) : leverage the "relational model" here?
+ * @see jakarta.persistence.Entity
  *
  * @author Steve Ebersole
  */

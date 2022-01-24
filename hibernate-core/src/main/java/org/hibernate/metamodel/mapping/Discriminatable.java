@@ -6,10 +6,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.util.Map;
 import java.util.function.Consumer;
 
-import org.hibernate.Filter;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;

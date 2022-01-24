@@ -10,7 +10,7 @@ package org.hibernate.metamodel.mapping;
 import org.hibernate.engine.spi.IdentifierValue;
 
 /**
- * Support for composite identifier mappings
+ * Mapping for a composite identifier
  *
  * @author Andrea Boriero
  */

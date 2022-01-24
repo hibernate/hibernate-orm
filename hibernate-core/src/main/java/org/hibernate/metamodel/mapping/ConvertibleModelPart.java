@@ -9,6 +9,8 @@ package org.hibernate.metamodel.mapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 
 /**
+ * A BasicValuedModelPart which can have a converter associated with it
+ *
  * @author Steve Ebersole
  */
 public interface ConvertibleModelPart extends BasicValuedModelPart {

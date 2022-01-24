@@ -20,6 +20,13 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchableContainer;
 
 /**
+ * Entity-valued model part<ul>
+ *     <li>{@link jakarta.persistence.ManyToOne}</li>
+ *     <li>{@link jakarta.persistence.OneToOne}</li>
+ *     <li>entity-valued collection element</li>
+ *     <li>entity-valued Map key</li>
+ * </ul>
+ *
  * @author Steve Ebersole
  */
 public interface EntityValuedModelPart extends FetchableContainer {

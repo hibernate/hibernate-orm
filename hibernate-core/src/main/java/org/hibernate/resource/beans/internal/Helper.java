@@ -22,21 +22,18 @@ public class Helper {
 	private Helper() {
 	}
 
-	public String determineBeanCacheKey(Class beanType) {
+	public String determineBeanCacheKey(Class<?> beanType) {
 		return beanType.getName();
 	}
 
-	public String determineBeanCacheKey(String name, Class beanType) {
+	public String determineBeanCacheKey(String name, Class<?> beanType) {
 		return beanType.getName() + ':' + name;
 	}
 
 	@SuppressWarnings("unused")
 	public BeanLifecycleStrategy getLifecycleStrategy(boolean shouldRegistryManageLifecycle) {
-		if ( shouldRegistryManageLifecycle ) {
-			return JpaCompliantLifecycleStrategy.INSTANCE;
-		}
-		else {
-			return ContainerManagedLifecycleStrategy.INSTANCE;
-		}
+		return shouldRegistryManageLifecycle
+				? JpaCompliantLifecycleStrategy.INSTANCE
+				: ContainerManagedLifecycleStrategy.INSTANCE;
 	}
 }

@@ -72,7 +72,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 	private static class BeanImpl<B> implements ContainedBeanImplementor<B> {
 		private final Class<B> beanType;
 
-		private BeanInstanceProducer fallbackProducer;
+		private final BeanInstanceProducer fallbackProducer;
 
 		private BeanManager beanManager;
 		private InjectionTarget<B> injectionTarget;
@@ -189,7 +189,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 		private final Class<B> beanType;
 		private final String beanName;
 
-		private BeanInstanceProducer fallbackProducer;
+		private final BeanInstanceProducer fallbackProducer;
 
 		private BeanManager beanManager;
 		private Bean<B> bean;

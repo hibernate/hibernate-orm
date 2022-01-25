@@ -25,7 +25,7 @@ import org.hibernate.service.ServiceRegistry;
  * in terms of building CDI-based {@link BeanContainer}
  * instance
  *
- * We need to to avoid statically linking CDI classed into the ClassLoader which
+ * We need to avoid statically linking CDI classed into the ClassLoader which
  * would lead to errors if CDI is not available on the classpath.
  *
  * @author Steve Ebersole
@@ -37,16 +37,15 @@ public class CdiBeanContainerBuilder {
 
 	private static final String BEAN_MANAGER_EXTENSION_FQN = "org.hibernate.resource.beans.container.spi.ExtendedBeanManager";
 
-	@SuppressWarnings("unchecked")
 	public static BeanContainer fromBeanManagerReference(
 			Object beanManagerRef,
 			ServiceRegistry serviceRegistry) {
 		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-		final Class beanManagerClass = ManagedBeanRegistryInitiator.cdiBeanManagerClass( classLoaderService );
-		final Class extendedBeanManagerClass = getHibernateClass( BEAN_MANAGER_EXTENSION_FQN );
+		final Class<?> beanManagerClass = ManagedBeanRegistryInitiator.cdiBeanManagerClass( classLoaderService );
+		final Class<?> extendedBeanManagerClass = getHibernateClass( BEAN_MANAGER_EXTENSION_FQN );
 
 		final Class<? extends BeanContainer> containerClass;
-		final Class ctorArgType;
+		final Class<?> ctorArgType;
 
 		if ( extendedBeanManagerClass.isInstance( beanManagerRef ) ) {
 			containerClass = getHibernateClass( CONTAINER_FQN_EXTENDED );

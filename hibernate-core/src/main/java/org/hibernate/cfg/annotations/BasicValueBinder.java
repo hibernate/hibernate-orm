@@ -26,7 +26,7 @@ import org.hibernate.annotations.AnyKeyJavaType;
 import org.hibernate.annotations.AnyKeyJdbcType;
 import org.hibernate.annotations.AnyKeyJdbcTypeCode;
 import org.hibernate.annotations.CollectionId;
-import org.hibernate.annotations.CollectionIdCustomType;
+import org.hibernate.annotations.CollectionIdType;
 import org.hibernate.annotations.CollectionIdJavaType;
 import org.hibernate.annotations.CollectionIdJdbcType;
 import org.hibernate.annotations.CollectionIdJdbcTypeCode;
@@ -1519,7 +1519,7 @@ public class BasicValueBinder<T> implements JdbcTypeIndicators {
 
 		@Override
 		public Class<? extends UserType<?>> customType(XProperty xProperty) {
-			final CollectionIdCustomType customType = findAnnotation( xProperty, CollectionIdCustomType.class );
+			final CollectionIdType customType = findAnnotation( xProperty, CollectionIdType.class );
 			if ( customType == null ) {
 				return null;
 			}
@@ -1529,7 +1529,7 @@ public class BasicValueBinder<T> implements JdbcTypeIndicators {
 
 		@Override
 		public Parameter[] customTypeParameters(XProperty xProperty) {
-			final CollectionIdCustomType customType = findAnnotation( xProperty, CollectionIdCustomType.class );
+			final CollectionIdType customType = findAnnotation( xProperty, CollectionIdType.class );
 			if ( customType == null ) {
 				return null;
 			}

@@ -21,7 +21,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @java.lang.annotation.Target({METHOD, FIELD})
 @Retention(RUNTIME)
-public @interface CollectionIdCustomType {
+public @interface CollectionIdType {
 
 	/**
 	 * The custom type implementor class

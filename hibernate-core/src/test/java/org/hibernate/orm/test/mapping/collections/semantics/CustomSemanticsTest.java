@@ -25,13 +25,23 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = TheEntityWithUniqueList.class )
+@DomainModel( annotatedClasses = { TheEntityWithUniqueList.class, TheEntityWithUniqueListRegistration.class } )
 @SessionFactory
 public class CustomSemanticsTest {
 
 	@Test
 	public void verifyModel(DomainModelScope scope) {
 		scope.withHierarchy( TheEntityWithUniqueList.class, (entityDescriptor) -> {
+			final Property strings = entityDescriptor.getProperty( "strings" );
+			final org.hibernate.mapping.Collection collectionDescriptor = (org.hibernate.mapping.Collection) strings.getValue();
+			assertThat( collectionDescriptor.getCollectionSemantics() ).isInstanceOf( CustomCollectionTypeSemantics.class );
+			final CustomCollectionTypeSemantics semantics = (CustomCollectionTypeSemantics) collectionDescriptor.getCollectionSemantics();
+			assertThat( semantics.getCollectionType() ).isInstanceOf( CustomCollectionType.class );
+			final CustomCollectionType collectionType = (CustomCollectionType) semantics.getCollectionType();
+			assertThat( collectionType.getUserType() ).isInstanceOf( UniqueListType.class );
+		} );
+
+		scope.withHierarchy( TheEntityWithUniqueListRegistration.class, (entityDescriptor) -> {
 			final Property strings = entityDescriptor.getProperty( "strings" );
 			final org.hibernate.mapping.Collection collectionDescriptor = (org.hibernate.mapping.Collection) strings.getValue();
 			assertThat( collectionDescriptor.getCollectionSemantics() ).isInstanceOf( CustomCollectionTypeSemantics.class );
@@ -54,6 +64,29 @@ public class CustomSemanticsTest {
 
 		scope.inTransaction( (session) -> {
 			final TheEntityWithUniqueList loaded = session.createQuery( "from TheEntityWithUniqueList", TheEntityWithUniqueList.class ).uniqueResult();
+			// try to re-add one, should throw IllegalArgumentException
+			try {
+				loaded.getStrings().add( "another" );
+				fail( "Expecting IllegalArgumentException" );
+			}
+			catch (IllegalArgumentException expected) {
+				// expected outcome
+			}
+		} );
+	}
+
+	@Test
+	public void testBasicRegistrationUsage(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			final TheEntityWithUniqueListRegistration entity = new TheEntityWithUniqueListRegistration( 1, "first" );
+			entity.setStrings( new ArrayList<>() );
+			entity.getStrings().add( "the string" );
+			entity.getStrings().add( "another" );
+			session.persist( entity );
+		} );
+
+		scope.inTransaction( (session) -> {
+			final TheEntityWithUniqueListRegistration loaded = session.createQuery( "from TheEntityWithUniqueListRegistration", TheEntityWithUniqueListRegistration.class ).uniqueResult();
 			// try to re-add one, should throw IllegalArgumentException
 			try {
 				loaded.getStrings().add( "another" );

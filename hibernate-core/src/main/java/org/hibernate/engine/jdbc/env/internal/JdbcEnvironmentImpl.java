@@ -28,6 +28,7 @@ import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.exception.internal.SQLExceptionTypeDelegate;
 import org.hibernate.exception.internal.SQLStateConversionDelegate;
 import org.hibernate.exception.internal.StandardSQLExceptionConverter;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -335,13 +336,11 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	}
 
 	private SqlExceptionHelper buildSqlExceptionHelper(Dialect dialect, boolean logWarnings) {
-		final StandardSQLExceptionConverter sqlExceptionConverter = new StandardSQLExceptionConverter(
-				dialect.buildSQLExceptionConversionDelegate(),
-				new SQLExceptionTypeDelegate( dialect ),
-				// todo : vary this based on extractedMetaDataSupport.getSqlStateType()
-				new SQLStateConversionDelegate( dialect )
-		);
-		return new SqlExceptionHelper( sqlExceptionConverter, logWarnings );
+		SQLExceptionConversionDelegate dialectDelegate = dialect.buildSQLExceptionConversionDelegate();
+		SQLExceptionConversionDelegate[] delegates = dialectDelegate == null
+				? new SQLExceptionConversionDelegate[] { new SQLExceptionTypeDelegate( dialect ), new SQLStateConversionDelegate( dialect ) }
+				: new SQLExceptionConversionDelegate[] { dialectDelegate, new SQLExceptionTypeDelegate( dialect ), new SQLStateConversionDelegate( dialect ) };
+		return new SqlExceptionHelper( new StandardSQLExceptionConverter(delegates), logWarnings );
 	}
 
 	@Override

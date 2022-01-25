@@ -9,7 +9,6 @@ package org.hibernate.engine.spi;
 import java.sql.Connection;
 import java.util.TimeZone;
 
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
@@ -25,7 +24,6 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  * @author Gunnar Morling
  * @author Guillaume Smet
  */
-@SuppressWarnings("unused")
 public abstract class AbstractDelegatingSharedSessionBuilder<T extends SharedSessionBuilder> implements SharedSessionBuilder<T> {
 
 	private final SharedSessionBuilder delegate;
@@ -60,8 +58,7 @@ public abstract class AbstractDelegatingSharedSessionBuilder<T extends SharedSes
 		return getThis();
 	}
 
-	@SuppressWarnings("deprecation")
-	@Override
+	@Override @Deprecated(since = "6.0")
 	public T connectionReleaseMode() {
 		delegate.connectionReleaseMode();
 		return getThis();
@@ -82,13 +79,6 @@ public abstract class AbstractDelegatingSharedSessionBuilder<T extends SharedSes
 	@Override
 	public T autoClose() {
 		delegate.autoClose();
-		return getThis();
-	}
-
-	@SuppressWarnings("deprecation")
-	@Override
-	public T flushBeforeCompletion() {
-		delegate.flushBeforeCompletion();
 		return getThis();
 	}
 
@@ -116,13 +106,6 @@ public abstract class AbstractDelegatingSharedSessionBuilder<T extends SharedSes
 		return getThis();
 	}
 
-	@SuppressWarnings("deprecation")
-	@Override
-	public T connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode) {
-		delegate.connectionReleaseMode( connectionReleaseMode );
-		return getThis();
-	}
-
 	@Override
 	public T autoJoinTransactions(boolean autoJoinTransactions) {
 		delegate.autoJoinTransactions( autoJoinTransactions );
@@ -132,13 +115,6 @@ public abstract class AbstractDelegatingSharedSessionBuilder<T extends SharedSes
 	@Override
 	public T autoClose(boolean autoClose) {
 		delegate.autoClose( autoClose );
-		return getThis();
-	}
-
-	@SuppressWarnings("deprecation")
-	@Override
-	public T flushBeforeCompletion(boolean flushBeforeCompletion) {
-		delegate.flushBeforeCompletion( flushBeforeCompletion );
 		return getThis();
 	}
 

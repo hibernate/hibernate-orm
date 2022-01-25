@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.CacheMode;
+import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -123,6 +124,7 @@ import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.Query;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.UnknownSqlResultSetMappingException;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
@@ -2001,8 +2003,13 @@ public class SessionImpl
 		}
 
 		@Override
+		@Deprecated(since = "6.0")
 		public T connectionReleaseMode() {
-			return connectionReleaseMode( session.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode().getReleaseMode() );
+			final PhysicalConnectionHandlingMode handlingMode = PhysicalConnectionHandlingMode.interpret(
+					ConnectionAcquisitionMode.AS_NEEDED,
+					session.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode().getReleaseMode()
+			);
+			return connectionHandlingMode( handlingMode );
 		}
 
 		@Override

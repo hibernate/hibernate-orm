@@ -9,7 +9,6 @@ package org.hibernate.engine.spi;
 import java.sql.Connection;
 import java.util.TimeZone;
 
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
@@ -71,13 +70,6 @@ public abstract class AbstractDelegatingSessionBuilder<T extends SessionBuilder>
 		return getThis();
 	}
 
-	@SuppressWarnings("deprecation")
-	@Override
-	public T connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode) {
-		delegate.connectionReleaseMode( connectionReleaseMode );
-		return getThis();
-	}
-
 	@Override
 	public T autoJoinTransactions(boolean autoJoinTransactions) {
 		delegate.autoJoinTransactions( autoJoinTransactions );
@@ -87,13 +79,6 @@ public abstract class AbstractDelegatingSessionBuilder<T extends SessionBuilder>
 	@Override
 	public T autoClose(boolean autoClose) {
 		delegate.autoClose( autoClose );
-		return getThis();
-	}
-
-	@SuppressWarnings("deprecation")
-	@Override
-	public T flushBeforeCompletion(boolean flushBeforeCompletion) {
-		delegate.flushBeforeCompletion( flushBeforeCompletion );
 		return getThis();
 	}
 

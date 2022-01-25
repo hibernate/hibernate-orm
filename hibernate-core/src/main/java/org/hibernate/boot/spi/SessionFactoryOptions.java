@@ -9,7 +9,6 @@ package org.hibernate.boot.spi;
 import java.util.TimeZone;
 import java.util.function.Supplier;
 
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
@@ -213,12 +212,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	default boolean doesConnectionProviderDisableAutoCommit() {
 		return false;
 	}
-
-	/**
-	 * @deprecated Use {@link #getPhysicalConnectionHandlingMode()} instead
-	 */
-	@Deprecated
-	ConnectionReleaseMode getConnectionReleaseMode();
 
 	boolean isCommentsEnabled();
 

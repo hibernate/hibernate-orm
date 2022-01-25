@@ -19,7 +19,7 @@ import java.util.Locale;
 import java.util.Map;
 import jakarta.transaction.Synchronization;
 
-import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -30,6 +30,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.jboss.logging.Logger;
@@ -44,14 +45,14 @@ import org.jboss.logging.Logger;
  * sessions generated here are unusable until after {@link Session#beginTransaction()} has been
  * called. If {@code close()} is called on a session managed by this class, it will be automatically
  * unbound.
- *
+ * <p>
  * Additionally, the static {@link #bind} and {@link #unbind} methods are provided to allow application
  * code to explicitly control opening and closing of these sessions.  This, with some from of interception,
  * is the preferred approach.  It also allows easy framework integration and one possible approach for
  * implementing long-sessions.
- *
+ * <p>
  * The {@link #buildOrObtainSession}, {@link #isAutoCloseEnabled}, {@link #isAutoFlushEnabled},
- * {@link #getConnectionReleaseMode}, and {@link #buildCleanupSynch} methods are all provided to allow easy
+ * {@link #getConnectionHandlingMode}, and {@link #buildCleanupSynch} methods are all provided to allow easy
  * subclassing (for long-running session scenarios, for example).
  *
  * @author Steve Ebersole
@@ -63,7 +64,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 			ThreadLocalSessionContext.class.getName()
 	);
 
-	private static final Class[] SESSION_PROXY_INTERFACES = new Class[] {
+	private static final Class<?>[] SESSION_PROXY_INTERFACES = new Class<?>[] {
 			Session.class,
 			SessionImplementor.class,
 			EventSource.class,
@@ -110,10 +111,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	private boolean needsWrapping(Session session) {
 		// try to make sure we don't wrap an already wrapped session
 		if ( Proxy.isProxyClass( session.getClass() ) ) {
-			final InvocationHandler invocationHandler = Proxy.getInvocationHandler( session );
-			if ( TransactionProtectionWrapper.class.isInstance( invocationHandler ) ) {
-				return false;
-			}
+			return !( Proxy.getInvocationHandler(session) instanceof TransactionProtectionWrapper );
 		}
 		return true;
 	}
@@ -139,8 +137,8 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	protected Session buildOrObtainSession() {
 		return baseSessionBuilder()
 				.autoClose( isAutoCloseEnabled() )
-				.connectionReleaseMode( getConnectionReleaseMode() )
-				.flushBeforeCompletion( isAutoFlushEnabled() )
+				.connectionHandlingMode( getConnectionHandlingMode() )
+				.flushMode( isAutoFlushEnabled() ? FlushMode.AUTO : FlushMode.MANUAL )
 				.openSession();
 	}
 
@@ -171,8 +169,8 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	 *
 	 * @return The connection release mode for any built sessions.
 	 */
-	protected ConnectionReleaseMode getConnectionReleaseMode() {
-		return factory().getSessionFactoryOptions().getPhysicalConnectionHandlingMode().getReleaseMode();
+	protected PhysicalConnectionHandlingMode getConnectionHandlingMode() {
+		return factory().getSessionFactoryOptions().getPhysicalConnectionHandlingMode();
 	}
 
 	protected Session wrap(Session session) {
@@ -230,7 +228,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	 * @return The session which was unbound.
 	 */
 	public static Session unbind(SessionFactory factory) {
-		return doUnbind( factory, true );
+		return doUnbind( factory);
 	}
 
 	private static Session existingSession(SessionFactory factory) {
@@ -241,16 +239,15 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 		return CONTEXT_TL.get();
 	}
 
-	@SuppressWarnings({"unchecked"})
 	private static void doBind(Session session, SessionFactory factory) {
 		Session orphanedPreviousSession = sessionMap().put( factory, session );
 		terminateOrphanedSession( orphanedPreviousSession );
 	}
 
-	private static Session doUnbind(SessionFactory factory, boolean releaseMapIfEmpty) {
+	private static Session doUnbind(SessionFactory factory) {
 		final Map<SessionFactory, Session> sessionMap = sessionMap();
 		final Session session = sessionMap.remove( factory );
-		if ( releaseMapIfEmpty && sessionMap.isEmpty() ) {
+		if ( sessionMap.isEmpty() ) {
 			//Do not use set(null) as it would prevent the initialValue to be invoked again in case of need.
 			CONTEXT_TL.remove();
 		}

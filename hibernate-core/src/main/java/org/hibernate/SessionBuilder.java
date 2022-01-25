@@ -150,38 +150,4 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 */
 	@Deprecated
 	T autoClose(boolean autoClose);
-
-	/**
-	 * Use a specific connection release mode for these session options.
-	 *
-	 * @param connectionReleaseMode The connection release mode to use.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated use {@link #connectionHandlingMode} instead
-	 */
-	@Deprecated(since = "5.2")
-	T connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode);
-
-	/**
-	 * Should the session be automatically flushed during the "before completion"
-	 * phase of transaction handling.
-	 *
-	 * @param flushBeforeCompletion Should the session be automatically flushed
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated use {@link #flushMode(FlushMode)} instead.
-	 */
-	@Deprecated(since = "5.2")
-	@SuppressWarnings("unchecked")
-	default T flushBeforeCompletion(boolean flushBeforeCompletion) {
-		if ( flushBeforeCompletion ) {
-			flushMode( FlushMode.ALWAYS );
-		}
-		else {
-			flushMode( FlushMode.MANUAL );
-		}
-		return (T) this;
-	}
 }

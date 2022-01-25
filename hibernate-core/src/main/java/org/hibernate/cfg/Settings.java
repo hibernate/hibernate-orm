@@ -6,7 +6,6 @@
  */
 package org.hibernate.cfg;
 
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.model.naming.Identifier;
@@ -96,7 +95,7 @@ public final class Settings {
 			LOG.debugf( "Scrollable result sets: %s", enabledDisabled( sessionFactoryOptions.isScrollableResultSetsEnabled() ) );
 			LOG.debugf( "JDBC3 getGeneratedKeys(): %s", enabledDisabled( sessionFactoryOptions.isGetGeneratedKeysEnabled() ) );
 			LOG.debugf( "JDBC result set fetch size: %s", sessionFactoryOptions.getJdbcFetchSize() );
-			LOG.debugf( "Connection release mode: %s", sessionFactoryOptions.getConnectionReleaseMode() );
+			LOG.debugf( "Connection handling mode: %s", sessionFactoryOptions.getPhysicalConnectionHandlingMode() );
 			LOG.debugf( "Generate SQL with comments: %s", enabledDisabled( sessionFactoryOptions.isCommentsEnabled() ) );
 
 			LOG.debugf( "JPA compliance - query : %s", enabledDisabled( sessionFactoryOptions.getJpaCompliance().isJpaQueryComplianceEnabled() ) );
@@ -269,10 +268,6 @@ public final class Settings {
 
 	public boolean isGetGeneratedKeysEnabled() {
 		return sessionFactoryOptions.isGetGeneratedKeysEnabled();
-	}
-
-	public ConnectionReleaseMode getConnectionReleaseMode() {
-		return sessionFactoryOptions.getConnectionReleaseMode();
 	}
 
 	public boolean isCommentsEnabled() {

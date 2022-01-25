@@ -161,7 +161,7 @@ public class SessionWithSharedConnectionTest {
 
 		Session secondSession = session.sessionWithOptions()
 				.transactionContext()
-				.flushBeforeCompletion( true )
+//				.flushBeforeCompletion( true )
 				.autoClose( true )
 				.openSession();
 
@@ -180,7 +180,7 @@ public class SessionWithSharedConnectionTest {
 
 		session = scope.getSessionFactory().openSession();
 		session.getTransaction().begin();
-		IrrelevantEntity it = (IrrelevantEntity) session.byId( IrrelevantEntity.class ).load( id );
+		IrrelevantEntity it = session.byId( IrrelevantEntity.class ).load( id );
 		assertNotNull( it );
 		session.delete( it );
 		session.getTransaction().commit();
@@ -220,7 +220,7 @@ public class SessionWithSharedConnectionTest {
 		//open secondary session to also insert an entity
 		Session secondSession = session.sessionWithOptions()
 				.connection()
-				.flushBeforeCompletion( true )
+//				.flushBeforeCompletion( true )
 				.autoClose( true )
 				.openSession();
 
@@ -245,7 +245,7 @@ public class SessionWithSharedConnectionTest {
 		//open secondary session with managed options
 		Session secondarySession = session.sessionWithOptions()
 				.connection()
-				.flushBeforeCompletion( true )
+//				.flushBeforeCompletion( true )
 				.autoClose( true )
 				.openSession();
 		

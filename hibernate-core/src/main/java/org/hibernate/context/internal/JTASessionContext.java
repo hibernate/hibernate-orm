@@ -12,7 +12,7 @@ import jakarta.transaction.Synchronization;
 import jakarta.transaction.Transaction;
 import jakarta.transaction.TransactionManager;
 
-import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.context.spi.AbstractCurrentSessionContext;
@@ -21,6 +21,7 @@ import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.internal.CoreMessageLogger;
 
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.jboss.logging.Logger;
 
 /**
@@ -37,7 +38,7 @@ import org.jboss.logging.Logger;
  * meaning that the session will be automatically flushed and closed as part of the lifecycle of the
  * JTA transaction with which it is associated.  Additionally, it will be configured to aggressively
  * release JDBC connections after each statement is executed.  These settings are governed by the
- * {@link #isAutoFlushEnabled()}, {@link #isAutoCloseEnabled()}, and {@link #getConnectionReleaseMode()}
+ * {@link #isAutoFlushEnabled()}, {@link #isAutoCloseEnabled()}, and {@link #getConnectionHandlingMode()}
  * methods; these are provided (along with the {@link #buildOrObtainSession()} method) for easier
  * subclassing for custom JTA-based session tracking logic (like maybe long-session semantics).
  *
@@ -49,7 +50,7 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 			JTASessionContext.class.getName()
 	);
 
-	private transient Map<Object, Session> currentSessionMap = new ConcurrentHashMap<>();
+	private transient final Map<Object, Session> currentSessionMap = new ConcurrentHashMap<>();
 
 	/**
 	 * Constructs a JTASessionContext
@@ -102,8 +103,8 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 				try {
 					currentSession.close();
 				}
-				catch ( Throwable ignore ) {
-					LOG.debug( "Unable to release generated current-session on failed synchronization registration", ignore );
+				catch ( Throwable e ) {
+					LOG.debug( "Unable to release generated current-session on failed synchronization registration", e );
 				}
 				throw new HibernateException( "Unable to register cleanup Synchronization with TransactionManager" );
 			}
@@ -138,8 +139,8 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 	protected Session buildOrObtainSession() {
 		return baseSessionBuilder()
 				.autoClose( isAutoCloseEnabled() )
-				.connectionReleaseMode( getConnectionReleaseMode() )
-				.flushBeforeCompletion( isAutoFlushEnabled() )
+				.connectionHandlingMode( getConnectionHandlingMode() )
+				.flushMode( isAutoFlushEnabled() ? FlushMode.AUTO : FlushMode.MANUAL )
 				.openSession();
 	}
 
@@ -166,16 +167,16 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 	 *
 	 * @return The connection release mode for any built sessions.
 	 */
-	protected ConnectionReleaseMode getConnectionReleaseMode() {
-		return ConnectionReleaseMode.AFTER_STATEMENT;
+	protected PhysicalConnectionHandlingMode getConnectionHandlingMode() {
+		return PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
 	}
 
 	/**
 	 * JTA transaction sync used for cleanup of the internal session map.
 	 */
 	protected static class CleanupSync implements Synchronization {
-		private Object transactionIdentifier;
-		private JTASessionContext context;
+		private final Object transactionIdentifier;
+		private final JTASessionContext context;
 
 		public CleanupSync(Object transactionIdentifier, JTASessionContext context) {
 			this.transactionIdentifier = transactionIdentifier;

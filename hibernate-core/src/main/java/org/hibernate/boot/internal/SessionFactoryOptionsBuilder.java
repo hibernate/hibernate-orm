@@ -1097,11 +1097,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public ConnectionReleaseMode getConnectionReleaseMode() {
-		return getPhysicalConnectionHandlingMode().getReleaseMode();
-	}
-
-	@Override
 	public boolean doesConnectionProviderDisableAutoCommit() {
 		return connectionProviderDisablesAutoCommit;
 	}

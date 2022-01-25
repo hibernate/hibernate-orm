@@ -320,12 +320,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
-	public ConnectionReleaseMode getConnectionReleaseMode() {
-		return delegate.getConnectionReleaseMode();
-	}
-
-	@Override
 	public boolean isCommentsEnabled() {
 		return delegate.isCommentsEnabled();
 	}

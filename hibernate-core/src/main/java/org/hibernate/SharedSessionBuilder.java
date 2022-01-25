@@ -79,21 +79,6 @@ public interface SharedSessionBuilder<T extends SharedSessionBuilder> extends Se
 	 */
 	T autoClose();
 
-	/**
-	 * Signifies that the flushBeforeCompletion flag from the original session should be used to create the new session.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated use {@link #flushMode()} instead.
-	 */
-	@Deprecated(since = "5.2")
-	@SuppressWarnings("unchecked")
-	default T flushBeforeCompletion() {
-		flushMode();
-		return (T) this;
-	}
-
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// overrides to maintain binary compatibility
 
@@ -107,22 +92,8 @@ public interface SharedSessionBuilder<T extends SharedSessionBuilder> extends Se
 	T connection(Connection connection);
 
 	@Override
-	T connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode);
-
-	@Override
 	T autoJoinTransactions(boolean autoJoinTransactions);
 
 	@Override
 	T autoClose(boolean autoClose);
-
-	@Override @SuppressWarnings("unchecked")
-	default T flushBeforeCompletion(boolean flushBeforeCompletion) {
-		if ( flushBeforeCompletion ) {
-			flushMode( FlushMode.ALWAYS );
-		}
-		else {
-			flushMode( FlushMode.MANUAL );
-		}
-		return (T) this;
-	}
 }

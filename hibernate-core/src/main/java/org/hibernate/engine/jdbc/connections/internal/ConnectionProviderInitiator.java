@@ -6,7 +6,6 @@
  */
 package org.hibernate.engine.jdbc.connections.internal;
 
-import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.sql.Connection;
@@ -27,7 +26,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
@@ -94,7 +92,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	}
 
 	@Override
-	public ConnectionProvider initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public ConnectionProvider initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		if ( configurationValues.containsKey( AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER ) ) {
 			// nothing to do, but given the separate hierarchies have to handle this here.
 			return null;
@@ -108,7 +106,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 				return (ConnectionProvider) explicitSetting;
 			}
 			else if ( explicitSetting instanceof Class ) {
-				final Class providerClass = (Class) explicitSetting;
+				final Class<?> providerClass = (Class<?>) explicitSetting;
 				LOG.instantiatingExplicitConnectionProvider( providerClass.getName() );
 				return instantiateExplicitConnectionProvider( providerClass );
 			}
@@ -125,7 +123,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 					}
 
 					LOG.instantiatingExplicitConnectionProvider( providerName );
-					final Class providerClass = strategySelector.selectStrategyImplementor(
+					final Class<?> providerClass = strategySelector.selectStrategyImplementor(
 							ConnectionProvider.class,
 							providerName
 					);
@@ -200,23 +198,21 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 
 
-		final Map injectionData = (Map) configurationValues.get( INJECTION_DATA );
+		final Map<?,?> injectionData = (Map<?,?>) configurationValues.get( INJECTION_DATA );
 		if ( injectionData != null && injectionData.size() > 0 ) {
 			final ConnectionProvider theConnectionProvider = connectionProvider;
 			new BeanInfoHelper( connectionProvider.getClass() ).applyToBeanInfo(
 					connectionProvider,
-					new BeanInfoHelper.BeanInfoDelegate() {
-						public void processBeanInfo(BeanInfo beanInfo) throws Exception {
-							final PropertyDescriptor[] descriptors = beanInfo.getPropertyDescriptors();
-							for ( PropertyDescriptor descriptor : descriptors ) {
-								final String propertyName = descriptor.getName();
-								if ( injectionData.containsKey( propertyName ) ) {
-									final Method method = descriptor.getWriteMethod();
-									method.invoke(
-											theConnectionProvider,
-											injectionData.get( propertyName )
-									);
-								}
+					beanInfo -> {
+						final PropertyDescriptor[] descriptors = beanInfo.getPropertyDescriptors();
+						for ( PropertyDescriptor descriptor : descriptors ) {
+							final String propertyName = descriptor.getName();
+							if ( injectionData.containsKey( propertyName ) ) {
+								final Method method = descriptor.getWriteMethod();
+								method.invoke(
+										theConnectionProvider,
+										injectionData.get( propertyName )
+								);
 							}
 						}
 					}
@@ -235,7 +231,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		return null;
 	}
 
-	private ConnectionProvider instantiateExplicitConnectionProvider(Class providerClass) {
+	private ConnectionProvider instantiateExplicitConnectionProvider(Class<?> providerClass) {
 			try {
 				return (ConnectionProvider) providerClass.newInstance();
 			}
@@ -244,10 +240,9 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			}
 	}
 
-	private static boolean c3p0ConfigDefined(Map configValues) {
-		for ( Object key : configValues.keySet() ) {
-			if ( String.class.isInstance( key )
-					&& ( (String) key ).startsWith( AvailableSettings.C3P0_CONFIG_PREFIX ) ) {
+	private static boolean c3p0ConfigDefined(Map<String, Object> configValues) {
+		for ( String key : configValues.keySet() ) {
+			if ( key.startsWith( AvailableSettings.C3P0_CONFIG_PREFIX ) ) {
 				return true;
 			}
 		}
@@ -264,10 +259,9 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 	}
 
-	private static boolean proxoolConfigDefined(Map configValues) {
-		for ( Object key : configValues.keySet() ) {
-			if ( String.class.isInstance( key )
-					&& ( (String) key ).startsWith( AvailableSettings.PROXOOL_CONFIG_PREFIX ) ) {
+	private static boolean proxoolConfigDefined(Map<String, Object> configValues) {
+		for ( String key : configValues.keySet() ) {
+			if ( key.startsWith( AvailableSettings.PROXOOL_CONFIG_PREFIX ) ) {
 				return true;
 			}
 		}
@@ -284,13 +278,9 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 	}
 
-	private boolean hikariConfigDefined(Map configValues) {
-		for ( Object key : configValues.keySet() ) {
-			if ( !String.class.isInstance( key ) ) {
-				continue;
-			}
-
-			if ( ( (String) key ).startsWith( "hibernate.hikari." ) ) {
+	private boolean hikariConfigDefined(Map<String, Object> configValues) {
+		for ( String key : configValues.keySet() ) {
+			if ( key.startsWith( "hibernate.hikari." ) ) {
 				return true;
 			}
 		}
@@ -307,13 +297,9 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 	}
 
-	private boolean viburConfigDefined(Map configValues) {
-		for ( Object key : configValues.keySet() ) {
-			if ( !String.class.isInstance( key ) ) {
-				continue;
-			}
-
-			if ( ( (String) key ).startsWith( "hibernate.vibur." ) ) {
+	private boolean viburConfigDefined(Map<String, Object> configValues) {
+		for ( String key : configValues.keySet() ) {
+			if ( key.startsWith( "hibernate.vibur." ) ) {
 				return true;
 			}
 		}
@@ -321,13 +307,9 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	}
 
 
-	private boolean agroalConfigDefined(Map configValues) {
-		for ( Object key : configValues.keySet() ) {
-			if ( !String.class.isInstance( key ) ) {
-				continue;
-			}
-
-			if ( ( (String) key ).startsWith( "hibernate.agroal." ) ) {
+	private boolean agroalConfigDefined(Map<String, Object> configValues) {
+		for ( String key : configValues.keySet() ) {
+			if ( key.startsWith( "hibernate.agroal." ) ) {
 				return true;
 			}
 		}
@@ -355,19 +337,20 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	}
 
 	/**
-	 * Build the connection properties capable of being passed to the {@link java.sql.DriverManager#getConnection}
-	 * forms taking {@link Properties} argument.  We seek out all keys in the passed map which start with
-	 * {@code hibernate.connection.}, using them to create a new {@link Properties} instance.  The keys in this
-	 * new {@link Properties} have the {@code hibernate.connection.} prefix trimmed.
+	 * Build the connection properties capable of being passed to
+	 * {@link java.sql.DriverManager#getConnection(String, Properties)} forms taking {@link Properties} argument.
+	 * We seek out all keys in the passed map which start with {@code hibernate.connection.}, using them to create
+	 * a new {@link Properties} instance. The keys in this new {@link Properties} have the
+	 * {@code hibernate.connection.} prefix trimmed.
 	 *
 	 * @param properties The map from which to build the connection specific properties.
 	 *
 	 * @return The connection properties.
 	 */
-	public static Properties getConnectionProperties(Map<?,?> properties) {
+	public static Properties getConnectionProperties(Map<String,Object> properties) {
 		final Properties result = new Properties();
-		for ( Map.Entry entry : properties.entrySet() ) {
-			if ( ! ( String.class.isInstance( entry.getKey() ) ) || ! String.class.isInstance( entry.getValue() ) ) {
+		for ( Map.Entry<?,?> entry : properties.entrySet() ) {
+			if ( !(entry.getKey() instanceof String) || !(entry.getValue() instanceof String) ) {
 				continue;
 			}
 			final String key = (String) entry.getKey();
@@ -444,7 +427,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			AvailableSettings.ENABLE_SYNONYMS, "includeSynonyms"
 	);
 
-	public static Integer extractIsolation(Map settings) {
+	public static Integer extractIsolation(Map<String,?> settings) {
 		return interpretIsolation( settings.get( AvailableSettings.ISOLATION ) );
 	}
 
@@ -453,7 +436,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			return null;
 		}
 
-		if ( Number.class.isInstance( setting ) ) {
+		if ( setting instanceof Number ) {
 			return ( (Number) setting ).intValue();
 		}
 

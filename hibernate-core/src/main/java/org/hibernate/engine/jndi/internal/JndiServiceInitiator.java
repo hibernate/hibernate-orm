@@ -29,7 +29,7 @@ public final class JndiServiceInitiator implements StandardServiceInitiator<Jndi
 	}
 
 	@Override
-	public JndiService initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public JndiService initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		return new JndiServiceImpl( configurationValues );
 	}
 }

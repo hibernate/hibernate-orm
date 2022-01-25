@@ -24,7 +24,7 @@ import org.junit.Test;
  */
 public class DuplicateTest  {
     @Test
-	public void testDuplicateEntityName() throws Exception {
+	public void testDuplicateEntityName() {
 		Configuration cfg = new Configuration();
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		ServiceRegistry serviceRegistry = null;

@@ -22,7 +22,7 @@ import org.hibernate.resource.beans.internal.ManagedBeanRegistryImpl;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
- * Hibernate's standard initializer for the ManagedBeanRegistry service.
+ * Hibernate's standard initializer for the {@link ManagedBeanRegistry} service.
  *
  * Produces a {@link ManagedBeanRegistryImpl}
  *
@@ -41,12 +41,12 @@ public class ManagedBeanRegistryInitiator implements StandardServiceInitiator<Ma
 
 	@Override
 	public ManagedBeanRegistry initiateService(
-			Map configurationValues,
+			Map<String, Object> configurationValues,
 			ServiceRegistryImplementor serviceRegistry) {
 		return new ManagedBeanRegistryImpl( resolveBeanContainer( configurationValues, serviceRegistry ) );
 	}
 
-	private BeanContainer resolveBeanContainer(Map configurationValues, ServiceRegistryImplementor serviceRegistry) {
+	private BeanContainer resolveBeanContainer(Map<?,?> configurationValues, ServiceRegistryImplementor serviceRegistry) {
 		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		final ConfigurationService cfgSvc = serviceRegistry.getService( ConfigurationService.class );
 
@@ -92,14 +92,14 @@ public class ManagedBeanRegistryInitiator implements StandardServiceInitiator<Ma
 		}
 
 		// otherwise we ultimately need to resolve this to a class
-		final Class containerClass;
+		final Class<?> containerClass;
 		if ( explicitSetting instanceof Class ) {
-			containerClass = (Class) explicitSetting;
+			containerClass = (Class<?>) explicitSetting;
 		}
 		else {
 			final String name = explicitSetting.toString();
 			// try the StrategySelector service
-			final Class selected = serviceRegistry.getService( StrategySelector.class )
+			final Class<?> selected = serviceRegistry.getService( StrategySelector.class )
 					.selectStrategyImplementor( BeanContainer.class, name );
 			if ( selected != null ) {
 				containerClass = selected;
@@ -128,7 +128,7 @@ public class ManagedBeanRegistryInitiator implements StandardServiceInitiator<Ma
 		}
 	}
 
-	public static Class cdiBeanManagerClass(ClassLoaderService classLoaderService) throws ClassLoadingException {
+	public static Class<?> cdiBeanManagerClass(ClassLoaderService classLoaderService) throws ClassLoadingException {
 		try {
 			return classLoaderService.classForName( "jakarta.enterprise.inject.spi.BeanManager" );
 		}

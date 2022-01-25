@@ -48,7 +48,7 @@ public class NonRootEntityWithCacheableAnnotationTest {
 
 	@Test
 	public void testCacheableOnNonRootEntity() {
-		Map settings = new HashMap();
+		Map<String,Object> settings = new HashMap<>();
 		settings.put( Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
 		settings.put( AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY, "read-write" );
 		settings.put( AvailableSettings.JPA_SHARED_CACHE_MODE, SharedCacheMode.ENABLE_SELECTIVE );

@@ -35,11 +35,10 @@ public class SessionFactoryServiceRegistryImpl
 	private final SessionFactoryOptions sessionFactoryOptions;
 	private final SessionFactoryImplementor sessionFactory;
 
-	@SuppressWarnings({"unchecked", "rawtypes"})
 	public SessionFactoryServiceRegistryImpl(
 			ServiceRegistryImplementor parent,
-			List<SessionFactoryServiceInitiator> initiators,
-			List<ProvidedService> providedServices,
+			List<SessionFactoryServiceInitiator<?>> initiators,
+			List<ProvidedService<?>> providedServices,
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryOptions sessionFactoryOptions) {
 		super( parent );
@@ -48,7 +47,7 @@ public class SessionFactoryServiceRegistryImpl
 		this.sessionFactoryOptions = sessionFactoryOptions;
 
 		// for now, just use the standard initiator list
-		for ( SessionFactoryServiceInitiator initiator : initiators ) {
+		for ( SessionFactoryServiceInitiator<?> initiator : initiators ) {
 			// create the bindings up front to help identify to which registry services belong
 			createServiceBinding( initiator );
 		}

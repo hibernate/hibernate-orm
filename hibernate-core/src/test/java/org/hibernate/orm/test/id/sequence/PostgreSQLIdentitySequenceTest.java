@@ -20,6 +20,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -46,7 +47,7 @@ public class PostgreSQLIdentitySequenceTest {
 	@BeforeAll
 	public void produceEntityManagerFactory() throws SQLException {
 		connectionProvider = new DriverManagerConnectionProviderImpl();
-		connectionProvider.configure( Environment.getProperties() );
+		connectionProvider.configure( PropertiesHelper.map( Environment.getProperties() ) );
 
 		try (Connection connection = connectionProvider.getConnection();
 			 Statement statement = connection.createStatement()) {

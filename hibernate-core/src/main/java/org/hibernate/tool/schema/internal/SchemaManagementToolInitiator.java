@@ -20,7 +20,7 @@ import org.hibernate.tool.schema.spi.SchemaManagementTool;
 public class SchemaManagementToolInitiator implements StandardServiceInitiator<SchemaManagementTool> {
 	public static final SchemaManagementToolInitiator INSTANCE = new SchemaManagementToolInitiator();
 
-	public SchemaManagementTool initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public SchemaManagementTool initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final Object setting = configurationValues.get( AvailableSettings.SCHEMA_MANAGEMENT_TOOL );
 		SchemaManagementTool tool = registry.getService( StrategySelector.class ).resolveStrategy( SchemaManagementTool.class, setting );
 		if ( tool == null ) {

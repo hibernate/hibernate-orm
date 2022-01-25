@@ -49,9 +49,8 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	// Configurable
 	// *************************************************************************
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public void configure(Map props) throws HibernateException {
+	public void configure(Map<String, Object> props) throws HibernateException {
 		try {
 			LOGGER.debug( "Configuring HikariCP" );
 
@@ -91,8 +90,7 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	}
 
 	@Override
-	@SuppressWarnings("rawtypes")
-	public boolean isUnwrappableAs(Class unwrapType) {
+	public boolean isUnwrappableAs(Class<?> unwrapType) {
 		return ConnectionProvider.class.equals( unwrapType )
 				|| HikariCPConnectionProvider.class.isAssignableFrom( unwrapType )
 				|| DataSource.class.isAssignableFrom( unwrapType );

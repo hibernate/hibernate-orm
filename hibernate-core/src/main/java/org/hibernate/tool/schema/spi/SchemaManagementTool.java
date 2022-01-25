@@ -19,10 +19,10 @@ import org.hibernate.tool.schema.internal.exec.GenerationTarget;
  */
 @Incubating
 public interface SchemaManagementTool extends Service {
-	SchemaCreator getSchemaCreator(Map options);
-	SchemaDropper getSchemaDropper(Map options);
-	SchemaMigrator getSchemaMigrator(Map options);
-	SchemaValidator getSchemaValidator(Map options);
+	SchemaCreator getSchemaCreator(Map<String,Object> options);
+	SchemaDropper getSchemaDropper(Map<String,Object> options);
+	SchemaMigrator getSchemaMigrator(Map<String,Object> options);
+	SchemaValidator getSchemaValidator(Map<String,Object> options);
 
 	/**
 	 * This allows to set an alternative implementation for the Database

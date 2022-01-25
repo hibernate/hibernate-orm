@@ -82,7 +82,7 @@ public class SubclassOnlyCachingTests extends BaseNonConfigCoreFunctionalTestCas
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		super.addSettings( settings );
 
 		settings.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );

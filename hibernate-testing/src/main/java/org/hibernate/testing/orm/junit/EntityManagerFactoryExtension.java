@@ -239,8 +239,7 @@ public class EntityManagerFactoryExtension
 			return;
 		}
 
-		final HashMap settings = new HashMap<>( baseProperties );
-		//noinspection unchecked
+		final HashMap<String,Object> settings = new HashMap<>( baseProperties );
 		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP );
 
 		final StandardServiceRegistry serviceRegistry = model.getMetadataBuildingOptions().getServiceRegistry();

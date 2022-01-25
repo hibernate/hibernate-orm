@@ -27,6 +27,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
@@ -55,9 +56,7 @@ import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Vlad Mihalcea
@@ -86,7 +85,7 @@ public class IndividuallySchemaValidatorImplConnectionTest extends BaseUnitTestC
 	public void setUp() throws Exception {
 		connectionProvider =
 				new DriverManagerConnectionProviderImpl();
-		connectionProvider.configure( properties() );
+		connectionProvider.configure( PropertiesHelper.map( properties() ) );
 
 		connection = connectionProvider.getConnection();
 
@@ -149,7 +148,7 @@ public class IndividuallySchemaValidatorImplConnectionTest extends BaseUnitTestC
 
 		DriverManagerConnectionProviderImpl connectionProvider =
 				new DriverManagerConnectionProviderImpl();
-		connectionProvider.configure( properties() );
+		connectionProvider.configure( PropertiesHelper.map( properties() ) );
 
 		final GenerationTargetToDatabase schemaGenerator =  new GenerationTargetToDatabase(
 				new DdlTransactionIsolatorTestingImpl(
@@ -188,7 +187,7 @@ public class IndividuallySchemaValidatorImplConnectionTest extends BaseUnitTestC
 	protected Properties properties() {
 		Properties properties = new Properties( );
 		URL propertiesURL = Thread.currentThread().getContextClassLoader().getResource( "hibernate.properties" );
-		try(FileInputStream inputStream = new FileInputStream( propertiesURL.getFile() )) {
+		try(FileInputStream inputStream = new FileInputStream( propertiesURL.getFile() ) ) {
 			properties.load( inputStream );
 		}
 		catch (IOException e) {

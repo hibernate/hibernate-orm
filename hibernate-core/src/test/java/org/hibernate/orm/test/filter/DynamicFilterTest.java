@@ -88,7 +88,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Override
-	public void addSettings(Map settings) {
+	public void addSettings(Map<String,Object> settings) {
 		settings.put( AvailableSettings.MAX_FETCH_DEPTH, "1" );
 		settings.put( AvailableSettings.GENERATE_STATISTICS, "true" );
 		settings.put( AvailableSettings.USE_QUERY_CACHE, "true" );

@@ -21,6 +21,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.service.ServiceRegistry;
 
@@ -44,7 +45,7 @@ public abstract class AbstractCharsetNamingStrategyTest extends BaseUnitTestCase
 
 	@Before
     public void setUp() {
-		Map<Object, Object> properties = new HashMap<>( Environment.getProperties() );
+		Map<String, Object> properties = PropertiesHelper.map( Environment.getProperties() );
 		properties.put( AvailableSettings.HBM2DDL_CHARSET_NAME, charsetName() );
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( properties );
 	}

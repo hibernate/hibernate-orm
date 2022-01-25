@@ -165,7 +165,7 @@ public class Configuration {
 		entityTuplizerFactory = new EntityTuplizerFactory();
 		interceptor = EmptyInterceptor.INSTANCE;
 		properties = new Properties(  );
-		properties.putAll( standardServiceRegistryBuilder.getSettings());
+		properties.putAll( standardServiceRegistryBuilder.getSettings() );
 	}
 
 
@@ -320,7 +320,7 @@ public class Configuration {
 	 *
 	 * @param type The type to register.
 	 */
-	public Configuration registerTypeOverride(BasicType type) {
+	public Configuration registerTypeOverride(BasicType<?> type) {
 		basicTypes.add( type );
 		return this;
 	}
@@ -865,7 +865,7 @@ public class Configuration {
 	 * @return this for method chaining
 	 */
 	public Configuration mergeProperties(Properties properties) {
-		for ( Map.Entry entry : properties.entrySet() ) {
+		for ( Map.Entry<Object,Object> entry : properties.entrySet() ) {
 			if ( this.properties.containsKey( entry.getKey() ) ) {
 				continue;
 			}

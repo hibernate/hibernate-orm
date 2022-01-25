@@ -22,7 +22,7 @@ public class EnversServiceInitiator implements StandardServiceInitiator<EnversSe
 
 	@Override
 	public EnversService initiateService(
-			Map configurationValues,
+			Map<String, Object> configurationValues,
 			ServiceRegistryImplementor registry) {
 		return new EnversServiceImpl();
 	}

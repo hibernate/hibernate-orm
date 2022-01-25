@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.hibernate.boot.cfgxml.internal.ConfigLoader;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
@@ -20,6 +21,7 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Environment;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
@@ -47,13 +49,13 @@ public class StandardServiceRegistryBuilder {
 	public static StandardServiceRegistryBuilder forJpa(BootstrapServiceRegistry bootstrapServiceRegistry) {
 		final LoadedConfig loadedConfig = new LoadedConfig( null ) {
 			@Override
-			protected void addConfigurationValues(Map configurationValues) {
+			protected void addConfigurationValues(Map<String,Object> configurationValues) {
 				// here, do nothing
 			}
 		};
 		return new StandardServiceRegistryBuilder(
 				bootstrapServiceRegistry,
-				new HashMap(),
+				new HashMap<>(),
 				loadedConfig
 		) {
 			@Override
@@ -66,13 +68,13 @@ public class StandardServiceRegistryBuilder {
 	}
 
 	/**
-	 * The default resource name for a hibernate configuration xml file.
+	 * The default resource name for a Hibernate configuration xml file.
 	 */
 	public static final String DEFAULT_CFG_RESOURCE_NAME = "hibernate.cfg.xml";
 
-	private final Map settings;
-	private final List<StandardServiceInitiator> initiators;
-	private final List<ProvidedService> providedServices = new ArrayList<>();
+	private final Map<String,Object> settings;
+	private final List<StandardServiceInitiator<?>> initiators;
+	private final List<ProvidedService<?>> providedServices = new ArrayList<>();
 
 	private boolean autoCloseRegistry = true;
 
@@ -97,14 +99,14 @@ public class StandardServiceRegistryBuilder {
 	}
 
 	/**
-	 * Intended for use exclusively from JPA boot-strapping, or extensions of
+	 * Intended for use exclusively from JPA bootstrapping, or extensions of
 	 * this class. Consider this an SPI.
 	 *
 	 * @see #forJpa
 	 */
 	protected StandardServiceRegistryBuilder(
 			BootstrapServiceRegistry bootstrapServiceRegistry,
-			Map settings,
+			Map<String,Object> settings,
 			LoadedConfig loadedConfig) {
 		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
 		this.configLoader = new ConfigLoader( bootstrapServiceRegistry );
@@ -114,7 +116,7 @@ public class StandardServiceRegistryBuilder {
 	}
 
 	/**
-	 * Intended for use exclusively from Quarkus boot-strapping, or extensions of
+	 * Intended for use exclusively from Quarkus bootstrapping, or extensions of
 	 * this class which need to override the standard ServiceInitiator list.
 	 * Consider this an SPI.
 	 * @deprecated Quarkus will switch to use {@link #StandardServiceRegistryBuilder(BootstrapServiceRegistry, Map, ConfigLoader, LoadedConfig, List)}
@@ -122,9 +124,9 @@ public class StandardServiceRegistryBuilder {
 	@Deprecated
 	protected StandardServiceRegistryBuilder(
 			BootstrapServiceRegistry bootstrapServiceRegistry,
-			Map settings,
+			Map <String,Object> settings,
 			LoadedConfig loadedConfig,
-			List<StandardServiceInitiator> initiators) {
+			List<StandardServiceInitiator<?>> initiators) {
 		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
 		this.configLoader = new ConfigLoader( bootstrapServiceRegistry );
 		this.settings = settings;
@@ -133,16 +135,16 @@ public class StandardServiceRegistryBuilder {
 	}
 
 	/**
-	 * Intended for use exclusively from Quarkus boot-strapping, or extensions of
+	 * Intended for use exclusively from Quarkus bootstrapping, or extensions of
 	 * this class which need to override the standard ServiceInitiator list.
 	 * Consider this an SPI.
 	 */
 	protected StandardServiceRegistryBuilder(
 			BootstrapServiceRegistry bootstrapServiceRegistry,
-			Map settings,
+			Map<String,Object> settings,
 			ConfigLoader loader,
 			LoadedConfig loadedConfig,
-			List<StandardServiceInitiator> initiators) {
+			List<StandardServiceInitiator<?>> initiators) {
 		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
 		this.configLoader = loader;
 		this.settings = settings;
@@ -158,7 +160,7 @@ public class StandardServiceRegistryBuilder {
 	public StandardServiceRegistryBuilder(
 			BootstrapServiceRegistry bootstrapServiceRegistry,
 			LoadedConfig loadedConfigBaseline) {
-		this.settings = Environment.getProperties();
+		this.settings = PropertiesHelper.map( Environment.getProperties() );
 		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
 		this.configLoader = new ConfigLoader( bootstrapServiceRegistry );
 		this.aggregatedCfgXml = loadedConfigBaseline;
@@ -181,13 +183,12 @@ public class StandardServiceRegistryBuilder {
 	 *
 	 * @return List of standard initiators
 	 */
-	private static List<StandardServiceInitiator> standardInitiatorList() {
-		final List<StandardServiceInitiator> initiators = new ArrayList<>( StandardServiceInitiators.LIST.size() );
+	private static List<StandardServiceInitiator<?>> standardInitiatorList() {
+		final List<StandardServiceInitiator<?>> initiators = new ArrayList<>( StandardServiceInitiators.LIST.size() );
 		initiators.addAll( StandardServiceInitiators.LIST );
 		return initiators;
 	}
 
-	@SuppressWarnings("unused")
 	public BootstrapServiceRegistry getBootstrapServiceRegistry() {
 		return bootstrapServiceRegistry;
 	}
@@ -205,9 +206,8 @@ public class StandardServiceRegistryBuilder {
 	 * @see #configure()
 	 * @see #configure(String)
 	 */
-	@SuppressWarnings({"unchecked"})
 	public StandardServiceRegistryBuilder loadProperties(String resourceName) {
-		settings.putAll( configLoader.loadProperties( resourceName ) );
+		settings.putAll( PropertiesHelper.map( configLoader.loadProperties( resourceName ) ) );
 		return this;
 	}
 
@@ -224,9 +224,8 @@ public class StandardServiceRegistryBuilder {
 	 * @see #configure()
 	 * @see #configure(String)
 	 */
-	@SuppressWarnings({"unchecked"})
 	public StandardServiceRegistryBuilder loadProperties(File file) {
-		settings.putAll( configLoader.loadProperties( file ) );
+		settings.putAll( PropertiesHelper.map( configLoader.loadProperties( file ) ) );
 		return this;
 	}
 
@@ -262,7 +261,6 @@ public class StandardServiceRegistryBuilder {
 		return configure( configLoader.loadConfigXmlUrl( url ) );
 	}
 
-	@SuppressWarnings({"unchecked"})
 	public StandardServiceRegistryBuilder configure(LoadedConfig loadedConfig) {
 		aggregatedCfgXml.merge( loadedConfig );
 		settings.putAll( loadedConfig.getConfigurationValues() );
@@ -278,25 +276,38 @@ public class StandardServiceRegistryBuilder {
 	 *
 	 * @return this, for method chaining
 	 */
-	@SuppressWarnings({"unchecked", "UnusedDeclaration"})
 	public StandardServiceRegistryBuilder applySetting(String settingName, Object value) {
 		settings.put( settingName, value );
 		return this;
 	}
 
 	/**
-	 * Apply a groups of setting values.
+	 * Apply a group of settings.
 	 *
 	 * @param settings The incoming settings to apply
 	 *
 	 * @return this, for method chaining
 	 */
-	@SuppressWarnings({"unchecked", "UnusedDeclaration"})
-	public StandardServiceRegistryBuilder applySettings(Map settings) {
+	public StandardServiceRegistryBuilder applySettings(Map<String,Object> settings) {
 		this.settings.putAll( settings );
 		return this;
 	}
 
+	/**
+	 * Apply a group of settings.
+	 *
+	 * @param settings The incoming settings to apply
+	 *
+	 * @return this, for method chaining
+	 */
+	public StandardServiceRegistryBuilder applySettings(Properties settings) {
+		this.settings.putAll( PropertiesHelper.map(settings) );
+		return this;
+	}
+
+	/**
+	 * Discard all the settings applied so far.
+	 */
 	public void clearSettings() {
 		settings.clear();
 	}
@@ -308,8 +319,7 @@ public class StandardServiceRegistryBuilder {
 	 *
 	 * @return this, for method chaining
 	 */
-	@SuppressWarnings({"UnusedDeclaration"})
-	public StandardServiceRegistryBuilder addInitiator(StandardServiceInitiator initiator) {
+	public StandardServiceRegistryBuilder addInitiator(StandardServiceInitiator<?> initiator) {
 		initiators.add( initiator );
 		return this;
 	}
@@ -322,9 +332,8 @@ public class StandardServiceRegistryBuilder {
 	 *
 	 * @return this, for method chaining
 	 */
-	@SuppressWarnings({"unchecked"})
-	public StandardServiceRegistryBuilder addService(final Class serviceRole, final Service service) {
-		providedServices.add( new ProvidedService( serviceRole, service ) );
+	public <T extends Service> StandardServiceRegistryBuilder addService(final Class<T> serviceRole, final T service) {
+		providedServices.add( new ProvidedService<>( serviceRole, service ) );
 		return this;
 	}
 
@@ -362,12 +371,11 @@ public class StandardServiceRegistryBuilder {
 	 *
 	 * @return The StandardServiceRegistry.
 	 */
-	@SuppressWarnings("unchecked")
 	public StandardServiceRegistry build() {
 		applyServiceContributingIntegrators();
 		applyServiceContributors();
 
-		final Map settingsCopy = new HashMap( settings );
+		final Map<String,Object> settingsCopy = new HashMap<>( settings );
 		settingsCopy.put( org.hibernate.boot.cfgxml.spi.CfgXmlAccessService.LOADED_CONFIG_KEY, aggregatedCfgXml );
 		ConfigurationHelper.resolvePlaceHolders( settingsCopy );
 
@@ -384,9 +392,9 @@ public class StandardServiceRegistryBuilder {
 	private void applyServiceContributingIntegrators() {
 		for ( Integrator integrator : bootstrapServiceRegistry.getService( IntegratorService.class )
 				.getIntegrators() ) {
-			if ( org.hibernate.integrator.spi.ServiceContributingIntegrator.class.isInstance( integrator ) ) {
-				org.hibernate.integrator.spi.ServiceContributingIntegrator.class.cast( integrator ).prepareServices(
-						this );
+			if ( integrator instanceof org.hibernate.integrator.spi.ServiceContributingIntegrator ) {
+				( (org.hibernate.integrator.spi.ServiceContributingIntegrator) integrator )
+						.prepareServices(this );
 			}
 		}
 	}
@@ -411,7 +419,7 @@ public class StandardServiceRegistryBuilder {
 	 * This allows code to configure the builder and access that to configure Configuration object.
 	 */
 	@Deprecated
-	public Map getSettings() {
+	public Map<String,Object> getSettings() {
 		return settings;
 	}
 

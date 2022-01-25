@@ -19,7 +19,6 @@ import org.junit.Test;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -47,7 +46,7 @@ public class C3P0DifferentIsolationLevelTest extends
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		connectionProvider = new C3P0ProxyConnectionProvider();
 		settings.put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
 		settings.put( AvailableSettings.ISOLATION, "REPEATABLE_READ" );

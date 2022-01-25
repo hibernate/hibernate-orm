@@ -73,15 +73,14 @@ public class DriverManagerConnectionProviderImpl
 	}
 
 	@Override
-	public void configure(Map configurationValues) {
+	public void configure(Map<String, Object> configurationValues) {
 		CONNECTIONS_MESSAGE_LOGGER.usingHibernateBuiltInConnectionPool();
 		PooledConnections pool = buildPool( configurationValues, serviceRegistry );
 		final long validationInterval = ConfigurationHelper.getLong( VALIDATION_INTERVAL, configurationValues, 30 );
-		PoolState newstate = new PoolState( pool, validationInterval );
-		this.state = newstate;
+		this.state = new PoolState( pool, validationInterval );
 	}
 
-	private PooledConnections buildPool(Map configurationValues, ServiceRegistryImplementor serviceRegistry) {
+	private PooledConnections buildPool(Map<String,Object> configurationValues, ServiceRegistryImplementor serviceRegistry) {
 		final boolean autoCommit = ConfigurationHelper.getBoolean(
 				AvailableSettings.AUTOCOMMIT,
 				configurationValues,
@@ -103,7 +102,7 @@ public class DriverManagerConnectionProviderImpl
 		return pooledConnectionBuilder.build();
 	}
 
-	private static ConnectionCreator buildCreator(Map configurationValues, ServiceRegistryImplementor serviceRegistry) {
+	private static ConnectionCreator buildCreator(Map<String,Object> configurationValues, ServiceRegistryImplementor serviceRegistry) {
 		final String url = (String) configurationValues.get( AvailableSettings.URL );
 
 		String driverClassName = (String) configurationValues.get( AvailableSettings.DRIVER );
@@ -276,7 +275,7 @@ public class DriverManagerConnectionProviderImpl
 	}
 
 	@Override
-	public boolean isUnwrappableAs(Class unwrapType) {
+	public boolean isUnwrappableAs(Class<?> unwrapType) {
 		return ConnectionProvider.class.equals( unwrapType ) ||
 				DriverManagerConnectionProviderImpl.class.isAssignableFrom( unwrapType );
 	}
@@ -516,7 +515,7 @@ public class DriverManagerConnectionProviderImpl
 		public static class Builder {
 			private final ConnectionCreator connectionCreator;
 			private ConnectionValidator connectionValidator;
-			private boolean autoCommit;
+			private final boolean autoCommit;
 			private int initialSize = 1;
 			private int minSize = 1;
 			private int maxSize = 20;

@@ -44,7 +44,7 @@ public class QualifiedTableNamingTest extends BaseNonConfigCoreFunctionalTestCas
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		super.addSettings( settings );
 		settings.put( AvailableSettings.DIALECT, TestDialect.class );
 		settings.put( AvailableSettings.CONNECTION_PROVIDER, MockedConnectionProvider.class.getName() );
@@ -119,7 +119,7 @@ public class QualifiedTableNamingTest extends BaseNonConfigCoreFunctionalTestCas
 
 
 		@Override
-		public boolean isUnwrappableAs(Class unwrapType) {
+		public boolean isUnwrappableAs(Class<?> unwrapType) {
 			return false;
 		}
 

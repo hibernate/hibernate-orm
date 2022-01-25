@@ -40,7 +40,7 @@ public class NoCachingRegionFactory implements RegionFactory {
 	}
 
 	@Override
-	public void start(SessionFactoryOptions settings, Map configValues) throws CacheException {
+	public void start(SessionFactoryOptions settings, Map<String,Object> configValues) throws CacheException {
 	}
 
 	@Override

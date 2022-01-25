@@ -58,7 +58,7 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 
 	// --- Configurable
 
-	private static void resolveIsolationSetting(Map<String, String> properties, AgroalConnectionFactoryConfigurationSupplier cf) {
+	private static void resolveIsolationSetting(Map<String, Object> properties, AgroalConnectionFactoryConfigurationSupplier cf) {
 		Integer isolation = ConnectionProviderInitiator.extractIsolation( properties );
 		if ( isolation != null ) {
 			// Agroal resolves transaction isolation from the 'nice' name
@@ -67,19 +67,19 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 		}
 	}
 
-	private static <T> void copyProperty(Map<String, String> properties, String key, Consumer<T> consumer, Function<String, T> converter) {
-		String value = properties.get( key );
-		if ( value != null ) {
-			consumer.accept( converter.apply( value ) );
+	private static <T> void copyProperty(Map<String, Object> properties, String key, Consumer<T> consumer, Function<String, T> converter) {
+		Object value = properties.get( key );
+		if ( value instanceof String ) {
+			consumer.accept( converter.apply( (String) value ) );
 		}
 	}
 
 	@Override
-	@SuppressWarnings( "unchecked" )
-	public void configure(Map props) throws HibernateException {
+	public void configure(Map<String, Object> props) throws HibernateException {
 		LOGGER.debug( "Configuring Agroal" );
 		try {
-			AgroalPropertiesReader agroalProperties = new AgroalPropertiesReader( CONFIG_PREFIX ).readProperties( props );
+			AgroalPropertiesReader agroalProperties = new AgroalPropertiesReader( CONFIG_PREFIX )
+					.readProperties( (Map) props ); //TODO: this is a garbage cast
 			agroalProperties.modify().connectionPoolConfiguration( cp -> cp.connectionFactoryConfiguration( cf -> {
 				copyProperty( props, AvailableSettings.DRIVER, cf::connectionProviderClassName, Function.identity() );
 				copyProperty( props, AvailableSettings.URL, cf::jdbcUrl, Function.identity() );
@@ -119,15 +119,17 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 	}
 
 	@Override
-	@SuppressWarnings( "rawtypes" )
-	public boolean isUnwrappableAs(Class unwrapType) {
-		return ConnectionProvider.class.equals( unwrapType ) || AgroalConnectionProvider.class.isAssignableFrom( unwrapType ) || DataSource.class.isAssignableFrom( unwrapType );
+	public boolean isUnwrappableAs(Class<?> unwrapType) {
+		return ConnectionProvider.class.equals( unwrapType )
+			|| AgroalConnectionProvider.class.isAssignableFrom( unwrapType )
+			|| DataSource.class.isAssignableFrom( unwrapType );
 	}
 
 	@Override
 	@SuppressWarnings( "unchecked" )
 	public <T> T unwrap(Class<T> unwrapType) {
-		if ( ConnectionProvider.class.equals( unwrapType ) || AgroalConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
+		if ( ConnectionProvider.class.equals( unwrapType )
+				|| AgroalConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
 			return (T) this;
 		}
 		if ( DataSource.class.isAssignableFrom( unwrapType ) ) {

@@ -29,7 +29,7 @@ public class DialectFactoryInitiator implements StandardServiceInitiator<Dialect
 	}
 
 	@Override
-	public DialectFactory initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public DialectFactory initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		return new DialectFactoryImpl();
 	}
 }

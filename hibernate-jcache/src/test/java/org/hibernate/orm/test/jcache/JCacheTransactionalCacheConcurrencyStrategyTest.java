@@ -42,7 +42,7 @@ public class JCacheTransactionalCacheConcurrencyStrategyTest
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		settings.put( Environment.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
 
 		TestingJtaBootstrap.prepare( settings );

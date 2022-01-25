@@ -21,7 +21,7 @@ public interface Wrapped {
 	 *
 	 * @return True/false.
 	 */
-	boolean isUnwrappableAs(Class unwrapType);
+	boolean isUnwrappableAs(Class<?> unwrapType);
 
 	/**
 	 * Unproxy the service proxy

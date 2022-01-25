@@ -41,8 +41,7 @@ import static org.junit.Assert.fail;
 @RequiresDialect(H2Dialect.class)
 public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	@Override
-	@SuppressWarnings("unchecked")
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		super.addSettings( settings );
 
 		TestingJtaBootstrap.prepare( settings );

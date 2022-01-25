@@ -7,7 +7,8 @@
 package org.hibernate.test.c3p0;
 
 import java.lang.management.ManagementFactory;
-import java.util.Properties;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -94,8 +95,8 @@ public class C3P0ConnectionProviderTest extends BaseCoreFunctionalTestCase {
 	public void testIsolationPropertyCouldBeEmpty() {
 		C3P0ConnectionProvider provider = new C3P0ConnectionProvider();
 		try {
-			Properties configuration = new Properties();
-			configuration.setProperty( Environment.ISOLATION, "" );
+			Map<String,Object> configuration = new HashMap<>();
+			configuration.put( Environment.ISOLATION, "" );
 			provider.configure( configuration );
 		}
 		finally {

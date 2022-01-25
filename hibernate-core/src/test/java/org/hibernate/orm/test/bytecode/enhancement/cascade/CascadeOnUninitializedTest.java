@@ -52,7 +52,7 @@ public class CascadeOnUninitializedTest extends BaseNonConfigCoreFunctionalTestC
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		super.addSettings( settings );
 		settings.put( AvailableSettings.FORMAT_SQL, "true" );
 		sqlInterceptor = new SQLStatementInterceptor( settings );

@@ -46,7 +46,7 @@ public class C3P0DefaultIsolationLevelTest extends
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		connectionProvider = new C3P0ProxyConnectionProvider();
 		settings.put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
 		settings.put( AvailableSettings.ISOLATION, "READ_COMMITTED" );

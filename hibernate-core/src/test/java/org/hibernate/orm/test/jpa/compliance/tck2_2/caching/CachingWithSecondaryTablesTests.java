@@ -131,8 +131,8 @@ public class CachingWithSecondaryTablesTests extends BaseUnitTestCase {
 	}
 
 
-	private SessionFactoryImplementor buildSessionFactory(Class entityClass, boolean strict) {
-		final Map settings = new HashMap();
+	private SessionFactoryImplementor buildSessionFactory(Class<?> entityClass, boolean strict) {
+		final Map<String,Object> settings = new HashMap<>();
 		settings.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
 		settings.put( AvailableSettings.JPA_SHARED_CACHE_MODE, SharedCacheMode.ENABLE_SELECTIVE );
 		settings.put( AvailableSettings.GENERATE_STATISTICS, "true" );

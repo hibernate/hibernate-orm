@@ -36,7 +36,7 @@ public class DialectResolverInitiator implements StandardServiceInitiator<Dialec
 	}
 
 	@Override
-	public DialectResolver initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public DialectResolver initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final DialectResolverSet resolverSet = new DialectResolverSet();
 
 		applyCustomerResolvers( resolverSet, registry, configurationValues );

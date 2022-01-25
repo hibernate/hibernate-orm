@@ -47,7 +47,7 @@ public class EagerToManyWhereDontUseClassWhereTest extends BaseNonConfigCoreFunc
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		settings.put( AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS, "false" );
 	}
 

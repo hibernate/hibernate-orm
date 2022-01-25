@@ -25,6 +25,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
@@ -112,7 +113,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void testMissingEntityContainsQualifiedEntityName() throws Exception {
+	public void testMissingEntityContainsQualifiedEntityName() {
 		final MetadataSources metadataSources = new MetadataSources( ssr );
 		metadataSources.addAnnotatedClass( MissingEntity.class );
 
@@ -129,7 +130,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void testMissingEntityContainsUnqualifiedEntityName() throws Exception {
+	public void testMissingEntityContainsUnqualifiedEntityName() {
 		final MetadataSources metadataSources = new MetadataSources( ssr );
 		metadataSources.addAnnotatedClass( UnqualifiedMissingEntity.class );
 
@@ -146,7 +147,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void testMissingColumn() throws Exception {
+	public void testMissingColumn() {
 		MetadataSources metadataSources = new MetadataSources( ssr );
 		metadataSources.addAnnotatedClass( NoNameColumn.class );
 
@@ -161,7 +162,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 
 		DriverManagerConnectionProviderImpl connectionProvider =
 				new DriverManagerConnectionProviderImpl();
-		connectionProvider.configure( properties() );
+		connectionProvider.configure( PropertiesHelper.map( properties() ) );
 
 		final GenerationTargetToDatabase schemaGenerator =  new GenerationTargetToDatabase(
 				new DdlTransactionIsolatorTestingImpl(
@@ -201,7 +202,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void testMismatchColumnType() throws Exception {
+	public void testMismatchColumnType() {
 		MetadataSources metadataSources = new MetadataSources( ssr );
 		metadataSources.addAnnotatedClass( NameColumn.class );
 
@@ -216,7 +217,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 
 		DriverManagerConnectionProviderImpl connectionProvider =
 				new DriverManagerConnectionProviderImpl();
-		connectionProvider.configure( properties() );
+		connectionProvider.configure( PropertiesHelper.map( properties() ) );
 
 		final GenerationTargetToDatabase schemaGenerator =  new GenerationTargetToDatabase(
 				new DdlTransactionIsolatorTestingImpl(
@@ -275,7 +276,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 	protected Properties properties() {
 		Properties properties = new Properties( );
 		URL propertiesURL = Thread.currentThread().getContextClassLoader().getResource( "hibernate.properties" );
-		try(FileInputStream inputStream = new FileInputStream( propertiesURL.getFile() )) {
+		try ( FileInputStream inputStream = new FileInputStream( propertiesURL.getFile() ) ) {
 			properties.load( inputStream );
 		}
 		catch (IOException e) {

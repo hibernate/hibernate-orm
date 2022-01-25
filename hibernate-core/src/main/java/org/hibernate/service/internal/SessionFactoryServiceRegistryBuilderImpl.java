@@ -23,8 +23,8 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistryBuilder;
 public class SessionFactoryServiceRegistryBuilderImpl implements SessionFactoryServiceRegistryBuilder {
 	private final ServiceRegistryImplementor parent;
 
-	private final List<SessionFactoryServiceInitiator> initiators = StandardSessionFactoryServiceInitiators.buildStandardServiceInitiatorList();
-	private final List<ProvidedService> providedServices = new ArrayList<>();
+	private final List<SessionFactoryServiceInitiator<?>> initiators = StandardSessionFactoryServiceInitiators.buildStandardServiceInitiatorList();
+	private final List<ProvidedService<?>> providedServices = new ArrayList<>();
 
 	public SessionFactoryServiceRegistryBuilderImpl(ServiceRegistryImplementor parent) {
 		this.parent = parent;
@@ -38,8 +38,7 @@ public class SessionFactoryServiceRegistryBuilderImpl implements SessionFactoryS
 	 * @return this, for method chaining
 	 */
 	@Override
-	@SuppressWarnings( {"UnusedDeclaration"})
-	public SessionFactoryServiceRegistryBuilder addInitiator(SessionFactoryServiceInitiator initiator) {
+	public SessionFactoryServiceRegistryBuilder addInitiator(SessionFactoryServiceInitiator<?> initiator) {
 		initiators.add( initiator );
 		return this;
 	}
@@ -53,9 +52,8 @@ public class SessionFactoryServiceRegistryBuilderImpl implements SessionFactoryS
 	 * @return this, for method chaining
 	 */
 	@Override
-	@SuppressWarnings( {"unchecked"})
-	public SessionFactoryServiceRegistryBuilder addService(final Class serviceRole, final Service service) {
-		providedServices.add( new ProvidedService( serviceRole, service ) );
+	public <R extends Service> SessionFactoryServiceRegistryBuilder addService(final Class<R> serviceRole, final R service) {
+		providedServices.add( new ProvidedService<>( serviceRole, service ) );
 		return this;
 	}
 

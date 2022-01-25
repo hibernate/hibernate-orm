@@ -17,7 +17,6 @@ import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityNameResolver;
@@ -50,6 +49,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.NullnessHelper;
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
@@ -268,8 +268,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
 		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
-		final Map<Object,Object> configurationSettings = new HashMap<>();
-		configurationSettings.putAll( jdbcServices.getJdbcEnvironment().getDialect().getDefaultProperties() );
+		final Map<String,Object> configurationSettings = new HashMap<>();
+		configurationSettings.putAll( PropertiesHelper.map( jdbcServices.getJdbcEnvironment().getDialect().getDefaultProperties() ) );
 		configurationSettings.putAll( cfgService.getSettings() );
 		if ( cfgService == null ) {
 			cfgService = new ConfigurationServiceImpl( configurationSettings );
@@ -702,7 +702,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	private static Interceptor determineInterceptor(
-			Map<Object,Object> configurationSettings,
+			Map<String,Object> configurationSettings,
 			StrategySelector strategySelector) {
 		Object setting = configurationSettings.get( INTERCEPTOR );
 		if ( setting == null ) {
@@ -724,7 +724,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@SuppressWarnings("unchecked")
 	private static Supplier<? extends Interceptor> determineStatelessInterceptor(
-			Map<Object,Object> configurationSettings,
+			Map<String,Object> configurationSettings,
 			StrategySelector strategySelector) {
 		Object setting = configurationSettings.get( SESSION_SCOPED_INTERCEPTOR );
 
@@ -761,7 +761,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	private PhysicalConnectionHandlingMode interpretConnectionHandlingMode(
-			Map<Object,Object> configurationSettings,
+			Map<String,Object> configurationSettings,
 			StandardServiceRegistry serviceRegistry) {
 		final PhysicalConnectionHandlingMode specifiedHandlingMode = PhysicalConnectionHandlingMode.interpret(
 				configurationSettings.get( CONNECTION_HANDLING )

@@ -35,5 +35,5 @@ public interface DialectFactory extends Service {
 	 *
 	 * @throws HibernateException No dialect specified and no resolver could make the determination.
 	 */
-	Dialect buildDialect(Map configValues, DialectResolutionInfoSource resolutionInfoSource) throws HibernateException;
+	Dialect buildDialect(Map<String,Object> configValues, DialectResolutionInfoSource resolutionInfoSource) throws HibernateException;
 }

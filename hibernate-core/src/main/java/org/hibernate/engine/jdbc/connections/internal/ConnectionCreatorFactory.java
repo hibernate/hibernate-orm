@@ -27,6 +27,6 @@ interface ConnectionCreatorFactory {
 			Boolean autocommit,
 			Integer isolation,
 			String initSql,
-			Map<Object, Object> configurationValues);
+			Map<String, Object> configurationValues);
 
 }

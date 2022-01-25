@@ -36,9 +36,9 @@ public class LocalDateCustomSessionLevelTimeZoneTest extends BaseSessionFactoryF
 	private static final TimeZone TIME_ZONE = TimeZone.getTimeZone(
 			"Europe/Berlin" );
 
-	private ConnectionProviderDelegate connectionProvider = new ConnectionProviderDelegate() {
+	private final ConnectionProviderDelegate connectionProvider = new ConnectionProviderDelegate() {
 		@Override
-		public void configure(Map configurationValues) {
+		public void configure(Map<String, Object> configurationValues) {
 			String url = (String) configurationValues.get( AvailableSettings.URL );
 			if ( !url.contains( "?" ) ) {
 				url += "?";

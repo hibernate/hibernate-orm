@@ -24,7 +24,7 @@ public class SessionFactoryServiceRegistryFactoryInitiator implements StandardSe
 	}
 
 	@Override
-	public SessionFactoryServiceRegistryFactoryImpl initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public SessionFactoryServiceRegistryFactoryImpl initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		return new SessionFactoryServiceRegistryFactoryImpl( registry );
 	}
 }

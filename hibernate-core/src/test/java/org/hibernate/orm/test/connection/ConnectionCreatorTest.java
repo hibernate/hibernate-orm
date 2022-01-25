@@ -39,8 +39,8 @@ public class ConnectionCreatorTest extends BaseUnitTestCase {
 				new StandardServiceRegistryImpl(
 						true,
 						new BootstrapServiceRegistryImpl(),
-						Collections.<StandardServiceInitiator>emptyList(),
-						Collections.<ProvidedService>emptyList(),
+						Collections.emptyList(),
+						Collections.emptyList(),
 						Collections.emptyMap()
 				) {
 					@Override

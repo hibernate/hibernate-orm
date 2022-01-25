@@ -83,7 +83,7 @@ public class ProxoolConnectionProvider
 	}
 
 	@Override
-	public boolean isUnwrappableAs(Class unwrapType) {
+	public boolean isUnwrappableAs(Class<?> unwrapType) {
 		return ConnectionProvider.class.equals( unwrapType ) ||
 				ProxoolConnectionProvider.class.isAssignableFrom( unwrapType );
 	}
@@ -111,7 +111,7 @@ public class ProxoolConnectionProvider
 	}
 
 	@Override
-	public void configure(Map props) {
+	public void configure(Map<String, Object> props) {
 		// Get the configurator files (if available)
 		final String jaxpFile = (String) props.get( Environment.PROXOOL_XML );
 		final String propFile = (String) props.get( Environment.PROXOOL_PROPERTIES );

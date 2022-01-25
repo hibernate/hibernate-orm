@@ -64,7 +64,6 @@ public class SchemaUpdate {
 		execute( targetTypes, metadata, ( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry() );
 	}
 
-	@SuppressWarnings("unchecked")
 	public void execute(EnumSet<TargetType> targetTypes, Metadata metadata, ServiceRegistry serviceRegistry) {
 		if ( targetTypes.isEmpty() ) {
 			LOG.debug( "Skipping SchemaExport as no targets were specified" );
@@ -74,7 +73,7 @@ public class SchemaUpdate {
 		exceptions.clear();
 		LOG.runningHbm2ddlSchemaUpdate();
 
-		Map config = new HashMap( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
+		Map<String,Object> config = new HashMap<>( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
 		config.put( AvailableSettings.HBM2DDL_DELIMITER, delimiter );
 		config.put( AvailableSettings.FORMAT_SQL, format );
 
@@ -106,7 +105,7 @@ public class SchemaUpdate {
 	 *
 	 * @return A List containing the Exceptions occurred during the export
 	 */
-	public List getExceptions() {
+	public List<Exception> getExceptions() {
 		return exceptions;
 	}
 
@@ -189,8 +188,7 @@ public class SchemaUpdate {
 		return ssrBuilder.build();
 	}
 
-	private static MetadataImplementor buildMetadata(CommandLineArgs parsedArgs, ServiceRegistry serviceRegistry)
-			throws Exception {
+	private static MetadataImplementor buildMetadata(CommandLineArgs parsedArgs, ServiceRegistry serviceRegistry) {
 		final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
 
 		for ( String filename : parsedArgs.hbmXmlFiles ) {

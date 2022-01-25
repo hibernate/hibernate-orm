@@ -20,7 +20,7 @@ public final class DefaultSessionFactoryBuilderInitiator implements StandardServ
 	}
 
 	@Override
-	public SessionFactoryBuilderService initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public SessionFactoryBuilderService initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		return DefaultSessionFactoryBuilderService.INSTANCE;
 	}
 

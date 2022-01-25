@@ -643,7 +643,7 @@ public class TransactionUtil {
 	 * @param consumer {@link Statement} callback to execute statements in auto-commit mode
 	 * @param settings Settings to build a new {@link ServiceRegistry}
 	 */
-	public static void doInAutoCommit(Consumer<Statement> consumer, Map settings) {
+	public static void doInAutoCommit(Consumer<Statement> consumer, Map<String,Object> settings) {
 		StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
 		if ( settings != null ) {
 			ssrb.applySettings( settings );
@@ -688,7 +688,7 @@ public class TransactionUtil {
 	 * @param settings Settings to build a new {@link ServiceRegistry}
 	 * @param statements statements to be executed in auto-commit mode
 	 */
-	public static void doInAutoCommit(Map settings, String... statements) {
+	public static void doInAutoCommit(Map<String,Object> settings, String... statements) {
 		doInAutoCommit( s -> {
 			for ( String statement : statements ) {
 				try {

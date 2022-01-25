@@ -27,14 +27,13 @@ public class PersisterClassResolverInitiator implements StandardServiceInitiator
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
-	public PersisterClassResolver initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public PersisterClassResolver initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final Object customImpl = configurationValues.get( IMPL_NAME );
 		if ( customImpl == null ) {
 			return new StandardPersisterClassResolver();
 		}
 
-		if ( PersisterClassResolver.class.isInstance( customImpl ) ) {
+		if ( customImpl instanceof PersisterClassResolver ) {
 			return (PersisterClassResolver) customImpl;
 		}
 

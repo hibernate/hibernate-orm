@@ -32,8 +32,7 @@ import static org.junit.Assert.fail;
 @RequiresDialect(H2Dialect.class)
 public class ThreadLocalCurrentSessionTest extends ConnectionManagementTestCase {
 	@Override
-	@SuppressWarnings("unchecked")
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		super.addSettings( settings );
 
 		settings.put( Environment.CURRENT_SESSION_CONTEXT_CLASS, TestableThreadLocalContext.class.getName() );

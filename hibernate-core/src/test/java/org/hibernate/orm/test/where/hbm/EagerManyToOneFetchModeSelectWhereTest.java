@@ -28,7 +28,7 @@ import static org.junit.Assert.assertSame;
 public class EagerManyToOneFetchModeSelectWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		settings.put( AvailableSettings.CREATE_EMPTY_COMPOSITES_ENABLED, true );
 	}
 

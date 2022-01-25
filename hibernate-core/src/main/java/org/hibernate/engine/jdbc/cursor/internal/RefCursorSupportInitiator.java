@@ -24,7 +24,7 @@ public class RefCursorSupportInitiator implements StandardServiceInitiator<RefCu
 	public static final RefCursorSupportInitiator INSTANCE = new RefCursorSupportInitiator();
 
 	@Override
-	public RefCursorSupport initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public RefCursorSupport initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		return new StandardRefCursorSupport();
 	}
 

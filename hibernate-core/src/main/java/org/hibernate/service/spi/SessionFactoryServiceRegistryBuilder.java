@@ -12,8 +12,7 @@ import org.hibernate.service.Service;
  * @author Steve Ebersole
  */
 public interface SessionFactoryServiceRegistryBuilder {
-	SessionFactoryServiceRegistryBuilder addInitiator(SessionFactoryServiceInitiator initiator);
+	SessionFactoryServiceRegistryBuilder addInitiator(SessionFactoryServiceInitiator<?> initiator);
 
-	@SuppressWarnings( {"unchecked"})
-	SessionFactoryServiceRegistryBuilder addService(Class serviceRole, Service service);
+	<R extends Service> SessionFactoryServiceRegistryBuilder addService(Class<R> serviceRole, R service);
 }

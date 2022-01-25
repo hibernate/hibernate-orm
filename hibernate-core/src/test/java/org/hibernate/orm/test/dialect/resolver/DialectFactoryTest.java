@@ -61,7 +61,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 
 	@Test
 	public void testExplicitShortNameUse() {
-		final Map<String, String> configValues = new HashMap<String, String>();
+		final Map<String, Object> configValues = new HashMap<>();
 
 		configValues.put( Environment.DIALECT, "H2" );
 		assertEquals( H2Dialect.class, dialectFactory.buildDialect( configValues, null ).getClass() );
@@ -72,7 +72,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 
 	@Test
 	public void testExplicitlySuppliedDialectClassName() {
-		final Map<String, String> configValues = new HashMap<String, String>();
+		final Map<String, Object> configValues = new HashMap<>();
 
 		configValues.put( Environment.DIALECT, "org.hibernate.dialect.HSQLDialect" );
 		assertEquals( HSQLDialect.class, dialectFactory.buildDialect( configValues, null ).getClass() );
@@ -98,17 +98,17 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBuildDialectByProperties() {
-		Properties props = new Properties();
 
 		try {
-			dialectFactory.buildDialect( props, null );
+			dialectFactory.buildDialect( new HashMap<>(), null );
 			fail();
 		}
 		catch ( HibernateException e ) {
 			assertNull( e.getCause() );
 		}
 
-		props.setProperty( Environment.DIALECT, "org.hibernate.dialect.HSQLDialect" );
+		Map<String,Object> props = new HashMap<>();
+		props.put( Environment.DIALECT, "org.hibernate.dialect.HSQLDialect" );
 		assertEquals( HSQLDialect.class, dialectFactory.buildDialect( props, null ).getClass() );
 	}
 
@@ -242,7 +242,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 			DialectResolver resolver) {
 		dialectFactory.setDialectResolver( resolver );
 		Dialect resolved = dialectFactory.buildDialect(
-				new Properties(),
+				new HashMap<>(),
 				new DialectResolutionInfoSource() {
 					@Override
 					public DialectResolutionInfo getDialectResolutionInfo() {

@@ -8,7 +8,6 @@ package org.hibernate.engine.jdbc.internal;
 
 import java.util.Map;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
@@ -45,7 +44,7 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 	}
 
 	@Override
-	public void configure(Map configValues) {
+	public void configure(Map<String, Object> configValues) {
 		this.jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 		assert jdbcEnvironment != null : "JdbcEnvironment was not found!";
 

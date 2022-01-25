@@ -27,7 +27,7 @@ public class PropertyAccessStrategyResolverInitiator implements StandardServiceI
 	}
 
 	@Override
-	public PropertyAccessStrategyResolver initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public PropertyAccessStrategyResolver initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		return new PropertyAccessStrategyResolverStandardImpl( registry );
 	}
 }

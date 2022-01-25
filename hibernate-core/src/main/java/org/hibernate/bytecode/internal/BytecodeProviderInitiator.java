@@ -21,7 +21,7 @@ public final class BytecodeProviderInitiator implements StandardServiceInitiator
 	public static final StandardServiceInitiator<BytecodeProvider> INSTANCE = new BytecodeProviderInitiator();
 
 	@Override
-	public BytecodeProvider initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public BytecodeProvider initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		// TODO in 6 this will no longer use Environment, which is configured via global environment variables,
 		// but move to a component which can be reconfigured differently in each registry.
 		return Environment.getBytecodeProvider();

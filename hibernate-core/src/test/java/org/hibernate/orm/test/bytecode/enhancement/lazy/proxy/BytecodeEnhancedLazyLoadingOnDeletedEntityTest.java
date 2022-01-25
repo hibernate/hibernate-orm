@@ -43,7 +43,7 @@ public class BytecodeEnhancedLazyLoadingOnDeletedEntityTest
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		super.addSettings( settings );
 		settings.put( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
 	}

@@ -21,7 +21,7 @@ public class JCacheConfigUrlTest
 		extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		settings.put( Environment.CACHE_REGION_FACTORY, "jcache" );
 		settings.put(
 				ConfigSettings.CONFIG_URI,

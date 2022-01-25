@@ -56,7 +56,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		CONNECTION_PROVIDER.setConnectionProvider( (ConnectionProvider) settings.get( AvailableSettings.CONNECTION_PROVIDER ) );
 		settings.put( AvailableSettings.CONNECTION_PROVIDER, CONNECTION_PROVIDER );
 	}

@@ -71,7 +71,7 @@ public class PreUpdateCustomEntityDirtinessStrategyTest
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		settings.put( AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY, DefaultCustomEntityDirtinessStrategy.INSTANCE );
 	}
 

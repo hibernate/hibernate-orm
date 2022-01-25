@@ -173,7 +173,7 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 		final BootstrapServiceRegistry bsr = bsrb.build();
 		afterBootstrapServiceRegistryBuilt( bsr );
 
-		final Map settings = new HashMap();
+		final Map<String,Object> settings = new HashMap<>();
 		settings.put( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		settings.put( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER ) ) {
@@ -191,7 +191,7 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 		return ssrb;
 	}
 
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 	}
 
 	/**

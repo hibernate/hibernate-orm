@@ -7,7 +7,7 @@
 package org.hibernate.resource.beans.spi;
 
 /**
- * ManagedBean implementation for cases where we have been handed an actual
+ * {@link ManagedBean} implementation for cases where we have been handed an actual
  * instance to use.
  *
  * @author Steve Ebersole

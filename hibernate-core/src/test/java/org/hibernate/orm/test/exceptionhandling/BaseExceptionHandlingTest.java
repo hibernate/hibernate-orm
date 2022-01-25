@@ -34,5 +34,5 @@ public abstract class BaseExceptionHandlingTest extends BaseJpaOrNativeBootstrap
 	}
 
 	@Override
-	protected void configure(Map<Object, Object> properties) {}
+	protected void configure(Map<String, Object> properties) {}
 }

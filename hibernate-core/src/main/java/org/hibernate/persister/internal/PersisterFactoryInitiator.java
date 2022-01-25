@@ -28,18 +28,18 @@ public class PersisterFactoryInitiator implements StandardServiceInitiator<Persi
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
-	public PersisterFactory initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public PersisterFactory initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final Object customImpl = configurationValues.get( IMPL_NAME );
 		if ( customImpl == null ) {
 			return new PersisterFactoryImpl();
 		}
 
-		if ( PersisterFactory.class.isInstance( customImpl ) ) {
+		if ( customImpl instanceof PersisterFactory ) {
 			return (PersisterFactory) customImpl;
 		}
 
-		final Class<? extends PersisterFactory> customImplClass = Class.class.isInstance( customImpl )
+		@SuppressWarnings("unchecked")
+		final Class<? extends PersisterFactory> customImplClass = customImpl instanceof Class
 				? ( Class<? extends PersisterFactory> ) customImpl
 				: locate( registry, customImpl.toString() );
 		try {

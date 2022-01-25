@@ -21,6 +21,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
@@ -67,11 +68,10 @@ public class C3P0ConnectionProvider
 	private ServiceRegistryImplementor serviceRegistry;
 
 	@Override
-	@SuppressWarnings("UnnecessaryUnboxing")
 	public Connection getConnection() throws SQLException {
 		final Connection c = ds.getConnection();
-		if ( isolation != null && !isolation.equals( c.getTransactionIsolation() ) ) {
-			c.setTransactionIsolation( isolation.intValue() );
+		if ( isolation != null && isolation != c.getTransactionIsolation() ) {
+			c.setTransactionIsolation( isolation );
 		}
 		if ( c.getAutoCommit() != autocommit ) {
 			c.setAutoCommit( autocommit );
@@ -85,7 +85,7 @@ public class C3P0ConnectionProvider
 	}
 
 	@Override
-	public boolean isUnwrappableAs(Class unwrapType) {
+	public boolean isUnwrappableAs(Class<?> unwrapType) {
 		return ConnectionProvider.class.equals( unwrapType ) ||
 				C3P0ConnectionProvider.class.isAssignableFrom( unwrapType ) ||
 				DataSource.class.isAssignableFrom( unwrapType );
@@ -107,8 +107,7 @@ public class C3P0ConnectionProvider
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
-	public void configure(Map props) {
+	public void configure(Map<String, Object> props) {
 		final String jdbcDriverClass = (String) props.get( Environment.DRIVER );
 		final String jdbcUrl = (String) props.get( Environment.URL );
 		final Properties connectionProps = ConnectionProviderInitiator.getConnectionProperties( props );
@@ -145,11 +144,7 @@ public class C3P0ConnectionProvider
 
 			// turn hibernate.c3p0.* into c3p0.*, so c3p0
 			// gets a chance to see all hibernate.c3p0.*
-			for ( Object o : props.keySet() ) {
-				if ( !String.class.isInstance( o ) ) {
-					continue;
-				}
-				final String key = (String) o;
+			for ( String key : props.keySet() ) {
 				if ( key.startsWith( "hibernate.c3p0." ) ) {
 					final String newKey = key.substring( 15 );
 					if ( props.containsKey( newKey ) ) {
@@ -185,9 +180,9 @@ public class C3P0ConnectionProvider
 
 			final DataSource unpooled = DataSources.unpooledDataSource( jdbcUrl, connectionProps );
 
-			final Map allProps = new HashMap();
+			final Map<String,Object> allProps = new HashMap<>();
 			allProps.putAll( props );
-			allProps.putAll( c3props );
+			allProps.putAll( PropertiesHelper.map(c3props) );
 
 			ds = DataSources.pooledDataSource( unpooled, allProps );
 		}
@@ -208,7 +203,7 @@ public class C3P0ConnectionProvider
 	private void setOverwriteProperty(
 			String hibernateStyleKey,
 			String c3p0StyleKey,
-			Map hibp,
+			Map<String,Object> hibp,
 			Properties c3p,
 			Integer value) {
 		if ( value != null ) {

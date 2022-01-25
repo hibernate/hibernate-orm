@@ -17,8 +17,7 @@ import org.hibernate.cfg.AvailableSettings;
 public final class TestingJtaBootstrap {
 	public static final TestingJtaBootstrap INSTANCE = new TestingJtaBootstrap();
 
-	@SuppressWarnings("unchecked")
-	public static void prepare(Map configValues) {
+	public static void prepare(Map<String,Object> configValues) {
 		configValues.put( AvailableSettings.JTA_PLATFORM, TestingJtaPlatformImpl.INSTANCE );
 		configValues.put( AvailableSettings.CONNECTION_PROVIDER, JtaAwareConnectionProviderImpl.class.getName() );
 		configValues.put( "javax.persistence.transactionType", "JTA" );

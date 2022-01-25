@@ -125,7 +125,7 @@ public class Helper {
 		}
 	}
 
-	public static boolean interpretNamespaceHandling(Map configurationValues) {
+	public static boolean interpretNamespaceHandling(Map<String,Object> configurationValues) {
 		//Print a warning if multiple conflicting properties are being set:
 		int count = 0;
 		if ( configurationValues.containsKey( AvailableSettings.HBM2DDL_CREATE_SCHEMAS ) ) {
@@ -158,7 +158,7 @@ public class Helper {
 		);
 	}
 
-	public static boolean interpretFormattingEnabled(Map configurationValues) {
+	public static boolean interpretFormattingEnabled(Map<String,Object> configurationValues) {
 		return ConfigurationHelper.getBoolean(
 				AvailableSettings.FORMAT_SQL,
 				configurationValues,

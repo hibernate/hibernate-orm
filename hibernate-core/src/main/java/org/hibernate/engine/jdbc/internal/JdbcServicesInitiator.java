@@ -31,7 +31,7 @@ public class JdbcServicesInitiator implements StandardServiceInitiator<JdbcServi
 	}
 
 	@Override
-	public JdbcServices initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public JdbcServices initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		return new JdbcServicesImpl();
 	}
 }

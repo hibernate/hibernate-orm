@@ -574,7 +574,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		super.addSettings( settings );
 		// needed for `#testListWithBagSemanticAndOrderBy`
 		settings.put( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );

@@ -18,7 +18,7 @@ import org.hibernate.testing.TestForIssue;
 @TestForIssue( jiraKey = "HHH-13817" )
 public class AssociationRevisionsOfEntitiesQueryStoreAtDeletionTest extends AssociationRevisionsOfEntitiesQueryTest {
     @Override
-    protected void addSettings(Map settings) {
+    protected void addSettings(Map<String,Object> settings) {
         super.addSettings( settings );
         settings.put( EnversSettings.STORE_DATA_AT_DELETE, true );
     }

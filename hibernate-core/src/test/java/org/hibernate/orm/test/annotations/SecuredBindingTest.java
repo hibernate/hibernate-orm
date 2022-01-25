@@ -27,7 +27,7 @@ public class SecuredBindingTest {
 
 
      @Test
-	public void testConfigurationMethods() throws Exception {
+	public void testConfigurationMethods() {
 		Configuration ac = new Configuration();
 		Properties p = new Properties();
 		p.put( Environment.DIALECT, "org.hibernate.dialect.HSQLDialect" );

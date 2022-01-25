@@ -29,6 +29,7 @@ import org.hibernate.tuple.DynamicMapInstantiator;
  * @author Steve Ebersole
  * @author Gavin King
  */
+@Deprecated(since = "6.0")
 public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DynamicMapEntityTuplizer.class );
 

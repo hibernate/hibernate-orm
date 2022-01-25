@@ -34,6 +34,7 @@ import org.hibernate.type.CompositeType;
  * @author Steve Ebersole
  * @author Gavin King
  */
+@Deprecated(since = "6.0")
 public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PojoEntityTuplizer.class );
 

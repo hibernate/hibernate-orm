@@ -21,6 +21,7 @@ import org.hibernate.metamodel.RepresentationMode;
  *
  * @author Steve Ebersole
  */
+@Deprecated(since = "6.0")
 public class EntityTuplizerFactory implements Serializable {
 	public static final Class<?>[] ENTITY_TUP_CTOR_SIG = new Class[] { EntityMetamodel.class, PersistentClass.class };
 

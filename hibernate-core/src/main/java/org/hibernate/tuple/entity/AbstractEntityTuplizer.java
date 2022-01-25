@@ -31,6 +31,7 @@ import org.hibernate.type.ComponentType;
  * @author Steve Ebersole
  * @author Gavin King
  */
+@Deprecated(since = "6.0")
 public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 	private final EntityMetamodel entityMetamodel;

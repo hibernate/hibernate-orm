@@ -128,14 +128,10 @@ public interface SessionFactoryImplementor
 
 	void addObserver(SessionFactoryObserver observer);
 
-	/**
-	 * @todo make a Service ?
-	 */
+	//todo make a Service ?
 	CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy();
 
-	/**
-	 * @todo make a Service ?
-	 */
+	//todo make a Service ?
 	CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver();
 
 	/**

@@ -14,7 +14,7 @@ import org.hibernate.bytecode.enhance.spi.CollectionTracker;
  * <p/>
  * Entity classes are free to implement this contract themselves.  This contract is
  * also introduced into the entity when using bytecode enhancement and requesting
- * that entities track there own dirtiness.
+ * that entities track their own dirtiness.
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */

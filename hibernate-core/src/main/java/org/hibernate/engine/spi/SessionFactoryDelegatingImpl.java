@@ -60,7 +60,6 @@ import jakarta.persistence.SynchronizationType;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings({"deprecation", "unused"})
 public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, SessionFactory {
 	private final SessionFactoryImplementor delegate;
 
@@ -107,17 +106,17 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.openStatelessSession( connection );
 	}
 
-	@Override
+	@Override @Deprecated
 	public ClassMetadata getClassMetadata(@SuppressWarnings("rawtypes") Class entityClass) {
 		return delegate.getClassMetadata( entityClass );
 	}
 
-	@Override
+	@Override @Deprecated
 	public ClassMetadata getClassMetadata(String entityName) {
 		return delegate.getClassMetadata( entityName );
 	}
 
-	@Override
+	@Override @Deprecated
 	public CollectionMetadata getCollectionMetadata(String roleName) {
 		return delegate.getCollectionMetadata( roleName );
 	}
@@ -367,7 +366,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.getCriteriaBuilder();
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public MetamodelImplementor getMetamodel() {
 		return delegate.getMetamodel();
 	}

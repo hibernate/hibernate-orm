@@ -66,11 +66,6 @@ public final class TypedValue implements Serializable {
 	}
 
 	private void initTransients() {
-		this.hashcode = new ValueHolder<>( new ValueHolder.DeferredInitializer<Integer>() {
-			@Override
-			public Integer initialize() {
-				return value == null ? 0 : type.getHashCode( value );
-			}
-		} );
+		this.hashcode = new ValueHolder<>( () -> value == null ? 0 : type.getHashCode( value ) );
 	}
 }

@@ -7,8 +7,8 @@
 package org.hibernate.engine.spi;
 
 /**
- * For persistence operations (INSERT, UPDATE, DELETE) what style of determining
- * results (success/failure) is to be used.
+ * For persistence operations (INSERT, UPDATE, DELETE) what style of
+ * determining results (success/failure) is to be used.
  *
  * @author Steve Ebersole
  */
@@ -22,7 +22,7 @@ public enum ExecuteUpdateResultCheckStyle {
 	NONE( "none" ),
 
 	/**
-	 * Perform row-count checking.  Row counts are the int values returned by both
+	 * Perform row count checking.  Row counts are the int values returned by both
 	 * {@link java.sql.PreparedStatement#executeUpdate()} and
 	 * {@link java.sql.Statement#executeBatch()}.  These values are checked
 	 * against some expected count.
@@ -39,7 +39,7 @@ public enum ExecuteUpdateResultCheckStyle {
 
 	private final String name;
 
-	private ExecuteUpdateResultCheckStyle(String name) {
+	ExecuteUpdateResultCheckStyle(String name) {
 		this.name = name;
 	}
 

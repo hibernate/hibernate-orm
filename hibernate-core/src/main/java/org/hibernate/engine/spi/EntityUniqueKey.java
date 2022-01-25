@@ -18,7 +18,7 @@ import org.hibernate.type.Type;
  * Used to uniquely key an entity instance in relation to a particular session
  * by some unique property reference, as opposed to identifier.
  * <p/>
- * Uniqueing information consists of the entity-name, the referenced
+ * Uniqueing information consists of the entity name, the referenced
  * property name, and the referenced property value.
  *
  * @author Gavin King

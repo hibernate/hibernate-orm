@@ -9,8 +9,8 @@ package org.hibernate.engine.spi;
 import org.hibernate.SessionBuilder;
 
 /**
- * Defines the internal contract between the {@code SessionBuilder} and other parts of
- * Hibernate..
+ * Defines the internal contract between the {@link SessionBuilder} and
+ * other parts of Hibernate.
  *
  * @see SessionBuilder
  *

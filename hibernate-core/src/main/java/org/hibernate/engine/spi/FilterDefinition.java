@@ -16,8 +16,9 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 /**
  * Represents the definition of a {@link org.hibernate.Filter filter}.
  * This information includes the {@linkplain #filterName name} of the
- * filter, along with the {@linkplain #parameterTypes name and type}
- * of every parameter of the filter. A filter may optionally have a
+ * filter, along with the {@linkplain #getParameterJdbcMapping(String)
+ * names} and {@linkplain #getParameterJdbcMapping(String) types} of
+ * every parameter of the filter. A filter may optionally have a
  * {@linkplain #defaultFilterCondition default condition}.
  *
  * @see org.hibernate.annotations.FilterDef

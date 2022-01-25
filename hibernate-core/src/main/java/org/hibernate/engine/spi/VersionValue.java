@@ -30,7 +30,7 @@ public class VersionValue implements UnsavedValueStrategy {
 	 */
 	public static final VersionValue NULL = new VersionValue() {
 		@Override
-		public final Boolean isUnsaved(Object version) {
+		public Boolean isUnsaved(Object version) {
 			LOG.trace( "Version unsaved-value strategy NULL" );
 			return version == null;
 		}
@@ -52,7 +52,7 @@ public class VersionValue implements UnsavedValueStrategy {
 	 */
 	public static final VersionValue UNDEFINED = new VersionValue() {
 		@Override
-		public final Boolean isUnsaved(Object version) {
+		public Boolean isUnsaved(Object version) {
 			LOG.trace( "Version unsaved-value strategy UNDEFINED" );
 			return version == null ? Boolean.TRUE : null;
 		}
@@ -75,7 +75,7 @@ public class VersionValue implements UnsavedValueStrategy {
 	public static final VersionValue NEGATIVE = new VersionValue() {
 
 		@Override
-		public final Boolean isUnsaved(Object version) throws MappingException {
+		public Boolean isUnsaved(Object version) throws MappingException {
 			LOG.trace( "Version unsaved-value strategy NEGATIVE" );
 			if ( version == null ) {
 				return Boolean.TRUE;

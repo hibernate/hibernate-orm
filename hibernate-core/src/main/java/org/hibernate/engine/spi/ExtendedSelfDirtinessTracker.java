@@ -11,8 +11,9 @@ import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterc
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 
 /**
- * A self dirtiness tracker that declares additional methods that are intended for internal communication. This
- * interface can be implemented optionally instead of the plain {@link SelfDirtinessTracker}.
+ * A self dirtiness tracker that declares additional methods that are intended for
+ * internal communication. This interface can be implemented optionally instead of
+ * the plain {@link SelfDirtinessTracker}.
  */
 public interface ExtendedSelfDirtinessTracker extends SelfDirtinessTracker {
 

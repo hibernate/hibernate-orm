@@ -26,9 +26,9 @@ public interface ExceptionConverter {
 	RuntimeException convertCommitException(RuntimeException e);
 
 	/**
-	 * Converts a Hibernate-specific exception into a JPA-specified exception; note that the JPA specification makes use
-	 * of exceptions outside its exception hierarchy, though they are all runtime exceptions.
-	 * <p/>
+	 * Converts a Hibernate-specific exception into a JPA-specified exception;
+	 * note that the JPA specification makes use of exceptions outside its
+	 * exception hierarchy, though they are all runtime exceptions.
 	 *
 	 * @param e The Hibernate exception.
 	 * @param lockOptions The lock options in effect at the time of exception (can be null)
@@ -38,9 +38,9 @@ public interface ExceptionConverter {
 	RuntimeException convert(HibernateException e, LockOptions lockOptions);
 
 	/**
-	 * Converts a Hibernate-specific exception into a JPA-specified exception; note that the JPA specification makes use
-	 * of exceptions outside its exception hierarchy, though they are all runtime exceptions.
-	 * <p/>
+	 * Converts a Hibernate-specific exception into a JPA-specified exception;
+	 * note that the JPA specification makes use of exceptions outside its
+	 * exception hierarchy, though they are all runtime exceptions.
 	 *
 	 * @param e The Hibernate exception.
 	 *

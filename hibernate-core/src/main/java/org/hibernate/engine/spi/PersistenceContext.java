@@ -741,7 +741,6 @@ public interface PersistenceContext {
 
 	/**
 	 * Registers an {@link EntityKey} as nullifiable on this {@link PersistenceContext}.
-	 * @param key
 	 */
 	void registerNullifiableEntityKey(EntityKey key);
 
@@ -772,8 +771,7 @@ public interface PersistenceContext {
 
 	/**
 	 * Adds a collection in the collections-by-key map.
-	 * @param collectionKey
-	 * @param persistentCollection
+	 *
 	 * @return the previous collection, it the key was already mapped.
 	 */
 	PersistentCollection<?> addCollectionByKey(CollectionKey collectionKey, PersistentCollection<?> persistentCollection);

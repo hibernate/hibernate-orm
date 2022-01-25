@@ -3,6 +3,19 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.6.5.Final (January 25, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32029
+
+** Bug
+    * [HHH-15044] - Revert HHH-14826 fix because the provided test was wrong
+    * [HHH-15041] - H2Dialect does not work properly with h2 2.0.202 due to new DDL type requirements
+    * [HHH-15014] - H2Dialect does not work properly with h2 2.0.202 on sub selects with tuples
+    * [HHH-15009] - H2Dialect does not work properly with h2 2.0.202 and updating schema 
+    * [HHH-14985] - H2Dialect does not work properly with h2 2.0.202 on inserts
+
+
 Changes in 5.6.4.Final (January 19, 2022)
 ------------------------------------------------------------------------------------------------------------------------
 

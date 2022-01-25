@@ -6,24 +6,44 @@
  */
 package org.hibernate.exception.internal;
 
-import java.sql.SQLException;
-import java.util.ArrayList;
-
 import org.hibernate.JDBCException;
 import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
+ * A {@link SQLExceptionConverter} that delegates to a chain of
+ * {@link SQLExceptionConversionDelegate}.
+ *
  * @author Steve Ebersole
  */
 public class StandardSQLExceptionConverter implements SQLExceptionConverter {
 
-	private final ArrayList<SQLExceptionConversionDelegate> delegates = new ArrayList<>();
+	private final List<SQLExceptionConversionDelegate> delegates;
 
-	public StandardSQLExceptionConverter() {
+	public StandardSQLExceptionConverter(SQLExceptionConversionDelegate... delegates) {
+		this.delegates = Arrays.asList(delegates);
 	}
 
+	/**
+	 * @deprecated use {@link #StandardSQLExceptionConverter(SQLExceptionConversionDelegate...)}
+	 */
+	@Deprecated(since = "6.0")
+	public StandardSQLExceptionConverter() {
+		delegates = new ArrayList<>();
+	}
+
+	/**
+	 * Add a delegate.
+	 *
+	 * @deprecated use {@link #StandardSQLExceptionConverter(SQLExceptionConversionDelegate...)}
+	 */
+	@Deprecated(since = "6.0")
 	public void addDelegate(SQLExceptionConversionDelegate delegate) {
 		if ( delegate != null ) {
 			this.delegates.add( delegate );

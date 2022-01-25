@@ -10,15 +10,15 @@ import java.sql.SQLException;
 import java.util.function.Function;
 
 /**
- * Knows how to extract a violated constraint name from an error message based on the
- * fact that the constraint name is templated within the message.
+ * Extracts a violated database constraint name from an error message
+ * by matching the error message against a template.
  *
  * @author Steve Ebersole
  * @author Brett Meyer
  */
 public class TemplatedViolatedConstraintNameExtractor implements ViolatedConstraintNameExtractor {
 
-	private Function<SQLException,String> extractConstraintName;
+	private final Function<SQLException,String> extractConstraintName;
 
 	public TemplatedViolatedConstraintNameExtractor(Function<SQLException,String> extractConstraintName) {
 		this.extractConstraintName = extractConstraintName;
@@ -49,7 +49,8 @@ public class TemplatedViolatedConstraintNameExtractor implements ViolatedConstra
 	}
 
 	/**
-	 * Extracts the constraint name based on a template (i.e., <i>templateStart</i><b>constraintName</b><i>templateEnd</i>).
+	 * Extracts the constraint name based on a template of form
+	 * <i>templateStart</i><b>constraintName</b><i>templateEnd</i>.
 	 *
 	 * @param templateStart The pattern denoting the start of the constraint name within the message.
 	 * @param templateEnd   The pattern denoting the end of the constraint name within the message.

@@ -9,8 +9,9 @@ package org.hibernate.engine.jdbc.dialect.spi;
 import java.sql.SQLException;
 
 import org.hibernate.JDBCException;
-import org.hibernate.exception.internal.SQLStateConverter;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
+import org.hibernate.exception.internal.SQLStateConversionDelegate;
+import org.hibernate.exception.internal.StandardSQLExceptionConverter;
+import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
@@ -34,7 +35,9 @@ public class BasicSQLExceptionConverter {
 	 */
 	public static final String MSG = LOG.unableToQueryDatabaseMetadata();
 
-	private static final SQLStateConverter CONVERTER = new SQLStateConverter( sqle ->"???" );
+	private static final SQLExceptionConverter CONVERTER = new StandardSQLExceptionConverter(
+			new SQLStateConversionDelegate(() -> sqle ->"???" )
+	);
 
 	/**
 	 * Perform a conversion.

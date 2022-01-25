@@ -14,9 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.JDBCException;
-import org.hibernate.exception.internal.SQLStateConverter;
+import org.hibernate.exception.internal.SQLStateConversionDelegate;
+import org.hibernate.exception.internal.StandardSQLExceptionConverter;
 import org.hibernate.exception.spi.SQLExceptionConverter;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 
@@ -38,7 +38,9 @@ public class SqlExceptionHelper {
 	private static final String DEFAULT_WARNING_MSG = "SQL Warning";
 	private final boolean logWarnings;
 
-	private static final SQLExceptionConverter DEFAULT_CONVERTER = new SQLStateConverter( e -> null );
+	private static final SQLExceptionConverter DEFAULT_CONVERTER = new StandardSQLExceptionConverter(
+			new SQLStateConversionDelegate( () -> e -> null )
+	);
 
 	private SQLExceptionConverter sqlExceptionConverter;
 
@@ -76,7 +78,7 @@ public class SqlExceptionHelper {
 	 * @param sqlExceptionConverter The converter to use.
 	 */
 	public void setSqlExceptionConverter(SQLExceptionConverter sqlExceptionConverter) {
-		this.sqlExceptionConverter = ( sqlExceptionConverter == null ? DEFAULT_CONVERTER : sqlExceptionConverter );
+		this.sqlExceptionConverter = sqlExceptionConverter == null ? DEFAULT_CONVERTER : sqlExceptionConverter;
 	}
 
 	// SQLException ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

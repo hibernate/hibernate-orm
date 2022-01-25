@@ -29,8 +29,9 @@ import org.hibernate.exception.spi.AbstractSQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.ConversionContext;
 
 /**
- * {@link org.hibernate.exception.spi.SQLExceptionConverter} implementation that does conversion based on the
- * JDBC 4 defined {@link SQLException} sub-type hierarchy.
+ * A {@link org.hibernate.exception.spi.SQLExceptionConverter} implementation
+ * that does conversion based on the {@link SQLException} subtype hierarchy
+ * defined by JDBC 4.
  *
  * @author Steve Ebersole
  */
@@ -41,17 +42,17 @@ public class SQLExceptionTypeDelegate extends AbstractSQLExceptionConversionDele
 
 	@Override
 	public JDBCException convert(SQLException sqlException, String message, String sql) {
-		if ( SQLClientInfoException.class.isInstance( sqlException )
-				|| SQLInvalidAuthorizationSpecException.class.isInstance( sqlException )
-				|| SQLNonTransientConnectionException.class.isInstance( sqlException )
-				|| SQLTransientConnectionException.class.isInstance( sqlException ) ) {
+		if ( sqlException instanceof SQLClientInfoException
+				|| sqlException instanceof SQLInvalidAuthorizationSpecException
+				|| sqlException instanceof SQLNonTransientConnectionException
+				|| sqlException instanceof SQLTransientConnectionException ) {
 			return new JDBCConnectionException( message, sqlException, sql );
 		}
-		else if ( DataTruncation.class.isInstance( sqlException ) ||
-				SQLDataException.class.isInstance( sqlException ) ) {
+		else if ( sqlException instanceof DataTruncation ||
+				sqlException instanceof SQLDataException ) {
 			throw new DataException( message, sqlException, sql );
 		}
-		else if ( SQLIntegrityConstraintViolationException.class.isInstance( sqlException ) ) {
+		else if ( sqlException instanceof SQLIntegrityConstraintViolationException ) {
 			return new ConstraintViolationException(
 					message,
 					sqlException,
@@ -59,13 +60,13 @@ public class SQLExceptionTypeDelegate extends AbstractSQLExceptionConversionDele
 					getConversionContext().getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
 			);
 		}
-		else if ( SQLSyntaxErrorException.class.isInstance( sqlException ) ) {
+		else if ( sqlException instanceof SQLSyntaxErrorException ) {
 			return new SQLGrammarException( message, sqlException, sql );
 		}
-		else if ( SQLTimeoutException.class.isInstance( sqlException ) ) {
+		else if ( sqlException instanceof SQLTimeoutException ) {
 			return new QueryTimeoutException( message, sqlException, sql );
 		}
-		else if ( SQLTransactionRollbackException.class.isInstance( sqlException ) ) {
+		else if ( sqlException instanceof SQLTransactionRollbackException ) {
 			// Not 100% sure this is completely accurate.  The JavaDocs for SQLTransactionRollbackException state that
 			// it indicates sql states starting with '40' and that those usually indicate that:
 			//		<quote>

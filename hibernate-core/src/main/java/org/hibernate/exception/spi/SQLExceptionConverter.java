@@ -12,24 +12,21 @@ import java.sql.SQLException;
 import org.hibernate.JDBCException;
 
 /**
- * Defines a contract for implementations that know how to convert a
- * {@link SQLException} to Hibernate's {@link JDBCException} hierarchy.
- * <p/>
- * Implementations <b>must</b> have a constructor which takes a
- * {@link ViolatedConstraintNameExtractor} parameter.
- * <p/>
- * Implementations may implement {@link Configurable} if they need to
- * perform configuration steps prior to first use.
+ * An object that interprets JDBC {@link SQLException}s and converts
+ * them to subtypes of Hibernate {@link JDBCException}s.
  *
  * @author Steve Ebersole
  */
 public interface SQLExceptionConverter extends Serializable {
 	/**
-	 * Convert the given SQLException into the Hibernate {@link JDBCException} hierarchy.
+	 * Convert the given {@link SQLException} to a subtype of
+	 * {@link JDBCException}.
 	 *
-	 * @param sqlException The SQLException to be converted.
-	 * @param message      An optional error message.
-	 * @return The resulting JDBCException.
+	 * @param sqlException The {@code SQLException} to be converted
+	 * @param message An optional error message
+	 * @param sql The SQL statement that resulted in the exception
+	 *
+	 * @return The resulting {@code JDBCException}.
 	 *
 	 * @see org.hibernate.exception.ConstraintViolationException
 	 * @see org.hibernate.exception.JDBCConnectionException

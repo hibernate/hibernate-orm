@@ -11,21 +11,25 @@ import java.sql.SQLException;
 import org.hibernate.JDBCException;
 
 /**
- * Allow a {@link SQLExceptionConverter} to work by chaining together multiple such delegates.  The main
- * difference between a delegate and a full-fledged converter is that a delegate may return {@code null}.
+ * Allow a {@link SQLExceptionConverter} to work by chaining together
+ * multiple delegates. The main difference between a delegate and a
+ * full-fledged converter is that a delegate may return {@code null}.
  *
  * @author Steve Ebersole
  */
 @FunctionalInterface
 public interface SQLExceptionConversionDelegate {
 	/**
-	 * Convert the given SQLException into the Hibernate {@link JDBCException} hierarchy.
+	 * Convert the given {@link SQLException} to a subtype of
+	 * {@link JDBCException}, if possible.
 	 *
-	 * @param sqlException The SQLException to be converted.
-	 * @param message An (optional) error message.
-	 * @param sql The {@literal SQL} statement, if one, being performed when the exception occurred.
+	 * @param sqlException The {@code SQLException} to be converted
+	 * @param message An optional error message
+	 * @param sql The SQL statement that resulted in the exception
 	 *
-	 * @return The resulting JDBCException, can be {@code null}
+	 * @return The resulting {@code JDBCException}, or {@code null}
+	 *         if this delegate does not know how to interpret the
+	 *         given {@link SQLException}.
 	 */
 	JDBCException convert(SQLException sqlException, String message, String sql);
 

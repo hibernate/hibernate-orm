@@ -22,14 +22,14 @@ import org.hibernate.exception.spi.ConversionContext;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 
 /**
- * A SQLExceptionConverter implementation which performs conversion based on the underlying SQLState.
- * Interpretation of a SQL error based on SQLState is not nearly as accurate as using the ErrorCode (which is,
- * however, vendor-specific).
- *
- * SQLState codes are defined by both ANSI SQL specs and X/Open.  Some of the "classes" are shared, others are
+ * A {@link org.hibernate.exception.spi.SQLExceptionConverter} implementation which performs conversion based
+ * on the underlying SQLState. Interpretation of a SQL error based on SQLState is not nearly as accurate as
+ * using the ErrorCode (which is, however, vendor-specific).
+ * <p>
+ * SQLState codes are defined by both ANSI SQL specs and X/Open.  Some "classes" are shared, others are
  * specific to one or another, yet others are custom vendor classes.  Unfortunately I have not been able to
  * find a "blessed" list of X/Open codes.  These codes are cobbled together between ANSI SQL spec and error
- * code tables from few vendors documentation.
+ * code tables from few vendor's documentation.
  *
  * @author Steve Ebersole
  */
@@ -48,7 +48,7 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 		);
 	}
 
-	private static final Set DATA_CATEGORIES = buildDataCategories();
+	private static final Set<String> DATA_CATEGORIES = buildDataCategories();
 	private static Set<String> buildDataCategories() {
 		return Set.of(
 				"21",	// "cardinality violation"
@@ -56,7 +56,7 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 		);
 	}
 
-	private static final Set INTEGRITY_VIOLATION_CATEGORIES = buildContraintCategories();
+	private static final Set<String> INTEGRITY_VIOLATION_CATEGORIES = buildContraintCategories();
 	private static Set<String> buildContraintCategories() {
 		return Set.of(
 				"23",	// "integrity constraint violation"
@@ -65,7 +65,7 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 		);
 	}
 
-	private static final Set CONNECTION_CATEGORIES = buildConnectionCategories();
+	private static final Set<String> CONNECTION_CATEGORIES = buildConnectionCategories();
 	private static Set<String> buildConnectionCategories() {
 		return Set.of(
 				"08"	// "connection exception"

@@ -15,8 +15,10 @@ import org.hibernate.persister.collection.CollectionPersister;
 
 /**
  * If a collection is extra lazy and has queued ops, we still need to
- * process them.  Ex: OneToManyPersister needs to insert indexes for List
- * collections.  See HHH-8083.
+ * process them.
+ * <p>
+ * For example, {@link org.hibernate.persister.collection.OneToManyPersister}
+ * needs to insert indexes for lists.  See HHH-8083.
  * 
  * @author Brett Meyer
  */

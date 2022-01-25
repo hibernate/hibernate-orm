@@ -12,23 +12,25 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Acts as a stand-in for an entity identifier which is supposed to be
  * generated on insert (like an IDENTITY column) where the insert needed to
- * be delayed because we were outside a transaction when the persist
- * occurred (save currently still performs the insert).
+ * be delayed because we were outside a transaction when the persist operation
+ * was called (save currently still performs the insert).
  * <p/>
  * The stand-in is only used within the {@link org.hibernate.engine.spi.PersistenceContext}
  * in order to distinguish one instance from another; it is never injected into
- * the entity instance or returned to the client...
+ * the entity instance or returned to the client.
  *
  * @author Steve Ebersole
  * @author Sanne Grinovero
  */
-public class DelayedPostInsertIdentifier implements Serializable, Comparable<DelayedPostInsertIdentifier> {
+public class DelayedPostInsertIdentifier
+		implements Serializable, Comparable<DelayedPostInsertIdentifier> {
+
 	private static final AtomicLong SEQUENCE = new AtomicLong();
 
 	private final long identifier;
 
 	/**
-	 * Constructs a DelayedPostInsertIdentifier
+	 * Constructs a {@link DelayedPostInsertIdentifier}
 	 */
 	public DelayedPostInsertIdentifier() {
 		long value = SEQUENCE.incrementAndGet();

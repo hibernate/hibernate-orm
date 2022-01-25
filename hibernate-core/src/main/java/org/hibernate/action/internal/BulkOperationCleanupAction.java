@@ -34,13 +34,13 @@ import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
 
 /**
- * An {@link org.hibernate.engine.spi.ActionQueue} {@link Executable} for ensuring
- * shared cache cleanup in relation to performed bulk HQL queries.
+ * An {@link org.hibernate.engine.spi.ActionQueue} {@link Executable} for
+ * ensuring shared cache cleanup in relation to performed bulk HQL queries.
  * <p/>
  * NOTE: currently this executes for {@code INSERT} queries as well as
  * {@code UPDATE} and {@code DELETE} queries.  For {@code INSERT} it is
  * really not needed as we'd have no invalid entity/collection data to
- * cleanup (we'd still nee to invalidate the appropriate update-timestamps
+ * clean up (we'd still need to invalidate the appropriate update-timestamps
  * regions) as a result of this query.
  *
  * @author Steve Ebersole
@@ -112,8 +112,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	 * @param session The session to which this request is tied.
 	 * @param tableSpaces The table spaces.
 	 */
-	@SuppressWarnings( { "unchecked", "rawtypes" } )
-	public BulkOperationCleanupAction(SharedSessionContractImplementor session, Set tableSpaces) {
+	public BulkOperationCleanupAction(SharedSessionContractImplementor session, Set<String> tableSpaces) {
 		final LinkedHashSet<String> spacesList = new LinkedHashSet<>( tableSpaces );
 
 		final SessionFactoryImplementor factory = session.getFactory();

@@ -34,7 +34,6 @@ public class EntityDeleteAction extends EntityAction {
 
 	private SoftLock lock;
 
-	private final NaturalIdMapping naturalIdMapping;
 	private Object naturalIdValues;
 
 	/**
@@ -60,14 +59,15 @@ public class EntityDeleteAction extends EntityAction {
 		this.isCascadeDeleteEnabled = isCascadeDeleteEnabled;
 		this.state = state;
 
-		this.naturalIdMapping = persister.getNaturalIdMapping();
+		NaturalIdMapping naturalIdMapping = persister.getNaturalIdMapping();
 
 		if ( naturalIdMapping != null ) {
-			naturalIdValues = session.getPersistenceContextInternal().getNaturalIdResolutions().removeLocalResolution(
-					getId(),
-					naturalIdMapping.extractNaturalIdFromEntityState( state, session ),
-					getPersister()
-			);
+			naturalIdValues = session.getPersistenceContextInternal().getNaturalIdResolutions()
+					.removeLocalResolution(
+							getId(),
+							naturalIdMapping.extractNaturalIdFromEntityState( state, session ),
+							getPersister()
+					);
 		}
 	}
 

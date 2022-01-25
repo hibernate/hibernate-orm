@@ -16,8 +16,8 @@ import java.io.Serializable;
  * @author Gavin King
  */
 public final class AssociationKey implements Serializable {
-	private EntityKey ownerKey;
-	private String propertyName;
+	private final EntityKey ownerKey;
+	private final String propertyName;
 
 	/**
 	 * Constructs an AssociationKey

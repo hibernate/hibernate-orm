@@ -22,7 +22,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
  */
 public final class CollectionRemoveAction extends CollectionAction {
 	private final Object affectedOwner;
-	private boolean emptySnapshot;
+	private final boolean emptySnapshot;
 
 	/**
 	 * Removes a persistent collection from its loaded owner.

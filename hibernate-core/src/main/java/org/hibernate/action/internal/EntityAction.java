@@ -14,10 +14,7 @@ import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.FastSessionServices;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.EntityPersister;
@@ -30,7 +27,7 @@ import org.hibernate.pretty.MessageHelper;
  * @author Gavin King
  */
 public abstract class EntityAction
-		implements Executable, Serializable, Comparable, AfterTransactionCompletionProcess {
+		implements Executable, Serializable, Comparable<EntityAction>, AfterTransactionCompletionProcess {
 
 	private final String entityName;
 	private final Object id;
@@ -49,7 +46,11 @@ public abstract class EntityAction
 	 * @param instance The entity instance
 	 * @param persister The entity persister
 	 */
-	protected EntityAction(SharedSessionContractImplementor session, Object id, Object instance, EntityPersister persister) {
+	protected EntityAction(
+			SharedSessionContractImplementor session,
+			Object id,
+			Object instance,
+			EntityPersister persister) {
 		this.entityName = persister.getEntityName();
 		this.id = id;
 		this.instance = instance;
@@ -107,8 +108,8 @@ public abstract class EntityAction
 	}
 
 	public final DelayedPostInsertIdentifier getDelayedId() {
-		return DelayedPostInsertIdentifier.class.isInstance( id )
-				? DelayedPostInsertIdentifier.class.cast( id )
+		return id instanceof DelayedPostInsertIdentifier
+				? (DelayedPostInsertIdentifier) id
 				: null;
 	}
 
@@ -155,8 +156,7 @@ public abstract class EntityAction
 	}
 
 	@Override
-	public int compareTo(Object other) {
-		final EntityAction action = (EntityAction) other;
+	public int compareTo(EntityAction action) {
 		//sort first by entity name
 		final int roleComparison = entityName.compareTo( action.entityName );
 		if ( roleComparison != 0 ) {

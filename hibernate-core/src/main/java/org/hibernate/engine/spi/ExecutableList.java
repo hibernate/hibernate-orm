@@ -22,29 +22,26 @@ import org.hibernate.action.spi.Executable;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
- * Specialized encapsulating of the state pertaining to each Executable list.
- * <p/>
- * Manages sorting the executables (lazily)
- * <p/>
- * Manages the querySpaces affected by the executables in the list, and caches this too.
+ * A list of {@link Executable executeble actions}. Responsible for
+ * {@linkplain #sort() sorting} the executables, and calculating the
+ * affected {@linkplain #getQuerySpaces() query spaces}.
  *
  * @author Steve Ebersole
  * @author Anton Marsden
  *
- * @param <E> Intersection type describing Executable implementations
+ * @param <E> Intersection type describing {@link Executable} implementations
  */
-@SuppressWarnings("rawtypes")
-public class ExecutableList<E extends Executable & Comparable & Serializable> implements Serializable, Iterable<E>, Externalizable {
+public class ExecutableList<E extends Executable & Comparable<? super E> & Serializable>
+		implements Serializable, Iterable<E>, Externalizable {
 
 	public static final int INIT_QUEUE_LIST_SIZE = 5;
 
 	/**
-	 * Provides a sorting interface for ExecutableList.
+	 * Provides a sorting interface for {@link ExecutableList}.
 	 * 
 	 * @param <E>
 	 */
 	public interface Sorter<E extends Executable> {
-
 		/**
 		 * Sorts the list.
 		 */
@@ -58,22 +55,22 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	private boolean sorted;
 
 	/**
-	 * Used to hold the query spaces (table names, roughly) that all the Executable instances contained
-	 * in this list define.  This information is ultimately used to invalidate cache regions as it is
-	 * exposed from {@link #getQuerySpaces}.  This value being {@code null} indicates that the
-	 * query spaces should be calculated.
+	 * Used to hold the query spaces (table names, roughly) that all the {@link Executable}
+	 * instances contained in this list define. This information is ultimately used to
+	 * invalidate cache regions as it is exposed from {@link #getQuerySpaces}. This value
+	 * being {@code null} indicates that the query spaces should be calculated.
 	 */
 	private transient Set<Serializable> querySpaces;
 
 	/**
-	 * Creates a new ExecutableList with the default settings.
+	 * Creates a new instance with the default settings.
 	 */
 	public ExecutableList() {
 		this( INIT_QUEUE_LIST_SIZE );
 	}
 
 	/**
-	 * Creates a new ExecutableList with the specified initialCapacity.
+	 * Creates a new instance with the given initial capacity.
 	 *
 	 * @param initialCapacity The initial capacity for instantiating the internal List
 	 */
@@ -95,7 +92,7 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	}
 
 	/**
-	 * Creates a new ExecutableList using the specified Sorter.
+	 * Creates a new instance using the given {@link Sorter}.
 	 *
 	 * @param sorter The Sorter to use; may be {@code null}
 	 */
@@ -104,7 +101,7 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	}
 
 	/**
-	 * Creates a new ExecutableList with the specified initialCapacity and Sorter.
+	 * Creates a new instance with the given initial capacity and {@link Sorter}.
 	 *
 	 * @param initialCapacity The initial capacity for instantiating the internal List
 	 * @param sorter The Sorter to use; may be {@code null}
@@ -156,7 +153,7 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	 * @return the entry that was removed
 	 */
 	public E remove(int index) {
-		// removals are generally safe in regards to sorting...
+		// removals are generally safe with regard to sorting...
 
 		final E e = executables.remove( index );
 
@@ -201,7 +198,7 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	}
 
 	/**
-	 * Add an Executable to this list.
+	 * Add an {@link Executable} to this list.
 	 * 
 	 * @param executable the executable to add to the list
 	 *
@@ -235,13 +232,13 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 			Collections.addAll( this.querySpaces, querySpaces );
 		}
 
-		return added;
+		return true;
 	}
 
 	/**
-	 * Sorts the list using the natural ordering or using the Sorter if it's not null.
+	 * Sorts the list using the natural ordering or using the {@link Sorter}
+	 * if it's not null.
 	 */
-	@SuppressWarnings("unchecked")
 	public void sort() {
 		if ( sorted || !requiresSorting ) {
 			// nothing to do
@@ -311,12 +308,12 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	}
 
 	/**
-	 * Read this object state back in from the given stream as part of de-serialization
+	 * Read this object state back in from the given stream as part of
+	 * the deserialization process.
 	 * 
 	 * @param in The stream from which to read our serial state
 	 */
 	@Override
-	@SuppressWarnings("unchecked")
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
 		sorted = in.readBoolean();
 
@@ -324,6 +321,7 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 		executables.ensureCapacity( numberOfExecutables );
 		if ( numberOfExecutables > 0 ) {
 			for ( int i = 0; i < numberOfExecutables; i++ ) {
+				@SuppressWarnings("unchecked")
 				E e = (E) in.readObject();
 				executables.add( e );
 			}
@@ -342,9 +340,10 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	}
 
 	/**
-	 * Allow the Executables to re-associate themselves with the Session after deserialization.
+	 * Allow the {@link Executable}s to reassociate themselves with the
+	 * session after deserialization.
 	 * 
-	 * @param session The session to which to associate the Executables
+	 * @param session The session with which to associate the {@code Executable}s
 	 */
 	public void afterDeserialize(SessionImplementor session) {
 		for ( E e : executables ) {

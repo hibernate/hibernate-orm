@@ -12,8 +12,9 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * A BeforeTransactionCompletionProcess impl to verify and increment an entity version as party
- * of before-transaction-completion processing
+ * A {@link BeforeTransactionCompletionProcess} implementation to verify and
+ * increment an entity version as party of before-transaction-completion
+ * processing.
  *
  * @author Scott Marlow
  */

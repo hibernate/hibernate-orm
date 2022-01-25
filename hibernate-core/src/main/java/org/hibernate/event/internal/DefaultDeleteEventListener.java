@@ -67,7 +67,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	 *
 	 */
 	public void onDelete(DeleteEvent event) throws HibernateException {
-		onDelete( event, new IdentitySet() );
+		onDelete( event, new IdentitySet<>() );
 	}
 
 	/**
@@ -281,7 +281,8 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		persistenceContext.registerNullifiableEntityKey( key );
 
 		if ( isOrphanRemovalBeforeUpdates ) {
-			// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.  This should be removed once action/task
+			// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.
+			//  This should be removed once action/task
 			// ordering is improved.
 			session.getActionQueue().addAction(
 					new OrphanRemovalAction(

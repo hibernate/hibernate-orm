@@ -20,10 +20,9 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.tuple.entity.PojoEntityTuplizer;
 
 /**
- * Most of this code was originally an internal detail of {@link PojoEntityTuplizer},
+ * Most of this code was originally an internal detail of {@code PojoEntityTuplizer},
  * then extracted to make it easier for integrators to initialize a custom
  * {@link org.hibernate.proxy.ProxyFactory}.
  */

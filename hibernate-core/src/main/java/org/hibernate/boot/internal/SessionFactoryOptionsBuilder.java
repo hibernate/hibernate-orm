@@ -55,7 +55,6 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
-import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.sqm.NullPrecedence;
@@ -71,8 +70,6 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.Statistics;
-import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.hibernate.type.FormatMapper;
 import org.hibernate.type.JacksonJsonFormatMapper;
 import org.hibernate.type.JsonBJsonFormatMapper;
@@ -186,7 +183,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final List<EntityNameResolver> entityNameResolvers = new ArrayList<>();
 	private EntityNotFoundDelegate entityNotFoundDelegate;
 	private boolean identifierRollbackEnabled;
-	private EntityTuplizerFactory entityTuplizerFactory = new EntityTuplizerFactory();
 	private boolean checkNullability;
 	private boolean initializeLazyStateOutsideTransactions;
 	private TempTableDdlTransactionHandling tempTableDdlTransactionHandling;
@@ -942,11 +938,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public EntityTuplizerFactory getEntityTuplizerFactory() {
-		return entityTuplizerFactory;
-	}
-
-	@Override
 	public boolean isCheckNullability() {
 		return checkNullability;
 	}
@@ -1285,14 +1276,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void allowLazyInitializationOutsideTransaction(boolean enabled) {
 		this.initializeLazyStateOutsideTransactions = enabled;
-	}
-
-	public void applyEntityTuplizerFactory(EntityTuplizerFactory entityTuplizerFactory) {
-		this.entityTuplizerFactory = entityTuplizerFactory;
-	}
-
-	public void applyEntityTuplizer(RepresentationMode entityMode, Class<? extends EntityTuplizer> tuplizerClass) {
-		this.entityTuplizerFactory.registerDefaultTuplizerClass( entityMode, tuplizerClass );
 	}
 
 	public void applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling) {

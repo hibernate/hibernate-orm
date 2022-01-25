@@ -18,14 +18,11 @@ import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
-import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 /**
  * The contract for building a {@link SessionFactory} given a number of options.
@@ -240,27 +237,6 @@ public interface SessionFactoryBuilder {
 	 * @see org.hibernate.cfg.AvailableSettings#ENABLE_LAZY_LOAD_NO_TRANS
 	 */
 	SessionFactoryBuilder applyLazyInitializationOutsideTransaction(boolean enabled);
-
-	/**
-	 * Specify the EntityTuplizerFactory to use.
-	 *
-	 * @param entityTuplizerFactory The EntityTuplizerFactory to use.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	SessionFactoryBuilder applyEntityTuplizerFactory(EntityTuplizerFactory entityTuplizerFactory);
-
-	/**
-	 * Register the default {@link EntityTuplizer} to be applied to the SessionFactory.
-	 *
-	 * @param entityMode The entity mode that which this tuplizer will be applied.
-	 * @param tuplizerClass The custom tuplizer class.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	SessionFactoryBuilder applyEntityTuplizer(
-			RepresentationMode entityMode,
-			Class<? extends EntityTuplizer> tuplizerClass);
 
 	SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling);
 

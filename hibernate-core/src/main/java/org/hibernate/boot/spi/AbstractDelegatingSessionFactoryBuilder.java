@@ -18,14 +18,11 @@ import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.loader.BatchFetchStyle;
-import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 /**
  * Convenience base class for custom implementors of SessionFactoryBuilder, using delegation
@@ -147,20 +144,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	@Override
 	public T applyLazyInitializationOutsideTransaction(boolean enabled) {
 		delegate.applyLazyInitializationOutsideTransaction( enabled );
-		return getThis();
-	}
-
-	@Override
-	public T applyEntityTuplizerFactory(EntityTuplizerFactory entityTuplizerFactory) {
-		delegate.applyEntityTuplizerFactory( entityTuplizerFactory );
-		return getThis();
-	}
-
-	@Override
-	public T applyEntityTuplizer(
-			RepresentationMode entityMode,
-			Class<? extends EntityTuplizer> tuplizerClass) {
-		delegate.applyEntityTuplizer( entityMode, tuplizerClass );
 		return getThis();
 	}
 

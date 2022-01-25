@@ -56,7 +56,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializationException;
 import org.hibernate.usertype.UserType;
@@ -111,7 +110,6 @@ public class Configuration {
 	// used to build SF
 	private StandardServiceRegistryBuilder standardServiceRegistryBuilder;
 	private EntityNotFoundDelegate entityNotFoundDelegate;
-	private EntityTuplizerFactory entityTuplizerFactory;
 	private Interceptor interceptor;
 	private SessionFactoryObserver sessionFactoryObserver;
 	private CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
@@ -162,7 +160,6 @@ public class Configuration {
 		namedProcedureCallMap = new HashMap<>();
 
 		standardServiceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
-		entityTuplizerFactory = new EntityTuplizerFactory();
 		interceptor = EmptyInterceptor.INSTANCE;
 		properties = new Properties(  );
 		properties.putAll( standardServiceRegistryBuilder.getSettings() );
@@ -572,10 +569,6 @@ public class Configuration {
 		return this;
 	}
 
-	public EntityTuplizerFactory getEntityTuplizerFactory() {
-		return entityTuplizerFactory;
-	}
-
 	/**
 	 * Retrieve the user-supplied delegate to handle non-existent entity
 	 * scenarios.  May be null.
@@ -685,10 +678,6 @@ public class Configuration {
 
 		if ( getEntityNotFoundDelegate() != null ) {
 			sessionFactoryBuilder.applyEntityNotFoundDelegate( getEntityNotFoundDelegate() );
-		}
-
-		if ( getEntityTuplizerFactory() != null ) {
-			sessionFactoryBuilder.applyEntityTuplizerFactory( getEntityTuplizerFactory() );
 		}
 
 		if ( getCurrentTenantIdentifierResolver() != null ) {

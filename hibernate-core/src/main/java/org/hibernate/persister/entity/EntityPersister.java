@@ -47,7 +47,6 @@ import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.tree.from.RootTableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.VersionJavaType;
@@ -918,16 +917,6 @@ public interface EntityPersister
 	@Override
 	default EntityMappingType getEntityMappingType() {
 		return this;
-	}
-
-	/**
-	 * Throws {@link UnsupportedOperationException}.
-	 *
-	 * @deprecated Use {@link #getRepresentationStrategy()}
-	 */
-	@Deprecated(since = "6.0") @Remove
-	default EntityTuplizer getEntityTuplizer() {
-		throw new UnsupportedOperationException("Support for EntityTuplizer has been removed");
 	}
 
 	BytecodeEnhancementMetadata getInstrumentationMetadata();

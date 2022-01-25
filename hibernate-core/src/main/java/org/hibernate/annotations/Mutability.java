@@ -9,6 +9,7 @@ package org.hibernate.annotations;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
@@ -19,45 +20,52 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Used to specify the MutabilityPlan for a basic value mapping.<ul>
+ * Used to specify a {@link MutabilityPlan} for a basic value mapping.
+ * <ul>
  *     <li>
- *         When applied to a Map-valued attribute, describes the Map value. Use
- *         {@link MapKeyMutability} to describe the key instead
+ *         When applied to a Map-valued attribute, describes the
+ *         {@code Map} value. Use {@link MapKeyMutability} to
+ *         describe the key instead.
  *     </li>
  *     <li>
- *         When applied to a List of array-valued attribute, describes the element.
+ *         When applied to a {@code List} of array-valued attribute,
+ *         describes the element.
  *     </li>
  *     <li>
- *         When mapping an id-bag, describes the collection element.  Use {@link CollectionIdMutability}
- *         to describe the collection-id
+ *         When mapping an id-bag, describes the collection element.
+ *         Use {@link CollectionIdMutability} to describe the
+ *         {@link CollectionId}.
  *     </li>
  *     <li>
- *         For other collection mappings, describes the elements
+ *         For other collection mappings, describes the elements.
  *     </li>
  *     <li>
- *         For discriminated association mappings (`@Any` and `@ManyToAny`), describes the discriminator
- *         value.
+ *         For discriminated association mappings ({@link Any} and
+ *         {@link ManyToAny}), describes the discriminator value.
  *     </li>
  * </ul>
  *
- * Resolved as a {@link org.hibernate.resource.beans.spi.ManagedBean}
+ * Resolved as a {@link org.hibernate.resource.beans.spi.ManagedBean}.
  *
- * See <a href="package-summary.html#basic-value-mapping"/> for high-level discussion
- * of basic value mapping.
+ * See <a href="package-summary.html#basic-value-mapping"/> for a
+ * high-level discussion of basic value mapping.
  *
- * @apiNote Valid on {@link ElementType#TYPE} in very limited cases - at the moment
- * it is only supported on an AttributeConverter implementation
+ * @apiNote Valid on {@link ElementType#TYPE} in very limited cases.
+ * At the moment it is only supported on implementations of
+ * {@link jakarta.persistence.AttributeConverter}.
  *
  * @see Immutable
  *
  * @since 6.0
+ *
+ * @author Steve Ebersole
  */
-@java.lang.annotation.Target({METHOD, FIELD, ANNOTATION_TYPE, TYPE})
+@Target({METHOD, FIELD, ANNOTATION_TYPE, TYPE})
 @Inherited
 @Retention(RUNTIME)
 public @interface Mutability {
 	/**
-	 * The MutabilityPlan implementation
+	 * A class implementing {@link MutabilityPlan}.
 	 */
 	Class<? extends MutabilityPlan<?>> value();
 }

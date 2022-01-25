@@ -15,6 +15,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.Remove;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -920,13 +921,13 @@ public interface EntityPersister
 	}
 
 	/**
-	 * Returns {@code null}.
+	 * Throws {@link UnsupportedOperationException}.
 	 *
 	 * @deprecated Use {@link #getRepresentationStrategy()}
 	 */
-	@Deprecated(since = "6.0")
+	@Deprecated(since = "6.0") @Remove
 	default EntityTuplizer getEntityTuplizer() {
-		return null;
+		throw new UnsupportedOperationException("Support for EntityTuplizer has been removed");
 	}
 
 	BytecodeEnhancementMetadata getInstrumentationMetadata();

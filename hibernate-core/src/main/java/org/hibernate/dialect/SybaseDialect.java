@@ -196,7 +196,9 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Override
 	public NationalizationSupport getNationalizationSupport() {
 		// At least the jTDS driver doesn't support this
-		return jtdsDriver ? NationalizationSupport.IMPLICIT : super.getNationalizationSupport();
+		return jtdsDriver
+			? NationalizationSupport.UNSUPPORTED
+			: super.getNationalizationSupport();
 	}
 
 	@Override

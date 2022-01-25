@@ -9,9 +9,6 @@ package org.hibernate.orm.test.boot.jaxb.hbm.internal;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSimpleIdType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTuplizerType;
-import org.hibernate.metamodel.RepresentationMode;
-import org.hibernate.tuple.entity.DynamicMapEntityTuplizer;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
@@ -23,24 +20,13 @@ public class RepresentationModeConverterTest extends BaseUnitTestCase {
 
 	@Test
 	public void testMashallNullEntityMode() throws Exception {
-		XmlBindingChecker.checkValidGeneration( generateXml( false ) );
+		XmlBindingChecker.checkValidGeneration( generateXml() );
 	}
 
-	@Test
-	public void testMashallNotNullEntityMode() throws Exception {
-		XmlBindingChecker.checkValidGeneration( generateXml( true ) );
-	}
 
-	private JaxbHbmHibernateMapping generateXml(boolean includeEntityMode)
-			throws Exception {
+	private JaxbHbmHibernateMapping generateXml()  {
 		JaxbHbmHibernateMapping hm = new JaxbHbmHibernateMapping();
 		JaxbHbmRootEntityType clazz = new JaxbHbmRootEntityType();
-		JaxbHbmTuplizerType tuplizer = new JaxbHbmTuplizerType();
-		tuplizer.setClazz( DynamicMapEntityTuplizer.class.getCanonicalName() );
-		if ( includeEntityMode ) {
-			tuplizer.setEntityMode( RepresentationMode.MAP );
-		}
-		clazz.getTuplizer().add( tuplizer );
 		JaxbHbmSimpleIdType id = new JaxbHbmSimpleIdType();
 		clazz.setId( id );
 		hm.getClazz().add( clazz );

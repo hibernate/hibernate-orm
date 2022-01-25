@@ -31,7 +31,6 @@ import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.jpa.boot.spi.Bootstrap;
@@ -69,7 +68,6 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -86,7 +84,6 @@ import jakarta.persistence.PersistenceException;
  */
 public class PersisterClassProviderTest {
 	@Test
-	@SuppressWarnings("unchecked")
 	public void testPersisterClassProvider() {
 		Map settings = SettingsGenerator.generateSettings(
 				PersisterClassResolverInitiator.IMPL_NAME, GoofyPersisterClassProvider.class,

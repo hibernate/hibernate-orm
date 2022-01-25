@@ -12,8 +12,8 @@ import org.hibernate.type.EnumType;
 /**
  * The place to list all "static" types we know of that need to be possible to
  * construct at runtime via reflection.
- * This is useful for GraalVM native images - but is not intenteded to be an
- * exhaustive list: take these as an helpful starting point.
+ * This is useful for GraalVM native images - but is not intended to be an
+ * exhaustive list: take these as a helpful starting point.
  */
 final class StaticClassLists {
 
@@ -22,13 +22,11 @@ final class StaticClassLists {
 				//The CoreMessageLogger is sometimes looked up without it necessarily being a field, so we're
 				//not processing it the same way as other Logger lookups.
 				org.hibernate.internal.CoreMessageLogger_$logger.class,
-				org.hibernate.tuple.entity.DynamicMapEntityTuplizer.class,
 				org.hibernate.persister.collection.OneToManyPersister.class,
 				org.hibernate.persister.collection.BasicCollectionPersister.class,
 				org.hibernate.persister.entity.JoinedSubclassEntityPersister.class,
 				org.hibernate.persister.entity.UnionSubclassEntityPersister.class,
 				org.hibernate.persister.entity.SingleTableEntityPersister.class,
-				org.hibernate.tuple.entity.PojoEntityTuplizer.class,
 		};
 	}
 

@@ -27,14 +27,11 @@ import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.loader.BatchFetchStyle;
-import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 /**
  * @author Gail Badner
@@ -181,20 +178,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder applyLazyInitializationOutsideTransaction(boolean enabled) {
 		this.optionsBuilder.allowLazyInitializationOutsideTransaction( enabled );
-		return this;
-	}
-
-	@Override
-	public SessionFactoryBuilder applyEntityTuplizerFactory(EntityTuplizerFactory entityTuplizerFactory) {
-		this.optionsBuilder.applyEntityTuplizerFactory( entityTuplizerFactory );
-		return this;
-	}
-
-	@Override
-	public SessionFactoryBuilder applyEntityTuplizer(
-			RepresentationMode entityMode,
-			Class<? extends EntityTuplizer> tuplizerClass) {
-		this.optionsBuilder.applyEntityTuplizer( entityMode, tuplizerClass );
 		return this;
 	}
 

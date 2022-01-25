@@ -206,6 +206,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 							: new ComponentType( this, originalPropertyOrder, getBuildingContext() );
 
 					this.type = localType;
+				} else {
+					localType = type;
 				}
 			}
 		}

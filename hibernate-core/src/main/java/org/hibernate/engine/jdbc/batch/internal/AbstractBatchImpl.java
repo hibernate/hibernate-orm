@@ -41,8 +41,8 @@ public abstract class AbstractBatchImpl implements Batch {
 	private final SqlStatementLogger sqlStatementLogger;
 	private final SqlExceptionHelper sqlExceptionHelper;
 
-	private LinkedHashMap<String, PreparedStatement> statements = new LinkedHashMap<>();
-	private LinkedHashSet<BatchObserver> observers = new LinkedHashSet<>();
+	private final LinkedHashMap<String, PreparedStatement> statements = new LinkedHashMap<>();
+	private final LinkedHashSet<BatchObserver> observers = new LinkedHashSet<>();
 
 	protected AbstractBatchImpl(BatchKey key, JdbcCoordinator jdbcCoordinator) {
 		if ( key == null ) {

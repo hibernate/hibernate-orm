@@ -155,9 +155,6 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 	/**
 	 * Constructor form used from testing
-	 *
-	 * @param dialect The dialect
-	 * @param jdbcConnectionAccess
 	 */
 	public JdbcEnvironmentImpl(
 			DatabaseMetaData databaseMetaData,
@@ -337,13 +334,13 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
 	private SqlExceptionHelper buildSqlExceptionHelper(Dialect dialect, boolean logWarnings) {
-		final StandardSQLExceptionConverter sqlExceptionConverter = new StandardSQLExceptionConverter();
-		sqlExceptionConverter.addDelegate( dialect.buildSQLExceptionConversionDelegate() );
-		sqlExceptionConverter.addDelegate( new SQLExceptionTypeDelegate( dialect ) );
-		// todo : vary this based on extractedMetaDataSupport.getSqlStateType()
-		sqlExceptionConverter.addDelegate( new SQLStateConversionDelegate( dialect ) );
+		final StandardSQLExceptionConverter sqlExceptionConverter = new StandardSQLExceptionConverter(
+				dialect.buildSQLExceptionConversionDelegate(),
+				new SQLExceptionTypeDelegate( dialect ),
+				// todo : vary this based on extractedMetaDataSupport.getSqlStateType()
+				new SQLStateConversionDelegate( dialect )
+		);
 		return new SqlExceptionHelper( sqlExceptionConverter, logWarnings );
 	}
 

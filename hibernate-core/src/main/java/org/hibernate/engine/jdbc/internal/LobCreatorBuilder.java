@@ -11,6 +11,7 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.Properties;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.ContextualLobCreator;
@@ -18,6 +19,7 @@ import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
@@ -34,20 +36,24 @@ public class LobCreatorBuilder {
 			LobCreatorBuilder.class.getName()
 	);
 
-	private boolean useContextualLobCreation;
+	private final boolean useContextualLobCreation;
 
 	/**
-	 * The public factory method for obtaining the appropriate (according to given JDBC {@link Connection}.
+	 * The public factory method for obtaining the appropriate according to given JDBC {@link Connection}.
 	 *
 	 * @param configValues The map of settings
 	 * @param jdbcConnection A JDBC {@link Connection} which can be used to gauge the drivers level of support,
 	 * specifically for creating LOB references.
 	 */
-	public LobCreatorBuilder(Map configValues, Connection jdbcConnection) {
+	public LobCreatorBuilder(Map<String,Object> configValues, Connection jdbcConnection) {
 		this.useContextualLobCreation = useContextualLobCreation( configValues, jdbcConnection );
 	}
 
-	private static final Class[] NO_ARG_SIG = ArrayHelper.EMPTY_CLASS_ARRAY;
+	public LobCreatorBuilder(Properties configValues, Connection jdbcConnection) {
+		this( PropertiesHelper.map(configValues), jdbcConnection );
+	}
+
+	private static final Class<?>[] NO_ARG_SIG = ArrayHelper.EMPTY_CLASS_ARRAY;
 	private static final Object[] NO_ARGS = ArrayHelper.EMPTY_OBJECT_ARRAY;
 
 	/**
@@ -60,8 +66,7 @@ public class LobCreatorBuilder {
 	 *
 	 * @return True if the connection can be used to create LOBs; false otherwise.
 	 */
-	@SuppressWarnings("unchecked")
-	private static boolean useContextualLobCreation(Map configValues, Connection jdbcConnection) {
+	private static boolean useContextualLobCreation(Map<String,Object> configValues, Connection jdbcConnection) {
 		final boolean isNonContextualLobCreationRequired =
 				ConfigurationHelper.getBoolean( Environment.NON_CONTEXTUAL_LOB_CREATION, configValues );
 		if ( isNonContextualLobCreationRequired ) {
@@ -86,20 +91,20 @@ public class LobCreatorBuilder {
 				// ignore exception and continue
 			}
 
-			final Class connectionClass = Connection.class;
+			final Class<Connection> connectionClass = Connection.class;
 			final Method createClobMethod = connectionClass.getMethod( "createClob", NO_ARG_SIG );
 			if ( createClobMethod.getDeclaringClass().equals( Connection.class ) ) {
-				// If we get here we are running in a jdk 1.6 (jdbc 4) environment...
-				// Further check to make sure the driver actually implements the LOB creation methods.  We
-				// check against createClob() as indicative of all; should we check against all 3 explicitly?
+				// If we get here we are running in a jdk 1.6 (jdbc 4) environment:
+				// Further check to make sure the driver actually implements the LOB creation methods.
+				// We check against createClob() as indicative of all; should we check against all 3 explicitly?
 				try {
 					final Object clob = createClobMethod.invoke( jdbcConnection, NO_ARGS );
 					try {
 						final Method freeMethod = clob.getClass().getMethod( "free", NO_ARG_SIG );
 						freeMethod.invoke( clob, NO_ARGS );
 					}
-					catch ( Throwable ignore ) {
-						LOG.tracef( "Unable to free CLOB created to test createClob() implementation : %s", ignore );
+					catch ( Throwable e ) {
+						LOG.tracef( "Unable to free CLOB created to test createClob() implementation : %s", e );
 					}
 					return true;
 				}

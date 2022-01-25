@@ -53,7 +53,7 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 	 * @param jdbcConnection A JDBC {@link Connection} which can be used to gauge the drivers level of support,
 	 * specifically for creating LOB references.
 	 */
-	public static LobCreatorBuilderImpl makeLobCreatorBuilder(Dialect dialect, Map configValues, Connection jdbcConnection) {
+	public static LobCreatorBuilderImpl makeLobCreatorBuilder(Dialect dialect, Map<String,Object> configValues, Connection jdbcConnection) {
 		return new LobCreatorBuilderImpl( useContextualLobCreation( dialect, configValues, jdbcConnection ) );
 	}
 
@@ -67,7 +67,7 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 		return new LobCreatorBuilderImpl( false );
 	}
 
-	private static final Class[] NO_ARG_SIG = ArrayHelper.EMPTY_CLASS_ARRAY;
+	private static final Class<?>[] NO_ARG_SIG = ArrayHelper.EMPTY_CLASS_ARRAY;
 	private static final Object[] NO_ARGS = ArrayHelper.EMPTY_OBJECT_ARRAY;
 
 	/**
@@ -82,8 +82,7 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 	 *
 	 * @return True if the connection can be used to create LOBs; false otherwise.
 	 */
-	@SuppressWarnings("unchecked")
-	private static boolean useContextualLobCreation(Dialect dialect, Map configValues, Connection jdbcConnection) {
+	private static boolean useContextualLobCreation(Dialect dialect, Map<String,Object> configValues, Connection jdbcConnection) {
 		final boolean isNonContextualLobCreationRequired =
 				ConfigurationHelper.getBoolean( Environment.NON_CONTEXTUAL_LOB_CREATION, configValues );
 		if ( isNonContextualLobCreationRequired ) {
@@ -112,20 +111,20 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 				// ignore exception and continue
 			}
 
-			final Class connectionClass = Connection.class;
+			final Class<?> connectionClass = Connection.class;
 			final Method createClobMethod = connectionClass.getMethod( "createClob", NO_ARG_SIG );
 			if ( createClobMethod.getDeclaringClass().equals( Connection.class ) ) {
-				// If we get here we are running in a jdk 1.6 (jdbc 4) environment...
-				// Further check to make sure the driver actually implements the LOB creation methods.  We
-				// check against createClob() as indicative of all; should we check against all 3 explicitly?
+				// If we get here we are running in a jdk 1.6 (jdbc 4) environment:
+				// Further check to make sure the driver actually implements the LOB creation methods.
+				// We check against createClob() as indicative of all; should we check against all 3 explicitly?
 				try {
 					final Object clob = createClobMethod.invoke( jdbcConnection, NO_ARGS );
 					try {
 						final Method freeMethod = clob.getClass().getMethod( "free", NO_ARG_SIG );
 						freeMethod.invoke( clob, NO_ARGS );
 					}
-					catch ( Throwable ignore ) {
-						LOG.tracef( "Unable to free CLOB created to test createClob() implementation : %s", ignore );
+					catch ( Throwable e ) {
+						LOG.tracef( "Unable to free CLOB created to test createClob() implementation : %s", e );
 					}
 					return true;
 				}

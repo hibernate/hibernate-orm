@@ -53,10 +53,10 @@ import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransacti
 public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JdbcCoordinatorImpl.class );
 
-	private transient LogicalConnectionImplementor logicalConnection;
-	private transient JdbcSessionOwner owner;
+	private transient final LogicalConnectionImplementor logicalConnection;
+	private transient final JdbcSessionOwner owner;
 
-	private transient JdbcServices jdbcServices;
+	private transient final JdbcServices jdbcServices;
 
 	private transient Batch currentBatch;
 
@@ -225,7 +225,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public void setTransactionTimeOut(int seconds) {
-		transactionTimeOutInstant = System.currentTimeMillis() + ( seconds * 1000 );
+		transactionTimeOutInstant = System.currentTimeMillis() + ( seconds * 1000L );
 	}
 
 	@Override
@@ -339,7 +339,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		catch (SQLException sqle) {
 			SqlExceptionHelper sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
 			//Should always be non-null, but to make sure as the implementation is lazy:
-			if ( sqlExceptionHelper != null ) {
+			if ( sqlExceptionHelper == null ) {
 				sqlExceptionHelper = new SqlExceptionHelper( false );
 			}
 			throw sqlExceptionHelper.convert( sqle, "Cannot cancel query" );
@@ -398,20 +398,17 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 				lastQuery = null;
 			}
 		}
-		catch( SQLException e ) {
-			LOG.debugf( "Unable to release JDBC statement [%s]", e.getMessage() );
-		}
 		catch ( Exception e ) {
-			// try to handle general errors more elegantly
 			LOG.debugf( "Unable to release JDBC statement [%s]", e.getMessage() );
 		}
 	}
 
-	@SuppressWarnings({ "unchecked" })
+
 	protected void close(ResultSet resultSet) {
 		LOG.tracev( "Closing result set [{0}]", resultSet );
 
 		if ( resultSet instanceof InvalidatableWrapper ) {
+			@SuppressWarnings({ "unchecked" })
 			final InvalidatableWrapper<ResultSet> wrapper = (InvalidatableWrapper<ResultSet>) resultSet;
 			close( wrapper.getWrappedObject() );
 			wrapper.invalidate();
@@ -420,9 +417,6 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 		try {
 			resultSet.close();
-		}
-		catch( SQLException e ) {
-			LOG.debugf( "Unable to release JDBC result set [%s]", e.getMessage() );
 		}
 		catch ( Exception e ) {
 			// try to handle general errors more elegantly

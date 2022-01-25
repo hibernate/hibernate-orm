@@ -16,7 +16,7 @@ import java.io.Reader;
  * @author Gavin King
  */
 public class ReaderInputStream extends InputStream {
-	private Reader reader;
+	private final Reader reader;
 
 	/**
 	 * Constructs a ReaderInputStream from a Reader

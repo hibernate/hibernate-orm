@@ -23,7 +23,7 @@ import org.hibernate.HibernateException;
  * @author Gail Badner
  */
 public class SerializableClobProxy implements InvocationHandler, Serializable {
-	private static final Class[] PROXY_INTERFACES = new Class[] { Clob.class, WrappedClob.class, Serializable.class };
+	private static final Class<?>[] PROXY_INTERFACES = new Class[] { Clob.class, WrappedClob.class, Serializable.class };
 
 	private final transient Clob clob;
 

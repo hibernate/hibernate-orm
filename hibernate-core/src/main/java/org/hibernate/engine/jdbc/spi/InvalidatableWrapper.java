@@ -8,7 +8,7 @@ package org.hibernate.engine.jdbc.spi;
 
 
 /**
- * Specialized {@link JdbcWrapper} contract for wrapped objects that can additioanlly be invalidated
+ * Specialized {@link JdbcWrapper} contract for wrapped objects that can additionally be invalidated
  *
  * @author Steve Ebersole
  */

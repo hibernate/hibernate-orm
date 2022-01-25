@@ -76,7 +76,7 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl
 		final Object dataSourceConfigValue = serviceRegistry.getService( ConfigurationService.class )
 				.getSettings()
 				.get( AvailableSettings.DATASOURCE );
-		if ( !String.class.isInstance( dataSourceConfigValue ) ) {
+		if ( !(dataSourceConfigValue instanceof String) ) {
 			throw new HibernateException( "Improper set up of DataSourceBasedMultiTenantConnectionProviderImpl" );
 		}
 		final String jndiName = (String) dataSourceConfigValue;
@@ -91,13 +91,13 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl
 			throw new HibernateException( "JNDI name [" + jndiName + "] could not be resolved" );
 		}
 
-		if ( DataSource.class.isInstance( namedObject ) ) {
+		if ( namedObject instanceof DataSource ) {
 			final int loc = jndiName.lastIndexOf( '/' );
 			this.baseJndiNamespace = jndiName.substring( 0, loc );
 			this.tenantIdentifierForAny = jndiName.substring( loc + 1 );
 			dataSourceMap().put( tenantIdentifierForAny, (DataSource) namedObject );
 		}
-		else if ( Context.class.isInstance( namedObject ) ) {
+		else if ( namedObject instanceof Context ) {
 			this.baseJndiNamespace = jndiName;
 			this.tenantIdentifierForAny = (String) serviceRegistry.getService( ConfigurationService.class )
 					.getSettings()

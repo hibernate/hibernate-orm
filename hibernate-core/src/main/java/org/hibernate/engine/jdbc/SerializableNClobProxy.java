@@ -16,7 +16,7 @@ import java.sql.NClob;
  * @author Steve Ebersole
  */
 public class SerializableNClobProxy extends SerializableClobProxy {
-	private static final Class[] PROXY_INTERFACES = new Class[] { NClob.class, WrappedNClob.class };
+	private static final Class<?>[] PROXY_INTERFACES = new Class[] { NClob.class, WrappedNClob.class };
 
 	/**
 	 * Builds a serializable {@link Clob} wrapper around the given {@link Clob}.

@@ -126,7 +126,7 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 		else {
 			assertTrue( nclob instanceof JdbcNClob );
 		}
-		assertTrue( NClob.class.isInstance( nclob ) );
+//		assertTrue( nclob instanceof NClob );
 		nclob = lobCreator.wrap( nclob );
 		assertTrue( nclob instanceof WrappedClob );
 
@@ -135,8 +135,8 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 		nclob.free();
 	}
 
-	private class LobCreationContextImpl implements LobCreationContext {
-		private Connection connection;
+	private static class LobCreationContextImpl implements LobCreationContext {
+		private final Connection connection;
 
 		private LobCreationContextImpl(Connection connection) {
 			this.connection = connection;
@@ -153,12 +153,12 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 	}
 
 	private interface JdbcLobBuilder {
-		public Blob createBlob() throws SQLException ;
-		public Clob createClob() throws SQLException ;
-		public NClob createNClob() throws SQLException ;
+		Blob createBlob() throws SQLException ;
+		Clob createClob() throws SQLException ;
+		NClob createNClob() throws SQLException ;
 	}
 
-	private class JdbcLobBuilderImpl implements JdbcLobBuilder {
+	private static class JdbcLobBuilderImpl implements JdbcLobBuilder {
 		private final boolean isSupported;
 
 		private JdbcLobBuilderImpl(boolean isSupported) {
@@ -199,31 +199,29 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 			// the only methods we are interested in are the LOB creation methods...
 			if ( args == null || args.length == 0 ) {
 				final String methodName = method.getName();
-				if ( "createBlob".equals( methodName ) ) {
-					return lobBuilder.createBlob();
-				}
-				else if ( "createClob".equals( methodName ) ) {
-					return lobBuilder.createClob();
-				}
-				else if ( "createNClob".equals( methodName ) ) {
-					return lobBuilder.createNClob();
-				}
-				else if ( "getMetaData".equals( methodName ) ) {
-					return metadata;
+				switch (methodName) {
+					case "createBlob":
+						return lobBuilder.createBlob();
+					case "createClob":
+						return lobBuilder.createClob();
+					case "createNClob":
+						return lobBuilder.createNClob();
+					case "getMetaData":
+						return metadata;
 				}
 			}
 			return null;
 		}
 	}
 
-	private static Class[] CONN_PROXY_TYPES = new Class[] { Connection.class };
+	private static final Class<?>[] CONN_PROXY_TYPES = new Class[] { Connection.class };
 
 	private Connection createConnectionProxy(int version, JdbcLobBuilder jdbcLobBuilder) {
 		ConnectionProxyHandler handler = new ConnectionProxyHandler( version, jdbcLobBuilder );
 		return ( Connection ) Proxy.newProxyInstance( getClass().getClassLoader(), CONN_PROXY_TYPES, handler );
 	}
 
-	private class MetadataProxyHandler implements InvocationHandler {
+	private static class MetadataProxyHandler implements InvocationHandler {
 		private final int jdbcVersion;
 
 		private MetadataProxyHandler(int jdbcVersion) {
@@ -239,14 +237,14 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 		}
 	}
 
-	private static Class[] META_PROXY_TYPES = new Class[] { DatabaseMetaData.class };
+	private static final Class<?>[] META_PROXY_TYPES = new Class[] { DatabaseMetaData.class };
 
 	private DatabaseMetaData createMetadataProxy(int  version) {
 		MetadataProxyHandler handler = new MetadataProxyHandler( version );
 		return ( DatabaseMetaData ) Proxy.newProxyInstance( getClass().getClassLoader(), META_PROXY_TYPES, handler );
 	}
 
-	private class JdbcBlob implements Blob {
+	private static class JdbcBlob implements Blob {
 		public long length() throws SQLException {
 			return 0;
 		}
@@ -255,7 +253,7 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 			return new byte[0];
 		}
 
-		public InputStream getBinaryStream() throws SQLException {
+		public InputStream getBinaryStream() {
 			return null;
 		}
 
@@ -275,35 +273,35 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 			return 0;
 		}
 
-		public OutputStream setBinaryStream(long pos) throws SQLException {
+		public OutputStream setBinaryStream(long pos) {
 			return null;
 		}
 
-		public void truncate(long len) throws SQLException {
+		public void truncate(long len) {
 		}
 
 		public void free() throws SQLException {
 		}
 
-		public InputStream getBinaryStream(long pos, long length) throws SQLException {
+		public InputStream getBinaryStream(long pos, long length) {
 			return null;
 		}
 	}
 
-	private class JdbcClob implements Clob {
+	private static class JdbcClob implements Clob {
 		public long length() throws SQLException {
 			return 0;
 		}
 
-		public String getSubString(long pos, int length) throws SQLException {
+		public String getSubString(long pos, int length) {
 			return null;
 		}
 
-		public Reader getCharacterStream() throws SQLException {
+		public Reader getCharacterStream() {
 			return null;
 		}
 
-		public InputStream getAsciiStream() throws SQLException {
+		public InputStream getAsciiStream() {
 			return null;
 		}
 
@@ -323,25 +321,25 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 			return 0;
 		}
 
-		public OutputStream setAsciiStream(long pos) throws SQLException {
+		public OutputStream setAsciiStream(long pos) {
 			return null;
 		}
 
-		public Writer setCharacterStream(long pos) throws SQLException {
+		public Writer setCharacterStream(long pos) {
 			return null;
 		}
 
-		public void truncate(long len) throws SQLException {
+		public void truncate(long len) {
 		}
 
 		public void free() throws SQLException {
 		}
 
-		public Reader getCharacterStream(long pos, long length) throws SQLException {
+		public Reader getCharacterStream(long pos, long length) {
 			return null;
 		}
 	}
 
-	private class JdbcNClob extends JdbcClob implements NClob {
+	private static class JdbcNClob extends JdbcClob implements NClob {
 	}
 }

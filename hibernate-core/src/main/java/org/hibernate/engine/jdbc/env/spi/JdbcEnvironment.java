@@ -9,7 +9,6 @@ package org.hibernate.engine.jdbc.env.spi;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.engine.jdbc.spi.TypeInfo;
 import org.hibernate.service.Service;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 

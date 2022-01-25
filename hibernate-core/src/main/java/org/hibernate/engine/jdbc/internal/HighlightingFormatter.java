@@ -37,7 +37,7 @@ public final class HighlightingFormatter implements Formatter {
 
 	private static String escape(String code) {
 		return "\u001b[" + code + "m";
-	};
+	}
 
 	private final String keywordEscape;
 	private final String stringEscape;

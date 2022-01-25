@@ -151,7 +151,7 @@ public class JtaWithFailingBatchTest extends AbstractJtaBatchTest {
 
 	public static class TestBatch extends BatchingBatch {
 		private int numberOfStatementsAfterReleasing;
-		private List<PreparedStatement> createdStatements = new ArrayList<>();
+		private final List<PreparedStatement> createdStatements = new ArrayList<>();
 		private boolean calledReleaseStatements;
 
 		private String currentStatementSql;

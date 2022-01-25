@@ -122,30 +122,15 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 	/**
 	 * Callback for performing contextual BLOB creation
 	 */
-	public static final LobCreationContext.Callback<Blob> CREATE_BLOB_CALLBACK = new LobCreationContext.Callback<Blob>() {
-		@Override
-		public Blob executeOnConnection(Connection connection) throws SQLException {
-			return connection.createBlob();
-		}
-	};
+	public static final LobCreationContext.Callback<Blob> CREATE_BLOB_CALLBACK = Connection::createBlob;
 
 	/**
 	 * Callback for performing contextual CLOB creation
 	 */
-	public static final LobCreationContext.Callback<Clob> CREATE_CLOB_CALLBACK = new LobCreationContext.Callback<Clob>() {
-		@Override
-		public Clob executeOnConnection(Connection connection) throws SQLException {
-			return connection.createClob();
-		}
-	};
+	public static final LobCreationContext.Callback<Clob> CREATE_CLOB_CALLBACK = Connection::createClob;
 
 	/**
 	 * Callback for performing contextual NCLOB creation
 	 */
-	public static final LobCreationContext.Callback<NClob> CREATE_NCLOB_CALLBACK = new LobCreationContext.Callback<NClob>() {
-		@Override
-		public NClob executeOnConnection(Connection connection) throws SQLException {
-			return connection.createNClob();
-		}
-	};
+	public static final LobCreationContext.Callback<NClob> CREATE_NCLOB_CALLBACK = Connection::createNClob;
 }

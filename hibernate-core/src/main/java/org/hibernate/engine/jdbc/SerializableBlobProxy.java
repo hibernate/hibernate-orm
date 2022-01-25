@@ -23,7 +23,7 @@ import org.hibernate.HibernateException;
  * @author Gail Badner
  */
 public class SerializableBlobProxy implements InvocationHandler, Serializable {
-	private static final Class[] PROXY_INTERFACES = new Class[] { Blob.class, WrappedBlob.class, Serializable.class };
+	private static final Class<?>[] PROXY_INTERFACES = new Class[] { Blob.class, WrappedBlob.class, Serializable.class };
 
 	private final transient Blob blob;
 

@@ -42,7 +42,7 @@ public class DefaultSchemaNameResolver implements SchemaNameResolver {
 		try {
 			final Class<? extends Connection> jdbcConnectionClass = connection.getClass();
 			final Method getSchemaMethod = jdbcConnectionClass.getMethod( "getSchema" );
-			if ( getSchemaMethod != null && getSchemaMethod.getReturnType().equals( String.class ) ) {
+			if ( getSchemaMethod.getReturnType().equals( String.class ) ) {
 				try {
 					// If the JDBC driver does not implement the Java 7 spec, but the JRE is Java 7
 					// then the getSchemaMethod is not null but the call to getSchema() throws an java.lang.AbstractMethodError
@@ -59,10 +59,10 @@ public class DefaultSchemaNameResolver implements SchemaNameResolver {
 				return SchemaNameResolverFallbackDelegate.INSTANCE;
 			}
 		}
-		catch (Exception ignore) {
+		catch (Exception e) {
 			log.debugf(
 					"Unable to use Java 1.7 Connection#getSchema : An error occurred trying to resolve the connection default schema resolver: %s",
-					ignore.getMessage() );
+					e.getMessage() );
 			return SchemaNameResolverFallbackDelegate.INSTANCE;
 		}
 	}

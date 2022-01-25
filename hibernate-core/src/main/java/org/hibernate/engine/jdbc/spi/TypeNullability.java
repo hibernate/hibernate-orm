@@ -9,7 +9,7 @@ package org.hibernate.engine.jdbc.spi;
 import java.sql.DatabaseMetaData;
 
 /**
- * Describes the instrinsic nullability of a data type as reported by the JDBC driver.
+ * Describes the intrinsic nullability of a data type as reported by the JDBC driver.
  *
  * @author Steve Ebersole
  */

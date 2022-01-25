@@ -7,11 +7,8 @@
 package org.hibernate.engine.jdbc.env.spi;
 
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
-import org.hibernate.engine.jdbc.spi.TypeInfo;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 
 /**
@@ -21,7 +18,6 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformation;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings( {"UnusedDeclaration"})
 public interface ExtractedDatabaseMetaData {
 	/**
 	 * Obtain the JDBC Environment from which this metadata came.

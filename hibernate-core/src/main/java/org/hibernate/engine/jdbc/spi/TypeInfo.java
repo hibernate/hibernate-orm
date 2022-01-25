@@ -21,7 +21,6 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("UnusedDeclaration")
 public class TypeInfo {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,

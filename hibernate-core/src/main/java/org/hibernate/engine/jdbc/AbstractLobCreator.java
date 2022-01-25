@@ -22,7 +22,7 @@ public abstract class AbstractLobCreator implements LobCreator {
 
 	@Override
 	public Clob wrap(Clob clob) {
-		if ( NClob.class.isInstance( clob ) ) {
+		if ( clob instanceof NClob ) {
 			return wrap( (NClob) clob );
 		}
 		else {

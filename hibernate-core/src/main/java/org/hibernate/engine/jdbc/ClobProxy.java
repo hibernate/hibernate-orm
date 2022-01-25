@@ -27,7 +27,7 @@ import org.hibernate.type.descriptor.java.DataHelper;
  * @author Gail Badner
  */
 public class ClobProxy implements InvocationHandler {
-	private static final Class[] PROXY_INTERFACES = new Class[] { Clob.class, ClobImplementer.class };
+	private static final Class<?>[] PROXY_INTERFACES = new Class[] { Clob.class, ClobImplementer.class };
 
 	private final CharacterStream characterStream;
 	private boolean needsReset;

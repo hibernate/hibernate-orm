@@ -6,8 +6,6 @@
  */
 package org.hibernate.engine.jdbc.cursor.internal;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.sql.CallableStatement;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;

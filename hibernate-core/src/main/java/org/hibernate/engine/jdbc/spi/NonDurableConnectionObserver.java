@@ -7,8 +7,8 @@
 package org.hibernate.engine.jdbc.spi;
 
 /**
- * Additional optional contract for connection observers to indicate that they should be released when the physical
- * connection is released.
+ * Additional optional contract for connection observers to indicate that
+ * they should be released when the physical connection is released.
  *
  * @author Steve Ebersole
  */

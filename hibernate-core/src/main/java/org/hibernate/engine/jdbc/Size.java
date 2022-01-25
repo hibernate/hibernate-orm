@@ -20,15 +20,15 @@ import java.io.Serializable;
  * @author Steve Ebersole
  */
 public class Size implements Serializable {
-	public static enum LobMultiplier {
+	public enum LobMultiplier {
 		NONE( 1 ),
 		K( NONE.factor * 1024 ),
 		M( K.factor * 1024 ),
 		G( M.factor * 1024 );
 
-		private long factor;
+		private final long factor;
 
-		private LobMultiplier(long factor) {
+		LobMultiplier(long factor) {
 			this.factor = factor;
 		}
 

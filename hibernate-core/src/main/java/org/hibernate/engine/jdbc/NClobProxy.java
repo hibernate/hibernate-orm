@@ -23,7 +23,7 @@ public class NClobProxy extends ClobProxy {
 	/**
 	 * The interfaces used to generate the proxy
 	 */
-	public static final Class[] PROXY_INTERFACES = new Class[] { NClob.class, NClobImplementer.class };
+	public static final Class<?>[] PROXY_INTERFACES = new Class[] { NClob.class, NClobImplementer.class };
 
 	protected NClobProxy(String string) {
 		super( string );

@@ -8,6 +8,7 @@ package org.hibernate.jpa.boot.internal;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -127,6 +128,7 @@ import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("deprecation")
 public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuilder {
 	private static final EntityManagerMessageLogger LOG = messageLogger( EntityManagerFactoryBuilderImpl.class );
 
@@ -163,8 +165,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	private final PersistenceUnitDescriptor persistenceUnit;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// things built in first phase, needed for second phase..
-	private final Map configurationValues;
+	// things built in first phase, needed for second phase
+	private final Map<Object,Object> configurationValues;
 	private final StandardServiceRegistry standardServiceRegistry;
 	private final ManagedResources managedResources;
 	private final MetadataBuilderImplementor metamodelBuilder;
@@ -180,20 +182,22 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 	}
 
-	public EntityManagerFactoryBuilderImpl(PersistenceUnitDescriptor persistenceUnit, Map integrationSettings) {
+	public EntityManagerFactoryBuilderImpl(
+			PersistenceUnitDescriptor persistenceUnit,
+			Map<?,?> integrationSettings) {
 		this( persistenceUnit, integrationSettings, null, null, null );
 	}
 
 	public EntityManagerFactoryBuilderImpl(
 			PersistenceUnitDescriptor persistenceUnit,
-			Map integrationSettings,
+			Map<?,?> integrationSettings,
 			ClassLoader providedClassLoader ) {
 		this( persistenceUnit, integrationSettings, providedClassLoader, null, null );
 	}
 
 	public EntityManagerFactoryBuilderImpl(
 			PersistenceUnitDescriptor persistenceUnit,
-			Map integrationSettings,
+			Map<?,?> integrationSettings,
 			ClassLoaderService providedClassLoaderService ) {
 		this( persistenceUnit, integrationSettings, null, providedClassLoaderService, null );
 	}
@@ -204,14 +208,14 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	@Internal
 	public EntityManagerFactoryBuilderImpl(
 			PersistenceUnitDescriptor persistenceUnitDescriptor,
-			Map integration,
+			Map<?,?> integration,
 			Consumer<MergedSettings> mergedSettingsBaseline) {
 		this( persistenceUnitDescriptor, integration, null, null, mergedSettingsBaseline );
 	}
 
 	private EntityManagerFactoryBuilderImpl(
 			PersistenceUnitDescriptor persistenceUnit,
-			Map integrationSettings,
+			Map<?,?> integrationSettings,
 			ClassLoader providedClassLoader,
 			ClassLoaderService providedClassLoaderService,
 			Consumer<MergedSettings> mergedSettingsBaseline) {
@@ -221,14 +225,14 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		this.persistenceUnit = persistenceUnit;
 
 		if ( integrationSettings == null ) {
-			integrationSettings = new HashMap();
+			integrationSettings = new HashMap<>();
 		}
 
-		Map mergedIntegrationSettings = null;
+		Map<Object,Object> mergedIntegrationSettings = null;
 		Properties properties = persistenceUnit.getProperties();
 		if ( properties != null ) {
 			// original integration setting entries take precedence
-			mergedIntegrationSettings = new HashMap( properties );
+			mergedIntegrationSettings = new HashMap<>( properties );
 			mergedIntegrationSettings.putAll( integrationSettings );
 		}
 
@@ -352,7 +356,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// temporary!
-	public Map getConfigurationValues() {
+	public Map<Object,Object> getConfigurationValues() {
 		return Collections.unmodifiableMap( configurationValues );
 	}
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -426,7 +430,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	 * @return The built BootstrapServiceRegistry
 	 */
 	private BootstrapServiceRegistry buildBootstrapServiceRegistry(
-			Map integrationSettings,
+			Map<?,?> integrationSettings,
 			ClassLoader providedClassLoader,
 			ClassLoaderService providedClassLoaderService) {
 		final BootstrapServiceRegistryBuilder bsrBuilder = new BootstrapServiceRegistryBuilder();
@@ -460,8 +464,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 			final Object classLoadersSetting = integrationSettings.get( CLASSLOADERS );
 			if ( classLoadersSetting != null ) {
-				if ( java.util.Collection.class.isInstance( classLoadersSetting ) ) {
-					for ( ClassLoader classLoader : (java.util.Collection<ClassLoader>) classLoadersSetting ) {
+				if ( classLoadersSetting instanceof Collection) {
+					@SuppressWarnings("unchecked")
+					Collection<ClassLoader> classLoaders = (Collection<ClassLoader>) classLoadersSetting;
+					for ( ClassLoader classLoader : classLoaders ) {
 						bsrBuilder.applyClassLoader( classLoader );
 					}
 				}
@@ -470,7 +476,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 						bsrBuilder.applyClassLoader( classLoader );
 					}
 				}
-				else if ( ClassLoader.class.isInstance( classLoadersSetting ) ) {
+				else if ( classLoadersSetting instanceof ClassLoader ) {
 					bsrBuilder.applyClassLoader( (ClassLoader) classLoadersSetting );
 				}
 			}
@@ -488,7 +494,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		return bsrBuilder.build();
 	}
 
-	private void applyIntegrationProvider(Map integrationSettings, BootstrapServiceRegistryBuilder bsrBuilder) {
+	private void applyIntegrationProvider(Map<?,?> integrationSettings, BootstrapServiceRegistryBuilder bsrBuilder) {
 		Object integrationSetting = integrationSettings.get( INTEGRATOR_PROVIDER );
 		if ( integrationSetting == null ) {
 			return;
@@ -506,7 +512,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private MergedSettings mergeSettings(
 			PersistenceUnitDescriptor persistenceUnit,
 			Map<?,?> integrationSettings,
@@ -536,16 +541,16 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		//		2) additional cache region declarations
 		//
 		// we will also clean up any references with null entries
-		Iterator<Map.Entry> itr = mergedSettings.configurationValues.entrySet().iterator();
+		Iterator<Map.Entry<Object,Object>> itr = mergedSettings.configurationValues.entrySet().iterator();
 		while ( itr.hasNext() ) {
-			final Map.Entry entry = itr.next();
+			final Map.Entry<Object,Object> entry = itr.next();
 			if ( entry.getValue() == null ) {
 				// remove entries with null values
 				itr.remove();
 				break;
 			}
 
-			if ( String.class.isInstance( entry.getKey() ) && String.class.isInstance( entry.getValue() ) ) {
+			if ( entry.getKey() instanceof String && entry.getValue() instanceof String) {
 				final String keyString = (String) entry.getKey();
 				final String valueString = (String) entry.getValue();
 
@@ -577,7 +582,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	/**
 	 * Handles normalizing the settings coming from multiple sources, applying proper precedences
 	 */
-	@SuppressWarnings("unchecked")
 	private void normalizeSettings(
 			PersistenceUnitDescriptor persistenceUnit,
 			Map<?, ?> integrationSettings,
@@ -701,7 +705,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		return persistenceUnit.getProperties() == null ? null : (T) persistenceUnit.getProperties().get( propertyName );
 	}
 
-	@SuppressWarnings("unchecked")
 	private void applyUserAndPass(Object effectiveUser, Object effectivePass, MergedSettings mergedSettings) {
 		if ( effectiveUser != null ) {
 			mergedSettings.configurationValues.put( USER, effectiveUser );
@@ -718,7 +721,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	private static final String IS_JTA_TXN_COORD = "local.setting.IS_JTA_TXN_COORD";
 
-	@SuppressWarnings("unchecked")
 	private void normalizeTransactionCoordinator(
 			PersistenceUnitDescriptor persistenceUnit,
 			HashMap<?, ?> integrationSettingsCopy,
@@ -760,7 +762,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 
 		boolean hasTxStrategy = mergedSettings.configurationValues.containsKey( TRANSACTION_COORDINATOR_STRATEGY );
-		final Boolean definiteJtaCoordinator;
+		final boolean definiteJtaCoordinator;
 
 		if ( hasTxStrategy ) {
 			LOG.overridingTransactionStrategyDangerous( TRANSACTION_COORDINATOR_STRATEGY );
@@ -871,7 +873,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			// hibernate-specific settings have precedence over the JPA ones
 			final Object integrationJdbcUrl = integrationSettingsCopy.get( URL );
 			if ( integrationJdbcUrl != null ) {
-				//noinspection unchecked
 				applyJdbcSettings(
 						integrationJdbcUrl,
 						NullnessHelper.coalesceSuppliedValues(
@@ -907,7 +908,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			final Object integrationJdbcUrl = integrationSettingsCopy.get( JAKARTA_JDBC_URL );
 
 			if ( integrationJdbcUrl != null ) {
-				//noinspection unchecked
 				applyJdbcSettings(
 						integrationJdbcUrl,
 						NullnessHelper.coalesceSuppliedValues(
@@ -929,7 +929,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			final Object integrationJdbcUrl = integrationSettingsCopy.get( JPA_JDBC_URL );
 
 			if ( integrationJdbcUrl != null ) {
-				//noinspection unchecked
 				applyJdbcSettings(
 						integrationJdbcUrl,
 						NullnessHelper.coalesceSuppliedValues(
@@ -1024,7 +1023,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		// any other conditions to account for?
 	}
 
-	@SuppressWarnings("unchecked")
 	private void applyDataSource(
 			Object dataSourceRef,
 			Boolean useJtaDataSource,
@@ -1108,7 +1106,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private void applyJdbcSettings(
 			Object url,
 			String driver,
@@ -1256,9 +1253,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		List<ConverterDescriptor> converterDescriptors = null;
 
 		// add any explicit Class references passed in
-		final List<Class> loadedAnnotatedClasses = (List<Class>) configurationValues.remove( org.hibernate.cfg.AvailableSettings.LOADED_CLASSES );
+		final List<Class<? extends AttributeConverter>> loadedAnnotatedClasses = (List<Class<? extends AttributeConverter>>)
+				configurationValues.remove( AvailableSettings.LOADED_CLASSES );
 		if ( loadedAnnotatedClasses != null ) {
-			for ( Class cls : loadedAnnotatedClasses ) {
+			for ( Class<? extends AttributeConverter> cls : loadedAnnotatedClasses ) {
 				if ( AttributeConverter.class.isAssignableFrom( cls ) ) {
 					if ( converterDescriptors == null ) {
 						converterDescriptors = new ArrayList<>();
@@ -1517,7 +1515,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	public static class MergedSettings {
-		private final Map configurationValues = new ConcurrentHashMap( 16, 0.75f, 1 );
+		private final Map<Object,Object> configurationValues = new ConcurrentHashMap<>( 16, 0.75f, 1 );
 
 		private List<CacheRegionDefinition> cacheRegionDefinitions;
 
@@ -1546,14 +1544,14 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 					configurationValues.put( SESSION_FACTORY_NAME, sfName );
 				}
 			}
-			else {
+//			else {
 				// make sure they match?
-			}
+//			}
 
 			configurationValues.putAll( loadedConfig.getConfigurationValues() );
 		}
 
-		public Map getConfigurationValues() {
+		public Map<Object,Object> getConfigurationValues() {
 			return configurationValues;
 		}
 
@@ -1565,6 +1563,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private <T> T loadSettingInstance(String settingName, Object settingValue, Class<T> clazz) {
 		T instance = null;
 		Class<? extends T> instanceClass = null;

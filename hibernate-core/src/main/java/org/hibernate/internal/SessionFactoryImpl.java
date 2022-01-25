@@ -27,7 +27,6 @@ import javax.naming.StringRefAddr;
 import jakarta.persistence.Cache;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.PersistenceContextType;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.PersistenceUnitUtil;
 import jakarta.persistence.Query;
@@ -606,13 +605,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	// todo : (5.2) review synchronizationType, persistenceContextType, transactionType usage
-
-	// SynchronizationType -> should we auto enlist in transactions
-	private transient SynchronizationType synchronizationType;
-
-	// PersistenceContextType -> influences FlushMode and 'autoClose'
-	private transient PersistenceContextType persistenceContextType;
-
 
 	@Override
 	public Session createEntityManager() {
@@ -1266,80 +1258,74 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			return new SessionImpl( sessionFactory, this );
 		}
 
-		@Override
 		@SuppressWarnings("unchecked")
+		private T getThis() {
+			return (T) this;
+		}
+
+		@Override
 		public T interceptor(Interceptor interceptor) {
 			this.interceptor = interceptor;
 			this.explicitNoInterceptor = false;
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T noInterceptor() {
 			this.interceptor = EmptyInterceptor.INSTANCE;
 			this.explicitNoInterceptor = true;
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T statementInspector(StatementInspector statementInspector) {
 			this.statementInspector = statementInspector;
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T connection(Connection connection) {
 			this.connection = connection;
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T connectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
 			this.connectionHandlingMode = connectionHandlingMode;
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T autoJoinTransactions(boolean autoJoinTransactions) {
 			this.autoJoinTransactions = autoJoinTransactions;
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T autoClose(boolean autoClose) {
 			this.autoClose = autoClose;
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T autoClear(boolean autoClear) {
 			this.autoClear = autoClear;
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T flushMode(FlushMode flushMode) {
 			this.flushMode = flushMode;
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T tenantIdentifier(String tenantIdentifier) {
 			this.tenantIdentifier = tenantIdentifier;
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T eventListeners(SessionEventListener... listeners) {
 			if ( this.listeners == null ) {
 				this.listeners = sessionFactory.getSessionFactoryOptions()
@@ -1347,11 +1333,10 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 						.buildBaselineList();
 			}
 			Collections.addAll( this.listeners, listeners );
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T clearEventListeners() {
 			if ( listeners == null ) {
 				//Needs to initialize explicitly to an empty list as otherwise "null" implies the default listeners will be applied
@@ -1360,13 +1345,13 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			else {
 				listeners.clear();
 			}
-			return (T) this;
+			return getThis();
 		}
 
-		@Override @SuppressWarnings("unchecked")
+		@Override
 		public T jdbcTimeZone(TimeZone timeZone) {
 			jdbcTimeZone = timeZone;
-			return (T) this;
+			return getThis();
 		}
 	}
 
@@ -1561,9 +1546,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	 * @param ois The stream from which to "read" the factory
 	 * @return The deserialized factory
 	 * @throws IOException indicates problems reading back serial data stream
-	 * @throws ClassNotFoundException indicates problems reading back serial data stream
 	 */
-	static SessionFactoryImpl deserialize(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+	static SessionFactoryImpl deserialize(ObjectInputStream ois) throws IOException {
 		LOG.trace( "Deserializing SessionFactory from Session" );
 		final String uuid = ois.readUTF();
 		boolean isNamed = ois.readBoolean();

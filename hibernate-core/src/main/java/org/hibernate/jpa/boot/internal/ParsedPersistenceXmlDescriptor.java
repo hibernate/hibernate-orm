@@ -39,11 +39,11 @@ public class ParsedPersistenceXmlDescriptor implements org.hibernate.jpa.boot.sp
 	private ValidationMode validationMode;
 	private SharedCacheMode sharedCacheMode;
 
-	private Properties properties = new Properties();
+	private final Properties properties = new Properties();
 
-	private List<String> classes = new ArrayList<>();
-	private List<String> mappingFiles = new ArrayList<>();
-	private List<URL> jarFileUrls = new ArrayList<>();
+	private final List<String> classes = new ArrayList<>();
+	private final List<String> mappingFiles = new ArrayList<>();
+	private final List<URL> jarFileUrls = new ArrayList<>();
 
 	public ParsedPersistenceXmlDescriptor(URL persistenceUnitRootUrl) {
 		this.persistenceUnitRootUrl = persistenceUnitRootUrl;

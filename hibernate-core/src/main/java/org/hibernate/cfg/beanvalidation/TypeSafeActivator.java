@@ -68,7 +68,7 @@ class TypeSafeActivator {
 	 */
 	@SuppressWarnings( {"UnusedDeclaration"})
 	public static void validateSuppliedFactory(Object object) {
-		if ( ! ValidatorFactory.class.isInstance( object ) ) {
+		if ( !(object instanceof ValidatorFactory) ) {
 			throw new IntegrationException(
 					"Given object was not an instance of " + ValidatorFactory.class.getName()
 							+ "[" + object.getClass().getName() + "]"
@@ -133,7 +133,6 @@ class TypeSafeActivator {
 		listener.initialize( cfgService.getSettings(), classLoaderService );
 	}
 
-	@SuppressWarnings({"unchecked", "UnusedParameters"})
 	private static void applyRelationalConstraints(ValidatorFactory factory, ActivationContext activationContext) {
 		final ConfigurationService cfgService = activationContext.getServiceRegistry().getService( ConfigurationService.class );
 		if ( !cfgService.getSetting( BeanValidationIntegrator.APPLY_CONSTRAINTS, StandardConverters.BOOLEAN, true  ) ) {
@@ -281,11 +280,10 @@ class TypeSafeActivator {
 			ConstraintDescriptor<Min> minConstraint = (ConstraintDescriptor<Min>) descriptor;
 			long min = minConstraint.getAnnotation().value();
 
-			@SuppressWarnings("unchecked")
 			final Iterator<Selectable> itor = property.getColumnIterator();
 			if ( itor.hasNext() ) {
 				final Selectable selectable = itor.next();
-				if ( Column.class.isInstance( selectable ) ) {
+				if ( selectable instanceof Column ) {
 					Column col = (Column) selectable;
 					String checkConstraint = col.getQuotedName(dialect) + ">=" + min;
 					applySQLCheck( col, checkConstraint );
@@ -300,11 +298,10 @@ class TypeSafeActivator {
 			ConstraintDescriptor<Max> maxConstraint = (ConstraintDescriptor<Max>) descriptor;
 			long max = maxConstraint.getAnnotation().value();
 
-			@SuppressWarnings("unchecked")
 			final Iterator<Selectable> itor = property.getColumnIterator();
 			if ( itor.hasNext() ) {
 				final Selectable selectable = itor.next();
-				if ( Column.class.isInstance( selectable ) ) {
+				if ( selectable instanceof Column ) {
 					Column col = (Column) selectable;
 					String checkConstraint = col.getQuotedName( dialect ) + "<=" + max;
 					applySQLCheck( col, checkConstraint );
@@ -323,7 +320,6 @@ class TypeSafeActivator {
 		col.setCheckConstraint( checkConstraint );
 	}
 
-	@SuppressWarnings("unchecked")
 	private static boolean applyNotNull(Property property, ConstraintDescriptor<?> descriptor) {
 		boolean hasNotNull = false;
 		if ( NotNull.class.equals( descriptor.getAnnotation().annotationType() ) ) {
@@ -334,8 +330,8 @@ class TypeSafeActivator {
 					final Iterator<Selectable> itr = property.getColumnIterator();
 					while ( itr.hasNext() ) {
 						final Selectable selectable = itr.next();
-						if ( Column.class.isInstance( selectable ) ) {
-							Column.class.cast( selectable ).setNullable( false );
+						if ( selectable instanceof Column ) {
+							((Column) selectable).setNullable( false );
 						}
 						else {
 							LOG.debugf(
@@ -360,11 +356,10 @@ class TypeSafeActivator {
 			int integerDigits = digitsConstraint.getAnnotation().integer();
 			int fractionalDigits = digitsConstraint.getAnnotation().fraction();
 
-			@SuppressWarnings("unchecked")
 			final Iterator<Selectable> itor = property.getColumnIterator();
 			if ( itor.hasNext() ) {
 				final Selectable selectable = itor.next();
-				if ( Column.class.isInstance( selectable ) ) {
+				if ( selectable instanceof Column ) {
 					Column col = (Column) selectable;
 					col.setPrecision( integerDigits + fractionalDigits );
 					col.setScale( fractionalDigits );
@@ -381,7 +376,6 @@ class TypeSafeActivator {
 			ConstraintDescriptor<Size> sizeConstraint = (ConstraintDescriptor<Size>) descriptor;
 			int max = sizeConstraint.getAnnotation().max();
 
-			@SuppressWarnings("unchecked")
 			final Iterator<Selectable> itor = property.getColumnIterator();
 			if ( itor.hasNext() ) {
 				final Selectable selectable = itor.next();
@@ -398,14 +392,12 @@ class TypeSafeActivator {
 				descriptor.getAnnotation().annotationType().getName()
 		)
 				&& String.class.equals( propertyDescriptor.getElementClass() ) ) {
-			@SuppressWarnings("unchecked")
 			int max = (Integer) descriptor.getAttributes().get( "max" );
 
-			@SuppressWarnings("unchecked")
 			final Iterator<Selectable> itor = property.getColumnIterator();
 			if ( itor.hasNext() ) {
 				final Selectable selectable = itor.next();
-				if ( Column.class.isInstance( selectable ) ) {
+				if ( selectable instanceof Column ) {
 					Column col = (Column) selectable;
 					if ( max < Integer.MAX_VALUE ) {
 						col.setLength( max );
@@ -518,7 +510,7 @@ class TypeSafeActivator {
 		}
 
 		try {
-			return ValidatorFactory.class.cast( validatorFactoryReference );
+			return (ValidatorFactory) validatorFactoryReference;
 		}
 		catch ( ClassCastException e ) {
 			throw new IntegrationException(
@@ -533,48 +525,41 @@ class TypeSafeActivator {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private static ValidatorFactory resolveProvidedFactory(ConfigurationService cfgService) {
 		return cfgService.getSetting(
 				AvailableSettings.JPA_VALIDATION_FACTORY,
-				new ConfigurationService.Converter<ValidatorFactory>() {
-					@Override
-					public ValidatorFactory convert(Object value) {
-						try {
-							return ValidatorFactory.class.cast( value );
-						}
-						catch ( ClassCastException e ) {
-							throw new IntegrationException(
-									String.format(
-											Locale.ENGLISH,
-											"ValidatorFactory reference (provided via `%s` setting) was not castable to %s : %s",
-											AvailableSettings.JPA_VALIDATION_FACTORY,
-											ValidatorFactory.class.getName(),
-											value.getClass().getName()
-									)
-							);
-						}
+				value -> {
+					try {
+						return (ValidatorFactory) value;
+					}
+					catch ( ClassCastException e ) {
+						throw new IntegrationException(
+								String.format(
+										Locale.ENGLISH,
+										"ValidatorFactory reference (provided via `%s` setting) was not castable to %s : %s",
+										AvailableSettings.JPA_VALIDATION_FACTORY,
+										ValidatorFactory.class.getName(),
+										value.getClass().getName()
+								)
+						);
 					}
 				},
 				cfgService.getSetting(
 						AvailableSettings.JAKARTA_VALIDATION_FACTORY,
-						new ConfigurationService.Converter<ValidatorFactory>() {
-							@Override
-							public ValidatorFactory convert(Object value) {
-								try {
-									return ValidatorFactory.class.cast( value );
-								}
-								catch ( ClassCastException e ) {
-									throw new IntegrationException(
-											String.format(
-													Locale.ENGLISH,
-													"ValidatorFactory reference (provided via `%s` setting) was not castable to %s : %s",
-													AvailableSettings.JAKARTA_VALIDATION_FACTORY,
-													ValidatorFactory.class.getName(),
-													value.getClass().getName()
-											)
-									);
-								}
+						value -> {
+							try {
+								return (ValidatorFactory) value;
+							}
+							catch ( ClassCastException e ) {
+								throw new IntegrationException(
+										String.format(
+												Locale.ENGLISH,
+												"ValidatorFactory reference (provided via `%s` setting) was not castable to %s : %s",
+												AvailableSettings.JAKARTA_VALIDATION_FACTORY,
+												ValidatorFactory.class.getName(),
+												value.getClass().getName()
+										)
+								);
 							}
 						},
 						null

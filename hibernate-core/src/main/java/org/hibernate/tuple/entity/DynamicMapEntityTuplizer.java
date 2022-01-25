@@ -28,6 +28,8 @@ import org.hibernate.tuple.DynamicMapInstantiator;
  *
  * @author Steve Ebersole
  * @author Gavin King
+ *
+ * @deprecated like its supertypes
  */
 @Deprecated(since = "6.0")
 public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {

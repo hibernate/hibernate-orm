@@ -20,6 +20,8 @@ import org.hibernate.metamodel.RepresentationMode;
  * A registry allowing users to define the default {@link EntityTuplizer} class to use per {@link RepresentationMode}.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated like its supertypes
  */
 @Deprecated(since = "6.0")
 public class EntityTuplizerFactory implements Serializable {

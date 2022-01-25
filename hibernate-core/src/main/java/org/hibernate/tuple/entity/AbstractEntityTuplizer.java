@@ -30,6 +30,8 @@ import org.hibernate.type.ComponentType;
  *
  * @author Steve Ebersole
  * @author Gavin King
+ *
+ * @deprecated like its supertypes
  */
 @Deprecated(since = "6.0")
 public abstract class AbstractEntityTuplizer implements EntityTuplizer {

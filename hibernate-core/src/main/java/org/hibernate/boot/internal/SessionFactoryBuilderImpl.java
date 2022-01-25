@@ -350,12 +350,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyConnectionReleaseMode(ConnectionReleaseMode connectionReleaseMode) {
-		this.optionsBuilder.applyConnectionReleaseMode( connectionReleaseMode );
-		return this;
-	}
-
-	@Override
 	public SessionFactoryBuilder applyConnectionProviderDisablesAutoCommit(boolean providerDisablesAutoCommit) {
 		this.optionsBuilder.applyConnectionProviderDisablesAutoCommit( providerDisablesAutoCommit );
 		return this;
@@ -388,13 +382,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder enableReleaseResourcesOnCloseEnabled(boolean enable) {
 		this.optionsBuilder.enableReleaseResourcesOnClose( enable );
-		return this;
-	}
-
-
-	@Override
-	public SessionFactoryBuilder applyStrictJpaQueryLanguageCompliance(boolean enabled) {
-		this.optionsBuilder.enableStrictJpaQueryLanguageCompliance( enabled );
 		return this;
 	}
 

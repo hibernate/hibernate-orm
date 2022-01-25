@@ -8,7 +8,6 @@ package org.hibernate.boot.spi;
 
 import java.util.function.Supplier;
 
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
@@ -238,12 +237,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public T applyStrictJpaQueryLanguageCompliance(boolean enabled) {
-		delegate.applyStrictJpaQueryLanguageCompliance( enabled );
-		return getThis();
-	}
-
-	@Override
 	public T applyNamedQueryCheckingOnStartup(boolean enabled) {
 		delegate.applyNamedQueryCheckingOnStartup( enabled );
 		return getThis();
@@ -324,13 +317,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	@Override
 	public T applyJdbcFetchSize(int size) {
 		delegate.applyJdbcFetchSize( size );
-		return getThis();
-	}
-
-	@SuppressWarnings("deprecation")
-	@Override
-	public T applyConnectionReleaseMode(ConnectionReleaseMode connectionReleaseMode) {
-		delegate.applyConnectionReleaseMode( connectionReleaseMode );
 		return getThis();
 	}
 

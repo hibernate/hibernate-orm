@@ -25,6 +25,8 @@ public interface JpaCompliance {
 	 * Deviations result in an exception if enabled
 	 *
 	 * @return {@code true} indicates to behave in the spec-defined way
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JPA_QUERY_COMPLIANCE
 	 */
 	boolean isJpaQueryComplianceEnabled();
 
@@ -34,6 +36,8 @@ public interface JpaCompliance {
 	 * since it extends the JPA one.
 	 *
 	 * @return {@code true} indicates to behave in the spec-defined way
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JPA_TRANSACTION_COMPLIANCE
 	 */
 	boolean isJpaTransactionComplianceEnabled();
 
@@ -48,6 +52,8 @@ public interface JpaCompliance {
 	 *
 	 * @return {@code true} indicates to behave in the spec-defined way, interpreting the
 	 * mapping as a "list", rather than a "bag"
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JPA_LIST_COMPLIANCE
 	 */
 	boolean isJpaListComplianceEnabled();
 
@@ -61,6 +67,8 @@ public interface JpaCompliance {
 	 * exceptions when the spec says it should with regard to close checking
 	 *
 	 * @return {@code true} indicates to behave in the spec-defined way
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JPA_CLOSED_COMPLIANCE
 	 */
 	boolean isJpaClosedComplianceEnabled();
 
@@ -76,6 +84,8 @@ public interface JpaCompliance {
 	 * If enabled Hibernate will initialize the entity Proxy even when accessing its identifier.
 	 *
 	 * @return {@code true} indicates to behave in the spec-defined way
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JPA_PROXY_COMPLIANCE
 	 */
 	boolean isJpaProxyComplianceEnabled();
 
@@ -88,6 +98,8 @@ public interface JpaCompliance {
 	 * than updated.
 	 *
 	 * @return {@code true} says to act the spec-defined way.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JPA_CACHING_COMPLIANCE
 	 */
 	boolean isJpaCacheComplianceEnabled();
 
@@ -97,6 +109,8 @@ public interface JpaCompliance {
 	 * defined?
 	 *
 	 * @return {@code true} indicates the generator name scope is considered global.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE
 	 */
 	boolean isGlobalGeneratorScopeEnabled();
 
@@ -106,6 +120,8 @@ public interface JpaCompliance {
 	 * JPA says the order-items can only be attribute references whereas Hibernate supports a
 	 * wide range of items.  With this enabled, Hibernate will throw a compliance error when a
 	 * non-attribute-reference is used.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JPA_ORDER_BY_MAPPING_COMPLIANCE
 	 */
 	boolean isJpaOrderByMappingComplianceEnabled();
 
@@ -120,6 +136,8 @@ public interface JpaCompliance {
 	 * {@link org.hibernate.type.descriptor.java.JavaType#coerce}.
 	 * <p>
 	 * This setting controls whether such a coercion should be allowed.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JPA_LOAD_BY_ID_COMPLIANCE
 	 *
 	 * @since 6.0
 	 */

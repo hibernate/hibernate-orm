@@ -17,7 +17,6 @@ import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
-import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EmptyInterceptor;
@@ -179,12 +178,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private Class<? extends Interceptor> statelessInterceptorClass;
 	private Supplier<? extends Interceptor> statelessInterceptorSupplier;
 	private StatementInspector statementInspector;
-	private List<SessionFactoryObserver> sessionFactoryObserverList = new ArrayList<>();
-	private BaselineSessionEventsListenerBuilder baselineSessionEventsListenerBuilder;	// not exposed on builder atm
+	private final List<SessionFactoryObserver> sessionFactoryObserverList = new ArrayList<>();
+	private final BaselineSessionEventsListenerBuilder baselineSessionEventsListenerBuilder;	// not exposed on builder atm
 
 	// persistence behavior
 	private CustomEntityDirtinessStrategy customEntityDirtinessStrategy;
-	private List<EntityNameResolver> entityNameResolvers = new ArrayList<>();
+	private final List<EntityNameResolver> entityNameResolvers = new ArrayList<>();
 	private EntityNotFoundDelegate entityNotFoundDelegate;
 	private boolean identifierRollbackEnabled;
 	private EntityTuplizerFactory entityTuplizerFactory = new EntityTuplizerFactory();
@@ -269,10 +268,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
 		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
-		final Map configurationSettings = new HashMap();
-		//noinspection unchecked
+		final Map<Object,Object> configurationSettings = new HashMap<>();
 		configurationSettings.putAll( jdbcServices.getJdbcEnvironment().getDialect().getDefaultProperties() );
-		//noinspection unchecked
 		configurationSettings.putAll( cfgService.getSettings() );
 		if ( cfgService == null ) {
 			cfgService = new ConfigurationServiceImpl( configurationSettings );
@@ -390,7 +387,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 		this.sqmTranslatorFactory = resolveSqmTranslator(
 				sqmTranslatorFactoryImplFqn,
-				serviceRegistry,
 				strategySelector
 		);
 
@@ -572,6 +568,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 	}
 
+	@SuppressWarnings("unchecked")
 	private SqmMultiTableMutationStrategy resolveSqmMutationStrategy(
 			String strategyName,
 			StandardServiceRegistry serviceRegistry,
@@ -620,6 +617,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 	}
 
+	@SuppressWarnings("unchecked")
 	private SqmMultiTableInsertStrategy resolveSqmInsertStrategy(
 			String strategyName,
 			StandardServiceRegistry serviceRegistry,
@@ -680,7 +678,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		return strategySelector.resolveDefaultableStrategy(
 				HqlTranslator.class,
 				producerName,
-				new Callable<HqlTranslator>() {
+				new Callable<>() {
 					@Override
 					public HqlTranslator call() throws Exception {
 						final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
@@ -692,7 +690,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	private SqmTranslatorFactory resolveSqmTranslator(
 			String translatorImplFqn,
-			StandardServiceRegistry serviceRegistry,
 			StrategySelector strategySelector) {
 		if ( StringHelper.isEmpty( translatorImplFqn ) ) {
 			return null;
@@ -704,8 +701,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 	}
 
-	@SuppressWarnings("deprecation")
-	private static Interceptor determineInterceptor(Map configurationSettings, StrategySelector strategySelector) {
+	private static Interceptor determineInterceptor(
+			Map<Object,Object> configurationSettings,
+			StrategySelector strategySelector) {
 		Object setting = configurationSettings.get( INTERCEPTOR );
 		if ( setting == null ) {
 			// try the legacy (deprecated) JPA name
@@ -724,9 +722,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 	}
 
-	@SuppressWarnings({"unchecked" })
+	@SuppressWarnings("unchecked")
 	private static Supplier<? extends Interceptor> determineStatelessInterceptor(
-			Map configurationSettings,
+			Map<Object,Object> configurationSettings,
 			StrategySelector strategySelector) {
 		Object setting = configurationSettings.get( SESSION_SCOPED_INTERCEPTOR );
 
@@ -763,7 +761,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	private PhysicalConnectionHandlingMode interpretConnectionHandlingMode(
-			Map configurationSettings,
+			Map<Object,Object> configurationSettings,
 			StandardServiceRegistry serviceRegistry) {
 		final PhysicalConnectionHandlingMode specifiedHandlingMode = PhysicalConnectionHandlingMode.interpret(
 				configurationSettings.get( CONNECTION_HANDLING )
@@ -930,7 +928,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@Override
 	public SessionFactoryObserver[] getSessionFactoryObservers() {
-		return sessionFactoryObserverList.toArray( new SessionFactoryObserver[ sessionFactoryObserverList.size() ] );
+		return sessionFactoryObserverList.toArray(new SessionFactoryObserver[0]);
 	}
 
 	@Override
@@ -1120,7 +1118,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@Override
 	public EntityNameResolver[] getEntityNameResolvers() {
-		return entityNameResolvers.toArray( new EntityNameResolver[ entityNameResolvers.size() ] );
+		return entityNameResolvers.toArray(new EntityNameResolver[0]);
 	}
 
 	@Override
@@ -1410,21 +1408,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.connectionHandlingMode = mode;
 	}
 
-	public void applyConnectionReleaseMode(ConnectionReleaseMode connectionReleaseMode) {
-		if ( this.connectionHandlingMode == null ) {
-			this.connectionHandlingMode = PhysicalConnectionHandlingMode.interpret(
-					ConnectionAcquisitionMode.AS_NEEDED,
-					connectionReleaseMode
-			);
-		}
-		else {
-			this.connectionHandlingMode = PhysicalConnectionHandlingMode.interpret(
-					this.connectionHandlingMode.getAcquisitionMode(),
-					connectionReleaseMode
-			);
-		}
-	}
-
 	public void applyConnectionProviderDisablesAutoCommit(boolean providerDisablesAutoCommit) {
 		this.connectionProviderDisablesAutoCommit = providerDisablesAutoCommit;
 	}
@@ -1448,16 +1431,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.releaseResourcesOnCloseEnabled = enable;
 	}
 
-	public void enableStrictJpaQueryLanguageCompliance(boolean enabled) {
-		enableJpaQueryCompliance( enabled );
-	}
-
 	public void enableJpaQueryCompliance(boolean enabled) {
 		mutableJpaCompliance().setQueryCompliance( enabled );
 	}
 
 	private MutableJpaCompliance mutableJpaCompliance() {
-		if ( ! MutableJpaCompliance.class.isInstance( this.jpaCompliance ) ) {
+		if ( !(this.jpaCompliance instanceof MutableJpaCompliance) ) {
 			throw new IllegalStateException( "JpaCompliance is no longer mutable" );
 		}
 
@@ -1506,7 +1485,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	public SessionFactoryOptions buildOptions() {
-		if ( MutableJpaCompliance.class.isInstance( this.jpaCompliance ) ) {
+		if ( this.jpaCompliance instanceof MutableJpaCompliance ) {
 			this.jpaCompliance = mutableJpaCompliance().immutableCopy();
 		}
 

@@ -396,25 +396,6 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyPreferUserTransactions(boolean preferUserTransactions);
 
 	/**
-	 * Should we strictly adhere to JPA Query Language (JPQL) syntax, or more broadly support
-	 * all of Hibernate's superset (HQL)?
-	 * <p/>
-	 * Setting this to {@code true} may cause valid HQL to throw an exception because it violates
-	 * the JPQL subset.
-	 *
-	 * @param enabled {@code true} indicates that we should strictly adhere to the JPQL subset; {@code false}
-	 * indicates we should accept the broader HQL syntax.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#JPAQL_STRICT_COMPLIANCE
-	 *
-	 * @deprecated Use {@link #enableJpaQueryCompliance} instead
-	 */
-	@Deprecated
-	SessionFactoryBuilder applyStrictJpaQueryLanguageCompliance(boolean enabled);
-
-	/**
 	 * Should named queries be checked on startup?
 	 *
 	 * @param enabled {@code true} indicates that they should; {@code false} indicates they should not.
@@ -619,25 +600,9 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyConnectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode);
 
 	/**
-	 * Apply a ConnectionReleaseMode.
-	 *
-	 * @param connectionReleaseMode The ConnectionReleaseMode to use.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#RELEASE_CONNECTIONS
-	 *
-	 * @deprecated Use {@link #applyConnectionHandlingMode} instead
-	 */
-	@Deprecated
-	SessionFactoryBuilder applyConnectionReleaseMode(ConnectionReleaseMode connectionReleaseMode);
-
-	/**
 	 * @see org.hibernate.cfg.AvailableSettings#CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT
 	 */
-	default SessionFactoryBuilder applyConnectionProviderDisablesAutoCommit(boolean providerDisablesAutoCommit) {
-		return this;
-	}
+	SessionFactoryBuilder applyConnectionProviderDisablesAutoCommit(boolean providerDisablesAutoCommit);
 
 	/**
 	 * Should Hibernate apply comments to SQL it generates?
@@ -652,15 +617,14 @@ public interface SessionFactoryBuilder {
 
 	/**
 	 * Apply a SQLFunction to the underlying {@link org.hibernate.query.sqm.function.SqmFunctionRegistry}.
-	 * <p/>
-	 * TODO : Ultimately I would like this to move to {@link MetadataBuilder} in conjunction with allowing mappings to reference SQLFunctions.
-	 * today mappings can only name SQL functions directly, not through the SQLFunctionRegistry indirection
 	 *
 	 * @param registrationName The name to register it under.
 	 * @param functionDescriptor The SQLFunction impl
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	// Ultimately I would like this to move to {@link MetadataBuilder} in conjunction with allowing mappings to reference SQLFunctions.
+	// today mappings can only name SQL functions directly, not through the SQLFunctionRegistry indirection
 	SessionFactoryBuilder applySqlFunction(String registrationName, SqmFunctionDescriptor functionDescriptor);
 
 	/**

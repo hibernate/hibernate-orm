@@ -55,15 +55,6 @@ public class NonRegistryManagedExtendedCdiSupportTest extends BaseUnitTestCase {
 		doTest( TestingExtendedBeanManager.create() );
 	}
 
-	/**
-	 * NOTE : we use the deprecated one here to make sure this continues to work.
-	 * Scott still uses this in WildFly and we need it to continue to work there
-	 */
-	@Test
-	public void testLegacy() {
-		doTest( TestingExtendedBeanManager.createLegacy() );
-	}
-
 	private void doTest(TestingExtendedBeanManager beanManager) {
 		Monitor.reset();
 

@@ -18,8 +18,4 @@ public interface TestingExtendedBeanManager {
 		return new TestingExtendedBeanManagerImpl();
 	}
 
-	static TestingExtendedBeanManager createLegacy() {
-		return new TestingLegacyExtendedBeanManagerImpl();
-	}
-
 }

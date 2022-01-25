@@ -148,9 +148,8 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		protected Instance<B> resolveContainerInstance() {
-			final Instance root;
+			final Instance<Object> root;
 			try {
 				root = beanManager.createInstance();
 			}

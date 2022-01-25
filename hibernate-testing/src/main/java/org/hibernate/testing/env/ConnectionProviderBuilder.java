@@ -19,6 +19,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.internal.util.ReflectHelper;
 
 import org.hibernate.testing.DialectCheck;
@@ -76,7 +77,7 @@ public class ConnectionProviderBuilder implements DialectCheck {
 
 	public static DatasourceConnectionProviderImpl buildDataSourceConnectionProvider(String dbName) {
 		try {
-			Class dataSourceClass = ReflectHelper.classForName( DATA_SOURCE, ConnectionProviderBuilder.class );
+			Class<?> dataSourceClass = ReflectHelper.classForName( DATA_SOURCE, ConnectionProviderBuilder.class );
 			DataSource actualDataSource = (DataSource) dataSourceClass.newInstance();
 			ReflectHelper.findSetterMethod( dataSourceClass, "URL", String.class ).invoke(
 					actualDataSource,
@@ -127,7 +128,7 @@ public class ConnectionProviderBuilder implements DialectCheck {
 
 		@Override
 		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-			if ("getConnection".equals(method.getName())) {
+			if ( "getConnection".equals( method.getName() ) ) {
 				if(actualConnection == null) {
 					actualConnection = (Connection) method.invoke( target, args);
 					connectionProxy = (Connection) Proxy.newProxyInstance(
@@ -177,7 +178,7 @@ public class ConnectionProviderBuilder implements DialectCheck {
 				return allowAggressiveRelease;
 			}
 		};
-		connectionProvider.configure( props );
+		connectionProvider.configure( PropertiesHelper.map( props ) );
 		return connectionProvider;
 	}
 

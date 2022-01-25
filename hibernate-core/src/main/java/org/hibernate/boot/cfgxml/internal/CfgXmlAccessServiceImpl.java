@@ -17,7 +17,7 @@ import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 public class CfgXmlAccessServiceImpl implements CfgXmlAccessService {
 	private final LoadedConfig aggregatedCfgXml;
 
-	public CfgXmlAccessServiceImpl(Map configurationValues) {
+	public CfgXmlAccessServiceImpl(Map<?,?> configurationValues) {
 		aggregatedCfgXml = (LoadedConfig) configurationValues.get( LOADED_CONFIG_KEY );
 	}
 

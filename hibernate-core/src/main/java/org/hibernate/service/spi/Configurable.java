@@ -18,5 +18,5 @@ public interface Configurable {
 	 *
 	 * @param configurationValues The configuration properties.
 	 */
-	void configure(Map configurationValues);
+	void configure(Map<String, Object> configurationValues);
 }

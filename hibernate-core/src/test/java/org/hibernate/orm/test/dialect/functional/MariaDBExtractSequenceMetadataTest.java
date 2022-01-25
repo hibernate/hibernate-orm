@@ -51,7 +51,8 @@ public class MariaDBExtractSequenceMetadataTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-13373")
 	public void testHibernateLaunchedSuccessfully() {
-		JdbcEnvironment jdbcEnvironment = ServiceRegistryBuilder.buildServiceRegistry(Environment.getProperties()).getService( JdbcEnvironment.class );
+		JdbcEnvironment jdbcEnvironment = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() )
+				.getService( JdbcEnvironment.class );
 		Assertions.assertFalse( jdbcEnvironment.getExtractedDatabaseMetaData().getSequenceInformationList().isEmpty() );
 	}
 

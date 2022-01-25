@@ -28,7 +28,7 @@ import static org.junit.Assert.fail;
 public class TestFlushJoinTransaction extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		super.addSettings( settings );
 		TestingJtaBootstrap.prepare( settings );
 		settings.put( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta" );

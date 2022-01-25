@@ -44,7 +44,7 @@ public class QueryHintHANATest extends BaseNonConfigCoreFunctionalTestCase {
 	private SQLStatementInterceptor sqlStatementInterceptor;
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		settings.put( AvailableSettings.USE_SQL_COMMENTS, "true" );
 		sqlStatementInterceptor = new SQLStatementInterceptor( settings );
 	}

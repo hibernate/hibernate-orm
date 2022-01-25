@@ -43,7 +43,7 @@ public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		TestingJtaBootstrap.prepare( settings );
 		//settings.put( AvailableSettings.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
 		settings.put( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, JtaTransactionCoordinatorBuilderImpl.class.getName() );

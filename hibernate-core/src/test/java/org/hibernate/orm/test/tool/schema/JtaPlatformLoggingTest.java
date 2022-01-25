@@ -40,7 +40,7 @@ public class JtaPlatformLoggingTest extends BaseNonConfigCoreFunctionalTestCase 
 	private Triggerable triggerable = logInspection.watchForLogMessages( "HHH000490" );
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		TestingJtaBootstrap.prepare( settings );
 		settings.put( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta" );
 	}

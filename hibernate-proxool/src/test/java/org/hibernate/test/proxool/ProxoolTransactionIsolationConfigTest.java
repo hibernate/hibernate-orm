@@ -6,6 +6,8 @@
  */
 package org.hibernate.test.proxool;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -22,14 +24,14 @@ import org.junit.Before;
  * @author Steve Ebersole
  */
 public class ProxoolTransactionIsolationConfigTest extends BaseTransactionIsolationConfigTest {
-	private Properties properties;
+	private Map<String,Object> properties;
 	private StandardServiceRegistry ssr;
 
 	@Before
 	public void setUp() {
 		String poolName = "pool-one";
 
-		properties = new Properties();
+		properties = new HashMap<>();
 		properties.put( AvailableSettings.PROXOOL_POOL_ALIAS, poolName );
 		properties.put( AvailableSettings.PROXOOL_PROPERTIES, poolName + ".properties" );
 

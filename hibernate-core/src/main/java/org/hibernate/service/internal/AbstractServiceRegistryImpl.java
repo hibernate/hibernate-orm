@@ -50,31 +50,29 @@ public abstract class AbstractServiceRegistryImpl
 	private volatile ServiceRegistryImplementor parent;
 	private final boolean allowCrawling;
 
-	private final ConcurrentMap<Class,ServiceBinding> serviceBindingMap = new ConcurrentHashMap<>();
-	private final ConcurrentMap<Class,Class> roleXref = new ConcurrentHashMap<>();
+	private final ConcurrentMap<Class<?>,ServiceBinding<?>> serviceBindingMap = new ConcurrentHashMap<>();
+	private final ConcurrentMap<Class<?>,Class<?>> roleXref = new ConcurrentHashMap<>();
 	// The services stored in initializedServiceByRole are completely initialized
 	// (i.e., configured, dependencies injected, and started)
-	private final ConcurrentMap<Class,Service> initializedServiceByRole = new ConcurrentHashMap<>();
+	private final ConcurrentMap<Class<?>,Service> initializedServiceByRole = new ConcurrentHashMap<>();
 
 	// IMPL NOTE : the list used for ordered destruction.  Cannot used map above because we need to
 	// iterate it in reverse order which is only available through ListIterator
 	// assume 20 services for initial sizing
 	// All access guarded by synchronization on the serviceBindingList itself.
-	private final List<ServiceBinding> serviceBindingList = CollectionHelper.arrayList( 20 );
+	private final List<ServiceBinding<?>> serviceBindingList = CollectionHelper.arrayList( 20 );
 
 	// Guarded by synchronization on this.
-	private boolean autoCloseRegistry;
+	private final boolean autoCloseRegistry;
 	// Guarded by synchronization on this.
 	private Set<ServiceRegistryImplementor> childRegistries;
 
 	private final AtomicBoolean active = new AtomicBoolean( true );
 
-	@SuppressWarnings( {"UnusedDeclaration"})
 	protected AbstractServiceRegistryImpl() {
 		this( (ServiceRegistryImplementor) null );
 	}
 
-	@SuppressWarnings( {"UnusedDeclaration"})
 	protected AbstractServiceRegistryImpl(boolean autoCloseRegistry) {
 		this( (ServiceRegistryImplementor) null, autoCloseRegistry );
 	}
@@ -100,7 +98,7 @@ public abstract class AbstractServiceRegistryImpl
 	public AbstractServiceRegistryImpl(
 			BootstrapServiceRegistry bootstrapServiceRegistry,
 			boolean autoCloseRegistry) {
-		if ( ! ServiceRegistryImplementor.class.isInstance( bootstrapServiceRegistry ) ) {
+		if ( !(bootstrapServiceRegistry instanceof ServiceRegistryImplementor) ) {
 			throw new IllegalArgumentException( "ServiceRegistry parent needs to implement ServiceRegistryImplementor" );
 		}
 		this.parent = (ServiceRegistryImplementor) bootstrapServiceRegistry;
@@ -110,9 +108,8 @@ public abstract class AbstractServiceRegistryImpl
 		this.parent.registerChild( this );
 	}
 
-	@SuppressWarnings({ "unchecked" })
 	protected <R extends Service> void createServiceBinding(ServiceInitiator<R> initiator) {
-		final ServiceBinding serviceBinding = new ServiceBinding( this, initiator );
+		final ServiceBinding<?> serviceBinding = new ServiceBinding<>( this, initiator );
 		serviceBindingMap.put( initiator.getServiceInitiated(), serviceBinding );
 	}
 
@@ -125,25 +122,23 @@ public abstract class AbstractServiceRegistryImpl
 		registerService( binding, providedService.getService() );
 	}
 
-	protected void visitServiceBindings(Consumer<ServiceBinding> action) {
+	protected void visitServiceBindings(Consumer<ServiceBinding<?>> action) {
 		serviceBindingList.forEach( action );
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
 	public ServiceRegistry getParentServiceRegistry() {
 		return parent;
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
 	public <R extends Service> ServiceBinding<R> locateServiceBinding(Class<R> serviceRole) {
 		return locateServiceBinding( serviceRole, true );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	protected <R extends Service> ServiceBinding<R> locateServiceBinding(Class<R> serviceRole, boolean checkParent) {
-		ServiceBinding<R> serviceBinding = serviceBindingMap.get( serviceRole );
+		ServiceBinding<R> serviceBinding = (ServiceBinding<R>) serviceBindingMap.get( serviceRole );
 		if ( serviceBinding == null && checkParent && parent != null ) {
 			// look in parent
 			serviceBinding = parent.locateServiceBinding( serviceRole );
@@ -158,32 +153,32 @@ public abstract class AbstractServiceRegistryImpl
 		}
 
 		// look for a previously resolved alternate registration
-		final Class alternative = roleXref.get( serviceRole );
+		final Class<?> alternative = roleXref.get( serviceRole );
 		if ( alternative != null ) {
-			return serviceBindingMap.get( alternative );
+			return (ServiceBinding<R>) serviceBindingMap.get( alternative );
 		}
 
 		// perform a crawl looking for an alternate registration
-		for ( ServiceBinding binding : serviceBindingMap.values() ) {
+		for ( ServiceBinding<?> binding : serviceBindingMap.values() ) {
 			if ( serviceRole.isAssignableFrom( binding.getServiceRole() ) ) {
 				// we found an alternate...
 				log.alternateServiceRole( serviceRole.getName(), binding.getServiceRole().getName() );
 				registerAlternate( serviceRole, binding.getServiceRole() );
-				return binding;
+				return (ServiceBinding<R>) binding;
 			}
 
 			if ( binding.getService() != null && serviceRole.isInstance( binding.getService() ) ) {
 				// we found an alternate...
 				log.alternateServiceRole( serviceRole.getName(), binding.getServiceRole().getName() );
 				registerAlternate( serviceRole, binding.getServiceRole() );
-				return binding;
+				return (ServiceBinding<R>) binding;
 			}
 		}
 
 		return null;
 	}
 
-	private void registerAlternate(Class alternate, Class target) {
+	private void registerAlternate(Class<?> alternate, Class<?> target) {
 		roleXref.put( alternate, target );
 	}
 
@@ -249,7 +244,6 @@ public abstract class AbstractServiceRegistryImpl
 		return service;
 	}
 
-	@SuppressWarnings( {"unchecked"})
 	protected <R extends Service> R createService(ServiceBinding<R> serviceBinding) {
 		final ServiceInitiator<R> serviceInitiator = serviceBinding.getServiceInitiator();
 		if ( serviceInitiator == null ) {
@@ -280,7 +274,7 @@ public abstract class AbstractServiceRegistryImpl
 
 		applyInjections( service );
 
-		if ( ServiceRegistryAwareService.class.isInstance( service ) ) {
+		if ( service instanceof ServiceRegistryAwareService ) {
 			( (ServiceRegistryAwareService) service ).injectServices( this );
 		}
 	}
@@ -301,15 +295,15 @@ public abstract class AbstractServiceRegistryImpl
 		}
 	}
 
-	@SuppressWarnings({ "unchecked" })
 	private <T extends Service> void processInjection(T service, Method injectionMethod, InjectService injectService) {
 		final Class<?>[] parameterTypes = injectionMethod.getParameterTypes();
-		if ( parameterTypes == null || injectionMethod.getParameterCount() != 1 ) {
+		if ( injectionMethod.getParameterCount() != 1 ) {
 			throw new ServiceDependencyException(
 					"Encountered @InjectService on method with unexpected number of parameters"
 			);
 		}
 
+		//noinspection rawtypes
 		Class dependentServiceRole = injectService.serviceRole();
 		if ( dependentServiceRole == null || dependentServiceRole.equals( Void.class ) ) {
 			dependentServiceRole = parameterTypes[0];
@@ -317,6 +311,7 @@ public abstract class AbstractServiceRegistryImpl
 
 		// todo : because of the use of proxies, this is no longer returning null here...
 
+		//noinspection unchecked
 		final Service dependantService = getService( dependentServiceRole );
 		if ( dependantService == null ) {
 			if ( injectService.required() ) {
@@ -336,9 +331,8 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
 	public <R extends Service> void startService(ServiceBinding<R> serviceBinding) {
-		if ( Startable.class.isInstance( serviceBinding.getService() ) ) {
+		if ( serviceBinding.getService() instanceof Startable ) {
 			( (Startable) serviceBinding.getService() ).start();
 		}
 	}
@@ -348,7 +342,6 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
 	public synchronized void destroy() {
 		if ( active.compareAndSet( true, false ) ) {
 			try {
@@ -356,11 +349,11 @@ public abstract class AbstractServiceRegistryImpl
 				//threads not owning the synchronization lock can't get an invalid Service:
 				initializedServiceByRole.clear();
 				synchronized (serviceBindingList) {
-					ListIterator<ServiceBinding> serviceBindingsIterator = serviceBindingList.listIterator(
+					ListIterator<ServiceBinding<?>> serviceBindingsIterator = serviceBindingList.listIterator(
 							serviceBindingList.size()
 					);
 					while ( serviceBindingsIterator.hasPrevious() ) {
-						final ServiceBinding serviceBinding = serviceBindingsIterator.previous();
+						final ServiceBinding<?> serviceBinding = serviceBindingsIterator.previous();
 						serviceBinding.getLifecycleOwner().stopService( serviceBinding );
 					}
 					serviceBindingList.clear();
@@ -376,7 +369,7 @@ public abstract class AbstractServiceRegistryImpl
 	@Override
 	public synchronized <R extends Service> void stopService(ServiceBinding<R> binding) {
 		final Service service = binding.getService();
-		if ( Stoppable.class.isInstance( service ) ) {
+		if ( service instanceof Stoppable ) {
 			try {
 				( (Stoppable) service ).stop();
 			}
@@ -430,7 +423,7 @@ public abstract class AbstractServiceRegistryImpl
 			this.parent.deRegisterChild( this );
 		}
 		if ( newParent != null ) {
-			if ( ! ServiceRegistryImplementor.class.isInstance( newParent ) ) {
+			if ( !(newParent instanceof ServiceRegistryImplementor) ) {
 				throw new IllegalArgumentException( "ServiceRegistry parent needs to implement ServiceRegistryImplementor" );
 			}
 			this.parent = (ServiceRegistryImplementor) newParent;
@@ -442,10 +435,7 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	public synchronized void reactivate() {
-		if ( active.compareAndSet( false, true ) ) {
-			//ok
-		}
-		else {
+		if ( !active.compareAndSet(false, true) ) {
 			throw new IllegalStateException( "Was not inactive, could not reactivate!" );
 		}
 	}

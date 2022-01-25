@@ -24,7 +24,7 @@ public class ConfigurationServiceInitiator implements StandardServiceInitiator<C
 	public static final ConfigurationServiceInitiator INSTANCE = new ConfigurationServiceInitiator();
 
 	@Override
-	public ConfigurationService initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public ConfigurationService initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		return new ConfigurationServiceImpl( configurationValues );
 	}
 

@@ -6,7 +6,7 @@
  */
 package org.hibernate.community.dialect;
 
-import java.util.Properties;
+import java.util.HashMap;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
@@ -14,8 +14,6 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.internal.DialectFactoryImpl;
-import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfoSource;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.orm.test.dialect.resolver.TestingDialectResolutionInfo;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -80,13 +78,8 @@ public class CommunityDialectFactoryTest extends BaseUnitTestCase {
 			DialectResolver resolver) {
 		dialectFactory.setDialectResolver( resolver );
 		Dialect resolved = dialectFactory.buildDialect(
-				new Properties(),
-				new DialectResolutionInfoSource() {
-					@Override
-					public DialectResolutionInfo getDialectResolutionInfo() {
-						return TestingDialectResolutionInfo.forDatabaseInfo( databaseName, driverName, majorVersion, minorVersion );
-					}
-				}
+				new HashMap<>(),
+				() -> TestingDialectResolutionInfo.forDatabaseInfo( databaseName, driverName, majorVersion, minorVersion )
 		);
 		assertEquals( expected, resolved.getClass() );
 	}

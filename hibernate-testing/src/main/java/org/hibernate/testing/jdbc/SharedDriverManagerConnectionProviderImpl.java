@@ -34,7 +34,7 @@ public class SharedDriverManagerConnectionProviderImpl extends DriverManagerConn
 	private Boolean supportsIsValid;
 
 	@Override
-	public void configure(Map configurationValues) {
+	public void configure(Map<String, Object> configurationValues) {
 		final Config c = new Config( configurationValues );
 		if ( !c.isCompatible( config ) ) {
 			if ( config != null ) {
@@ -86,7 +86,7 @@ public class SharedDriverManagerConnectionProviderImpl extends DriverManagerConn
 		private final Properties connectionProps;
 		private final Integer isolation;
 
-		public Config(Map configurationValues) {
+		public Config(Map<String,Object> configurationValues) {
 			this.autoCommit = ConfigurationHelper.getBoolean( AvailableSettings.AUTOCOMMIT, configurationValues, false );
 			this.minSize = ConfigurationHelper.getInt( MIN_SIZE, configurationValues, 2 );
 			this.maxSize = ConfigurationHelper.getInt( AvailableSettings.POOL_SIZE, configurationValues, 20 );

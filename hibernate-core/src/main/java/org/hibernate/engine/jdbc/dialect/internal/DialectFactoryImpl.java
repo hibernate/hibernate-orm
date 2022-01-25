@@ -53,7 +53,7 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 	}
 
 	@Override
-	public Dialect buildDialect(Map configValues, DialectResolutionInfoSource resolutionInfoSource) throws HibernateException {
+	public Dialect buildDialect(Map<String,Object> configValues, DialectResolutionInfoSource resolutionInfoSource) throws HibernateException {
 		final Object dialectReference = configValues.get( AvailableSettings.DIALECT );
 		Dialect dialect = !isEmpty( dialectReference ) ?
 				constructDialect( dialectReference, resolutionInfoSource ) :

@@ -97,7 +97,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 	public SchemaCreatorImpl(ServiceRegistry serviceRegistry, SchemaFilter schemaFilter) {
 		SchemaManagementTool smt = serviceRegistry.getService( SchemaManagementTool.class );
-		if ( !HibernateSchemaManagementTool.class.isInstance( smt ) ) {
+		if ( !(smt instanceof HibernateSchemaManagementTool) ) {
 			smt = new HibernateSchemaManagementTool();
 			( (HibernateSchemaManagementTool) smt ).injectServices( (ServiceRegistryImplementor) serviceRegistry );
 		}
@@ -382,9 +382,9 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				}
 
 				// indexes
-				final Iterator indexItr = table.getIndexIterator();
+				final Iterator<Index> indexItr = table.getIndexIterator();
 				while ( indexItr.hasNext() ) {
-					final Index index = (Index) indexItr.next();
+					final Index index = indexItr.next();
 					checkExportIdentifier( index, exportIdentifiers );
 					applySqlStrings(
 							dialect.getIndexExporter().getSqlCreateStrings( index, metadata,
@@ -397,9 +397,9 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				}
 
 				// unique keys
-				final Iterator ukItr = table.getUniqueKeyIterator();
+				final Iterator<UniqueKey> ukItr = table.getUniqueKeyIterator();
 				while ( ukItr.hasNext() ) {
-					final UniqueKey uniqueKey = (UniqueKey) ukItr.next();
+					final UniqueKey uniqueKey = ukItr.next();
 					checkExportIdentifier( uniqueKey, exportIdentifiers );
 					applySqlStrings(
 							dialect.getUniqueKeyExporter().getSqlCreateStrings( uniqueKey, metadata,
@@ -431,9 +431,9 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				}
 
 				// foreign keys
-				final Iterator fkItr = table.getForeignKeyIterator();
+				final Iterator<ForeignKey> fkItr = table.getForeignKeyIterator();
 				while ( fkItr.hasNext() ) {
-					final ForeignKey foreignKey = (ForeignKey) fkItr.next();
+					final ForeignKey foreignKey = fkItr.next();
 					applySqlStrings(
 							dialect.getForeignKeyExporter().getSqlCreateStrings( foreignKey, metadata,
 									sqlStringGenerationContext
@@ -549,7 +549,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 		for ( String currentFile : importFiles.split( "," ) ) {
 			final String resourceName = currentFile.trim();
-			if ( resourceName != null && resourceName.isEmpty() ) {
+			if ( resourceName.isEmpty() ) {
 				//skip empty resource names
 				continue;
 			}
@@ -602,7 +602,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			}
 
 			@Override
-			public Map getConfigurationValues() {
+			public Map<String,Object> getConfigurationValues() {
 				return Collections.emptyMap();
 			}
 
@@ -647,7 +647,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 	public void doCreation(
 			Metadata metadata,
 			final ServiceRegistry serviceRegistry,
-			final Map settings,
+			final Map<String,Object> settings,
 			final boolean manageNamespaces,
 			GenerationTarget... targets) {
 		doCreation(
@@ -660,7 +660,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 					}
 
 					@Override
-					public Map getConfigurationValues() {
+					public Map<String,Object> getConfigurationValues() {
 						return settings;
 					}
 

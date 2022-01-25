@@ -46,7 +46,8 @@ class ManagedProviderConnectionHelper implements ConnectionHelper {
 
 	private static StandardServiceRegistryImpl createServiceRegistry(Properties properties) {
 		ConfigurationHelper.resolvePlaceHolders( properties );
-		return (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder().applySettings( properties ).build();
+		return (StandardServiceRegistryImpl)
+				new StandardServiceRegistryBuilder().applySettings( properties ).build();
 	}
 
 	public Connection getConnection() throws SQLException {

@@ -152,7 +152,7 @@ public class ServiceRegistryTest {
 		}
 
 		@Override
-		public void configure(Map configurationValues) {
+		public void configure(Map<String, Object> configurationValues) {
 			try {
 				Thread.sleep( TIME_TO_SLEEP );
 			}
@@ -194,7 +194,7 @@ public class ServiceRegistryTest {
 		}
 
 		@Override
-		public SlowInitializationService initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+		public SlowInitializationService initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 			return new SlowInitializationService();
 		}
 	}
@@ -207,7 +207,7 @@ public class ServiceRegistryTest {
 		}
 
 		@Override
-		public FakeService initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+		public FakeService initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 			return null;
 		}
 	}
@@ -220,7 +220,7 @@ public class ServiceRegistryTest {
 		}
 
 		@Override
-		public void configure(Map configurationValues) {
+		public void configure(Map<String, Object> configurationValues) {
 
 		}
 

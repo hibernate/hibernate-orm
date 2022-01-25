@@ -56,7 +56,7 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	}
 
 	@Override
-	public boolean isUnwrappableAs(Class unwrapType) {
+	public boolean isUnwrappableAs(Class<?> unwrapType) {
 		return ConnectionProvider.class.equals( unwrapType ) ||
 				DatasourceConnectionProviderImpl.class.isAssignableFrom( unwrapType ) ||
 				DataSource.class.isAssignableFrom( unwrapType );
@@ -78,10 +78,10 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	}
 
 	@Override
-	public void configure(Map configValues) {
+	public void configure(Map<String, Object> configValues) {
 		if ( this.dataSource == null ) {
 			final Object dataSource = configValues.get( Environment.DATASOURCE );
-			if ( DataSource.class.isInstance( dataSource ) ) {
+			if ( dataSource instanceof DataSource ) {
 				this.dataSource = (DataSource) dataSource;
 			}
 			else {

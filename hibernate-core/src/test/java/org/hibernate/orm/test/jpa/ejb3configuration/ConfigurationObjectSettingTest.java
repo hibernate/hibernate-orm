@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.jpa.ejb3configuration;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -311,7 +312,11 @@ public class ConfigurationObjectSettingTest {
 		assertThat( grouping.getScriptAction() ).isEqualTo( scriptAction );
 
 		// verify also interpreting the db-name, etc... they are used by SF/EMF to resolve Dialect
-		final DialectResolver dialectResolver = new DialectResolverInitiator().initiateService( settings, (ServiceRegistryImplementor) new StandardServiceRegistryBuilder().build() );
+		final DialectResolver dialectResolver = new DialectResolverInitiator()
+				.initiateService(
+						new HashMap<>(settings),
+						(ServiceRegistryImplementor) new StandardServiceRegistryBuilder().build()
+				);
 		final Dialect dialect = dialectResolver.resolveDialect( TestingDialectResolutionInfo.forDatabaseInfo( dbName ) );
 		assertThat( dialect ).isInstanceOf( H2Dialect.class );
 	}

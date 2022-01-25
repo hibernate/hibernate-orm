@@ -91,7 +91,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 	public SchemaDropperImpl(ServiceRegistry serviceRegistry, SchemaFilter schemaFilter) {
 		SchemaManagementTool smt = serviceRegistry.getService( SchemaManagementTool.class );
-		if ( !HibernateSchemaManagementTool.class.isInstance( smt ) ) {
+		if ( !(smt instanceof HibernateSchemaManagementTool) ) {
 			smt = new HibernateSchemaManagementTool();
 			( (HibernateSchemaManagementTool) smt ).injectServices( (ServiceRegistryImplementor) serviceRegistry );
 		}
@@ -370,9 +370,9 @@ public class SchemaDropperImpl implements SchemaDropper {
 				continue;
 			}
 
-			final Iterator fks = table.getForeignKeyIterator();
+			final Iterator<ForeignKey> fks = table.getForeignKeyIterator();
 			while ( fks.hasNext() ) {
-				final ForeignKey foreignKey = (ForeignKey) fks.next();
+				final ForeignKey foreignKey = fks.next();
 				applySqlStrings(
 						dialect.getForeignKeyExporter().getSqlDropStrings( foreignKey, metadata,
 								sqlStringGenerationContext
@@ -448,7 +448,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			}
 
 			@Override
-			public Map getConfigurationValues() {
+			public Map<String,Object> getConfigurationValues() {
 				return Collections.emptyMap();
 			}
 
@@ -502,7 +502,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 	public void doDrop(
 			Metadata metadata,
 			final ServiceRegistry serviceRegistry,
-			final Map settings,
+			final Map<String,Object> settings,
 			final boolean manageNamespaces,
 			GenerationTarget... targets) {
 		if ( targets == null || targets.length == 0 ) {
@@ -524,7 +524,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 					}
 
 					@Override
-					public Map getConfigurationValues() {
+					public Map<String,Object> getConfigurationValues() {
 						return settings;
 					}
 

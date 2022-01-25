@@ -47,7 +47,7 @@ public abstract class AbstractMultiTenantConnectionProvider implements MultiTena
 	}
 
 	@Override
-	public boolean isUnwrappableAs(Class unwrapType) {
+	public boolean isUnwrappableAs(Class<?> unwrapType) {
 		return
 			ConnectionProvider.class.isAssignableFrom( unwrapType ) ||
 			MultiTenantConnectionProvider.class.isAssignableFrom( unwrapType );

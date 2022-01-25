@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.registry.internal;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,7 +27,7 @@ import org.hibernate.service.spi.ServiceInitiator;
 public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl implements StandardServiceRegistry {
 
 	//Access to this field requires synchronization on -this-
-	private Map configurationValues;
+	private Map<String,Object> configurationValues;
 
 	/**
 	 * Constructs a StandardServiceRegistryImpl.  Should not be instantiated directly; use
@@ -41,12 +40,11 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 	 *
 	 * @see org.hibernate.boot.registry.StandardServiceRegistryBuilder
 	 */
-	@SuppressWarnings( {"unchecked"})
 	public StandardServiceRegistryImpl(
 			BootstrapServiceRegistry bootstrapServiceRegistry,
-			List<StandardServiceInitiator> serviceInitiators,
-			List<ProvidedService> providedServices,
-			Map<?, ?> configurationValues) {
+			List<StandardServiceInitiator<?>> serviceInitiators,
+			List<ProvidedService<?>> providedServices,
+			Map<String,Object> configurationValues) {
 		this( true, bootstrapServiceRegistry, serviceInitiators, providedServices, configurationValues );
 	}
 
@@ -63,13 +61,12 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 	 *
 	 * @see org.hibernate.boot.registry.StandardServiceRegistryBuilder
 	 */
-	@SuppressWarnings( {"unchecked"})
 	public StandardServiceRegistryImpl(
 			boolean autoCloseRegistry,
 			BootstrapServiceRegistry bootstrapServiceRegistry,
-			List<StandardServiceInitiator> serviceInitiators,
-			List<ProvidedService> providedServices,
-			Map<?, ?> configurationValues) {
+			List<StandardServiceInitiator<?>> serviceInitiators,
+			List<ProvidedService<?>> providedServices,
+			Map<String,Object> configurationValues) {
 		super( bootstrapServiceRegistry, autoCloseRegistry );
 
 		this.configurationValues = configurationValues;
@@ -77,15 +74,17 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 		applyServiceRegistrations( serviceInitiators, providedServices );
 	}
 
-	private void applyServiceRegistrations(List<StandardServiceInitiator> serviceInitiators, List<ProvidedService> providedServices) {
+	private void applyServiceRegistrations(List<StandardServiceInitiator<?>> serviceInitiators, List<ProvidedService<?>> providedServices) {
 		try {
 			// process initiators
-			for ( ServiceInitiator initiator : serviceInitiators ) {
+			for ( ServiceInitiator<?> initiator : serviceInitiators ) {
 				createServiceBinding( initiator );
 			}
 
 			// then, explicitly provided service instances
+			//noinspection rawtypes
 			for ( ProvidedService providedService : providedServices ) {
+				//noinspection unchecked
 				createServiceBinding( providedService );
 			}
 		}
@@ -103,25 +102,9 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 
 	@Override
 	public synchronized <R extends Service> void configureService(ServiceBinding<R> serviceBinding) {
-		if ( Configurable.class.isInstance( serviceBinding.getService() ) ) {
+		if ( serviceBinding.getService() instanceof Configurable ) {
 			( (Configurable) serviceBinding.getService() ).configure( configurationValues );
 		}
-	}
-
-	/**
-	 * Very advanced and tricky to handle: not designed for this. Intended for experiments only!
-	 */
-	public synchronized void resetAndReactivate(BootstrapServiceRegistry bootstrapServiceRegistry,
-									List<StandardServiceInitiator> serviceInitiators,
-									List<ProvidedService> providedServices,
-									Map<?, ?> configurationValues) {
-		if ( super.isActive() ) {
-			throw new IllegalStateException( "Can't reactivate an active registry!" );
-		}
-		super.resetParent( bootstrapServiceRegistry );
-		this.configurationValues = new HashMap( configurationValues );
-		super.reactivate();
-		applyServiceRegistrations( serviceInitiators, providedServices );
 	}
 
 	@Override

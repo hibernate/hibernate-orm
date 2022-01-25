@@ -63,7 +63,7 @@ public class SchemaManagementToolCoordinator {
 	public static void process(
 			final Metadata metadata,
 			final ServiceRegistry serviceRegistry,
-			final Map<?,?> configurationValues,
+			final Map<String,Object> configurationValues,
 			DelayedDropRegistry delayedDropRegistry) {
 		final Set<ActionGrouping> groupings = ActionGrouping.interpret( metadata, configurationValues );
 
@@ -169,7 +169,7 @@ public class SchemaManagementToolCoordinator {
 	}
 
 	public static ExecutionOptions buildExecutionOptions(
-			final Map<?,?> configurationValues,
+			final Map<String,Object> configurationValues,
 			final ExceptionHandler exceptionHandler) {
 		return buildExecutionOptions(
 				configurationValues,
@@ -179,7 +179,7 @@ public class SchemaManagementToolCoordinator {
 	}
 
 	public static ExecutionOptions buildExecutionOptions(
-			final Map<?,?> configurationValues,
+			final Map<String,Object> configurationValues,
 			final SchemaFilter schemaFilter,
 			final ExceptionHandler exceptionHandler) {
 		return new ExecutionOptions() {
@@ -189,7 +189,7 @@ public class SchemaManagementToolCoordinator {
 			}
 
 			@Override
-			public Map<?,?> getConfigurationValues() {
+			public Map<String,Object> getConfigurationValues() {
 				return configurationValues;
 			}
 

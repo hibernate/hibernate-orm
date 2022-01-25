@@ -51,7 +51,7 @@ public interface RegionFactory extends Service, Stoppable {
 	 * considered as a sign to stop {@link org.hibernate.SessionFactory}
 	 * building.
 	 */
-	void start(SessionFactoryOptions settings, Map configValues) throws CacheException;
+	void start(SessionFactoryOptions settings, Map<String,Object> configValues) throws CacheException;
 
 	/**
 	 * By default should we perform "minimal puts" when using this second

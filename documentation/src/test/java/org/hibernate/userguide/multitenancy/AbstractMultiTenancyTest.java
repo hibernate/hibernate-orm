@@ -27,6 +27,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
@@ -88,7 +89,7 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
 
         DriverManagerConnectionProviderImpl connectionProvider =
             new DriverManagerConnectionProviderImpl();
-        connectionProvider.configure(properties);
+        connectionProvider.configure( PropertiesHelper.map(properties) );
         connectionProviderMap.put(tenantIdentifier, connectionProvider);
     }
     //end::multitenacy-hibernate-MultiTenantConnectionProvider-example[]

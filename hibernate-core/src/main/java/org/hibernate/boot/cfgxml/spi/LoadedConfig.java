@@ -38,11 +38,11 @@ public class LoadedConfig {
 
 	private String sessionFactoryName;
 
-	private final Map configurationValues = new ConcurrentHashMap( 16, 0.75f, 1 );
+	private final Map<String,Object> configurationValues = new ConcurrentHashMap<>( 16, 0.75f, 1 );
 
 	private List<CacheRegionDefinition> cacheRegionDefinitions;
 	private List<MappingReference> mappingReferences;
-	private Map<EventType,Set<String>> eventListenerMap;
+	private Map<EventType<?>,Set<String>> eventListenerMap;
 
 	public LoadedConfig(String sessionFactoryName) {
 		this.sessionFactoryName = sessionFactoryName;
@@ -52,7 +52,7 @@ public class LoadedConfig {
 		return sessionFactoryName;
 	}
 
-	public Map getConfigurationValues() {
+	public Map<String,Object> getConfigurationValues() {
 		return configurationValues;
 	}
 
@@ -64,7 +64,7 @@ public class LoadedConfig {
 		return mappingReferences == null ? Collections.emptyList() : mappingReferences;
 	}
 
-	public Map<EventType, Set<String>> getEventListenerMap() {
+	public Map<EventType<?>, Set<String>> getEventListenerMap() {
 		return eventListenerMap == null ? Collections.emptyMap() : eventListenerMap;
 	}
 
@@ -93,7 +93,7 @@ public class LoadedConfig {
 
 		if ( !jaxbCfg.getSessionFactory().getListener().isEmpty() ) {
 			for ( JaxbCfgEventListenerType listener : jaxbCfg.getSessionFactory().getListener() ) {
-				final EventType eventType = EventType.resolveEventTypeByName( listener.getType().value() );
+				final EventType<?> eventType = EventType.resolveEventTypeByName( listener.getType().value() );
 				cfg.addEventListener( eventType, listener.getClazz() );
 			}
 		}
@@ -105,7 +105,7 @@ public class LoadedConfig {
 				}
 
 				final String eventTypeName = listenerGroup.getType().value();
-				final EventType eventType = EventType.resolveEventTypeByName( eventTypeName );
+				final EventType<?> eventType = EventType.resolveEventTypeByName( eventTypeName );
 
 				for ( JaxbCfgEventListenerType listener : listenerGroup.getListener() ) {
 					if ( listener.getType() != null ) {
@@ -127,7 +127,6 @@ public class LoadedConfig {
 		return value.trim();
 	}
 
-	@SuppressWarnings("unchecked")
 	private void addConfigurationValue(String propertyName, String value) {
 		value = trim( value );
 		configurationValues.put( propertyName, value );
@@ -146,7 +145,7 @@ public class LoadedConfig {
 	}
 
 	private static CacheRegionDefinition parseCacheRegionDefinition(Object cacheDeclaration) {
-		if ( JaxbCfgEntityCacheType.class.isInstance( cacheDeclaration ) ) {
+		if ( cacheDeclaration instanceof JaxbCfgEntityCacheType ) {
 			final JaxbCfgEntityCacheType jaxbClassCache = (JaxbCfgEntityCacheType) cacheDeclaration;
 			return new CacheRegionDefinition(
 					CacheRegionDefinition.CacheRegionType.ENTITY,
@@ -175,7 +174,7 @@ public class LoadedConfig {
 		cacheRegionDefinitions.add( cacheRegionDefinition );
 	}
 
-	public void addEventListener(EventType eventType, String listenerClass) {
+	public void addEventListener(EventType<?> eventType, String listenerClass) {
 		if ( eventListenerMap == null ) {
 			eventListenerMap = new HashMap<>();
 		}
@@ -216,8 +215,7 @@ public class LoadedConfig {
 		addEventListeners( incoming.getEventListenerMap() );
 	}
 
-	@SuppressWarnings("unchecked")
-	protected void addConfigurationValues(Map configurationValues) {
+	protected void addConfigurationValues(Map<String,Object> configurationValues) {
 		if ( configurationValues == null ) {
 			return;
 		}
@@ -247,7 +245,7 @@ public class LoadedConfig {
 		this.cacheRegionDefinitions.addAll( cacheRegionDefinitions );
 	}
 
-	private void addEventListeners(Map<EventType, Set<String>> eventListenerMap) {
+	private void addEventListeners(Map<EventType<?>, Set<String>> eventListenerMap) {
 		if ( eventListenerMap == null ) {
 			return;
 		}
@@ -256,7 +254,7 @@ public class LoadedConfig {
 			this.eventListenerMap = new HashMap<>();
 		}
 
-		for ( Map.Entry<EventType, Set<String>> incomingEntry : eventListenerMap.entrySet() ) {
+		for ( Map.Entry<EventType<?>, Set<String>> incomingEntry : eventListenerMap.entrySet() ) {
 			Set<String> listenerClasses = this.eventListenerMap.get( incomingEntry.getKey() );
 			if ( listenerClasses == null ) {
 				listenerClasses = new HashSet<>();

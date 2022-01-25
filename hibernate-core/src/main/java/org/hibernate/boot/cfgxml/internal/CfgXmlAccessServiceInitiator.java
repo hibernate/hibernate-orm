@@ -22,7 +22,7 @@ public class CfgXmlAccessServiceInitiator implements StandardServiceInitiator<Cf
 	public static final CfgXmlAccessServiceInitiator INSTANCE = new CfgXmlAccessServiceInitiator();
 
 	@Override
-	public CfgXmlAccessService initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public CfgXmlAccessService initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		return new CfgXmlAccessServiceImpl( configurationValues );
 	}
 

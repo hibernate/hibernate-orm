@@ -41,7 +41,7 @@ public class ImmutableEntityUpdateQueryHandlingModeExceptionTest extends BaseNon
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		settings.put( AvailableSettings.IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE, "exception" );
 	}
 

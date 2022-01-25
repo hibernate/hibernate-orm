@@ -54,7 +54,7 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 	public static final String INTERNAL_LIST_OF_USER_TYPES = "internalListOfUserTypes";
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		super.addSettings( settings );
 		settings.put( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, "false" );
 	}

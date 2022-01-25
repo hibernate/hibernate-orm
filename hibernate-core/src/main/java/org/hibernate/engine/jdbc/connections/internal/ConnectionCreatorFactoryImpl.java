@@ -33,7 +33,7 @@ public class ConnectionCreatorFactoryImpl implements ConnectionCreatorFactory {
 			Boolean autoCommit,
 			Integer isolation,
 			String initSql,
-			Map<Object, Object> configurationValues) {
+			Map<String, Object> configurationValues) {
 		if ( driver == null ) {
 			return new DriverManagerConnectionCreator(
 					serviceRegistry,

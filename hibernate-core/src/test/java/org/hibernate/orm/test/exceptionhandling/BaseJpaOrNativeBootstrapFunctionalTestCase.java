@@ -28,6 +28,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
@@ -283,7 +284,7 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 			properties.put( AvailableSettings.COLLECTION_CACHE_PREFIX + "." + entry.getKey(), entry.getValue() );
 		}
 
-		configure( properties );
+		configure( PropertiesHelper.map( properties ) );
 
 		if ( createSchema() ) {
 			properties.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
@@ -293,7 +294,7 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 		return properties;
 	}
 
-	protected void configure(Map<Object, Object> properties) {
+	protected void configure(Map<String, Object> properties) {
 	}
 
 	protected static final Class<?>[] NO_CLASSES = new Class[0];

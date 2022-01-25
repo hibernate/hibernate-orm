@@ -27,7 +27,7 @@ public class SqlScriptExtractorInitiator implements StandardServiceInitiator<Sql
 	}
 
 	@Override
-	public SqlScriptCommandExtractor initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public SqlScriptCommandExtractor initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final Object explicitSettingValue = configurationValues.get( Environment.HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR );
 
 		if ( explicitSettingValue == null ) {

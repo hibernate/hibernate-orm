@@ -78,8 +78,7 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		super.addSettings( settings );
 
 		settings.put( Environment.CONNECTION_HANDLING, PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_HOLD.toString() );

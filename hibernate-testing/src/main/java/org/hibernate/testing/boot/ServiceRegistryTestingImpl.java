@@ -17,6 +17,7 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.service.StandardServiceInitiators;
 import org.hibernate.service.internal.ProvidedService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -41,11 +42,11 @@ public class ServiceRegistryTestingImpl
 						dialectFactoryService(),
 						connectionProviderService()
 				),
-				Environment.getProperties()
+				PropertiesHelper.map( Environment.getProperties() )
 		);
 	}
 
-	public static ServiceRegistryTestingImpl forUnitTesting(Map settings) {
+	public static ServiceRegistryTestingImpl forUnitTesting(Map<String,Object> settings) {
 		return new ServiceRegistryTestingImpl(
 				true,
 				new BootstrapServiceRegistryBuilder().build(),
@@ -58,12 +59,12 @@ public class ServiceRegistryTestingImpl
 		);
 	}
 
-	private static ProvidedService dialectFactoryService() {
-		return new ProvidedService<DialectFactory>( DialectFactory.class, new DialectFactoryTestingImpl() );
+	private static ProvidedService<DialectFactory> dialectFactoryService() {
+		return new ProvidedService<>( DialectFactory.class, new DialectFactoryTestingImpl() );
 	}
 
-	private static ProvidedService connectionProviderService() {
-		return new ProvidedService<ConnectionProvider>(
+	private static ProvidedService<ConnectionProvider> connectionProviderService() {
+		return new ProvidedService<>(
 				ConnectionProvider.class,
 				ConnectionProviderBuilder.buildConnectionProvider( true )
 		);
@@ -72,9 +73,9 @@ public class ServiceRegistryTestingImpl
 	public ServiceRegistryTestingImpl(
 			boolean autoCloseRegistry,
 			BootstrapServiceRegistry bootstrapServiceRegistry,
-			List<StandardServiceInitiator> serviceInitiators,
-			List<ProvidedService> providedServices,
-			Map<?, ?> configurationValues) {
+			List<StandardServiceInitiator<?>> serviceInitiators,
+			List<ProvidedService<?>> providedServices,
+			Map<String,Object> configurationValues) {
 		super( autoCloseRegistry, bootstrapServiceRegistry, serviceInitiators, providedServices, configurationValues );
 	}
 }

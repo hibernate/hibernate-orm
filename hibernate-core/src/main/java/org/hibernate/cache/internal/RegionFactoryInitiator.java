@@ -43,7 +43,7 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 	}
 
 	@Override
-	public RegionFactory initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public RegionFactory initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final RegionFactory regionFactory = resolveRegionFactory( configurationValues, registry );
 
 		LOG.debugf( "Cache region factory : %s", regionFactory.getClass().getName() );
@@ -52,7 +52,7 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 	}
 
 
-	protected RegionFactory resolveRegionFactory(Map configurationValues, ServiceRegistryImplementor registry) {
+	protected RegionFactory resolveRegionFactory(Map<String,Object> configurationValues, ServiceRegistryImplementor registry) {
 		final Properties p = new Properties();
 		p.putAll( configurationValues );
 
@@ -83,8 +83,7 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 
 		if ( setting == null && implementors.size() != 1 ) {
 			// if either is explicitly defined as TRUE we need a RegionFactory
-			if ( ( useSecondLevelCache != null && useSecondLevelCache == TRUE )
-					|| ( useQueryCache != null && useQueryCache == TRUE ) ) {
+			if ( useSecondLevelCache == TRUE || useQueryCache == TRUE ) {
 				throw new CacheException( "Caching was explicitly requested, but no RegionFactory was defined and there is not a single registered RegionFactory" );
 			}
 		}
@@ -125,7 +124,7 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 		return NoCachingRegionFactory.INSTANCE;
 	}
 
-	protected RegionFactory getFallback(Map configurationValues, ServiceRegistryImplementor registry) {
+	protected RegionFactory getFallback(Map<?,?> configurationValues, ServiceRegistryImplementor registry) {
 		return null;
 	}
 }

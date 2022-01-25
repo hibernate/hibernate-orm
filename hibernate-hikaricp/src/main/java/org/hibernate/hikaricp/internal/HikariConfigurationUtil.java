@@ -31,8 +31,7 @@ public class HikariConfigurationUtil {
 	 * @param props a map of Hibernate properties
 	 * @return a HikariConfig
 	 */
-	@SuppressWarnings("rawtypes")
-	public static HikariConfig loadConfiguration(Map props) {
+	public static HikariConfig loadConfiguration(Map<String,Object> props) {
 		Properties hikariProps = new Properties();
 		copyProperty( AvailableSettings.AUTOCOMMIT, props, "autoCommit", hikariProps );
 
@@ -43,11 +42,7 @@ public class HikariConfigurationUtil {
 
 		copyIsolationSetting( props, hikariProps );
 
-		for ( Object keyo : props.keySet() ) {
-			if ( !(keyo instanceof String) ) {
-				continue;
-			}
-			String key = (String) keyo;
+		for ( String key : props.keySet() ) {
 			if ( key.startsWith( CONFIG_PREFIX ) ) {
 				hikariProps.setProperty( key.substring( CONFIG_PREFIX.length() ), (String) props.get( key ) );
 			}
@@ -56,14 +51,13 @@ public class HikariConfigurationUtil {
 		return new HikariConfig( hikariProps );
 	}
 
-	@SuppressWarnings("rawtypes")
-	private static void copyProperty(String srcKey, Map src, String dstKey, Properties dst) {
+	private static void copyProperty(String srcKey, Map<String,Object> src, String dstKey, Properties dst) {
 		if ( src.containsKey( srcKey ) ) {
 			dst.setProperty( dstKey, (String) src.get( srcKey ) );
 		}
 	}
 
-	private static void copyIsolationSetting(Map props, Properties hikariProps) {
+	private static void copyIsolationSetting(Map<String,Object> props, Properties hikariProps) {
 		final Integer isolation = ConnectionProviderInitiator.extractIsolation( props );
 		if ( isolation != null ) {
 			hikariProps.put(

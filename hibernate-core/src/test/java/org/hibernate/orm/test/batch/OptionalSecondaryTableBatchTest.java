@@ -105,7 +105,7 @@ public class OptionalSecondaryTableBatchTest extends BaseNonConfigCoreFunctional
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		super.addSettings( settings );
 		settings.put( AvailableSettings.STATEMENT_BATCH_SIZE, 5 );
 	}

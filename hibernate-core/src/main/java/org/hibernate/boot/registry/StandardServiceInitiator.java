@@ -28,5 +28,5 @@ public interface StandardServiceInitiator<R extends Service> extends ServiceInit
 	 *
 	 * @return The initiated service.
 	 */
-	R initiateService(Map configurationValues, ServiceRegistryImplementor registry);
+	R initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry);
 }

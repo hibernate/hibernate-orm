@@ -62,7 +62,7 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 	private EntitiesConfigurations entitiesConfigurations;
 
 	@Override
-	public void configure(Map configurationValues) {
+	public void configure(Map<String, Object> configurationValues) {
 		if ( configurationValues.containsKey( LEGACY_AUTO_REGISTER ) ) {
 			log.debugf(
 					"Encountered deprecated Envers setting [%s]; use [%s] or [%s] instead",

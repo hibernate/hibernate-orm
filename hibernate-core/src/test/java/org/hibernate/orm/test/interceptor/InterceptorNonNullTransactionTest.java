@@ -32,7 +32,7 @@ import org.junit.runners.Parameterized;
 public class InterceptorNonNullTransactionTest extends BaseJpaOrNativeBootstrapFunctionalTestCase {
 
 	public enum JpaComplianceTransactionSetting { DEFAULT, TRUE, FALSE }
-	public enum JtaAllowTransactionAccessSetting { DEFAULT, TRUE, FALSE; };
+	public enum JtaAllowTransactionAccessSetting { DEFAULT, TRUE, FALSE }
 
 	@Parameterized.Parameters(name = "Bootstrap={0}, JpaComplianceTransactionSetting={1}, JtaAllowTransactionAccessSetting={2}")
 	public static Iterable<Object[]> parameters() {
@@ -72,7 +72,7 @@ public class InterceptorNonNullTransactionTest extends BaseJpaOrNativeBootstrapF
 	}
 
 	@Override
-	protected void configure(Map<Object, Object> properties) {
+	protected void configure(Map<String, Object> properties) {
 		super.configure( properties );
 
 		switch ( jpaComplianceTransactionSetting ) {

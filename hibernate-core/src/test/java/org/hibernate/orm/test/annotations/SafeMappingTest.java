@@ -7,6 +7,7 @@
 
 //$Id$
 package org.hibernate.orm.test.annotations;
+
 import org.junit.Test;
 
 import org.hibernate.AnnotationException;
@@ -23,7 +24,7 @@ import static org.junit.Assert.fail;
  */
 public class SafeMappingTest {
     @Test
-	public void testDeclarativeMix() throws Exception {
+	public void testDeclarativeMix() {
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( IncorrectEntity.class );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );

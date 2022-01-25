@@ -34,6 +34,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
@@ -101,12 +102,12 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
         Properties properties = properties();
         properties.put(
             Environment.URL,
-            tenantUrl(properties.getProperty(Environment.URL), tenantIdentifier)
+            tenantUrl( properties.getProperty(Environment.URL), tenantIdentifier )
        );
 
         DriverManagerConnectionProviderImpl connectionProvider =
                 new DriverManagerConnectionProviderImpl();
-        connectionProvider.configure(properties);
+        connectionProvider.configure( PropertiesHelper.map(properties) );
 
         connectionProviderMap.put(tenantIdentifier, connectionProvider);
 

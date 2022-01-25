@@ -56,7 +56,7 @@ public class ExplicitConnectionProviderInstanceTest extends BaseUnitTestCase {
 		}
 
 		@Override
-		public boolean isUnwrappableAs(Class unwrapType) {
+		public boolean isUnwrappableAs(Class<?> unwrapType) {
 			return false;
 		}
 

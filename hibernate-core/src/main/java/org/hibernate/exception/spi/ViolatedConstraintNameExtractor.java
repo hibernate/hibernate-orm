@@ -10,7 +10,8 @@ import java.sql.SQLException;
 
 /**
  * Defines a contract for implementations that can extract the name of a violated
- * constraint from a SQLException that is the result of that constraint violation.
+ * constraint from a {@link SQLException} that is the result of that constraint
+ * violation.
  *
  * @author Steve Ebersole
  */

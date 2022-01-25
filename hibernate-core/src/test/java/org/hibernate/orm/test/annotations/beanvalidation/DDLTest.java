@@ -83,7 +83,7 @@ public class DDLTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		settings.put( "javax.persistence.validation.mode", "ddl" );
 	}
 

@@ -20,8 +20,6 @@ import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.orm.test.envers.integration.components.dynamic.AuditedDynamicComponentEntity;
-import org.hibernate.orm.test.envers.integration.components.dynamic.SimpleEntity;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;

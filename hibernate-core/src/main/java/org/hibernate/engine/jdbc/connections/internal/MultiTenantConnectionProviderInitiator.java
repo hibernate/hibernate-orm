@@ -38,8 +38,7 @@ public class MultiTenantConnectionProviderInitiator implements StandardServiceIn
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
-	public MultiTenantConnectionProvider initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public MultiTenantConnectionProvider initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		if ( !configurationValues.containsKey( AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER ) ) {
 			// nothing to do, but given the separate hierarchies have to handle this here.
 			return null;
@@ -50,20 +49,22 @@ public class MultiTenantConnectionProviderInitiator implements StandardServiceIn
 			// if they also specified the data source *name*, then lets assume they want
 			// DataSourceBasedMultiTenantConnectionProviderImpl
 			final Object dataSourceConfigValue = configurationValues.get( AvailableSettings.DATASOURCE );
-			if ( String.class.isInstance( dataSourceConfigValue ) ) {
+			if ( dataSourceConfigValue instanceof String ) {
 				return new DataSourceBasedMultiTenantConnectionProviderImpl();
 			}
 
 			return null;
 		}
 
-		if ( MultiTenantConnectionProvider.class.isInstance( configValue ) ) {
+		if ( configValue instanceof MultiTenantConnectionProvider ) {
 			return (MultiTenantConnectionProvider) configValue;
 		}
 		else {
 			final Class<MultiTenantConnectionProvider> implClass;
-			if ( Class.class.isInstance( configValue ) ) {
-				implClass = (Class) configValue;
+			if ( configValue instanceof Class ) {
+				@SuppressWarnings("unchecked")
+				Class<MultiTenantConnectionProvider> clazz = (Class<MultiTenantConnectionProvider>) configValue;
+				implClass = clazz;
 			}
 			else {
 				final String className = configValue.toString();

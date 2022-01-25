@@ -210,7 +210,7 @@ public class ServiceRegistryExtension
 			}
 
 			for ( ServiceRegistry.Service service : serviceRegistryAnn.services() ) {
-				ssrb.addService( service.role(), service.impl().newInstance() );
+				ssrb.addService( (Class) service.role(), service.impl().newInstance() );
 			}
 		}
 		catch (Exception e) {

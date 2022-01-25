@@ -34,14 +34,14 @@ public class SqlStatementLogger {
 	private final long logSlowQuery;
 
 	/**
-	 * Constructs a new SqlStatementLogger instance.
+	 * Constructs a new {@code SqlStatementLogger} instance.
 	 */
 	public SqlStatementLogger() {
 		this( false, false, false );
 	}
 
 	/**
-	 * Constructs a new SqlStatementLogger instance.
+	 * Constructs a new {@code SqlStatementLogger} instance.
 	 *
 	 * @param logToStdout Should we log to STDOUT in addition to our internal logger.
 	 * @param format Should we format the statements in the console and log
@@ -51,7 +51,7 @@ public class SqlStatementLogger {
 	}
 
 	/**
-	 * Constructs a new SqlStatementLogger instance.
+	 * Constructs a new {@code SqlStatementLogger} instance.
 	 *
 	 * @param logToStdout Should we log to STDOUT in addition to our internal logger.
 	 * @param format Should we format the statements in the console and log
@@ -62,7 +62,7 @@ public class SqlStatementLogger {
 	}
 
 	/**
-	 * Constructs a new SqlStatementLogger instance.
+	 * Constructs a new {@code SqlStatementLogger} instance.
 	 *
 	 * @param logToStdout Should we log to STDOUT in addition to our internal logger.
 	 * @param format Should we format the statements in the console and log

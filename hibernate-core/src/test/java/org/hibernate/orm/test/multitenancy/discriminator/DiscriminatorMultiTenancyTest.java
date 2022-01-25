@@ -57,7 +57,7 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() {
-		Map settings = new HashMap();
+		Map<String,Object> settings = new HashMap<>();
 		settings.put(Environment.MULTI_TENANT_IDENTIFIER_RESOLVER, currentTenantResolver);
 		settings.put(Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName());
 		settings.put(Environment.GENERATE_STATISTICS, "true");

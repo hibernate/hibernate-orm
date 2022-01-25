@@ -25,7 +25,7 @@ public class JtaPlatformResolverInitiator implements StandardServiceInitiator<Jt
 	private static final Logger log = Logger.getLogger( JtaPlatformResolverInitiator.class );
 
 	@Override
-	public JtaPlatformResolver initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public JtaPlatformResolver initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final Object setting = configurationValues.get( AvailableSettings.JTA_PLATFORM_RESOLVER );
 		final JtaPlatformResolver resolver = registry.getService( StrategySelector.class )
 				.resolveStrategy( JtaPlatformResolver.class, setting );

@@ -32,7 +32,7 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityCopyObserverFactoryInitiator.class );
 
 	@Override
-	public EntityCopyObserverFactory initiateService(final Map configurationValues, final ServiceRegistryImplementor registry) {
+	public EntityCopyObserverFactory initiateService(final Map<String, Object> configurationValues, final ServiceRegistryImplementor registry) {
 		final Object value = getConfigurationValue( configurationValues );
 		if ( value.equals( EntityCopyNotAllowedObserver.SHORT_NAME ) || value.equals( EntityCopyNotAllowedObserver.class.getName() ) ) {
 			LOG.debugf( "Configured EntityCopyObserver strategy: %s", EntityCopyNotAllowedObserver.SHORT_NAME );
@@ -51,13 +51,13 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 			//this might look excessive, but it also happens to test eagerly (at boot) that we can actually construct these
 			//and that they are indeed of the right type.
 			EntityCopyObserver exampleInstance = registry.getService( StrategySelector.class ).resolveStrategy( EntityCopyObserver.class, value );
-			Class observerType = exampleInstance.getClass();
+			Class<?> observerType = exampleInstance.getClass();
 			LOG.debugf( "Configured EntityCopyObserver is a custom implementation of type %s", observerType.getName() );
 			return new EntityObserversFactoryFromClass( observerType );
 		}
 	}
 
-	private Object getConfigurationValue(final Map configurationValues) {
+	private Object getConfigurationValue(final Map<?,?> configurationValues) {
 		final Object o = configurationValues.get( AvailableSettings.MERGE_ENTITY_COPY_OBSERVER );
 		if ( o == null ) {
 			return EntityCopyNotAllowedObserver.SHORT_NAME; //default
@@ -77,9 +77,9 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 
 	private static class EntityObserversFactoryFromClass implements EntityCopyObserverFactory {
 
-		private final Class value;
+		private final Class<?> value;
 
-		public EntityObserversFactoryFromClass(Class value) {
+		public EntityObserversFactoryFromClass(Class<?> value) {
 			this.value = value;
 		}
 

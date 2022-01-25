@@ -18,7 +18,7 @@ import org.hibernate.boot.model.relational.Exportable;
  */
 @Incubating
 public interface ExecutionOptions {
-	Map getConfigurationValues();
+	Map<String,Object> getConfigurationValues();
 
 	boolean shouldManageNamespaces();
 

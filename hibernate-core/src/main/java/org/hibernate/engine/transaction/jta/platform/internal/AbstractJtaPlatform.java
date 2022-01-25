@@ -49,7 +49,7 @@ public abstract class AbstractJtaPlatform
 	protected abstract TransactionManager locateTransactionManager();
 	protected abstract UserTransaction locateUserTransaction();
 
-	public void configure(Map configValues) {
+	public void configure(Map<String, Object> configValues) {
 		cacheTransactionManager = ConfigurationHelper.getBoolean(
 				AvailableSettings.JTA_CACHE_TM,
 				configValues,

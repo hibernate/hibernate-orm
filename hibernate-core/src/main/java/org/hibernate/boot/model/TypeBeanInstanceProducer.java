@@ -54,7 +54,6 @@ public class TypeBeanInstanceProducer implements BeanInstanceProducer, TypeBoots
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Map<String, Object> getConfigurationSettings() {
 		return typeConfiguration.getServiceRegistry().getService( ConfigurationService.class ).getSettings();
 	}

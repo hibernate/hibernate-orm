@@ -28,7 +28,7 @@ public class C3P0ProxyConnectionProvider extends C3P0ConnectionProvider {
 	}
 
 	@Override
-	public void configure(Map props) {
+	public void configure(Map<String, Object> props) {
 		super.configure( props );
 		DataSource ds = unwrap( DataSource.class );
 		DataSource dataSource = spy( ds );
@@ -45,7 +45,7 @@ public class C3P0ProxyConnectionProvider extends C3P0ConnectionProvider {
 			throw new IllegalStateException( e );
 		}
 
-		ReflectionUtil.setField( C3P0ConnectionProvider.class.cast( this ), "ds", dataSource );
+		ReflectionUtil.setField( this, "ds", dataSource );
 	}
 
 	@Override

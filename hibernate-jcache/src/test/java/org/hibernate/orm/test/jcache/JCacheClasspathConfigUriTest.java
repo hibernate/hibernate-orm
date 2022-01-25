@@ -21,7 +21,7 @@ public class JCacheClasspathConfigUriTest
 		extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		settings.put( Environment.CACHE_REGION_FACTORY, "jcache" );
 		settings.put( ConfigSettings.CONFIG_URI, "classpath://hibernate-config/ehcache/jcache-ehcache-config.xml" );
 	}

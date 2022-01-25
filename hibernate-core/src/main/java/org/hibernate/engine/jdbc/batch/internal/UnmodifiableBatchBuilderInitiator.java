@@ -9,7 +9,6 @@ package org.hibernate.engine.jdbc.batch.internal;
 import java.util.Map;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -36,7 +35,7 @@ public final class UnmodifiableBatchBuilderInitiator implements StandardServiceI
 	}
 
 	@Override
-	public BatchBuilder initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public BatchBuilder initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final Object builder = configurationValues.get( BatchBuilderInitiator.BUILDER );
 		if ( builder == null ) {
 			return new UnmodifiableBatchBuilderImpl(

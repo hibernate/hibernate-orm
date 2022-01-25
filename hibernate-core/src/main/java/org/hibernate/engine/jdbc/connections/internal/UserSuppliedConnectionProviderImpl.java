@@ -22,7 +22,7 @@ import org.hibernate.service.UnknownUnwrapTypeException;
  */
 public class UserSuppliedConnectionProviderImpl implements ConnectionProvider {
 	@Override
-	public boolean isUnwrappableAs(Class unwrapType) {
+	public boolean isUnwrappableAs(Class<?> unwrapType) {
 		return ConnectionProvider.class.equals( unwrapType ) ||
 				UserSuppliedConnectionProviderImpl.class.isAssignableFrom( unwrapType );
 	}

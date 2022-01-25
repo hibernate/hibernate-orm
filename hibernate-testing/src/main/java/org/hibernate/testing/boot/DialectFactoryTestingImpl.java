@@ -29,7 +29,7 @@ public class DialectFactoryTestingImpl implements DialectFactory {
 	}
 
 	@Override
-	public Dialect buildDialect(Map configValues, DialectResolutionInfoSource resolutionInfoSource) {
+	public Dialect buildDialect(Map<String,Object> configValues, DialectResolutionInfoSource resolutionInfoSource) {
 		return dialect;
 	}
 }

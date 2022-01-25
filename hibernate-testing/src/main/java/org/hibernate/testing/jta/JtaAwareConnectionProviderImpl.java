@@ -9,6 +9,7 @@ package org.hibernate.testing.jta;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -39,30 +40,27 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 
 	private DriverManagerConnectionProviderImpl delegate;
 
-	private List<Connection> nonEnlistedConnections = new ArrayList<Connection>();
+	private final List<Connection> nonEnlistedConnections = new ArrayList<>();
 
 	@Override
-	public void configure(Map configurationValues) {
-		Properties connectionSettings = new Properties();
+	public void configure(Map<String, Object> configurationValues) {
+		Map<String,Object> connectionSettings = new HashMap<>();
 		transferSetting( Environment.DRIVER, configurationValues, connectionSettings );
 		transferSetting( Environment.URL, configurationValues, connectionSettings );
 		transferSetting( Environment.USER, configurationValues, connectionSettings );
 		transferSetting( Environment.PASS, configurationValues, connectionSettings );
 		transferSetting( Environment.ISOLATION, configurationValues, connectionSettings );
 		Properties passThroughSettings = ConnectionProviderInitiator.getConnectionProperties( configurationValues );
-		if ( passThroughSettings != null ) {
-			for ( String setting : passThroughSettings.stringPropertyNames() ) {
-				transferSetting( Environment.CONNECTION_PREFIX + '.' + setting, configurationValues, connectionSettings );
-			}
+		for ( String setting : passThroughSettings.stringPropertyNames() ) {
+			transferSetting( Environment.CONNECTION_PREFIX + '.' + setting, configurationValues, connectionSettings );
 		}
-		connectionSettings.setProperty( Environment.AUTOCOMMIT, "false" );
+		connectionSettings.put( Environment.AUTOCOMMIT, "false" );
 
 		delegate = new DriverManagerConnectionProviderImpl();
 		delegate.configure( connectionSettings );
 	}
 
-	@SuppressWarnings("unchecked")
-	private static void transferSetting(String settingName, Map source, Map target) {
+	private static void transferSetting(String settingName, Map<String,Object> source, Map<String,Object> target) {
 		Object value = source.get( settingName );
 		if ( value != null ) {
 			target.put( settingName, value );
@@ -122,10 +120,10 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 			nonEnlistedConnections.remove( conn );
 			delegate.closeConnection( conn );
 		}
-		else {
+//		else {
 			// do nothing.  part of the enlistment contract here is that the XAResource wrapper
 			// takes that responsibility.
-		}
+//		}
 	}
 
 	@Override
@@ -143,7 +141,7 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 	}
 
 	@Override
-	public boolean isUnwrappableAs(Class unwrapType) {
+	public boolean isUnwrappableAs(Class<?> unwrapType) {
 		return delegate.isUnwrappableAs( unwrapType );
 	}
 
@@ -240,23 +238,23 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 		}
 
 		@Override
-		public int getTransactionTimeout() throws XAException {
+		public int getTransactionTimeout() {
 			return transactionTimeout;
 		}
 
 		@Override
-		public boolean setTransactionTimeout(int i) throws XAException {
+		public boolean setTransactionTimeout(int i) {
 			transactionTimeout = i;
 			return true;
 		}
 
 		@Override
-		public boolean isSameRM(XAResource xaResource) throws XAException {
-			return xaResource != null && xaResource == this;
+		public boolean isSameRM(XAResource xaResource) {
+			return xaResource == this;
 		}
 
 		@Override
-		public Xid[] recover(int i) throws XAException {
+		public Xid[] recover(int i) {
 			return new Xid[0];
 		}
 	}

@@ -14,10 +14,10 @@ import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.configuration.EnversSettings;
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.AfterClassOnce;

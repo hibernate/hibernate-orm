@@ -12,6 +12,7 @@ import java.util.Properties;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Startable;
 import org.hibernate.service.spi.Stoppable;
@@ -39,9 +40,9 @@ public abstract class BaseTransactionIsolationConfigTest extends BaseUnitTestCas
 		ConnectionProvider provider = getConnectionProviderUnderTest();
 
 		try {
-			( (Configurable) provider ).configure( properties );
+			( (Configurable) provider ).configure( PropertiesHelper.map( properties ) );
 
-			if ( Startable.class.isInstance( provider ) ) {
+			if ( provider instanceof Startable ) {
 				( (Startable) provider ).start();
 			}
 
@@ -63,9 +64,9 @@ public abstract class BaseTransactionIsolationConfigTest extends BaseUnitTestCas
 		ConnectionProvider provider = getConnectionProviderUnderTest();
 
 		try {
-			( (Configurable) provider ).configure( properties );
+			( (Configurable) provider ).configure( PropertiesHelper.map( properties ) );
 
-			if ( Startable.class.isInstance( provider ) ) {
+			if ( provider instanceof Startable ) {
 				( (Startable) provider ).start();
 			}
 
@@ -87,9 +88,9 @@ public abstract class BaseTransactionIsolationConfigTest extends BaseUnitTestCas
 		ConnectionProvider provider = getConnectionProviderUnderTest();
 
 		try {
-			( (Configurable) provider ).configure( properties );
+			( (Configurable) provider ).configure( PropertiesHelper.map( properties ) );
 
-			if ( Startable.class.isInstance( provider ) ) {
+			if ( provider instanceof Startable ) {
 				( (Startable) provider ).start();
 			}
 
@@ -111,9 +112,9 @@ public abstract class BaseTransactionIsolationConfigTest extends BaseUnitTestCas
 		ConnectionProvider provider = getConnectionProviderUnderTest();
 
 		try {
-			( (Configurable) provider ).configure( properties );
+			( (Configurable) provider ).configure( PropertiesHelper.map( properties ) );
 
-			if ( Startable.class.isInstance( provider ) ) {
+			if ( provider instanceof Startable ) {
 				( (Startable) provider ).start();
 			}
 

@@ -10,7 +10,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.Set;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.InvalidNameException;
@@ -39,14 +38,14 @@ final class JndiServiceImpl implements JndiService {
 			JndiServiceImpl.class.getName()
 	);
 
-	private final Hashtable initialContextSettings;
+	private final Hashtable<String,Object> initialContextSettings;
 
 	/**
 	 * Constructs a JndiServiceImpl
 	 *
 	 * @param configurationValues Map of configuration settings, some of which apply to JNDI support.
 	 */
-	public JndiServiceImpl(Map configurationValues) {
+	public JndiServiceImpl(Map<?,?> configurationValues) {
 		this.initialContextSettings = extractJndiProperties( configurationValues );
 	}
 
@@ -57,18 +56,17 @@ final class JndiServiceImpl implements JndiService {
 	 *
 	 * @return The extracted JNDI specific properties.
 	 */
-	@SuppressWarnings({ "unchecked" })
-	private static Hashtable extractJndiProperties(Map configurationValues) {
-		final Hashtable jndiProperties = new Hashtable();
+	private static Hashtable<String,Object> extractJndiProperties(Map<?,?> configurationValues) {
+		final Hashtable<String,Object> jndiProperties = new Hashtable<>();
 
-		for ( Map.Entry entry : (Set<Map.Entry>) configurationValues.entrySet() ) {
-			if ( !String.class.isInstance( entry.getKey() ) ) {
+		for ( Map.Entry<?,?> entry : configurationValues.entrySet() ) {
+			if ( !(entry.getKey() instanceof String) ) {
 				continue;
 			}
 			final String propertyName = (String) entry.getKey();
 			final Object propertyValue = entry.getValue();
 			if ( propertyName.startsWith( Environment.JNDI_PREFIX ) ) {
-				// write the IntialContextFactory class and provider url to the result only if they are
+				// write the InitialContextFactory class and provider url to the result only if they are
 				// non-null; this allows the environmental defaults (if any) to remain in effect
 				if ( Environment.JNDI_CLASS.equals( propertyName ) ) {
 					if ( propertyValue != null ) {
@@ -81,8 +79,8 @@ final class JndiServiceImpl implements JndiService {
 					}
 				}
 				else {
-					final String passThruPropertyname = propertyName.substring( Environment.JNDI_PREFIX.length() + 1 );
-					jndiProperties.put( passThruPropertyname, propertyValue );
+					final String passThruPropertyName = propertyName.substring( Environment.JNDI_PREFIX.length() + 1 );
+					jndiProperties.put( passThruPropertyName, propertyValue );
 				}
 			}
 		}

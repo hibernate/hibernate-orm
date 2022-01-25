@@ -22,6 +22,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.TargetType;
@@ -57,7 +58,7 @@ public class ConnectionsReleaseTest extends BaseUnitTestCase {
 	@Before
 	public void setUp() {
 		connectionProvider = new ConnectionProviderDecorator();
-		connectionProvider.configure( getConnectionProviderProperties() );
+		connectionProvider.configure( PropertiesHelper.map( getConnectionProviderProperties() ) );
 
 		ssr = new StandardServiceRegistryBuilder()
 				.addService( ConnectionProvider.class, connectionProvider )
@@ -75,13 +76,13 @@ public class ConnectionsReleaseTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void testSchemaUpdateReleasesAllConnections() throws SQLException {
+	public void testSchemaUpdateReleasesAllConnections() {
 		new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ), metadata );
 		assertThat( connectionProvider.getOpenConnection(), is( 0 ) );
 	}
 
 	@Test
-	public void testSchemaValidatorReleasesAllConnections() throws SQLException {
+	public void testSchemaValidatorReleasesAllConnections() {
 		new SchemaValidator().validate( metadata );
 		assertThat( connectionProvider.getOpenConnection(), is( 0 ) );
 	}

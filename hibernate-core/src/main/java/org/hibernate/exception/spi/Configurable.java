@@ -11,8 +11,9 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 
 /**
- * The Configurable interface defines the contract for SQLExceptionConverter impls that
- * want to be configured prior to usage given the currently defined Hibernate properties.
+ * This interface defines the contract for {@link SQLExceptionConverter}
+ * implementations that want to be configured prior to usage given the
+ * currently defined Hibernate properties.
  *
  * @author Steve Ebersole
  */

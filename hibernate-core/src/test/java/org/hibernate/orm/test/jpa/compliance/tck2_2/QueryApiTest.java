@@ -42,7 +42,7 @@ public class QueryApiTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		super.addSettings( settings );
 		settings.put( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, "true" );
 	}

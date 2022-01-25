@@ -11,7 +11,7 @@ import jakarta.enterprise.inject.spi.BeanManager;
 /**
  * This contract and the nested LifecycleListener contract represent the changes
  * we'd like to propose to the CDI spec.  The idea being simply to allow contextual
- * registration of BeanManager lifecycle callbacks
+ * registration of {@link BeanManager} lifecycle callbacks
  *
  * @author Steve Ebersole
  */

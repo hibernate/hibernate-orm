@@ -50,7 +50,7 @@ public class CachingRegionFactory extends RegionFactoryTemplate {
 	}
 
 	@Override
-	protected void prepareForUse(SessionFactoryOptions settings, Map configValues) {
+	protected void prepareForUse(SessionFactoryOptions settings, Map<String,Object> configValues) {
 	}
 
 	@Override

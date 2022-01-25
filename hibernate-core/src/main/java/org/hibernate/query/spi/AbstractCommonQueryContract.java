@@ -240,7 +240,6 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return this;
 	}
 
-	@SuppressWarnings("deprecation")
 	public final boolean applyHint(String hintName, Object value) {
 		getSession().checkOpen( true );
 
@@ -632,13 +631,12 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		setHibernateFlushMode( FlushModeTypeHelper.getFlushMode( flushModeType ) );
 	}
 
-	@SuppressWarnings( "rawtypes" )
-	public boolean applyTupleTransformer(TupleTransformer transformer) {
+	public boolean applyTupleTransformer(TupleTransformer<?> transformer) {
 		getQueryOptions().setTupleTransformer( transformer );
 		return true;
 	}
 
-	public boolean applyResultListTransformer(ResultListTransformer transformer) {
+	public boolean applyResultListTransformer(ResultListTransformer<?> transformer) {
 		getQueryOptions().setResultListTransformer( transformer );
 		return true;
 	}
@@ -649,7 +647,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	protected abstract ParameterMetadataImplementor getParameterMetadata();
 
-	@SuppressWarnings( {"unchecked", "rawtypes"} )
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	public Set<Parameter<?>> getParameters() {
 		getSession().checkOpen( false );
 		return (Set) getParameterMetadata().getRegistrations();
@@ -1394,7 +1392,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
-	public CommonQueryContract setProperties(Map map) {
+	public CommonQueryContract setProperties(@SuppressWarnings("rawtypes") Map map) {
 		for ( String paramName : getParameterMetadata().getNamedParameterNames() ) {
 			final Object object = map.get( paramName );
 			if ( object == null ) {

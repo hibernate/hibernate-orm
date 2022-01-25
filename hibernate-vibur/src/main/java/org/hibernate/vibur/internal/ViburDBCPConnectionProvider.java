@@ -51,8 +51,7 @@ public class ViburDBCPConnectionProvider implements ConnectionProvider, Configur
 	private ViburDBCPDataSource dataSource = null;
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public void configure(Map configurationValues) {
+	public void configure(Map<String, Object> configurationValues) {
 		dataSource = new ViburDBCPDataSource( transform( configurationValues ) );
 		dataSource.start();
 	}
@@ -81,7 +80,7 @@ public class ViburDBCPConnectionProvider implements ConnectionProvider, Configur
 	}
 
 	@Override
-	public boolean isUnwrappableAs(Class unwrapType) {
+	public boolean isUnwrappableAs(Class<?> unwrapType) {
 		return ConnectionProvider.class.equals( unwrapType ) ||
 				ViburDBCPConnectionProvider.class.isAssignableFrom( unwrapType );
 	}
@@ -97,41 +96,41 @@ public class ViburDBCPConnectionProvider implements ConnectionProvider, Configur
 		}
 	}
 
-	private static Properties transform(Map<String, String> configurationValues) {
+	private static Properties transform(Map<String, Object> configurationValues) {
 		Properties result = new Properties();
 
-		String driverClassName = configurationValues.get( DRIVER );
+		String driverClassName = (String) configurationValues.get( DRIVER );
 		if ( driverClassName != null ) {
 			result.setProperty( "driverClassName", driverClassName );
 		}
-		String jdbcUrl = configurationValues.get( URL );
+		String jdbcUrl = (String) configurationValues.get( URL );
 		if ( jdbcUrl != null ) {
 			result.setProperty( "jdbcUrl", jdbcUrl );
 		}
 
-		String username = configurationValues.get( USER );
+		String username = (String) configurationValues.get( USER );
 		if ( username != null ) {
 			result.setProperty( "username", username );
 		}
-		String password = configurationValues.get( PASS );
+		String password = (String) configurationValues.get( PASS );
 		if ( password != null ) {
 			result.setProperty( "password", password );
 		}
 
-		String defaultTransactionIsolationValue = configurationValues.get( ISOLATION );
+		String defaultTransactionIsolationValue = (String) configurationValues.get( ISOLATION );
 		if ( defaultTransactionIsolationValue != null ) {
 			result.setProperty( "defaultTransactionIsolationValue", defaultTransactionIsolationValue );
 		}
-		String defaultAutoCommit = configurationValues.get( AUTOCOMMIT );
+		String defaultAutoCommit = (String) configurationValues.get( AUTOCOMMIT );
 		if ( defaultAutoCommit != null ) {
 			result.setProperty( "defaultAutoCommit", defaultAutoCommit );
 		}
 
-		for ( Map.Entry<String, String> entry : configurationValues.entrySet() ) {
+		for ( Map.Entry<String, Object> entry : configurationValues.entrySet() ) {
 			String key = entry.getKey();
 			if ( key.startsWith( VIBUR_PREFIX ) ) {
 				key = key.substring( VIBUR_PREFIX.length() );
-				result.setProperty( key, entry.getValue() );
+				result.setProperty( key, (String) entry.getValue() );
 			}
 		}
 

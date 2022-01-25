@@ -38,7 +38,7 @@ public class BatchBuilderInitiator implements StandardServiceInitiator<BatchBuil
 	}
 
 	@Override
-	public BatchBuilder initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public BatchBuilder initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final Object builder = configurationValues.get( BUILDER );
 		if ( builder == null ) {
 			return new BatchBuilderImpl(
@@ -46,7 +46,7 @@ public class BatchBuilderInitiator implements StandardServiceInitiator<BatchBuil
 			);
 		}
 
-		if ( BatchBuilder.class.isInstance( builder ) ) {
+		if ( builder instanceof BatchBuilder ) {
 			return (BatchBuilder) builder;
 		}
 

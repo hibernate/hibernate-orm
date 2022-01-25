@@ -183,7 +183,7 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 	}
 
 	@Override
-	protected void prepareForUse(SessionFactoryOptions settings, Map configValues) {
+	protected void prepareForUse(SessionFactoryOptions settings, Map<String,Object> configValues) {
 		this.cacheManager = resolveCacheManager( settings, configValues );
 		if ( this.cacheManager == null ) {
 			throw new CacheException( "Could not locate/create CacheManager" );
@@ -193,7 +193,7 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 		);
 	}
 
-	protected CacheManager resolveCacheManager(SessionFactoryOptions settings, Map properties) {
+	protected CacheManager resolveCacheManager(SessionFactoryOptions settings, Map<String,Object> properties) {
 		final Object explicitCacheManager = properties.get( ConfigSettings.CACHE_MANAGER );
 		if ( explicitCacheManager != null ) {
 			return useExplicitCacheManager( settings, explicitCacheManager );
@@ -216,7 +216,7 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 		return cachingProvider.getDefaultClassLoader();
 	}
 
-	protected URI getUri(SessionFactoryOptions settings, Map properties) {
+	protected URI getUri(SessionFactoryOptions settings, Map<String,Object> properties) {
 		String cacheManagerUri = getProp( properties, ConfigSettings.CONFIG_URI );
 		if ( cacheManagerUri == null ) {
 			return null;
@@ -238,11 +238,11 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 		}
 	}
 
-	private String getProp(Map properties, String prop) {
+	private String getProp(Map<String,Object> properties, String prop) {
 		return properties != null ? (String) properties.get( prop ) : null;
 	}
 
-	protected CachingProvider getCachingProvider(final Map properties){
+	protected CachingProvider getCachingProvider(final Map<String,Object> properties){
 		final CachingProvider cachingProvider;
 		final String provider = getProp( properties, ConfigSettings.PROVIDER );
 		if ( provider != null ) {

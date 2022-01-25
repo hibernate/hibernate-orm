@@ -55,25 +55,25 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		return builder.build();
 	}
 
-	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map properties) {
+	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map<?,?> properties) {
 		return getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties, null, null );
 	}
 
-	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map properties,
+	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map<?,?> properties,
 			ClassLoader providedClassLoader) {
 		return getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties, providedClassLoader, null );
 	}
 
-	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map properties,
+	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map<?,?> properties,
 			ClassLoaderService providedClassLoaderService) {
 		return getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties, null, providedClassLoaderService );
 	}
 
-	private EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map properties,
+	private EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map<?,?> properties,
 			ClassLoader providedClassLoader, ClassLoaderService providedClassLoaderService) {
 		log.tracef( "Attempting to obtain correct EntityManagerFactoryBuilder for persistenceUnitName : %s", persistenceUnitName );
 
-		final Map integration = wrap( properties );
+		final Map<?,?> integration = wrap( properties );
 		final List<ParsedPersistenceXmlDescriptor> units;
 		try {
 			units = PersistenceXmlParser.locatePersistenceUnits( integration );
@@ -124,8 +124,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
-	protected static Map wrap(Map properties) {
+	protected static Map<?,?> wrap(Map<?,?> properties) {
 		return properties == null ? Collections.emptyMap() : Collections.unmodifiableMap( properties );
 	}
 
@@ -166,17 +165,17 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		return true;
 	}
 
-	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(PersistenceUnitInfo info, Map integration) {
+	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(PersistenceUnitInfo info, Map<?,?> integration) {
 		return Bootstrap.getEntityManagerFactoryBuilder( info, integration );
 	}
 
 	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(PersistenceUnitDescriptor persistenceUnitDescriptor,
-			Map integration, ClassLoader providedClassLoader) {
+			Map<?,?> integration, ClassLoader providedClassLoader) {
 		return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnitDescriptor, integration, providedClassLoader );
 	}
 
 	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(PersistenceUnitDescriptor persistenceUnitDescriptor,
-			Map integration, ClassLoaderService providedClassLoaderService) {
+			Map<?,?> integration, ClassLoaderService providedClassLoaderService) {
 		return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnitDescriptor, integration, providedClassLoaderService );
 	}
 

@@ -47,7 +47,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 	}
 
 	@Override
-	public JdbcEnvironment initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public JdbcEnvironment initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final DialectFactory dialectFactory = registry.getService( DialectFactory.class );
 
 		// 'hibernate.temp.use_jdbc_metadata_defaults' is a temporary magic value.
@@ -244,7 +244,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		return new JdbcEnvironmentImpl( registry, dialectFactory.buildDialect( configurationValues, null ) );
 	}
 
-	private JdbcConnectionAccess buildJdbcConnectionAccess(Map configValues, ServiceRegistryImplementor registry) {
+	private JdbcConnectionAccess buildJdbcConnectionAccess(Map<?,?> configValues, ServiceRegistryImplementor registry) {
 		if ( !configValues.containsKey( AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER ) ) {
 			ConnectionProvider connectionProvider = registry.getService( ConnectionProvider.class );
 			return new ConnectionProviderJdbcConnectionAccess( connectionProvider );

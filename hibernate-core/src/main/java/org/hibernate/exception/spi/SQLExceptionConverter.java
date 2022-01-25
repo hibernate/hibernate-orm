@@ -12,15 +12,14 @@ import java.sql.SQLException;
 import org.hibernate.JDBCException;
 
 /**
- * Defines a contract for implementations that know how to convert a SQLException
- * into Hibernate's JDBCException hierarchy.  Inspired by Spring's
- * SQLExceptionTranslator.
+ * Defines a contract for implementations that know how to convert a
+ * {@link SQLException} to Hibernate's {@link JDBCException} hierarchy.
  * <p/>
  * Implementations <b>must</b> have a constructor which takes a
  * {@link ViolatedConstraintNameExtractor} parameter.
  * <p/>
- * Implementations may implement {@link Configurable} if they need to perform
- * configuration steps prior to first use.
+ * Implementations may implement {@link Configurable} if they need to
+ * perform configuration steps prior to first use.
  *
  * @author Steve Ebersole
  */
@@ -31,7 +30,11 @@ public interface SQLExceptionConverter extends Serializable {
 	 * @param sqlException The SQLException to be converted.
 	 * @param message      An optional error message.
 	 * @return The resulting JDBCException.
-	 * @see org.hibernate.exception.ConstraintViolationException , JDBCConnectionException, SQLGrammarException, LockAcquisitionException
+	 *
+	 * @see org.hibernate.exception.ConstraintViolationException
+	 * @see org.hibernate.exception.JDBCConnectionException
+	 * @see org.hibernate.exception.SQLGrammarException
+	 * @see org.hibernate.exception.LockAcquisitionException
 	 */
 	JDBCException convert(SQLException sqlException, String message, String sql);
 }

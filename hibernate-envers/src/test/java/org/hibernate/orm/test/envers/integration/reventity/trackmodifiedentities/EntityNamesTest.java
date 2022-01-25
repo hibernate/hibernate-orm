@@ -30,7 +30,7 @@ public class EntityNamesTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		super.addSettings( settings );
 
 		settings.put( EnversSettings.TRACK_ENTITIES_CHANGED_IN_REVISION, "true" );

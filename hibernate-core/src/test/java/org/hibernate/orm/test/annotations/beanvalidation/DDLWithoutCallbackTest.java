@@ -33,7 +33,7 @@ import static org.junit.Assert.fail;
 public class DDLWithoutCallbackTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		settings.put( "javax.persistence.validation.mode", "ddl" );
 	}
 

@@ -31,7 +31,7 @@ public class TransactionCoordinatorBuilderInitiator implements StandardServiceIn
 	public static final TransactionCoordinatorBuilderInitiator INSTANCE = new TransactionCoordinatorBuilderInitiator();
 
 	@Override
-	public TransactionCoordinatorBuilder initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public TransactionCoordinatorBuilder initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		return registry.getService( StrategySelector.class ).resolveDefaultableStrategy(
 				TransactionCoordinatorBuilder.class,
 				determineStrategySelection( configurationValues ),

@@ -26,7 +26,7 @@ import static org.junit.Assert.fail;
  */
 public class PersisterClassProviderTest extends BaseUnitTestCase {
 	@Test
-	public void testPersisterClassProvider() throws Exception {
+	public void testPersisterClassProvider() {
 
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( Gate.class );

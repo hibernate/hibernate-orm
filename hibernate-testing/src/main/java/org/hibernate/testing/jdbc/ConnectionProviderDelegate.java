@@ -64,10 +64,9 @@ public class ConnectionProviderDelegate implements
 	}
 
 	@Override
-	public void configure(Map configurationValues) {
+	public void configure(Map<String, Object> configurationValues) {
 		if ( !configured ) {
 			if ( connectionProvider == null ) {
-				@SuppressWarnings("unchecked")
 				Map<String, Object> settings = new HashMap<>( configurationValues );
 				settings.remove( AvailableSettings.CONNECTION_PROVIDER );
 				connectionProvider = ConnectionProviderInitiator.INSTANCE.initiateService(
@@ -105,7 +104,7 @@ public class ConnectionProviderDelegate implements
 	}
 
 	@Override
-	public boolean isUnwrappableAs(Class unwrapType) {
+	public boolean isUnwrappableAs(Class<?> unwrapType) {
 		return connectionProvider.isUnwrappableAs( unwrapType );
 	}
 

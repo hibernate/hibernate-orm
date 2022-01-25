@@ -42,7 +42,7 @@ public class SessionJdbcBatchTest
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		settings.put( AvailableSettings.STATEMENT_BATCH_SIZE, 2 );
 		connectionProvider.setConnectionProvider( (ConnectionProvider) settings.get( AvailableSettings.CONNECTION_PROVIDER ) );
 		settings.put(

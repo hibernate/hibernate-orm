@@ -56,7 +56,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 	public void setUp() {
 		T multiTenantConnectionProvider = buildMultiTenantConnectionProvider();
 
-		Map settings = new HashMap();
+		Map<String,Object> settings = new HashMap<>();
 		settings.put( Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
 		settings.put( Environment.GENERATE_STATISTICS, "true" );
 

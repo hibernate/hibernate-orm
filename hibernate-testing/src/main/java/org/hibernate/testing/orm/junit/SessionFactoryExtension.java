@@ -72,7 +72,7 @@ public class SessionFactoryExtension
 			producer = (SessionFactoryProducer) testInstance;
 		}
 		else {
-			if ( !context.getElement().isPresent() ) {
+			if ( context.getElement().isEmpty() ) {
 				throw new RuntimeException( "Unable to determine how to handle given ExtensionContext : " + context.getDisplayName() );
 			}
 
@@ -154,8 +154,7 @@ public class SessionFactoryExtension
 			return;
 		}
 
-		final HashMap settings = new HashMap<>( baseProperties );
-		//noinspection unchecked
+		final HashMap<String,Object> settings = new HashMap<>( baseProperties );
 		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP );
 		if ( createSecondarySchemas ) {
 			if ( !( model.getDatabase().getDialect().canCreateSchema() ) ) {
@@ -373,7 +372,7 @@ public class SessionFactoryExtension
 		public void inStatelessSession(Consumer<StatelessSession> action) {
 			log.trace( "#inStatelessSession(Consumer)" );
 
-			try (final StatelessSession statelessSession = getSessionFactory().openStatelessSession();) {
+			try ( final StatelessSession statelessSession = getSessionFactory().openStatelessSession() ) {
 				log.trace( "StatelessSession opened, calling action" );
 				action.accept( statelessSession );
 			}
@@ -386,7 +385,7 @@ public class SessionFactoryExtension
 		public void inStatelessTransaction(Consumer<StatelessSession> action) {
 			log.trace( "#inStatelessTransaction(Consumer)" );
 
-			try (final StatelessSession statelessSession = getSessionFactory().openStatelessSession();) {
+			try ( final StatelessSession statelessSession = getSessionFactory().openStatelessSession() ) {
 				log.trace( "StatelessSession opened, calling action" );
 				inStatelessTransaction( statelessSession, action );
 			}

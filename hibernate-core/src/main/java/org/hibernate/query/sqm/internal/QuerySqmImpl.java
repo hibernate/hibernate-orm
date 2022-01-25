@@ -354,10 +354,13 @@ public class QuerySqmImpl<R>
 			// todo (6.0) : implement
 		}
 		else {
+			final boolean jpaQueryComplianceEnabled = sessionFactory.getSessionFactoryOptions()
+					.getJpaCompliance()
+					.isJpaQueryComplianceEnabled();
 			if ( selections.size() != 1 ) {
 				final String errorMessage = "Query result-type error - multiple selections: use Tuple or array";
 
-				if ( sessionFactory.getSessionFactoryOptions().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+				if ( jpaQueryComplianceEnabled ) {
 					throw new IllegalArgumentException( errorMessage );
 				}
 				else {
@@ -377,6 +380,9 @@ public class QuerySqmImpl<R>
 				}
 			}
 
+			if ( jpaQueryComplianceEnabled ) {
+				return;
+			}
 			verifyResultType( resultClass, sqmSelection.getNodeType(), sessionFactory );
 		}
 	}
@@ -387,9 +393,8 @@ public class QuerySqmImpl<R>
 			SessionFactoryImplementor sessionFactory) {
 		assert sqmExpressible != null;
 		assert sqmExpressible.getExpressibleJavaType() != null;
-
 		final Class<?> javaTypeClass = sqmExpressible.getExpressibleJavaType().getJavaTypeClass();
-		if ( ! resultClass.isAssignableFrom( javaTypeClass ) ) {
+		if ( !resultClass.isAssignableFrom( javaTypeClass ) ) {
 			// Special case for date because we always report java.util.Date as expression type
 			// But the expected resultClass could be a subtype of that, so we need to check the JdbcType
 			if ( javaTypeClass == Date.class ) {
@@ -428,13 +433,7 @@ public class QuerySqmImpl<R>
 					resultClass.getName(),
 					sqmExpressible.getExpressibleJavaType().getJavaType().getTypeName()
 			);
-
-			if ( sessionFactory.getSessionFactoryOptions().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
-				throw new IllegalArgumentException( errorMessage );
-			}
-			else {
-				throw new QueryTypeMismatchException( errorMessage );
-			}
+			throw new QueryTypeMismatchException( errorMessage );
 		}
 	}
 

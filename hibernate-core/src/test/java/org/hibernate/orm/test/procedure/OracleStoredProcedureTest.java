@@ -69,6 +69,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 @RequiresDialect(value = OracleDialect.class)
 public class OracleStoredProcedureTest {
 
+	private Person person1;
+
 	@Test
 	public void testUnRegisteredParameter(EntityManagerFactoryScope scope) {
 		scope.inTransaction( (em) -> {
@@ -97,7 +99,7 @@ public class OracleStoredProcedureTest {
 					query.registerStoredProcedureParameter( 1, Long.class, ParameterMode.IN );
 					query.registerStoredProcedureParameter( 2, Long.class, ParameterMode.OUT );
 
-					query.setParameter( 1, 1L );
+					query.setParameter( 1, person1.getId() );
 
 					query.execute();
 					Long phoneCount = (Long) query.getOutputParameterValue( 2 );
@@ -113,7 +115,7 @@ public class OracleStoredProcedureTest {
 					StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_person_phones" );
 					query.registerStoredProcedureParameter( 1, Long.class, ParameterMode.IN );
 					query.registerStoredProcedureParameter( 2, Class.class, ParameterMode.REF_CURSOR );
-					query.setParameter( 1, 1L );
+					query.setParameter( 1, person1.getId() );
 
 					query.execute();
 					List<Object[]> postComments = query.getResultList();
@@ -134,7 +136,7 @@ public class OracleStoredProcedureTest {
 							Long.class,
 							ParameterMode.IN
 					);
-					call.setParameter( inParam, 1L );
+					call.setParameter( inParam, person1.getId() );
 					call.registerParameter( 2, Class.class, ParameterMode.REF_CURSOR );
 
 					Output output = call.getOutputs().getCurrent();
@@ -150,7 +152,7 @@ public class OracleStoredProcedureTest {
 				entityManager -> {
 					BigDecimal phoneCount = (BigDecimal) entityManager
 							.createNativeQuery( "SELECT fn_count_phones(:personId) FROM DUAL" )
-							.setParameter( "personId", 1 )
+							.setParameter( "personId", person1.getId() )
 							.getSingleResult();
 					assertEquals( BigDecimal.valueOf( 2 ), phoneCount );
 				}
@@ -163,7 +165,7 @@ public class OracleStoredProcedureTest {
 				entityManager -> {
 					List<Object[]> postAndComments = entityManager
 							.createNamedStoredProcedureQuery( "personAndPhonesFunction" )
-							.setParameter( 1, 1L )
+							.setParameter( 1, person1.getId() )
 							.getResultList();
 					Object[] postAndComment = postAndComments.get( 0 );
 					Person person = (Person) postAndComment[0];
@@ -188,7 +190,7 @@ public class OracleStoredProcedureTest {
 								//OracleTypes.CURSOR
 								function.registerOutParameter( 1, -10 );
 							}
-							function.setInt( 2, 1 );
+							function.setLong( 2, person1.getId() );
 							function.execute();
 							try (ResultSet resultSet = (ResultSet) function.getObject( 1 );) {
 								while ( resultSet.next() ) {
@@ -411,18 +413,18 @@ public class OracleStoredProcedureTest {
 				);
 
 				statement.execute(
-						"create or replace function find_char(" +
-								"		search in char, " +
-								"		string in varchar," +
-								"		start in integer default 0) " +
-								"return integer " +
-								"as " +
-								"		position integer; " +
-								"begin " +
-								"    select instr( search, string, start ) into position " +
-								"    from dual; " +
-								"    return position; " +
-								"end;"
+						"CREATE OR REPLACE FUNCTION find_char(" +
+								"		search_char IN CHAR, " +
+								"		string IN VARCHAR," +
+								"		start_idx IN NUMBER DEFAULT 1) " +
+								"RETURN NUMBER " +
+								"IS " +
+								"		pos NUMBER; " +
+								"BEGIN " +
+								"    SELECT INSTR( string, search_char, start_idx ) INTO pos " +
+								"    FROM dual; " +
+								"    RETURN pos; " +
+								"END;"
 				);
 			}
 			catch (SQLException e) {
@@ -432,7 +434,7 @@ public class OracleStoredProcedureTest {
 		} ) );
 
 		scope.inTransaction( (entityManager) -> {
-			Person person1 = new Person( "John Doe" );
+			person1 = new Person( "John Doe" );
 			person1.setNickName( "JD" );
 			person1.setAddress( "Earth" );
 			person1.setCreatedOn( Timestamp.from( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 )

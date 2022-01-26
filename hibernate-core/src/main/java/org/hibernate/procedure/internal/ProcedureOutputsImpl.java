@@ -8,6 +8,7 @@ package org.hibernate.procedure.internal;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.procedure.ParameterMisuseException;
@@ -27,7 +28,7 @@ import jakarta.persistence.ParameterMode;
  * @author Steve Ebersole
  */
 public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutputs {
-	private final ProcedureCallImpl procedureCall;
+	private final ProcedureCallImpl<?> procedureCall;
 	private final CallableStatement callableStatement;
 
 	private final Map<ProcedureParameter<?>, JdbcCallParameterRegistration> parameterRegistrations;
@@ -35,7 +36,7 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 	private int refCursorParamIndex;
 
 	ProcedureOutputsImpl(
-			ProcedureCallImpl procedureCall,
+			ProcedureCallImpl<?> procedureCall,
 			Map<ProcedureParameter<?>, JdbcCallParameterRegistration> parameterRegistrations,
 			JdbcCallRefCursorExtractor[] refCursorParameters,
 			CallableStatement callableStatement) {
@@ -44,6 +45,11 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 		this.callableStatement = callableStatement;
 		this.parameterRegistrations = parameterRegistrations;
 		this.refCursorParameters = refCursorParameters;
+		if ( procedureCall.getFunctionReturn() != null && procedureCall.getFunctionReturn().getMode() != ParameterMode.REF_CURSOR ) {
+			// Set to -1, so we can handle the function return as out parameter separately
+			this.refCursorParamIndex = -1;
+		}
+		executeStatement();
 	}
 
 	@Override
@@ -116,9 +122,19 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 
 		@Override
 		protected Output buildExtendedReturn() {
-			final JdbcCallRefCursorExtractor refCursorParam = refCursorParameters[ProcedureOutputsImpl.this.refCursorParamIndex++];
-			final ResultSet resultSet = refCursorParam.extractResultSet( callableStatement, procedureCall.getSession() );
-			return buildResultSetOutput( () -> extractResults( resultSet ) );
+			if ( ProcedureOutputsImpl.this.refCursorParamIndex == -1 ) {
+				// Handle the function return
+				ProcedureOutputsImpl.this.refCursorParamIndex = 0;
+				return buildResultSetOutput( () -> List.of( getOutputParameterValue( procedureCall.getFunctionReturn() ) ) );
+			}
+			else {
+				final JdbcCallRefCursorExtractor refCursorParam = refCursorParameters[ProcedureOutputsImpl.this.refCursorParamIndex++];
+				final ResultSet resultSet = refCursorParam.extractResultSet(
+						callableStatement,
+						procedureCall.getSession()
+				);
+				return buildResultSetOutput( () -> extractResults( resultSet ) );
+			}
 		}
 	}
 

@@ -22,7 +22,7 @@ public class JdbcCallFunctionReturnImpl extends JdbcCallParameterRegistrationImp
 		super(
 				null,
 				1,
-				ParameterMode.REF_CURSOR,
+				refCursorExtractor == null ? ParameterMode.OUT : ParameterMode.REF_CURSOR,
 				ormType,
 				null,
 				parameterExtractor,

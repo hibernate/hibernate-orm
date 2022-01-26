@@ -18,12 +18,22 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.ParamDef;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.NumericBooleanConverter;
 import org.hibernate.type.YesNoConverter;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,12 +65,32 @@ public class FilterParameterTests {
 			final EntityOne loaded = session.byId( EntityOne.class ).load( 1 );
 			assertThat( loaded ).isNull();
 		} );
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 silently converts a boolean to string types")
+	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL silently converts a boolean to string types")
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby silently converts a boolean to string types")
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 silently converts a boolean to string types")
+	@SkipForDialect(dialectClass = MySQLDialect.class, reason = "MySQL silently converts a boolean to string types")
+	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB silently converts a boolean to string types")
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase silently converts a boolean to string types")
+	public void testYesNoMismatch(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			final EntityOne loaded = session.byId( EntityOne.class ).load( 1 );
+			assertThat( loaded ).isNotNull();
+		} );
 
 		scope.inTransaction( (session) -> {
 			session.enableFilter( "filterYesNoBoolean" ).setParameter( "yesNo", Boolean.FALSE );
 
-			final EntityOne loaded = session.byId( EntityOne.class ).load( 1 );
-			assertThat( loaded ).isNull();
+			try {
+				session.byId( EntityOne.class ).load( 1 );
+				fail( "Expecting an exception" );
+			}
+			catch (Exception expected) {
+				System.out.println(expected.getMessage());
+			}
 		} );
 	}
 
@@ -77,16 +107,40 @@ public class FilterParameterTests {
 			final EntityTwo loaded = session.byId( EntityTwo.class ).load( 1 );
 			assertThat( loaded ).isNull();
 		} );
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 silently converts a boolean to integral types")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle silently converts a boolean to integral types")
+	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL silently converts a boolean to integral types")
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby silently converts a boolean to integral types")
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 silently converts a boolean to integral types")
+	@SkipForDialect(dialectClass = MySQLDialect.class, reason = "MySQL silently converts a boolean to integral types")
+	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB silently converts a boolean to integral types")
+	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server silently converts a boolean to integral types")
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase silently converts a boolean to integral types")
+	public void testNumericMismatch(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			final EntityTwo loaded = session.byId( EntityTwo.class ).load( 1 );
+			assertThat( loaded ).isNotNull();
+		} );
 
 		scope.inTransaction( (session) -> {
 			session.enableFilter( "filterNumberBoolean" ).setParameter( "zeroOne", Boolean.FALSE );
 
-			final EntityTwo loaded = session.byId( EntityTwo.class ).load( 1 );
-			assertThat( loaded ).isNull();
+			try {
+				session.byId( EntityTwo.class ).load( 1 );
+				fail( "Expecting an exception" );
+			}
+			catch (Exception expected) {
+				System.out.println(expected.getMessage());
+			}
 		} );
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = MySQLDialect.class, reason = "MySQL silently converts strings to integral types")
+	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB silently converts strings to integral types")
 	public void testMismatch(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final EntityThree loaded = session.byId( EntityThree.class ).load( 1 );
@@ -101,6 +155,7 @@ public class FilterParameterTests {
 				fail( "Expecting an exception" );
 			}
 			catch (Exception expected) {
+				System.out.println(expected.getMessage());
 			}
 		} );
 	}

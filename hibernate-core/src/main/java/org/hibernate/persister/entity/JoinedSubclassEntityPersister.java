@@ -173,7 +173,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			if ( discriminatorMapping != null ) {
 				log.debug( "Encountered explicit discriminator mapping for joined inheritance" );
 
-				final Selectable selectable = discriminatorMapping.getColumnIterator().next();
+				final Selectable selectable = discriminatorMapping.getSelectables().get(0);
 				if ( selectable instanceof Formula ) {
 					throw new MappingException( "Discriminator formulas on joined inheritance hierarchies not supported at this time" );
 				}
@@ -259,12 +259,15 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			String[] keyCols = new String[idColumnSpan];
 			String[] keyColReaders = new String[idColumnSpan];
 			String[] keyColReaderTemplates = new String[idColumnSpan];
-			Iterator<Selectable> cItr = key.getColumnIterator();
+			List<Column> columns = key.getColumns();
 			for ( int k = 0; k < idColumnSpan; k++ ) {
-				Column column = (Column) cItr.next();
+				Column column = columns.get(k);
 				keyCols[k] = column.getQuotedName( factory.getJdbcServices().getDialect() );
 				keyColReaders[k] = column.getReadExpr( factory.getJdbcServices().getDialect() );
-				keyColReaderTemplates[k] = column.getTemplate( factory.getJdbcServices().getDialect(), factory.getQueryEngine().getSqmFunctionRegistry() );
+				keyColReaderTemplates[k] = column.getTemplate(
+						factory.getJdbcServices().getDialect(),
+						factory.getQueryEngine().getSqmFunctionRegistry()
+				);
 			}
 			keyColumns.add( keyCols );
 			keyColumnReaders.add( keyColReaders );
@@ -297,9 +300,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			String[] keyColReaders = new String[joinIdColumnSpan];
 			String[] keyColReaderTemplates = new String[joinIdColumnSpan];
 
-			Iterator<Selectable> cItr = key.getColumnIterator();
+			List<Column> columns = key.getColumns();
 			for ( int k = 0; k < joinIdColumnSpan; k++ ) {
-				Column column = (Column) cItr.next();
+				Column column = columns.get(k);
 				keyCols[k] = column.getQuotedName( factory.getJdbcServices().getDialect() );
 				keyColReaders[k] = column.getReadExpr( factory.getJdbcServices().getDialect() );
 				keyColReaderTemplates[k] = column.getTemplate( factory.getJdbcServices().getDialect(), factory.getQueryEngine().getSqmFunctionRegistry() );
@@ -335,9 +338,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			final String tableName = determineTableName( tab );
 			subclassTableNames.add( tableName );
 			String[] key = new String[idColumnSpan];
-			Iterator<Column> cItr = tab.getPrimaryKey().getColumnIterator();
+			List<Column> columns = tab.getPrimaryKey().getColumns();
 			for ( int k = 0; k < idColumnSpan; k++ ) {
-				key[k] = cItr.next().getQuotedName( factory.getJdbcServices().getDialect() );
+				key[k] = columns.get(k).getQuotedName( factory.getJdbcServices().getDialect() );
 			}
 			keyColumns.add( key );
 		}
@@ -357,9 +360,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			String joinTableName = determineTableName( joinTable );
 			subclassTableNames.add( joinTableName );
 			String[] key = new String[idColumnSpan];
-			Iterator<Column> citer = joinTable.getPrimaryKey().getColumnIterator();
+			List<Column> columns = joinTable.getPrimaryKey().getColumns();
 			for ( int k = 0; k < idColumnSpan; k++ ) {
-				key[k] = citer.next().getQuotedName( factory.getJdbcServices().getDialect() );
+				key[k] = columns.get(k).getQuotedName( factory.getJdbcServices().getDialect() );
 			}
 			keyColumns.add( key );
 		}
@@ -473,11 +476,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		int hydrateSpan = getPropertySpan();
 		naturalOrderPropertyTableNumbers = new int[hydrateSpan];
 		propertyTableNumbers = new int[hydrateSpan];
-		Iterator<Property> iter = persistentClass.getPropertyClosureIterator();
 		int i = 0;
-		while ( iter.hasNext() ) {
-			Property prop = iter.next();
-			String tabname = prop.getValue().getTable().getQualifiedName(
+		for ( Property property : persistentClass.getPropertyClosure() ) {
+			String tabname = property.getValue().getTable().getQualifiedName(
 					factory.getSqlStringGenerationContext()
 			);
 			propertyTableNumbers[i] = getTableId( tabname, this.tableNames );
@@ -493,20 +494,16 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		ArrayList<Integer> formulaTableNumbers = new ArrayList<>();
 		ArrayList<Integer> propTableNumbers = new ArrayList<>();
 
-		iter = persistentClass.getSubclassPropertyClosureIterator();
-		while ( iter.hasNext() ) {
-			Property prop = iter.next();
-			Table tab = prop.getValue().getTable();
+		for ( Property property : persistentClass.getSubclassPropertyClosure() ) {
+			Table tab = property.getValue().getTable();
 			String tabname = tab.getQualifiedName(
 					factory.getSqlStringGenerationContext()
 			);
 			Integer tabnum = getTableId( tabname, subclassTableNameClosure );
 			propTableNumbers.add( tabnum );
 
-			Iterator<Selectable> citer = prop.getColumnIterator();
-			while ( citer.hasNext() ) {
-				Selectable thing = citer.next();
-				if ( thing.isFormula() ) {
+			for ( Selectable selectable : property.getSelectables() ) {
+				if ( selectable.isFormula() ) {
 					formulaTableNumbers.add( tabnum );
 				}
 				else {

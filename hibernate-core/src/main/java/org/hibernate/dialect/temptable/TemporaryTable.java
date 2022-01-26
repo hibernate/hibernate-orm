@@ -125,12 +125,10 @@ public class TemporaryTable implements Exportable, Contributable {
 					final PersistentClass entityBinding = runtimeModelCreationContext.getBootModel()
 							.getEntityBinding( entityDescriptor.getEntityName() );
 
-					final Iterator<Selectable> itr = entityBinding.getKey().getColumnIterator();
 					final Iterator<JdbcMapping> jdbcMappings = entityDescriptor.getIdentifierMapping()
 							.getJdbcMappings()
 							.iterator();
-					while ( itr.hasNext() ) {
-						final Column column = (Column) itr.next();
+					for ( Column column : entityBinding.getKey().getColumns() ) {
 						final JdbcMapping jdbcMapping = jdbcMappings.next();
 						columns.add(
 								new TemporaryTableColumn(
@@ -155,8 +153,8 @@ public class TemporaryTable implements Exportable, Contributable {
 										if ( !( fkTarget instanceof EntityIdentifierMapping ) ) {
 											final Value value = entityBinding.getSubclassProperty( pluralAttribute.getAttributeName() )
 													.getValue();
-											final Iterator<Selectable> columnIterator = ( (Collection) value ).getKey()
-													.getColumnIterator();
+											final Iterator<Selectable> columnIterator =
+													( (Collection) value ).getKey().getColumnIterator();
 											fkTarget.forEachSelectable(
 													(columnIndex, selection) -> {
 														final Selectable selectable = columnIterator.next();
@@ -207,12 +205,10 @@ public class TemporaryTable implements Exportable, Contributable {
 					final boolean hasOptimizer;
 					if ( identityColumn ) {
 						hasOptimizer = false;
-						final Iterator<Selectable> itr = entityBinding.getKey().getColumnIterator();
 						final Iterator<JdbcMapping> jdbcMappings = entityDescriptor.getIdentifierMapping()
 								.getJdbcMappings()
 								.iterator();
-						while ( itr.hasNext() ) {
-							final Column column = (Column) itr.next();
+						for ( Column column : entityBinding.getKey().getColumns() ) {
 							final JdbcMapping jdbcMapping = jdbcMappings.next();
 							columns.add(
 									new TemporaryTableColumn(
@@ -237,12 +233,10 @@ public class TemporaryTable implements Exportable, Contributable {
 							hasOptimizer = false;
 						}
 					}
-					final Iterator<Selectable> itr = entityBinding.getKey().getColumnIterator();
 					final Iterator<JdbcMapping> jdbcMappings = entityDescriptor.getIdentifierMapping()
 							.getJdbcMappings()
 							.iterator();
-					while ( itr.hasNext() ) {
-						final Column column = (Column) itr.next();
+					for ( Column column : entityBinding.getKey().getColumns() ) {
 						final JdbcMapping jdbcMapping = jdbcMappings.next();
 						columns.add(
 								new TemporaryTableColumn(
@@ -259,7 +253,7 @@ public class TemporaryTable implements Exportable, Contributable {
 
 					final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
 					if ( entityBinding.getDiscriminator() != null && !discriminatorMapping.isFormula() ) {
-						final Column discriminator = (Column) entityBinding.getDiscriminator().getColumnIterator().next();
+						final Column discriminator = entityBinding.getDiscriminator().getColumns().get(0);
 						columns.add(
 								new TemporaryTableColumn(
 										temporaryTable,

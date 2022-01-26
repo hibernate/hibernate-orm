@@ -12,8 +12,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.type.ComponentType;
-import org.hibernate.type.Type;
 
 import java.util.Objects;
 
@@ -43,9 +41,6 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 	public void setFetchMode(FetchMode fetchMode) {
 		this.fetchMode=fetchMode;
 	}
-
-	public abstract void createForeignKey() throws MappingException;
-	public abstract Type getType() throws MappingException;
 
 	public String getReferencedPropertyName() {
 		return referencedPropertyName;
@@ -98,8 +93,8 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 
 	public boolean isSame(ToOne other) {
 		return super.isSame( other )
-				&& Objects.equals( referencedPropertyName, other.referencedPropertyName )
-				&& Objects.equals( referencedEntityName, other.referencedEntityName );
+			&& Objects.equals( referencedPropertyName, other.referencedPropertyName )
+			&& Objects.equals( referencedEntityName, other.referencedEntityName );
 	}
 
 	public boolean isValid(Mapping mapping) throws MappingException {

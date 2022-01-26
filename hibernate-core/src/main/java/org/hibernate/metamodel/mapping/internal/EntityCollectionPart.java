@@ -286,7 +286,7 @@ public class EntityCollectionPart
 			final BasicValuedModelPart basicFkTargetPart = (BasicValuedModelPart) fkTargetPart;
 			final SelectableMapping keySelectableMapping = SelectableMappingImpl.from(
 					fkKeyTableName,
-					fkBootDescriptorSource.getColumnIterator().next(),
+					fkBootDescriptorSource.getSelectables().get(0),
 					basicFkTargetPart.getJdbcMapping(),
 					dialect,
 					creationProcess.getSqmFunctionRegistry()

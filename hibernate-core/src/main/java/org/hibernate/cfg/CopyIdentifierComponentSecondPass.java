@@ -6,7 +6,6 @@
  */
 package org.hibernate.cfg;
 
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 
@@ -64,7 +63,6 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
 	public void doSecondPass(Map persistentClasses) throws MappingException {
 		PersistentClass referencedPersistentClass = (PersistentClass) persistentClasses.get( referencedEntityName );
 		// TODO better error names
@@ -78,8 +76,6 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 			);
 		}
 		Component referencedComponent = (Component) referencedPersistentClass.getIdentifier();
-		Iterator<Property> properties = referencedComponent.getPropertyIterator();
-
 
 		//prepare column name structure
 		boolean isExplicitReference = true;
@@ -101,8 +97,7 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 		}
 
 		MutableInteger index = new MutableInteger();
-		while ( properties.hasNext() ) {
-			Property referencedProperty = properties.next();
+		for ( Property referencedProperty : referencedComponent.getProperties() ) {
 			if ( referencedProperty.isComposite() ) {
 				Property property = createComponentProperty( referencedPersistentClass, isExplicitReference, columnByReferencedName, index, referencedProperty );
 				component.addProperty( property );
@@ -135,10 +130,7 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 		value.setComponentClassName( referencedValue.getComponentClassName() );
 
 
-		Iterator<Property> propertyIterator = referencedValue.getPropertyIterator();
-		while(propertyIterator.hasNext()) {
-			Property referencedComponentProperty = propertyIterator.next();
-
+		for ( Property referencedComponentProperty : referencedValue.getProperties() ) {
 			if ( referencedComponentProperty.isComposite() ) {
 				Property componentProperty = createComponentProperty( referencedValue.getOwner(), isExplicitReference, columnByReferencedName, index, referencedComponentProperty );
 				value.addProperty( componentProperty );
@@ -169,19 +161,18 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 		property.setValue( value );
 		final SimpleValue referencedValue = (SimpleValue) referencedProperty.getValue();
 		value.copyTypeFrom( referencedValue );
-		final Iterator<Selectable> columns = referencedValue.getColumnIterator();
 
 		if ( joinColumns[0].isNameDeferred() ) {
 			joinColumns[0].copyReferencedStructureAndCreateDefaultJoinColumns(
-				referencedPersistentClass,
-				columns,
-				value);
+					referencedPersistentClass,
+					referencedValue,
+					value
+			);
 		}
 		else {
 			//FIXME take care of Formula
-			while ( columns.hasNext() ) {
-				final Selectable selectable = columns.next();
-				if ( ! Column.class.isInstance( selectable ) ) {
+			for ( Selectable selectable : referencedValue.getSelectables() ) {
+				if ( !(selectable instanceof Column) ) {
 					log.debug( "Encountered formula definition; skipping" );
 					continue;
 				}

@@ -73,7 +73,7 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 		ParameterType reader = (ParameterType) parameters.get( PARAMETER_TYPE );
 		if ( reader != null ) {
 			@SuppressWarnings("unchecked")
-			Class<T> returnedClass = reader.getReturnedClass();
+			Class<T> returnedClass = (Class<T>) reader.getReturnedClass();
 			setJavaTypeDescriptor( new SerializableJavaType<>(returnedClass) );
 		}
 		else {

@@ -113,7 +113,8 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 				if ( bootDescriptor.getIdentifierMapper() != null ) {
 					mapsIdRepresentationStrategy = new EmbeddableRepresentationStrategyPojo(
 							bootDescriptor.getIdentifierMapper(),
-							() -> ( ( CompositeTypeImplementor) bootDescriptor.getIdentifierMapper().getType() ).getMappingModelPart().getEmbeddableTypeDescriptor(),
+							() -> ( ( CompositeTypeImplementor) bootDescriptor.getIdentifierMapper().getType() )
+									.getMappingModelPart().getEmbeddableTypeDescriptor(),
 							// we currently do not support custom instantiators for identifiers
 							null,
 							creationContext
@@ -122,7 +123,8 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 				else if ( bootDescriptorIdentifier != null ) {
 					mapsIdRepresentationStrategy = new EmbeddableRepresentationStrategyPojo(
 							(Component) bootDescriptorIdentifier,
-							() -> ( ( CompositeTypeImplementor) bootDescriptor.getIdentifierMapper().getType() ).getMappingModelPart().getEmbeddableTypeDescriptor(),
+							() -> ( ( CompositeTypeImplementor) bootDescriptor.getIdentifierMapper().getType() )
+									.getMappingModelPart().getEmbeddableTypeDescriptor(),
 							// we currently do not support custom instantiators for identifiers
 							null,
 							creationContext
@@ -223,14 +225,11 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 		proxyInterfaces.add( HibernateProxy.class );
 
-		Iterator<?> properties = bootDescriptor.getPropertyIterator();
 		Class<?> clazz = bootDescriptor.getMappedClass();
 		final Method idGetterMethod;
 		final Method idSetterMethod;
-
 		try {
-			while ( properties.hasNext() ) {
-				Property property = (Property) properties.next();
+			for ( Property property : bootDescriptor.getProperties() ) {
 				ProxyFactoryHelper.validateGetterSetterMethodProxyability(
 						"Getter",
 						property.getGetter( clazz ).getMethod()

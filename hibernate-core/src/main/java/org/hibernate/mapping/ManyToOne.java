@@ -48,16 +48,21 @@ public class ManyToOne extends ToOne {
 		return resolvedType;
 	}
 
-	public void createForeignKey() throws MappingException {
+	public void createForeignKey() {
 		// Ensure properties are sorted before we create a foreign key
 		sortProperties();
 		// the case of a foreign key to something other than the pk is handled in createPropertyRefConstraints
-		if (referencedPropertyName==null && !hasFormula() ) {
+		if ( referencedPropertyName==null && !hasFormula() ) {
 			createForeignKeyOfEntity( ( (EntityType) getType() ).getAssociatedEntityName() );
 		} 
 	}
 
-
+	@Override
+	public void createUniqueKey() {
+		if ( !hasFormula() ) {
+			getTable().createUniqueKey( getConstraintColumns() );
+		}
+	}
 
 	public void createPropertyRefConstraints(Map persistentClasses) {
 		if (referencedPropertyName!=null) {
@@ -82,19 +87,12 @@ public class ManyToOne extends ToOne {
 				}
 				// todo : if "none" another option is to create the ForeignKey object still	but to set its #disableCreation flag
 				if ( !hasFormula() && !"none".equals( getForeignKeyName() ) ) {
-					java.util.List refColumns = new ArrayList();
-					Iterator iter = property.getColumnIterator();
-					while ( iter.hasNext() ) {
-						Column col = (Column) iter.next();
-						refColumns.add( col );
-					}
-					
 					ForeignKey fk = getTable().createForeignKey( 
 							getForeignKeyName(), 
 							getConstraintColumns(), 
 							( (EntityType) getType() ).getAssociatedEntityName(), 
-							getForeignKeyDefinition(), 
-							refColumns
+							getForeignKeyDefinition(),
+							new ArrayList<>( property.getColumns() )
 					);
 					fk.setCascadeDeleteEnabled(isCascadeDeleteEnabled() );
 				}

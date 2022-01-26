@@ -358,14 +358,12 @@ public abstract class AbstractCollectionPersister
 		// KEY
 
 		keyType = collectionBootDescriptor.getKey().getType();
-		Iterator<Selectable> columnIter = collectionBootDescriptor.getKey().getColumnIterator();
 		int keySpan = collectionBootDescriptor.getKey().getColumnSpan();
 		keyColumnNames = new String[keySpan];
 		keyColumnAliases = new String[keySpan];
 		int k = 0;
-		while ( columnIter.hasNext() ) {
+		for ( Column column: collectionBootDescriptor.getKey().getColumns() ) {
 			// NativeSQL: collect key column and auto-aliases
-			Column column = (Column) columnIter.next();
 			keyColumnNames[k] = column.getQuotedName( dialect );
 			keyColumnAliases[k] = column.getAlias( dialect, table );
 			k++;
@@ -404,9 +402,7 @@ public abstract class AbstractCollectionPersister
 			columnInsertability = elementBootDescriptor.getColumnInsertability();
 		}
 		int j = 0;
-		columnIter = elementBootDescriptor.getColumnIterator();
-		while ( columnIter.hasNext() ) {
-			Selectable selectable = columnIter.next();
+		for ( Selectable selectable: elementBootDescriptor.getSelectables() ) {
 			elementColumnAliases[j] = selectable.getAlias( dialect, table );
 			if ( selectable.isFormula() ) {
 				Formula form = (Formula) selectable;
@@ -455,7 +451,6 @@ public abstract class AbstractCollectionPersister
 			int indexSpan = indexedCollection.getIndex().getColumnSpan();
 			boolean[] indexColumnInsertability = indexedCollection.getIndex().getColumnInsertability();
 			boolean[] indexColumnUpdatability = indexedCollection.getIndex().getColumnUpdateability();
-			columnIter = indexedCollection.getIndex().getColumnIterator();
 			indexColumnNames = new String[indexSpan];
 			indexFormulaTemplates = new String[indexSpan];
 			indexFormulas = new String[indexSpan];
@@ -464,8 +459,7 @@ public abstract class AbstractCollectionPersister
 			indexColumnAliases = new String[indexSpan];
 			int i = 0;
 			boolean hasFormula = false;
-			while ( columnIter.hasNext() ) {
-				Selectable s = columnIter.next();
+			for ( Selectable s: indexedCollection.getIndex().getSelectables() ) {
 				indexColumnAliases[i] = s.getAlias( dialect );
 				if ( s.isFormula() ) {
 					Formula indexForm = (Formula) s;
@@ -516,8 +510,7 @@ public abstract class AbstractCollectionPersister
 			}
 			IdentifierCollection idColl = (IdentifierCollection) collectionBootDescriptor;
 			identifierType = idColl.getIdentifier().getType();
-			columnIter = idColl.getIdentifier().getColumnIterator();
-			Column col = (Column) columnIter.next();
+			Column col = idColl.getIdentifier().getColumns().get(0);
 			identifierColumnName = col.getQuotedName( dialect );
 			identifierColumnAlias = col.getAlias( dialect );
 			identifierGenerator = idColl.getIdentifier().createIdentifierGenerator(

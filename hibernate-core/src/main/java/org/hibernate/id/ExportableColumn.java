@@ -6,7 +6,6 @@
  */
 package org.hibernate.id;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -69,14 +68,19 @@ public class ExportableColumn extends Column {
 			return 1;
 		}
 
-		@Override
+		@Override @Deprecated
 		public Iterator<Selectable> getColumnIterator() {
 			return new ColumnIterator( column );
 		}
 
 		@Override
 		public List<Selectable> getSelectables() {
-			return Arrays.asList( column );
+			return List.of( column );
+		}
+
+		@Override
+		public List<Column> getColumns() {
+			return List.of( column );
 		}
 
 		@Override
@@ -130,7 +134,11 @@ public class ExportableColumn extends Column {
 		}
 
 		@Override
-		public void createForeignKey() throws MappingException {
+		public void createForeignKey() {
+		}
+
+		@Override
+		public void createUniqueKey() {
 		}
 
 		@Override

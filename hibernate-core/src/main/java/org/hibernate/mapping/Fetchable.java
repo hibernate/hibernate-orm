@@ -9,6 +9,7 @@ import org.hibernate.FetchMode;
 
 /**
  * Any mapping with an outer-join attribute
+ *
  * @author Gavin King
  */
 public interface Fetchable {

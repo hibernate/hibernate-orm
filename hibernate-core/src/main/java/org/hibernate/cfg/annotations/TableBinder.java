@@ -29,6 +29,7 @@ import org.hibernate.cfg.IndexOrUniqueKeySecondPass;
 import org.hibernate.cfg.JPAIndexHolder;
 import org.hibernate.cfg.ObjectNameSource;
 import org.hibernate.cfg.UniqueConstraintHolder;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -39,6 +40,7 @@ import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SortableValue;
 import org.hibernate.mapping.Table;
@@ -52,7 +54,6 @@ import org.jboss.logging.Logger;
  *
  * @author Emmanuel Bernard
  */
-@SuppressWarnings("unchecked")
 public class TableBinder {
 	//TODO move it to a getter/setter strategy
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, TableBinder.class.getName() );
@@ -525,13 +526,6 @@ public class TableBinder {
 		return table;
 	}
 
-	private static String extract(Identifier identifier) {
-		if ( identifier == null ) {
-			return null;
-		}
-		return identifier.render();
-	}
-
 	public static void bindFk(
 			PersistentClass referencedEntity,
 			PersistentClass destinationEntity,
@@ -551,14 +545,14 @@ public class TableBinder {
 		}
 		final String mappedByProperty = columns[0].getMappedBy();
 		if ( StringHelper.isNotEmpty( mappedByProperty ) ) {
-			/**
+			/*
 			 * Get the columns of the mapped-by property
 			 * copy them and link the copy to the actual value
 			 */
 			LOG.debugf( "Retrieving property %s.%s", associatedClass.getEntityName(), mappedByProperty );
 
 			final Property property = associatedClass.getRecursiveProperty( columns[0].getMappedBy() );
-			Iterator mappedByColumns;
+			List<Column> mappedByColumns;
 			if ( property.getValue() instanceof Collection ) {
 				Collection collection = ( (Collection) property.getValue() );
 				Value element = collection.getElement();
@@ -568,31 +562,25 @@ public class TableBinder {
 									+ associatedClass.getEntityName() + "." + mappedByProperty
 					);
 				}
-				mappedByColumns = element.getColumnIterator();
+				mappedByColumns = element.getColumns();
 			}
 			else {
-				mappedByColumns = property.getValue().getColumnIterator();
+				mappedByColumns = property.getValue().getColumns();
 			}
-			while ( mappedByColumns.hasNext() ) {
-				Column column = (Column) mappedByColumns.next();
+			for ( Column column: mappedByColumns ) {
 				columns[0].overrideFromReferencedColumnIfNecessary( column );
 				columns[0].linkValueUsingAColumnCopy( column, value );
 			}
 		}
 		else if ( columns[0].isImplicit() ) {
-			/**
+			/*
 			 * if columns are implicit, then create the columns based on the
 			 * referenced entity id columns
 			 */
-			Iterator idColumns;
-			if ( referencedEntity instanceof JoinedSubclass ) {
-				idColumns = referencedEntity.getKey().getColumnIterator();
-			}
-			else {
-				idColumns = referencedEntity.getIdentifier().getColumnIterator();
-			}
-			while ( idColumns.hasNext() ) {
-				Column column = (Column) idColumns.next();
+			List<Column> idColumns = referencedEntity instanceof JoinedSubclass
+					? referencedEntity.getKey().getColumns()
+					: referencedEntity.getIdentifier().getColumns();
+			for ( Column column: idColumns ) {
 				columns[0].linkValueUsingDefaultColumnNaming( column, referencedEntity, value );
 				columns[0].overrideFromReferencedColumnIfNecessary( column );
 			}
@@ -635,7 +623,7 @@ public class TableBinder {
 					);
 				}
 				linkJoinColumnWithValueOverridingNameIfImplicit(
-						referencedEntity, synthProp.getColumnIterator(), columns, value
+						referencedEntity, synthProp.getValue(), columns, value
 				);
 				if ( value instanceof SortableValue ) {
 					( (SortableValue) value ).sortProperties();
@@ -654,7 +642,7 @@ public class TableBinder {
 					}
 					linkJoinColumnWithValueOverridingNameIfImplicit(
 							referencedEntity,
-							referencedEntity.getIdentifier().getColumnIterator(),
+							referencedEntity.getIdentifier(),
 							columns,
 							value
 					);
@@ -668,25 +656,25 @@ public class TableBinder {
 						( (Component) referencedEntity.getKey() ).sortProperties();
 					}
 					//explicit referencedColumnName
-					Iterator idColItr = referencedEntity.getKey().getColumnIterator();
-					Column col;
+					List<Column> idColumns = referencedEntity.getKey().getColumns();
 					//works cause the pk has to be on the primary table
 					Table table = referencedEntity.getTable();
-					if ( !idColItr.hasNext() ) {
+					if ( idColumns.isEmpty() ) {
 						LOG.debug( "No column in the identifier!" );
 					}
-					while ( idColItr.hasNext() ) {
+					for ( Column col: idColumns ) {
 						boolean match = false;
 						//for each PK column, find the associated FK column.
-						col = (Column) idColItr.next();
-						final String colName = col.getQuotedName( buildingContext.getMetadataCollector().getDatabase().getJdbcEnvironment().getDialect() );
+						Dialect dialect = buildingContext.getMetadataCollector().getDatabase()
+								.getJdbcEnvironment().getDialect();
+						final String colName = col.getQuotedName(dialect);
 						for (AnnotatedJoinColumn joinCol : columns) {
 							String referencedColumn = joinCol.getReferencedColumn();
 							referencedColumn = buildingContext.getMetadataCollector().getPhysicalColumnName(
 									table,
 									referencedColumn
 							);
-							//In JPA 2 referencedColumnName is case insensitive
+							//In JPA 2 referencedColumnName is case-insensitive
 							if ( referencedColumn.equalsIgnoreCase( colName ) ) {
 								//proper join column
 								if ( joinCol.isNameDeferred() ) {
@@ -718,15 +706,16 @@ public class TableBinder {
 		}
 		value.createForeignKey();
 		if ( unique ) {
-			createUniqueConstraint( value );
+			value.createUniqueKey();
 		}
 	}
 
 	public static void linkJoinColumnWithValueOverridingNameIfImplicit(
 			PersistentClass referencedEntity,
-			Iterator columnIterator,
+			Value v,
 			AnnotatedJoinColumn[] columns,
 			SimpleValue value) {
+		Iterator<Selectable> columnIterator = v.getColumnIterator();
 		for (AnnotatedJoinColumn joinCol : columns) {
 			Column synthCol = (Column) columnIterator.next();
 			if ( joinCol.isNameDeferred() ) {
@@ -738,15 +727,6 @@ public class TableBinder {
 				joinCol.overrideFromReferencedColumnIfNecessary( synthCol );
 			}
 		}
-	}
-
-	public static void createUniqueConstraint(Value value) {
-		Iterator iter = value.getColumnIterator();
-		ArrayList cols = new ArrayList();
-		while ( iter.hasNext() ) {
-			cols.add( iter.next() );
-		}
-		value.getTable().createUniqueKey( cols );
 	}
 
 	public static void addIndexes(Table hibTable, Index[] indexes, MetadataBuildingContext buildingContext) {

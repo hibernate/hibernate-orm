@@ -256,7 +256,8 @@ public class MetadataContext {
 			LOG.trace( "Wrapping up metadata context..." );
 		}
 
-		boolean staticMetamodelScanEnabled = this.jpaStaticMetaModelPopulationSetting != JpaStaticMetaModelPopulationSetting.DISABLED;
+		boolean staticMetamodelScanEnabled =
+				this.jpaStaticMetaModelPopulationSetting != JpaStaticMetaModelPopulationSetting.DISABLED;
 
 		//we need to process types from superclasses to subclasses
 		for ( Object mapping : orderedMappings ) {
@@ -266,7 +267,8 @@ public class MetadataContext {
 					LOG.trace( "Starting entity [" + safeMapping.getEntityName() + ']' );
 				}
 				try {
-					final EntityDomainType<Object> jpaMapping = (EntityDomainType<Object>) entityTypesByPersistentClass.get( safeMapping );
+					final EntityDomainType<Object> jpaMapping = (EntityDomainType<Object>)
+							entityTypesByPersistentClass.get( safeMapping );
 
 					applyIdMetadata( safeMapping, jpaMapping );
 					applyVersionAttribute( safeMapping, jpaMapping );
@@ -315,7 +317,8 @@ public class MetadataContext {
 					LOG.trace( "Starting mapped superclass [" + safeMapping.getMappedClass().getName() + ']' );
 				}
 				try {
-					final MappedSuperclassDomainType<Object> jpaType = (MappedSuperclassDomainType<Object>) mappedSuperclassByMappedSuperclassMapping.get( safeMapping );
+					final MappedSuperclassDomainType<Object> jpaType = (MappedSuperclassDomainType<Object>)
+							mappedSuperclassByMappedSuperclassMapping.get( safeMapping );
 
 					applyIdMetadata( safeMapping, jpaType );
 					applyVersionAttribute( safeMapping, jpaType );
@@ -366,10 +369,9 @@ public class MetadataContext {
 
 			for ( EmbeddableDomainType<?> embeddable : processingEmbeddables ) {
 				final Component component = componentByEmbeddable.get( embeddable );
-				final Iterator<Property> propertyItr = component.getPropertyIterator();
-				while ( propertyItr.hasNext() ) {
-					final Property property = propertyItr.next();
-					final PersistentAttribute<Object, ?> attribute = attributeFactory.buildAttribute( (ManagedDomainType<Object>) embeddable, property );
+				for ( Property property : component.getProperties() ) {
+					final PersistentAttribute<Object, ?> attribute =
+							attributeFactory.buildAttribute( (ManagedDomainType<Object>) embeddable, property );
 					if ( attribute != null ) {
 						addAttribute( embeddable, attribute );
 					}
@@ -386,16 +388,19 @@ public class MetadataContext {
 	}
 
 	private void addAttribute(ManagedDomainType<?> type, PersistentAttribute<Object, ?> attribute) {
-		final AttributeContainer.InFlightAccess<Object> inFlightAccess = ( (AttributeContainer<Object>) type ).getInFlightAccess();
+		//noinspection unchecked
+		AttributeContainer<Object> container = (AttributeContainer<Object>) type;
+		final AttributeContainer.InFlightAccess<Object> inFlightAccess = container.getInFlightAccess();
 		final boolean virtual = attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED
 				&& attribute.getAttributeJavaType() instanceof EntityJavaType<?>;
 		if ( virtual ) {
 			final EmbeddableDomainType<?> embeddableDomainType = (EmbeddableDomainType<?>) attribute.getValueGraphType();
 			final Component component = componentByEmbeddable.get( embeddableDomainType );
-			final Iterator<Property> propertyItr = component.getPropertyIterator();
-			while ( propertyItr.hasNext() ) {
-				final Property property = propertyItr.next();
-				final PersistentAttribute<Object, ?> subAttribute = attributeFactory.buildAttribute( (ManagedDomainType<Object>) embeddableDomainType, property );
+			for ( Property property : component.getProperties() ) {
+				//noinspection unchecked
+				ManagedDomainType<Object> managedDomainType = (ManagedDomainType<Object>) embeddableDomainType;
+				final PersistentAttribute<Object, ?> subAttribute =
+						attributeFactory.buildAttribute( managedDomainType, property );
 				if ( subAttribute != null ) {
 					inFlightAccess.addAttribute( subAttribute );
 				}
@@ -411,7 +416,6 @@ public class MetadataContext {
 	// 2) register the part (mapping role)
 	// 3) somehow get the mapping role "into" the part (setter, ?)
 
-	@SuppressWarnings({"unchecked", "rawtypes"})
 	private void applyIdMetadata(PersistentClass persistentClass, IdentifiableDomainType<?> identifiableType) {
 		if ( persistentClass.hasIdentifierProperty() ) {
 			final Property declaredIdentifierProperty = persistentClass.getDeclaredIdentifierProperty();
@@ -421,53 +425,54 @@ public class MetadataContext {
 						declaredIdentifierProperty
 				);
 
+				//noinspection unchecked rawtypes
 				( ( AttributeContainer) identifiableType ).getInFlightAccess().applyIdAttribute( idAttribute );
 			}
 		}
 		else {
 			// we have a non-aggregated composite-id
 
-			//noinspection RedundantClassCall
-			if ( ! Component.class.isInstance( persistentClass.getIdentifier() ) ) {
+			if ( !(persistentClass.getIdentifier() instanceof Component) ) {
 				throw new MappingException( "Expecting Component for id mapping with no id-attribute" );
 			}
 
 			// Handle the actual id-attributes
 			final Component cidValue = (Component) persistentClass.getIdentifier();
-			final Iterator<Property> cidPropertyItr;
+			final List<Property> cidProperties;
 			final int propertySpan;
 			final EmbeddableTypeImpl<?> idClassType;
 			final Component identifierMapper = persistentClass.getIdentifierMapper();
 			if ( identifierMapper != null ) {
-				cidPropertyItr = identifierMapper.getPropertyIterator();
+				cidProperties = identifierMapper.getProperties();
 				propertySpan = identifierMapper.getPropertySpan();
 				idClassType = applyIdClassMetadata( (Component) persistentClass.getIdentifier() );
 			}
 			else {
-				cidPropertyItr = cidValue.getPropertyIterator();
+				cidProperties = cidValue.getProperties();
 				propertySpan = cidValue.getPropertySpan();
 				idClassType = null;
 			}
 
 			assert cidValue.isEmbedded();
 
-			AbstractIdentifiableType idType = (AbstractIdentifiableType) entityTypesByEntityName.get( cidValue.getOwner().getEntityName() );
+			AbstractIdentifiableType<?> idType = (AbstractIdentifiableType<?>)
+					entityTypesByEntityName.get( cidValue.getOwner().getEntityName() );
+			//noinspection rawtypes
 			Set idAttributes = idType.getIdClassAttributesSafely();
 			if ( idAttributes == null ) {
 				idAttributes = new HashSet<>( propertySpan );
-				while ( cidPropertyItr.hasNext() ) {
-					final Property cidSubProperty = cidPropertyItr.next();
-					final SingularPersistentAttribute<?, Object> cidSubAttr = attributeFactory.buildIdAttribute(
-							idType,
-							cidSubProperty
-					);
-
+				for ( Property cidSubproperty : cidProperties ) {
+					final SingularPersistentAttribute<?, Object> cidSubAttr =
+							attributeFactory.buildIdAttribute( idType, cidSubproperty );
+					//noinspection unchecked
 					idAttributes.add( cidSubAttr );
 				}
 			}
 
 
-			( ( AttributeContainer) identifiableType ).getInFlightAccess().applyNonAggregatedIdAttributes( idAttributes, idClassType );
+			AttributeContainer<?> container = (AttributeContainer<?>) identifiableType;
+			//noinspection unchecked
+			container.getInFlightAccess().applyNonAggregatedIdAttributes( idAttributes, idClassType );
 		}
 	}
 
@@ -486,12 +491,12 @@ public class MetadataContext {
 		return embeddableType;
 	}
 
-	@SuppressWarnings({"unchecked", "rawtypes"})
 	private <X> void applyIdMetadata(MappedSuperclass mappingType, MappedSuperclassDomainType<X> jpaMappingType) {
 		if ( mappingType.hasIdentifierProperty() ) {
 			final Property declaredIdentifierProperty = mappingType.getDeclaredIdentifierProperty();
 			if ( declaredIdentifierProperty != null ) {
-				final SingularPersistentAttribute<X, Object> attribute = attributeFactory.buildIdAttribute( jpaMappingType, declaredIdentifierProperty );
+				final SingularPersistentAttribute<X, Object> attribute =
+						attributeFactory.buildIdAttribute( jpaMappingType, declaredIdentifierProperty );
 				//noinspection unchecked
 				( ( AttributeContainer) jpaMappingType ).getInFlightAccess().applyIdAttribute( attribute );
 			}
@@ -500,7 +505,7 @@ public class MetadataContext {
 		else if ( mappingType.getIdentifierMapper() != null ) {
 			Set<SingularPersistentAttribute<? super X, ?>> attributes = buildIdClassAttributes(
 					jpaMappingType,
-					mappingType.getIdentifierMapper().getPropertyIterator()
+					mappingType.getIdentifierMapper().getProperties()
 			);
 			//noinspection unchecked
 			( ( AttributeContainer<X>) jpaMappingType ).getInFlightAccess().applyIdClassAttributes( attributes );
@@ -529,13 +534,13 @@ public class MetadataContext {
 
 	private <X> Set<SingularPersistentAttribute<? super X, ?>> buildIdClassAttributes(
 			IdentifiableDomainType<X> ownerType,
-			Iterator<Property> propertyIterator) {
+			List<Property> properties) {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Building old-school composite identifier [" + ownerType.getJavaType().getName() + ']' );
 		}
 		Set<SingularPersistentAttribute<? super X, ?>> attributes = new HashSet<>();
-		while ( propertyIterator.hasNext() ) {
-			attributes.add( attributeFactory.buildIdAttribute( ownerType, propertyIterator.next() ) );
+		for ( Property property : properties ) {
+			attributes.add( attributeFactory.buildIdAttribute( ownerType, property ) );
 		}
 		return attributes;
 	}

@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.io.Serializable;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.function.Consumer;
 
@@ -152,9 +151,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		int attributeIndex = 0;
 		int columnPosition = 0;
 
-		final Iterator<Property> propertyIterator = bootDescriptor.getPropertyIterator();
-		while ( propertyIterator.hasNext() ) {
-			final Property bootPropertyDescriptor = propertyIterator.next();
+		for ( Property bootPropertyDescriptor : bootDescriptor.getProperties() ) {
 			final Type subtype = subtypes[ attributeIndex ];
 
 			attributeTypeValidator.check( bootPropertyDescriptor.getName(), subtype );

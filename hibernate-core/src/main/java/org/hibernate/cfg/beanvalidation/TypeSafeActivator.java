@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -280,9 +279,7 @@ class TypeSafeActivator {
 			ConstraintDescriptor<Min> minConstraint = (ConstraintDescriptor<Min>) descriptor;
 			long min = minConstraint.getAnnotation().value();
 
-			final Iterator<Selectable> itor = property.getColumnIterator();
-			if ( itor.hasNext() ) {
-				final Selectable selectable = itor.next();
+			for ( Selectable selectable : property.getSelectables() ) {
 				if ( selectable instanceof Column ) {
 					Column col = (Column) selectable;
 					String checkConstraint = col.getQuotedName(dialect) + ">=" + min;
@@ -298,9 +295,7 @@ class TypeSafeActivator {
 			ConstraintDescriptor<Max> maxConstraint = (ConstraintDescriptor<Max>) descriptor;
 			long max = maxConstraint.getAnnotation().value();
 
-			final Iterator<Selectable> itor = property.getColumnIterator();
-			if ( itor.hasNext() ) {
-				final Selectable selectable = itor.next();
+			for ( Selectable selectable : property.getSelectables() ) {
 				if ( selectable instanceof Column ) {
 					Column col = (Column) selectable;
 					String checkConstraint = col.getQuotedName( dialect ) + "<=" + max;
@@ -327,9 +322,7 @@ class TypeSafeActivator {
 			if ( !( property.getPersistentClass() instanceof SingleTableSubclass ) ) {
 				//composite should not add not-null on all columns
 				if ( !property.isComposite() ) {
-					final Iterator<Selectable> itr = property.getColumnIterator();
-					while ( itr.hasNext() ) {
-						final Selectable selectable = itr.next();
+					for ( Selectable selectable : property.getSelectables() ) {
 						if ( selectable instanceof Column ) {
 							((Column) selectable).setNullable( false );
 						}
@@ -356,9 +349,7 @@ class TypeSafeActivator {
 			int integerDigits = digitsConstraint.getAnnotation().integer();
 			int fractionalDigits = digitsConstraint.getAnnotation().fraction();
 
-			final Iterator<Selectable> itor = property.getColumnIterator();
-			if ( itor.hasNext() ) {
-				final Selectable selectable = itor.next();
+			for ( Selectable selectable : property.getSelectables() ) {
 				if ( selectable instanceof Column ) {
 					Column col = (Column) selectable;
 					col.setPrecision( integerDigits + fractionalDigits );
@@ -376,10 +367,7 @@ class TypeSafeActivator {
 			ConstraintDescriptor<Size> sizeConstraint = (ConstraintDescriptor<Size>) descriptor;
 			int max = sizeConstraint.getAnnotation().max();
 
-			final Iterator<Selectable> itor = property.getColumnIterator();
-			if ( itor.hasNext() ) {
-				final Selectable selectable = itor.next();
-				Column col = (Column) selectable;
+			for ( Column col : property.getColumns() ) {
 				if ( max < Integer.MAX_VALUE ) {
 					col.setLength( max );
 				}
@@ -394,9 +382,7 @@ class TypeSafeActivator {
 				&& String.class.equals( propertyDescriptor.getElementClass() ) ) {
 			int max = (Integer) descriptor.getAttributes().get( "max" );
 
-			final Iterator<Selectable> itor = property.getColumnIterator();
-			if ( itor.hasNext() ) {
-				final Selectable selectable = itor.next();
+			for ( Selectable selectable : property.getSelectables() ) {
 				if ( selectable instanceof Column ) {
 					Column col = (Column) selectable;
 					if ( max < Integer.MAX_VALUE ) {

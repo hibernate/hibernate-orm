@@ -33,7 +33,7 @@ public class OneToMany implements Value {
 
 	public OneToMany(MetadataBuildingContext buildingContext, PersistentClass owner) throws MappingException {
 		this.buildingContext = buildingContext;
-		this.referencingTable = ( owner == null ) ? null : owner.getTable();
+		this.referencingTable = owner == null ? null : owner.getTable();
 	}
 
 	public MetadataBuildingContext getBuildingContext() {
@@ -74,6 +74,11 @@ public class OneToMany implements Value {
 		// no foreign key element for a one-to-many
 	}
 
+	@Override
+	public void createUniqueKey() {
+	}
+
+	@Deprecated
 	public Iterator<Selectable> getColumnIterator() {
 		return associatedClass.getKey().getColumnIterator();
 	}
@@ -81,6 +86,11 @@ public class OneToMany implements Value {
 	@Override
 	public List<Selectable> getSelectables() {
 		return associatedClass.getKey().getSelectables();
+	}
+
+	@Override
+	public List<Column> getColumns() {
+		return associatedClass.getKey().getColumns();
 	}
 
 	public int getColumnSpan() {
@@ -150,8 +160,8 @@ public class OneToMany implements Value {
 
 	public boolean isSame(OneToMany other) {
 		return Objects.equals( referencingTable, other.referencingTable )
-				&& Objects.equals( referencedEntityName, other.referencedEntityName )
-				&& Objects.equals( associatedClass, other.associatedClass );
+			&& Objects.equals( referencedEntityName, other.referencedEntityName )
+			&& Objects.equals( associatedClass, other.associatedClass );
 	}
 
 	public boolean[] getColumnInsertability() {

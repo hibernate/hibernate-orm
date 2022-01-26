@@ -82,10 +82,8 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		this.cascade = new CascadeStyle[propertySpan];
 		this.joinedFetch = new FetchMode[propertySpan];
 
-		final Iterator<Property> itr = component.getPropertyIterator();
 		int i = 0;
-		while ( itr.hasNext() ) {
-			final Property property = itr.next();
+		for ( Property property : component.getProperties() ) {
 			// todo (6.0) : see if we really need to create these
 			final StandardProperty prop = PropertyFactory.buildStandardProperty( property, false );
 			this.propertyNames[i] = prop.getName();

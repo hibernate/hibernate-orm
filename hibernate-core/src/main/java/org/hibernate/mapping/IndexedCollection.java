@@ -58,23 +58,21 @@ public abstract class IndexedCollection extends Collection {
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
 			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
-			pk.addColumns( getKey().getColumnIterator() );
+			pk.addColumns( getKey() );
 
 			// index should be last column listed
 			boolean indexIsPartOfElement = false;
-			final Iterator<Selectable> iter = getIndex().getColumnIterator();
-			while ( iter.hasNext() ) {
-				final Selectable selectable = iter.next();
+			for ( Selectable selectable: getIndex().getSelectables() ) {
 				if ( selectable.isFormula() || !getCollectionTable().containsColumn( (Column) selectable ) ) {
 					indexIsPartOfElement = true;
 				}
 			}
 			if ( indexIsPartOfElement ) {
 				//if it is part of the element, use the element columns in the PK
-				pk.addColumns( getElement().getColumnIterator() );
+				pk.addColumns( getElement() );
 			}
 			else {
-				pk.addColumns( getIndex().getColumnIterator() );
+				pk.addColumns( getIndex() );
 			}
 			getCollectionTable().setPrimaryKey(pk);
 		}

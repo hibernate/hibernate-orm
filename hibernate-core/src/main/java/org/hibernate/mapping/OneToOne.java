@@ -6,14 +6,12 @@
  */
 package org.hibernate.mapping;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
@@ -28,7 +26,7 @@ public class OneToOne extends ToOne {
 	private ForeignKeyDirection foreignKeyType;
 	private KeyValue identifier;
 	private String propertyName;
-	private String entityName;
+	private final String entityName;
 	private String mappedByProperty;
 
 	public OneToOne(MetadataBuildingContext buildingContext, Table table, PersistentClass owner) throws MappingException {
@@ -48,13 +46,9 @@ public class OneToOne extends ToOne {
 	public String getEntityName() {
 		return entityName;
 	}
-
-	public void setEntityName(String propertyName) {
-		this.entityName = entityName==null ? null : entityName.intern();
-	}
 	
 	public Type getType() throws MappingException {
-		if ( getColumnIterator().hasNext() ) {
+		if ( getColumnSpan()>0 ) {
 			return MappingHelper.specialOneToOne(
 					getReferencedEntityName(),
 					getForeignKeyType(),
@@ -95,20 +89,27 @@ public class OneToOne extends ToOne {
 	}
 
 	@Override
-	public List<Selectable> getSelectables() {
-		if ( super.getSelectables().size() > 0 ) {
-			return super.getSelectables();
+	public void createUniqueKey() {
+		if ( !hasFormula() && getColumnSpan()>0  ) {
+			getTable().createUniqueKey( getConstraintColumns() );
 		}
-		return getConstraintColumns();
 	}
 
-	public List getConstraintColumns() {
-		ArrayList list = new ArrayList();
-		Iterator iter = identifier.getColumnIterator();
-		while ( iter.hasNext() ) {
-			list.add( iter.next() );
+	@Override
+	public List<Selectable> getVirtualSelectables() {
+		List<Selectable> selectables = super.getVirtualSelectables();
+		if ( selectables.isEmpty() ) {
+			selectables = identifier.getSelectables();
 		}
-		return list;
+		return selectables;
+	}
+
+	public List<Column> getConstraintColumns() {
+		List<Column> columns = super.getColumns();
+		if ( columns.isEmpty() ) {
+			columns = identifier.getColumns();
+		}
+		return columns;
 	}
 
 	@Override

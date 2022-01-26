@@ -77,9 +77,29 @@ public class Property implements Serializable, MetaAttributable {
 	public int getColumnSpan() {
 		return value.getColumnSpan();
 	}
-	
+
+	/**
+	 * @deprecated moving away from the use of {@link Iterator} as a return type
+	 */
+	@Deprecated(since = "6.0")
 	public Iterator<Selectable> getColumnIterator() {
 		return value.getColumnIterator();
+	}
+
+	/**
+	 * Delegates to {@link Value#getSelectables()}.
+	 */
+	public java.util.List<Selectable> getSelectables() {
+		return value.getSelectables();
+	}
+
+	/**
+	 * Delegates to {@link Value#getColumns()}.
+	 *
+	 * @throws org.hibernate.AssertionFailure if the mapping involves formulas
+	 */
+	public java.util.List<Column> getColumns() {
+		return value.getColumns();
 	}
 	
 	public String getName() {
@@ -104,9 +124,7 @@ public class Property implements Serializable, MetaAttributable {
 
 	public void resetOptional(boolean optional) {
 		setOptional(optional);
-		Iterator<Selectable> columnIterator = getValue().getColumnIterator();
-		while ( columnIterator.hasNext() ) {
-			Selectable column = columnIterator.next();
+		for ( Selectable column: getValue().getSelectables() ) {
 			if (column instanceof Column) {
 				( (Column) column ).setNullable(optional);
 			}

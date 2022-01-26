@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.TimeZoneStorageStrategy;
@@ -70,7 +71,7 @@ public abstract class SimpleValue implements KeyValue {
 
 	public static final String DEFAULT_ID_GEN_STRATEGY = "assigned";
 
-	private MetadataBuildingContext buildingContext;
+	private final MetadataBuildingContext buildingContext;
 	private final MetadataImplementor metadata;
 
 	private final List<Selectable> columns = new ArrayList<>();
@@ -187,10 +188,8 @@ public abstract class SimpleValue implements KeyValue {
 
 	@Override
 	public boolean hasFormula() {
-		Iterator iter = getColumnIterator();
-		while ( iter.hasNext() ) {
-			Object o = iter.next();
-			if (o instanceof Formula) {
+		for ( Selectable selectable : getSelectables() ) {
+			if ( selectable instanceof Formula ) {
 				return true;
 			}
 		}
@@ -206,7 +205,7 @@ public abstract class SimpleValue implements KeyValue {
 		return columns.get( position );
 	}
 
-	@Override
+	@Override @Deprecated
 	public Iterator<Selectable> getColumnIterator() {
 		return columns.iterator();
 	}
@@ -216,8 +215,15 @@ public abstract class SimpleValue implements KeyValue {
 		return columns;
 	}
 
-	public List getConstraintColumns() {
-		return columns;
+	@Override
+	public List<Column> getColumns() {
+		if ( hasFormula() ) {
+			// in principle this method should never get called
+			// if we have formulas in the mapping
+			throw new AssertionFailure("value involves formulas");
+		}
+		//noinspection unchecked, rawtypes
+		return (List) columns;
 	}
 
 	public Iterator<Selectable> getConstraintColumnIterator() {
@@ -236,7 +242,7 @@ public abstract class SimpleValue implements KeyValue {
 					.getServiceRegistry()
 					.getService( ClassLoaderService.class );
 			try {
-				final Class<? extends AttributeConverter> converterClass = cls.classForName( converterClassName );
+				final Class<? extends AttributeConverter<?,?>> converterClass = cls.classForName( converterClassName );
 				this.attributeConverterDescriptor = new ClassBasedConverterDescriptor(
 						converterClass,
 						false,
@@ -285,10 +291,18 @@ public abstract class SimpleValue implements KeyValue {
 
 	@Override
 	public void createForeignKeyOfEntity(String entityName) {
-		if ( !hasFormula() && !"none".equals(getForeignKeyName())) {
-			ForeignKey fk = table.createForeignKey( getForeignKeyName(), getConstraintColumns(), entityName, getForeignKeyDefinition() );
-			fk.setCascadeDeleteEnabled(cascadeDeleteEnabled);
+		if ( !hasFormula() && !"none".equals( getForeignKeyName() ) ) {
+			table.createForeignKey( getForeignKeyName(), getConstraintColumns(), entityName, getForeignKeyDefinition() )
+					.setCascadeDeleteEnabled(cascadeDeleteEnabled);
 		}
+	}
+
+	@Override
+	public void createUniqueKey() {
+		if ( hasFormula() ) {
+			throw new MappingException( "unique key constraint involves formulas" );
+		}
+		getTable().createUniqueKey( getConstraintColumns() );
 	}
 
 	private IdentifierGeneratorCreator customIdGeneratorCreator;
@@ -395,7 +409,7 @@ public abstract class SimpleValue implements KeyValue {
 		params.setProperty( PersistentIdentifierGenerator.TABLE, tableName );
 
 		//pass the column name (a generated id almost always has a single column)
-		final String columnName = ( (Column) getColumnIterator().next() ).getQuotedName( dialect );
+		final String columnName = ( (Column) getSelectables().get(0) ).getQuotedName( dialect );
 		params.setProperty( PersistentIdentifierGenerator.PK, columnName );
 
 		//pass the entity-name, if not a collection-id
@@ -485,7 +499,9 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect) {
-		return IdentityGenerator.class.isAssignableFrom(identifierGeneratorFactory.getIdentifierGeneratorClass( identifierGeneratorStrategy ));
+		return IdentityGenerator.class.isAssignableFrom(
+				identifierGeneratorFactory.getIdentifierGeneratorClass( identifierGeneratorStrategy )
+		);
 	}
 
 	public Properties getIdentifierGeneratorProperties() {
@@ -553,9 +569,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public boolean isNullable() {
-		Iterator itr = getColumnIterator();
-		while ( itr.hasNext() ) {
-			final Object selectable = itr.next();
+		for (Selectable selectable : getSelectables()) {
 			if ( selectable instanceof Formula ) {
 				// if there are *any* formulas, then the Value overall is
 				// considered nullable
@@ -698,7 +712,6 @@ public abstract class SimpleValue implements KeyValue {
 	 *
 	 * @todo : see if we already have previously built a custom on-the-fly BasicType for this AttributeConverter; see note below about caching
 	 */
-	@SuppressWarnings("unchecked")
 	private Type buildAttributeConverterTypeAdapter() {
 		// todo : validate the number of columns present here?
 
@@ -720,7 +733,6 @@ public abstract class SimpleValue implements KeyValue {
 		);
 
 		final BasicJavaType<?> domainJtd = (BasicJavaType<?>) jpaAttributeConverter.getDomainJavaType();
-
 
 		// build the SqlTypeDescriptor adapter ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Going back to the illustration, this should be a SqlTypeDescriptor that handles the Integer <-> String
@@ -846,7 +858,7 @@ public abstract class SimpleValue implements KeyValue {
 
 	@Override
 	public String toString() {
-		return getClass().getName() + '(' + columns.toString() + ')';
+		return getClass().getName() + '(' + columns + ')';
 	}
 
 	public Object accept(ValueVisitor visitor) {
@@ -937,7 +949,7 @@ public abstract class SimpleValue implements KeyValue {
 							table.getCatalog(),
 							table.getSchema(),
 							table.getName(),
-							Boolean.valueOf( typeParameters.getProperty( DynamicParameterizedType.IS_PRIMARY_KEY ) ),
+							Boolean.parseBoolean( typeParameters.getProperty( DynamicParameterizedType.IS_PRIMARY_KEY ) ),
 							columnNames,
 							columnLengths
 					)
@@ -990,7 +1002,7 @@ public abstract class SimpleValue implements KeyValue {
 
 	private static final class ParameterTypeImpl implements DynamicParameterizedType.ParameterType {
 
-		private final Class returnedClass;
+		private final Class<?> returnedClass;
 		private final Annotation[] annotationsMethod;
 		private final String catalog;
 		private final String schema;
@@ -1000,7 +1012,7 @@ public abstract class SimpleValue implements KeyValue {
 		private final Long[] columnLengths;
 
 		private ParameterTypeImpl(
-				Class returnedClass,
+				Class<?> returnedClass,
 				Annotation[] annotationsMethod,
 				String catalog,
 				String schema,
@@ -1019,7 +1031,7 @@ public abstract class SimpleValue implements KeyValue {
 		}
 
 		@Override
-		public Class getReturnedClass() {
+		public Class<?> getReturnedClass() {
 			return returnedClass;
 		}
 

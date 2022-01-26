@@ -47,7 +47,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	public static final String DEFAULT_KEY_COLUMN_NAME = "id";
 
 	private final MetadataBuildingContext buildingContext;
-	private PersistentClass owner;
+	private final PersistentClass owner;
 
 	private KeyValue key;
 	private Value element;
@@ -346,14 +346,12 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 			throws MappingException {
 		final boolean[] insertability = value.getColumnInsertability();
 		final boolean[] updatability = value.getColumnUpdateability();
-		final Iterator<Selectable> iterator = value.getColumnIterator();
 		int i = 0;
-		while ( iterator.hasNext() ) {
-			Selectable s = iterator.next();
+		for ( Selectable selectable : value.getSelectables() ) {
 			// exclude formulas and columns that are not insertable or updatable
 			// since these values can be repeated (HHH-5393)
-			if ( !s.isFormula() && ( insertability[i] || updatability[i] ) ) {
-				Column col = (Column) s;
+			if ( !selectable.isFormula() && ( insertability[i] || updatability[i] ) ) {
+				Column col = (Column) selectable;
 				if ( !distinctColumns.add( col.getName() ) ) {
 					throw new MappingException(
 							"Repeated column in mapping for collection: "
@@ -387,12 +385,18 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		}
 	}
 
+	@Deprecated
 	public Iterator<Selectable> getColumnIterator() {
 		return Collections.emptyIterator();
 	}
 
 	@Override
 	public List<Selectable> getSelectables() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public List<Column> getColumns() {
 		return Collections.emptyList();
 	}
 
@@ -404,8 +408,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return getCollectionType();
 	}
 
-	@SuppressWarnings("rawtypes")
-	public CollectionSemantics getCollectionSemantics() {
+	public CollectionSemantics<?,?> getCollectionSemantics() {
 		if ( cachedCollectionSemantics == null ) {
 			cachedCollectionSemantics = resolveCollectionSemantics();
 		}
@@ -473,6 +476,10 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	}
 
 	public void createForeignKey() {
+	}
+
+	@Override
+	public void createUniqueKey() {
 	}
 
 	public boolean isSimpleValue() {

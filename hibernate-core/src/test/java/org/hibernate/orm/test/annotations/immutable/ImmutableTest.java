@@ -32,11 +32,10 @@ import static org.junit.Assert.fail;
  *
  * @author Hardy Ferentschik
  */
-@SuppressWarnings("unchecked")
 public class ImmutableTest extends BaseCoreFunctionalTestCase {
 
 	@Test
-	public void testImmutableEntity() throws Exception {
+	public void testImmutableEntity() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Country country = new Country();
@@ -48,7 +47,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		// try changing the entity
 		s = openSession();
 		tx = s.beginTransaction();
-		Country germany = (Country) s.get(Country.class, country.getId());
+		Country germany = s.get(Country.class, country.getId());
 		assertNotNull(germany);
 		germany.setName("France");
 		assertEquals("Local name can be changed", "France", germany.getName());
@@ -59,7 +58,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		// retrieving the country again - it should be unmodified
 		s = openSession();
 		tx = s.beginTransaction();
-		germany = (Country) s.get(Country.class, country.getId());
+		germany = s.get(Country.class, country.getId());
 		assertNotNull(germany);
 		assertEquals("Name should not have changed", "Germany", germany.getName());
 		tx.commit();
@@ -70,7 +69,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 	public void testImmutableCollection() {
 		Country country = new Country();
 		country.setName("Germany");
-		List states = new ArrayList<State>();
+		List<State> states = new ArrayList<>();
 		State bayern = new State();
 		bayern.setName("Bayern");
 		State hessen = new State();
@@ -90,7 +89,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		Country germany = (Country) s.get(Country.class, country.getId());
+		Country germany = s.get(Country.class, country.getId());
 		assertNotNull(germany);
 		assertEquals("Wrong number of states", 3, germany.getStates().size());
 
@@ -112,7 +111,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		germany = (Country) s.get(Country.class, country.getId());
+		germany = s.get(Country.class, country.getId());
 		assertNotNull(germany);
 		assertEquals("Wrong number of states", 3, germany.getStates().size());
 
@@ -129,7 +128,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		germany = (Country) s.get(Country.class, country.getId());
+		germany = s.get(Country.class, country.getId());
 		assertNotNull(germany);
 		assertEquals("Wrong number of states", 3, germany.getStates().size());
 		tx.commit();

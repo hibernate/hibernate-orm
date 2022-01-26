@@ -9,6 +9,7 @@ package org.hibernate.mapping;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -38,7 +39,6 @@ import org.jboss.logging.Logger;
  *
  * @author Gavin King
  */
-@SuppressWarnings("deprecation")
 public class Table implements RelationalModel, Serializable, ContributableDatabaseObject {
 	private static final Logger log = Logger.getLogger( Table.class );
 	private static final Column[] EMPTY_COLUMN_ARRAY = new Column[0];
@@ -52,14 +52,14 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 	/**
 	 * contains all columns, including the primary key
 	 */
-	private Map<String, Column> columns = new LinkedHashMap<>();
+	private final Map<String, Column> columns = new LinkedHashMap<>();
 	private KeyValue idValue;
 	private PrimaryKey primaryKey;
-	private Map<ForeignKeyKey, ForeignKey> foreignKeys = new LinkedHashMap<>();
-	private Map<String, Index> indexes = new LinkedHashMap<>();
-	private Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<>();
+	private final Map<ForeignKeyKey, ForeignKey> foreignKeys = new LinkedHashMap<>();
+	private final Map<String, Index> indexes = new LinkedHashMap<>();
+	private final Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<>();
 	private int uniqueInteger;
-	private List<String> checkConstraints = new ArrayList<>();
+	private final List<String> checkConstraints = new ArrayList<>();
 	private String rowId;
 	private String subselect;
 	private boolean isAbstract;
@@ -229,7 +229,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 			return null;
 		}
 
-		Column myColumn = (Column) columns.get( column.getCanonicalName() );
+		Column myColumn = columns.get( column.getCanonicalName() );
 
 		return column.equals( myColumn ) ?
 				myColumn :
@@ -241,7 +241,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 			return null;
 		}
 
-		return (Column) columns.get( name.getCanonicalName() );
+		return columns.get( name.getCanonicalName() );
 	}
 
 	public Column getColumn(int n) {
@@ -249,7 +249,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 		for ( int i = 0; i < n - 1; i++ ) {
 			iter.next();
 		}
-		return (Column) iter.next();
+		return iter.next();
 	}
 
 	public void addColumn(Column column) {
@@ -283,6 +283,10 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 
 	public Iterator<Column> getColumnIterator() {
 		return columns.values().iterator();
+	}
+
+	public Collection<Column> getColumns() {
+		return columns.values();
 	}
 
 	public Iterator<Index> getIndexIterator() {
@@ -425,7 +429,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 		List<String> results = new ArrayList<>();
 
 		while ( iter.hasNext() ) {
-			final Column column = (Column) iter.next();
+			final Column column = iter.next();
 			final ColumnInformation columnInfo = tableInfo.getColumn( Identifier.toIdentifier( column.getName(), column.isQuoted() ) );
 
 			if ( columnInfo == null ) {
@@ -651,7 +655,9 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 	public UniqueKey createUniqueKey(List<Column> keyColumns) {
 		String keyName = Constraint.generateName( "UK_", this, keyColumns );
 		UniqueKey uk = getOrCreateUniqueKey( keyName );
-		uk.addColumns( keyColumns.iterator() );
+		for (Column keyColumn : keyColumns) {
+			uk.addColumn( keyColumn );
+		}
 		return uk;
 	}
 
@@ -691,8 +697,10 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 			fk = new ForeignKey();
 			fk.setTable( this );
 			fk.setReferencedEntityName( referencedEntityName );
-			fk.setKeyDefinition(keyDefinition);
-			fk.addColumns( keyColumns.iterator() );
+			fk.setKeyDefinition( keyDefinition );
+			for (Column keyColumn : keyColumns) {
+				fk.addColumn( keyColumn );
+			}
 			if ( referencedColumns != null ) {
 				fk.addReferencedColumns( referencedColumns.iterator() );
 			}

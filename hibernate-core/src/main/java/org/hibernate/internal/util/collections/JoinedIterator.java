@@ -30,6 +30,7 @@ public class JoinedIterator<T> implements Iterator<T> {
 		this( wrappedIterators.toArray(new Iterator[0]) );
 	}
 
+	@SafeVarargs
 	public JoinedIterator(Iterator<? extends T>... iteratorsToWrap) {
 		if( iteratorsToWrap == null ) {
 			throw new NullPointerException( "Iterators to join were null" );

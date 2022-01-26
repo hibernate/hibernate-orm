@@ -580,7 +580,7 @@ public class MappingModelCreationHelper {
 				final BasicValue index = (BasicValue) ( (IndexedCollection) bootValueMapping ).getIndex();
 				final SelectableMapping selectableMapping = SelectableMappingImpl.from(
 						tableExpression,
-						index.getColumnIterator().next(),
+						index.getSelectables().get(0),
 						creationContext.getTypeConfiguration().getBasicTypeForJavaType( Integer.class ),
 						dialect,
 						creationProcess.getSqmFunctionRegistry()
@@ -631,7 +631,7 @@ public class MappingModelCreationHelper {
 				final BasicValue index = (BasicValue) ( (IndexedCollection) bootValueMapping ).getIndex();
 				final SelectableMapping selectableMapping = SelectableMappingImpl.from(
 						tableExpression,
-						index.getColumnIterator().next(),
+						index.getSelectables().get(0),
 						creationContext.getTypeConfiguration().getBasicTypeForJavaType( Integer.class ),
 						dialect,
 						creationProcess.getSqmFunctionRegistry()
@@ -858,7 +858,7 @@ public class MappingModelCreationHelper {
 			final String tableExpression = getTableIdentifierExpression( bootValueMappingKey.getTable(), creationProcess );
 			final SelectableMapping keySelectableMapping = SelectableMappingImpl.from(
 					tableExpression,
-					bootValueMappingKey.getColumnIterator().next(),
+					bootValueMappingKey.getSelectables().get(0),
 					(JdbcMapping) keyType,
 					dialect,
 					creationProcess.getSqmFunctionRegistry()
@@ -1320,7 +1320,7 @@ public class MappingModelCreationHelper {
 			final BasicValue basicValue = (BasicValue) bootMapKeyDescriptor;
 			final SelectableMapping selectableMapping = SelectableMappingImpl.from(
 					tableExpression,
-					basicValue.getColumnIterator().next(),
+					basicValue.getSelectables().get(0),
 					basicValue.resolve().getJdbcMapping(),
 					dialect,
 					creationProcess.getSqmFunctionRegistry()
@@ -1403,7 +1403,7 @@ public class MappingModelCreationHelper {
 			final BasicValue basicElement = (BasicValue) element;
 			final SelectableMapping selectableMapping = SelectableMappingImpl.from(
 					tableExpression,
-					basicElement.getColumnIterator().next(),
+					basicElement.getSelectables().get(0),
 					basicElement.resolve().getJdbcMapping(),
 					dialect,
 					creationProcess.getSqmFunctionRegistry()

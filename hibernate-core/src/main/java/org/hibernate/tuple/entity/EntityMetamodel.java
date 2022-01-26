@@ -154,9 +154,8 @@ public class EntityMetamodel implements Serializable {
 			if ( identifierMapperComponent != null ) {
 				nonAggregatedCidMapper = (CompositeType) identifierMapperComponent.getType();
 				idAttributeNames = new HashSet<>( );
-				final Iterator<Property> propertyItr = identifierMapperComponent.getPropertyIterator();
-				while ( propertyItr.hasNext() ) {
-					idAttributeNames.add( propertyItr.next().getName() );
+				for ( Property property : identifierMapperComponent.getProperties() ) {
+					idAttributeNames.add( property.getName() );
 				}
 			}
 			else {
@@ -463,10 +462,8 @@ public class EntityMetamodel implements Serializable {
 			SessionFactoryImplementor sessionFactory,
 			Component composite,
 			CompositeGenerationStrategyPairBuilder builder) {
-		Iterator<?> subProperties = composite.getPropertyIterator();
-		while ( subProperties.hasNext() ) {
-			final Property subProperty = (Property) subProperties.next();
-			builder.addPair( buildGenerationStrategyPair( sessionFactory, subProperty ) );
+		for ( Property property : composite.getProperties() ) {
+			builder.addPair( buildGenerationStrategyPair( sessionFactory, property ) );
 		}
 	}
 
@@ -616,10 +613,8 @@ public class EntityMetamodel implements Serializable {
 				// start building the aggregate values
 				int propertyIndex = -1;
 				int columnIndex = 0;
-				Iterator<?> subProperties = composite.getPropertyIterator();
-				while ( subProperties.hasNext() ) {
+				for ( Property property : composite.getProperties() ) {
 					propertyIndex++;
-					final Property subProperty = (Property) subProperties.next();
 					final InDatabaseValueGenerationStrategy subStrategy = inDatabaseStrategies.get( propertyIndex );
 
 					if ( subStrategy.getGenerationTiming() == GenerationTiming.ALWAYS ) {
@@ -632,11 +627,11 @@ public class EntityMetamodel implements Serializable {
 						referenceColumns = true;
 					}
 					if ( subStrategy.getReferencedColumnValues() != null ) {
-						if ( subStrategy.getReferencedColumnValues().length != subProperty.getColumnSpan() ) {
+						if ( subStrategy.getReferencedColumnValues().length != property.getColumnSpan() ) {
 							throw new ValueGenerationStrategyException(
 									"Internal error : mismatch between number of collected 'referenced column values'" +
 											" and number of columns for composite attribute : " + mappingProperty.getName() +
-											'.' + subProperty.getName()
+											'.' + property.getName()
 							);
 						}
 						System.arraycopy(
@@ -644,7 +639,7 @@ public class EntityMetamodel implements Serializable {
 								0,
 								columnValues,
 								columnIndex,
-								subProperty.getColumnSpan()
+								property.getColumnSpan()
 						);
 					}
 				}
@@ -760,9 +755,8 @@ public class EntityMetamodel implements Serializable {
 	private void mapPropertyToIndex(Property prop, int i) {
 		propertyIndexes.put( prop.getName(), i );
 		if ( prop.getValue() instanceof Component ) {
-			Iterator<?> iter = ( (Component) prop.getValue() ).getPropertyIterator();
-			while ( iter.hasNext() ) {
-				Property subprop = (Property) iter.next();
+			Component composite = (Component) prop.getValue();
+			for ( Property subprop : composite.getProperties() ) {
 				propertyIndexes.put(
 						prop.getName() + '.' + subprop.getName(),
 						i

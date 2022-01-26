@@ -192,10 +192,6 @@ public final class Settings {
 		return sessionFactoryOptions.isJtaTrackByThread();
 	}
 
-	public boolean isStrictJPAQLCompliance() {
-		return sessionFactoryOptions.getJpaCompliance().isJpaCacheComplianceEnabled();
-	}
-
 	public boolean isNamedQueryStartupCheckingEnabled() {
 		return sessionFactoryOptions.isNamedQueryStartupCheckingEnabled();
 	}
@@ -234,8 +230,8 @@ public final class Settings {
 
 	public boolean isAutoCreateSchema() {
 		return sessionFactoryOptions.getSchemaAutoTooling() == SchemaAutoTooling.CREATE
-				|| sessionFactoryOptions.getSchemaAutoTooling() == SchemaAutoTooling.CREATE_DROP
-				|| sessionFactoryOptions.getSchemaAutoTooling() == SchemaAutoTooling.CREATE_ONLY;
+			|| sessionFactoryOptions.getSchemaAutoTooling() == SchemaAutoTooling.CREATE_DROP
+			|| sessionFactoryOptions.getSchemaAutoTooling() == SchemaAutoTooling.CREATE_ONLY;
 	}
 
 	public boolean isAutoDropSchema() {

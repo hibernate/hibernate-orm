@@ -40,7 +40,14 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 
 	@Override
 	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
+		final boolean isNegated = booleanExpressionPredicate.isNegated();
+		if ( isNegated ) {
+			appendSql( "not(" );
+		}
 		booleanExpressionPredicate.getExpression().accept( this );
+		if ( isNegated ) {
+			appendSql( CLOSE_PARENTHESIS );
+		}
 	}
 
 	@Override

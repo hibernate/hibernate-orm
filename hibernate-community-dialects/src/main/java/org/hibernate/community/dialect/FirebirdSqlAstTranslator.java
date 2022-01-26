@@ -54,7 +54,14 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	@Override
 	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
 		if ( getDialect().getVersion().isSameOrAfter( 3 ) ) {
+			final boolean isNegated = booleanExpressionPredicate.isNegated();
+			if ( isNegated ) {
+				appendSql( "not(" );
+			}
 			booleanExpressionPredicate.getExpression().accept( this );
+			if ( isNegated ) {
+				appendSql( CLOSE_PARENTHESIS );
+			}
 		}
 		else {
 			super.visitBooleanExpressionPredicate( booleanExpressionPredicate );

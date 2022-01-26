@@ -47,7 +47,14 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 
 	@Override
 	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
+		final boolean isNegated = booleanExpressionPredicate.isNegated();
+		if ( isNegated ) {
+			appendSql( "not(" );
+		}
 		booleanExpressionPredicate.getExpression().accept( this );
+		if ( isNegated ) {
+			appendSql( CLOSE_PARENTHESIS );
+		}
 	}
 
 	// HSQL does not allow CASE expressions where all result arms contain plain parameters.

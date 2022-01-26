@@ -4630,7 +4630,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		// Most databases do not support boolean expressions in a predicate context, so we render `expr=true`
 		booleanExpressionPredicate.getExpression().accept( this );
 		appendSql( '=' );
-		getDialect().appendBooleanValueString( this, true );
+		if ( booleanExpressionPredicate.isNegated() ) {
+			getDialect().appendBooleanValueString( this, false );
+
+		}
+		else {
+			getDialect().appendBooleanValueString( this, true );
+		}
 	}
 
 	@Override

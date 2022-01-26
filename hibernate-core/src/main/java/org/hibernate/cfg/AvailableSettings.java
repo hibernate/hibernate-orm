@@ -2151,6 +2151,13 @@ public interface AvailableSettings {
 	String JPA_LIST_COMPLIANCE	= "hibernate.jpa.compliance.list";
 
 	/**
+	 * JPA specifies that items occurring in {@link jakarta.persistence.OrderBy}
+	 * lists must be references to entity attributes, whereas Hibernate, by default,
+	 * allows more complex expressions.
+	 * <p>
+	 * If enabled, an exception is thrown for items which are not entity attribute
+	 * references.
+	 *
 	 * @see org.hibernate.jpa.spi.JpaCompliance#isJpaOrderByMappingComplianceEnabled()
 	 *
 	 * @since 6.0
@@ -2158,11 +2165,14 @@ public interface AvailableSettings {
 	String JPA_ORDER_BY_MAPPING_COMPLIANCE	= "hibernate.jpa.compliance.orderby";
 
 	/**
-	 * JPA defines specific exception types that must be thrown by specific
-	 * methods of {@link jakarta.persistence.EntityManager} and
-	 * {@link jakarta.persistence.EntityManagerFactory} when the object has
-	 * been closed. When enabled, this setting specifies that Hibernate should
-	 * comply with the specification.
+	 * JPA specifies that an {@link IllegalStateException} must be thrown by
+	 * {@link jakarta.persistence.EntityManager#close()} and
+	 * {@link jakarta.persistence.EntityManagerFactory#close()} if the object has
+	 * already been closed. By default, Hibernate treats any additional call to
+	 * {@code close()} as a noop.
+	 * <p>
+	 * When enabled, this setting forces Hibernate to throw an exception if
+	 * {@code close()} is called on an instance that was already closed.
 	 *
 	 * @see org.hibernate.jpa.spi.JpaCompliance#isJpaClosedComplianceEnabled()
 	 *
@@ -2192,17 +2202,33 @@ public interface AvailableSettings {
 	String JPA_PROXY_COMPLIANCE = "hibernate.jpa.compliance.proxy";
 
 	/**
+	 * By default, Hibernate uses second-level cache invalidation for entities
+	 * with {@linkplain jakarta.persistence.SecondaryTable secondary tables}
+	 * in order to avoid the possibility of inconsistent cached data in the
+	 * case where different transactions simultaneously update different table
+	 * rows corresponding to the same entity instance.
+	 * <p>
+	 * The JPA TCK, for no good reason, requires that entities with secondary
+	 * tables be immediately cached in the second-level cache rather than
+	 * invalidated and re-cached on a subsequent read.
+	 * <p>
+	 * Note that Hibernate's default behavior here is safer and more careful
+	 * than the behavior mandated by the TCK but YOLO.
+	 * <p>
+	 * When enabled, this setting makes Hibernate pass the TCK.
+	 *
 	 * @see org.hibernate.jpa.spi.JpaCompliance#isJpaCacheComplianceEnabled()
+	 * @see org.hibernate.persister.entity.AbstractEntityPersister#isCacheInvalidationRequired()
 	 *
 	 * @since 5.3
 	 */
 	String JPA_CACHING_COMPLIANCE = "hibernate.jpa.compliance.caching";
 
 	/**
-	 * Determines whether the scope of any identifier generator name specified via
-	 * {@link jakarta.persistence.TableGenerator#name()} or
-	 * {@link jakarta.persistence.SequenceGenerator#name()} is considered global to
-	 * the persistence unit, or local to the entity in which identifier generator
+	 * Determines whether the scope of any identifier generator name specified
+	 * via {@link jakarta.persistence.TableGenerator#name()} or
+	 * {@link jakarta.persistence.SequenceGenerator#name()} is considered global
+	 * to the persistence unit, or local to the entity in which identifier generator
 	 * is defined.
 	 * <p>
 	 * If enabled, the name will be considered globally scoped, and so the existence
@@ -2216,6 +2242,16 @@ public interface AvailableSettings {
 	String JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE = "hibernate.jpa.compliance.global_id_generators";
 
 	/**
+	 * Determines if an identifier value passed to
+	 * {@link jakarta.persistence.EntityManager#find} or
+	 * {@link jakarta.persistence.EntityManager#getReference} may be
+	 * {@linkplain  org.hibernate.type.descriptor.java.JavaType#coerce coerced} to
+	 * the identifier type declared by the entity. For example, an {@link Integer}
+	 * argument might be widened to {@link Long}.
+	 * <p>
+	 * By default, coercion is allowed. When enabled, coercion is disallowed, as
+	 * required by the JPA specification.
+	 *
 	 * @see org.hibernate.jpa.spi.JpaCompliance#isLoadByIdComplianceEnabled()
 	 *
 	 * @since 6.0
@@ -2276,7 +2312,7 @@ public interface AvailableSettings {
 	 * <p>
 	 * However, for database systems supporting execution plan caching, there's a
 	 * better chance of hitting the cache if the number of possible {@code IN} clause
-	 * parameters is smaller.
+	 * parameter list lengths is smaller.
 	 * <p>
 	 * When this setting is enabled, we expand the number of bind parameters to an
 	 * integer power of two: 4, 8, 16, 32, 64. Thus, if 5, 6, or 7 arguments are bound

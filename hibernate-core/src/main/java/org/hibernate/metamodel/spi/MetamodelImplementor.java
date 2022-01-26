@@ -9,7 +9,6 @@ package org.hibernate.metamodel.spi;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import org.hibernate.EntityNameResolver;
 import org.hibernate.MappingException;

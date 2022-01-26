@@ -96,7 +96,6 @@ import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.id.Assigned;
@@ -257,7 +256,6 @@ import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.entity.EntityBasedAssociationAttribute;
 import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
@@ -268,7 +266,6 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Basic functionality for persisting an entity via JDBC
@@ -1087,7 +1084,7 @@ public abstract class AbstractEntityPersister
 		this.cacheEntryHelper = buildCacheEntryHelper();
 
 		if ( sessionFactoryOptions.isSecondLevelCacheEnabled() ) {
-			this.invalidateCache = canWriteToCache && determineWhetherToInvalidateCache( bootDescriptor, creationContext );
+			this.invalidateCache = canWriteToCache && shouldInvalidateCache( bootDescriptor, creationContext );
 		}
 		else {
 			this.invalidateCache = false;
@@ -1102,41 +1099,50 @@ public abstract class AbstractEntityPersister
 		return new SingleIdEntityLoaderDynamicBatch<>( entityDescriptor, batchSize, factory );
 	}
 
-	@SuppressWarnings("RedundantIfStatement")
-	private boolean determineWhetherToInvalidateCache(
+	/**
+	 * We might need to use cache invalidation is we have formulas,
+	 * dynamic update, or secondary tables.
+	 *
+	 * @see #isCacheInvalidationRequired()
+	 */
+	private boolean shouldInvalidateCache(
 			PersistentClass persistentClass,
 			PersisterCreationContext creationContext) {
 		if ( hasFormulaProperties() ) {
+			// we need to evaluate formulas in the database
 			return true;
 		}
-
-		if ( isVersioned() ) {
+		else if ( isVersioned() ) {
+			// we don't need to be "careful" in the case of
+			// versioned entities
 			return false;
 		}
-
-		if ( entityMetamodel.isDynamicUpdate() ) {
+		else if ( entityMetamodel.isDynamicUpdate() ) {
+			// if the unversioned entity has dynamic updates
+			// there is a risk of concurrent updates
+			return true;
+		}
+		else if ( isCacheComplianceEnabled(creationContext) ) {
+			// The JPA TCK (inadvertently, but still...)
+			// requires that we cache entities with secondary
+			// tables instead of being more careful and just
+			// invalidating them
 			return false;
 		}
+		else {
+			// if the unversioned entity has second tables
+			// there is a risk of concurrent updates
+			// todo : this should really consider optionality of the secondary tables
+			//        in count so non-optional tables do not cause this bypass
+			return persistentClass.getJoinClosureSpan() >= 1;
+		}
+	}
 
-		// We need to check whether the user may have circumvented this logic (JPA TCK)
-		final boolean complianceEnabled = creationContext.getSessionFactory()
+	private boolean isCacheComplianceEnabled(PersisterCreationContext creationContext) {
+		return creationContext.getSessionFactory()
 				.getSessionFactoryOptions()
 				.getJpaCompliance()
 				.isJpaCacheComplianceEnabled();
-		if ( complianceEnabled ) {
-			// The JPA TCK (inadvertently, but still...) requires that we cache
-			// entities with secondary tables even though Hibernate historically
-			// invalidated them
-			return false;
-		}
-
-		if ( persistentClass.getJoinClosureSpan() >= 1 ) {
-			// todo : this should really consider optionality of the secondary tables in count
-			//		non-optional tables do not cause this bypass
-			return true;
-		}
-
-		return false;
 	}
 
 	private boolean determineCanWriteToCache(PersistentClass persistentClass, EntityDataAccess cacheAccessStrategy) {
@@ -1842,10 +1848,15 @@ public abstract class AbstractEntityPersister
 	 * We can't immediately add to the cache if we have formulas
 	 * which must be evaluated, or if we have the possibility of
 	 * two concurrent updates to the same item being merged on
-	 * the database. This can happen if (a) the item is not
-	 * versioned and either (b) we have dynamic update enabled
-	 * or (c) we have multiple tables holding the state of the
-	 * item.
+	 * the database. This second case can happen if:
+	 * <ol>
+	 * <li> the item is not versioned, and either
+	 * <li>we have dynamic update enabled, or
+	 * <li>the state of the item spans multiple tables.
+	 * </ol>
+	 * Therefore, we're careful, and just invalidate the cache in
+	 * these cases (the item will be readded when it's read again
+	 * fresh from the database).
 	 */
 	public boolean isCacheInvalidationRequired() {
 		return invalidateCache;

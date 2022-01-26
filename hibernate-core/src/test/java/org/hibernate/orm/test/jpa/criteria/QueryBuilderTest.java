@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.jpa.criteria;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -20,6 +19,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.Metamodel;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.orm.test.jpa.metamodel.Address;
@@ -35,7 +35,6 @@ import org.hibernate.orm.test.jpa.metamodel.Phone;
 import org.hibernate.orm.test.jpa.metamodel.Product;
 import org.hibernate.orm.test.jpa.metamodel.ShelfLife;
 import org.hibernate.orm.test.jpa.metamodel.Spouse;
-import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 
 import org.hibernate.testing.FailureExpected;
@@ -77,7 +76,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 		em.getTransaction().begin();
 
 		CriteriaBuilder cb = em.getCriteriaBuilder();
-		MappingMetamodelImpl mm = (MappingMetamodelImpl) em.getMetamodel();
+		Metamodel mm = em.getMetamodel();
 
 		CriteriaQuery<Integer> cquery = cb.createQuery( Integer.class );
 		Root<Product> product = cquery.from( Product.class );
@@ -120,7 +119,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 		Phone phone3 = new Phone( "3", "555", "0003", address );
 		Phone phone4 = new Phone( "4", "555", "0004" );
 
-		List<Phone> phones = new ArrayList<Phone>( 3 );
+		List<Phone> phones = new ArrayList<>( 3 );
 		phones.add( phone1 );
 		phones.add( phone2 );
 		phones.add( phone3 );
@@ -135,7 +134,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 		em.getTransaction().begin();
 
 		CriteriaBuilder cb = em.getCriteriaBuilder();
-		MappingMetamodelImpl mm = (MappingMetamodelImpl) em.getMetamodel();
+		Metamodel mm = em.getMetamodel();
 		EntityType<Phone> Phone_ = mm.entity( Phone.class );
 
 		CriteriaQuery<Phone> cquery = cb.createQuery( Phone.class );
@@ -157,7 +156,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		CriteriaBuilder cb = em.getCriteriaBuilder();
-		MappingMetamodelImpl mm = (MappingMetamodelImpl) em.getMetamodel();
+		Metamodel mm = em.getMetamodel();
 		EntityType<Product> Product_ = mm.entity( Product.class );
 
 		// toFloat
@@ -189,7 +188,6 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		CriteriaBuilder cb = em.getCriteriaBuilder();
-		MappingMetamodelImpl mm = (MappingMetamodelImpl) em.getMetamodel();
 
 		CriteriaQuery<Customer> cquery = cb.createQuery( Customer.class );
 		Root<Customer> customer = cquery.from( Customer.class );
@@ -236,7 +234,6 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		CriteriaBuilder cb = em.getCriteriaBuilder();
-		MappingMetamodelImpl mm = (MappingMetamodelImpl) em.getMetamodel();
 
 		CriteriaQuery<java.sql.Date> dateQuery = cb.createQuery( java.sql.Date.class );
 		dateQuery.from( Customer.class );
@@ -328,7 +325,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 			entityManager.persist( store );
 
 			final Book book = new Book();
-			book.setStores( new HashSet<>( Arrays.asList( store ) ) );
+			book.setStores( new HashSet<>( List.of(store) ) );
 			entityManager.persist( book );
 		} );
 

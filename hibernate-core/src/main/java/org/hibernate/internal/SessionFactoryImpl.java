@@ -95,7 +95,6 @@ import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.query.BindableType;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -515,7 +514,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public SessionBuilderImplementor withOptions() {
-		return new SessionBuilderImpl( this );
+		return new SessionBuilderImpl<>( this );
 	}
 
 	@Override
@@ -602,7 +601,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
-		return (List) getMetamodel().findEntityGraphsByJavaType( entityClass );
+		return (List) getJpaMetamodel().findEntityGraphsByJavaType( entityClass );
 	}
 
 	// todo : (5.2) review synchronizationType, persistenceContextType, transactionType usage
@@ -617,12 +616,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		assert status != Status.CLOSED;
 
 		SessionBuilderImplementor builder = withOptions();
-		if ( synchronizationType == SynchronizationType.SYNCHRONIZED ) {
-			builder.autoJoinTransactions( true );
-		}
-		else {
-			builder.autoJoinTransactions( false );
-		}
+		builder.autoJoinTransactions( synchronizationType == SynchronizationType.SYNCHRONIZED );
 
 		final Session session = builder.openSession();
 		if ( map != null ) {
@@ -688,7 +682,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public RootGraphImplementor<?> findEntityGraphByName(String name) {
-		return getMetamodel().findEntityGraphByName( name );
+		return getJpaMetamodel().findEntityGraphByName( name );
 	}
 
 	@Override
@@ -952,7 +946,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public <T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph) {
-		getMetamodel().addNamedEntityGraph( graphName, (RootGraphImplementor<T>) entityGraph );
+		getMappingMetamodel().addNamedEntityGraph( graphName, (RootGraphImplementor<T>) entityGraph );
 	}
 
 	@Override

@@ -795,7 +795,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		if ( Tuple.class.equals(resultClass) ) {
 			query.setTupleTransformer( new NativeQueryTupleTransformer() );
 		}
-		else if ( getFactory().getMetamodel().isEntityClass(resultClass) ) {
+		else if ( getFactory().getMappingMetamodel().isEntityClass(resultClass) ) {
 			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
 		}
 		return query;
@@ -805,7 +805,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public <T> NativeQueryImplementor<T> createNativeQuery(String sqlString, Class<T> resultClass, String tableAlias) {
 		@SuppressWarnings("unchecked")
 		NativeQueryImplementor<T> query = createNativeQuery( sqlString );
-		if ( getFactory().getMetamodel().isEntityClass(resultClass) ) {
+		if ( getFactory().getMappingMetamodel().isEntityClass(resultClass) ) {
 			query.addEntity( tableAlias, resultClass.getName(), LockMode.READ );
 		}
 		else {

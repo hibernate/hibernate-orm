@@ -52,7 +52,14 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	@Override
 	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
 		if ( getDB2Version().isSameOrAfter( 11 ) ) {
+			final boolean isNegated = booleanExpressionPredicate.isNegated();
+			if ( isNegated ) {
+				appendSql( "not(" );
+			}
 			booleanExpressionPredicate.getExpression().accept( this );
+			if ( isNegated ) {
+				appendSql( CLOSE_PARENTHESIS );
+			}
 		}
 		else {
 			super.visitBooleanExpressionPredicate( booleanExpressionPredicate );

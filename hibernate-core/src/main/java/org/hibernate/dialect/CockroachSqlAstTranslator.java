@@ -37,7 +37,19 @@ public class CockroachSqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	@Override
 	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		booleanExpressionPredicate.getExpression().accept( this );
+		if ( booleanExpressionPredicate.isNegated() ) {
+			super.visitBooleanExpressionPredicate( booleanExpressionPredicate );
+		}
+		else {
+			final boolean isNegated = booleanExpressionPredicate.isNegated();
+			if ( isNegated ) {
+				appendSql( "not(" );
+			}
+			booleanExpressionPredicate.getExpression().accept( this );
+			if ( isNegated ) {
+				appendSql( CLOSE_PARENTHESIS );
+			}
+		}
 	}
 
 	@Override

@@ -40,7 +40,14 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Abstrac
 
 	@Override
 	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
+		final boolean isNegated = booleanExpressionPredicate.isNegated();
+		if ( isNegated ) {
+			appendSql( "not(" );
+		}
 		booleanExpressionPredicate.getExpression().accept( this );
+		if ( isNegated ) {
+			appendSql( CLOSE_PARENTHESIS );
+		}
 	}
 
 	@Override

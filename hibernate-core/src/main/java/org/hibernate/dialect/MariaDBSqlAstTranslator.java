@@ -39,7 +39,14 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 
 	@Override
 	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
+		final boolean isNegated = booleanExpressionPredicate.isNegated();
+		if ( isNegated ) {
+			appendSql( "not(" );
+		}
 		booleanExpressionPredicate.getExpression().accept( this );
+		if ( isNegated ) {
+			appendSql( CLOSE_PARENTHESIS );
+		}
 	}
 
 	@Override

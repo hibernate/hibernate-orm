@@ -59,7 +59,7 @@ public abstract class AbstractEntityWithOneToManyTest {
 	@BeforeEach
 	protected void prepareTest(SessionFactoryScope scope) throws Exception {
 		SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		MappingMetamodel domainModel = sessionFactory.getDomainModel();
+		MappingMetamodel domainModel = sessionFactory.getRuntimeMetamodels().getMappingMetamodel();
 
 		isContractPartiesInverse = domainModel.getCollectionDescriptor( Contract.class.getName() + ".parties" )
 				.isInverse();

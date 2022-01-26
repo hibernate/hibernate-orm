@@ -244,10 +244,11 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 				session.beginTransaction();
 			}
 
-			session.getPersistenceContextInternal().addUninitializedDetachedCollection(
-					session.getFactory().getMetamodel().collectionPersister(getRole()),
-					this
-			);
+			final CollectionPersister collectionDescriptor = session.getSessionFactory()
+					.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getCollectionDescriptor( getRole() );
+			session.getPersistenceContextInternal().addUninitializedDetachedCollection( collectionDescriptor, this );
 		}
 
 		try {
@@ -1214,8 +1215,11 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			return oldElements;
 		}
 
-		final EntityPersister entityPersister = session.getFactory().getMetamodel().entityPersister(entityName);
-		final Type idType = entityPersister.getIdentifierType();
+		final EntityPersister entityDescriptor = session.getFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
+		final Type idType = entityDescriptor.getIdentifierType();
 		final boolean useIdDirect = mayUseIdDirect( idType );
 
 		// create the collection holding the Orphans
@@ -1279,16 +1283,16 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			Object entityInstance,
 			String entityName,
 			SharedSessionContractImplementor session) {
-
 		if ( entityInstance != null && ForeignKeys.isNotTransient( entityName, entityInstance, null, session ) ) {
-			final EntityPersister entityPersister = session.getFactory().getMetamodel().entityPersister(entityName);
-			final Type idType = entityPersister.getIdentifierType();
-
+			final EntityPersister entityDescriptor = session.getFactory()
+					.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( entityName );
 			final Object idOfCurrent = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, entityInstance, session );
 			final Iterator<?> itr = list.iterator();
 			while ( itr.hasNext() ) {
 				final Object idOfOld = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, itr.next(), session );
-				if ( idType.isEqual( idOfCurrent, idOfOld, session.getFactory() ) ) {
+				if ( entityDescriptor.getIdentifierMapping().areEqual( idOfCurrent, idOfOld, session ) ) {
 					itr.remove();
 					break;
 				}

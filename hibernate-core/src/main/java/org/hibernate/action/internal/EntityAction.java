@@ -182,7 +182,7 @@ public abstract class EntityAction
 		// guard against NullPointerException
 		if ( session != null ) {
 			this.session = session;
-			this.persister = session.getFactory().getMetamodel().entityPersister( entityName );
+			this.persister = session.getFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( entityName );
 			this.instance = session.getPersistenceContext().getEntity( session.generateEntityKey( id, persister ) );
 		}
 	}

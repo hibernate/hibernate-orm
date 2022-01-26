@@ -61,17 +61,21 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 	throws HibernateException {
 		final EventSource session = getSession();
 		if ( collection.wasInitialized() ) {
-			CollectionPersister collectionPersister = session.getFactory().getMetamodel().collectionPersister(type.getRole());
-			session.getPersistenceContext()
-				.addInitializedDetachedCollection( collectionPersister, collection );
+			final CollectionPersister persister = session.getFactory()
+					.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getCollectionDescriptor( type.getRole() );
+			session.getPersistenceContext().addInitializedDetachedCollection( persister, collection );
 		}
 		else {
 			if ( !isCollectionSnapshotValid( collection ) ) {
 				throw new HibernateException( "could not re-associate uninitialized transient collection" );
 			}
-			CollectionPersister collectionPersister = session.getFactory().getMetamodel().collectionPersister(collection.getRole());
-			session.getPersistenceContext()
-				.addUninitializedDetachedCollection( collectionPersister, collection );
+			final CollectionPersister persister = session.getFactory()
+					.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getCollectionDescriptor( collection.getRole() );
+			session.getPersistenceContext().addUninitializedDetachedCollection( persister, collection );
 		}
 	}
 

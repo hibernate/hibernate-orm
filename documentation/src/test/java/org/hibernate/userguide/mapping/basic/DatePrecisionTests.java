@@ -16,9 +16,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.java.TemporalJavaType;
 
@@ -39,8 +39,10 @@ import static org.hamcrest.Matchers.is;
 public class DatePrecisionTests {
 	@Test
 	public void verifyMapping(SessionFactoryScope scope) {
-		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityOfDates.class);
+		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel();
+		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor(EntityOfDates.class);
 
 		{
 			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("dateAsTimestamp");

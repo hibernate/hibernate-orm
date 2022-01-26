@@ -194,8 +194,9 @@ public class MatchingIdSelectionHelper {
 			DomainQueryExecutionContext executionContext) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 
-		final EntityMappingType entityDescriptor = factory.getDomainModel()
-				.getEntityDescriptor( sqmMutationStatement.getTarget().getModel().getHibernateEntityName() );
+		final EntityMappingType entityDescriptor = factory.getRuntimeMetamodels().getEntityMappingType(
+				sqmMutationStatement.getTarget().getModel().getHibernateEntityName()
+		);
 
 		final MultiTableSqmMutationConverter sqmConverter = new MultiTableSqmMutationConverter(
 				entityDescriptor,
@@ -284,7 +285,7 @@ public class MatchingIdSelectionHelper {
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
 				SqmUtil.generateJdbcParamsXref(domainParameterXref, sqmConverter),
-				factory.getDomainModel(),
+				factory.getRuntimeMetamodels().getMappingMetamodel(),
 				navigablePath -> sqmConverter.getMutatingTableGroup(),
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")

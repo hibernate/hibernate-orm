@@ -42,6 +42,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.ParameterMetadata;
@@ -1051,13 +1052,19 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public NativeQueryImplementor<R> addSynchronizedEntityName(String entityName) throws MappingException {
-		addQuerySpaces( getSession().getFactory().getMetamodel().entityPersister( entityName ).getQuerySpaces() );
+		final EntityPersister entityDescriptor = getSession().getFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
+		addQuerySpaces( entityDescriptor.getQuerySpaces() );
 		return this;
 	}
 
 	@Override
 	public NativeQueryImplementor<R> addSynchronizedEntityClass(@SuppressWarnings("rawtypes") Class entityClass) throws MappingException {
-		addQuerySpaces( getSession().getFactory().getMetamodel().entityPersister( entityClass.getName() ).getQuerySpaces() );
+		final EntityPersister entityDescriptor = getSession().getFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityClass );
+		addQuerySpaces( entityDescriptor.getQuerySpaces() );
 		return this;
 	}
 

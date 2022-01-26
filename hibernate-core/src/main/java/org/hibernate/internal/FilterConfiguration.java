@@ -69,16 +69,20 @@ public class FilterConfiguration {
 	}
 
 	private Map<String, String> mergeAliasMaps(SessionFactoryImplementor factory) {
-		Map<String, String> ret = new HashMap<>();
+		final Map<String, String> ret = new HashMap<>();
 		if ( aliasTableMap != null ) {
 			ret.putAll( aliasTableMap );
 		}
+
 		if ( aliasEntityMap != null ) {
 			for ( Map.Entry<String, String> entry : aliasEntityMap.entrySet() ) {
-				Joinable joinable = (Joinable) factory.getMetamodel().entityPersister(entry.getValue());
+				final Joinable joinable = (Joinable) factory.getRuntimeMetamodels()
+						.getMappingMetamodel()
+						.getEntityDescriptor( entry.getValue() );
 				ret.put( entry.getKey(), joinable.getTableName() );
 			}
 		}
+
 		return ret;
 	}
 }

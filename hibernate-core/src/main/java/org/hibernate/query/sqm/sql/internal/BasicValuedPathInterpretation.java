@@ -51,13 +51,20 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 		if ( jpaQueryComplianceEnabled ) {
 			if ( sqmPath.getLhs() instanceof SqmTreatedPath ) {
 				final EntityDomainType treatTargetDomainType = ( (SqmTreatedPath) sqmPath.getLhs() ).getTreatTarget();
-				final MappingMetamodel domainModel = sqlAstCreationState.getCreationContext().getDomainModel();
-				treatTarget = domainModel.findEntityDescriptor( treatTargetDomainType.getHibernateEntityName() );
+
+				final MappingMetamodel mappingMetamodel = sqlAstCreationState.getCreationContext()
+						.getSessionFactory()
+						.getRuntimeMetamodels()
+						.getMappingMetamodel();
+				treatTarget = mappingMetamodel.findEntityDescriptor( treatTargetDomainType.getHibernateEntityName() );
 			}
 			else if ( sqmPath.getLhs().getNodeType() instanceof EntityDomainType ) {
 				final EntityDomainType entityDomainType = (EntityDomainType) sqmPath.getLhs().getNodeType();
-				final MappingMetamodel domainModel = sqlAstCreationState.getCreationContext().getDomainModel();
-				treatTarget = domainModel.findEntityDescriptor( entityDomainType.getHibernateEntityName() );
+				final MappingMetamodel mappingMetamodel = sqlAstCreationState.getCreationContext()
+						.getSessionFactory()
+						.getRuntimeMetamodels()
+						.getMappingMetamodel();
+				treatTarget = mappingMetamodel.findEntityDescriptor( entityDomainType.getHibernateEntityName() );
 			}
 		}
 

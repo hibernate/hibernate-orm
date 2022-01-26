@@ -485,7 +485,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		SessionImpl sImpl = ( SessionImpl ) s;
         sImpl.getPersistenceContext().getDatabaseSnapshot(
 				lastContainerId,
-                sImpl.getFactory().getMetamodel().entityPersister(Container.class.getName())
+                sImpl.getFactory().getMappingMetamodel().getEntityDescriptor(Container.class.getName())
 		);
 		assertFalse( Hibernate.isInitialized( proxy ) );
 		t.commit();

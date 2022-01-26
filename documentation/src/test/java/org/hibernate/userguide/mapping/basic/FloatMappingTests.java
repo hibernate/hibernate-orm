@@ -11,9 +11,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -38,8 +38,10 @@ public class FloatMappingTests {
 	@Test
 	public void testMappings(SessionFactoryScope scope) {
 		// first, verify the type selections...
-		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityOfFloats.class);
+		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel();
+		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor(EntityOfFloats.class);
 
 		{
 			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");

@@ -475,7 +475,7 @@ public class MultiLoadTest {
 	public void testMultiLoadClearsBatchFetchQueue(SessionFactoryScope scope) {
 		final EntityKey entityKey = new EntityKey(
 				1,
-				scope.getSessionFactory().getMetamodel().entityPersister( SimpleEntity.class.getName() )
+				scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( SimpleEntity.class.getName() )
 		);
 
 		scope.inTransaction(

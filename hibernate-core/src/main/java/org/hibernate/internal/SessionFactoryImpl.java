@@ -91,8 +91,9 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
-import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
+import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.query.BindableType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
@@ -169,7 +170,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	// todo : org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor too?
 
-	private final transient RuntimeMetamodels runtimeMetamodels;
+	private final transient RuntimeMetamodelsImplementor runtimeMetamodels;
 	private final PersistenceUnitUtil jpaPersistenceUnitUtil;
 	private final transient CacheImplementor cacheAccess;
 	private final transient QueryEngine queryEngine;
@@ -564,7 +565,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
-		return getMetamodel().getTypeConfiguration();
+		return runtimeMetamodels.getMappingMetamodel().getTypeConfiguration();
 	}
 
 	@Override
@@ -726,10 +727,10 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	public Type getIdentifierType(String className) throws MappingException {
-		return getMetamodel().entityPersister( className ).getIdentifierType();
+		return runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( className ).getIdentifierType();
 	}
 	public String getIdentifierPropertyName(String className) throws MappingException {
-		return getMetamodel().entityPersister( className ).getIdentifierPropertyName();
+		return runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( className ).getIdentifierPropertyName();
 	}
 
 	public ClassMetadata getClassMetadata(@SuppressWarnings("rawtypes") Class persistentClass) throws HibernateException {
@@ -737,15 +738,15 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	public CollectionMetadata getCollectionMetadata(String roleName) throws HibernateException {
-		return (CollectionMetadata) getMetamodel().collectionPersister( roleName );
+		return (CollectionMetadata) runtimeMetamodels.getMappingMetamodel().getCollectionDescriptor( roleName );
 	}
 
 	public ClassMetadata getClassMetadata(String entityName) throws HibernateException {
-		return (ClassMetadata) getMetamodel().entityPersister( entityName );
+		return (ClassMetadata) runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( entityName );
 	}
 
 	public Type getReferencedPropertyType(String className, String propertyName) throws MappingException {
-		return getMetamodel().entityPersister( className ).getPropertyType( propertyName );
+		return runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( className ).getPropertyType( propertyName );
 	}
 
 	/**
@@ -790,7 +791,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			if ( runtimeMetamodels != null && runtimeMetamodels.getMappingMetamodel() != null ) {
 				final JdbcConnectionAccess jdbcConnectionAccess = jdbcServices.getBootstrapJdbcConnectionAccess();
-				runtimeMetamodels.getMappingMetamodel().visitEntityDescriptors(
+				runtimeMetamodels.getMappingMetamodel().forEachEntityDescriptor(
 						entityPersister -> {
 							if ( entityPersister.getSqmMultiTableMutationStrategy() != null ) {
 								entityPersister.getSqmMultiTableMutationStrategy().release(
@@ -930,7 +931,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			return type.cast( cacheAccess );
 		}
 
-		if ( type.isAssignableFrom( JpaMetamodel.class ) ) {
+		if ( type.isInstance( runtimeMetamodels ) ) {
+			return type.cast( runtimeMetamodels );
+		}
+
+		if ( type.isInstance( runtimeMetamodels.getJpaMetamodel() ) ) {
 			return type.cast( runtimeMetamodels.getJpaMetamodel() );
 		}
 
@@ -1030,13 +1035,13 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public RuntimeMetamodels getRuntimeMetamodels() {
+	public RuntimeMetamodelsImplementor getRuntimeMetamodels() {
 		return runtimeMetamodels;
 
 	}
 
 	@Override
-	public JpaMetamodel getJpaMetamodel() {
+	public JpaMetamodelImplementor getJpaMetamodel() {
 		return runtimeMetamodels.getJpaMetamodel();
 	}
 
@@ -1083,7 +1088,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public <T> BindableType<T> resolveParameterBindType(Class<T> javaType) {
-		return getMetamodel().resolveQueryParameterType( javaType );
+		return getRuntimeMetamodels().getMappingMetamodel().resolveQueryParameterType( javaType );
 	}
 
 	/**

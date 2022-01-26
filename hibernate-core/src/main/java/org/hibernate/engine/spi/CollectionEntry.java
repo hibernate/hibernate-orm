@@ -118,7 +118,9 @@ public final class CollectionEntry implements Serializable {
 		ignore = false;
 
 		loadedKey = collection.getKey();
-		setLoadedPersister( factory.getMetamodel().collectionPersister( collection.getRole() ) );
+		setLoadedPersister(
+				factory.getRuntimeMetamodels().getMappingMetamodel().getCollectionDescriptor( collection.getRole() )
+		);
 
 		snapshot = collection.getStoredSnapshot();
 	}
@@ -279,7 +281,12 @@ public final class CollectionEntry implements Serializable {
 	}
 
 	void afterDeserialize(SessionFactoryImplementor factory) {
-		loadedPersister = ( factory == null ? null : factory.getMetamodel().collectionPersister( role ) );
+		if ( factory == null ) {
+			loadedPersister = null;
+		}
+		else {
+			loadedPersister = factory.getRuntimeMetamodels().getMappingMetamodel().getCollectionDescriptor( role );
+		}
 	}
 
 	public boolean wasDereferenced() {

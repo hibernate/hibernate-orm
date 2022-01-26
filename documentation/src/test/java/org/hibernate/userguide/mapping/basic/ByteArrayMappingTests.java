@@ -15,6 +15,7 @@ import jakarta.persistence.Table;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -35,8 +36,10 @@ public class ByteArrayMappingTests {
 
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
-		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityOfByteArrays.class);
+		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel();
+		final EntityPersister entityDescriptor = mappingMetamodel.getEntityDescriptor(EntityOfByteArrays.class);
 
 		{
 			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitive");

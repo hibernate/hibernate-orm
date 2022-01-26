@@ -63,7 +63,7 @@ public class Conversion
 				creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 						this,
 						type.getJdbcMapping().getJavaTypeDescriptor(),
-						creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
+						creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
 				).getValuesArrayPosition(),
 				resultVariable,
 				type.getJdbcMapping().getJavaTypeDescriptor()
@@ -78,7 +78,7 @@ public class Conversion
 		sqlExpressionResolver.resolveSqlSelection(
 				this,
 				type.getJdbcMapping().getJavaTypeDescriptor(),
-				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);
 	}
 

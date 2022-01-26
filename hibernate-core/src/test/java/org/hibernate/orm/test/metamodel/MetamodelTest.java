@@ -47,7 +47,7 @@ public class MetamodelTest {
 
 	@Test
 	public void testGetCollectionRolesByEntityParticipant(EntityManagerFactoryScope scope) {
-		Set<String> collectionRolesByEntityParticipant = ( (SessionFactoryImplementor) scope.getEntityManagerFactory() ).getMetamodel()
+		Set<String> collectionRolesByEntityParticipant = ( (SessionFactoryImplementor) scope.getEntityManagerFactory() ).getMappingMetamodel()
 				.getCollectionRolesByEntityParticipant( ElementOfCollection.class.getName() );
 		assertEquals( 1, collectionRolesByEntityParticipant.size() );
 		assertEquals(

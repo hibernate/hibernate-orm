@@ -195,7 +195,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
 				SqmUtil.generateJdbcParamsXref( domainParameterXref, sqmConverter ),
-				factory.getDomainModel(),
+				factory.getRuntimeMetamodels().getMappingMetamodel(),
 				navigablePath -> sqmConverter.getMutatingTableGroup(),
 				paramTypeResolutions::get,
 				executionContext.getSession()

@@ -141,7 +141,7 @@ public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContain
 
 	@Override
 	public void applySqlSelections(DomainResultCreationState creationState) {
-		TypeConfiguration typeConfiguration = creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration();
+		TypeConfiguration typeConfiguration = creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration();
 		for ( SqlSelection sqlSelection : selectClause.getSqlSelections() ) {
 			sqlSelection.getExpressionType().forEachJdbcType(
 					(index, jdbcMapping) -> {
@@ -157,7 +157,7 @@ public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContain
 
 	@Override
 	public DomainResult createDomainResult(String resultVariable, DomainResultCreationState creationState) {
-		TypeConfiguration typeConfiguration = creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration();
+		TypeConfiguration typeConfiguration = creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration();
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
 		if ( selectClause.getSqlSelections().size() == 1 ) {
 			SqlSelection first = selectClause.getSqlSelections().get( 0 );

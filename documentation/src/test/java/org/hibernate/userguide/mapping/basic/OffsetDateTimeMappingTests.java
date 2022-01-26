@@ -8,14 +8,13 @@ package org.hibernate.userguide.mapping.basic;
 
 import java.sql.Types;
 import java.time.OffsetDateTime;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -36,8 +35,10 @@ public class OffsetDateTimeMappingTests {
 
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
-		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityWithOffsetDateTime.class);
+		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel();
+		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor(EntityWithOffsetDateTime.class);
 
 		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("offsetDateTime");
 		final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();

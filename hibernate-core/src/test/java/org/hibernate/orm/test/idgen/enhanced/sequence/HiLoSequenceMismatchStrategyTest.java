@@ -93,7 +93,9 @@ public class HiLoSequenceMismatchStrategyTest {
 
 	@Test
 	public void testSequenceMismatchStrategyNotApplied(SessionFactoryScope scope) {
-        final EntityPersister persister = scope.getSessionFactory().getMetamodel().entityPersister(TestEntity.class.getName());
+        final EntityPersister persister = scope.getSessionFactory()
+				.getMappingMetamodel()
+				.getEntityDescriptor(TestEntity.class.getName());
 		assertThat( persister.getIdentifierGenerator(), instanceOf( SequenceStyleGenerator.class ) );
 
 		final SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getIdentifierGenerator();

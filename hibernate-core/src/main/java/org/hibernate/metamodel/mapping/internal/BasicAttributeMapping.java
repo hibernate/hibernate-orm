@@ -245,7 +245,7 @@ public class BasicAttributeMapping
 						)
 				),
 				valueConverter == null ? getMappedType().getMappedJavaType() : valueConverter.getRelationalJavaType(),
-				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
+				creationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
 	}
 

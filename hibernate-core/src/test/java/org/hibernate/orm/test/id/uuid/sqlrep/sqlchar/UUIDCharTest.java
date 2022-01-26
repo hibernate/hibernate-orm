@@ -52,7 +52,7 @@ public class UUIDCharTest {
 
 	@Test
 	public void testUsage(SessionFactoryScope scope) {
-		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
+		final MappingMetamodel domainModel = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel();
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( Node.class );
 		final List<JdbcMapping> identifierJdbcMappings = entityDescriptor.getIdentifierMapping().getJdbcMappings();
 		assertThat( identifierJdbcMappings, hasSize( 1 ) );

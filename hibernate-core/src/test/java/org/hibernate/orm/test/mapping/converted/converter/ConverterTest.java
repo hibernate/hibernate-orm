@@ -6,9 +6,17 @@
  */
 package org.hibernate.orm.test.mapping.converted.converter;
 
-import org.hibernate.SessionFactory;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.Root;
+
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.BindableType;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.query.Query;
 import org.hibernate.type.Type;
 
@@ -18,14 +26,6 @@ import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaUpdate;
-import jakarta.persistence.criteria.Root;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -151,13 +151,14 @@ public class ConverterTest {
 	public void testJPQLUpperAttributeValueBindParameterType(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			//tag::basic-attribute-converter-query-parameter-converter-object-example[]
-			SessionFactory sessionFactory = entityManager.getEntityManagerFactory()
-					.unwrap( SessionFactory.class );
+			SessionFactoryImplementor sessionFactory = entityManager.getEntityManagerFactory()
+					.unwrap( SessionFactoryImplementor.class );
+			final MappingMetamodelImplementor mappingMetamodel = sessionFactory
+					.getRuntimeMetamodels()
+					.getMappingMetamodel();
 
-			MetamodelImplementor metamodelImplementor = (MetamodelImplementor) sessionFactory.getMetamodel();
-
-			Type captionType = metamodelImplementor
-					.entityPersister( Photo.class.getName() )
+			Type captionType = mappingMetamodel
+					.getEntityDescriptor( Photo.class )
 					.getPropertyType( "caption" );
 
 			Photo photo = (Photo) entityManager.createQuery(

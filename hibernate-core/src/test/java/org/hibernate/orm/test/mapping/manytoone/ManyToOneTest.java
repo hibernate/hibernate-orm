@@ -43,7 +43,7 @@ public class ManyToOneTest {
 	@Test
 	public void basicTest(SessionFactoryScope scope) {
 		final EntityPersister otherDescriptor = scope.getSessionFactory()
-				.getMetamodel()
+				.getMappingMetamodel()
 				.findEntityDescriptor( OtherEntity.class );
 
 		final ModelPart simpleEntityAssociation = otherDescriptor.findSubPart( "simpleEntity" );

@@ -9,7 +9,7 @@ package org.hibernate.procedure.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.named.NamedObjectRepository;
@@ -70,11 +70,11 @@ public class Util {
 			ResultSetMapping resultSetMapping,
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
-		final MappingMetamodel domainModel = context.getSessionFactory().getDomainModel();
-		final JavaTypeRegistry javaTypeRegistry = domainModel.getTypeConfiguration().getJavaTypeRegistry();
+		final MappingMetamodelImplementor mappingMetamodel = context.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel();
+		final JavaTypeRegistry javaTypeRegistry = mappingMetamodel.getTypeConfiguration().getJavaTypeRegistry();
 
 		for ( Class<?> resultSetMappingClass : resultSetMappingClasses ) {
-			final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( resultSetMappingClass );
+			final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor( resultSetMappingClass );
 			if ( entityDescriptor != null ) {
 				resultSetMapping.addResultBuilder( new EntityDomainResultBuilder( entityDescriptor ) );
 				for ( String querySpace : entityDescriptor.getSynchronizedQuerySpaces() ) {

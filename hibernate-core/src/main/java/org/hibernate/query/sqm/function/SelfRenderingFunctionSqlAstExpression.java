@@ -106,8 +106,7 @@ public class SelfRenderingFunctionSqlAstExpression
 						.resolveSqlSelection(
 								this,
 								type.getExpressibleJavaType(),
-								creationState.getSqlAstCreationState().getCreationContext()
-										.getDomainModel().getTypeConfiguration()
+								creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
 						)
 						.getValuesArrayPosition(),
 				resultVariable,
@@ -181,7 +180,7 @@ public class SelfRenderingFunctionSqlAstExpression
 		sqlExpressionResolver.resolveSqlSelection(
 				this,
 				type.getExpressibleJavaType(),
-				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);
 	}
 

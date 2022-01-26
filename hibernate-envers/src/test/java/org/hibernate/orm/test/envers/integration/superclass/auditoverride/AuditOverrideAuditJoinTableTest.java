@@ -120,8 +120,8 @@ public class AuditOverrideAuditJoinTableTest extends BaseEnversJPAFunctionalTest
 	public void testMetadataAuditSuperClassWithAuditJoinTable() {
 		try {
 			entityManagerFactory().unwrap( SessionFactoryImplementor.class )
-					.getMetamodel()
-					.locateEntityPersister( "SuperClass_StringList" );
+					.getMappingMetamodel()
+					.getEntityDescriptor( "SuperClass_StringList" );
 		}
 		catch ( UnknownEntityTypeException e ) {
 			fail( "Expected to find an entity-persister for the string-list in the super audit type" );
@@ -132,8 +132,8 @@ public class AuditOverrideAuditJoinTableTest extends BaseEnversJPAFunctionalTest
 	public void testMetadataNonAuditedSuperClassWithOverrideAuditJoinTable() {
 		try {
 			entityManagerFactory().unwrap( SessionFactoryImplementor.class )
-					.getMetamodel()
-					.locateEntityPersister( "OOAE_StringList" );
+					.getMappingMetamodel()
+					.getEntityDescriptor( "OOAE_StringList" );
 		}
 		catch ( UnknownEntityTypeException e ) {
 			fail( "Expected to find an entity-persister for the string-list in the super audit type" );
@@ -144,8 +144,8 @@ public class AuditOverrideAuditJoinTableTest extends BaseEnversJPAFunctionalTest
 	public void testMetadataNonAuditedSuperClassWithAuditParentsOverrideAuditJoinTable() {
 		try {
 			entityManagerFactory().unwrap( SessionFactoryImplementor.class )
-					.getMetamodel()
-					.locateEntityPersister( "OAPAE_StringList" );
+					.getMappingMetamodel()
+					.getEntityDescriptor( "OAPAE_StringList" );
 		}
 		catch ( UnknownEntityTypeException e ) {
 			fail( "Expected to find an entity-persister for the string-list in the super audit type" );

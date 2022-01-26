@@ -43,12 +43,10 @@ public class BasicUnstructuredCachingOfConvertedValueTest {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9615" )
-	@SuppressWarnings("unchecked")
 	public void basicCacheStructureTest(SessionFactoryScope scope) {
 		EntityPersister persister = scope.getSessionFactory()
-				.getMetamodel()
-				.entityPersisters()
-				.get( Address.class.getName() );
+				.getMappingMetamodel()
+				.getEntityDescriptor( Address.class.getName() );
 		final DomainDataRegion region = persister.getCacheAccessStrategy().getRegion();
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

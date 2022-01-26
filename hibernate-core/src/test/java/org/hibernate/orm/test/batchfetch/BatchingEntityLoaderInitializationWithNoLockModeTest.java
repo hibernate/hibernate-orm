@@ -1,23 +1,23 @@
 package org.hibernate.orm.test.batchfetch;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -47,8 +47,11 @@ public class BatchingEntityLoaderInitializationWithNoLockModeTest {
 		} );
 
 		scope.inTransaction( em -> {
-			EntityPersister entityPersister = ( (MetamodelImplementor) em.getMetamodel() )
-					.entityPersister( MainEntity.class );
+			final EntityPersister entityPersister = em.getEntityManagerFactory()
+					.unwrap( SessionFactoryImplementor.class )
+					.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( MainEntity.class );
 
 			// use some specific lock options to trigger the creation of a loader with lock options
 			LockOptions lockOptions = new LockOptions( LockMode.NONE );

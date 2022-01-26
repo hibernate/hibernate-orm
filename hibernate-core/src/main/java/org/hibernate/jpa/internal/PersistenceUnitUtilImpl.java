@@ -95,7 +95,9 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 		Class<?> entityClass = Hibernate.getClass( entity );
 		final EntityPersister persister;
 		try {
-			persister = sessionFactory.getMetamodel().entityPersister( entityClass );
+			persister = sessionFactory.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( entityClass );
 			if ( persister == null ) {
 				throw new IllegalArgumentException( entityClass.getName() + " is not an entity" );
 			}

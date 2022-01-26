@@ -1011,7 +1011,9 @@ public class SessionImpl
 	@Override
 	public Object immediateLoad(String entityName, Object id) throws HibernateException {
 		if ( log.isDebugEnabled() ) {
-			EntityPersister persister = getFactory().getMetamodel().entityPersister( entityName );
+			final EntityPersister persister = getFactory().getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( entityName );
 			log.debugf( "Initializing proxy: %s", MessageHelper.infoString( persister, id, getFactory() ) );
 		}
 		LoadEvent event = loadEvent;
@@ -1421,7 +1423,10 @@ public class SessionImpl
 
 	@Override
 	public Object instantiate(String entityName, Object id) throws HibernateException {
-		return instantiate( getFactory().getMetamodel().entityPersister( entityName ), id );
+		final EntityPersister persister = getFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
+		return instantiate( persister, id );
 	}
 
 	/**
@@ -1447,7 +1452,9 @@ public class SessionImpl
 	public EntityPersister getEntityPersister(final String entityName, final Object object) {
 		checkOpenOrWaitingForAutoClose();
 		if ( entityName == null ) {
-			return getFactory().getMetamodel().entityPersister( guessEntityName( object ) );
+			return getFactory().getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( guessEntityName( object ) );
 		}
 		else {
 			// try block is a hack around fact that currently tuplizers are not
@@ -1456,7 +1463,10 @@ public class SessionImpl
 			// influence this decision if we were not able to based on the
 			// given entityName
 			try {
-				return getFactory().getMetamodel().entityPersister( entityName ).getSubclassEntityPersister( object, getFactory() );
+				return getFactory().getRuntimeMetamodels()
+						.getMappingMetamodel()
+						.getEntityDescriptor( entityName )
+						.getSubclassEntityPersister( object, getFactory() );
 			}
 			catch (HibernateException e) {
 				try {
@@ -1554,7 +1564,9 @@ public class SessionImpl
 						if ( entityName == null ) {
 							throw new IllegalArgumentException( "Could not resolve entity-name [" + object + "]" );
 						}
-						getSessionFactory().getMetamodel().entityPersister( entityName );
+						getFactory().getRuntimeMetamodels()
+								.getMappingMetamodel()
+								.getEntityDescriptor( entityName );
 					}
 					catch (HibernateException e) {
 						throw new IllegalArgumentException( "Not an entity [" + object.getClass() + "]", e );
@@ -1588,7 +1600,9 @@ public class SessionImpl
 			if ( !HibernateProxy.class.isInstance( object ) && persistenceContext.getEntry( object ) == null ) {
 				// check if it is an entity -> if not throw an exception (per JPA)
 				try {
-					getSessionFactory().getMetamodel().entityPersister( entityName );
+					getFactory().getRuntimeMetamodels()
+							.getMappingMetamodel()
+							.getEntityDescriptor( entityName );
 				}
 				catch (HibernateException e) {
 					throw new IllegalArgumentException( "Not an entity [" + entityName + "] : " + object );
@@ -2154,11 +2168,15 @@ public class SessionImpl
 	}
 
 	private EntityPersister requireEntityPersister(Class<?> entityClass) {
-		return getFactory().getMetamodel().locateEntityPersister( entityClass );
+		return getFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityClass );
 	}
 
 	private EntityPersister requireEntityPersister(String entityName) {
-		return getFactory().getMetamodel().locateEntityPersister( entityName );
+		return getFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
 	}
 
 	@Override

@@ -130,7 +130,7 @@ public class CteInsertHandler implements InsertHandler {
 				.getReferencedPathSource()
 				.getHibernateEntityName();
 
-		this.entityDescriptor = sessionFactory.getMetamodel().getEntityDescriptor( entityName );
+		this.entityDescriptor = sessionFactory.getRuntimeMetamodels().getEntityMappingType( entityName );
 		this.cteTable = cteTable;
 		this.domainParameterXref = domainParameterXref;
 	}
@@ -657,7 +657,7 @@ public class CteInsertHandler implements InsertHandler {
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
 				SqmUtil.generateJdbcParamsXref(domainParameterXref, sqmConverter),
-				factory.getDomainModel(),
+				factory.getRuntimeMetamodels().getMappingMetamodel(),
 				navigablePath -> sqmConverter.getMutatingTableGroup(),
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
@@ -706,7 +706,9 @@ public class CteInsertHandler implements InsertHandler {
 
 		final EntityPersister entityPersister = entityDescriptor.getEntityPersister();
 		final String rootEntityName = entityPersister.getRootEntityName();
-		final EntityPersister rootEntityDescriptor = factory.getDomainModel().getEntityDescriptor( rootEntityName );
+		final EntityPersister rootEntityDescriptor = factory.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( rootEntityName );
 
 		final String hierarchyRootTableName = ( (Joinable) rootEntityDescriptor ).getTableName();
 		final TableReference hierarchyRootTableReference = updatingTableGroup.resolveTableReference(

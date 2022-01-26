@@ -173,8 +173,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public Object get(String entityName, Object id, LockMode lockMode) {
 		checkOpen();
 
-		Object result = getFactory().getMetamodel().entityPersister( entityName )
-				.load( id, null, getNullSafeLockMode( lockMode ), this );
+		final EntityPersister entityDescriptor = getFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
+		final Object result = entityDescriptor.load( id, null, getNullSafeLockMode( lockMode ), this );
+
 		if ( temporaryPersistenceContext.isLoadFinished() ) {
 			temporaryPersistenceContext.clear();
 		}
@@ -261,7 +264,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public Object instantiate(
 			String entityName,
 			Object id) throws HibernateException {
-		return instantiate( getFactory().getMetamodel().entityPersister( entityName ), id );
+		final EntityPersister entityDescriptor = getFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
+		return instantiate( entityDescriptor, id );
 	}
 
 	@Override
@@ -278,8 +284,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			boolean nullable) throws HibernateException {
 		checkOpen();
 
-		final EntityPersister persister = getFactory().getMetamodel().entityPersister( entityName );
-		final EntityKey entityKey = generateEntityKey( id, persister );
+		final EntityPersister entityDescriptor = getFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
+		final EntityKey entityKey = generateEntityKey( id, entityDescriptor );
 
 		// first, try to load it from the temp PC associated to this SS
 		final PersistenceContext persistenceContext = getPersistenceContext();
@@ -296,13 +304,13 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 			// first, check to see if we can use "bytecode proxies"
 
-			final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
+			final EntityMetamodel entityMetamodel = entityDescriptor.getEntityMetamodel();
 			final BytecodeEnhancementMetadata bytecodeEnhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
 			if ( bytecodeEnhancementMetadata.isEnhancedForLazyLoading() ) {
 
 				// if the entity defines a HibernateProxy factory, see if there is an
 				// existing proxy associated with the PC - and if so, use it
-				if ( persister.getRepresentationStrategy().getProxyFactory() != null ) {
+				if ( entityDescriptor.getRepresentationStrategy().getProxyFactory() != null ) {
 					final Object proxy = persistenceContext.getProxy( entityKey );
 
 					if ( proxy != null ) {
@@ -313,7 +321,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 							LOG.debug( "Ignoring NO_PROXY to honor laziness" );
 						}
 
-						return persistenceContext.narrowProxy( proxy, persister, entityKey, null );
+						return persistenceContext.narrowProxy( proxy, entityDescriptor, entityKey, null );
 					}
 
 					// specialized handling for entities with subclasses with a HibernateProxy factory
@@ -332,10 +340,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				// The entity will get loaded below.
 			}
 			else {
-				if ( persister.hasProxy() ) {
+				if ( entityDescriptor.hasProxy() ) {
 					final Object existingProxy = persistenceContext.getProxy( entityKey );
 					if ( existingProxy != null ) {
-						return persistenceContext.narrowProxy( existingProxy, persister, entityKey, null );
+						return persistenceContext.narrowProxy( existingProxy, entityDescriptor, entityKey, null );
 					}
 					else {
 						return createProxy( entityKey );
@@ -412,13 +420,15 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		else if ( association instanceof PersistentCollection ) {
 			PersistentCollection<?> persistentCollection = (PersistentCollection<?>) association;
 			if ( !persistentCollection.wasInitialized() ) {
-				CollectionPersister persister =
-						getFactory().getMetamodel().collectionPersister( persistentCollection.getRole() );
+
+				final CollectionPersister collectionDescriptor = getFactory().getRuntimeMetamodels()
+						.getMappingMetamodel()
+						.getCollectionDescriptor( persistentCollection.getRole() );
 				Object key = persistentCollection.getKey();
-				persistenceContext.addUninitializedCollection( persister, persistentCollection, key );
+				persistenceContext.addUninitializedCollection( collectionDescriptor, persistentCollection, key );
 				persistentCollection.setCurrentSession(this);
 				try {
-					persister.initialize( key, this );
+					collectionDescriptor.initialize( key, this );
 				}
 				finally {
 					persistentCollection.unsetSession(this);
@@ -520,10 +530,15 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			throws HibernateException {
 		checkOpen();
 		if ( entityName == null ) {
-			return getFactory().getMetamodel().entityPersister( guessEntityName( object ) );
+			return getFactory().getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( guessEntityName( object ) );
 		}
 		else {
-			return getFactory().getMetamodel().entityPersister( entityName ).getSubclassEntityPersister( object, getFactory() );
+			return getFactory().getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( entityName )
+					.getSubclassEntityPersister( object, getFactory() );
 		}
 	}
 

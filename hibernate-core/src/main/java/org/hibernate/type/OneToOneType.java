@@ -65,7 +65,10 @@ public class OneToOneType extends EntityType {
 	@Override
 	public boolean isNull(Object owner, SharedSessionContractImplementor session) {
 		if ( propertyName != null ) {
-			final EntityPersister ownerPersister = session.getFactory().getMetamodel().entityPersister( entityName );
+			final EntityPersister ownerPersister = session.getFactory()
+					.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( entityName );
 			final Object id = session.getContextEntityIdentifier( owner );
 			final EntityKey entityKey = session.generateEntityKey( id, ownerPersister );
 			return session.getPersistenceContextInternal().isPropertyNull( entityKey, getPropertyName() );

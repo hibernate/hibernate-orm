@@ -27,8 +27,9 @@ public class StatsHelper {
 		}
 		else {
 			final EntityPersister rootEntityDescriptor = entityDescriptor.getFactory()
-					.getMetamodel()
-					.entityPersister( rootEntityName );
+					.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( rootEntityName );
 			return rootEntityDescriptor.getNavigableRole();
 		}
 	}

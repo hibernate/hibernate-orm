@@ -33,6 +33,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.Queryable;
 import org.hibernate.procedure.NoSuchParameterException;
 import org.hibernate.procedure.ParameterStrategyException;
 import org.hibernate.procedure.ProcedureCall;
@@ -456,9 +457,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public <T> ProcedureParameter<T> registerParameter(int position, Class<T> javaType, ParameterMode mode) {
-		final BindableType<T> parameterType = getSessionFactory()
-				.getDomainModel()
-				.resolveQueryParameterType( javaType );
+		final BindableType<T> parameterType = getSessionFactory().resolveParameterBindType( javaType );
 
 		final Class<T> expressibleJavaType;
 		if ( parameterType == null ) {
@@ -511,9 +510,8 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public <T> ProcedureParameterImplementor<T> registerParameter(String name, Class<T> javaType, ParameterMode mode) {
-		final BindableType<T> parameterType = getSessionFactory().getDomainModel().resolveQueryParameterType(
-				javaType
-		);
+		final BindableType<T> parameterType = getSessionFactory().resolveParameterBindType( javaType );
+
 		final ProcedureParameterImpl<T> parameter = new ProcedureParameterImpl<>(
 				name,
 				mode,
@@ -745,7 +743,10 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureCallImplementor<R> addSynchronizedEntityName(String entityName) {
-		addSynchronizedQuerySpaces( getSession().getFactory().getMetamodel().entityPersister( entityName ) );
+		final EntityPersister entityDescriptor = getSession().getFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
+		addSynchronizedQuerySpaces( entityDescriptor );
 		return this;
 	}
 
@@ -755,7 +756,10 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureCallImplementor<R> addSynchronizedEntityClass(@SuppressWarnings("rawtypes") Class entityClass) {
-		addSynchronizedQuerySpaces( getSession().getFactory().getMetamodel().entityPersister( entityClass.getName() ) );
+		final EntityPersister entityDescriptor = getSession().getFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityClass );
+		addSynchronizedQuerySpaces( entityDescriptor );
 		return this;
 	}
 

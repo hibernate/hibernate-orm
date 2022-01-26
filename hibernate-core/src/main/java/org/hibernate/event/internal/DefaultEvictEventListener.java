@@ -56,7 +56,10 @@ public class DefaultEvictEventListener implements EvictEventListener {
 				throw new IllegalArgumentException( "Could not determine identifier of proxy passed to evict()" );
 			}
 
-			final EntityPersister persister = source.getFactory().getMetamodel().entityPersister(li.getEntityName());
+			final EntityPersister persister = source.getFactory()
+					.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( li.getEntityName() );
 			final EntityKey key = source.generateEntityKey( id, persister );
 			persistenceContext.removeProxy( key );
 
@@ -82,7 +85,10 @@ public class DefaultEvictEventListener implements EvictEventListener {
 				final String entityName = persistenceContext.getSession().guessEntityName( object );
 				if ( entityName != null ) {
 					try {
-						persister = persistenceContext.getSession().getFactory().getMetamodel().entityPersister(entityName);
+						persister = source.getFactory()
+								.getRuntimeMetamodels()
+								.getMappingMetamodel()
+								.getEntityDescriptor( entityName );
 					}
 					catch (Exception ignore) {
 					}

@@ -29,7 +29,7 @@ public class MetamodelBoundedCacheTest extends BaseNonConfigCoreFunctionalTestCa
 	@Test
 	@TestForIssue(jiraKey = "HHH-14948")
 	public void testMemoryConsumptionOfFailedImportsCache() throws NoSuchFieldException, IllegalAccessException {
-		MappingMetamodel mappingMetamodel = sessionFactory().getMetamodel();
+		MappingMetamodel mappingMetamodel = sessionFactory().getMappingMetamodel();
 
 		MappingMetamodelImpl mImpl = (MappingMetamodelImpl) mappingMetamodel;
 		final JpaMetamodel jpaMetamodel = mImpl.getJpaMetamodel();

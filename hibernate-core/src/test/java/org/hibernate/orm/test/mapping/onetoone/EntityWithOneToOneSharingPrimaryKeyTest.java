@@ -38,7 +38,7 @@ public class EntityWithOneToOneSharingPrimaryKeyTest {
 	@Test
 	public void basicTest(SessionFactoryScope scope) {
 		final EntityPersister entityDescriptor = scope.getSessionFactory()
-				.getMetamodel()
+				.getMappingMetamodel()
 				.findEntityDescriptor( EntityWithOneToOneSharingPrimaryKey.class );
 
 		final ModelPart otherAssociation = entityDescriptor.findSubPart( "other" );

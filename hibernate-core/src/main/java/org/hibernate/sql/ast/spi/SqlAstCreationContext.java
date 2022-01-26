@@ -7,21 +7,34 @@
 package org.hibernate.sql.ast.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.service.ServiceRegistry;
 
 /**
- * The "context" in which creation of SQL AST occurs.  Exposes access to
- * services generally needed in creating SQL AST nodes
+ * The "context" in which creation of SQL AST occurs.  Provides
+ * access to generally needed when creating SQL AST nodes
  *
  * @author Steve Ebersole
  */
 public interface SqlAstCreationContext {
+	/**
+	 * The SessionFactory
+	 */
 	SessionFactoryImplementor getSessionFactory();
 
-	MappingMetamodel getDomainModel();
+	/**
+	 * The runtime MappingMetamodelImplementor
+	 */
+	MappingMetamodelImplementor getMappingMetamodel();
 
+	/**
+	 * Access to Services
+	 */
 	ServiceRegistry getServiceRegistry();
 
+	/**
+	 * When creating {@link org.hibernate.sql.results.graph.Fetch} references,
+	 * defines a limit to how deep we should join for fetches.
+	 */
 	Integer getMaximumFetchDepth();
 }

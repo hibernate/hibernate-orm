@@ -311,7 +311,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			return entityDescriptor;
 		}
 
-		final EntityPersister concreteType = session.getFactory().getMetamodel().findEntityDescriptor( concreteEntityName );
+		final EntityPersister concreteType = session.getFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.findEntityDescriptor( concreteEntityName );
 
 		if ( concreteType == null || !concreteType.isTypeOrSuperType( entityDescriptor ) ) {
 			throw new WrongClassException(

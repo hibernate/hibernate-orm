@@ -110,7 +110,9 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 
 	@Override
 	public int execute(DomainQueryExecutionContext executionContext) {
-		final EntityPersister entityDescriptor = sessionFactory.getDomainModel().getEntityDescriptor( sqmDelete.getTarget().getEntityName() );
+		final EntityPersister entityDescriptor = sessionFactory.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( sqmDelete.getTarget().getEntityName() );
 		final String hierarchyRootTableName = ( (Joinable) entityDescriptor ).getTableName();
 
 		final TableGroup deletingTableGroup = converter.getMutatingTableGroup();
@@ -232,7 +234,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 						domainParameterXref,
 						() -> restrictionSqmParameterResolutions
 				),
-				sessionFactory.getDomainModel(),
+				sessionFactory.getRuntimeMetamodels().getMappingMetamodel(),
 				navigablePath -> tableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
@@ -481,7 +483,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 						domainParameterXref,
 						() -> restrictionSqmParameterResolutions
 				),
-				sessionFactory.getDomainModel(),
+				sessionFactory.getRuntimeMetamodels().getMappingMetamodel(),
 				navigablePath -> deletingTableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")

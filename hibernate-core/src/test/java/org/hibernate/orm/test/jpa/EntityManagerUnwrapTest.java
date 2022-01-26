@@ -15,6 +15,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
@@ -67,6 +68,7 @@ public class EntityManagerUnwrapTest extends EntityManagerFactoryBasedFunctional
 		entityManagerFactory.unwrap( Metamodel.class );
 		entityManagerFactory.unwrap( MetamodelImplementor.class );
 		entityManagerFactory.unwrap( MappingMetamodel.class );
+		entityManagerFactory.unwrap( RuntimeMetamodelsImplementor.class );
 
 		entityManagerFactory.unwrap( QueryEngine.class );
 	}

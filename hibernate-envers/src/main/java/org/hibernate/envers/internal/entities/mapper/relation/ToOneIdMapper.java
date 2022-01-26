@@ -126,7 +126,7 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 		// therefore resolve the identifier from the entity directly prior to simply then
 		// doing the identifier comparison.
 
-		final EntityPersister persister = session.getFactory().getMetamodel().entityPersister( referencedEntityName );
+		final EntityPersister persister = session.getFactory().getMappingMetamodel().getEntityDescriptor( referencedEntityName );
 
 		Object resolvedNewObjectId = newObj;
 		if ( !persister.getIdentifierType().getReturnedClass().isInstance( newObj ) ) {

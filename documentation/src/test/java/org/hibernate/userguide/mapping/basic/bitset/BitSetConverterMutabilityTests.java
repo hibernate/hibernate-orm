@@ -8,12 +8,18 @@ package org.hibernate.userguide.mapping.basic.bitset;
 
 import java.sql.Types;
 import java.util.BitSet;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Converter;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import org.hibernate.annotations.Mutability;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -21,12 +27,6 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Converter;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import org.assertj.core.api.Assertions;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -45,9 +45,11 @@ public class BitSetConverterMutabilityTests {
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final MappingMetamodel domainModel = sessionFactory.getDomainModel();
+		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel();
 
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(Product.class);
+		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor(Product.class);
 		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("bitSet");
 
 		assertThat( attributeMapping.getJavaType().getJavaTypeClass(), equalTo( BitSet.class));

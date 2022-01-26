@@ -9,9 +9,11 @@ package org.hibernate.metamodel;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.hibernate.Incubating;
 import org.hibernate.graph.RootGraph;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.BindableType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -63,7 +65,8 @@ public interface MappingMetamodel {
 	/**
 	 * Visit all entity mapping descriptors defined in the model
 	 */
-	void visitEntityDescriptors(Consumer<EntityPersister> action);
+	void forEachEntityDescriptor(Consumer<EntityPersister> action);
+	Stream<EntityPersister> streamEntityDescriptors();
 
 	/**
 	 * Given a JPA entity domain type, get the associated Hibernate entity descriptor
@@ -154,7 +157,8 @@ public interface MappingMetamodel {
 	/**
 	 * Visit the mapping descriptors for all collections defined in the model
 	 */
-	void visitCollectionDescriptors(Consumer<CollectionPersister> action);
+	void forEachCollectionDescriptor(Consumer<CollectionPersister> action);
+	Stream<CollectionPersister> streamCollectionDescriptors();
 
 	/**
 	 * Get a collection mapping descriptor based on its role
@@ -195,8 +199,8 @@ public interface MappingMetamodel {
 	// JPA entity graphs
 
 	RootGraph<?> findNamedGraph(String name);
-	void visitNamedGraphs(Consumer<RootGraph<?>> action);
-
+	<T> void addNamedEntityGraph(String graphName, RootGraphImplementor<T> entityGraph);
+	void forEachNamedGraph(Consumer<RootGraph<?>> action);
 	RootGraph<?> defaultGraph(String entityName);
 	RootGraph<?> defaultGraph(Class entityJavaType);
 	RootGraph<?> defaultGraph(EntityPersister entityDescriptor);

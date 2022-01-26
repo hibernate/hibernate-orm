@@ -216,7 +216,10 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			return ReflectHelper.classForName( entityName );
 		}
 		catch (ClassNotFoundException cnfe) {
-			return typeConfiguration.getSessionFactory().getMetamodel().entityPersister( entityName )
+			return typeConfiguration.getSessionFactory()
+					.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( entityName )
 					.getMappedClass();
 		}
 	}
@@ -413,7 +416,10 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		//form it returns the local variable to avoid a second volatile read: associatedEntityPersister
 		//needs to be volatile as the initialization might happen by a different thread than the readers.
 		if ( persister == null ) {
-			associatedEntityPersister = factory.getMetamodel().entityPersister( getAssociatedEntityName() );
+			associatedEntityPersister = factory
+					.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( getAssociatedEntityName() );
 			return associatedEntityPersister;
 		}
 		else {
@@ -656,7 +662,10 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			Object key,
 			SharedSessionContractImplementor session) throws HibernateException {
 		final SessionFactoryImplementor factory = session.getFactory();
-		UniqueKeyLoadable persister = (UniqueKeyLoadable) factory.getMetamodel().entityPersister( entityName );
+		UniqueKeyLoadable persister = (UniqueKeyLoadable) factory
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
 
 		//TODO: implement 2nd level caching?! natural id caching ?! proxies?!
 

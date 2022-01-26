@@ -58,11 +58,11 @@ public class JoinFetchedOneToOneAllowProxyTests extends BaseNonConfigCoreFunctio
 
 	@Test
 	public void testOwnerIsProxy() {
-		final EntityPersister supplementalInfoDescriptor = sessionFactory().getMetamodel().entityPersister( SupplementalInfo.class );
+		final EntityPersister supplementalInfoDescriptor = sessionFactory().getMappingMetamodel().getEntityDescriptor( SupplementalInfo.class );
 		final BytecodeEnhancementMetadata supplementalInfoEnhancementMetadata = supplementalInfoDescriptor.getBytecodeEnhancementMetadata();
 		assertThat( supplementalInfoEnhancementMetadata.isEnhancedForLazyLoading(), is( true ) );
 
-		final EntityPersister customerDescriptor = sessionFactory().getMetamodel().entityPersister( Customer.class );
+		final EntityPersister customerDescriptor = sessionFactory().getMappingMetamodel().getEntityDescriptor( Customer.class );
 		final BytecodeEnhancementMetadata customerEnhancementMetadata = customerDescriptor.getBytecodeEnhancementMetadata();
 		assertThat( customerEnhancementMetadata.isEnhancedForLazyLoading(), is( true ) );
 

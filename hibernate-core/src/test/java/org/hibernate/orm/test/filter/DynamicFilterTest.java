@@ -106,7 +106,9 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testSecondLevelCachedCollectionsFiltering() {
 
-        CollectionPersister persister = sessionFactory().getMetamodel().collectionPersister(Salesperson.class.getName() + ".orders");
+        CollectionPersister persister = sessionFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getCollectionDescriptor(Salesperson.class.getName() + ".orders");
 		CollectionDataAccess cache = persister.getCacheAccessStrategy();
 
 		CollectionCacheEntry cachedData = fromSession(

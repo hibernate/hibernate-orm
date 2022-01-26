@@ -155,7 +155,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 				for ( int i = 0; i < argumentReaders.size(); i++ ) {
 					final ArgumentReader<?> argumentReader = argumentReaders.get( i );
 					final JavaType<?> argumentTypeDescriptor = creationState.getSqlAstCreationContext()
-							.getDomainModel()
+							.getMappingMetamodel()
 							.getTypeConfiguration()
 							.getJavaTypeRegistry()
 							.resolveDescriptor( genericParameterTypes[i] );

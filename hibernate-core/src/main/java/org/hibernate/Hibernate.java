@@ -228,9 +228,10 @@ public final class Hibernate {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <E> E createDetachedProxy(SessionFactory sessionFactory, Class<E> entityClass, Object id) {
-		EntityPersister persister =
-				sessionFactory.unwrap(SessionFactoryImplementor.class).getMetamodel()
-						.findEntityDescriptor(entityClass);
+		final EntityPersister persister = sessionFactory.unwrap(SessionFactoryImplementor.class)
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.findEntityDescriptor(entityClass);
 		if (persister==null) {
 			throw new UnknownEntityTypeException("unknown entity type");
 		}

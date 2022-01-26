@@ -57,7 +57,7 @@ public class SqmMappingModelHelper {
 		// Our EntityTypeImpl#getType impl returns the Hibernate entity-name
 		// which is exactly what we want
 		final String hibernateEntityName = entityType.getHibernateEntityName();
-		return sessionFactory.getMetamodel().entityPersister( hibernateEntityName );
+		return sessionFactory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( hibernateEntityName );
 	}
 
 	public static <J> SqmPathSource<J> resolveSqmKeyPathSource(

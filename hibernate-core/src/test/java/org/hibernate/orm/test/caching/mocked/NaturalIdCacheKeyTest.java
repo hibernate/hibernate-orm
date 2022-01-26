@@ -18,6 +18,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
+import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.junit.Test;
@@ -42,7 +43,7 @@ public class NaturalIdCacheKeyTest {
         final SessionFactoryImplementor sessionFactoryImplementor = mock( SessionFactoryImplementor.class );
         final SessionImplementor sessionImplementor = mock( SessionImplementor.class );
 
-        final RuntimeMetamodels runtimeMetamodels = mock( RuntimeMetamodels.class );
+        final RuntimeMetamodelsImplementor runtimeMetamodels = mock( RuntimeMetamodelsImplementor.class );
         final EntityPersister entityPersister = mock( EntityPersister.class );
         final NaturalIdMapping naturalIdMapping = mock( NaturalIdMapping.class );
 

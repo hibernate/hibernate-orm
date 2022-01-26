@@ -66,8 +66,10 @@ public final class CollectionKey implements Serializable {
 
 	@Override
 	public String toString() {
-		return "CollectionKey"
-				+ MessageHelper.collectionInfoString(factory.getMetamodel().collectionPersister(role), key, factory );
+		final CollectionPersister collectionDescriptor = factory.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getCollectionDescriptor( role );
+		return "CollectionKey" + MessageHelper.collectionInfoString( collectionDescriptor, key, factory );
 	}
 
 	@Override

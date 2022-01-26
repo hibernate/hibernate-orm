@@ -170,10 +170,10 @@ public class CascadeDeleteManyToOneTest extends BaseCoreFunctionalTestCase {
 
 	private void checkInterceptor(Child child, boolean isNullExpected) {
 		final BytecodeEnhancementMetadata bytecodeEnhancementMetadata = sessionFactory()
-						.getMetamodel()
-						.entityPersister( Child.class )
-						.getEntityMetamodel()
-						.getBytecodeEnhancementMetadata();
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( Child.class )
+				.getBytecodeEnhancementMetadata();
 		if ( isNullExpected ) {
 			// if a null Interceptor is expected, then there shouldn't be any uninitialized attributes
 			assertFalse( bytecodeEnhancementMetadata.hasUnFetchedAttributes( child ) );

@@ -80,8 +80,11 @@ public class ForeignGenerator implements StandardGenerator {
 
 	@Override
 	public Object generate(SharedSessionContractImplementor sessionImplementor, Object object) {
-		final EntityPersister persister = sessionImplementor.getFactory().getMetamodel().entityPersister( entityName );
-		Object associatedObject = persister.getPropertyValue( object, propertyName );
+		final EntityPersister entityDescriptor = sessionImplementor.getFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
+		Object associatedObject = entityDescriptor.getPropertyValue( object, propertyName );
 		if ( associatedObject == null ) {
 			throw new IdentifierGenerationException(
 					"attempted to assign id from null one-to-one property [" + getRole() + "]"
@@ -89,14 +92,14 @@ public class ForeignGenerator implements StandardGenerator {
 		}
 
 		final EntityType foreignValueSourceType;
-		final Type propertyType = persister.getPropertyType( propertyName );
+		final Type propertyType = entityDescriptor.getPropertyType( propertyName );
 		if ( propertyType.isEntityType() ) {
 			// the normal case
 			foreignValueSourceType = (EntityType) propertyType;
 		}
 		else {
 			// try identifier mapper
-			foreignValueSourceType = (EntityType) persister.getPropertyType( PropertyPath.IDENTIFIER_MAPPER_PROPERTY + "." + propertyName );
+			foreignValueSourceType = (EntityType) entityDescriptor.getPropertyType( PropertyPath.IDENTIFIER_MAPPER_PROPERTY + "." + propertyName );
 		}
 
 		Object id;

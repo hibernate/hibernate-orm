@@ -26,7 +26,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.internal.StandardHqlTranslator;
@@ -133,7 +133,7 @@ public class QueryEngine {
 			String uuid,
 			String name,
 			JpaCompliance jpaCompliance,
-			Supplier<JpaMetamodel> jpaMetamodelAccess,
+			Supplier<JpaMetamodelImplementor> jpaMetamodelAccess,
 			ValueHandlingMode criteriaValueHandlingMode,
 			int preferredSqlTypeCodeForBoolean,
 			NamedObjectRepository namedObjectRepository,
@@ -202,7 +202,7 @@ public class QueryEngine {
 	public QueryEngine(
 			String uuid,
 			String name,
-			JpaMetamodel jpaMetamodel,
+			JpaMetamodelImplementor jpaMetamodel,
 			ValueHandlingMode criteriaValueHandlingMode,
 			int preferredSqlTypeCodeForBoolean,
 			boolean useStrictJpaCompliance,
@@ -231,7 +231,7 @@ public class QueryEngine {
 
 		final SqmCreationContext sqmCreationContext = new SqmCreationContext() {
 			@Override
-			public JpaMetamodel getJpaMetamodel() {
+			public JpaMetamodelImplementor getJpaMetamodel() {
 				return jpaMetamodel;
 			}
 

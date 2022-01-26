@@ -33,8 +33,8 @@ public class MaterializedBlobTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testTypeSelection() {
-        int index = sessionFactory().getMetamodel().entityPersister(MaterializedBlobEntity.class.getName()).getEntityMetamodel().getPropertyIndex( "theBytes" );
-        BasicType<?> type = (BasicType<?>) sessionFactory().getMetamodel().entityPersister(MaterializedBlobEntity.class.getName()).getEntityMetamodel().getProperties()[index].getType();
+        int index = sessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(MaterializedBlobEntity.class.getName()).getEntityMetamodel().getPropertyIndex( "theBytes" );
+        BasicType<?> type = (BasicType<?>) sessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(MaterializedBlobEntity.class.getName()).getEntityMetamodel().getProperties()[index].getType();
 		assertTrue( type.getJavaTypeDescriptor() instanceof PrimitiveByteArrayJavaType );
 		assertTrue( type.getJdbcType() instanceof BlobJdbcType );
 	}

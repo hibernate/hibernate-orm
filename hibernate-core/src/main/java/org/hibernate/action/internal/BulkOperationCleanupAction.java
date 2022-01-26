@@ -25,7 +25,7 @@ import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
@@ -81,10 +81,11 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 				);
 			}
 
-			final Set<String> roles = factory.getMetamodel().getCollectionRolesByEntityParticipant( persister.getEntityName() );
+			final MappingMetamodelImplementor mappingMetamodel = factory.getRuntimeMetamodels().getMappingMetamodel();
+			final Set<String> roles = mappingMetamodel.getCollectionRolesByEntityParticipant( persister.getEntityName() );
 			if ( roles != null ) {
 				for ( String role : roles ) {
-					final CollectionPersister collectionPersister = factory.getMetamodel().collectionPersister( role );
+					final CollectionPersister collectionPersister = mappingMetamodel.getCollectionDescriptor( role );
 					if ( collectionPersister.hasCache() ) {
 						collectionCleanups.add(
 								new CollectionCleanup(
@@ -116,47 +117,47 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		final LinkedHashSet<String> spacesList = new LinkedHashSet<>( tableSpaces );
 
 		final SessionFactoryImplementor factory = session.getFactory();
-		final MetamodelImplementor metamodel = factory.getMetamodel();
-		for ( EntityPersister persister : metamodel.entityPersisters().values() ) {
-			final String[] entitySpaces = (String[]) persister.getQuerySpaces();
+		final MappingMetamodelImplementor metamodel = factory.getRuntimeMetamodels().getMappingMetamodel();
+		metamodel.forEachEntityDescriptor( (entityDescriptor) -> {
+			final String[] entitySpaces = (String[]) entityDescriptor.getQuerySpaces();
 			if ( affectedEntity( tableSpaces, entitySpaces ) ) {
 				Collections.addAll( spacesList, entitySpaces );
 
-				if ( persister.canWriteToCache() ) {
-					entityCleanups.add( new EntityCleanup( persister.getCacheAccessStrategy(), session ) );
+				if ( entityDescriptor.canWriteToCache() ) {
+					entityCleanups.add( new EntityCleanup( entityDescriptor.getCacheAccessStrategy(), session ) );
 				}
-				if ( persister.hasNaturalIdentifier() && persister.hasNaturalIdCache() ) {
-					naturalIdCleanups.add( new NaturalIdCleanup( persister.getNaturalIdCacheAccessStrategy(), session ) );
+				if ( entityDescriptor.hasNaturalIdentifier() && entityDescriptor.hasNaturalIdCache() ) {
+					naturalIdCleanups.add( new NaturalIdCleanup( entityDescriptor.getNaturalIdCacheAccessStrategy(), session ) );
 				}
 
-				final Set<String> roles = metamodel.getCollectionRolesByEntityParticipant( persister.getEntityName() );
+				final Set<String> roles = metamodel.getCollectionRolesByEntityParticipant( entityDescriptor.getEntityName() );
 				if ( roles != null ) {
 					for ( String role : roles ) {
-						final CollectionPersister collectionPersister = metamodel.collectionPersister( role );
-						if ( collectionPersister.hasCache() ) {
+						final CollectionPersister collectionDescriptor = metamodel.getCollectionDescriptor( role );
+						if ( collectionDescriptor.hasCache() ) {
 							collectionCleanups.add(
-									new CollectionCleanup( collectionPersister.getCacheAccessStrategy(), session )
+									new CollectionCleanup( collectionDescriptor.getCacheAccessStrategy(), session )
 							);
 						}
 					}
 				}
 			}
-		}
+		} );
 
 		this.affectedTableSpaces = spacesList.toArray( new String[ 0 ] );
 	}
 
 	public static void schedule(SharedSessionContractImplementor session, SqmDmlStatement<?> statement) {
 		final List<EntityPersister> entityPersisters = new ArrayList<>( 1 );
-		final MetamodelImplementor metamodel = session.getFactory().getMetamodel();
+		final MappingMetamodelImplementor metamodel = session.getFactory().getRuntimeMetamodels().getMappingMetamodel();
 		if ( !( statement instanceof InsertStatement ) ) {
-			entityPersisters.add( metamodel.entityPersister( statement.getTarget().getEntityName() ) );
+			entityPersisters.add( metamodel.getEntityDescriptor( statement.getTarget().getEntityName() ) );
 		}
 		for ( SqmCteStatement<?> cteStatement : statement.getCteStatements() ) {
 			final SqmStatement<?> cteDefinition = cteStatement.getCteDefinition();
 			if ( cteDefinition instanceof SqmDmlStatement<?> && !( cteDefinition instanceof InsertStatement ) ) {
 				entityPersisters.add(
-						metamodel.entityPersister( ( (SqmDmlStatement<?>) cteDefinition ).getTarget().getEntityName() )
+						metamodel.getEntityDescriptor( ( (SqmDmlStatement<?>) cteDefinition ).getTarget().getEntityName() )
 				);
 			}
 		}

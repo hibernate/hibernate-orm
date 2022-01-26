@@ -56,7 +56,10 @@ public class NewGeneratorMappingsTest  {
 
 	@Test
 	public void testMinimalSequenceEntity(SessionFactoryScope scope) {
-        final EntityPersister persister = scope.getSessionFactory().getMetamodel().entityPersister(MinimalSequenceEntity.class.getName());
+        final EntityPersister persister = scope.getSessionFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor(MinimalSequenceEntity.class.getName());
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
@@ -71,7 +74,10 @@ public class NewGeneratorMappingsTest  {
 
 	@Test
 	public void testCompleteSequenceEntity(SessionFactoryScope scope) {
-        final EntityPersister persister = scope.getSessionFactory().getMetamodel().entityPersister(CompleteSequenceEntity.class.getName());
+        final EntityPersister persister = scope.getSessionFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor(CompleteSequenceEntity.class.getName());
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
@@ -82,7 +88,7 @@ public class NewGeneratorMappingsTest  {
 
 	@Test
 	public void testAutoEntity(SessionFactoryScope scope) {
-        final EntityPersister persister = scope.getSessionFactory().getMetamodel().entityPersister(AutoEntity.class.getName());
+        final EntityPersister persister = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(AutoEntity.class.getName());
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
@@ -93,7 +99,7 @@ public class NewGeneratorMappingsTest  {
 
 	@Test
 	public void testTablePerClassAutoEntity(SessionFactoryScope scope) {
-        final EntityPersister persister = scope.getSessionFactory().getMetamodel().entityPersister(AbstractTPCAutoEntity.class.getName());
+        final EntityPersister persister = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(AbstractTPCAutoEntity.class.getName());
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
@@ -105,7 +111,7 @@ public class NewGeneratorMappingsTest  {
 
 	@Test
 	public void testMinimalTableEntity(SessionFactoryScope scope) {
-        final EntityPersister persister = scope.getSessionFactory().getMetamodel().entityPersister(MinimalTableEntity.class.getName());
+        final EntityPersister persister = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(MinimalTableEntity.class.getName());
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
 		assertTrue( TableGenerator.class.isInstance( generator ) );
 		TableGenerator tabGenerator = (TableGenerator) generator;
@@ -124,7 +130,7 @@ public class NewGeneratorMappingsTest  {
 	@TestForIssue(jiraKey = "HHH-6790")
 	public void testSequencePerEntity(SessionFactoryScope scope) {
 		// Checking first entity.
-        EntityPersister persister = scope.getSessionFactory().getMetamodel().entityPersister(DedicatedSequenceEntity1.class.getName());
+        EntityPersister persister = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(DedicatedSequenceEntity1.class.getName());
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
@@ -134,7 +140,7 @@ public class NewGeneratorMappingsTest  {
 		);
 
 		// Checking second entity.
-        persister = scope.getSessionFactory().getMetamodel().entityPersister(DedicatedSequenceEntity2.class.getName());
+        persister = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(DedicatedSequenceEntity2.class.getName());
 		generator = persister.getIdentifierGenerator();
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		seqGenerator = (SequenceStyleGenerator) generator;

@@ -168,13 +168,17 @@ public class FetchStrategyHelperTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private org.hibernate.FetchMode determineFetchMode(Class<?> entityClass, String path) {
-        OuterJoinLoadable entityPersister = (OuterJoinLoadable) sessionFactory().getMetamodel().entityPersister(entityClass.getName());
+        OuterJoinLoadable entityPersister = (OuterJoinLoadable) sessionFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor(entityClass.getName());
 		int index = ( (UniqueKeyLoadable) entityPersister ).getPropertyIndex( path );
 		return  entityPersister.getFetchMode( index );
 	}
 
 	private AssociationType determineAssociationType(Class<?> entityClass, String path) {
-        OuterJoinLoadable entityPersister = (OuterJoinLoadable) sessionFactory().getMetamodel().entityPersister(entityClass.getName());
+        OuterJoinLoadable entityPersister = (OuterJoinLoadable) sessionFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor(entityClass.getName());
 		int index = ( (UniqueKeyLoadable) entityPersister ).getPropertyIndex( path );
 		return (AssociationType) entityPersister.getSubclassPropertyType( index );
 	}

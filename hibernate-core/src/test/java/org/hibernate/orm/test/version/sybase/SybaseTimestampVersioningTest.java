@@ -234,8 +234,10 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-10413" )
 	public void testComparableTimestamps() {
-        final BasicType<?> versionType =
-				sessionFactory().getMetamodel().entityPersister(User.class.getName()).getVersionType();
+        final BasicType<?> versionType = sessionFactory()
+				.getMappingMetamodel()
+				.getEntityDescriptor(User.class.getName())
+				.getVersionType();
 		assertTrue( versionType.getJavaTypeDescriptor() instanceof PrimitiveByteArrayJavaType );
 		assertTrue( versionType.getJdbcType() instanceof VarbinaryJdbcType );
 

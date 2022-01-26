@@ -46,7 +46,7 @@ public class BasicNaturalIdCachingTests {
 
 	private NaturalIdDataAccess resolveCacheAccess(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final EntityPersister entityPersister = sessionFactory.getMetamodel().entityPersister( CachedEntity.class );
+		final EntityPersister entityPersister = sessionFactory.getMappingMetamodel().getEntityDescriptor( CachedEntity.class );
 		return entityPersister.getNaturalIdMapping().getCacheAccess();
 	}
 
@@ -70,7 +70,7 @@ public class BasicNaturalIdCachingTests {
 
 		scope.inTransaction(
 				(session) -> {
-					final EntityPersister entityPersister = sessionFactory.getMetamodel().entityPersister( CachedEntity.class );
+					final EntityPersister entityPersister = sessionFactory.getMappingMetamodel().getEntityDescriptor( CachedEntity.class );
 					final NaturalIdDataAccess cacheAccess = resolveCacheAccess( scope );
 					final Object cacheKey = cacheAccess.generateCacheKey( "abc", entityPersister, session );
 					final Object cached = cacheAccess.get( session, cacheKey );

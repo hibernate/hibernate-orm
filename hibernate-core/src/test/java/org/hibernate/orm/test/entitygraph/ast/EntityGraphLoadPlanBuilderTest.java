@@ -200,7 +200,7 @@ public class EntityGraphLoadPlanBuilderTest implements SessionFactoryScopeAware 
 	}
 
 	private Fetchable getFetchable(String attributeName, Class entityClass) {
-		EntityPersister person = scope.getSessionFactory().getDomainModel().findEntityDescriptor(
+		EntityPersister person = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel().findEntityDescriptor(
 				entityClass.getName() );
 		Collection<AttributeMapping> attributeMappings = person.getAttributeMappings();
 		Fetchable fetchable = null;
@@ -354,7 +354,7 @@ public class EntityGraphLoadPlanBuilderTest implements SessionFactoryScopeAware 
 			RootGraphImplementor<T> entityGraph,
 			GraphSemantic mode,
 			SessionFactoryScope scope) {
-		final EntityPersister entityDescriptor = scope.getSessionFactory().getDomainModel().getEntityDescriptor( entityType );
+		final EntityPersister entityDescriptor = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( entityType );
 
 		final LoadQueryInfluencers loadQueryInfluencers = new LoadQueryInfluencers( scope.getSessionFactory() );
 		final EffectiveEntityGraph effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();

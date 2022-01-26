@@ -42,7 +42,8 @@ public abstract class AbstractSchemaSubstitutionFormulaTest {
 	public void test(SessionFactoryScope scope) {
 		final String className = FooBar.class.getName();
 		final AbstractEntityPersister persister = (AbstractEntityPersister) scope.getSessionFactory()
-				.getMetamodel().entityPersister( className );
+				.getMappingMetamodel()
+				.getEntityDescriptor( className );
 		final String formula = persister.getSubclassPropertyFormulaTemplateClosure()[persister.getPropertyIndex( "isValid" )][0];
 		validate( formula );
 

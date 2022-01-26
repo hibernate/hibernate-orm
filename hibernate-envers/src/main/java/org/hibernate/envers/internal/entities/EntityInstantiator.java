@@ -75,8 +75,8 @@ public class EntityInstantiator {
 		// If it is not in the cache, creating a new entity instance
 		Object ret = versionsReader.getSessionImplementor()
 				.getFactory()
-				.getMetamodel()
-				.entityPersister( entityName )
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName )
 				.getRepresentationStrategy().getInstantiator()
 				.instantiate( versionsReader.getSessionImplementor().getSessionFactory() );
 
@@ -132,8 +132,8 @@ public class EntityInstantiator {
 							key,
 							versionsReader.getSessionImplementor()
 									.getFactory()
-									.getMetamodel()
-									.entityPersister( entityName )
+									.getMappingMetamodel().
+									getEntityDescriptor( entityName )
 									.createProxy( entityId, delegate )
 					);
 				}

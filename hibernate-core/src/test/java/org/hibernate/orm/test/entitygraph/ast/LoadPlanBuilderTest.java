@@ -50,7 +50,9 @@ public class LoadPlanBuilderTest {
 	@Test
 	public void testSimpleBuild(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final EntityPersister entityDescriptor = sessionFactory.getDomainModel().getEntityDescriptor( Message.class );
+		final EntityPersister entityDescriptor = sessionFactory.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( Message.class );
 
 		final SingleIdEntityLoaderStandardImpl<?> loader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, sessionFactory );
 
@@ -126,7 +128,9 @@ public class LoadPlanBuilderTest {
 	@Test
 	public void testCollectionInitializerCase(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final EntityPersister posterEntityDescriptor = sessionFactory.getDomainModel().getEntityDescriptor( Poster.class );
+		final EntityPersister posterEntityDescriptor = sessionFactory.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( Poster.class );
 		final PluralAttributeMapping messages = (PluralAttributeMapping) posterEntityDescriptor.findAttributeMapping( "messages" );
 
 		final CollectionLoaderSingleKey loader = new CollectionLoaderSingleKey(

@@ -77,7 +77,7 @@ public class EnumeratedWithMappedSuperclassTest extends BaseUnitTestCase {
 
 		SessionFactoryImplementor sf = (SessionFactoryImplementor) metadata.buildSessionFactory();
 		try {
-            EntityPersister p = sf.getMetamodel().entityPersister(AddressLevel.class.getName());
+            EntityPersister p = sf.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(AddressLevel.class.getName());
 			CustomType<Object> runtimeType = assertTyping( CustomType.class, p.getPropertyType( "nature" ) );
 			EnumType runtimeEnumType = assertTyping( EnumType.class, runtimeType.getUserType() );
 			assertEquals( Types.VARCHAR, runtimeEnumType.sqlTypes()[0] );

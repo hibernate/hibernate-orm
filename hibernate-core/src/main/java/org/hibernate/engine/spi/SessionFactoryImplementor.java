@@ -21,10 +21,10 @@ import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.event.spi.EventEngine;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.internal.FastSessionServices;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.QueryEngine;
@@ -73,8 +73,8 @@ public interface SessionFactoryImplementor
 	}
 
 	@Override
-	default MappingMetamodel getDomainModel() {
-		return getMetamodel();
+	default MappingMetamodelImplementor getMappingMetamodel() {
+		return getRuntimeMetamodels().getMappingMetamodel();
 	}
 
 	QueryEngine getQueryEngine();
@@ -96,7 +96,7 @@ public interface SessionFactoryImplementor
 	@Override
 	StatisticsImplementor getStatistics();
 
-	RuntimeMetamodels getRuntimeMetamodels();
+	RuntimeMetamodelsImplementor getRuntimeMetamodels();
 
 	/**
 	 * Access to the ServiceRegistry for this SessionFactory.

@@ -28,7 +28,7 @@ import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
@@ -104,7 +104,7 @@ public class CollectionCacheInvalidator
 		try {
 			SessionFactoryImplementor factory = persister.getFactory();
 
-			final MetamodelImplementor metamodel = factory.getMetamodel();
+			final MappingMetamodelImplementor metamodel = factory.getRuntimeMetamodels().getMappingMetamodel();
 			Set<String> collectionRoles = metamodel.getCollectionRolesByEntityParticipant( persister.getEntityName() );
 			if ( collectionRoles == null || collectionRoles.isEmpty() ) {
 				return;
@@ -112,7 +112,7 @@ public class CollectionCacheInvalidator
 			final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
 			final boolean debugEnabled = LOG.isDebugEnabled();
 			for ( String role : collectionRoles ) {
-				final CollectionPersister collectionPersister = metamodel.collectionPersister( role );
+				final CollectionPersister collectionPersister = metamodel.getCollectionDescriptor( role );
 				if ( !collectionPersister.hasCache() ) {
 					// ignore collection if no caching is used
 					continue;
@@ -167,7 +167,11 @@ public class CollectionCacheInvalidator
 		if ( obj != null ) {
 			id = session.getContextEntityIdentifier( obj );
 			if ( id == null ) {
-				id = session.getSessionFactory().getMetamodel().entityPersister( obj.getClass() ).getIdentifier( obj, session );
+				final EntityPersister persister = session.getFactory()
+						.getRuntimeMetamodels()
+						.getMappingMetamodel()
+						.getEntityDescriptor( obj.getClass() );
+				id = persister.getIdentifier( obj, session );
 			}
 		}
 		return id;

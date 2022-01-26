@@ -53,7 +53,7 @@ public class TwoPersistenceUnits2LCDisabledEnabled {
 				config
 		);
 		SessionFactoryImplementor sf = entityManagerFactoryBuilder.build().unwrap( SessionFactoryImplementor.class );
-		final EntityPersister persister = sf.getMetamodel().entityPersister( AnEntity.class.getName() );
+		final EntityPersister persister = sf.getMappingMetamodel().getEntityDescriptor( AnEntity.class.getName() );
 
 		try {
 			if ( config.get( AvailableSettings.USE_SECOND_LEVEL_CACHE ).equals( "true" ) ) {

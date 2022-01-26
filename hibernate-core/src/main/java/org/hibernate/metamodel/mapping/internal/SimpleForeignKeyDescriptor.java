@@ -251,7 +251,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 								)
 				),
 				selectableMapping.getJdbcMapping().getJavaTypeDescriptor(),
-				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
 
 		//noinspection unchecked

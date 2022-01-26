@@ -109,7 +109,7 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 		creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 				this,
 				type.getJdbcMapping().getJavaTypeDescriptor(),
-				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
+				creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);
 	}
 }

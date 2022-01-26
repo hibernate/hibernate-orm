@@ -35,8 +35,12 @@ public class OnUpdateVisitor extends ReattachVisitor {
 			return null;
 		}
 
-		EventSource session = getSession();
-		CollectionPersister persister = session.getFactory().getMetamodel().collectionPersister(type.getRole());
+		final EventSource session = getSession();
+
+		final CollectionPersister persister = session.getFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getCollectionDescriptor( type.getRole() );
 
 		final Object collectionKey = extractCollectionKeyFromOwner( persister );
 		if ( ( collection instanceof PersistentCollection ) ) {

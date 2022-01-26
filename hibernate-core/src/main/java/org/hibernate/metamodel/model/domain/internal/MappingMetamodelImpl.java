@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import jakarta.persistence.metamodel.EmbeddableType;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.ManagedType;
@@ -50,20 +51,21 @@ import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
-import org.hibernate.query.BindableType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.TupleType;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterFactory;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -90,7 +92,7 @@ import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetti
  * @author Emmanuel Bernard
  * @author Andrea Boriero
  */
-public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplementor, Serializable {
+public class MappingMetamodelImpl implements MappingMetamodelImplementor, MetamodelImplementor, Serializable {
 	// todo : Integrate EntityManagerLogger into CoreMessageLogger
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( MappingMetamodelImpl.class );
 
@@ -101,7 +103,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JpaMetamodel
 
-	private final JpaMetamodel jpaMetamodel;
+	private final JpaMetamodelImplementor jpaMetamodel;
 
 	private final Map<Class<?>, String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
 
@@ -163,7 +165,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 		this.jpaMetamodel = new JpaMetamodelImpl( typeConfiguration, sessionFactory.getSessionFactoryOptions().getJpaCompliance() );
 	}
 
-	public JpaMetamodel getJpaMetamodel() {
+	public JpaMetamodelImplementor getJpaMetamodel() {
 		return jpaMetamodel;
 	}
 
@@ -369,8 +371,13 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	}
 
 	@Override
-	public void visitEntityDescriptors(Consumer<EntityPersister> action) {
+	public void forEachEntityDescriptor(Consumer<EntityPersister> action) {
 		entityPersisterMap.values().forEach( action );
+	}
+
+	@Override
+	public Stream<EntityPersister> streamEntityDescriptors() {
+		return entityPersisterMap.values().stream();
 	}
 
 	@Override
@@ -382,7 +389,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	public EntityPersister getEntityDescriptor(String entityName) {
 		final EntityPersister entityPersister = entityPersisterMap.get( entityName );
 		if ( entityPersister == null ) {
-			throw new IllegalArgumentException( "Unable to locate persister: " + entityName );
+			throw new UnknownEntityTypeException( "Unable to locate persister: " + entityName );
 		}
 		return entityPersister;
 	}
@@ -423,7 +430,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 		}
 
 		if ( entityPersister == null ) {
-			throw new IllegalArgumentException( "Unable to locate persister: " + entityJavaType.getName() );
+			throw new UnknownEntityTypeException( "Unable to locate entity descriptor: " + entityJavaType.getName() );
 		}
 
 		return entityPersister;
@@ -559,7 +566,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 
 	@Override
 	public EntityPersister entityPersister(Class<?> entityClass) {
-		return entityPersister( entityClass.getName() );
+		return getEntityDescriptor( entityClass.getName() );
 	}
 
 	@Override
@@ -587,8 +594,13 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	}
 
 	@Override
-	public void visitCollectionDescriptors(Consumer<CollectionPersister> action) {
+	public void forEachCollectionDescriptor(Consumer<CollectionPersister> action) {
 		collectionPersisterMap.values().forEach( action );
+	}
+
+	@Override
+	public Stream<CollectionPersister> streamCollectionDescriptors() {
+		return collectionPersisterMap.values().stream();
 	}
 
 	@Override
@@ -656,7 +668,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	}
 
 	@Override
-	public void visitNamedGraphs(Consumer<RootGraph<?>> action) {
+	public void forEachNamedGraph(Consumer<RootGraph<?>> action) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
@@ -721,7 +733,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 						if ( mappedClass != null && clazz.isAssignableFrom( mappedClass ) ) {
 							final boolean assignableSuperclass;
 							if ( checkQueryable.isInherited() ) {
-								Class<?> mappedSuperclass = entityPersister( checkQueryable.getMappedSuperclass() ).getMappedClass();
+								Class<?> mappedSuperclass = getEntityDescriptor( checkQueryable.getMappedSuperclass() ).getMappedClass();
 								assignableSuperclass = clazz.isAssignableFrom( mappedSuperclass );
 							}
 							else {

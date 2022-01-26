@@ -151,7 +151,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 		return expressionResolver.resolveSqlSelection(
 				resolveSqlExpression( navigablePath, jdbcMappingToUse, tableGroup, creationState ),
 				jdbcMappingToUse.getJavaTypeDescriptor(),
-				creationState.getCreationContext().getDomainModel().getTypeConfiguration()
+				creationState.getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
 	}
 
@@ -303,7 +303,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 				Function<R,String> subtypeResolver,
 				BasicType underlyingDiscriminatorType,
 				final SessionFactoryImplementor sessionFactory) {
-			final TypeConfiguration typeConfiguration = sessionFactory.getDomainModel().getTypeConfiguration();
+			final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 			final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
 
 			final JavaType<Object> domainJtd;

@@ -57,7 +57,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.ConcurrentReferenceHashMap;
 import org.hibernate.internal.util.collections.IdentityMap;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -365,7 +365,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	private EntityPersister locateProperPersister(EntityPersister persister) {
-		return session.getFactory().getMetamodel().entityPersister( persister.getRootEntityName() );
+		return persister.getRootEntityDescriptor().getEntityPersister();
 	}
 
 	@Override
@@ -628,7 +628,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	private void reassociateProxy(LazyInitializer li, HibernateProxy proxy) {
 		if ( li.getSession() != this.getSession() ) {
-			final EntityPersister persister = session.getFactory().getMetamodel().entityPersister( li.getEntityName() );
+			final EntityPersister persister = session.getFactory()
+					.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( li.getEntityName() );
 			final EntityKey key = session.generateEntityKey( li.getInternalIdentifier(), persister );
 		  	// any earlier proxy takes precedence
 			getOrInitializeProxiesByKey().putIfAbsent( key, proxy );
@@ -1229,8 +1232,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public Object getOwnerId(String entityName, String propertyName, Object childEntity, Map mergeMap) {
 		final String collectionRole = entityName + '.' + propertyName;
-		final EntityPersister persister = session.getFactory().getMetamodel().entityPersister( entityName );
-		final CollectionPersister collectionPersister = session.getFactory().getMetamodel().collectionPersister( collectionRole );
+
+		final MappingMetamodelImplementor mappingMetamodel = session.getFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel();
+		final EntityPersister persister = mappingMetamodel.getEntityDescriptor( entityName );
+		final CollectionPersister collectionPersister = mappingMetamodel.getCollectionDescriptor( collectionRole );
 
 	    // try cache lookup first
 		final Object parent = getParentsByChild( childEntity );
@@ -1355,9 +1362,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public Object getIndexInOwner(String entity, String property, Object childEntity, Map mergeMap) {
-		final MetamodelImplementor metamodel = session.getFactory().getMetamodel();
-		final EntityPersister persister = metamodel.entityPersister( entity );
-		final CollectionPersister cp = metamodel.collectionPersister( entity + '.' + property );
+		final MappingMetamodelImplementor metamodel = session.getFactory().getRuntimeMetamodels().getMappingMetamodel();
+		final EntityPersister persister = metamodel.getEntityDescriptor( entity );
+		final CollectionPersister cp = metamodel.getCollectionDescriptor( entity + '.' + property );
 
 	    // try cache lookup first
 		final Object parent = getParentsByChild( childEntity );

@@ -103,7 +103,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
 				jdbcParamsXref,
-				factory.getDomainModel(),
+				factory.getRuntimeMetamodels().getMappingMetamodel(),
 				sqmInterpretation.getFromClauseAccess()::findTableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")

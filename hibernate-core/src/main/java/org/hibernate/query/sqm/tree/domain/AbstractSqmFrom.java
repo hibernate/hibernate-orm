@@ -180,8 +180,9 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 				return (ModelPartContainer) creationState.getCreationContext().getQueryEngine()
 						.getTypeConfiguration()
 						.getSessionFactory()
-						.getMetamodel()
-						.entityPersister( entityName )
+						.getRuntimeMetamodels()
+						.getMappingMetamodel()
+						.getEntityDescriptor( entityName )
 						.findSubPart( attributeJoin.getAttribute().getName(), null );
 			}
 			else {
@@ -204,8 +205,9 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 			return (ModelPartContainer) creationState.getCreationContext().getQueryEngine()
 					.getTypeConfiguration()
 					.getSessionFactory()
-					.getMetamodel()
-					.entityPersister( entityName )
+					.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( entityName )
 					.findSubPart( attributeJoin.getAttribute().getName(), null );
 		}
 	}

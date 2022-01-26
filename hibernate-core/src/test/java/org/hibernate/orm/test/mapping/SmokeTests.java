@@ -60,7 +60,8 @@ public class SmokeTests {
 	@Test
 	public void testSimpleEntity(SessionFactoryScope scope) {
 		final EntityPersister entityDescriptor = scope.getSessionFactory()
-				.getDomainModel()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
 				.getEntityDescriptor( SimpleEntity.class );
 		final JdbcTypeRegistry jdbcTypeRegistry = entityDescriptor.getFactory()
 				.getTypeConfiguration()
@@ -159,11 +160,13 @@ public class SmokeTests {
 	@Test
 	public void testEntityBasedManyToOne(SessionFactoryScope scope) {
 		final EntityPersister entityDescriptor = scope.getSessionFactory()
-				.getDomainModel()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
 				.getEntityDescriptor( OtherEntity.class );
 
 		final EntityPersister simpleEntityDescriptor = scope.getSessionFactory()
-				.getDomainModel()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
 				.getEntityDescriptor( SimpleEntity.class );
 
 		final ModelPart part = entityDescriptor.findSubPart( "simpleEntity" );

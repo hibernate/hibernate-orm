@@ -55,6 +55,7 @@ import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
@@ -64,9 +65,10 @@ import org.hibernate.type.descriptor.java.spi.EntityJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
+ *
  * @author Steve Ebersole
  */
-public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
+public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( JpaMetamodel.class );
 	private static final ImportInfo<?> INVALID_IMPORT = new ImportInfo<>( null, null );
 
@@ -430,7 +432,8 @@ public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 					if ( superType instanceof EntityDomainType<?>
 							&& javaType.isAssignableFrom( superType.getJavaType() ) ) {
 						final Queryable entityPersister = (Queryable) typeConfiguration.getSessionFactory()
-								.getMetamodel()
+								.getRuntimeMetamodels()
+								.getMappingMetamodel()
 								.getEntityDescriptor( ( (EntityDomainType<?>) superType ).getHibernateEntityName() );
 						// But only skip adding this type if the parent doesn't require explicit polymorphism
 						if ( !entityPersister.isExplicitPolymorphism() ) {
@@ -438,7 +441,8 @@ public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 						}
 					}
 					final Queryable entityPersister = (Queryable) typeConfiguration.getSessionFactory()
-							.getMetamodel()
+							.getRuntimeMetamodels()
+							.getMappingMetamodel()
 							.getEntityDescriptor( entityDomainType.getHibernateEntityName() );
 					if ( !entityPersister.isExplicitPolymorphism() ) {
 						matchingDescriptors.add( entityDomainType );

@@ -106,7 +106,7 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 						)
 				),
 				rowIdType.getJavaTypeDescriptor(),
-				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
 
 		return new BasicResult(

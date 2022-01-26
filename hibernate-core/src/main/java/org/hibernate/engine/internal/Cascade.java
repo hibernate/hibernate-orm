@@ -460,7 +460,10 @@ public final class Cascade {
 			final CascadeStyle style,
 			final Object anything,
 			final CollectionType type) {
-		final CollectionPersister persister = eventSource.getFactory().getMetamodel().collectionPersister(type.getRole());
+		final CollectionPersister persister = eventSource.getFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getCollectionDescriptor( type.getRole());
 		final Type elemType = persister.getElementType();
 
 		CascadePoint elementsCascadePoint = cascadePoint;

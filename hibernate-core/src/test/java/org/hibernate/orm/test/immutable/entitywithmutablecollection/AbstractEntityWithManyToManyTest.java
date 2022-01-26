@@ -46,7 +46,7 @@ public abstract class AbstractEntityWithManyToManyTest {
 	@BeforeEach
 	protected void prepareTest(SessionFactoryScope scope) throws Exception {
 		SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		MappingMetamodel domainModel = sessionFactory.getDomainModel();
+		MappingMetamodel domainModel = sessionFactory.getRuntimeMetamodels().getMappingMetamodel();
 		isPlanContractsInverse = domainModel.getCollectionDescriptor( Plan.class.getName() + ".contracts" )
 				.isInverse();
 		try {
@@ -56,8 +56,8 @@ public abstract class AbstractEntityWithManyToManyTest {
 		catch (IllegalArgumentException ex) {
 			isPlanContractsBidirectional = false;
 		}
-        isPlanVersioned = sessionFactory.getMetamodel().entityPersister(Plan.class.getName()).isVersioned();
-        isContractVersioned = sessionFactory.getMetamodel().entityPersister(Contract.class.getName()).isVersioned();
+        isPlanVersioned = sessionFactory.getMappingMetamodel().getEntityDescriptor(Plan.class.getName()).isVersioned();
+        isContractVersioned = sessionFactory.getMappingMetamodel().getEntityDescriptor(Contract.class.getName()).isVersioned();
 		sessionFactory.getStatistics().clear();
 	}
 

@@ -42,7 +42,7 @@ public class ZoneMappingTests {
 	@Test
 	public void basicAssertions(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final EntityPersister entityDescriptor = sessionFactory.getMetamodel().entityPersister( ZoneMappingTestEntity.class );
+		final EntityPersister entityDescriptor = sessionFactory.getMappingMetamodel().getEntityDescriptor( ZoneMappingTestEntity.class );
 		final JdbcTypeRegistry jdbcTypeRegistry = sessionFactory.getTypeConfiguration().getJdbcTypeRegistry();
 
 		{

@@ -11,9 +11,9 @@ import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * Marker for all object types that can be part of a ResultSetMapping.
+ * Marker for all object types that can be part of a result mapping
  *
- * Both {@link DomainResult} and {@link Fetch} are ResultSetMappingNode sub-types.
+ * Both {@link DomainResult} and {@link Fetch} are ResultSetMappingNode subtypes.
  *
  * @author Steve Ebersole
  */

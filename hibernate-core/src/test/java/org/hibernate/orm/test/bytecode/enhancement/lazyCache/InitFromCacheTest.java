@@ -68,7 +68,9 @@ public class InitFromCacheTest extends BaseCoreFunctionalTestCase {
 
     @Before
     public void prepare() {
-        persister = sessionFactory().getMetamodel().entityPersister( Document.class );
+        persister = sessionFactory().getRuntimeMetamodels()
+                .getMappingMetamodel()
+                .getEntityDescriptor( Document.class );
         assertTrue( persister.hasCache() );
 
         doInHibernate( this::sessionFactory, s -> {

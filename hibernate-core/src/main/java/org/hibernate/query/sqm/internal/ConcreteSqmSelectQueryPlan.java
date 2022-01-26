@@ -334,7 +334,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
 				sqmInterpretation.getJdbcParamsXref(),
-				session.getFactory().getDomainModel(),
+				session.getFactory().getRuntimeMetamodels().getMappingMetamodel(),
 				sqmInterpretation.getTableGroupAccess()::findTableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					//this is pretty ugly!
@@ -386,7 +386,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
 				jdbcParamsXref,
-				session.getFactory().getDomainModel(),
+				session.getFactory().getRuntimeMetamodels().getMappingMetamodel(),
 				tableGroupAccess::findTableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")

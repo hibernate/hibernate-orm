@@ -167,7 +167,10 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 		if ( StringHelper.isEmpty( mappingIdentifier ) ) {
 			return;
 		}
-		EntityPersister entityDescriptor = sessionFactory.getMetamodel().findEntityDescriptor( mappingIdentifier );
+
+		final EntityPersister entityDescriptor = sessionFactory.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.findEntityDescriptor( mappingIdentifier );
 		if ( entityDescriptor == null ) {
 			return;
 		}

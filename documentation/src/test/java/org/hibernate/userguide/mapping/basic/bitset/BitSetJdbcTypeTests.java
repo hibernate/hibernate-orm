@@ -13,9 +13,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.annotations.JdbcType;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.userguide.mapping.basic.CustomBinaryJdbcType;
 
@@ -39,10 +38,11 @@ public class BitSetJdbcTypeTests {
 
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
-		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final MappingMetamodel domainModel = sessionFactory.getDomainModel();
+		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel();
 
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(Product.class);
+		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor(Product.class);
 		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("bitSet");
 
 		assertThat( attributeMapping.getJavaType().getJavaTypeClass(), equalTo( BitSet.class));

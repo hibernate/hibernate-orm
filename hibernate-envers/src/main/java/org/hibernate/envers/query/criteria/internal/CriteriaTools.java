@@ -104,7 +104,9 @@ public abstract class CriteriaTools {
 		final SessionFactoryImplementor sessionFactory = versionsReader.getSessionImplementor().getFactory();
 
 		if ( AuditId.IDENTIFIER_PLACEHOLDER.equals( propertyName ) ) {
-			final String identifierPropertyName = sessionFactory.getMetamodel().entityPersister( entityName ).getIdentifierPropertyName();
+			final String identifierPropertyName = sessionFactory.getMappingMetamodel()
+					.getEntityDescriptor( entityName )
+					.getIdentifierPropertyName();
 			propertyName = enversService.getConfig().getOriginalIdPropertyName() + "." + identifierPropertyName;
 		}
 		else {
@@ -165,12 +167,16 @@ public abstract class CriteriaTools {
 	 * @return List of property names representing entity identifier.
 	 */
 	private static List<String> identifierPropertyNames(SessionFactoryImplementor sessionFactory, String entityName) {
-		final String identifierPropertyName = sessionFactory.getMetamodel().entityPersister( entityName ).getIdentifierPropertyName();
+		final String identifierPropertyName = sessionFactory.getMappingMetamodel()
+				.getEntityDescriptor( entityName )
+				.getIdentifierPropertyName();
 		if ( identifierPropertyName != null ) {
 			// Single id.
 			return Arrays.asList( identifierPropertyName );
 		}
-		final Type identifierType = sessionFactory.getMetamodel().entityPersister( entityName ).getIdentifierType();
+		final Type identifierType = sessionFactory.getMappingMetamodel()
+				.getEntityDescriptor( entityName )
+				.getIdentifierType();
 		if ( identifierType instanceof EmbeddedComponentType ) {
 			// Multiple ids.
 			final EmbeddedComponentType embeddedComponentType = (EmbeddedComponentType) identifierType;

@@ -12,6 +12,11 @@ import java.util.Map;
 import java.util.Set;
 import javax.naming.NamingException;
 import javax.naming.Reference;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceUnitUtil;
+import jakarta.persistence.Query;
+import jakarta.persistence.SynchronizationType;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.HibernateException;
@@ -33,13 +38,13 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FastSessionServices;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
-import org.hibernate.metamodel.RuntimeMetamodels;
-import org.hibernate.query.BindableType;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -47,12 +52,6 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.spi.TypeConfiguration;
-
-import jakarta.persistence.EntityGraph;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceUnitUtil;
-import jakarta.persistence.Query;
-import jakarta.persistence.SynchronizationType;
 
 /**
  * Base delegating implementation of the SessionFactory and SessionFactoryImplementor
@@ -127,7 +126,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public RuntimeMetamodels getRuntimeMetamodels() {
+	public RuntimeMetamodelsImplementor getRuntimeMetamodels() {
 		return delegate.getRuntimeMetamodels();
 	}
 
@@ -198,21 +197,29 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 
 	@Deprecated
 	public EntityPersister getEntityPersister(String entityName) throws MappingException {
-		return delegate.getMetamodel().entityPersister(entityName);
+		return delegate.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
 	}
 
 	@Deprecated
 	public Map<String, EntityPersister> getEntityPersisters() {
+		// for the time being, leave this calling `MetamodelImplementor` to avoid
+		// creating the map
 		return delegate.getMetamodel().entityPersisters();
 	}
 
 	@Deprecated
 	public CollectionPersister getCollectionPersister(String role) throws MappingException {
-		return delegate.getMetamodel().collectionPersister(role);
+		return delegate.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getCollectionDescriptor( role );
 	}
 
 	@Deprecated
 	public Map<String, CollectionPersister> getCollectionPersisters() {
+		// for the time being, leave this calling `MetamodelImplementor` to avoid
+		// creating the map
 		return delegate.getMetamodel().collectionPersisters();
 	}
 
@@ -228,6 +235,8 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 
 	@Deprecated
 	public String[] getImplementors(String className) throws MappingException {
+		// for the time being, leave this calling `MetamodelImplementor` - nothing uses
+		// this method and this is the only usage of `MetamodelImplementor#getImplementors`
 		return delegate.getMetamodel().getImplementors(className);
 	}
 
@@ -248,7 +257,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 
 	@Deprecated
 	public Set<String> getCollectionRolesByEntityParticipant(String entityName) {
-		return delegate.getMetamodel().getCollectionRolesByEntityParticipant(entityName);
+		return delegate.getRuntimeMetamodels().getMappingMetamodel().getCollectionRolesByEntityParticipant( entityName );
 	}
 
 	@Override
@@ -262,7 +271,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public JpaMetamodel getJpaMetamodel() {
+	public JpaMetamodelImplementor getJpaMetamodel() {
 		return delegate.getJpaMetamodel();
 	}
 

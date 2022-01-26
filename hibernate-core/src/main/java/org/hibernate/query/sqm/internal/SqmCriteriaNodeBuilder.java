@@ -36,6 +36,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
@@ -165,7 +166,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	private final String name;
 	private final transient boolean jpaComplianceEnabled;
 	private final transient QueryEngine queryEngine;
-	private final transient Supplier<JpaMetamodel> domainModelAccess;
+	private final transient Supplier<JpaMetamodelImplementor> domainModelAccess;
 	private final transient ServiceRegistry serviceRegistry;
 	private final transient ValueHandlingMode criteriaValueHandlingMode;
 	private transient BasicType<Boolean> booleanType;
@@ -176,7 +177,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			String name,
 			boolean jpaComplianceEnabled,
 			QueryEngine queryEngine,
-			Supplier<JpaMetamodel> domainModelAccess,
+			Supplier<JpaMetamodelImplementor> domainModelAccess,
 			ServiceRegistry serviceRegistry,
 			ValueHandlingMode criteriaValueHandlingMode) {
 		this.uuid = uuid;
@@ -228,7 +229,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public JpaMetamodel getJpaMetamodel() {
+	public JpaMetamodelImplementor getJpaMetamodel() {
 		return domainModelAccess.get();
 	}
 

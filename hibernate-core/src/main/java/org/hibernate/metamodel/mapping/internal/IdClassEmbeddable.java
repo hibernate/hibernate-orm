@@ -193,7 +193,9 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
 		final SessionFactoryImplementor factory = session.getFactory();
-
+		final EntityPersister entityDescriptor = factory.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entity.getClass() );
 		final Object[] propertyValues = new Object[attributeMappings.size()];
 		virtualIdEmbeddable.forEachAttribute(
 				(position, virtualIdAttribute) -> {
@@ -212,9 +214,10 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 							propertyValues[position] = persistenceContext.getEntity( entityKey );
 							if ( propertyValues[position] == null ) {
 								// get the association out of the entity itself
-								propertyValues[position] = factory.getMetamodel()
-										.findEntityDescriptor( entity.getClass() )
-										.getPropertyValue( entity, toOneAttributeMapping.getAttributeName() );
+								propertyValues[position] = entityDescriptor.getPropertyValue(
+										entity,
+										toOneAttributeMapping.getAttributeName()
+								);
 							}
 						}
 					}

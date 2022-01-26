@@ -24,6 +24,7 @@ import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.persister.entity.DiscriminatorMetadata;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -59,11 +60,12 @@ public class EntityTypeImpl<J>
 
 		this.jpaEntityName = persistentClass.getJpaEntityName();
 
-		final Queryable entityPersister = (Queryable) jpaMetamodel.getTypeConfiguration()
+		final Queryable entityDescriptor = (Queryable) jpaMetamodel.getTypeConfiguration()
 				.getSessionFactory()
-				.getMetamodel()
-				.entityPersister( getHibernateEntityName() );
-		final DiscriminatorMetadata discriminatorMetadata = entityPersister.getTypeDiscriminatorMetadata();
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( getHibernateEntityName() );
+		final DiscriminatorMetadata discriminatorMetadata = entityDescriptor.getTypeDiscriminatorMetadata();
 		final DomainType discriminatorType;
 		if ( discriminatorMetadata != null ) {
 			discriminatorType = (DomainType) discriminatorMetadata.getResolutionType();
@@ -77,7 +79,7 @@ public class EntityTypeImpl<J>
 		this.discriminatorPathSource = new DiscriminatorSqmPathSource(
 				discriminatorType,
 				this,
-				entityPersister
+				entityDescriptor
 		);
 	}
 

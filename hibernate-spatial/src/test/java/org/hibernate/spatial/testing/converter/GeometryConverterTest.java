@@ -48,7 +48,7 @@ public class GeometryConverterTest extends BaseUnitTestCase {
 			try (final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) metadataBuilder.build()
 					.buildSessionFactory()) {
 
-				final TypeConfiguration typeConfiguration = sessionFactory.getMetamodel().getTypeConfiguration();
+				final TypeConfiguration typeConfiguration = sessionFactory.getMappingMetamodel().getTypeConfiguration();
 
 				assertThat(
 						typeConfiguration.getJavaTypeRegistry().getDescriptor( Geometry.class ),
@@ -57,7 +57,7 @@ public class GeometryConverterTest extends BaseUnitTestCase {
 
 				// todo (5.3) : what to assert wrt to SqlTypeDescriptor?  Anything?
 
-				final EntityPersister entityPersister = sessionFactory.getMetamodel().entityPersister( MyEntity.class );
+				final EntityPersister entityPersister = sessionFactory.getMappingMetamodel().getEntityDescriptor( MyEntity.class );
 				final AttributeConverterTypeAdapter geometryAttributeType = assertTyping(
 						AttributeConverterTypeAdapter.class,
 						entityPersister.getPropertyType( "geometry" )

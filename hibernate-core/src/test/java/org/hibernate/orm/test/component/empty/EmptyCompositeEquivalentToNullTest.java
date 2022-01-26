@@ -117,8 +117,9 @@ public class EmptyCompositeEquivalentToNullTest extends BaseCoreFunctionalTestCa
 
 	private CompositeType getCompositeType(String componentPropertyName, SessionFactoryImplementor sessionFactory) {
 		return (CompositeType) sessionFactory
-				.getMetamodel()
-				.entityPersister( AnEntity.class )
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( AnEntity.class )
 				.getPropertyType( componentPropertyName );
 	}
 

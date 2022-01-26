@@ -112,7 +112,9 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 
 	private void checkMatch(SqmDeleteOrUpdateStatement<?> sqmStatement) {
 		final String targetEntityName = sqmStatement.getTarget().getEntityName();
-		final EntityPersister targetEntityDescriptor = sessionFactory.getDomainModel().getEntityDescriptor( targetEntityName );
+		final EntityPersister targetEntityDescriptor = sessionFactory.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( targetEntityName );
 
 		if ( targetEntityDescriptor != rootDescriptor && ! rootDescriptor.isSubclassEntityName( targetEntityDescriptor.getEntityName() ) ) {
 			throw new IllegalArgumentException(

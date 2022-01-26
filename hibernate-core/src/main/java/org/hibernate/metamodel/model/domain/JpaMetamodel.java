@@ -23,8 +23,10 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * Hibernate extension to the JPA {@link jakarta.persistence.metamodel.Metamodel} contract
  *
- * @author Steve Ebersole
  * @see MappingMetamodel
+ *
+ * @since 6.0
+ * @author Steve Ebersole
  */
 @Incubating
 public interface JpaMetamodel extends jakarta.persistence.metamodel.Metamodel {

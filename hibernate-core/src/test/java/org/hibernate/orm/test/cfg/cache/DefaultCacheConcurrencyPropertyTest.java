@@ -61,7 +61,9 @@ public class DefaultCacheConcurrencyPropertyTest extends BaseUnitTestCase {
 			);
 			final SessionFactoryImplementor sf = (SessionFactoryImplementor) metadata.buildSessionFactory();
 			try {
-				final EntityPersister persister = sf.getMetamodel().entityPersister( TheEntity.class.getName() );
+				final EntityPersister persister = sf.getRuntimeMetamodels()
+						.getMappingMetamodel()
+						.getEntityDescriptor( TheEntity.class.getName() );
 				assertTrue( persister.canReadFromCache() );
 				assertTrue( persister.canWriteToCache() );
 				assertNotNull( persister.getCacheAccessStrategy() );

@@ -57,7 +57,7 @@ public class LoadingSmokeTests {
 					assertThat( gotten.getData(), is( "first" ) );
 
 					final AbstractEntityPersister entityDescriptor = (AbstractEntityPersister) session.getSessionFactory()
-							.getDomainModel()
+							.getRuntimeMetamodels().getMappingMetamodel()
 							.getEntityDescriptor( BasicEntity.class );
 
 					final SingleIdEntityLoader singleIdEntityLoader = entityDescriptor.getSingleIdEntityLoader();

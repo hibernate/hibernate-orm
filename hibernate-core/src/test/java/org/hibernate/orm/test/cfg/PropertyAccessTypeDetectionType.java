@@ -48,9 +48,9 @@ public class PropertyAccessTypeDetectionType extends BaseCoreFunctionalTestCase 
 		// verify that the entity persister is configured with property intValue as an Integer rather than
 		// using the static field reference and determining the type to be String.
 		assertTrue(
-				sessionFactory()
-						.getMetamodel()
-						.entityPersister( FooEntity.class )
+				sessionFactory().getRuntimeMetamodels()
+						.getMappingMetamodel()
+						.getEntityDescriptor( FooEntity.class )
 						.getPropertyType( "intValue" )
 						.getReturnedClass()
 						.isAssignableFrom( Integer.class )

@@ -47,13 +47,13 @@ public class TablePerClassInheritanceWithConcreteRootTest {
 	@Test
 	public void basicTest(SessionFactoryScope scope) {
 		final EntityPersister customerDescriptor = scope.getSessionFactory()
-				.getMetamodel()
+				.getMappingMetamodel()
 				.findEntityDescriptor( Customer.class );
 		final EntityPersister domesticCustomerDescriptor = scope.getSessionFactory()
-				.getMetamodel()
+				.getMappingMetamodel()
 				.findEntityDescriptor( DomesticCustomer.class );
 		final EntityPersister foreignCustomerDescriptor = scope.getSessionFactory()
-				.getMetamodel()
+				.getMappingMetamodel()
 				.findEntityDescriptor( ForeignCustomer.class );
 
 		assert customerDescriptor instanceof UnionSubclassEntityPersister;

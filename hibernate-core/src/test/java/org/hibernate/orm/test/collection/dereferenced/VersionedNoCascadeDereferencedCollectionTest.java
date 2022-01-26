@@ -97,7 +97,9 @@ public class VersionedNoCascadeDereferencedCollectionTest extends AbstractDerefe
 					assertNotNull( ceManiesOrig );
 					assertEquals( role, ceManiesOrig.getRole() );
                     assertSame(
-                            scope.getSessionFactory().getMetamodel().collectionPersister(role),
+                            scope.getSessionFactory().getRuntimeMetamodels()
+									.getMappingMetamodel()
+									.getCollectionDescriptor(role),
 							ceManiesOrig.getLoadedPersister()
 					);
 					assertEquals( one.getId(), ceManiesOrig.getKey() );
@@ -177,7 +179,9 @@ public class VersionedNoCascadeDereferencedCollectionTest extends AbstractDerefe
 					assertNotNull( ceManies );
 					assertEquals( role, ceManies.getRole() );
                     assertSame(
-                            scope.getSessionFactory().getMetamodel().collectionPersister(role),
+                            scope.getSessionFactory().getRuntimeMetamodels()
+									.getMappingMetamodel()
+									.getCollectionDescriptor(role),
 							ceManies.getLoadedPersister()
 					);
 					assertEquals( one.getId(), ceManies.getKey() );
@@ -261,7 +265,9 @@ public class VersionedNoCascadeDereferencedCollectionTest extends AbstractDerefe
 					assertNotNull( ceManiesOrig );
 					assertEquals( role, ceManiesOrig.getRole() );
                     assertSame(
-                            scope.getSessionFactory().getMetamodel().collectionPersister(role),
+                            scope.getSessionFactory().getRuntimeMetamodels()
+									.getMappingMetamodel()
+									.getCollectionDescriptor(role),
 							ceManiesOrig.getLoadedPersister()
 					);
 					assertEquals( one.getId(), ceManiesOrig.getKey() );
@@ -304,7 +310,9 @@ public class VersionedNoCascadeDereferencedCollectionTest extends AbstractDerefe
 					assertNotNull( ceManiesAfterReplace );
 					assertEquals( role, ceManiesAfterReplace.getRole() );
                     assertSame(
-                            scope.getSessionFactory().getMetamodel().collectionPersister(role),
+                            scope.getSessionFactory().getRuntimeMetamodels()
+									.getMappingMetamodel()
+									.getCollectionDescriptor(role),
 							ceManiesAfterReplace.getLoadedPersister()
 					);
 					assertEquals( one.getId(), ceManiesAfterReplace.getKey() );

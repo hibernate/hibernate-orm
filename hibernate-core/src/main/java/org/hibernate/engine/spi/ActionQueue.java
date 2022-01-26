@@ -47,6 +47,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CollectionType;
@@ -1164,8 +1165,9 @@ public class ActionQueue {
 						action.getEntityName(),
 						action.getSession()
 								.getFactory()
-								.getMetamodel()
-								.entityPersister( action.getEntityName() )
+								.getRuntimeMetamodels()
+								.getMappingMetamodel()
+								.getEntityDescriptor( action.getEntityName() )
 								.getRootEntityName()
 				);
 
@@ -1301,11 +1303,14 @@ public class ActionQueue {
 				BatchIdentifier batchIdentifier,
 				Type type,
 				Object value) {
+			final MappingMetamodelImplementor mappingMetamodel = action.getSession()
+					.getFactory()
+					.getRuntimeMetamodels()
+					.getMappingMetamodel();
 			if ( type.isEntityType() ) {
 				final EntityType entityType = (EntityType) type;
 				final String entityName = entityType.getName();
-				final String rootEntityName = action.getSession().getFactory().getMetamodel().
-						entityPersister( entityName ).getRootEntityName();
+				final String rootEntityName = mappingMetamodel.getEntityDescriptor( entityName ).getRootEntityName();
 
 				if ( entityType.isOneToOne() && entityType.getForeignKeyDirection() == ForeignKeyDirection.TO_PARENT ) {
 					if ( !entityType.isReferenceToPrimaryKey() ) {
@@ -1333,11 +1338,10 @@ public class ActionQueue {
 			else if ( type.isCollectionType() ) {
 				CollectionType collectionType = (CollectionType) type;
 				final SessionFactoryImplementor sessionFactory = action.getSession().getSessionFactory();
-				if ( collectionType.getElementType( sessionFactory ).isEntityType() &&
-						!sessionFactory.getMetamodel().collectionPersister( collectionType.getRole() ).isManyToMany() ) {
-					String entityName = collectionType.getAssociatedEntityName( sessionFactory );
-					String rootEntityName = action.getSession().getFactory().getMetamodel()
-							.entityPersister( entityName ).getRootEntityName();
+				if ( collectionType.getElementType( sessionFactory ).isEntityType()
+						&& !mappingMetamodel.getCollectionDescriptor( collectionType.getRole() ).isManyToMany() ) {
+					final String entityName = collectionType.getAssociatedEntityName( sessionFactory );
+					final String rootEntityName = mappingMetamodel.getEntityDescriptor( entityName ).getRootEntityName();
 					batchIdentifier.getChildEntityNames().add( entityName );
 					if ( !rootEntityName.equals( entityName ) ) {
 						batchIdentifier.getChildEntityNames().add( rootEntityName );

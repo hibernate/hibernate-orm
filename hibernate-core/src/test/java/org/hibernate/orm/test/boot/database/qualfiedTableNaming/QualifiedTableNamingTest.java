@@ -73,7 +73,9 @@ public class QualifiedTableNamingTest extends BaseNonConfigCoreFunctionalTestCas
 
 		assertNotNull( expectedName );
 
-        SingleTableEntityPersister persister = (SingleTableEntityPersister) sessionFactory().getMetamodel().entityPersister(Box.class.getName());
+        SingleTableEntityPersister persister = (SingleTableEntityPersister) sessionFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( Box.class.getName());
 		assertEquals( expectedName, persister.getTableName() );
 	}
 

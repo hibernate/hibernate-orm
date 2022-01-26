@@ -37,7 +37,7 @@ public class PluralAttributeMappingTests {
 
 	@Test
 	public void testArrays(SessionFactoryScope scope) {
-		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
+		final MappingMetamodel domainModel = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel();
 		final EntityMappingType containerEntityDescriptor = domainModel.getEntityDescriptor( EntityOfArrays.class );
 
 		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 2 ) );
@@ -48,7 +48,7 @@ public class PluralAttributeMappingTests {
 
 	@Test
 	public void testLists(SessionFactoryScope scope) {
-		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
+		final MappingMetamodel domainModel = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel();
 		final EntityMappingType containerEntityDescriptor = domainModel.getEntityDescriptor( EntityOfLists.class );
 
 		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 8 ) );
@@ -74,7 +74,7 @@ public class PluralAttributeMappingTests {
 
 	@Test
 	public void testSets(SessionFactoryScope scope) {
-		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
+		final MappingMetamodel domainModel = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel();
 		final EntityMappingType containerEntityDescriptor = domainModel.getEntityDescriptor( EntityOfSets.class );
 
 		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 12 ) );
@@ -112,7 +112,7 @@ public class PluralAttributeMappingTests {
 
 	@Test
 	public void testMaps(SessionFactoryScope scope) {
-		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
+		final MappingMetamodel domainModel = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel();
 		final EntityMappingType containerEntityDescriptor = domainModel.getEntityDescriptor( EntityOfMaps.class );
 
 		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 17 ) );

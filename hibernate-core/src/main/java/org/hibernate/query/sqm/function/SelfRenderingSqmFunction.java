@@ -9,9 +9,9 @@ package org.hibernate.query.sqm.function;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
@@ -75,7 +75,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 	@Override
 	public SelfRenderingFunctionSqlAstExpression convertToSqlAst(SqmToSqlAstConverter walker) {
 		final ReturnableType<?> resultType = resolveResultType(
-				walker.getCreationContext().getDomainModel().getTypeConfiguration()
+				walker.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);
 
 		List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
@@ -128,7 +128,10 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 			mapping = returnTypeResolver.resolveFunctionReturnType(
 					() -> {
 						try {
-							final MappingMetamodel domainModel = walker.getCreationContext().getDomainModel();
+							final MappingMetamodelImplementor domainModel = walker.getCreationContext()
+									.getSessionFactory()
+									.getRuntimeMetamodels()
+									.getMappingMetamodel();
 							return (BasicValuedMapping) domainModel.resolveMappingExpressible(
 									getNodeType(),
 									walker.getFromClauseAccess()::getTableGroup

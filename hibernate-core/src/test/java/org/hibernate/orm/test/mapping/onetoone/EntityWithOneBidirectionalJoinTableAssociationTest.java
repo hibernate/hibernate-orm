@@ -43,7 +43,7 @@ public class EntityWithOneBidirectionalJoinTableAssociationTest {
 	@Test
 	public void basicTest(SessionFactoryScope scope) {
 		final EntityPersister parentDescriptor = scope.getSessionFactory()
-				.getMetamodel()
+				.getMappingMetamodel()
 				.findEntityDescriptor( Parent.class );
 
 		final ModelPart childAssociation = parentDescriptor.findSubPart( "child" );
@@ -68,7 +68,7 @@ public class EntityWithOneBidirectionalJoinTableAssociationTest {
 			);
 
 		final EntityPersister childDescriptor = scope.getSessionFactory()
-				.getMetamodel()
+				.getMappingMetamodel()
 				.findEntityDescriptor( Child.class );
 
 		final ModelPart parentAssociation = childDescriptor.findSubPart( "parent" );

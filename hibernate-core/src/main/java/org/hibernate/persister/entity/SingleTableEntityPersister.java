@@ -636,7 +636,10 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private String[] decodeTreatAsRequests(Set<String> treatAsDeclarations) {
 		final List<String> values = new ArrayList<>();
 		for ( String subclass : treatAsDeclarations ) {
-			final Queryable queryable = (Queryable) getFactory().getMetamodel().entityPersister( subclass );
+			final Queryable queryable = (Queryable) getFactory()
+					.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( subclass );
 			if ( !queryable.isAbstract() ) {
 				values.add( queryable.getDiscriminatorSQLValue() );
 			}
@@ -649,7 +652,10 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 						continue;
 					}
 
-					Queryable actualQueryable = (Queryable) getFactory().getMetamodel().entityPersister( actualSubClass );
+					final Queryable actualQueryable = (Queryable) getFactory()
+							.getRuntimeMetamodels()
+							.getMappingMetamodel()
+							.getEntityDescriptor( actualSubClass );
 					if ( !actualQueryable.hasSubclasses() ) {
 						values.add( actualQueryable.getDiscriminatorSQLValue() );
 					}
@@ -667,7 +673,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			// first access; build it
 			final List<String> values = new ArrayList<>();
 			for ( String subclass : getSubclassClosure() ) {
-				final Queryable queryable = (Queryable) getFactory().getMetamodel().entityPersister( subclass );
+				final Queryable queryable = (Queryable) getFactory().getRuntimeMetamodels()
+						.getMappingMetamodel()
+						.getEntityDescriptor( subclass );
 				if ( !queryable.isAbstract() ) {
 					values.add( queryable.getDiscriminatorSQLValue() );
 				}
@@ -686,7 +694,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			// first access; build it
 			final List<Object> values = new ArrayList<>();
 			for ( String subclass : getSubclassClosure() ) {
-				final Queryable queryable = (Queryable) getFactory().getMetamodel().entityPersister( subclass );
+				final Queryable queryable = (Queryable) getFactory().getRuntimeMetamodels()
+						.getMappingMetamodel()
+						.getEntityDescriptor( subclass );
 				if ( !queryable.isAbstract() ) {
 					values.add( queryable.getDiscriminatorValue() );
 				}
@@ -744,7 +754,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			concreteEntityPersister = this;
 		}
 		else {
-			concreteEntityPersister = getFactory().getMetamodel().entityPersister( entityName );
+			concreteEntityPersister = getFactory().getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( entityName );
 		}
 		Type type = concreteEntityPersister.getPropertyType( propertyName );
 		if ( type.isAssociationType() && ( (AssociationType) type ).useLHSPrimaryKey() ) {

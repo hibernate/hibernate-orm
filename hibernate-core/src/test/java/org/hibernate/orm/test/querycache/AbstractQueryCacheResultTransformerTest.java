@@ -3071,7 +3071,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 
 			private Constructor getConstructor() {
 				Type studentNametype =
-						scope.getSessionFactory().getMetamodel().entityPersister( Student.class.getName() )
+						scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( Student.class.getName() )
 								.getPropertyType( "name" );
 				return ReflectHelper.getConstructor(
 						Student.class,

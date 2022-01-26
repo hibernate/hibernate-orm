@@ -33,7 +33,9 @@ public class BasicForcedTableSequenceTest {
 
 	@Test
 	public void testNormalBoundary(SessionFactoryScope scope) {
-        final EntityPersister persister = scope.getSessionFactory().getMetamodel().entityPersister(Entity.class.getName());
+        final EntityPersister persister = scope.getSessionFactory()
+				.getMappingMetamodel()
+				.getEntityDescriptor(Entity.class.getName());
 		assertThat( persister.getIdentifierGenerator(), instanceOf( SequenceStyleGenerator.class ) );
 
 		final SequenceStyleGenerator generator = ( SequenceStyleGenerator ) persister.getIdentifierGenerator();

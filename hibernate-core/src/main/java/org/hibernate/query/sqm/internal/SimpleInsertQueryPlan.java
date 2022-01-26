@@ -96,7 +96,7 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
 				jdbcParamsXref,
-				factory.getDomainModel(),
+				factory.getRuntimeMetamodels().getMappingMetamodel(),
 				tableGroupAccess::findTableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")

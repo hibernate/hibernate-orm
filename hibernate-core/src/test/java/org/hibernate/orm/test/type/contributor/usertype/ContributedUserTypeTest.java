@@ -35,7 +35,7 @@ public class ContributedUserTypeTest {
 	@Test
 	@JiraKey( "HHH-14408" )
 	public void test(SessionFactoryScope scope) {
-		Type type = scope.getSessionFactory().getMetamodel().entityPersister( StringWrapperTestEntity.class )
+		Type type = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( StringWrapperTestEntity.class )
 				.getPropertyType( "stringWrapper" );
 		Assertions.assertTrue( type instanceof CustomType, "Type was initialized too early i.e. before type-contributors were run" );
 	}

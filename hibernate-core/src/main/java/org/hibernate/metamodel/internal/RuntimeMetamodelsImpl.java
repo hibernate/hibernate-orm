@@ -10,29 +10,29 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
-import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
+import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 
 /**
  * @author Steve Ebersole
  */
-public class RuntimeMetamodelsImpl implements RuntimeMetamodels {
-	private JpaMetamodel jpaMetamodel;
-	private MappingMetamodel mappingMetamodel;
+public class RuntimeMetamodelsImpl implements RuntimeMetamodelsImplementor {
+	private JpaMetamodelImplementor jpaMetamodel;
+	private MappingMetamodelImplementor mappingMetamodel;
 
 	public RuntimeMetamodelsImpl() {
 	}
 
 	@Override
-	public JpaMetamodel getJpaMetamodel() {
+	public JpaMetamodelImplementor getJpaMetamodel() {
 		return jpaMetamodel;
 	}
 
 	@Override
-	public MappingMetamodel getMappingMetamodel() {
+	public MappingMetamodelImplementor getMappingMetamodel() {
 		return mappingMetamodel;
 	}
 

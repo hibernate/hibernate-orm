@@ -46,7 +46,7 @@ public class ManyToOneJoinTableTest {
 	@Test
 	public void basicTest(SessionFactoryScope scope) {
 		final EntityPersister otherDescriptor = scope.getSessionFactory()
-				.getMetamodel()
+				.getMappingMetamodel()
 				.findEntityDescriptor( OtherEntity.class );
 
 		final ModelPart simpleEntityAssociation = otherDescriptor.findSubPart( "simpleEntity" );
@@ -93,7 +93,7 @@ public class ManyToOneJoinTableTest {
 
 
 		final EntityPersister simpleDescriptor = scope.getSessionFactory()
-				.getMetamodel()
+				.getMappingMetamodel()
 				.findEntityDescriptor( SimpleEntity.class );
 
 		ModelPart otherEntityEntityAssociation = simpleDescriptor.findSubPart( "other" );
@@ -119,7 +119,7 @@ public class ManyToOneJoinTableTest {
 
 
 		final EntityPersister anotherDescriptor = scope.getSessionFactory()
-				.getMetamodel()
+				.getMappingMetamodel()
 				.findEntityDescriptor( AnotherEntity.class );
 
 		otherEntityEntityAssociation = anotherDescriptor.findSubPart( "other" );

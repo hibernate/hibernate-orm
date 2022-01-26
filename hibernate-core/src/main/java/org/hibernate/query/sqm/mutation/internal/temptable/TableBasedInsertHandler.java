@@ -23,7 +23,6 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
@@ -92,7 +91,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 		this.domainParameterXref = domainParameterXref;
 
 		final String targetEntityName = sqmInsert.getTarget().getEntityName();
-		this.entityDescriptor = sessionFactory.getDomainModel().getEntityDescriptor( targetEntityName );
+		this.entityDescriptor = sessionFactory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( targetEntityName );
 	}
 
 	public SqmInsertStatement<?> getSqmInsertStatement() {
@@ -113,8 +112,9 @@ public class TableBasedInsertHandler implements InsertHandler {
 	}
 
 	private ExecutionDelegate resolveDelegate(DomainQueryExecutionContext executionContext) {
-		final MappingMetamodel domainModel = sessionFactory.getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.getEntityDescriptor( getSqmInsertStatement().getTarget().getEntityName() );
+		final EntityPersister entityDescriptor = sessionFactory.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( getSqmInsertStatement().getTarget().getEntityName() );
 
 		final MultiTableSqmMutationConverter converterDelegate = new MultiTableSqmMutationConverter(
 				entityDescriptor,

@@ -20,6 +20,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Tuple;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -99,13 +105,6 @@ import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.Parameter;
-import jakarta.persistence.PersistenceException;
-import jakarta.persistence.TemporalType;
-import jakarta.persistence.Tuple;
 
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
@@ -443,7 +442,8 @@ public class QuerySqmImpl<R>
 			String hqlString,
 			SqmUpdateStatement<R> sqmStatement,
 			SessionFactoryImplementor factory) {
-		final EntityPersister entityDescriptor = factory.getDomainModel()
+		final EntityPersister entityDescriptor = factory.getRuntimeMetamodels()
+				.getMappingMetamodel()
 				.getEntityDescriptor( sqmStatement.getTarget().getEntityName() );
 		if ( entityDescriptor.isMutable() ) {
 			return;
@@ -844,7 +844,9 @@ public class QuerySqmImpl<R>
 	private NonSelectQueryPlan buildConcreteDeleteQueryPlan(@SuppressWarnings("rawtypes") SqmDeleteStatement sqmDelete) {
 		final EntityDomainType<?> entityDomainType = sqmDelete.getTarget().getReferencedPathSource();
 		final String entityNameToDelete = entityDomainType.getHibernateEntityName();
-		final EntityPersister entityDescriptor = getSessionFactory().getDomainModel().findEntityDescriptor( entityNameToDelete );
+		final EntityPersister entityDescriptor = getSessionFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityNameToDelete );
 		final SqmMultiTableMutationStrategy multiTableStrategy = entityDescriptor.getSqmMultiTableMutationStrategy();
 		if ( multiTableStrategy == null ) {
 			return new SimpleDeleteQueryPlan( entityDescriptor, sqmDelete, domainParameterXref );
@@ -869,7 +871,9 @@ public class QuerySqmImpl<R>
 		final SqmUpdateStatement sqmUpdate = (SqmUpdateStatement) getSqmStatement();
 
 		final String entityNameToUpdate = sqmUpdate.getTarget().getReferencedPathSource().getHibernateEntityName();
-		final EntityPersister entityDescriptor = getSessionFactory().getDomainModel().findEntityDescriptor( entityNameToUpdate );
+		final EntityPersister entityDescriptor = getSessionFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityNameToUpdate );
 
 		final SqmMultiTableMutationStrategy multiTableStrategy = entityDescriptor.getSqmMultiTableMutationStrategy();
 		if ( multiTableStrategy == null ) {
@@ -885,7 +889,9 @@ public class QuerySqmImpl<R>
 		final SqmInsertStatement sqmInsert = (SqmInsertStatement) getSqmStatement();
 
 		final String entityNameToInsert = sqmInsert.getTarget().getReferencedPathSource().getHibernateEntityName();
-		final EntityPersister entityDescriptor = getSessionFactory().getDomainModel().findEntityDescriptor( entityNameToInsert );
+		final EntityPersister entityDescriptor = getSessionFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityNameToInsert );
 
 		final SqmMultiTableInsertStrategy multiTableStrategy = entityDescriptor.getSqmMultiTableInsertStrategy();
 		if ( multiTableStrategy == null || isSimpleValuesInsert( sqmInsert, entityDescriptor ) ) {

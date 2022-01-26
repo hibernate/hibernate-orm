@@ -346,12 +346,12 @@ public class DefaultCatalogAndSchemaTest {
 		// so many methods that allow retrieving the entity persister or entity metamodel from the entity class no longer work,
 		// because these methods generally assume the native entity name is the FQCN.
 		// Thus we use custom code.
-		AbstractEntityPersister persister = (AbstractEntityPersister) sessionFactory.getMetamodel().entityPersisters()
-				.values().stream()
+		AbstractEntityPersister persister = (AbstractEntityPersister) sessionFactory.getRuntimeMetamodels().getMappingMetamodel().streamEntityDescriptors()
 				.filter( p -> p.getMappedClass().equals( entityClass ) )
 				.findFirst()
 				.orElseThrow( () -> new IllegalStateException( "Cannot find persister for " + entityClass ) );
-		String jpaEntityName = sessionFactory.getMetamodel().getEntities().stream()
+		String jpaEntityName = sessionFactory.getRuntimeMetamodels().getJpaMetamodel().getEntities()
+				.stream()
 				.filter( p -> p.getBindableJavaType().equals( entityClass ) )
 				.findFirst()
 				.orElseThrow( () -> new IllegalStateException( "Cannot find entity metamodel for " + entityClass ) )
@@ -472,8 +472,9 @@ public class DefaultCatalogAndSchemaTest {
 	}
 
 	private <T extends IdentifierGenerator> T idGenerator(Class<T> expectedType, Class<?> entityClass) {
-		AbstractEntityPersister persister = (AbstractEntityPersister)
-				sessionFactory.getMetamodel().entityPersister( entityClass );
+		final AbstractEntityPersister persister = (AbstractEntityPersister) sessionFactory.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityClass );
 		return expectedType.cast( persister.getIdentifierGenerator() );
 	}
 

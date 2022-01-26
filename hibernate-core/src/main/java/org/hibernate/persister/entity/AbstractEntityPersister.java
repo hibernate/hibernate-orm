@@ -1542,7 +1542,9 @@ public abstract class AbstractEntityPersister
 				// we have a condition where a collection attribute is being access via enhancement:
 				// 		we can circumvent all the rest and just return the PersistentCollection
 				final CollectionType collectionType = (CollectionType) type;
-				final CollectionPersister persister = factory.getMetamodel().collectionPersister( collectionType.getRole() );
+				final CollectionPersister persister = factory.getRuntimeMetamodels()
+						.getMappingMetamodel()
+						.getCollectionDescriptor( collectionType.getRole() );
 
 				// Get/create the collection, and make sure it is initialized!  This initialized part is
 				// different from proxy-based scenarios where we have to create the PersistentCollection
@@ -6639,7 +6641,9 @@ public abstract class AbstractEntityPersister
 				continue;
 			}
 			try {
-				final EntityPersister subClassEntityPersister = factory.getMetamodel().getEntityDescriptor( subClassEntityName );
+				final EntityPersister subClassEntityPersister = factory.getRuntimeMetamodels()
+						.getMappingMetamodel()
+						.getEntityDescriptor( subClassEntityName );
 				collectAttributeDefinitions( attributeDefinitionsByName, subClassEntityPersister.getEntityMetamodel() );
 			}
 			catch (MappingException e) {

@@ -39,7 +39,7 @@ public class DomainDataRegionTest extends BaseFunctionalTest {
 		// see if we can get access to all of the access objects we think should be defined in this region
 
 		final EntityDataAccess itemAccess = domainDataRegion.getEntityDataAccess(
-				sessionFactory().getMetamodel().entityPersister( Item.class ).getNavigableRole()
+				sessionFactory().getMappingMetamodel().getEntityDescriptor( Item.class ).getNavigableRole()
 		);
 		assertThat(
 				itemAccess.getAccessType(),
@@ -47,18 +47,18 @@ public class DomainDataRegionTest extends BaseFunctionalTest {
 		);
 
 		assertThat(
-				sessionFactory().getMetamodel().entityPersister( VersionedItem.class ).getCacheAccessStrategy().getAccessType(),
+				sessionFactory().getMappingMetamodel().getEntityDescriptor( VersionedItem.class ).getCacheAccessStrategy().getAccessType(),
 				equalTo( AccessType.READ_WRITE )
 		);
 
 		assertThat(
-				sessionFactory().getMetamodel().entityPersister( Event.class ).getCacheAccessStrategy().getAccessType(),
+				sessionFactory().getMappingMetamodel().getEntityDescriptor( Event.class ).getCacheAccessStrategy().getAccessType(),
 				equalTo( AccessType.READ_WRITE )
 		);
 
 		assertThat(
-				sessionFactory().getMetamodel()
-						.collectionPersister( Event.class.getName() + ".participants" )
+				sessionFactory().getMappingMetamodel()
+						.getCollectionDescriptor( Event.class.getName() + ".participants" )
 						.getCacheAccessStrategy()
 						.getAccessType(),
 				equalTo( AccessType.READ_WRITE )

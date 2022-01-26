@@ -133,7 +133,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 						domainParameterXref,
 						() -> parameterResolutions
 				),
-				sessionFactory.getDomainModel(),
+				sessionFactory.getRuntimeMetamodels().getMappingMetamodel(),
 				navigablePath -> insertingTableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")

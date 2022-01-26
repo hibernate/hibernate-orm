@@ -39,7 +39,10 @@ public class OnReplicateVisitor extends ReattachVisitor {
 		}
 
 		final EventSource session = getSession();
-		final CollectionPersister persister = session.getFactory().getMetamodel().collectionPersister( type.getRole() );
+		final CollectionPersister persister = session.getFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getCollectionDescriptor( type.getRole() );
 
 		if ( isUpdate ) {
 			removeCollection( persister, extractCollectionKeyFromOwner( persister ), session );

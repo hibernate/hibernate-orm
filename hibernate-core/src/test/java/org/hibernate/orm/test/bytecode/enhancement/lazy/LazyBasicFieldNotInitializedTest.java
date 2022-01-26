@@ -67,7 +67,9 @@ public class LazyBasicFieldNotInitializedTest extends BaseCoreFunctionalTestCase
             TestEntity entity = s.get( TestEntity.class, entityId );
             Assert.assertFalse( Hibernate.isPropertyInitialized( entity, "description" ) );
 
-            EntityPersister entityPersister = sessionFactory().getMetamodel().entityPersister( TestEntity.class );
+            EntityPersister entityPersister = sessionFactory().getRuntimeMetamodels()
+                    .getMappingMetamodel()
+                    .getEntityDescriptor( TestEntity.class );
 
             boolean[] propertyLaziness = entityPersister.getPropertyLaziness();
             assertEquals( 1, propertyLaziness.length );

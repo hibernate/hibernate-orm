@@ -209,8 +209,8 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
 			}
 
 			final EntityPersister entityPersister = session.getFactory()
-					.getMetamodel()
-					.locateEntityPersister( ( (EntityType) elementType ).getAssociatedEntityName() );
+					.getMappingMetamodel()
+					.getEntityDescriptor( ( (EntityType) elementType ).getAssociatedEntityName() );
 
 			final Object lhsId = entityPersister.getIdentifier( lhs, session );
 			final Object rhsId = entityPersister.getIdentifier( rhs, session );

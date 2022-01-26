@@ -45,10 +45,18 @@ public class CacheKeyImplementationHashCodeTest {
 
 
 			CacheKeyImplementation anEntityCacheKey = createCacheKeyImplementation(
-					1, sessionFactory.getMetamodel().entityPersister( AnEntity.class ), sessionFactory
+					1,
+					sessionFactory.getRuntimeMetamodels()
+							.getMappingMetamodel()
+							.getEntityDescriptor( AnEntity.class ),
+					sessionFactory
 			);
 			CacheKeyImplementation anotherEntityCacheKey = createCacheKeyImplementation(
-					1, sessionFactory.getMetamodel().entityPersister( AnotherEntity.class ), sessionFactory
+					1,
+					sessionFactory.getRuntimeMetamodels()
+							.getMappingMetamodel()
+							.getEntityDescriptor( AnotherEntity.class ),
+					sessionFactory
 			);
 			assertFalse( anEntityCacheKey.equals( anotherEntityCacheKey ) );
 		}

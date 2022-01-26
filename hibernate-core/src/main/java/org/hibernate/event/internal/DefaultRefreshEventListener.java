@@ -31,7 +31,7 @@ import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -253,10 +253,10 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			throws HibernateException {
 		final ActionQueue actionQueue = source.getActionQueue();
 		final SessionFactoryImplementor factory = source.getFactory();
-		final MetamodelImplementor metamodel = factory.getMetamodel();
+		final MappingMetamodelImplementor metamodel = factory.getRuntimeMetamodels().getMappingMetamodel();
 		for ( Type type : types ) {
 			if ( type.isCollectionType() ) {
-				CollectionPersister collectionPersister = metamodel.collectionPersister( ( (CollectionType) type ).getRole() );
+				CollectionPersister collectionPersister = metamodel.getCollectionDescriptor( ( (CollectionType) type ).getRole() );
 				if ( collectionPersister.hasCache() ) {
 					final CollectionDataAccess cache = collectionPersister.getCacheAccessStrategy();
 					final Object ck = cache.generateCacheKey(

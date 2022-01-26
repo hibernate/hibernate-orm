@@ -37,7 +37,9 @@ public class BasicSequenceTest {
 
 	@Test
 	public void testNormalBoundary(SessionFactoryScope scope) {
-        final EntityPersister persister = scope.getSessionFactory().getMetamodel().entityPersister(Entity.class.getName());
+        final EntityPersister persister = scope.getSessionFactory()
+				.getMappingMetamodel()
+				.getEntityDescriptor(Entity.class.getName());
 		assertThat( persister.getIdentifierGenerator(), instanceOf( SequenceStyleGenerator.class ) );
 
 		final SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getIdentifierGenerator();
@@ -66,7 +68,9 @@ public class BasicSequenceTest {
 	public void testSequencePerEntity(SessionFactoryScope scope) {
 		final String overriddenEntityName = "SpecialEntity";
 
-        final EntityPersister persister = scope.getSessionFactory().getMetamodel().entityPersister(overriddenEntityName);
+        final EntityPersister persister = scope.getSessionFactory()
+				.getMappingMetamodel()
+				.getEntityDescriptor(overriddenEntityName);
 		assertThat( persister.getIdentifierGenerator(), instanceOf( SequenceStyleGenerator.class ) );
 
 		final SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getIdentifierGenerator();

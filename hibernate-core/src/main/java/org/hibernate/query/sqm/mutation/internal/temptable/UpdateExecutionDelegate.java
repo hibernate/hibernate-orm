@@ -107,7 +107,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 						domainParameterXref,
 						() -> parameterResolutions
 				),
-				sessionFactory.getDomainModel(),
+				sessionFactory.getRuntimeMetamodels().getMappingMetamodel(),
 				navigablePath -> updatingTableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")

@@ -51,17 +51,17 @@ public class MixedInheritanceTest {
 	@Test
 	public void basicTest(SessionFactoryScope scope) {
 		final EntityPersister customerDescriptor = scope.getSessionFactory()
-				.getMetamodel()
+				.getMappingMetamodel()
 				.findEntityDescriptor( Customer.class );
 		final EntityPersister domesticCustomerDescriptor = scope.getSessionFactory()
-				.getMetamodel()
+				.getMappingMetamodel()
 				.findEntityDescriptor( DomesticCustomer.class );
 		final EntityPersister foreignCustomerDescriptor = scope.getSessionFactory()
-				.getMetamodel()
+				.getMappingMetamodel()
 				.findEntityDescriptor( ForeignCustomer.class );
 
 		final EntityPersister italianCustomerDescriptor = scope.getSessionFactory()
-				.getMetamodel()
+				.getMappingMetamodel()
 				.findEntityDescriptor( ItalianCustomer.class );
 
 		assert customerDescriptor instanceof JoinedSubclassEntityPersister;

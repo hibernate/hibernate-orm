@@ -11,7 +11,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.AfterLoadAction;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.service.ServiceRegistry;
@@ -68,8 +68,8 @@ public abstract class BaseSqmUnitTest
 	}
 
 	@Override
-	public MetamodelImplementor getDomainModel() {
-		return sessionFactory().getMetamodel();
+	public MappingMetamodelImplementor getMappingMetamodel() {
+		return sessionFactory().getRuntimeMetamodels().getMappingMetamodel();
 	}
 
 	@Override

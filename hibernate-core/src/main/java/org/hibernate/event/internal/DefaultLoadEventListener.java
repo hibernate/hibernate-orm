@@ -87,7 +87,11 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			);
 		}
 		else {
-			return event.getSession().getFactory().getMetamodel().entityPersister( event.getEntityClassName() );
+			return event.getSession()
+					.getFactory()
+					.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( event.getEntityClassName() );
 		}
 	}
 

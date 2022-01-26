@@ -238,8 +238,8 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 
 		// Fallback to resolving the persister from the collection role
 		final CollectionPersister collectionPersister = session.getFactory()
-				.getMetamodel()
-				.collectionPersister( commonCollectionMapperData.getRole() );
+				.getMappingMetamodel()
+				.getCollectionDescriptor( commonCollectionMapperData.getRole() );
 
 		if ( collectionPersister == null ) {
 			throw new AuditException(

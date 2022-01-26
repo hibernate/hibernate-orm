@@ -39,7 +39,7 @@ public class EntityWithOneToOneJoinTableTest {
 	@Test
 	public void basicTest(SessionFactoryScope scope) {
 		final EntityPersister entityWithOneToOneJoinTableDescriptor = scope.getSessionFactory()
-				.getMetamodel()
+				.getMappingMetamodel()
 				.findEntityDescriptor( EntityWithOneToOneJoinTable.class );
 		final ModelPart other = entityWithOneToOneJoinTableDescriptor.findSubPart( "other" );
 		assertThat( other, instanceOf( ToOneAttributeMapping.class ) );

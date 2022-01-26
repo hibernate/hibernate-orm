@@ -29,6 +29,7 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.pretty.MessageHelper;
@@ -163,7 +164,10 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		}
 
 		if ( entityName == null ) {
-			for ( EntityNameResolver resolver : typeConfiguration.getSessionFactory().getMetamodel().getEntityNameResolvers() ) {
+			final MappingMetamodelImplementor mappingMetamodel = typeConfiguration.getSessionFactory()
+					.getRuntimeMetamodels()
+					.getMappingMetamodel();
+			for ( EntityNameResolver resolver : mappingMetamodel.getEntityNameResolvers() ) {
 				entityName = resolver.resolveEntityName( entity );
 				if ( entityName != null ) {
 					break;
@@ -176,7 +180,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 			entityName = object.getClass().getName();
 		}
 
-		return typeConfiguration.getSessionFactory().getMetamodel().entityPersister( entityName );
+		return typeConfiguration.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( entityName );
 	}
 
 	@Override
@@ -269,7 +273,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		String entityName = factory.bestGuessEntityName(value);
 		final EntityPersister descriptor = entityName == null
 				? null
-				: factory.getDomainModel().getEntityDescriptor( entityName );
+				: factory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( entityName );
 		return MessageHelper.infoString( descriptor, value, factory );
 	}
 

@@ -128,7 +128,11 @@ public class UnresolvedEntityInsertActions {
 		for ( Map.Entry<Object,Set<AbstractEntityInsertAction>> entry : dependentActionsByTransientEntity.entrySet() ) {
 			final Object transientEntity = entry.getKey();
 			final String transientEntityName = session.guessEntityName( transientEntity );
-			final Object transientEntityId = session.getFactory().getMetamodel().entityPersister( transientEntityName ).getIdentifier( transientEntity, session );
+			final Object transientEntityId = session.getFactory()
+					.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( transientEntityName )
+					.getIdentifier( transientEntity, session );
 			final String transientEntityString = MessageHelper.infoString( transientEntityName, transientEntityId );
 			final Set<String> dependentEntityStrings = new TreeSet<>();
 			final Set<String> nonNullableTransientPropertyPaths = new TreeSet<>();

@@ -14,9 +14,9 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
-import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
@@ -41,10 +41,11 @@ import static org.hamcrest.Matchers.is;
 public class CharacterArrayNationalizedMappingTests {
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
-		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityWithCharArrays.class);
-		final JdbcTypeRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
-				.getJdbcTypeRegistry();
+		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel();
+		final EntityPersister entityDescriptor = mappingMetamodel.getEntityDescriptor(EntityWithCharArrays.class);
+		final JdbcTypeRegistry jdbcTypeRegistry = mappingMetamodel.getTypeConfiguration().getJdbcTypeRegistry();
 
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final NationalizationSupport nationalizationSupport = dialect.getNationalizationSupport();

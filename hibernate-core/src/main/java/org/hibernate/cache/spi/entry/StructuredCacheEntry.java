@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -41,7 +42,12 @@ public class StructuredCacheEntry implements CacheEntryStructure {
 		final Map map = (Map) structured;
 		final String subclass = (String) map.get( SUBCLASS_KEY );
 		final Object version = map.get( VERSION_KEY );
-		final EntityPersister subclassPersister = factory.getMetamodel().entityPersister(subclass);
+
+		final EntityPersister subclassPersister = factory
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( subclass );
+
 		final String[] names = subclassPersister.getPropertyNames();
 		final Serializable[] disassembledState = new Serializable[names.length];
 		for ( int i = 0; i < names.length; i++ ) {

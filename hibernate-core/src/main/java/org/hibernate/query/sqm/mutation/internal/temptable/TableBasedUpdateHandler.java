@@ -76,7 +76,7 @@ public class TableBasedUpdateHandler
 		this.domainParameterXref = domainParameterXref;
 
 		final String targetEntityName = sqmUpdate.getTarget().getEntityName();
-		this.entityDescriptor = sessionFactory.getDomainModel().getEntityDescriptor( targetEntityName );
+		this.entityDescriptor = sessionFactory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( targetEntityName );
 	}
 
 	protected SqmUpdateStatement<?> getSqmUpdate() {
@@ -104,7 +104,7 @@ public class TableBasedUpdateHandler
 
 	private ExecutionDelegate resolveDelegate(DomainQueryExecutionContext executionContext) {
 		final SessionFactoryImplementor sessionFactory = getSessionFactory();
-		final MappingMetamodel domainModel = sessionFactory.getDomainModel();
+		final MappingMetamodel domainModel = sessionFactory.getRuntimeMetamodels().getMappingMetamodel();
 		final EntityPersister entityDescriptor = domainModel.getEntityDescriptor( getSqmDeleteOrUpdateStatement().getTarget().getEntityName() );
 
 		final String rootEntityName = entityDescriptor.getRootEntityName();

@@ -114,7 +114,7 @@ public class EntityTypeLiteral implements Expression, MappingModelExpressible, D
 						this,
 						discriminatorType.getExpressibleJavaType(),
 						creationState.getSqlAstCreationState().getCreationContext()
-								.getDomainModel().getTypeConfiguration()
+								.getMappingMetamodel().getTypeConfiguration()
 				);
 	}
 

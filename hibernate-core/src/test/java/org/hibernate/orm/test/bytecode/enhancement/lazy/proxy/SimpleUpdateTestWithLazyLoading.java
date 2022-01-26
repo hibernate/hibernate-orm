@@ -113,7 +113,9 @@ public class SimpleUpdateTestWithLazyLoading extends BaseNonConfigCoreFunctional
 
 		final String updatedName = "Barrabas_";
 
-		final EntityPersister childPersister = sessionFactory().getMetamodel().entityPersister( Child.class.getName() );
+		final EntityPersister childPersister = sessionFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( Child.class.getName() );
 
 		final int relativesAttributeIndex = childPersister.getEntityMetamodel().getPropertyIndex( "relatives" );
 

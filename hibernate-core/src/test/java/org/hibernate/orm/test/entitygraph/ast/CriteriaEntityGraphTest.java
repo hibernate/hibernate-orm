@@ -205,8 +205,10 @@ public class CriteriaEntityGraphTest implements SessionFactoryScopeAware {
 	}
 
 	private Fetchable getFetchable(String attributeName, Class entityClass) {
-		EntityPersister person = scope.getSessionFactory().getDomainModel().findEntityDescriptor(
-				entityClass.getName() );
+		EntityPersister person = scope.getSessionFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.findEntityDescriptor( entityClass.getName() );
 		Collection<AttributeMapping> attributeMappings = person.getAttributeMappings();
 		Fetchable fetchable = null;
 		for(AttributeMapping mapping :attributeMappings){

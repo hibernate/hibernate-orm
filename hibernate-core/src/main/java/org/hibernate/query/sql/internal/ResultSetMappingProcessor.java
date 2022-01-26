@@ -384,11 +384,13 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 	}
 
 	private SQLLoadable getSQLLoadable(String entityName) throws MappingException {
-		EntityPersister persister = factory.getMetamodel().entityPersister(entityName);
-		if ( !(persister instanceof SQLLoadable) ) {
+		final EntityPersister entityDescriptor = factory.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
+		if ( !(entityDescriptor instanceof SQLLoadable) ) {
 			throw new MappingException( "class persister is not SQLLoadable: " + entityName );
 		}
-		return (SQLLoadable) persister;
+		return (SQLLoadable) entityDescriptor;
 	}
 
 	private String generateEntitySuffix() {
@@ -450,15 +452,19 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 	}
 
 	private void addCollection(String role, String alias, Map<String, String[]> propertyResults) {
-		SQLLoadableCollection collectionPersister = ( SQLLoadableCollection ) factory.getMetamodel().collectionPersister(role);
-		alias2CollectionPersister.put( alias, collectionPersister );
+
+		final SQLLoadableCollection collectionDescriptor = (SQLLoadableCollection) factory.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getCollectionDescriptor( role );
+
+		alias2CollectionPersister.put( alias, collectionDescriptor );
 		String suffix = generateCollectionSuffix();
 		LOG.tracev( "Mapping alias [{0}] to collection-suffix [{1}]", alias, suffix );
 		alias2CollectionSuffix.put( alias, suffix );
 		collectionPropertyResultMaps.put( alias, propertyResults );
 
-		if ( collectionPersister.isOneToMany() || collectionPersister.isManyToMany() ) {
-			SQLLoadable persister = ( SQLLoadable ) collectionPersister.getElementPersister();
+		if ( collectionDescriptor.isOneToMany() || collectionDescriptor.isManyToMany() ) {
+			SQLLoadable persister = ( SQLLoadable ) collectionDescriptor.getElementPersister();
 			addPersister( alias, filter( propertyResults ), persister );
 		}
 	}

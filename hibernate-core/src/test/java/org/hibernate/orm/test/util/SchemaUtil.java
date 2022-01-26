@@ -69,7 +69,8 @@ public abstract class SchemaUtil {
 		Set<String> result = new HashSet<>();
 		AbstractEntityPersister persister = (AbstractEntityPersister) entityManagerFactory
 				.unwrap( SessionFactoryImplementor.class )
-				.getMetamodel().entityPersister( entityType );
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityType );
 		if ( persister == null ) {
 			return result;
 		}

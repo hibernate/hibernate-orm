@@ -57,7 +57,10 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 		this.entityKey = entityKey;
 
-		final EntityPersister entityPersister = session.getFactory().getMetamodel().entityPersister( entityName );
+		final EntityPersister entityPersister = session.getFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
 		if ( entityPersister.hasCollections() ) {
 			Type[] propertyTypes = entityPersister.getPropertyTypes();
 			collectionAttributeNames = new HashSet<>();
@@ -100,8 +103,9 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 					final Object[] writtenValues;
 
 					final EntityPersister entityPersister = session.getFactory()
-							.getMetamodel()
-							.entityPersister( getEntityName() );
+							.getRuntimeMetamodels()
+							.getMappingMetamodel()
+							.getEntityDescriptor( getEntityName() );
 
 					if ( writtenFieldNames != null && !writtenFieldNames.isEmpty() ) {
 
@@ -200,8 +204,9 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 		);
 
 		final EntityPersister persister = session.getFactory()
-				.getMetamodel()
-				.entityPersister( getEntityName() );
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( getEntityName() );
 
 		if ( isTemporarySession ) {
 			// Add an entry for this entity in the PC of the temp Session

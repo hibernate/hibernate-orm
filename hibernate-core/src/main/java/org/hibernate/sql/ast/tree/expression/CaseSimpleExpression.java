@@ -66,7 +66,7 @@ public class CaseSimpleExpression implements Expression, DomainResultProducer {
 				creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 						this,
 						javaType,
-						creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
+						creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
 				).getValuesArrayPosition(),
 				resultVariable,
 				javaType
@@ -81,7 +81,7 @@ public class CaseSimpleExpression implements Expression, DomainResultProducer {
 		sqlExpressionResolver.resolveSqlSelection(
 				this,
 				type.getJdbcMappings().get( 0 ).getJavaTypeDescriptor(),
-				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);
 	}
 

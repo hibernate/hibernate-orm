@@ -140,7 +140,7 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressible<T>, Doma
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				this,
 				jdbcMapping.getJavaTypeDescriptor(),
-				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);
 
 		//noinspection unchecked
@@ -155,7 +155,7 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressible<T>, Doma
 		sqlExpressionResolver.resolveSqlSelection(
 				this,
 				jdbcMapping.getJavaTypeDescriptor(),
-				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);
 	}
 

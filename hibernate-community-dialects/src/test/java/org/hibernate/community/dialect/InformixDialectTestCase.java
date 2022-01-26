@@ -9,8 +9,8 @@ package org.hibernate.community.dialect;
 import java.util.Collections;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.orm.test.jpa.JpaComplianceStub;
 import org.hibernate.metamodel.model.domain.internal.JpaMetamodelImpl;
+import org.hibernate.orm.test.jpa.JpaComplianceStub;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.internal.NamedObjectRepositoryImpl;
 import org.hibernate.query.spi.QueryEngine;
@@ -32,7 +32,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Testing of patched support for Informix boolean type; see HHH-9894, HHH-10800

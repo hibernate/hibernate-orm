@@ -510,8 +510,9 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 			);
 
 			final EntityPersister entityMapping = emf.unwrap( SessionFactoryImplementor.class )
-					.getMetamodel()
-					.entityPersister( MappedEntity.class );
+					.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( MappedEntity.class );
 			assertThat( entityMapping, notNullValue() );
 			assertThat(
 					entityMapping.getCacheAccessStrategy().getAccessType(),

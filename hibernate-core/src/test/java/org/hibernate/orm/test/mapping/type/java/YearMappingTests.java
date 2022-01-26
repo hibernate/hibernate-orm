@@ -44,7 +44,7 @@ public class YearMappingTests {
 	@Test
 	public void basicAssertions(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final EntityPersister entityDescriptor = sessionFactory.getMetamodel().entityPersister( YearMappingTestEntity.class );
+		final EntityPersister entityDescriptor = sessionFactory.getMappingMetamodel().getEntityDescriptor( YearMappingTestEntity.class );
 
 		{
 			final BasicAttributeMapping yearAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "year" );

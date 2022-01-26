@@ -85,7 +85,7 @@ public class CustomCollectionType extends CollectionType {
 	@Override
 	public Object replaceElements(Object original, Object target, Object owner, Map copyCache, SharedSessionContractImplementor session)
 			throws HibernateException {
-		CollectionPersister cp = session.getFactory().getMetamodel().collectionPersister( getRole() );
+		CollectionPersister cp = session.getFactory().getRuntimeMetamodels().getMappingMetamodel().getCollectionDescriptor( getRole() );
 		return userType.replaceElements(original, target, cp, owner, copyCache, session);
 	}
 

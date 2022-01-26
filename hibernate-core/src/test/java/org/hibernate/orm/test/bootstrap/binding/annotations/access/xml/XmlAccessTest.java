@@ -181,7 +181,8 @@ public class XmlAccessTest {
 	// uses the first getter of the tupelizer for the assertions
 
 	private void assertAccessType(SessionFactoryImplementor factory, Class<?> classUnderTest, AccessType accessType) {
-		final EntityPersister entityDescriptor = factory.getDomainModel()
+		final EntityPersister entityDescriptor = factory.getRuntimeMetamodels()
+				.getMappingMetamodel()
 				.findEntityDescriptor( classUnderTest.getName() );
 		final Collection<AttributeMapping> attributeMappings = entityDescriptor.getAttributeMappings();
 		final AttributeMapping attributeMapping = attributeMappings.iterator().next();

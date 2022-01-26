@@ -149,7 +149,10 @@ public final class EntityKey implements Serializable {
 	public static EntityKey deserialize(ObjectInputStream ois, SessionFactoryImplementor sessionFactory) throws IOException, ClassNotFoundException {
 		final Object id = ois.readObject();
 		final String entityName = (String) ois.readObject();
-		final EntityPersister entityPersister = sessionFactory.getMetamodel().entityPersister(entityName);
-		return new EntityKey(id, entityPersister);
+		final EntityPersister entityPersister = sessionFactory
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName);
+		return new EntityKey( id, entityPersister );
 	}
 }

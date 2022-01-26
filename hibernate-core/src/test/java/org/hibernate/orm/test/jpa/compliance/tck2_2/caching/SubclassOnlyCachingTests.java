@@ -26,8 +26,6 @@ import org.junit.Test;
 
 import org.hamcrest.CoreMatchers;
 
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -38,15 +36,15 @@ public class SubclassOnlyCachingTests extends BaseNonConfigCoreFunctionalTestCas
 	@Test
 	public void testMapping() {
 		assertThat(
-				sessionFactory().getMetamodel().entityPersister( Person.class ).hasCache(),
+				sessionFactory().getMappingMetamodel().getEntityDescriptor( Person.class ).hasCache(),
 				CoreMatchers.is( false )
 		);
 		assertThat(
-				sessionFactory().getMetamodel().entityPersister( Employee.class ).hasCache(),
+				sessionFactory().getMappingMetamodel().getEntityDescriptor( Employee.class ).hasCache(),
 				CoreMatchers.is( false )
 		);
 		assertThat(
-				sessionFactory().getMetamodel().entityPersister( Customer.class ).hasCache(),
+				sessionFactory().getMappingMetamodel().getEntityDescriptor( Customer.class ).hasCache(),
 				CoreMatchers.is( true )
 		);
 	}

@@ -9,6 +9,7 @@ package org.hibernate.metamodel.spi;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.hibernate.EntityNameResolver;
 import org.hibernate.MappingException;
@@ -23,7 +24,8 @@ import org.hibernate.persister.entity.EntityPersister;
  *
  * @author Steve Ebersole
  *
- * @deprecated - Prefer {@link MappingMetamodel}
+ * @deprecated - Use {@link MappingMetamodel} or {@link org.hibernate.metamodel.model.domain.JpaMetamodel}
+ * instead.  See {@link org.hibernate.metamodel.RuntimeMetamodels}
  */
 @Deprecated(since = "6.0")
 public interface MetamodelImplementor extends MappingMetamodel, Metamodel {
@@ -31,6 +33,10 @@ public interface MetamodelImplementor extends MappingMetamodel, Metamodel {
 	@Override
 	SessionFactoryImplementor getSessionFactory();
 
+	/**
+	 * @deprecated Use {@link MappingMetamodelImplementor#getEntityNameResolvers} instead
+	 */
+	@Deprecated(since = "6.0")
 	Collection<EntityNameResolver> getEntityNameResolvers();
 
 	/**
@@ -41,7 +47,10 @@ public interface MetamodelImplementor extends MappingMetamodel, Metamodel {
 	 * @return The entity persister
 	 *
 	 * @throws MappingException Indicates persister for that class could not be found.
+	 *
+	 * @deprecated Use {@link MappingMetamodel#getEntityDescriptor} instead
 	 */
+	@Deprecated(since = "6.0")
 	default EntityPersister entityPersister(Class<?> entityClass) {
 		return getEntityDescriptor(entityClass);
 	}
@@ -54,7 +63,10 @@ public interface MetamodelImplementor extends MappingMetamodel, Metamodel {
 	 * @return The persister
 	 *
 	 * @throws MappingException Indicates persister could not be found with that name.
+	 *
+	 * @deprecated Use {@link MappingMetamodel#getEntityDescriptor} instead
 	 */
+	@Deprecated(since = "6.0")
 	default EntityPersister entityPersister(String entityName) {
 		return getEntityDescriptor(entityName);
 	}
@@ -63,7 +75,11 @@ public interface MetamodelImplementor extends MappingMetamodel, Metamodel {
 	 * Get all entity persisters as a Map, which entity name its the key and the persister is the value.
 	 *
 	 * @return The Map contains all entity persisters.
+	 *
+	 * @deprecated With no direct replacement; see {@link MappingMetamodel#forEachEntityDescriptor}
+	 * and {@link MappingMetamodel#streamEntityDescriptors()} instead
 	 */
+	@Deprecated(since = "6.0")
 	Map<String,EntityPersister> entityPersisters();
 
 	/**
@@ -74,7 +90,10 @@ public interface MetamodelImplementor extends MappingMetamodel, Metamodel {
 	 * @return The persister
 	 *
 	 * @throws MappingException Indicates persister could not be found with that role.
+	 *
+	 * @deprecated Use {@link MappingMetamodel#getCollectionDescriptor} instead
 	 */
+	@Deprecated(since = "6.0")
 	default CollectionPersister collectionPersister(String role) {
 		return getCollectionDescriptor(role);
 	}
@@ -83,7 +102,11 @@ public interface MetamodelImplementor extends MappingMetamodel, Metamodel {
 	 * Get all collection persisters as a Map, which collection role as the key and the persister is the value.
 	 *
 	 * @return The Map contains all collection persisters.
+	 *
+	 * @deprecated With no direct replacement; see {@link MappingMetamodel#forEachCollectionDescriptor}
+	 * and {@link MappingMetamodel#streamCollectionDescriptors()} instead
 	 */
+	@Deprecated(since = "6.0")
 	Map<String,CollectionPersister> collectionPersisters();
 
 	/**
@@ -93,7 +116,11 @@ public interface MetamodelImplementor extends MappingMetamodel, Metamodel {
 	 * @param entityName The entity name for which to get the collection roles.
 	 *
 	 * @return set of all the collection roles in which the given entityName participates.
+	 *
+	 * @deprecated Use {@link MappingMetamodelImplementor#getCollectionRolesByEntityParticipant}
+	 * and {@link MappingMetamodel#streamCollectionDescriptors()} instead
 	 */
+	@Deprecated(since = "6.0")
 	Set<String> getCollectionRolesByEntityParticipant(String entityName);
 
 	/**

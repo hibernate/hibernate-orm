@@ -402,7 +402,9 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	}
 
 	private Queryable getQueryable(String entityName, SessionImplementor sessionImplementor) {
-		return (Queryable) sessionImplementor.getFactory().getMetamodel().entityPersister( entityName );
+		return (Queryable) sessionImplementor.getFactory()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
 	}
 
 	private void addEndRevisionNullRestriction(Configuration configuration, Parameters rootParameters) {
@@ -424,7 +426,9 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	}
 
 	private boolean isNonIdentifierWhereConditionsRequired(String entityName, String propertyName, SessionImplementor session) {
-		final Type propertyType = session.getSessionFactory().getMetamodel().entityPersister( entityName ).getPropertyType( propertyName );
+		final Type propertyType = session.getSessionFactory()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName ).getPropertyType( propertyName );
 		if ( propertyType.isCollectionType() ) {
 			final CollectionType collectionType = (CollectionType) propertyType;
 			final Type collectionElementType = collectionType.getElementType( session.getSessionFactory() );

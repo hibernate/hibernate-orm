@@ -43,7 +43,7 @@ public class XmlTest {
 	public void testXmlMappingWithCacheable(EntityManagerFactoryScope scope) {
 		EntityManager em = scope.getEntityManagerFactory().createEntityManager();
 		SharedSessionContractImplementor session = em.unwrap( SharedSessionContractImplementor.class );
-		EntityPersister entityPersister= session.getFactory().getMetamodel().entityPersister( Lighter.class );
+		EntityPersister entityPersister= session.getFactory().getMappingMetamodel().getEntityDescriptor( Lighter.class );
 		Assertions.assertTrue(entityPersister.canReadFromCache());
 		Assertions.assertTrue(entityPersister.canWriteToCache());
 	}

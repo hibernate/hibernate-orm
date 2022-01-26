@@ -44,15 +44,19 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 
 		EntityMappingType treatTarget = null;
 		if ( jpaQueryComplianceEnabled ) {
+			final MappingMetamodel mappingMetamodel = converter.getCreationContext()
+					.getSessionFactory()
+					.getRuntimeMetamodels()
+					.getMappingMetamodel();
 			if ( sqmPath.getLhs() instanceof SqmTreatedPath ) {
-				final EntityDomainType treatTargetDomainType = ( (SqmTreatedPath) sqmPath.getLhs() ).getTreatTarget();
-				final MappingMetamodel domainModel = converter.getCreationContext().getDomainModel();
-				treatTarget = domainModel.findEntityDescriptor( treatTargetDomainType.getHibernateEntityName() );
+				//noinspection rawtypes
+				final EntityDomainType<?> treatTargetDomainType = ( (SqmTreatedPath) sqmPath.getLhs() ).getTreatTarget();
+				treatTarget = mappingMetamodel.findEntityDescriptor( treatTargetDomainType.getHibernateEntityName() );
 			}
 			else if ( sqmPath.getLhs().getNodeType() instanceof EntityDomainType ) {
-				final EntityDomainType entityDomainType = (EntityDomainType) sqmPath.getLhs().getNodeType();
-				final MappingMetamodel domainModel = converter.getCreationContext().getDomainModel();
-				treatTarget = domainModel.findEntityDescriptor( entityDomainType.getHibernateEntityName() );
+				//noinspection rawtypes
+				final EntityDomainType<?> entityDomainType = (EntityDomainType) sqmPath.getLhs().getNodeType();
+				treatTarget = mappingMetamodel.findEntityDescriptor( entityDomainType.getHibernateEntityName() );
 
 			}
 		}

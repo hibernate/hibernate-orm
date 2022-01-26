@@ -70,7 +70,7 @@ public class BinaryArithmeticExpression implements Expression, DomainResultProdu
 		return creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 				this,
 				resultType.getJdbcMapping().getJavaTypeDescriptor(),
-				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
+				creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);
 	}
 

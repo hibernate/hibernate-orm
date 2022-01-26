@@ -75,8 +75,9 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 		final StatisticsImplementor stats = sessionFactory().getStatistics();
 		stats.clear();
 
-		assert sessionFactory().getMetamodel()
-				.entityPersister( DEntity.class )
+		assert sessionFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( DEntity.class )
 				.getBytecodeEnhancementMetadata()
 				.isEnhancedForLazyLoading();
 
@@ -108,8 +109,9 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 		final StatisticsImplementor stats = sessionFactory().getStatistics();
 		stats.clear();
 
-		assert sessionFactory().getMetamodel()
-				.entityPersister( DEntity.class )
+		assert sessionFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( DEntity.class )
 				.getBytecodeEnhancementMetadata()
 				.isEnhancedForLazyLoading();
 
@@ -218,8 +220,9 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 		final StatisticsImplementor stats = sessionFactory().getStatistics();
 		stats.clear();
 
-		assert sessionFactory().getMetamodel()
-				.entityPersister( DEntity.class )
+		assert sessionFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( DEntity.class )
 				.getBytecodeEnhancementMetadata()
 				.isEnhancedForLazyLoading();
 
@@ -277,8 +280,9 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 		final StatisticsImplementor stats = sessionFactory().getStatistics();
 		stats.clear();
 
-		assert sessionFactory().getMetamodel()
-				.entityPersister( DEntity.class )
+		assert sessionFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( DEntity.class )
 				.getBytecodeEnhancementMetadata()
 				.isEnhancedForLazyLoading();
 
@@ -326,9 +330,10 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testLazyAssociationSameAsNonLazyInPC() {
 
-		assert sessionFactory().getMetamodel()
-				.entityPersister( DEntity.class )
-				.getInstrumentationMetadata()
+		assert sessionFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( DEntity.class )
+				.getBytecodeEnhancementMetadata()
 				.isEnhancedForLazyLoading();
 
 		inSession(
@@ -352,7 +357,9 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 		final StatisticsImplementor stats = sessionFactory().getStatistics();
 		stats.clear();
 
-		final EntityPersister persister = sessionFactory().getMetamodel().entityPersister( DEntity.class );
+		final EntityPersister persister = sessionFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( DEntity.class );
 		assert persister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 
 		inSession(
@@ -498,8 +505,9 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 		final StatisticsImplementor stats = sessionFactory().getStatistics();
 		stats.clear();
 
-		assert sessionFactory().getMetamodel()
-				.entityPersister( RoleEntity.class )
+		assert sessionFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( RoleEntity.class )
 				.getInstrumentationMetadata()
 				.isEnhancedForLazyLoading();
 

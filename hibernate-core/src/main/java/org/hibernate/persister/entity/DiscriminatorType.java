@@ -133,25 +133,31 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 			Object value,
 			int index,
 			SharedSessionContractImplementor session) throws HibernateException, SQLException {
-		String entityName = session.getFactory().getClassMetadata((Class<?>) value).getEntityName();
-		Loadable entityPersister = (Loadable) session.getFactory().getMetamodel().entityPersister(entityName);
-		underlyingType.nullSafeSet(st, entityPersister.getDiscriminatorValue(), index, session);
+		final Loadable loadable = (Loadable) session.getFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( (Class<?>) value );
+		underlyingType.nullSafeSet(st, loadable.getDiscriminatorValue(), index, session);
 	}
 
 	@Override
 	public void bind(PreparedStatement st, T value, int index, WrapperOptions options) throws SQLException {
 		final SessionFactoryImplementor factory = options.getSession().getFactory();
-		final String entityName = factory.getClassMetadata( (Class<?>) value).getEntityName();
-		final Loadable entityPersister = (Loadable) factory.getMetamodel().entityPersister(entityName);
-		underlyingType.getJdbcValueBinder().bind( st, entityPersister.getDiscriminatorValue(), index, options );
+		final Loadable loadable = (Loadable) factory
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( (Class<?>) value );
+		underlyingType.getJdbcValueBinder().bind( st, loadable.getDiscriminatorValue(), index, options );
 	}
 
 	@Override
 	public void bind(CallableStatement st, T value, String name, WrapperOptions options) throws SQLException {
 		final SessionFactoryImplementor factory = options.getSession().getFactory();
-		final String entityName = factory.getClassMetadata( (Class<?>) value).getEntityName();
-		final Loadable entityPersister = (Loadable) factory.getMetamodel().entityPersister(entityName);
-		underlyingType.getJdbcValueBinder().bind( st, entityPersister.getDiscriminatorValue(), name, options );
+		final Loadable loadable = (Loadable) factory
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( (Class<?>) value );
+		underlyingType.getJdbcValueBinder().bind( st, loadable.getDiscriminatorValue(), name, options );
 	}
 
 	@Override

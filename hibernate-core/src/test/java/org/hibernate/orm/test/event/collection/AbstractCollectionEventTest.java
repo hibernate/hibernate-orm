@@ -49,7 +49,9 @@ public abstract class AbstractCollectionEventTest extends BaseCoreFunctionalTest
 				s -> {
 					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 					List children;
-					if ( s.getFactory().getMetamodel().findEntityDescriptor( dummyChild.getClass() ) == null ) {
+					if ( s.getFactory().getRuntimeMetamodels()
+							.getMappingMetamodel()
+							.findEntityDescriptor( dummyChild.getClass() ) == null ) {
 						children = Collections.emptyList();
 					}
 					else {

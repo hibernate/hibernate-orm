@@ -7,6 +7,8 @@
 package org.hibernate.stat.internal;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
@@ -19,7 +21,7 @@ import org.hibernate.cache.spi.Region;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.Service;
 import org.hibernate.stat.Statistics;
@@ -37,8 +39,12 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	private static final CoreMessageLogger LOG = messageLogger( StatisticsImpl.class );
 
-	private final MetamodelImplementor metamodel;
+	private final MappingMetamodelImplementor metamodel;
 	private final CacheImplementor cache;
+
+	private final String[] allEntityNames;
+	private final String[] allCollectionRoles;
+
 	private final boolean secondLevelCacheEnabled;
 	private final boolean queryCacheEnabled;
 
@@ -117,10 +123,18 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 				20
 		);
 		resetStart();
-		metamodel = sessionFactory.getMetamodel();
+		metamodel = sessionFactory.getRuntimeMetamodels().getMappingMetamodel();
 		cache = sessionFactory.getCache();
 		secondLevelCacheEnabled = sessionFactoryOptions.isSecondLevelCacheEnabled();
 		queryCacheEnabled = sessionFactoryOptions.isQueryCacheEnabled();
+
+		final List<String> entityNames = new ArrayList<>();
+		metamodel.forEachEntityDescriptor( (entityDescriptor) -> entityNames.add( entityDescriptor.getEntityName() ) );
+		this.allEntityNames = entityNames.toArray( new String[0] );
+
+		final List<String> collectionRoles = new ArrayList<>();
+		metamodel.forEachCollectionDescriptor( (collectionDescriptor) -> collectionRoles.add( collectionDescriptor.getRole() ) );
+		this.allCollectionRoles = collectionRoles.toArray( new String[0] );
 	}
 
 	/**
@@ -218,7 +232,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public String[] getEntityNames() {
-		return metamodel.getAllEntityNames();
+		return allEntityNames;
 	}
 
 	@Override
@@ -322,7 +336,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public String[] getCollectionRoleNames() {
-		return metamodel.getAllCollectionRoles();
+		return allCollectionRoles;
 	}
 
 	@Override
@@ -505,7 +519,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 			naturalIdQueryExecutionMaxTimeEntity = rootEntityName;
 		}
 
-		final EntityPersister rootEntityPersister = metamodel.entityPersister( rootEntityName );
+		final EntityPersister rootEntityPersister = metamodel.getEntityDescriptor( rootEntityName );
 
 		getNaturalIdStatistics( rootEntityName ).queryExecuted( time );
 
@@ -926,15 +940,15 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	}
 
 	private EntityStatisticsImpl instantiateEntityStatistics(final String entityName) {
-		return new EntityStatisticsImpl( metamodel.entityPersister( entityName ) );
+		return new EntityStatisticsImpl( metamodel.getEntityDescriptor( entityName ) );
 	}
 
 	private CollectionStatisticsImpl instantiateCollectionStatistics(final String role) {
-		return new CollectionStatisticsImpl( metamodel.collectionPersister( role ) );
+		return new CollectionStatisticsImpl( metamodel.getCollectionDescriptor( role ) );
 	}
 
 	private NaturalIdStatisticsImpl instantiateNaturalStatistics(final String entityName) {
-		final EntityPersister entityDescriptor = metamodel.entityPersister( entityName );
+		final EntityPersister entityDescriptor = metamodel.getEntityDescriptor( entityName );
 		if ( !entityDescriptor.hasNaturalIdentifier() ) {
 			throw new IllegalArgumentException( "Given entity [" + entityName + "] does not define natural-id" );
 		}

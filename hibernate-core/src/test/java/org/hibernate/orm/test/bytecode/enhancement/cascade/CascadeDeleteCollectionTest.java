@@ -152,12 +152,10 @@ public class CascadeDeleteCollectionTest extends BaseCoreFunctionalTestCase {
     }
 
     private void checkInterceptor(Parent parent, boolean isNullExpected) {
-        final BytecodeEnhancementMetadata bytecodeEnhancementMetadata =
-                sessionFactory()
-                        .getMetamodel()
-                        .entityPersister( Parent.class )
-                        .getEntityMetamodel()
-                        .getBytecodeEnhancementMetadata();
+        final BytecodeEnhancementMetadata bytecodeEnhancementMetadata = sessionFactory().getRuntimeMetamodels()
+                .getMappingMetamodel()
+                .getEntityDescriptor( Parent.class )
+                .getBytecodeEnhancementMetadata();
         if ( isNullExpected ) {
             // if a null Interceptor is expected, then there shouldn't be any uninitialized attributes
             assertFalse( bytecodeEnhancementMetadata.hasUnFetchedAttributes( parent ) );

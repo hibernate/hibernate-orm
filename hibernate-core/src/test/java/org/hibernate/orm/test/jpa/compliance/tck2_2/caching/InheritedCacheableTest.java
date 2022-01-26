@@ -37,15 +37,15 @@ public class InheritedCacheableTest extends BaseNonConfigCoreFunctionalTestCase 
 	@Test
 	public void testMapping() {
 		assertThat(
-				sessionFactory().getMetamodel().entityPersister( Person.class ).hasCache(),
+				sessionFactory().getMappingMetamodel().getEntityDescriptor( Person.class ).hasCache(),
 				CoreMatchers.is( true )
 		);
 		assertThat(
-				sessionFactory().getMetamodel().entityPersister( Employee.class ).hasCache(),
+				sessionFactory().getMappingMetamodel().getEntityDescriptor( Employee.class ).hasCache(),
 				CoreMatchers.is( true )
 		);
 		assertThat(
-				sessionFactory().getMetamodel().entityPersister( Customer.class ).hasCache(),
+				sessionFactory().getMappingMetamodel().getEntityDescriptor( Customer.class ).hasCache(),
 				CoreMatchers.is( false )
 		);
 	}

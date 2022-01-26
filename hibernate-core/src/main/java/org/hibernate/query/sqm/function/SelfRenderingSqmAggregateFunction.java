@@ -46,7 +46,7 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 	@Override
 	public SelfRenderingFunctionSqlAstExpression convertToSqlAst(SqmToSqlAstConverter walker) {
 		final ReturnableType<?> resultType = resolveResultType(
-				walker.getCreationContext().getDomainModel().getTypeConfiguration()
+				walker.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);
 
 		List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );

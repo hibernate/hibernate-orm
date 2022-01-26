@@ -52,8 +52,9 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 		super( sessionImplementor, entityName, enversService, id, RevisionType.ADD );
 
 		this.data = data;
-		final String[] propertyNames = sessionImplementor.getFactory().getMetamodel()
-				.entityPersister( getEntityName() )
+		final String[] propertyNames = sessionImplementor.getFactory()
+				.getMappingMetamodel()
+				.getEntityDescriptor( getEntityName() )
 				.getPropertyNames();
 		this.state = ArraysTools.mapToArray( data, propertyNames );
 	}

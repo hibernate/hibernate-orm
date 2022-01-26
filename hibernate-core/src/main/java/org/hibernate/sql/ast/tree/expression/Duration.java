@@ -61,7 +61,7 @@ public class Duration implements Expression, DomainResultProducer {
 				creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 						this,
 						type.getJdbcMapping().getJavaTypeDescriptor(),
-						creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
+						creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
 				).getValuesArrayPosition(),
 				resultVariable,
 				type.getJdbcMapping().getJavaTypeDescriptor()
@@ -76,7 +76,7 @@ public class Duration implements Expression, DomainResultProducer {
 		sqlExpressionResolver.resolveSqlSelection(
 				this,
 				type.getJdbcMapping().getJavaTypeDescriptor(),
-				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);
 	}
 

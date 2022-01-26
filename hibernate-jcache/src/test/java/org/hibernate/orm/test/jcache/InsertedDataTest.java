@@ -197,7 +197,7 @@ public class InsertedDataTest {
 					final Object fromCache = region.getCacheStorageAccess().getFromCache(
 							region.getEffectiveKeysFactory().createEntityKey(
 									1L,
-									sessionFactory().getMetamodel().entityPersister( CacheableItem.class ),
+									sessionFactory().getMappingMetamodel().getEntityDescriptor( CacheableItem.class ),
 									sessionFactory(),
 									null
 							),

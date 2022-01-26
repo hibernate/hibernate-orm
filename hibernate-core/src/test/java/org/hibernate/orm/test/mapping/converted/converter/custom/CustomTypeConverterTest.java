@@ -80,7 +80,7 @@ public class CustomTypeConverterTest extends BaseUnitTestCase {
 					sameInstance( PayloadWrapperJdbcType.INSTANCE )
 			);
 
-			final EntityPersister entityPersister = sessionFactory.getMetamodel().entityPersister( MyEntity.class );
+			final EntityPersister entityPersister = sessionFactory.getMappingMetamodel().getEntityDescriptor( MyEntity.class );
 			entityPersister.getPropertyType( "customType" );
 		}
 	}

@@ -64,11 +64,11 @@ public class ManyToOneAllowProxyTests extends BaseNonConfigCoreFunctionalTestCas
 
 	@Test
 	public void testOwnerIsProxy() {
-		final EntityPersister orderDescriptor = sessionFactory().getMetamodel().entityPersister( Order.class );
+		final EntityPersister orderDescriptor = sessionFactory().getMappingMetamodel().getEntityDescriptor( Order.class );
 		final BytecodeEnhancementMetadata orderEnhancementMetadata = orderDescriptor.getBytecodeEnhancementMetadata();
 		assertThat( orderEnhancementMetadata.isEnhancedForLazyLoading(), is( true ) );
 
-		final EntityPersister customerDescriptor = sessionFactory().getMetamodel().entityPersister( Customer.class );
+		final EntityPersister customerDescriptor = sessionFactory().getMappingMetamodel().getEntityDescriptor( Customer.class );
 		final BytecodeEnhancementMetadata customerEnhancementMetadata = customerDescriptor.getBytecodeEnhancementMetadata();
 		assertThat( customerEnhancementMetadata.isEnhancedForLazyLoading(), is( true ) );
 

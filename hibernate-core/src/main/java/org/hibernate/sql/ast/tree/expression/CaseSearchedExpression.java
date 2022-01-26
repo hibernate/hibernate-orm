@@ -98,7 +98,7 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 		sqlExpressionResolver.resolveSqlSelection(
 				this,
 				type.getExpressibleJavaType(),
-				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
+				creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);
 	}
 

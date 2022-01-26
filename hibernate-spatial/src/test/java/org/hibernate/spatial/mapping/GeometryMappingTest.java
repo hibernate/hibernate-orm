@@ -36,7 +36,8 @@ public class GeometryMappingTest {
 	@Test
 	public void testSimpleEntity(SessionFactoryScope scope) {
 		final EntityPersister entityDescriptor = scope.getSessionFactory()
-				.getDomainModel()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
 				.getEntityDescriptor( MLEntity.class );
 		final JdbcTypeRegistry jdbcTypeRegistry = entityDescriptor.getFactory()
 				.getTypeConfiguration()

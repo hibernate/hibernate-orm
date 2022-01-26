@@ -72,14 +72,14 @@ public class HibernateCacheTest extends BaseFunctionalTest {
 		assertThat( slcs.getPutCount(), equalTo( 2L ) );
 		assertTrue( sessionFactory().getCache().containsEntity( Item.class, i.getId() ) );
 
-		final DomainDataRegionTemplate region = (DomainDataRegionTemplate) sessionFactory().getMetamodel()
-				.entityPersister( Item.class )
+		final DomainDataRegionTemplate region = (DomainDataRegionTemplate) sessionFactory().getMappingMetamodel()
+				.getEntityDescriptor( Item.class )
 				.getCacheAccessStrategy()
 				.getRegion();
 		final Object fromCache = region.getCacheStorageAccess().getFromCache(
 				region.getEffectiveKeysFactory().createEntityKey(
 						i.getId(),
-						sessionFactory().getMetamodel().entityPersister( Item.class ),
+						sessionFactory().getMappingMetamodel().getEntityDescriptor( Item.class ),
 						sessionFactory(),
 						null
 				),
@@ -171,14 +171,14 @@ public class HibernateCacheTest extends BaseFunctionalTest {
 //			assertThat( initialVersion, equalTo( cachedVersionValue ) );
 //		}
 
-		final DomainDataRegionTemplate region = (DomainDataRegionTemplate) sessionFactory().getMetamodel()
-				.entityPersister( Item.class )
+		final DomainDataRegionTemplate region = (DomainDataRegionTemplate) sessionFactory().getMappingMetamodel()
+				.getEntityDescriptor( Item.class )
 				.getCacheAccessStrategy()
 				.getRegion();
 		final Object fromCache = region.getCacheStorageAccess().getFromCache(
 				region.getEffectiveKeysFactory().createEntityKey(
 						item.getId(),
-						sessionFactory().getMetamodel().entityPersister( Item.class ),
+						sessionFactory().getMappingMetamodel().getEntityDescriptor( Item.class ),
 						sessionFactory(),
 						null
 				),

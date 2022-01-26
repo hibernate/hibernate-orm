@@ -121,8 +121,10 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 				session = s;
 				if ( readOnlyBeforeAttachedToSession == null ) {
 					// use the default read-only/modifiable setting
-					final EntityPersister persister = s.getFactory().getMetamodel().entityPersister(entityName);
-					setReadOnly( s.getPersistenceContext().isDefaultReadOnly() || !persister.isMutable() );
+					final EntityPersister entityDescriptor = getSession().getFactory().getRuntimeMetamodels()
+							.getMappingMetamodel()
+							.getEntityDescriptor( entityName );
+					setReadOnly( s.getPersistenceContext().isDefaultReadOnly() || !entityDescriptor.isMutable() );
 				}
 				else {
 					// use the read-only/modifiable setting indicated during deserialization
@@ -137,7 +139,10 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		if ( id == null || s == null || entityName == null ) {
 			return null;
 		}
-		return s.generateEntityKey( id, s.getFactory().getMetamodel().entityPersister(entityName));
+		final EntityPersister entityDescriptor = s.getFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
+		return s.generateEntityKey( id, entityDescriptor );
 	}
 
 	@Override
@@ -246,10 +251,10 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 */
 	public final void initializeWithoutLoadIfPossible() {
 		if ( !initialized && session != null && session.isOpenOrWaitingForAutoClose() ) {
-			final EntityKey key = session.generateEntityKey(
-					getInternalIdentifier(),
-					session.getFactory().getMetamodel().entityPersister( getEntityName() )
-			);
+			final EntityPersister entityDescriptor = getSession().getFactory().getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( getEntityName() );
+			final EntityKey key = session.generateEntityKey( getInternalIdentifier(), entityDescriptor );
 			final Object entity = session.getPersistenceContextInternal().getEntity( key );
 			if ( entity != null ) {
 				setImplementation( entity );
@@ -357,8 +362,10 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		errorIfReadOnlySettingNotAvailable();
 		// only update if readOnly is different from current setting
 		if ( this.readOnly != readOnly ) {
-			final EntityPersister persister = session.getFactory().getMetamodel().entityPersister(entityName);
-			if ( !persister.isMutable() && !readOnly ) {
+			final EntityPersister entityDescriptor = getSession().getFactory().getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( entityName );
+			if ( !entityDescriptor.isMutable() && !readOnly ) {
 				throw new IllegalStateException( "cannot make proxies [" + entityName + "#" + id + "] for immutable entities modifiable" );
 			}
 			this.readOnly = readOnly;

@@ -193,7 +193,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 						)
 				),
 				versionBasicType.getJdbcMapping().getJavaTypeDescriptor(),
-				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
 
 		return new BasicFetch<>(
@@ -267,7 +267,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 						)
 				),
 				versionBasicType.getJdbcMapping().getJavaTypeDescriptor(),
-				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
 	}
 

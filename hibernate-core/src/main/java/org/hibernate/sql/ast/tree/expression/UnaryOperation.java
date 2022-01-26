@@ -60,7 +60,7 @@ public class UnaryOperation implements Expression, DomainResultProducer {
 		final SqlSelection sqlSelection = creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 				this,
 				type.getJdbcMapping().getJavaTypeDescriptor(),
-				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
+				creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);
 
 		//noinspection unchecked
@@ -79,7 +79,7 @@ public class UnaryOperation implements Expression, DomainResultProducer {
 		sqlExpressionResolver.resolveSqlSelection(
 				this,
 				type.getJdbcMapping().getJavaTypeDescriptor(),
-				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);
 	}
 

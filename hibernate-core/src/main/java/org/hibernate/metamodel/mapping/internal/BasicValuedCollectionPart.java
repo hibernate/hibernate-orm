@@ -177,7 +177,7 @@ public class BasicValuedCollectionPart
 						)
 				),
 				getJavaType(),
-				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
+				creationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
 	}
 

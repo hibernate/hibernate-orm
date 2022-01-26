@@ -76,7 +76,9 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 		return EnhancementHelper.performWork(
 				this,
 				(session, isTemporarySession) -> {
-					final EntityPersister persister = session.getFactory().getMetamodel().entityPersister( getEntityName() );
+					final EntityPersister persister = session.getFactory()
+							.getMappingMetamodel()
+							.getEntityDescriptor( getEntityName() );
 
 					if ( isTemporarySession ) {
 						final Object id = persister.getIdentifier( target, session );

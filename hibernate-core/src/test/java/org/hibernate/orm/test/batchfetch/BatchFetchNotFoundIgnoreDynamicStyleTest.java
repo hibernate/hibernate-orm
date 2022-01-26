@@ -282,8 +282,10 @@ public class BatchFetchNotFoundIgnoreDynamicStyleTest {
 
 	private static void checkInBatchFetchQueue(long id, Session session, boolean expected) {
 		final SessionImplementor sessionImplementor = (SessionImplementor) session;
-		final EntityPersister persister =
-				sessionImplementor.getFactory().getMetamodel().entityPersister( Task.class );
+		final EntityPersister persister = sessionImplementor.getFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( Task.class );
 		final BatchFetchQueue batchFetchQueue =
 				sessionImplementor.getPersistenceContextInternal().getBatchFetchQueue();
 		assertThat(

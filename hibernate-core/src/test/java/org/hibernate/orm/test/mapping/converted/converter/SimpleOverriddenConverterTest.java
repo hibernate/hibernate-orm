@@ -44,9 +44,8 @@ public class SimpleOverriddenConverterTest extends BaseNonConfigCoreFunctionalTe
 	 */
 	@Test
 	public void testSimpleConvertOverrides() {
-        final EntityPersister ep = sessionFactory().getMetamodel().entityPersister(Sub.class.getName());
-		final JdbcTypeRegistry jdbcTypeRegistry = sessionFactory().getTypeConfiguration()
-				.getJdbcTypeRegistry();
+        final EntityPersister ep = sessionFactory().getMappingMetamodel().getEntityDescriptor(Sub.class.getName());
+		final JdbcTypeRegistry jdbcTypeRegistry = sessionFactory().getTypeConfiguration().getJdbcTypeRegistry();
 
 		BasicType<?> type = (BasicType<?>) ep.getPropertyType( "it" );
 		assertTyping( StringJavaType.class, type.getJavaTypeDescriptor() );

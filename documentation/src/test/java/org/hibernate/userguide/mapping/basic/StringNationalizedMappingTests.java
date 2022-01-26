@@ -14,9 +14,9 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
-import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
@@ -42,9 +42,11 @@ public class StringNationalizedMappingTests {
 	@Test
 	public void testMappings(SessionFactoryScope scope) {
 		// first, verify the type selections...
-		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityOfStrings.class);
-		final JdbcTypeRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
+		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel();
+		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor(EntityOfStrings.class);
+		final JdbcTypeRegistry jdbcTypeRegistry = mappingMetamodel.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();

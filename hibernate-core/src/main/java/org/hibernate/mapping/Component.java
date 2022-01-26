@@ -196,7 +196,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 		if ( localType == null ) {
 			synchronized ( this ) {
-				if ( type == null ) {
+				localType = type;
+				if ( localType == null ) {
 					// Make sure this is sorted which is important especially for synthetic components
 					// Other components should be sorted already
 					sortProperties( true );
@@ -206,8 +207,6 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 							: new ComponentType( this, originalPropertyOrder, getBuildingContext() );
 
 					this.type = localType;
-				} else {
-					localType = type;
 				}
 			}
 		}

@@ -10,17 +10,19 @@ import org.hibernate.MappingException;
 import org.hibernate.type.Type;
 
 /**
- * Defines operations common to "compiled" mappings (ie. {@code SessionFactory})
- * and "uncompiled" mappings (ie. {@code Configuration}) that are used by
- * implementors of {@code Type}.
+ * Declares operations used by implementors of {@link Type} that are common to
+ * "compiled" mappings held at runtime by a {@link org.hibernate.SessionFactory}
+ * and "uncompiled" mappings held by a {@link org.hibernate.cfg.Configuration}.
  *
  * @see Type
  * @see org.hibernate.internal.SessionFactoryImpl
  * @see org.hibernate.cfg.Configuration
+ *
  * @author Gavin King
  *
  * @deprecated Use {@link org.hibernate.type.spi.TypeConfiguration},
- * {@link org.hibernate.boot.Metadata} or {@link org.hibernate.metamodel.RuntimeMetamodels}
+ * {@link org.hibernate.boot.Metadata}, or
+ * {@link org.hibernate.metamodel.RuntimeMetamodels}
  * to access such information
  */
 @Deprecated(since = "6.0")

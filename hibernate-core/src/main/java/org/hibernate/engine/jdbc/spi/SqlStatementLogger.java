@@ -85,30 +85,8 @@ public class SqlStatementLogger {
 		return logToStdout;
 	}
 
-	/**
-	 * Enable (true) or disable (false) logging to stdout.
-	 *
-	 * @param logToStdout True to enable logging to stdout; false to disable.
-	 *
-	 * @deprecated Will likely be removed:
-	 * Should either become immutable or threadsafe.
-	 */
-	@Deprecated
-	public void setLogToStdout(boolean logToStdout) {
-		this.logToStdout = logToStdout;
-	}
-
 	public boolean isFormat() {
 		return format;
-	}
-
-	/**
-	 * @deprecated Will likely be removed:
-	 * Should either become immutable or threadsafe.
-	 */
-	@Deprecated
-	public void setFormat(boolean format) {
-		this.format = format;
 	}
 
 	public long getLogSlowQuery() {

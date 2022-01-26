@@ -26,6 +26,7 @@ import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
+import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
@@ -409,6 +410,9 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			String idpath2 = extendPath( path, idPropName );
 			addPropertyPath( idpath2, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
 			initPropertyPaths( idpath2, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
+		}
+		else if ( (! etype.isNullable() ) && idtype.isComponentType() && idtype instanceof EmbeddedComponentType ) {
+			initComponentPropertyPaths( path, (CompositeType) idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
 		}
 	}
 

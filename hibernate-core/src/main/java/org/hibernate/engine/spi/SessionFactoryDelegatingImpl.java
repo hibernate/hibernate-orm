@@ -54,8 +54,9 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Base delegating implementation of the SessionFactory and SessionFactoryImplementor
- * contracts for intended for easier implementation of SessionFactory.
+ * Base delegating implementation of the {@link SessionFactory} and
+ * {@link SessionFactoryImplementor} contracts for intended for easier
+ * implementation of {@link SessionFactory}.
  *
  * @author Steve Ebersole
  */
@@ -195,6 +196,16 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.getProperties();
 	}
 
+	@Override
+	public JdbcServices getJdbcServices() {
+		return delegate.getJdbcServices();
+	}
+
+	@Override
+	public SqlStringGenerationContext getSqlStringGenerationContext() {
+		return delegate.getSqlStringGenerationContext();
+	}
+
 	@Deprecated
 	public EntityPersister getEntityPersister(String entityName) throws MappingException {
 		return delegate.getRuntimeMetamodels()
@@ -221,16 +232,6 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		// for the time being, leave this calling `MetamodelImplementor` to avoid
 		// creating the map
 		return delegate.getMetamodel().collectionPersisters();
-	}
-
-	@Override
-	public JdbcServices getJdbcServices() {
-		return delegate.getJdbcServices();
-	}
-
-	@Override
-	public SqlStringGenerationContext getSqlStringGenerationContext() {
-		return delegate.getSqlStringGenerationContext();
 	}
 
 	@Deprecated
@@ -375,7 +376,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.getCriteriaBuilder();
 	}
 
-	@Override @SuppressWarnings("deprecation")
+	@Override @Deprecated
 	public MetamodelImplementor getMetamodel() {
 		return delegate.getMetamodel();
 	}

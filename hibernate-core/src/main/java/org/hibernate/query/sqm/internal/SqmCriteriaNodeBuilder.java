@@ -456,7 +456,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			expressibleType = (DomainType<R>) typeConfiguration.resolveTupleType( sqmExpressions );
 		}
 		else {
-			expressibleType = typeConfiguration.getSessionFactory().getMetamodel().embeddable( tupleType );
+			expressibleType = typeConfiguration.getSessionFactory().getJpaMetamodel().embeddable( tupleType );
 		}
 		return tuple( expressibleType, sqmExpressions );
 	}
@@ -962,15 +962,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <T> SqmExpression<T> nullLiteral(Class<T> resultClass) {
 		final TypeConfiguration typeConfiguration = getTypeConfiguration();
 		final BasicType<T> basicTypeForJavaType = typeConfiguration.getBasicTypeForJavaType( resultClass );
-		final SqmExpressible<T> sqmExpressible;
-		if ( basicTypeForJavaType == null ) {
-			sqmExpressible = typeConfiguration.getSessionFactory()
-					.getMetamodel()
-					.managedType( resultClass );
-		}
-		else {
-			sqmExpressible = basicTypeForJavaType;
-		}
+		final SqmExpressible<T> sqmExpressible = basicTypeForJavaType == null
+				? typeConfiguration.getSessionFactory().getJpaMetamodel().managedType( resultClass )
+				: basicTypeForJavaType;
 		return new SqmLiteralNull<>(sqmExpressible, this );
 	}
 

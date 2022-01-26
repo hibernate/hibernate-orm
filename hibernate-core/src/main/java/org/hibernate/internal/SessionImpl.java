@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.persistence.metamodel.Metamodel;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.Filter;
@@ -114,7 +115,6 @@ import org.hibernate.loader.access.IdentifierLoadAccessImpl;
 import org.hibernate.loader.access.LoadAccessContext;
 import org.hibernate.loader.access.NaturalIdLoadAccessImpl;
 import org.hibernate.loader.access.SimpleNaturalIdLoadAccessImpl;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.procedure.ProcedureCall;
@@ -334,7 +334,7 @@ public class SessionImpl
 
 	@Override
 	public SharedSessionBuilder sessionWithOptions() {
-		return new SharedSessionBuilderImpl( this );
+		return new SharedSessionBuilderImpl<>( this );
 	}
 
 	@Override
@@ -2703,15 +2703,19 @@ public class SessionImpl
 	}
 
 	@Override
-	public MetamodelImplementor getMetamodel() {
+	public Metamodel getMetamodel() {
 		checkOpen();
-		return getFactory().getMetamodel();
+		return getFactory().getJpaMetamodel();
 	}
 
 	@Override
 	public <T> RootGraphImplementor<T> createEntityGraph(Class<T> rootType) {
 		checkOpen();
-		return new RootGraphImpl<>( null, getMetamodel().entity( rootType ), getEntityManagerFactory().getJpaMetamodel() );
+		return new RootGraphImpl<>(
+				null,
+				getFactory().getJpaMetamodel().entity( rootType ),
+				getEntityManagerFactory().getJpaMetamodel()
+		);
 	}
 
 	@Override

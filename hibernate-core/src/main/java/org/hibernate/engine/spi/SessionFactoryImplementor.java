@@ -169,7 +169,10 @@ public interface SessionFactoryImplementor
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// map these to Metamodel
 
-	@Override @SuppressWarnings("deprecation")
+	/**
+	 * @deprecated no longer for internal use, use {@link #getMappingMetamodel()} or {@link #getJpaMetamodel()}
+	 */
+	@Override @Deprecated
 	MetamodelImplementor getMetamodel();
 
 	RootGraphImplementor<?> findEntityGraphByName(String name);

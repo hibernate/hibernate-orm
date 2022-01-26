@@ -48,6 +48,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
+import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
@@ -254,7 +255,12 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	@Override
 	public Set<Join<?, ?>> getCorrelatedJoins() {
 		final Set<Join<?, ?>> correlatedJoins = new HashSet<>();
-		for ( SqmRoot<?> root : getQuerySpec().getFromClause().getRoots() ) {
+		final SqmFromClause fromClause = getQuerySpec().getFromClause();
+		if ( fromClause == null ) {
+			return correlatedJoins;
+		}
+
+		for ( SqmRoot<?> root : fromClause.getRoots() ) {
 			if ( root instanceof SqmCorrelation<?, ?> ) {
 				for ( SqmJoin<?, ?> sqmJoin : root.getSqmJoins() ) {
 					if ( sqmJoin instanceof SqmCorrelation<?, ?> && sqmJoin instanceof Join<?, ?> ) {

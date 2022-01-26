@@ -28,9 +28,7 @@ public class PrimaryKey extends Constraint {
 
 	@Override
 	public void addColumn(Column column) {
-		final Iterator<Column> columnIterator = getTable().getColumnIterator();
-		while ( columnIterator.hasNext() ) {
-			final Column next = columnIterator.next();
+		for ( Column next : getTable().getColumns() ) {
 			if ( next.getCanonicalName().equals( column.getCanonicalName() ) ) {
 				next.setNullable( false );
 				if ( log.isDebugEnabled() ) {
@@ -62,9 +60,9 @@ public class PrimaryKey extends Constraint {
 
 	public String sqlConstraintString(Dialect dialect) {
 		StringBuilder buf = new StringBuilder("primary key (");
-		Iterator iter = getColumnIterator();
+		Iterator<Column> iter = getColumnIterator();
 		while ( iter.hasNext() ) {
-			buf.append( ( (Column) iter.next() ).getQuotedName(dialect) );
+			buf.append( iter.next().getQuotedName(dialect) );
 			if ( iter.hasNext() ) {
 				buf.append(", ");
 			}

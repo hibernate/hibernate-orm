@@ -67,12 +67,7 @@ public final class MappingHelper {
 
 	public static void injectParameters(Object type, Properties parameters) {
 		if ( type instanceof ParameterizedType ) {
-			if ( parameters == null ) {
-				( (ParameterizedType) type ).setParameterValues( EMPTY_PROPERTIES );
-			}
-			else {
-				( (ParameterizedType) type ).setParameterValues( parameters );
-			}
+			( (ParameterizedType) type ).setParameterValues( parameters == null ? EMPTY_PROPERTIES : parameters );
 		}
 		else if ( parameters != null && !parameters.isEmpty() ) {
 			MappingModelCreationLogger.LOGGER.debugf(

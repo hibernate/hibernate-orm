@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.mapping.JoinedSubclass;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 
 /**
@@ -26,7 +27,7 @@ public class CreateKeySecondPass implements SecondPass {
 		this.joinedSubClass = joinedSubClass;
 	}
 
-	public void doSecondPass(Map persistentClasses) throws MappingException {
+	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
 		if ( rootClass != null ) {
 			rootClass.createPrimaryKey();
 		}

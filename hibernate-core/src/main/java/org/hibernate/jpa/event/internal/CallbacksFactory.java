@@ -13,11 +13,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.jpa.event.spi.Callback;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
-import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -68,9 +66,7 @@ public final class CallbacksFactory {
 			registry.registerCallbacks( persistentClass.getMappedClass(),
 					buildCallbacks( persistentClass.getCallbackDefinitions(), beanRegistry ) );
 
-			for ( @SuppressWarnings("unchecked") Iterator<Property> propertyIterator = persistentClass.getDeclaredPropertyIterator();
-					propertyIterator.hasNext(); ) {
-				final Property property = propertyIterator.next();
+			for ( Property property : persistentClass.getDeclaredProperties() ) {
 				registry.registerCallbacks( persistentClass.getMappedClass(),
 						buildCallbacks( property.getCallbackDefinitions(), beanRegistry ) );
 			}

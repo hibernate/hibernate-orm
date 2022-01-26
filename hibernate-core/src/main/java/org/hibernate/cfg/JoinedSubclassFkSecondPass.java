@@ -11,6 +11,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.TableBinder;
 import org.hibernate.mapping.JoinedSubclass;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
 
 /**
@@ -39,7 +40,7 @@ public class JoinedSubclassFkSecondPass extends FkSecondPass {
 		return true;
 	}
 
-	public void doSecondPass(Map persistentClasses) throws MappingException {
+	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
 		TableBinder.bindFk( entity.getSuperclass(), entity, columns, value, false, buildingContext );
 	}
 }

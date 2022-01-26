@@ -7,12 +7,10 @@
 package org.hibernate.mapping;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
@@ -64,11 +62,11 @@ public class ManyToOne extends ToOne {
 		}
 	}
 
-	public void createPropertyRefConstraints(Map persistentClasses) {
+	public void createPropertyRefConstraints(Map<String, PersistentClass> persistentClasses) {
 		if (referencedPropertyName!=null) {
 			// Ensure properties are sorted before we create a foreign key
 			sortProperties();
-			PersistentClass pc = (PersistentClass) persistentClasses.get(getReferencedEntityName() );
+			PersistentClass pc = persistentClasses.get(getReferencedEntityName() );
 			
 			Property property = pc.getReferencedProperty( getReferencedPropertyName() );
 			

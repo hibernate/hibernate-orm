@@ -32,9 +32,7 @@ public class EntityInstantiatorDynamicMap
 
 		entityRoleNames.add( getRoleName() );
 		if ( bootDescriptor.hasSubclasses() ) {
-			final Iterator<PersistentClass> itr = bootDescriptor.getSubclassClosureIterator();
-			while ( itr.hasNext() ) {
-				final PersistentClass subclassInfo = itr.next();
+			for ( PersistentClass subclassInfo : bootDescriptor.getSubclassClosure() ) {
 				entityRoleNames.add( subclassInfo.getEntityName() );
 			}
 		}

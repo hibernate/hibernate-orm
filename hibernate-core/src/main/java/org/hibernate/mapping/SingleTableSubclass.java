@@ -36,6 +36,7 @@ public class SingleTableSubclass extends Subclass {
 		return new JoinedList<>( getSuperclass().getUnjoinedProperties(), getUnjoinedProperties() );
 	}
 
+	@Deprecated
 	protected Iterator<Selectable> getDiscriminatorColumnIterator() {
 		return isDiscriminatorInsertable() && !getDiscriminator().hasFormula()
 				? getDiscriminator().getColumnIterator()

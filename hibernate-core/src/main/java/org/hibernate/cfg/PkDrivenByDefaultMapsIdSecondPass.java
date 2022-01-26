@@ -41,8 +41,8 @@ public class PkDrivenByDefaultMapsIdSecondPass extends FkSecondPass {
 	}
 
 	@Override
-	public void doSecondPass(Map persistentClasses) throws MappingException {
-		PersistentClass referencedEntity = (PersistentClass) persistentClasses.get( referencedEntityName );
+	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
+		PersistentClass referencedEntity = persistentClasses.get( referencedEntityName );
 		if ( referencedEntity == null ) {
 			throw new AnnotationException(
 					"Unknown entity name: " + referencedEntityName

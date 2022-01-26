@@ -7,6 +7,7 @@
 package org.hibernate.cfg;
 
 import org.hibernate.MappingException;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.ToOne;
 
 /**
@@ -30,7 +31,7 @@ public class SimpleToOneFkSecondPass extends FkSecondPass {
 		return false;
 	}
 
-	public void doSecondPass(java.util.Map persistentClasses) throws MappingException {
+	public void doSecondPass(java.util.Map<String, PersistentClass> persistentClasses) throws MappingException {
 		value.createForeignKey();
 	}
 }

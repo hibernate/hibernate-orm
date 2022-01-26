@@ -397,9 +397,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				}
 
 				// unique keys
-				final Iterator<UniqueKey> ukItr = table.getUniqueKeyIterator();
-				while ( ukItr.hasNext() ) {
-					final UniqueKey uniqueKey = ukItr.next();
+				for ( UniqueKey uniqueKey : table.getUniqueKeys().values() ) {
 					checkExportIdentifier( uniqueKey, exportIdentifiers );
 					applySqlStrings(
 							dialect.getUniqueKeyExporter().getSqlCreateStrings( uniqueKey, metadata,
@@ -431,9 +429,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				}
 
 				// foreign keys
-				final Iterator<ForeignKey> fkItr = table.getForeignKeyIterator();
-				while ( fkItr.hasNext() ) {
-					final ForeignKey foreignKey = fkItr.next();
+				for ( ForeignKey foreignKey : table.getForeignKeys().values() ) {
 					applySqlStrings(
 							dialect.getForeignKeyExporter().getSqlCreateStrings( foreignKey, metadata,
 									sqlStringGenerationContext

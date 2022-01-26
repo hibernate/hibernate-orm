@@ -75,12 +75,9 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			HibernateSchemaManagementTool tool,
 			SchemaFilter schemaFilter) {
 		this.tool = tool;
-		if ( schemaFilter == null ) {
-			this.schemaFilter = DefaultSchemaFilter.INSTANCE;
-		}
-		else {
-			this.schemaFilter = schemaFilter;
-		}
+		this.schemaFilter = schemaFilter == null
+				? DefaultSchemaFilter.INSTANCE
+				: schemaFilter;
 	}
 
 	private UniqueConstraintSchemaUpdateStrategy uniqueConstraintStrategy;
@@ -325,9 +322,6 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			ExecutionOptions options,
 			SqlStringGenerationContext sqlStringGenerationContext,
 			GenerationTarget... targets) {
-		final Database database = metadata.getDatabase();
-
-		//noinspection unchecked
 		applySqlStrings(
 				false,
 				table.sqlAlterStrings(
@@ -394,9 +388,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		if ( uniqueConstraintStrategy != UniqueConstraintSchemaUpdateStrategy.SKIP ) {
 			final Exporter<Constraint> exporter = dialect.getUniqueKeyExporter();
 
-			final Iterator ukItr = table.getUniqueKeyIterator();
-			while ( ukItr.hasNext() ) {
-				final UniqueKey uniqueKey = (UniqueKey) ukItr.next();
+			for ( UniqueKey uniqueKey : table.getUniqueKeys().values() ) {
 				// Skip if index already exists. Most of the time, this
 				// won't work since most Dialects use Constraints. However,
 				// keep it for the few that do use Indexes.
@@ -449,10 +441,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		if ( dialect.hasAlterTable() ) {
 			final Exporter<ForeignKey> exporter = dialect.getForeignKeyExporter();
 
-			@SuppressWarnings("unchecked")
-			final Iterator<ForeignKey> fkItr = table.getForeignKeyIterator();
-			while ( fkItr.hasNext() ) {
-				final ForeignKey foreignKey = fkItr.next();
+			for ( ForeignKey foreignKey : table.getForeignKeys().values() ) {
 				if ( foreignKey.isPhysicalConstraint() && foreignKey.isCreationEnabled() ) {
 					boolean existingForeignKeyFound = false;
 					if ( tableInformation != null ) {

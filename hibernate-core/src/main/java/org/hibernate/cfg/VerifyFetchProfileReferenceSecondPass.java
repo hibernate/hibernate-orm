@@ -18,9 +18,9 @@ import org.hibernate.mapping.PersistentClass;
  * @author Hardy Ferentschik
  */
 public class VerifyFetchProfileReferenceSecondPass implements SecondPass {
-	private String fetchProfileName;
-	private FetchProfile.FetchOverride fetch;
-	private MetadataBuildingContext buildingContext;
+	private final String fetchProfileName;
+	private final FetchProfile.FetchOverride fetch;
+	private final MetadataBuildingContext buildingContext;
 
 	public VerifyFetchProfileReferenceSecondPass(
 			String fetchProfileName,
@@ -31,7 +31,7 @@ public class VerifyFetchProfileReferenceSecondPass implements SecondPass {
 		this.buildingContext = buildingContext;
 	}
 
-	public void doSecondPass(Map persistentClasses) throws MappingException {
+	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
 		org.hibernate.mapping.FetchProfile profile = buildingContext.getMetadataCollector().getFetchProfile(
 				fetchProfileName
 		);

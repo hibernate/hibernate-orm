@@ -6,7 +6,6 @@
  */
 package org.hibernate.tool.schema.internal;
 
-import java.util.Iterator;
 import java.util.Locale;
 
 import org.hibernate.boot.Metadata;
@@ -137,9 +136,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			);
 		}
 
-		final Iterator<Column> columnIter = table.getColumnIterator();
-		while ( columnIter.hasNext() ) {
-			final Column column = columnIter.next();
+		for ( Column column : table.getColumns() ) {
 			final ColumnInformation existingColumn = tableInformation.getColumn( Identifier.toIdentifier( column.getQuotedName() ) );
 			if ( existingColumn == null ) {
 				throw new SchemaManagementException(

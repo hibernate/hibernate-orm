@@ -214,9 +214,25 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	}
 
 	/**
-	 * Iterate over subclasses in a special 'order', most derived subclasses
-	 * first.
+	 * Get the subclasses in a special 'order', most derived subclasses first.
 	 */
+	public List<Subclass> getSubclasses() {
+		@SuppressWarnings("unchecked")
+		List<Subclass>[] iters = new List[subclasses.size() + 1];
+		int i = 0;
+		for ( Subclass subclass : subclasses ) {
+			iters[i++] = subclass.getSubclasses();
+		}
+		iters[i] = subclasses;
+		return new JoinedList<>( iters );
+	}
+
+	/**
+	 * Iterate over subclasses in a special 'order', most derived subclasses first.
+	 *
+	 * @deprecated use {@link #getSubclasses()}
+	 */
+	@Deprecated(since = "6.0")
 	public Iterator<Subclass> getSubclassIterator() {
 		@SuppressWarnings("unchecked")
 		Iterator<Subclass>[] iters = new Iterator[subclasses.size() + 1];
@@ -229,13 +245,21 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		return new JoinedIterator<>( iters );
 	}
 
+	public List<PersistentClass> getSubclassClosure() {
+		ArrayList<List<PersistentClass>> lists = new ArrayList<>();
+		lists.add( List.of( this ) );
+		for ( Subclass subclass : getSubclasses() ) {
+			lists.add( subclass.getSubclassClosure() );
+		}
+		return new JoinedList<>( lists );
+	}
+
+	@Deprecated(since = "6.0")
 	public Iterator<PersistentClass> getSubclassClosureIterator() {
 		ArrayList<Iterator<PersistentClass>> iters = new ArrayList<>();
 		iters.add( new SingletonIterator<>( this ) );
-		Iterator<Subclass> iter = getSubclassIterator();
-		while ( iter.hasNext() ) {
-			PersistentClass clazz =  iter.next();
-			iters.add( clazz.getSubclassClosureIterator() );
+		for ( Subclass subclass : getSubclasses() ) {
+			iters.add( subclass.getSubclassClosureIterator() );
 		}
 		return new JoinedIterator<>( iters );
 	}
@@ -244,8 +268,8 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		return getRootTable();
 	}
 
-	public Iterator<Subclass> getDirectSubclasses() {
-		return subclasses.iterator();
+	public List<Subclass> getDirectSubclasses() {
+		return subclasses;
 	}
 
 	@Override
@@ -328,6 +352,9 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	@Deprecated(since = "6.0")
 	public abstract Iterator<Table> getTableClosureIterator();
 
+	public abstract List<KeyValue> getKeyClosure();
+
+	@Deprecated(since = "6.0")
 	public abstract Iterator<KeyValue> getKeyClosureIterator();
 
 	protected void addSubclassProperty(Property prop) {
@@ -783,7 +810,10 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	 * defined in superclasses of the mapping inheritance are not included.
 	 *
 	 * @return An iterator over the "normal" properties.
+	 *
+	 * @deprecated use {@link #getProperties()}
 	 */
+	@Deprecated(since = "6.0")
 	public Iterator<Property> getPropertyIterator() {
 		ArrayList<Iterator<Property>> iterators = new ArrayList<>();
 		iterators.add( properties.iterator() );
@@ -1006,6 +1036,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		return getUnjoinedProperties();
 	}
 
+	@Deprecated(since = "6.0")
 	protected Iterator<Selectable> getDiscriminatorColumnIterator() {
 		return Collections.emptyIterator();
 	}
@@ -1113,11 +1144,20 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	}
 
 	// The following methods are added to support @MappedSuperclass in the metamodel
+	public List<Property> getDeclaredProperties() {
+		ArrayList<List<Property>> lists = new ArrayList<>();
+		lists.add( declaredProperties );
+		for (Join join : joins) {
+			lists.add( join.getDeclaredProperties() );
+		}
+		return new JoinedList<>( lists );
+	}
+
+	@Deprecated(since = "6.0")
 	public Iterator<Property> getDeclaredPropertyIterator() {
 		ArrayList<Iterator<Property>> iterators = new ArrayList<>();
 		iterators.add( declaredProperties.iterator() );
-		for ( int i = 0; i < joins.size(); i++ ) {
-			Join join = joins.get( i );
+		for (Join join : joins) {
 			iterators.add( join.getDeclaredPropertyIterator() );
 		}
 		return new JoinedIterator<>( iterators );

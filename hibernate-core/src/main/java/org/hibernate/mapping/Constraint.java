@@ -84,7 +84,8 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 			if ( o instanceof Column ) {
 				defensive.add( (Column) o );
 			}
-			//else: others might be Formula instances. They don't need to be part of the name generation.
+			// else: others might be Formula instances.
+			// They don't need to be part of the name generation.
 		}
 		return generateName( prefix, table, defensive.toArray( new Column[0] ) );
 	}
@@ -156,6 +157,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		return  columns.get( i );
 	}
 
+	@Deprecated(since = "6.0")
 	public Iterator<Column> getColumnIterator() {
 		return columns.iterator();
 	}

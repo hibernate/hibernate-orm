@@ -6,29 +6,20 @@
  */
 package org.hibernate.cfg.annotations;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import jakarta.persistence.SqlResultSetMapping;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.QuerySecondPass;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.ToOne;
-import org.hibernate.mapping.Value;
 import org.hibernate.boot.query.SqlResultSetMappingDescriptor;
 
 /**
  * @author Emmanuel Bernard
  */
 public class ResultsetMappingSecondPass implements QuerySecondPass {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ResultsetMappingSecondPass.class );
+//	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ResultsetMappingSecondPass.class );
 
 	private final SqlResultSetMapping ann;
 	private final MetadataBuildingContext context;
@@ -41,7 +32,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 	}
 
 	@Override
-	public void doSecondPass(Map persistentClasses) throws MappingException {
+	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
 		if ( ann == null ) {
 			return;
 		}
@@ -196,26 +187,26 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 //			context.getMetadataCollector().addResultSetMapping( definition );
 //		}
 	}
-
-	private String normalizeColumnQuoting(String name) {
-		return context.getMetadataCollector().getDatabase().toIdentifier( name ).render();
-	}
-
-	private List<String> getFollowers(Iterator parentPropIter, String reducedName, String name) {
-		boolean hasFollowers = false;
-		List<String> followers = new ArrayList<>();
-		while ( parentPropIter.hasNext() ) {
-			String currentPropertyName = ( (Property) parentPropIter.next() ).getName();
-			String currentName = reducedName + '.' + currentPropertyName;
-			if ( hasFollowers ) {
-				followers.add( currentName );
-			}
-			if ( name.equals( currentName ) ) {
-				hasFollowers = true;
-			}
-		}
-		return followers;
-	}
+//
+//	private String normalizeColumnQuoting(String name) {
+//		return context.getMetadataCollector().getDatabase().toIdentifier( name ).render();
+//	}
+//
+//	private List<String> getFollowers(Iterator<Property> parentPropIter, String reducedName, String name) {
+//		boolean hasFollowers = false;
+//		List<String> followers = new ArrayList<>();
+//		while ( parentPropIter.hasNext() ) {
+//			String currentPropertyName = parentPropIter.next().getName();
+//			String currentName = reducedName + '.' + currentPropertyName;
+//			if ( hasFollowers ) {
+//				followers.add( currentName );
+//			}
+//			if ( name.equals( currentName ) ) {
+//				hasFollowers = true;
+//			}
+//		}
+//		return followers;
+//	}
 //
 //	private Iterator getSubPropertyIterator(PersistentClass pc, String reducedName) {
 //		Value value = pc.getRecursiveProperty( reducedName ).getValue();

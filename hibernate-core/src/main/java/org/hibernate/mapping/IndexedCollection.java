@@ -6,7 +6,6 @@
  */
 package org.hibernate.mapping;
 
-import java.util.Iterator;
 import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
@@ -76,7 +75,7 @@ public abstract class IndexedCollection extends Collection {
 			}
 			getCollectionTable().setPrimaryKey(pk);
 		}
-		else {
+//		else {
 			// don't create a unique key, 'cos some
 			// databases don't like a UK on nullable
 			// columns
@@ -84,7 +83,7 @@ public abstract class IndexedCollection extends Collection {
 			list.addAll( getKey().getConstraintColumns() );
 			list.addAll( getIndex().getConstraintColumns() );
 			getCollectionTable().createUniqueKey(list);*/
-		}
+//		}
 	}
 
 	public void validate(Mapping mapping) throws MappingException {

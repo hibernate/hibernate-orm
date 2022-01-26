@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -370,9 +369,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 				continue;
 			}
 
-			final Iterator<ForeignKey> fks = table.getForeignKeyIterator();
-			while ( fks.hasNext() ) {
-				final ForeignKey foreignKey = fks.next();
+			for ( ForeignKey foreignKey : table.getForeignKeys().values() ) {
 				applySqlStrings(
 						dialect.getForeignKeyExporter().getSqlDropStrings( foreignKey, metadata,
 								sqlStringGenerationContext

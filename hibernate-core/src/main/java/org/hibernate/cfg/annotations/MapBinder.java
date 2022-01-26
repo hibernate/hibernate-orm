@@ -7,7 +7,7 @@
 package org.hibernate.cfg.annotations;
 
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -129,7 +129,7 @@ public class MapBinder extends CollectionBinder {
 				// check if the index column has been mapped by the associated entity to a property;
 				// @MapKeyColumn only maps a column to the primary table for the one-to-many, so we only
 				// need to check "un-joined" properties.
-				if ( !propertyIteratorContainsColumn( persistentClass.getUnjoinedPropertyIterator(), column ) ) {
+				if ( !propertiesContainColumn( persistentClass.getUnjoinedProperties(), column ) ) {
 					// The index column is not mapped to an associated entity property so we can
 					// safely make the index column nullable.
 					column.setNullable( true );
@@ -138,9 +138,8 @@ public class MapBinder extends CollectionBinder {
 		}
 	}
 
-	private boolean propertyIteratorContainsColumn(Iterator<Property> propertyIterator, Column column) {
-		for (; propertyIterator.hasNext(); ) {
-			final Property property = propertyIterator.next();
+	private boolean propertiesContainColumn(List<Property> properties, Column column) {
+		for ( Property property : properties ) {
 			for ( Selectable selectable: property.getSelectables() ) {
 				if ( column.equals( selectable ) ) {
 					final Column iteratedColumn = (Column) selectable;

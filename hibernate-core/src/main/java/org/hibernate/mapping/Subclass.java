@@ -155,12 +155,20 @@ public class Subclass extends PersistentClass {
 		);
 	}
 
-	@Override
+	@Override @Deprecated
 	public Iterator<KeyValue> getKeyClosureIterator() {
 		return new JoinedIterator<>(
 				getSuperclass().getKeyClosureIterator(),
 				new SingletonIterator<>( getKey() )
 			);
+	}
+
+	@Override
+	public List<KeyValue> getKeyClosure() {
+		return new JoinedList<>(
+				getSuperclass().getKeyClosure(),
+				List.of( getKey() )
+		);
 	}
 
 	@Override

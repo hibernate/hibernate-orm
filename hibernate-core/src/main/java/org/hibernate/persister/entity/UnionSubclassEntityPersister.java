@@ -34,8 +34,7 @@ import org.hibernate.id.IdentityGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.StaticFilterAliasGenerator;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.collections.JoinedIterator;
-import org.hibernate.internal.util.collections.SingletonIterator;
+import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Subclass;
@@ -162,9 +161,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				persistentClass.getEntityName()
 		);
 		if ( persistentClass.isPolymorphic() ) {
-			Iterator<Subclass> subclassIter = persistentClass.getSubclassIterator();
-			while ( subclassIter.hasNext() ) {
-				Subclass subclass = subclassIter.next();
+			for ( Subclass subclass : persistentClass.getSubclasses() ) {
 				subclassByDiscriminatorValue.put( subclass.getSubclassId(), subclass.getEntityName() );
 			}
 		}
@@ -196,9 +193,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			tableExpressions.add( generateSubquery( parentPersistentClass, creationContext.getMetadata() ) );
 			parentPersistentClass = parentPersistentClass.getSuperclass();
 		}
-		final Iterator<PersistentClass> subclassClosureIterator = persistentClass.getSubclassClosureIterator();
-		while ( subclassClosureIterator.hasNext() ) {
-			final PersistentClass subPersistentClass = subclassClosureIterator.next();
+		for ( PersistentClass subPersistentClass : persistentClass.getSubclassClosure() ) {
 			if ( subPersistentClass.hasSubclasses() ) {
 				tableExpressions.add( generateSubquery( subPersistentClass, creationContext.getMetadata() ) );
 			}
@@ -475,13 +470,12 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		StringBuilder buf = new StringBuilder()
 				.append( "( " );
 
-		Iterator<PersistentClass> siter = new JoinedIterator<>(
-				new SingletonIterator<>( model ),
-				model.getSubclassIterator()
+		List<PersistentClass> classes = new JoinedList<>(
+				List.of( model ),
+				Collections.unmodifiableList( model.getSubclasses() )
 		);
 
-		while ( siter.hasNext() ) {
-			PersistentClass clazz = siter.next();
+		for ( PersistentClass clazz : classes ) {
 			Table table = clazz.getTable();
 			if ( !table.isAbstractUnionTable() ) {
 				//TODO: move to .sql package!!

@@ -1155,9 +1155,7 @@ public abstract class AbstractEntityPersister
 			return true;
 		}
 
-		final Iterator<Subclass> subclassIterator = persistentClass.getSubclassIterator();
-		while ( subclassIterator.hasNext() ) {
-			final Subclass subclass = subclassIterator.next();
+		for ( Subclass subclass : persistentClass.getSubclasses() ) {
 			if ( subclass.isCached() ) {
 				return true;
 			}

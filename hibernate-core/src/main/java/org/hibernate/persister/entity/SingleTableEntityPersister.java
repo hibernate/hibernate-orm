@@ -187,11 +187,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		// JOINS
 
-		Iterator<Join> joinIter = persistentClass.getJoinClosureIterator();
 		int j = 1;
 		final Dialect dialect = factory.getJdbcServices().getDialect();
-		while ( joinIter.hasNext() ) {
-			Join join = joinIter.next();
+		for ( Join join : persistentClass.getJoinClosure() ) {
 			qualifiedTableNames[j] = determineTableName( join.getTable() );
 			isInverseTable[j] = join.isInverse();
 			isNullableTable[j] = join.isOptional();
@@ -253,9 +251,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		isInverses.add( Boolean.FALSE );
 		isNullables.add( Boolean.FALSE );
 		isLazies.add( Boolean.FALSE );
-		joinIter = persistentClass.getSubclassJoinClosureIterator();
-		while ( joinIter.hasNext() ) {
-			Join join = joinIter.next();
+		for ( Join join : persistentClass.getSubclassJoinClosure() ) {
 			isConcretes.add( persistentClass.isClassOrSuperclassTable( join.getTable() ) );
 			isClassOrSuperclassJoins.add( persistentClass.isClassOrSuperclassJoin( join ) );
 			isInverses.add( join.isInverse() );

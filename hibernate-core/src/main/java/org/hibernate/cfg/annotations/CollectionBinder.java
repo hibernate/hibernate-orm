@@ -2020,10 +2020,8 @@ public abstract class CollectionBinder {
 			}
 			else {
 				//find the appropriate reference key, can be in a join
-				Iterator<Join> joinsIt = referencedEntity.getJoinIterator();
 				KeyValue key = null;
-				while ( joinsIt.hasNext() ) {
-					Join join = joinsIt.next();
+				for ( Join join : referencedEntity.getJoins() ) {
 					if ( join.containsProperty( property ) ) {
 						key = join.getKey();
 						break;

@@ -282,10 +282,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		isNullableTable = new boolean[tableSpan];
 		isInverseTable = new boolean[tableSpan];
 
-		Iterator<Join> joinItr = persistentClass.getJoinClosureIterator();
-		for ( int tableIndex = 0; joinItr.hasNext(); tableIndex++ ) {
-			Join join = joinItr.next();
-
+		int tableIndex = 0;
+		for ( Join join : persistentClass.getJoinClosure() ) {
 			isNullableTable[tableIndex] = join.isOptional();
 			isInverseTable[tableIndex] = join.isInverse();
 
@@ -311,6 +309,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			keyColumnReaders.add( keyColReaders );
 			keyColumnReaderTemplates.add( keyColReaderTemplates );
 			cascadeDeletes.add( key.isCascadeDeleteEnabled() && factory.getJdbcServices().getDialect().supportsCascadeDelete() );
+
+			tableIndex++;
 		}
 
 		naturalOrderTableNames = ArrayHelper.toStringArray( tableNames );
@@ -327,18 +327,16 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		ArrayList<Boolean> isNullables = new ArrayList<>();
 
 		keyColumns = new ArrayList<>();
-		tItr = persistentClass.getSubclassTableClosureIterator();
-		while ( tItr.hasNext() ) {
-			Table tab = tItr.next();
-			isConcretes.add( persistentClass.isClassOrSuperclassTable( tab ) );
+		for ( Table table : persistentClass.getSubclassTableClosure() ) {
+			isConcretes.add( persistentClass.isClassOrSuperclassTable( table ) );
 			isDeferreds.add( Boolean.FALSE );
 			isLazies.add( Boolean.FALSE );
 			isInverses.add( Boolean.FALSE );
 			isNullables.add( Boolean.FALSE );
-			final String tableName = determineTableName( tab );
+			final String tableName = determineTableName( table );
 			subclassTableNames.add( tableName );
 			String[] key = new String[idColumnSpan];
-			List<Column> columns = tab.getPrimaryKey().getColumns();
+			List<Column> columns = table.getPrimaryKey().getColumns();
 			for ( int k = 0; k < idColumnSpan; k++ ) {
 				key[k] = columns.get(k).getQuotedName( factory.getJdbcServices().getDialect() );
 			}
@@ -346,9 +344,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 
 		//Add joins
-		joinItr = persistentClass.getSubclassJoinClosureIterator();
-		while ( joinItr.hasNext() ) {
-			final Join join = joinItr.next();
+		for ( Join join : persistentClass.getSubclassJoinClosure() ) {
 			final Table joinTable = join.getTable();
 
 			isConcretes.add( persistentClass.isClassOrSuperclassTable( joinTable ) );
@@ -446,11 +442,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			throw new AssertionFailure( "Tablespan does not match height of joined-subclass hiearchy." );
 		}
 
-		joinItr = persistentClass.getJoinClosureIterator();
 		int j = coreTableSpan;
-		while ( joinItr.hasNext() ) {
-			Join join = joinItr.next();
-
+		for ( Join join : persistentClass.getJoinClosure() ) {
 			isInverseTable[j] = join.isInverse();
 			isNullableTable[j] = join.isOptional();
 
@@ -746,9 +739,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		associateSubclassNamesToSubclassTableIndex( tableName, classNames, mapping );
 
-		Iterator<Join> itr = persistentClass.getJoinIterator();
-		while ( itr.hasNext() ) {
-			final Join join = itr.next();
+		for ( Join join : persistentClass.getJoins() ) {
 			final String secondaryTableName = join.getTable().getQualifiedName(
 					factory.getSqlStringGenerationContext()
 			);

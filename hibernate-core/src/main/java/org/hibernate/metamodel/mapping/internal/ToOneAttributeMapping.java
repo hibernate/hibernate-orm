@@ -223,9 +223,7 @@ public class ToOneAttributeMapping
 						.getEntityBinding( manyToOne.getReferencedEntityName() );
 				if ( cardinality == Cardinality.LOGICAL_ONE_TO_ONE ) {
 					// Handle join table cases
-					final Iterator<Join> joinClosureIterator = entityBinding.getJoinClosureIterator();
-					while ( joinClosureIterator.hasNext() ) {
-						final Join join = joinClosureIterator.next();
+					for ( Join join : entityBinding.getJoinClosure() ) {
 						if ( join.getPersistentClass().getEntityName().equals( entityBinding.getEntityName() )
 								&& join.getPropertySpan() == 1
 								&& join.getTable() == manyToOne.getTable()

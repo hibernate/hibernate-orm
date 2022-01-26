@@ -38,10 +38,12 @@ public class Subclass extends PersistentClass {
 		this.subclassId = superclass.nextSubclassId();
 	}
 
+	@Override
 	int nextSubclassId() {
 		return getSuperclass().nextSubclassId();
 	}
 
+	@Override
 	public int getSubclassId() {
 		return subclassId;
 	}
@@ -51,55 +53,74 @@ public class Subclass extends PersistentClass {
 		return getSuperclass().getNaturalIdCacheRegionName();
 	}
 
+	@Override
 	public String getCacheConcurrencyStrategy() {
 		return getRootClass().getCacheConcurrencyStrategy();
 	}
 
+	@Override
 	public RootClass getRootClass() {
 		return getSuperclass().getRootClass();
 	}
 
+	@Override
 	public PersistentClass getSuperclass() {
 		return superclass;
 	}
 
+	@Override
 	public Property getIdentifierProperty() {
 		return getSuperclass().getIdentifierProperty();
 	}
 
+	@Override
 	public Property getDeclaredIdentifierProperty() {
 		return null;
 	}
 
+	@Override
 	public KeyValue getIdentifier() {
 		return getSuperclass().getIdentifier();
 	}
+
+	@Override
 	public boolean hasIdentifierProperty() {
 		return getSuperclass().hasIdentifierProperty();
 	}
+
+	@Override
 	public Value getDiscriminator() {
 		return getSuperclass().getDiscriminator();
 	}
+
+	@Override
 	public boolean isMutable() {
 		return getSuperclass().isMutable();
 	}
+
+	@Override
 	public boolean isInherited() {
 		return true;
 	}
+
+	@Override
 	public boolean isPolymorphic() {
 		return true;
 	}
 
+	@Override
 	public void addProperty(Property p) {
 		super.addProperty(p);
 		getSuperclass().addSubclassProperty(p);
 	}
 
+	@Override
 	public void addMappedsuperclassProperty(Property p) {
 		super.addMappedsuperclassProperty( p );
 		getSuperclass().addSubclassProperty(p);
 	}
 
+	@Override
 	public void addJoin(Join j) {
 		super.addJoin(j);
 		getSuperclass().addSubclassJoin(j);
@@ -110,7 +131,7 @@ public class Subclass extends PersistentClass {
 		return new JoinedList<>( getSuperclass().getPropertyClosure(), getProperties() );
 	}
 
-	@Deprecated
+	@Deprecated @Override
 	public Iterator<Property> getPropertyClosureIterator() {
 		return new JoinedIterator<>(
 				getSuperclass().getPropertyClosureIterator(),
@@ -118,60 +139,86 @@ public class Subclass extends PersistentClass {
 			);
 	}
 
+	@Deprecated @Override
 	public Iterator<Table> getTableClosureIterator() {
 		return new JoinedIterator<>(
 				getSuperclass().getTableClosureIterator(),
 				new SingletonIterator<>( getTable() )
 			);
 	}
+
+	@Override
+	public List<Table> getTableClosure() {
+		return new JoinedList<>(
+				getSuperclass().getTableClosure(),
+				List.of( getTable() )
+		);
+	}
+
+	@Override
 	public Iterator<KeyValue> getKeyClosureIterator() {
 		return new JoinedIterator<>(
 				getSuperclass().getKeyClosureIterator(),
 				new SingletonIterator<>( getKey() )
 			);
 	}
+
+	@Override
 	protected void addSubclassProperty(Property p) {
 		super.addSubclassProperty(p);
 		getSuperclass().addSubclassProperty(p);
 	}
+
+	@Override
 	protected void addSubclassJoin(Join j) {
 		super.addSubclassJoin(j);
 		getSuperclass().addSubclassJoin(j);
 	}
 
+	@Override
 	protected void addSubclassTable(Table table) {
 		super.addSubclassTable(table);
 		getSuperclass().addSubclassTable(table);
 	}
 
+	@Override
 	public boolean isVersioned() {
 		return getSuperclass().isVersioned();
 	}
+
+	@Override
 	public Property getVersion() {
 		return getSuperclass().getVersion();
 	}
 
+	@Override
 	public Property getDeclaredVersion() {
 		return null;
 	}
 
+	@Override
 	public boolean hasEmbeddedIdentifier() {
 		return getSuperclass().hasEmbeddedIdentifier();
 	}
+
+	@Override
 	public Class<? extends EntityPersister> getEntityPersisterClass() {
 		return classPersisterClass == null
 				? getSuperclass().getEntityPersisterClass()
 				: classPersisterClass;
 	}
 
+	@Override
 	public Table getRootTable() {
 		return getSuperclass().getRootTable();
 	}
 
+	@Override
 	public KeyValue getKey() {
 		return getSuperclass().getIdentifier();
 	}
 
+	@Override
 	public boolean isExplicitPolymorphism() {
 		return getSuperclass().isExplicitPolymorphism();
 	}
@@ -180,10 +227,12 @@ public class Subclass extends PersistentClass {
 		this.superclass = superclass;
 	}
 
+	@Override
 	public String getWhere() {
 		return getSuperclass().getWhere();
 	}
 
+	@Override
 	public boolean isJoinedSubclass() {
 		return getTable()!=getRootTable();
 	}
@@ -195,18 +244,28 @@ public class Subclass extends PersistentClass {
 		getKey().createForeignKeyOfEntity( getSuperclass().getEntityName() );
 	}
 
+	@Override
 	public void setEntityPersisterClass(Class<? extends EntityPersister> classPersisterClass) {
 		this.classPersisterClass = classPersisterClass;
 	}
 
+
+	@Override
 	public int getJoinClosureSpan() {
 		return getSuperclass().getJoinClosureSpan() + super.getJoinClosureSpan();
 	}
 
+	@Override
 	public int getPropertyClosureSpan() {
 		return getSuperclass().getPropertyClosureSpan() + super.getPropertyClosureSpan();
 	}
 
+	@Override
+	public List<Join> getJoinClosure() {
+		return new JoinedList<>( getSuperclass().getJoinClosure(), super.getJoinClosure() );
+	}
+
+	@Deprecated(since = "6.0")
 	public Iterator<Join> getJoinClosureIterator() {
 		return new JoinedIterator<>(
 			getSuperclass().getJoinClosureIterator(),
@@ -214,26 +273,33 @@ public class Subclass extends PersistentClass {
 		);
 	}
 
+
+	@Override
 	public boolean isClassOrSuperclassJoin(Join join) {
 		return super.isClassOrSuperclassJoin(join) || getSuperclass().isClassOrSuperclassJoin(join);
 	}
 
+	@Override
 	public boolean isClassOrSuperclassTable(Table table) {
 		return super.isClassOrSuperclassTable(table) || getSuperclass().isClassOrSuperclassTable(table);
 	}
 
+	@Override
 	public Table getTable() {
 		return getSuperclass().getTable();
 	}
 
+	@Override
 	public boolean isForceDiscriminator() {
 		return getSuperclass().isForceDiscriminator();
 	}
 
+	@Override
 	public boolean isDiscriminatorInsertable() {
 		return getSuperclass().isDiscriminatorInsertable();
 	}
 
+	@Override
 	public java.util.Set<String> getSynchronizedTables() {
 		HashSet<String> result = new HashSet<>();
 		result.addAll(synchronizedTables);
@@ -241,21 +307,25 @@ public class Subclass extends PersistentClass {
 		return result;
 	}
 
+	@Override
 	public Object accept(PersistentClassVisitor mv) {
 		return mv.accept(this);
 	}
 
+	@Override
 	public java.util.List<FilterConfiguration> getFilters() {
 		java.util.List<FilterConfiguration> filters = new ArrayList<>(super.getFilters());
 		filters.addAll(getSuperclass().getFilters());
 		return filters;
 	}
 
+	@Override
 	public boolean hasSubselectLoadableCollections() {
 		return super.hasSubselectLoadableCollections() ||
 			getSuperclass().hasSubselectLoadableCollections();
 	}
 
+	@Override
 	public String getTuplizerImplClassName(RepresentationMode mode) {
 		String impl = super.getTuplizerImplClassName( mode );
 		if ( impl == null ) {
@@ -264,6 +334,7 @@ public class Subclass extends PersistentClass {
 		return impl;
 	}
 
+	@Override
 	public Map getTuplizerMap() {
 		Map specificTuplizerDefs = super.getTuplizerMap();
 		Map superclassTuplizerDefs = getSuperclass().getTuplizerMap();
@@ -282,6 +353,7 @@ public class Subclass extends PersistentClass {
 		}
 	}
 
+	@Override
 	public Component getIdentifierMapper() {
 		return superclass.getIdentifierMapper();
 	}

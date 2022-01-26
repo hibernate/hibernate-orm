@@ -12,6 +12,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.Test;
 
@@ -31,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Steve Ebersole
  */
 @Jpa
+@NotImplementedYet( strict = false, reason = "This is something Christian is working on" )
 @RequiresDialect( H2Dialect.class )
 @JiraKey("https://hibernate.atlassian.net/browse/HHH-11447")
 public class ProcedureParameterTests {

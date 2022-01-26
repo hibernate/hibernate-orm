@@ -58,10 +58,12 @@
 		<property name="startDate" column="STARTDATE" not-null="false"/>
 		<property name="endDate" column="ENDDATE" insert="false"/>
 		<property name="regionCode" column="REGIONCODE" update="false"/>
+<!--
 	    <property name="salary" type="org.hibernate.orm.test.sql.hand.MonetaryAmountUserType">
 			<column name="AMOUNT" sql-type="float"/>
 			<column name="CURRENCY"/>			
 		</property>
+-->
 	</class>
 	
 	<class name="Order" table="TBL_ORDER">

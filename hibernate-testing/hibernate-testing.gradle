@@ -42,9 +42,6 @@ dependencies {
     implementation libraries.wildfly_transaction_client
 }
 
-
-tasks.test.include '**/*'
-
 tasks.checkstyleMain {
     exclude '**/org/hibernate/orm/test/legacy/**'
 }

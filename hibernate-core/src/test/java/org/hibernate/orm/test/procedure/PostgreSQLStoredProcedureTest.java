@@ -35,9 +35,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import org.hibernate.test.procedure.Person;
-import org.hibernate.test.procedure.Phone;
-
 /**
  * @author Vlad Mihalcea
  */

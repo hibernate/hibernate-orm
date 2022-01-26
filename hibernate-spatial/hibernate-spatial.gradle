@@ -55,5 +55,3 @@ tasks.test {
 	].contains( project.db )
 }
 
-tasks.test.include '**/*'
-

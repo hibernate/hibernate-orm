@@ -31,9 +31,6 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.test.procedure.Person;
-import org.hibernate.test.procedure.Phone;
-import org.hibernate.test.procedure.Vote;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,7 +44,6 @@ import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.StoredProcedureQuery;
 import org.assertj.core.api.Assertions;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

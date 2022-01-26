@@ -6,18 +6,15 @@
  */
 package org.hibernate.orm.test.inheritance.discriminator;
 
-import org.hibernate.Session;
-import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.junit.RequiresDialects;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.test.inheritance.discriminator.InheritingEntity;
-import org.hibernate.test.inheritance.discriminator.ParentEntity;
+import org.hibernate.orm.test.mapping.inheritance.discriminator.InheritingEntity;
+import org.hibernate.orm.test.mapping.inheritance.discriminator.ParentEntity;
 import org.junit.jupiter.api.Test;
 
 /**

@@ -20,8 +20,6 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.test.procedure.Person;
-import org.hibernate.test.procedure.Phone;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

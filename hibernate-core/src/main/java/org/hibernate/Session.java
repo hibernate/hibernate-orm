@@ -455,7 +455,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @param object a detached instance of a persistent class
 	 * @param replicationMode the replication mode to use
+	 *
+	 * @deprecated With no real replacement
 	 */
+	@Deprecated( since = "6.0" )
 	void replicate(Object object, ReplicationMode replicationMode);
 
 	/**
@@ -467,7 +470,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param entityName the entity name
 	 * @param object a detached instance of a persistent class
 	 * @param replicationMode the replication mode to use
+	 *
+	 * @deprecated With no real replacement
 	 */
+	@Deprecated( since = "6.0" )
 	void replicate(String entityName, Object object, ReplicationMode replicationMode) ;
 
 	/**

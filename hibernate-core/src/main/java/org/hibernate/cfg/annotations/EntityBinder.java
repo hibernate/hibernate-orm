@@ -31,6 +31,7 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
@@ -844,12 +845,12 @@ public class EntityBinder {
 		 * Those operations has to be done after the id definition of the persistence class.
 		 * ie after the properties parsing
 		 */
-		Iterator joins = secondaryTables.values().iterator();
-		Iterator joinColumns = secondaryTableJoins.values().iterator();
+		Iterator<Join> joins = secondaryTables.values().iterator();
+		Iterator<Object> joinColumns = secondaryTableJoins.values().iterator();
 
 		while ( joins.hasNext() ) {
 			Object uncastedColumn = joinColumns.next();
-			Join join = (Join) joins.next();
+			Join join = joins.next();
 			createPrimaryColumnsToSecondaryTable( uncastedColumn, propertyHolder, join );
 		}
 	}
@@ -1203,16 +1204,13 @@ public class EntityBinder {
 		//comment and index are processed here
 		if ( table == null ) return;
 		String appliedTable = table.appliesTo();
-		Iterator tables = persistentClass.getTableClosureIterator();
 		Table hibTable = null;
-		while ( tables.hasNext() ) {
-			Table pcTable = (Table) tables.next();
+		for ( Table pcTable : persistentClass.getTableClosure() ) {
 			if ( pcTable.getQuotedName().equals( appliedTable ) ) {
 				//we are in the correct table to find columns
 				hibTable = pcTable;
 				break;
 			}
-			hibTable = null;
 		}
 		if ( hibTable == null ) {
 			//maybe a join/secondary table

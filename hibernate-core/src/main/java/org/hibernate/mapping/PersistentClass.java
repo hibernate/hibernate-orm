@@ -323,6 +323,9 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	@Deprecated(since = "6.0")
 	public abstract Iterator<Property> getPropertyClosureIterator();
 
+	public abstract List<Table> getTableClosure();
+
+	@Deprecated(since = "6.0")
 	public abstract Iterator<Table> getTableClosureIterator();
 
 	public abstract Iterator<KeyValue> getKeyClosureIterator();
@@ -360,10 +363,20 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		return new JoinedList<>( lists );
 	}
 
+	@Deprecated(since = "6.0")
 	public Iterator<Join> getSubclassJoinClosureIterator() {
 		return new JoinedIterator<>( getJoinClosureIterator(), subclassJoins.iterator() );
 	}
 
+	public List<Join> getSubclassJoinClosure() {
+		return new JoinedList<>( getJoinClosure(), subclassJoins );
+	}
+
+	public List<Table> getSubclassTableClosure() {
+		return new JoinedList<>( getTableClosure(), subclassTables );
+	}
+
+	@Deprecated(since = "6.0")
 	public Iterator<Table> getSubclassTableClosureIterator() {
 		return new JoinedIterator<>( getTableClosureIterator(), subclassTables.iterator() );
 	}
@@ -712,10 +725,20 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		return getClass().getName() + '(' + getEntityName() + ')';
 	}
 
+	public List<Join> getJoins() {
+		return joins;
+	}
+
+	public List<Join> getJoinClosure() {
+		return joins;
+	}
+
+	@Deprecated(since = "6.0")
 	public Iterator<Join> getJoinIterator() {
 		return joins.iterator();
 	}
 
+	@Deprecated(since = "6.0")
 	public Iterator<Join> getJoinClosureIterator() {
 		return joins.iterator();
 	}
@@ -739,9 +762,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	public int getJoinNumber(Property prop) {
 		int result = 1;
-		Iterator<Join> iter = getSubclassJoinClosureIterator();
-		while ( iter.hasNext() ) {
-			Join join = iter.next();
+		for ( Join join : getSubclassJoinClosure() ) {
 			if ( join.containsProperty( prop ) ) {
 				return result;
 			}
@@ -998,10 +1019,8 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		}
 		checkColumnDuplication( cols, getDiscriminator() );
 		checkPropertyColumnDuplication( cols, getNonDuplicatedProperties() );
-		Iterator<Join> iter = getJoinIterator();
-		while ( iter.hasNext() ) {
+		for ( Join join : getJoins() ) {
 			cols.clear();
-			Join join = iter.next();
 			checkColumnDuplication( cols, join.getKey() );
 			checkPropertyColumnDuplication( cols, join.getProperties() );
 		}

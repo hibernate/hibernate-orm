@@ -6,7 +6,6 @@
  */
 package org.hibernate.cfg;
 
-import java.util.Iterator;
 import java.util.Map;
 
 import jakarta.persistence.JoinColumn;
@@ -27,7 +26,6 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SortableValue;
 import org.hibernate.type.ForeignKeyDirection;
 
@@ -176,10 +174,8 @@ public class OneToOneSecondPass implements SecondPass {
 				propertyHolder.addProperty( prop, inferredData.getDeclaringClass() );
 			}
 			else if ( otherSideProperty.getValue() instanceof ManyToOne ) {
-				Iterator<Join> it = otherSide.getJoinIterator();
 				Join otherSideJoin = null;
-				while ( it.hasNext() ) {
-					Join otherSideJoinValue = it.next();
+				for ( Join otherSideJoinValue : otherSide.getJoins() ) {
 					if ( otherSideJoinValue.containsProperty( otherSideProperty ) ) {
 						otherSideJoin = otherSideJoinValue;
 						break;

@@ -28,9 +28,9 @@ public class DynamicMapInstantiator implements Instantiator {
 		this.roleName = mappingInfo.getEntityName();
 		isInstanceEntityNames.add( roleName );
 		if ( mappingInfo.hasSubclasses() ) {
-			Iterator itr = mappingInfo.getSubclassClosureIterator();
+			Iterator<PersistentClass> itr = mappingInfo.getSubclassClosureIterator();
 			while ( itr.hasNext() ) {
-				final PersistentClass subclassInfo = ( PersistentClass ) itr.next();
+				final PersistentClass subclassInfo = itr.next();
 				isInstanceEntityNames.add( subclassInfo.getEntityName() );
 			}
 		}

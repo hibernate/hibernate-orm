@@ -478,7 +478,7 @@ public class BinderHelper {
 			catch (MappingException me) {
 				//swallow it
 			}
-			Iterator joins = current.getJoinIterator();
+			Iterator<Join> joins = current.getJoinIterator();
 			while ( !found && joins.hasNext() ) {
 				result = joins.next();
 				currentTable = ( (Join) result ).getTable();

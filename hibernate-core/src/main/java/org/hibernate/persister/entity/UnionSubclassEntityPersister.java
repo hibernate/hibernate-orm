@@ -182,9 +182,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		}
 
 		HashSet<String> subclassTables = new HashSet<>();
-		Iterator<Table> subclassTableIter = persistentClass.getSubclassTableClosureIterator();
-		while ( subclassTableIter.hasNext() ) {
-			subclassTables.add( determineTableName( subclassTableIter.next() ) );
+		for ( Table table : persistentClass.getSubclassTableClosure() ) {
+			subclassTables.add( determineTableName( table ) );
 		}
 		subclassSpaces = ArrayHelper.toStringArray( subclassTables );
 
@@ -210,14 +209,12 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			int idColumnSpan = getIdentifierColumnSpan();
 			ArrayList<String> tableNames = new ArrayList<>();
 			ArrayList<String[]> keyColumns = new ArrayList<>();
-			Iterator<Table> tableIter = persistentClass.getSubclassTableClosureIterator();
-			while ( tableIter.hasNext() ) {
-				Table tab = tableIter.next();
-				if ( !tab.isAbstractUnionTable() ) {
-					final String tableName = determineTableName( tab );
+			for ( Table table : persistentClass.getSubclassTableClosure() ) {
+				if ( !table.isAbstractUnionTable() ) {
+					final String tableName = determineTableName( table );
 					tableNames.add( tableName );
 					String[] key = new String[idColumnSpan];
-					List<Column> columns = tab.getPrimaryKey().getColumns();
+					List<Column> columns = table.getPrimaryKey().getColumns();
 					for ( int k = 0; k < idColumnSpan; k++ ) {
 						key[k] = columns.get(k).getQuotedName( factory.getJdbcServices().getDialect() );
 					}
@@ -468,14 +465,10 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			);
 		}
 
-		HashSet<Column> columns = new LinkedHashSet<>();
-		Iterator<Table> titer = model.getSubclassTableClosureIterator();
-		while ( titer.hasNext() ) {
-			Table table = titer.next();
+		Set<Column> columns = new LinkedHashSet<>();
+		for ( Table table : model.getSubclassTableClosure() ) {
 			if ( !table.isAbstractUnionTable() ) {
-				for ( Column column : table.getColumns() ) {
-					columns.add( column );
-				}
+				columns.addAll( table.getColumns() );
 			}
 		}
 

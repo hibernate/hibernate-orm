@@ -300,19 +300,23 @@ public class ProcedureCallImpl<R>
 		if ( memento.getHints() != null ) {
 			final Object callableFunction = memento.getHints().get( HINT_CALLABLE_FUNCTION );
 			if ( callableFunction != null && Boolean.parseBoolean( callableFunction.toString() ) ) {
-				final List<Class<?>> resultTypes = new ArrayList<>();
-				resultSetMapping.visitResultBuilders(
-						(index, resultBuilder) -> resultTypes.add( resultBuilder.getJavaType() )
-				);
-				final TypeConfiguration typeConfiguration = getSessionFactory().getTypeConfiguration();
-				final BasicType<?> type;
-				if ( resultTypes.size() != 1 || ( type = typeConfiguration.getBasicTypeForJavaType( resultTypes.get( 0 ) ) ) == null ) {
-					markAsFunctionCall( Types.REF_CURSOR );
-				}
-				else {
-					markAsFunctionCall( type.getJdbcType().getJdbcTypeCode() );
-				}
+				applyCallableFunctionHint();
 			}
+		}
+	}
+
+	private void applyCallableFunctionHint() {
+		final List<Class<?>> resultTypes = new ArrayList<>();
+		resultSetMapping.visitResultBuilders(
+				(index, resultBuilder) -> resultTypes.add( resultBuilder.getJavaType() )
+		);
+		final TypeConfiguration typeConfiguration = getSessionFactory().getTypeConfiguration();
+		final BasicType<?> type;
+		if ( resultTypes.size() != 1 || ( type = typeConfiguration.getBasicTypeForJavaType( resultTypes.get( 0 ) ) ) == null ) {
+			markAsFunctionCall( Types.REF_CURSOR );
+		}
+		else {
+			markAsFunctionCall( type.getJdbcType().getJdbcTypeCode() );
 		}
 	}
 
@@ -1062,7 +1066,14 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureCallImplementor<R> setHint(String hintName, Object value) {
-		super.setHint( hintName, value );
+		if ( HINT_CALLABLE_FUNCTION.equals( hintName ) ) {
+			if ( value != null && Boolean.parseBoolean( value.toString() ) ) {
+				applyCallableFunctionHint();
+			}
+		}
+		else {
+			super.setHint( hintName, value );
+		}
 		return this;
 	}
 

@@ -229,7 +229,7 @@ public class ToOneAttributeMapping
 						if ( join.getPersistentClass().getEntityName().equals( entityBinding.getEntityName() )
 								&& join.getPropertySpan() == 1
 								&& join.getTable() == manyToOne.getTable()
-								&& equal( join.getKey().getColumnIterator(), manyToOne.getColumnIterator() ) ) {
+								&& equal( join.getKey(), manyToOne ) ) {
 							bidirectionalAttributeName = join.getPropertyIterator().next().getName();
 							break;
 						}
@@ -503,7 +503,9 @@ public class ToOneAttributeMapping
 		this.isConstrained = original.isConstrained;
 	}
 
-	private static boolean equal(Iterator<Selectable> lhsColumns, Iterator<Selectable> rhsColumns) {
+	private static boolean equal(Value lhsValue, Value rhsValue) {
+		Iterator<Selectable> lhsColumns = lhsValue.getColumnIterator();
+		Iterator<Selectable> rhsColumns = rhsValue.getColumnIterator();
 		boolean hasNext;
 		do {
 			final Selectable lhs = lhsColumns.next();

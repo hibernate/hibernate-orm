@@ -292,9 +292,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		// Reset the attribute mappings that were added in previous attempts
 		this.attributeMappings.clear();
 
-		final Iterator<Property> propertyIterator = bootDescriptor.getPropertyIterator();
-		while ( propertyIterator.hasNext() ) {
-			final Property bootPropertyDescriptor = propertyIterator.next();
+		for ( Property bootPropertyDescriptor : bootDescriptor.getProperties() ) {
 			final AttributeMapping attributeMapping;
 
 			final Type subtype = subtypes[attributeIndex];

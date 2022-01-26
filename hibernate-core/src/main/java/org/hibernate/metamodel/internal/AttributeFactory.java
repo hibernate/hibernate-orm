@@ -251,7 +251,8 @@ public class AttributeFactory {
 				else {
 					// we should have a non-dynamic embeddable
 					assert component.getComponentClassName() != null;
-					final Class<Y> embeddableClass = component.getComponentClass();
+					@SuppressWarnings("unchecked")
+					final Class<Y> embeddableClass = (Class<Y>) component.getComponentClass();
 
 					final EmbeddableDomainType<Y> cached = context.locateEmbeddable( embeddableClass, component );
 					if ( cached != null ) {
@@ -274,9 +275,7 @@ public class AttributeFactory {
 				}
 
 				final EmbeddableTypeImpl.InFlightAccess<Y> inFlightAccess = embeddableType.getInFlightAccess();
-				final Iterator<Property> subProperties = component.getPropertyIterator();
-				while ( subProperties.hasNext() ) {
-					final Property property = subProperties.next();
+				for ( Property property : component.getProperties() ) {
 					final PersistentAttribute<Y, Y> attribute = buildAttribute( embeddableType, property, context );
 					if ( attribute != null ) {
 						inFlightAccess.addAttribute( attribute );

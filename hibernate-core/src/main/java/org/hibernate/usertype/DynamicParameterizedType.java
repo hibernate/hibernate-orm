@@ -32,7 +32,7 @@ public interface DynamicParameterizedType extends ParameterizedType {
 
 	interface ParameterType {
 
-		Class getReturnedClass();
+		Class<?> getReturnedClass();
 
 		Annotation[] getAnnotationsMethod();
 

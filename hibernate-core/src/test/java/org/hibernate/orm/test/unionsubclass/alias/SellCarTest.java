@@ -34,7 +34,7 @@ public class SellCarTest extends BaseCoreFunctionalTestCase {
     }
 
 	@Test
-    public void testSellCar() throws Exception {
+    public void testSellCar() {
         prepareData();
         Session session = openSession();
         Transaction tx = session.beginTransaction();
@@ -54,7 +54,6 @@ public class SellCarTest extends BaseCoreFunctionalTestCase {
         session.close();
     }
 
-    @SuppressWarnings( {"unchecked"})
 	private Object createData() {
         Seller stliu = new Seller();
         stliu.setId( createID( "stliu" ) );
@@ -69,7 +68,7 @@ public class SellCarTest extends BaseCoreFunctionalTestCase {
 	private PersonID createID( String name ) {
         PersonID id = new PersonID();
         id.setName( name );
-        id.setNum( Long.valueOf( 100 ) );
+        id.setNum(100L);
         return id;
     }
 }

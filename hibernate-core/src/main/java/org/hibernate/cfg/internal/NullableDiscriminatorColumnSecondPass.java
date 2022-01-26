@@ -28,9 +28,7 @@ public class NullableDiscriminatorColumnSecondPass implements SecondPass {
 	public void doSecondPass(Map persistentClasses) throws MappingException {
 		PersistentClass rootPersistenceClass = (PersistentClass) persistentClasses.get( rootEntityName );
 		if ( hasNullDiscriminatorValue( rootPersistenceClass ) ) {
-			for ( Iterator<Selectable> iterator = rootPersistenceClass.getDiscriminator().getColumnIterator();
-					iterator.hasNext(); ) {
-				Selectable selectable = iterator.next();
+			for ( Selectable selectable: rootPersistenceClass.getDiscriminator().getSelectables() ) {
 				if ( selectable instanceof Column ) {
 					( (Column) selectable ).setNullable( true );
 				}
@@ -38,7 +36,6 @@ public class NullableDiscriminatorColumnSecondPass implements SecondPass {
 		}
 	}
 
-	@SuppressWarnings({ "unchecked" })
 	private boolean hasNullDiscriminatorValue(PersistentClass rootPersistenceClass) {
 		if ( rootPersistenceClass.isDiscriminatorValueNull() ) {
 			return true;

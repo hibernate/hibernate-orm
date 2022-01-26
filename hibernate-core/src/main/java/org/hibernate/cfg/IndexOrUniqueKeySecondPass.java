@@ -18,6 +18,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 
@@ -64,7 +65,7 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 	}
 
 	@Override
-	public void doSecondPass(Map persistentClasses) throws MappingException {
+	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
 		if ( columns != null ) {
 			for ( String column1 : columns ) {
 				addConstraintToColumn( column1 );
@@ -79,18 +80,18 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 					propertyHolder.getPersistentClass().getEntityName() :
 					propertyHolder.getEntityName();
 
-			final PersistentClass persistentClass = (PersistentClass) persistentClasses.get( entityName );
+			final PersistentClass persistentClass = persistentClasses.get( entityName );
 			final Property property = persistentClass.getProperty( column.getPropertyName() );
 
 			if ( property.getValue() instanceof Component ) {
 				final Component component = (Component) property.getValue();
 
 				List<Column> columns = new ArrayList<>();
-				component.getColumnIterator().forEachRemaining( selectable -> {
+				for ( Selectable selectable: component.getSelectables() ) {
 					if ( selectable instanceof Column ) {
 						columns.add( (Column) selectable );
 					}
-				} );
+				}
 				addConstraintToColumns( columns );
 			}
 			else {

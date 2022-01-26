@@ -5,10 +5,12 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.mapping;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.AssertionFailure;
@@ -16,6 +18,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.collections.JoinedIterator;
+import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.internal.util.collections.SingletonIterator;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.persister.entity.EntityPersister;
@@ -102,12 +105,19 @@ public class Subclass extends PersistentClass {
 		getSuperclass().addSubclassJoin(j);
 	}
 
+	@Override
+	public List<Property> getPropertyClosure() {
+		return new JoinedList<>( getSuperclass().getPropertyClosure(), getProperties() );
+	}
+
+	@Deprecated
 	public Iterator<Property> getPropertyClosureIterator() {
 		return new JoinedIterator<>(
 				getSuperclass().getPropertyClosureIterator(),
 				getPropertyIterator()
 			);
 	}
+
 	public Iterator<Table> getTableClosureIterator() {
 		return new JoinedIterator<>(
 				getSuperclass().getTableClosureIterator(),
@@ -149,12 +159,9 @@ public class Subclass extends PersistentClass {
 		return getSuperclass().hasEmbeddedIdentifier();
 	}
 	public Class<? extends EntityPersister> getEntityPersisterClass() {
-		if (classPersisterClass==null) {
-			return getSuperclass().getEntityPersisterClass();
-		}
-		else {
-			return classPersisterClass;
-		}
+		return classPersisterClass == null
+				? getSuperclass().getEntityPersisterClass()
+				: classPersisterClass;
 	}
 
 	public Table getRootTable() {

@@ -55,7 +55,7 @@ public abstract class IdentifierCollection extends Collection {
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
 			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
-			pk.addColumns( getIdentifier().getColumnIterator() );
+			pk.addColumns( getIdentifier() );
 			getCollectionTable().setPrimaryKey(pk);
 		}
 		// create an index on the key columns??

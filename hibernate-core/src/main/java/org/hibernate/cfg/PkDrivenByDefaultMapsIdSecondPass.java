@@ -50,7 +50,7 @@ public class PkDrivenByDefaultMapsIdSecondPass extends FkSecondPass {
 		}
 		TableBinder.linkJoinColumnWithValueOverridingNameIfImplicit(
 				referencedEntity,
-				referencedEntity.getKey().getColumnIterator(),
+				referencedEntity.getKey(),
 				columns,
 				value);
 	}

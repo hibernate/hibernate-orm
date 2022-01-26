@@ -8,6 +8,7 @@ package org.hibernate.mapping;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.hibernate.MappingException;
@@ -125,9 +126,14 @@ public class RootClass extends PersistentClass implements TableOwner {
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public Iterator<Property> getPropertyClosureIterator() {
 		return getPropertyIterator();
+	}
+
+	@Override
+	public List<Property> getPropertyClosure() {
+		return getProperties();
 	}
 
 	@Override

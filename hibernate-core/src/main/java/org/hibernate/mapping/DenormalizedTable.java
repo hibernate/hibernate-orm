@@ -7,17 +7,18 @@
 package org.hibernate.mapping;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.internal.util.collections.JoinedIterator;
+import org.hibernate.internal.util.collections.JoinedList;
 
 /**
  * @author Gavin King
  */
-@SuppressWarnings("unchecked")
 public class DenormalizedTable extends Table {
 
 	private final Table includedTable;
@@ -59,9 +60,9 @@ public class DenormalizedTable extends Table {
 	@Override
 	public void createForeignKeys() {
 		includedTable.createForeignKeys();
-		Iterator iter = includedTable.getForeignKeyIterator();
+		Iterator<ForeignKey> iter = includedTable.getForeignKeyIterator();
 		while ( iter.hasNext() ) {
-			ForeignKey fk = (ForeignKey) iter.next();
+			ForeignKey fk = iter.next();
 			createForeignKey(
 					Constraint.generateName(
 							fk.generatedConstraintNamePrefix(),
@@ -79,29 +80,27 @@ public class DenormalizedTable extends Table {
 	@Override
 	public Column getColumn(Column column) {
 		Column superColumn = super.getColumn( column );
-		if ( superColumn != null ) {
-			return superColumn;
-		}
-		else {
-			return includedTable.getColumn( column );
-		}
+		return superColumn != null ? superColumn : includedTable.getColumn(column);
 	}
 
 	public Column getColumn(Identifier name) {
 		Column superColumn = super.getColumn( name );
-		if ( superColumn != null ) {
-			return superColumn;
-		}
-		else {
-			return includedTable.getColumn( name );
-		}
+		return superColumn != null ? superColumn : includedTable.getColumn(name);
+	}
+
+	@Override @Deprecated
+	public Iterator<Column> getColumnIterator() {
+		return new JoinedIterator<>(
+				includedTable.getColumnIterator(),
+				super.getColumnIterator()
+		);
 	}
 
 	@Override
-	public Iterator getColumnIterator() {
-		return new JoinedIterator(
-				includedTable.getColumnIterator(),
-				super.getColumnIterator()
+	public Collection<Column> getColumns() {
+		return new JoinedList<>(
+				new ArrayList<>( includedTable.getColumns() ),
+				new ArrayList<>( super.getColumns() )
 		);
 	}
 
@@ -116,11 +115,11 @@ public class DenormalizedTable extends Table {
 	}
 
 	@Override
-	public Iterator getUniqueKeyIterator() {
+	public Iterator<UniqueKey> getUniqueKeyIterator() {
 		if ( !includedTable.isPhysicalTable() ) {
-			Iterator iter = includedTable.getUniqueKeyIterator();
+			Iterator<UniqueKey> iter = includedTable.getUniqueKeyIterator();
 			while ( iter.hasNext() ) {
-				UniqueKey uk = (UniqueKey) iter.next();
+				UniqueKey uk = iter.next();
 				createUniqueKey( uk.getColumns() );
 			}
 		}
@@ -128,18 +127,18 @@ public class DenormalizedTable extends Table {
 	}
 
 	@Override
-	public Iterator getIndexIterator() {
-		List indexes = new ArrayList();
-		Iterator iter = includedTable.getIndexIterator();
+	public Iterator<Index> getIndexIterator() {
+		List<Index> indexes = new ArrayList<>();
+		Iterator<Index> iter = includedTable.getIndexIterator();
 		while ( iter.hasNext() ) {
-			Index parentIndex = (Index) iter.next();
+			Index parentIndex = iter.next();
 			Index index = new Index();
 			index.setName( getName() + parentIndex.getName() );
 			index.setTable( this );
 			index.addColumns( parentIndex.getColumnIterator() );
 			indexes.add( index );
 		}
-		return new JoinedIterator(
+		return new JoinedIterator<>(
 				indexes.iterator(),
 				super.getIndexIterator()
 		);

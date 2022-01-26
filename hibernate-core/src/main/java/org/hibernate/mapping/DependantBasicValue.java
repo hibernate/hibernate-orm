@@ -14,8 +14,8 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 public class DependantBasicValue extends BasicValue {
 	private final BasicValue referencedValue;
 
-	private boolean nullable;
-	private boolean updateable;
+	private final boolean nullable;
+	private final boolean updateable;
 
 	public DependantBasicValue(
 			MetadataBuildingContext buildingContext,

@@ -27,7 +27,7 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.SimpleValue;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SortableValue;
 import org.hibernate.type.ForeignKeyDirection;
 
@@ -36,18 +36,18 @@ import org.hibernate.type.ForeignKeyDirection;
  * -
  */
 public class OneToOneSecondPass implements SecondPass {
-	private MetadataBuildingContext buildingContext;
-	private String mappedBy;
-	private String ownerEntity;
-	private String ownerProperty;
-	private PropertyHolder propertyHolder;
-	private boolean ignoreNotFound;
-	private PropertyData inferredData;
-	private XClass targetEntity;
-	private boolean cascadeOnDelete;
-	private boolean optional;
-	private String cascadeStrategy;
-	private AnnotatedJoinColumn[] joinColumns;
+	private final MetadataBuildingContext buildingContext;
+	private final String mappedBy;
+	private final String ownerEntity;
+	private final String ownerProperty;
+	private final PropertyHolder propertyHolder;
+	private final boolean ignoreNotFound;
+	private final PropertyData inferredData;
+	private final XClass targetEntity;
+	private final boolean cascadeOnDelete;
+	private final boolean optional;
+	private final String cascadeStrategy;
+	private final AnnotatedJoinColumn[] joinColumns;
 
 	//that sucks, we should read that from the property mainly
 	public OneToOneSecondPass(
@@ -176,10 +176,10 @@ public class OneToOneSecondPass implements SecondPass {
 				propertyHolder.addProperty( prop, inferredData.getDeclaringClass() );
 			}
 			else if ( otherSideProperty.getValue() instanceof ManyToOne ) {
-				Iterator it = otherSide.getJoinIterator();
+				Iterator<Join> it = otherSide.getJoinIterator();
 				Join otherSideJoin = null;
 				while ( it.hasNext() ) {
-					Join otherSideJoinValue = (Join) it.next();
+					Join otherSideJoinValue = it.next();
 					if ( otherSideJoinValue.containsProperty( otherSideProperty ) ) {
 						otherSideJoin = otherSideJoinValue;
 						break;
@@ -200,9 +200,7 @@ public class OneToOneSecondPass implements SecondPass {
 					manyToOne.setUnwrapProxy( value.isUnwrapProxy() );
 					manyToOne.markAsLogicalOneToOne();
 					prop.setValue( manyToOne );
-					Iterator otherSideJoinKeyColumns = otherSideJoin.getKey().getColumnIterator();
-					while ( otherSideJoinKeyColumns.hasNext() ) {
-						Column column = (Column) otherSideJoinKeyColumns.next();
+					for ( Column column: otherSideJoin.getKey().getColumns() ) {
 						Column copy = new Column();
 						copy.setLength( column.getLength() );
 						copy.setScale( column.getScale() );
@@ -287,9 +285,7 @@ public class OneToOneSecondPass implements SecondPass {
 		//TODO support for inverse and optional
 		join.setOptional( true ); //perhaps not quite per-spec, but a Good Thing anyway
 		key.setCascadeDeleteEnabled( false );
-		Iterator mappedByColumns = otherSideProperty.getValue().getColumnIterator();
-		while ( mappedByColumns.hasNext() ) {
-			Column column = (Column) mappedByColumns.next();
+		for ( Column column: otherSideProperty.getValue().getColumns() ) {
 			Column copy = new Column();
 			copy.setLength( column.getLength() );
 			copy.setScale( column.getScale() );

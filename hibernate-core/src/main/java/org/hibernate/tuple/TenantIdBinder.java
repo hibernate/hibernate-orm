@@ -90,10 +90,10 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 		if ( property.getColumnSpan()!=1 ) {
 			throw new MappingException("@TenantId attribute must be mapped to a single column or formula");
 		}
-		Selectable column = property.getColumnIterator().next();
-		return column.isFormula()
-				? ((Formula) column).getFormula()
-				: ((Column) column).getName();
+		Selectable selectable = property.getSelectables().get(0);
+		return selectable.isFormula()
+				? ((Formula) selectable).getFormula()
+				: ((Column) selectable).getName();
 	}
 
 }

@@ -6,6 +6,7 @@
  */
 package org.hibernate.mapping;
 import java.util.Iterator;
+import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -52,8 +53,13 @@ public class JoinedSubclass extends Subclass implements TableOwner {
 		}
 	}
 
+	@Deprecated
 	public Iterator<Property> getReferenceablePropertyIterator() {
 		return getPropertyIterator();
+	}
+
+	public List<Property> getReferenceableProperties() {
+		return getProperties();
 	}
 
 	public Object accept(PersistentClassVisitor mv) {

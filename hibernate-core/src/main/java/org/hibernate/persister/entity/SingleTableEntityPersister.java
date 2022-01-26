@@ -214,11 +214,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 					? ExecuteUpdateResultCheckStyle.determineDefault( customSQLDelete[j], deleteCallable[j] )
 					: join.getCustomSQLDeleteCheckStyle();
 
-			Iterator<Selectable> iter = join.getKey().getColumnIterator();
 			keyColumnNames[j] = new String[join.getKey().getColumnSpan()];
 			int i = 0;
-			while ( iter.hasNext() ) {
-				Column col = (Column) iter.next();
+			for ( Column col : join.getKey().getColumns() ) {
 				keyColumnNames[j][i++] = col.getQuotedName( dialect );
 			}
 
@@ -270,11 +268,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			String joinTableName = determineTableName( join.getTable() );
 			subclassTables.add( joinTableName );
 
-			Iterator<Selectable> iter = join.getKey().getColumnIterator();
 			String[] keyCols = new String[join.getKey().getColumnSpan()];
 			int i = 0;
-			while ( iter.hasNext() ) {
-				Column col = (Column) iter.next();
+			for ( Column col : join.getKey().getColumns() ) {
 				keyCols[i++] = col.getQuotedName( dialect );
 			}
 			joinKeyColumns.add( keyCols );
@@ -297,7 +293,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				throw new MappingException( "discriminator mapping required for single table polymorphic persistence" );
 			}
 			forceDiscriminator = persistentClass.isForceDiscriminator();
-			Selectable selectable = discrimValue.getColumnIterator().next();
+			Selectable selectable = discrimValue.getSelectables().get(0);
 			if ( discrimValue.hasFormula() ) {
 				Formula formula = (Formula) selectable;
 				discriminatorFormula = formula.getFormula();
@@ -371,12 +367,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		// PROPERTIES
 
 		propertyTableNumbers = new int[getPropertySpan()];
-		Iterator<Property> props = persistentClass.getPropertyClosureIterator();
 		int i = 0;
-		while ( props.hasNext() ) {
-			Property prop = props.next();
-			propertyTableNumbers[i++] = persistentClass.getJoinNumber( prop );
-
+		for ( Property property : persistentClass.getPropertyClosure() ) {
+			propertyTableNumbers[i++] = persistentClass.getJoinNumber( property );
 		}
 
 		//TODO: code duplication with JoinedSubclassEntityPersister
@@ -388,22 +381,18 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		final HashMap<String, Integer> propertyTableNumbersByNameAndSubclassLocal = new HashMap<>();
 		final Map<Object, String> subclassesByDiscriminatorValueLocal = new HashMap<>();
 
-		Iterator<Property> iter = persistentClass.getSubclassPropertyClosureIterator();
-		while ( iter.hasNext() ) {
-			Property prop = iter.next();
-			Integer join = persistentClass.getJoinNumber( prop );
+		for ( Property property : persistentClass.getSubclassPropertyClosure() ) {
+			Integer join = persistentClass.getJoinNumber( property );
 			propertyJoinNumbers.add( join );
 
 			//propertyTableNumbersByName.put( prop.getName(), join );
 			propertyTableNumbersByNameAndSubclassLocal.put(
-					prop.getPersistentClass().getEntityName() + '.' + prop.getName(),
+					property.getPersistentClass().getEntityName() + '.' + property.getName(),
 					join
 			);
 
-			Iterator<Selectable> citer = prop.getColumnIterator();
-			while ( citer.hasNext() ) {
-				Selectable thing = citer.next();
-				if ( thing.isFormula() ) {
+			for ( Selectable selectable : property.getSelectables() ) {
+				if ( selectable.isFormula() ) {
 					formulaJoinedNumbers.add( join );
 				}
 				else {

@@ -7,7 +7,9 @@
 package org.hibernate.mapping;
 
 /**
- * Part of the mapping model that is associated with a contributor.  ORM, Envers, Search, etc
+ * Part of the mapping model that is associated with a contributor.
+ * ORM, Envers, Search, etc
+ *
  * @author Steve Ebersole
  */
 public interface Contributable {

@@ -133,6 +133,7 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Subclass;
@@ -1284,9 +1285,8 @@ public final class AnnotationBinder {
 			persistentClass.addProperty( property );
 			entityBinder.setIgnoreIdAnnotations( true );
 
-			Iterator properties = mapper.getPropertyIterator();
-			while ( properties.hasNext() ) {
-				idPropertiesIfIdClass.add( ( ( Property ) properties.next() ).getName() );
+			for ( Property prop : mapper.getProperties() ) {
+				idPropertiesIfIdClass.add( prop.getName() );
 			}
 			return true;
 		}
@@ -3442,15 +3442,12 @@ public final class AnnotationBinder {
 				mapToPK = false;
 			}
 			else {
-				Iterator idColumns = identifier.getColumnIterator();
 				List<String> idColumnNames = new ArrayList<>();
-				org.hibernate.mapping.Column currentColumn;
 				if ( identifier.getColumnSpan() != joinColumns.length ) {
 					mapToPK = false;
 				}
 				else {
-					while ( idColumns.hasNext() ) {
-						currentColumn = ( org.hibernate.mapping.Column ) idColumns.next();
+					for ( org.hibernate.mapping.Column currentColumn : identifier.getColumns() ) {
 						idColumnNames.add( currentColumn.getName() );
 					}
 					for ( AnnotatedJoinColumn col : joinColumns ) {

@@ -217,9 +217,9 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 					final String tableName = determineTableName( tab );
 					tableNames.add( tableName );
 					String[] key = new String[idColumnSpan];
-					Iterator<Column> citer = tab.getPrimaryKey().getColumnIterator();
+					List<Column> columns = tab.getPrimaryKey().getColumns();
 					for ( int k = 0; k < idColumnSpan; k++ ) {
-						key[k] = citer.next().getQuotedName( factory.getJdbcServices().getDialect() );
+						key[k] = columns.get(k).getQuotedName( factory.getJdbcServices().getDialect() );
 					}
 					keyColumns.add( key );
 				}
@@ -473,9 +473,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		while ( titer.hasNext() ) {
 			Table table = titer.next();
 			if ( !table.isAbstractUnionTable() ) {
-				Iterator<Column> citer = table.getColumnIterator();
-				while ( citer.hasNext() ) {
-					columns.add( citer.next() );
+				for ( Column column : table.getColumns() ) {
+					columns.add( column );
 				}
 			}
 		}
@@ -483,7 +482,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		StringBuilder buf = new StringBuilder()
 				.append( "( " );
 
-		@SuppressWarnings("unchecked")
 		Iterator<PersistentClass> siter = new JoinedIterator<>(
 				new SingletonIterator<>( model ),
 				model.getSubclassIterator()

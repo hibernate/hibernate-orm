@@ -216,59 +216,59 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 		}
 		return followers;
 	}
-
-	private Iterator getSubPropertyIterator(PersistentClass pc, String reducedName) {
-		Value value = pc.getRecursiveProperty( reducedName ).getValue();
-		Iterator parentPropIter;
-		if ( value instanceof Component ) {
-			Component comp = (Component) value;
-			parentPropIter = comp.getPropertyIterator();
-		}
-		else if ( value instanceof ToOne ) {
-			ToOne toOne = (ToOne) value;
-			PersistentClass referencedPc = context.getMetadataCollector().getEntityBinding( toOne.getReferencedEntityName() );
-			if ( toOne.getReferencedPropertyName() != null ) {
-				try {
-					parentPropIter = ( (Component) referencedPc.getRecursiveProperty(
-							toOne.getReferencedPropertyName()
-					).getValue() ).getPropertyIterator();
-				}
-				catch (ClassCastException e) {
-					throw new MappingException(
-							"dotted notation references neither a component nor a many/one to one", e
-					);
-				}
-			}
-			else {
-				try {
-					if ( referencedPc.getIdentifierMapper() == null ) {
-						parentPropIter = ( (Component) referencedPc.getIdentifierProperty()
-								.getValue() ).getPropertyIterator();
-					}
-					else {
-						parentPropIter = referencedPc.getIdentifierMapper().getPropertyIterator();
-					}
-				}
-				catch (ClassCastException e) {
-					throw new MappingException(
-							"dotted notation references neither a component nor a many/one to one", e
-					);
-				}
-			}
-		}
-		else {
-			throw new MappingException( "dotted notation references neither a component nor a many/one to one" );
-		}
-		return parentPropIter;
-	}
-
-	private static int getIndexOfFirstMatchingProperty(List propertyNames, String follower) {
-		int propertySize = propertyNames.size();
-		for (int propIndex = 0; propIndex < propertySize; propIndex++) {
-			if ( ( (String) propertyNames.get( propIndex ) ).startsWith( follower ) ) {
-				return propIndex;
-			}
-		}
-		return -1;
-	}
+//
+//	private Iterator getSubPropertyIterator(PersistentClass pc, String reducedName) {
+//		Value value = pc.getRecursiveProperty( reducedName ).getValue();
+//		Iterator parentPropIter;
+//		if ( value instanceof Component ) {
+//			Component comp = (Component) value;
+//			parentPropIter = comp.getPropertyIterator();
+//		}
+//		else if ( value instanceof ToOne ) {
+//			ToOne toOne = (ToOne) value;
+//			PersistentClass referencedPc = context.getMetadataCollector().getEntityBinding( toOne.getReferencedEntityName() );
+//			if ( toOne.getReferencedPropertyName() != null ) {
+//				try {
+//					parentPropIter = ( (Component) referencedPc.getRecursiveProperty(
+//							toOne.getReferencedPropertyName()
+//					).getValue() ).getPropertyIterator();
+//				}
+//				catch (ClassCastException e) {
+//					throw new MappingException(
+//							"dotted notation references neither a component nor a many/one to one", e
+//					);
+//				}
+//			}
+//			else {
+//				try {
+//					if ( referencedPc.getIdentifierMapper() == null ) {
+//						parentPropIter = ( (Component) referencedPc.getIdentifierProperty()
+//								.getValue() ).getPropertyIterator();
+//					}
+//					else {
+//						parentPropIter = referencedPc.getIdentifierMapper().getPropertyIterator();
+//					}
+//				}
+//				catch (ClassCastException e) {
+//					throw new MappingException(
+//							"dotted notation references neither a component nor a many/one to one", e
+//					);
+//				}
+//			}
+//		}
+//		else {
+//			throw new MappingException( "dotted notation references neither a component nor a many/one to one" );
+//		}
+//		return parentPropIter;
+//	}
+//
+//	private static int getIndexOfFirstMatchingProperty(List propertyNames, String follower) {
+//		int propertySize = propertyNames.size();
+//		for (int propIndex = 0; propIndex < propertySize; propIndex++) {
+//			if ( ( (String) propertyNames.get( propIndex ) ).startsWith( follower ) ) {
+//				return propIndex;
+//			}
+//		}
+//		return -1;
+//	}
 }

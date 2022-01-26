@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
@@ -41,7 +42,7 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class Component extends SimpleValue implements MetaAttributable, SortableValue {
-	private ArrayList<Property> properties = new ArrayList<>();
+	private final ArrayList<Property> properties = new ArrayList<>();
 	private int[] originalPropertyOrder = ArrayHelper.EMPTY_INT_ARRAY;
 	private String componentClassName;
 	private boolean embedded;
@@ -88,6 +89,10 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		return properties.iterator();
 	}
 
+	public List<Property> getProperties() {
+		return properties;
+	}
+
 	public void addProperty(Property p) {
 		properties.add( p );
 	}
@@ -100,37 +105,35 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	@Override
 	public int getColumnSpan() {
 		int n=0;
-		Iterator iter = getPropertyIterator();
-		while ( iter.hasNext() ) {
-			Property p = (Property) iter.next();
-			n+= p.getColumnSpan();
+		for ( Property property : getProperties() ) {
+			n += property.getColumnSpan();
 		}
 		return n;
 	}
 
-	@Override
-	@SuppressWarnings("unchecked")
+	@Override @Deprecated
 	public Iterator<Selectable> getColumnIterator() {
+		@SuppressWarnings("unchecked")
 		Iterator<Selectable>[] iters = new Iterator[ getPropertySpan() ];
-		Iterator<Property> iter = getPropertyIterator();
 		int i = 0;
-		while ( iter.hasNext() ) {
-			iters[i++] = iter.next().getColumnIterator();
+		for ( Property property : getProperties() ) {
+			iters[i++] = property.getColumnIterator();
 		}
 		return new JoinedIterator<>( iters );
 	}
 
 	@Override
 	public List<Selectable> getSelectables() {
-		final List<Selectable> columns = new ArrayList<>();
-		final Iterator<Property> propertyIterator = getPropertyIterator();
-		while ( propertyIterator.hasNext() ) {
-			final Iterator<Selectable> columnIterator = propertyIterator.next().getColumnIterator();
-			while ( columnIterator.hasNext() ) {
-				columns.add( columnIterator.next() );
-			}
-		}
-		return columns;
+		return properties.stream()
+				.flatMap( p -> p.getSelectables().stream() )
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public List<Column> getColumns() {
+		return properties.stream()
+				.flatMap( p -> p.getValue().getColumns().stream() )
+				.collect(Collectors.toList());
 	}
 
 	public boolean isEmbedded() {
@@ -141,7 +144,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		return componentClassName;
 	}
 
-	public Class getComponentClass() throws MappingException {
+	public Class<?> getComponentClass() throws MappingException {
 		final ClassLoaderService classLoaderService = getMetadata()
 				.getMetadataBuildingOptions()
 				.getServiceRegistry()
@@ -256,10 +259,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	@Override
 	public boolean[] getColumnInsertability() {
 		boolean[] result = new boolean[ getColumnSpan() ];
-		Iterator iter = getPropertyIterator();
 		int i=0;
-		while ( iter.hasNext() ) {
-			Property prop = (Property) iter.next();
+		for ( Property prop : getProperties() ) {
 			boolean[] chunk = prop.getValue().getColumnInsertability();
 			if ( prop.isInsertable() ) {
 				System.arraycopy(chunk, 0, result, i, chunk.length);
@@ -284,10 +285,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	@Override
 	public boolean[] getColumnUpdateability() {
 		boolean[] result = new boolean[ getColumnSpan() ];
-		Iterator iter = getPropertyIterator();
 		int i=0;
-		while ( iter.hasNext() ) {
-			Property prop = (Property) iter.next();
+		for ( Property prop : getProperties() ) {
 			boolean[] chunk = prop.getValue().getColumnUpdateability();
 			if ( prop.isUpdateable() ) {
 				System.arraycopy(chunk, 0, result, i, chunk.length);
@@ -334,9 +333,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	public Property getProperty(String propertyName) throws MappingException {
-		Iterator iter = getPropertyIterator();
-		while ( iter.hasNext() ) {
-			Property prop = (Property) iter.next();
+		for ( Property prop : getProperties() ) {
 			if ( prop.getName().equals(propertyName) ) {
 				return prop;
 			}
@@ -391,8 +388,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 			);
 		}
 
-		final Class entityClass = rootClass.getMappedClass();
-		final Class attributeDeclarer; // what class is the declarer of the composite pk attributes
+		final Class<?> entityClass = rootClass.getMappedClass();
+		final Class<?> attributeDeclarer; // what class is the declarer of the composite pk attributes
 		CompositeNestedGeneratedValueGenerator.GenerationContextLocator locator;
 
 		// IMPL NOTE : See the javadoc discussion on CompositeNestedGeneratedValueGenerator wrt the
@@ -413,9 +410,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		locator = new StandardGenerationContextLocator( rootClass.getEntityName() );
 		final CompositeNestedGeneratedValueGenerator generator = new CompositeNestedGeneratedValueGenerator( locator );
 
-		Iterator itr = getPropertyIterator();
-		while ( itr.hasNext() ) {
-			final Property property = (Property) itr.next();
+		for ( Property property : getProperties() ) {
 			if ( property.getValue().isSimpleValue() ) {
 				final SimpleValue value = (SimpleValue) property.getValue();
 
@@ -443,13 +438,13 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		return generator;
 	}
 
-	private Setter injector(Property property, Class attributeDeclarer) {
+	private Setter injector(Property property, Class<?> attributeDeclarer) {
 		return property.getPropertyAccessStrategy( attributeDeclarer )
 				.buildPropertyAccess( attributeDeclarer, property.getName(), true )
 				.getSetter();
 	}
 
-	private Class resolveComponentClass() {
+	private Class<?> resolveComponentClass() {
 		try {
 			return getComponentClass();
 		}
@@ -543,9 +538,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 				final List<Column> columns = primaryKey.getColumns();
 				columns.clear();
 				for ( int i = 0; i < properties.size(); i++ ) {
-					final Iterator<Selectable> columnIterator = properties.get( i ).getColumnIterator();
-					while ( columnIterator.hasNext() ) {
-						final Selectable selectable = columnIterator.next();
+					for ( Selectable selectable : properties.get(i).getSelectables() ) {
 						if ( selectable instanceof Column ) {
 							columns.add( (Column) selectable );
 						}

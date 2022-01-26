@@ -70,10 +70,8 @@ public final class ProxyFactoryHelper {
 	}
 
 	public static void validateProxyability(final PersistentClass persistentClass) {
-		Iterator<?> properties = persistentClass.getPropertyIterator();
 		Class<?> clazz = persistentClass.getMappedClass();
-		while ( properties.hasNext() ) {
-			Property property = (Property) properties.next();
+		for ( Property property : persistentClass.getProperties() ) {
 			validateGetterSetterMethodProxyability( "Getter", property.getGetter( clazz ).getMethod() );
 			validateGetterSetterMethodProxyability( "Setter", property.getSetter( clazz ).getMethod() );
 		}

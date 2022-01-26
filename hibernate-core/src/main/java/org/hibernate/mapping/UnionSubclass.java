@@ -6,6 +6,7 @@
  */
 package org.hibernate.mapping;
 import java.util.Iterator;
+import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -35,9 +36,15 @@ public class UnionSubclass extends Subclass implements TableOwner {
 	public java.util.Set<String> getSynchronizedTables() {
 		return synchronizedTables;
 	}
-	
+
+	@Deprecated
 	protected Iterator<Property> getNonDuplicatedPropertyIterator() {
 		return getPropertyClosureIterator();
+	}
+
+	@Override
+	protected List<Property> getNonDuplicatedProperties() {
+		return getPropertyClosure();
 	}
 
 	public void validate(Mapping mapping) throws MappingException {

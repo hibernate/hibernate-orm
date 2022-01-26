@@ -108,7 +108,7 @@ import static org.junit.Assert.fail;
 @RequiresDialectFeature(DialectChecks.SupportsTemporaryTable.class)
 public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
-	private List<Long> createdAnimalIds = new ArrayList<>();
+	private final List<Long> createdAnimalIds = new ArrayList<>();
 
 	@After
 	public void cleanUpTestData() {

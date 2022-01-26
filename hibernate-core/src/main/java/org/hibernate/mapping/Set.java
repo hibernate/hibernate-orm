@@ -6,7 +6,6 @@
  */
 package org.hibernate.mapping;
 
-import java.util.Iterator;
 import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
@@ -71,10 +70,8 @@ public class Set extends Collection {
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
 			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
-			pk.addColumns( getKey().getColumnIterator() );
-			Iterator<?> iter = getElement().getColumnIterator();
-			while ( iter.hasNext() ) {
-				Object selectable = iter.next();
+			pk.addColumns( getKey() );
+			for ( Selectable selectable : getElement().getSelectables() ) {
 				if ( selectable instanceof Column ) {
 					Column col = (Column) selectable;
 					if ( !col.isNullable() ) {
@@ -85,18 +82,18 @@ public class Set extends Collection {
 					}
 				}
 			}
-			if ( pk.getColumnSpan() == getKey().getColumnSpan() ) {
+			if ( pk.getColumnSpan() != getKey().getColumnSpan() ) {
+				getCollectionTable().setPrimaryKey( pk );
+			}
+//			else {
 				//for backward compatibility, allow a set with no not-null
 				//element columns, using all columns in the row locator SQL
 				//TODO: create an implicit not null constraint on all cols?
-			}
-			else {
-				getCollectionTable().setPrimaryKey( pk );
-			}
+//			}
 		}
-		else {
+//		else {
 			//create an index on the key columns??
-		}
+//		}
 	}
 
 	public Object accept(ValueVisitor visitor) {

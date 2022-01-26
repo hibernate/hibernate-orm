@@ -34,11 +34,9 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.BasicValueBinder;
 import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.cfg.annotations.Nullability;
-import org.hibernate.cfg.annotations.TableBinder;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.BasicValue;
@@ -49,6 +47,7 @@ import org.hibernate.mapping.Join;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.Table;
@@ -72,7 +71,6 @@ public class BinderHelper {
 
 	public static final String ANNOTATION_STRING_DEFAULT = "";
 
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BinderHelper.class );
 	private static final Logger log = CoreLogging.logger( BinderHelper.class );
 
 	private BinderHelper() {
@@ -126,7 +124,7 @@ public class BinderHelper {
 				columns[0].getPropertyHolder().getPersistentClass() :
 				null;
 		if ( AnnotatedJoinColumn.NON_PK_REFERENCE == fkEnum ) {
-			/**
+			/*
 			 * Create a synthetic property to refer to including an
 			 * embedded component value containing all the properties
 			 * mapped to the referenced columns
@@ -166,7 +164,7 @@ public class BinderHelper {
 				synthProp.setPropertyAccessorName( "embedded" );
 				ownerEntity.addProperty( synthProp );
 				//make it unique
-				TableBinder.createUniqueConstraint( embeddedComp );
+				embeddedComp.createUniqueKey();
 			}
 			else {
 				//TODO use a ToOne type doing a second select
@@ -201,12 +199,12 @@ public class BinderHelper {
 				throw new AnnotationException( columnsList.toString() );
 			}
 
-			/**
+			/*
 			 * creating the property ref to the new synthetic property
 			 */
 			if ( value instanceof ToOne ) {
 				( (ToOne) value ).setReferencedPropertyName( syntheticPropertyName );
-				( (ToOne) value ).setReferenceToPrimaryKey( syntheticPropertyName == null );
+				( (ToOne) value ).setReferenceToPrimaryKey( false );
 				context.getMetadataCollector().addUniquePropertyReference(
 						ownerEntity.getEntityName(),
 						syntheticPropertyName
@@ -267,11 +265,11 @@ public class BinderHelper {
 			columnsToProperty.put( column, new HashSet<>() );
 		}
 		boolean isPersistentClass = columnOwner instanceof PersistentClass;
-		Iterator it = isPersistentClass ?
-				( (PersistentClass) columnOwner ).getPropertyIterator() :
-				( (Join) columnOwner ).getPropertyIterator();
-		while ( it.hasNext() ) {
-			matchColumnsByProperty( (Property) it.next(), columnsToProperty );
+		List<Property> properties = isPersistentClass ?
+				( (PersistentClass) columnOwner ).getProperties() :
+				( (Join) columnOwner ).getProperties();
+		for (Property property : properties) {
+			matchColumnsByProperty( property, columnsToProperty );
 		}
 		if ( isPersistentClass ) {
 			matchColumnsByProperty( ( (PersistentClass) columnOwner ).getIdentifierProperty(), columnsToProperty );
@@ -314,13 +312,12 @@ public class BinderHelper {
 //			}
 //		}
 		else {
-			Iterator columnIt = property.getColumnIterator();
-			while ( columnIt.hasNext() ) {
-				//can be a Formula so we don't cast
-				Object column = columnIt.next();
+			for (Selectable selectable : property.getSelectables()) {
+				//can be a Formula, so we don't cast
 				//noinspection SuspiciousMethodCalls
-				if ( columnsToProperty.containsKey( column ) ) {
-					columnsToProperty.get( column ).add( property );
+				if ( columnsToProperty.containsKey( selectable ) ) {
+					//noinspection SuspiciousMethodCalls
+					columnsToProperty.get( selectable ).add( property );
 				}
 			}
 		}
@@ -526,7 +523,7 @@ public class BinderHelper {
 		if ( id.getColumnSpan() == 1 ) {
 			params.setProperty(
 					PersistentIdentifierGenerator.PK,
-					( (Column) id.getColumnIterator().next() ).getName()
+					id.getColumns().get(0).getName()
 			);
 		}
 		// YUCK!  but cannot think of a clean way to do this given the string-config based scheme
@@ -774,7 +771,6 @@ public class BinderHelper {
 		);
 	}
 
-	@SuppressWarnings("ConstantConditions")
 	private static GenerationType interpretGenerationType(GeneratedValue generatedValueAnn) {
 		if ( generatedValueAnn.strategy() == null ) {
 			return GenerationType.AUTO;
@@ -854,7 +850,7 @@ public class BinderHelper {
 		);
 		value.setDiscriminatorValueMappings( discriminatorValueMappings );
 
-		BasicValueBinder keyValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ANY_KEY, context );
+		BasicValueBinder<?> keyValueBinder = new BasicValueBinder<>( BasicValueBinder.Kind.ANY_KEY, context );
 		assert keyColumns.length == 1;
 		keyColumns[0].setTable( value.getTable() );
 		keyValueBinder.setColumns( keyColumns );
@@ -887,8 +883,8 @@ public class BinderHelper {
 		if ( valuesAnn != null ) {
 			final AnyDiscriminatorValue[] valueAnns = valuesAnn.value();
 			if ( valueAnns != null && valueAnns.length > 0 ) {
-				for ( int i = 0; i < valueAnns.length; i++ ) {
-					consumer.accept( valueAnns[i] );
+				for ( AnyDiscriminatorValue ann : valueAnns ) {
+					consumer.accept(ann);
 				}
 			}
 		}

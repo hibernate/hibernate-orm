@@ -30,10 +30,10 @@ import org.hibernate.mapping.ToOne;
  * @author Emmanuel Bernard
  */
 public class ToOneFkSecondPass extends FkSecondPass {
-	private MetadataBuildingContext buildingContext;
-	private boolean unique;
-	private String path;
-	private String entityClassName;
+	private final MetadataBuildingContext buildingContext;
+	private final boolean unique;
+	private final String path;
+	private final String entityClassName;
 
 	public ToOneFkSecondPass(
 			ToOne value,
@@ -76,9 +76,9 @@ public class ToOneFkSecondPass extends FkSecondPass {
 				if ( path.startsWith( "id." ) ) {
 					localPath = path.substring( 3 );
 				}
-				Iterator it = ( (Component) valueIdentifier ).getPropertyIterator();
-				while ( it.hasNext() ) {
-					Property idProperty = (Property) it.next();
+
+				Component component = (Component) valueIdentifier;
+				for ( Property idProperty : component.getProperties() ) {
 					if ( localPath.equals( idProperty.getName() ) || localPath.startsWith( idProperty.getName() + "." ) ) {
 						return true;
 					}

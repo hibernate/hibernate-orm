@@ -9,6 +9,7 @@ package org.hibernate.mapping;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.sql.Alias;
@@ -52,6 +53,15 @@ public class Join implements AttributeContainer, Serializable {
 		prop.setPersistentClass( getPersistentClass() );
 	}
 
+	public List<Property> getDeclaredProperties() {
+		return declaredProperties;
+	}
+
+	public List<Property> getProperties() {
+		return properties;
+	}
+
+	@Deprecated(since = "6.0")
 	public Iterator<Property> getDeclaredPropertyIterator() {
 		return declaredProperties.iterator();
 	}
@@ -59,6 +69,8 @@ public class Join implements AttributeContainer, Serializable {
 	public boolean containsProperty(Property prop) {
 		return properties.contains(prop);
 	}
+
+	@Deprecated(since = "6.0")
 	public Iterator<Property> getPropertyIterator() {
 		return properties.iterator();
 	}
@@ -95,7 +107,7 @@ public class Join implements AttributeContainer, Serializable {
 		pk.setName( PK_ALIAS.toAliasString( table.getName() ) );
 		table.setPrimaryKey(pk);
 
-		pk.addColumns( getKey().getColumnIterator() );
+		pk.addColumns( getKey() );
 	}
 
 	public int getPropertySpan() {

@@ -7,7 +7,6 @@
 package org.hibernate.cfg;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -345,7 +344,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 
 		final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();
 
-		Column col = (Column) identifier.getColumnIterator().next();
+		Column col = identifier.getColumns().get(0);
 		String defaultName = context.getMetadataCollector().getLogicalColumnName(
 				identifier.getTable(),
 				col.getQuotedName()
@@ -449,17 +448,14 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		}
 	}
 
-
-
 	public void copyReferencedStructureAndCreateDefaultJoinColumns(
 			PersistentClass referencedEntity,
-			Iterator columnIterator,
+			SimpleValue referencedValue,
 			SimpleValue value) {
 		if ( !isNameDeferred() ) {
 			throw new AssertionFailure( "Building implicit column but the column is not implicit" );
 		}
-		while ( columnIterator.hasNext() ) {
-			Column synthCol = (Column) columnIterator.next();
+		for ( Column synthCol: referencedValue.getColumns() ) {
 			this.linkValueUsingDefaultColumnNaming( synthCol, referencedEntity, value );
 		}
 		//reset for the future
@@ -586,8 +582,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 									.getEntityBinding( mappedByEntityName );
 							final Property mappedByProperty = mappedByEntityBinding.getProperty( mappedByPropertyName );
 							final SimpleValue value = (SimpleValue) mappedByProperty.getValue();
-							final Iterator<Selectable> selectableValues = value.getColumnIterator();
-							if ( !selectableValues.hasNext() ) {
+							if ( value.getSelectables().isEmpty() ) {
 								throw new AnnotationException(
 										String.format(
 												Locale.ENGLISH,
@@ -597,8 +592,8 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 										)
 								);
 							}
-							final Selectable selectable = selectableValues.next();
-							if ( !Column.class.isInstance( selectable ) ) {
+							final Selectable selectable = value.getSelectables().get(0);
+							if ( !(selectable instanceof Column) ) {
 								throw new AnnotationException(
 										String.format(
 												Locale.ENGLISH,
@@ -608,7 +603,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 										)
 								);
 							}
-							if ( selectableValues.hasNext() ) {
+							if ( value.getSelectables().size()>1 ) {
 								throw new AnnotationException(
 										String.format(
 												Locale.ENGLISH,
@@ -817,9 +812,8 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			MetadataBuildingContext context) {
 		//convenient container to find whether a column is an id one or not
 		Set<Column> idColumns = new HashSet<>();
-		Iterator idColumnsIt = referencedEntity.getKey().getColumnIterator();
-		while ( idColumnsIt.hasNext() ) {
-			idColumns.add( (Column) idColumnsIt.next() );
+		for ( Selectable selectable : referencedEntity.getKey().getSelectables() ) {
+			idColumns.add( (Column) selectable );
 		}
 
 		boolean isFkReferencedColumnName = false;

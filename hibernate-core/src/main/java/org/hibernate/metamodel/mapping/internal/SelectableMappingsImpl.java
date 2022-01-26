@@ -64,13 +64,13 @@ public class SelectableMappingsImpl implements SelectableMappings {
 		final List<JdbcMapping> jdbcMappings = new ArrayList<>();
 		resolveJdbcMappings( jdbcMappings, mapping, value.getType() );
 
-		final List<Selectable> constraintColumns = value.getSelectables();
+		final List<Selectable> selectables = value.getVirtualSelectables();
 
 		final SelectableMapping[] selectableMappings = new SelectableMapping[jdbcMappings.size()];
-		for ( int i = 0; i < constraintColumns.size(); i++ ) {
+		for ( int i = 0; i < selectables.size(); i++ ) {
 			selectableMappings[propertyOrder[i]] = SelectableMappingImpl.from(
 					containingTableExpression,
-					constraintColumns.get( i ),
+					selectables.get( i ),
 					jdbcMappings.get( propertyOrder[i] ),
 					dialect,
 					sqmFunctionRegistry
@@ -85,13 +85,9 @@ public class SelectableMappingsImpl implements SelectableMappings {
 		final List<SelectableMapping> selectableMappings = CollectionHelper.arrayList( propertySpan );
 
 		embeddableMappingType.forEachAttributeMapping(
-				(index, attributeMapping) -> {
-					attributeMapping.forEachSelectable(
-							(columnIndex, selection) -> {
-								selectableMappings.add( selection );
-							}
-					);
-				}
+				(index, attributeMapping) -> attributeMapping.forEachSelectable(
+						(columnIndex, selection) -> selectableMappings.add( selection )
+				)
 		);
 
 		return new SelectableMappingsImpl( selectableMappings.toArray( new SelectableMapping[0] ) );

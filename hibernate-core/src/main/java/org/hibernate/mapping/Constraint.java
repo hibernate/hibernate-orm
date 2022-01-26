@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
@@ -129,11 +130,13 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		}
 	}
 
-	public void addColumns(Iterator columnIterator) {
-		while ( columnIterator.hasNext() ) {
-			Selectable col = (Selectable) columnIterator.next();
-			if ( !col.isFormula() ) {
-				addColumn( (Column) col );
+	public void addColumns(Value value) {
+		for ( Selectable selectable : value.getSelectables() ) {
+			if ( selectable.isFormula() ) {
+				throw new MappingException( "constraint involves a formula: " + this.name );
+			}
+			else {
+				addColumn( (Column) selectable );
 			}
 		}
 	}

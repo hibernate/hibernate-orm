@@ -284,7 +284,6 @@ public abstract class AbstractEntityPersister
 	public static final String VERSION_COLUMN_ALIAS = "version_";
 
 	private final String sqlAliasStem;
-	private EntityMappingType rootEntityDescriptor;
 
 	private final SingleIdEntityLoader<?> singleIdEntityLoader;
 	private final MultiIdEntityLoader<?> multiIdEntityLoader;
@@ -774,24 +773,22 @@ public abstract class AbstractEntityPersister
 
 		multiIdEntityLoader = new MultiIdLoaderStandard<>( this, bootDescriptor, factory );
 
-		Iterator<Selectable> idColumns = bootDescriptor.getIdentifier().getColumnIterator();
 		int i = 0;
-		while ( idColumns.hasNext() ) {
-			Column col = (Column) idColumns.next();
-			rootTableKeyColumnNames[i] = col.getQuotedName( dialect );
-			rootTableKeyColumnReaders[i] = col.getReadExpr( dialect );
-			rootTableKeyColumnReaderTemplates[i] = col.getTemplate(
+		for ( Column column: bootDescriptor.getIdentifier().getColumns() ) {
+			rootTableKeyColumnNames[i] = column.getQuotedName( dialect );
+			rootTableKeyColumnReaders[i] = column.getReadExpr( dialect );
+			rootTableKeyColumnReaderTemplates[i] = column.getTemplate(
 					dialect,
 					factory.getQueryEngine().getSqmFunctionRegistry()
 			);
-			identifierAliases[i] = col.getAlias( dialect, bootDescriptor.getRootTable() );
+			identifierAliases[i] = column.getAlias( dialect, bootDescriptor.getRootTable() );
 			i++;
 		}
 
 		// VERSION
 
 		if ( bootDescriptor.isVersioned() ) {
-			versionColumnName = ( (Column) bootDescriptor.getVersion().getColumnIterator().next() ).getQuotedName( dialect );
+			versionColumnName = bootDescriptor.getVersion().getColumns().get(0).getQuotedName( dialect );
 		}
 		else {
 			versionColumnName = null;
@@ -841,11 +838,9 @@ public abstract class AbstractEntityPersister
 		ArrayList<String[]> lazyColAliases = new ArrayList<>();
 
 		final ArrayList<Integer> lobPropertiesLocalCollector = new ArrayList<>();
-		Iterator<Property> properties = bootDescriptor.getPropertyClosureIterator();
 		i = 0;
 		boolean foundFormula = false;
-		while ( properties.hasNext() ) {
-			Property prop = properties.next();
+		for ( Property prop : bootDescriptor.getPropertyClosure() ) {
 			thisClassProperties.add( prop );
 
 			int span = prop.getColumnSpan();
@@ -856,18 +851,16 @@ public abstract class AbstractEntityPersister
 			String[] colReaderTemplates = new String[span];
 			String[] colWriters = new String[span];
 			String[] formulaTemplates = new String[span];
-			Iterator<Selectable> colIter = prop.getColumnIterator();
 			int k = 0;
-			while ( colIter.hasNext() ) {
-				Selectable thing = colIter.next();
-				colAliases[k] = thing.getAlias( dialect, prop.getValue().getTable() );
-				if ( thing.isFormula() ) {
+			for ( Selectable selectable: prop.getSelectables() ) {
+				colAliases[k] = selectable.getAlias( dialect, prop.getValue().getTable() );
+				if ( selectable.isFormula() ) {
 					foundFormula = true;
-					( (Formula) thing ).setFormula( substituteBrackets( ( (Formula) thing ).getFormula() ) );
-					formulaTemplates[k] = thing.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
+					( (Formula) selectable ).setFormula( substituteBrackets( ( (Formula) selectable ).getFormula() ) );
+					formulaTemplates[k] = selectable.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
 				}
 				else {
-					Column col = (Column) thing;
+					Column col = (Column) selectable;
 					colNames[k] = col.getQuotedName( dialect );
 					colReaderTemplates[k] = col.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
 					colWriters[k] = col.getWriteExpr();
@@ -945,9 +938,7 @@ public abstract class AbstractEntityPersister
 		ArrayList<Boolean> columnSelectables = new ArrayList<>();
 		ArrayList<Boolean> propNullables = new ArrayList<>();
 
-		Iterator<Property> iter = bootDescriptor.getSubclassPropertyClosureIterator();
-		while ( iter.hasNext() ) {
-			final Property prop = iter.next();
+		for ( Property prop : bootDescriptor.getSubclassPropertyClosure() ) {
 			names.add( prop.getName() );
 			classes.add( prop.getPersistentClass().getEntityName() );
 			types.add( prop.getType() );
@@ -956,7 +947,6 @@ public abstract class AbstractEntityPersister
 			definedBySubclass.add( Boolean.valueOf( isDefinedBySubclass ) );
 			propNullables.add( Boolean.valueOf( prop.isOptional() || isDefinedBySubclass ) ); //TODO: is this completely correct?
 
-			final Iterator<Selectable> colIter = prop.getColumnIterator();
 			String[] cols = new String[ prop.getColumnSpan() ];
 			String[] readers = new String[ prop.getColumnSpan() ];
 			String[] readerTemplates = new String[ prop.getColumnSpan() ];
@@ -968,7 +958,7 @@ public abstract class AbstractEntityPersister
 			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 					prop,
 					entityMetamodel.isInstrumented(),
-					(entityName) -> {
+					entityName -> {
 						final MetadataImplementor metadata = creationContext.getMetadata();
 						final PersistentClass entityBinding = metadata.getEntityBinding( entityName );
 						assert entityBinding != null;
@@ -976,26 +966,25 @@ public abstract class AbstractEntityPersister
 					},
 					sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled()
 			);
-			while ( colIter.hasNext() ) {
-				final Selectable thing = colIter.next();
-				if ( thing.isFormula() ) {
-					String template = thing.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
+			for ( Selectable selectable : prop.getSelectables() ) {
+				if ( selectable.isFormula() ) {
+					String template = selectable.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
 					formnos[l] = formulaTemplates.size();
 					colnos[l] = -1;
 					formulaTemplates.add( template );
 					forms[l] = template;
-					formulas.add( thing.getText( dialect ) );
-					formulaAliases.add( thing.getAlias( dialect ) );
+					formulas.add( selectable.getText( dialect ) );
+					formulaAliases.add( selectable.getAlias( dialect ) );
 					formulasLazy.add( lazy );
 				}
 				else {
-					Column col = (Column) thing;
+					Column col = (Column) selectable;
 					String colName = col.getQuotedName( dialect );
 					colnos[l] = columns.size(); //before add :-)
 					formnos[l] = -1;
 					columns.add( colName );
 					cols[l] = colName;
-					aliases.add( thing.getAlias( dialect, prop.getValue().getTable() ) );
+					aliases.add( selectable.getAlias( dialect, prop.getValue().getTable() ) );
 					columnsLazy.add( lazy );
 					columnSelectables.add( Boolean.valueOf( prop.isSelectable() ) );
 
@@ -1059,29 +1048,9 @@ public abstract class AbstractEntityPersister
 			filterHelper = null;
 		}
 
-		// Check if we can use Reference Cached entities in 2lc
-		// todo : should really validate that the cache access type is read-only
-		boolean refCacheEntries = true;
-		if ( !factory.getSessionFactoryOptions().isDirectReferenceCacheEntriesEnabled() ) {
-			refCacheEntries = false;
-		}
+		useReferenceCacheEntries = useReferenceCacheEntries();
 
-		// for now, limit this to just entities that:
-		// 		1) are immutable
-		if ( entityMetamodel.isMutable() ) {
-			refCacheEntries = false;
-		}
-
-		//		2)  have no associations.  Eventually we want to be a little more lenient with associations.
-		for ( Type type : getSubclassPropertyTypeClosure() ) {
-			if ( type.isAssociationType() ) {
-				refCacheEntries = false;
-			}
-		}
-
-		useReferenceCacheEntries = refCacheEntries;
-
-		this.cacheEntryHelper = buildCacheEntryHelper();
+		cacheEntryHelper = buildCacheEntryHelper();
 
 		if ( sessionFactoryOptions.isSecondLevelCacheEnabled() ) {
 			this.invalidateCache = canWriteToCache && shouldInvalidateCache( bootDescriptor, creationContext );
@@ -1090,6 +1059,30 @@ public abstract class AbstractEntityPersister
 			this.invalidateCache = false;
 		}
 
+	}
+
+	private boolean useReferenceCacheEntries() {
+		// Check if we can use Reference Cached entities in 2lc
+		// todo : should really validate that the cache access type is read-only
+		if ( !factory.getSessionFactoryOptions().isDirectReferenceCacheEntriesEnabled() ) {
+			return false;
+		}
+
+		// for now, limit this to just entities that:
+		else if ( entityMetamodel.isMutable() ) {
+			// 		1) are immutable
+			return false;
+		}
+		else {
+			//		2) have no associations.
+			//		Eventually we want to be a little more lenient with associations.
+			for ( Type type : getSubclassPropertyTypeClosure() ) {
+				if ( type.isAssociationType() ) {
+					return false;
+				}
+			}
+			return true;
+		}
 	}
 
 	private static SingleIdEntityLoader<?> createBatchingIdEntityLoader(
@@ -2355,13 +2348,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private DiscriminatorMetadata buildTypeDiscriminatorMetadata() {
-		return new DiscriminatorMetadata() {
-
-			@Override
-			public Type getResolutionType() {
-				return new DiscriminatorType( (BasicType) getDiscriminatorType(), AbstractEntityPersister.this );
-			}
-		};
+		return () -> new DiscriminatorType( (BasicType<?>) getDiscriminatorType(), AbstractEntityPersister.this );
 	}
 
 	public static String generateTableAlias(String rootAlias, int tableNumber) {
@@ -2530,13 +2517,11 @@ public abstract class AbstractEntityPersister
 			} );
 		}
 
-		if ( attributeNames != null ) {
-			final boolean[] propertyUpdateability = entityMetamodel.getPropertyUpdateability();
-			for ( String attributeName : attributeNames ) {
-				final Integer index = entityMetamodel.getPropertyIndexOrNull( attributeName );
-				if ( index != null && propertyUpdateability[index] && !fields.contains( index ) ) {
-					fields.add( index );
-				}
+		final boolean[] propertyUpdateability = entityMetamodel.getPropertyUpdateability();
+		for ( String attributeName : attributeNames ) {
+			final Integer index = entityMetamodel.getPropertyIndexOrNull( attributeName );
+			if ( index != null && propertyUpdateability[index] && !fields.contains( index ) ) {
+				fields.add( index );
 			}
 		}
 
@@ -2599,7 +2584,7 @@ public abstract class AbstractEntityPersister
 	protected void initSubclassPropertyAliasesMap(PersistentClass model) throws MappingException {
 
 		// ALIASES
-		internalInitSubclassPropertyAliasesMap( null, model.getSubclassPropertyClosureIterator() );
+		internalInitSubclassPropertyAliasesMap( null, model.getSubclassPropertyClosure() );
 
 		// aliases for identifier ( alias.id ); skip if the entity defines a non-id property named 'id'
 		if ( !entityMetamodel.hasNonIdentifierPropertyNamedId() ) {
@@ -2658,31 +2643,26 @@ public abstract class AbstractEntityPersister
 
 	}
 
-	private void internalInitSubclassPropertyAliasesMap(String path, Iterator<Property> propertyIterator) {
-		while ( propertyIterator.hasNext() ) {
-
-			Property prop = propertyIterator.next();
-			String propname = path == null ? prop.getName() : path + "." + prop.getName();
-			if ( prop.isComposite() ) {
-				Component component = (Component) prop.getValue();
-				Iterator<Property> compProps = component.getPropertyIterator();
-				internalInitSubclassPropertyAliasesMap( propname, compProps );
+	private void internalInitSubclassPropertyAliasesMap(String path, List<Property> properties) {
+		for (Property property : properties) {
+			String name = path == null ? property.getName() : path + "." + property.getName();
+			if ( property.isComposite() ) {
+				Component component = (Component) property.getValue();
+				internalInitSubclassPropertyAliasesMap( name, component.getProperties() );
 			}
 			else {
-				String[] aliases = new String[prop.getColumnSpan()];
-				String[] cols = new String[prop.getColumnSpan()];
-				Iterator<Selectable> colIter = prop.getColumnIterator();
+				String[] aliases = new String[property.getColumnSpan()];
+				String[] cols = new String[property.getColumnSpan()];
 				int l = 0;
-				while ( colIter.hasNext() ) {
-					Selectable thing = colIter.next();
+				for ( Selectable selectable: property.getSelectables() ) {
 					Dialect dialect = getFactory().getJdbcServices().getDialect();
-					aliases[l] = thing.getAlias( dialect, prop.getValue().getTable() );
-					cols[l] = thing.getText(dialect); // TODO: skip formulas?
+					aliases[l] = selectable.getAlias( dialect, property.getValue().getTable() );
+					cols[l] = selectable.getText(dialect); // TODO: skip formulas?
 					l++;
 				}
 
-				subclassPropertyAliases.put( propname, aliases );
-				subclassPropertyColumnNames.put( propname, cols );
+				subclassPropertyAliases.put( name, aliases );
+				subclassPropertyColumnNames.put( name, cols );
 			}
 		}
 
@@ -4389,9 +4369,8 @@ public abstract class AbstractEntityPersister
 	public final boolean[] getPropertiesToUpdate(final int[] dirtyProperties, final boolean hasDirtyCollection) {
 		final boolean[] propsToUpdate = new boolean[entityMetamodel.getPropertySpan()];
 		final boolean[] updateability = getPropertyUpdateability(); //no need to check laziness, dirty checking handles that
-		for ( int j = 0; j < dirtyProperties.length; j++ ) {
-			int property = dirtyProperties[j];
-			if ( updateability[property] ) {
+		for ( int property: dirtyProperties ) {
+			if (updateability[property]) {
 				propsToUpdate[property] = true;
 			}
 		}
@@ -4490,9 +4469,9 @@ public abstract class AbstractEntityPersister
 
 	private void logDirtyProperties(int[] props) {
 		if ( LOG.isTraceEnabled() ) {
-			for ( int i = 0; i < props.length; i++ ) {
-				String propertyName = entityMetamodel.getProperties()[props[i]].getName();
-				LOG.trace( StringHelper.qualify( getEntityName(), propertyName ) + " is dirty" );
+			for ( int prop : props ) {
+				String propertyName = entityMetamodel.getProperties()[prop].getName();
+				LOG.trace(StringHelper.qualify(getEntityName(), propertyName) + " is dirty");
 			}
 		}
 	}
@@ -5501,6 +5480,7 @@ public abstract class AbstractEntityPersister
 				.getBootModel()
 				.getEntityBinding( getEntityName() );
 
+		EntityMappingType rootEntityDescriptor;
 		if ( superMappingType != null ) {
 			( (InFlightEntityMappingType) superMappingType ).prepareMappingModel( creationProcess );
 			if ( shouldProcessSuperMapping() ) {
@@ -5528,10 +5508,8 @@ public abstract class AbstractEntityPersister
 			final NonIdentifierAttribute runtimeAttrDefinition = properties[i];
 			final Property bootProperty = bootEntityDescriptor.getProperty( runtimeAttrDefinition.getName() );
 
-			if ( superMappingType != null && superMappingType.findAttributeMapping( bootProperty.getName() ) != null ) {
-				// its defined on the super-type, skip it here
-			}
-			else {
+			if ( superMappingType == null
+					|| superMappingType.findAttributeMapping( bootProperty.getName() ) == null ) {
 				declaredAttributeMappings.put(
 						runtimeAttrDefinition.getName(),
 						generateNonIdAttributeMapping(
@@ -5542,6 +5520,9 @@ public abstract class AbstractEntityPersister
 						)
 				);
 			}
+//			else {
+				// its defined on the supertype, skip it here
+//			}
 		}
 
 		getAttributeMappings();
@@ -5577,8 +5558,8 @@ public abstract class AbstractEntityPersister
 				}
 		);
 
-		boolean needsMultiTableInsert;
-		if ( needsMultiTableInsert = isMultiTable() ) {
+		boolean needsMultiTableInsert = isMultiTable();
+		if ( needsMultiTableInsert ) {
 			creationProcess.registerInitializationCallback(
 					"Entity(" + getEntityName() + ") `sqmMultiTableMutationStrategy` interpretation",
 					() -> {
@@ -6074,9 +6055,9 @@ public abstract class AbstractEntityPersister
 					attrColumnExpression = attrColumnNames[ 0 ];
 					isAttrColumnExpressionFormula = false;
 
-					final Iterator<Selectable> selectableIterator = basicBootValue.getColumnIterator();
-					assert selectableIterator.hasNext();
-					final Selectable selectable = selectableIterator.next();
+					final List<Selectable> selectables = basicBootValue.getSelectables();
+					assert !selectables.isEmpty();
+					final Selectable selectable = selectables.get(0);
 
 					assert attrColumnExpression.equals( selectable.getText(sessionFactory.getJdbcServices().getDialect()) );
 

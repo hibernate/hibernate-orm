@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.internal;
 
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -40,14 +39,12 @@ public abstract class AbstractEmbeddableRepresentationStrategy implements Embedd
 		this.attributeNameToPositionMap = new ConcurrentHashMap<>( propertySpan );
 
 		boolean foundCustomAccessor = false;
-		Iterator itr = bootDescriptor.getPropertyIterator();
 		int i = 0;
-		while ( itr.hasNext() ) {
-			final Property prop = ( Property ) itr.next();
-			propertyAccesses[i] = buildPropertyAccess( prop );
-			attributeNameToPositionMap.put( prop.getName(), i );
+		for ( Property property : bootDescriptor.getProperties() ) {
+			propertyAccesses[i] = buildPropertyAccess( property );
+			attributeNameToPositionMap.put( property.getName(), i );
 
-			if ( !prop.isBasicPropertyAccessor() ) {
+			if ( !property.isBasicPropertyAccessor() ) {
 				foundCustomAccessor = true;
 			}
 

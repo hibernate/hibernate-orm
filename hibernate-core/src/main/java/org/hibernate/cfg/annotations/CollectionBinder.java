@@ -1352,9 +1352,7 @@ public abstract class CollectionBinder {
 
 	private static String buildOrderById(PersistentClass associatedClass, String order) {
 		final StringBuilder sb = new StringBuilder();
-		final Iterator<Selectable> columnIterator = associatedClass.getIdentifier().getColumnIterator();
-		while ( columnIterator.hasNext() ) {
-			final Selectable selectable = columnIterator.next();
+		for ( Selectable selectable: associatedClass.getIdentifier().getSelectables() ) {
 			sb.append( selectable.getText() );
 			sb.append( order );
 			sb.append( ", " );
@@ -1812,7 +1810,7 @@ public abstract class CollectionBinder {
 				}
 				else if ( owner.getIdentifierMapper() != null && owner.getIdentifierMapper().getPropertySpan() > 0 ) {
 					// use the access for the owning entity's "id mapper", if one
-					Property prop = owner.getIdentifierMapper().getPropertyIterator().next();
+					Property prop = owner.getIdentifierMapper().getProperties().get(0);
 					baseAccessType = prop.getPropertyAccessorName().equals( "property" )
 							? AccessType.PROPERTY
 							: AccessType.FIELD;
@@ -2016,16 +2014,16 @@ public abstract class CollectionBinder {
 		final String mappedBy = columns[0].getMappedBy();
 		if ( StringHelper.isNotEmpty( mappedBy ) ) {
 			final Property property = referencedEntity.getRecursiveProperty( mappedBy );
-			Iterator<Selectable> mappedByColumns;
+			List<Selectable> mappedByColumns;
 			if ( property.getValue() instanceof Collection ) {
-				mappedByColumns = ( (Collection) property.getValue() ).getKey().getColumnIterator();
+				mappedByColumns = ( (Collection) property.getValue() ).getKey().getSelectables();
 			}
 			else {
 				//find the appropriate reference key, can be in a join
 				Iterator<Join> joinsIt = referencedEntity.getJoinIterator();
 				KeyValue key = null;
 				while ( joinsIt.hasNext() ) {
-					Join join = (Join) joinsIt.next();
+					Join join = joinsIt.next();
 					if ( join.containsProperty( property ) ) {
 						key = join.getKey();
 						break;
@@ -2034,10 +2032,10 @@ public abstract class CollectionBinder {
 				if ( key == null ) {
 					key = property.getPersistentClass().getIdentifier();
 				}
-				mappedByColumns = key.getColumnIterator();
+				mappedByColumns = key.getSelectables();
 			}
-			while ( mappedByColumns.hasNext() ) {
-				Column column = (Column) mappedByColumns.next();
+			for ( Selectable selectable: mappedByColumns ) {
+				Column column = (Column) selectable;
 				columns[0].linkValueUsingAColumnCopy( column, value );
 			}
 			String referencedPropertyName =

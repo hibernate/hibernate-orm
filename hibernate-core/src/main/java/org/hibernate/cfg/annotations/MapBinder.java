@@ -119,11 +119,11 @@ public class MapBinder extends CollectionBinder {
 			if ( indexValue.getColumnSpan() != 1 ) {
 				throw new AssertionFailure( "Map key mapped by @MapKeyColumn does not have 1 column" );
 			}
-			final Selectable selectable = indexValue.getColumnIterator().next();
+			final Selectable selectable = indexValue.getSelectables().get(0);
 			if ( selectable.isFormula() ) {
 				throw new AssertionFailure( "Map key mapped by @MapKeyColumn is a Formula" );
 			}
-			Column column = (Column) map.getIndex().getColumnIterator().next();
+			Column column = (Column) selectable;
 			if ( !column.isNullable() ) {
 				final PersistentClass persistentClass = ( ( OneToMany ) map.getElement() ).getAssociatedClass();
 				// check if the index column has been mapped by the associated entity to a property;
@@ -138,11 +138,10 @@ public class MapBinder extends CollectionBinder {
 		}
 	}
 
-	private boolean propertyIteratorContainsColumn(Iterator propertyIterator, Column column) {
-		for ( Iterator it = propertyIterator; it.hasNext(); ) {
-			final Property property = (Property) it.next();
-			for ( Iterator<Selectable> selectableIterator = property.getColumnIterator(); selectableIterator.hasNext(); ) {
-				final Selectable selectable = selectableIterator.next();
+	private boolean propertyIteratorContainsColumn(Iterator<Property> propertyIterator, Column column) {
+		for (; propertyIterator.hasNext(); ) {
+			final Property property = propertyIterator.next();
+			for ( Selectable selectable: property.getSelectables() ) {
 				if ( column.equals( selectable ) ) {
 					final Column iteratedColumn = (Column) selectable;
 					if ( column.getValue().getTable().equals( iteratedColumn.getValue().getTable() ) ) {
@@ -190,7 +189,7 @@ public class MapBinder extends CollectionBinder {
 			//this is a true Map mapping
 			//TODO ugly copy/paste from CollectionBinder.bindManyToManySecondPass
 			String mapKeyType;
-			Class target = void.class;
+			Class<?> target = void.class;
 			/*
 			 * target has priority over reflection for the map key type
 			 * JPA 2 has priority
@@ -264,8 +263,9 @@ public class MapBinder extends CollectionBinder {
 							: AccessType.FIELD;
 				}
 				else if ( owner.getIdentifierMapper() != null && owner.getIdentifierMapper().getPropertySpan() > 0 ) {
-					Property prop = (Property) owner.getIdentifierMapper().getPropertyIterator().next();
-					accessType = prop.getPropertyAccessorName().equals( "property" ) ? AccessType.PROPERTY
+					Property prop = owner.getIdentifierMapper().getProperties().get(0);
+					accessType = prop.getPropertyAccessorName().equals( "property" )
+							? AccessType.PROPERTY
 							: AccessType.FIELD;
 				}
 				else {
@@ -301,7 +301,7 @@ public class MapBinder extends CollectionBinder {
 					mapValue.setIndex( component );
 				}
 				else {
-					final BasicValueBinder elementBinder = new BasicValueBinder( BasicValueBinder.Kind.MAP_KEY, buildingContext );
+					final BasicValueBinder<?> elementBinder = new BasicValueBinder<>( BasicValueBinder.Kind.MAP_KEY, buildingContext );
 					elementBinder.setReturnedClassName( mapKeyType );
 
 					AnnotatedColumn[] elementColumns = mapKeyColumns;
@@ -423,11 +423,9 @@ public class MapBinder extends CollectionBinder {
 
 		if ( value instanceof Component ) {
 			Component component = (Component) value;
-			Iterator properties = component.getPropertyIterator();
 			Component indexComponent = new Component( getBuildingContext(), collection );
 			indexComponent.setComponentClassName( component.getComponentClassName() );
-			while ( properties.hasNext() ) {
-				Property current = (Property) properties.next();
+			for ( Property current : component.getProperties() ) {
 				Property newProperty = new Property();
 				newProperty.setCascade( current.getCascade() );
 				newProperty.setValueGenerationStrategy( current.getValueGenerationStrategy() );
@@ -489,9 +487,7 @@ public class MapBinder extends CollectionBinder {
 				targetValue = new BasicValue( getBuildingContext(), mapKeyTable );
 				targetValue.copyTypeFrom( sourceValue );
 			}
-			final Iterator<Selectable> columns = sourceValue.getColumnIterator();
-			while ( columns.hasNext() ) {
-				Selectable current = columns.next();
+			for ( Selectable current : sourceValue.getSelectables() ) {
 				if ( current instanceof Column ) {
 					targetValue.addColumn( ( (Column) current ).clone() );
 				}

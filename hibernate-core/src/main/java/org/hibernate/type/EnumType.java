@@ -118,7 +118,7 @@ public class EnumType<T extends Enum<T>>
 		// the `reader != null` block handles annotations, while the `else` block
 		// handles hbm.xml
 		if ( reader != null ) {
-			enumClass = reader.getReturnedClass().asSubclass( Enum.class );
+			enumClass = (Class<T>) reader.getReturnedClass().asSubclass( Enum.class );
 
 			final Long columnLength = reader.getColumnLengths()[0];
 

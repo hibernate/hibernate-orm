@@ -41,8 +41,6 @@ import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
-import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -204,41 +202,6 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public SqlStringGenerationContext getSqlStringGenerationContext() {
 		return delegate.getSqlStringGenerationContext();
-	}
-
-	@Deprecated
-	public EntityPersister getEntityPersister(String entityName) throws MappingException {
-		return delegate.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityName );
-	}
-
-	@Deprecated
-	public Map<String, EntityPersister> getEntityPersisters() {
-		// for the time being, leave this calling `MetamodelImplementor` to avoid
-		// creating the map
-		return delegate.getMetamodel().entityPersisters();
-	}
-
-	@Deprecated
-	public CollectionPersister getCollectionPersister(String role) throws MappingException {
-		return delegate.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getCollectionDescriptor( role );
-	}
-
-	@Deprecated
-	public Map<String, CollectionPersister> getCollectionPersisters() {
-		// for the time being, leave this calling `MetamodelImplementor` to avoid
-		// creating the map
-		return delegate.getMetamodel().collectionPersisters();
-	}
-
-	@Deprecated
-	public String[] getImplementors(String className) throws MappingException {
-		// for the time being, leave this calling `MetamodelImplementor` - nothing uses
-		// this method and this is the only usage of `MetamodelImplementor#getImplementors`
-		return delegate.getMetamodel().getImplementors(className);
 	}
 
 	@Override

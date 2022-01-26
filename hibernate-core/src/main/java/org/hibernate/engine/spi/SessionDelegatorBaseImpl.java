@@ -490,13 +490,18 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public SelectionQuery<?> createSelectQuery(String hqlString) {
-		return queryDelegate().createSelectQuery( hqlString );
+	public SelectionQuery<?> createSelectionQuery(String hqlString) {
+		return queryDelegate().createSelectionQuery( hqlString );
 	}
 
 	@Override
-	public <R> SelectionQuery<R> createSelectQuery(String hqlString, Class<R> resultType) {
-		return queryDelegate().createSelectQuery( hqlString, resultType );
+	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, Class<R> resultType) {
+		return queryDelegate().createSelectionQuery( hqlString, resultType );
+	}
+
+	@Override
+	public <R> SelectionQuery<R> createSelectionQuery(CriteriaQuery<R> criteria) {
+		return queryDelegate().createSelectionQuery( criteria );
 	}
 
 	@Override
@@ -512,6 +517,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public <T> QueryImplementor<T> createNamedQuery(String name, Class<T> resultClass) {
 		return queryDelegate().createNamedQuery( name, resultClass );
+	}
+
+	@Override
+	public SelectionQuery<?> createNamedSelectionQuery(String name) {
+		return delegate().createNamedSelectionQuery( name );
+	}
+
+	@Override
+	public <R> SelectionQuery<R> createNamedSelectionQuery(String name, Class<R> resultType) {
+		return delegate().createNamedSelectionQuery( name, resultType );
 	}
 
 	@Override @SuppressWarnings("rawtypes")

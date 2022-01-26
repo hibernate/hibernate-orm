@@ -15,6 +15,13 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.function.Function;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.NamedNativeQuery;
+import jakarta.persistence.TransactionRequiredException;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
 
 import org.hibernate.CacheMode;
 import org.hibernate.EmptyInterceptor;
@@ -87,13 +94,6 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
-
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.TransactionRequiredException;
-import jakarta.persistence.Tuple;
-import jakarta.persistence.criteria.CriteriaDelete;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.CriteriaUpdate;
 
 import static java.lang.Boolean.TRUE;
 
@@ -653,7 +653,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public SelectionQuery<?> createSelectQuery(String hqlString) {
+	public SelectionQuery<?> createSelectionQuery(String hqlString) {
 		checkOpen();
 		pulseTransactionCoordinator();
 		delayedAfterCompletion();
@@ -666,8 +666,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 					s -> queryEngine.getHqlTranslator().translate( hqlString )
 			);
 
-			if ( hqlInterpretation.getSqmStatement() instanceof SqmDmlStatement ) {
-				throw new IllegalSelectQueryException( "Expecting a selection query, but found `" + hqlString + "`" );
+			if ( !( hqlInterpretation.getSqmStatement() instanceof SqmSelectStatement ) ) {
+				throw new IllegalSelectQueryException( "Expecting a selection query, but found `" + hqlString + "`", hqlString );
 			}
 
 			final SqmSelectionQuery<?> query = new SqmSelectionQueryImpl<>( hqlString, hqlInterpretation, this );
@@ -679,13 +679,13 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 		catch (RuntimeException e) {
 			markForRollbackOnly();
-			throw getExceptionConverter().convert( e );
+			throw e;
 		}
 	}
 
 	@Override
-	public <R> SelectionQuery<R> createSelectQuery(String hqlString, Class<R> expectedResultType) {
-		final SelectionQuery<?> selectQuery = createSelectQuery( hqlString );
+	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, Class<R> expectedResultType) {
+		final SelectionQuery<?> selectQuery = createSelectionQuery( hqlString );
 		//noinspection unchecked
 		final Class<?> resultType = ( (SqmSelectionQueryImpl<R>) selectQuery ).getResultType();
 		if ( resultType == null || expectedResultType.isAssignableFrom( resultType ) ) {
@@ -703,6 +703,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		);
 	}
 
+	@Override
+	public <R> SelectionQuery<R> createSelectionQuery(CriteriaQuery<R> criteria) {
+		return new SqmSelectionQueryImpl<>( (SqmSelectStatement<R>) criteria, this );
+	}
 
 	@Override
 	public <T> QueryImplementor<T> createQuery(String queryString, Class<T> resultClass) {
@@ -840,6 +844,75 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public <R> QueryImplementor<R> createNamedQuery(String name, Class<R> resultClass) {
 		return buildNamedQuery( name, resultClass );
+	}
+
+	@Override
+	public SelectionQuery<?> createNamedSelectionQuery(String queryName) {
+		return createNamedSelectionQuery( queryName, null );
+	}
+
+	@Override
+	public <R> SelectionQuery<R> createNamedSelectionQuery(String queryName, Class<R> expectedResultType) {
+		checkOpen();
+		pulseTransactionCoordinator();
+		delayedAfterCompletion();
+
+		// this method can be called for either a named HQL query or a named native query
+
+		// first see if it is a named HQL query
+		final NamedHqlQueryMemento namedHqlDescriptor = getFactory().getQueryEngine()
+				.getNamedObjectRepository()
+				.getHqlQueryMemento( queryName );
+
+		if ( namedHqlDescriptor != null ) {
+			return createNamedHqlSelectionQuery( namedHqlDescriptor, expectedResultType );
+		}
+
+
+		// otherwise, see if it is a named native query
+		final NamedNativeQueryMemento namedNativeDescriptor = getFactory().getQueryEngine()
+				.getNamedObjectRepository()
+				.getNativeQueryMemento( queryName );
+
+		if ( namedNativeDescriptor != null ) {
+			return createNamedNativeSelectionQuery( namedNativeDescriptor, expectedResultType );
+		}
+
+		throw new UnknownNamedQueryException( queryName );
+	}
+
+	private <R> SelectionQuery<R> createNamedNativeSelectionQuery(
+			NamedNativeQueryMemento memento,
+			Class<R> expectedResultType) {
+		throw new UnsupportedOperationException(
+				String.format(
+						Locale.ROOT,
+						"Support for `@%s` + `%s` is not (yet) implemented",
+						NamedNativeQuery.class.getName(),
+						SelectionQuery.class.getName()
+				)
+		);
+	}
+
+	private <R> SqmSelectionQueryImpl<R> createNamedHqlSelectionQuery(
+			NamedHqlQueryMemento memento,
+			Class<R> expectedResultType) {
+		final SqmSelectionQueryImpl<R> selectionQuery = new SqmSelectionQueryImpl<>( memento, expectedResultType, this );
+
+		if ( StringHelper.isEmpty( memento.getComment() ) ) {
+			selectionQuery.setComment( "Named HQL query : " + memento.getRegistrationName() );
+		}
+		else {
+			selectionQuery.setComment( memento.getComment() );
+		}
+
+		applyQuerySettingsAndHints( selectionQuery );
+
+		if ( memento.getLockOptions() != null ) {
+			selectionQuery.getLockOptions().overlay( memento.getLockOptions() );
+		}
+
+		return selectionQuery;
 	}
 
 	@Override

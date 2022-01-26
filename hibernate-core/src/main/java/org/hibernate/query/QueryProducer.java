@@ -39,7 +39,7 @@ public interface QueryProducer {
 	 * @see jakarta.persistence.EntityManager#createQuery(String)
 	 *
 	 * @deprecated use {@link #createQuery(String, Class)},
-	 * {@link #createSelectQuery} or {@link #createMutationQuery(String)}
+	 * {@link #createSelectionQuery} or {@link #createMutationQuery(String)}
 	 * depending on intention
 	 */
 	@Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
@@ -168,7 +168,7 @@ public interface QueryProducer {
 	 * @throws IllegalSelectQueryException if the given HQL query
 	 * is an insert, update or delete query
 	 */
-	SelectionQuery<?> createSelectQuery(String hqlString);
+	SelectionQuery<?> createSelectionQuery(String hqlString);
 
 	/**
 	 * Create a {@link SelectionQuery} reference for the given HQL.
@@ -180,7 +180,14 @@ public interface QueryProducer {
 	 * @throws IllegalSelectQueryException if the given HQL query
 	 * is an insert, update or delete query
 	 */
-	<R> SelectionQuery<R> createSelectQuery(String hqlString, Class<R> resultType);
+	<R> SelectionQuery<R> createSelectionQuery(String hqlString, Class<R> resultType);
+
+	/**
+	 * Create a {@link SelectionQuery} reference for the given Criteria.
+	 *
+	 * @see jakarta.persistence.EntityManager#createQuery(CriteriaQuery)
+	 */
+	<R> SelectionQuery<R> createSelectionQuery(CriteriaQuery<R> criteria);
 
 	/**
 	 * Create a MutationQuery reference for the given HQL insert,
@@ -247,6 +254,25 @@ public interface QueryProducer {
 	 * @see jakarta.persistence.EntityManager#createNamedQuery(String,Class)
 	 */
 	<R> Query<R> createNamedQuery(String name, Class<R> resultClass);
+
+	/**
+	 * Create a {@link SelectionQuery} instance for the
+	 * named {@link jakarta.persistence.NamedQuery}
+	 *
+	 * @throws IllegalSelectQueryException if the given HQL query is a select query
+	 * @throws UnknownNamedQueryException if no query has been defined with the given name
+	 */
+	SelectionQuery<?> createNamedSelectionQuery(String name);
+
+	/**
+	 * Create a {@link SelectionQuery} instance for the
+	 * named {@link jakarta.persistence.NamedQuery} with the expected
+	 * result-type
+	 *
+	 * @throws IllegalSelectQueryException if the given HQL query is a select query
+	 * @throws UnknownNamedQueryException if no query has been defined with the given name
+	 */
+	<R> SelectionQuery<R> createNamedSelectionQuery(String name, Class<R> resultType);
 
 	/**
 	 * Create a {@link MutationQuery} instance for the given named insert,

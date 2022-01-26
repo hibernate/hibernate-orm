@@ -16,7 +16,6 @@ import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.named.AbstractNamedQueryMemento;
 import org.hibernate.query.named.NameableQuery;
 import org.hibernate.query.named.NamedQueryMemento;
-import org.hibernate.query.spi.QueryImplementor;
 
 /**
  * NamedQueryMemento for HQL queries

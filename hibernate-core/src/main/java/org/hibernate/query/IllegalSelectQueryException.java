@@ -9,7 +9,7 @@ package org.hibernate.query;
 import org.hibernate.QueryException;
 
 /**
- * Indicates an attempt to call {@link QueryProducer#createSelectQuery(String)}
+ * Indicates an attempt to call {@link QueryProducer#createSelectionQuery(String)}
  * with a non-selection query (generally a mutation query)
  *
  * @author Steve Ebersole

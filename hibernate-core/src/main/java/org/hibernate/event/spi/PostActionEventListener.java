@@ -19,20 +19,6 @@ interface PostActionEventListener {
 	 * @param persister The persister for the entity in question.
 	 *
 	 * @return {@code true} if after transaction callbacks should be added.
-	 *
-	 * @deprecated use {@link #requiresPostCommitHandling(EntityPersister)}
 	 */
-	@Deprecated
-	boolean requiresPostCommitHanding(EntityPersister persister);
-
-	/**
-	 * Does this listener require that after transaction hooks be registered?
-	 *
-	 * @param persister The persister for the entity in question.
-	 *
-	 * @return {@code true} if after transaction callbacks should be added.
-	 */
-	default boolean requiresPostCommitHandling(EntityPersister persister) {
-		return requiresPostCommitHanding( persister );
-	}
+	boolean requiresPostCommitHandling(EntityPersister persister);
 }

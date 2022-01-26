@@ -165,7 +165,7 @@ public class MergeListPreAndPostPersistWithIdentityTest extends BaseCoreFunction
 						}
 					}
 
-					public boolean requiresPostCommitHanding(EntityPersister persister) {
+					public boolean requiresPostCommitHandling(EntityPersister persister) {
 						return false;
 					}
 				}

@@ -12,6 +12,7 @@ import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 
 import org.hibernate.annotations.CollectionTypeRegistration;
@@ -31,7 +32,7 @@ public class TheEntityWithUniqueListRegistration {
 	@Basic
 	private String name;
 
-	@CollectionTable(name = "unique_list_contents_reg")
+	@CollectionTable(name = "unique_list_contents_reg", joinColumns = @JoinColumn(name = "id"))
 	//tag::ex-collections-custom-type-model[]
 	@ElementCollection
 	private List<String> strings;

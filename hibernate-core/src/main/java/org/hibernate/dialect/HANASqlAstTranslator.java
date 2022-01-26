@@ -7,10 +7,13 @@
 package org.hibernate.dialect;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
@@ -102,6 +105,26 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		}
 		else {
 			expression.accept( this );
+		}
+	}
+
+	@Override
+	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
+		final BinaryArithmeticOperator operator = arithmeticExpression.getOperator();
+		if ( operator == BinaryArithmeticOperator.MODULO ) {
+			append( "mod" );
+			appendSql( OPEN_PARENTHESIS );
+			arithmeticExpression.getLeftHandOperand().accept( this );
+			appendSql( ',' );
+			arithmeticExpression.getRightHandOperand().accept( this );
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		else {
+			appendSql( OPEN_PARENTHESIS );
+			render( arithmeticExpression.getLeftHandOperand(), SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+			appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
+			render( arithmeticExpression.getRightHandOperand(), SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+			appendSql( CLOSE_PARENTHESIS );
 		}
 	}
 

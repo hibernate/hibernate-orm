@@ -125,7 +125,17 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 			if ( ProcedureOutputsImpl.this.refCursorParamIndex == -1 ) {
 				// Handle the function return
 				ProcedureOutputsImpl.this.refCursorParamIndex = 0;
-				return buildResultSetOutput( () -> List.of( getOutputParameterValue( procedureCall.getFunctionReturn() ) ) );
+				final Object outputParameterValue = getOutputParameterValue( procedureCall.getFunctionReturn() );
+				return buildResultSetOutput(
+						() -> {
+							if ( outputParameterValue instanceof ResultSet ) {
+								return extractResults( (ResultSet) outputParameterValue );
+							}
+							else {
+								return List.of( outputParameterValue );
+							}
+						}
+				);
 			}
 			else {
 				final JdbcCallRefCursorExtractor refCursorParam = refCursorParameters[ProcedureOutputsImpl.this.refCursorParamIndex++];

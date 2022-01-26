@@ -15,6 +15,7 @@ import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 
 /**
@@ -30,7 +31,7 @@ public class TheEntityWithUniqueList {
 	@Basic
 	private String name;
 
-	@CollectionTable(name = "unique_list_contents")
+	@CollectionTable(name = "unique_list_contents", joinColumns = @JoinColumn(name = "id"))
 	//tag::ex-collections-custom-type-model[]
 	@ElementCollection
 	@CollectionType(type = UniqueListType.class)

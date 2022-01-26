@@ -346,7 +346,6 @@ public class OutputsImpl implements Outputs {
 			else if ( hasExtendedReturns() ) {
 				return buildExtendedReturn();
 			}
-//			else if ( procedureCall)
 
 			throw new NoMoreOutputsException();
 		}

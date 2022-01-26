@@ -1814,19 +1814,19 @@ public class ModelBinder {
 			secondaryTableJoin.createForeignKey();
 		}
 	}
-
-	private List<ColumnSource> sortColumns(List<ColumnSource> primaryKeyColumnSources, KeyValue identifier) {
-		if ( primaryKeyColumnSources.size() == 1 || !identifier.getType().isComponentType() ) {
-			return primaryKeyColumnSources;
-		}
-		final ComponentType componentType = (ComponentType) identifier.getType();
-		final List<ColumnSource> sortedColumnSource = new ArrayList<>( primaryKeyColumnSources.size() );
-		final int[] originalPropertyOrder = componentType.getOriginalPropertyOrder();
-		for ( int originalIndex : originalPropertyOrder ) {
-			sortedColumnSource.add( primaryKeyColumnSources.get( originalIndex ) );
-		}
-		return sortedColumnSource;
-	}
+//
+//	private List<ColumnSource> sortColumns(List<ColumnSource> primaryKeyColumnSources, KeyValue identifier) {
+//		if ( primaryKeyColumnSources.size() == 1 || !identifier.getType().isComponentType() ) {
+//			return primaryKeyColumnSources;
+//		}
+//		final ComponentType componentType = (ComponentType) identifier.getType();
+//		final List<ColumnSource> sortedColumnSource = new ArrayList<>( primaryKeyColumnSources.size() );
+//		final int[] originalPropertyOrder = componentType.getOriginalPropertyOrder();
+//		for ( int originalIndex : originalPropertyOrder ) {
+//			sortedColumnSource.add( primaryKeyColumnSources.get( originalIndex ) );
+//		}
+//		return sortedColumnSource;
+//	}
 
 	private Property createEmbeddedAttribute(
 			MappingDocument sourceDocument,
@@ -3168,7 +3168,7 @@ public class ModelBinder {
 		}
 
 		@Override
-		public void doSecondPass(Map persistentClasses) throws org.hibernate.MappingException {
+		public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws org.hibernate.MappingException {
 			bindCollectionTable();
 
 			bindCollectionKey();
@@ -4108,7 +4108,7 @@ public class ModelBinder {
 		}
 
 		@Override
-		public void doSecondPass(Map persistentClasses) throws org.hibernate.MappingException {
+		public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws org.hibernate.MappingException {
 			if ( allColumnsNamed ) {
 				relationalObjectBinder.bindColumnsAndFormulas(
 						mappingDocument,
@@ -4202,7 +4202,7 @@ public class ModelBinder {
 		}
 
 		@Override
-		public void doSecondPass(Map persistentClasses) throws org.hibernate.MappingException {
+		public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws org.hibernate.MappingException {
 			if ( referencedEntityAttributeName == null ) {
 				manyToOneBinding.createForeignKey();
 			}

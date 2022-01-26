@@ -1872,16 +1872,14 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			final MetadataBuildingContext buildingContext) throws MappingException {
 		table.createForeignKeys();
 
-		Iterator itr = table.getForeignKeyIterator();
-		while ( itr.hasNext() ) {
-			final ForeignKey fk = (ForeignKey) itr.next();
-			if ( !done.contains( fk ) ) {
-				done.add( fk );
-				final String referencedEntityName = fk.getReferencedEntityName();
+		for ( ForeignKey foreignKey : table.getForeignKeys().values() ) {
+			if ( !done.contains( foreignKey ) ) {
+				done.add( foreignKey );
+				final String referencedEntityName = foreignKey.getReferencedEntityName();
 				if ( referencedEntityName == null ) {
 					throw new MappingException(
 							"An association from the table " +
-									fk.getTable().getName() +
+									foreignKey.getTable().getName() +
 									" does not specify the referenced entity"
 					);
 				}
@@ -1891,7 +1889,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				if ( referencedClass == null ) {
 					throw new MappingException(
 							"An association from the table " +
-									fk.getTable().getName() +
+									foreignKey.getTable().getName() +
 									" refers to an unmapped class: " +
 									referencedEntityName
 					);
@@ -1900,12 +1898,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 					secondPassCompileForeignKeys( referencedClass.getSuperclass().getTable(), done, buildingContext );
 				}
 
-				fk.setReferencedTable( referencedClass.getTable() );
+				foreignKey.setReferencedTable( referencedClass.getTable() );
 
 				Identifier nameIdentifier;
 
 				ImplicitForeignKeyNameSource foreignKeyNameSource = new ImplicitForeignKeyNameSource() {
-					final List<Identifier> columnNames = extractColumnNames( fk.getColumns() );
+					final List<Identifier> columnNames = extractColumnNames( foreignKey.getColumns() );
 					List<Identifier> referencedColumnNames = null;
 
 					@Override
@@ -1920,20 +1918,20 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 					@Override
 					public Identifier getReferencedTableName() {
-						return fk.getReferencedTable().getNameIdentifier();
+						return foreignKey.getReferencedTable().getNameIdentifier();
 					}
 
 					@Override
 					public List<Identifier> getReferencedColumnNames() {
 						if ( referencedColumnNames == null ) {
-							referencedColumnNames = extractColumnNames( fk.getReferencedColumns() );
+							referencedColumnNames = extractColumnNames( foreignKey.getReferencedColumns() );
 						}
 						return referencedColumnNames;
 					}
 
 					@Override
 					public Identifier getUserProvidedIdentifier() {
-						return fk.getName() != null ? Identifier.toIdentifier( fk.getName() ) : null;
+						return foreignKey.getName() != null ? Identifier.toIdentifier( foreignKey.getName() ) : null;
 					}
 
 					@Override
@@ -1944,9 +1942,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 				nameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy().determineForeignKeyName(foreignKeyNameSource);
 
-				fk.setName( nameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() ) );
+				foreignKey.setName( nameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() ) );
 
-				fk.alignColumns();
+				foreignKey.alignColumns();
 			}
 		}
 	}

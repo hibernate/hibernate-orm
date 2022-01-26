@@ -12,6 +12,7 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
 
 /**
@@ -50,7 +51,7 @@ public class IdGeneratorResolverSecondPass implements SecondPass {
 	}
 
 	@Override
-	public void doSecondPass(Map idGeneratorDefinitionMap) throws MappingException {
+	public void doSecondPass(Map<String, PersistentClass> idGeneratorDefinitionMap) throws MappingException {
 		BinderHelper.makeIdGenerator( id, idXProperty, generatorType, generatorName, buildingContext, localIdentifierGeneratorDefinition );
 	}
 }

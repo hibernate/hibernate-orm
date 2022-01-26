@@ -6,8 +6,6 @@
  */
 package org.hibernate.cfg;
 
-import java.util.Iterator;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -88,10 +86,10 @@ public class ToOneFkSecondPass extends FkSecondPass {
 		return false;
 	}
 
-	public void doSecondPass(java.util.Map persistentClasses) throws MappingException {
+	public void doSecondPass(java.util.Map<String, PersistentClass> persistentClasses) throws MappingException {
 		if ( value instanceof ManyToOne ) {
 			ManyToOne manyToOne = (ManyToOne) value;
-			PersistentClass ref = (PersistentClass) persistentClasses.get( manyToOne.getReferencedEntityName() );
+			PersistentClass ref = persistentClasses.get( manyToOne.getReferencedEntityName() );
 			if ( ref == null ) {
 				throw new AnnotationException(
 						"@OneToOne or @ManyToOne on "

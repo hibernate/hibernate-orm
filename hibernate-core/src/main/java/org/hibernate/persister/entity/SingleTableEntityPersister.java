@@ -9,7 +9,6 @@ package org.hibernate.persister.entity;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -412,23 +411,21 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		// SUBCLASSES
 		if ( persistentClass.isPolymorphic() ) {
-			Iterator<Subclass> subclasses = persistentClass.getSubclassIterator();
 			int k = 1;
-			while ( subclasses.hasNext() ) {
-				Subclass sc = subclasses.next();
-				subclassClosure[k++] = sc.getEntityName();
-				if ( sc.isDiscriminatorValueNull() ) {
-					addSubclassByDiscriminatorValue( subclassesByDiscriminatorValueLocal, NULL_DISCRIMINATOR, sc.getEntityName() );
+			for ( Subclass subclass : persistentClass.getSubclasses() ) {
+				subclassClosure[k++] = subclass.getEntityName();
+				if ( subclass.isDiscriminatorValueNull() ) {
+					addSubclassByDiscriminatorValue( subclassesByDiscriminatorValueLocal, NULL_DISCRIMINATOR, subclass.getEntityName() );
 				}
-				else if ( sc.isDiscriminatorValueNotNull() ) {
-					addSubclassByDiscriminatorValue( subclassesByDiscriminatorValueLocal, NOT_NULL_DISCRIMINATOR, sc.getEntityName() );
+				else if ( subclass.isDiscriminatorValueNotNull() ) {
+					addSubclassByDiscriminatorValue( subclassesByDiscriminatorValueLocal, NOT_NULL_DISCRIMINATOR, subclass.getEntityName() );
 				}
 				else {
 					try {
 						addSubclassByDiscriminatorValue(
 								subclassesByDiscriminatorValueLocal,
-								discriminatorType.getJavaTypeDescriptor().fromString( sc.getDiscriminatorValue() ),
-								sc.getEntityName()
+								discriminatorType.getJavaTypeDescriptor().fromString( subclass.getDiscriminatorValue() ),
+								subclass.getEntityName()
 						);
 					}
 					catch (ClassCastException cce) {

@@ -56,10 +56,7 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 		}
 		else if ( table.getForeignKeys().size() > 0 ) {
 			// a table with no PK's but has FK's; often corresponds to element collection properties
-			keyColumns = new ArrayList<>();
-			for (Iterator<Column> column = table.getColumnIterator(); column.hasNext();) {
-				keyColumns.add( column.next() );
-			}
+			keyColumns = table.getColumns();
 		}
 		else {
 			// the case corresponding to a sequence-table that will only have 1 row.
@@ -77,12 +74,11 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 		StringJoiner colsAndTypes = new StringJoiner( "," );
 
 
-		for (Iterator<Column> column = table.getColumnIterator(); column.hasNext();) {
-			Column col = column.next();
+		for ( Column column : table.getColumns() ) {
 			String columnDeclaration =
-					col.getName()
-							+ " " + col.getSqlType()
-							+ ( col.isNullable() ? this.spannerDialect.getNullColumnString( col.getSqlType() ) : " not null" );
+					column.getName()
+							+ " " + column.getSqlType()
+							+ ( column.isNullable() ? this.spannerDialect.getNullColumnString( column.getSqlType() ) : " not null" );
 			colsAndTypes.add( columnDeclaration );
 		}
 

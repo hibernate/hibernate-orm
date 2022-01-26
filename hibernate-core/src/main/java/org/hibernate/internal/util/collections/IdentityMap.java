@@ -23,7 +23,7 @@ import java.util.function.Consumer;
 public final class IdentityMap<K,V> implements Map<K,V> {
 
 	private final LinkedHashMap<IdentityKey<K>,V> map;
-	@SuppressWarnings( {"unchecked"})
+
 	private transient Entry<IdentityKey<K>,V>[] entryArray = null;
 
 	/**

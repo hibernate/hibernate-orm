@@ -8,7 +8,6 @@ package org.hibernate.proxy.pojo;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Iterator;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -51,9 +50,7 @@ public final class ProxyFactoryHelper {
 			proxyInterfaces.add( mappedClass );
 		}
 
-		Iterator<Subclass> subclasses = persistentClass.getSubclassIterator();
-		while ( subclasses.hasNext() ) {
-			final Subclass subclass = subclasses.next();
+		for ( Subclass subclass : persistentClass.getSubclasses() ) {
 			final Class<?> subclassProxy = subclass.getProxyInterface();
 			final Class<?> subclassClass = subclass.getMappedClass();
 			if ( subclassProxy != null && !subclassClass.equals( subclassProxy ) ) {

@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -273,9 +272,7 @@ public class MetadataContext {
 					applyIdMetadata( safeMapping, jpaMapping );
 					applyVersionAttribute( safeMapping, jpaMapping );
 
-					Iterator<Property> properties = safeMapping.getDeclaredPropertyIterator();
-					while ( properties.hasNext() ) {
-						final Property property = properties.next();
+					for ( Property property : safeMapping.getDeclaredProperties() ) {
 						if ( property.getValue() == safeMapping.getIdentifierMapper() ) {
 							// property represents special handling for id-class mappings but we have already
 							// accounted for the embedded property mappings in #applyIdMetadata &&
@@ -324,9 +321,7 @@ public class MetadataContext {
 					applyVersionAttribute( safeMapping, jpaType );
 //					applyNaturalIdAttribute( safeMapping, jpaType );
 
-					Iterator<Property> properties = safeMapping.getDeclaredPropertyIterator();
-					while ( properties.hasNext() ) {
-						final Property property = properties.next();
+					for ( Property property : safeMapping.getDeclaredProperties() ) {
 						if ( safeMapping.isVersioned() && property == safeMapping.getVersion() ) {
 							// skip the version property, it was already handled previously.
 							continue;

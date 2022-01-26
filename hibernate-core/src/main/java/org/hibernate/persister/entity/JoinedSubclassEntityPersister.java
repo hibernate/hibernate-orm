@@ -249,11 +249,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		ArrayList<String[]> keyColumnReaders = new ArrayList<>();
 		ArrayList<String[]> keyColumnReaderTemplates = new ArrayList<>();
 		ArrayList<Boolean> cascadeDeletes = new ArrayList<>();
-		Iterator<Table> tItr = persistentClass.getTableClosureIterator();
-		Iterator<KeyValue> kItr = persistentClass.getKeyClosureIterator();
-		while ( tItr.hasNext() ) {
-			final Table table = tItr.next();
-			final KeyValue key = kItr.next();
+		List<Table> tItr = persistentClass.getTableClosure();
+		List<KeyValue> kItr = persistentClass.getKeyClosure();
+		for ( int i = 0; i < tItr.size() && i < kItr.size(); i++ ) {
+			final Table table = tItr.get(i);
+			final KeyValue key = kItr.get(i);
 			final String tableName = determineTableName( table );
 			tableNames.add( tableName );
 			String[] keyCols = new String[idColumnSpan];
@@ -562,26 +562,25 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			notNullColumnNames = null;
 		}
 
-		Iterator<Subclass> siter = persistentClass.getSubclassIterator();
 		int k = 0;
-		while ( siter.hasNext() ) {
-			Subclass sc = siter.next();
-			subclassClosure[k] = sc.getEntityName();
-			final Table table = sc.getTable();
-			subclassNameByTableName.put( table.getName(), sc.getEntityName() );
+		for ( Subclass subclass : persistentClass.getSubclasses() ) {
+			subclassClosure[k] = subclass.getEntityName();
+			final Table table = subclass.getTable();
+			subclassNameByTableName.put( table.getName(), subclass.getEntityName() );
 			try {
 				if ( persistentClass.isPolymorphic() ) {
 					final Object discriminatorValue;
 					if ( explicitDiscriminatorColumnName != null ) {
-						if ( sc.isDiscriminatorValueNull() ) {
+						if ( subclass.isDiscriminatorValueNull() ) {
 							discriminatorValue = NULL_DISCRIMINATOR;
 						}
-						else if ( sc.isDiscriminatorValueNotNull() ) {
+						else if ( subclass.isDiscriminatorValueNotNull() ) {
 							discriminatorValue = NOT_NULL_DISCRIMINATOR;
 						}
 						else {
 							try {
-								discriminatorValue = discriminatorType.getJavaTypeDescriptor().fromString( sc.getDiscriminatorValue() );
+								discriminatorValue = discriminatorType.getJavaTypeDescriptor()
+										.fromString( subclass.getDiscriminatorValue() );
 							}
 							catch (ClassCastException cce) {
 								throw new MappingException( "Illegal discriminator type: " + discriminatorType.getName() );
@@ -595,10 +594,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 						// we now use subclass ids that are consistent across all
 						// persisters for a class hierarchy, so that the use of
 						// "foo.class = Bar" works in HQL
-						discriminatorValue = sc.getSubclassId();
+						discriminatorValue = subclass.getSubclassId();
 					}
 					initDiscriminatorProperties( factory, k, table, discriminatorValue );
-					subclassesByDiscriminatorValue.put( discriminatorValue, sc.getEntityName() );
+					subclassesByDiscriminatorValue.put( discriminatorValue, subclass.getEntityName() );
 					int id = getTableId(
 							table.getQualifiedName(
 									factory.getSqlStringGenerationContext()
@@ -700,9 +699,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		// included when one of the collected class names is used in TREAT
 		final Set<String> classNames = new HashSet<>();
 
-		final Iterator<Subclass> itr = persistentClass.getDirectSubclasses();
-		while ( itr.hasNext() ) {
-			final Subclass subclass = itr.next();
+		for ( Subclass subclass : persistentClass.getDirectSubclasses() ) {
 			final Set<String> subclassSubclassNames = processPersistentClassHierarchy(
 					subclass,
 					false,

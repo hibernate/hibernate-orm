@@ -35,6 +35,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Subclass;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.tuple.GenerationTiming;
@@ -404,10 +405,9 @@ public class EntityMetamodel implements Serializable {
 		hasCollections = foundCollection;
 		mutablePropertiesIndexes = mutableIndexes;
 
-		Iterator<?> iter = persistentClass.getSubclassIterator();
 		final Set<String> subclassEntityNamesLocal = new HashSet<>();
-		while ( iter.hasNext() ) {
-			subclassEntityNamesLocal.add( ( (PersistentClass) iter.next() ).getEntityName() );
+		for ( Subclass subclass : persistentClass.getSubclasses() ) {
+			subclassEntityNamesLocal.add( subclass.getEntityName() );
 		}
 		subclassEntityNamesLocal.add( name );
 		subclassEntityNames = CollectionHelper.toSmallSet( subclassEntityNamesLocal );
@@ -415,10 +415,8 @@ public class EntityMetamodel implements Serializable {
 		HashMap<Class<?>, String> entityNameByInheritanceClassMapLocal = new HashMap<>();
 		if ( persistentClass.hasPojoRepresentation() ) {
 			entityNameByInheritanceClassMapLocal.put( persistentClass.getMappedClass(), persistentClass.getEntityName() );
-			iter = persistentClass.getSubclassIterator();
-			while ( iter.hasNext() ) {
-				final PersistentClass pc = ( PersistentClass ) iter.next();
-				entityNameByInheritanceClassMapLocal.put( pc.getMappedClass(), pc.getEntityName() );
+			for ( Subclass subclass : persistentClass.getSubclasses() ) {
+				entityNameByInheritanceClassMapLocal.put( subclass.getMappedClass(), subclass.getEntityName() );
 			}
 		}
 		entityNameByInheritenceClassMap = CollectionHelper.toSmallMap( entityNameByInheritanceClassMapLocal );

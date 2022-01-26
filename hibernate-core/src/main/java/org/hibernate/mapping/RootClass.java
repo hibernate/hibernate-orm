@@ -146,9 +146,14 @@ public class RootClass extends PersistentClass implements TableOwner {
 		return List.of( getTable() );
 	}
 
-	@Override
+	@Override @Deprecated
 	public Iterator<KeyValue> getKeyClosureIterator() {
 		return new SingletonIterator<>( getKey() );
+	}
+
+	@Override
+	public List<KeyValue> getKeyClosure() {
+		return List.of( getKey() );
 	}
 
 	@Override
@@ -351,9 +356,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 
 	public Set<Table> getIdentityTables() {
 		Set<Table> tables = new HashSet<>();
-		Iterator<PersistentClass> iter = getSubclassClosureIterator();
-		while ( iter.hasNext() ) {
-			PersistentClass clazz = iter.next();
+		for ( PersistentClass clazz : getSubclassClosure() ) {
 			if ( clazz.isAbstract() == null || !clazz.isAbstract() ) {
 				tables.add( clazz.getIdentityTable() );
 			}

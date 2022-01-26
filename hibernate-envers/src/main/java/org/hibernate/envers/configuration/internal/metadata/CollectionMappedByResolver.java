@@ -22,7 +22,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.Value;
 
 import org.jboss.logging.Logger;
 
@@ -149,12 +148,10 @@ public class CollectionMappedByResolver {
 	}
 
 	private static String searchMappedByKey(PersistentClass referencedClass, Collection collectionValue) {
-		final Iterator<KeyValue> assocIdClassProps = referencedClass.getKeyClosureIterator();
-		while ( assocIdClassProps.hasNext() ) {
-			final Value value = assocIdClassProps.next();
+		for ( KeyValue keyValue : referencedClass.getKeyClosure() ) {
 			// make sure it's a 'Component' because IdClass is registered as this type.
-			if ( value instanceof Component ) {
-				final Component component = (Component) value;
+			if ( keyValue instanceof Component ) {
+				final Component component = (Component) keyValue;
 				final Iterator<Property> componentPropertyIterator = component.getPropertyIterator();
 				while ( componentPropertyIterator.hasNext() ) {
 					final Property property = componentPropertyIterator.next();

@@ -6,8 +6,6 @@
  */
 package org.hibernate.cache.cfg.internal;
 
-import java.util.Iterator;
-
 import org.hibernate.cache.cfg.spi.NaturalIdDataCachingConfig;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.mapping.Property;
@@ -36,10 +34,8 @@ public class NaturalIdDataCachingConfigImpl
 	}
 
 	private boolean hasAnyMutableNaturalIdProps() {
-		final Iterator itr = rootEntityDescriptor.getDeclaredPropertyIterator();
-		while ( itr.hasNext() ) {
-			final Property prop = (Property) itr.next();
-			if ( prop.isNaturalIdentifier() && prop.isUpdateable() ) {
+		for ( Property property : rootEntityDescriptor.getDeclaredProperties() ) {
+			if ( property.isNaturalIdentifier() && property.isUpdateable() ) {
 				return true;
 			}
 		}

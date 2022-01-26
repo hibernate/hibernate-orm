@@ -8,7 +8,6 @@ package org.hibernate.tuple;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -28,9 +27,7 @@ public class DynamicMapInstantiator implements Instantiator {
 		this.roleName = mappingInfo.getEntityName();
 		isInstanceEntityNames.add( roleName );
 		if ( mappingInfo.hasSubclasses() ) {
-			Iterator<PersistentClass> itr = mappingInfo.getSubclassClosureIterator();
-			while ( itr.hasNext() ) {
-				final PersistentClass subclassInfo = itr.next();
+			for ( PersistentClass subclassInfo : mappingInfo.getSubclassClosure() ) {
 				isInstanceEntityNames.add( subclassInfo.getEntityName() );
 			}
 		}

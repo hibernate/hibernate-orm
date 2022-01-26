@@ -1617,17 +1617,12 @@ public final class AnnotationBinder {
 					reflectionManager, entityClass, callbackType ) );
 		}
 
-		context.getMetadataCollector().addSecondPass( new SecondPass() {
-			@Override
-			public void doSecondPass(Map persistentClasses) throws MappingException {
-				for ( @SuppressWarnings("unchecked") Iterator<Property> propertyIterator = persistentClass.getDeclaredPropertyIterator();
-						propertyIterator.hasNext(); ) {
-					Property property = propertyIterator.next();
-					if ( property.isComposite() ) {
-						for ( CallbackType callbackType : CallbackType.values() ) {
-							property.addCallbackDefinitions( CallbackDefinitionResolverLegacyImpl.resolveEmbeddableCallbacks(
-									reflectionManager, persistentClass.getMappedClass(), property, callbackType ) );
-						}
+		context.getMetadataCollector().addSecondPass( persistentClasses -> {
+			for ( Property property : persistentClass.getDeclaredProperties() ) {
+				if ( property.isComposite() ) {
+					for ( CallbackType callbackType : CallbackType.values() ) {
+						property.addCallbackDefinitions( CallbackDefinitionResolverLegacyImpl.resolveEmbeddableCallbacks(
+								reflectionManager, persistentClass.getMappedClass(), property, callbackType ) );
 					}
 				}
 			}

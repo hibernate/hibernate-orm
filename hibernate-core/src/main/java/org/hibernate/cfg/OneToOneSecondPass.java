@@ -76,7 +76,7 @@ public class OneToOneSecondPass implements SecondPass {
 	}
 
 	//TODO refactor this code, there is a lot of duplication in this method
-	public void doSecondPass(Map persistentClasses) throws MappingException {
+	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
 		OneToOne value = new OneToOne(
 				buildingContext,
 				propertyHolder.getTable(),
@@ -141,14 +141,13 @@ public class OneToOneSecondPass implements SecondPass {
 				//no column associated since its a one to one
 				propertyHolder.addProperty( prop, inferredData.getDeclaringClass() );
 			}
-			else {
+//			else {
 				//this is a many to one with Formula
-
-			}
+//			}
 		}
 		else {
 			value.setMappedByProperty( mappedBy );
-			PersistentClass otherSide = (PersistentClass) persistentClasses.get( value.getReferencedEntityName() );
+			PersistentClass otherSide = persistentClasses.get( value.getReferencedEntityName() );
 			Property otherSideProperty;
 			try {
 				if ( otherSide == null ) {

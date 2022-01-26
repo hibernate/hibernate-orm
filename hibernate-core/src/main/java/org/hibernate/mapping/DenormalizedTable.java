@@ -60,19 +60,17 @@ public class DenormalizedTable extends Table {
 	@Override
 	public void createForeignKeys() {
 		includedTable.createForeignKeys();
-		Iterator<ForeignKey> iter = includedTable.getForeignKeyIterator();
-		while ( iter.hasNext() ) {
-			ForeignKey fk = iter.next();
+		for ( ForeignKey foreignKey : includedTable.getForeignKeys().values() ) {
 			createForeignKey(
 					Constraint.generateName(
-							fk.generatedConstraintNamePrefix(),
+							foreignKey.generatedConstraintNamePrefix(),
 							this,
-							fk.getColumns()
+							foreignKey.getColumns()
 					),
-					fk.getColumns(),
-					fk.getReferencedEntityName(),
-					fk.getKeyDefinition(),
-					fk.getReferencedColumns()
+					foreignKey.getColumns(),
+					foreignKey.getReferencedEntityName(),
+					foreignKey.getKeyDefinition(),
+					foreignKey.getReferencedColumns()
 			);
 		}
 	}
@@ -117,10 +115,8 @@ public class DenormalizedTable extends Table {
 	@Override
 	public Iterator<UniqueKey> getUniqueKeyIterator() {
 		if ( !includedTable.isPhysicalTable() ) {
-			Iterator<UniqueKey> iter = includedTable.getUniqueKeyIterator();
-			while ( iter.hasNext() ) {
-				UniqueKey uk = iter.next();
-				createUniqueKey( uk.getColumns() );
+			for ( UniqueKey uniqueKey : includedTable.getUniqueKeys().values() ) {
+				createUniqueKey( uniqueKey.getColumns() );
 			}
 		}
 		return getUniqueKeys().values().iterator();

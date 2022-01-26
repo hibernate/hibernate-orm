@@ -20,6 +20,7 @@ import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.Table;
@@ -70,10 +71,8 @@ public class StandardTableExporter implements Exporter<Table> {
 				pkColName = pkColumn.getQuotedName( dialect );
 			}
 
-			final Iterator columnItr = table.getColumnIterator();
 			boolean isFirst = true;
-			while ( columnItr.hasNext() ) {
-				final Column col = (Column) columnItr.next();
+			for ( Column col : table.getColumns() ) {
 				if ( isFirst ) {
 					isFirst = false;
 				}
@@ -162,7 +161,7 @@ public class StandardTableExporter implements Exporter<Table> {
 
 		applyInitCommands( table, sqlStrings, context );
 
-			return sqlStrings.toArray( new String[ sqlStrings.size() ] );
+			return sqlStrings.toArray(StringHelper.EMPTY_STRINGS);
 		}
 		catch (Exception e) {
 			throw new MappingException( "Error creating SQL create commands for table : " + tableName, e );
@@ -174,9 +173,7 @@ public class StandardTableExporter implements Exporter<Table> {
 			if ( table.getComment() != null ) {
 				sqlStrings.add( "comment on table " + tableName + " is '" + table.getComment() + "'" );
 			}
-			final Iterator iter = table.getColumnIterator();
-			while ( iter.hasNext() ) {
-				Column column = (Column) iter.next();
+			for ( Column column : table.getColumns() ) {
 				String columnComment = column.getComment();
 				if ( columnComment != null ) {
 					sqlStrings.add( "comment on column " + tableName + '.' + column.getQuotedName( dialect ) + " is '" + columnComment + "'" );
@@ -197,10 +194,9 @@ public class StandardTableExporter implements Exporter<Table> {
 
 	protected void applyTableCheck(Table table, StringBuilder buf) {
 		if ( dialect.supportsTableCheck() ) {
-			final Iterator<String> checkConstraints = table.getCheckConstraintsIterator();
-			while ( checkConstraints.hasNext() ) {
+			for (String constraint : table.getCheckConstraints() ) {
 				buf.append( ", check (" )
-						.append( checkConstraints.next() )
+						.append( constraint )
 						.append( ')' );
 			}
 		}

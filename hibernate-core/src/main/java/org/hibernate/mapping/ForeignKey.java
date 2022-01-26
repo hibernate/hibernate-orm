@@ -65,20 +65,14 @@ public class ForeignKey extends Constraint {
 		String[] columnNames = new String[getColumnSpan()];
 		String[] referencedColumnNames = new String[getColumnSpan()];
 
-		final Iterator<Column> referencedColumnItr;
-		if ( isReferenceToPrimaryKey() ) {
-			referencedColumnItr = referencedTable.getPrimaryKey().getColumnIterator();
-		}
-		else {
-			referencedColumnItr = referencedColumns.iterator();
-		}
+		final List<Column> referencedColumns = isReferenceToPrimaryKey()
+				? referencedTable.getPrimaryKey().getColumns()
+				: this.referencedColumns;
 
-		Iterator<Column> columnItr = getColumnIterator();
-		int i = 0;
-		while ( columnItr.hasNext() ) {
-			columnNames[i] = columnItr.next().getQuotedName( dialect );
-			referencedColumnNames[i] = referencedColumnItr.next().getQuotedName( dialect );
-			i++;
+		List<Column> columns = getColumns();
+		for ( int i=0; i<referencedColumns.size() && i<columns.size(); i++ ) {
+			columnNames[i] = columns.get(i).getQuotedName( dialect );
+			referencedColumnNames[i] = referencedColumns.get(i).getQuotedName( dialect );
 		}
 
 		final String result = keyDefinition != null ?
@@ -218,12 +212,11 @@ public class ForeignKey extends Constraint {
 		return referencedColumns.isEmpty();
 	}
 
-	public void addReferencedColumns(Iterator<Column> referencedColumnsIterator) {
-		while ( referencedColumnsIterator.hasNext() ) {
-			Selectable col = referencedColumnsIterator.next();
-			if ( !col.isFormula() ) {
-				addReferencedColumn( (Column) col );
-			}
+	public void addReferencedColumns(List<Column> referencedColumns) {
+		for (Column referencedColumn : referencedColumns) {
+//			if ( !referencedColumn.isFormula() ) {
+				addReferencedColumn( referencedColumn );
+//			}
 		}
 	}
 

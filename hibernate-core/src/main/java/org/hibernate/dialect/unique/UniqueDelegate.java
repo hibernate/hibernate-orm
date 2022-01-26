@@ -48,10 +48,10 @@ public interface UniqueDelegate {
 	String getColumnDefinitionUniquenessFragment(Column column, SqlStringGenerationContext context);
 
 	/**
-	 * Get the fragment that can be used to apply unique constraints as part of table creation.  The implementation
-	 * should iterate over the {@link UniqueKey} instances for the given table (see
-	 * {@link org.hibernate.mapping.Table#getUniqueKeyIterator()} and generate the whole fragment for all
-	 * unique keys
+	 * Get the fragment that can be used to apply unique constraints as part of table creation.  The
+	 * implementation should iterate over the {@link UniqueKey} instances for the given table (see
+	 * {@link org.hibernate.mapping.Table#getUniqueKeyIterator()} and generate the whole fragment for
+	 * all unique keys
 	 * <p/>
 	 * Intended for Dialects which support unique constraint definitions, but just not in separate ALTER statements.
 	 *

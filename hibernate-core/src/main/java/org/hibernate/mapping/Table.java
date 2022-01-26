@@ -281,6 +281,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 		return columns.size();
 	}
 
+	@Deprecated(since = "6.0")
 	public Iterator<Column> getColumnIterator() {
 		return columns.values().iterator();
 	}
@@ -293,6 +294,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 		return indexes.values().iterator();
 	}
 
+	@Deprecated(since = "6.0")
 	public Iterator<ForeignKey> getForeignKeyIterator() {
 		return foreignKeys.values().iterator();
 	}
@@ -301,11 +303,12 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 		return Collections.unmodifiableMap( foreignKeys );
 	}
 
+	@Deprecated(since = "6.0")
 	public Iterator<UniqueKey> getUniqueKeyIterator() {
 		return getUniqueKeys().values().iterator();
 	}
 
-	Map<String, UniqueKey> getUniqueKeys() {
+	public Map<String, UniqueKey> getUniqueKeys() {
 		cleanseUniqueKeyMapIfNeeded();
 		return uniqueKeys;
 	}
@@ -425,12 +428,12 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 				.append( ' ' )
 				.append( dialect.getAddColumnString() );
 
-		Iterator<Column> iter = getColumnIterator();
 		List<String> results = new ArrayList<>();
 
-		while ( iter.hasNext() ) {
-			final Column column = iter.next();
-			final ColumnInformation columnInfo = tableInfo.getColumn( Identifier.toIdentifier( column.getName(), column.isQuoted() ) );
+		for ( Column column : getColumns() ) {
+			final ColumnInformation columnInfo = tableInfo.getColumn(
+					Identifier.toIdentifier( column.getName(), column.isQuoted() )
+			);
 
 			if ( columnInfo == null ) {
 				// the column doesnt exist at all.
@@ -702,7 +705,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 				fk.addColumn( keyColumn );
 			}
 			if ( referencedColumns != null ) {
-				fk.addReferencedColumns( referencedColumns.iterator() );
+				fk.addReferencedColumns( referencedColumns );
 			}
 
 			// NOTE : if the name is null, we will generate an implicit name during second pass processing
@@ -811,8 +814,13 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 		this.comment = comment;
 	}
 
+	@Deprecated(since = "6.0")
 	public Iterator<String> getCheckConstraintsIterator() {
 		return checkConstraints.iterator();
+	}
+
+	public List<String> getCheckConstraints() {
+		return checkConstraints;
 	}
 
 	@Override

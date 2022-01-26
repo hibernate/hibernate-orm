@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.cfg;
+
 import java.util.Map;
 
 import org.hibernate.annotations.common.reflection.XClass;
@@ -45,7 +46,7 @@ public final class PropertyHolderBuilder {
 	 *
 	 * @param component component to wrap
 	 * @param path	  component path
-	 * @param context
+	 *
 	 * @return PropertyHolder
 	 */
 	public static PropertyHolder buildPropertyHolder(

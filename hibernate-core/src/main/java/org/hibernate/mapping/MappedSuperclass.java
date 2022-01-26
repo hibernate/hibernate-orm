@@ -30,8 +30,8 @@ import java.util.List;
 public class MappedSuperclass {
 	private final MappedSuperclass superMappedSuperclass;
 	private final PersistentClass superPersistentClass;
-	private final List declaredProperties;
-	private Class mappedClass;
+	private final List<Property> declaredProperties;
+	private Class<?> mappedClass;
 	private Property identifierProperty;
 	private Property version;
 	private Component identifierMapper;
@@ -39,7 +39,7 @@ public class MappedSuperclass {
 	public MappedSuperclass(MappedSuperclass superMappedSuperclass, PersistentClass superPersistentClass) {
 		this.superMappedSuperclass = superMappedSuperclass;
 		this.superPersistentClass = superPersistentClass;
-		this.declaredProperties = new ArrayList();
+		this.declaredProperties = new ArrayList<>();
 	}
 
 	/**
@@ -71,28 +71,32 @@ public class MappedSuperclass {
 		return superPersistentClass;
 	}
 
-	public Iterator getDeclaredPropertyIterator() {
+	@Deprecated(since = "6.0")
+	public Iterator<Property> getDeclaredPropertyIterator() {
 		return declaredProperties.iterator();
+	}
+
+	public List<Property> getDeclaredProperties() {
+		return declaredProperties;
 	}
 
 	public void addDeclaredProperty(Property p) {
 		//Do not add duplicate properties
 		//TODO is it efficient enough?
 		String name = p.getName();
-		Iterator it = declaredProperties.iterator();
-		while (it.hasNext()) {
-			if ( name.equals( ((Property)it.next()).getName() ) ) {
+		for (Property declaredProperty : declaredProperties) {
+			if ( name.equals( declaredProperty.getName() ) ) {
 				return;
 			}
 		}
 		declaredProperties.add(p);
 	}
 
-	public Class getMappedClass() {
+	public Class<?> getMappedClass() {
 		return mappedClass;
 	}
 
-	public void setMappedClass(Class mappedClass) {
+	public void setMappedClass(Class<?> mappedClass) {
 		this.mappedClass = mappedClass;
 	}
 
@@ -173,9 +177,7 @@ public class MappedSuperclass {
 	 * @return {@code true} if a property with that name exists; {@code false} if not
 	 */
 	public boolean hasProperty(String name) {
-		final Iterator itr = getDeclaredPropertyIterator();
-		while ( itr.hasNext() ) {
-			final Property property = (Property) itr.next();
+		for ( Property property : getDeclaredProperties() ) {
 			if ( property.getName().equals( name ) ) {
 				return true;
 			}
@@ -210,8 +212,7 @@ public class MappedSuperclass {
 		return false;
 	}
 
-	@SuppressWarnings( "unchecked" )
 	public void prepareForMappingModel() {
-		( (List<Property>) declaredProperties ).sort( Comparator.comparing( Property::getName ) );
+		declaredProperties.sort( Comparator.comparing( Property::getName ) );
 	}
 }

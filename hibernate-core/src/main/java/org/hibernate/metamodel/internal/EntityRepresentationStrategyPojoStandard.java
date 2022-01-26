@@ -208,9 +208,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			proxyInterfaces.add( mappedClass );
 		}
 
-		final Iterator<Subclass> subclasses = bootDescriptor.getSubclassIterator();
-		while ( subclasses.hasNext() ) {
-			final Subclass subclass = subclasses.next();
+		for ( Subclass subclass : bootDescriptor.getSubclasses() ) {
 			final Class<?> subclassProxy = subclass.getProxyInterface();
 			final Class<?> subclassClass = subclass.getMappedClass();
 			if ( subclassProxy != null && !subclassClass.equals( subclassProxy ) ) {

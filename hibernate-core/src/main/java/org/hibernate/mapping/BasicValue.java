@@ -67,7 +67,6 @@ import static org.hibernate.mapping.MappingHelper.injectParameters;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings({"unchecked", "rawtypes"})
 public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resolvable {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( BasicValue.class );
 
@@ -77,7 +76,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	// incoming "configuration" values
 
 	private String explicitTypeName;
-	private Map explicitLocalTypeParams;
+	private Map<Object,Object> explicitLocalTypeParams;
 
 	private Function<TypeConfiguration, BasicJavaType> explicitJavaTypeAccess;
 	private Function<TypeConfiguration, JdbcType> explicitJdbcTypeAccess;
@@ -179,7 +178,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	@Override
 	public long getColumnLength() {
 		final Selectable column = getColumn();
-		if ( column != null && column instanceof Column ) {
+		if ( column instanceof Column ) {
 			final Long length = ( (Column) column ).getLength();
 			return length == null ? NO_COLUMN_LENGTH : length;
 		}
@@ -191,7 +190,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	@Override
 	public int getColumnPrecision() {
 		final Selectable column = getColumn();
-		if ( column != null && column instanceof Column ) {
+		if ( column instanceof Column ) {
 			final Integer length = ( (Column) column ).getPrecision();
 			return length == null ? NO_COLUMN_PRECISION : length;
 		}
@@ -203,7 +202,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	@Override
 	public int getColumnScale() {
 		final Selectable column = getColumn();
-		if ( column != null && column instanceof Column ) {
+		if ( column instanceof Column ) {
 			final Integer length = ( (Column) column ).getScale();
 			return length == null ? NO_COLUMN_SCALE : length;
 		}
@@ -240,13 +239,11 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			return;
 		}
 
-		if ( column != null ) {
-			throw new IllegalStateException(
-					"BasicValue [" + ownerName + "." + propertyName +
-							"] already had column associated: `" + column.getText() +
-							"` -> `" + incomingColumn.getText() + "`"
-			);
-		}
+		throw new IllegalStateException(
+				"BasicValue [" + ownerName + "." + propertyName +
+						"] already had column associated: `" + column.getText() +
+						"` -> `" + incomingColumn.getText() + "`"
+		);
 	}
 
 	@Override
@@ -386,12 +383,12 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			);
 		}
 
-		JavaType jtd = null;
+		JavaType<?> jtd = null;
 
 		// determine JavaType if we can
 
 		if ( explicitJavaTypeAccess != null ) {
-			final BasicJavaType explicitJtd = explicitJavaTypeAccess.apply( typeConfiguration );
+			final BasicJavaType<?> explicitJtd = explicitJavaTypeAccess.apply( typeConfiguration );
 			if ( explicitJtd != null ) {
 				jtd = explicitJtd;
 			}
@@ -407,7 +404,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		}
 
 		if ( jtd == null ) {
-			final JavaType reflectedJtd = determineReflectedJavaType();
+			final JavaType<?> reflectedJtd = determineReflectedJavaType();
 			if ( reflectedJtd != null ) {
 				jtd = reflectedJtd;
 			}
@@ -453,7 +450,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 	}
 
-	private JavaType determineReflectedJavaType() {
+	private JavaType<?> determineReflectedJavaType() {
 		final java.lang.reflect.Type impliedJavaType;
 
 		if ( resolvedJavaType != null ) {
@@ -486,8 +483,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	}
 
 
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	private static Resolution interpretExplicitlyNamedType(
+	private static Resolution<?> interpretExplicitlyNamedType(
 			String name,
 			EnumType enumerationStyle,
 			Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess,
@@ -495,7 +491,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			Function<TypeConfiguration, JdbcType> explicitStdAccess,
 			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
 			ConverterDescriptor converterDescriptor,
-			Map localTypeParams,
+			Map<Object,Object> localTypeParams,
 			Consumer<Properties> combinedParameterConsumer,
 			JdbcTypeIndicators stdIndicators,
 			TypeConfiguration typeConfiguration,
@@ -539,7 +535,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		if ( name.startsWith( BasicTypeImpl.EXTERNALIZED_PREFIX ) ) {
 			final BasicTypeImpl<Object> basicType = context.getBootstrapContext().resolveAdHocBasicType( name );
 
-			return new NamedBasicTypeResolution(
+			return new NamedBasicTypeResolution<>(
 					basicType.getJavaTypeDescriptor(),
 					basicType,
 					null,
@@ -549,24 +545,24 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		}
 
 		// see if it is a named basic type
-		final BasicType basicTypeByName = typeConfiguration.getBasicTypeRegistry().getRegisteredType( name );
+		final BasicType<?> basicTypeByName = typeConfiguration.getBasicTypeRegistry().getRegisteredType( name );
 		if ( basicTypeByName != null ) {
-			final BasicValueConverter valueConverter;
+			final BasicValueConverter<?,?> valueConverter;
 			final JavaType<?> domainJtd;
 			if ( converterDescriptor != null ) {
 				valueConverter = converterDescriptor.createJpaAttributeConverter( converterCreationContext );
 				domainJtd = valueConverter.getDomainJavaType();
 			}
 			else if ( basicTypeByName instanceof ConvertedBasicType ) {
-				final ConvertedBasicType convertedType = (ConvertedBasicType) basicTypeByName;
-				return new ConvertedBasicTypeResolution( convertedType, stdIndicators );
+				final ConvertedBasicType<?> convertedType = (ConvertedBasicType<?>) basicTypeByName;
+				return new ConvertedBasicTypeResolution<>( convertedType, stdIndicators );
 			}
 			else {
 				valueConverter = null;
 				domainJtd = basicTypeByName.getJavaTypeDescriptor();
 			}
 
-			return new NamedBasicTypeResolution(
+			return new NamedBasicTypeResolution<>(
 					domainJtd,
 					basicTypeByName,
 					valueConverter,
@@ -594,7 +590,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		// see if the name is a UserType or BasicType implementor class name
 		final ClassLoaderService cls = typeConfiguration.getServiceRegistry().getService( ClassLoaderService.class );
 		try {
-			final Class typeNamedClass = cls.classForName( name );
+			final Class<?> typeNamedClass = cls.classForName( name );
 
 			// if there are no local config params, register an implicit TypeDefinition for this custom type .
 			//  later uses may find it and re-use its cacheable reference...
@@ -670,7 +666,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		return typeConfiguration;
 	}
 
-	public void setExplicitTypeParams(Map explicitLocalTypeParams) {
+	public void setExplicitTypeParams(Map<Object,Object> explicitLocalTypeParams) {
 		this.explicitLocalTypeParams = explicitLocalTypeParams;
 	}
 

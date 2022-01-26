@@ -16,6 +16,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.OneToMany;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Value;
 
@@ -44,7 +45,7 @@ public abstract class CollectionSecondPass implements SecondPass {
 		this( buildingContext, collection, Collections.EMPTY_MAP );
 	}
 
-	public void doSecondPass(Map persistentClasses)
+	public void doSecondPass(Map<String, PersistentClass> persistentClasses)
 			throws MappingException {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Second pass for collection: %s", collection.getRole() );

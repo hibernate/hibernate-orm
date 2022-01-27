@@ -557,18 +557,25 @@ public class EntityCollectionPart
 			NavigablePath navigablePath,
 			TableGroup collectionTableGroup,
 			String explicitSourceAlias,
-			SqlAstJoinType sqlAstJoinType,
+			SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
+		final SqlAstJoinType joinType;
+		if ( requestedJoinType == null ) {
+			joinType = SqlAstJoinType.INNER;
+		}
+		else {
+			joinType = requestedJoinType;
+		}
 		if ( collectionDescriptor.isOneToMany() && nature == Nature.ELEMENT ) {
 			// If this is a one-to-many, the element part is already available, so we return a TableGroupJoin "hull"
 			return new TableGroupJoin(
 					navigablePath,
-					sqlAstJoinType,
+					joinType,
 					( (OneToManyTableGroup) collectionTableGroup ).getElementTableGroup(),
 					null
 			);
@@ -578,7 +585,7 @@ public class EntityCollectionPart
 				navigablePath,
 				collectionTableGroup,
 				explicitSourceAlias,
-				sqlAstJoinType,
+				requestedJoinType,
 				fetched,
 				null,
 				aliasBaseGenerator,
@@ -588,7 +595,7 @@ public class EntityCollectionPart
 		);
 		final TableGroupJoin join = new TableGroupJoin(
 				navigablePath,
-				sqlAstJoinType,
+				joinType,
 				lazyTableGroup,
 				null
 		);
@@ -598,7 +605,6 @@ public class EntityCollectionPart
 						fkDescriptor.generateJoinPredicate(
 								tableGroup.getPrimaryTableReference(),
 								collectionTableGroup.resolveTableReference( fkDescriptor.getKeyTable() ),
-								sqlAstJoinType,
 								sqlExpressionResolver,
 								creationContext
 						)
@@ -613,15 +619,22 @@ public class EntityCollectionPart
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
-			SqlAstJoinType sqlAstJoinType,
+			SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			Consumer<Predicate> predicateConsumer,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
+		final SqlAstJoinType joinType;
+		if ( requestedJoinType == null ) {
+			joinType = SqlAstJoinType.INNER;
+		}
+		else {
+			joinType = requestedJoinType;
+		}
 		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
-		final boolean canUseInnerJoin = sqlAstJoinType == SqlAstJoinType.INNER || lhs.canUseInnerJoins();
+		final boolean canUseInnerJoin = joinType == SqlAstJoinType.INNER || lhs.canUseInnerJoins();
 		final LazyTableGroup lazyTableGroup = new LazyTableGroup(
 				canUseInnerJoin,
 				navigablePath,
@@ -671,7 +684,6 @@ public class EntityCollectionPart
 							fkDescriptor.generateJoinPredicate(
 									tableGroup.getPrimaryTableReference(),
 									keySideTableReference,
-									sqlAstJoinType,
 									sqlExpressionResolver,
 									creationContext
 							)

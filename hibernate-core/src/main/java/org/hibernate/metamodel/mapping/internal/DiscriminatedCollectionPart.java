@@ -245,18 +245,25 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
-			SqlAstJoinType sqlAstJoinType,
+			SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
+		final SqlAstJoinType joinType;
+		if ( requestedJoinType == null ) {
+			joinType = SqlAstJoinType.INNER;
+		}
+		else {
+			joinType = requestedJoinType;
+		}
 		final TableGroup tableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
 				explicitSourceAlias,
-				sqlAstJoinType,
+				requestedJoinType,
 				fetched,
 				null,
 				aliasBaseGenerator,
@@ -265,7 +272,7 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 				creationContext
 		);
 
-		return new TableGroupJoin( navigablePath, sqlAstJoinType, tableGroup );
+		return new TableGroupJoin( navigablePath, joinType, tableGroup );
 	}
 
 	@Override
@@ -273,7 +280,7 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
-			SqlAstJoinType sqlAstJoinType,
+			SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			Consumer<Predicate> predicateConsumer,
 			SqlAliasBaseGenerator aliasBaseGenerator,

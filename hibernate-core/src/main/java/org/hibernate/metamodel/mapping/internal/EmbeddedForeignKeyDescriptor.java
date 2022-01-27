@@ -369,7 +369,6 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	public Predicate generateJoinPredicate(
 			TableGroup targetSideTableGroup,
 			TableGroup keySideTableGroup,
-			SqlAstJoinType sqlAstJoinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		final TableReference lhsTableReference = targetSideTableGroup.resolveTableReference(
@@ -381,7 +380,6 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		return generateJoinPredicate(
 				lhsTableReference,
 				rhsTableKeyReference,
-				sqlAstJoinType,
 				sqlExpressionResolver,
 				creationContext
 		);
@@ -391,7 +389,6 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	public Predicate generateJoinPredicate(
 			TableReference targetSideReference,
 			TableReference keySideReference,
-			SqlAstJoinType sqlAstJoinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		return getPredicate( targetSideReference, keySideReference, creationContext, targetSelectableMappings, keySelectableMappings );

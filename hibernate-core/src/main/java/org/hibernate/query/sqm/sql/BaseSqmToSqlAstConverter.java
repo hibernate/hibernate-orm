@@ -245,7 +245,6 @@ import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.SqlTreeCreationLogger;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -2735,14 +2734,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			implicitJoinChecker = BaseSqmToSqlAstConverter::verifyManipulationImplicitJoin;
 		}
 		final FromClauseIndex fromClauseIndex = fromClauseIndexStack.getCurrent();
-		prepareReusablePath( fromClauseIndex, sqmPath, false, implicitJoinChecker );
+		prepareReusablePath( fromClauseIndex, sqmPath, implicitJoinChecker );
 		return supplier.get();
 	}
 
 	private TableGroup prepareReusablePath(
 			FromClauseIndex fromClauseIndex,
 			JpaPath<?> sqmPath,
-			boolean useInnerJoin,
 			Consumer<TableGroup> implicitJoinChecker) {
 		final JpaPath<?> parentPath;
 		if ( sqmPath instanceof SqmTreatedPath<?, ?> ) {
@@ -2759,14 +2757,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final TableGroup parentTableGroup = prepareReusablePath(
 					fromClauseIndex,
 					parentPath,
-					useInnerJoin,
 					implicitJoinChecker
 			);
 			if ( parentPath instanceof SqmTreatedPath<?, ?> ) {
 				fromClauseIndex.register( (SqmPath<?>) parentPath, parentTableGroup );
 				return parentTableGroup;
 			}
-			final TableGroup newTableGroup = createTableGroup( parentTableGroup, (SqmPath<?>) parentPath, useInnerJoin );
+			final TableGroup newTableGroup = createTableGroup( parentTableGroup, (SqmPath<?>) parentPath );
 			if ( newTableGroup != null ) {
 				implicitJoinChecker.accept( newTableGroup );
 				if ( sqmPath instanceof SqmFrom<?, ?> ) {
@@ -2803,14 +2800,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			else {
 				navigablePath = joinedPath.getLhs().getNavigablePath();
 			}
-			// todo (6.0): check again if this really is a "requirement" by the JPA spec and document the reference if it is.
-			//  The additional join will filter rows, so there would be no way to just select the FK for a nullable association
-			final boolean useInnerJoin = true;
-			// INNER join semantics are required per the JPA spec for select items.
 			final TableGroup createdTableGroup = createTableGroup(
 					fromClauseIndex.getTableGroup( navigablePath ),
-					joinedPath,
-					useInnerJoin
+					joinedPath
 			);
 			if ( createdTableGroup != null && joinedPath instanceof SqmTreatedPath<?, ?> ) {
 				fromClauseIndex.register( joinedPath, createdTableGroup );
@@ -2821,7 +2813,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 	}
 
-	private TableGroup createTableGroup(TableGroup parentTableGroup, SqmPath<?> joinedPath, boolean useInnerJoin) {
+	private TableGroup createTableGroup(TableGroup parentTableGroup, SqmPath<?> joinedPath) {
 		final TableGroup actualParentTableGroup = findActualTableGroup( parentTableGroup, joinedPath );
 		final SqmPath<?> lhsPath = joinedPath.getLhs();
 		final FromClauseIndex fromClauseIndex = getFromClauseIndex();
@@ -2837,15 +2829,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final TableGroupJoinProducer joinProducer = (TableGroupJoinProducer) subPart;
 			final SqlAstJoinType defaultSqlAstJoinType;
 
-			// The check for joinProducer being an instance of PluralAttributeMapping is necessary
-			// for cases where we are consuming a reusable path for special case in which de-referencing a plural path is allowed,
-			// i.e.`select key(s.addresses) from Student s`.
-			if ( useInnerJoin || joinProducer instanceof PluralAttributeMapping ) {
-				defaultSqlAstJoinType = SqlAstJoinType.INNER;
-			}
-			else {
-				defaultSqlAstJoinType = joinProducer.getDefaultSqlAstJoinType( actualParentTableGroup );
-			}
 			if ( fromClauseIndex.findTableGroupOnLeaf( actualParentTableGroup.getNavigablePath() ) == null ) {
 				final QuerySpec querySpec = currentQuerySpec();
 				// The parent table group is on a parent query, so we need a root table group
@@ -2853,7 +2836,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						joinedPath.getNavigablePath(),
 						actualParentTableGroup,
 						null,
-						defaultSqlAstJoinType,
+						null,
 						false,
 						querySpec::applyPredicate,
 						this
@@ -2867,14 +2850,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final TableGroup compatibleTableGroup = findCompatibleJoinedGroup(
 						actualParentTableGroup,
 						joinProducer,
-						defaultSqlAstJoinType
+						SqlAstJoinType.INNER
 				);
 				if ( compatibleTableGroup == null ) {
 					final TableGroupJoin tableGroupJoin = joinProducer.createTableGroupJoin(
 							joinedPath.getNavigablePath(),
 							actualParentTableGroup,
 							null,
-							defaultSqlAstJoinType,
+							null,
 							false,
 							false,
 							this
@@ -3436,7 +3419,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					pluralAttributeMapping.getKeyDescriptor().generateJoinPredicate(
 							parentTableGroup,
 							tableGroup,
-							SqlAstJoinType.INNER,
 							getSqlExpressionResolver(),
 							creationContext
 					)
@@ -3619,7 +3601,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					pluralAttributeMapping.getKeyDescriptor().generateJoinPredicate(
 							parentFromClauseAccess.findTableGroup( parent ),
 							tableGroup,
-							SqlAstJoinType.INNER,
 							getSqlExpressionResolver(),
 							creationContext
 					)
@@ -3752,7 +3733,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 										pluralPartPath.getPluralDomainPath().getNavigablePath().getParent()
 								),
 								tableGroup,
-								SqlAstJoinType.INNER,
 								getSqlExpressionResolver(),
 								creationContext
 						)
@@ -5435,7 +5415,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					pluralAttributeMapping.getKeyDescriptor().generateJoinPredicate(
 							parentFromClauseAccess.findTableGroup( pluralPath.getNavigablePath().getParent() ),
 							tableGroup,
-							SqlAstJoinType.INNER,
 							getSqlExpressionResolver(),
 							creationContext
 					)

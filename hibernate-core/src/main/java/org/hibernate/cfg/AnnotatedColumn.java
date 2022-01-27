@@ -867,7 +867,7 @@ public class AnnotatedColumn {
 	@Override
 	public String toString() {
 		return String.format(
-				"Ejb3Column{table=%s, mappingColumn=%s, insertable=%s, updatable=%s, unique=%s}",
+				"Column{table=%s, mappingColumn=%s, insertable=%s, updatable=%s, unique=%s}",
 				getTable(), mappingColumn.getName(), insertable, updatable, unique
 		);
 	}

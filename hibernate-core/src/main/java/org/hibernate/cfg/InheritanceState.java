@@ -44,9 +44,9 @@ public class InheritanceState {
 	private boolean hasParents = false;
 	private InheritanceType type;
 	private boolean isEmbeddableSuperclass = false;
-	private Map<XClass, InheritanceState> inheritanceStatePerClass;
-	private List<XClass> classesToProcessForMappedSuperclass = new ArrayList<>();
-	private MetadataBuildingContext buildingContext;
+	private final Map<XClass, InheritanceState> inheritanceStatePerClass;
+	private final List<XClass> classesToProcessForMappedSuperclass = new ArrayList<>();
+	private final MetadataBuildingContext buildingContext;
 	private AccessType accessType;
 	private ElementsToProcess elementsToProcess;
 	private Boolean hasIdClassOrEmbeddedId;
@@ -195,16 +195,14 @@ public class InheritanceState {
 	}
 
 	/*
-     * Get the annotated elements and determine access type from hierarchy, guessing from @Id or @EmbeddedId presence if not
-     * specified.
+     * Get the annotated elements and determine access type from hierarchy,
+     * guessing from @Id or @EmbeddedId presence if not specified.
      * Change EntityBinder by side effect
      */
-
 	public ElementsToProcess getElementsToProcess() {
 		if ( elementsToProcess == null ) {
 			InheritanceState inheritanceState = inheritanceStatePerClass.get( clazz );
 			assert !inheritanceState.isEmbeddableSuperclass();
-
 
 			getMappedSuperclassesTillNextEntityOrdered();
 

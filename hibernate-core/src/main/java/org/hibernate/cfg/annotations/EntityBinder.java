@@ -31,7 +31,6 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
@@ -70,8 +69,6 @@ import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.AnnotatedJoinColumn;
-import org.hibernate.cfg.InheritanceState;
-import org.hibernate.cfg.ObjectNameSource;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -103,7 +100,8 @@ import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
  * @author Emmanuel Bernard
  */
 public class EntityBinder {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, EntityBinder.class.getName());
+
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, EntityBinder.class.getName() );
 	private static final String NATURAL_ID_CACHE_SUFFIX = "##NaturalId";
 
 	private MetadataBuildingContext context;
@@ -125,10 +123,9 @@ public class EntityBinder {
 	private String where;
 	// todo : we should defer to InFlightMetadataCollector.EntityTableXref for secondary table tracking;
 	//		atm we use both from here; HBM binding solely uses InFlightMetadataCollector.EntityTableXref
-	private java.util.Map<String, Join> secondaryTables = new HashMap<>();
-	private java.util.Map<String, Object> secondaryTableJoins = new HashMap<>();
-	private List<Filter> filters = new ArrayList<>();
-	private InheritanceState inheritanceState;
+	private final java.util.Map<String, Join> secondaryTables = new HashMap<>();
+	private final java.util.Map<String, Object> secondaryTableJoins = new HashMap<>();
+	private final List<Filter> filters = new ArrayList<>();
 	private boolean ignoreIdAnnotations;
 	private AccessType propertyAccessType = AccessType.DEFAULT;
 	private boolean wrapIdsInEmbeddedComponents;
@@ -151,14 +148,13 @@ public class EntityBinder {
 	}
 
 	public EntityBinder(
-			Entity ejb3Ann,
 			XClass annotatedClass,
 			PersistentClass persistentClass,
 			MetadataBuildingContext context) {
 		this.context = context;
 		this.persistentClass = persistentClass;
 		this.annotatedClass = annotatedClass;
-		bindEjb3Annotation( ejb3Ann );
+		bindEntityAnnotation( annotatedClass.getAnnotation( Entity.class ) );
 		bindHibernateAnnotation();
 	}
 
@@ -170,14 +166,10 @@ public class EntityBinder {
 	 *
 	 * @return {@code true} if a property by that given name does already exist in the super hierarchy.
 	 */
-	@SuppressWarnings("SimplifiableIfStatement")
 	public boolean isPropertyDefinedInSuperHierarchy(String name) {
 		// Yes, yes... persistentClass can be null because EntityBinder can be used
 		// to bind components as well, of course...
-		if ( persistentClass == null ) {
-			return false;
-		}
-		return persistentClass.isPropertyDefinedInSuperHierarchy( name );
+		return  persistentClass != null &&  persistentClass.isPropertyDefinedInSuperHierarchy( name );
 	}
 
 	@SuppressWarnings("SimplifiableConditionalExpression")
@@ -218,14 +210,13 @@ public class EntityBinder {
 		}
 	}
 
-	private void bindEjb3Annotation(Entity ejb3Ann) {
-		if ( ejb3Ann == null ) throw new AssertionFailure( "@Entity should always be not null" );
-		if ( BinderHelper.isEmptyAnnotationValue( ejb3Ann.name() ) ) {
-			name = StringHelper.unqualify( annotatedClass.getName() );
+	private void bindEntityAnnotation(Entity ejb3Ann) {
+		if ( ejb3Ann == null ) {
+			throw new AssertionFailure( "@Entity should never be missing" );
 		}
-		else {
-			name = ejb3Ann.name();
-		}
+		name = BinderHelper.isEmptyAnnotationValue( ejb3Ann.name() )
+				? StringHelper.unqualify(annotatedClass.getName())
+				: ejb3Ann.name();
 	}
 
 	public boolean isRootEntity() {
@@ -262,11 +253,7 @@ public class EntityBinder {
 
 		if ( persistentClass instanceof RootClass ) {
 			RootClass rootClass = (RootClass) persistentClass;
-			boolean mutable = true;
-			//priority on @Immutable, then @Entity.mutable()
-			if ( annotatedClass.isAnnotationPresent( Immutable.class ) ) {
-				mutable = false;
-			}
+			boolean mutable = !annotatedClass.isAnnotationPresent( Immutable.class );
 
 			rootClass.setMutable( mutable );
 			rootClass.setExplicitPolymorphism( isExplicitPolymorphism( polymorphismType ) );
@@ -307,6 +294,7 @@ public class EntityBinder {
 		//set persister if needed
 		Persister persisterAnn = annotatedClass.getAnnotation( Persister.class );
 		if ( persisterAnn != null ) {
+			//TODO: throw an error if the class doesn't inherit EntityPersister
 			Class<? extends EntityPersister> persister = (Class<? extends EntityPersister>) persisterAnn.impl();
 			persistentClass.setEntityPersisterClass( persister );
 		}
@@ -477,7 +465,6 @@ public class EntityBinder {
 		}
 	}
 
-	@SuppressWarnings({ "unchecked" })
 	public void setProxy(Proxy proxy) {
 		if ( proxy != null ) {
 			lazy = proxy.lazy();
@@ -514,6 +501,7 @@ public class EntityBinder {
 			XClass clazzToProcess,
 			SharedCacheMode sharedCacheMode,
 			MetadataBuildingContext context) {
+
 		final Cache explicitCacheAnn = clazzToProcess.getAnnotation( Cache.class );
 		final Cacheable explicitCacheableAnn = clazzToProcess.getAnnotation( Cacheable.class );
 
@@ -678,26 +666,6 @@ public class EntityBinder {
 		);
 	}
 
-	private static class EntityTableObjectNameSource implements ObjectNameSource {
-		private final String explicitName;
-		private final String logicalName;
-
-		private EntityTableObjectNameSource(String explicitName, String entityName) {
-			this.explicitName = explicitName;
-			this.logicalName = StringHelper.isNotEmpty( explicitName )
-					? explicitName
-					: StringHelper.unqualify( entityName );
-		}
-
-		public String getExplicitName() {
-			return explicitName;
-		}
-
-		public String getLogicalName() {
-			return logicalName;
-		}
-	}
-
 	private static class EntityTableNamingStrategyHelper implements NamingStrategyHelper {
 		private final String className;
 		private final String entityName;
@@ -761,7 +729,7 @@ public class EntityBinder {
 	}
 
 	public void bindTableForDiscriminatedSubclass(InFlightMetadataCollector.EntityTableXref superTableXref) {
-		if ( !SingleTableSubclass.class.isInstance( persistentClass ) ) {
+		if ( !(persistentClass instanceof SingleTableSubclass) ) {
 			throw new AssertionFailure(
 					"Was expecting a discriminated subclass [" + SingleTableSubclass.class.getName() +
 							"] but found [" + persistentClass.getClass().getName() + "] for entity [" +
@@ -951,7 +919,7 @@ public class EntityBinder {
 				final boolean noConstraintByDefault = context.getBuildingOptions().isNoConstraintByDefault();
 				if ( jpaSecondaryTable.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
 						|| jpaSecondaryTable.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) {
-					( (SimpleValue) join.getKey() ).setForeignKeyName( "none" );
+					( (SimpleValue) join.getKey() ).disableForeignKey();
 				}
 				else {
 					( (SimpleValue) join.getKey() ).setForeignKeyName( StringHelper.nullIfEmpty( jpaSecondaryTable.foreignKey().name() ) );
@@ -1020,33 +988,6 @@ public class EntityBinder {
 	public Join addJoin(JoinTable joinTable, PropertyHolder holder, boolean noDelayInPkColumnCreation) {
 		return addJoin( null, joinTable, holder, noDelayInPkColumnCreation );
 	}
-
-	private static class SecondaryTableNamingStrategyHelper implements NamingStrategyHelper {
-		@Override
-		public Identifier determineImplicitName(MetadataBuildingContext buildingContext) {
-			// should maybe throw an exception here
-			return null;
-		}
-
-		@Override
-		public Identifier handleExplicitName(String explicitName, MetadataBuildingContext buildingContext) {
-			return buildingContext.getMetadataCollector()
-					.getDatabase()
-					.getJdbcEnvironment()
-					.getIdentifierHelper()
-					.toIdentifier( explicitName );
-		}
-
-		@Override
-		public Identifier toPhysicalName(Identifier logicalName, MetadataBuildingContext buildingContext) {
-			return buildingContext.getBuildingOptions().getPhysicalNamingStrategy().toPhysicalTableName(
-					logicalName,
-					buildingContext.getMetadataCollector().getDatabase().getJdbcEnvironment()
-			);
-		}
-	}
-
-	private static SecondaryTableNamingStrategyHelper SEC_TBL_NS_HELPER = new SecondaryTableNamingStrategyHelper();
 
 	private Join addJoin(
 			SecondaryTable secondaryTable,
@@ -1183,10 +1124,6 @@ public class EntityBinder {
 
 	public void addFilter(Filter filter) {
 		filters.add(filter);
-	}
-
-	public void setInheritanceState(InheritanceState inheritanceState) {
-		this.inheritanceState = inheritanceState;
 	}
 
 	public boolean isIgnoreIdAnnotations() {

@@ -50,7 +50,7 @@ public class ManyToOne extends ToOne {
 		// Ensure properties are sorted before we create a foreign key
 		sortProperties();
 		// the case of a foreign key to something other than the pk is handled in createPropertyRefConstraints
-		if ( referencedPropertyName==null && !hasFormula() ) {
+		if ( isForeignKeyEnabled() && referencedPropertyName==null && !hasFormula() ) {
 			createForeignKeyOfEntity( ( (EntityType) getType() ).getAssociatedEntityName() );
 		} 
 	}

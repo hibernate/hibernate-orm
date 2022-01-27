@@ -296,7 +296,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 		if ( getIdentifier() instanceof Component ) {
 			Component id = (Component) getIdentifier();
 			if ( !id.isDynamic() ) {
-				final Class idClass = id.getComponentClass();
+				final Class<?> idClass = id.getComponentClass();
 				if ( idClass != null ) {
 					final String idComponentClassName = idClass.getName();
 					if ( !ReflectHelper.overridesEquals( idClass ) ) {

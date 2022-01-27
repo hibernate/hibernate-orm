@@ -150,7 +150,6 @@ import org.hibernate.tuple.GeneratedValueGeneration;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.ComponentType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.StandardBasicTypes;
@@ -190,9 +189,6 @@ public class ModelBinder {
 		};
 		this.implicitNamingStrategy = context.getBuildingOptions().getImplicitNamingStrategy();
 		this.relationalObjectBinder = new RelationalObjectBinder( context );
-	}
-
-	public void finishUp(MetadataBuildingContext context) {
 	}
 
 	public void bindEntityHierarchy(EntityHierarchySourceImpl hierarchySource) {
@@ -308,7 +304,7 @@ public class ModelBinder {
 			// Configuration applied a similar logic but that capability is no longer
 			// accessible from Configuration
 			switch ( mappingDocument.getBuildingOptions().getSharedCacheMode() ) {
-				case ALL: {
+				case ALL:
 					caching = new Caching(
 							null,
 							mappingDocument.getBuildingOptions().getImplicitCacheAccessType(),
@@ -316,24 +312,11 @@ public class ModelBinder {
 							TruthValue.UNKNOWN
 					);
 					break;
-				}
-				case NONE: {
-					// Ideally we'd disable all caching...
-					break;
-				}
-				case ENABLE_SELECTIVE: {
-					// this is default behavior for hbm.xml
-					break;
-				}
-				case DISABLE_SELECTIVE: {
-					// really makes no sense for hbm.xml
-					break;
-				}
-				default: {
-					// null or UNSPECIFIED, nothing to do.  IMO for hbm.xml this is equivalent
-					// to ENABLE_SELECTIVE
-					break;
-				}
+				case NONE: // Ideally we'd disable all caching...
+				case ENABLE_SELECTIVE: // this is default behavior for hbm.xml
+				case DISABLE_SELECTIVE: // really makes no sense for hbm.xml
+				default: // null or UNSPECIFIED, nothing to do.  IMO for hbm.xml this is equivalent to ENABLE_SELECTIVE
+					// do nothing
 			}
 		}
 
@@ -464,7 +447,7 @@ public class ModelBinder {
 			}
 		}
 
-		bindCustomSql( sourceDocument, entitySource, entityDescriptor );
+		bindCustomSql( entitySource, entityDescriptor );
 
 		final JdbcEnvironment jdbcEnvironment = sourceDocument.getMetadataCollector().getDatabase().getJdbcEnvironment();
 
@@ -846,8 +829,7 @@ public class ModelBinder {
 				idPropertyName,
 				idPropertyName == null,
 				idClassName == null && idPropertyName == null,
-				identifierSource.getEmbeddableSource().isDynamic(),
-				identifierSource.getIdentifierAttributeSource().getXmlNodeName()
+				identifierSource.getEmbeddableSource().isDynamic()
 		);
 
 		finishBindingCompositeIdentifier(
@@ -892,8 +874,7 @@ public class ModelBinder {
 				null,
 				true,
 				idClassName == null,
-				false,
-				null
+				false
 		);
 
 		if ( idClassName != null ) {
@@ -911,8 +892,7 @@ public class ModelBinder {
 					null,
 					true,
 					true,
-					false,
-					null
+					false
 			);
 
 			rootEntityDescriptor.setIdentifierMapper( mapper );
@@ -1758,11 +1738,7 @@ public class ModelBinder {
 		secondaryTableJoin.setTable( secondaryTable );
 		entityTableXref.addSecondaryTable( mappingDocument, logicalTableName, secondaryTableJoin );
 
-		bindCustomSql(
-				mappingDocument,
-				secondaryTableSource,
-				secondaryTableJoin
-		);
+		bindCustomSql( secondaryTableSource, secondaryTableJoin );
 
 		secondaryTableJoin.setSequentialSelect( secondaryTableSource.getFetchStyle() == FetchStyle.SELECT );
 		secondaryTableJoin.setInverse( secondaryTableSource.isInverse() );
@@ -1841,7 +1817,6 @@ public class ModelBinder {
 				componentBinding,
 				containingClassName,
 				attributeName,
-				embeddedSource.getXmlNodeName(),
 				embeddedSource.isVirtualAttribute()
 		);
 
@@ -2006,7 +1981,6 @@ public class ModelBinder {
 					sourceDocument,
 					oneToOneBinding.getReferencedEntityName(),
 					propertyRef,
-					true,
 					"<one-to-one name=\"" + oneToOneSource.getName() + "\"/>"
 			);
 		}
@@ -2030,7 +2004,6 @@ public class ModelBinder {
 			MappingDocument mappingDocument,
 			String referencedEntityName,
 			String referencedPropertyName,
-			boolean isUnique,
 			String sourceElementSynopsis) {
 		PersistentClass entityBinding = mappingDocument.getMetadataCollector().getEntityBinding( referencedEntityName );
 		if ( entityBinding == null ) {
@@ -2039,7 +2012,7 @@ public class ModelBinder {
 					new DelayedPropertyReferenceHandlerImpl(
 							referencedEntityName,
 							referencedPropertyName,
-							isUnique,
+							true,
 							sourceElementSynopsis,
 							mappingDocument.getOrigin()
 					),
@@ -2054,7 +2027,7 @@ public class ModelBinder {
 						new DelayedPropertyReferenceHandlerImpl(
 								referencedEntityName,
 								referencedPropertyName,
-								isUnique,
+								true,
 								sourceElementSynopsis,
 								mappingDocument.getOrigin()
 						),
@@ -2068,9 +2041,7 @@ public class ModelBinder {
 						referencedPropertyName,
 						sourceElementSynopsis
 				);
-				if ( isUnique ) {
-					( (SimpleValue) propertyBinding.getValue() ).setAlternateUniqueKey( true );
-				}
+				( (SimpleValue) propertyBinding.getValue() ).setAlternateUniqueKey( true );
 			}
 		}
 	}
@@ -2191,7 +2162,6 @@ public class ModelBinder {
 					sourceDocument,
 					manyToOneBinding.getReferencedEntityName(),
 					propertyRef,
-					true,
 					"<many-to-one name=\"" + manyToOneSource.getName() + "\"/>"
 			);
 		}
@@ -2309,7 +2279,7 @@ public class ModelBinder {
 			String entityName) {
 		final String attributeName = anyMapping.getName();
 
-		bindAny( sourceDocument, anyMapping, anyBinding, anyMapping.getAttributeRole(), anyMapping.getAttributePath() );
+		bindAny( sourceDocument, anyMapping, anyBinding, anyMapping.getAttributeRole() );
 
 		prepareValueTypeViaReflection( sourceDocument, anyBinding, entityName, attributeName, anyMapping.getAttributeRole() );
 
@@ -2330,8 +2300,7 @@ public class ModelBinder {
 			MappingDocument sourceDocument,
 			final AnyMappingSource anyMapping,
 			Any anyBinding,
-			final AttributeRole attributeRole,
-			AttributePath attributePath) {
+			final AttributeRole attributeRole) {
 
 		anyBinding.setLazy( anyMapping.isLazy() );
 
@@ -2592,19 +2561,7 @@ public class ModelBinder {
 		property.setMetaAttributes( propertySource.getToolingHintContext().getMetaAttributeMap() );
 
 		if ( log.isDebugEnabled() ) {
-			final StringBuilder message = new StringBuilder()
-					.append( "Mapped property: " )
-					.append( propertySource.getName() )
-					.append( " -> [" );
-			final Iterator<Selectable> itr = property.getValue().getColumnIterator();
-			while ( itr.hasNext() ) {
-				message.append( itr.next().getText() );
-				if ( itr.hasNext() ) {
-					message.append( ", " );
-				}
-			}
-			message.append( "]" );
-			log.debug( message.toString() );
+			log.debug( "Mapped property: " + propertySource.getName() + " -> [" + columns( property.getValue() ) + "]" );
 		}
 	}
 
@@ -2614,7 +2571,6 @@ public class ModelBinder {
 			Component component,
 			String containingClassName,
 			String propertyName,
-			String xmlNodeName,
 			boolean isVirtual) {
 		final String fullRole = embeddableSource.getAttributeRoleBase().getFullPath();
 		final String explicitComponentClassName = extractExplicitComponentClassName( embeddableSource );
@@ -2629,8 +2585,7 @@ public class ModelBinder {
 				propertyName,
 				isVirtual,
 				isVirtual,
-				embeddableSource.isDynamic(),
-				xmlNodeName
+				embeddableSource.isDynamic()
 		);
 	}
 
@@ -2652,8 +2607,7 @@ public class ModelBinder {
 			String propertyName,
 			boolean isComponentEmbedded,
 			boolean isVirtual,
-			boolean isDynamic,
-			String xmlNodeName) {
+			boolean isDynamic) {
 
 		componentBinding.setMetaAttributes( embeddableSource.getToolingHintContext().getMetaAttributeMap() );
 
@@ -3014,7 +2968,6 @@ public class ModelBinder {
 	}
 
 	private static void bindCustomSql(
-			MappingDocument sourceDocument,
 			EntitySource entitySource,
 			PersistentClass entityDescriptor) {
 		if ( entitySource.getCustomSqlInsert() != null ) {
@@ -3045,7 +2998,6 @@ public class ModelBinder {
 	}
 
 	private static void bindCustomSql(
-			MappingDocument sourceDocument,
 			SecondaryTableSource secondaryTableSource,
 			Join secondaryTable) {
 		if ( secondaryTableSource.getCustomSqlInsert() != null ) {
@@ -3194,18 +3146,6 @@ public class ModelBinder {
 					log.debugf( "   + element -> " + columns( getCollectionBinding().getElement() ) );
 				}
 			}
-		}
-
-		private String columns(Value value) {
-			final StringBuilder builder = new StringBuilder();
-			final Iterator<Selectable> selectableItr = value.getColumnIterator();
-			while ( selectableItr.hasNext() ) {
-				builder.append( selectableItr.next().getText() );
-				if ( selectableItr.hasNext() ) {
-					builder.append( ", " );
-				}
-			}
-			return builder.toString();
 		}
 
 		private void bindCollectionTable() {
@@ -3485,7 +3425,6 @@ public class ModelBinder {
 						elementBinding,
 						null,
 						embeddableSource.getAttributePathBase().getProperty(),
-						getPluralAttributeSource().getXmlNodeName(),
 						false
 				);
 
@@ -3668,9 +3607,7 @@ public class ModelBinder {
 						mappingDocument,
 						elementSource,
 						elementBinding,
-						getPluralAttributeSource().getAttributeRole().append( "element" ),
-						getPluralAttributeSource().getAttributePath().append( "element" )
-
+						getPluralAttributeSource().getAttributeRole().append( "element" )
 				);
 				getCollectionBinding().setElement( elementBinding );
 				// Collection#setWhere is used to set the "where" clause that applies to the collection table
@@ -4003,7 +3940,6 @@ public class ModelBinder {
 					componentBinding,
 					null,
 					pluralAttributeSource.getName(),
-					mapKeySource.getXmlNodeName(),
 					false
 			);
 			collectionBinding.setIndex( componentBinding );
@@ -4050,8 +3986,7 @@ public class ModelBinder {
 					mappingDocument,
 					mapKeySource,
 					mapKeyBinding,
-					pluralAttributeSource.getAttributeRole().append( "key" ),
-					pluralAttributeSource.getAttributePath().append( "key" )
+					pluralAttributeSource.getAttributeRole().append( "key" )
 			);
 			collectionBinding.setIndex( mapKeyBinding );
 		}
@@ -4287,6 +4222,17 @@ public class ModelBinder {
 
 			entityBinding.getTable().addUniqueKey( uk );
 		}
+	}
 
+	private String columns(Value value) {
+		final StringBuilder builder = new StringBuilder();
+		final Iterator<Selectable> selectableItr = value.getColumnIterator();
+		while ( selectableItr.hasNext() ) {
+			builder.append( selectableItr.next().getText() );
+			if ( selectableItr.hasNext() ) {
+				builder.append( ", " );
+			}
+		}
+		return builder.toString();
 	}
 }

@@ -24,7 +24,7 @@ public interface IdGeneratorStrategyInterpreter {
 		 * The Java type of the attribute defining the id whose value is to
 		 * be generated.
 		 */
-		Class getIdType();
+		Class<?> getIdType();
 
 		/**
 		 * The {@link GeneratedValue#generator()} name.

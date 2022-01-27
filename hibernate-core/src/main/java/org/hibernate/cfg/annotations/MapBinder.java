@@ -348,7 +348,7 @@ public class MapBinder extends CollectionBinder {
 				if ( foreignKey != null ) {
 					if ( foreignKey.value() == ConstraintMode.NO_CONSTRAINT
 							|| foreignKey.value() == ConstraintMode.PROVIDER_DEFAULT && getBuildingContext().getBuildingOptions().isNoConstraintByDefault() ) {
-						element.setForeignKeyName( "none" );
+						element.disableForeignKey();
 					}
 					else {
 						element.setForeignKeyName( StringHelper.nullIfEmpty( foreignKey.name() ) );

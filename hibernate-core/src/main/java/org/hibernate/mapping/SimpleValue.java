@@ -93,6 +93,7 @@ public abstract class SimpleValue implements KeyValue {
 	private String foreignKeyDefinition;
 	private boolean alternateUniqueKey;
 	private boolean cascadeDeleteEnabled;
+	private boolean foreignKeyEnabled = true;
 
 	private ConverterDescriptor attributeConverterDescriptor;
 	private Type type;
@@ -291,7 +292,7 @@ public abstract class SimpleValue implements KeyValue {
 
 	@Override
 	public void createForeignKeyOfEntity(String entityName) {
-		if ( !hasFormula() && !"none".equals( getForeignKeyName() ) ) {
+		if ( isConstrained() ) {
 			table.createForeignKey( getForeignKeyName(), getConstraintColumns(), entityName, getForeignKeyDefinition() )
 					.setCascadeDeleteEnabled(cascadeDeleteEnabled);
 		}
@@ -545,11 +546,24 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public void setForeignKeyName(String foreignKeyName) {
+		// the FK name "none" was a magic value in the hbm.xml
+		// mapping language that indicated to not create a FK
+		if ( "none".equals( foreignKeyName ) ) {
+			foreignKeyEnabled = false;
+		}
 		this.foreignKeyName = foreignKeyName;
 	}
 
+	public boolean isForeignKeyEnabled() {
+		return foreignKeyEnabled;
+	}
+
+	public void disableForeignKey() {
+		this.foreignKeyEnabled = false;
+	}
+
 	public boolean isConstrained() {
-		return !"none".equals( foreignKeyName ) && !hasFormula();
+		return isForeignKeyEnabled() && !hasFormula();
 	}
 
 	public String getForeignKeyDefinition() {

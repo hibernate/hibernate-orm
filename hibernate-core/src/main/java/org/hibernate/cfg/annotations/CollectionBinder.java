@@ -8,7 +8,6 @@ package org.hibernate.cfg.annotations;
 
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -184,7 +183,7 @@ public abstract class CollectionBinder {
 	private TableBinder tableBinder;
 	private AnnotatedColumn[] mapKeyColumns;
 	private AnnotatedJoinColumn[] mapKeyManyToManyColumns;
-	protected HashMap<String, IdentifierGeneratorDefinition> localGenerators;
+	protected Map<String, IdentifierGeneratorDefinition> localGenerators;
 	protected Map<XClass, InheritanceState> inheritanceStatePerClass;
 	private XClass declaringClass;
 	private boolean declaringClassSet;
@@ -1119,8 +1118,7 @@ public abstract class CollectionBinder {
 		if ( jpaOrderBy != null ) {
 			final String orderByFragment = buildOrderByClauseFromHql(
 					jpaOrderBy.value(),
-					associatedClass,
-					collection.getRole()
+					associatedClass
 			);
 			if ( StringHelper.isNotEmpty( orderByFragment ) ) {
 				collection.setOrderBy( orderByFragment );
@@ -1337,7 +1335,7 @@ public abstract class CollectionBinder {
 		}
 	}
 
-	private static String buildOrderByClauseFromHql(String orderByFragment, PersistentClass associatedClass, String role) {
+	private static String buildOrderByClauseFromHql(String orderByFragment, PersistentClass associatedClass) {
 		if ( orderByFragment != null ) {
 			if ( orderByFragment.length() == 0 ) {
 				//order by id
@@ -1437,7 +1435,7 @@ public abstract class CollectionBinder {
 				if ( collectionTableAnn != null ) {
 					if ( collectionTableAnn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
 							|| collectionTableAnn.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) {
-						key.setForeignKeyName( "none" );
+						key.disableForeignKey();
 					}
 					else {
 						key.setForeignKeyName( StringHelper.nullIfEmpty( collectionTableAnn.foreignKey().name() ) );
@@ -1469,7 +1467,7 @@ public abstract class CollectionBinder {
 						}
 						if ( foreignKeyValue == ConstraintMode.NO_CONSTRAINT
 								|| foreignKeyValue == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) {
-							key.setForeignKeyName( "none" );
+							key.disableForeignKey();
 						}
 						else {
 							key.setForeignKeyName( StringHelper.nullIfEmpty( foreignKeyName ) );
@@ -1482,7 +1480,7 @@ public abstract class CollectionBinder {
 						);
 						if ( fkOverride != null && ( fkOverride.value() == ConstraintMode.NO_CONSTRAINT ||
 								fkOverride.value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) ) {
-							key.setForeignKeyName( "none" );
+							key.disableForeignKey();
 						}
 						else if ( fkOverride != null ) {
 							key.setForeignKeyName( StringHelper.nullIfEmpty( fkOverride.name() ) );
@@ -1495,14 +1493,14 @@ public abstract class CollectionBinder {
 									&& ( onDeleteAnn == null || onDeleteAnn.action() != OnDeleteAction.CASCADE ) ) {
 								// foreign key should be up to @ManyToOne side
 								// @OnDelete generate "on delete cascade" foreign key
-								key.setForeignKeyName( "none" );
+								key.disableForeignKey();
 							}
 							else {
 								final JoinColumn joinColumnAnn = property.getAnnotation( JoinColumn.class );
 								if ( joinColumnAnn != null ) {
 									if ( joinColumnAnn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
 											|| joinColumnAnn.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) {
-										key.setForeignKeyName( "none" );
+										key.disableForeignKey();
 									}
 									else {
 										key.setForeignKeyName( StringHelper.nullIfEmpty( joinColumnAnn.foreignKey().name() ) );
@@ -1674,7 +1672,7 @@ public abstract class CollectionBinder {
 			// as per 11.1.38 of JPA 2.0 spec, default to primary key if no column is specified by @OrderBy.
 			if ( hqlOrderBy != null ) {
 				collValue.setManyToManyOrdering(
-						buildOrderByClauseFromHql( hqlOrderBy, collectionEntity, collValue.getRole() )
+						buildOrderByClauseFromHql( hqlOrderBy, collectionEntity)
 				);
 			}
 
@@ -1687,20 +1685,16 @@ public abstract class CollectionBinder {
 				if ( joinTableAnn != null ) {
 					String foreignKeyName = joinTableAnn.inverseForeignKey().name();
 					String foreignKeyDefinition = joinTableAnn.inverseForeignKey().foreignKeyDefinition();
-					ConstraintMode foreignKeyValue = joinTableAnn.inverseForeignKey().value();
 					if ( joinTableAnn.inverseJoinColumns().length != 0 ) {
 						final JoinColumn joinColumnAnn = joinTableAnn.inverseJoinColumns()[0];
 						if ( foreignKeyName != null && foreignKeyName.isEmpty() ) {
 							foreignKeyName = joinColumnAnn.foreignKey().name();
 							foreignKeyDefinition = joinColumnAnn.foreignKey().foreignKeyDefinition();
 						}
-						if ( foreignKeyValue != ConstraintMode.NO_CONSTRAINT ) {
-							foreignKeyValue = joinColumnAnn.foreignKey().value();
-						}
 					}
 					if ( joinTableAnn.inverseForeignKey().value() == ConstraintMode.NO_CONSTRAINT
 							|| joinTableAnn.inverseForeignKey().value() == ConstraintMode.PROVIDER_DEFAULT && buildingContext.getBuildingOptions().isNoConstraintByDefault() ) {
-						element.setForeignKeyName( "none" );
+						element.disableForeignKey();
 					}
 					else {
 						element.setForeignKeyName( StringHelper.nullIfEmpty( foreignKeyName ) );
@@ -2089,7 +2083,7 @@ public abstract class CollectionBinder {
 		this.mapKeyManyToManyColumns = mapJoinColumns;
 	}
 
-	public void setLocalGenerators(HashMap<String, IdentifierGeneratorDefinition> localGenerators) {
+	public void setLocalGenerators(Map<String, IdentifierGeneratorDefinition> localGenerators) {
 		this.localGenerators = localGenerators;
 	}
 }

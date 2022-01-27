@@ -85,7 +85,7 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 
 	@Override
 	public String toString() {
-		return String.format("Ejb3DiscriminatorColumn{logicalColumnName'%s', discriminatorTypeName='%s'}",
+		return String.format("DiscriminatorColumn{logicalColumnName'%s', discriminatorTypeName='%s'}",
 				getLogicalColumnName(), discriminatorTypeName
 		);
 	}

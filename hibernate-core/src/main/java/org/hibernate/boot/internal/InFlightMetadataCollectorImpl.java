@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -1177,7 +1176,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			type = AnnotatedClassType.EMBEDDABLE;
 		}
 		else if ( clazz.isAnnotationPresent( jakarta.persistence.MappedSuperclass.class ) ) {
-			type = AnnotatedClassType.EMBEDDABLE_SUPERCLASS;
+			type = AnnotatedClassType.MAPPED_SUPERCLASS;
 		}
 		else {
 			type = AnnotatedClassType.NONE;

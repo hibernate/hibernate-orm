@@ -32,7 +32,7 @@ public class StandardAnyTypeDefinition implements AnyMappingDefinition {
 
 	private static List<DiscriminatorMapping> interpretDiscriminatorMappings(AnyType anyType) {
 		final Type discriminatorType = anyType.getDiscriminatorType();
-		if ( ! MetaType.class.isInstance( discriminatorType ) ) {
+		if ( !(discriminatorType instanceof MetaType) ) {
 			return Collections.emptyList();
 		}
 

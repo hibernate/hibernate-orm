@@ -72,8 +72,6 @@ import static org.hibernate.cfg.AnnotatedColumn.buildColumnOrFormulaFromAnnotati
  */
 public class BinderHelper {
 
-	public static final String ANNOTATION_STRING_DEFAULT = "";
-
 	private static final Logger log = CoreLogging.logger( BinderHelper.class );
 
 	private BinderHelper() {

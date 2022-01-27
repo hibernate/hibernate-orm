@@ -49,7 +49,7 @@ public class BeanValidationEventListener
 	);
 
 	private ValidatorFactory factory;
-	private ConcurrentHashMap<EntityPersister, Set<String>> associationsPerEntityPersister = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<EntityPersister, Set<String>> associationsPerEntityPersister = new ConcurrentHashMap<>();
 	private GroupsPerOperation groupsPerOperation;
 	boolean initialized;
 
@@ -59,18 +59,18 @@ public class BeanValidationEventListener
 	 * @param factory The {@code ValidatorFactory} to use to create {@code Validator} instance(s)
 	 * @param settings Configured properties
 	 */
-	public BeanValidationEventListener(ValidatorFactory factory, Map settings, ClassLoaderService classLoaderService) {
+	public BeanValidationEventListener(ValidatorFactory factory, Map<String,Object> settings, ClassLoaderService classLoaderService) {
 		init( factory, settings, classLoaderService );
 	}
 
-	public void initialize(Map settings, ClassLoaderService classLoaderService) {
+	public void initialize(Map<String,Object> settings, ClassLoaderService classLoaderService) {
 		if ( !initialized ) {
 			ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
 			init( factory, settings, classLoaderService );
 		}
 	}
 
-	private void init(ValidatorFactory factory, Map settings, ClassLoaderService classLoaderService) {
+	private void init(ValidatorFactory factory, Map<String,Object> settings, ClassLoaderService classLoaderService) {
 		this.factory = factory;
 		groupsPerOperation = GroupsPerOperation.from( settings, new ClassLoaderAccessImpl( classLoaderService ) );
 		initialized = true;

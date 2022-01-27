@@ -32,13 +32,13 @@ import org.hibernate.mapping.Table;
 
  */
 public class ClassPropertyHolder extends AbstractPropertyHolder {
-	private PersistentClass persistentClass;
+	private final PersistentClass persistentClass;
 	private Map<String, Join> joins;
 	private transient Map<String, Join> joinsPerRealTableName;
 	private EntityBinder entityBinder;
 	private final Map<XClass, InheritanceState> inheritanceStatePerClass;
 
-	private Map<String,AttributeConversionInfo> attributeConversionInfoMap;
+	private final Map<String,AttributeConversionInfo> attributeConversionInfoMap;
 
 	public ClassPropertyHolder(
 			PersistentClass persistentClass,
@@ -232,7 +232,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	private void addPropertyToMappedSuperclass(Property prop, XClass declaringClass) {
-		final Class type = getContext().getBootstrapContext().getReflectionManager().toClass( declaringClass );
+		final Class<?> type = getContext().getBootstrapContext().getReflectionManager().toClass( declaringClass );
 		MappedSuperclass superclass = getContext().getMetadataCollector().getMappedSuperclass( type );
 		superclass.addDeclaredProperty( prop );
 	}

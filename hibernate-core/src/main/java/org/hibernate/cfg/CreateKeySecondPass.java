@@ -7,7 +7,6 @@
 package org.hibernate.cfg;
 import java.util.Map;
 
-import org.hibernate.MappingException;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;

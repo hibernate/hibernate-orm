@@ -6,7 +6,6 @@
  */
 package org.hibernate.cfg;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -33,16 +32,10 @@ public abstract class CollectionSecondPass implements SecondPass {
 
 	MetadataBuildingContext buildingContext;
 	Collection collection;
-	private Map localInheritedMetas;
-
-	public CollectionSecondPass(MetadataBuildingContext buildingContext, Collection collection, Map inheritedMetas) {
-		this.collection = collection;
-		this.buildingContext = buildingContext;
-		this.localInheritedMetas = inheritedMetas;
-	}
 
 	public CollectionSecondPass(MetadataBuildingContext buildingContext, Collection collection) {
-		this( buildingContext, collection, Collections.EMPTY_MAP );
+		this.collection = collection;
+		this.buildingContext = buildingContext;
 	}
 
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses)
@@ -51,7 +44,7 @@ public abstract class CollectionSecondPass implements SecondPass {
 			LOG.debugf( "Second pass for collection: %s", collection.getRole() );
 		}
 
-		secondPass( persistentClasses, localInheritedMetas ); // using local since the inheritedMetas at this point is not the correct map since it is always the empty map
+		secondPass( persistentClasses );
 		collection.createAllKeys();
 
 		if ( LOG.isDebugEnabled() ) {
@@ -69,8 +62,7 @@ public abstract class CollectionSecondPass implements SecondPass {
 		}
 	}
 
-	abstract public void secondPass(Map persistentClasses, Map inheritedMetas)
-			throws MappingException;
+	abstract public void secondPass(Map<String, PersistentClass> persistentClasses) throws MappingException;
 
 	private static String columns(Value val) {
 		StringBuilder columns = new StringBuilder();

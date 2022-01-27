@@ -58,16 +58,16 @@ public class BaselineSessionEventsListenerBuilder {
 			arr[0] = buildStatsListener();
 			arr[1] = buildAutoListener( autoListener );
 		}
-		else if ( !addStats && !addAutoListener ) {
-			arr = EMPTY;
-		}
 		else if ( !addStats && addAutoListener ) {
 			arr = new SessionEventListener[1];
 			arr[0] = buildAutoListener( autoListener );
 		}
-		else { //Last case: if ( addStats && !addAutoListener )
+		else if ( addStats && !addAutoListener ) {
 			arr = new SessionEventListener[1];
 			arr[0] = buildStatsListener();
+		}
+		else {//if ( !addStats && !addAutoListener )
+			arr = EMPTY;
 		}
 		return arr;
 	}

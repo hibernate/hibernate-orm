@@ -25,7 +25,7 @@ public enum MetadataSourceType {
 
 	private final String name;
 
-	private MetadataSourceType(String name) {
+	MetadataSourceType(String name) {
 		this.name = name;
 	}
 

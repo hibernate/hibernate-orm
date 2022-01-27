@@ -137,7 +137,7 @@ public class MergeListPreAndPostPersistTest extends BaseCoreFunctionalTestCase {
 				new PreInsertEventListener() {
 					@Override
 					public boolean onPreInsert(PreInsertEvent event) {
-						if ( Order.class.isInstance( event.getEntity() ) ) {
+						if ( event.getEntity() instanceof Order ) {
 							assertEquals( order, event.getEntity());
 							assertEquals( order.items, ( (Order) event.getEntity() ).items );
 						}
@@ -150,7 +150,7 @@ public class MergeListPreAndPostPersistTest extends BaseCoreFunctionalTestCase {
 				EventType.POST_INSERT,
 				new PostInsertEventListener() {
 					public void onPostInsert(PostInsertEvent event) {
-						if ( Order.class.isInstance( event.getEntity() ) ) {
+						if ( event.getEntity() instanceof Order ) {
 							assertEquals( order, event.getEntity());
 							assertEquals( order.items, ( (Order) event.getEntity() ).items );
 						}

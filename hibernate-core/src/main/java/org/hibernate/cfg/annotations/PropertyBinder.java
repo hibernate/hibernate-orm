@@ -71,7 +71,7 @@ public class PropertyBinder {
 	private boolean insertable = true;
 	private boolean updatable = true;
 	private String cascade;
-	private BasicValueBinder basicValueBinder;
+	private BasicValueBinder<?> basicValueBinder;
 	private XClass declaringClass;
 	private boolean declaringClassSet;
 	private boolean embedded;
@@ -99,7 +99,6 @@ public class PropertyBinder {
 	private XClass returnedClass;
 	private boolean isId;
 	private Map<XClass, InheritanceState> inheritanceStatePerClass;
-	private Property mappingProperty;
 
 	public void setInsertable(boolean insertable) {
 		this.insertable = insertable;
@@ -180,7 +179,7 @@ public class PropertyBinder {
 		final String containerClassName = holder.getClassName();
 		holder.startingProperty( property );
 
-		basicValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ATTRIBUTE, buildingContext );
+		basicValueBinder = new BasicValueBinder<>( BasicValueBinder.Kind.ATTRIBUTE, buildingContext );
 		basicValueBinder.setPropertyName( name );
 		basicValueBinder.setReturnedClassName( returnedClassName );
 		basicValueBinder.setColumns( columns );
@@ -202,7 +201,7 @@ public class PropertyBinder {
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	private void callAttributeBinders(Property prop) {
-		final Annotation containingAnnotation = findContainingAnnotation( property, AttributeBinderType.class, buildingContext );
+		final Annotation containingAnnotation = findContainingAnnotation( property, AttributeBinderType.class);
 		if ( containingAnnotation != null ) {
 			final AttributeBinderType binderAnn = containingAnnotation.annotationType().getAnnotation( AttributeBinderType.class );
 			try {
@@ -302,30 +301,29 @@ public class PropertyBinder {
 	public Property makeProperty() {
 		validateMake();
 		LOG.debugf( "Building property %s", name );
-		Property prop = new Property();
-		prop.setName( name );
-		prop.setValue( value );
-		prop.setLazy( lazy );
-		prop.setLazyGroup( lazyGroup );
-		prop.setCascade( cascade );
-		prop.setPropertyAccessorName( accessType.getType() );
-		prop.setReturnedClassName( returnedClassName );
+		Property property = new Property();
+		property.setName( name );
+		property.setValue( value );
+		property.setLazy( lazy );
+		property.setLazyGroup( lazyGroup );
+		property.setCascade( cascade );
+		property.setPropertyAccessorName( accessType.getType() );
+		property.setReturnedClassName( returnedClassName );
 
-		if ( property != null ) {
-			handleNaturalId( prop );
-			prop.setValueGenerationStrategy( determineValueGenerationStrategy( property ) );
+		if ( this.property != null ) {
+			handleNaturalId( property );
+			property.setValueGenerationStrategy( determineValueGenerationStrategy(this.property) );
 			// HHH-4635 -- needed for dialect-specific property ordering
-			prop.setLob( property.isAnnotationPresent(Lob.class) );
+			property.setLob( this.property.isAnnotationPresent(Lob.class) );
 		}
 
-		prop.setInsertable( insertable );
-		prop.setUpdateable( updatable );
+		property.setInsertable( insertable );
+		property.setUpdateable( updatable );
 
-		inferOptimisticLocking(prop);
+		inferOptimisticLocking(property);
 
 		LOG.tracev( "Cascading {0} with {1}", name, cascade );
-		this.mappingProperty = prop;
-		return prop;
+		return property;
 	}
 
 	private void handleNaturalId(Property prop) {
@@ -516,7 +514,7 @@ public class PropertyBinder {
 	}
 
 	private boolean isToOneValue(Value value) {
-		return ToOne.class.isInstance( value );
+		return value instanceof ToOne;
 	}
 
 	public void setProperty(XProperty property) {
@@ -527,7 +525,7 @@ public class PropertyBinder {
 		this.returnedClass = returnedClass;
 	}
 
-	public BasicValueBinder getBasicValueBinder() {
+	public BasicValueBinder<?> getBasicValueBinder() {
 		return basicValueBinder;
 	}
 

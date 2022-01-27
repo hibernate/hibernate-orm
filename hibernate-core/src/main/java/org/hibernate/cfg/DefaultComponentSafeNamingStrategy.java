@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.cfg;
+
 import java.util.Locale;
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.util.StringHelper;

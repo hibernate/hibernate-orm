@@ -104,6 +104,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.usertype.ParameterizedType;
@@ -143,7 +144,7 @@ import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromExterna
  * @author inger
  * @author Emmanuel Bernard
  */
-@SuppressWarnings({"unchecked", "deprecation"})
+@SuppressWarnings("deprecation")
 public abstract class CollectionBinder {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionBinder.class.getName());
 
@@ -730,8 +731,10 @@ public abstract class CollectionBinder {
 	private void bindCustomPersister() {
 		Persister persisterAnn = property.getAnnotation( Persister.class );
 		if ( persisterAnn != null ) {
-			//noinspection rawtypes
-			collection.setCollectionPersisterClass( (Class) persisterAnn.impl() );
+			//noinspection unchecked
+			Class<? extends CollectionPersister> persister =
+					(Class<? extends CollectionPersister>) persisterAnn.impl();
+			collection.setCollectionPersisterClass( persister );
 		}
 	}
 
@@ -1033,9 +1036,8 @@ public abstract class CollectionBinder {
 			final TableBinder assocTableBinder,
 			final MetadataBuildingContext buildingContext) {
 		return new CollectionSecondPass( buildingContext, collection ) {
-			@SuppressWarnings("rawtypes")
 			@Override
-			public void secondPass(Map persistentClasses, Map inheritedMetas) throws MappingException {
+			public void secondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
 				bindStarToManySecondPass(
 						persistentClasses,
 						collType,
@@ -1808,7 +1810,7 @@ public abstract class CollectionBinder {
 					property,
 					elementClass,
 					collValue.getOwnerEntityName(),
-					holder.resolveElementAttributeConverterDescriptor(property, elementClass )
+					holder.resolveElementAttributeConverterDescriptor( property, elementClass )
 			);
 			elementBinder.setPersistentClassName( propertyHolder.getEntityName() );
 			elementBinder.setAccessType( accessType );

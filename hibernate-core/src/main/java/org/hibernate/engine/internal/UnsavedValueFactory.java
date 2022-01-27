@@ -71,10 +71,11 @@ public class UnsavedValueFactory {
 	}
 
 	/**
-	 * Return the UnsavedValueStrategy for determining whether an entity instance is
-	 * unsaved based on the version.  If an explicit strategy is not specified, determine the
-	 * unsaved value by instantiating an instance of the entity and reading the value of its
-	 * version property, or if that is not possible, using the java default value for the type
+	 * Return the {@link org.hibernate.engine.spi.UnsavedValueStrategy} for determining
+	 * whether an entity instance is unsaved based on the version.  If an explicit strategy
+	 * is not specified, determine the unsaved value by instantiating an instance of the
+	 * entity and reading the value of its version property, or if that is not possible,
+	 * using the java default value for the type.
 	 */
 	public static <T> VersionValue getUnsavedVersionValue(
 			KeyValue bootVersionMapping,
@@ -84,8 +85,9 @@ public class UnsavedValueFactory {
 		final String unsavedValue = bootVersionMapping.getNullValue();
 		if ( unsavedValue == null ) {
 			if ( getter != null && templateInstanceAccess != null ) {
+				Object templateInstance = templateInstanceAccess.get();
 				@SuppressWarnings("unchecked")
-				final T defaultValue = (T) getter.get( templateInstanceAccess.get() );
+				final T defaultValue = (T) getter.get( templateInstance );
 
 				// if the version of a newly instantiated object is not the same
 				// as the version seed value, use that as the unsaved-value
@@ -98,18 +100,18 @@ public class UnsavedValueFactory {
 				return VersionValue.UNDEFINED;
 			}
 		}
-		else if ( "undefined".equals( unsavedValue ) ) {
-			return VersionValue.UNDEFINED;
-		}
-		else if ( "null".equals( unsavedValue ) ) {
-			return VersionValue.NULL;
-		}
-		else if ( "negative".equals( unsavedValue ) ) {
-			return VersionValue.NEGATIVE;
-		}
 		else {
-			// this should not happen since the DTD prevents it
-			throw new MappingException( "Could not parse version unsaved-value: " + unsavedValue );
+			switch (unsavedValue) {
+				case "undefined":
+					return VersionValue.UNDEFINED;
+				case "null":
+					return VersionValue.NULL;
+				case "negative":
+					return VersionValue.NEGATIVE;
+				default:
+					// this should not happen since the DTD prevents it
+					throw new MappingException("Could not parse version unsaved-value: " + unsavedValue);
+			}
 		}
 
 	}
@@ -165,18 +167,18 @@ public class UnsavedValueFactory {
 				return VersionValue.UNDEFINED;
 			}
 		}
-		else if ( "undefined".equals( versionUnsavedValue ) ) {
-			return VersionValue.UNDEFINED;
-		}
-		else if ( "null".equals( versionUnsavedValue ) ) {
-			return VersionValue.NULL;
-		}
-		else if ( "negative".equals( versionUnsavedValue ) ) {
-			return VersionValue.NEGATIVE;
-		}
 		else {
-			// this should not happen since the DTD prevents it
-			throw new MappingException( "Could not parse version unsaved-value: " + versionUnsavedValue );
+			switch (versionUnsavedValue) {
+				case "undefined":
+					return VersionValue.UNDEFINED;
+				case "null":
+					return VersionValue.NULL;
+				case "negative":
+					return VersionValue.NEGATIVE;
+				default:
+					// this should not happen since the DTD prevents it
+					throw new MappingException("Could not parse version unsaved-value: " + versionUnsavedValue);
+			}
 		}
 	}
 

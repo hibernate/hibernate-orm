@@ -6,7 +6,6 @@
  */
 package org.hibernate.cfg.beanvalidation;
 
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
@@ -26,7 +25,7 @@ public enum ValidationMode {
 
 	private final String externalForm;
 
-	private ValidationMode(String externalForm) {
+	ValidationMode(String externalForm) {
 		this.externalForm = externalForm;
 	}
 
@@ -36,8 +35,7 @@ public enum ValidationMode {
 			modes.add( ValidationMode.AUTO );
 		}
 		else {
-			final String[] modesInString = modeProperty.toString().split( "," );
-			for ( String modeInString : modesInString ) {
+			for ( String modeInString : modeProperty.toString().split( "," ) ) {
 				modes.add( getMode(modeInString) );
 			}
 		}

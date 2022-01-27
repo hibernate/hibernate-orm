@@ -38,7 +38,10 @@ import jakarta.persistence.Column;
  * @author Emmanuel Bernard
  */
 public class IdBagBinder extends BagBinder {
-	public IdBagBinder(Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver, MetadataBuildingContext buildingContext) {
+
+	public IdBagBinder(
+			Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver,
+			MetadataBuildingContext buildingContext) {
 		super( customTypeBeanResolver, buildingContext );
 	}
 
@@ -106,7 +109,8 @@ public class IdBagBinder extends BagBinder {
 			idColumn.setNullable( false );
 		}
 
-		final BasicValueBinder<?> valueBinder = new BasicValueBinder<>( BasicValueBinder.Kind.COLLECTION_ID, buildingContext );
+		final BasicValueBinder<?> valueBinder =
+				new BasicValueBinder<>( BasicValueBinder.Kind.COLLECTION_ID, buildingContext );
 
 		final Table table = collection.getCollectionTable();
 		valueBinder.setTable( table );

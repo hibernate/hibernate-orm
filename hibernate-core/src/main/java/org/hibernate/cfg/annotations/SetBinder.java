@@ -12,7 +12,6 @@ import org.hibernate.annotations.OrderBy;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.SemanticsResolver;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.usertype.UserCollectionType;
 

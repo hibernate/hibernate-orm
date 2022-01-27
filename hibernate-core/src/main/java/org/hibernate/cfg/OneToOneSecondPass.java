@@ -183,7 +183,7 @@ public class OneToOneSecondPass implements SecondPass {
 				if ( otherSideJoin != null ) {
 					//@OneToOne @JoinTable
 					Join mappedByJoin = buildJoinFromMappedBySide(
-							(PersistentClass) persistentClasses.get( ownerEntity ), otherSideProperty, otherSideJoin
+							persistentClasses.get( ownerEntity ), otherSideProperty, otherSideJoin
 					);
 					ManyToOne manyToOne = new ManyToOne( buildingContext, mappedByJoin.getTable() );
 					//FIXME use ignore not found here

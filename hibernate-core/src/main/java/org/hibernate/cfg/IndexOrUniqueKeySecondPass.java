@@ -45,14 +45,6 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 		this.unique = false;
 	}
 
-
-	/**
-	 * Build an index
-	 */
-	public IndexOrUniqueKeySecondPass(String indexName, AnnotatedColumn column, MetadataBuildingContext buildingContext) {
-		this( indexName, column, buildingContext, false );
-	}
-
 	/**
 	 * Build an index if unique is false or a Unique Key if unique is true
 	 */

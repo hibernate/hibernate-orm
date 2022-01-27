@@ -6,7 +6,6 @@
  */
 package org.hibernate.cfg.internal;
 
-import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.MappingException;

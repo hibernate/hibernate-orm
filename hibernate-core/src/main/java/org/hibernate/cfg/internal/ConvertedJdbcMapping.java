@@ -28,17 +28,14 @@ import jakarta.persistence.AttributeConverter;
  * @author Steve Ebersole
  */
 public class ConvertedJdbcMapping<T> implements JdbcMapping {
-	private final ManagedBean<AttributeConverter<?, ?>> converterBean;
 
 	private final JavaType<T> domainJtd;
 	private final JavaType<?> relationalJtd;
 	private final JdbcType jdbcType;
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public ConvertedJdbcMapping(
 			ManagedBean<AttributeConverter<?, ?>> converterBean,
 			TypeConfiguration typeConfiguration) {
-		this.converterBean = converterBean;
 
 		final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
 		final JavaType<? extends AttributeConverter<?,?>> converterJtd = jtdRegistry.resolveDescriptor( converterBean.getBeanClass() );
@@ -50,6 +47,7 @@ public class ConvertedJdbcMapping<T> implements JdbcMapping {
 		this.domainJtd = jtdRegistry.resolveDescriptor( domainJavaClass );
 		this.relationalJtd = jtdRegistry.resolveDescriptor( relationalJavaClass );
 
+		@SuppressWarnings({ "unchecked", "rawtypes" })
 		final JpaAttributeConverterImpl converterDescriptor = new JpaAttributeConverterImpl(
 				converterBean,
 				converterJtd,

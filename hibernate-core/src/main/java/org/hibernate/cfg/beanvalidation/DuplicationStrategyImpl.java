@@ -16,8 +16,8 @@ public class DuplicationStrategyImpl implements DuplicationStrategy {
 
 	@Override
 	public boolean areMatch(Object listener, Object original) {
-		return listener.getClass().equals( original.getClass() ) &&
-				BeanValidationEventListener.class.equals( listener.getClass() );
+		return listener.getClass().equals( original.getClass() )
+			&& BeanValidationEventListener.class.equals( listener.getClass() );
 	}
 
 	@Override

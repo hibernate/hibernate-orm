@@ -81,7 +81,7 @@ public class HibernateTraversableResolver implements TraversableResolver {
 		if ( traversableProperty.getName() == null ) {
 			throw new AssertionFailure(
 					"TraversableResolver being passed a traversableProperty with null name. pathToTraversableObject: "
-							+ path.toString() );
+							+ path );
 		}
 		path.append( traversableProperty.getName() );
 

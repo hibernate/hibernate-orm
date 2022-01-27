@@ -94,7 +94,7 @@ public class MapBinder extends CollectionBinder {
 			final TableBinder assocTableBinder,
 			final MetadataBuildingContext buildingContext) {
 		return new CollectionSecondPass( buildingContext, MapBinder.this.collection ) {
-			public void secondPass(Map persistentClasses, Map inheritedMetas)
+			public void secondPass(Map<String, PersistentClass> persistentClasses)
 					throws MappingException {
 				bindStarToManySecondPass(
 						persistentClasses, collType, fkJoinColumns, keyColumns, inverseColumns, elementColumns,
@@ -154,7 +154,7 @@ public class MapBinder extends CollectionBinder {
 
 	private void bindKeyFromAssociationTable(
 			XClass collType,
-			Map persistentClasses,
+			Map<String, PersistentClass> persistentClasses,
 			String mapKeyPropertyName,
 			XProperty property,
 			boolean isEmbedded,
@@ -164,7 +164,7 @@ public class MapBinder extends CollectionBinder {
 			String targetPropertyName) {
 		if ( mapKeyPropertyName != null ) {
 			//this is an EJB3 @MapKey
-			PersistentClass associatedClass = (PersistentClass) persistentClasses.get( collType.getName() );
+			PersistentClass associatedClass = persistentClasses.get( collType.getName() );
 			if ( associatedClass == null ) throw new AnnotationException( "Associated class not found: " + collType );
 			Property mapProperty = BinderHelper.findPropertyByName( associatedClass, mapKeyPropertyName );
 			if ( mapProperty == null ) {
@@ -202,7 +202,7 @@ public class MapBinder extends CollectionBinder {
 			else {
 				mapKeyType = property.getMapKey().getName();
 			}
-			PersistentClass collectionEntity = (PersistentClass) persistentClasses.get( mapKeyType );
+			PersistentClass collectionEntity = persistentClasses.get( mapKeyType );
 			boolean isIndexOfEntities = collectionEntity != null;
 			ManyToOne element = null;
 			org.hibernate.mapping.Map mapValue = (org.hibernate.mapping.Map) this.collection;

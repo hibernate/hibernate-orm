@@ -28,7 +28,7 @@ public class GroupsPerOperation {
 	private static final Class<?>[] DEFAULT_GROUPS = new Class<?>[] { Default.class };
 	private static final Class<?>[] EMPTY_GROUPS = new Class<?>[] { };
 
-	private Map<Operation, Class<?>[]> groupsPerOperation = CollectionHelper.mapOfSize( 4 );
+	private final Map<Operation, Class<?>[]> groupsPerOperation = CollectionHelper.mapOfSize( 4 );
 
 	private GroupsPerOperation() {
 	}

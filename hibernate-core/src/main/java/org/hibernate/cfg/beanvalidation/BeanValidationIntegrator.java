@@ -13,10 +13,12 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import org.jboss.logging.Logger;
@@ -47,11 +49,10 @@ public class BeanValidationIntegrator implements Integrator {
 	 *
 	 * @param object The supposed ValidatorFactory instance
 	 */
-	@SuppressWarnings("unchecked")
 	public static void validateFactory(Object object) {
 		try {
 			// this direct usage of ClassLoader should be fine since the classes exist in the same jar
-			final Class activatorClass = BeanValidationIntegrator.class.getClassLoader().loadClass( ACTIVATOR_CLASS_NAME );
+			final Class<?> activatorClass = BeanValidationIntegrator.class.getClassLoader().loadClass( ACTIVATOR_CLASS_NAME );
 			try {
 				final Method validateMethod = activatorClass.getMethod( VALIDATE_SUPPLIED_FACTORY_METHOD_NAME, Object.class );
 				try {
@@ -83,10 +84,10 @@ public class BeanValidationIntegrator implements Integrator {
 	}
 
 	@Override
-	public void integrate(
-			final Metadata metadata,
-			final SessionFactoryImplementor sessionFactory,
-			final SessionFactoryServiceRegistry serviceRegistry) {
+	public void integrate(Metadata metadata,
+						  BootstrapContext bootstrapContext,
+						  SessionFactoryImplementor sessionFactory) {
+		ServiceRegistryImplementor serviceRegistry = sessionFactory.getServiceRegistry();
 		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
 		// IMPL NOTE : see the comments on ActivationContext.getValidationModes() as to why this is multi-valued...
 		Object modeSetting = cfgService.getSettings().get( MODE_PROPERTY );
@@ -108,8 +109,7 @@ public class BeanValidationIntegrator implements Integrator {
 		if ( isBeanValidationApiAvailable( classLoaderService ) ) {
 			// and if so, call out to the TypeSafeActivator
 			try {
-				final Class typeSafeActivatorClass = loadTypeSafeActivatorClass( classLoaderService );
-				@SuppressWarnings("unchecked")
+				final Class<?> typeSafeActivatorClass = loadTypeSafeActivatorClass( classLoaderService );
 				final Method activateMethod = typeSafeActivatorClass.getMethod( ACTIVATE_METHOD_NAME, ActivationContext.class );
 				final ActivationContext activationContext = new ActivationContext() {
 					@Override
@@ -129,7 +129,7 @@ public class BeanValidationIntegrator implements Integrator {
 
 					@Override
 					public SessionFactoryServiceRegistry getServiceRegistry() {
-						return serviceRegistry;
+						return (SessionFactoryServiceRegistry) serviceRegistry;
 					}
 				};
 
@@ -137,8 +137,8 @@ public class BeanValidationIntegrator implements Integrator {
 					activateMethod.invoke( null, activationContext );
 				}
 				catch (InvocationTargetException e) {
-					if ( HibernateException.class.isInstance( e.getTargetException() ) ) {
-						throw ( (HibernateException) e.getTargetException() );
+					if ( e.getTargetException() instanceof HibernateException ) {
+						throw (HibernateException) e.getTargetException();
 					}
 					throw new IntegrationException( "Error activating Bean Validation integration", e.getTargetException() );
 				}
@@ -160,17 +160,16 @@ public class BeanValidationIntegrator implements Integrator {
 	private boolean isBeanValidationApiAvailable(ClassLoaderService classLoaderService) {
 		try {
 			classLoaderService.classForName( BV_CHECK_CLASS );
-			return true;
 		}
 		catch (Exception e) {
 			try {
 				classLoaderService.classForName( JAKARTA_BV_CHECK_CLASS );
-				return true;
 			}
 			catch (Exception e2) {
 				return false;
 			}
 		}
+		return true;
 	}
 
 	/**
@@ -187,7 +186,7 @@ public class BeanValidationIntegrator implements Integrator {
 		}
 	}
 
-	private Class loadTypeSafeActivatorClass(ClassLoaderService classLoaderService) {
+	private Class<?> loadTypeSafeActivatorClass(ClassLoaderService classLoaderService) {
 		try {
 			return classLoaderService.classForName( ACTIVATOR_CLASS_NAME );
 		}

@@ -7,7 +7,6 @@
 package org.hibernate.cfg.annotations;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import jakarta.persistence.UniqueConstraint;
 
@@ -596,8 +595,8 @@ public class TableBinder {
 				else if ( value instanceof DependantValue ) {
 					String propertyName = columns[0].getPropertyName();
 					if ( propertyName != null ) {
-						Collection collection = (Collection) referencedEntity.getRecursiveProperty( propertyName )
-								.getValue();
+						Collection collection = (Collection)
+								referencedEntity.getRecursiveProperty( propertyName ).getValue();
 						referencedPropertyName = collection.getReferencedPropertyName();
 					}
 					else {
@@ -712,18 +711,19 @@ public class TableBinder {
 
 	public static void linkJoinColumnWithValueOverridingNameIfImplicit(
 			PersistentClass referencedEntity,
-			Value v,
+			Value value,
 			AnnotatedJoinColumn[] columns,
-			SimpleValue value) {
-		Iterator<Selectable> columnIterator = v.getColumnIterator();
-		for (AnnotatedJoinColumn joinCol : columns) {
-			Column synthCol = (Column) columnIterator.next();
+			SimpleValue simpleValue) {
+		List<Column> valueColumns = value.getColumns();
+		for ( int i = 0; i < columns.length; i++ ) {
+			AnnotatedJoinColumn joinCol = columns[i];
+			Column synthCol = valueColumns.get(i);
 			if ( joinCol.isNameDeferred() ) {
 				//this has to be the default value
-				joinCol.linkValueUsingDefaultColumnNaming( synthCol, referencedEntity, value );
+				joinCol.linkValueUsingDefaultColumnNaming( synthCol, referencedEntity, simpleValue );
 			}
 			else {
-				joinCol.linkWithValue( value );
+				joinCol.linkWithValue( simpleValue );
 				joinCol.overrideFromReferencedColumnIfNecessary( synthCol );
 			}
 		}

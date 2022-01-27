@@ -13,7 +13,6 @@ import org.hibernate.Internal;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.annotations.common.reflection.java.JavaXMember;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 
 /**
  * Manage the various fun-ness of dealing with HCANN...
@@ -92,9 +91,7 @@ public final class HCANNHelper {
 	 */
 	public static <A extends Annotation, T extends Annotation> A findContainingAnnotation(
 			XAnnotatedElement xAnnotatedElement,
-			Class<T> annotationType,
-			MetadataBuildingContext context) {
-		// xAnnotatedElement = id-prop
+			Class<T> annotationType) {
 
 		for ( int i = 0; i < xAnnotatedElement.getAnnotations().length; i++ ) {
 			final Annotation annotation = xAnnotatedElement.getAnnotations()[ i ];

@@ -14,8 +14,8 @@ import org.hibernate.internal.util.StringHelper;
  * @author Emmanuel Bernard
  */
 public class WrappedInferredData implements PropertyData {
-	private PropertyData wrappedInferredData;
-	private String propertyName;
+	private final PropertyData wrappedInferredData;
+	private final String propertyName;
 
 	public XClass getClassOrElement() throws MappingException {
 		return wrappedInferredData.getClassOrElement();

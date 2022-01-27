@@ -27,7 +27,6 @@ import org.hibernate.mapping.IndexBackref;
 import org.hibernate.mapping.List;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.SemanticsResolver;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.usertype.UserCollectionType;
@@ -40,7 +39,6 @@ import org.jboss.logging.Logger;
  * @author Matthew Inger
  * @author Emmanuel Bernard
  */
-@SuppressWarnings("unchecked")
 public class ListBinder extends CollectionBinder {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, ListBinder.class.getName() );
 
@@ -77,7 +75,7 @@ public class ListBinder extends CollectionBinder {
 			final MetadataBuildingContext buildingContext) {
 		return new CollectionSecondPass( getBuildingContext(), ListBinder.this.collection ) {
 			@Override
-            public void secondPass(Map persistentClasses, Map inheritedMetas)
+            public void secondPass(Map<String, PersistentClass> persistentClasses)
 					throws MappingException {
 				bindStarToManySecondPass(
 						persistentClasses,
@@ -100,26 +98,21 @@ public class ListBinder extends CollectionBinder {
 
 	private void bindIndex(XProperty property, XClass collType, final MetadataBuildingContext buildingContext) {
 		final PropertyHolder valueHolder = PropertyHolderBuilder.buildPropertyHolder(
-				this.collection,
-				StringHelper.qualify( this.collection.getRole(), "key" ),
+				collection,
+				StringHelper.qualify( collection.getRole(), "key" ),
 				null,
 				null,
 				propertyHolder,
 				getBuildingContext()
 		);
 
-		final List listValueMapping = (List) this.collection;
-
-		if ( indexColumn.isImplicit() ) {
-			// create it
-			assert true;
-		}
+		final List listValueMapping = (List) collection;
 
 		if ( !listValueMapping.isOneToMany() ) {
 			indexColumn.forceNotNull();
 		}
 		indexColumn.setPropertyHolder( valueHolder );
-		final BasicValueBinder valueBinder = new BasicValueBinder( BasicValueBinder.Kind.LIST_INDEX, buildingContext );
+		final BasicValueBinder<?> valueBinder = new BasicValueBinder<>( BasicValueBinder.Kind.LIST_INDEX, buildingContext );
 		valueBinder.setColumns( new AnnotatedColumn[] { indexColumn } );
 		valueBinder.setReturnedClassName( Integer.class.getName() );
 		valueBinder.setType( property, collType, null, null );

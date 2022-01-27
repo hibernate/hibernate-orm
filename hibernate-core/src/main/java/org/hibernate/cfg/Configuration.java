@@ -7,7 +7,6 @@
 package org.hibernate.cfg;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
@@ -94,9 +93,9 @@ public class Configuration {
 	// used during processing mappings
 	private ImplicitNamingStrategy implicitNamingStrategy;
 	private PhysicalNamingStrategy physicalNamingStrategy;
-	private List<BasicType> basicTypes = new ArrayList<>();
+	private final List<BasicType<?>> basicTypes = new ArrayList<>();
 	private List<UserTypeRegistration> userTypeRegistrations;
-	private List<TypeContributor> typeContributorRegistrations = new ArrayList<>();
+	private final List<TypeContributor> typeContributorRegistrations = new ArrayList<>();
 	private Map<String, NamedHqlQueryDefinition> namedQueries;
 	private Map<String, NamedNativeQueryDefinition> namedSqlQueries;
 	private Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
@@ -105,7 +104,7 @@ public class Configuration {
 
 	private Map<String, SqmFunctionDescriptor> customFunctionDescriptors;
 	private List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
-	private HashMap<Class, ConverterDescriptor> attributeConverterDescriptorsByClass;
+	private HashMap<Class<?>, ConverterDescriptor> attributeConverterDescriptorsByClass;
 
 	// used to build SF
 	private StandardServiceRegistryBuilder standardServiceRegistryBuilder;
@@ -411,9 +410,8 @@ public class Configuration {
 	 * @return The dom "deserialized" from the cached file.
 	 *
 	 * @throws SerializationException Indicates a problem deserializing the cached dom tree
-	 * @throws FileNotFoundException Indicates that the cached file was not found or was not usable.
 	 */
-	public Configuration addCacheableFileStrictly(File xmlFile) throws SerializationException, FileNotFoundException {
+	public Configuration addCacheableFileStrictly(File xmlFile) throws SerializationException {
 		metadataSources.addCacheableFileStrictly( xmlFile );
 		return this;
 	}
@@ -644,7 +642,7 @@ public class Configuration {
 		}
 
 		if ( !basicTypes.isEmpty() ) {
-			for ( BasicType basicType : basicTypes ) {
+			for ( BasicType<?> basicType : basicTypes ) {
 				metadataBuilder.applyBasicType( basicType );
 			}
 		}

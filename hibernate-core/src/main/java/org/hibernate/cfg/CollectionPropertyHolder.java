@@ -52,8 +52,8 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 	private boolean canElementBeConverted = true;
 	private boolean canKeyBeConverted = true;
 
-	private Map<String,AttributeConversionInfo> elementAttributeConversionInfoMap;
-	private Map<String,AttributeConversionInfo> keyAttributeConversionInfoMap;
+	private final Map<String,AttributeConversionInfo> elementAttributeConversionInfoMap;
+	private final Map<String,AttributeConversionInfo> keyAttributeConversionInfoMap;
 
 	public CollectionPropertyHolder(
 			Collection collection,

@@ -22,17 +22,13 @@ public abstract class FkSecondPass implements SecondPass {
 	 * Fairly hacky but IBM VM sometimes returns the same hashCode for 2 different objects
 	 * TODO is it doable to rely on the Ejb3JoinColumn names? Not sure as they could be inferred
 	 */
-	private int uniqueCounter;
-	private static AtomicInteger globalCounter = new AtomicInteger();
+	private final int uniqueCounter;
+	private static final AtomicInteger globalCounter = new AtomicInteger();
 
 	public FkSecondPass(SimpleValue value, AnnotatedJoinColumn[] columns) {
 		this.value = value;
 		this.columns = columns;
 		this.uniqueCounter = globalCounter.getAndIncrement();
-	}
-
-	public int getUniqueCounter() {
-		return uniqueCounter;
 	}
 
 	public Value getValue() {
@@ -45,9 +41,7 @@ public abstract class FkSecondPass implements SecondPass {
 
 		FkSecondPass that = (FkSecondPass) o;
 
-		if ( uniqueCounter != that.uniqueCounter ) return false;
-
-		return true;
+		return uniqueCounter == that.uniqueCounter;
 	}
 
 	public int hashCode() {

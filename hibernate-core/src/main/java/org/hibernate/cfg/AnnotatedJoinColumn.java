@@ -89,7 +89,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 
 	//Due to @AnnotationOverride overriding rules, I don't want the constructor to be public
 	private AnnotatedJoinColumn() {
-		setMappedBy( BinderHelper.ANNOTATION_STRING_DEFAULT );
+		setMappedBy("");
 	}
 
 	//Due to @AnnotationOverride overriding rules, I don't want the constructor to be public

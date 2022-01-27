@@ -2843,7 +2843,7 @@ public final class AnnotationBinder {
 
 	private static void setVersionInformation(XProperty property, PropertyBinder propertyBinder) {
 		propertyBinder.getBasicValueBinder().setVersion( true );
-		if(property.isAnnotationPresent( Source.class )) {
+		if ( property.isAnnotationPresent( Source.class ) ) {
 			Source source = property.getAnnotation( Source.class );
 			propertyBinder.getBasicValueBinder().setTimestampVersionType( source.value().typeName() );
 		}
@@ -2866,7 +2866,7 @@ public final class AnnotationBinder {
 		XProperty idXProperty = inferredData.getProperty();
 
 		final Annotation generatorAnnotation =
-				HCANNHelper.findContainingAnnotation( idXProperty, IdGeneratorType.class, buildingContext );
+				HCANNHelper.findContainingAnnotation( idXProperty, IdGeneratorType.class);
 		if ( generatorAnnotation != null ) {
 			idValue.setCustomIdGeneratorCreator( new CustomIdGeneratorCreator( generatorAnnotation, idXProperty ) );
 		}
@@ -2883,7 +2883,7 @@ public final class AnnotationBinder {
 					: "assigned";
 			String generatorName = generatedValue != null
 					? generatedValue.generator()
-					: BinderHelper.ANNOTATION_STRING_DEFAULT;
+					: "";
 			if ( isComponent ) {
 				//a component must not have any generator
 				generatorType = "assigned";

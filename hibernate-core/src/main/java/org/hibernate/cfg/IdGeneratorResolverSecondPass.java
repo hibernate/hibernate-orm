@@ -19,11 +19,11 @@ import org.hibernate.mapping.SimpleValue;
  * @author Andrea Boriero
  */
 public class IdGeneratorResolverSecondPass implements SecondPass {
-	private SimpleValue id;
-	private XProperty idXProperty;
-	private String generatorType;
-	private String generatorName;
-	private MetadataBuildingContext buildingContext;
+	private final SimpleValue id;
+	private final XProperty idXProperty;
+	private final String generatorType;
+	private final String generatorName;
+	private final MetadataBuildingContext buildingContext;
 	private IdentifierGeneratorDefinition localIdentifierGeneratorDefinition;
 
 	public IdGeneratorResolverSecondPass(

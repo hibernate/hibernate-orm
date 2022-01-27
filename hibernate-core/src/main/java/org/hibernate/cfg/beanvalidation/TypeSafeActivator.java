@@ -160,7 +160,7 @@ class TypeSafeActivator {
 	public static void applyRelationalConstraints(
 			ValidatorFactory factory,
 			Collection<PersistentClass> persistentClasses,
-			Map settings,
+			Map<String,Object> settings,
 			Dialect dialect,
 			ClassLoaderAccess classLoaderAccess) {
 		Class<?>[] groupsArray = GroupsPerOperation.buildGroupsForOperation(

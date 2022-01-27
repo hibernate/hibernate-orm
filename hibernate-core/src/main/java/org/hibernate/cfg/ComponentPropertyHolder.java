@@ -60,13 +60,13 @@ import org.hibernate.mapping.Table;
 public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	//TODO introduce an overrideTable() method for columns held by sec table rather than the hack
 	//     joinsPerRealTableName in ClassPropertyHolder
-	private Component component;
-	private boolean isOrWithinEmbeddedId;
-	private boolean isWithinElementCollection;
+	private final Component component;
+	private final boolean isOrWithinEmbeddedId;
+	private final boolean isWithinElementCollection;
 
 //	private boolean virtual;
-	private String embeddedAttributeName;
-	private Map<String,AttributeConversionInfo> attributeConversionInfoMap;
+	private final String embeddedAttributeName;
+	private final Map<String,AttributeConversionInfo> attributeConversionInfoMap;
 
 	public ComponentPropertyHolder(
 			Component component,
@@ -244,15 +244,8 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 	@Override
 	protected AttributeConversionInfo locateAttributeConversionInfo(XProperty property) {
-		final String propertyName = property.getName();
-
 		// conversions on parent would have precedence
-		AttributeConversionInfo conversion = locateAttributeConversionInfo( propertyName );
-		if ( conversion != null ) {
-			return conversion;
-		}
-
-		return null;
+		return locateAttributeConversionInfo( property.getName() );
 	}
 
 	@Override
@@ -364,18 +357,16 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	private String extractUserPropertyName(String redundantString, String propertyName) {
-		String result = null;
 		String className = component.getOwner().getClassName();
-		if ( propertyName.startsWith( className )
+		boolean specialCase = propertyName.startsWith(className)
 				&& propertyName.length() > className.length() + 2 + redundantString.length() // .id.
-				&& propertyName.substring(
-				className.length() + 1, className.length() + 1 + redundantString.length()
-		).equals( redundantString )
-				) {
-			//remove id we might be in a @IdCLass case
-			result = className + propertyName.substring( className.length() + 1 + redundantString.length() );
+				&& propertyName.substring( className.length() + 1, className.length() + 1 + redundantString.length() )
+						.equals(redundantString);
+		if (specialCase) {
+			//remove id we might be in a @IdClass case
+			return className + propertyName.substring( className.length() + 1 + redundantString.length() );
 		}
-		return result;
+		return null;
 	}
 
 	@Override

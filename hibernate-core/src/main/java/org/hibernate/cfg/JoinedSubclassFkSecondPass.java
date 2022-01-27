@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.cfg;
+
 import java.util.Map;
 
 import org.hibernate.MappingException;
@@ -17,10 +18,9 @@ import org.hibernate.mapping.SimpleValue;
 /**
  * @author Emmanuel Bernard
  */
-@SuppressWarnings({"serial", "unchecked"})
 public class JoinedSubclassFkSecondPass extends FkSecondPass {
-	private JoinedSubclass entity;
-	private MetadataBuildingContext buildingContext;
+	private final JoinedSubclass entity;
+	private final MetadataBuildingContext buildingContext;
 
 	public JoinedSubclassFkSecondPass(
 			JoinedSubclass entity,

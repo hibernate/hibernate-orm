@@ -24,7 +24,7 @@ import static org.junit.Assert.fail;
  */
 public class EntityNonEntityTest extends BaseCoreFunctionalTestCase {
 	@Test
-	public void testMix() throws Exception {
+	public void testMix() {
 		GSM gsm = new GSM();
 		gsm.brand = "Sony";
 		gsm.frequency = 900;
@@ -37,7 +37,7 @@ public class EntityNonEntityTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.clear();
 		tx = s.beginTransaction();
-		gsm = (GSM) s.get( GSM.class, gsm.id );
+		gsm = s.get( GSM.class, gsm.id );
 		assertEquals( "top mapped superclass", 2, gsm.number );
 		assertNull( "non entity between mapped superclass and entity", gsm.species );
 		assertTrue( "mapped superclass under entity", gsm.isNumeric );

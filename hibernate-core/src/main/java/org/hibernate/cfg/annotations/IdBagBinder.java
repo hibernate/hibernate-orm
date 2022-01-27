@@ -28,7 +28,6 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IdentifierBag;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.SemanticsResolver;
 import org.hibernate.mapping.Table;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.usertype.UserCollectionType;
@@ -49,7 +48,7 @@ public class IdBagBinder extends BagBinder {
 
 	@Override
 	protected boolean bindStarToManySecondPass(
-			Map persistentClasses,
+			Map<String, PersistentClass> persistentClasses,
 			XClass collType,
 			AnnotatedJoinColumn[] fkJoinColumns,
 			AnnotatedJoinColumn[] keyColumns,
@@ -62,8 +61,18 @@ public class IdBagBinder extends BagBinder {
 			boolean ignoreNotFound,
 			MetadataBuildingContext buildingContext) {
 		boolean result = super.bindStarToManySecondPass(
-				persistentClasses, collType, fkJoinColumns, keyColumns, inverseColumns, elementColumns, isEmbedded,
-				property, unique, associationTableBinder, ignoreNotFound, getBuildingContext()
+				persistentClasses,
+				collType,
+				fkJoinColumns,
+				keyColumns,
+				inverseColumns,
+				elementColumns,
+				isEmbedded,
+				property,
+				unique,
+				associationTableBinder,
+				ignoreNotFound,
+				getBuildingContext()
 		);
 
 		final CollectionId collectionIdAnn = property.getAnnotation( CollectionId.class );
@@ -82,9 +91,8 @@ public class IdBagBinder extends BagBinder {
 				"id"
 		);
 
-		final AnnotatedColumn[] idColumns = AnnotatedColumn.buildColumnFromAnnotation(
+		final AnnotatedColumn[] idColumns = AnnotatedColumn.buildColumnsFromAnnotations(
 				new Column[] { collectionIdAnn.column() },
-				null,
 				null,
 				Nullability.FORCED_NOT_NULL,
 				propertyHolder,
@@ -98,7 +106,7 @@ public class IdBagBinder extends BagBinder {
 			idColumn.setNullable( false );
 		}
 
-		final BasicValueBinder valueBinder = new BasicValueBinder( BasicValueBinder.Kind.COLLECTION_ID, buildingContext );
+		final BasicValueBinder<?> valueBinder = new BasicValueBinder<>( BasicValueBinder.Kind.COLLECTION_ID, buildingContext );
 
 		final Table table = collection.getCollectionTable();
 		valueBinder.setTable( table );

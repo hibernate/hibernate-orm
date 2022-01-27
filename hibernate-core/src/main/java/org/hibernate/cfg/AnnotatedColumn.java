@@ -236,7 +236,15 @@ public class AnnotatedColumn {
 		}
 		else {
 			initMappingColumn(
-					logicalColumnName, propertyName, length, precision, scale, nullable, sqlType, unique, true
+					logicalColumnName,
+					propertyName,
+					length,
+					precision,
+					scale,
+					nullable,
+					sqlType,
+					unique,
+					true
 			);
 			if ( defaultValue != null ) {
 				mappingColumn.setDefaultValue( defaultValue );
@@ -485,7 +493,7 @@ public class AnnotatedColumn {
 		}
 
 		return StringHelper.isNotEmpty( explicitTableName )
-				&& !propertyHolder.getTable().getName().equals( explicitTableName );
+			&& !propertyHolder.getTable().getName().equals( explicitTableName );
 	}
 
 	public Join getJoin() {
@@ -518,8 +526,7 @@ public class AnnotatedColumn {
 		mappingColumn.setNullable( false );
 	}
 
-	public static AnnotatedColumn[] buildColumnFromAnnotation(
-			jakarta.persistence.Column[] anns,
+	public static AnnotatedColumn[] buildFormulaFromAnnotation(
 			org.hibernate.annotations.Formula formulaAnn,
 			Comment commentAnn,
 			Nullability nullability,
@@ -527,8 +534,110 @@ public class AnnotatedColumn {
 			PropertyData inferredData,
 			Map<String, Join> secondaryTables,
 			MetadataBuildingContext context) {
-		return buildColumnFromAnnotation(
-				anns,
+		return buildColumnOrFormulaFromAnnotation(
+				null,
+				formulaAnn,
+				commentAnn,
+				nullability,
+				propertyHolder,
+				inferredData,
+				secondaryTables,
+				context
+		);
+	}
+
+	public static AnnotatedColumn[] buildColumnFromNoAnnotation(
+			Comment commentAnn,
+			Nullability nullability,
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			Map<String, Join> secondaryTables,
+			MetadataBuildingContext context) {
+		return buildColumnsFromAnnotations(
+				null,
+				commentAnn,
+				nullability,
+				propertyHolder,
+				inferredData,
+				secondaryTables,
+				context
+		);
+	}
+
+	public static AnnotatedColumn[] buildColumnFromAnnotation(
+			jakarta.persistence.Column column,
+			Comment commentAnn,
+			Nullability nullability,
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			Map<String, Join> secondaryTables,
+			MetadataBuildingContext context) {
+		return buildColumnOrFormulaFromAnnotation(
+				column,
+				null,
+				commentAnn,
+				nullability,
+				propertyHolder,
+				inferredData,
+				secondaryTables,
+				context
+		);
+	}
+
+	public static AnnotatedColumn[] buildColumnsFromAnnotations(
+			jakarta.persistence.Column[] columns,
+			Comment commentAnn,
+			Nullability nullability,
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			Map<String, Join> secondaryTables,
+			MetadataBuildingContext context) {
+		return buildColumnsOrFormulaFromAnnotation(
+				columns,
+				null,
+				commentAnn,
+				nullability,
+				propertyHolder,
+				inferredData,
+				null,
+				secondaryTables,
+				context
+		);
+	}
+
+	public static AnnotatedColumn[] buildColumnsFromAnnotations(
+			jakarta.persistence.Column[] columns,
+			Comment commentAnn,
+			Nullability nullability,
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			String suffixForDefaultColumnName,
+			Map<String, Join> secondaryTables,
+			MetadataBuildingContext context) {
+		return buildColumnsOrFormulaFromAnnotation(
+				columns,
+				null,
+				commentAnn,
+				nullability,
+				propertyHolder,
+				inferredData,
+				suffixForDefaultColumnName,
+				secondaryTables,
+				context
+		);
+	}
+
+	public static AnnotatedColumn[] buildColumnOrFormulaFromAnnotation(
+			jakarta.persistence.Column column,
+			org.hibernate.annotations.Formula formulaAnn,
+			Comment commentAnn,
+			Nullability nullability,
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			Map<String, Join> secondaryTables,
+			MetadataBuildingContext context) {
+		return buildColumnsOrFormulaFromAnnotation(
+				new jakarta.persistence.Column[] { column },
 				formulaAnn,
 				commentAnn,
 				nullability,
@@ -539,8 +648,9 @@ public class AnnotatedColumn {
 				context
 		);
 	}
-	public static AnnotatedColumn[] buildColumnFromAnnotation(
-			jakarta.persistence.Column[] anns,
+
+	public static AnnotatedColumn[] buildColumnsOrFormulaFromAnnotation(
+			jakarta.persistence.Column[] columnAnns,
 			org.hibernate.annotations.Formula formulaAnn,
 			Comment commentAnn,
 			Nullability nullability,
@@ -549,7 +659,7 @@ public class AnnotatedColumn {
 			String suffixForDefaultColumnName,
 			Map<String, Join> secondaryTables,
 			MetadataBuildingContext context) {
-		AnnotatedColumn[] columns;
+
 		if ( formulaAnn != null ) {
 			AnnotatedColumn formulaColumn = new AnnotatedColumn();
 			formulaColumn.setFormula( formulaAnn.value() );
@@ -557,21 +667,23 @@ public class AnnotatedColumn {
 			formulaColumn.setBuildingContext( context );
 			formulaColumn.setPropertyHolder( propertyHolder );
 			formulaColumn.bind();
-			columns = new AnnotatedColumn[] { formulaColumn };
+			return new AnnotatedColumn[] { formulaColumn };
 		}
 		else {
-			jakarta.persistence.Column[] actualCols = anns;
+			jakarta.persistence.Column[] actualCols = columnAnns;
 			jakarta.persistence.Column[] overriddenCols = propertyHolder.getOverriddenColumn(
 					StringHelper.qualify( propertyHolder.getPath(), inferredData.getPropertyName() )
 			);
 			if ( overriddenCols != null ) {
 				//check for overridden first
-				if ( anns != null && overriddenCols.length != anns.length ) {
+				if ( columnAnns != null && overriddenCols.length != columnAnns.length ) {
 					throw new AnnotationException( "AttributeOverride.column() should override all columns for now" );
 				}
 				actualCols = overriddenCols.length == 0 ? null : overriddenCols;
 				LOG.debugf( "Column(s) overridden for property %s", inferredData.getPropertyName() );
 			}
+
+			AnnotatedColumn[] columns;
 			if ( actualCols == null ) {
 				columns = buildImplicitColumn(
 						inferredData,
@@ -667,8 +779,9 @@ public class AnnotatedColumn {
 					columns[index] = column;
 				}
 			}
+
+			return columns;
 		}
-		return columns;
 	}
 
 	private void applyColumnDefault(PropertyData inferredData, int length) {

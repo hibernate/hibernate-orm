@@ -27,7 +27,7 @@ public class BasicSessionFactoryScopeTests {
 		assertThat( scope.getSessionFactory(), notNullValue() );
 		// check we can use the SF to create Sessions
 		scope.inTransaction(
-				(session) -> session.createQuery( "from AnEntity" ).list()
+				session -> session.createQuery( "from AnEntity" ).list()
 		);
 	}
 

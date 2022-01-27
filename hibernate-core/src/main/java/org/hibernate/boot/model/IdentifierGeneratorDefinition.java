@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
 
@@ -86,18 +87,9 @@ public class IdentifierGeneratorDefinition implements Serializable {
 		}
 
 		IdentifierGeneratorDefinition that = (IdentifierGeneratorDefinition) o;
-
-		if ( name != null ? !name.equals( that.name ) : that.name != null ) {
-			return false;
-		}
-		if ( parameters != null ? !parameters.equals( that.parameters ) : that.parameters != null ) {
-			return false;
-		}
-		if ( strategy != null ? !strategy.equals( that.strategy ) : that.strategy != null ) {
-			return false;
-		}
-
-		return true;
+		return Objects.equals(name, that.name)
+			&& Objects.equals(strategy, that.strategy)
+			&& Objects.equals(parameters, that.parameters);
 	}
 
 	@Override

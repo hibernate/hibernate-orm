@@ -22,6 +22,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A one-to-one association to an entity
+ *
  * @author Gavin King
  */
 public class OneToOneType extends EntityType {

@@ -21,6 +21,7 @@ import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -93,6 +94,15 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 						expression.nodeBuilder()
 				)
 		);
+	}
+
+	@Override
+	public Object visitFunction(SqmFunction<?> sqmFunction) {
+		SqmExpressibleAccessor<?> current = inferenceBasis;
+		inferenceBasis = null;
+		super.visitFunction( sqmFunction );
+		inferenceBasis = current;
+		return sqmFunction;
 	}
 
 	private <T> BindableType<T> getInferredParameterType(JpaCriteriaParameter<?> expression) {

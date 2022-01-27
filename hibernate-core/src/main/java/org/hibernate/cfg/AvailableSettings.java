@@ -785,19 +785,18 @@ public interface AvailableSettings {
 	 * list index configuration.
 	 * <p/>
 	 * Historically Hibernate interpreted this using
-	 * {@link org.hibernate.metamodel.CollectionClassification#BAG} semantics. The JPA-compliant
-	 * default is to consider it a {@link org.hibernate.metamodel.CollectionClassification#LIST}.
+	 * {@linkplain  org.hibernate.metamodel.CollectionClassification#BAG BAG} semantics.
+	 * Starting in 6.0, Hibernate now interprets this situation using
+	 * {@linkplain  org.hibernate.metamodel.CollectionClassification#LIST LIST} semantics.
 	 * <p/>
 	 * Accepts any of:
 	 * <ul>
-	 *     <li>an instance of {@code CollectionClassification},
-	 *     <li>the (case insensitive) name of a {@code CollectionClassification}, or
-	 *     <li>a {@link Class} representing either {@link java.util.List} or {@link java.util.Collection}.
+	 *     <li>an instance of {@code CollectionClassification}
+	 *     <li>the (case insensitive) name of a {@code CollectionClassification} (bag e.g.)
+	 *     <li>a {@link Class} representing either {@link java.util.List} or {@link java.util.Collection}
 	 * </ul>
 	 * <p/>
 	 * Backwards compatibility can be achieved by specifying `hibernate.mapping.default_list_semantics=bag` e.g.
-	 *
-	 * @see org.hibernate.jpa.spi.JpaCompliance#isJpaListComplianceEnabled()
 	 *
 	 * @since 6.0
 	 */
@@ -2147,7 +2146,13 @@ public interface AvailableSettings {
 	 * @see org.hibernate.jpa.spi.JpaCompliance#isJpaListComplianceEnabled()
 	 *
 	 * @since 5.3
+	 *
+	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#DEFAULT_LIST_SEMANTICS} instead.
+	 * The specification is actually undefined in terms of how this should be handled.  It actually
+	 * says that portable applications should not rely on a specific behavior in terms of a List
+	 * with no `@OrderColumn`
 	 */
+	@Deprecated( since = "6.0" )
 	String JPA_LIST_COMPLIANCE	= "hibernate.jpa.compliance.list";
 
 	/**

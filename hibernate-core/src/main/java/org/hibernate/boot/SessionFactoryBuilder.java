@@ -640,7 +640,10 @@ public interface SessionFactoryBuilder {
 
 	/**
 	 * @see JpaCompliance#isJpaListComplianceEnabled()
+	 *
+	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#DEFAULT_LIST_SEMANTICS} instead
 	 */
+	@Deprecated( since = "6.0" )
 	SessionFactoryBuilder enableJpaListCompliance(boolean enabled);
 
 	/**

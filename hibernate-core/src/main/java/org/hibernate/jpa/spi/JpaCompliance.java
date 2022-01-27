@@ -7,6 +7,7 @@
 package org.hibernate.jpa.spi;
 
 import org.hibernate.Transaction;
+import org.hibernate.cfg.AvailableSettings;
 
 /**
  * Encapsulates settings controlling whether Hibernate complies strictly
@@ -56,7 +57,10 @@ public interface JpaCompliance {
 	 * interpreting the mapping as a "list", rather than a "bag"
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#JPA_LIST_COMPLIANCE
+	 *
+	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#DEFAULT_LIST_SEMANTICS} instead
 	 */
+	@Deprecated( since = "6.0" )
 	boolean isJpaListComplianceEnabled();
 
 	/**

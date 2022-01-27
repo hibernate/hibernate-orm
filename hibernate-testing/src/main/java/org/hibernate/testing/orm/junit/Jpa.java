@@ -80,6 +80,7 @@ public @interface Jpa {
 
 	/**
 	 * @see JpaCompliance#isJpaListComplianceEnabled()
+	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_LIST_SEMANTICS
 	 */
 	boolean listMappingComplianceEnabled() default false;
 

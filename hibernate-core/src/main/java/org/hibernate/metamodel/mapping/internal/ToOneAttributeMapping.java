@@ -1245,7 +1245,7 @@ public class ToOneAttributeMapping
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
-			SqlAstJoinType sqlAstJoinType,
+			SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAliasBaseGenerator aliasBaseGenerator,
@@ -1273,10 +1273,17 @@ public class ToOneAttributeMapping
 				break;
 			}
 		}
+		final SqlAstJoinType joinType;
+		if ( requestedJoinType == null ) {
+			joinType = SqlAstJoinType.INNER;
+		}
+		else {
+			joinType = requestedJoinType;
+		}
 		// If a parent is a collection part, there is no custom predicate and the join is INNER or LEFT
 		// we check if this attribute is the map key property to reuse the existing index table group
 		if ( CollectionPart.Nature.ELEMENT.getName().equals( parentTableGroup.getNavigablePath().getUnaliasedLocalName() )
-				&& !addsPredicate && ( sqlAstJoinType == SqlAstJoinType.INNER || sqlAstJoinType == SqlAstJoinType.LEFT ) ) {
+				&& !addsPredicate && ( joinType == SqlAstJoinType.INNER || joinType == SqlAstJoinType.LEFT ) ) {
 			final PluralTableGroup pluralTableGroup = (PluralTableGroup) fromClauseAccess.findTableGroup(
 					parentTableGroup.getNavigablePath().getParent()
 			);
@@ -1293,10 +1300,10 @@ public class ToOneAttributeMapping
 			if ( pathName.equals( indexPropertyName ) ) {
 				final TableGroup indexTableGroup = pluralTableGroup.getIndexTableGroup();
 				// If this is the map key property, we can reuse the index table group
-				initializeIfNeeded( lhs, sqlAstJoinType, indexTableGroup );
+				initializeIfNeeded( lhs, requestedJoinType, indexTableGroup );
 				return new TableGroupJoin(
 						navigablePath,
-						sqlAstJoinType,
+						joinType,
 						new MappedByTableGroup(
 								navigablePath,
 								this,
@@ -1333,7 +1340,7 @@ public class ToOneAttributeMapping
 				navigablePath,
 				lhs,
 				explicitSourceAlias,
-				sqlAstJoinType,
+				requestedJoinType,
 				fetched,
 				null,
 				aliasBaseGenerator,
@@ -1343,7 +1350,7 @@ public class ToOneAttributeMapping
 		);
 		final TableGroupJoin join = new TableGroupJoin(
 				navigablePath,
-				sqlAstJoinType,
+				joinType,
 				lazyTableGroup,
 				null
 		);
@@ -1355,7 +1362,6 @@ public class ToOneAttributeMapping
 						foreignKeyDescriptor.generateJoinPredicate(
 								sideNature == ForeignKeyDescriptor.Nature.TARGET ? lhsTableReference : tableGroup.getPrimaryTableReference(),
 								sideNature == ForeignKeyDescriptor.Nature.TARGET ? tableGroup.getPrimaryTableReference() : lhsTableReference,
-								sqlAstJoinType,
 								sqlExpressionResolver,
 								creationContext
 						)
@@ -1370,7 +1376,7 @@ public class ToOneAttributeMapping
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
-			SqlAstJoinType sqlAstJoinType,
+			SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			Consumer<Predicate> predicateConsumer,
 			SqlAliasBaseGenerator aliasBaseGenerator,
@@ -1378,7 +1384,14 @@ public class ToOneAttributeMapping
 			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
 		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( sqlAliasStem );
-		final boolean canUseInnerJoin = sqlAstJoinType == SqlAstJoinType.INNER || lhs.canUseInnerJoins() && !isNullable;
+		final SqlAstJoinType joinType;
+		if ( requestedJoinType == null ) {
+			joinType = SqlAstJoinType.INNER;
+		}
+		else {
+			joinType = requestedJoinType;
+		}
+		final boolean canUseInnerJoin = joinType == SqlAstJoinType.INNER || lhs.canUseInnerJoins() && !isNullable;
 
 		TableGroup realParentTableGroup = lhs;
 		while ( realParentTableGroup.getModelPart() instanceof EmbeddableValuedModelPart ) {
@@ -1446,7 +1459,6 @@ public class ToOneAttributeMapping
 							foreignKeyDescriptor.generateJoinPredicate(
 									sideNature == ForeignKeyDescriptor.Nature.TARGET ? lhsTableReference : tableGroup.getPrimaryTableReference(),
 									sideNature == ForeignKeyDescriptor.Nature.TARGET ? tableGroup.getPrimaryTableReference() : lhsTableReference,
-									sqlAstJoinType,
 									sqlExpressionResolver,
 									creationContext
 							)
@@ -1459,7 +1471,7 @@ public class ToOneAttributeMapping
 			lazyTableGroup.getPrimaryTableReference();
 		}
 		else {
-			initializeIfNeeded( lhs, sqlAstJoinType, lazyTableGroup );
+			initializeIfNeeded( lhs, requestedJoinType, lazyTableGroup );
 		}
 
 		return lazyTableGroup;

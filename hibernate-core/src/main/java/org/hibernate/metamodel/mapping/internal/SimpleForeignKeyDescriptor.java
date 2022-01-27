@@ -32,7 +32,6 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -266,7 +265,6 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	public Predicate generateJoinPredicate(
 			TableReference targetSideReference,
 			TableReference keySideReference,
-			SqlAstJoinType sqlAstJoinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		return new ComparisonPredicate(
@@ -288,7 +286,6 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	public Predicate generateJoinPredicate(
 			TableGroup targetSideTableGroup,
 			TableGroup keySideTableGroup,
-			SqlAstJoinType sqlAstJoinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		final TableReference lhsTableReference = targetSideTableGroup.resolveTableReference(
@@ -302,7 +299,6 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		return generateJoinPredicate(
 				lhsTableReference,
 				rhsTableKeyReference,
-				sqlAstJoinType,
 				sqlExpressionResolver,
 				creationContext
 		);

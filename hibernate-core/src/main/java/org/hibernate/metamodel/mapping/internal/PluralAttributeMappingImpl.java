@@ -527,19 +527,26 @@ public class PluralAttributeMappingImpl
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
-			SqlAstJoinType sqlAstJoinType,
+			SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
+		final SqlAstJoinType joinType;
+		if ( requestedJoinType == null ) {
+			joinType = SqlAstJoinType.INNER;
+		}
+		else {
+			joinType = requestedJoinType;
+		}
 		final java.util.List<Predicate> predicates = new ArrayList<>( 2 );
 		final TableGroup tableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
 				explicitSourceAlias,
-				sqlAstJoinType,
+				requestedJoinType,
 				fetched,
 				predicates::add,
 				aliasBaseGenerator,
@@ -549,7 +556,7 @@ public class PluralAttributeMappingImpl
 		);
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				navigablePath,
-				sqlAstJoinType,
+				joinType,
 				tableGroup,
 				null
 		);
@@ -562,18 +569,25 @@ public class PluralAttributeMappingImpl
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
-			SqlAstJoinType sqlAstJoinType,
+			SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			Consumer<Predicate> predicateConsumer,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
+		final SqlAstJoinType joinType;
+		if ( requestedJoinType == null ) {
+			joinType = SqlAstJoinType.INNER;
+		}
+		else {
+			joinType = requestedJoinType;
+		}
 		final CollectionPersister collectionDescriptor = getCollectionDescriptor();
 		final TableGroup tableGroup;
 		if ( collectionDescriptor.isOneToMany() ) {
 			tableGroup = createOneToManyTableGroup(
-					lhs.canUseInnerJoins() && sqlAstJoinType == SqlAstJoinType.INNER,
+					lhs.canUseInnerJoins() && joinType == SqlAstJoinType.INNER,
 					navigablePath,
 					fetched,
 					explicitSourceAlias,
@@ -585,7 +599,7 @@ public class PluralAttributeMappingImpl
 		}
 		else {
 			tableGroup = createCollectionTableGroup(
-					lhs.canUseInnerJoins() && sqlAstJoinType == SqlAstJoinType.INNER,
+					lhs.canUseInnerJoins() && joinType == SqlAstJoinType.INNER,
 					navigablePath,
 					fetched,
 					explicitSourceAlias,
@@ -601,7 +615,6 @@ public class PluralAttributeMappingImpl
 					getKeyDescriptor().generateJoinPredicate(
 							lhs,
 							tableGroup,
-							sqlAstJoinType,
 							sqlExpressionResolver,
 							creationContext
 					)

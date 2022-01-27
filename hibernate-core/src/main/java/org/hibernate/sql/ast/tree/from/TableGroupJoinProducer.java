@@ -28,6 +28,8 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 
 	/**
 	 * Create a TableGroupJoin as defined for this producer
+	 *
+	 * The sqlAstJoinType may be null to signal that the join is for an implicit path.
 	 */
 	default TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
@@ -53,6 +55,8 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 
 	/**
 	 * Create a TableGroupJoin as defined for this producer
+	 *
+	 * The sqlAstJoinType may be null to signal that the join is for an implicit path.
 	 */
 	TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
@@ -68,6 +72,8 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 
 	/**
 	 * Create a TableGroup as defined for this producer
+	 *
+	 * The sqlAstJoinType may be null to signal that the join is for an implicit path.
 	 */
 	default TableGroup createRootTableGroupJoin(
 			NavigablePath navigablePath,
@@ -93,6 +99,8 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 
 	/**
 	 * Create a TableGroupJoin as defined for this producer
+	 *
+	 * The sqlAstJoinType may be null to signal that the join is for an implicit path.
 	 */
 	TableGroup createRootTableGroupJoin(
 			NavigablePath navigablePath,

@@ -245,6 +245,8 @@ public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 			value = DialectChecks.DoesReadCommittedNotCauseWritersToBlockReadersCheck.class,
 			comment = "write locks block readers"
 	)
+	@NotImplementedYet( reason = "Second-level cache statistics" )
+	@FailureExpected( jiraKey = "n/a" )
 	public void testConcurrentCachedDirtyQueries() throws Exception {
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();

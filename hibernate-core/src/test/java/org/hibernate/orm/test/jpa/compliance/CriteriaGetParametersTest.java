@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.TypedQuery;
@@ -118,6 +119,7 @@ public class CriteriaGetParametersTest {
 		private Integer age;
 
 		@ManyToMany
+		@JoinTable(name = "PERSON_ADDRESSES_TABLE")
 		private Collection<Address> addresses;
 
 		Person() {
@@ -143,7 +145,7 @@ public class CriteriaGetParametersTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Address")
 	public static class Address {
 		@Id
 		private Integer id;

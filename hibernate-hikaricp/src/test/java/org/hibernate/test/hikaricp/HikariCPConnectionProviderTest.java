@@ -11,10 +11,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.ConnectionProviderJdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.hikaricp.internal.HikariCPConnectionProvider;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -27,6 +29,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Brett Meyer
  */
+@SkipForDialect(value = SybaseDialect.class, comment = "The jTDS driver doesn't implement Connection#isValid so this fails")
 public class HikariCPConnectionProviderTest extends BaseCoreFunctionalTestCase {
 
 	@Test

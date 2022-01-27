@@ -6,14 +6,17 @@
  */
 package org.hibernate.test.agroal;
 
+import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.agroal.internal.AgroalConnectionProvider;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.common.connections.BaseTransactionIsolationConfigTest;
 
 /**
  * @author Steve Ebersole
  */
+@SkipForDialect(value = TiDBDialect.class, comment = "Doesn't support SERIALIZABLE isolation")
 public class AgroalTransactionIsolationConfigTest extends BaseTransactionIsolationConfigTest {
 	@Override
 	protected ConnectionProvider getConnectionProviderUnderTest() {

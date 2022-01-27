@@ -57,7 +57,7 @@ public class OptionalOneToOneTest {
 		} );
 	}
 
-	@Entity
+	@Entity(name = "Person")
 	public static class Person {
 		@Id @GeneratedValue(generator = "fk")
 		@GenericGenerator(strategy = "foreign", name = "fk", parameters = @Parameter(name="property", value="personAddress"))
@@ -85,7 +85,7 @@ public class OptionalOneToOneTest {
 	}
 
 
-	@Entity
+	@Entity(name = "PersonAddress")
 	public static class PersonAddress {
 		@Id
 		@GeneratedValue

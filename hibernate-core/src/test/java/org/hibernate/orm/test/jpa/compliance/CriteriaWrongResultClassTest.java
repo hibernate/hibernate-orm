@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.MapKey;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -50,7 +51,7 @@ public class CriteriaWrongResultClassTest {
 		);
 	}
 
-	@Entity
+	@Entity(name = "Department")
 	@Table(name = "DEPARTMENT_TABLE")
 	public static class Department {
 		@Id
@@ -59,6 +60,7 @@ public class CriteriaWrongResultClassTest {
 		private String name;
 
 		@OneToMany
+		@JoinTable(name = "DEPARTMENT_EMPLOYEE_TABLE")
 		@MapKey(name = "nickname")
 		private Map<String, Person> people = new HashMap<>();
 
@@ -89,7 +91,7 @@ public class CriteriaWrongResultClassTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Person")
 	@Table(name = "EMPLOYEE_TABLE")
 	public static class Person {
 

@@ -29,6 +29,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -49,7 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SessionFactory( useCollectingStatementInspector = true )
 @RequiresDialect(AbstractHANADialect.class)
 // afaik this does not work
-@NotImplementedYet( strict = false )
+//@NotImplementedYet( strict = false )
 public class QueryHintHANATest {
 
 	@BeforeEach
@@ -64,6 +65,14 @@ public class QueryHintHANATest {
 			s.persist( department );
 			s.persist( employee1 );
 			s.persist( employee2 );
+		} );
+	}
+
+	@AfterEach
+	public void cleanupTestData(SessionFactoryScope scope) {
+		scope.inTransaction( (s) -> {
+			s.createMutationQuery( "delete from QueryHintHANATest$Employee" ).executeUpdate();
+			s.createMutationQuery( "delete from QueryHintHANATest$Department" ).executeUpdate();
 		} );
 	}
 

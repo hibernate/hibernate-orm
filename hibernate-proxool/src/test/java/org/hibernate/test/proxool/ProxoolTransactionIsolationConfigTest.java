@@ -13,16 +13,19 @@ import java.util.Properties;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.proxool.internal.ProxoolConnectionProvider;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.common.connections.BaseTransactionIsolationConfigTest;
 import org.junit.Before;
 
 /**
  * @author Steve Ebersole
  */
+@SkipForDialect(value = TiDBDialect.class, comment = "Doesn't support SERIALIZABLE isolation")
 public class ProxoolTransactionIsolationConfigTest extends BaseTransactionIsolationConfigTest {
 	private Map<String,Object> properties;
 	private StandardServiceRegistry ssr;

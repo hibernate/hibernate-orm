@@ -202,7 +202,7 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			Person person1 = new Person( "John Doe" );
+			Person person1 = new Person( 1L, "John Doe" );
 			person1.setNickName( "JD" );
 			person1.setAddress( "Earth" );
 			person1.setCreatedOn( Timestamp.from( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 )

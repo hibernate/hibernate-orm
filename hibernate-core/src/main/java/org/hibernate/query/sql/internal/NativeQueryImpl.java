@@ -272,7 +272,7 @@ public class NativeQueryImpl<R>
 		if ( resultJavaType == Tuple.class ) {
 			setTupleTransformer( new NativeQueryTupleTransformer() );
 		}
-		else if ( resultJavaType != null ) {
+		else if ( resultJavaType != null && resultJavaType != Object[].class ) {
 			switch ( resultSetMapping.getNumberOfResultBuilders() ) {
 				case 0:
 					throw new IllegalArgumentException( "Named query exists but its result type is not compatible" );

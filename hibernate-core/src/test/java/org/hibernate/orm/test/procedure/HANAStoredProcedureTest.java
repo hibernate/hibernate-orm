@@ -33,10 +33,11 @@ import org.hibernate.type.YesNoConverter;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,6 +55,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 				Vote.class
 		}
 )
+@SessionFactory
 public class HANAStoredProcedureTest {
 
 	@NamedStoredProcedureQueries({
@@ -72,7 +74,7 @@ public class HANAStoredProcedureTest {
 		String name;
 	}
 
-	@BeforeAll
+	@BeforeEach
 	public void prepareSchemaAndData(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			session.doWork( connection -> {
@@ -181,7 +183,7 @@ public class HANAStoredProcedureTest {
 		} );
 
 		scope.inTransaction( (session) -> {
-			Person person1 = new Person( "John Doe" );
+			Person person1 = new Person( 1L, "John Doe" );
 			person1.setNickName( "JD" );
 			person1.setAddress( "Earth" );
 			person1.setCreatedOn( Timestamp.from( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 ).toInstant( ZoneOffset.UTC ) ) );
@@ -202,7 +204,7 @@ public class HANAStoredProcedureTest {
 		} );
 	}
 
-	@AfterAll
+	@AfterEach
 	public void cleanUpSchemaAndData(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			session.createMutationQuery( "delete Phone" ).executeUpdate();
@@ -313,7 +315,7 @@ public class HANAStoredProcedureTest {
 				try ( ResultSet resultSet = function.getResultSet() ) {
 					while ( resultSet.next() ) {
 						assertThat( resultSet.getLong( 1 ) ).isInstanceOf( Long.class );
-						assertThat( resultSet.getLong( 2 ) ).isInstanceOf( String.class );
+						assertThat( resultSet.getString( 2 ) ).isInstanceOf( String.class );
 					}
 				}
 			}

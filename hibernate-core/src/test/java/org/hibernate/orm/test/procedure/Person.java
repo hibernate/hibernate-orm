@@ -103,7 +103,6 @@ import static org.hibernate.jpa.HibernateHints.HINT_CALLABLE_FUNCTION;
 public class Person {
 
     @Id
-    @GeneratedValue
     private Long id;
 
     private String name;
@@ -128,7 +127,8 @@ public class Person {
 
     public Person() {}
 
-    public Person(String name) {
+    public Person(Long id, String name) {
+        this.id = id;
         this.name = name;
     }
 

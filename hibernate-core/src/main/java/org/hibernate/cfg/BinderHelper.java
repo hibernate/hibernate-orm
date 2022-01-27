@@ -65,6 +65,8 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
 import jakarta.persistence.UniqueConstraint;
 
+import static org.hibernate.cfg.AnnotatedColumn.buildColumnOrFormulaFromAnnotation;
+
 /**
  * @author Emmanuel Bernard
  */
@@ -817,8 +819,8 @@ public class BinderHelper {
 		final BasicValueBinder<?> discriminatorValueBinder =
 				new BasicValueBinder<>( BasicValueBinder.Kind.ANY_DISCRIMINATOR, context );
 
-		final AnnotatedColumn[] discriminatorColumns = AnnotatedColumn.buildColumnFromAnnotation(
-				new jakarta.persistence.Column[] { discriminatorColumn },
+		final AnnotatedColumn[] discriminatorColumns = buildColumnOrFormulaFromAnnotation(
+				discriminatorColumn,
 				discriminatorFormula,
 				null,
 				nullability,
@@ -947,8 +949,8 @@ public class BinderHelper {
 			}
 			return pd;
 		}
-		String propertyPath = isId ? "" : propertyName;
-		return buildingContext.getMetadataCollector().getPropertyAnnotatedWithMapsId( persistentXClass, propertyPath );
+		return buildingContext.getMetadataCollector()
+				.getPropertyAnnotatedWithMapsId( persistentXClass, isId ? "" : propertyName);
 	}
 	
 	public static Map<String,String> toAliasTableMap(SqlFragmentAlias[] aliases){

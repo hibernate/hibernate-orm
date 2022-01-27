@@ -28,6 +28,10 @@ import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.cfg.annotations.Nullability;
 import org.hibernate.internal.util.StringHelper;
 
+import static org.hibernate.cfg.AnnotatedColumn.buildColumnFromAnnotation;
+import static org.hibernate.cfg.AnnotatedColumn.buildColumnFromNoAnnotation;
+import static org.hibernate.cfg.AnnotatedColumn.buildColumnsFromAnnotations;
+import static org.hibernate.cfg.AnnotatedColumn.buildFormulaFromAnnotation;
 import static org.hibernate.cfg.AnnotationBinder.getOverridableAnnotation;
 
 /**
@@ -77,12 +81,20 @@ class ColumnsBuilder {
 
 
 		Comment comment = property.getAnnotation(Comment.class);
-		if ( property.isAnnotationPresent( Column.class ) || property.isAnnotationPresent( Formula.class ) ) {
-			Column ann = property.getAnnotation( Column.class );
-			Formula formulaAnn = getOverridableAnnotation( property, Formula.class, buildingContext );
-			columns = AnnotatedColumn.buildColumnFromAnnotation(
-					new Column[] { ann },
-					formulaAnn,
+		if ( property.isAnnotationPresent( Column.class ) ) {
+			columns = buildColumnFromAnnotation(
+					property.getAnnotation( Column.class ),
+					comment,
+					nullability,
+					propertyHolder,
+					inferredData,
+					entityBinder.getSecondaryTables(),
+					buildingContext
+			);
+		}
+		else if ( property.isAnnotationPresent( Formula.class ) ) {
+			columns = buildFormulaFromAnnotation(
+					getOverridableAnnotation( property, Formula.class, buildingContext ),
 					comment,
 					nullability,
 					propertyHolder,
@@ -92,10 +104,8 @@ class ColumnsBuilder {
 			);
 		}
 		else if ( property.isAnnotationPresent( Columns.class ) ) {
-			Columns anns = property.getAnnotation( Columns.class );
-			columns = AnnotatedColumn.buildColumnFromAnnotation(
-					anns.columns(),
-					null,
+			columns = buildColumnsFromAnnotations(
+					property.getAnnotation( Columns.class ).columns(),
 					comment,
 					nullability,
 					propertyHolder,
@@ -110,20 +120,17 @@ class ColumnsBuilder {
 				( property.isAnnotationPresent( ManyToOne.class )
 						|| property.isAnnotationPresent( OneToOne.class ) )
 				) {
-			joinColumns = buildDefaultJoinColumnsForXToOne(property, inferredData);
+			joinColumns = buildDefaultJoinColumnsForXToOne( property, inferredData );
 		}
 		else if ( joinColumns == null &&
 				( property.isAnnotationPresent( OneToMany.class )
 						|| property.isAnnotationPresent( ElementCollection.class )
 				) ) {
 			OneToMany oneToMany = property.getAnnotation( OneToMany.class );
-			String mappedBy = oneToMany != null ?
-					oneToMany.mappedBy() :
-					"";
 			joinColumns = AnnotatedJoinColumn.buildJoinColumns(
 					null,
 					comment,
-					mappedBy,
+					oneToMany != null ? oneToMany.mappedBy() : "",
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
 					inferredData.getPropertyName(),
@@ -136,9 +143,7 @@ class ColumnsBuilder {
 		}
 		if ( columns == null && !property.isAnnotationPresent( ManyToMany.class ) ) {
 			//useful for collection of embedded elements
-			columns = AnnotatedColumn.buildColumnFromAnnotation(
-					null,
-					null,
+			columns = buildColumnFromNoAnnotation(
 					comment,
 					nullability,
 					propertyHolder,

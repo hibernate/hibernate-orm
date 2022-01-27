@@ -3,6 +3,74 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.0.0.CR1 (January 27, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32013
+
+** Bug
+    * [HHH-15046] - DB2z and DB2i NullpointerException on initialization
+    * [HHH-15044] - Revert HHH-14826 fix because the provided test was wrong
+    * [HHH-15037] - Criteria Update/Delete with vararg parameters throws NullPointerException
+    * [HHH-15035] - Native query type discovery with h2 2.0.202 with float(..) DDL type
+    * [HHH-15014] - H2Dialect does not work properly with h2 2.0.202 on sub selects with tuples
+    * [HHH-15013] - H2Dialect does not work properly with h2 2.0.202 and sequences
+    * [HHH-15009] - H2Dialect does not work properly with h2 2.0.202 and updating schema 
+    * [HHH-14991] - Cache StoreMode property not renamed to Jakarta Persistence API
+    * [HHH-14985] - H2Dialect does not work properly with h2 2.0.202 on inserts
+    * [HHH-14958] - Use of CDI to create built-in generators upon metadata creation, leading to errors if CDI is not yet initialized
+    * [HHH-9688] - Combination of @OrderBy and @SortComparator
+
+** Improvement
+    * [HHH-15047] - Ensure all spatial functions have a valid FunctionReturnTypeResolver
+    * [HHH-15042] - Add Offset-Feature for DB2zDialect
+    * [HHH-15030] - Introduce SelectionQuery and MutationQuery
+    * [HHH-15021] - Support for UserCollectionType
+    * [HHH-15017] - Clean-up Query#setParameter overloads
+    * [HHH-14974] - Allow AttributeConverter as parameter type
+    * [HHH-14951] - Add @EmbeddableRepresentationStrategy
+    * [HHH-14950] - Support mapping of embeddables with no setters (assuming a custom instantiator or repo-strategy is used)
+    * [HHH-14808] - Refactor SpatialPredicates for H6
+    * [HHH-14807] - Upgrade spatial support for Oracle
+    * [HHH-14805] - Upgrade spatial support for SqlServer
+    * [HHH-14804] - Upgrade spatial support for MySQL
+    * [HHH-14682] - H2 supports COMMENT ON
+    * [HHH-13361] - Allow audited entities that use composite identifiers to support nested embeddables.
+    * [HHH-11836] - Create an @EndOfLife corollary to @Incubating
+    * [HHH-11696] - Remove (deprecated) Settings in favor of SessionFactoryOptions
+
+** New Feature
+    * [HHH-14855] - Support passing a String representation of EntityGraph we can parse through the graph-language parser 
+    * [HHH-11595] - Add complementing annotation for @CollectionTable for customizing audit table name
+    * [HHH-11433] - Allow usage of KEY expression in a join
+
+** Remove Feature
+    * [HHH-14866] - Drop `@ParamDef#type`
+    * [HHH-11447] - Remove org.hibernate.query.procedure.ProcedureParameter#enablePassingNulls and #isPassNullsEnabled
+
+** Sub-task
+    * [HHH-14497] - Drop legacy id-generator settings
+
+** Task
+    * [HHH-15040] - Upgrade to Hibernate Commons Annotations 6.0.0.CR1
+    * [HHH-15033] - Restrict JNDI lookups to "java" scheme
+    * [HHH-15031] - Upgrade to ByteBuddy 1.12.7
+    * [HHH-15029] - Remove deprecated JndiHelper
+    * [HHH-15028] - Upgrade to JBoss Logging 3.4.3.Final
+    * [HHH-15026] - Upgrade to Log4J 2.17.1
+    * [HHH-15024] - Upgrade to Jandex 2.4.2.Final
+    * [HHH-15018] - OracleTypesHelper shouldn't log stacktraces when the Oracle JDBC driver isn't loadable
+    * [HHH-15000] - Upgrade to Hibernate Commons Annotations 6.0.0.Beta1
+    * [HHH-14999] - Upgrade to Hibernate Validator 6.2.1.Final (EE) and 7.0.2.Final (Jakarta)
+    * [HHH-14998] - Upgrade to GraalVM 21.3.0
+    * [HHH-14997] - Upgrade to Agroal 1.14
+    * [HHH-14996] - Upgrade to JBoss Logging Processor (and matching Annotations) 2.2.1.Final
+    * [HHH-14995] - Upgrade to Jandex 2.4.1.Final
+    * [HHH-14905] - Verify that custom JavaType and JdbcType registration combo works
+    * [HHH-14886] - Add ability to influence CollectionSemantics
+    * [HHH-14885] - New composite user-type
+
+
 Changes in 6.0.0.Beta3 (December 18, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

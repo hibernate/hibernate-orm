@@ -1785,8 +1785,8 @@ public abstract class CollectionBinder {
 		else {
 			holder.prepare(property);
 
-			final BasicValueBinder<?> elementBinder =
-					new BasicValueBinder<>( BasicValueBinder.Kind.COLLECTION_ELEMENT, buildingContext);
+			final BasicValueBinder elementBinder =
+					new BasicValueBinder( BasicValueBinder.Kind.COLLECTION_ELEMENT, buildingContext);
 			elementBinder.setReturnedClassName( collType.getName() );
 			if ( elementColumns == null || elementColumns.length == 0 ) {
 				elementColumns = new AnnotatedColumn[1];

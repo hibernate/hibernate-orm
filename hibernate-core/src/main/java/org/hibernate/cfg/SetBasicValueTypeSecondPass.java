@@ -16,9 +16,9 @@ import org.hibernate.mapping.PersistentClass;
  * @author Sharath Reddy
  */
 public class SetBasicValueTypeSecondPass implements SecondPass {
-	private final BasicValueBinder<?> binder;
+	private final BasicValueBinder binder;
 
-	public SetBasicValueTypeSecondPass(BasicValueBinder<?> val) {
+	public SetBasicValueTypeSecondPass(BasicValueBinder val) {
 		binder = val;
 	}
 

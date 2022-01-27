@@ -22,7 +22,10 @@ import org.hibernate.usertype.UserCollectionType;
  * @author Anthony Patricio
  */
 public class ArrayBinder extends ListBinder {
-	public ArrayBinder(Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver, MetadataBuildingContext buildingContext) {
+
+	public ArrayBinder(
+			Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver,
+			MetadataBuildingContext buildingContext) {
 		super( customTypeBeanResolver, buildingContext );
 	}
 

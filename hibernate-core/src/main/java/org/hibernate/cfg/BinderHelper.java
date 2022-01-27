@@ -814,8 +814,8 @@ public class BinderHelper {
 		value.setLazy( lazy );
 		value.setCascadeDeleteEnabled( cascadeOnDelete );
 
-		final BasicValueBinder<?> discriminatorValueBinder =
-				new BasicValueBinder<>( BasicValueBinder.Kind.ANY_DISCRIMINATOR, context );
+		final BasicValueBinder discriminatorValueBinder =
+				new BasicValueBinder( BasicValueBinder.Kind.ANY_DISCRIMINATOR, context );
 
 		final AnnotatedColumn[] discriminatorColumns = buildColumnOrFormulaFromAnnotation(
 				discriminatorColumn,
@@ -853,7 +853,7 @@ public class BinderHelper {
 		);
 		value.setDiscriminatorValueMappings( discriminatorValueMappings );
 
-		BasicValueBinder<?> keyValueBinder = new BasicValueBinder<>( BasicValueBinder.Kind.ANY_KEY, context );
+		BasicValueBinder keyValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ANY_KEY, context );
 		assert keyColumns.length == 1;
 		keyColumns[0].setTable( value.getTable() );
 		keyValueBinder.setColumns( keyColumns );

@@ -42,7 +42,9 @@ import org.jboss.logging.Logger;
 public class ListBinder extends CollectionBinder {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, ListBinder.class.getName() );
 
-	public ListBinder(Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver, MetadataBuildingContext buildingContext) {
+	public ListBinder(
+			Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver,
+			MetadataBuildingContext buildingContext) {
 		super( customTypeBeanResolver, false, buildingContext );
 	}
 
@@ -112,7 +114,7 @@ public class ListBinder extends CollectionBinder {
 			indexColumn.forceNotNull();
 		}
 		indexColumn.setPropertyHolder( valueHolder );
-		final BasicValueBinder<?> valueBinder = new BasicValueBinder<>( BasicValueBinder.Kind.LIST_INDEX, buildingContext );
+		final BasicValueBinder valueBinder = new BasicValueBinder( BasicValueBinder.Kind.LIST_INDEX, buildingContext );
 		valueBinder.setColumns( new AnnotatedColumn[] { indexColumn } );
 		valueBinder.setReturnedClassName( Integer.class.getName() );
 		valueBinder.setType( property, collType, null, null );

@@ -21,7 +21,11 @@ import org.hibernate.usertype.UserCollectionType;
  * @author Matthew Inger
  */
 public class SetBinder extends CollectionBinder {
-	public SetBinder(Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver, boolean sorted, MetadataBuildingContext buildingContext) {
+
+	public SetBinder(
+			Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver,
+			boolean sorted,
+			MetadataBuildingContext buildingContext) {
 		super( customTypeBeanResolver, sorted, buildingContext );
 	}
 

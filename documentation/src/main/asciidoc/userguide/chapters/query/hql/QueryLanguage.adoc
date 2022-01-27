@@ -67,7 +67,7 @@ HQL features four different kinds of statement:
 
 [IMPORTANT]
 ====
-The effect of an `update` and `delete` statement is not reflected in the persistence context, nor in the state of entity objects held in memory at the time the statement is executed.
+The effect of an `update` or `delete` statement is not reflected in the persistence context, nor in the state of entity objects held in memory at the time the statement is executed.
 
 It is the responsibility of the application to maintain synchronization of state held in memory with the database after execution of an `update` or `delete` statement.
 ====

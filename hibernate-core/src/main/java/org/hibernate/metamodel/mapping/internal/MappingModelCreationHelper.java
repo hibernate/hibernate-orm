@@ -1595,7 +1595,7 @@ public class MappingModelCreationHelper {
 			}
 			else if ( fetchStyle == FetchStyle.JOIN
 					|| !lazy
-					|| ( value instanceof OneToOne && value.isNullable() )
+					|| value instanceof OneToOne && value.isNullable()
 					|| value instanceof ManyToOne && value.isNullable() && ( (ManyToOne) value ).isIgnoreNotFound() ) {
 				fetchTiming = FetchTiming.IMMEDIATE;
 			}

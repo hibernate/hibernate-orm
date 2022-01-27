@@ -369,7 +369,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			}
 		}
 
-		if ( (! etype.isNullable() ) && idPropName != null ) {
+		if ( !etype.isNullable() && idPropName != null ) {
 			String idpath2 = extendPath( path, idPropName );
 			addPropertyPath( idpath2, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
 			initPropertyPaths( idpath2, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
@@ -397,7 +397,8 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			final String[] columns,
 			final String[] columnReaders,
 			final String[] columnReaderTemplates,
-			String[] formulaTemplates, final Mapping factory) throws MappingException {
+			final String[] formulaTemplates,
+			final Mapping factory) throws MappingException {
 
 		Type[] types = type.getSubtypes();
 		String[] properties = type.getPropertyNames();

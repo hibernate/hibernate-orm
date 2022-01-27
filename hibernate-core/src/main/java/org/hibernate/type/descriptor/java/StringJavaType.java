@@ -10,6 +10,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.sql.Clob;
 import java.sql.Types;
+import java.util.Locale;
 
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
@@ -111,5 +112,50 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 			default:
 				return false;
 		}
+	}
+
+	@Override
+	public <X> String coerce(X value, CoercionContext coercionContext) {
+		if ( value == null ) {
+			return null;
+		}
+
+		if ( value instanceof String ) {
+			return (String) value;
+		}
+
+		if ( value instanceof Double ) {
+			return Double.toString( (Double) value );
+		}
+
+		if ( value instanceof Byte ) {
+			return Byte.toString( (Byte) value );
+		}
+
+		if ( value instanceof Short ) {
+			return Short.toString( (Short) value );
+		}
+
+		if ( value instanceof Integer ) {
+			return Integer.toString( (Integer) value );
+		}
+
+		if ( value instanceof Long ) {
+			return Long.toString( (Long) value );
+		}
+
+		if ( value instanceof Float ) {
+			return Float.toString( (Float) value );
+		}
+
+		throw new CoercionException(
+				String.format(
+						Locale.ROOT,
+						"Cannot coerce value `%s` [%s] as String",
+						value,
+						value.getClass().getName()
+				)
+		);
+
 	}
 }

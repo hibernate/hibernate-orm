@@ -18,6 +18,7 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingValidator;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.CoercionException;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.TemporalJavaType;
@@ -142,7 +143,9 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 
 		final SqmExpressible<? extends T> sqmExpressible = parameterType.resolveExpressible( sessionFactory );
 		assert sqmExpressible != null;
-
+		if ( sqmExpressible instanceof AttributeConverterTypeAdapter ) {
+			return value;
+		}
 		return sqmExpressible.getExpressibleJavaType().coerce( value, this );
 	}
 

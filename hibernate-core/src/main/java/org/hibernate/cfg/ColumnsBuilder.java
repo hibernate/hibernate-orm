@@ -38,12 +38,13 @@ import static org.hibernate.cfg.AnnotationBinder.getOverridableAnnotation;
  * @author Brett Meyer
  */
 class ColumnsBuilder {
-	private PropertyHolder propertyHolder;
-	private Nullability nullability;
-	private XProperty property;
-	private PropertyData inferredData;
-	private EntityBinder entityBinder;
-	private MetadataBuildingContext buildingContext;
+
+	private final PropertyHolder propertyHolder;
+	private final Nullability nullability;
+	private final XProperty property;
+	private final PropertyData inferredData;
+	private final EntityBinder entityBinder;
+	private final MetadataBuildingContext buildingContext;
 	private AnnotatedColumn[] columns;
 	private AnnotatedJoinColumn[] joinColumns;
 

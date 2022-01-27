@@ -968,7 +968,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	@Override
 	public String toString() {
 		return String.format(
-				"Ejb3JoinColumn{logicalColumnName='%s', referencedColumn='%s', mappedBy='%s'}",
+				"JoinColumn{logicalColumnName='%s', referencedColumn='%s', mappedBy='%s'}",
 				getLogicalColumnName(), referencedColumn, mappedBy
 		);
 	}

@@ -22,7 +22,7 @@ import jakarta.persistence.TemporalType;
 /**
  * Defines the aspects of query execution and parameter binding that apply to all
  * forms of querying - HQL, {@linkplain jakarta.persistence.criteria.CriteriaBuilder
- * criteria queries} and {@link org.hibernate.procedure.ProcedureCall stored
+ * criteria queries}, and {@link org.hibernate.procedure.ProcedureCall stored
  * procedure calls}.
  *
  * @author Steve Ebersole

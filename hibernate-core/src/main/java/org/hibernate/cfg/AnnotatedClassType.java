@@ -18,15 +18,15 @@ public enum AnnotatedClassType {
 	 */
 	NONE,
 	/**
-	 * has @Entity annotation
+	 * has an {@link jakarta.persistence.Entity} annotation
 	 */
 	ENTITY,
 	/**
-	 * has an @Embeddable annotation
+	 * has an {@link jakarta.persistence.Embeddable} annotation
 	 */
 	EMBEDDABLE,
 	/**
-	 * has @EmbeddedSuperclass annotation
+	 * has {@link jakarta.persistence.MappedSuperclass} annotation
 	 */
-	EMBEDDABLE_SUPERCLASS
+	MAPPED_SUPERCLASS
 }

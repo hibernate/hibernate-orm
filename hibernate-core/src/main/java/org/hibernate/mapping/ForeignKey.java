@@ -48,8 +48,8 @@ public class ForeignKey extends Constraint {
 	@Override
 	public void setName(String name) {
 		super.setName( name );
-		// the FK name "none" is a magic value in the hbm.xml binding that indicated to
-		// not create a FK.
+		// the FK name "none" was a magic value in the hbm.xml
+		// mapping language that indicated to not create a FK
 		if ( "none".equals( name ) ) {
 			disableCreation();
 		}

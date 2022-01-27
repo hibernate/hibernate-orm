@@ -150,9 +150,7 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 	}
 
 	@Override
-	public void postProcessEntityHierarchies() {
-		modelBinder.finishUp( rootBuildingContext );
-	}
+	public void postProcessEntityHierarchies() {}
 
 	@Override
 	public void processResultSetMappings() {

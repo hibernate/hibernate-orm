@@ -82,7 +82,7 @@ public class OneToOne extends ToOne {
 	public void createForeignKey() throws MappingException {
 		// Ensure properties are sorted before we create a foreign key
 		sortProperties();
-		if ( constrained && referencedPropertyName==null) {
+		if ( isForeignKeyEnabled() && constrained && referencedPropertyName==null) {
 			//TODO: handle the case of a foreign key to something other than the pk
 			createForeignKeyOfEntity( ( (EntityType) getType() ).getAssociatedEntityName() );
 		}

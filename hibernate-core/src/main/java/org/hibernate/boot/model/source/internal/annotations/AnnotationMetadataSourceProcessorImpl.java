@@ -79,8 +79,8 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		if ( metadataBuildingOptions.isXmlMappingEnabled() ) {
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			// Ewww.  This is temporary until we migrate to Jandex + StAX for annotation binding
-			final JPAXMLOverriddenMetadataProvider jpaMetadataProvider = (JPAXMLOverriddenMetadataProvider) ( (MetadataProviderInjector) reflectionManager )
-					.getMetadataProvider();
+			final JPAXMLOverriddenMetadataProvider jpaMetadataProvider = (JPAXMLOverriddenMetadataProvider)
+					( (MetadataProviderInjector) reflectionManager ).getMetadataProvider();
 			for ( Binding<?> xmlBinding : managedResources.getXmlMappingBindings() ) {
 				Object root = xmlBinding.getRoot();
 				if ( !(root instanceof JaxbEntityMappings) ) {
@@ -98,21 +98,21 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		}
 
 		for ( String className : managedResources.getAnnotatedClassNames() ) {
-			final Class annotatedClass = classLoaderService.classForName( className );
-			categorizeAnnotatedClass( annotatedClass, attributeConverterManager, classLoaderService );
+			final Class<?> annotatedClass = classLoaderService.classForName( className );
+			categorizeAnnotatedClass( annotatedClass, attributeConverterManager );
 		}
 
-		for ( Class annotatedClass : managedResources.getAnnotatedClassReferences() ) {
-			categorizeAnnotatedClass( annotatedClass, attributeConverterManager, classLoaderService );
+		for ( Class<?> annotatedClass : managedResources.getAnnotatedClassReferences() ) {
+			categorizeAnnotatedClass( annotatedClass, attributeConverterManager );
 		}
 	}
 
-	private void categorizeAnnotatedClass(Class annotatedClass, AttributeConverterManager attributeConverterManager, ClassLoaderService cls) {
+	private void categorizeAnnotatedClass(Class<?> annotatedClass, AttributeConverterManager attributeConverterManager) {
 		final XClass xClass = reflectionManager.toXClass( annotatedClass );
 		// categorize it, based on assumption it does not fall into multiple categories
 		if ( xClass.isAnnotationPresent( Converter.class ) ) {
-			//noinspection unchecked
-			attributeConverterManager.addAttributeConverter( annotatedClass );
+			//noinspection unchecked, rawtypes
+			attributeConverterManager.addAttributeConverter( (Class<? extends AttributeConverter>) annotatedClass );
 		}
 		else if ( xClass.isAnnotationPresent( Entity.class )
 				|| xClass.isAnnotationPresent( MappedSuperclass.class ) ) {
@@ -126,7 +126,6 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		}
 	}
 
-	@SuppressWarnings("deprecation")
 	private XClass toXClass(String className, ReflectionManager reflectionManager, ClassLoaderService cls) {
 		return reflectionManager.toXClass( cls.classForName( className ) );
 	}
@@ -136,7 +135,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		// use any persistence-unit-defaults defined in orm.xml
 		( (JpaOrmXmlPersistenceUnitDefaultAware) rootMetadataBuildingContext.getBuildingOptions() ).apply(
 				new JpaOrmXmlPersistenceUnitDefaults() {
-					final Map persistenceUnitDefaults = reflectionManager.getDefaults();
+					final Map<?,?> persistenceUnitDefaults = reflectionManager.getDefaults();
 
 					@Override
 					public String getDefaultSchemaName() {
@@ -319,6 +318,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 			rootMetadataBuildingContext.getMetadataCollector().addAttributeConverter( descriptor );
 		}
 
+		@SuppressWarnings("rawtypes")
 		public void addAttributeConverter(Class<? extends AttributeConverter> converterClass) {
 			rootMetadataBuildingContext.getMetadataCollector().addAttributeConverter( converterClass );
 		}

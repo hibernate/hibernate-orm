@@ -29,6 +29,7 @@ import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
+import org.hibernate.boot.model.IdGeneratorStrategyInterpreter.GeneratorNameDeterminationContext;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.BasicValueBinder;
@@ -550,8 +551,7 @@ public class BinderHelper {
 				id.setIdentifierGeneratorStrategy( identifierGeneratorStrategy );
 			}
 			//checkIfMatchingGenerator(gen, generatorType, generatorName);
-			for ( Object o : gen.getParameters().entrySet() ) {
-				Map.Entry elt = (Map.Entry) o;
+			for ( Map.Entry<?,?> elt : gen.getParameters().entrySet() ) {
 				if ( elt.getKey() == null ) {
 					continue;
 				}
@@ -594,7 +594,8 @@ public class BinderHelper {
 			}
 		}
 
-		final IdentifierGeneratorDefinition globalDefinition = buildingContext.getMetadataCollector().getIdentifierGenerator( name );
+		final IdentifierGeneratorDefinition globalDefinition =
+				buildingContext.getMetadataCollector().getIdentifierGenerator( name );
 		if ( globalDefinition != null ) {
 			return globalDefinition;
 		}
@@ -615,7 +616,8 @@ public class BinderHelper {
 			return new IdentifierGeneratorDefinition( "assigned", "assigned" );
 		}
 
-		final IdGeneratorStrategyInterpreter generationInterpreter = buildingContext.getBuildingOptions().getIdGenerationTypeInterpreter();
+		final IdGeneratorStrategyInterpreter generationInterpreter =
+				buildingContext.getBuildingOptions().getIdGenerationTypeInterpreter();
 
 		final GenerationType generationType = interpretGenerationType( generatedValueAnn );
 
@@ -746,9 +748,9 @@ public class BinderHelper {
 		else {
 			strategyName = generationInterpreter.determineGeneratorName(
 					generationType,
-					new IdGeneratorStrategyInterpreter.GeneratorNameDeterminationContext() {
+					new GeneratorNameDeterminationContext() {
 						@Override
-						public Class getIdType() {
+						public Class<?> getIdType() {
 							return buildingContext
 									.getBootstrapContext()
 									.getReflectionManager()
@@ -812,7 +814,8 @@ public class BinderHelper {
 		value.setLazy( lazy );
 		value.setCascadeDeleteEnabled( cascadeOnDelete );
 
-		final BasicValueBinder<?> discriminatorValueBinder = new BasicValueBinder<>( BasicValueBinder.Kind.ANY_DISCRIMINATOR, context );
+		final BasicValueBinder<?> discriminatorValueBinder =
+				new BasicValueBinder<>( BasicValueBinder.Kind.ANY_DISCRIMINATOR, context );
 
 		final AnnotatedColumn[] discriminatorColumns = AnnotatedColumn.buildColumnFromAnnotation(
 				new jakarta.persistence.Column[] { discriminatorColumn },
@@ -864,7 +867,10 @@ public class BinderHelper {
 		final BasicValue keyDescriptor = keyValueBinder.make();
 		value.setKey( keyDescriptor );
 		keyValueBinder.fillSimpleValue();
-		AnnotatedColumn.checkPropertyConsistency( keyColumns, propertyHolder.getEntityName() + "." + inferredData.getPropertyName() );
+		AnnotatedColumn.checkPropertyConsistency(
+				keyColumns,
+				propertyHolder.getEntityName() + "." + inferredData.getPropertyName()
+		);
 		keyColumns[0].linkWithValue( keyDescriptor );
 
 		return value;

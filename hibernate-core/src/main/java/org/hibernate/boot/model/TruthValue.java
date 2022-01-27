@@ -19,16 +19,14 @@ public enum TruthValue {
 	FALSE,
 	UNKNOWN;
 
-	@SuppressWarnings("SimplifiableIfStatement")
 	public boolean toBoolean(boolean defaultValue) {
-		if ( this == TRUE ) {
-			return true;
-		}
-		else if ( this == FALSE ) {
-			return false;
-		}
-		else {
-			return defaultValue;
+		switch (this) {
+			case TRUE:
+				return true;
+			case FALSE:
+				return false;
+			default:
+				return defaultValue;
 		}
 	}
 

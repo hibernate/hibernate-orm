@@ -97,7 +97,7 @@ import static org.hibernate.cfg.annotations.HCANNHelper.findAnnotation;
  * @author Steve Ebersole
  * @author Emmanuel Bernard
  */
-public class BasicValueBinder<T> implements JdbcTypeIndicators {
+public class BasicValueBinder implements JdbcTypeIndicators {
 
 	// todo (6.0) : In light of how we want to build Types (specifically BasicTypes) moving forward this class should undergo major changes
 	//		see the comments in #setType
@@ -163,7 +163,7 @@ public class BasicValueBinder<T> implements JdbcTypeIndicators {
 
 	public BasicValueBinder(Kind kind, MetadataBuildingContext buildingContext) {
 		assert kind != null;
-		assert  buildingContext != null;
+		assert buildingContext != null;
 
 		this.kind = kind;
 		this.buildingContext = buildingContext;

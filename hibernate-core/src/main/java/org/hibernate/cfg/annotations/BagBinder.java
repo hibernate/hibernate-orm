@@ -21,7 +21,10 @@ import org.hibernate.usertype.UserCollectionType;
  * @author Matthew Inger
  */
 public class BagBinder extends CollectionBinder {
-	public BagBinder(Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver, MetadataBuildingContext context) {
+
+	public BagBinder(
+			Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver,
+			MetadataBuildingContext context) {
 		super( customTypeBeanResolver, false, context );
 	}
 

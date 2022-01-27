@@ -29,7 +29,6 @@ import org.hibernate.cfg.AnnotatedColumn;
 import org.hibernate.cfg.AnnotatedJoinColumn;
 import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.PropertyData;
-import org.hibernate.cfg.PropertyHolderBuilder;
 import org.hibernate.cfg.PropertyPreloadedData;
 import org.hibernate.cfg.SecondPass;
 import org.hibernate.engine.jdbc.Size;
@@ -60,13 +59,19 @@ import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.MapKeyJoinColumn;
 import jakarta.persistence.MapKeyJoinColumns;
 
+import static org.hibernate.cfg.PropertyHolderBuilder.buildPropertyHolder;
+
 /**
  * Implementation to bind a Map
  *
  * @author Emmanuel Bernard
  */
 public class MapBinder extends CollectionBinder {
-	public MapBinder(Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver, boolean sorted, MetadataBuildingContext buildingContext) {
+
+	public MapBinder(
+			Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver,
+			boolean sorted,
+			MetadataBuildingContext buildingContext) {
 		super( customTypeBeanResolver, sorted, buildingContext );
 	}
 
@@ -236,7 +241,7 @@ public class MapBinder extends CollectionBinder {
 					}
 				}
 
-				CollectionPropertyHolder holder = PropertyHolderBuilder.buildPropertyHolder(
+				CollectionPropertyHolder holder = buildPropertyHolder(
 						mapValue,
 						StringHelper.qualify( mapValue.getRole(), "mapkey" ),
 						keyXClass,
@@ -274,14 +279,10 @@ public class MapBinder extends CollectionBinder {
 				if ( AnnotatedClassType.EMBEDDABLE.equals( classType ) ) {
 					EntityBinder entityBinder = new EntityBinder();
 
-					PropertyData inferredData;
-					if ( isHibernateExtensionMapping() ) {
-						inferredData = new PropertyPreloadedData( AccessType.PROPERTY, "index", keyXClass );
-					}
-					else {
-						//"key" is the JPA 2 prefix for map keys
-						inferredData = new PropertyPreloadedData( AccessType.PROPERTY, "key", keyXClass );
-					}
+					PropertyData inferredData = isHibernateExtensionMapping()
+							? new PropertyPreloadedData(AccessType.PROPERTY, "index", keyXClass)
+							: new PropertyPreloadedData(AccessType.PROPERTY, "key", keyXClass);
+					//"key" is the JPA 2 prefix for map keys
 
 					//TODO be smart with isNullable
 					Component component = AnnotationBinder.fillComponent(
@@ -300,7 +301,7 @@ public class MapBinder extends CollectionBinder {
 					mapValue.setIndex( component );
 				}
 				else {
-					final BasicValueBinder<?> elementBinder = new BasicValueBinder<>( BasicValueBinder.Kind.MAP_KEY, buildingContext );
+					final BasicValueBinder elementBinder = new BasicValueBinder( BasicValueBinder.Kind.MAP_KEY, buildingContext );
 					elementBinder.setReturnedClassName( mapKeyType );
 
 					AnnotatedColumn[] elementColumns = mapKeyColumns;
@@ -347,7 +348,8 @@ public class MapBinder extends CollectionBinder {
 				final jakarta.persistence.ForeignKey foreignKey = getMapKeyForeignKey( property );
 				if ( foreignKey != null ) {
 					if ( foreignKey.value() == ConstraintMode.NO_CONSTRAINT
-							|| foreignKey.value() == ConstraintMode.PROVIDER_DEFAULT && getBuildingContext().getBuildingOptions().isNoConstraintByDefault() ) {
+							|| foreignKey.value() == ConstraintMode.PROVIDER_DEFAULT
+									&& getBuildingContext().getBuildingOptions().isNoConstraintByDefault() ) {
 						element.disableForeignKey();
 					}
 					else {
@@ -440,7 +442,12 @@ public class MapBinder extends CollectionBinder {
 				newProperty.setSelectable( current.isSelectable() );
 				newProperty.setValue(
 						createFormulatedValue(
-								current.getValue(), collection, targetPropertyName, associatedClass, associatedClass, buildingContext
+								current.getValue(),
+								collection,
+								targetPropertyName,
+								associatedClass,
+								associatedClass,
+								buildingContext
 						)
 				);
 				indexComponent.addProperty( newProperty );

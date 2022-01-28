@@ -27,7 +27,11 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.w3c.dom.Document;
 
 /**
- * Helper for building and handling {@link XmlSource} references
+ * Helper for building and handling {@link XmlSource} references.
+ * <p>
+ * An {@code XmlSource} represents an XML document containing
+ * O/R mapping metadata, either a JPA {@code orm.xml} file, or a
+ * Hibernate {@code .hbm.xml} file.
  *
  * @author Steve Ebersole
  */
@@ -112,29 +116,28 @@ public class XmlSources {
 		return new JaxpSourceXmlSource( origin, new DOMSource( document ) );
 	}
 
+	/**
+	 * Read all {@code .hbm.xml} mappings from a jar file and pass them
+	 * to the given {@link Consumer}.
+	 * <p/>
+	 * Assumes that any file named {@code *.hbm.xml} is a mapping document.
+	 * This method does not support {@code orm.xml} files!
+	 *
+	 * @param jar a jar file
+	 * @param consumer a consumer of the resulting {@linkplain XmlSource XML sources}
+	 */
 	public static void fromJar(File jar, Consumer<XmlSource> consumer) {
 		JaxbLogger.JAXB_LOGGER.tracef( "Seeking mapping documents in jar file : %s", jar.getName() );
 
 		final Origin origin = new Origin( SourceType.JAR, jar.getAbsolutePath() );
 
-		try {
-			final JarFile jarFile = new JarFile( jar );
-
-			try {
-				final Enumeration<JarEntry> entries = jarFile.entries();
-				while ( entries.hasMoreElements() ) {
-					final JarEntry jarEntry = entries.nextElement();
-					if ( jarEntry.getName().endsWith( ".hbm.xml" ) ) {
-						JaxbLogger.JAXB_LOGGER.tracef( "Found hbm.xml mapping in jar : %s", jarEntry.getName() );
-						consumer.accept( new JarFileEntryXmlSource( origin, jarFile, jarEntry ) );
-					}
-				}
-			}
-			finally {
-				try {
-					jarFile.close();
-				}
-				catch ( Exception ignore ) {
+		try ( JarFile jarFile = new JarFile(jar) ) {
+			final Enumeration<JarEntry> entries = jarFile.entries();
+			while ( entries.hasMoreElements() ) {
+				final JarEntry jarEntry = entries.nextElement();
+				if ( jarEntry.getName().endsWith(".hbm.xml") ) {
+					JaxbLogger.JAXB_LOGGER.tracef( "Found hbm.xml mapping in jar : %s", jarEntry.getName() );
+					consumer.accept( new JarFileEntryXmlSource( origin, jarFile, jarEntry ) );
 				}
 			}
 		}

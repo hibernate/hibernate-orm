@@ -16,13 +16,8 @@ package org.hibernate.service;
  * and
  * <li>{@linkplain org.hibernate.boot.registry.StandardServiceRegistry
  * standard service registries}, which may be obtained from a
- * {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder},
+ * {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder}.
  * </ul>
- *
- * @see org.hibernate.boot.registry.BootstrapServiceRegistry
- * @see org.hibernate.boot.registry.StandardServiceRegistry
- * @see org.hibernate.boot.registry.BootstrapServiceRegistryBuilder
- * @see org.hibernate.boot.registry.StandardServiceRegistryBuilder
  *
  * @author Steve Ebersole
  */

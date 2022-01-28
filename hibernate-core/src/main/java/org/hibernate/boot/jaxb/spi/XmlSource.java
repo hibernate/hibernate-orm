@@ -9,6 +9,12 @@ package org.hibernate.boot.jaxb.spi;
 import org.hibernate.boot.jaxb.Origin;
 
 /**
+ * An XML document containing O/R mapping metadata, either:
+ * <ul>
+ *     <li>a JPA {@code orm.xml} file, or
+ *     <li>a Hibernate {@code .hbm.xml} file.
+ * </ul>
+ *
  * @author Steve Ebersole
  */
 public abstract class XmlSource {

@@ -17,6 +17,7 @@ import org.hibernate.Session;
 
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.Parameter;
+import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TemporalType;
 
 /**
@@ -544,4 +545,15 @@ public interface CommonQueryContract {
 	 * @return {@code this}, for method chaining
 	 */
 	CommonQueryContract setProperties(@SuppressWarnings("rawtypes") Map bean);
+
+	/**
+	 * Allows unwrapping this query as another, more specific type.
+	 *
+	 * @param type The class of the object to be returned.
+	 * This is normally an interface implemented by the underlying query implementation.
+	 * @return The unwrapped query.
+	 * @throws RuntimeException If the given type is not supported.
+	 */
+	<T> T unwrap(Class<T> type);
+
 }

@@ -18,6 +18,7 @@ import java.util.function.Supplier;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
+import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.CacheMode;
@@ -26,6 +27,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
+import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -555,6 +557,18 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 		putIfNotNull( hints, HINT_FOLLOW_ON_LOCKING, getQueryOptions().getLockOptions().getFollowOnLocking() );
 	}
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// unwrap
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> T unwrap(Class<T> cls) {
+		if ( cls.isInstance( this ) ) {
+			return (T) this;
+		}
+
+		throw new PersistenceException( "Unrecognized unwrap type [" + cls.getName() + "]" );
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// covariance

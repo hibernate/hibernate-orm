@@ -6,16 +6,19 @@
  */
 package org.hibernate.orm.test.query.sqm;
 
-import jakarta.persistence.Basic;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.NamedQuery;
-import jakarta.persistence.Table;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.query.IllegalSelectQueryException;
+import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.SelectionQuery;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
+import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.query.spi.SqmQuery;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.contacts.Contact;
@@ -24,7 +27,11 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.fail;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.Table;
 
 /**
  * @author Steve Ebersole
@@ -117,6 +124,17 @@ public class BasicSelectionQueryTests {
 			}
 			catch (IllegalSelectQueryException expected) {
 			}
+		} );
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void unwrapTest(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			final SelectionQuery<Contact> query =
+					session.createSelectionQuery( "select c from Contact c", Contact.class )
+							.unwrap( SelectionQuery.class );
+			checkResults( query, session );
 		} );
 	}
 

@@ -6,10 +6,8 @@
  */
 package org.hibernate.orm.test.query.sqm.mutation;
 
-import java.sql.SQLException;
-
-import org.hibernate.annotations.QueryHints;
 import org.hibernate.query.IllegalMutationQueryException;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -23,13 +21,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.NamedQuery;
-import jakarta.persistence.PersistenceException;
-import jakarta.persistence.QueryHint;
-import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.Table;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
@@ -94,6 +86,16 @@ public class BasicMutationQueryTests {
 	void basicUnequivocallyInvalidNamedNativeDeleteTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			session.createNamedMutationQuery( "invalid-native-result" );
+		} );
+	}
+
+	// Unwrapping to Query<?> is useful for legacy applications in particular.
+	@Test
+	void unwrapTest(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			Query<?> query = session.createMutationQuery( "delete Contact" )
+					.unwrap( Query.class );
+			query.executeUpdate();
 		} );
 	}
 

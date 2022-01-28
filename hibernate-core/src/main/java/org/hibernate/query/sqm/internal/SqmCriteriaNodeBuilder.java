@@ -245,7 +245,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		// to indicate that we do not know.  this will allow later
 		// calls to `SqmSelectStatement#select`, `SqmSelectStatement#multiSelect`,
 		// etc. to influence the result type
-		return new SqmSelectStatement<Object>( (Class) null, this );
+		return new SqmSelectStatement( Object.class, this );
 	}
 
 	@Override

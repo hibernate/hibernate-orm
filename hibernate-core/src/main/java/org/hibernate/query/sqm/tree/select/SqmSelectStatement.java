@@ -193,7 +193,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 			checkSelectionIsJpaCompliant( selection );
 		}
 		getQuerySpec().setSelection( (JpaSelection<T>) selection );
-		if ( getResultType() == null ) {
+		if ( getResultType() == Object.class ) {
 			setResultType( (Class<T>) selection.getJavaType() );
 		}
 		return this;
@@ -209,7 +209,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 		}
 		final Selection<? extends T> resultSelection;
 		Class<T> resultType = getResultType();
-		if ( resultType == null ) {
+		if ( resultType == Object.class ) {
 			setResultType( resultType = (Class<T>) Object[].class );
 		}
 		if ( Tuple.class.isAssignableFrom( resultType ) ) {

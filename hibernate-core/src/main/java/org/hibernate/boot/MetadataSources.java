@@ -7,32 +7,21 @@
 package org.hibernate.boot;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.jar.JarFile;
-import java.util.zip.ZipEntry;
-import javax.xml.transform.dom.DOMSource;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
-import org.hibernate.boot.jaxb.Origin;
-import org.hibernate.boot.jaxb.SourceType;
-import org.hibernate.boot.jaxb.internal.CacheableFileXmlSource;
-import org.hibernate.boot.jaxb.internal.JarFileEntryXmlSource;
-import org.hibernate.boot.jaxb.internal.JaxpSourceXmlSource;
 import org.hibernate.boot.jaxb.internal.XmlSources;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.jaxb.spi.XmlSource;
@@ -50,9 +39,12 @@ import org.hibernate.type.SerializationException;
 import org.w3c.dom.Document;
 
 /**
- * Entry point into working with sources of metadata information (mapping XML, annotations).   Tell Hibernate
- * about sources and then call {@link #buildMetadata()}, or use {@link #getMetadataBuilder()} to customize
- * how sources are processed (naming strategies, etc).
+ * Entry point for working with sources of O/R mapping metadata, either
+ * in the form of annotated classes, or as XML mapping documents.
+ * <p>
+ * A client must register sources and then call {@link #buildMetadata()},
+ * or use {@link #getMetadataBuilder()} to customize how the sources are
+ * processed (naming strategies, etc).
  *
  * @author Steve Ebersole
  *
@@ -154,8 +146,7 @@ public class MetadataSources implements Serializable {
 	 * @return The built metadata.
 	 */
 	public MetadataBuilder getMetadataBuilder() {
-		MetadataBuilderImpl defaultBuilder = new MetadataBuilderImpl( this );
-		return getCustomBuilderOrDefault( defaultBuilder );
+		return getCustomBuilderOrDefault( new MetadataBuilderImpl(this) );
 	}
 
 	/**
@@ -166,23 +157,25 @@ public class MetadataSources implements Serializable {
 	 */
 	@Deprecated
 	public MetadataBuilder getMetadataBuilder(StandardServiceRegistry serviceRegistry) {
-		MetadataBuilderImpl defaultBuilder = new MetadataBuilderImpl( this, serviceRegistry );
-		return getCustomBuilderOrDefault( defaultBuilder );
+		return getCustomBuilderOrDefault( new MetadataBuilderImpl(this, serviceRegistry ) );
 	}
 
 	/**
-	 * In case a custom {@link MetadataBuilderFactory} creates a custom builder, return that one, otherwise the default
-	 * builder.
+	 * In case a custom {@link MetadataBuilderFactory} creates a custom builder,
+	 * return that one, otherwise return the default builder.
 	 */
 	private MetadataBuilder getCustomBuilderOrDefault(MetadataBuilderImpl defaultBuilder) {
-		final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
-		final Collection<MetadataBuilderFactory> discoveredBuilderFactories = cls.loadJavaServices( MetadataBuilderFactory.class );
+
+		Collection<MetadataBuilderFactory> discoveredBuilderFactories =
+				serviceRegistry.getService( ClassLoaderService.class )
+						.loadJavaServices( MetadataBuilderFactory.class );
 
 		MetadataBuilder builder = null;
 		List<String> activeFactoryNames = null;
 
-		for ( MetadataBuilderFactory discoveredBuilderFactory : discoveredBuilderFactories ) {
-			final MetadataBuilder returnedBuilder = discoveredBuilderFactory.getMetadataBuilder( this, defaultBuilder );
+		for ( MetadataBuilderFactory discoveredBuilderFactory : discoveredBuilderFactories) {
+			final MetadataBuilder returnedBuilder =
+					discoveredBuilderFactory.getMetadataBuilder( this, defaultBuilder );
 			if ( returnedBuilder != null ) {
 				if ( activeFactoryNames == null ) {
 					activeFactoryNames = new ArrayList<>();
@@ -203,9 +196,9 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
-	 * Short-hand form of calling {@link #getMetadataBuilder()} and using its
-	 * {@link MetadataBuilder#build()} method in cases where the application wants
-	 * to accept the defaults.
+	 * Shorthand form of calling {@link #getMetadataBuilder()} and using its
+	 * {@link MetadataBuilder#build()} method in cases where the application
+	 * wants to accept the defaults.
 	 *
 	 * @return The built metadata.
 	 */
@@ -224,7 +217,7 @@ public class MetadataSources implements Serializable {
 	 *
 	 * @return this (for method chaining)
 	 */
-	public MetadataSources addAnnotatedClass(Class annotatedClass) {
+	public MetadataSources addAnnotatedClass(Class<?> annotatedClass) {
 		if ( annotatedClasses == null ) {
 			annotatedClasses = new LinkedHashSet<>();
 		}
@@ -246,9 +239,10 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
-	 * Read metadata from the annotations attached to the given class.  The important
-	 * distinction here is that the {@link Class} will not be accessed until later
-	 * which is important for on-the-fly bytecode-enhancement
+	 * Read metadata from the annotations attached to the given class. The
+	 * important distinction here is that the {@link Class} will not be
+	 * accessed until later, which is important for on-the-fly bytecode
+	 * enhancement
 	 *
 	 * @param annotatedClassName The name of a class containing annotations
 	 *
@@ -322,26 +316,26 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
-	 * Read a mapping as an application resource using the convention that a class named {@code foo.bar.Foo} is
-	 * mapped by a file named {@code foo/bar/Foo.hbm.xml} which can be resolved as a classpath resource.
+	 * Read a mapping as an application resource using the convention
+	 * that a class named {@code foo.bar.Foo} is mapped by a file named
+	 * {@code foo/bar/Foo.hbm.xml} which can be resolved as a classpath
+	 * resource.
 	 *
-	 * @param entityClass The mapped class. Cannot be {@code null} null.
+	 * @param entityClass The mapped class
 	 *
 	 * @return this (for method chaining purposes)
 	 *
 	 * @deprecated hbm.xml is a legacy mapping format now considered deprecated.
 	 */
 	@Deprecated
-	public MetadataSources addClass(Class entityClass) {
+	public MetadataSources addClass(Class<?> entityClass) {
 		if ( entityClass == null ) {
 			throw new IllegalArgumentException( "The specified class cannot be null" );
 		}
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "adding resource mappings from class convention : %s", entityClass.getName() );
 		}
-		final String mappingResourceName = entityClass.getName().replace( '.', '/' ) + ".hbm.xml";
-		addResource( mappingResourceName );
-		return this;
+		return addResource( entityClass.getName().replace( '.', '/' ) + ".hbm.xml" );
 	}
 
 	/**
@@ -359,9 +353,11 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
-	 * Read mappings from a particular XML file
+	 * Read mappings from a particular XML file.
+	 * <p>
+	 * The given path is resolved using {@link File#File(String)}.
 	 *
-	 * @param path The path to a file.  Expected to be resolvable by {@link File#File(String)}
+	 * @param path The path to a file
 	 *
 	 * @return this (for method chaining purposes)
 	 *
@@ -373,7 +369,7 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
-	 * Read mappings from a particular XML file
+	 * Read mappings from a particular XML file.
 	 *
 	 * @param file The reference to the XML file
 	 *
@@ -387,9 +383,10 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
-	 * Add XML mapping bindings created from an arbitrary source by the {@linkplain #getXmlMappingBinderAccess() binder}.
+	 * Add XML mapping bindings created from an arbitrary source by the
+	 * {@linkplain #getXmlMappingBinderAccess() binder}.
 	 *
-	 * @param binding The binding.
+	 * @param binding The binding
 	 *
 	 * @return this (for method chaining purposes)
 	 */
@@ -399,9 +396,11 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
-	 * See {@link #addCacheableFile(File)} for description
+	 * Add a {@link #addCacheableFile(File) cached mapping file}.
+	 * <p>
+	 * The given path is resolved using {@link File#File(String)}.
 	 *
-	 * @param path The path to a file.  Expected to be resolvable by {@link File#File(String)}
+	 * @param path The path to a file
 	 *
 	 * @return this (for method chaining purposes)
 	 *
@@ -413,9 +412,11 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
-	 * See {@link #addCacheableFile(File)} for description
+	 * Add a {@link #addCacheableFile(File) cached mapping file}.
+	 * <p>
+	 * The given path is resolved using {@link File#File(String)}.
 	 *
-	 * @param path The path to a file.  Expected to be resolvable by {@link File#File(String)}
+	 * @param path The path to a file
 	 *
 	 * @return this (for method chaining purposes)
 	 *
@@ -427,13 +428,14 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
-	 * Add a cached mapping file.  A cached file is a serialized representation of the DOM structure of a
-	 * particular mapping.  It is saved from a previous call as a file with the name {@code {xmlFile}.bin}
-	 * where {@code {xmlFile}} is the name of the original mapping file.
+	 * Add a cached mapping file. A cached file is a serialized representation of
+	 * the DOM structure of a particular mapping. It is saved from a previous call
+	 * as a file with the name {@code {xmlFile}.bin} where {@code {xmlFile}} is the
+	 * name of the original mapping file.
 	 * </p>
-	 * If a cached {@code {xmlFile}.bin} exists and is newer than {@code {xmlFile}}, the {@code {xmlFile}.bin}
-	 * file will be read directly. Otherwise {@code {xmlFile}} is read and then serialized to {@code {xmlFile}.bin} for
-	 * use the next time.
+	 * If a cached {@code {xmlFile}.bin} exists and is newer than {@code {xmlFile}},
+	 * the {@code {xmlFile}.bin} file will be read directly. Otherwise {@code {xmlFile}}
+	 * is read and then serialized to {@code {xmlFile}.bin} for use the next time.
 	 *
 	 * @param file The cacheable mapping file to be added, {@code {xmlFile}} in above discussion.
 	 *
@@ -444,13 +446,14 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
-	 * Add a cached mapping file.  A cached file is a serialized representation of the DOM structure of a
-	 * particular mapping.  It is saved from a previous call as a file with the name {@code {xmlFile}.bin}
-	 * where {@code {xmlFile}} is the name of the original mapping file.
+	 * Add a cached mapping file.  A cached file is a serialized representation of
+	 * the DOM structure of a particular mapping. It is saved from a previous call
+	 * as a file with the name {@code {xmlFile}.bin} where {@code {xmlFile}} is the
+	 * name of the original mapping file.
 	 * </p>
-	 * If a cached {@code {xmlFile}.bin} exists and is newer than {@code {xmlFile}}, the {@code {xmlFile}.bin}
-	 * file will be read directly. Otherwise {@code {xmlFile}} is read and then serialized to {@code {xmlFile}.bin} for
-	 * use the next time.
+	 * If a cached {@code {xmlFile}.bin} exists and is newer than {@code {xmlFile}},
+	 * the {@code {xmlFile}.bin} file will be read directly. Otherwise {@code {xmlFile}}
+	 * is read and then serialized to {@code {xmlFile}.bin} for use the next time.
 	 *
 	 * @param file The cacheable mapping file to be added, {@code {xmlFile}} in above discussion.
 	 *
@@ -466,15 +469,15 @@ public class MetadataSources implements Serializable {
 	/**
 	 * <b>INTENDED FOR TESTSUITE USE ONLY!</b>
 	 * <p/>
-	 * Much like {@link #addCacheableFile(File)} except that here we will fail immediately if
-	 * the cache version cannot be found or used for whatever reason
+	 * Much like {@link #addCacheableFile(File)} except that here we will fail
+	 * immediately if the cache version cannot be found or used for whatever reason.
 	 *
 	 * @param file The xml file, not the bin!
 	 *
 	 * @return The dom "deserialized" from the cached file.
 	 *
 	 * @throws SerializationException Indicates a problem deserializing the cached dom tree
-	 * @throws FileNotFoundException Indicates that the cached file was not found or was not usable.
+	 * @throws MappingNotFoundException Indicates that the cached file was not found or was not usable.
 	 */
 	public MetadataSources addCacheableFileStrictly(File file) throws SerializationException {
 		final XmlSource xmlSource = XmlSources.fromCacheableFile( file, true );
@@ -486,15 +489,15 @@ public class MetadataSources implements Serializable {
 	/**
 	 * <b>INTENDED FOR TESTSUITE USE ONLY!</b>
 	 * <p/>
-	 * Much like {@link #addCacheableFile(File)} except that here we will fail immediately if
-	 * the cache version cannot be found or used for whatever reason
+	 * Much like {@link #addCacheableFile(File)} except that here we will fail
+	 * immediately if the cache version cannot be found or used for whatever reason.
 	 *
 	 * @param file The xml file, not the bin!
 	 *
 	 * @return The dom "deserialized" from the cached file.
 	 *
 	 * @throws SerializationException Indicates a problem deserializing the cached dom tree
-	 * @throws FileNotFoundException Indicates that the cached file was not found or was not usable.
+	 * @throws MappingNotFoundException Indicates that the cached file was not found or was not usable.
 	 */
 	public MetadataSources addCacheableFileStrictly(File file, File cacheDir) throws SerializationException {
 		final XmlSource xmlSource = XmlSources.fromCacheableFile( file, cacheDir, true );

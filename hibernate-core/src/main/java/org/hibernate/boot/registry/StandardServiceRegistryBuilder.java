@@ -29,6 +29,8 @@ import org.hibernate.service.StandardServiceInitiators;
 import org.hibernate.service.internal.ProvidedService;
 import org.hibernate.service.spi.ServiceContributor;
 
+import static org.hibernate.boot.cfgxml.spi.CfgXmlAccessService.LOADED_CONFIG_KEY;
+
 /**
  * Builder for standard {@link ServiceRegistry} instances.
  *
@@ -39,24 +41,27 @@ import org.hibernate.service.spi.ServiceContributor;
  */
 public class StandardServiceRegistryBuilder {
 	/**
-	 * Intended only for use from {@link org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl}.
+	 * Creates a {@code StandardServiceRegistryBuilder} specific to the needs
+	 * of bootstrapping JPA.
+	 * <p>
+	 * Intended only for use from
+	 * {@link org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl}.
+	 * <p>
+	 * In particular, we ignore properties found in {@code cfg.xml} files.
+	 * {@code EntityManagerFactoryBuilderImpl} collects these properties later.
 	 *
-	 * Creates a StandardServiceRegistryBuilder specific to the needs of JPA bootstrapping.
-	 * Specifically we ignore properties found in `cfg.xml` files in terms of adding them to
-	 * the builder immediately.  EntityManagerFactoryBuilderImpl handles collecting these
-	 * properties itself.
+	 * @see org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl
 	 */
 	public static StandardServiceRegistryBuilder forJpa(BootstrapServiceRegistry bootstrapServiceRegistry) {
-		final LoadedConfig loadedConfig = new LoadedConfig( null ) {
-			@Override
-			protected void addConfigurationValues(Map<String,Object> configurationValues) {
-				// here, do nothing
-			}
-		};
 		return new StandardServiceRegistryBuilder(
 				bootstrapServiceRegistry,
 				new HashMap<>(),
-				loadedConfig
+				new LoadedConfig( null ) {
+					@Override
+					protected void addConfigurationValues(Map<String,Object> configurationValues) {
+						// here, do nothing
+					}
+				}
 		) {
 			@Override
 			public StandardServiceRegistryBuilder configure(LoadedConfig loadedConfig) {
@@ -68,7 +73,7 @@ public class StandardServiceRegistryBuilder {
 	}
 
 	/**
-	 * The default resource name for a Hibernate configuration xml file.
+	 * The default resource name for a Hibernate configuration XML file.
 	 */
 	public static final String DEFAULT_CFG_RESOURCE_NAME = "hibernate.cfg.xml";
 
@@ -99,8 +104,10 @@ public class StandardServiceRegistryBuilder {
 	}
 
 	/**
-	 * Intended for use exclusively from JPA bootstrapping, or extensions of
-	 * this class. Consider this an SPI.
+	 * Intended for use exclusively from JPA bootstrapping, or extensions of this
+	 * class.
+	 *
+	 * Consider this an SPI.
 	 *
 	 * @see #forJpa
 	 */
@@ -118,8 +125,11 @@ public class StandardServiceRegistryBuilder {
 	/**
 	 * Intended for use exclusively from Quarkus bootstrapping, or extensions of
 	 * this class which need to override the standard ServiceInitiator list.
+	 *
 	 * Consider this an SPI.
-	 * @deprecated Quarkus will switch to use {@link #StandardServiceRegistryBuilder(BootstrapServiceRegistry, Map, ConfigLoader, LoadedConfig, List)}
+	 *
+	 * @deprecated Quarkus will switch to use
+	 * {@link #StandardServiceRegistryBuilder(BootstrapServiceRegistry, Map, ConfigLoader, LoadedConfig, List)}
 	 */
 	@Deprecated
 	protected StandardServiceRegistryBuilder(
@@ -137,6 +147,7 @@ public class StandardServiceRegistryBuilder {
 	/**
 	 * Intended for use exclusively from Quarkus bootstrapping, or extensions of
 	 * this class which need to override the standard ServiceInitiator list.
+	 *
 	 * Consider this an SPI.
 	 */
 	protected StandardServiceRegistryBuilder(
@@ -184,9 +195,7 @@ public class StandardServiceRegistryBuilder {
 	 * @return List of standard initiators
 	 */
 	private static List<StandardServiceInitiator<?>> standardInitiatorList() {
-		final List<StandardServiceInitiator<?>> initiators = new ArrayList<>( StandardServiceInitiators.LIST.size() );
-		initiators.addAll( StandardServiceInitiators.LIST );
-		return initiators;
+		return new ArrayList<>( StandardServiceInitiators.LIST );
 	}
 
 	public BootstrapServiceRegistry getBootstrapServiceRegistry() {
@@ -196,10 +205,11 @@ public class StandardServiceRegistryBuilder {
 	/**
 	 * Read settings from a {@link java.util.Properties} file by resource name.
 	 * <p>
-	 * Differs from {@link #configure()} and {@link #configure(String)} in that here we expect to read a
-	 * {@link java.util.Properties} file while for {@link #configure} we read the XML variant.
+	 * Differs from {@link #configure()} and {@link #configure(String)} in that
+	 * here we expect to read a {@linkplain java.util.Properties properties} file,
+	 * while for {@link #configure} we read the configuration from XML.
 	 *
-	 * @param resourceName The name by which to perform a resource look up for the properties file.
+	 * @param resourceName The name by which to perform a resource look up for the properties file
 	 *
 	 * @return this, for method chaining
 	 *
@@ -214,8 +224,9 @@ public class StandardServiceRegistryBuilder {
 	/**
 	 * Read settings from a {@link java.util.Properties} file by File reference
 	 * <p>
-	 * Differs from {@link #configure()} and {@link #configure(String)} in that here we expect to read a
-	 * {@link java.util.Properties} file while for {@link #configure} we read the XML variant.
+	 * Differs from {@link #configure()} and {@link #configure(String)} in that
+	 * here we expect to read a {@linkplain java.util.Properties properties} file,
+	 * while for {@link #configure} we read the configuration from XML.
 	 *
 	 * @param file The properties File reference
 	 *
@@ -332,51 +343,47 @@ public class StandardServiceRegistryBuilder {
 	 *
 	 * @return this, for method chaining
 	 */
-	public <T extends Service> StandardServiceRegistryBuilder addService(final Class<T> serviceRole, final T service) {
+	public <T extends Service> StandardServiceRegistryBuilder addService(Class<T> serviceRole, T service) {
 		providedServices.add( new ProvidedService<>( serviceRole, service ) );
 		return this;
 	}
 
 	/**
-	 * By default, when a ServiceRegistry is no longer referenced by any other
-	 * registries as a parent it will be closed.
-	 * <p/>
-	 * Some applications that explicitly build "shared registries" may want to
-	 * circumvent that behavior.
+	 * By default, when a {@link ServiceRegistry} is no longer referenced by any
+	 * other registries as a parent it will be closed. Some applications that
+	 * explicitly build "shared registries" may need to circumvent that behavior.
 	 * <p/>
 	 * This method indicates that the registry being built should not be
-	 * automatically closed.  The caller agrees to take responsibility to
-	 * close it themselves.
+	 * automatically closed. The caller takes responsibility for closing it.
 	 *
 	 * @return this, for method chaining
 	 */
 	public StandardServiceRegistryBuilder disableAutoClose() {
-		this.autoCloseRegistry = false;
+		autoCloseRegistry = false;
 		return this;
 	}
 
 	/**
-	 * See the discussion on {@link #disableAutoClose}.  This method enables
-	 * the auto-closing.
+	 * Enables {@link #disableAutoClose auto-closing}.
 	 *
 	 * @return this, for method chaining
 	 */
 	public StandardServiceRegistryBuilder enableAutoClose() {
-		this.autoCloseRegistry = true;
+		autoCloseRegistry = true;
 		return this;
 	}
 
 	/**
-	 * Build the StandardServiceRegistry.
+	 * Build and resturn the {@link StandardServiceRegistry}.
 	 *
-	 * @return The StandardServiceRegistry.
+	 * @return A newly-instantiated {@link StandardServiceRegistry}
 	 */
 	public StandardServiceRegistry build() {
 		applyServiceContributingIntegrators();
 		applyServiceContributors();
 
 		final Map<String,Object> settingsCopy = new HashMap<>( settings );
-		settingsCopy.put( org.hibernate.boot.cfgxml.spi.CfgXmlAccessService.LOADED_CONFIG_KEY, aggregatedCfgXml );
+		settingsCopy.put( LOADED_CONFIG_KEY, aggregatedCfgXml );
 		ConfigurationHelper.resolvePlaceHolders( settingsCopy );
 
 		return new StandardServiceRegistryImpl(
@@ -410,13 +417,12 @@ public class StandardServiceRegistryBuilder {
 	}
 
 	/**
-	 * Temporarily exposed since Configuration is still around and much code still uses Configuration.  This allows
-	 * code to configure the builder and access that to configure Configuration object (used from HEM atm).
+	 * Obtain the current aggregated settings.
 	 *
-	 * @return The settings map.
-	 *
-	 * @deprecated Temporarily exposed since Configuration is still around and much code still uses Configuration.
-	 * This allows code to configure the builder and access that to configure Configuration object.
+	 * @deprecated Temporarily exposed since
+	 * {@link org.hibernate.cfg.Configuration} is still around and much code
+	 * still uses it. This allows code to configure the builder and access
+	 * that to configure the {@code Configuration} object.
 	 */
 	@Deprecated
 	public Map<String,Object> getSettings() {
@@ -424,15 +430,15 @@ public class StandardServiceRegistryBuilder {
 	}
 
 	/**
-	 * Destroy a service registry.  Applications should only destroy registries they have explicitly created.
+	 * Destroy a service registry.
+	 * <p>
+	 * Applications should only destroy registries they have explicitly created.
 	 *
 	 * @param serviceRegistry The registry to be closed.
 	 */
 	public static void destroy(ServiceRegistry serviceRegistry) {
-		if ( serviceRegistry == null ) {
-			return;
+		if ( serviceRegistry != null ) {
+			( (StandardServiceRegistryImpl) serviceRegistry ).destroy();
 		}
-
-		( (StandardServiceRegistryImpl) serviceRegistry ).destroy();
 	}
 }

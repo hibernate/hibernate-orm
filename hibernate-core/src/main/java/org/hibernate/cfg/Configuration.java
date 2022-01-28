@@ -60,27 +60,37 @@ import org.hibernate.type.SerializationException;
 import org.hibernate.usertype.UserType;
 
 /**
- * Represents one approach for bootstrapping Hibernate.  In fact, historically this was
- * <b>the</b> way to bootstrap Hibernate.
- * <p/>
- * The approach here is to define all configuration and mapping sources in one API
- * and to then build the {@link SessionFactory} in one-shot.  The configuration
- * and mapping sources defined here are just held here until the SessionFactory is built.  This
- * is an important distinction from the legacy behavior of this class, where we would try to
- * incrementally build the mappings from sources as they were added.  The ramification of this
- * change in behavior is that users can add configuration and mapping sources here, but they can
- * no longer query the in-flight state of mappings ({@link org.hibernate.mapping.PersistentClass},
- * {@link org.hibernate.mapping.Collection}, etc) here.
- * <p/>
- * Note: Internally this class uses the new bootstrapping approach when asked to build the
- * SessionFactory.
+ * A convenience API making it easier to bootstrap an instance of Hibernate
+ * using {@link MetadataBuilder} and {@link StandardServiceRegistryBuilder}
+ * under the covers.
+ * <p>
+ * A {@code Configuration} may be used to aggregate:
+ * <ul>
+ * <li>{@linkplain #setProperty(String, String) configuration properties}
+ *     from various sources, and
+ * <li>entity O/R mappings, defined in either {@linkplain #addAnnotatedClass
+ *    annotated classes}, or {@linkplain #addFile XML mapping documents}.
+ * </ul>
+ * In addition, there are convenience methods for adding
+ * {@link #addAttributeConverter attribute converters},
+ * {@link #registerTypeContributor type contributors}, and
+ * {@link #addSqlFunction SQL function descriptors}, for setting
+ * {@link #setImplicitNamingStrategy naming strategies} and
+ * {@link #setCurrentTenantIdentifierResolver tenant id resolvers},
+ * and more.
+ * <p>
+ * Ultimately, this class simply delegates to {@link MetadataBuilder} and
+ * {@link StandardServiceRegistryBuilder} to actually do the hard work of
+ * {@linkplain #buildSessionFactory() building} the {@code SessionFactory}.
+ * <p>
+ * Configuration properties are enumerated by {@link AvailableSettings}.
  *
  * @author Gavin King
  * @author Steve Ebersole
  *
  * @see SessionFactory
+ * @see AvailableSettings
  */
-@SuppressWarnings( {"UnusedDeclaration"})
 public class Configuration {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( Configuration.class );
 
@@ -234,7 +244,8 @@ public class Configuration {
 	}
 
 	/**
-	 * Use the mappings and properties specified in an application resource named {@code hibernate.cfg.xml}.
+	 * Use the mappings and properties specified in an application resource named
+	 * {@code hibernate.cfg.xml}.
 	 *
 	 * @return this for method chaining
 	 *
@@ -247,8 +258,9 @@ public class Configuration {
 	}
 
 	/**
-	 * Use the mappings and properties specified in the given application resource. The format of the resource is
-	 * defined in {@code hibernate-configuration-3.0.dtd}.
+	 * Use the mappings and properties specified in the given application resource.
+	 * <p>
+	 * The format of the resource is defined by {@code hibernate-configuration-3.0.dtd}.
 	 *
 	 * @param resource The resource to use
 	 *
@@ -272,8 +284,9 @@ public class Configuration {
 	}
 
 	/**
-	 * Use the mappings and properties specified in the given document. The format of the document is defined in
-	 * {@code hibernate-configuration-3.0.dtd}.
+	 * Use the mappings and properties specified in the given document.
+	 * <p>
+	 * The format of the document is defined by {@code hibernate-configuration-3.0.dtd}.
 	 *
 	 * @param url URL from which you wish to load the configuration
 	 *
@@ -288,8 +301,9 @@ public class Configuration {
 	}
 
 	/**
-	 * Use the mappings and properties specified in the given application file. The format of the file is defined in
-	 * {@code hibernate-configuration-3.0.dtd}.
+	 * Use the mappings and properties specified in the given application file.
+	 * <p>
+	 * The format of the file is defined by {@code hibernate-configuration-3.0.dtd}.
 	 *
 	 * @param configFile File from which you wish to load the configuration
 	 *
@@ -311,8 +325,8 @@ public class Configuration {
 	}
 
 	/**
-	 * Allows registration of a type into the type registry.  The phrase 'override' in the method name simply
-	 * reminds that registration *potentially* replaces a previously registered type .
+	 * Register a {@linkplain BasicType type} into the type registry,
+	 * potentially replacing a previously registered type.
 	 *
 	 * @param type The type to register.
 	 */
@@ -349,11 +363,13 @@ public class Configuration {
 		return this;
 	}
 	/**
-	 * Read mappings from a particular XML file
+	 * Read mappings from a particular XML file.
 	 *
 	 * @param xmlFile a path to a file
+	 *
 	 * @return this (for method chaining purposes)
-	 * @throws MappingException Indicates inability to locate the specified mapping file.
+	 *
+	 * @throws MappingException Indicates inability to locate the specified mapping file
 	 */
 	public Configuration addFile(File xmlFile) throws MappingException {
 		metadataSources.addFile( xmlFile );
@@ -361,7 +377,8 @@ public class Configuration {
 	}
 
 	/**
-	 * @return An object capable of parsing XML mapping files that can then be passed to {@link #addXmlMapping(Binding)}.
+	 * An object capable of parsing XML mapping files that can then be passed
+	 * to {@link #addXmlMapping(Binding)}.
 	 */
 	public XmlMappingBinderAccess getXmlMappingBinderAccess() {
 		return metadataSources.getXmlMappingBinderAccess();
@@ -371,6 +388,7 @@ public class Configuration {
 	 * Read mappings that were parsed using {@link #getXmlMappingBinderAccess()}.
 	 *
 	 * @param binding the parsed mapping
+	 *
 	 * @return this (for method chaining purposes)
 	 */
 	public Configuration addXmlMapping(Binding<?> binding) {
@@ -379,20 +397,23 @@ public class Configuration {
 	}
 
 	/**
-	 * Add a cached mapping file.  A cached file is a serialized representation
-	 * of the DOM structure of a particular mapping.  It is saved from a previous
-	 * call as a file with the name {@code xmlFile + ".bin"} where xmlFile is
-	 * the name of the original mapping file.
+	 * Add a cacheable mapping file.
+	 * <p>
+	 * A cached file is a serialized representation of the DOM structure of a
+	 * particular mapping. It is saved from a previous call as a file with the
+	 * name {@code xmlFile + ".bin"} where {@code xmlFile} is the name of the
+	 * original mapping file.
 	 * </p>
-	 * If a cached {@code xmlFile + ".bin"} exists and is newer than
-	 * {@code xmlFile} the {@code ".bin"} file will be read directly. Otherwise
-	 * xmlFile is read and then serialized to {@code xmlFile + ".bin"} for use
-	 * the next time.
+	 * If a cached {@code xmlFile + ".bin"} exists and is newer than {@code xmlFile},
+	 * the {@code ".bin"} file will be read directly. Otherwise, {@code xmlFile} is
+	 * read and then serialized to {@code xmlFile + ".bin"} for use the next time.
 	 *
 	 * @param xmlFile The cacheable mapping file to be added.
+	 *
 	 * @return this (for method chaining purposes)
-	 * @throws MappingException Indicates problems reading the cached file or processing
-	 * the non-cached file.
+	 *
+	 * @throws MappingException Indicates problems reading the cached file or
+	 * processing the non-cached file.
 	 */
 	public Configuration addCacheableFile(File xmlFile) throws MappingException {
 		metadataSources.addCacheableFile( xmlFile );
@@ -402,8 +423,9 @@ public class Configuration {
 	/**
 	 * <b>INTENDED FOR TESTSUITE USE ONLY!</b>
 	 * <p/>
-	 * Much like {@link #addCacheableFile(File)} except that here we will fail immediately if
-	 * the cache version cannot be found or used for whatever reason
+	 * Much like {@link #addCacheableFile(File)} except that here we will fail
+	 * immediately if the cache version cannot be found or used for whatever
+	 * reason.
 	 *
 	 * @param xmlFile The xml file, not the bin!
 	 *
@@ -419,11 +441,14 @@ public class Configuration {
 	/**
 	 * Add a cacheable mapping file.
 	 *
-	 * @param xmlFile The name of the file to be added.  This must be in a form
-	 * useable to simply construct a {@link File} instance.
+	 * @param xmlFile The name of the file to be added, in a form usable to
+	 *                simply construct a {@link File} instance
+	 *
 	 * @return this (for method chaining purposes)
-	 * @throws MappingException Indicates problems reading the cached file or processing
-	 * the non-cached file.
+	 *
+	 * @throws MappingException Indicates problems reading the cached file or
+	 * processing the non-cached file
+	 *
 	 * @see #addCacheableFile(File)
 	 */
 	public Configuration addCacheableFile(String xmlFile) throws MappingException {
@@ -432,7 +457,7 @@ public class Configuration {
 	}
 
 	/**
-	 * Read mappings from a {@code URL}
+	 * Read mappings from a {@code URL}.
 	 *
 	 * @param url The url for the mapping document to be read.
 	 * @return this (for method chaining purposes)
@@ -458,8 +483,9 @@ public class Configuration {
 	}
 
 	/**
-	 * Read mappings as a application resourceName (i.e. classpath lookup)
-	 * trying different class loaders.
+	 * Read mappings as an application resource name, that is, using a
+	 * {@linkplain ClassLoader#getResource(String) classpath lookup}, trying
+	 * different class loaders in turn.
 	 *
 	 * @param resourceName The resource name
 	 * @return this (for method chaining purposes)
@@ -474,7 +500,8 @@ public class Configuration {
 	/**
 	 * Read a mapping as an application resource using the convention that a class
 	 * named {@code foo.bar.Foo} is mapped by a file {@code foo/bar/Foo.hbm.xml}
-	 * which can be resolved as a classpath resource.
+	 * which can be resolved as a {@linkplain ClassLoader#getResource(String)
+	 * classpath resource}.
 	 *
 	 * @param persistentClass The mapped class
 	 * @return this (for method chaining purposes)
@@ -513,7 +540,7 @@ public class Configuration {
 	}
 
 	/**
-	 * Read all mappings from a jar file
+	 * Read all mappings from a {@code .jar} file.
 	 * <p/>
 	 * Assumes that any file named {@code *.hbm.xml} is a mapping document.
 	 *
@@ -555,10 +582,9 @@ public class Configuration {
 	}
 
 	/**
-	 * Set the current {@link Interceptor}
+	 * Set the current {@link Interceptor}.
 	 *
-	 * @param interceptor The {@link Interceptor} to use for the {@linkplain #buildSessionFactory built}
-	 * {@link SessionFactory}.
+	 * @param interceptor The {@link Interceptor} to use
 	 *
 	 * @return this for method chaining
 	 */
@@ -568,8 +594,8 @@ public class Configuration {
 	}
 
 	/**
-	 * Retrieve the user-supplied delegate to handle non-existent entity
-	 * scenarios.  May be null.
+	 * Retrieve the user-supplied {@link EntityNotFoundDelegate}, or
+	 * {@code null} if no delegate has been specified.
 	 *
 	 * @return The user-supplied delegate
 	 */
@@ -578,9 +604,9 @@ public class Configuration {
 	}
 
 	/**
-	 * Specify a user-supplied delegate to be used to handle scenarios where an entity could not be
-	 * located by specified id.  This is mainly intended for EJB3 implementations to be able to
-	 * control how proxy initialization errors should be handled...
+	 * Specify a user-supplied {@link EntityNotFoundDelegate} to be
+	 * used to handle scenarios where an entity could not be located
+	 * by specified id.
 	 *
 	 * @param entityNotFoundDelegate The delegate to use
 	 */
@@ -605,19 +631,21 @@ public class Configuration {
 	}
 
 	/**
-	 * Create a {@link SessionFactory} using the properties and mappings in this configuration. The
-	 * SessionFactory will be immutable, so changes made to this Configuration after building the
-	 * SessionFactory will not affect it.
+	 * Create a {@link SessionFactory} using the properties and mappings
+	 * in this configuration. The {@code SessionFactory} will be immutable,
+	 * so changes made to this {@code Configuration} after building the
+	 * factory will not affect it.
 	 *
 	 * @param serviceRegistry The registry of services to be used in creating this session factory.
 	 *
-	 * @return The built {@link SessionFactory}
+	 * @return The newly-built {@link SessionFactory}
 	 *
 	 * @throws HibernateException usually indicates an invalid configuration or invalid mapping information
 	 */
 	public SessionFactory buildSessionFactory(ServiceRegistry serviceRegistry) throws HibernateException {
 		log.debug( "Building session factory using provided StandardServiceRegistry" );
-		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder( (StandardServiceRegistry) serviceRegistry );
+		final MetadataBuilder metadataBuilder =
+				metadataSources.getMetadataBuilder( (StandardServiceRegistry) serviceRegistry );
 
 		if ( implicitNamingStrategy != null ) {
 			metadataBuilder.applyImplicitNamingStrategy( implicitNamingStrategy );
@@ -687,11 +715,12 @@ public class Configuration {
 
 
 	/**
-	 * Create a {@link SessionFactory} using the properties and mappings in this configuration. The
-	 * {@link SessionFactory} will be immutable, so changes made to {@code this} {@link Configuration} after
-	 * building the {@link SessionFactory} will not affect it.
+	 * Create a {@link SessionFactory} using the properties and mappings
+	 * in this configuration. The {@link SessionFactory} will be immutable,
+	 * so changes made to this {@link Configuration} after building the
+	 * factory will not affect it.
 	 *
-	 * @return The build {@link SessionFactory}
+	 * @return The newly-built {@link SessionFactory}
 	 *
 	 * @throws HibernateException usually indicates an invalid configuration or invalid mapping information
 	 */
@@ -707,8 +736,6 @@ public class Configuration {
 			throw t;
 		}
 	}
-
-
 
 	public Map<String,SqmFunctionDescriptor> getSqlFunctions() {
 		return customFunctionDescriptors;
@@ -729,44 +756,46 @@ public class Configuration {
 	}
 
 	/**
-	 * Adds the AttributeConverter Class to this Configuration.
+	 * Adds an {@link AttributeConverter} to this configuration.
 	 *
-	 * @param attributeConverterClass The AttributeConverter class.
-	 * @param autoApply Should the AttributeConverter be auto applied to property types as specified
-	 * by its "entity attribute" parameterized type?
+	 * @param attributeConverterClass The {@code AttributeConverter} class.
+	 * @param autoApply Should the AttributeConverter be auto applied to
+	 *                  property types as specified by its "entity attribute"
+	 *                  parameterized type?
 	 */
 	public void addAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass, boolean autoApply) {
 		addAttributeConverter( new ClassBasedConverterDescriptor( attributeConverterClass, autoApply, classmateContext ) );
 	}
 
 	/**
-	 * Adds the AttributeConverter Class to this Configuration.
+	 * Adds an {@link AttributeConverter} to this configuration.
 	 *
-	 * @param attributeConverterClass The AttributeConverter class.
+	 * @param attributeConverterClass The {@code AttributeConverter} class.
 	 */
 	public void addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass) {
 		addAttributeConverter( new ClassBasedConverterDescriptor( attributeConverterClass, classmateContext ) );
 	}
 
 	/**
-	 * Adds the AttributeConverter instance to this Configuration.  This form is mainly intended for developers
-	 * to programmatically add their own AttributeConverter instance.  HEM, instead, uses the
-	 * {@link #addAttributeConverter(Class, boolean)} form
+	 * Adds an {@link AttributeConverter} instance to this configuration.
+	 * This form is mainly intended for developers to programmatically add
+	 * their own {@code AttributeConverter} instance.
 	 *
-	 * @param attributeConverter The AttributeConverter instance.
+	 * @param attributeConverter The {@code AttributeConverter} instance.
 	 */
 	public void addAttributeConverter(AttributeConverter<?,?> attributeConverter) {
 		addAttributeConverter( new InstanceBasedConverterDescriptor( attributeConverter, classmateContext ) );
 	}
 
 	/**
-	 * Adds the AttributeConverter instance to this Configuration.  This form is mainly intended for developers
-	 * to programmatically add their own AttributeConverter instance.  HEM, instead, uses the
-	 * {@link #addAttributeConverter(Class, boolean)} form
+	 * Adds an {@link AttributeConverter} instance to this configuration.
+	 * This form is mainly intended for developers to programmatically add
+	 * their own {@code AttributeConverter} instance.
 	 *
-	 * @param attributeConverter The AttributeConverter instance.
-	 * @param autoApply Should the AttributeConverter be auto applied to property types as specified
-	 * by its "entity attribute" parameterized type?
+	 * @param attributeConverter The {@code AttributeConverter} instance.
+	 * @param autoApply Should the {@code AttributeConverter} be auto applied
+	 *                  to property types as specified by its "entity attribute"
+	 *                  parameterized type?
 	 */
 	public void addAttributeConverter(AttributeConverter<?,?> attributeConverter, boolean autoApply) {
 		addAttributeConverter( new InstanceBasedConverterDescriptor( attributeConverter, autoApply, classmateContext ) );
@@ -780,10 +809,10 @@ public class Configuration {
 	}
 
 	/**
-	 * Sets the SharedCacheMode to use.
-	 *
-	 * Note that at the moment, only {@link jakarta.persistence.SharedCacheMode#ALL} has
-	 * any effect in terms of {@code hbm.xml} binding.
+	 * Sets the {@link SharedCacheMode} to use.
+	 * <p>
+	 * Note that currently only {@link jakarta.persistence.SharedCacheMode#ALL}
+	 * has any effect in terms of {@code hbm.xml} binding.
 	 *
 	 * @param sharedCacheMode The SharedCacheMode to use
 	 */
@@ -819,8 +848,9 @@ public class Configuration {
 	}
 
 	/**
-	 * Adds the incoming properties to the internal properties structure, as long as the internal structure does not
-	 * already contain an entry for the given key.
+	 * Adds the incoming properties to the internal properties structure, as
+	 * long as the internal structure does not already contain an entry for
+	 * the given key.
 	 *
 	 * @param properties The properties to merge
 	 *

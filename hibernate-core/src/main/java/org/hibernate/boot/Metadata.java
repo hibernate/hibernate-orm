@@ -29,13 +29,8 @@ import org.hibernate.mapping.Table;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 
 /**
- * Represents the ORM model as determined from all provided mapping sources.
+ * Represents the ORM model as determined by aggregating the provided mapping sources.
  * An instance may be obtained by calling {@link MetadataSources#buildMetadata()}.
- *
- * @apiNote For the time being this is essentially a copy of the legacy
- * {@link Mapping} contract, split between reading the mapping information
- * exposed here and collecting it via
- * {@link org.hibernate.boot.spi.InFlightMetadataCollector}.
  *
  * @author Steve Ebersole
  *

@@ -26,10 +26,11 @@ import org.hibernate.service.ServiceRegistry;
 /**
  * Builder for {@link BootstrapServiceRegistry} instances.
  * <p>
- * An instance of this class may be obtained by instantiations, simply by
- * calling {@code new BootstrapServiceRegistryBuilder()}. Then a new
+ * An instance of this class may be obtained simply by
+ * {@linkplain #BootstrapServiceRegistryBuilder() instantiation}. Then a new
  * {@code BootstrapServiceRegistry} may be obtained by calling {@link #build()}.
  * It should be later destroyed by calling {@link #destroy(ServiceRegistry)}.
+ * Alternatively, {@linkplain #enableAutoClose() auto-close} may be enabled.
  * <p>
  * Provides a registry of services needed for most operations.
  * Manages a {@link ClassLoaderService}, a set of {@link Integrator}s, and a
@@ -50,6 +51,9 @@ public class BootstrapServiceRegistryBuilder {
 	private TcclLookupPrecedence tcclLookupPrecedence = TcclLookupPrecedence.AFTER;
 
 	private boolean autoCloseRegistry = true;
+
+	public BootstrapServiceRegistryBuilder() {
+	}
 
 	/**
 	 * Add an {@link Integrator} to be applied to the bootstrap registry.

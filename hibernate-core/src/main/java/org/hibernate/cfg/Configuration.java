@@ -65,7 +65,7 @@ import org.hibernate.usertype.UserType;
  * under the covers.
  * <p>
  * An instance of {@code Configuration} may be obtained simply by
- * instantiation, using {@link #Configuration() new Configuration()}.
+ * {@linkplain #Configuration() instantiation}.
  * <p>
  * A {@code Configuration} may be used to aggregate:
  * <ul>
@@ -74,6 +74,9 @@ import org.hibernate.usertype.UserType;
  * <li>entity O/R mappings, defined in either {@linkplain #addAnnotatedClass
  *    annotated classes}, or {@linkplain #addFile XML mapping documents}.
  * </ul>
+ * Note that XML mappings may be expressed using the JPA {@code orm.xml}
+ * format, or in Hibernate's legacy {@code .hbm.xml} format.
+ * <p>
  * In addition, there are convenience methods for adding
  * {@link #addAttributeConverter attribute converters},
  * {@link #registerTypeContributor type contributors},
@@ -786,7 +789,7 @@ public class Configuration {
 	 *                  property types as specified by its "entity attribute"
 	 *                  parameterized type?
 	 */
-	public void addAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass, boolean autoApply) {
+	public void addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass, boolean autoApply) {
 		addAttributeConverter( new ClassBasedConverterDescriptor( attributeConverterClass, autoApply, classmateContext ) );
 	}
 

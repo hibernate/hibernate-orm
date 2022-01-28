@@ -12,7 +12,7 @@ import java.util.Objects;
 
 
 /**
- * Describes the origin of an xml document
+ * Describes the origin of an XML document.
  *
  * @author Steve Ebersole
  */

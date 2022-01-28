@@ -42,6 +42,9 @@ import org.w3c.dom.Document;
  * Entry point for working with sources of O/R mapping metadata, either
  * in the form of annotated classes, or as XML mapping documents.
  * <p>
+ * Note that XML mappings may be expressed using the JPA {@code orm.xml}
+ * format, or in Hibernate's legacy {@code .hbm.xml} format.
+ * <p>
  * An instance of {@code MetadataSources} may be obtained simply by
  * instantiation, using {@link #MetadataSources() new MetadataSources()}.
  * The client must register sources and then call {@link #buildMetadata()},

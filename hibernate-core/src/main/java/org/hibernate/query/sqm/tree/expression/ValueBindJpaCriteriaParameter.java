@@ -49,4 +49,16 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T>{
 		sb.append( value );
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return System.identityHashCode( this );
+	}
 }

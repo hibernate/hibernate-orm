@@ -408,12 +408,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <T extends MetadataBuilder> T unwrap(Class<T> type) {
-		return (T) this;
-	}
-
-	@Override
 	public MetadataImplementor build() {
 		final CfgXmlAccessService cfgXmlAccessService = options.serviceRegistry.getService( CfgXmlAccessService.class );
 		if ( cfgXmlAccessService.getAggregatedConfig() != null ) {

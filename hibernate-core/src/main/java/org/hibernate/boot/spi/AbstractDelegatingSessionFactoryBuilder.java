@@ -372,12 +372,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <S extends SessionFactoryBuilder> S unwrap(Class<S> type) {
-		return (S) this;
-	}
-
-	@Override
 	public T applyStatelessInterceptor(Supplier<? extends Interceptor> statelessInterceptorSupplier) {
 		delegate.applyStatelessInterceptor(statelessInterceptorSupplier);
 		return getThis();

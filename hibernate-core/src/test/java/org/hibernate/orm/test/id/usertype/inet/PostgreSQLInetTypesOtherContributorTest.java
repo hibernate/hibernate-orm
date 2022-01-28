@@ -53,9 +53,10 @@ public class PostgreSQLInetTypesOtherContributorTest extends PostgreSQLInetTypes
 
 		@Override
 		public void contribute(MetadataBuilder metadataBuilder) {
-			final TypeConfiguration typeConfiguration = metadataBuilder.unwrap( MetadataBuilderImplementor.class )
-					.getBootstrapContext()
-					.getTypeConfiguration();
+			final TypeConfiguration typeConfiguration =
+					( (MetadataBuilderImplementor) metadataBuilder )
+							.getBootstrapContext()
+							.getTypeConfiguration();
 			typeConfiguration.getJavaTypeRegistry().addDescriptor( InetJavaType.INSTANCE );
 			typeConfiguration.getJdbcTypeRegistry().addDescriptor( InetJdbcType.INSTANCE );
 			metadataBuilder.applyBasicType(

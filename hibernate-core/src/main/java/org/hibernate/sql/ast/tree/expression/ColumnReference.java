@@ -159,6 +159,11 @@ public class ColumnReference implements Expression, Assignable {
 		);
 	}
 
+	@Override
+	public ColumnReference getColumnReference() {
+		return this;
+	}
+
 	public String getQualifier() {
 		return qualifier;
 	}

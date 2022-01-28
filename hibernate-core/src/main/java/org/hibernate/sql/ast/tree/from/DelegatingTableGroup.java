@@ -14,6 +14,7 @@ import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -38,8 +39,8 @@ public abstract class DelegatingTableGroup implements TableGroup {
 	}
 
 	@Override
-	public <T> T unwrap(Class<T> target) {
-		return getTableGroup().unwrap( target );
+	public ColumnReference getColumnReference() {
+		return getTableGroup().getColumnReference();
 	}
 
 	@Override

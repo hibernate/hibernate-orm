@@ -402,24 +402,6 @@ public interface MetadataBuilder {
 
 	MetadataBuilder applyIdGenerationTypeInterpreter(IdGeneratorStrategyInterpreter interpreter);
 
-
-//	/**
-//	 * Specify the resolve to be used in identifying the backing members of a
-//	 * persistent attributes.
-//	 *
-//	 * @param resolver The resolver to use
-//	 *
-//	 * @return {@code this}, for method chaining
-//	 */
-//	public MetadataBuilder with(PersistentAttributeMemberResolver resolver);
-
-	/**
-	 * Allows unwrapping this builder as another, more specific type.
-	 *
-	 * @return The unwrapped builder.
-	 */
-	<T extends MetadataBuilder> T unwrap(Class<T> type);
-
 	/**
 	 * Actually build the metamodel
 	 *

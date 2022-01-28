@@ -30,25 +30,8 @@ public class SqlSelectionExpression implements Expression {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <T> T unwrap(Class<T> target) {
-		if ( target.isInstance( this ) ) {
-			return (T) this;
-		}
-
-		if ( target.isInstance( theSelection ) ) {
-			return (T) theSelection;
-		}
-
-		if ( target.isInstance( theSelection.getExpression() ) ) {
-			return (T) theSelection.getExpression();
-		}
-
-		if ( target.isInstance( theSelection.getExpressionType() ) ) {
-			return (T) theSelection.getExpressionType();
-		}
-
-		return theSelection.getExpression().unwrap( target );
+	public ColumnReference getColumnReference() {
+		return theSelection.getExpression().getColumnReference();
 	}
 
 	@Override

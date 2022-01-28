@@ -71,9 +71,10 @@ public class PostgreSQLMultipleTypesOtherContributorTest extends BaseEntityManag
 		options.put(
 				EntityManagerFactoryBuilderImpl.METADATA_BUILDER_CONTRIBUTOR,
 				(MetadataBuilderContributor) metadataBuilder -> {
-					final TypeConfiguration typeConfiguration = metadataBuilder.unwrap( MetadataBuilderImplementor.class )
-							.getBootstrapContext()
-							.getTypeConfiguration();
+					final TypeConfiguration typeConfiguration =
+							( (MetadataBuilderImplementor) metadataBuilder )
+									.getBootstrapContext()
+									.getTypeConfiguration();
 					typeConfiguration.getJavaTypeRegistry().addDescriptor( InetJavaType.INSTANCE );
 					typeConfiguration.getJdbcTypeRegistry().addDescriptor( InetJdbcType.INSTANCE );
 					metadataBuilder.applyBasicType(

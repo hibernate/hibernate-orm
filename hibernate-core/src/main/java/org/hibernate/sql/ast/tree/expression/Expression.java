@@ -25,8 +25,8 @@ public interface Expression extends SqlAstNode, SqlSelectionProducer {
 	 */
 	JdbcMappingContainer getExpressionType();
 
-	default <T> T unwrap(Class<T> target) {
-		return (T) this;
+	default ColumnReference getColumnReference() {
+		return null;
 	}
 
 	@Override

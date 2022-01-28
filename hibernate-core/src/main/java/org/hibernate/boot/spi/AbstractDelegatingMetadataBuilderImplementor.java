@@ -239,11 +239,6 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Met
 	}
 
 	@Override
-	public <M extends MetadataBuilder> M unwrap(Class<M> type) {
-		return delegate.unwrap( type );
-	}
-
-	@Override
 	public MetadataBuildingOptions getMetadataBuildingOptions() {
 		return delegate.getMetadataBuildingOptions();
 	}

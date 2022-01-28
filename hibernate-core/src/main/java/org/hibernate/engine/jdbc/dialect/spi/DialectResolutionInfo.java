@@ -8,6 +8,8 @@ package org.hibernate.engine.jdbc.dialect.spi;
 
 import org.hibernate.dialect.DatabaseVersion;
 
+import java.sql.DatabaseMetaData;
+
 /**
  * Exposes information about the database and JDBC driver that can be used in resolving the appropriate Dialect
  * to use.
@@ -78,13 +80,11 @@ public interface DialectResolutionInfo extends DatabaseVersion {
 	String getSQLKeywords();
 
 	/**
-	 * Obtain access to the underlying object of the given type.
+	 * Obtain access to the {@link DatabaseMetaData} if it is available.
 	 *
-	 * Return <code>null</code> if the underlying object is not of the given type.
-	 *
-	 * @return The unwrapped object or <code>null</code>
+	 * @return The {@link DatabaseMetaData} or <code>null</code> if not available
 	 */
-	default <T> T unwrap(Class<T> clazz) {
+	default DatabaseMetaData getDatabaseMetadata() {
 		return null;
 	}
 }

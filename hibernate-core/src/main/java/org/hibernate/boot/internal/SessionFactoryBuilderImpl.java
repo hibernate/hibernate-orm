@@ -408,12 +408,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <T extends SessionFactoryBuilder> T unwrap(Class<T> type) {
-		return (T) this;
-	}
-
-	@Override
 	public SessionFactory build() {
 		final StandardServiceRegistry serviceRegistry = metadata.getMetadataBuildingOptions().getServiceRegistry();
 		BytecodeProvider bytecodeProvider = serviceRegistry.getService( BytecodeProvider.class );

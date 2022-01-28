@@ -42,19 +42,7 @@ public class OptimizerFactory {
 
 	private static final Class[] CTOR_SIG = new Class[] { Class.class, int.class };
 
-	/**
-	 * Builds an optimizer
-	 *
-	 * @param type The optimizer type, either a short-hand name or the {@link Optimizer} class name.
-	 * @param returnClass The generated value java type
-	 * @param incrementSize The increment size.
-	 *
-	 * @return The built optimizer
-	 *
-	 * @deprecated Use {@link #buildOptimizer(String, Class, int, long)} instead
-	 */
-	@Deprecated
-	public static Optimizer buildOptimizer(String type, Class returnClass, int incrementSize) {
+	private static Optimizer buildOptimizer(String type, Class returnClass, int incrementSize) {
 		final Class<? extends Optimizer> optimizerClass;
 
 		final StandardOptimizerDescriptor standardDescriptor = StandardOptimizerDescriptor.fromExternalName( type );

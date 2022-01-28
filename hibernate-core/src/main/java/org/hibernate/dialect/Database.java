@@ -207,7 +207,7 @@ public enum Database {
 	POSTGRESQL {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			final String version = getVersion( info.unwrap( DatabaseMetaData.class ) );
+			final String version = getVersion( info.getDatabaseMetadata() );
 			if ( version.startsWith( "Cockroach" ) ) {
 				return new CockroachDialect( info );
 			}

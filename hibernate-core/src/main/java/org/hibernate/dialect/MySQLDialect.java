@@ -199,7 +199,7 @@ public class MySQLDialect extends Dialect {
 		// we need to remember the character set before calling getMaxVarcharLength()
 		// we could not do this earlier because we get called from the constructor
 		// of the superclass, before our own constructor has run
-		int bytesPerCharacter = getCharacterSetBytesPerCharacter( info.unwrap(DatabaseMetaData.class) );
+		int bytesPerCharacter = getCharacterSetBytesPerCharacter( info.getDatabaseMetadata() );
 		maxVarcharLength = maxVarcharLength( getMySQLVersion(), bytesPerCharacter );
 		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
 	}

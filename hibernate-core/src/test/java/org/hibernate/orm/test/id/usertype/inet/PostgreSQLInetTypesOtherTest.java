@@ -22,7 +22,6 @@ import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 /**
  * @author Vlad Mihalcea
@@ -42,9 +41,10 @@ public class PostgreSQLInetTypesOtherTest extends BaseEntityManagerFunctionalTes
 		options.put(
 				EntityManagerFactoryBuilderImpl.METADATA_BUILDER_CONTRIBUTOR,
 				(MetadataBuilderContributor) metadataBuilder -> {
-					final TypeConfiguration typeConfiguration = metadataBuilder.unwrap( MetadataBuilderImplementor.class )
-							.getBootstrapContext()
-							.getTypeConfiguration();
+					final TypeConfiguration typeConfiguration =
+							( (MetadataBuilderImplementor) metadataBuilder )
+									.getBootstrapContext()
+									.getTypeConfiguration();
 					typeConfiguration.getJavaTypeRegistry().addDescriptor( InetJavaType.INSTANCE );
 					typeConfiguration.getJdbcTypeRegistry().addDescriptor( InetJdbcType.INSTANCE );
 					metadataBuilder.applyBasicType(

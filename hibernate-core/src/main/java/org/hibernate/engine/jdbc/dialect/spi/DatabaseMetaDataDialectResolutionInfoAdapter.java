@@ -99,10 +99,7 @@ public class DatabaseMetaDataDialectResolutionInfoAdapter implements DialectReso
 	}
 
 	@Override
-	public <T> T unwrap(Class<T> clazz) {
-		if ( clazz.isInstance( databaseMetaData ) ) {
-			return clazz.cast( databaseMetaData );
-		}
-		return null;
+	public DatabaseMetaData getDatabaseMetadata() {
+		return databaseMetaData;
 	}
 }

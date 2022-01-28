@@ -269,7 +269,7 @@ public class EmbeddedAttributeMapping
 							)
 					);
 
-					columnReferences.add( columnReference.unwrap( ColumnReference.class ) );
+					columnReferences.add( columnReference.getColumnReference() );
 				}
 		);
 
@@ -302,13 +302,7 @@ public class EmbeddedAttributeMapping
 			SqlExpressionResolver sqlExpressionResolver,
 			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
-		final SqlAstJoinType joinType;
-		if ( requestedJoinType == null ) {
-			joinType = SqlAstJoinType.INNER;
-		}
-		else {
-			joinType = requestedJoinType;
-		}
+		final SqlAstJoinType joinType = requestedJoinType == null ? SqlAstJoinType.INNER : requestedJoinType;
 		final TableGroup tableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,

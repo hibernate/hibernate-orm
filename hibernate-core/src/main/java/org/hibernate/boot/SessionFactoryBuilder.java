@@ -652,13 +652,6 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder enableJpaClosedCompliance(boolean enabled);
 
 	/**
-	 * Allows unwrapping this builder as another, more specific type.
-	 *
-	 * @return The unwrapped builder.
-	 */
-	<T extends SessionFactoryBuilder> T unwrap(Class<T> type);
-
-	/**
 	 * After all options have been set, build the SessionFactory.
 	 *
 	 * @return The built SessionFactory.

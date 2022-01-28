@@ -83,7 +83,7 @@ public class SybaseASEDialect extends SybaseDialect {
 
 	public SybaseASEDialect(DialectResolutionInfo info) {
 		super(info);
-		ansiNull = isAnsiNull( info.unwrap( DatabaseMetaData.class ) );
+		ansiNull = isAnsiNull( info.getDatabaseMetadata() );
 		registerSybaseKeywords();
 	}
 

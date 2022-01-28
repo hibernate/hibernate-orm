@@ -75,20 +75,7 @@ public class DuplicateMappingException extends MappingException {
 	 * @param name The name of the duplicated thing.
 	 */
 	public DuplicateMappingException(Type type, String name) {
-		this( type.text, name );
-	}
-
-	/**
-	 * Creates a DuplicateMappingException using the given type and name.
-	 *
-	 * @param type The type of the duplicated thing.
-	 * @param name The name of the duplicated thing.
-	 *
-	 * @deprecated Use the for taking {@link Type} instead.
-	 */
-	@Deprecated
-	public DuplicateMappingException(String type, String name) {
-		this( "Duplicate " + type + " mapping " + name, type, name );
+		this ( "Duplicate " + type.text + " mapping " + name, type, name );
 	}
 
 	/**
@@ -99,23 +86,9 @@ public class DuplicateMappingException extends MappingException {
 	 * @param name The name of the duplicated thing.
 	 */
 	public DuplicateMappingException(String customMessage, Type type, String name) {
-		this( customMessage, type.name(), name );
-	}
-
-	/**
-	 * Creates a DuplicateMappingException using the given customMessage, type and name.
-	 *
-	 * @param customMessage A custom exception message explaining the exception condition
-	 * @param type The type of the duplicated thing.
-	 * @param name The name of the duplicated thing.
-	 *
-	 * @deprecated Use the for taking {@link Type} instead.
-	 */
-	@Deprecated
-	public DuplicateMappingException(String customMessage, String type, String name) {
 		super( customMessage );
-		this.type=type;
-		this.name=name;
+		this.type = type.name();
+		this.name = name;
 	}
 
 	public String getType() {

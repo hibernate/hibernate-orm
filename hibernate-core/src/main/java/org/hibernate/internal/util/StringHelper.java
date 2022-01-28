@@ -544,14 +544,6 @@ public final class StringHelper {
 		return string == null || string.isBlank();
 	}
 
-	/**
-	 * @deprecated use {@link #isBlank(String)}
-	 */
-	@Deprecated
-	public static boolean isEmptyOrWhitespace(String string) {
-		return isBlank(string);
-	}
-
 	public static String qualify(String prefix, String name) {
 		if ( name == null || prefix == null ) {
 			throw new NullPointerException( "prefix or name were null attempting to build qualified name" );

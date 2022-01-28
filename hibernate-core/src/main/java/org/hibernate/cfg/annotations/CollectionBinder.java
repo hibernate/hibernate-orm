@@ -557,6 +557,11 @@ public abstract class CollectionBinder {
 					|| property.isAnnotationPresent( OrderBy.class ) ) {
 				return CollectionClassification.BAG;
 			}
+			ManyToMany manyToMany = property.getAnnotation( ManyToMany.class );
+			if ( manyToMany != null && ! StringHelper.isEmpty( manyToMany.mappedBy() ) ) {
+				// We don't support @OrderColumn on the non-owning side of a many-to-many association.
+				return CollectionClassification.BAG;
+			}
 			// otherwise, return the implicit classification for List attributes
 			return buildingContext.getBuildingOptions().getMappingDefaults().getImplicitListClassification();
 		}

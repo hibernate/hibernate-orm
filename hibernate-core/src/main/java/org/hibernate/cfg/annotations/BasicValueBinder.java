@@ -7,7 +7,6 @@
 package org.hibernate.cfg.annotations;
 
 import java.io.Serializable;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
 import java.util.Collections;
@@ -18,7 +17,6 @@ import java.util.function.Function;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.annotations.AnyKeyJavaClass;
@@ -46,10 +44,8 @@ import org.hibernate.annotations.Mutability;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Target;
-import org.hibernate.annotations.TimeZoneColumn;
 import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.TimeZoneStorageType;
-import org.hibernate.annotations.TimeZoneType;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.TypeDefinition;
@@ -62,7 +58,6 @@ import org.hibernate.cfg.PkDrivenByDefaultMapsIdSecondPass;
 import org.hibernate.cfg.SetBasicValueTypeSecondPass;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
-import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -84,7 +79,6 @@ import org.hibernate.usertype.UserType;
 
 import org.jboss.logging.Logger;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -184,8 +178,6 @@ public class BasicValueBinder<T> implements JdbcTypeIndicators {
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 		if ( timeZoneStorageType != null ) {
 			switch ( timeZoneStorageType ) {
-				case COLUMN:
-					return TimeZoneStorageStrategy.COLUMN;
 				case NATIVE:
 					return TimeZoneStorageStrategy.NATIVE;
 				case NORMALIZE:
@@ -663,105 +655,7 @@ public class BasicValueBinder<T> implements JdbcTypeIndicators {
 		}
 
 		final TimeZoneStorage timeZoneStorageAnn = attributeXProperty.getAnnotation( TimeZoneStorage.class );
-		if ( timeZoneStorageAnn != null ) {
-			timeZoneStorageType = timeZoneStorageAnn.value();
-			final TimeZoneColumn timeZoneColumnAnn = attributeXProperty.getAnnotation( TimeZoneColumn.class );
-			final Column column;
-			final TimeZoneType type;
-			if ( timeZoneColumnAnn != null ) {
-				column = timeZoneColumnAnn.column();
-				type = timeZoneColumnAnn.type();
-			}
-			else {
-				switch ( timeZoneStorageType ) {
-					case AUTO:
-						if ( getDialect().getTimeZoneSupport() == TimeZoneSupport.NATIVE ) {
-							column = null;
-							type = null;
-							break;
-						}
-					case COLUMN:
-						final String timeZoneColumnName = columns[0].getName() + "_tz";
-						column = new Column() {
-							@Override
-							public String name() {
-								return timeZoneColumnName;
-							}
-
-							@Override
-							public boolean unique() {
-								return false;
-							}
-
-							@Override
-							public boolean nullable() {
-								return columns[0].isNullable();
-							}
-
-							@Override
-							public boolean insertable() {
-								return columns[0].isInsertable();
-							}
-
-							@Override
-							public boolean updatable() {
-								return columns[0].isUpdatable();
-							}
-
-							@Override
-							public String columnDefinition() {
-								return "";
-							}
-
-							@Override
-							public String table() {
-								return columns[0].getExplicitTableName();
-							}
-
-							@Override
-							public int length() {
-								return 255;
-							}
-
-							@Override
-							public int precision() {
-								return 0;
-							}
-
-							@Override
-							public int scale() {
-								return 0;
-							}
-
-							@Override
-							public Class<? extends Annotation> annotationType() {
-								return Column.class;
-							}
-						};
-						type = TimeZoneType.OFFSET;
-						break;
-					default:
-						column = null;
-						type = null;
-						break;
-				}
-			}
-			if ( column != null ) {
-				// todo (6.0): do something with the column
-				//  maybe move this to AnnotationBinder#2266 and make it treat the property as composite for the COLUMN strategy
-				throw new NotYetImplementedFor6Exception("TimeZoneColumn support is not yet implemented!");
-			}
-			else if ( timeZoneColumnAnn != null ) {
-				throw new IllegalStateException(
-						"@TimeZoneColumn can not be used in conjunction with @TimeZoneStorage( " + timeZoneStorageType +
-								" ) with attribute " + attributeXProperty.getDeclaringClass().getName() +
-								'.' + attributeXProperty.getName()
-				);
-			}
-		}
-		else {
-			timeZoneStorageType = null;
-		}
+		timeZoneStorageType = timeZoneStorageAnn != null ? timeZoneStorageAnn.value() : null;
 
 		normalSupplementalDetails( attributeXProperty);
 

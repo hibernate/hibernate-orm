@@ -1515,7 +1515,7 @@ The `JavaType` resolved earlier is then inspected for a number of special cases.
     still uses any explicit `JdbcType` indicators
 . For temporal values, we check for `@Temporal` and create an enumeration mapping.  Note that this resolution
     still uses any explicit `JdbcType` indicators; this includes `@JdbcType` and `@JdbcTypeCode`, as well as
-    `@TimeZoneStorage` and `@TimeZoneColumn` if appropriate.
+    `@TimeZoneStorage` if appropriate.
 
 The fallback at this point is to use the `JavaType` and `JdbcType` determined in earlier steps to create a
 JDBC-mapping (which encapsulates the `JavaType` and `JdbcType`) and combines it with the resolved `MutabilityPlan`

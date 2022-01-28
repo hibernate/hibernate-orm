@@ -38,7 +38,6 @@ import static java.lang.annotation.ElementType.METHOD;
  * @author Christian Beikov
  * @author Steve Ebersole
  * @author Andrea Boriero
- * @see TimeZoneColumn
  */
 @Incubating
 @Retention(RetentionPolicy.RUNTIME)
@@ -47,5 +46,5 @@ public @interface TimeZoneStorage {
 	/**
 	 * The storage strategy for the time zone information.
 	 */
-	TimeZoneStorageType value() default TimeZoneStorageType.AUTO;
+	TimeZoneStorageType value();
 }

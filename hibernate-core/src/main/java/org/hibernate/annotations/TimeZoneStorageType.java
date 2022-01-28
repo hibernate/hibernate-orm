@@ -30,18 +30,5 @@ public enum TimeZoneStorageType {
 	 * Does not store the time zone, and instead normalizes
 	 * timestamps to UTC.
 	 */
-	NORMALIZE,
-	/**
-	 * Stores the time zone in a separate column; works in
-	 * conjunction with {@link TimeZoneColumn}.
-	 */
-	COLUMN,
-	/**
-	 * Stores the time zone either with {@link #NATIVE} if
-	 * {@link Dialect#getTimeZoneSupport()} is
-	 * {@link org.hibernate.dialect.TimeZoneSupport#NATIVE},
-	 * otherwise uses the {@link #COLUMN} strategy.
-	 */
-	AUTO
-
+	NORMALIZE
 }

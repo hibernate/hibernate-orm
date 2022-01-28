@@ -10,8 +10,8 @@ import java.util.TreeMap;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -19,6 +19,9 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
+import org.hibernate.id.enhanced.TableGenerator;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.IdentifierCollection;
@@ -26,8 +29,8 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tool.api.reveng.RevengDialectFactory;
 import org.hibernate.tool.api.reveng.RevengDialect;
+import org.hibernate.tool.api.reveng.RevengDialectFactory;
 import org.hibernate.tool.api.reveng.RevengStrategy.SchemaSelection;
 import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 import org.hibernate.tool.internal.reveng.reader.DatabaseReader;
@@ -98,12 +101,11 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		// TODO: move this check into something that could check per class or collection instead.
 		while ( iter.hasNext() ) {
 			PersistentIdentifierGenerator generator = (PersistentIdentifierGenerator) iter.next();
-			Object key = generator.generatorKey();
+			Object key = getGeneratorKey(generator);
 			if ( !isSequence(key, sequences) && !isTable( key ) ) {
 				collector.reportIssue( new Issue( "MISSING_ID_GENERATOR", Issue.HIGH_PRIORITY, "Missing sequence or table: " + key));
 			}
 		}
-
 		
 	}
 
@@ -229,13 +231,10 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 	 * @return iterator over all the IdentifierGenerator's found in the entitymodel and return a list of unique IdentifierGenerators
 	 * @throws MappingException
 	 */
-	@SuppressWarnings("deprecation")
 	private Iterator<IdentifierGenerator> iterateGenerators() throws MappingException {
 
 		TreeMap<Object, IdentifierGenerator> generators = 
 				new TreeMap<Object, IdentifierGenerator>();
-		String defaultCatalog = properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
-		String defaultSchema = properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
 
 		Iterator<PersistentClass> persistentClassIterator = getMetadata().getEntityBindings().iterator();
 		while ( persistentClassIterator.hasNext() ) {
@@ -245,15 +244,13 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 
 				IdentifierGenerator ig = pc.getIdentifier()
 						.createIdentifierGenerator(
-								getMetadata().getIdentifierGeneratorFactory(),
+								getIdentifierGeneratorFactory(),
 								dialect,
-								defaultCatalog,
-								defaultSchema,
 								(RootClass) pc
 							);
 
 				if ( ig instanceof PersistentIdentifierGenerator ) {
-					generators.put( ( (PersistentIdentifierGenerator) ig ).generatorKey(), ig );
+					generators.put( getGeneratorKey( (PersistentIdentifierGenerator) ig ), ig );
 				}
 
 			}
@@ -267,15 +264,13 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 
 				IdentifierGenerator ig = ( (IdentifierCollection) collection ).getIdentifier()
 						.createIdentifierGenerator(
-								getMetadata().getIdentifierGeneratorFactory(),
+								getIdentifierGeneratorFactory(),
 								dialect,
-								defaultCatalog,
-								defaultSchema,
 								null
 							);
 
 				if ( ig instanceof PersistentIdentifierGenerator ) {
-					generators.put( ( (PersistentIdentifierGenerator) ig ).generatorKey(), ig );
+					generators.put( ( getGeneratorKey((PersistentIdentifierGenerator) ig )), ig );
 				}
 
 			}
@@ -306,6 +301,28 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 			}
 			
 		};
+	}
+	
+	private IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
+		return ((MetadataImpl)getMetadata()).getBootstrapContext().getIdentifierGeneratorFactory();
+	}
+
+	private String getGeneratorKey(PersistentIdentifierGenerator ig) {
+		String result = null;
+		if  (ig instanceof SequenceStyleGenerator) {
+			result = getKeyForSequenceStyleGenerator((SequenceStyleGenerator)ig);
+		} else if (ig instanceof TableGenerator) {
+			result = getKeyForTableGenerator((TableGenerator)ig);
+		}
+		return result;
+	}
+	
+	private String getKeyForSequenceStyleGenerator(SequenceStyleGenerator ig) {
+		return ig.getDatabaseStructure().getPhysicalName().render();
+	}
+	
+	private String getKeyForTableGenerator(TableGenerator ig) {
+		return ig.getTableName();
 	}
 
 }

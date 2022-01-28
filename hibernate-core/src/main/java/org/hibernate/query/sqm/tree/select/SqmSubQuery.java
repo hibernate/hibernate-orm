@@ -127,6 +127,10 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 
 	@Override
 	public SqmExpression<T> getSelection() {
+		final SqmSelectClause selectClause = getQuerySpec().getSelectClause();
+		if ( selectClause == null ) {
+			return null;
+		}
 		return this;
 	}
 

@@ -20,8 +20,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.Service;
@@ -382,7 +380,6 @@ public class StandardServiceRegistryBuilder {
 	 * @return A newly-instantiated {@link StandardServiceRegistry}
 	 */
 	public StandardServiceRegistry build() {
-		applyServiceContributingIntegrators();
 		applyServiceContributors();
 
 		final Map<String,Object> settingsCopy = new HashMap<>( settings );
@@ -396,17 +393,6 @@ public class StandardServiceRegistryBuilder {
 				providedServices,
 				settingsCopy
 		);
-	}
-
-	@SuppressWarnings("deprecation")
-	private void applyServiceContributingIntegrators() {
-		for ( Integrator integrator : bootstrapServiceRegistry.getService( IntegratorService.class )
-				.getIntegrators() ) {
-			if ( integrator instanceof org.hibernate.integrator.spi.ServiceContributingIntegrator ) {
-				( (org.hibernate.integrator.spi.ServiceContributingIntegrator) integrator )
-						.prepareServices(this );
-			}
-		}
 	}
 
 	private void applyServiceContributors() {

@@ -19,6 +19,7 @@ import org.hibernate.type.Type;
  * The purpose of this contract then is to allow applications such a plug-in point.
  *
  * @see org.hibernate.cfg.AvailableSettings#CUSTOM_ENTITY_DIRTINESS_STRATEGY
+ * @see org.hibernate.boot.SessionFactoryBuilder#applyCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy)
  *
  * @author Steve Ebersole
  */

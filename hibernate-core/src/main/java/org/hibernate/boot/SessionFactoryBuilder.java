@@ -8,7 +8,6 @@ package org.hibernate.boot;
 
 import java.util.function.Supplier;
 
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
@@ -35,31 +34,35 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 @SuppressWarnings("UnusedReturnValue")
 public interface SessionFactoryBuilder {
 	/**
-	 * Apply a Bean Validation ValidatorFactory to the SessionFactory being built.
+	 * Specifies a Bean Validation {@link jakarta.validation.ValidatorFactory}.
 	 *
-	 * NOTE : De-typed to avoid hard dependency on Bean Validation jar at runtime.
+	 * @apiNote De-typed to avoid a hard dependency on the Bean Validation jar
 	 *
-	 * @param validatorFactory The Bean Validation ValidatorFactory to use
+	 * @param validatorFactory The Bean Validation {@code ValidatorFactory} to use
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JAKARTA_VALIDATION_FACTORY
 	 */
 	SessionFactoryBuilder applyValidatorFactory(Object validatorFactory);
 
 	/**
-	 * Apply a CDI BeanManager to the SessionFactory being built.
+	 * Specifies a CDI {@link jakarta.enterprise.inject.spi.BeanManager}.
 	 *
-	 * NOTE : De-typed to avoid hard dependency on CDI jar at runtime.
+	 * @apiNote De-typed to avoid a hard dependency on the CDI jar
 	 *
-	 * @param beanManager The CDI BeanManager to use
+	 * @param beanManager The CDI {@code BeanManager} to use
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JAKARTA_CDI_BEAN_MANAGER
 	 */
 	SessionFactoryBuilder applyBeanManager(Object beanManager);
 
 	/**
-	 * Applies a SessionFactory name.
+	 * Specifies a name for the {@link SessionFactory}.
 	 *
-	 * @param sessionFactoryName The name to use for the SessionFactory being built
+	 * @param sessionFactoryName The name to use
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -68,7 +71,8 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyName(String sessionFactoryName);
 
 	/**
-	 * Applies a SessionFactory name.
+	 * Specifies that the {@link SessionFactory} should be registered in JNDI,
+	 * under the name specified using {@link #applyName(String)}.
 	 *
 	 * @param isJndiName {@code true} indicates that the name specified in
 	 * {@link #applyName} will be used for binding the SessionFactory into JNDI.
@@ -80,7 +84,8 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyNameAsJndiName(boolean isJndiName);
 
 	/**
-	 * Applies whether Sessions should be automatically closed at the end of the transaction.
+	 * Specifies whether {@link org.hibernate.Session}s should be automatically
+	 * closed at the end of the transaction.
 	 *
 	 * @param enabled {@code true} indicates they should be auto-closed; {@code false} indicates not.
 	 *
@@ -91,7 +96,8 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyAutoClosing(boolean enabled);
 
 	/**
-	 * Applies whether Sessions should be automatically flushed at the end of the transaction.
+	 * Applies whether {@link org.hibernate.Session}s should be automatically
+	 * flushed at the end of the transaction.
 	 *
 	 * @param enabled {@code true} indicates they should be auto-flushed; {@code false} indicates not.
 	 *
@@ -102,7 +108,7 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyAutoFlushing(boolean enabled);
 
 	/**
-	 * Applies whether statistics gathering is enabled.
+	 * Specifies whether statistics gathering is enabled.
 	 *
 	 * @param enabled {@code true} indicates that statistics gathering should be enabled; {@code false} indicates not.
 	 *
@@ -113,8 +119,9 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyStatisticsSupport(boolean enabled);
 
 	/**
-	 * Names an interceptor to be applied to the SessionFactory, which in turn means it will be used by all
-	 * Sessions unless one is explicitly specified in {@link org.hibernate.SessionBuilder#interceptor}
+	 * Specifies an {@link Interceptor} associated with the {@link SessionFactory},
+	 * which will be used by all sessions unless an interceptor is explicitly
+	 * specified using {@link org.hibernate.SessionBuilder#interceptor}.
 	 *
 	 * @param interceptor The interceptor
 	 *
@@ -125,8 +132,10 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyInterceptor(Interceptor interceptor);
 
 	/**
-	 * Names an interceptor Class to be applied to the SessionFactory, which in turn means it will be used by all
-	 * Sessions unless one is explicitly specified in {@link org.hibernate.SessionBuilder#interceptor}
+	 * Specifies an interceptor {@link Class} associated with the
+	 * {@link SessionFactory}, which is used to instantiate a new interceptor
+	 * for each session, unless an interceptor is explicitly specified using
+	 * {@link org.hibernate.SessionBuilder#interceptor}.
 	 *
 	 * @param statelessInterceptorClass The interceptor class
 	 *
@@ -137,9 +146,10 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyStatelessInterceptor(Class<? extends Interceptor> statelessInterceptorClass);
 
 	/**
-	 * Names a {@link Supplier} instance which is used to retrieve the interceptor to be applied to the SessionFactory,
-	 * which in turn means it will be used by all Sessions unless one is explicitly specified in
-	 * {@link org.hibernate.SessionBuilder#interceptor}
+	 * Specifies an interceptor {@link Supplier} associated with the
+	 * {@link SessionFactory}, which is used to obtain an interceptor for
+	 * each session, unless an interceptor is explicitly specified using
+	 * {@link org.hibernate.SessionBuilder#interceptor}.
 	 *
 	 * @param statelessInterceptorSupplier {@link Supplier} instance which is used to retrieve the interceptor
 	 *
@@ -150,8 +160,10 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyStatelessInterceptor(Supplier<? extends Interceptor> statelessInterceptorSupplier);
 
 	/**
-	 * Names a StatementInspector to be applied to the SessionFactory, which in turn means it will be used by all
-	 * Sessions unless one is explicitly specified in {@link org.hibernate.SessionBuilder#statementInspector}
+	 * Specifies a {@link StatementInspector} associated with the
+	 * {@link SessionFactory}, which will be used by all sessions unless a
+	 * statement inspector is explicitly specified using
+	 * {@link org.hibernate.SessionBuilder#statementInspector}
 	 *
 	 * @param statementInspector The StatementInspector
 	 *
@@ -162,18 +174,19 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyStatementInspector(StatementInspector statementInspector);
 
 	/**
-	 * Specifies one or more observers to be applied to the SessionFactory.  Can be called multiple times to add
-	 * additional observers.
+	 * Specifies one or more {@linkplain SessionFactoryObserver observers}.
+	 * May be called multiple times to add additional observers.
 	 *
 	 * @param observers The observers to add
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#SESSION_FACTORY_OBSERVER
 	 */
 	SessionFactoryBuilder addSessionFactoryObservers(SessionFactoryObserver... observers);
 
 	/**
-	 * Specifies a custom entity dirtiness strategy to be applied to the SessionFactory.  See the contract
-	 * of {@link CustomEntityDirtinessStrategy} for details.
+	 * Specifies a {@link CustomEntityDirtinessStrategy}.
 	 *
 	 * @param strategy The custom strategy to be used.
 	 *
@@ -184,8 +197,8 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy strategy);
 
 	/**
-	 * Specifies one or more entity name resolvers to be applied to the SessionFactory (see the {@link EntityNameResolver}
-	 * contract for more information..  Can be called multiple times to add additional resolvers..
+	 * Specifies one or more {@linkplain EntityNameResolver entity name resolvers}.
+	 * May be called multiple times to add additional resolvers.
 	 *
 	 * @param entityNameResolvers The entityNameResolvers to add
 	 *
@@ -194,8 +207,9 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder addEntityNameResolver(EntityNameResolver... entityNameResolvers);
 
 	/**
-	 * Names the {@link EntityNotFoundDelegate} to be applied to the SessionFactory.  EntityNotFoundDelegate is a
-	 * strategy that accounts for different exceptions thrown between Hibernate and JPA when an entity cannot be found.
+	 * Specifies an {@link EntityNotFoundDelegate}. An {@code EntityNotFoundDelegate}
+	 * is a strategy that accounts for different exceptions thrown between Hibernate
+	 * and JPA when an entity cannot be found.
 	 *
 	 * @param entityNotFoundDelegate The delegate/strategy to use.
 	 *
@@ -215,7 +229,8 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyIdentifierRollbackSupport(boolean enabled);
 
 	/**
-	 * Should attributes using columns marked as not-null be checked (by Hibernate) for nullness?
+	 * Should attributes using columns marked as not-null be checked (by Hibernate)
+	 * for nullness, or should this be left as a job for the database?
 	 *
 	 * @param enabled {@code true} indicates that Hibernate should perform nullness checking; {@code false} indicates
 	 * it should not.
@@ -227,10 +242,11 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyNullabilityChecking(boolean enabled);
 
 	/**
-	 * Should the application be allowed to initialize uninitialized lazy state outside the bounds of a transaction?
+	 * Should the application be allowed to initialize uninitialized lazy state
+	 * outside the bounds of a transaction?
 	 *
-	 * @param enabled {@code true} indicates initialization outside the transaction should be allowed; {@code false}
-	 * indicates it should not.
+	 * @param enabled {@code true} indicates initialization outside the transaction
+	 *                should be allowed; {@code false} indicates it should not.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -255,16 +271,16 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyBatchFetchStyle(BatchFetchStyle style);
 
 	/**
-	 * Should entity Loaders be generated immediately?  Or should the creation
-	 * be delayed until first need?
+	 * Should entity {@linkplain org.hibernate.loader.ast.spi.Loader loaders} be
+	 * generated immediately? Or should the creation be delayed until first need?
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#DELAY_ENTITY_LOADER_CREATIONS
 	 */
 	SessionFactoryBuilder applyDelayedEntityLoaderCreations(boolean delay);
 
 	/**
-	 * Allows specifying a default batch-fetch size for all entities and collections
-	 * which do not otherwise specify a batch-fetch size.
+	 * Specifies a default batch fetch size for all entities and collections which
+	 * do not otherwise specify a batch fetch size.
 	 *
 	 * @param size The size to use for batch fetching for entities/collections which
 	 * do not specify an explicit batch fetch size.
@@ -276,8 +292,9 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyDefaultBatchFetchSize(int size);
 
 	/**
-	 * Apply a limit to the depth Hibernate will use for outer joins.  Note that this is different than an
-	 * overall limit on the number of joins...
+	 * Apply a limit to the depth Hibernate will use for outer joins.
+	 * <p>
+	 * Note that this is different to an overall limit on the number of joins.
 	 *
 	 * @param depth The depth for limiting joins.
 	 *
@@ -288,8 +305,8 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyMaximumFetchDepth(int depth);
 
 	/**
-	 * Apply a null precedence (NULLS FIRST, NULLS LAST) to be applied order-by clauses rendered into
-	 * SQL queries.
+	 * Apply a null precedence (NULLS FIRST, NULLS LAST) to be applied to
+	 * order by clauses rendered in SQL queries.
 	 *
 	 * @param nullPrecedence The default null precedence to use.
 	 *
@@ -300,9 +317,11 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyDefaultNullPrecedence(NullPrecedence nullPrecedence);
 
 	/**
-	 * Apply whether ordering of inserts should be enabled.  This allows more efficient SQL
-	 * generation via the use of batching for the inserts; the cost is that the determination of the
-	 * ordering is far more inefficient than not ordering.
+	 * Specify whether ordering of inserts should be enabled.
+	 * <p>
+	 * This allows more efficient SQL execution via the use of batching
+	 * for the inserts; the cost is that the determination of the ordering
+	 * is far less efficient than not ordering.
 	 *
 	 * @param enabled {@code true} indicates that ordering should be enabled; {@code false} indicates not
 	 *
@@ -313,9 +332,11 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyOrderingOfInserts(boolean enabled);
 
 	/**
-	 * Apply whether ordering of updates should be enabled.  This allows more efficient SQL
-	 * generation via the use of batching for the updates; the cost is that the determination of the
-	 * ordering is far more inefficient than not ordering.
+	 * Specify whether ordering of updates should be enabled.
+	 * <p>
+	 * This allows more efficient SQL execution via the use of batching for
+	 * the updates; the cost is that the determination of the ordering is far
+	 * less efficient than not ordering.
 	 *
 	 * @param enabled {@code true} indicates that ordering should be enabled; {@code false} indicates not
 	 *
@@ -326,7 +347,7 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyOrderingOfUpdates(boolean enabled);
 
 	/**
-	 * Apply the form of multi-tenancy used by the application
+	 * Specifies whether multi-tenancy is enabled
 	 *
 	 * @param enabled True if multi-tenancy in use.
 	 *
@@ -335,8 +356,9 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyMultiTenancy(boolean enabled);
 
 	/**
-	 * Specifies a strategy for resolving the notion of a "current" tenant-identifier when using multi-tenancy
-	 * together with current sessions
+	 * Specifies a {@link CurrentTenantIdentifierResolver} that is responsible for
+	 * resolving the current tenant identifier when
+	 * {@link org.hibernate.SessionFactory#getCurrentSession()} is used.
 	 *
 	 * @param resolver The resolution strategy to use.
 	 *
@@ -347,8 +369,10 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver resolver);
 
 	/**
-	 * If using the built-in Hibernate JTA-based TransactionCoordinator/Builder, should it track JTA
-	 * transactions by thread in an attempt to detect timeouts?
+	 * If using the built-in JTA-based
+	 * {@link org.hibernate.resource.transaction.spi.TransactionCoordinator} or
+	 * {@link org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder},
+	 * should it track JTA transactions by thread in an attempt to detect timeouts?
 	 *
 	 * @param enabled {@code true} indicates we should track by thread; {@code false} indicates not
 	 *
@@ -359,11 +383,15 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyJtaTrackingByThread(boolean enabled);
 
 	/**
-	 * If using the built-in Hibernate JTA-based TransactionCoordinator/Builder, should it prefer to use
-	 * {@link jakarta.transaction.UserTransaction} over {@link jakarta.transaction.Transaction}?
+	 * If using the built-in JTA-based
+	 * {@link org.hibernate.resource.transaction.spi.TransactionCoordinator} or
+	 * {@link org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder},
+	 * should it prefer to use {@link jakarta.transaction.UserTransaction} in
+	 * preference to {@link jakarta.transaction.Transaction}?
 	 *
-	 * @param preferUserTransactions {@code true} indicates we should prefer {@link jakarta.transaction.UserTransaction};
-	 * {@code false} indicates we should prefer {@link jakarta.transaction.Transaction}
+	 * @param preferUserTransactions {@code true} indicates we should prefer
+	 * {@link jakarta.transaction.UserTransaction}; {@code false} indicates we
+	 * should prefer {@link jakarta.transaction.Transaction}
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -385,8 +413,8 @@ public interface SessionFactoryBuilder {
 	/**
 	 * Should second level caching support be enabled?
 	 *
-	 * @param enabled {@code true} indicates we should enable the use of second level caching; {@code false}
-	 * indicates we should disable the use of second level caching.
+	 * @param enabled {@code true} indicates we should enable the use of second level caching;
+	 * {@code false} indicates we should disable the use of second level caching.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -407,9 +435,9 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyQueryCacheSupport(boolean enabled);
 
 	/**
-	 * Specifies a QueryCacheFactory to use for building query cache handlers.
+	 * Specifies a {@link org.hibernate.cache.spi.TimestampsCacheFactory}.
 	 *
-	 * @param factory The QueryCacheFactory to use
+	 * @param factory The {@link org.hibernate.cache.spi.TimestampsCacheFactory} to use
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -418,7 +446,7 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyTimestampsCacheFactory(TimestampsCacheFactory factory);
 
 	/**
-	 * Apply a prefix to prepended to all cache region names for this SessionFactory.
+	 * Specify a prefix to prepended to all cache region names.
 	 *
 	 * @param prefix The prefix.
 	 *
@@ -557,21 +585,24 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @see org.hibernate.cfg.AvailableSettings#USE_GET_GENERATED_KEYS
+	 * @see org.hibernate.cfg.AvailableSettings#STATEMENT_FETCH_SIZE
 	 * @see java.sql.Statement#setFetchSize(int)
 	 */
 	SessionFactoryBuilder applyJdbcFetchSize(int size);
 
 	/**
-	 * Apply the specified handling mode for JDBC connections
+	 * Specifies the {@linkplain PhysicalConnectionHandlingMode connection handling mode}
+	 * for JDBC connections.
 	 *
 	 * @param connectionHandlingMode The handling mode to apply
 	 *
 	 * @return {@code this}, for method chaining
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#CONNECTION_HANDLING
+	 * @see PhysicalConnectionHandlingMode
+	 *
 	 * @see org.hibernate.ConnectionAcquisitionMode
-	 * @see ConnectionReleaseMode
+	 * @see org.hibernate.ConnectionReleaseMode
 	 */
 	SessionFactoryBuilder applyConnectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode);
 
@@ -592,10 +623,11 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applySqlComments(boolean enabled);
 
 	/**
-	 * Apply a SQLFunction to the underlying {@link org.hibernate.query.sqm.function.SqmFunctionRegistry}.
+	 * Register a {@link SqmFunctionDescriptor SQL function} with the underlying
+	 * {@link org.hibernate.query.sqm.function.SqmFunctionRegistry}.
 	 *
-	 * @param registrationName The name to register it under.
-	 * @param functionDescriptor The SQLFunction impl
+	 * @param registrationName The function name to register it under
+	 * @param functionDescriptor The {@link SqmFunctionDescriptor}
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -604,7 +636,8 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applySqlFunction(String registrationName, SqmFunctionDescriptor functionDescriptor);
 
 	/**
-	 * Should collections be included in the default fetch group when bytecode enhancement is used?
+	 * Should collections be included in the default fetch group when bytecode
+	 * enhancement is used?
 	 *
 	 * @param enabled {@code true} collections should be included
 	 *
@@ -612,34 +645,45 @@ public interface SessionFactoryBuilder {
 	 */
 	SessionFactoryBuilder applyCollectionsInDefaultFetchGroup(boolean enabled);
 
+	/**
+	 * @see org.hibernate.cfg.AvailableSettings#ALLOW_UPDATE_OUTSIDE_TRANSACTION
+	 */
 	SessionFactoryBuilder allowOutOfTransactionUpdateOperations(boolean allow);
 
 	/**
-	 * Should resources held by {@link jakarta.persistence.EntityManager} instance be released immediately on close?
+	 * Should resources held by an {@link jakarta.persistence.EntityManager} be
+	 * released immediately on close?
 	 * <p/>
-	 * The other option is to release them as part of an after-transaction callback.
-	 *
+	 * The other option is to release them as part of an after transaction callback.
 	 */
 	SessionFactoryBuilder enableReleaseResourcesOnCloseEnabled(boolean enable);
 
 
 	/**
 	 * @see JpaCompliance#isJpaQueryComplianceEnabled()
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JPA_QUERY_COMPLIANCE
 	 */
 	SessionFactoryBuilder enableJpaQueryCompliance(boolean enabled);
 
 	/**
 	 * @see JpaCompliance#isJpaQueryComplianceEnabled()
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JPA_ORDER_BY_MAPPING_COMPLIANCE
 	 */
 	SessionFactoryBuilder enableJpaOrderByMappingCompliance(boolean enabled);
 
 	/**
 	 * @see JpaCompliance#isJpaTransactionComplianceEnabled()
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JPA_TRANSACTION_COMPLIANCE
 	 */
 	SessionFactoryBuilder enableJpaTransactionCompliance(boolean enabled);
 
 	/**
 	 * @see JpaCompliance#isJpaListComplianceEnabled()
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JPA_LIST_COMPLIANCE
 	 *
 	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#DEFAULT_LIST_SEMANTICS} instead
 	 */
@@ -648,6 +692,8 @@ public interface SessionFactoryBuilder {
 
 	/**
 	 * @see JpaCompliance#isJpaClosedComplianceEnabled()
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JPA_CLOSED_COMPLIANCE
 	 */
 	SessionFactoryBuilder enableJpaClosedCompliance(boolean enabled);
 

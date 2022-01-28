@@ -7,7 +7,6 @@
 package org.hibernate.jpa.spi;
 
 import org.hibernate.Transaction;
-import org.hibernate.cfg.AvailableSettings;
 
 /**
  * Encapsulates settings controlling whether Hibernate complies strictly
@@ -44,14 +43,16 @@ public interface JpaCompliance {
 	boolean isJpaTransactionComplianceEnabled();
 
 	/**
-	 * Controls how Hibernate interprets a mapped List without an
-	 * "order column" specified. Historically Hibernate defines this as
-	 * a "bag", which is a concept JPA does not have.
-	 * <p>
-	 * If enabled, Hibernate will recognize this condition as defining
-	 * a {@link org.hibernate.collection.spi.PersistentList}, otherwise
-	 * Hibernate will treat is as a
-	 * {@link org.hibernate.collection.spi.PersistentBag}
+	 * Controls how Hibernate interprets a mapped {@link java.util.List}
+	 * without no {@linkplain jakarta.persistence.OrderColumn order column}
+	 * specified. Historically Hibernate treats this as a "bag", which is a
+	 * concept JPA does not have.
+	 * <ul>
+	 * <li>If enabled, Hibernate will recognize this case as a
+	 *     {@linkplain org.hibernate.collection.spi.PersistentList list}.
+	 * <li>Otherwise, if disabled, Hibernate will treat it as a
+	 *     {@linkplain org.hibernate.collection.spi.PersistentBag "bag"}.
+	 * </ul>
 	 *
 	 * @return {@code true} indicates to behave in the spec-defined way,
 	 * interpreting the mapping as a "list", rather than a "bag"

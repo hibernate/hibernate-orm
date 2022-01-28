@@ -8,12 +8,28 @@ package org.hibernate.cfg;
 
 import java.util.function.Supplier;
 
+import org.hibernate.CustomEntityDirtinessStrategy;
+import org.hibernate.Interceptor;
+import org.hibernate.SessionFactoryObserver;
+import org.hibernate.cache.spi.TimestampsCacheFactory;
+import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.query.spi.QueryPlan;
+import org.hibernate.query.sqm.NullPrecedence;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 /**
  * Enumerates the configuration properties supported by Hibernate, including
  * properties defined by the JPA specification.
+ * <p>
+ * The settings defined here may be specified at configuration time:
+ * <ul>
+ *     <li>in a configuration file, for example, in {@code persistence.xml} or
+ *         {@code hibernate.cfg.xml},
+ *     <li>via {@link Configuration#setProperty(String, String)}, or
+ *     <li>via {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder#applySetting(String, Object)}.
+ * </ul>
  *
  * @author Steve Ebersole
  */
@@ -130,6 +146,8 @@ public interface AvailableSettings {
 
 	/**
 	 * Used to pass along any discovered {@link jakarta.validation.ValidatorFactory}.
+	 * 
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyValidatorFactory(Object) 
 	 */
 	String JAKARTA_VALIDATION_FACTORY = "jakarta.persistence.validation.factory";
 
@@ -194,6 +212,8 @@ public interface AvailableSettings {
 	 * This setting is used to configure access to the {@code BeanManager},
 	 * either directly, or via
 	 * {@link org.hibernate.resource.beans.container.spi.ExtendedBeanManager}.
+	 * 
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyBeanManager(Object) 
 	 */
 	String JAKARTA_CDI_BEAN_MANAGER = "jakarta.persistence.bean.manager";
 
@@ -344,6 +364,8 @@ public interface AvailableSettings {
 	 * <p/>
 	 * By default, Hibernate calls {@link java.sql.Connection#setAutoCommit(boolean)} on
 	 * newly-obtained connections.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyConnectionProviderDisablesAutoCommit(boolean)
 	 *
 	 * @since 5.2.10
 	 */
@@ -519,6 +541,8 @@ public interface AvailableSettings {
 	 *
 	 * @see org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform#retrieveUserTransaction
 	 * @see org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform#retrieveTransactionManager
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyPreferUserTransactions(boolean)
 	 *
 	 * @since 5.0
 	 */
@@ -819,6 +843,7 @@ public interface AvailableSettings {
 	 *
 	 * @see #SESSION_FACTORY_NAME_IS_JNDI
 	 * @see org.hibernate.internal.SessionFactoryRegistry
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyName(String) 
 	 */
 	String SESSION_FACTORY_NAME = "hibernate.session_factory_name";
 
@@ -833,6 +858,7 @@ public interface AvailableSettings {
 	 * not want JNDI to be used.
 	 *
 	 * @see #SESSION_FACTORY_NAME
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyNameAsJndiName(boolean) 
 	 */
 	String SESSION_FACTORY_NAME_IS_JNDI = "hibernate.session_factory_name_is_jndi";
 
@@ -853,11 +879,15 @@ public interface AvailableSettings {
 
 	/**
 	 * Specifies that comments should be added to the generated SQL.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applySqlComments(boolean)
 	 */
 	String USE_SQL_COMMENTS = "hibernate.use_sql_comments";
 
 	/**
 	 * Specifies the maximum depth of nested outer join fetching.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyMaximumFetchDepth(int)
 	 */
 	String MAX_FETCH_DEPTH = "hibernate.max_fetch_depth";
 
@@ -865,6 +895,7 @@ public interface AvailableSettings {
 	 * Specifies the default batch size for batch fetching.
 	 *
 	 * @see org.hibernate.annotations.BatchSize
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDefaultBatchFetchSize(int)
 	 */
 	String DEFAULT_BATCH_FETCH_SIZE = "hibernate.default_batch_fetch_size";
 
@@ -872,6 +903,8 @@ public interface AvailableSettings {
 	 * When enabled, specifies that JDBC scrollable {@code ResultSet}s may be used.
 	 * This property is only necessary when there is no {@code ConnectionProvider},
 	 * that is, when the client is supplying JDBC connections.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyScrollableResultsSupport(boolean)
 	 */
 	String USE_SCROLLABLE_RESULTSET = "hibernate.jdbc.use_scrollable_resultset";
 
@@ -883,6 +916,7 @@ public interface AvailableSettings {
 	 * the JDBC driver supports {@code getGeneratedKeys()}.
 	 *
 	 * @see java.sql.PreparedStatement#getGeneratedKeys
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyGetGeneratedKeysSupport(boolean)
 	 */
 	String USE_GET_GENERATED_KEYS = "hibernate.jdbc.use_get_generated_keys";
 
@@ -892,6 +926,7 @@ public interface AvailableSettings {
 	 * default settings will be used.
 	 *
 	 * @see java.sql.ResultSet#setFetchSize(int)
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcFetchSize(int)
 	 */
 	String STATEMENT_FETCH_SIZE = "hibernate.jdbc.fetch_size";
 
@@ -899,6 +934,7 @@ public interface AvailableSettings {
 	 * Specifies the maximum JDBC batch size. A nonzero value enables batch updates.
 	 *
 	 * @see java.sql.PreparedStatement#executeBatch()
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcBatchSize(int)
 	 */
 	String STATEMENT_BATCH_SIZE = "hibernate.jdbc.batch_size";
 
@@ -910,6 +946,8 @@ public interface AvailableSettings {
 	/**
 	 * When enabled, specifies that {@link jakarta.persistence.Version versioned}
 	 * data should be included in batching.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcBatchingForVersionedEntities(boolean)
 	 */
 	String BATCH_VERSIONED_DATA = "hibernate.jdbc.batch_versioned_data";
 
@@ -929,12 +967,16 @@ public interface AvailableSettings {
 	/**
 	 * When enabled, specifies that the {@link org.hibernate.Session} should be
 	 * closed automatically at the end of each transaction.
+	 * 
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyAutoClosing(boolean) 
 	 */
 	String AUTO_CLOSE_SESSION = "hibernate.transaction.auto_close_session";
 
 	/**
 	 * When enabled, specifies that automatic flushing should occur during the JTA
 	 * {@link jakarta.transaction.Synchronization#beforeCompletion()} callback.
+	 * 
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyAutoFlushing(boolean) 
 	 */
 	String FLUSH_BEFORE_COMPLETION = "hibernate.transaction.flush_before_completion";
 
@@ -943,6 +985,7 @@ public interface AvailableSettings {
 	 * and release.
 	 *
 	 * @see org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyConnectionHandlingMode(PhysicalConnectionHandlingMode)
 	 *
 	 * @since 5.2
 	 */
@@ -955,6 +998,9 @@ public interface AvailableSettings {
 	 */
 	String CURRENT_SESSION_CONTEXT_CLASS = "hibernate.current_session_context_class";
 
+	/**
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyIdentifierRollbackSupport(boolean)
+	 */
 	String USE_IDENTIFIER_ROLLBACK = "hibernate.use_identifier_rollback";
 
 	/**
@@ -1005,16 +1051,22 @@ public interface AvailableSettings {
 	 * By default, named queries are checked at startup.
 	 * <p>
 	 * Mainly intended for use in test environments.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyNamedQueryCheckingOnStartup(boolean)
 	 */
 	String QUERY_STARTUP_CHECKING = "hibernate.query.startup_check";
 
 	/**
 	 * Enable ordering of update statements by primary key value.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyOrderingOfUpdates(boolean)
 	 */
 	String ORDER_UPDATES = "hibernate.order_updates";
 
 	/**
 	 * Enable ordering of insert statements for the purpose of more efficient JDBC batching.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyOrderingOfInserts(boolean)
 	 */
 	String ORDER_INSERTS = "hibernate.order_inserts";
 
@@ -1034,6 +1086,8 @@ public interface AvailableSettings {
 	 * Default precedence of null values in {@code ORDER BY} clause.
 	 * <p>
 	 * Supported options: {@code none} (default), {@code first}, {@code last}.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDefaultNullPrecedence(NullPrecedence)
 	 */
 	String DEFAULT_NULL_ORDERING = "hibernate.order_by.default_null_ordering";
 
@@ -1198,32 +1252,44 @@ public interface AvailableSettings {
 	 * By default, if the configured {@link org.hibernate.cache.spi.RegionFactory}
 	 * is not the {@link org.hibernate.cache.internal.NoCachingRegionFactory}, then
 	 * the second-level cache is enabled. Otherwise, the second-level cache is disabled.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applySecondLevelCacheSupport(boolean)
 	 */
 	String USE_SECOND_LEVEL_CACHE = "hibernate.cache.use_second_level_cache";
 
 	/**
 	 * Enable the query cache (disabled by default).
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyQueryCacheSupport(boolean)
 	 */
 	String USE_QUERY_CACHE = "hibernate.cache.use_query_cache";
 
 	/**
 	 * Specifies the {@link org.hibernate.cache.spi.TimestampsCacheFactory} to use.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyTimestampsCacheFactory(TimestampsCacheFactory)
 	 */
 	String QUERY_CACHE_FACTORY = "hibernate.cache.query_cache_factory";
 
 	/**
 	 * The {@code CacheProvider} region name prefix
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyCacheRegionPrefix(String)
 	 */
 	String CACHE_REGION_PREFIX = "hibernate.cache.region_prefix";
 
 	/**
 	 * Optimize interaction with the second-level cache to minimize writes, at the cost
 	 * of more frequent database reads.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyMinimalPutsForCaching(boolean)
 	 */
 	String USE_MINIMAL_PUTS = "hibernate.cache.use_minimal_puts";
 
 	/**
 	 * Enables the use of structured second-level cache entries.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyStructuredCacheEntries(boolean)
 	 */
 	String USE_STRUCTURED_CACHE = "hibernate.cache.use_structured_entries";
 
@@ -1232,6 +1298,8 @@ public interface AvailableSettings {
 	 * cache when an element in the {@link jakarta.persistence.ManyToOne} collection
 	 * is added, updated, or removed without properly managing the change on the
 	 * {@link jakarta.persistence.OneToMany} side.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyAutomaticEvictionOfCollectionCaches(boolean)
 	 */
 	String AUTO_EVICT_COLLECTION_CACHE = "hibernate.cache.auto_evict_collection_cache";
 
@@ -1240,6 +1308,8 @@ public interface AvailableSettings {
 	 * applicable. This is appropriate only for immutable entities.
 	 * <p>
 	 * By default, entities are always stored in a "disassembled" form.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDirectReferenceCaching(boolean)
 	 */
 	String USE_DIRECT_REFERENCE_CACHE_ENTRIES = "hibernate.cache.use_reference_entries";
 
@@ -1273,6 +1343,8 @@ public interface AvailableSettings {
 	 * <p>
 	 * Defaults to disabled if Bean Validation is present in the classpath and
 	 * annotations are used, or enabled otherwise.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyNullabilityChecking(boolean)
 	 */
 	String CHECK_NULLABILITY = "hibernate.check_nullability";
 
@@ -1772,6 +1844,8 @@ public interface AvailableSettings {
 	/**
 	 * Setting to identify a {@link org.hibernate.CustomEntityDirtinessStrategy} to use.
 	 * May specify either a class name or an instance.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy)
 	 */
 	String CUSTOM_ENTITY_DIRTINESS_STRATEGY = "hibernate.entity_dirtiness_strategy";
 
@@ -1813,6 +1887,8 @@ public interface AvailableSettings {
 	 *     <li>the name of a class that implements {@code CurrentTenantIdentifierResolver}.
 	 * </ul>
 	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver)
+	 *
 	 * @since 4.1
 	 */
 	String MULTI_TENANT_IDENTIFIER_RESOLVER = "hibernate.tenant_identifier_resolver";
@@ -1831,6 +1907,8 @@ public interface AvailableSettings {
 	 * applied; the same instance will be passed to each {@code Session}. If there
 	 * should be a separate instance of {@code Interceptor} for each {@code Session},
 	 * use {@link #SESSION_SCOPED_INTERCEPTOR} instead.
+	 * 
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyInterceptor(Interceptor) 
 	 *
 	 * @since 5.0
 	 */
@@ -1851,6 +1929,9 @@ public interface AvailableSettings {
 	 * applied to every {@code Session} opened from the {@code SessionFactory}, but
 	 * unlike {@link #INTERCEPTOR}, a separate instance created for each {@code Session}.
 	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyStatelessInterceptor(Class)
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyStatelessInterceptor(Supplier)
+	 * 
 	 * @since 5.2
 	 */
 	String SESSION_SCOPED_INTERCEPTOR = "hibernate.session_factory.session_scoped_interceptor";
@@ -1865,10 +1946,15 @@ public interface AvailableSettings {
 	 *     <li>the name of a class that implements {@code StatementInspector}.
 	 * </ul>
 	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyStatementInspector(StatementInspector)
+	 *
 	 * @since 5.0
 	 */
 	String STATEMENT_INSPECTOR = "hibernate.session_factory.statement_inspector";
 
+	/**
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyLazyInitializationOutsideTransaction(boolean)
+	 */
 	String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";
 
 	/**
@@ -1898,6 +1984,8 @@ public interface AvailableSettings {
 	 * this will consume more memory but ensures all necessary memory is
 	 * allocated right away.
 	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDelayedEntityLoaderCreations(boolean)
+	 *
 	 * @since 5.3
 	 */
 	String DELAY_ENTITY_LOADER_CREATIONS = "hibernate.loader.delay_entity_loader_creations";
@@ -1910,6 +1998,8 @@ public interface AvailableSettings {
 	 * Session is called.  This can certainly have performance considerations.
 	 *
 	 * Default is {@code true} (enabled).
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJtaTrackingByThread(boolean)
 	 */
 	String JTA_TRACK_BY_THREAD = "hibernate.jta.track_by_thread";
 
@@ -1956,6 +2046,8 @@ public interface AvailableSettings {
 	/**
 	 * When enabled, specifies that {@linkplain org.hibernate.stat.Statistics statistics}
 	 * should be collected.
+	 * 
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyStatisticsSupport(boolean) 
 	 */
 	String GENERATE_STATISTICS = "hibernate.generate_statistics";
 
@@ -2018,6 +2110,8 @@ public interface AvailableSettings {
 	 * {@code false}, which does not.
 	 * <p>
 	 * The default behavior is to disallow update operations outside a transaction.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#allowOutOfTransactionUpdateOperations(boolean)
 	 *
 	 * @since 5.2
 	 */
@@ -2110,6 +2204,7 @@ public interface AvailableSettings {
 	 * an {@link jakarta.persistence.EntityTransaction}.
 	 *
 	 * @see org.hibernate.jpa.spi.JpaCompliance#isJpaTransactionComplianceEnabled()
+	 * @see org.hibernate.boot.SessionFactoryBuilder#enableJpaTransactionCompliance(boolean)
 	 *
 	 * @since 5.3
 	 */
@@ -2129,28 +2224,32 @@ public interface AvailableSettings {
 	 * useful features of HQL.
 	 *
 	 * @see org.hibernate.jpa.spi.JpaCompliance#isJpaQueryComplianceEnabled()
+	 * @see org.hibernate.boot.SessionFactoryBuilder#enableJpaQueryCompliance(boolean)
 	 *
 	 * @since 5.3
 	 */
 	String JPA_QUERY_COMPLIANCE = "hibernate.jpa.compliance.query";
 
 	/**
-	 * Controls whether Hibernate should recognize what it considers a "bag"
-	 * ({@link org.hibernate.collection.spi.PersistentBag}) as a list
-	 * ({@link org.hibernate.collection.spi.PersistentList}) or as a bag.
+	 * Controls whether Hibernate should treat what it would usually consider a
+	 * {@linkplain org.hibernate.collection.spi.PersistentBag "bag"}, that is, a
+	 * list with no index column, whose element order is not persistent, as a true
+	 * {@link org.hibernate.collection.spi.PersistentList list} with an index column
+	 * and a persistent element order.
 	 * <p>
 	 * If enabled, Hibernate will recognize it as a list where the
 	 * {@link jakarta.persistence.OrderColumn} annotation is simply missing
 	 * (and its defaults will apply).
 	 *
 	 * @see org.hibernate.jpa.spi.JpaCompliance#isJpaListComplianceEnabled()
+	 * @see org.hibernate.boot.SessionFactoryBuilder#enableJpaListCompliance(boolean)
 	 *
 	 * @since 5.3
 	 *
-	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#DEFAULT_LIST_SEMANTICS} instead.
-	 * The specification is actually undefined in terms of how this should be handled.  It actually
-	 * says that portable applications should not rely on a specific behavior in terms of a List
-	 * with no `@OrderColumn`
+	 * @deprecated Use {@link #DEFAULT_LIST_SEMANTICS} instead. The specification
+	 * actually leaves this behavior undefined, saying that portable applications
+	 * should not rely on any specific behavior for a {@link java.util.List} with
+	 * no {@code @OrderColumn}.
 	 */
 	@Deprecated( since = "6.0" )
 	String JPA_LIST_COMPLIANCE	= "hibernate.jpa.compliance.list";
@@ -2164,6 +2263,7 @@ public interface AvailableSettings {
 	 * references.
 	 *
 	 * @see org.hibernate.jpa.spi.JpaCompliance#isJpaOrderByMappingComplianceEnabled()
+	 * @see org.hibernate.boot.SessionFactoryBuilder#enableJpaOrderByMappingCompliance(boolean)
 	 *
 	 * @since 6.0
 	 */
@@ -2180,6 +2280,7 @@ public interface AvailableSettings {
 	 * {@code close()} is called on an instance that was already closed.
 	 *
 	 * @see org.hibernate.jpa.spi.JpaCompliance#isJpaClosedComplianceEnabled()
+	 * @see org.hibernate.boot.SessionFactoryBuilder#enableJpaClosedCompliance(boolean)
 	 *
 	 * @since 5.3
 	 */
@@ -2386,10 +2487,8 @@ public interface AvailableSettings {
 	 * Specifies the default strategy for storage of the timezone information
 	 * for zoned datetime types:
 	 * <ul>
-	 *     <li>{@link org.hibernate.annotations.TimeZoneStorageType#NORMALIZE},
-	 *     <li>{@link org.hibernate.annotations.TimeZoneStorageType#COLUMN},
-	 *     <li>{@link org.hibernate.annotations.TimeZoneStorageType#NATIVE}, or
-	 *     <li>{@link org.hibernate.annotations.TimeZoneStorageType#AUTO}.
+	 *     <li>{@link org.hibernate.annotations.TimeZoneStorageType#NORMALIZE}, or
+	 *     <li>{@link org.hibernate.annotations.TimeZoneStorageType#NATIVE}.
 	 * </ul>
 	 * The default is {@link org.hibernate.annotations.TimeZoneStorageType#NORMALIZE},
 	 * meaning that timezone information is not stored by default, but timestamps are
@@ -2708,6 +2807,8 @@ public interface AvailableSettings {
 	/**
 	 * Specifies a class which implements {@link org.hibernate.SessionFactoryObserver} and has
 	 * a constructor with no parameters.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#addSessionFactoryObservers(SessionFactoryObserver...)
 	 */
 	String SESSION_FACTORY_OBSERVER = "hibernate.session_factory_observer";
 

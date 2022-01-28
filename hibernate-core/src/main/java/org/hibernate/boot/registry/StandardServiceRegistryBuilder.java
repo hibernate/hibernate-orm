@@ -18,6 +18,7 @@ import org.hibernate.boot.cfgxml.internal.ConfigLoader;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
@@ -33,6 +34,8 @@ import static org.hibernate.boot.cfgxml.spi.CfgXmlAccessService.LOADED_CONFIG_KE
 
 /**
  * Builder for standard {@link ServiceRegistry} instances.
+ * <p>
+ * Configuration properties are enumerated by {@link AvailableSettings}.
  *
  * @author Steve Ebersole
  * 

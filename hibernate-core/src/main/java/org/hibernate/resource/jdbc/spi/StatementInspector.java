@@ -14,6 +14,8 @@ import java.io.Serializable;
  * An implementation may be specified via the configuration property
  * {@value org.hibernate.cfg.AvailableSettings#STATEMENT_INSPECTOR}.
  *
+ * @see org.hibernate.boot.SessionFactoryBuilder#applyStatementInspector(StatementInspector)
+ *
  * @author Steve Ebersole
  */
 public interface StatementInspector extends Serializable {

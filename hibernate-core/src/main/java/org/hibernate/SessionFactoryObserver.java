@@ -14,6 +14,9 @@ import java.io.Serializable;
  * A {@code SessionFactoryObserver} may be registered using the configuration property
  * {@value org.hibernate.cfg.AvailableSettings#SESSION_FACTORY_OBSERVER}.
  *
+ * @see org.hibernate.cfg.AvailableSettings#SESSION_FACTORY_OBSERVER
+ * @see org.hibernate.boot.SessionFactoryBuilder#addSessionFactoryObservers(SessionFactoryObserver...)
+ *
  * @author Steve Ebersole
  */
 public interface SessionFactoryObserver extends Serializable {

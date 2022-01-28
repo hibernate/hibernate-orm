@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import java.util.Objects;
+
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.BindableType;
@@ -159,5 +161,25 @@ public class JpaCriteriaParameter<T>
 	@Override
 	public void applySqlSelections(DomainResultCreationState creationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		JpaCriteriaParameter<?> parameter = (JpaCriteriaParameter<?>) o;
+		return Objects.equals( name, parameter.name );
+	}
+
+	@Override
+	public int hashCode() {
+		if ( name == null ) {
+			return super.hashCode();
+		}
+		return Objects.hash( name );
 	}
 }

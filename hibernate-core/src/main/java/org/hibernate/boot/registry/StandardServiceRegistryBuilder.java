@@ -377,7 +377,7 @@ public class StandardServiceRegistryBuilder {
 	}
 
 	/**
-	 * Build and resturn the {@link StandardServiceRegistry}.
+	 * Build and return the {@link StandardServiceRegistry}.
 	 *
 	 * @return A newly-instantiated {@link StandardServiceRegistry}
 	 */

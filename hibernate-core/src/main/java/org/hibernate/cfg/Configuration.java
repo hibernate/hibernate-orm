@@ -64,6 +64,9 @@ import org.hibernate.usertype.UserType;
  * using {@link MetadataBuilder} and {@link StandardServiceRegistryBuilder}
  * under the covers.
  * <p>
+ * An instance of {@code Configuration} may be obtained simply by
+ * instantiation, using {@link #Configuration() new Configuration()}.
+ * <p>
  * A {@code Configuration} may be used to aggregate:
  * <ul>
  * <li>{@linkplain #setProperty(String, String) configuration properties}
@@ -73,11 +76,15 @@ import org.hibernate.usertype.UserType;
  * </ul>
  * In addition, there are convenience methods for adding
  * {@link #addAttributeConverter attribute converters},
- * {@link #registerTypeContributor type contributors}, and
- * {@link #addSqlFunction SQL function descriptors}, for setting
- * {@link #setImplicitNamingStrategy naming strategies} and
- * {@link #setCurrentTenantIdentifierResolver tenant id resolvers},
+ * {@link #registerTypeContributor type contributors},
+ * {@link #addSqlFunction SQL function descriptors}, and
+ * {@link #addAuxiliaryDatabaseObject auxiliary database objects}, for
+ * setting {@link #setImplicitNamingStrategy naming strategies} and a
+ * {@link #setCurrentTenantIdentifierResolver tenant id resolver},
  * and more.
+ * <p>
+ * Finally, an instance of {@link SessionFactoryBuilder} is obtained by
+ * calling {@link #buildSessionFactory()}.
  * <p>
  * Ultimately, this class simply delegates to {@link MetadataBuilder} and
  * {@link StandardServiceRegistryBuilder} to actually do the hard work of
@@ -125,10 +132,20 @@ public class Configuration {
 	private Properties properties;
 	private SharedCacheMode sharedCacheMode;
 
+	/**
+	 * Create a new instance, using a default {@link BootstrapServiceRegistry}
+	 * and a newly instantiated {@link MetadataSources}.
+	 * <p>
+	 * This is the usual method of obtaining a {@code Configuration}.
+	 */
 	public Configuration() {
 		this( new BootstrapServiceRegistryBuilder().build() );
 	}
 
+	/**
+	 * Create a new instance, using the given {@link BootstrapServiceRegistry}
+	 * and a newly instantiated {@link MetadataSources}.
+	 */
 	public Configuration(BootstrapServiceRegistry serviceRegistry) {
 		this.bootstrapServiceRegistry = serviceRegistry;
 		this.metadataSources = new MetadataSources( serviceRegistry );
@@ -136,6 +153,10 @@ public class Configuration {
 		reset();
 	}
 
+	/**
+	 * Create a new instance, using the given {@link MetadataSources}, and a
+	 * {@link BootstrapServiceRegistry} obtained from the {@link MetadataSources}.
+	 */
 	public Configuration(MetadataSources metadataSources) {
 		this.bootstrapServiceRegistry = getBootstrapRegistry( metadataSources.getServiceRegistry() );
 		this.metadataSources = metadataSources;
@@ -540,9 +561,10 @@ public class Configuration {
 	}
 
 	/**
-	 * Read all mappings from a {@code .jar} file.
+	 * Read all {@code .hbm.xml} mappings from a {@code .jar} file.
 	 * <p/>
 	 * Assumes that any file named {@code *.hbm.xml} is a mapping document.
+	 * This method does not support {@code orm.xml} files!
 	 *
 	 * @param jar a jar file
 	 * @return this (for method chaining purposes)
@@ -555,9 +577,10 @@ public class Configuration {
 	}
 
 	/**
-	 * Read all mapping documents from a directory tree.
+	 * Read all {@code .hbm.xml} mapping documents from a directory tree.
 	 * <p/>
 	 * Assumes that any file named {@code *.hbm.xml} is a mapping document.
+	 * This method does not support {@code orm.xml} files!
 	 *
 	 * @param dir The directory
 	 * @return this (for method chaining purposes)

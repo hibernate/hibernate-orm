@@ -10,6 +10,8 @@ import org.hibernate.service.ServiceRegistry;
 
 /**
  * Specialization of the {@link ServiceRegistry} contract mainly for type safety.
+ * <p>
+ * An instance may be obtained using {@link StandardServiceRegistryBuilder#build()}.
  *
  * @author Steve Ebersole
  */

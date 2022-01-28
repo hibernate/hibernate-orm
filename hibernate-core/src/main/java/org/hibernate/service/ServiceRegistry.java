@@ -7,7 +7,22 @@
 package org.hibernate.service;
 
 /**
- * A registry of {@linkplain Service services}.
+ * A registry of {@linkplain Service services}. This interface abstracts
+ * the operations of:
+ * <ul>
+ * <li>{@linkplain org.hibernate.boot.registry.BootstrapServiceRegistry
+ * bootstrap service registries}, which may be obtained from a
+ * {@link org.hibernate.boot.registry.BootstrapServiceRegistryBuilder},
+ * and
+ * <li>{@linkplain org.hibernate.boot.registry.StandardServiceRegistry
+ * standard service registries}, which may be obtained from a
+ * {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder},
+ * </ul>
+ *
+ * @see org.hibernate.boot.registry.BootstrapServiceRegistry
+ * @see org.hibernate.boot.registry.StandardServiceRegistry
+ * @see org.hibernate.boot.registry.BootstrapServiceRegistryBuilder
+ * @see org.hibernate.boot.registry.StandardServiceRegistryBuilder
  *
  * @author Steve Ebersole
  */

@@ -24,10 +24,17 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.service.ServiceRegistry;
 
 /**
- * Builder for {@link BootstrapServiceRegistry} instances.  Provides registry for services needed for
- * most operations.  This includes {@link Integrator} handling and ClassLoader handling.
- *
- * Additionally responsible for building and managing the {@link org.hibernate.boot.registry.selector.spi.StrategySelector}
+ * Builder for {@link BootstrapServiceRegistry} instances.
+ * <p>
+ * An instance of this class may be obtained by instantiations, simply by
+ * calling {@code new BootstrapServiceRegistryBuilder()}. Then a new
+ * {@code BootstrapServiceRegistry} may be obtained by calling {@link #build()}.
+ * It should be later destroyed by calling {@link #destroy(ServiceRegistry)}.
+ * <p>
+ * Provides a registry of services needed for most operations.
+ * Manages a {@link ClassLoaderService}, a set of {@link Integrator}s, and a
+ * {@link StrategySelectorBuilder} responsible for creation and management
+ * of {@link org.hibernate.boot.registry.selector.spi.StrategySelector}s.
  *
  * @author Steve Ebersole
  * @author Brett Meyer
@@ -39,7 +46,7 @@ public class BootstrapServiceRegistryBuilder {
 
 	private List<ClassLoader> providedClassLoaders;
 	private ClassLoaderService providedClassLoaderService;
-	private StrategySelectorBuilder strategySelectorBuilder = new StrategySelectorBuilder();
+	private final StrategySelectorBuilder strategySelectorBuilder = new StrategySelectorBuilder();
 	private TcclLookupPrecedence tcclLookupPrecedence = TcclLookupPrecedence.AFTER;
 
 	private boolean autoCloseRegistry = true;
@@ -105,7 +112,6 @@ public class BootstrapServiceRegistryBuilder {
 	 *
 	 * @see org.hibernate.boot.registry.selector.spi.StrategySelector#registerStrategyImplementor(Class, String, Class)
 	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
 	public <T> BootstrapServiceRegistryBuilder applyStrategySelector(Class<T> strategy, String name, Class<? extends T> implementation) {
 		this.strategySelectorBuilder.addExplicitStrategyRegistration( strategy, implementation, name );
 		return this;
@@ -120,9 +126,8 @@ public class BootstrapServiceRegistryBuilder {
 	 *
 	 * @see org.hibernate.boot.registry.selector.spi.StrategySelector#registerStrategyImplementor(Class, String, Class)
 	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
 	public BootstrapServiceRegistryBuilder applyStrategySelectors(StrategyRegistrationProvider strategyRegistrationProvider) {
-		for ( StrategyRegistration strategyRegistration : strategyRegistrationProvider.getStrategyRegistrations() ) {
+		for ( StrategyRegistration<?> strategyRegistration : strategyRegistrationProvider.getStrategyRegistrations() ) {
 			this.strategySelectorBuilder.addExplicitStrategyRegistration( strategyRegistration );
 		}
 		return this;

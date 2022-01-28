@@ -41,14 +41,14 @@ import org.hibernate.type.JsonBJsonFormatMapper;
 import org.jboss.logging.Logger;
 
 /**
- * Builder for StrategySelector instances.
+ * Builder for {@link StrategySelector} instances.
  *
  * @author Steve Ebersole
  */
 public class StrategySelectorBuilder {
 	private static final Logger log = Logger.getLogger( StrategySelectorBuilder.class );
 
-	private final List<StrategyRegistration> explicitStrategyRegistrations = new ArrayList<>();
+	private final List<StrategyRegistration<?>> explicitStrategyRegistrations = new ArrayList<>();
 
 	/**
 	 * Adds an explicit (as opposed to discovered) strategy registration.
@@ -59,7 +59,6 @@ public class StrategySelectorBuilder {
 	 * @param <T> The type of the strategy.  Used to make sure that the strategy and implementation are type
 	 * compatible.
 	 */
-	@SuppressWarnings("unchecked")
 	public <T> void addExplicitStrategyRegistration(Class<T> strategy, Class<? extends T> implementation, String name) {
 		addExplicitStrategyRegistration( new SimpleStrategyRegistrationImpl<>( strategy, implementation, name ) );
 	}
@@ -114,20 +113,19 @@ public class StrategySelectorBuilder {
 
 		// apply auto-discovered registrations
 		for ( StrategyRegistrationProvider provider : classLoaderService.loadJavaServices( StrategyRegistrationProvider.class ) ) {
-			for ( StrategyRegistration discoveredStrategyRegistration : provider.getStrategyRegistrations() ) {
+			for ( StrategyRegistration<?> discoveredStrategyRegistration : provider.getStrategyRegistrations() ) {
 				applyFromStrategyRegistration( strategySelector, discoveredStrategyRegistration );
 			}
 		}
 
 		// apply customizations
-		for ( StrategyRegistration explicitStrategyRegistration : explicitStrategyRegistrations ) {
+		for ( StrategyRegistration<?> explicitStrategyRegistration : explicitStrategyRegistrations ) {
 			applyFromStrategyRegistration( strategySelector, explicitStrategyRegistration );
 		}
 
 		return strategySelector;
 	}
 
-	@SuppressWarnings("unchecked")
 	private <T> void applyFromStrategyRegistration(StrategySelectorImpl strategySelector, StrategyRegistration<T> strategyRegistration) {
 		for ( String name : strategyRegistration.getSelectorNames() ) {
 			strategySelector.registerStrategyImplementor(

@@ -42,9 +42,14 @@ import org.w3c.dom.Document;
  * Entry point for working with sources of O/R mapping metadata, either
  * in the form of annotated classes, or as XML mapping documents.
  * <p>
- * A client must register sources and then call {@link #buildMetadata()},
+ * An instance of {@code MetadataSources} may be obtained simply by
+ * instantiation, using {@link #MetadataSources() new MetadataSources()}.
+ * The client must register sources and then call {@link #buildMetadata()},
  * or use {@link #getMetadataBuilder()} to customize how the sources are
- * processed (naming strategies, etc).
+ * processed (by registering naming strategies, etc).
+ * <p>
+ * As an alternative to working directly with {@code MetadataSources}, and
+ * {@link Metadata}, a program may use {@link org.hibernate.cfg.Configuration}.
  *
  * @author Steve Ebersole
  *
@@ -66,12 +71,15 @@ public class MetadataSources implements Serializable {
 
 	private Map<String,Class<?>> extraQueryImports;
 
+	/**
+	 * Create a new instance, using a default {@link BootstrapServiceRegistry}.
+	 */
 	public MetadataSources() {
 		this( new BootstrapServiceRegistryBuilder().build() );
 	}
 
 	/**
-	 * Create a metadata sources using the specified service registry.
+	 * Create a new instance using the given {@link ServiceRegistry}.
 	 *
 	 * @param serviceRegistry The service registry to use.
 	 */
@@ -103,7 +111,7 @@ public class MetadataSources implements Serializable {
 
 	protected static boolean isExpectedServiceRegistryType(ServiceRegistry serviceRegistry) {
 		return serviceRegistry instanceof BootstrapServiceRegistry
-				|| serviceRegistry instanceof StandardServiceRegistry;
+			|| serviceRegistry instanceof StandardServiceRegistry;
 	}
 
 	public XmlMappingBinderAccess getXmlMappingBinderAccess() {
@@ -226,7 +234,7 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
-	 * Var-arg form of {@link #addAnnotatedClass}
+	 * Vararg form of {@link #addAnnotatedClass(Class)}.
 	 */
 	public MetadataSources addAnnotatedClasses(Class<?>... annotatedClasses) {
 		if ( annotatedClasses != null && annotatedClasses.length > 0 ) {
@@ -257,7 +265,7 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
-	 * Var-arg form of {@link #addAnnotatedClassName}
+	 * Vararg form of {@link #addAnnotatedClassName(String)}.
 	 */
 	public MetadataSources addAnnotatedClassNames(String... annotatedClassNames) {
 		if ( annotatedClassNames != null && annotatedClassNames.length > 0 ) {
@@ -566,9 +574,10 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
-	 * Read all mappings from a jar file.
+	 * Read all {@code .hbm.xml} mappings from a jar file.
 	 * <p/>
 	 * Assumes that any file named {@code *.hbm.xml} is a mapping document.
+	 * This method does not support {@code orm.xml} files!
 	 *
 	 * @param jar a jar file
 	 *
@@ -591,9 +600,10 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
-	 * Read all mapping documents from a directory tree.
+	 * Read all {@code .hbm.xml} mapping documents from a directory tree.
 	 * <p/>
 	 * Assumes that any file named {@code *.hbm.xml} is a mapping document.
+	 * This method does not support {@code orm.xml} files!
 	 *
 	 * @param dir The directory
 	 *

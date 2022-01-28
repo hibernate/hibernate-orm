@@ -274,7 +274,6 @@ Specifies whether to automatically quote any names that are deemed keywords.
 Global setting for configuring the default storage for the time zone information for time zone based types.
 +
 `NORMALIZE`::: Does not store the time zone, and instead normalizes timestamps to UTC
-`COLUMN`::: Stores the time zone in a separate column; works in conjunction with `@TimeZoneColumn`
 `NATIVE`::: Stores the time zone by using the `with time zone` type. Error if `Dialect#getTimeZoneSupport()` is not `NATIVE`
 `AUTO`::: Stores the time zone either with `NATIVE` if `Dialect#getTimeZoneSupport()` is `NATIVE`, otherwise uses the `COLUMN` strategy.
 +

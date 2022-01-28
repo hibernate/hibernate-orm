@@ -65,8 +65,6 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 					public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 						if ( timeZoneStorageType != null ) {
 							switch ( timeZoneStorageType ) {
-								case COLUMN:
-									return TimeZoneStorageStrategy.COLUMN;
 								case NATIVE:
 									return TimeZoneStorageStrategy.NATIVE;
 								case NORMALIZE:

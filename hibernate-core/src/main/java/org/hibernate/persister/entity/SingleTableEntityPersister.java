@@ -257,7 +257,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			isNullables.add( join.isOptional() );
 			isLazies.add( lazyAvailable && join.isLazy() );
 
-			boolean isDeferred = join.isSequentialSelect() && ! persistentClass.isClassOrSuperclassJoin( join ) ;
+			boolean isDeferred = join.isSequentialSelect() && !persistentClass.isClassOrSuperclassJoin( join ) ;
 			isDeferreds.add( isDeferred );
 
 			String joinTableName = determineTableName( join.getTable() );
@@ -457,46 +457,57 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
+	@Override
 	public boolean isInverseTable(int j) {
 		return isInverseTable[j];
 	}
 
+	@Override
 	protected boolean isInverseSubclassTable(int j) {
 		return isInverseSubclassTable[j];
 	}
 
+	@Override
 	public String getDiscriminatorColumnName() {
 		return discriminatorColumnName;
 	}
 
+	@Override
 	public String getDiscriminatorColumnReaders() {
 		return discriminatorColumnReaders;
 	}
 
+	@Override
 	public String getDiscriminatorColumnReaderTemplate() {
 		return discriminatorColumnReaderTemplate;
 	}
 
+	@Override
 	public String getDiscriminatorAlias() {
 		return discriminatorAlias;
 	}
 
+	@Override
 	public String getDiscriminatorFormulaTemplate() {
 		return discriminatorFormulaTemplate;
 	}
 
+	@Override
 	public String getTableName() {
 		return qualifiedTableNames[0];
 	}
 
+	@Override
 	public Type getDiscriminatorType() {
 		return discriminatorType;
 	}
 
+	@Override
 	public Object getDiscriminatorValue() {
 		return discriminatorValue;
 	}
 
+	@Override
 	public String getDiscriminatorSQLValue() {
 		return discriminatorSQLValue;
 	}
@@ -505,6 +516,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return subclassClosure;
 	}
 
+	@Override
 	public String getSubclassForDiscriminatorValue(Object value) {
 		if ( value == null ) {
 			return subclassesByDiscriminatorValue.get( NULL_DISCRIMINATOR );
@@ -518,6 +530,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
+	@Override
 	public Serializable[] getPropertySpaces() {
 		return spaces;
 	}
@@ -532,28 +545,34 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return discriminatorFormula;
 	}
 
+	@Override
 	public String getTableName(int j) {
 		return qualifiedTableNames[j];
 	}
 
+	@Override
 	public String[] getKeyColumns(int j) {
 		return keyColumnNames[j];
 	}
 
+	@Override
 	public boolean isTableCascadeDeleteEnabled(int j) {
 		return cascadeDeleteEnabled[j];
 	}
 
+	@Override
 	public boolean isPropertyOfTable(int property, int j) {
 		return propertyTableNumbers[property] == j;
 	}
 
+	@Override
 	protected boolean isSubclassTableSequentialSelect(int j) {
 		return subclassTableSequentialSelect[j] && !isClassOrSuperclassTable[j];
 	}
 
 	// Execute the SQL:
 
+	@Override
 	public String fromTableFragment(String name) {
 		return getTableName() + ' ' + name;
 	}
@@ -689,22 +708,27 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return fullDiscriminatorValues;
 	}
 
+	@Override
 	public String getSubclassPropertyTableName(int i) {
 		return subclassTableNameClosure[subclassPropertyTableNumberClosure[i]];
 	}
 
+	@Override
 	protected int[] getPropertyTableNumbersInSelect() {
 		return propertyTableNumbers;
 	}
 
+	@Override
 	protected int getSubclassPropertyTableNumber(int i) {
 		return subclassPropertyTableNumberClosure[i];
 	}
 
+	@Override
 	public int getTableSpan() {
 		return joinSpan;
 	}
 
+	@Override
 	protected void addDiscriminatorToInsert(Insert insert) {
 
 		if ( discriminatorInsertable ) {
@@ -713,14 +737,17 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	}
 
+	@Override
 	protected int[] getSubclassColumnTableNumberClosure() {
 		return subclassColumnTableNumberClosure;
 	}
 
+	@Override
 	protected int[] getSubclassFormulaTableNumberClosure() {
 		return subclassFormulaTableNumberClosure;
 	}
 
+	@Override
 	protected int[] getPropertyTableNumbers() {
 		return propertyTableNumbers;
 	}
@@ -748,10 +775,12 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return tabnum == null ? 0 : tabnum;
 	}
 
+	@Override
 	protected String[] getSubclassTableKeyColumns(int j) {
 		return subclassTableKeyColumnClosure[j];
 	}
 
+	@Override
 	public String getSubclassTableName(int j) {
 		return subclassTableNameClosure[j];
 	}
@@ -761,26 +790,32 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return subclassTableNameClosure;
 	}
 
+	@Override
 	public int getSubclassTableSpan() {
 		return subclassTableNameClosure.length;
 	}
 
+	@Override
 	protected boolean isClassOrSuperclassTable(int j) {
 		return isClassOrSuperclassTable[j];
 	}
 
+	@Override
 	protected boolean isClassOrSuperclassJoin(int j) {
 		return isClassOrSuperclassJoin[j];
 	}
 
+	@Override
 	protected boolean isSubclassTableLazy(int j) {
 		return subclassTableIsLazyClosure[j];
 	}
 
+	@Override
 	public boolean isNullableTable(int j) {
 		return isNullableTable[j];
 	}
 
+	@Override
 	protected boolean isNullableSubclassTable(int j) {
 		return isNullableSubclassTable[j];
 	}
@@ -799,14 +834,17 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return true;
 	}
 
+	@Override
 	public boolean isMultiTable() {
 		return getTableSpan() > 1;
 	}
 
+	@Override
 	public String[] getConstraintOrderedTableNameClosure() {
 		return constraintOrderedTableNames;
 	}
 
+	@Override
 	public String[][] getContraintOrderedTableKeyColumnClosure() {
 		return constraintOrderedKeyColumnNames;
 	}

@@ -278,12 +278,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public String getTableName() {
-		if ( hasSubclasses() ) {
-			return subquery;
-		}
-		else {
-			return tableName;
-		}
+		return hasSubclasses() ? subquery : tableName;
 	}
 
 	@Override
@@ -419,10 +414,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	protected EntityDiscriminatorMapping generateDiscriminatorMapping(MappingModelCreationProcess modelCreationProcess) {
-		if ( hasSubclasses() ) {
-			return super.generateDiscriminatorMapping( modelCreationProcess );
-		}
-		return null;
+		return hasSubclasses() ? super.generateDiscriminatorMapping(modelCreationProcess) : null;
 	}
 
 	@Override
@@ -455,9 +447,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		SqlStringGenerationContext sqlStringGenerationContext = getFactory().getSqlStringGenerationContext();
 
 		if ( !model.hasSubclasses() ) {
-			return model.getTable().getQualifiedName(
-					sqlStringGenerationContext
-			);
+			return model.getTable().getQualifiedName( sqlStringGenerationContext );
 		}
 
 		Set<Column> columns = new LinkedHashSet<>();
@@ -530,7 +520,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		// Collect the concrete subclass table names for the treated entity names
 		final Set<String> treatedTableNames = new HashSet<>( treated.size() );
 		for ( String subclassName : treated ) {
-			final UnionSubclassEntityPersister subPersister = (UnionSubclassEntityPersister) getSubclassMappingType( subclassName );
+			final UnionSubclassEntityPersister subPersister =
+					(UnionSubclassEntityPersister) getSubclassMappingType( subclassName );
 			for ( String subclassTableName : subPersister.getSubclassTableNames() ) {
 				if ( ArrayHelper.indexOf( subclassSpaces, subclassTableName ) != -1 ) {
 					treatedTableNames.add( subclassTableName );

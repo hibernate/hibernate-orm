@@ -2345,7 +2345,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private DiscriminatorMetadata buildTypeDiscriminatorMetadata() {
-		return () -> new DiscriminatorType( (BasicType<?>) getDiscriminatorType(), AbstractEntityPersister.this );
+		return () -> new DiscriminatorType<>( (BasicType<?>) getDiscriminatorType(), AbstractEntityPersister.this );
 	}
 
 	public static String generateTableAlias(String rootAlias, int tableNumber) {
@@ -5039,6 +5039,7 @@ public abstract class AbstractEntityPersister
 		return getPropertyValue( baseValue, baseValueType, propertyName, nextDotIndex );
 	}
 
+	@Override @Deprecated
 	public Object getIdentifier(Object object) {
 		return getIdentifier( object, null );
 	}
@@ -5144,6 +5145,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
+	@Override @Deprecated
 	public boolean isMultiTable() {
 		return false;
 	}
@@ -5477,7 +5479,7 @@ public abstract class AbstractEntityPersister
 				.getBootModel()
 				.getEntityBinding( getEntityName() );
 
-		EntityMappingType rootEntityDescriptor;
+//		EntityMappingType rootEntityDescriptor;
 		if ( superMappingType != null ) {
 			( (InFlightEntityMappingType) superMappingType ).prepareMappingModel( creationProcess );
 			if ( shouldProcessSuperMapping() ) {
@@ -5490,11 +5492,11 @@ public abstract class AbstractEntityPersister
 			else {
 				prepareMappingModel( creationProcess, bootEntityDescriptor );
 			}
-			rootEntityDescriptor = superMappingType.getRootEntityDescriptor();
+//			rootEntityDescriptor = superMappingType.getRootEntityDescriptor();
 		}
 		else {
 			prepareMappingModel( creationProcess, bootEntityDescriptor );
-			rootEntityDescriptor = this;
+//			rootEntityDescriptor = this;
 		}
 
 		final EntityMetamodel currentEntityMetamodel = this.getEntityMetamodel();

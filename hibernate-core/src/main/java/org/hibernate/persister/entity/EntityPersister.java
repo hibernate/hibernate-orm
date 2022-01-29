@@ -668,7 +668,10 @@ public interface EntityPersister
 
 	/**
 	 * Get the user-visible metadata for the class (optional operation)
+	 *
+	 * @deprecated This operation is no longer called by Hibernate.
 	 */
+	@Deprecated(since = "6.0")
 	ClassMetadata getClassMetadata();
 
 	/**

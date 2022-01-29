@@ -264,6 +264,12 @@ public interface CollectionPersister extends CollectionDefinition, Restrictable 
 	 */
 	Serializable[] getCollectionSpaces();
 
+	/**
+	 * Get the user-visible metadata for the collection (optional operation)
+	 *
+	 * @deprecated This operation is no longer called by Hibernate.
+	 */
+	@Deprecated(since = "6.0")
 	CollectionMetadata getCollectionMetadata();
 
 	/**

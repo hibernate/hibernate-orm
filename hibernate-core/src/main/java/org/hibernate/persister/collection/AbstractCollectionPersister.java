@@ -2035,7 +2035,7 @@ public abstract class AbstractCollectionPersister
 	protected abstract void doProcessQueuedOps(PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session)
 			throws HibernateException;
 
-	@Override
+	@Override @Deprecated
 	public CollectionMetadata getCollectionMetadata() {
 		return this;
 	}

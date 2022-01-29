@@ -13,7 +13,7 @@ import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * Specialization of ManagedTypeRepresentationStrategy for an entity type
+ * Specialization of {@link ManagedTypeRepresentationStrategy} for an entity type
  * adding the ability to generate an instantiator and a proxy factory
  *
  * @author Steve Ebersole

@@ -106,7 +106,7 @@ public interface Lifecycle {
 	 * @param id the identifier
 	 */
 	default void onLoad(Session s, Object id) {
-		if (id instanceof Serializable) {
+		if (id==null || id instanceof Serializable) {
 			onLoad(s, (Serializable) id);
 		}
 	}

@@ -556,19 +556,6 @@ However, it's much better to close the `ResultSet` as soon as possible.
 The program should always close a `Stream` either explicitly, by calling `close()`, or using a https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html[try-with-resources] block.
 ====
 
-There's one exception to this rule: the `Stream` is automatically closed after a terminal operation, as illustrated by the following example:
-
-[[jpql-api-stream-terminal-operation]]
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/HQLTest.java[tags=jpql-api-stream-terminal-operation]
-----
-====
-
-Here, the `Stream` is closed automatically after the `collect()` method is called.
-
-
 [[hql-query-plan-cache]]
 === Entity query plan cache
 

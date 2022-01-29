@@ -9,7 +9,6 @@ package org.hibernate.orm.test.legacy;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -77,11 +76,11 @@ import org.hibernate.type.internal.BasicTypeImpl;
 
 public class CustomPersister implements EntityPersister {
 
-	private static final Hashtable INSTANCES = new Hashtable();
+	private static final Hashtable<Object,Object> INSTANCES = new Hashtable<>();
 	private static final IdentifierGenerator GENERATOR = new UUIDHexGenerator();
 
-	private SessionFactoryImplementor factory;
-	private EntityMetamodel entityMetamodel;
+	private final SessionFactoryImplementor factory;
+	private final EntityMetamodel entityMetamodel;
 
 	@SuppressWarnings("UnusedParameters")
 	public CustomPersister(
@@ -116,7 +115,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public Class getMappedClass() {
+	public Class<?> getMappedClass() {
 		return Custom.class;
 	}
 
@@ -254,17 +253,13 @@ public class CustomPersister implements EntityPersister {
 	public void processUpdateGeneratedProperties(Object id, Object entity, Object[] state, SharedSessionContractImplementor session) {
 	}
 
-	public void retrieveGeneratedProperties(Serializable id, Object entity, Object[] state, SharedSessionContractImplementor session) {
-		throw new UnsupportedOperationException();
-	}
-
 	@Override
 	public boolean implementsLifecycle() {
 		return false;
 	}
 
 	@Override
-	public Class getConcreteProxyClass() {
+	public Class<?> getConcreteProxyClass() {
 		return Custom.class;
 	}
 
@@ -410,7 +405,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public List multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions) {
+	public List<?> multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions) {
 		return Collections.emptyList();
 	}
 
@@ -541,37 +536,22 @@ public class CustomPersister implements EntityPersister {
 	private static final boolean[] MUTABILITY = new boolean[] { true };
 	private static final boolean[] GENERATION = new boolean[] { false };
 
-	/**
-	 * @see EntityPersister#getPropertyTypes()
-	 */
 	public Type[] getPropertyTypes() {
 		return TYPES;
 	}
 
-	/**
-	 * @see EntityPersister#getPropertyNames()
-	 */
 	public String[] getPropertyNames() {
 		return NAMES;
 	}
 
-	/**
-	 * @see EntityPersister#getPropertyCascadeStyles()
-	 */
 	public CascadeStyle[] getPropertyCascadeStyles() {
 		return null;
 	}
 
-	/**
-	 * @see EntityPersister#getIdentifierType()
-	 */
 	public Type getIdentifierType() {
 		return STRING_TYPE;
 	}
 
-	/**
-	 * @see EntityPersister#getIdentifierPropertyName()
-	 */
 	public String getIdentifierPropertyName() {
 		return "id";
 	}
@@ -604,9 +584,6 @@ public class CustomPersister implements EntityPersister {
 		return new String[] { "CUSTOMS" };
 	}
 
-	/**
-	 * @see EntityPersister#getClassMetadata()
-	 */
 	public ClassMetadata getClassMetadata() {
 		return null;
 	}
@@ -619,9 +596,6 @@ public class CustomPersister implements EntityPersister {
 		return MUTABILITY;
 	}
 
-	/**
-	 * @see EntityPersister#getPropertyInsertability()
-	 */
 	public boolean[] getPropertyInsertability() {
 		return MUTABILITY;
 	}
@@ -775,10 +749,6 @@ public class CustomPersister implements EntityPersister {
 	@Override
 	public Serializable loadEntityIdByNaturalId(Object[] naturalIdValues, LockOptions lockOptions,
 			SharedSessionContractImplementor session) {
-		return null;
-	}
-
-	public Comparator getVersionComparator() {
 		return null;
 	}
 

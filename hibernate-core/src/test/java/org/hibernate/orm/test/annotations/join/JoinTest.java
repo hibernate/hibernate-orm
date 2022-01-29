@@ -38,7 +38,7 @@ import static org.junit.Assert.fail;
 public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testDefaultValue() {
-		Join join = (Join) metadata().getEntityBinding( Life.class.getName() ).getJoinClosureIterator().next();
+		Join join = metadata().getEntityBinding( Life.class.getName() ).getJoinClosureIterator().next();
 		assertEquals( "ExtendedLife", join.getTable().getName() );
 		org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column();
 		owner.setName( "LIFE_ID" );
@@ -62,8 +62,8 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testCompositePK() throws Exception {
-		Join join = (Join) metadata().getEntityBinding( Dog.class.getName() ).getJoinClosureIterator().next();
+	public void testCompositePK() {
+		Join join = metadata().getEntityBinding( Dog.class.getName() ).getJoinClosureIterator().next();
 		assertEquals( "DogThoroughbred", join.getTable().getName() );
 		org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column();
 		owner.setName( "OWNER_NAME" );
@@ -91,7 +91,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testExplicitValue() throws Exception {
+	public void testExplicitValue() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Death death = new Death();
@@ -152,7 +152,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.beginTransaction();
 		SysGroupsOrm g=new SysGroupsOrm();
 		SysUserOrm u=new SysUserOrm();
-		u.setGroups( new ArrayList<SysGroupsOrm>() );
+		u.setGroups( new ArrayList<>() );
 		u.getGroups().add( g );
 		s.save( g );
 		s.save( u );
@@ -161,7 +161,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 	
 	@Test
-	public void testUniqueConstaintOnSecondaryTable() throws Exception {
+	public void testUniqueConstaintOnSecondaryTable() {
 		Cat cat = new Cat();
 		cat.setStoryPart2( "My long story" );
 		Cat cat2 = new Cat();
@@ -189,7 +189,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testFetchModeOnSecondaryTable() throws Exception {
+	public void testFetchModeOnSecondaryTable() {
 		Cat cat = new Cat();
 		cat.setStoryPart2( "My long story" );
 		Session s = openSession();
@@ -207,7 +207,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testCustomSQL() throws Exception {
+	public void testCustomSQL() {
 		Cat cat = new Cat();
 		String storyPart2 = "My long story";
 		cat.setStoryPart2( storyPart2 );
@@ -218,7 +218,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.flush();
 		s.clear();
 
-		Cat c = (Cat) s.get( Cat.class, cat.getId() );
+		Cat c = s.get( Cat.class, cat.getId() );
 		assertEquals( storyPart2.toUpperCase(Locale.ROOT), c.getStoryPart2() );
 
 		tx.rollback();
@@ -226,7 +226,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testMappedSuperclassAndSecondaryTable() throws Exception {
+	public void testMappedSuperclassAndSecondaryTable() {
 		Session s = openSession( );
 		s.getTransaction().begin();
 		C c = new C();
@@ -236,7 +236,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.persist( c );
 		s.flush();
 		s.clear();
-		c= (C) s.get( C.class, c.getId() );
+		c= s.get( C.class, c.getId() );
 		assertNotNull( c.getCreateDate() );
 		assertNotNull( c.getName() );
 		s.getTransaction().rollback();

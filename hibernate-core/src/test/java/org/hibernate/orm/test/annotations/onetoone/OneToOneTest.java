@@ -41,7 +41,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
-	public void testEagerFetching() throws Exception {
+	public void testEagerFetching() {
 		final String clientName = "Emmanuel";
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
 			Client c = new Client();
@@ -67,7 +67,7 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testDefaultOneToOne() throws Exception {
+	public void testDefaultOneToOne() {
 		//test a default one to one and a mappedBy in the other side
 		Long customerId = TransactionUtil.doInHibernate( this::sessionFactory, session -> {
 			Customer c = new Customer();
@@ -94,7 +94,7 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testOneToOneWithExplicitFk() throws Exception {
+	public void testOneToOneWithExplicitFk() {
 		final Client c = new Client();
 		Address a = new Address();
 		a.setCity( "Paris" );
@@ -115,7 +115,7 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testOneToOneWithExplicitSecondaryTableFk() throws Exception {
+	public void testOneToOneWithExplicitSecondaryTableFk() {
 		final Client c = new Client();
 		Address a = new Address();
 		a.setCity( "Paris" );
@@ -136,7 +136,7 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testUnidirectionalTrueOneToOne() throws Exception {
+	public void testUnidirectionalTrueOneToOne() {
 		final Body b = new Body();
 		final Heart h = new Heart();
 		b.setHeart( h );
@@ -157,7 +157,7 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testCompositePk() throws Exception {
+	public void testCompositePk() {
 		final ComputerPk cid = new ComputerPk();
 		final SerialNumber sn = new SerialNumber();
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
@@ -184,7 +184,7 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testBidirectionalTrueOneToOne() throws Exception {
+	public void testBidirectionalTrueOneToOne() {
 		try (Session s = openSession()) {
 			Party party = new Party();
 			PartyAffiliate affiliate = new PartyAffiliate();
@@ -234,7 +234,7 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testBidirectionalFkOneToOne() throws Exception {
+	public void testBidirectionalFkOneToOne() {
 		try (Session s = openSession()) {
 			s.getTransaction().begin();
 			Trousers trousers = new Trousers();
@@ -303,13 +303,13 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 	@TestForIssue( jiraKey = "HHH-4606" )
 	public void testJoinColumnConfiguredInXml() {
 		PersistentClass pc = metadata().getEntityBinding( Son.class.getName() );
-		Iterator iter = pc.getJoinIterator();
-		Table table = ( ( Join ) iter.next() ).getTable();
-		Iterator columnIter = table.getColumnIterator();
+		Iterator<Join> iter = pc.getJoinIterator();
+		Table table = iter.next().getTable();
+		Iterator<Column> columnIter = table.getColumnIterator();
 		boolean fooFound = false;
 		boolean barFound = false;
 		while ( columnIter.hasNext() ) {
-			Column column = ( Column ) columnIter.next();
+			Column column = columnIter.next();
 			if ( column.getName().equals( "foo" ) ) {
 				fooFound = true;
 			}
@@ -387,7 +387,7 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-5757")
-	public void testHqlQuery() throws Exception {
+	public void testHqlQuery() {
 		//test a default one to one and a mappedBy in the other side
 		final Passport passport = TransactionUtil.doInHibernate( this::sessionFactory, session -> {
 			Customer c = new Customer();

@@ -62,7 +62,7 @@ public interface Interceptor {
 	 *
 	 * @deprecated use {@link #onLoad(Object, Object, Object[], String[], Type[])}
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	default boolean onLoad(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types)
 			throws CallbackException {
 		return false;
@@ -116,7 +116,7 @@ public interface Interceptor {
 	 *
 	 * @deprecated use {@link #onFlushDirty(Object, Object, Object[], Object[], String[], Type[])}
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	default boolean onFlushDirty(
 			Object entity,
 			Serializable id,
@@ -177,7 +177,7 @@ public interface Interceptor {
 	 *
 	 * @deprecated use {@link #onSave(Object, Object, Object[], String[], Type[])}
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	default boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types)
 			throws CallbackException {
 		return false;
@@ -217,7 +217,7 @@ public interface Interceptor {
 	 *
 	 * @deprecated use {@link #onDelete(Object, Object, Object[], String[], Type[])}
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	default void onDelete(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types)
 			throws CallbackException {}
 
@@ -249,7 +249,7 @@ public interface Interceptor {
 	 *
 	 * @deprecated use {@link #onCollectionRecreate(Object, Object)}
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	default void onCollectionRecreate(Object collection, Serializable key) throws CallbackException {}
 
 	/**
@@ -276,7 +276,7 @@ public interface Interceptor {
 	 *
 	 * @deprecated use {@link #onCollectionRemove(Object, Object)}
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	default void onCollectionRemove(Object collection, Serializable key) throws CallbackException {}
 
 	/**
@@ -303,7 +303,7 @@ public interface Interceptor {
 	 * 
 	 * @deprecated use {@link #onCollectionUpdate(Object, Object)}
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	default void onCollectionUpdate(Object collection, Serializable key) throws CallbackException {}
 
 	/**
@@ -375,7 +375,7 @@ public interface Interceptor {
 	 * 
 	 * @deprecated use {@link #findDirty(Object, Object, Object[], Object[], String[], Type[])}
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	default int[] findDirty(
 			Object entity,
 			Serializable id,
@@ -467,7 +467,7 @@ public interface Interceptor {
 	 * 
 	 * @deprecated use {@link #getEntity(String, Object)}
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	default Object getEntity(String entityName, Serializable id) throws CallbackException {
 		return null;
 	}

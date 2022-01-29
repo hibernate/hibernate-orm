@@ -122,6 +122,6 @@ public interface Lifecycle {
 	 *
 	 * @deprecated use {@link #onLoad(Session, Object)}
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	default void onLoad(Session s, Serializable id) {}
 }

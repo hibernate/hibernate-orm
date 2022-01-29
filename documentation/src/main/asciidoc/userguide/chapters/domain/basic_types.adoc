@@ -24,26 +24,20 @@ should be mapped to the database.
 ====
 The Jakarta Persistence specification strictly limits the Java types that can be marked as basic to the following:
 
-* Java primitive types (`boolean`, `int`, etc)
-* wrappers for the primitive types (`java.lang.Boolean`, `java.lang.Integer`, etc)
-* `java.lang.String`
-* `java.math.BigInteger`
-* `java.math.BigDecimal`
-* `java.time.Instant`
-* `java.time.LocalDate`
-* `java.time.LocalTime`
-* `java.time.LocalDateTime`
-* `java.time.OffsetTime`
-* `java.time.OffsetDateTime`
-* `java.util.Date`
-* `java.util.Calendar`
-* `java.sql.Date`
-* `java.sql.Time`
-* `java.sql.Timestamp`
-* `byte[]` or `Byte[]`
-* `char[]` or `Character[]`
-* enums
-* any other type that implements ``Serializable``footnote:[Jakarta Persistence's support for Serializable types is to directly serialize their state to the database]
+|===
+| Category | Package | Types
+
+| Java primitive types | | `boolean`, `int`, `double`, etc.
+| Primitive wrappers | `java.lang` | `Boolean`, `Integer`, `Double`, etc.
+| Strings | `java.lang` | `String`
+| Arbitrary-precision numeric types | `java.math` | `BigInteger` and `BigDecimal`
+| Date/time types | `java.time` | `LocalDate`, `LocalTime`, `LocalDateTime`, `OffsetTime`, `OffsetDateTime`, `Instant`
+| Deprecated date/time types | `java.util` | `Date` and `Calendar`
+| Deprecated date/time types from | `java.sql` | `Date`, `Time`, `Timestamp`
+| Byte and character arrays | | `byte[]` or `Byte[]`, `char[]` or `Character[]`
+| Java enumerated types | | Any `enum`
+| Serializable types | | Any type that implements ``java.io.Serializable``footnote:[Jakarta Persistence's support for Serializable types is to directly serialize their state to the database]
+|===
 
 If provider portability is a concern, you should stick to just these basic types.
 

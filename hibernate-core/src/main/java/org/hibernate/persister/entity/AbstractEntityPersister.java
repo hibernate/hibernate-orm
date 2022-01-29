@@ -45,7 +45,6 @@ import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
@@ -325,15 +324,15 @@ public abstract class AbstractEntityPersister
 	//including inherited properties
 	//(only really needed for updatable/insertable properties)
 	private final int[] propertyColumnSpans;
-	private final String[] propertySubclassNames;
+//	private final String[] propertySubclassNames;
 	private final String[][] propertyColumnAliases;
 	private final String[][] propertyColumnNames;
 	private final String[][] propertyColumnFormulaTemplates;
-	private final String[][] propertyColumnReaderTemplates;
+//	private final String[][] propertyColumnReaderTemplates;
 	private final String[][] propertyColumnWriters;
 	private final boolean[][] propertyColumnUpdateable;
 	private final boolean[][] propertyColumnInsertable;
-	private final boolean[] propertyUniqueness;
+//	private final boolean[] propertyUniqueness;
 	private final boolean[] propertySelectable;
 
 	private final List<Integer> lobProperties;
@@ -346,7 +345,7 @@ public abstract class AbstractEntityPersister
 
 	//information about all properties in class hierarchy
 	private final String[] subclassPropertyNameClosure;
-	private final String[] subclassPropertySubclassNameClosure;
+//	private final String[] subclassPropertySubclassNameClosure;
 	private final Type[] subclassPropertyTypeClosure;
 	private final String[][] subclassPropertyFormulaTemplateClosure;
 	private final String[][] subclassPropertyColumnNameClosure;
@@ -355,20 +354,20 @@ public abstract class AbstractEntityPersister
 	private final FetchMode[] subclassPropertyFetchModeClosure;
 	private final boolean[] subclassPropertyNullabilityClosure;
 	private final boolean[] propertyDefinedOnSubclass;
-	private final int[][] subclassPropertyColumnNumberClosure;
-	private final int[][] subclassPropertyFormulaNumberClosure;
+//	private final int[][] subclassPropertyColumnNumberClosure;
+//	private final int[][] subclassPropertyFormulaNumberClosure;
 	private final CascadeStyle[] subclassPropertyCascadeStyleClosure;
 
 	//information about all columns/formulas in class hierarchy
-	private final String[] subclassColumnClosure;
-	private final boolean[] subclassColumnLazyClosure;
+	private final String[] subclassColumnClosure; //only used by JoinedSubclassEntityPersister! TODO: MOVE IT DOWN!
+//	private final boolean[] subclassColumnLazyClosure;
 	private final String[] subclassColumnAliasClosure;
 	private final boolean[] subclassColumnSelectableClosure;
-	private final String[] subclassColumnReaderTemplateClosure;
-	private final String[] subclassFormulaClosure;
-	private final String[] subclassFormulaTemplateClosure;
+//	private final String[] subclassColumnReaderTemplateClosure;
+//	private final String[] subclassFormulaClosure;
+//	private final String[] subclassFormulaTemplateClosure;
 	private final String[] subclassFormulaAliasClosure;
-	private final boolean[] subclassFormulaLazyClosure;
+//	private final boolean[] subclassFormulaLazyClosure;
 
 	// dynamic filters attached to the class-level
 	private final FilterHelper filterHelper;
@@ -426,10 +425,6 @@ public abstract class AbstractEntityPersister
 	protected void addDiscriminatorToInsert(Insert insert) {
 	}
 
-	protected abstract int[] getSubclassColumnTableNumberClosure();
-
-	protected abstract int[] getSubclassFormulaTableNumberClosure();
-
 	@Override
 	public abstract String getSubclassTableName(int j);
 
@@ -468,8 +463,6 @@ public abstract class AbstractEntityPersister
 	public abstract String[] getKeyColumns(int j);
 
 	public abstract boolean isPropertyOfTable(int property, int j);
-
-	protected abstract int[] getPropertyTableNumbersInSelect();
 
 	protected abstract int[] getPropertyTableNumbers();
 
@@ -524,7 +517,7 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getSubclassEntityNames().contains( entityName );
 	}
 
-	private boolean[] getTableHasColumns() {
+	protected boolean[] getTableHasColumns() {
 		return tableHasColumns;
 	}
 
@@ -553,12 +546,7 @@ public abstract class AbstractEntityPersister
 		return result;
 	}
 
-	public String getSQLLazySelectString(String fetchGroup) {
-		final SingleIdArrayLoadPlan singleIdLoadPlan = sqlLazySelectStringsByFetchGroup.get( fetchGroup );
-		return singleIdLoadPlan == null ? null : singleIdLoadPlan.getJdbcSelect().getSql();
-	}
-
-	public SingleIdArrayLoadPlan getSQLLazySelectLoadPlan(String fetchGroup) {
+	SingleIdArrayLoadPlan getSQLLazySelectLoadPlan(String fetchGroup) {
 		return sqlLazySelectStringsByFetchGroup.get( fetchGroup );
 	}
 
@@ -578,15 +566,15 @@ public abstract class AbstractEntityPersister
 		return sqlLazyUpdateStrings;
 	}
 
-	public ExecuteUpdateResultCheckStyle[] getInsertResultCheckStyles() {
+	protected ExecuteUpdateResultCheckStyle[] getInsertResultCheckStyles() {
 		return insertResultCheckStyles;
 	}
 
-	public ExecuteUpdateResultCheckStyle[] getUpdateResultCheckStyles() {
+	protected ExecuteUpdateResultCheckStyle[] getUpdateResultCheckStyles() {
 		return updateResultCheckStyles;
 	}
 
-	public ExecuteUpdateResultCheckStyle[] getDeleteResultCheckStyles() {
+	protected ExecuteUpdateResultCheckStyle[] getDeleteResultCheckStyles() {
 		return deleteResultCheckStyles;
 	}
 
@@ -665,16 +653,16 @@ public abstract class AbstractEntityPersister
 		return rowIdName != null;
 	}
 
+	//used by Hibernate Reactive
+	@SuppressWarnings("unused")
 	public boolean[][] getPropertyColumnUpdateable() {
 		return propertyColumnUpdateable;
 	}
 
+	//used by Hibernate Reactive
+	@SuppressWarnings("unused")
 	public boolean[][] getPropertyColumnInsertable() {
 		return propertyColumnInsertable;
-	}
-
-	public boolean[] getPropertySelectable() {
-		return propertySelectable;
 	}
 
 	public String[] getTableNames() {
@@ -685,7 +673,6 @@ public abstract class AbstractEntityPersister
 		return tableNames;
 	}
 
-	@SuppressWarnings("UnnecessaryBoxing")
 	public AbstractEntityPersister(
 			final PersistentClass bootDescriptor,
 			final EntityDataAccess cacheAccessStrategy,
@@ -823,13 +810,13 @@ public abstract class AbstractEntityPersister
 
 		int hydrateSpan = entityMetamodel.getPropertySpan();
 		propertyColumnSpans = new int[hydrateSpan];
-		propertySubclassNames = new String[hydrateSpan];
+//		propertySubclassNames = new String[hydrateSpan];
 		propertyColumnAliases = new String[hydrateSpan][];
 		propertyColumnNames = new String[hydrateSpan][];
 		propertyColumnFormulaTemplates = new String[hydrateSpan][];
-		propertyColumnReaderTemplates = new String[hydrateSpan][];
+//		propertyColumnReaderTemplates = new String[hydrateSpan][];
 		propertyColumnWriters = new String[hydrateSpan][];
-		propertyUniqueness = new boolean[hydrateSpan];
+//		propertyUniqueness = new boolean[hydrateSpan];
 		propertySelectable = new boolean[hydrateSpan];
 		propertyColumnUpdateable = new boolean[hydrateSpan][];
 		propertyColumnInsertable = new boolean[hydrateSpan][];
@@ -848,10 +835,10 @@ public abstract class AbstractEntityPersister
 
 			int span = prop.getColumnSpan();
 			propertyColumnSpans[i] = span;
-			propertySubclassNames[i] = prop.getPersistentClass().getEntityName();
+//			propertySubclassNames[i] = prop.getPersistentClass().getEntityName();
 			String[] colNames = new String[span];
 			String[] colAliases = new String[span];
-			String[] colReaderTemplates = new String[span];
+//			String[] colReaderTemplates = new String[span];
 			String[] colWriters = new String[span];
 			String[] formulaTemplates = new String[span];
 			int k = 0;
@@ -865,23 +852,23 @@ public abstract class AbstractEntityPersister
 				else {
 					Column col = (Column) selectable;
 					colNames[k] = col.getQuotedName( dialect );
-					colReaderTemplates[k] = col.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
+//					colReaderTemplates[k] = col.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
 					colWriters[k] = col.getWriteExpr();
 				}
 				k++;
 			}
 			propertyColumnNames[i] = colNames;
 			propertyColumnFormulaTemplates[i] = formulaTemplates;
-			propertyColumnReaderTemplates[i] = colReaderTemplates;
+//			propertyColumnReaderTemplates[i] = colReaderTemplates;
 			propertyColumnWriters[i] = colWriters;
 			propertyColumnAliases[i] = colAliases;
 
 			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 					prop,
 					entityMetamodel.isInstrumented(),
-					(entityName) -> {
-						final MetadataImplementor metadata = creationContext.getMetadata();
-						final PersistentClass entityBinding = metadata.getEntityBinding( entityName );
+					entityName -> {
+						final PersistentClass entityBinding =
+								creationContext.getMetadata().getEntityBinding( entityName );
 						assert entityBinding != null;
 						return entityBinding.hasSubclasses();
 					},
@@ -900,7 +887,7 @@ public abstract class AbstractEntityPersister
 
 			propertySelectable[i] = prop.isSelectable();
 
-			propertyUniqueness[i] = prop.getValue().isAlternateUniqueKey();
+//			propertyUniqueness[i] = prop.getValue().isAlternateUniqueKey();
 
 			if ( prop.isLob() && dialect.forceLobAsLastValue() ) {
 				lobPropertiesLocalCollector.add( i );
@@ -919,16 +906,16 @@ public abstract class AbstractEntityPersister
 		// SUBCLASS PROPERTY CLOSURE
 
 		ArrayList<String> columns = new ArrayList<>();
-		ArrayList<Boolean> columnsLazy = new ArrayList<>();
-		ArrayList<String> columnReaderTemplates = new ArrayList<>();
+//		ArrayList<Boolean> columnsLazy = new ArrayList<>();
+//		ArrayList<String> columnReaderTemplates = new ArrayList<>();
 		ArrayList<String> aliases = new ArrayList<>();
-		ArrayList<String> formulas = new ArrayList<>();
+//		ArrayList<String> formulas = new ArrayList<>();
 		ArrayList<String> formulaAliases = new ArrayList<>();
-		ArrayList<String> formulaTemplates = new ArrayList<>();
-		ArrayList<Boolean> formulasLazy = new ArrayList<>();
+//		ArrayList<String> formulaTemplates = new ArrayList<>();
+//		ArrayList<Boolean> formulasLazy = new ArrayList<>();
 		ArrayList<Type> types = new ArrayList<>();
 		ArrayList<String> names = new ArrayList<>();
-		ArrayList<String> classes = new ArrayList<>();
+//		ArrayList<String> classes = new ArrayList<>();
 		ArrayList<String[]> templates = new ArrayList<>();
 		ArrayList<String[]> propColumns = new ArrayList<>();
 		ArrayList<String[]> propColumnReaders = new ArrayList<>();
@@ -936,65 +923,65 @@ public abstract class AbstractEntityPersister
 		ArrayList<FetchMode> joinedFetchesList = new ArrayList<>();
 		ArrayList<CascadeStyle> cascades = new ArrayList<>();
 		ArrayList<Boolean> definedBySubclass = new ArrayList<>();
-		ArrayList<int[]> propColumnNumbers = new ArrayList<>();
-		ArrayList<int[]> propFormulaNumbers = new ArrayList<>();
+//		ArrayList<int[]> propColumnNumbers = new ArrayList<>();
+//		ArrayList<int[]> propFormulaNumbers = new ArrayList<>();
 		ArrayList<Boolean> columnSelectables = new ArrayList<>();
 		ArrayList<Boolean> propNullables = new ArrayList<>();
 
 		for ( Property prop : bootDescriptor.getSubclassPropertyClosure() ) {
 			names.add( prop.getName() );
-			classes.add( prop.getPersistentClass().getEntityName() );
+//			classes.add( prop.getPersistentClass().getEntityName() );
 			types.add( prop.getType() );
 
 			final boolean isDefinedBySubclass = !thisClassProperties.contains( prop );
-			definedBySubclass.add( Boolean.valueOf( isDefinedBySubclass ) );
-			propNullables.add( Boolean.valueOf( prop.isOptional() || isDefinedBySubclass ) ); //TODO: is this completely correct?
+			definedBySubclass.add( isDefinedBySubclass );
+			propNullables.add( prop.isOptional() || isDefinedBySubclass ); //TODO: is this completely correct?
 
 			String[] cols = new String[ prop.getColumnSpan() ];
 			String[] readers = new String[ prop.getColumnSpan() ];
 			String[] readerTemplates = new String[ prop.getColumnSpan() ];
 			String[] forms = new String[ prop.getColumnSpan() ];
-			int[] colnos = new int[ prop.getColumnSpan() ];
-			int[] formnos = new int[ prop.getColumnSpan() ];
+//			int[] colnos = new int[ prop.getColumnSpan() ];
+//			int[] formnos = new int[ prop.getColumnSpan() ];
 
 			int l = 0;
-			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
-					prop,
-					entityMetamodel.isInstrumented(),
-					entityName -> {
-						final MetadataImplementor metadata = creationContext.getMetadata();
-						final PersistentClass entityBinding = metadata.getEntityBinding( entityName );
-						assert entityBinding != null;
-						return entityBinding.hasSubclasses();
-					},
-					sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled()
-			);
+//			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
+//					prop,
+//					entityMetamodel.isInstrumented(),
+//					entityName -> {
+//						final MetadataImplementor metadata = creationContext.getMetadata();
+//						final PersistentClass entityBinding = metadata.getEntityBinding( entityName );
+//						assert entityBinding != null;
+//						return entityBinding.hasSubclasses();
+//					},
+//					sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled()
+//			);
 			for ( Selectable selectable : prop.getSelectables() ) {
 				if ( selectable.isFormula() ) {
 					String template = selectable.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
-					formnos[l] = formulaTemplates.size();
-					colnos[l] = -1;
-					formulaTemplates.add( template );
+//					formnos[l] = formulaTemplates.size();
+//					colnos[l] = -1;
+//					formulaTemplates.add( template );
 					forms[l] = template;
-					formulas.add( selectable.getText( dialect ) );
+//					formulas.add( selectable.getText( dialect ) );
 					formulaAliases.add( selectable.getAlias( dialect ) );
-					formulasLazy.add( lazy );
+//					formulasLazy.add( lazy );
 				}
 				else {
 					Column col = (Column) selectable;
 					String colName = col.getQuotedName( dialect );
-					colnos[l] = columns.size(); //before add :-)
-					formnos[l] = -1;
+//					colnos[l] = columns.size(); //before add :-)
+//					formnos[l] = -1;
 					columns.add( colName );
 					cols[l] = colName;
 					aliases.add( selectable.getAlias( dialect, prop.getValue().getTable() ) );
-					columnsLazy.add( lazy );
-					columnSelectables.add( Boolean.valueOf( prop.isSelectable() ) );
+//					columnsLazy.add( lazy );
+					columnSelectables.add( prop.isSelectable() );
 
 					readers[l] = col.getReadExpr( dialect );
 					String readerTemplate = col.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
 					readerTemplates[l] = readerTemplate;
-					columnReaderTemplates.add( readerTemplate );
+//					columnReaderTemplates.add( readerTemplate );
 				}
 				l++;
 			}
@@ -1002,33 +989,33 @@ public abstract class AbstractEntityPersister
 			propColumnReaders.add( readers );
 			propColumnReaderTemplates.add( readerTemplates );
 			templates.add( forms );
-			propColumnNumbers.add( colnos );
-			propFormulaNumbers.add( formnos );
+//			propColumnNumbers.add( colnos );
+//			propFormulaNumbers.add( formnos );
 
 			joinedFetchesList.add( prop.getValue().getFetchMode() );
 			cascades.add( prop.getCascadeStyle() );
 		}
 		subclassColumnClosure = ArrayHelper.toStringArray( columns );
 		subclassColumnAliasClosure = ArrayHelper.toStringArray( aliases );
-		subclassColumnLazyClosure = ArrayHelper.toBooleanArray( columnsLazy );
+//		subclassColumnLazyClosure = ArrayHelper.toBooleanArray( columnsLazy );
 		subclassColumnSelectableClosure = ArrayHelper.toBooleanArray( columnSelectables );
-		subclassColumnReaderTemplateClosure = ArrayHelper.toStringArray( columnReaderTemplates );
+//		subclassColumnReaderTemplateClosure = ArrayHelper.toStringArray( columnReaderTemplates );
 
-		subclassFormulaClosure = ArrayHelper.toStringArray( formulas );
-		subclassFormulaTemplateClosure = ArrayHelper.toStringArray( formulaTemplates );
+//		subclassFormulaClosure = ArrayHelper.toStringArray( formulas );
+//		subclassFormulaTemplateClosure = ArrayHelper.toStringArray( formulaTemplates );
 		subclassFormulaAliasClosure = ArrayHelper.toStringArray( formulaAliases );
-		subclassFormulaLazyClosure = ArrayHelper.toBooleanArray( formulasLazy );
+//		subclassFormulaLazyClosure = ArrayHelper.toBooleanArray( formulasLazy );
 
 		subclassPropertyNameClosure = ArrayHelper.toStringArray( names );
-		subclassPropertySubclassNameClosure = ArrayHelper.toStringArray( classes );
+//		subclassPropertySubclassNameClosure = ArrayHelper.toStringArray( classes );
 		subclassPropertyTypeClosure = ArrayHelper.toTypeArray( types );
 		subclassPropertyNullabilityClosure = ArrayHelper.toBooleanArray( propNullables );
 		subclassPropertyFormulaTemplateClosure = ArrayHelper.to2DStringArray( templates );
 		subclassPropertyColumnNameClosure = ArrayHelper.to2DStringArray( propColumns );
 		subclassPropertyColumnReaderClosure = ArrayHelper.to2DStringArray( propColumnReaders );
 		subclassPropertyColumnReaderTemplateClosure = ArrayHelper.to2DStringArray( propColumnReaderTemplates );
-		subclassPropertyColumnNumberClosure = ArrayHelper.to2DIntArray( propColumnNumbers );
-		subclassPropertyFormulaNumberClosure = ArrayHelper.to2DIntArray( propFormulaNumbers );
+//		subclassPropertyColumnNumberClosure = ArrayHelper.to2DIntArray( propColumnNumbers );
+//		subclassPropertyFormulaNumberClosure = ArrayHelper.to2DIntArray( propFormulaNumbers );
 
 		subclassPropertyCascadeStyleClosure = new CascadeStyle[cascades.size()];
 		int j = 0;
@@ -1044,23 +1031,17 @@ public abstract class AbstractEntityPersister
 		propertyDefinedOnSubclass = ArrayHelper.toBooleanArray( definedBySubclass );
 
 		// Handle any filters applied to the class level
-		if ( CollectionHelper.isNotEmpty( bootDescriptor.getFilters() ) ) {
-			filterHelper = new FilterHelper( bootDescriptor.getFilters(), factory );
-		}
-		else {
-			filterHelper = null;
-		}
+		filterHelper = CollectionHelper.isNotEmpty( bootDescriptor.getFilters() )
+				? new FilterHelper(bootDescriptor.getFilters(), factory)
+				: null;
 
 		useReferenceCacheEntries = useReferenceCacheEntries();
 
 		cacheEntryHelper = buildCacheEntryHelper();
 
-		if ( sessionFactoryOptions.isSecondLevelCacheEnabled() ) {
-			this.invalidateCache = canWriteToCache && shouldInvalidateCache( bootDescriptor, creationContext );
-		}
-		else {
-			this.invalidateCache = false;
-		}
+		invalidateCache = sessionFactoryOptions.isSecondLevelCacheEnabled()
+				&& canWriteToCache
+				&& shouldInvalidateCache(bootDescriptor, creationContext);
 
 	}
 
@@ -1186,12 +1167,6 @@ public abstract class AbstractEntityPersister
 	@Override
 	public boolean canUseReferenceCacheEntries() {
 		return useReferenceCacheEntries;
-	}
-
-	protected static String getTemplateFromString(String string, SessionFactoryImplementor factory) {
-		return string == null ?
-				null :
-				Template.renderWhereStringTemplate( string, factory.getJdbcServices().getDialect(), factory.getQueryEngine().getSqmFunctionRegistry() );
 	}
 
 	protected Map<String, SingleIdArrayLoadPlan> generateLazySelectStringsByFetchGroup() {
@@ -1346,7 +1321,7 @@ public abstract class AbstractEntityPersister
 				creationContext
 		);
 
-		final StandardTableGroup tableGroup = new StandardTableGroup(
+		return new StandardTableGroup(
 				canUseInnerJoins,
 				navigablePath,
 				this,
@@ -1359,19 +1334,15 @@ public abstract class AbstractEntityPersister
 					final String[] subclassTableNames = getSubclassTableNames();
 					for ( int i = 0; i < subclassTableNames.length; i++ ) {
 						if ( tableExpression.equals( subclassTableNames[ i ] ) ) {
-							final boolean isNullableTable = isNullableSubclassTable( i );
 							final NamedTableReference joinedTableReference = new NamedTableReference(
 									tableExpression,
 									sqlAliasBase.generateNewAlias(),
-									isNullableTable,
+									isNullableSubclassTable( i ),
 									getFactory()
 							);
 
 							return new TableReferenceJoin(
-									shouldInnerJoinSubclassTable(
-											i,
-											Collections.emptySet()
-									),
+									shouldInnerJoinSubclassTable( i, Collections.emptySet() ),
 									joinedTableReference,
 									additionalPredicateCollectorAccess == null
 											? null
@@ -1389,8 +1360,6 @@ public abstract class AbstractEntityPersister
 				},
 				getFactory()
 		);
-
-		return tableGroup;
 	}
 
 	@Override
@@ -1703,7 +1672,6 @@ public abstract class AbstractEntityPersister
 				final boolean set = initializeLazyProperty(
 						fieldName,
 						entity,
-						session,
 						entry,
 						fetchGroupAttributeDescriptor.getLazyIndex(),
 						selectedValue
@@ -1755,7 +1723,7 @@ public abstract class AbstractEntityPersister
 						session,
 						entity
 				);
-				if ( initializeLazyProperty( fieldName, entity, session, entry, j, propValue ) ) {
+				if ( initializeLazyProperty( fieldName, entity, entry, j, propValue ) ) {
 					result = propValue;
 				}
 			}
@@ -1766,23 +1734,23 @@ public abstract class AbstractEntityPersister
 		return result;
 	}
 
+	// called by Hibernate Reactive
 	protected boolean initializeLazyProperty(
 			final String fieldName,
 			final Object entity,
-			final SharedSessionContractImplementor session,
 			final EntityEntry entry,
-			final int j,
+			final int index,
 			final Object propValue) {
-		setPropertyValue( entity, lazyPropertyNumbers[j], propValue );
+		setPropertyValue( entity, lazyPropertyNumbers[index], propValue );
 		if ( entry.getLoadedState() != null ) {
 			// object have been loaded with setReadOnly(true); HHH-2236
-			entry.getLoadedState()[lazyPropertyNumbers[j]] = lazyPropertyTypes[j].deepCopy( propValue, factory );
+			entry.getLoadedState()[lazyPropertyNumbers[index]] = lazyPropertyTypes[index].deepCopy( propValue, factory );
 		}
 		// If the entity has deleted state, then update that as well
 		if ( entry.getDeletedState() != null ) {
-			entry.getDeletedState()[lazyPropertyNumbers[j]] = lazyPropertyTypes[j].deepCopy( propValue, factory );
+			entry.getDeletedState()[lazyPropertyNumbers[index]] = lazyPropertyTypes[index].deepCopy( propValue, factory );
 		}
-		return fieldName.equals( lazyPropertyNames[j] );
+		return fieldName.equals( lazyPropertyNames[index] );
 	}
 
 	public boolean isBatchable() {
@@ -1834,14 +1802,6 @@ public abstract class AbstractEntityPersister
 
 	public String getVersionedTableName() {
 		return getTableName( 0 );
-	}
-
-	protected boolean[] getSubclassColumnLazyiness() {
-		return subclassColumnLazyClosure;
-	}
-
-	protected boolean[] getSubclassFormulaLazyiness() {
-		return subclassFormulaLazyClosure;
 	}
 
 	/**
@@ -2101,10 +2061,6 @@ public abstract class AbstractEntityPersister
 		return select.addCondition( rootTableKeyColumnNames, "=?" ).toStatementString();
 	}
 
-	public boolean[] getPropertyUniqueness() {
-		return propertyUniqueness;
-	}
-
 	private GeneratedValuesProcessor createGeneratedValuesProcessor(GenerationTiming timing) {
 		return new GeneratedValuesProcessor( this, timing, getFactory() );
 	}
@@ -2339,10 +2295,7 @@ public abstract class AbstractEntityPersister
 				return getSubclassColumnTableNumberClosure()[idx];
 			}
 		}*/
-		int index = ArrayHelper.indexOf(
-				getSubclassPropertyNameClosure(),
-				rootPropertyName
-		); //TODO: optimize this better!
+		int index = ArrayHelper.indexOf( getSubclassPropertyNameClosure(), rootPropertyName ); //TODO: optimize this better!
 		return index == -1 ? 0 : getSubclassPropertyTableNumber( index );
 	}
 
@@ -2404,10 +2357,6 @@ public abstract class AbstractEntityPersister
 
 	private int getSubclassPropertyIndex(String propertyName) {
 		return ArrayHelper.indexOf( subclassPropertyNameClosure, propertyName );
-	}
-
-	protected String[] getPropertySubclassNames() {
-		return propertySubclassNames;
 	}
 
 	@Override
@@ -2560,28 +2509,13 @@ public abstract class AbstractEntityPersister
 		return ArrayHelper.toIntArray( fields );
 	}
 
-	protected String[] getSubclassPropertySubclassNameClosure() {
-		return subclassPropertySubclassNameClosure;
-	}
-
+	@Deprecated //TODO: REMOVE THIS
 	protected String[] getSubclassColumnClosure() {
 		return subclassColumnClosure;
 	}
 
 	protected String[] getSubclassColumnAliasClosure() {
 		return subclassColumnAliasClosure;
-	}
-
-	public String[] getSubclassColumnReaderTemplateClosure() {
-		return subclassColumnReaderTemplateClosure;
-	}
-
-	protected String[] getSubclassFormulaClosure() {
-		return subclassFormulaClosure;
-	}
-
-	protected String[] getSubclassFormulaTemplateClosure() {
-		return subclassFormulaTemplateClosure;
 	}
 
 	protected String[] getSubclassFormulaAliasClosure() {
@@ -2702,18 +2636,8 @@ public abstract class AbstractEntityPersister
 
 	}
 
-	protected int[] getLazyPropertyNumbers() {
-		return lazyPropertyNumbers;
-	}
-
-	protected String[] getLazyPropertyNames() {
-		return lazyPropertyNames;
-	}
-
-	protected Type[] getLazyPropertyTypes() {
-		return lazyPropertyTypes;
-	}
-
+	// used by Hibernate Reactive
+	@SuppressWarnings("unused")
 	protected String[][] getLazyPropertyColumnAliases() {
 		return lazyPropertyColumnAliases;
 	}
@@ -3236,11 +3160,6 @@ public abstract class AbstractEntityPersister
 			return getIdentifierColumnSpan();
 		}
 		return 0;
-	}
-
-	public boolean useInsertSelectIdentity() {
-		return !useGetGeneratedKeys()
-			&& getFactory().getJdbcServices().getDialect().getIdentityColumnSupport().supportsInsertSelectIdentity();
 	}
 
 	public boolean useGetGeneratedKeys() {
@@ -4095,18 +4014,9 @@ public abstract class AbstractEntityPersister
 
 	protected abstract String filterFragment(String alias, Set<String> treatAsDeclarations);
 
-
-	public String generateWhereConditionAlias(String alias) {
-		return alias;
-	}
-
 	@Override
 	public String generateFilterConditionAlias(String rootAlias) {
 		return rootAlias;
-	}
-
-	protected boolean isSubclassTableLazy(int j) {
-		return false;
 	}
 
 	protected boolean shouldInnerJoinSubclassTable(
@@ -6677,15 +6587,6 @@ public abstract class AbstractEntityPersister
 	@Override
 	public Iterable<AttributeDefinition> getAttributes() {
 		return attributeDefinitions;
-	}
-
-	/**
-	 * If true, persister can omit superclass tables during joining if they are not needed in the query.
-	 *
-	 * @return true if the persister can do it
-	 */
-	public boolean canOmitSuperclassTableJoin() {
-		return false;
 	}
 
 	private void prepareEntityIdentifierDefinition() {

@@ -87,7 +87,7 @@ public interface Interceptor {
 	 */
 	default boolean onLoad(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
 			throws CallbackException {
-		if (id instanceof Serializable) {
+		if (id==null || id instanceof Serializable) {
 			return onLoad(entity, (Serializable) id, state, propertyNames, types);
 		}
 		return false;
@@ -155,7 +155,7 @@ public interface Interceptor {
 			Object[] previousState,
 			String[] propertyNames,
 			Type[] types) throws CallbackException {
-		if (id instanceof Serializable) {
+		if (id==null || id instanceof Serializable) {
 			return onFlushDirty(entity, (Serializable) id, currentState, previousState, propertyNames, types);
 		}
 		return false;
@@ -174,10 +174,36 @@ public interface Interceptor {
 	 * @return {@code true} if the user modified the {@code state} in any way.
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
+	 *
+	 * @deprecated use {@link #onSave(Object, Object, Object[], String[], Type[])}
 	 */
-	boolean onSave(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
-			throws CallbackException;
+	@Deprecated
+	default boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types)
+			throws CallbackException {
+		return false;
+	}
 
+	/**
+	 * Called before an object is saved. The interceptor may modify the <tt>state</tt>, which will be used for
+	 * the SQL <tt>INSERT</tt> and propagated to the persistent object.
+	 *
+	 * @param entity The entity instance whose state is being inserted
+	 * @param id The identifier of the entity
+	 * @param state The state of the entity which will be inserted
+	 * @param propertyNames The names of the entity properties.
+	 * @param types The types of the entity properties
+	 *
+	 * @return <tt>true</tt> if the user modified the <tt>state</tt> in any way.
+	 *
+	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
+	 */
+	default boolean onSave(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
+			throws CallbackException {
+		if (id==null || id instanceof Serializable) {
+			return onSave(entity, (Serializable) id, state, propertyNames, types);
+		}
+		return false;
+	}
 	/**
 	 *  Called before an object is deleted. It is not recommended that the interceptor modify the {@code state}.
 	 *
@@ -208,7 +234,7 @@ public interface Interceptor {
 	 */
 	default void onDelete(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
 			throws CallbackException {
-		if (id instanceof Serializable) {
+		if (id==null || id instanceof Serializable) {
 			onDelete(entity, (Serializable) id, state, propertyNames, types);
 		}
 	}
@@ -386,7 +412,7 @@ public interface Interceptor {
 			Object[] previousState,
 			String[] propertyNames,
 			Type[] types) {
-		if (id instanceof Serializable) {
+		if (id==null || id instanceof Serializable) {
 			return findDirty(entity, (Serializable) id, currentState, previousState, propertyNames, types);
 		}
 		return null;
@@ -404,10 +430,17 @@ public interface Interceptor {
 		return instantiate( entityName, representationStrategy.getMode(), id );
 	}
 
-	Object instantiate(
+	/**
+	 * Instantiate the entity. Return {@code null} to indicate that Hibernate should use
+	 * the default constructor of the class. The identifier property of the returned instance
+	 * should be initialized with the given identifier.
+	 */
+	default Object instantiate(
 			String entityName,
 			RepresentationMode representationMode,
-			Object id) throws CallbackException;
+			Object id) throws CallbackException {
+		return null;
+	}
 
 	/**
 	 * Get the entity name for a persistent or transient instance.
@@ -450,7 +483,7 @@ public interface Interceptor {
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
 	default Object getEntity(String entityName, Object id) throws CallbackException {
-		if (id instanceof Serializable) {
+		if (id==null || id instanceof Serializable) {
 			return getEntity(entityName, (Serializable) id);
 		}
 		return null;

@@ -26,15 +26,4 @@ public class EmptyInterceptor implements Interceptor, Serializable {
 	public static final Interceptor INSTANCE = new EmptyInterceptor();
 
 	protected EmptyInterceptor() {}
-
-	@Override
-	public boolean onSave(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
-			throws CallbackException {
-		return false;
-	}
-
-	@Override
-	public Object instantiate(String entityName, RepresentationMode representationMode, Object id) throws CallbackException {
-		return null;
-	}
 }

@@ -10,13 +10,13 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 
 /**
- * During a flush cycle, Hibernate needs to determine which of the entities associated with a {@link Session}.
- * Dirty entities are the ones that get {@literal UPDATE}ed to the database.
+ * During a flush cycle, Hibernate needs to determine which of the entities associated with a {@link Session}
+ * are <em>dirty</em>, meaning modified. Dirty entities will be {@literal UPDATE}ed in the database.
  * <p/>
- * In some circumstances, that process of determining whether an entity is dirty can take a significant time as
- * by default Hibernate must check each of the entity's attribute values one-by-one.  Oftentimes applications
- * already have knowledge of an entity's dirtiness and using that information instead would be more performant.
- * The purpose of this contract then is to allow applications such a plug-in point.
+ * In some circumstances, the process of determining whether an entity is dirty can carry a significant overhead,
+ * since, by default, Hibernate must check each of the entity's attribute values one by one. Sometimes, an
+ * application already has knowledge of an entity's dirtiness and making use of that information would save some
+ * work. This contract allows the application to take over the task of determining if an entity is dirty.
  *
  * @see org.hibernate.cfg.AvailableSettings#CUSTOM_ENTITY_DIRTINESS_STRATEGY
  * @see org.hibernate.boot.SessionFactoryBuilder#applyCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy)
@@ -28,7 +28,7 @@ public interface CustomEntityDirtinessStrategy {
 	 * Is this strategy capable of telling whether the given entity is dirty?  A return of {@code true} means that
 	 * {@link #isDirty} will be called next as the definitive means to determine whether the entity is dirty.
 	 *
-	 * @param entity The entity to be check.
+	 * @param entity The entity to be checked
 	 * @param persister The persister corresponding to the given entity
 	 * @param session The session from which this check originates.
 	 *
@@ -61,7 +61,7 @@ public interface CustomEntityDirtinessStrategy {
 	/**
 	 * Callback used to hook into Hibernate algorithm for determination of which attributes have changed.  Applications
 	 * wanting to hook in to this would call back into the given {@link DirtyCheckContext#doDirtyChecking}
-	 * method passing along an appropriate {@link AttributeChecker} implementation.
+	 * method, passing along an appropriate {@link AttributeChecker} implementation.
 	 *
 	 * @param entity The entity being checked
 	 * @param persister The persister corresponding to the given entity
@@ -72,11 +72,12 @@ public interface CustomEntityDirtinessStrategy {
 
 	/**
 	 * A callback to drive dirty checking.  Handed to the {@link CustomEntityDirtinessStrategy#findDirty} method
-	 * so that it can callback on to it if it wants to handle dirty checking rather than using Hibernate's default
-	 * checking
+	 * so that it can call back in to it if it wants to handle dirty checking rather than using Hibernate's default
+	 * checking.
 	 *
 	 * @see CustomEntityDirtinessStrategy#findDirty
 	 */
+	@FunctionalInterface
 	interface DirtyCheckContext {
 		/**
 		 * The callback to indicate that dirty checking (the dirty attribute determination phase) should be handled
@@ -90,6 +91,7 @@ public interface CustomEntityDirtinessStrategy {
 	/**
 	 * Responsible for identifying when attributes are dirty.
 	 */
+	@FunctionalInterface
 	interface AttributeChecker {
 		/**
 		 * Do the attribute dirty check.

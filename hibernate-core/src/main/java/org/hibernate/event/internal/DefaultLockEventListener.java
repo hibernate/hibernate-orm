@@ -63,7 +63,7 @@ public class DefaultLockEventListener extends AbstractLockUpgradeEventListener i
 		//      resulting in two SQL selects
 		
 		EntityEntry entry = persistenceContext.getEntry(entity);
-		if (entry==null) {
+		if ( entry == null ) {
 			final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 			final Object id = persister.getIdentifier( entity, source );
 			if ( !ForeignKeys.isNotTransient( event.getEntityName(), entity, Boolean.FALSE, source ) ) {

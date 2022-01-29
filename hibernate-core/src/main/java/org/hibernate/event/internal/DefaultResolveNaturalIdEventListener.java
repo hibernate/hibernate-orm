@@ -31,9 +31,6 @@ public class DefaultResolveNaturalIdEventListener
 		extends AbstractLockUpgradeEventListener
 		implements ResolveNaturalIdEventListener {
 
-	public static final Object REMOVED_ENTITY_MARKER = new Object();
-	public static final Object INCONSISTENT_RTN_CLASS_MARKER = new Object();
-
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultResolveNaturalIdEventListener.class );
 
 	@Override
@@ -94,10 +91,12 @@ public class DefaultResolveNaturalIdEventListener
 	 * @return The entity from the cache, or null.
 	 */
 	protected Object resolveFromCache(final ResolveNaturalIdEvent event) {
-		return event.getSession().getPersistenceContextInternal().getNaturalIdResolutions().findCachedIdByNaturalId(
-				event.getOrderedNaturalIdValues(),
-				event.getEntityPersister()
-		);
+		return event.getSession().getPersistenceContextInternal()
+				.getNaturalIdResolutions()
+				.findCachedIdByNaturalId(
+						event.getOrderedNaturalIdValues(),
+						event.getEntityPersister()
+				);
 	}
 
 	/**
@@ -110,11 +109,10 @@ public class DefaultResolveNaturalIdEventListener
 	 */
 	protected Object loadFromDatasource(final ResolveNaturalIdEvent event) {
 		final EventSource session = event.getSession();
-		final SessionFactoryImplementor factory = session.getFactory();
-		final StatisticsImplementor statistics = factory.getStatistics();
-		final boolean stats = statistics.isStatisticsEnabled();
+		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		final boolean statisticsEnabled = statistics.isStatisticsEnabled();
 		long startTime = 0;
-		if ( stats ) {
+		if ( statisticsEnabled ) {
 			startTime = System.nanoTime();
 		}
 
@@ -124,7 +122,7 @@ public class DefaultResolveNaturalIdEventListener
 				session
 		);
 
-		if ( stats ) {
+		if ( statisticsEnabled ) {
 			final long endTime = System.nanoTime();
 			final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
 			statistics.naturalIdQueryExecuted(
@@ -135,10 +133,9 @@ public class DefaultResolveNaturalIdEventListener
 
 		//PK can be null if the entity doesn't exist
 		if (pk != null) {
-			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-			persistenceContext.getNaturalIdResolutions().cacheResolutionFromLoad(
-					pk, event.getOrderedNaturalIdValues(), event.getEntityPersister()
-			);
+			session.getPersistenceContextInternal()
+					.getNaturalIdResolutions()
+					.cacheResolutionFromLoad( pk, event.getOrderedNaturalIdValues(), event.getEntityPersister() );
 		}
 
 		return pk;

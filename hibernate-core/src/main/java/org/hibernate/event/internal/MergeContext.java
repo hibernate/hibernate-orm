@@ -73,7 +73,7 @@ import org.hibernate.pretty.MessageHelper;
  *
  * @author Gail Badner
  */
-public class MergeContext implements Map {
+public class MergeContext implements Map<Object,Object> {
 
 	private final EventSource session;
 	private final EntityCopyObserver entityCopyObserver;
@@ -146,7 +146,7 @@ public class MergeContext implements Map {
 	 *
 	 * @see Collections#unmodifiableSet(Set)
 	 */
-	public Set entrySet() {
+	public Set<Map.Entry<Object,Object>> entrySet() {
 		return Collections.unmodifiableSet( mergeToManagedEntityXref.entrySet() );
 	}
 
@@ -177,7 +177,7 @@ public class MergeContext implements Map {
 	 *
 	 * @see Collections#unmodifiableSet(Set)
 	 */
-	public Set keySet() {
+	public Set<Object> keySet() {
 		return Collections.unmodifiableSet( mergeToManagedEntityXref.keySet() );
 	}
 
@@ -284,9 +284,8 @@ public class MergeContext implements Map {
 	 * but associated value in <code>map</code> is different from the previous value in this MergeContext.
 	 * @throws IllegalStateException if internal cross-references are out of sync,
 	 */
-	public void putAll(Map map) {
-		for ( Object o : map.entrySet() ) {
-			Entry entry = (Entry) o;
+	public void putAll(Map<?,?> map) {
+		for ( Entry<?,?> entry : map.entrySet() ) {
 			put( entry.getKey(), entry.getValue() );
 		}
 	}
@@ -316,7 +315,7 @@ public class MergeContext implements Map {
 	 *
 	 * @see Collections#unmodifiableSet(Set)
 	 */
-	public Collection values() {
+	public Collection<Object> values() {
 		return Collections.unmodifiableSet( managedToMergeEntityXref.keySet() );
 	}
 
@@ -364,7 +363,7 @@ public class MergeContext implements Map {
 	 *
 	 * @see Collections#unmodifiableMap(Map)
 	 */
-	public Map invertMap() {
+	public Map<Object,Object> invertMap() {
 		return Collections.unmodifiableMap( managedToMergeEntityXref );
 	}
 

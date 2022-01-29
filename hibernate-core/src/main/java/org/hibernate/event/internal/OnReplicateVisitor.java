@@ -57,12 +57,12 @@ public class OnReplicateVisitor extends ReattachVisitor {
 				reattachCollection( wrapper, type );
 			}
 		}
-		else {
+//		else {
 			// otherwise a null or brand new collection
 			// this will also (inefficiently) handle arrays, which
 			// have no snapshot, so we can't do any better
 			//processArrayOrNewCollection(collection, type);
-		}
+//		}
 
 		return null;
 

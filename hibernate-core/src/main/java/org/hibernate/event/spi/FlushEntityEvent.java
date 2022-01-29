@@ -12,14 +12,14 @@ import org.hibernate.engine.spi.EntityEntry;
  * @author Gavin King
  */
 public class FlushEntityEvent extends AbstractEvent {
-	private Object entity;
+	private final Object entity;
 	private Object[] propertyValues;
 	private Object[] databaseSnapshot;
 	private int[] dirtyProperties;
 	private boolean hasDirtyCollection;
 	private boolean dirtyCheckPossible;
 	private boolean dirtyCheckHandledByInterceptor;
-	private EntityEntry entityEntry;
+	private final EntityEntry entityEntry;
 	
 	public FlushEntityEvent(EventSource source, Object entity, EntityEntry entry) {
 		super(source);

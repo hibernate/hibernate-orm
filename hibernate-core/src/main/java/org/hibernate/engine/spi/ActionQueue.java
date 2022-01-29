@@ -551,7 +551,7 @@ public class ActionQueue {
 	 *
 	 * @return {@code true} if we contain pending actions against any of the given tables; {@code false} otherwise.
 	 */
-	public boolean areTablesToBeUpdated(Set<Serializable> tables) {
+	public boolean areTablesToBeUpdated(Set<? extends Serializable> tables) {
 		if ( tables.isEmpty() ) {
 			return false;
 		}
@@ -567,7 +567,7 @@ public class ActionQueue {
 		return areTablesToBeUpdated( unresolvedInsertions, tables );
 	}
 
-	private static boolean areTablesToBeUpdated(ExecutableList<?> actions, Set<Serializable> tableSpaces) {
+	private static boolean areTablesToBeUpdated(ExecutableList<?> actions, Set<? extends Serializable> tableSpaces) {
 		if ( actions == null || actions.isEmpty() ) {
 			return false;
 		}
@@ -582,7 +582,7 @@ public class ActionQueue {
 		return false;
 	}
 
-	private static boolean areTablesToBeUpdated(UnresolvedEntityInsertActions actions, Set<Serializable> tableSpaces) {
+	private static boolean areTablesToBeUpdated(UnresolvedEntityInsertActions actions, Set<? extends Serializable> tableSpaces) {
 		for ( Executable action : actions.getDependentEntityInsertActions() ) {
 			final Serializable[] spaces = action.getPropertySpaces();
 			for ( Serializable space : spaces ) {

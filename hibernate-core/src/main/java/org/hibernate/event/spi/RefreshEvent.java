@@ -16,7 +16,7 @@ import org.hibernate.LockOptions;
  */
 public class RefreshEvent extends AbstractEvent {
 
-	private Object object;
+	private final Object object;
 	private String entityName;
 
 	private LockOptions lockOptions = new LockOptions().setLockMode(LockMode.READ);

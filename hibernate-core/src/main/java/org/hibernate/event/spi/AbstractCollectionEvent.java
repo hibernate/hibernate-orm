@@ -61,15 +61,19 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 
 	protected static Object getOwnerIdOrNull(Object owner, EventSource source ) {
 		EntityEntry ownerEntry = source.getPersistenceContextInternal().getEntry( owner );
-		return ( ownerEntry == null ? null : ownerEntry.getId() );
+		return ownerEntry == null ? null : ownerEntry.getId();
 	}
 
-	protected static String getAffectedOwnerEntityName(CollectionPersister collectionPersister, Object affectedOwner, EventSource source ) {
+	protected static String getAffectedOwnerEntityName(
+			CollectionPersister collectionPersister,
+			Object affectedOwner,
+			EventSource source ) {
 
 		// collectionPersister should not be null, but we don't want to throw
 		// an exception if it is null
-		String entityName =
-				( collectionPersister == null ? null : collectionPersister.getOwnerEntityPersister().getEntityName() );
+		String entityName = collectionPersister == null
+				? null
+				: collectionPersister.getOwnerEntityPersister().getEntityName();
 		if ( affectedOwner != null ) {
 			EntityEntry ee = source.getPersistenceContextInternal().getEntry( affectedOwner );
 			if ( ee != null && ee.getEntityName() != null) {

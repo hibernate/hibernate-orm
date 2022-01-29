@@ -159,10 +159,8 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 			return false;
 		}
 
-		CollectionCacheEntry cacheEntry = (CollectionCacheEntry) persister.getCacheEntryStructure().destructure(
-				ce,
-				factory
-		);
+		CollectionCacheEntry cacheEntry = (CollectionCacheEntry)
+				persister.getCacheEntryStructure().destructure( ce, factory );
 
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		cacheEntry.assemble( collection, persister, persistenceContext.getCollectionOwner( id, persister ) );

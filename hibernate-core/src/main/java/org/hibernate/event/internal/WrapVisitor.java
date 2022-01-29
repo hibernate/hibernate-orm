@@ -12,6 +12,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLaziness
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
@@ -48,19 +49,14 @@ public class WrapVisitor extends ProxyVisitor {
 	Object processCollection(Object collection, CollectionType collectionType)
 			throws HibernateException {
 
-		if ( collection == null ) {
-			return null;
-		}
-
-		if ( collection == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+		if ( collection == null || collection == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 			return null;
 		}
 
 		if ( collection instanceof PersistentCollection ) {
 			final PersistentCollection<?> coll = (PersistentCollection<?>) collection;
-			final SessionImplementor session = getSession();
 
-			if ( coll.setCurrentSession( session ) ) {
+			if ( coll.setCurrentSession( getSession() ) ) {
 				reattachCollection( coll, collectionType );
 			}
 
@@ -103,7 +99,9 @@ public class WrapVisitor extends ProxyVisitor {
 			}
 			else {
 				if ( entity instanceof PersistentAttributeInterceptable ) {
-					if ( ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor() instanceof EnhancementAsProxyLazinessInterceptor ) {
+					PersistentAttributeInterceptor attributeInterceptor =
+							((PersistentAttributeInterceptable) entity).$$_hibernate_getInterceptor();
+					if ( attributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 						return null;
 					}
 				}

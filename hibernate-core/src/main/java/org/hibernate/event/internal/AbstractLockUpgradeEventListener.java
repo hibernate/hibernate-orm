@@ -33,6 +33,6 @@ public abstract class AbstractLockUpgradeEventListener extends AbstractReassocia
 	 * @param source The session which is the source of the event being processed.
 	 */
 	protected void upgradeLock(Object object, EntityEntry entry, LockOptions lockOptions, EventSource source) {
-		LoaderHelper.upgradeLock( object, entry, lockOptions, (SessionImplementor) source );
+		LoaderHelper.upgradeLock( object, entry, lockOptions, source );
 	}
 }

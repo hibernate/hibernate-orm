@@ -14,15 +14,15 @@ import java.util.Set;
  */
 public class AutoFlushEvent extends FlushEvent {
 
-	private Set querySpaces;
+	private Set<String> querySpaces;
 	private boolean flushRequired;
 
-	public AutoFlushEvent(Set querySpaces, EventSource source) {
+	public AutoFlushEvent(Set<String> querySpaces, EventSource source) {
 		super(source);
 		this.querySpaces = querySpaces;
 	}
 
-	public Set getQuerySpaces() {
+	public Set<String> getQuerySpaces() {
 		return querySpaces;
 	}
 

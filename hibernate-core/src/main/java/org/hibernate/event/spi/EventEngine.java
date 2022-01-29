@@ -30,8 +30,8 @@ import org.hibernate.service.spi.Stoppable;
  * @author Steve Ebersole
  */
 public class EventEngine {
-	@SuppressWarnings("rawtypes")
-	private final Map<String,EventType> registeredEventTypes;
+
+	private final Map<String,EventType<?>> registeredEventTypes;
 	private final EventListenerRegistry listenerRegistry;
 
 	private final CallbackRegistryImplementor callbackRegistry;
@@ -55,14 +55,14 @@ public class EventEngine {
 				sessionFactory.getSessionFactoryOptions().isJpaBootstrap()
 		);
 
-		final Map<String,EventType> eventTypes = new HashMap<>();
+		final Map<String,EventType<?>> eventTypes = new HashMap<>();
 		EventType.registerStandardTypes( eventTypes );
 
 		final EventEngineContributions contributionManager = new EventEngineContributions() {
 			@Override
 			public <T> EventType<T> findEventType(String name) {
 				//noinspection unchecked
-				return eventTypes.get( name );
+				return (EventType<T>) eventTypes.get( name );
 			}
 
 			@Override
@@ -101,13 +101,12 @@ public class EventEngine {
 				return eventType;
 			}
 
-			@Override
-			public <T> EventType<T> contributeEventType(String name, Class<T> listenerRole, T... defaultListeners) {
+			@Override @SafeVarargs
+			public final <T> EventType<T> contributeEventType(String name, Class<T> listenerRole, T... defaultListeners) {
 				final EventType<T> eventType = contributeEventType( name, listenerRole );
 
 				if ( defaultListeners != null ) {
-					final EventListenerGroup<T> listenerGroup = listenerRegistryBuilder.getListenerGroup( eventType );
-					listenerGroup.appendListeners( defaultListeners );
+					listenerRegistryBuilder.getListenerGroup( eventType ).appendListeners( defaultListeners );
 				}
 
 				return eventType;
@@ -125,9 +124,10 @@ public class EventEngine {
 			}
 		};
 
-		final Collection<EventEngineContributor> discoveredContributors = sessionFactory.getServiceRegistry()
-				.getService( ClassLoaderService.class )
-				.loadJavaServices( EventEngineContributor.class );
+		final Collection<EventEngineContributor> discoveredContributors =
+				sessionFactory.getServiceRegistry()
+						.getService( ClassLoaderService.class )
+						.loadJavaServices( EventEngineContributor.class );
 		if ( CollectionHelper.isNotEmpty( discoveredContributors ) ) {
 			for ( EventEngineContributor contributor : discoveredContributors ) {
 				contributor.contribute( contributionManager );
@@ -139,13 +139,12 @@ public class EventEngine {
 	}
 
 	public Collection<EventType<?>> getRegisteredEventTypes() {
-		//noinspection unchecked,rawtypes
-		return (Collection) registeredEventTypes.values();
+		return registeredEventTypes.values();
 	}
 
 	public <T> EventType<T> findRegisteredEventType(String name) {
 		//noinspection unchecked
-		return registeredEventTypes.get( name );
+		return (EventType<T>) registeredEventTypes.get( name );
 	}
 
 	public EventListenerRegistry getListenerRegistry() {

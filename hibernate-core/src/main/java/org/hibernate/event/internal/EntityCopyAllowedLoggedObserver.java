@@ -76,7 +76,7 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 		}
 		if ( detachedEntitiesForManaged == null ) {
 			// There were no existing representations for this particular managed entity;
-			detachedEntitiesForManaged = new IdentitySet();
+			detachedEntitiesForManaged = new IdentitySet<>();
 			managedToMergeEntitiesXref.put( managedEntity, detachedEntitiesForManaged );
 			incrementEntityNameCount( entityName );
 		}
@@ -117,13 +117,11 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 		// Log the summary.
 		if ( countsByEntityName != null ) {
 			for ( Map.Entry<String, Integer> entry : countsByEntityName.entrySet() ) {
-				final String entityName = entry.getKey();
-				final int count = entry.getValue();
 				LOG.debug(
 						String.format(
 								"Summary: number of %s entities with multiple representations merged: %d",
-								entityName,
-								count
+								entry.getKey(),
+								entry.getValue()
 						)
 				);
 			}
@@ -135,7 +133,7 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 		if ( managedToMergeEntitiesXref != null ) {
 			for ( Map.Entry<Object,Set<Object>> entry : managedToMergeEntitiesXref.entrySet() ) {
 				Object managedEntity = entry.getKey();
-				Set mergeEntities = entry.getValue();
+				Set<Object> mergeEntities = entry.getValue();
 				StringBuilder sb = new StringBuilder( "Details: merged ")
 						.append( mergeEntities.size() )
 						.append( " representations of the same entity " )
@@ -163,11 +161,8 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 	}
 
 	private String getManagedOrDetachedEntityString(Object managedEntity, Object mergeEntity ) {
-		if ( mergeEntity == managedEntity) {
-			return  "Managed: [" + mergeEntity + "]";
-		}
-		else {
-			return "Detached: [" + mergeEntity + "]";
-		}
+		return mergeEntity == managedEntity
+				? "Managed: [" + mergeEntity + "]"
+				: "Detached: [" + mergeEntity + "]";
 	}
 }

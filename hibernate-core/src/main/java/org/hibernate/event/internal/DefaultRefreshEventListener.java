@@ -49,7 +49,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultRefreshEventListener.class );
 
 	public void onRefresh(RefreshEvent event) throws HibernateException {
-		onRefresh( event, new IdentityHashMap( 10 ) );
+		onRefresh( event, new IdentityHashMap<>( 10 ) );
 	}
 
 	/**
@@ -60,15 +60,12 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 	public void onRefresh(RefreshEvent event, Map refreshedAlready) {
 
 		final EventSource source = event.getSession();
-		boolean isTransient;
-		if ( event.getEntityName() != null ) {
-			isTransient = !source.contains( event.getEntityName(), event.getObject() );
-		}
-		else {
-			isTransient = !source.contains( event.getObject() );
-		}
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+
 		if ( persistenceContext.reassociateIfUninitializedProxy( event.getObject() ) ) {
+			boolean isTransient = event.getEntityName() != null
+					? !source.contains(event.getEntityName(), event.getObject())
+					: !source.contains(event.getObject());
 			if ( isTransient ) {
 				source.setReadOnly( event.getObject(), source.isDefaultReadOnly() );
 			}
@@ -82,11 +79,11 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			return;
 		}
 
-		final EntityEntry e = persistenceContext.getEntry( object );
+		final EntityEntry entry = persistenceContext.getEntry( object );
 		final EntityPersister persister;
 		final Object id;
 
-		if ( e == null ) {
+		if ( entry == null ) {
 			//refresh() does not pass an entityName
 			persister = source.getEntityPersister( event.getEntityName(), object );
 			id = persister.getIdentifier( object, event.getSession() );
@@ -111,21 +108,21 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Refreshing ", MessageHelper.infoString(
-						e.getPersister(),
-						e.getId(),
+						entry.getPersister(),
+						entry.getId(),
 						source.getFactory()
 				)
 				);
 			}
-			if ( !e.isExistsInDatabase() ) {
+			if ( !entry.isExistsInDatabase() ) {
 				throw new UnresolvableObjectException(
-						e.getId(),
+						entry.getId(),
 						"this instance does not yet exist as a row in the database"
 				);
 			}
 
-			persister = e.getPersister();
-			id = e.getId();
+			persister = entry.getPersister();
+			id = entry.getId();
 		}
 
 		// cascade the refresh prior to refreshing this entity
@@ -139,7 +136,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				refreshedAlready
 		);
 
-		if ( e != null ) {
+		if ( entry != null ) {
 			final EntityKey key = source.generateEntityKey( id, persister );
 			persistenceContext.removeEntity( key );
 			if ( persister.hasCollections() ) {
@@ -171,7 +168,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 
 		final Object result = source.getLoadQueryInfluencers().fromInternalFetchProfile(
 				CascadingFetchProfile.REFRESH,
-				() -> doRefresh( event, source, object, e, persister, id, persistenceContext )
+				() -> doRefresh( event, source, object, entry, persister, id, persistenceContext )
 		);
 
 		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );
@@ -200,9 +197,9 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				// the requested lock-mode is less restrictive than the current one
 				//		- pass along the current lock-mode (after accounting for WRITE)
 				lockOptionsToUse = LockOptions.copy( event.getLockOptions(), new LockOptions() );
-				if ( currentLockMode == LockMode.WRITE ||
-						currentLockMode == LockMode.PESSIMISTIC_WRITE ||
-						currentLockMode == LockMode.PESSIMISTIC_READ ) {
+				if ( currentLockMode == LockMode.WRITE
+						|| currentLockMode == LockMode.PESSIMISTIC_WRITE
+						|| currentLockMode == LockMode.PESSIMISTIC_READ ) {
 					// our transaction should already hold the exclusive lock on
 					// the underlying row - so READ should be sufficient.
 					//
@@ -239,7 +236,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				source.setReadOnly( result, true );
 			}
 			else {
-				source.setReadOnly( result, ( e == null ? source.isDefaultReadOnly() : e.isReadOnly() ) );
+				source.setReadOnly( result, e == null ? source.isDefaultReadOnly() : e.isReadOnly() );
 			}
 		}
 		return result;
@@ -256,7 +253,8 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		final MappingMetamodelImplementor metamodel = factory.getRuntimeMetamodels().getMappingMetamodel();
 		for ( Type type : types ) {
 			if ( type.isCollectionType() ) {
-				CollectionPersister collectionPersister = metamodel.getCollectionDescriptor( ( (CollectionType) type ).getRole() );
+				final String role = ((CollectionType) type).getRole();
+				CollectionPersister collectionPersister = metamodel.getCollectionDescriptor(role);
 				if ( collectionPersister.hasCache() ) {
 					final CollectionDataAccess cache = collectionPersister.getCacheAccessStrategy();
 					final Object ck = cache.generateCacheKey(
@@ -271,8 +269,8 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				}
 			}
 			else if ( type.isComponentType() ) {
-				CompositeType actype = (CompositeType) type;
-				evictCachedCollections( actype.getSubtypes(), id, source );
+				CompositeType compositeType = (CompositeType) type;
+				evictCachedCollections( compositeType.getSubtypes(), id, source );
 			}
 		}
 	}

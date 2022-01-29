@@ -73,15 +73,9 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 
 		final ReplicationMode replicationMode = event.getReplicationMode();
 
-		final Object oldVersion;
-		if ( replicationMode == ReplicationMode.EXCEPTION ) {
-			//always do an INSERT, and let it fail by constraint violation
-			oldVersion = null;
-		}
-		else {
-			//what is the version on the database?
-			oldVersion = persister.getCurrentVersion( id, source );
-		}
+		final Object oldVersion = replicationMode == ReplicationMode.EXCEPTION
+				? null //always do an INSERT, and let it fail by constraint violation
+				: persister.getCurrentVersion(id, source); //what is the version on the database?
 
 		if ( oldVersion != null ) {
 			if ( LOG.isTraceEnabled() ) {
@@ -185,7 +179,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 
 		source.getPersistenceContextInternal().addEntity(
 				entity,
-				( persister.isMutable() ? Status.MANAGED : Status.READ_ONLY ),
+				persister.isMutable() ? Status.MANAGED : Status.READ_ONLY,
 				null,
 				source.generateEntityKey( id, persister ),
 				version,

@@ -17,7 +17,7 @@ import org.hibernate.LockOptions;
 public class LockEvent extends AbstractEvent {
 
 	private Object object;
-	private LockOptions lockOptions;
+	private final LockOptions lockOptions;
 	private String entityName;
 
 	public LockEvent(String entityName, Object original, LockMode lockMode, EventSource source) {

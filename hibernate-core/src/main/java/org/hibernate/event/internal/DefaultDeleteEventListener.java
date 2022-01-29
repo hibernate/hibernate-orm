@@ -19,6 +19,7 @@ import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.internal.Nullability;
+import org.hibernate.engine.internal.Nullability.NullabilityCheckType;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
@@ -184,7 +185,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		EntityPersister persister = source.getEntityPersister( entityName, event.getObject() );
 		Object id =  persister.getIdentifier( event.getObject(), source );
 		entityName = entityName == null ? source.guessEntityName( event.getObject() ) : entityName;
-		throw new IllegalArgumentException("Removing a detached instance "+ entityName + "#" + id);
+		throw new IllegalArgumentException( "Removing a detached instance " + entityName + "#" + id );
 	}
 
 	/**
@@ -247,17 +248,11 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		}
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		final Type[] propTypes = persister.getPropertyTypes();
 		final Object version = entityEntry.getVersion();
 
-		final Object[] currentState;
-		if ( entityEntry.getLoadedState() == null ) {
-			//ie. the entity came in from update()
-			currentState = persister.getPropertyValues( entity );
-		}
-		else {
-			currentState = entityEntry.getLoadedState();
-		}
+		final Object[] currentState = entityEntry.getLoadedState() == null
+				? persister.getPropertyValues(entity) //i.e. the entity came in from update()
+				: entityEntry.getLoadedState();
 
 		final Object[] deletedState = createDeletedState( persister, currentState, session );
 		entityEntry.setDeletedState( deletedState );
@@ -267,17 +262,19 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 				entityEntry.getId(),
 				deletedState,
 				persister.getPropertyNames(),
-				propTypes
+				persister.getPropertyTypes()
 		);
 
-		// before any callbacks, etc, so subdeletions see that this deletion happened first
+		// before any callbacks, etc., so subdeletions see that this deletion happened first
 		persistenceContext.setEntryStatus( entityEntry, Status.DELETED );
 		final EntityKey key = session.generateEntityKey( entityEntry.getId(), persister );
 
 		cascadeBeforeDelete( session, persister, entity, entityEntry, transientEntities );
 
-		new ForeignKeys.Nullifier(  entity, true, false, session, persister ).nullifyTransientReferences( entityEntry.getDeletedState() );
-		new Nullability( session ).checkNullability( entityEntry.getDeletedState(), persister, Nullability.NullabilityCheckType.DELETE );
+		new ForeignKeys.Nullifier(  entity, true, false, session, persister )
+				.nullifyTransientReferences( entityEntry.getDeletedState() );
+		new Nullability( session )
+				.checkNullability( entityEntry.getDeletedState(), persister, NullabilityCheckType.DELETE );
 		persistenceContext.registerNullifiableEntityKey( key );
 
 		if ( isOrphanRemovalBeforeUpdates ) {

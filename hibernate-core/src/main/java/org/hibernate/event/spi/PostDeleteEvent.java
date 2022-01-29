@@ -14,10 +14,10 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Gavin King
  */
 public class PostDeleteEvent extends AbstractEvent {
-	private Object entity;
-	private EntityPersister persister;
-	private Object id;
-	private Object[] deletedState;
+	private final Object entity;
+	private final EntityPersister persister;
+	private final Object id;
+	private final Object[] deletedState;
 	
 	public PostDeleteEvent(
 			Object entity,

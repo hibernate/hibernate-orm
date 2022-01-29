@@ -44,7 +44,6 @@ import org.hibernate.event.service.spi.EventListenerRegistrationException;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.jpa.event.internal.CallbackRegistryImplementor;
-import org.hibernate.service.spi.Stoppable;
 
 import static org.hibernate.event.spi.EventType.AUTO_FLUSH;
 import static org.hibernate.event.spi.EventType.CLEAR;
@@ -346,12 +345,11 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 			);
 		}
 
-		@SuppressWarnings({"rawtypes", "unchecked"})
 		public <T> void prepareListeners(
 				EventType<T> type,
 				T defaultListener,
 				Function<EventType<T>,EventListenerGroupImpl<T>> groupCreator) {
-			final EventListenerGroupImpl listenerGroup = groupCreator.apply( type );
+			final EventListenerGroupImpl<T> listenerGroup = groupCreator.apply( type );
 
 			if ( defaultListener != null ) {
 				listenerGroup.appendListener( defaultListener );
@@ -365,18 +363,17 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 			return (EventListenerGroup<T>) listenerGroupMap.get( eventType );
 		}
 
-		@SuppressWarnings("rawtypes")
-		public EventListenerRegistry buildRegistry(Map<String, EventType> registeredEventTypes) {
+		public EventListenerRegistry buildRegistry(Map<String, EventType<?>> registeredEventTypes) {
 			// validate contiguity of the event-type ordinals and build the EventListenerGroups array
 
-			final ArrayList<EventType> eventTypeList = new ArrayList<>( registeredEventTypes.values() );
+			final ArrayList<EventType<?>> eventTypeList = new ArrayList<>( registeredEventTypes.values() );
 			eventTypeList.sort( Comparator.comparing( EventType::ordinal ) );
 
-			final EventListenerGroup[] eventListeners = new EventListenerGroup[ eventTypeList.size() ];
+			final EventListenerGroup<?>[] eventListeners = new EventListenerGroup[ eventTypeList.size() ];
 
 			int previous = -1;
 			for ( int i = 0; i < eventTypeList.size(); i++ ) {
-				final EventType eventType = eventTypeList.get( i );
+				final EventType<?> eventType = eventTypeList.get( i );
 
 				assert i == eventType.ordinal();
 				assert i - 1 == previous;

@@ -330,18 +330,22 @@ public abstract class AbstractSaveEventListener
 			boolean shouldDelayIdentityInserts) {
 		if ( useIdentityColumn ) {
 			EntityIdentityInsertAction insert = new EntityIdentityInsertAction(
-					values, entity, persister, isVersionIncrementDisabled(), source, shouldDelayIdentityInserts
+					values,
+					entity,
+					persister,
+					isVersionIncrementDisabled(),
+					source,
+					shouldDelayIdentityInserts
 			);
 			source.getActionQueue().addAction( insert );
 			return insert;
 		}
 		else {
-			final Object version = Versioning.getVersion( values, persister );
 			final EntityInsertAction insert = new EntityInsertAction(
 					id,
 					values,
 					entity,
-					version,
+					Versioning.getVersion( values, persister ),
 					persister,
 					isVersionIncrementDisabled(),
 					source

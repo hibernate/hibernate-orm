@@ -47,7 +47,6 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	 * @param event The update event to be handled.
 	 */
 	public void onSaveOrUpdate(SaveOrUpdateEvent event) {
-		final SessionImplementor source = event.getSession();
 		final Object object = event.getObject();
 		final Object requestedId = event.getRequestedId();
 
@@ -59,6 +58,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 			}
 		}
 
+		final SessionImplementor source = event.getSession();
 		// For an uninitialized proxy, noop, don't even need to return an id, since it is never a save()
 		if ( reassociateIfUninitializedProxy( object, source ) ) {
 			LOG.trace( "Reassociated uninitialized proxy" );
@@ -220,9 +220,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 		EntityPersister persister = session.getEntityPersister( event.getEntityName(), entity );
 
 		event.setRequestedId(
-				getUpdateId(
-						entity, persister, event.getRequestedId(), session
-				)
+				getUpdateId( entity, persister, event.getRequestedId(), session )
 		);
 
 		performUpdate( event, entity, persister );
@@ -279,9 +277,10 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 		}
 
 		final EventSource source = event.getSession();
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+
 		final EntityKey key = source.generateEntityKey( event.getRequestedId(), persister );
 
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		persistenceContext.checkUniqueness( key, entity );
 
 		if ( invokeUpdateLifecycle( entity, persister, source ) ) {
@@ -307,7 +306,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 
 		persistenceContext.addEntity(
 				entity,
-				( persister.isMutable() ? Status.MANAGED : Status.READ_ONLY ),
+				persister.isMutable() ? Status.MANAGED : Status.READ_ONLY,
 				null, // cachedState,
 				key,
 				persister.getVersion( entity ),

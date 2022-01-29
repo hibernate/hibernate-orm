@@ -10,6 +10,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.type.CollectionType;
@@ -32,8 +33,10 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 		super( session );
 		EnhancementAsProxyLazinessInterceptor interceptor = null;
 		if ( entity instanceof PersistentAttributeInterceptable ) {
-			if ( ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor() instanceof EnhancementAsProxyLazinessInterceptor ) {
-				interceptor = (EnhancementAsProxyLazinessInterceptor) ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
+			PersistentAttributeInterceptor attributeInterceptor =
+					((PersistentAttributeInterceptable) entity).$$_hibernate_getInterceptor();
+			if ( attributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+				interceptor = (EnhancementAsProxyLazinessInterceptor) attributeInterceptor;
 			}
 		}
 		this.interceptor = interceptor;
@@ -62,7 +65,7 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 				// we now always call wrap() before getting to here)
 				// return ( ! (obj instanceof PersistentCollection) ) ?
 				//true : searchForDirtyCollections( (PersistentCollection) obj, type );
-				persistentCollection = (PersistentCollection) collection;
+				persistentCollection = (PersistentCollection<?>) collection;
 			}
 
 			if ( persistentCollection.isDirty() ) { //we need to check even if it was not initialized, because of delayed adds!

@@ -50,22 +50,24 @@ public class DefaultPostLoadEventListener implements PostLoadEventListener, Call
 		}
 
 		final LockMode lockMode = entry.getLockMode();
-		if ( LockMode.PESSIMISTIC_FORCE_INCREMENT.equals( lockMode ) ) {
-			final EntityPersister persister = entry.getPersister();
-			final Object nextVersion = persister.forceVersionIncrement(
-					entry.getId(),
-					entry.getVersion(),
-					session
-			);
-			entry.forceLocked( entity, nextVersion );
-		}
-		else if ( LockMode.OPTIMISTIC_FORCE_INCREMENT.equals( lockMode ) ) {
-			final EntityIncrementVersionProcess incrementVersion = new EntityIncrementVersionProcess( entity );
-			session.getActionQueue().registerProcess( incrementVersion );
-		}
-		else if ( LockMode.OPTIMISTIC.equals( lockMode ) ) {
-			final EntityVerifyVersionProcess verifyVersion = new EntityVerifyVersionProcess( entity );
-			session.getActionQueue().registerProcess( verifyVersion );
+		switch (lockMode) {
+			case PESSIMISTIC_FORCE_INCREMENT:
+				final EntityPersister persister = entry.getPersister();
+				final Object nextVersion = persister.forceVersionIncrement(
+						entry.getId(),
+						entry.getVersion(),
+						session
+				);
+				entry.forceLocked(entity, nextVersion);
+				break;
+			case OPTIMISTIC_FORCE_INCREMENT:
+				final EntityIncrementVersionProcess incrementVersion = new EntityIncrementVersionProcess(entity);
+				session.getActionQueue().registerProcess(incrementVersion);
+				break;
+			case OPTIMISTIC:
+				final EntityVerifyVersionProcess verifyVersion = new EntityVerifyVersionProcess(entity);
+				session.getActionQueue().registerProcess(verifyVersion);
+				break;
 		}
 
 		invokeLoadLifecycle(event, session);

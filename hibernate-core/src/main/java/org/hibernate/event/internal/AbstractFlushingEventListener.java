@@ -28,10 +28,8 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.service.spi.JpaBootstrapSensitive;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.FlushEntityEvent;
 import org.hibernate.event.spi.FlushEntityEventListener;
 import org.hibernate.event.spi.FlushEvent;
@@ -103,7 +101,6 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		logFlushResults( event );
 	}
 
-	@SuppressWarnings("unchecked")
 	protected void logFlushResults(FlushEvent event) {
 		if ( !LOG.isDebugEnabled() ) {
 			return;
@@ -151,7 +148,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 	}
 
 	private void cascadeOnFlush(EventSource session, EntityPersister persister, Object object, Object anything)
-	throws HibernateException {
+			throws HibernateException {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
 		try {
@@ -163,21 +160,11 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 	}
 
 	protected Object getAnything() {
-		if ( jpaBootstrap ) {
-			return new IdentityHashMap( 10 );
-		}
-		else {
-			return null;
-		}
+		return jpaBootstrap ? new IdentityHashMap<>(10) : null;
 	}
 
 	protected CascadingAction getCascadingAction() {
-		if ( jpaBootstrap ) {
-			return CascadingActions.PERSIST_ON_FLUSH;
-		}
-		else {
-			return CascadingActions.SAVE_UPDATE;
-		}
+		return jpaBootstrap ? CascadingActions.PERSIST_ON_FLUSH : CascadingActions.SAVE_UPDATE;
 	}
 
 	/**
@@ -200,7 +187,8 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 	 * 2. schedule any entity updates
 	 * 3. search out any reachable collections
 	 */
-	private int flushEntities(final FlushEvent event, final PersistenceContext persistenceContext) throws HibernateException {
+	private int flushEntities(final FlushEvent event, final PersistenceContext persistenceContext)
+			throws HibernateException {
 
 		LOG.trace( "Flushing entities and processing referenced collections" );
 
@@ -238,8 +226,8 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 	 * process any unreferenced collections and then inspect all known collections,
 	 * scheduling creates/removes/updates
 	 */
-	@SuppressWarnings("unchecked")
-	private int flushCollections(final EventSource session, final PersistenceContext persistenceContext) throws HibernateException {
+	private int flushCollections(final EventSource session, final PersistenceContext persistenceContext)
+			throws HibernateException {
 		LOG.trace( "Processing unreferenced collections" );
 
 		final int count = persistenceContext.getCollectionEntriesSize();

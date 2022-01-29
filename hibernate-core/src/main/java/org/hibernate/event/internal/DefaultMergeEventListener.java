@@ -76,9 +76,9 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	}
 
 	private EntityCopyObserver createEntityCopyObserver(SessionFactoryImplementor sessionFactory) {
-		final ServiceRegistry serviceRegistry = sessionFactory.getServiceRegistry();
-		final EntityCopyObserverFactory configurationService = serviceRegistry.getService( EntityCopyObserverFactory.class );
-		return configurationService.createEntityCopyObserver();
+		return sessionFactory.getServiceRegistry()
+				.getService( EntityCopyObserverFactory.class )
+				.createEntityCopyObserver();
 	}
 
 	/**
@@ -127,7 +127,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 				entity = original;
 			}
 
-			if ( copyCache.containsKey( entity ) && ( copyCache.isOperatedOn( entity ) ) ) {
+			if ( copyCache.containsKey( entity ) && copyCache.isOperatedOn( entity ) ) {
 				LOG.trace( "Already in merge process" );
 				event.setResult( entity );
 			}
@@ -364,8 +364,10 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		if ( incoming instanceof PersistentAttributeInterceptable
 				&& persister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
 
-			final PersistentAttributeInterceptor incomingInterceptor = ( (PersistentAttributeInterceptable) incoming ).$$_hibernate_getInterceptor();
-			final PersistentAttributeInterceptor managedInterceptor = ( (PersistentAttributeInterceptable) managed ).$$_hibernate_getInterceptor();
+			final PersistentAttributeInterceptor incomingInterceptor =
+					( (PersistentAttributeInterceptable) incoming ).$$_hibernate_getInterceptor();
+			final PersistentAttributeInterceptor managedInterceptor =
+					( (PersistentAttributeInterceptable) managed ).$$_hibernate_getInterceptor();
 
 			// todo - do we need to specially handle the case where both `incoming` and `managed` are initialized, but
 			//		with different attributes initialized?

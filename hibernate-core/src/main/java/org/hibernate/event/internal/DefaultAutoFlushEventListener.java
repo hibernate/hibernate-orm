@@ -79,7 +79,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 
 	private boolean flushIsReallyNeeded(AutoFlushEvent event, final EventSource source) {
 		return source.getHibernateFlushMode() == FlushMode.ALWAYS
-				|| source.getActionQueue().areTablesToBeUpdated( event.getQuerySpaces() );
+			|| source.getActionQueue().areTablesToBeUpdated( event.getQuerySpaces() );
 	}
 
 	private boolean flushMightBeNeeded(final EventSource source) {

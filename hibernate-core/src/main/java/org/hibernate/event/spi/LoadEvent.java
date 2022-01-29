@@ -41,7 +41,7 @@ public class LoadEvent extends AbstractEvent {
 	private String entityClassName;
 	private Object instanceToLoad;
 	private LockOptions lockOptions;
-	private boolean isAssociationFetch;
+	private final boolean isAssociationFetch;
 	private Object result;
 	private PostLoadEvent postLoadEvent;
 	private Boolean readOnly;

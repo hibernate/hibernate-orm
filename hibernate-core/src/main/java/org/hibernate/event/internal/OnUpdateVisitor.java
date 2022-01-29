@@ -62,7 +62,7 @@ public class OnUpdateVisitor extends ReattachVisitor {
 			}
 		}
 		else {
-			// null or brand new collection
+			// null or brand-new collection
 			// this will also (inefficiently) handle arrays, which have
 			// no snapshot, so we can't do any better
 			removeCollection(persister, collectionKey, session);

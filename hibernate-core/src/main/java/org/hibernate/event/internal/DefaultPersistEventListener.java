@@ -149,7 +149,6 @@ public class DefaultPersistEventListener
 
 	}
 
-	@SuppressWarnings({"unchecked"})
 	protected void entityIsPersistent(PersistEvent event, Map createCache) {
 		LOG.trace( "Ignoring persistent instance" );
 		final EventSource source = event.getSession();
@@ -177,7 +176,6 @@ public class DefaultPersistEventListener
 	 * @param event The save event to be handled.
 	 * @param createCache The copy cache of entity instance to merge/copy instance.
 	 */
-	@SuppressWarnings({"unchecked"})
 	protected void entityIsTransient(PersistEvent event, Map createCache) {
 		LOG.trace( "Saving transient instance" );
 
@@ -189,7 +187,6 @@ public class DefaultPersistEventListener
 		}
 	}
 
-	@SuppressWarnings({"unchecked"})
 	private void entityIsDeleted(PersistEvent event, Map createCache) {
 		final EventSource source = event.getSession();
 

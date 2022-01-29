@@ -69,7 +69,7 @@ public abstract class AbstractReassociateEventListener {
 
 		EntityEntry newEntry = persistenceContext.addEntity(
 				object,
-				( persister.isMutable() ? Status.MANAGED : Status.READ_ONLY ),
+				persister.isMutable() ? Status.MANAGED : Status.READ_ONLY,
 				values,
 				key,
 				version,

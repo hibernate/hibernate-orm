@@ -25,7 +25,7 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 
 	Object processEntity(Object value, EntityType entityType) throws HibernateException {
 
-		if (value!=null) {
+		if ( value != null ) {
 			getSession().getPersistenceContext().reassociateIfUninitializedProxy(value);
 			// if it is an initialized proxy, let cascade
 			// handle it later on
@@ -39,17 +39,19 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 	 * was snapshotted and detached?
 	 */
 	protected static boolean isOwnerUnchanged(
-			final CollectionPersister persister, final Object id, final PersistentCollection<?> snapshot
+			final CollectionPersister persister,
+			final Object id,
+			final PersistentCollection<?> snapshot
 	) {
-		return isCollectionSnapshotValid(snapshot) &&
-				persister.getRole().equals( snapshot.getRole() ) &&
-				id.equals( snapshot.getKey() );
+		return isCollectionSnapshotValid(snapshot)
+			&& persister.getRole().equals( snapshot.getRole() )
+			&& id.equals( snapshot.getKey() );
 	}
 
 	private static boolean isCollectionSnapshotValid(PersistentCollection<?> snapshot) {
-		return snapshot != null &&
-				snapshot.getRole() != null &&
-				snapshot.getKey() != null;
+		return snapshot != null
+			&& snapshot.getRole() != null
+			&& snapshot.getKey() != null;
 	}
 	
 	/**
@@ -58,7 +60,7 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 	 * wrapper
 	 */
 	protected void reattachCollection(PersistentCollection<?> collection, CollectionType type)
-	throws HibernateException {
+			throws HibernateException {
 		final EventSource session = getSession();
 		if ( collection.wasInitialized() ) {
 			final CollectionPersister persister = session.getFactory()

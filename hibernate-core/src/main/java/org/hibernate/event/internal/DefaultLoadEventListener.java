@@ -39,7 +39,6 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Defines the default load event listeners used by hibernate for loading entities
@@ -66,7 +65,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			throw new HibernateException( "Unable to locate persister: " + event.getEntityClassName() );
 		}
 
-		final Class idClass = persister.getIdentifierType().getReturnedClass();
+		final Class<?> idClass = persister.getIdentifierType().getReturnedClass();
 		if ( idClass != null &&
 				!idClass.isInstance( event.getEntityId() ) &&
 				!(event.getEntityId() instanceof DelayedPostInsertIdentifier) ) {
@@ -128,7 +127,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final EntityPersister persister,
 			final LoadEvent event,
 			final LoadType loadType,
-			final Class idClass) {
+			final Class<?> idClass) {
 		// we may have the jpa requirement of allowing find-by-id where id is the "simple pk value" of a
 		// dependent objects parent.  This is part of its generally goofy derived identity "feature"
 		final EntityIdentifierMapping idMapping = persister.getIdentifierMapping();
@@ -140,15 +139,10 @@ public class DefaultLoadEventListener implements LoadEventListener {
 				if ( singleIdAttribute.getMappedType() instanceof EntityMappingType ) {
 					final EntityMappingType parentIdTargetMapping = (EntityMappingType) singleIdAttribute.getMappedType();
 					final EntityIdentifierMapping parentIdTargetIdMapping = parentIdTargetMapping.getIdentifierMapping();
-					final MappingType mappedType;
-					if ( parentIdTargetIdMapping instanceof CompositeIdentifierMapping ) {
-						mappedType = ( (CompositeIdentifierMapping) parentIdTargetIdMapping ).getMappedIdEmbeddableTypeDescriptor();
-					}
-					else {
-						mappedType = parentIdTargetIdMapping.getMappedType();
-					}
-					final JavaType<?> parentIdJtd = mappedType.getMappedJavaType();
-					if ( parentIdJtd.getJavaTypeClass().isInstance( event.getEntityId() ) ) {
+					final MappingType parentIdType = parentIdTargetIdMapping instanceof CompositeIdentifierMapping
+							? ((CompositeIdentifierMapping) parentIdTargetIdMapping).getMappedIdEmbeddableTypeDescriptor()
+							: parentIdTargetIdMapping.getMappedType();
+					if ( parentIdType.getMappedJavaType().getJavaTypeClass().isInstance( event.getEntityId() ) ) {
 						// yep that's what we have...
 						loadByDerivedIdentitySimplePkValue(
 								event,
@@ -164,7 +158,8 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		}
 
 		throw new TypeMismatchException(
-				"Provided id of the wrong type for class " + persister.getEntityName() + ". Expected: " + idClass
+				"Provided id of the wrong type for class " + persister.getEntityName()
+						+ ". Expected: " + idClass
 						+ ", got " + event.getEntityId().getClass()
 		);
 	}
@@ -180,10 +175,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		final Object parent = doLoad( event, parentPersister, parentEntityKey, options );
 
 		final Object dependent = dependentIdType.instantiate();
-		dependentIdType.getPartMappingType().setValues(
-				dependent,
-				new Object[] { parent }
-		);
+		dependentIdType.getPartMappingType().setValues( dependent, new Object[] { parent } );
 		final EntityKey dependentEntityKey = session.generateEntityKey( dependent, dependentPersister );
 		event.setEntityId( dependent );
 
@@ -226,8 +218,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		boolean isOptionalInstance = event.getInstanceToLoad() != null;
 
 		if ( entity == null && ( !options.isAllowNulls() || isOptionalInstance ) ) {
-			session
-					.getFactory()
+			session.getFactory()
 					.getEntityNotFoundDelegate()
 					.handleEntityNotFound( event.getEntityClassName(), event.getEntityId() );
 		}
@@ -269,7 +260,6 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 
 		final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
-		final boolean entityHasHibernateProxyFactory = persister.getRepresentationStrategy().getProxyFactory() != null;
 
 		// Check for the case where we can use the entity itself as a proxy
 		if ( options.isAllowProxyCreation()
@@ -278,8 +268,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final Object managed = persistenceContext.getEntity( keyToLoad );
 			if ( managed != null ) {
 				if ( options.isCheckDeleted() ) {
-					final EntityEntry entry = persistenceContext.getEntry( managed );
-					final Status status = entry.getStatus();
+					final Status status = persistenceContext.getEntry( managed ).getStatus();
 					if ( status == Status.DELETED || status == Status.GONE ) {
 						return null;
 					}
@@ -289,7 +278,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 
 			// if the entity defines a HibernateProxy factory, see if there is an
 			// existing proxy associated with the PC - and if so, use it
-			if ( entityHasHibernateProxyFactory ) {
+			if ( persister.getRepresentationStrategy().getProxyFactory() != null ) {
 				final Object proxy = persistenceContext.getProxy( keyToLoad );
 
 				if ( proxy != null ) {
@@ -329,7 +318,8 @@ public class DefaultLoadEventListener implements LoadEventListener {
 
 				// This is the crux of HHH-11147
 				// create the (uninitialized) entity instance - has only id set
-				return persister.getBytecodeEnhancementMetadata().createEnhancedProxy( keyToLoad, true, session );
+				return persister.getBytecodeEnhancementMetadata()
+						.createEnhancedProxy( keyToLoad, true, session );
 			}
 			// If we get here, then the entity class has subclasses and there is no HibernateProxy factory.
 			// The entity will get loaded below.
@@ -391,7 +381,6 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		}
 
 		LazyInitializer li = ( (HibernateProxy) proxy ).getHibernateLazyInitializer();
-
 		if ( li.isUnwrap() ) {
 			return li.getImplementation();
 		}
@@ -437,10 +426,9 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final LoadType options,
 			final PersistenceContext persistenceContext) {
 		Object existing = persistenceContext.getEntity( keyToLoad );
-		final boolean traceEnabled = LOG.isTraceEnabled();
 		if ( existing != null ) {
 			// return existing object or initialized proxy (unless deleted)
-			if ( traceEnabled ) {
+			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Entity found in session cache" );
 			}
 			if ( options.isCheckDeleted() ) {
@@ -452,10 +440,12 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			}
 			return existing;
 		}
-		if ( traceEnabled ) {
-			LOG.trace( "Creating new proxy for entity" );
+		else {
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Creating new proxy for entity" );
+			}
+			return createProxy( event, persister, keyToLoad, persistenceContext );
 		}
-		return createProxy( event, persister, keyToLoad, persistenceContext );
 	}
 
 	private Object createProxy(
@@ -547,11 +537,8 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			);
 		}
 
-		CacheEntityLoaderHelper.PersistenceContextEntry persistenceContextEntry = CacheEntityLoaderHelper.INSTANCE.loadFromSessionCache(
-				event,
-				keyToLoad,
-				options
-		);
+		CacheEntityLoaderHelper.PersistenceContextEntry persistenceContextEntry
+				= CacheEntityLoaderHelper.INSTANCE.loadFromSessionCache( event, keyToLoad, options );
 		Object entity = persistenceContextEntry.getEntity();
 
 		if ( entity != null ) {
@@ -580,7 +567,9 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		if ( entity != null && persister.hasNaturalIdentifier() ) {
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			persistenceContext.getNaturalIdResolutions().cacheResolutionFromLoad(
-					event.getEntityId(), persister.getNaturalIdMapping().extractNaturalIdFromEntity( entity, session ), persister
+					event.getEntityId(),
+					persister.getNaturalIdMapping().extractNaturalIdFromEntity( entity, session ),
+					persister
 			);
 		}
 

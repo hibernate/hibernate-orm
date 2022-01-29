@@ -23,12 +23,9 @@ public class DefaultSaveEventListener extends DefaultSaveOrUpdateEventListener {
 		// this implementation is supposed to tolerate incorrect unsaved-value
 		// mappings, for the purpose of backward-compatibility
 		EntityEntry entry = event.getSession().getPersistenceContextInternal().getEntry( event.getEntity() );
-		if ( entry!=null && entry.getStatus() != Status.DELETED ) {
-			return entityIsPersistent(event);
-		}
-		else {
-			return entityIsTransient(event);
-		}
+		return entry != null && entry.getStatus() != Status.DELETED
+				? entityIsPersistent(event)
+				: entityIsTransient(event);
 	}
 	
 	protected Object saveWithGeneratedOrRequestedId(SaveOrUpdateEvent event) {
@@ -36,15 +33,15 @@ public class DefaultSaveEventListener extends DefaultSaveOrUpdateEventListener {
 			return super.saveWithGeneratedOrRequestedId(event);
 		}
 		else {
-			return saveWithRequestedId( 
-					event.getEntity(), 
-					event.getRequestedId(), 
-					event.getEntityName(), 
-					null, 
-					event.getSession() 
+			return saveWithRequestedId(
+					event.getEntity(),
+					event.getRequestedId(),
+					event.getEntityName(),
+					null,
+					event.getSession()
 				);
 		}
-		
+
 	}
 
 	protected boolean reassociateIfUninitializedProxy(Object object, SessionImplementor source) {

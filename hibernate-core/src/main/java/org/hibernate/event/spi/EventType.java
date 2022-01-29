@@ -26,7 +26,7 @@ public final class EventType<T> {
 	/**
 	 * Used to assign ordinals for the standard event-types
 	 */
-	private static AtomicInteger STANDARD_TYPE_COUNTER = new AtomicInteger();
+	private static final AtomicInteger STANDARD_TYPE_COUNTER = new AtomicInteger();
 
 	public static final EventType<LoadEventListener> LOAD = create( "load", LoadEventListener.class );
 	public static final EventType<ResolveNaturalIdEventListener> RESOLVE_NATURAL_ID = create( "resolve-natural-id", ResolveNaturalIdEventListener.class );
@@ -83,26 +83,22 @@ public final class EventType<T> {
 	 * Maintain a map of {@link EventType} instances keyed by name for lookup by name as well as {@link #values()}
 	 * resolution.
 	 */
-	@SuppressWarnings({"rawtypes", "Convert2Lambda"})
-	private static final Map<String,EventType> STANDARD_TYPE_BY_NAME_MAP = AccessController.doPrivileged(
-			new PrivilegedAction<Map<String, EventType>>() {
-				@Override
-				public Map<String, EventType> run() {
-					final Map<String, EventType> typeByNameMap = new HashMap<>();
-					for ( Field field : EventType.class.getDeclaredFields() ) {
-						if ( EventType.class.isAssignableFrom( field.getType() ) ) {
-							try {
-								final EventType typeField = (EventType) field.get( null );
-								typeByNameMap.put( typeField.eventName(), typeField );
-							}
-							catch (Exception t) {
-								throw new HibernateException( "Unable to initialize EventType map", t );
-							}
+	private static final Map<String,EventType<?>> STANDARD_TYPE_BY_NAME_MAP = AccessController.doPrivileged(
+			(PrivilegedAction<Map<String, EventType<?>>>) () -> {
+				final Map<String, EventType<?>> typeByNameMap = new HashMap<>();
+				for ( Field field : EventType.class.getDeclaredFields() ) {
+					if ( EventType.class.isAssignableFrom( field.getType() ) ) {
+						try {
+							final EventType<?> typeField = (EventType<?>) field.get( null );
+							typeByNameMap.put( typeField.eventName(), typeField );
+						}
+						catch (Exception t) {
+							throw new HibernateException( "Unable to initialize EventType map", t );
 						}
 					}
-
-					return Collections.unmodifiableMap( typeByNameMap );
 				}
+
+				return Collections.unmodifiableMap( typeByNameMap );
 			}
 	);
 
@@ -138,8 +134,7 @@ public final class EventType<T> {
 	/**
 	 * Get a collection of all the standard {@link EventType} instances.
 	 */
-	@SuppressWarnings("rawtypes")
-	public static Collection<EventType> values() {
+	public static Collection<EventType<?>> values() {
 		return STANDARD_TYPE_BY_NAME_MAP.values();
 	}
 
@@ -148,8 +143,7 @@ public final class EventType<T> {
 	 *
 	 * Simply copy the values into its (passed) Map
 	 */
-	@SuppressWarnings("rawtypes")
-	static void registerStandardTypes(Map<String, EventType> eventTypes) {
+	static void registerStandardTypes(Map<String, EventType<?>> eventTypes) {
 		eventTypes.putAll( STANDARD_TYPE_BY_NAME_MAP );
 	}
 
@@ -180,7 +174,7 @@ public final class EventType<T> {
 	 *
 	 * For the total number of types, see {@link #values()}
 	 *
-	 * @return An unique ordinal for this {@link EventType}, starting at 0 and up to the number of distinct events
+	 * @return A unique ordinal for this {@link EventType}, starting at 0 and up to the number of distinct events
 	 */
 	public int ordinal() {
 		return ordinal;

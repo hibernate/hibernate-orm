@@ -35,8 +35,8 @@ public class FlushVisitor extends AbstractVisitor {
 		}
 
 		if ( collection != null ) {
-			final PersistentCollection<?> coll;
 			final EventSource session = getSession();
+			final PersistentCollection<?> coll;
 			if ( type.hasHolder() ) {
 				coll = session.getPersistenceContextInternal().getCollectionHolder(collection);
 			}
@@ -51,7 +51,7 @@ public class FlushVisitor extends AbstractVisitor {
 				return null;
 			}
 
-			Collections.processReachableCollection( coll, type, owner, session);
+			Collections.processReachableCollection( coll, type, owner, session );
 		}
 
 		return null;

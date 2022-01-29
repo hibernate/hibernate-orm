@@ -14,6 +14,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
@@ -36,9 +37,11 @@ import org.hibernate.loader.entity.CacheEntityLoaderHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
+import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.proxy.map.MapProxy;
@@ -56,7 +59,6 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeHelper;
 
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
@@ -186,6 +188,32 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					assemblerMap.put( attributeMapping, stateAssembler );
 				},
 				null
+		);
+	}
+
+	private static void deepCopy(
+			ManagedMappingType containerDescriptor,
+			Object[] source,
+			Object[] target,
+			EntityPersister concreteDescriptor) {
+		containerDescriptor.visitStateArrayContributors(
+				contributor -> {
+					if ( contributor.getAttributeMetadataAccess().resolveAttributeMetadata( concreteDescriptor ).isUpdatable() ) {
+						final int position = contributor.getStateArrayPosition();
+						Object result;
+						if ( source[position] == LazyPropertyInitializer.UNFETCHED_PROPERTY
+								|| source[position] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+							result = source[position];
+						}
+						else {
+							result = contributor.getAttributeMetadataAccess()
+									.resolveAttributeMetadata(null)
+									.getMutabilityPlan()
+									.deepCopy( source[position] );
+						}
+						target[position] = result;
+					}
+				}
 		);
 	}
 
@@ -832,11 +860,11 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 		else {
 			//take a snapshot
-			TypeHelper.deepCopy(
+			deepCopy(
 					concreteDescriptor,
 					resolvedEntityState,
 					resolvedEntityState,
-					attributeMapping -> attributeMapping.getAttributeMetadataAccess().resolveAttributeMetadata( concreteDescriptor ).isUpdatable()
+					concreteDescriptor
 			);
 			persistenceContext.setEntryStatus( entityEntry, Status.MANAGED );
 		}

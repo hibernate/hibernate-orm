@@ -6,75 +6,24 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
 import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Predicate;
 
+import org.hibernate.Internal;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.metamodel.mapping.ManagedMappingType;
-import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
-import org.hibernate.tuple.NonIdentifierAttribute;
 
 /**
- * Collection of convenience methods relating to operations across arrays of types...
+ * Certain operations for working with arrays of property values.
  *
  * @author Steve Ebersole
- *
- * @deprecated with no real replacement.  this was always intended as an internal class
  */
-@Deprecated(since = "6.0")
+@Internal
 public class TypeHelper {
 	/**
 	 * Disallow instantiation
 	 */
 	private TypeHelper() {
-	}
-
-	public static final BiFunction<StateArrayContributorMapping,Object,Object> DEEP_COPY_VALUE_PRODUCER = (navigable, sourceValue) -> {
-		if ( sourceValue == LazyPropertyInitializer.UNFETCHED_PROPERTY
-				|| sourceValue == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-			return sourceValue;
-		}
-		else {
-			return navigable.getAttributeMetadataAccess()
-					.resolveAttributeMetadata( null )
-					.getMutabilityPlan()
-					.deepCopy( sourceValue );
-		}
-	};
-
-	public static void deepCopy(
-			ManagedMappingType containerDescriptor,
-			Object[] source,
-			Object[] target,
-			Predicate<StateArrayContributorMapping> copyConditions) {
-		deepCopy(
-				containerDescriptor,
-				source,
-				target,
-				copyConditions,
-				DEEP_COPY_VALUE_PRODUCER
-		);
-	}
-
-	public static void deepCopy(
-			ManagedMappingType containerDescriptor,
-			Object[] source,
-			Object[] target,
-			Predicate<StateArrayContributorMapping> copyConditions,
-			BiFunction<StateArrayContributorMapping, Object, Object> targetValueProducer) {
-		containerDescriptor.visitStateArrayContributors(
-				contributor -> {
-					if ( copyConditions.test( contributor ) ) {
-						final int position = contributor.getStateArrayPosition();
-						target[position] = targetValueProducer.apply( contributor, source[position] );
-					}
-				}
-		);
 	}
 
 	/**
@@ -104,81 +53,6 @@ public class TypeHelper {
 				}
 			}
 		}
-	}
-
-	/**
-	 * Apply the {@link Type#assemble} operation across a series of values.
-	 *
-	 * @param row The values
-	 * @param types The value types
-	 * @param session The originating session
-	 * @param owner The entity "owning" the values
-	 * @return The assembled state
-	 */
-	public static Object[] assemble(
-			final Serializable[] row,
-			final Type[] types,
-			final SharedSessionContractImplementor session,
-			final Object owner) {
-		Object[] assembled = new Object[row.length];
-		for ( int i = 0; i < types.length; i++ ) {
-			if ( row[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY || row[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-				assembled[i] = row[i];
-			}
-			else {
-				assembled[i] = types[i].assemble( row[i], session, owner );
-			}
-		}
-		return assembled;
-	}
-
-	public static Object[] assemble(
-			final Object[] row,
-			final Type[] types,
-			final SharedSessionContractImplementor session,
-			final Object owner) {
-		Object[] assembled = new Object[row.length];
-		for ( int i = 0; i < types.length; i++ ) {
-			if ( row[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY || row[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-				assembled[i] = row[i];
-			}
-			else {
-				assembled[i] = types[i].assemble( (Serializable) row[i], session, owner );
-			}
-		}
-		return assembled;
-	}
-
-	/**
-	 * Apply the {@link Type#disassemble} operation across a series of values.
-	 *
-	 * @param row The values
-	 * @param types The value types
-	 * @param nonCacheable An array indicating which values to include in the disassembled state
-	 * @param session The originating session
-	 * @param owner The entity "owning" the values
-	 *
-	 * @return The disassembled state
-	 */
-	public static Serializable[] disassemble(
-			final Object[] row,
-			final Type[] types,
-			final boolean[] nonCacheable,
-			final SharedSessionContractImplementor session,
-			final Object owner) {
-		Serializable[] disassembled = new Serializable[row.length];
-		for ( int i = 0; i < row.length; i++ ) {
-			if ( nonCacheable!=null && nonCacheable[i] ) {
-				disassembled[i] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
-			}
-			else if ( row[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY || row[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-				disassembled[i] = (Serializable) row[i];
-			}
-			else {
-				disassembled[i] = types[i].disassemble( row[i], session, owner );
-			}
-		}
-		return disassembled;
 	}
 
 	/**
@@ -300,111 +174,6 @@ public class TypeHelper {
 			}
 		}
 		return copied;
-	}
-
-	/**
-	 * Determine if any of the given field values are dirty, returning an array containing
-	 * indices of the dirty fields.
-	 * <p/>
-	 * If it is determined that no fields are dirty, null is returned.
-	 *
-	 * @param properties The property definitions
-	 * @param currentState The current state of the entity
-	 * @param previousState The baseline state of the entity
-	 * @param includeColumns Columns to be included in the dirty checking, per property
-	 * @param session The session from which the dirty check request originated.
-	 *
-	 * @return Array containing indices of the dirty properties, or null if no properties considered dirty.
-	 */
-	public static int[] findDirty(
-			final NonIdentifierAttribute[] properties,
-			final Object[] currentState,
-			final Object[] previousState,
-			final boolean[][] includeColumns,
-			final SharedSessionContractImplementor session) {
-		int[] results = null;
-		int count = 0;
-		int span = properties.length;
-
-		for ( int i = 0; i < span; i++ ) {
-			final boolean dirty;
-			if ( currentState[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-				dirty = false;
-			}
-			else if ( previousState[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-				dirty = true;
-			}
-			else if ( properties[i].isDirtyCheckable()
-					&& properties[i].getType().isDirty( previousState[i], currentState[i], includeColumns[i], session ) ) {
-				dirty = true;
-			}
-			else {
-				dirty = false;
-			}
-
-			if ( dirty ) {
-				if ( results == null ) {
-					results = new int[span];
-				}
-				results[count++] = i;
-			}
-		}
-
-		if ( count == 0 ) {
-			return null;
-		}
-		else {
-			return ArrayHelper.trim(results, count);
-		}
-	}
-
-	/**
-	 * Determine if any of the given field values are modified, returning an array containing
-	 * indices of the modified fields.
-	 * <p/>
-	 * If it is determined that no fields are dirty, null is returned.
-	 *
-	 * @param properties The property definitions
-	 * @param currentState The current state of the entity
-	 * @param previousState The baseline state of the entity
-	 * @param includeColumns Columns to be included in the mod checking, per property
-	 * @param includeProperties Array of property indices that identify which properties participate in check
-	 * @param session The session from which the dirty check request originated.
-	 *
-	 * @return Array containing indices of the modified properties, or null if no properties considered modified.
-	 **/
-	public static int[] findModified(
-			final NonIdentifierAttribute[] properties,
-			final Object[] currentState,
-			final Object[] previousState,
-			final boolean[][] includeColumns,
-			final boolean[] includeProperties,
-			final SharedSessionContractImplementor session) {
-		int[] results = null;
-		int count = 0;
-		int span = properties.length;
-
-		for ( int i = 0; i < span; i++ ) {
-			final boolean modified = currentState[ i ] != LazyPropertyInitializer.UNFETCHED_PROPERTY
-					&& includeProperties[ i ]
-					&& properties[ i ].isDirtyCheckable()
-					&& properties[ i ].getType().isModified( previousState[ i ], currentState[ i ], includeColumns[ i ], session );
-			if ( modified ) {
-				if ( results == null ) {
-					results = new int[ span ];
-				}
-				results[ count++ ] = i;
-			}
-		}
-
-		if ( count == 0 ) {
-			return null;
-		}
-		else {
-			int[] trimmed = new int[ count ];
-			System.arraycopy( results, 0, trimmed, 0, count );
-			return trimmed;
-		}
 	}
 
 }

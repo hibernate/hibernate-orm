@@ -136,7 +136,6 @@ import org.hibernate.query.sqm.sql.internal.SqlAstQueryPartProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqmMapEntryResult;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
-import org.hibernate.query.sqm.sql.internal.TypeHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -5106,7 +5105,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 			final Expression resultExpression = (Expression) whenFragment.getResult().accept( this );
 			inferrableTypeAccessStack.pop();
-			resolved = (MappingModelExpressible<?>) TypeHelper.highestPrecedence( resolved, resultExpression.getExpressionType() );
+			resolved = (MappingModelExpressible<?>) highestPrecedence( resolved, resultExpression.getExpressionType() );
 
 			whenFragments.add(
 					new CaseSimpleExpression.WhenFragment(
@@ -5123,7 +5122,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 			otherwise = (Expression) expression.getOtherwise().accept( this );
 			inferrableTypeAccessStack.pop();
-			resolved = (MappingModelExpressible<?>) TypeHelper.highestPrecedence( resolved, otherwise.getExpressionType() );
+			resolved = (MappingModelExpressible<?>) highestPrecedence( resolved, otherwise.getExpressionType() );
 		}
 
 		return new CaseSimpleExpression(
@@ -5151,7 +5150,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 			final Expression resultExpression = (Expression) whenFragment.getResult().accept( this );
 			inferrableTypeAccessStack.pop();
-			resolved = (MappingModelExpressible<?>) TypeHelper.highestPrecedence( resolved, resultExpression.getExpressionType() );
+			resolved = (MappingModelExpressible<?>) highestPrecedence( resolved, resultExpression.getExpressionType() );
 
 			whenFragments.add( new CaseSearchedExpression.WhenFragment( whenPredicate, resultExpression ) );
 		}
@@ -5163,7 +5162,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 			otherwise = (Expression) expression.getOtherwise().accept( this );
 			inferrableTypeAccessStack.pop();
-			resolved = (MappingModelExpressible<?>) TypeHelper.highestPrecedence( resolved, otherwise.getExpressionType() );
+			resolved = (MappingModelExpressible<?>) highestPrecedence( resolved, otherwise.getExpressionType() );
 		}
 
 		return new CaseSearchedExpression( resolved, whenFragments, otherwise );
@@ -6264,5 +6263,29 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			result.add( expression );
 		}
 		return result;
+	}
+
+	private static JdbcMappingContainer highestPrecedence(JdbcMappingContainer type1, JdbcMappingContainer type2) {
+		if ( type1 == null ) {
+			return type2;
+		}
+
+		if ( type2 == null ) {
+			return type1;
+		}
+
+		if ( type1 instanceof ModelPart ) {
+			return type1;
+		}
+
+		if ( type2 instanceof ModelPart ) {
+			return type2;
+		}
+
+		// todo (6.0) : we probably want a precedence based on generic resolutions such as those based on Serializable
+
+		// todo (6.0) : anything else to consider?
+
+		return type1;
 	}
 }

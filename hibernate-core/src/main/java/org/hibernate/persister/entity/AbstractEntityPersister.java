@@ -262,7 +262,6 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeHelper;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
@@ -4326,8 +4325,7 @@ public abstract class AbstractEntityPersister
 				return true;
 			}
 			// we still need to verify collection fields to be eagerly loaded by 'join'
-			final NonIdentifierAttribute[] attributes = entityMetamodel.getProperties();
-			for ( NonIdentifierAttribute attribute : attributes ) {
+			for ( NonIdentifierAttribute attribute : entityMetamodel.getProperties() ) {
 				if ( attribute instanceof EntityBasedAssociationAttribute ) {
 					final AssociationType associationType = ( (EntityBasedAssociationAttribute) attribute ).getType();
 					if ( associationType instanceof CollectionType ) {
@@ -4408,7 +4406,7 @@ public abstract class AbstractEntityPersister
 	 */
 	public int[] findDirty(Object[] currentState, Object[] previousState, Object entity, SharedSessionContractImplementor session)
 			throws HibernateException {
-		int[] props = TypeHelper.findDirty(
+		int[] props = DirtyHelper.findDirty(
 				entityMetamodel.getProperties(),
 				currentState,
 				previousState,
@@ -4437,7 +4435,7 @@ public abstract class AbstractEntityPersister
 	 */
 	public int[] findModified(Object[] old, Object[] current, Object entity, SharedSessionContractImplementor session)
 			throws HibernateException {
-		int[] props = TypeHelper.findModified(
+		int[] props = DirtyHelper.findModified(
 				entityMetamodel.getProperties(),
 				current,
 				old,

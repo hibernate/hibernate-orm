@@ -51,6 +51,7 @@ import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.ast.SqlAstJoinType;
@@ -165,6 +166,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 
 		final SessionFactoryImplementor factory = creationContext.getSessionFactory();
+		final JdbcServices jdbcServices = factory.getServiceRegistry().getService( JdbcServices.class );
+		final Dialect dialect = jdbcServices.getJdbcEnvironment().getDialect();
+		final SqmFunctionRegistry sqmFunctionRegistry = factory.getQueryEngine().getSqmFunctionRegistry();
+
 
 		// DISCRIMINATOR
 
@@ -179,8 +184,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				}
 				else {
 					final Column column = (Column) selectable;
-					explicitDiscriminatorColumnName = column.getQuotedName( factory.getJdbcServices().getDialect() );
-					discriminatorAlias = column.getAlias( factory.getJdbcServices().getDialect(), persistentClass.getRootTable() );
+					explicitDiscriminatorColumnName = column.getQuotedName( dialect );
+					discriminatorAlias = column.getAlias( dialect, persistentClass.getRootTable() );
 				}
 				discriminatorType = (BasicType<?>) persistentClass.getDiscriminator().getType();
 				if ( persistentClass.isDiscriminatorValueNull() ) {
@@ -199,7 +204,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 								.getJdbcLiteralFormatter( discriminatorType.getJavaTypeDescriptor() );
 						discriminatorSQLString = literalFormatter.toJdbcLiteral(
 								discriminatorValue,
-								factory.getJdbcServices().getDialect(),
+								dialect,
 								factory.getWrapperOptions()
 						);
 					}
@@ -262,17 +267,14 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			List<Column> columns = key.getColumns();
 			for ( int k = 0; k < idColumnSpan; k++ ) {
 				Column column = columns.get(k);
-				keyCols[k] = column.getQuotedName( factory.getJdbcServices().getDialect() );
-				keyColReaders[k] = column.getReadExpr( factory.getJdbcServices().getDialect() );
-				keyColReaderTemplates[k] = column.getTemplate(
-						factory.getJdbcServices().getDialect(),
-						factory.getQueryEngine().getSqmFunctionRegistry()
-				);
+				keyCols[k] = column.getQuotedName( dialect );
+				keyColReaders[k] = column.getReadExpr( dialect );
+				keyColReaderTemplates[k] = column.getTemplate( dialect, sqmFunctionRegistry );
 			}
 			keyColumns.add( keyCols );
 			keyColumnReaders.add( keyColReaders );
 			keyColumnReaderTemplates.add( keyColReaderTemplates );
-			cascadeDeletes.add( key.isCascadeDeleteEnabled() && factory.getJdbcServices().getDialect().supportsCascadeDelete() );
+			cascadeDeletes.add( key.isCascadeDeleteEnabled() && dialect.supportsCascadeDelete() );
 		}
 
 		//Span of the tableNames directly mapped by this entity and super-classes, if any
@@ -301,14 +303,14 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			List<Column> columns = key.getColumns();
 			for ( int k = 0; k < joinIdColumnSpan; k++ ) {
 				Column column = columns.get(k);
-				keyCols[k] = column.getQuotedName( factory.getJdbcServices().getDialect() );
-				keyColReaders[k] = column.getReadExpr( factory.getJdbcServices().getDialect() );
-				keyColReaderTemplates[k] = column.getTemplate( factory.getJdbcServices().getDialect(), factory.getQueryEngine().getSqmFunctionRegistry() );
+				keyCols[k] = column.getQuotedName( dialect );
+				keyColReaders[k] = column.getReadExpr( dialect );
+				keyColReaderTemplates[k] = column.getTemplate( dialect, sqmFunctionRegistry );
 			}
 			keyColumns.add( keyCols );
 			keyColumnReaders.add( keyColReaders );
 			keyColumnReaderTemplates.add( keyColReaderTemplates );
-			cascadeDeletes.add( key.isCascadeDeleteEnabled() && factory.getJdbcServices().getDialect().supportsCascadeDelete() );
+			cascadeDeletes.add( key.isCascadeDeleteEnabled() && dialect.supportsCascadeDelete() );
 
 			tableIndex++;
 		}
@@ -338,7 +340,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			String[] key = new String[idColumnSpan];
 			List<Column> columns = table.getPrimaryKey().getColumns();
 			for ( int k = 0; k < idColumnSpan; k++ ) {
-				key[k] = columns.get(k).getQuotedName( factory.getJdbcServices().getDialect() );
+				key[k] = columns.get(k).getQuotedName( dialect );
 			}
 			keyColumns.add( key );
 		}
@@ -358,7 +360,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			String[] key = new String[idColumnSpan];
 			List<Column> columns = joinTable.getPrimaryKey().getColumns();
 			for ( int k = 0; k < idColumnSpan; k++ ) {
-				key[k] = columns.get(k).getQuotedName( factory.getJdbcServices().getDialect() );
+				key[k] = columns.get(k).getQuotedName( dialect );
 			}
 			keyColumns.add( key );
 		}
@@ -482,9 +484,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		// subclass closure properties
 
 		//TODO: code duplication with SingleTableEntityPersister
-
-		final JdbcServices jdbcServices = factory.getServiceRegistry().getService( JdbcServices.class );
-		final Dialect dialect = jdbcServices.getJdbcEnvironment().getDialect();
 
 		ArrayList<Integer> columnTableNumbers = new ArrayList<>();
 //		ArrayList<Integer> formulaTableNumbers = new ArrayList<>();

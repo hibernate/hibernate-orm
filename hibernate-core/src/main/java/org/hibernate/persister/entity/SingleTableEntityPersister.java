@@ -141,6 +141,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 
 		final SessionFactoryImplementor factory = creationContext.getSessionFactory();
+		final Dialect dialect = factory.getJdbcServices().getDialect();
 
 		// CLASS + TABLE
 
@@ -187,7 +188,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		// JOINS
 
 		int j = 1;
-		final Dialect dialect = factory.getJdbcServices().getDialect();
 		for ( Join join : persistentClass.getJoinClosure() ) {
 			qualifiedTableNames[j] = determineTableName( join.getTable() );
 			isInverseTable[j] = join.isInverse();
@@ -327,7 +327,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 							.getJdbcLiteralFormatter( discriminatorType.getJavaTypeDescriptor() );
 					discriminatorSQLValue = literalFormatter.toJdbcLiteral(
 							discriminatorValue,
-							factory.getJdbcServices().getDialect(),
+							dialect,
 							factory.getWrapperOptions()
 					);
 				}

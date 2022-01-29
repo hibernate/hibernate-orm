@@ -104,6 +104,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		}
 
 		final SessionFactoryImplementor factory = creationContext.getSessionFactory();
+		final Dialect dialect = factory.getJdbcServices().getDialect();
 
 		// TABLE
 
@@ -206,12 +207,11 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			ArrayList<String[]> keyColumns = new ArrayList<>();
 			for ( Table table : persistentClass.getSubclassTableClosure() ) {
 				if ( !table.isAbstractUnionTable() ) {
-					final String tableName = determineTableName( table );
-					tableNames.add( tableName );
+					tableNames.add( determineTableName( table ) );
 					String[] key = new String[idColumnSpan];
 					List<Column> columns = table.getPrimaryKey().getColumns();
 					for ( int k = 0; k < idColumnSpan; k++ ) {
-						key[k] = columns.get(k).getQuotedName( factory.getJdbcServices().getDialect() );
+						key[k] = columns.get(k).getQuotedName( dialect );
 					}
 					keyColumns.add( key );
 				}
@@ -221,8 +221,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			constraintOrderedKeyColumnNames = ArrayHelper.to2DStringArray( keyColumns );
 		}
 		else {
-			constraintOrderedTableNames = new String[] {tableName};
-			constraintOrderedKeyColumnNames = new String[][] {getIdentifierColumnNames()};
+			constraintOrderedTableNames = new String[] { tableName };
+			constraintOrderedKeyColumnNames = new String[][] { getIdentifierColumnNames() };
 		}
 
 		initSubclassPropertyAliasesMap( persistentClass );

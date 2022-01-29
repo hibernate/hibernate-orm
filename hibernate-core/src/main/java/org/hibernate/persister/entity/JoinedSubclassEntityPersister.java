@@ -788,6 +788,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return isInverseTable[j];
 	}
 
+	@Override
 	protected boolean isSubclassTableSequentialSelect(int j) {
 		return subclassTableSequentialSelect[j] && !isClassOrSuperclassTable[j];
 	}
@@ -798,6 +799,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		loader = createEntityLoader(LockMode.NONE, CollectionHelper.EMPTY_MAP);
 	}*/
 
+	@Override
 	public String getSubclassPropertyTableName(int i) {
 		return subclassTableNameClosure[subclassPropertyTableNumberClosure[i]];
 	}
@@ -812,10 +814,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return isNullableSubclassTable[j];
 	}
 
+	@Override
 	public Type getDiscriminatorType() {
 		return discriminatorType;
 	}
 
+	@Override
 	public Object getDiscriminatorValue() {
 		return discriminatorValue;
 	}
@@ -842,10 +846,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return getDiscriminatorColumnName();
 	}
 
+	@Override
 	public String getDiscriminatorAlias() {
 		return discriminatorAlias;
 	}
 
+	@Override
 	public String getSubclassForDiscriminatorValue(Object value) {
 		if ( value == null ) {
 			return subclassesByDiscriminatorValue.get( NULL_DISCRIMINATOR );
@@ -866,23 +872,28 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
+	@Override
 	public Serializable[] getPropertySpaces() {
 		return spaces; // don't need subclass tables, because they can't appear in conditions
 	}
 
 
+	@Override
 	public String getTableName(int j) {
 		return naturalOrderTableNames[j];
 	}
 
+	@Override
 	public String[] getKeyColumns(int j) {
 		return naturalOrderTableKeyColumns[j];
 	}
 
+	@Override
 	public boolean isTableCascadeDeleteEnabled(int j) {
 		return naturalOrderCascadeDeleteEnabled[j];
 	}
 
+	@Override
 	public boolean isPropertyOfTable(int property, int j) {
 		return naturalOrderPropertyTableNumbers[property] == j;
 	}
@@ -927,10 +938,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return temp;
 	}
 
+	@Override
 	public String fromTableFragment(String alias) {
 		return getTableName() + ' ' + alias;
 	}
 
+	@Override
 	public String getTableName() {
 		return tableNames[0];
 	}
@@ -955,18 +968,22 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return filterFragment( alias );
 	}
 
+	@Override
 	public String generateFilterConditionAlias(String rootAlias) {
 		return generateTableAlias( rootAlias, tableSpan - 1 );
 	}
 
+	@Override
 	public String generateWhereConditionAlias(String rootAlias) {
 		return generateTableAlias( rootAlias, tableSpan - 1 );
 	}
 
+	@Override
 	public String[] getIdentifierColumnNames() {
 		return tableKeyColumns[0];
 	}
 
+	@Override
 	public String[] getIdentifierColumnReaderTemplates() {
 		return tableKeyColumnReaderTemplates[0];
 	}
@@ -976,42 +993,52 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return  naturalOrderTableNames[0];
 	}
 
+	@Override
 	public String[] getIdentifierColumnReaders() {
 		return tableKeyColumnReaders[0];
 	}
 
+	@Override
 	protected int[] getPropertyTableNumbersInSelect() {
 		return propertyTableNumbers;
 	}
 
+	@Override
 	protected int getSubclassPropertyTableNumber(int i) {
 		return subclassPropertyTableNumberClosure[i];
 	}
 
+	@Override
 	public int getTableSpan() {
 		return tableSpan;
 	}
 
+	@Override
 	public boolean isMultiTable() {
 		return true;
 	}
 
+	@Override
 	protected int[] getSubclassColumnTableNumberClosure() {
 		return subclassColumnTableNumberClosure;
 	}
 
+	@Override
 	protected int[] getSubclassFormulaTableNumberClosure() {
 		return subclassFormulaTableNumberClosure;
 	}
 
+	@Override
 	protected int[] getPropertyTableNumbers() {
 		return naturalOrderPropertyTableNumbers;
 	}
 
+	@Override
 	protected String[] getSubclassTableKeyColumns(int j) {
 		return subclassTableKeyColumnClosure[j];
 	}
 
+	@Override
 	public String getSubclassTableName(int j) {
 		return subclassTableNameClosure[j];
 	}
@@ -1021,10 +1048,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return subclassTableNameClosure;
 	}
 
+	@Override
 	public int getSubclassTableSpan() {
 		return subclassTableNameClosure.length;
 	}
 
+	@Override
 	protected boolean isSubclassTableLazy(int j) {
 		return subclassTableIsLazyClosure[j];
 	}
@@ -1034,6 +1063,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return false;
 	}
 
+	@Override
 	protected boolean isClassOrSuperclassTable(int j) {
 		return isClassOrSuperclassTable[j];
 	}
@@ -1082,18 +1112,22 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return tableNames[propertyTableNumbers[index]];
 	}
 
+	@Override
 	public String[] getConstraintOrderedTableNameClosure() {
 		return constraintOrderedTableNames;
 	}
 
+	@Override
 	public String[][] getContraintOrderedTableKeyColumnClosure() {
 		return constraintOrderedKeyColumnNames;
 	}
 
+	@Override
 	public String getRootTableAlias(String drivingAlias) {
 		return generateTableAlias( drivingAlias, getTableId( getRootTableName(), tableNames ) );
 	}
 
+	@Override
 	public Declarer getSubclassPropertyDeclarer(String propertyPath) {
 		if ( "class".equals( propertyPath ) ) {
 			// special case where we need to force include all subclass joins
@@ -1241,6 +1275,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return null;
 	}
 
+	@Override
 	protected EntityIdentifierMapping generateNonEncapsulatedCompositeIdentifierMapping(
 			MappingModelCreationProcess creationProcess,
 			PersistentClass bootEntityDescriptor) {

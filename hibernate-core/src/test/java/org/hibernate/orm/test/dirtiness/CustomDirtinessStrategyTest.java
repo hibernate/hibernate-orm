@@ -9,7 +9,7 @@ package org.hibernate.orm.test.dirtiness;
 import java.io.Serializable;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionFactory;
@@ -55,7 +55,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		Thing thing = (Thing) session.get( Thing.class, id );
+		Thing thing = session.get( Thing.class, id );
 		thing.setName( SUBSEQUENT_NAME );
 		session.getTransaction().commit();
 		session.close();
@@ -67,7 +67,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		thing = (Thing) session.get( Thing.class, id );
+		thing = session.get( Thing.class, id );
 		assertEquals( SUBSEQUENT_NAME, thing.getName() );
 		session.delete( thing );
 		session.getTransaction().commit();
@@ -86,7 +86,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 
 		session = sessionWithInterceptor().openSession();
 		session.beginTransaction();
-		Thing thing = (Thing) session.get( Thing.class, id );
+		Thing thing = session.get( Thing.class, id );
 		thing.setName( SUBSEQUENT_NAME );
 		session.getTransaction().commit();
 		session.close();
@@ -99,7 +99,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		thing = (Thing) session.get( Thing.class, id );
+		thing = session.get( Thing.class, id );
 		assertEquals( SUBSEQUENT_NAME, thing.getName() );
 		session.delete( thing );
 		session.getTransaction().commit();
@@ -107,7 +107,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testOnlyCustomStrategyConsultedOnNonDirty() throws Exception {
+	public void testOnlyCustomStrategyConsultedOnNonDirty() {
 		Session session = openSession();
 		session.beginTransaction();
 		Long id = (Long) session.save( new Thing( INITIAL_NAME ) );
@@ -116,7 +116,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		Thing thing = (Thing) session.get( Thing.class, id );
+		Thing thing = session.get( Thing.class, id );
 		// lets change the name
 		thing.setName( SUBSEQUENT_NAME );
 		assertTrue( Strategy.INSTANCE.isDirty( thing, null, null ) );
@@ -128,7 +128,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		thing = (Thing) session.get( Thing.class, id );
+		thing = session.get( Thing.class, id );
 		assertEquals( INITIAL_NAME, thing.getName() );
 		session.createQuery( "delete Thing" ).executeUpdate();
 		session.getTransaction().commit();
@@ -150,7 +150,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		public boolean canDirtyCheck(Object entity, EntityPersister persister, Session session) {
 			canDirtyCheckCount++;
 			System.out.println( "canDirtyCheck called" );
-			return Thing.class.isInstance( entity );
+			return entity instanceof Thing;
 		}
 
 		int isDirtyCount = 0;
@@ -159,7 +159,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		public boolean isDirty(Object entity, EntityPersister persister, Session session) {
 			isDirtyCount++;
 			System.out.println( "isDirty called" );
-			return ! Thing.class.cast( entity ).changedValues.isEmpty();
+			return ! ((Thing) entity).changedValues.isEmpty();
 		}
 
 		int resetDirtyCount = 0;
@@ -168,7 +168,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		public void resetDirty(Object entity, EntityPersister persister, Session session) {
 			resetDirtyCount++;
 			System.out.println( "resetDirty called" );
-			Thing.class.cast( entity ).changedValues.clear();
+			((Thing) entity).changedValues.clear();
 		}
 
 		int findDirtyCount = 0;
@@ -178,12 +178,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 			findDirtyCount++;
 			System.out.println( "findDirty called" );
 			dirtyCheckContext.doDirtyChecking(
-					new AttributeChecker() {
-						@Override
-						public boolean isDirty(AttributeInformation attributeInformation) {
-							return Thing.class.cast( entity ).changedValues.containsKey( attributeInformation.getName() );
-						}
-					}
+					attributeInformation -> ((Thing) entity).changedValues.containsKey( attributeInformation.getName() )
 			);
 		}
 
@@ -196,8 +191,8 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 	}
 
 
-	public static class OnFlushDirtyInterceptor extends EmptyInterceptor {
-		private static OnFlushDirtyInterceptor INSTANCE = new OnFlushDirtyInterceptor();
+	public static class OnFlushDirtyInterceptor implements Interceptor {
+		private static final OnFlushDirtyInterceptor INSTANCE = new OnFlushDirtyInterceptor();
 
 		@Override
 		public boolean onFlushDirty(

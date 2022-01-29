@@ -36,7 +36,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 	@Test
-	public void testEager() throws Exception {
+	public void testEager() {
 		Session s;
 		Transaction tx;
 		s = openSession();
@@ -52,7 +52,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		car = (Car) s.get( Car.class, car.getId() );
+		car = s.get( Car.class, car.getId() );
 		tx.commit();
 		s.close();
 		assertNotNull( car );
@@ -61,7 +61,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testDefaultMetadata() throws Exception {
+	public void testDefaultMetadata() {
 		Session s;
 		Transaction tx;
 		s = openSession();
@@ -77,7 +77,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		car = (Car) s.get( Car.class, car.getId() );
+		car = s.get( Car.class, car.getId() );
 		assertNotNull( car );
 		assertNotNull( car.getBodyColor() );
 		assertEquals( c.getId(), car.getBodyColor().getId() );
@@ -92,9 +92,9 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		Flight firstOne = new Flight();
-		firstOne.setId( new Long( 1 ) );
+		firstOne.setId(1L);
 		firstOne.setName( "AF0101" );
-		firstOne.setDuration( new Long( 1000 ) );
+		firstOne.setDuration(1000L);
 		Company frenchOne = new Company();
 		frenchOne.setName( "Air France" );
 		firstOne.setCompany( frenchOne );
@@ -105,7 +105,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		firstOne = (Flight) s.get( Flight.class, new Long( 1 ) );
+		firstOne = s.get( Flight.class, 1L);
 		assertNotNull( firstOne.getCompany() );
 		assertEquals( frenchOne.getName(), firstOne.getCompany().getName() );
 		tx.commit();
@@ -113,7 +113,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testCascade() throws Exception {
+	public void testCascade() {
 		Session s;
 		Transaction tx;
 		s = openSession();
@@ -121,7 +121,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 		Discount discount = new Discount();
 		discount.setDiscount( 20.12 );
 		Customer customer = new Customer();
-		Collection discounts = new ArrayList();
+		Collection<Discount> discounts = new ArrayList<>();
 		discounts.add( discount );
 		customer.setName( "Quentin Tarantino" );
 		discount.setOwner( customer );
@@ -132,14 +132,14 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		discount = (Discount) s.get( Discount.class, discount.getId() );
+		discount = s.get( Discount.class, discount.getId() );
 		assertNotNull( discount );
 		assertEquals( 20.12, discount.getDiscount(), 0.01 );
 		assertNotNull( discount.getOwner() );
 		customer = new Customer();
 		customer.setName( "Clooney" );
 		discount.setOwner( customer );
-		discounts = new ArrayList();
+		discounts = new ArrayList<>();
 		discounts.add( discount );
 		customer.setDiscountTickets( discounts );
 		tx.commit();
@@ -147,7 +147,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		discount = (Discount) s.get( Discount.class, discount.getId() );
+		discount = s.get( Discount.class, discount.getId() );
 		assertNotNull( discount );
 		assertNotNull( discount.getOwner() );
 		assertEquals( "Clooney", discount.getOwner().getName() );
@@ -156,14 +156,14 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		customer = (Customer) s.get( Customer.class, customer.getId() );
+		customer = s.get( Customer.class, customer.getId() );
 		s.delete( customer );
 		tx.commit();
 		s.close();
 	}
 
 	@Test
-	public void testFetch() throws Exception {
+	public void testFetch() {
 		Session s;
 		Transaction tx;
 		s = openSession();
@@ -171,7 +171,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 		Discount discount = new Discount();
 		discount.setDiscount( 20 );
 		Customer customer = new Customer();
-		Collection discounts = new ArrayList();
+		Collection<Discount> discounts = new ArrayList<>();
 		discounts.add( discount );
 		customer.setName( "Quentin Tarantino" );
 		discount.setOwner( customer );
@@ -182,14 +182,14 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		discount = (Discount) s.get( Discount.class, discount.getId() );
+		discount = s.get( Discount.class, discount.getId() );
 		assertNotNull( discount );
 		assertFalse( Hibernate.isInitialized( discount.getOwner() ) );
 		tx.commit();
 
 		s = openSession();
 		tx = s.beginTransaction();
-		discount = (Discount) s.load( Discount.class, discount.getId() );
+		discount = s.load( Discount.class, discount.getId() );
 		assertNotNull( discount );
 		assertFalse( Hibernate.isInitialized( discount.getOwner() ) );
 		tx.commit();
@@ -202,7 +202,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testCompositeFK() throws Exception {
+	public void testCompositeFK() {
 		Session s;
 		Transaction tx;
 		s = openSession();
@@ -234,7 +234,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testImplicitCompositeFk() throws Exception {
+	public void testImplicitCompositeFk() {
 		Session s;
 		Transaction tx;
 		s = openSession();
@@ -256,7 +256,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		n2 = (Node) s.get( Node.class, n2pk );
+		n2 = s.get( Node.class, n2pk );
 		assertNotNull( n2 );
 		assertNotNull( n2.getParent() );
 		assertEquals( 1, n2.getParent().getId().getLevel() );
@@ -265,7 +265,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testManyToOneNonPk() throws Exception {
+	public void testManyToOneNonPk() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Order order = new Order();
@@ -277,7 +277,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 		s.persist( ol );
 		s.flush();
 		s.clear();
-		ol = (OrderLine) s.get( OrderLine.class, ol.getId() );
+		ol = s.get( OrderLine.class, ol.getId() );
 		assertNotNull( ol.getOrder() );
 		assertEquals( "123", ol.getOrder().getOrderNbr() );
 		assertTrue( ol.getOrder().getOrderLines().contains( ol ) );
@@ -286,7 +286,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testManyToOneNonPkSecondaryTable() throws Exception {
+	public void testManyToOneNonPkSecondaryTable() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Order order = new Order();
@@ -298,7 +298,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 		s.persist( ol );
 		s.flush();
 		s.clear();
-		ol = (OrderLine) s.get( OrderLine.class, ol.getId() );
+		ol = s.get( OrderLine.class, ol.getId() );
 		assertNotNull( ol.getReplacementOrder() );
 		assertEquals( "123", ol.getReplacementOrder().getOrderNbr() );
 		assertFalse( ol.getReplacementOrder().getOrderLines().contains( ol ) );
@@ -307,7 +307,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testTwoManyToOneNonPk() throws Exception {
+	public void testTwoManyToOneNonPk() {
 		//2 many to one non pk pointing to the same referencedColumnName should not fail
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -323,7 +323,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 		s.persist( deal );
 		s.flush();
 		s.clear();
-		deal = (Deal) s.get( Deal.class, deal.id );
+		deal = s.get( Deal.class, deal.id );
 		assertNotNull( deal.from );
 		assertNotNull( deal.to );
 		tx.rollback();
@@ -331,7 +331,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testFormulaOnOtherSide() throws Exception {
+	public void testFormulaOnOtherSide() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Frame frame = new Frame();
@@ -347,7 +347,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 		s.persist( r );
 		s.flush();
 		s.clear();
-		frame = (Frame) s.get( Frame.class, frame.getId() );
+		frame = s.get( Frame.class, frame.getId() );
 		assertEquals( 2, frame.getLenses().size() );
 		assertTrue( frame.getLenses().iterator().next().getLength() <= 1/1.2f );
 		assertTrue( frame.getLenses().iterator().next().getLength() >= 1/2.5f );

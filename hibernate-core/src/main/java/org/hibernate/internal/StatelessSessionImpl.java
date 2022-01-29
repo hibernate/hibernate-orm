@@ -83,7 +83,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		checkOpen();
 		EntityPersister persister = getEntityPersister( entityName, entity );
 		Object id = persister.getIdentifierGenerator().generate( this, entity );
-		Object[] state = persister.getPropertyValues( entity );
+		Object[] state = persister.getValues( entity );
 		if ( persister.isVersioned() ) {
 			boolean substitute = Versioning.seedVersion(
 					state,
@@ -92,7 +92,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					this
 			);
 			if ( substitute ) {
-				persister.setPropertyValues( entity, state );
+				persister.setValues( entity, state );
 			}
 		}
 		if ( id == IdentifierGeneratorHelper.POST_INSERT_INDICATOR ) {
@@ -137,13 +137,13 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		checkOpen();
 		EntityPersister persister = getEntityPersister( entityName, entity );
 		Object id = persister.getIdentifier( entity, this );
-		Object[] state = persister.getPropertyValues( entity );
+		Object[] state = persister.getValues( entity );
 		Object oldVersion;
 		if ( persister.isVersioned() ) {
 			oldVersion = persister.getVersion( entity );
 			Object newVersion = Versioning.increment( oldVersion, persister.getVersionJavaType(), this );
 			Versioning.setVersion( state, newVersion, persister );
-			persister.setPropertyValues( entity, state );
+			persister.setValues( entity, state );
 		}
 		else {
 			oldVersion = null;

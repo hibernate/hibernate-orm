@@ -128,7 +128,7 @@ public class CollectionCacheInvalidator
 						// old one
 						oldId = getIdentifier( session, oldState[i] );
 					}
-					Object ref = persister.getPropertyValue( entity, i );
+					Object ref = persister.getValue( entity, i );
 					Object id = getIdentifier( session, ref );
 
 					// only evict if the related entity has changed
@@ -147,9 +147,9 @@ public class CollectionCacheInvalidator
 					}
 					final CollectionDataAccess cacheAccessStrategy = collectionPersister.getCacheAccessStrategy();
 					final SoftLock softLock = cacheAccessStrategy.lockRegion();
-					session.getActionQueue().registerProcess( (success, session1) -> {
-						cacheAccessStrategy.unlockRegion( softLock );
-					} );
+					session.getActionQueue().registerProcess(
+							(success, session1) -> cacheAccessStrategy.unlockRegion( softLock )
+					);
 				}
 			}
 		}

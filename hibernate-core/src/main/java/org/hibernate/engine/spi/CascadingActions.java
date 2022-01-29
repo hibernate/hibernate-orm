@@ -368,7 +368,7 @@ public class CascadingActions {
 				Type propertyType,
 				int propertyIndex) {
 			if ( propertyType.isEntityType() ) {
-				Object child = persister.getPropertyValue( parent, propertyIndex );
+				Object child = persister.getValue( parent, propertyIndex );
 				if ( child != null
 						&& !isInManagedState( child, session )
 						&& !(child instanceof HibernateProxy) ) { //a proxy cannot be transient and it breaks ForeignKeys.isTransient

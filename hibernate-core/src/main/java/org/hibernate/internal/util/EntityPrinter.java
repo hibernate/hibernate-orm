@@ -28,7 +28,7 @@ import org.hibernate.type.Type;
 public final class EntityPrinter {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityPrinter.class );
 
-	private SessionFactoryImplementor factory;
+	private final SessionFactoryImplementor factory;
 
 	/**
 	 * Renders an entity to a string.
@@ -60,7 +60,7 @@ public final class EntityPrinter {
 
 		Type[] types = entityPersister.getPropertyTypes();
 		String[] names = entityPersister.getPropertyNames();
-		Object[] values = entityPersister.getPropertyValues( entity );
+		Object[] values = entityPersister.getValues( entity );
 		for ( int i = 0; i < types.length; i++ ) {
 			if ( !names[i].startsWith( "_" ) ) {
 				final String strValue;
@@ -76,7 +76,7 @@ public final class EntityPrinter {
 				result.put( names[i], strValue );
 			}
 		}
-		return entityName + result.toString();
+		return entityName + result;
 	}
 
 	public String toString(Type[] types, Object[] values) throws HibernateException {

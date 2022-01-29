@@ -57,7 +57,7 @@ public abstract class AbstractReassociateEventListener {
 		persistenceContext.checkUniqueness( key, object );
 
 		//get a snapshot
-		Object[] values = persister.getPropertyValues( object );
+		Object[] values = persister.getValues( object );
 		TypeHelper.deepCopy(
 				values,
 				persister.getPropertyTypes(),

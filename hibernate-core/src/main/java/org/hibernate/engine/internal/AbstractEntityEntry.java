@@ -256,7 +256,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 
 		if ( getPersister().isVersioned() ) {
 			this.version = nextVersion;
-			getPersister().setPropertyValue( entity, getPersister().getVersionProperty(), nextVersion );
+			getPersister().setValue( entity, getPersister().getVersionProperty(), nextVersion );
 		}
 
 		if( entity instanceof SelfDirtinessTracker ) {
@@ -383,7 +383,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 		// TODO:  use LockMode.PESSIMISTIC_FORCE_INCREMENT
 		//noinspection deprecation
 		setLockMode( LockMode.FORCE );
-		persister.setPropertyValue( entity, getPersister().getVersionProperty(), nextVersion );
+		persister.setValue( entity, getPersister().getVersionProperty(), nextVersion );
 	}
 
 	@Override
@@ -410,7 +410,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 				throw new IllegalStateException( "Cannot make an immutable entity modifiable." );
 			}
 			setStatus( Status.MANAGED );
-			loadedState = getPersister().getPropertyValues( entity );
+			loadedState = getPersister().getValues( entity );
 			getPersistenceContext().getNaturalIdResolutions().manageLocalResolution(
 					id, loadedState, persister,
 					CachedNaturalIdValueSource.LOAD

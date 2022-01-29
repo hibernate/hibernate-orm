@@ -151,11 +151,11 @@ public class WrapVisitor extends ProxyVisitor {
 
 	@Override
 	public void process(Object object, EntityPersister persister) throws HibernateException {
-		final Object[] values = persister.getPropertyValues( object );
+		final Object[] values = persister.getValues( object );
 		final Type[] types = persister.getPropertyTypes();
 		processEntityPropertyValues( values, types );
 		if ( isSubstitutionRequired() ) {
-			persister.setPropertyValues( object, values );
+			persister.setValues( object, values );
 		}
 	}
 }

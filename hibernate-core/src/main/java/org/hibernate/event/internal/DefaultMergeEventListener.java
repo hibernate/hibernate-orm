@@ -448,8 +448,8 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			final SessionImplementor source,
 			final Map copyCache) {
 		final Object[] copiedValues = TypeHelper.replace(
-				persister.getPropertyValues( entity ),
-				persister.getPropertyValues( target ),
+				persister.getValues( entity ),
+				persister.getValues( target ),
 				persister.getPropertyTypes(),
 				source,
 				target,
@@ -474,8 +474,8 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			// replacement to associations types (value types were already replaced
 			// during the first pass)
 			copiedValues = TypeHelper.replaceAssociations(
-					persister.getPropertyValues( entity ),
-					persister.getPropertyValues( target ),
+					persister.getValues( entity ),
+					persister.getValues( target ),
 					persister.getPropertyTypes(),
 					source,
 					target,
@@ -485,8 +485,8 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		}
 		else {
 			copiedValues = TypeHelper.replace(
-					persister.getPropertyValues( entity ),
-					persister.getPropertyValues( target ),
+					persister.getValues( entity ),
+					persister.getValues( target ),
 					persister.getPropertyTypes(),
 					source,
 					target,

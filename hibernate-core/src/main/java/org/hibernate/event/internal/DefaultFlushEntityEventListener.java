@@ -166,7 +166,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			checkId( entity, persister, entry.getId(), session );
 
 			// grab its current state
-			Object[] values = persister.getPropertyValues( entity );
+			Object[] values = persister.getValues( entity );
 
 			checkNaturalId( persister, entity, entry, values, loadedState, session );
 
@@ -263,7 +263,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 						dirtyProperties,
 						event.hasDirtyCollection(),
 						status == Status.DELETED && !entry.isModifiableEntity() ?
-								persister.getPropertyValues( entity ) :
+								persister.getValues( entity ) :
 								entry.getLoadedState(),
 						entry.getVersion(),
 						nextVersion,
@@ -568,7 +568,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 					// - entry.getDeletedState() contains the entity's current property values with
 					//   references to transient entities set to null.
 					// - dirtyProperties will only contain properties that refer to transient entities
-					final Object[] currentState = persister.getPropertyValues( event.getEntity() );
+					final Object[] currentState = persister.getValues( event.getEntity() );
 					dirtyProperties = persister.findDirty( entry.getDeletedState(), currentState, entity, session );
 					dirtyCheckPossible = true;
 				}

@@ -120,8 +120,8 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 
 			entityEntry = persistenceContext.addEntity(
 					entity,
-					(persister.isMutable() ? Status.MANAGED : Status.READ_ONLY),
-					persister.getPropertyValues( entity ),
+					persister.isMutable() ? Status.MANAGED : Status.READ_ONLY,
+					persister.getValues( entity ),
 					key,
 					version,
 					LockMode.NONE,
@@ -251,7 +251,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		final Object version = entityEntry.getVersion();
 
 		final Object[] currentState = entityEntry.getLoadedState() == null
-				? persister.getPropertyValues(entity) //i.e. the entity came in from update()
+				? persister.getValues(entity) //i.e. the entity came in from update()
 				: entityEntry.getLoadedState();
 
 		final Object[] deletedState = createDeletedState( persister, currentState, session );

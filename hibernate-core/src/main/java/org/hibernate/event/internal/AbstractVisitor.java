@@ -109,7 +109,7 @@ public abstract class AbstractVisitor {
 	public void process(Object object, EntityPersister persister)
 	throws HibernateException {
 		processEntityPropertyValues(
-			persister.getPropertyValues( object ),
+			persister.getValues( object ),
 			persister.getPropertyTypes()
 		);
 	}

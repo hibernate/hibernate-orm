@@ -147,7 +147,7 @@ public final class Cascade {
 						}
 					}
 					else {
-						child = persister.getPropertyValue( parent, i );
+						child = persister.getValue( parent, i );
 					}
 					cascadeProperty(
 							action,
@@ -180,7 +180,7 @@ public final class Cascade {
 								eventSource,
 								null,
 								parent,
-								persister.getPropertyValue( parent, i ),
+								persister.getValue( parent, i ),
 								type,
 								style,
 								propertyName,

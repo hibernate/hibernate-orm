@@ -43,7 +43,7 @@ The Jakarta Persistence specification strictly limits the Java types that can be
 * `byte[]` or `Byte[]`
 * `char[]` or `Character[]`
 * enums
-* any other type that implements `Serializable`footnote:[Jakarta Persistence's support for Serializable types is to directly serialize their state to the database]
+* any other type that implements ``Serializable``footnote:[Jakarta Persistence's support for Serializable types is to directly serialize their state to the database]
 
 If provider portability is a concern, you should stick to just these basic types.
 

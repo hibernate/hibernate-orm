@@ -40,6 +40,7 @@ import org.hibernate.mapping.Value;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -58,7 +59,6 @@ import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
@@ -89,7 +89,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private final String[] subclassClosure;
 
 	private final String[] subclassTableNameClosure;
-	private final boolean[] subclassTableIsLazyClosure;
+//	private final boolean[] subclassTableIsLazyClosure;
 	private final boolean[] isInverseSubclassTable;
 	private final boolean[] isNullableSubclassTable;
 	private final boolean[] subclassTableSequentialSelect;
@@ -104,8 +104,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	// subclasses and superclasses of this class
 	private final int[] subclassPropertyTableNumberClosure;
 
-	private final int[] subclassColumnTableNumberClosure;
-	private final int[] subclassFormulaTableNumberClosure;
+//	private final int[] subclassColumnTableNumberClosure;
+//	private final int[] subclassFormulaTableNumberClosure;
 
 	// discriminator column
 	private final Map<Object, String> subclassesByDiscriminatorValue;
@@ -113,7 +113,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private final String discriminatorColumnName;
 	private final String discriminatorColumnReaders;
 	private final String discriminatorColumnReaderTemplate;
-	private final String discriminatorFormula;
+//	private final String discriminatorFormula;
 	private final String discriminatorFormulaTemplate;
 	private final String discriminatorAlias;
 	private final BasicType<?> discriminatorType;
@@ -125,7 +125,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private final String[][] constraintOrderedKeyColumnNames;
 
 	//private final Map propertyTableNumbersByName = new HashMap();
-	private final Map<String, Integer> propertyTableNumbersByNameAndSubclass;
+//	private final Map<String, Integer> propertyTableNumbersByNameAndSubclass;
 
 	private static final Object NULL_DISCRIMINATOR = new MarkerObject( "<null discriminator>" );
 	private static final Object NOT_NULL_DISCRIMINATOR = new MarkerObject( "<not null discriminator>" );
@@ -192,8 +192,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			qualifiedTableNames[j] = determineTableName( join.getTable() );
 			isInverseTable[j] = join.isInverse();
 			isNullableTable[j] = join.isOptional();
-			cascadeDeleteEnabled[j] = join.getKey().isCascadeDeleteEnabled() &&
-					dialect.supportsCascadeDelete();
+			cascadeDeleteEnabled[j] = join.getKey().isCascadeDeleteEnabled() && dialect.supportsCascadeDelete();
 
 			customSQLInsert[j] = join.getCustomSQLInsert();
 			insertCallable[j] = customSQLInsert[j] != null && join.isCustomInsertCallable();
@@ -232,7 +231,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				ArrayHelper.toStringArray( persistentClass.getSynchronizedTables() )
 		);
 
-		final boolean lazyAvailable = isInstrumented();
+//		final boolean lazyAvailable = isInstrumented();
 
 		ArrayList<String> subclassTables = new ArrayList<>();
 		ArrayList<String[]> joinKeyColumns = new ArrayList<>();
@@ -241,7 +240,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		ArrayList<Boolean> isDeferreds = new ArrayList<>();
 		ArrayList<Boolean> isInverses = new ArrayList<>();
 		ArrayList<Boolean> isNullables = new ArrayList<>();
-		ArrayList<Boolean> isLazies = new ArrayList<>();
+//		ArrayList<Boolean> isLazies = new ArrayList<>();
 		subclassTables.add( qualifiedTableNames[0] );
 		joinKeyColumns.add( getIdentifierColumnNames() );
 		isConcretes.add( Boolean.TRUE );
@@ -249,13 +248,13 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		isDeferreds.add( Boolean.FALSE );
 		isInverses.add( Boolean.FALSE );
 		isNullables.add( Boolean.FALSE );
-		isLazies.add( Boolean.FALSE );
+//		isLazies.add( Boolean.FALSE );
 		for ( Join join : persistentClass.getSubclassJoinClosure() ) {
 			isConcretes.add( persistentClass.isClassOrSuperclassTable( join.getTable() ) );
 			isClassOrSuperclassJoins.add( persistentClass.isClassOrSuperclassJoin( join ) );
 			isInverses.add( join.isInverse() );
 			isNullables.add( join.isOptional() );
-			isLazies.add( lazyAvailable && join.isLazy() );
+//			isLazies.add( lazyAvailable && join.isLazy() );
 
 			boolean isDeferred = join.isSequentialSelect() && !persistentClass.isClassOrSuperclassJoin( join ) ;
 			isDeferreds.add( isDeferred );
@@ -273,7 +272,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		subclassTableSequentialSelect = ArrayHelper.toBooleanArray( isDeferreds );
 		subclassTableNameClosure = ArrayHelper.toStringArray( subclassTables );
-		subclassTableIsLazyClosure = ArrayHelper.toBooleanArray( isLazies );
+//		subclassTableIsLazyClosure = ArrayHelper.toBooleanArray( isLazies );
 		subclassTableKeyColumnClosure = ArrayHelper.to2DStringArray( joinKeyColumns );
 		isClassOrSuperclassTable = ArrayHelper.toBooleanArray( isConcretes );
 		isClassOrSuperclassJoin = ArrayHelper.toBooleanArray( isClassOrSuperclassJoins );
@@ -289,13 +288,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			}
 			forceDiscriminator = persistentClass.isForceDiscriminator();
 			Selectable selectable = discrimValue.getSelectables().get(0);
+			SqmFunctionRegistry functionRegistry = factory.getQueryEngine().getSqmFunctionRegistry();
 			if ( discrimValue.hasFormula() ) {
 				Formula formula = (Formula) selectable;
-				discriminatorFormula = formula.getFormula();
-				discriminatorFormulaTemplate = formula.getTemplate(
-						dialect,
-						factory.getQueryEngine().getSqmFunctionRegistry()
-				);
+//				discriminatorFormula = formula.getFormula();
+				discriminatorFormulaTemplate = formula.getTemplate( dialect, functionRegistry );
 				discriminatorColumnName = null;
 				discriminatorColumnReaders = null;
 				discriminatorColumnReaderTemplate = null;
@@ -305,12 +302,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				Column column = (Column) selectable;
 				discriminatorColumnName = column.getQuotedName( dialect );
 				discriminatorColumnReaders = column.getReadExpr( dialect );
-				discriminatorColumnReaderTemplate = column.getTemplate(
-						dialect,
-						factory.getQueryEngine().getSqmFunctionRegistry()
-				);
+				discriminatorColumnReaderTemplate = column.getTemplate( dialect, functionRegistry );
 				discriminatorAlias = column.getAlias( dialect, persistentClass.getRootTable() );
-				discriminatorFormula = null;
+//				discriminatorFormula = null;
 				discriminatorFormulaTemplate = null;
 			}
 			discriminatorType = (BasicType<?>) persistentClass.getDiscriminator().getType();
@@ -355,7 +349,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			discriminatorType = null;
 			discriminatorValue = null;
 			discriminatorSQLValue = null;
-			discriminatorFormula = null;
+//			discriminatorFormula = null;
 			discriminatorFormulaTemplate = null;
 		}
 
@@ -369,11 +363,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		//TODO: code duplication with JoinedSubclassEntityPersister
 
-		ArrayList<Integer> columnJoinNumbers = new ArrayList<>();
-		ArrayList<Integer> formulaJoinedNumbers = new ArrayList<>();
+//		ArrayList<Integer> columnJoinNumbers = new ArrayList<>();
+//		ArrayList<Integer> formulaJoinedNumbers = new ArrayList<>();
 		ArrayList<Integer> propertyJoinNumbers = new ArrayList<>();
 
-		final HashMap<String, Integer> propertyTableNumbersByNameAndSubclassLocal = new HashMap<>();
+//		final HashMap<String, Integer> propertyTableNumbersByNameAndSubclassLocal = new HashMap<>();
 		final Map<Object, String> subclassesByDiscriminatorValueLocal = new HashMap<>();
 
 		for ( Property property : persistentClass.getSubclassPropertyClosure() ) {
@@ -381,32 +375,36 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			propertyJoinNumbers.add( join );
 
 			//propertyTableNumbersByName.put( prop.getName(), join );
-			propertyTableNumbersByNameAndSubclassLocal.put(
-					property.getPersistentClass().getEntityName() + '.' + property.getName(),
-					join
-			);
+//			propertyTableNumbersByNameAndSubclassLocal.put(
+//					property.getPersistentClass().getEntityName() + '.' + property.getName(),
+//					join
+//			);
 
-			for ( Selectable selectable : property.getSelectables() ) {
-				if ( selectable.isFormula() ) {
-					formulaJoinedNumbers.add( join );
-				}
-				else {
-					columnJoinNumbers.add( join );
-				}
-			}
+//			for ( Selectable selectable : property.getSelectables() ) {
+//				if ( selectable.isFormula() ) {
+//					formulaJoinedNumbers.add( join );
+//				}
+//				else {
+//					columnJoinNumbers.add( join );
+//				}
+//			}
 		}
 
-		propertyTableNumbersByNameAndSubclass = CollectionHelper.toSmallMap( propertyTableNumbersByNameAndSubclassLocal );
+//		propertyTableNumbersByNameAndSubclass = CollectionHelper.toSmallMap( propertyTableNumbersByNameAndSubclassLocal );
 
-		subclassColumnTableNumberClosure = ArrayHelper.toIntArray( columnJoinNumbers );
-		subclassFormulaTableNumberClosure = ArrayHelper.toIntArray( formulaJoinedNumbers );
+//		subclassColumnTableNumberClosure = ArrayHelper.toIntArray( columnJoinNumbers );
+//		subclassFormulaTableNumberClosure = ArrayHelper.toIntArray( formulaJoinedNumbers );
 		subclassPropertyTableNumberClosure = ArrayHelper.toIntArray( propertyJoinNumbers );
 
 		int subclassSpan = persistentClass.getSubclassSpan() + 1;
 		subclassClosure = new String[subclassSpan];
 		subclassClosure[0] = getEntityName();
 		if ( persistentClass.isPolymorphic() ) {
-			addSubclassByDiscriminatorValue( subclassesByDiscriminatorValueLocal, discriminatorValue, getEntityName() );
+			addSubclassByDiscriminatorValue(
+					subclassesByDiscriminatorValueLocal,
+					discriminatorValue,
+					getEntityName()
+			);
 		}
 
 		// SUBCLASSES
@@ -415,16 +413,25 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			for ( Subclass subclass : persistentClass.getSubclasses() ) {
 				subclassClosure[k++] = subclass.getEntityName();
 				if ( subclass.isDiscriminatorValueNull() ) {
-					addSubclassByDiscriminatorValue( subclassesByDiscriminatorValueLocal, NULL_DISCRIMINATOR, subclass.getEntityName() );
+					addSubclassByDiscriminatorValue(
+							subclassesByDiscriminatorValueLocal,
+							NULL_DISCRIMINATOR,
+							subclass.getEntityName()
+					);
 				}
 				else if ( subclass.isDiscriminatorValueNotNull() ) {
-					addSubclassByDiscriminatorValue( subclassesByDiscriminatorValueLocal, NOT_NULL_DISCRIMINATOR, subclass.getEntityName() );
+					addSubclassByDiscriminatorValue(
+							subclassesByDiscriminatorValueLocal,
+							NOT_NULL_DISCRIMINATOR,
+							subclass.getEntityName()
+					);
 				}
 				else {
 					try {
 						addSubclassByDiscriminatorValue(
 								subclassesByDiscriminatorValueLocal,
-								discriminatorType.getJavaTypeDescriptor().fromString( subclass.getDiscriminatorValue() ),
+								discriminatorType.getJavaTypeDescriptor()
+										.fromString( subclass.getDiscriminatorValue() ),
 								subclass.getEntityName()
 						);
 					}
@@ -439,7 +446,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		}
 
 		// Don't hold a reference to an empty HashMap:
-		this.subclassesByDiscriminatorValue = CollectionHelper.toSmallMap( subclassesByDiscriminatorValueLocal );
+		subclassesByDiscriminatorValue = CollectionHelper.toSmallMap( subclassesByDiscriminatorValueLocal );
 
 		initSubclassPropertyAliasesMap( persistentClass );
 
@@ -535,14 +542,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return spaces;
 	}
 
-	//Access cached SQL
-
-	protected boolean isDiscriminatorFormula() {
+	private boolean isDiscriminatorFormula() {
 		return discriminatorColumnName == null;
-	}
-
-	protected String getDiscriminatorFormula() {
-		return discriminatorFormula;
 	}
 
 	@Override
@@ -714,11 +715,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected int[] getPropertyTableNumbersInSelect() {
-		return propertyTableNumbers;
-	}
-
-	@Override
 	protected int getSubclassPropertyTableNumber(int i) {
 		return subclassPropertyTableNumberClosure[i];
 	}
@@ -738,41 +734,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected int[] getSubclassColumnTableNumberClosure() {
-		return subclassColumnTableNumberClosure;
-	}
-
-	@Override
-	protected int[] getSubclassFormulaTableNumberClosure() {
-		return subclassFormulaTableNumberClosure;
-	}
-
-	@Override
 	protected int[] getPropertyTableNumbers() {
 		return propertyTableNumbers;
-	}
-
-	private int getSubclassPropertyTableNumber(String propertyName, String entityName) {
-		// When there are duplicated property names in the subclasses
-		// then propertyMapping.toType( propertyName ) may return an
-		// incorrect Type. To ensure correct results, lookup the property type
-		// using the concrete EntityPersister with the specified entityName
-		// (since the concrete EntityPersister cannot have duplicated property names).
-		final EntityPersister concreteEntityPersister;
-		if ( getEntityName().equals( entityName ) ) {
-			concreteEntityPersister = this;
-		}
-		else {
-			concreteEntityPersister = getFactory().getRuntimeMetamodels()
-					.getMappingMetamodel()
-					.getEntityDescriptor( entityName );
-		}
-		Type type = concreteEntityPersister.getPropertyType( propertyName );
-		if ( type.isAssociationType() && ( (AssociationType) type ).useLHSPrimaryKey() ) {
-			return 0;
-		}
-		final Integer tabnum = propertyTableNumbersByNameAndSubclass.get( entityName + '.' + propertyName );
-		return tabnum == null ? 0 : tabnum;
 	}
 
 	@Override
@@ -806,11 +769,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected boolean isSubclassTableLazy(int j) {
-		return subclassTableIsLazyClosure[j];
-	}
-
-	@Override
 	public boolean isNullableTable(int j) {
 		return isNullableTable[j];
 	}
@@ -823,18 +781,10 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	@Override
 	public String getPropertyTableName(String propertyName) {
 		Integer index = getEntityMetamodel().getPropertyIndexOrNull( propertyName );
-		if ( index == null ) {
-			return null;
-		}
-		return qualifiedTableNames[propertyTableNumbers[index]];
+		return index == null ? null : qualifiedTableNames[propertyTableNumbers[index]];
 	}
 
-	@Override
-	public boolean canOmitSuperclassTableJoin() {
-		return true;
-	}
-
-	@Override
+	@Override @Deprecated
 	public boolean isMultiTable() {
 		return getTableSpan() > 1;
 	}
@@ -879,8 +829,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			final Predicate discriminatorPredicate = createDiscriminatorPredicate(
 					tableGroup.getPrimaryTableReference().getIdentificationVariable(),
 					tableGroup,
-					expressionResolver,
-					creationContext
+					expressionResolver
 			);
 			additionalPredicateCollectorAccess.get().accept( discriminatorPredicate );
 		}
@@ -899,8 +848,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 					createDiscriminatorPredicate(
 							alias,
 							tableGroup,
-							creationState.getSqlExpressionResolver(),
-							creationState.getCreationContext()
+							creationState.getSqlExpressionResolver()
 					)
 			);
 		}
@@ -910,8 +858,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private Predicate createDiscriminatorPredicate(
 			String alias,
 			TableGroup tableGroup,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
+			SqlExpressionResolver sqlExpressionResolver) {
 		final String columnReferenceKey;
 		final String discriminatorExpression;
 		if ( isDiscriminatorFormula() ) {

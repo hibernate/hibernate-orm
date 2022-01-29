@@ -306,17 +306,9 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return spaces;
 	}
 
-	protected boolean isDiscriminatorFormula() {
-		return false;
-	}
-
 	@Override
 	protected boolean shouldProcessSuperMapping() {
 		return false;
-	}
-
-	protected String getDiscriminatorFormula() {
-		return null;
 	}
 
 	@Override
@@ -362,11 +354,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected int[] getPropertyTableNumbersInSelect() {
-		return new int[getPropertySpan()];
-	}
-
-	@Override
 	protected int getSubclassPropertyTableNumber(int i) {
 		return 0;
 	}
@@ -376,7 +363,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return 0;
 	}
 
-	@Override
+	@Override @Deprecated
 	public boolean isMultiTable() {
 		// This could also just be true all the time...
 		return isAbstract() || hasSubclasses();
@@ -420,16 +407,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	@Override
 	public int getTableSpan() {
 		return 1;
-	}
-
-	@Override
-	protected int[] getSubclassColumnTableNumberClosure() {
-		return new int[getSubclassColumnClosure().length];
-	}
-
-	@Override
-	protected int[] getSubclassFormulaTableNumberClosure() {
-		return new int[getSubclassFormulaClosure().length];
 	}
 
 	protected boolean[] getTableHasColumns() {

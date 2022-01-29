@@ -15,7 +15,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.Remove;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -27,7 +26,6 @@ import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.TableGroupFilterAliasGenerator;
@@ -113,9 +111,10 @@ public interface EntityPersister
 	 * entity persisters before calling {@link #postInstantiate()}.
 	 *
 	 * @deprecated The legacy "walking model" is deprecated in favor of the newer "mapping model".
-	 * This method is no longer called by Hibernate.  See {@link InFlightEntityMappingType#prepareMappingModel} instead
+	 * This method is no longer called by Hibernate.
+	 * See {@link InFlightEntityMappingType#prepareMappingModel} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	void generateEntityDefinition();
 
 	/**
@@ -257,8 +256,8 @@ public interface EntityPersister
 
 	default void visitQuerySpaces(Consumer<String> querySpaceConsumer) {
 		final String[] spaces = getSynchronizedQuerySpaces();
-		for ( int i = 0; i < spaces.length; i++ ) {
-			querySpaceConsumer.accept( spaces[ i ] );
+		for (String space : spaces) {
+			querySpaceConsumer.accept(space);
 		}
 	}
 
@@ -500,8 +499,12 @@ public interface EntityPersister
 	 */
 	Object load(Object id, Object optionalObject, LockMode lockMode, SharedSessionContractImplementor session);
 
+	/**
+	 * @deprecated Use {@link #load(Object, Object, LockMode, SharedSessionContractImplementor)}
+	 */
+	@Deprecated(since = "6.0")
 	default Object load(Object id, Object optionalObject, LockMode lockMode, SharedSessionContractImplementor session, Boolean readOnly)
-	throws HibernateException {
+			throws HibernateException {
 		return load( id, optionalObject, lockMode, session );
 	}
 
@@ -808,9 +811,9 @@ public interface EntityPersister
 	/**
 	 * Set the given values to the mapped properties of the given object
 	 *
-	 * @deprecated as of 6.0.  Use {@link #setValues} instead
+	 * @deprecated Use {@link #setValues} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	void setPropertyValues(Object object, Object[] values);
 
 	default void setValue(Object object, int i, Object value) {
@@ -820,9 +823,9 @@ public interface EntityPersister
 	/**
 	 * Set the value of a particular property
 	 *
-	 * @deprecated as of 6.0.  Use {@link #setValue} instead
+	 * @deprecated Use {@link #setValue} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	void setPropertyValue(Object object, int i, Object value);
 
 	default Object[] getValues(Object object) {
@@ -830,9 +833,9 @@ public interface EntityPersister
 	}
 
 	/**
-	 * @deprecated as of 6.0.  Use {@link #getValues} instead
+	 * @deprecated Use {@link #getValues} instead
 	 */
-	@Deprecated
+	@Deprecated(since  = "6.0")
 	Object[] getPropertyValues(Object object);
 
 	default Object getValue(Object object, int i) {
@@ -840,9 +843,9 @@ public interface EntityPersister
 	}
 
 	/**
-	 * @deprecated as of 6.0.  Use {@link #getValue} instead
+	 * @deprecated Use {@link #getValue} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "6.0")
 	Object getPropertyValue(Object object, int i) throws HibernateException;
 
 	/**
@@ -944,10 +947,8 @@ public interface EntityPersister
 	/**
 	 * Like {@link #resolveAttributeIndexes(String[])} but also always returns mutable attributes
 	 *
-	 * @param values
-	 * @param loadedState
 	 * @param attributeNames Array of names to be resolved
-	 * @param session
+	 *
 	 * @return A set of unique indexes of the attribute names found in the metamodel
 	 */
 	default int[] resolveDirtyAttributeIndexes(

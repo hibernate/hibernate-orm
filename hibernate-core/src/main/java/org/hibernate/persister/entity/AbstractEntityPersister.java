@@ -359,7 +359,7 @@ public abstract class AbstractEntityPersister
 	private final CascadeStyle[] subclassPropertyCascadeStyleClosure;
 
 	//information about all columns/formulas in class hierarchy
-	private final String[] subclassColumnClosure; //only used by JoinedSubclassEntityPersister! TODO: MOVE IT DOWN!
+//	private final String[] subclassColumnClosure;
 //	private final boolean[] subclassColumnLazyClosure;
 	private final String[] subclassColumnAliasClosure;
 	private final boolean[] subclassColumnSelectableClosure;
@@ -705,12 +705,10 @@ public abstract class AbstractEntityPersister
 
 		this.entityMetamodel = new EntityMetamodel( bootDescriptor, this, creationContext );
 
-		if ( entityMetamodel.isMutable() ) {
-			this.entityEntryFactory = MutableEntityEntryFactory.INSTANCE;
-		}
-		else {
-			this.entityEntryFactory = ImmutableEntityEntryFactory.INSTANCE;
-		}
+		this.entityEntryFactory = entityMetamodel.isMutable()
+				? MutableEntityEntryFactory.INSTANCE
+				: ImmutableEntityEntryFactory.INSTANCE;
+
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		this.representationStrategy = creationContext.getBootstrapContext().getRepresentationStrategySelector()
@@ -718,7 +716,6 @@ public abstract class AbstractEntityPersister
 
 		this.javaType = representationStrategy.getLoadJavaType();
 		assert javaType != null;
-
 
 		final JdbcServices jdbcServices = factory.getServiceRegistry().getService( JdbcServices.class );
 		final Dialect dialect = jdbcServices.getJdbcEnvironment().getDialect();
@@ -777,12 +774,9 @@ public abstract class AbstractEntityPersister
 
 		// VERSION
 
-		if ( bootDescriptor.isVersioned() ) {
-			versionColumnName = bootDescriptor.getVersion().getColumns().get(0).getQuotedName( dialect );
-		}
-		else {
-			versionColumnName = null;
-		}
+		versionColumnName = bootDescriptor.isVersioned()
+				? bootDescriptor.getVersion().getColumns().get(0).getQuotedName(dialect)
+				: null;
 
 		//WHERE STRING
 
@@ -846,14 +840,15 @@ public abstract class AbstractEntityPersister
 				colAliases[k] = selectable.getAlias( dialect, prop.getValue().getTable() );
 				if ( selectable.isFormula() ) {
 					foundFormula = true;
-					( (Formula) selectable ).setFormula( substituteBrackets( ( (Formula) selectable ).getFormula() ) );
+					Formula formula = (Formula) selectable;
+					formula.setFormula( substituteBrackets( formula.getFormula() ) );
 					formulaTemplates[k] = selectable.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
 				}
 				else {
-					Column col = (Column) selectable;
-					colNames[k] = col.getQuotedName( dialect );
-//					colReaderTemplates[k] = col.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
-					colWriters[k] = col.getWriteExpr();
+					Column column = (Column) selectable;
+					colNames[k] = column.getQuotedName( dialect );
+//					colReaderTemplates[k] = column.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
+					colWriters[k] = column.getWriteExpr();
 				}
 				k++;
 			}
@@ -863,7 +858,7 @@ public abstract class AbstractEntityPersister
 			propertyColumnWriters[i] = colWriters;
 			propertyColumnAliases[i] = colAliases;
 
-			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
+			final boolean lazy = !EnhancementHelper.includeInBaseFetchGroup(
 					prop,
 					entityMetamodel.isInstrumented(),
 					entityName -> {
@@ -905,7 +900,7 @@ public abstract class AbstractEntityPersister
 
 		// SUBCLASS PROPERTY CLOSURE
 
-		ArrayList<String> columns = new ArrayList<>();
+//		ArrayList<String> columns = new ArrayList<>();
 //		ArrayList<Boolean> columnsLazy = new ArrayList<>();
 //		ArrayList<String> columnReaderTemplates = new ArrayList<>();
 		ArrayList<String> aliases = new ArrayList<>();
@@ -968,19 +963,21 @@ public abstract class AbstractEntityPersister
 //					formulasLazy.add( lazy );
 				}
 				else {
-					Column col = (Column) selectable;
-					String colName = col.getQuotedName( dialect );
+					Column column = (Column) selectable;
+					String colName = column.getQuotedName( dialect );
 //					colnos[l] = columns.size(); //before add :-)
 //					formnos[l] = -1;
-					columns.add( colName );
+//					columns.add( colName );
 					cols[l] = colName;
 					aliases.add( selectable.getAlias( dialect, prop.getValue().getTable() ) );
 //					columnsLazy.add( lazy );
 					columnSelectables.add( prop.isSelectable() );
 
-					readers[l] = col.getReadExpr( dialect );
-					String readerTemplate = col.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
-					readerTemplates[l] = readerTemplate;
+					readers[l] = column.getReadExpr( dialect );
+					readerTemplates[l] = column.getTemplate(
+							dialect,
+							factory.getQueryEngine().getSqmFunctionRegistry()
+					);
 //					columnReaderTemplates.add( readerTemplate );
 				}
 				l++;
@@ -995,7 +992,7 @@ public abstract class AbstractEntityPersister
 			joinedFetchesList.add( prop.getValue().getFetchMode() );
 			cascades.add( prop.getCascadeStyle() );
 		}
-		subclassColumnClosure = ArrayHelper.toStringArray( columns );
+//		subclassColumnClosure = ArrayHelper.toStringArray( columns );
 		subclassColumnAliasClosure = ArrayHelper.toStringArray( aliases );
 //		subclassColumnLazyClosure = ArrayHelper.toBooleanArray( columnsLazy );
 		subclassColumnSelectableClosure = ArrayHelper.toBooleanArray( columnSelectables );
@@ -2507,11 +2504,6 @@ public abstract class AbstractEntityPersister
 		}
 
 		return ArrayHelper.toIntArray( fields );
-	}
-
-	@Deprecated //TODO: REMOVE THIS
-	protected String[] getSubclassColumnClosure() {
-		return subclassColumnClosure;
 	}
 
 	protected String[] getSubclassColumnAliasClosure() {

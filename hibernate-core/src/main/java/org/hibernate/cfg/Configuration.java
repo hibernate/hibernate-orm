@@ -847,11 +847,11 @@ public class Configuration {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// todo : decide about these
 
-	public Map getNamedSQLQueries() {
+	public Map<String, NamedNativeQueryDefinition> getNamedSQLQueries() {
 		return namedSqlQueries;
 	}
 
-	public Map getSqlResultSetMappings() {
+	public Map<String, NamedResultSetMappingDescriptor> getSqlResultSetMappings() {
 		return sqlResultSetMappings;
 	}
 
@@ -881,10 +881,9 @@ public class Configuration {
 	 */
 	public Configuration mergeProperties(Properties properties) {
 		for ( Map.Entry<Object,Object> entry : properties.entrySet() ) {
-			if ( this.properties.containsKey( entry.getKey() ) ) {
-				continue;
+			if ( !properties.containsKey( entry.getKey() ) ) {
+				properties.setProperty( (String) entry.getKey(), (String) entry.getValue() );
 			}
-			this.properties.setProperty( (String) entry.getKey(), (String) entry.getValue() );
 		}
 		return this;
 	}

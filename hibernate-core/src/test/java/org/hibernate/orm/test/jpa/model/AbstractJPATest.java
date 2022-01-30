@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.jpa.model;
 
 import java.sql.Connection;
-import java.util.IdentityHashMap;
 
 import org.hibernate.Session;
 import org.hibernate.boot.Metadata;
@@ -27,6 +26,7 @@ import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.FlushEntityEventListener;
 import org.hibernate.event.spi.FlushEventListener;
+import org.hibernate.event.spi.PersistContext;
 import org.hibernate.event.spi.PersistEventListener;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.proxy.EntityNotFoundDelegate;
@@ -132,7 +132,7 @@ public abstract class AbstractJPATest extends BaseSessionFactoryFunctionalTest {
 
 	public static class JPAPersistOnFlushEventListener extends JPAPersistEventListener {
 		@Override
-		protected CascadingAction getCascadeAction() {
+		protected CascadingAction<PersistContext> getCascadeAction() {
 			return CascadingActions.PERSIST_ON_FLUSH;
 		}
 	}
@@ -142,13 +142,13 @@ public abstract class AbstractJPATest extends BaseSessionFactoryFunctionalTest {
 		public static final AutoFlushEventListener INSTANCE = new JPAAutoFlushEventListener();
 
 		@Override
-		protected CascadingAction getCascadingAction() {
+		protected CascadingAction<PersistContext> getCascadingAction() {
 			return CascadingActions.PERSIST_ON_FLUSH;
 		}
 
 		@Override
-		protected Object getAnything() {
-			return new IdentityHashMap( 10 );
+		protected PersistContext getContext() {
+			return PersistContext.create();
 		}
 	}
 
@@ -157,13 +157,13 @@ public abstract class AbstractJPATest extends BaseSessionFactoryFunctionalTest {
 		public static final FlushEventListener INSTANCE = new JPAFlushEventListener();
 
 		@Override
-		protected CascadingAction getCascadingAction() {
+		protected CascadingAction<PersistContext> getCascadingAction() {
 			return CascadingActions.PERSIST_ON_FLUSH;
 		}
 
 		@Override
-		protected Object getAnything() {
-			return new IdentityHashMap( 10 );
+		protected PersistContext getContext() {
+			return PersistContext.create();
 		}
 	}
 

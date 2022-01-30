@@ -48,12 +48,14 @@ import org.hibernate.type.TypeHelper;
  *
  * @author Gavin King
  */
-public class DefaultMergeEventListener extends AbstractSaveEventListener implements MergeEventListener {
+public class DefaultMergeEventListener
+		extends AbstractSaveEventListener<MergeContext>
+		implements MergeEventListener {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultMergeEventListener.class );
 
 	@Override
-	protected Map<Object,Object> getMergeMap(Object anything) {
-		return ( (MergeContext) anything ).invertMap();
+	protected Map<Object,Object> getMergeMap(MergeContext context) {
+		return context.invertMap();
 	}
 
 	/**
@@ -126,14 +128,14 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 				entity = original;
 			}
 
-			if ( ((MergeContext) copiedAlready).containsKey( entity ) && ((MergeContext) copiedAlready).isOperatedOn( entity ) ) {
+			if ( copiedAlready.containsKey( entity ) && copiedAlready.isOperatedOn( entity ) ) {
 				LOG.trace( "Already in merge process" );
 				event.setResult( entity );
 			}
 			else {
-				if ( ((MergeContext) copiedAlready).containsKey( entity ) ) {
+				if ( copiedAlready.containsKey( entity ) ) {
 					LOG.trace( "Already in copyCache; setting in merge process" );
-					((MergeContext) copiedAlready).setOperatedOn( entity, true );
+					copiedAlready.setOperatedOn( entity, true );
 				}
 				event.setEntity( entity );
 				EntityState entityState = null;
@@ -166,13 +168,13 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 
 				switch ( entityState ) {
 					case DETACHED:
-						entityIsDetached( event, (MergeContext) copiedAlready);
+						entityIsDetached( event, copiedAlready);
 						break;
 					case TRANSIENT:
-						entityIsTransient( event, (MergeContext) copiedAlready);
+						entityIsTransient( event, copiedAlready);
 						break;
 					case PERSISTENT:
-						entityIsPersistent( event, (MergeContext) copiedAlready);
+						entityIsPersistent( event, copiedAlready);
 						break;
 					default: //DELETED
 						throw new ObjectDeletedException(
@@ -530,7 +532,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 
 
 	@Override
-	protected CascadingAction getCascadeAction() {
+	protected CascadingAction<MergeContext> getCascadeAction() {
 		return CascadingActions.MERGE;
 	}
 
@@ -538,7 +540,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	 * Cascade behavior is redefined by this subclass, disable superclass behavior
 	 */
 	@Override
-	protected void cascadeAfterSave(EventSource source, EntityPersister persister, Object entity, Object anything)
+	protected void cascadeAfterSave(EventSource source, EntityPersister persister, Object entity, MergeContext anything)
 			throws HibernateException {
 	}
 
@@ -546,7 +548,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	 * Cascade behavior is redefined by this subclass, disable superclass behavior
 	 */
 	@Override
-	protected void cascadeBeforeSave(EventSource source, EntityPersister persister, Object entity, Object anything)
+	protected void cascadeBeforeSave(EventSource source, EntityPersister persister, Object entity, MergeContext anything)
 			throws HibernateException {
 	}
 }

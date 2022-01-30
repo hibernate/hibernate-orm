@@ -42,7 +42,7 @@ import org.hibernate.type.TypeHelper;
  *
  * @author Steve Ebersole.
  */
-public abstract class AbstractSaveEventListener
+public abstract class AbstractSaveEventListener<C>
 		extends AbstractReassociateEventListener
 		implements CallbackRegistryConsumer {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractSaveEventListener.class );
@@ -59,7 +59,7 @@ public abstract class AbstractSaveEventListener
 	 * @param entity The entity to be saved.
 	 * @param requestedId The id to which to associate the entity.
 	 * @param entityName The name of the entity being saved.
-	 * @param anything Generally cascade-specific information.
+	 * @param context Generally cascade-specific information.
 	 * @param source The session which is the source of this save event.
 	 *
 	 * @return The id used to save the entity.
@@ -68,7 +68,7 @@ public abstract class AbstractSaveEventListener
 			Object entity,
 			Object requestedId,
 			String entityName,
-			Object anything,
+			C context,
 			EventSource source) {
 		callbackRegistry.preCreate( entity );
 
@@ -77,7 +77,7 @@ public abstract class AbstractSaveEventListener
 				requestedId,
 				source.getEntityPersister( entityName, entity ),
 				false,
-				anything,
+				context,
 				source,
 				true
 		);
@@ -88,7 +88,7 @@ public abstract class AbstractSaveEventListener
 	 *
 	 * @param entity The entity to be saved
 	 * @param entityName The entity-name for the entity to be saved
-	 * @param anything Generally cascade-specific information.
+	 * @param context Generally cascade-specific information.
 	 * @param source The session which is the source of this save event.
 	 * @param requiresImmediateIdAccess does the event context require
 	 * access to the identifier immediately after execution of this method (if
@@ -101,7 +101,7 @@ public abstract class AbstractSaveEventListener
 	protected Object saveWithGeneratedId(
 			Object entity,
 			String entityName,
-			Object anything,
+			C context,
 			EventSource source,
 			boolean requiresImmediateIdAccess) {
 		callbackRegistry.preCreate( entity );
@@ -119,7 +119,7 @@ public abstract class AbstractSaveEventListener
 			return source.getIdentifier( entity );
 		}
 		else if ( generatedId == IdentifierGeneratorHelper.POST_INSERT_INDICATOR ) {
-			return performSave( entity, null, persister, true, anything, source, requiresImmediateIdAccess );
+			return performSave( entity, null, persister, true, context, source, requiresImmediateIdAccess );
 		}
 		else {
 			// TODO: define toString()s for generators
@@ -131,7 +131,7 @@ public abstract class AbstractSaveEventListener
 				);
 			}
 
-			return performSave( entity, generatedId, persister, false, anything, source, true );
+			return performSave( entity, generatedId, persister, false, context, source, true );
 		}
 	}
 
@@ -143,7 +143,7 @@ public abstract class AbstractSaveEventListener
 	 * @param id The id by which to save the entity.
 	 * @param persister The entity's persister instance.
 	 * @param useIdentityColumn Is an identity column being used?
-	 * @param anything Generally cascade-specific information.
+	 * @param context Generally cascade-specific information.
 	 * @param source The session from which the event originated.
 	 * @param requiresImmediateIdAccess does the event context require
 	 * access to the identifier immediately after execution of this method (if
@@ -158,7 +158,7 @@ public abstract class AbstractSaveEventListener
 			Object id,
 			EntityPersister persister,
 			boolean useIdentityColumn,
-			Object anything,
+			C context,
 			EventSource source,
 			boolean requiresImmediateIdAccess) {
 
@@ -194,7 +194,7 @@ public abstract class AbstractSaveEventListener
 				key,
 				persister,
 				useIdentityColumn,
-				anything,
+				context,
 				source,
 				requiresImmediateIdAccess
 		);
@@ -221,7 +221,7 @@ public abstract class AbstractSaveEventListener
 	 * @param key The id to be used for saving the entity (or null, in the case of identity columns)
 	 * @param persister The entity's persister instance.
 	 * @param useIdentityColumn Should an identity column be used for id generation?
-	 * @param anything Generally cascade-specific information.
+	 * @param context Generally cascade-specific information.
 	 * @param source The session which is the source of the current event.
 	 * @param requiresImmediateIdAccess Is access to the identifier required immediately
 	 * after the completion of the save?  persist(), for example, does not require this...
@@ -234,7 +234,7 @@ public abstract class AbstractSaveEventListener
 			EntityKey key,
 			EntityPersister persister,
 			boolean useIdentityColumn,
-			Object anything,
+			C context,
 			EventSource source,
 			boolean requiresImmediateIdAccess) {
 
@@ -260,9 +260,9 @@ public abstract class AbstractSaveEventListener
 				false
 		);
 
-		cascadeBeforeSave( source, persister, entity, anything );
+		cascadeBeforeSave( source, persister, entity, context );
 
-		Object[] values = persister.getPropertyValuesToInsert( entity, getMergeMap( anything ), source );
+		Object[] values = persister.getPropertyValuesToInsert( entity, getMergeMap( context ), source );
 		Type[] types = persister.getPropertyTypes();
 
 		boolean substitute = substituteValuesIfNecessary( entity, id, values, persister, source );
@@ -295,7 +295,7 @@ public abstract class AbstractSaveEventListener
 
 		// postpone initializing id in case the insert has non-nullable transient dependencies
 		// that are not resolved until cascadeAfterSave() is executed
-		cascadeAfterSave( source, persister, entity, anything );
+		cascadeAfterSave( source, persister, entity, context );
 		if ( useIdentityColumn && insert.isEarlyInsert() ) {
 			if ( !(insert instanceof EntityIdentityInsertAction) ) {
 				throw new IllegalStateException(
@@ -355,7 +355,7 @@ public abstract class AbstractSaveEventListener
 		}
 	}
 
-	protected Map<Object,Object> getMergeMap(Object anything) {
+	protected Map<Object,Object> getMergeMap(C anything) {
 		return null;
 	}
 
@@ -427,13 +427,13 @@ public abstract class AbstractSaveEventListener
 	 * @param source The session from which the save event originated.
 	 * @param persister The entity's persister instance.
 	 * @param entity The entity to be saved.
-	 * @param anything Generally cascade-specific data
+	 * @param context Generally cascade-specific data
 	 */
 	protected void cascadeBeforeSave(
 			EventSource source,
 			EntityPersister persister,
 			Object entity,
-			Object anything) {
+			C context) {
 
 		// cascade-save to many-to-one BEFORE the parent is saved
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
@@ -445,7 +445,7 @@ public abstract class AbstractSaveEventListener
 					source,
 					persister,
 					entity,
-					anything
+					context
 			);
 		}
 		finally {
@@ -459,13 +459,13 @@ public abstract class AbstractSaveEventListener
 	 * @param source The session from which the event originated.
 	 * @param persister The entity's persister instance.
 	 * @param entity The entity being saved.
-	 * @param anything Generally cascade-specific data
+	 * @param context Generally cascade-specific data
 	 */
 	protected void cascadeAfterSave(
 			EventSource source,
 			EntityPersister persister,
 			Object entity,
-			Object anything) {
+			C context) {
 
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		// cascade-save to collections AFTER the collection owner was saved
@@ -477,7 +477,7 @@ public abstract class AbstractSaveEventListener
 					source,
 					persister,
 					entity,
-					anything
+					context
 			);
 		}
 		finally {
@@ -485,6 +485,6 @@ public abstract class AbstractSaveEventListener
 		}
 	}
 
-	protected abstract CascadingAction getCascadeAction();
+	protected abstract CascadingAction<C> getCascadeAction();
 
 }

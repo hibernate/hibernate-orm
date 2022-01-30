@@ -11,7 +11,10 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.MergeContext;
+import org.hibernate.event.spi.PersistContext;
+import org.hibernate.event.spi.RefreshContext;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
@@ -84,25 +87,25 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	 * @deprecated  OperationalContext should cover this overload I believe
 	 */
 	@Deprecated
-	void persist(String entityName, Object object, Map createdAlready) throws HibernateException;
+	void persist(String entityName, Object object, PersistContext createdAlready) throws HibernateException;
 
 	/**
 	 * @deprecated  OperationalContext should cover this overload I believe
 	 */
 	@Deprecated
-	void persistOnFlush(String entityName, Object object, Map copiedAlready);
+	void persistOnFlush(String entityName, Object object, PersistContext copiedAlready);
 
 	/**
 	 * @deprecated  OperationalContext should cover this overload I believe
 	 */
 	@Deprecated
-	void refresh(String entityName, Object object, Map refreshedAlready) throws HibernateException;
+	void refresh(String entityName, Object object, RefreshContext refreshedAlready) throws HibernateException;
 
 	/**
 	 * @deprecated  OperationalContext should cover this overload I believe
 	 */
 	@Deprecated
-	void delete(String entityName, Object child, boolean isCascadeDeleteEnabled, Set transientEntities);
+	void delete(String entityName, Object child, boolean isCascadeDeleteEnabled, DeleteContext transientEntities);
 
 	/**
 	 * @deprecated  OperationalContext should cover this overload I believe

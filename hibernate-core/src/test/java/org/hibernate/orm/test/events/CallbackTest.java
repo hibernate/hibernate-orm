@@ -6,8 +6,6 @@
  */
 package org.hibernate.orm.test.events;
 
-import java.util.Set;
-
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
@@ -16,6 +14,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.DeleteEvent;
 import org.hibernate.event.spi.DeleteEventListener;
 import org.hibernate.event.spi.EventType;
@@ -135,7 +134,7 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 		public void onDelete(DeleteEvent event) throws HibernateException {
 		}
 
-		public void onDelete(DeleteEvent event, Set transientEntities) throws HibernateException {
+		public void onDelete(DeleteEvent event, DeleteContext transientEntities) throws HibernateException {
 		}
 	}
 }

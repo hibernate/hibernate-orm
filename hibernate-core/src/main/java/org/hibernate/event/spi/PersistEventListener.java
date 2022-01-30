@@ -29,6 +29,6 @@ public interface PersistEventListener {
 	 *
 	 * @param event The create event to be handled.
 	 */
-	void onPersist(PersistEvent event, Map createdAlready) throws HibernateException;
+	void onPersist(PersistEvent event, PersistContext createdAlready) throws HibernateException;
 
 }

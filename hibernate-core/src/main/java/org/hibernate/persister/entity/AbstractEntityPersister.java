@@ -5162,7 +5162,10 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SharedSessionContractImplementor session)
+	public Object[] getPropertyValuesToInsert(
+			Object entity,
+			Map<Object,Object> mergeMap,
+			SharedSessionContractImplementor session)
 			throws HibernateException {
 		if ( shouldGetAllProperties( entity ) && accessOptimizer != null ) {
 			return accessOptimizer.getPropertyValues( entity );

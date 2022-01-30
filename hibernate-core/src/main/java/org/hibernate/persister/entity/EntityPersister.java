@@ -760,7 +760,7 @@ public interface EntityPersister
 	/**
 	 * Return the values of the insertable properties of the object (including backrefs)
 	 */
-	Object[] getPropertyValuesToInsert(Object object, Map mergeMap, SharedSessionContractImplementor session);
+	Object[] getPropertyValuesToInsert(Object object, Map<Object,Object> mergeMap, SharedSessionContractImplementor session);
 
 	/**
 	 * Perform a select to retrieve the values of any generated properties

@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.util.Set;
-
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -26,12 +24,12 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.service.spi.JpaBootstrapSensitive;
+import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.DeleteEvent;
 import org.hibernate.event.spi.DeleteEventListener;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.EntityPersister;
@@ -68,7 +66,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	 *
 	 */
 	public void onDelete(DeleteEvent event) throws HibernateException {
-		onDelete( event, new IdentitySet<>() );
+		onDelete( event, DeleteContext.create() );
 	}
 
 	/**
@@ -78,7 +76,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	 * @param transientEntities The cache of entities already deleted
 	 *
 	 */
-	public void onDelete(DeleteEvent event, Set transientEntities) throws HibernateException {
+	public void onDelete(DeleteEvent event, DeleteContext transientEntities) throws HibernateException {
 
 		final EventSource source = event.getSession();
 
@@ -208,13 +206,12 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			Object entity,
 			boolean cascadeDeleteEnabled,
 			EntityPersister persister,
-			Set transientEntities) {
+			DeleteContext transientEntities) {
 		LOG.handlingTransientEntity();
-		if ( transientEntities.contains( entity ) ) {
+		if ( !transientEntities.add( entity ) ) {
 			LOG.trace( "Already handled transient entity; skipping" );
 			return;
 		}
-		transientEntities.add( entity );
 		cascadeBeforeDelete( session, persister, entity, null, transientEntities );
 		cascadeAfterDelete( session, persister, entity, transientEntities );
 	}
@@ -238,7 +235,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			final boolean isCascadeDeleteEnabled,
 			final boolean isOrphanRemovalBeforeUpdates,
 			final EntityPersister persister,
-			final Set transientEntities) {
+			final DeleteContext transientEntities) {
 
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev(
@@ -342,7 +339,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			EntityPersister persister,
 			Object entity,
 			EntityEntry entityEntry,
-			Set transientEntities) throws HibernateException {
+			DeleteContext transientEntities) throws HibernateException {
 
 		CacheMode cacheMode = session.getCacheMode();
 		session.setCacheMode( CacheMode.GET );
@@ -369,7 +366,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			EventSource session,
 			EntityPersister persister,
 			Object entity,
-			Set transientEntities) throws HibernateException {
+			DeleteContext transientEntities) throws HibernateException {
 
 		CacheMode cacheMode = session.getCacheMode();
 		session.setCacheMode( CacheMode.GET );

@@ -7,8 +7,6 @@
 package org.hibernate.engine.spi;
 
 import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -17,8 +15,11 @@ import org.hibernate.ReplicationMode;
 import org.hibernate.TransientPropertyValueException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.ForeignKeys;
+import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.MergeContext;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.spi.PersistContext;
+import org.hibernate.event.spi.RefreshContext;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
@@ -46,16 +47,16 @@ public class CascadingActions {
 	/**
 	 * @see org.hibernate.Session#delete(Object)
 	 */
-	public static final CascadingAction DELETE = new BaseCascadingAction() {
+	public static final CascadingAction<DeleteContext> DELETE = new BaseCascadingAction<>() {
 		@Override
 		public void cascade(
 				EventSource session,
 				Object child,
 				String entityName,
-				Object anything,
+				DeleteContext context,
 				boolean isCascadeDeleteEnabled) {
 			LOG.tracev( "Cascading to delete: {0}", entityName );
-			session.delete( entityName, child, isCascadeDeleteEnabled, (Set<?>) anything );
+			session.delete( entityName, child, isCascadeDeleteEnabled, context );
 		}
 
 		@Override
@@ -82,19 +83,18 @@ public class CascadingActions {
 	/**
 	 * @see org.hibernate.Session#lock(Object, LockMode)
 	 */
-	public static final CascadingAction LOCK = new BaseCascadingAction() {
+	public static final CascadingAction<LockOptions> LOCK = new BaseCascadingAction<>() {
 		@Override
 		public void cascade(
 				EventSource session,
 				Object child,
 				String entityName,
-				Object anything,
+				LockOptions lockOptions,
 				boolean isCascadeDeleteEnabled) {
 			LOG.tracev( "Cascading to lock: {0}", entityName );
 			LockMode lockMode = LockMode.NONE;
 			LockOptions lr = new LockOptions();
-			if ( anything instanceof LockOptions ) {
-				LockOptions lockOptions = (LockOptions) anything;
+			if ( lockOptions != null ) {
 				lr.setTimeOut( lockOptions.getTimeOut() );
 				lr.setScope( lockOptions.getScope() );
 				lr.setFollowOnLocking( lockOptions.getFollowOnLocking() );
@@ -130,17 +130,17 @@ public class CascadingActions {
 	/**
 	 * @see org.hibernate.Session#refresh(Object)
 	 */
-	public static final CascadingAction REFRESH = new BaseCascadingAction() {
+	public static final CascadingAction<RefreshContext> REFRESH = new BaseCascadingAction<>() {
 		@Override
 		public void cascade(
 				EventSource session,
 				Object child,
 				String entityName,
-				Object anything,
+				RefreshContext context,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
 			LOG.tracev( "Cascading to refresh: {0}", entityName );
-			session.refresh( entityName, child, (Map<?,?>) anything );
+			session.refresh( entityName, child, context );
 		}
 
 		@Override
@@ -166,13 +166,13 @@ public class CascadingActions {
 	/**
 	 * @see org.hibernate.Session#evict(Object)
 	 */
-	public static final CascadingAction EVICT = new BaseCascadingAction() {
+	public static final CascadingAction<Void> EVICT = new BaseCascadingAction<>() {
 		@Override
 		public void cascade(
 				EventSource session,
 				Object child,
 				String entityName,
-				Object anything,
+				Void nothing,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
 			LOG.tracev( "Cascading to evict: {0}", entityName );
@@ -207,13 +207,13 @@ public class CascadingActions {
 	/**
 	 * @see org.hibernate.Session#saveOrUpdate(Object)
 	 */
-	public static final CascadingAction SAVE_UPDATE = new BaseCascadingAction() {
+	public static final CascadingAction<PersistContext> SAVE_UPDATE = new BaseCascadingAction<>() {
 		@Override
 		public void cascade(
 				EventSource session,
 				Object child,
 				String entityName,
-				Object anything,
+				PersistContext nothing,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
 			LOG.tracev( "Cascading to save or update: {0}", entityName );
@@ -249,17 +249,17 @@ public class CascadingActions {
 	/**
 	 * @see org.hibernate.Session#merge(Object)
 	 */
-	public static final CascadingAction MERGE = new BaseCascadingAction() {
+	public static final CascadingAction<MergeContext> MERGE = new BaseCascadingAction<>() {
 		@Override
 		public void cascade(
 				EventSource session,
 				Object child,
 				String entityName,
-				Object anything,
+				MergeContext context,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
 			LOG.tracev( "Cascading to merge: {0}", entityName );
-			session.merge( entityName, child, (MergeContext) anything );
+			session.merge( entityName, child, context );
 		}
 
 		@Override
@@ -286,17 +286,17 @@ public class CascadingActions {
 	/**
 	 * @see org.hibernate.Session#persist(Object)
 	 */
-	public static final CascadingAction PERSIST = new BaseCascadingAction() {
+	public static final CascadingAction<PersistContext> PERSIST = new BaseCascadingAction<>() {
 		@Override
 		public void cascade(
 				EventSource session,
 				Object child,
 				String entityName,
-				Object anything,
+				PersistContext context,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
 			LOG.tracev( "Cascading to persist: {0}", entityName );
-			session.persist( entityName, child, (Map<?,?>) anything );
+			session.persist( entityName, child, context );
 		}
 
 		@Override
@@ -329,17 +329,17 @@ public class CascadingActions {
 	 *
 	 * @see org.hibernate.Session#persist(Object)
 	 */
-	public static final CascadingAction PERSIST_ON_FLUSH = new BaseCascadingAction() {
+	public static final CascadingAction<PersistContext> PERSIST_ON_FLUSH = new BaseCascadingAction<>() {
 		@Override
 		public void cascade(
 				EventSource session,
 				Object child,
 				String entityName,
-				Object anything,
+				PersistContext anything,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
 			LOG.tracev( "Cascading to persist on flush: {0}", entityName );
-			session.persistOnFlush( entityName, child, (Map<?,?>) anything );
+			session.persistOnFlush( entityName, child, anything );
 		}
 
 		@Override
@@ -373,8 +373,9 @@ public class CascadingActions {
 				if ( child != null
 						&& !isInManagedState( child, session )
 						&& !(child instanceof HibernateProxy) ) { //a proxy cannot be transient and it breaks ForeignKeys.isTransient
-					final String childEntityName = ((EntityType) propertyType).getAssociatedEntityName(session.getFactory());
-					if (ForeignKeys.isTransient(childEntityName, child, null, session)) {
+					final String childEntityName =
+							((EntityType) propertyType).getAssociatedEntityName( session.getFactory() );
+					if ( ForeignKeys.isTransient(childEntityName, child, null, session) ) {
 						String parentEntityName = persister.getEntityName();
 						String propertyName = persister.getPropertyNames()[propertyIndex];
 						throw new TransientPropertyValueException(
@@ -412,17 +413,17 @@ public class CascadingActions {
 	/**
 	 * @see org.hibernate.Session#replicate
 	 */
-	public static final CascadingAction REPLICATE = new BaseCascadingAction() {
+	public static final CascadingAction<ReplicationMode> REPLICATE = new BaseCascadingAction<>() {
 		@Override
 		public void cascade(
 				EventSource session,
 				Object child,
 				String entityName,
-				Object anything,
+				ReplicationMode anything,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
 			LOG.tracev( "Cascading to replicate: {0}", entityName );
-			session.replicate( entityName, child, (ReplicationMode) anything );
+			session.replicate( entityName, child, anything );
 		}
 
 		@Override
@@ -445,7 +446,7 @@ public class CascadingActions {
 		}
 	};
 
-	public abstract static class BaseCascadingAction implements CascadingAction {
+	public abstract static class BaseCascadingAction<T> implements CascadingAction<T> {
 		@Override
 		public boolean requiresNoCascadeChecking() {
 			return false;

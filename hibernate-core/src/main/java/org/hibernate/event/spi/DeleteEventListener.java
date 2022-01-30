@@ -24,5 +24,5 @@ public interface DeleteEventListener {
      */
 	void onDelete(DeleteEvent event) throws HibernateException;
 
-	void onDelete(DeleteEvent event, Set transientEntities) throws HibernateException;
+	void onDelete(DeleteEvent event, DeleteContext transientEntities) throws HibernateException;
 }

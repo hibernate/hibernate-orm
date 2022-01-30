@@ -125,7 +125,7 @@ public interface ClassMetadata {
 	 */
 	@Deprecated(since = "5.3")
 	@SuppressWarnings({"UnusedDeclaration"})
-	default Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SessionImplementor session)
+	default Object[] getPropertyValuesToInsert(Object entity, Map<Object,Object> mergeMap, SessionImplementor session)
 			throws HibernateException {
 		return getPropertyValuesToInsert( entity, mergeMap, (SharedSessionContractImplementor) session );
 	}
@@ -134,7 +134,8 @@ public interface ClassMetadata {
 	 * Return the values of the mapped properties of the object
 	 */
 	@SuppressWarnings( {"UnusedDeclaration"})
-	Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SharedSessionContractImplementor session) throws HibernateException;
+	Object[] getPropertyValuesToInsert(Object entity, Map<Object,Object> mergeMap, SharedSessionContractImplementor session)
+			throws HibernateException;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -144,7 +145,7 @@ public interface ClassMetadata {
 	/**
 	 * The persistent class, or null
 	 */
-	Class getMappedClass();
+	Class<?> getMappedClass();
 
 	/**
 	 * Create a class instance initialized with the given identifier

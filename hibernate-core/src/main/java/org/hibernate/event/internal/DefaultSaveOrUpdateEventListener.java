@@ -23,6 +23,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.spi.PersistContext;
 import org.hibernate.event.spi.SaveOrUpdateEvent;
 import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.internal.CoreLogging;
@@ -38,7 +39,9 @@ import org.hibernate.proxy.HibernateProxy;
  * @author Steve Ebersole
  * @author Gavin King
  */
-public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener implements SaveOrUpdateEventListener {
+public class DefaultSaveOrUpdateEventListener
+		extends AbstractSaveEventListener<PersistContext>
+		implements SaveOrUpdateEventListener {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultSaveOrUpdateEventListener.class );
 
 	/**
@@ -363,7 +366,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	}
 
 	@Override
-	protected CascadingAction getCascadeAction() {
+	protected CascadingAction<PersistContext> getCascadeAction() {
 		return CascadingActions.SAVE_UPDATE;
 	}
 }

@@ -762,6 +762,11 @@ public abstract class Dialect implements ConversionContext {
 	 * <li> year(arg)					- synonym of extract(year from a)
 	 * </ul>
 	 *
+	 * Note that according to this definition, the second() function returns
+	 * a floating point value, contrary to the integer type returned by the
+	 * native function with this name on many databases. Thus, we don't just
+	 * naively map these HQL functions to the native SQL functions with the
+	 * same names.
 	 */
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();

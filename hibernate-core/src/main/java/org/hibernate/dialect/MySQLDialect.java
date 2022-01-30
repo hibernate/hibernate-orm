@@ -527,6 +527,14 @@ public class MySQLDialect extends Dialect {
 		return getMySQLVersion().isBefore( 5, 7 ) ? super.currentTimestamp() : "current_timestamp(6)";
 	}
 
+	// for consistency, we could do this: but I decided not to
+	// because it seems to me that fractional seconds can't possibly
+	// be meaningful in a time, as opposed to a timestamp
+//	@Override
+//	public String currentTime() {
+//		return getMySQLVersion().isBefore( 5, 7 ) ? super.currentTimestamp() : "current_time(6)";
+//	}
+
 	/**
 	 * {@code microsecond} is the smallest unit for
 	 * {@code timestampadd()} and {@code timestampdiff()},

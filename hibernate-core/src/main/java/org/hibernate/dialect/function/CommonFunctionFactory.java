@@ -923,6 +923,11 @@ public class CommonFunctionFactory {
 				new CaseWhenEveryAnyEmulation( queryEngine.getTypeConfiguration(), false ) );
 	}
 
+	/**
+	 * Note that we include these for completeness, but
+	 * since their names collide with the HQL abbreviations
+	 * for extract(), they can't actually be called from HQL.
+	 */
 	public static void yearMonthDay(QueryEngine queryEngine) {
 		final BasicType<Integer> integerType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
 				.resolve( StandardBasicTypes.INTEGER );
@@ -943,6 +948,11 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * Note that we include these for completeness, but
+	 * since their names collide with the HQL abbreviations
+	 * for extract(), they can't actually be called from HQL.
+	 */
 	public static void hourMinuteSecond(QueryEngine queryEngine) {
 		final BasicType<Integer> integerType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
 				.resolve( StandardBasicTypes.INTEGER );

@@ -8,7 +8,6 @@ package org.hibernate.engine.internal;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -21,6 +20,7 @@ import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -56,8 +56,8 @@ public final class Cascade {
 	 * @param persister The parent's entity persister
 	 * @param parent The parent reference.
 	 */
-	public static void cascade(
-			final CascadingAction action, final CascadePoint cascadePoint,
+	public static <T> void cascade(
+			final CascadingAction<T> action, final CascadePoint cascadePoint,
 			final EventSource eventSource, final EntityPersister persister, final Object parent)
 			throws HibernateException {
 		cascade( action, cascadePoint, eventSource, persister, parent, null );
@@ -72,13 +72,13 @@ public final class Cascade {
 	 * @param anything Anything ;)   Typically some form of cascade-local cache
 	 * which is specific to each CascadingAction type
 	 */
-	public static void cascade(
-			final CascadingAction action,
+	public static <T> void cascade(
+			final CascadingAction<T> action,
 			final CascadePoint cascadePoint,
 			final EventSource eventSource,
 			final EntityPersister persister,
 			final Object parent,
-			final Object anything) throws HibernateException {
+			final T anything) throws HibernateException {
 
 		if ( persister.hasCascades() || action.requiresNoCascadeChecking() ) { // performance opt
 			final boolean traceEnabled = LOG.isTraceEnabled();
@@ -106,7 +106,7 @@ public final class Cascade {
 						// Cascade to an uninitialized, lazy value only if
 						// parent is managed in the PersistenceContext.
 						// If parent is a detached entity being merged,
-						// then parent will not be in the PersistencContext
+						// then parent will not be in the PersistenceContext
 						// (so lazy attributes must not be initialized).
 						if ( persistenceContext.getEntry( parent ) == null ) {
 							// parent was not in the PersistenceContext
@@ -199,8 +199,8 @@ public final class Cascade {
 	/**
 	 * Cascade an action to the child or children
 	 */
-	private static void cascadeProperty(
-			final CascadingAction action,
+	private static <T> void cascadeProperty(
+			final CascadingAction<T> action,
 			final CascadePoint cascadePoint,
 			final EventSource eventSource,
 			List<String> componentPath,
@@ -209,7 +209,7 @@ public final class Cascade {
 			final Type type,
 			final CascadeStyle style,
 			final String propertyName,
-			final Object anything,
+			final T anything,
 			final boolean isCascadeDeleteEnabled) throws HibernateException {
 		
 		if ( child != null ) {
@@ -265,8 +265,8 @@ public final class Cascade {
 				isCascadeDeleteEnabled );
 	}
 
-	private static void cascadeLogicalOneToOneOrphanRemoval(
-			final CascadingAction action,
+	private static <T> void cascadeLogicalOneToOneOrphanRemoval(
+			final CascadingAction<T> action,
 			final EventSource eventSource,
 			final List<String> componentPath,
 			final Object parent,
@@ -355,7 +355,7 @@ public final class Cascade {
 							}
 							else {
 								// Else, we must delete after the updates.
-								eventSource.delete( entityName, loadedValue, isCascadeDeleteEnabled, new HashSet<>() );
+								eventSource.delete( entityName, loadedValue, isCascadeDeleteEnabled, DeleteContext.create() );
 							}
 						}
 					}
@@ -380,15 +380,15 @@ public final class Cascade {
 		return associationType.getForeignKeyDirection().cascadeNow( cascadePoint );
 	}
 
-	private static void cascadeComponent(
-			final CascadingAction action,
+	private static <T> void cascadeComponent(
+			final CascadingAction<T> action,
 			final CascadePoint cascadePoint,
 			final EventSource eventSource,
 			final List<String> componentPath,
 			final Object parent,
 			final Object child,
 			final CompositeType componentType,
-			final Object anything) {
+			final T anything) {
 
 		Object[] children = null;
 		final Type[] types = componentType.getSubtypes();
@@ -418,8 +418,8 @@ public final class Cascade {
 		}
 	}
 
-	private static void cascadeAssociation(
-			final CascadingAction action,
+	private static <T> void cascadeAssociation(
+			final CascadingAction<T> action,
 			final CascadePoint cascadePoint,
 			final EventSource eventSource,
 			final List<String> componentPath,
@@ -427,7 +427,7 @@ public final class Cascade {
 			final Object child,
 			final Type type,
 			final CascadeStyle style,
-			final Object anything,
+			final T anything,
 			final boolean isCascadeDeleteEnabled) {
 		if ( type.isEntityType() || type.isAnyType() ) {
 			cascadeToOne( action, eventSource, parent, child, type, style, anything, isCascadeDeleteEnabled );
@@ -450,15 +450,15 @@ public final class Cascade {
 	/**
 	 * Cascade an action to a collection
 	 */
-	private static void cascadeCollection(
-			final CascadingAction action,
+	private static <T> void cascadeCollection(
+			final CascadingAction<T> action,
 			final CascadePoint cascadePoint,
 			final EventSource eventSource,
 			final List<String> componentPath,
 			final Object parent,
 			final Object child,
 			final CascadeStyle style,
-			final Object anything,
+			final T anything,
 			final CollectionType type) {
 		final CollectionPersister persister = eventSource.getFactory()
 				.getRuntimeMetamodels()
@@ -492,14 +492,14 @@ public final class Cascade {
 	/**
 	 * Cascade an action to a to-one association or any type
 	 */
-	private static void cascadeToOne(
-			final CascadingAction action,
+	private static <T> void cascadeToOne(
+			final CascadingAction<T> action,
 			final EventSource eventSource,
 			final Object parent,
 			final Object child,
 			final Type type,
 			final CascadeStyle style,
-			final Object anything,
+			final T anything,
 			final boolean isCascadeDeleteEnabled) {
 		final String entityName = type.isEntityType()
 				? ( (EntityType) type ).getAssociatedEntityName()
@@ -520,8 +520,8 @@ public final class Cascade {
 	/**
 	 * Cascade to the collection elements
 	 */
-	private static void cascadeCollectionElements(
-			final CascadingAction action,
+	private static <T> void cascadeCollectionElements(
+			final CascadingAction<T> action,
 			final CascadePoint cascadePoint,
 			final EventSource eventSource,
 			final List<String> componentPath,
@@ -530,9 +530,10 @@ public final class Cascade {
 			final CollectionType collectionType,
 			final CascadeStyle style,
 			final Type elemType,
-			final Object anything,
+			final T anything,
 			final boolean isCascadeDeleteEnabled) throws HibernateException {
-		final boolean reallyDoCascade = style.reallyDoCascade( action ) && child != CollectionType.UNFETCHED_COLLECTION;
+		final boolean reallyDoCascade = style.reallyDoCascade( action )
+				&& child != CollectionType.UNFETCHED_COLLECTION;
 
 		if ( reallyDoCascade ) {
 			final boolean traceEnabled = LOG.isTraceEnabled();
@@ -605,7 +606,7 @@ public final class Cascade {
 		for ( Object orphan : orphans ) {
 			if ( orphan != null ) {
 				LOG.tracev( "Deleting orphaned entity instance: {0}", entityName );
-				eventSource.delete( entityName, orphan, false, new HashSet<>() );
+				eventSource.delete( entityName, orphan, false, DeleteContext.create() );
 			}
 		}
 	}

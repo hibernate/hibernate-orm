@@ -20,7 +20,7 @@ import org.hibernate.type.Type;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface CascadingAction {
+public interface CascadingAction<T> {
 
 	/**
 	 * Cascade the action to the child object.
@@ -36,7 +36,7 @@ public interface CascadingAction {
 			EventSource session,
 			Object child,
 			String entityName,
-			Object anything,
+			T anything,
 			boolean isCascadeDeleteEnabled) throws HibernateException;
 
 	/**

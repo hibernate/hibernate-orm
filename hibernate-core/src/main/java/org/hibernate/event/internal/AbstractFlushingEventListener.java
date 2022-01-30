@@ -6,7 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.util.IdentityHashMap;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -33,6 +32,7 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.FlushEntityEvent;
 import org.hibernate.event.spi.FlushEntityEventListener;
 import org.hibernate.event.spi.FlushEvent;
+import org.hibernate.event.spi.PersistContext;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.EntityPrinter;
 import org.hibernate.persister.entity.EntityPersister;
@@ -135,19 +135,19 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 		LOG.debug( "Processing flush-time cascades" );
 
-		final Object anything = getAnything();
+		final PersistContext context = getContext();
 		//safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
 		for ( Map.Entry<Object,EntityEntry> me : persistenceContext.reentrantSafeEntityEntries() ) {
 //		for ( Map.Entry me : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
 			EntityEntry entry = me.getValue();
 			Status status = entry.getStatus();
 			if ( status == Status.MANAGED || status == Status.SAVING || status == Status.READ_ONLY ) {
-				cascadeOnFlush( session, entry.getPersister(), me.getKey(), anything );
+				cascadeOnFlush( session, entry.getPersister(), me.getKey(), context );
 			}
 		}
 	}
 
-	private void cascadeOnFlush(EventSource session, EntityPersister persister, Object object, Object anything)
+	private void cascadeOnFlush(EventSource session, EntityPersister persister, Object object, PersistContext anything)
 			throws HibernateException {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
@@ -159,11 +159,11 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		}
 	}
 
-	protected Object getAnything() {
-		return jpaBootstrap ? new IdentityHashMap<>(10) : null;
+	protected PersistContext getContext() {
+		return jpaBootstrap ? PersistContext.create() : null;
 	}
 
-	protected CascadingAction getCascadingAction() {
+	protected CascadingAction<PersistContext> getCascadingAction() {
 		return jpaBootstrap ? CascadingActions.PERSIST_ON_FLUSH : CascadingActions.SAVE_UPDATE;
 	}
 
@@ -177,9 +177,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		// and reset reached, doupdate, etc.
 
 		LOG.debug( "Dirty checking collections" );
-		persistenceContext.forEachCollectionEntry( (pc,ce) -> {
-			ce.preFlush( pc );
-		}, true );
+		persistenceContext.forEachCollectionEntry( (pc,ce) -> ce.preFlush( pc ), true );
 	}
 
 	/**

@@ -37,7 +37,10 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.MergeContext;
+import org.hibernate.event.spi.PersistContext;
+import org.hibernate.event.spi.RefreshContext;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
@@ -1102,22 +1105,22 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void persist(String entityName, Object object, Map createdAlready) throws HibernateException {
+	public void persist(String entityName, Object object, PersistContext createdAlready) throws HibernateException {
 		delegate.persist( entityName, object, createdAlready );
 	}
 
 	@Override
-	public void persistOnFlush(String entityName, Object object, Map copiedAlready) {
+	public void persistOnFlush(String entityName, Object object, PersistContext copiedAlready) {
 		delegate.persistOnFlush( entityName, object, copiedAlready );
 	}
 
 	@Override
-	public void refresh(String entityName, Object object, Map refreshedAlready) throws HibernateException {
+	public void refresh(String entityName, Object object, RefreshContext refreshedAlready) throws HibernateException {
 		delegate.refresh( entityName, object, refreshedAlready );
 	}
 
 	@Override
-	public void delete(String entityName, Object child, boolean isCascadeDeleteEnabled, Set transientEntities) {
+	public void delete(String entityName, Object child, boolean isCascadeDeleteEnabled, DeleteContext transientEntities) {
 		delegate.delete( entityName, child, isCascadeDeleteEnabled, transientEntities );
 	}
 

@@ -34,7 +34,9 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public class DefaultReplicateEventListener extends AbstractSaveEventListener implements ReplicateEventListener {
+public class DefaultReplicateEventListener
+		extends AbstractSaveEventListener<ReplicationMode>
+		implements ReplicateEventListener {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultReplicateEventListener.class );
 
 	/**
@@ -88,15 +90,14 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 				);
 			}
 
-			/// HHH-2378
-			final Object realOldVersion = persister.isVersioned() ? oldVersion : null;
-
 			@SuppressWarnings("unchecked")
+			final BasicType<Object> versionType = (BasicType<Object>) persister.getVersionType();
+			final Object realOldVersion = persister.isVersioned() ? oldVersion : null; /// HHH-2378
 			boolean canReplicate = replicationMode.shouldOverwriteCurrentVersion(
 					entity,
 					realOldVersion,
 					persister.getVersion( entity ),
-					(BasicType<Object>) persister.getVersionType()
+					versionType
 			);
 
 			// if can replicate, will result in a SQL UPDATE
@@ -215,7 +216,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 	}
 
 	@Override
-	protected CascadingAction getCascadeAction() {
+	protected CascadingAction<ReplicationMode> getCascadeAction() {
 		return CascadingActions.REPLICATE;
 	}
 }

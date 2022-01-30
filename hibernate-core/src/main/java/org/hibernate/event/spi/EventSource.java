@@ -6,9 +6,6 @@
  */
 package org.hibernate.event.spi;
 
-import java.util.Map;
-import java.util.Set;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.EntityEntry;
@@ -43,20 +40,20 @@ public interface EventSource extends SessionImplementor {
 	/**
 	 * Cascade persist an entity instance
 	 */
-	void persist(String entityName, Object object, Map createdAlready) throws HibernateException;
+	void persist(String entityName, Object object, PersistContext createdAlready) throws HibernateException;
 
 	/**
 	 * Cascade persist an entity instance during the flush process
 	 */
-	void persistOnFlush(String entityName, Object object, Map copiedAlready);
+	void persistOnFlush(String entityName, Object object, PersistContext copiedAlready);
 	/**
 	 * Cascade refresh an entity instance
 	 */
-	void refresh(String entityName, Object object, Map refreshedAlready) throws HibernateException;
+	void refresh(String entityName, Object object, RefreshContext refreshedAlready) throws HibernateException;
 	/**
 	 * Cascade delete an entity instance
 	 */
-	void delete(String entityName, Object child, boolean isCascadeDeleteEnabled, Set transientEntities);
+	void delete(String entityName, Object child, boolean isCascadeDeleteEnabled, DeleteContext transientEntities);
 	/**
 	 * A specialized type of deletion for orphan removal that must occur prior to queued inserts and updates.
 	 */

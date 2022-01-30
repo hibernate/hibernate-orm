@@ -6,9 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.util.IdentityHashMap;
-import java.util.Map;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -26,6 +23,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.spi.RefreshContext;
 import org.hibernate.event.spi.RefreshEvent;
 import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.internal.CoreLogging;
@@ -49,7 +47,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultRefreshEventListener.class );
 
 	public void onRefresh(RefreshEvent event) throws HibernateException {
-		onRefresh( event, new IdentityHashMap<>( 10 ) );
+		onRefresh( event, RefreshContext.create() );
 	}
 
 	/**
@@ -57,7 +55,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 	 *
 	 * @param event The refresh event to be handled.
 	 */
-	public void onRefresh(RefreshEvent event, Map refreshedAlready) {
+	public void onRefresh(RefreshEvent event, RefreshContext refreshedAlready) {
 
 		final EventSource source = event.getSession();
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
@@ -74,7 +72,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 
 		final Object object = persistenceContext.unproxyAndReassociate( event.getObject() );
 
-		if ( refreshedAlready.containsKey( object ) ) {
+		if ( !refreshedAlready.add( object ) ) {
 			LOG.trace( "Already refreshed" );
 			return;
 		}
@@ -126,7 +124,6 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		}
 
 		// cascade the refresh prior to refreshing this entity
-		refreshedAlready.put( object, object );
 		Cascade.cascade(
 				CascadingActions.REFRESH,
 				CascadePoint.BEFORE_REFRESH,
@@ -224,7 +221,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		if ( result != null ) {
 			// apply `postRefreshLockMode`, if needed
 			if ( postRefreshLockMode != null ) {
-				// if we get here, there was a previous entry and we need to re-set its lock-mode
+				// if we get here, there was a previous entry, and we need to re-set its lock-mode
 				//		- however, the refresh operation actually creates a new entry, so get it
 				persistenceContext.getEntry( result ).setLockMode( postRefreshLockMode );
 			}

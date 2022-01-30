@@ -24,6 +24,6 @@ public interface RefreshEventListener {
      */
 	void onRefresh(RefreshEvent event) throws HibernateException;
 	
-	void onRefresh(RefreshEvent event, Map refreshedAlready) throws HibernateException;
+	void onRefresh(RefreshEvent event, RefreshContext refreshedAlready) throws HibernateException;
 
 }

@@ -6,9 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.util.IdentityHashMap;
-import java.util.Map;
-
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.PersistentObjectException;
@@ -18,6 +15,7 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.spi.PersistContext;
 import org.hibernate.event.spi.PersistEvent;
 import org.hibernate.event.spi.PersistEventListener;
 import org.hibernate.id.ForeignGenerator;
@@ -36,12 +34,12 @@ import org.hibernate.proxy.LazyInitializer;
  * @author Gavin King
  */
 public class DefaultPersistEventListener
-		extends AbstractSaveEventListener
+		extends AbstractSaveEventListener<PersistContext>
 		implements PersistEventListener, CallbackRegistryConsumer {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultPersistEventListener.class );
 
 	@Override
-	protected CascadingAction getCascadeAction() {
+	protected CascadingAction<PersistContext> getCascadeAction() {
 		return CascadingActions.PERSIST;
 	}
 
@@ -52,7 +50,7 @@ public class DefaultPersistEventListener
 	 *
 	 */
 	public void onPersist(PersistEvent event) throws HibernateException {
-		onPersist( event, new IdentityHashMap<>( 10 ) );
+		onPersist( event, PersistContext.create() );
 	}
 
 	/**
@@ -61,7 +59,7 @@ public class DefaultPersistEventListener
 	 * @param event The create event to be handled.
 	 *
 	 */
-	public void onPersist(PersistEvent event, Map createCache) throws HibernateException {
+	public void onPersist(PersistEvent event, PersistContext createCache) throws HibernateException {
 		final SessionImplementor source = event.getSession();
 		final Object object = event.getObject();
 
@@ -149,7 +147,7 @@ public class DefaultPersistEventListener
 
 	}
 
-	protected void entityIsPersistent(PersistEvent event, Map createCache) {
+	protected void entityIsPersistent(PersistEvent event, PersistContext createCache) {
 		LOG.trace( "Ignoring persistent instance" );
 		final EventSource source = event.getSession();
 
@@ -158,13 +156,13 @@ public class DefaultPersistEventListener
 		final Object entity = source.getPersistenceContextInternal().unproxy( event.getObject() );
 		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 
-		if ( createCache.put( entity, entity ) == null ) {
+		if ( createCache.add( entity ) ) {
 			justCascade( createCache, source, entity, persister );
 
 		}
 	}
 
-	private void justCascade(Map createCache, EventSource source, Object entity, EntityPersister persister) {
+	private void justCascade(PersistContext createCache, EventSource source, Object entity, EntityPersister persister) {
 		//TODO: merge into one method!
 		cascadeBeforeSave( source, persister, entity, createCache );
 		cascadeAfterSave( source, persister, entity, createCache );
@@ -176,18 +174,18 @@ public class DefaultPersistEventListener
 	 * @param event The save event to be handled.
 	 * @param createCache The copy cache of entity instance to merge/copy instance.
 	 */
-	protected void entityIsTransient(PersistEvent event, Map createCache) {
+	protected void entityIsTransient(PersistEvent event, PersistContext createCache) {
 		LOG.trace( "Saving transient instance" );
 
 		final EventSource source = event.getSession();
 		final Object entity = source.getPersistenceContextInternal().unproxy( event.getObject() );
 
-		if ( createCache.put( entity, entity ) == null ) {
+		if ( createCache.add( entity ) ) {
 			saveWithGeneratedId( entity, event.getEntityName(), createCache, source, false );
 		}
 	}
 
-	private void entityIsDeleted(PersistEvent event, Map createCache) {
+	private void entityIsDeleted(PersistEvent event, PersistContext createCache) {
 		final EventSource source = event.getSession();
 
 		final Object entity = source.getPersistenceContextInternal().unproxy( event.getObject() );
@@ -204,7 +202,7 @@ public class DefaultPersistEventListener
 			);
 		}
 
-		if ( createCache.put( entity, entity ) == null ) {
+		if ( createCache.add( entity ) ) {
 			justCascade( createCache, source, entity, persister );
 		}
 	}

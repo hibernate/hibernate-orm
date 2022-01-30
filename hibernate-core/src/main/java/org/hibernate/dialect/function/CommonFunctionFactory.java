@@ -6,33 +6,20 @@
  */
 package org.hibernate.dialect.function;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.Types;
 import java.util.Date;
-import java.util.List;
 import java.util.Arrays;
-import java.util.function.Supplier;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.query.ReturnableType;
 
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
-import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
-import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
-import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.*;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
@@ -1891,106 +1878,9 @@ public class CommonFunctionFactory {
 				.setParameterTypes(COMPARABLE)
 				.register();
 
-		final TypeConfiguration typeConfiguration = queryEngine.getTypeConfiguration();
-		final BasicType<Long> longType = typeConfiguration.getBasicTypeForJavaType( Long.class );
-		final BasicType<Double> doubleType = typeConfiguration.getBasicTypeForJavaType( Double.class );
-		final BasicType<BigInteger> bigIntegerType = typeConfiguration.getBasicTypeForJavaType( BigInteger.class );
-		final BasicType<BigDecimal> bigDecimalType = typeConfiguration.getBasicTypeForJavaType( BigDecimal.class );
-		// Resolve according to JPA spec 4.8.5
-		// SUM returns Long when applied to state fields of integral types (other than BigInteger);
-		// Double when applied to state fields of floating point types;
-		// BigInteger when applied to state fields of type BigInteger;
-		// and BigDecimal when applied to state fields of type BigDecimal.
 		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "sum" )
 				.setArgumentRenderingMode( inferenceArgumentRenderingMode )
-				.setReturnTypeResolver(
-						new FunctionReturnTypeResolver() {
-							@Override
-							public ReturnableType<?> resolveFunctionReturnType(
-									ReturnableType<?> impliedType,
-									List<? extends SqmTypedNode<?>> arguments,
-									TypeConfiguration typeConfiguration) {
-								if ( impliedType != null ) {
-									return impliedType;
-								}
-								final ReturnableType<?> argType = StandardFunctionReturnTypeResolvers.extractArgumentType(
-										arguments,
-										1
-								);
-								final BasicType<?> basicType;
-								if ( argType instanceof BasicType<?> ) {
-									basicType = (BasicType<?>) argType;
-								}
-								else {
-									basicType = typeConfiguration.getBasicTypeForJavaType( argType.getJavaType() );
-									if ( basicType == null ) {
-										return impliedType;
-									}
-								}
-								switch ( basicType.getJdbcType().getJdbcTypeCode() ) {
-									case Types.SMALLINT:
-									case Types.TINYINT:
-									case Types.INTEGER:
-									case Types.BIGINT:
-										return longType;
-									case Types.FLOAT:
-									case Types.REAL:
-									case Types.DOUBLE:
-										return doubleType;
-									case Types.DECIMAL:
-									case Types.NUMERIC:
-										if ( BigInteger.class.isAssignableFrom( basicType.getJavaType() ) ) {
-											return bigIntegerType;
-										}
-										else {
-											return bigDecimalType;
-										}
-								}
-								return bigDecimalType;
-							}
-
-							@Override
-							public BasicValuedMapping resolveFunctionReturnType(
-									Supplier<BasicValuedMapping> impliedTypeAccess,
-									List<? extends SqlAstNode> arguments) {
-								if ( impliedTypeAccess != null ) {
-									final BasicValuedMapping basicValuedMapping = impliedTypeAccess.get();
-									if ( basicValuedMapping != null ) {
-										return basicValuedMapping;
-									}
-								}
-								// Resolve according to JPA spec 4.8.5
-								final BasicValuedMapping specifiedArgType = StandardFunctionReturnTypeResolvers.extractArgumentValuedMapping(
-										arguments,
-										1
-								);
-								switch ( specifiedArgType.getJdbcMapping().getJdbcType().getJdbcTypeCode() ) {
-									case Types.SMALLINT:
-									case Types.TINYINT:
-									case Types.INTEGER:
-									case Types.BIGINT:
-										return longType;
-									case Types.FLOAT:
-									case Types.REAL:
-									case Types.DOUBLE:
-										return doubleType;
-									case Types.DECIMAL:
-									case Types.NUMERIC:
-										final Class<?> argTypeClass = specifiedArgType.getJdbcMapping()
-												.getJavaTypeDescriptor()
-												.getJavaTypeClass();
-										if ( BigInteger.class.isAssignableFrom( argTypeClass ) ) {
-											return bigIntegerType;
-										}
-										else {
-											return bigDecimalType;
-										}
-								}
-								return bigDecimalType;
-							}
-
-						}
-				)
+				.setReturnTypeResolver( new SumReturnTypeResolver( queryEngine.getTypeConfiguration() ) )
 				.setExactArgumentCount( 1 )
 				.register();
 
@@ -2439,51 +2329,4 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	private static class PowerReturnTypeResolver implements FunctionReturnTypeResolver {
-
-		private final BasicType<Double> doubleType;
-
-		private PowerReturnTypeResolver(TypeConfiguration typeConfiguration) {
-			this.doubleType = typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE );
-		}
-
-		@Override
-		public ReturnableType<?> resolveFunctionReturnType(
-				ReturnableType<?> impliedType,
-				List<? extends SqmTypedNode<?>> arguments,
-				TypeConfiguration typeConfiguration) {
-			final JdbcMapping baseType = StandardFunctionReturnTypeResolvers
-					.extractArgumentJdbcMapping( typeConfiguration, arguments, 1 );
-			final JdbcMapping powerType = StandardFunctionReturnTypeResolvers
-					.extractArgumentJdbcMapping( typeConfiguration, arguments, 2 );
-
-			if ( baseType.getJdbcType().isDecimal() ) {
-				return (ReturnableType<?>) arguments.get( 0 ).getNodeType();
-			}
-			else if ( powerType.getJdbcType().isDecimal() ) {
-				return (ReturnableType<?>) arguments.get( 1 ).getNodeType();
-			}
-			return typeConfiguration.getBasicTypeForJavaType( Double.class );
-		}
-
-		@Override
-		public BasicValuedMapping resolveFunctionReturnType(
-				Supplier<BasicValuedMapping> impliedTypeAccess, List<? extends SqlAstNode> arguments) {
-			final BasicValuedMapping baseMapping = StandardFunctionReturnTypeResolvers.extractArgumentValuedMapping(
-					arguments,
-					1
-			);
-			final BasicValuedMapping powerMapping = StandardFunctionReturnTypeResolvers.extractArgumentValuedMapping(
-					arguments,
-					2
-			);
-			if ( baseMapping.getJdbcMapping().getJdbcType().isDecimal() ) {
-				return baseMapping;
-			}
-			else if ( powerMapping.getJdbcMapping().getJdbcType().isDecimal() ) {
-				return powerMapping;
-			}
-			return doubleType;
-		}
-	}
 }

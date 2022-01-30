@@ -1982,9 +1982,11 @@ public class CommonFunctionFactory {
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "power" )
+				.setInvariantType(
+						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
+				)
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(NUMERIC, NUMERIC)
-				.setReturnTypeResolver( new PowerReturnTypeResolver( queryEngine.getTypeConfiguration() ) )
 				.register();
 	}
 
@@ -2000,9 +2002,11 @@ public class CommonFunctionFactory {
 
 	public static void power_expLn(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "power", "exp(ln(?1)*?2)" )
+				.setInvariantType(
+						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
+				)
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(NUMERIC, NUMERIC)
-				.setReturnTypeResolver( new PowerReturnTypeResolver( queryEngine.getTypeConfiguration() ) )
 				.register();
 	}
 

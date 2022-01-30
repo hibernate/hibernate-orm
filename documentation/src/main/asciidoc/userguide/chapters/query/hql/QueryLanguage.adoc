@@ -1590,9 +1590,9 @@ include::{sourcedir}/HQLTest.java[tags=hql-explicit-join-jpql-on-example]
 ====
 
 [[hql-explicit-fetch-join]]
-==== `fetch join` for association fetching
+==== `join fetch` for association fetching
 
-A `fetch join`  overrides the laziness of a given association, specifying that the association should be fetched with a SQL join.
+A _fetch join_  overrides the laziness of a given association, specifying that the association should be fetched with a SQL join.
 The join may be an inner or outer join.
 
 * A `join fetch`, or, more explicitly, `inner join fetch`, only returns base entities with an associated entity.
@@ -1601,7 +1601,7 @@ The join may be an inner or outer join.
 [IMPORTANT]
 ====
 This is one of the most important features of Hibernate.
-To achieve acceptable performance with HQL, you'll need to use `fetch join` quite often.
+To achieve acceptable performance with HQL, you'll need to use `join fetch` quite often.
 Without it, you'll quickly run into the dreaded "n+1 selects" problem.
 ====
 
@@ -1618,13 +1618,13 @@ include::{sourcedir}/HQLTest.java[tags=hql-explicit-fetch-join-example]
 
 In this example, we used a left outer join because we also wanted to obtain customers with no orders.
 
-A query may have more than one `fetch join`, but be aware that:
+A query may have more than one fetch join, but be aware that:
 
 * it's perfectly safe to fetch several to-one associations in series or parallel in a single query, and
 * a single series of _nested_ fetch joins is also fine, but
 * fetching multiple collections or to-many associations in _parallel_ results in a Cartesian product at the database level, and might exhibit very poor performance.
 
-HQL doesn't disallow it, but it's usually a bad idea to apply a restriction to a ``fetch join``ed entity, since the elements of the fetched collection would be incomplete.
+HQL doesn't disallow it, but it's usually a bad idea to apply a restriction to a ``join fetch``ed entity, since the elements of the fetched collection would be incomplete.
 Indeed, it's best to avoid even assigning an identification variable to a fetched joined entity except for the purpose of specifying a nested fetch join.
 
 [IMPORTANT]
@@ -2168,7 +2168,7 @@ What happened to the `limit` clause?
 
 [IMPORTANT]
 ====
-When limits or pagination are combined with `fetch join`, Hibernate must retrieve all matching results from the database and _apply the limit in memory_!
+When limits or pagination are combined with a fetch join, Hibernate must retrieve all matching results from the database and _apply the limit in memory_!
 
 This _almost certainly_ isn't the behavior you were hoping for, and in general will exhibit _terrible_ performance characteristics.
 ====

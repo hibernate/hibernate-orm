@@ -330,7 +330,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-explicit-inner-join-example[]
 
-			// same query but specifying join type as 'inner' explicitly
+			// same query, but specifying join type as 'inner' explicitly
 			List<Person> persons = entityManager.createQuery(
 				"select distinct pr " +
 				"from Person pr " +
@@ -367,7 +367,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-explicit-outer-join-example[]
 
-			// functionally the same query but using the 'left outer' phrase
+			// same query, but specifying join type as 'outer' explicitly
 			List<Person> persons = entityManager.createQuery(
 				"select distinct pr " +
 				"from Person pr " +
@@ -386,8 +386,6 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	public void test_hql_explicit_fetch_join_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-explicit-fetch-join-example[]
-
-			// functionally the same query but using the 'left outer' phrase
 			List<Person> persons = entityManager.createQuery(
 				"select distinct pr " +
 				"from Person pr " +

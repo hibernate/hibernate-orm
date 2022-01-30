@@ -221,14 +221,9 @@ public class SqmUtil {
 					continue;
 				}
 				if ( !domainParamBinding.isBound() ) {
-					final MappingModelExpressible<?> mappingExpressible = SqmMappingModelHelper.resolveMappingModelExpressible(
-							sqmParameter,
-							domainModel,
-							tableGroupLocator
-					);
 					for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
 						final List<JdbcParameter> jdbcParams = jdbcParamsBinds.get( i );
-						mappingExpressible.forEachJdbcType(
+						parameterType.forEachJdbcType(
 								(position, jdbcType) -> {
 									jdbcParameterBindings.addBinding(
 											jdbcParams.get( position ),

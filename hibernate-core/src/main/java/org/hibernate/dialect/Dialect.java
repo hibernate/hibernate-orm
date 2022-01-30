@@ -640,11 +640,11 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Initialize the given registry with any dialect-specific functions.
-	 *
+	 * <p>
 	 * Support for certain SQL functions is required, and if the database
 	 * does not support a required function, then the dialect must define
 	 * a way to emulate it.
-	 *
+	 * <p>
 	 * These required functions include the functions defined by the JPA
 	 * query language specification:
 	 *
@@ -791,6 +791,14 @@ public abstract class Dialect implements ConversionContext {
 
 		//math functions supported on almost every database
 
+		//Note that while certain mathematical functions return the same type
+		//as their arguments, this is not the case in general - any function
+		//involving exponentiation by a non-integer power, logarithms,
+		//trigonometric functions, etc., should be considered to be of type
+		//Double. In particular, there is no meaningful concept of an "exact
+		//decimal" version of these functions, and if any database attempted
+		//to implement such a silly thing, it would be dog slow.
+
 		CommonFunctionFactory.math( queryEngine );
 
 		//trig functions supported on almost every database
@@ -847,6 +855,10 @@ public abstract class Dialect implements ConversionContext {
 		//ANSI SQL cast() function is supported on the databases we care most
 		//about but in certain cases it doesn't allow some useful typecasts,
 		//which must be emulated in a dialect-specific way
+
+		//Note that two case are especially tricky to make portable:
+		// - casts to and from Boolean, and
+		// - casting Double or Float to String.
 
 		queryEngine.getSqmFunctionRegistry().register(
 				"cast",

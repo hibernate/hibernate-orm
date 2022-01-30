@@ -5076,10 +5076,18 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private void visitJunctionPredicate(Junction.Nature nature, Predicate p) {
-		if ( p instanceof Junction && nature != ( (Junction) p ).getNature() ) {
-			appendSql( OPEN_PARENTHESIS );
-			p.accept( this );
-			appendSql( CLOSE_PARENTHESIS );
+		if ( p instanceof Junction ) {
+			final Junction junction = (Junction) p;
+			// If we have the same nature, or if this is a disjunction and the operand is a conjunction,
+			// then we don't need parenthesis, because the AND operator binds stronger
+			if ( nature == junction.getNature() || nature == Junction.Nature.DISJUNCTION ) {
+				p.accept( this );
+			}
+			else {
+				appendSql( OPEN_PARENTHESIS );
+				p.accept( this );
+				appendSql( CLOSE_PARENTHESIS );
+			}
 		}
 		else {
 			p.accept( this );

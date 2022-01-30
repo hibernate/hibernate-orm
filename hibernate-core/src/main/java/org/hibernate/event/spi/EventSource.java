@@ -39,7 +39,7 @@ public interface EventSource extends SessionImplementor {
 	/**
 	 * Cascade merge an entity instance
 	 */
-	void merge(String entityName, Object object, Map copiedAlready) throws HibernateException;
+	void merge(String entityName, Object object, MergeContext copiedAlready) throws HibernateException;
 	/**
 	 * Cascade persist an entity instance
 	 */

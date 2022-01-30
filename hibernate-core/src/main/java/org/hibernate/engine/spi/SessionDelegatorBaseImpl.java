@@ -37,6 +37,7 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.event.spi.MergeContext;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
@@ -1096,7 +1097,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void merge(String entityName, Object object, Map copiedAlready) throws HibernateException {
+	public void merge(String entityName, Object object, MergeContext copiedAlready) throws HibernateException {
 		delegate.merge( entityName, object, copiedAlready );
 	}
 

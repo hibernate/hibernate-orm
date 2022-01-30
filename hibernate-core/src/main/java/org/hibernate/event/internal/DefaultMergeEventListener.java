@@ -29,6 +29,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EntityCopyObserver;
 import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.spi.MergeContext;
 import org.hibernate.event.spi.MergeEvent;
 import org.hibernate.event.spi.MergeEventListener;
 import org.hibernate.internal.CoreLogging;
@@ -37,7 +38,6 @@ import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.TypeHelper;
@@ -52,7 +52,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultMergeEventListener.class );
 
 	@Override
-	protected Map getMergeMap(Object anything) {
+	protected Map<Object,Object> getMergeMap(Object anything) {
 		return ( (MergeContext) anything ).invertMap();
 	}
 
@@ -87,9 +87,8 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	 * @param event The merge event to be handled.
 	 *
 	 */
-	public void onMerge(MergeEvent event, Map copiedAlready) throws HibernateException {
+	public void onMerge(MergeEvent event, MergeContext copiedAlready) throws HibernateException {
 
-		final MergeContext copyCache = (MergeContext) copiedAlready;
 		final EventSource source = event.getSession();
 		final Object original = event.getOriginal();
 
@@ -127,14 +126,14 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 				entity = original;
 			}
 
-			if ( copyCache.containsKey( entity ) && copyCache.isOperatedOn( entity ) ) {
+			if ( ((MergeContext) copiedAlready).containsKey( entity ) && ((MergeContext) copiedAlready).isOperatedOn( entity ) ) {
 				LOG.trace( "Already in merge process" );
 				event.setResult( entity );
 			}
 			else {
-				if ( copyCache.containsKey( entity ) ) {
+				if ( ((MergeContext) copiedAlready).containsKey( entity ) ) {
 					LOG.trace( "Already in copyCache; setting in merge process" );
-					copyCache.setOperatedOn( entity, true );
+					((MergeContext) copiedAlready).setOperatedOn( entity, true );
 				}
 				event.setEntity( entity );
 				EntityState entityState = null;
@@ -167,13 +166,13 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 
 				switch ( entityState ) {
 					case DETACHED:
-						entityIsDetached( event, copyCache );
+						entityIsDetached( event, (MergeContext) copiedAlready);
 						break;
 					case TRANSIENT:
-						entityIsTransient( event, copyCache );
+						entityIsTransient( event, (MergeContext) copiedAlready);
 						break;
 					case PERSISTENT:
-						entityIsPersistent( event, copyCache );
+						entityIsPersistent( event, (MergeContext) copiedAlready);
 						break;
 					default: //DELETED
 						throw new ObjectDeletedException(
@@ -188,7 +187,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 
 	}
 
-	protected void entityIsPersistent(MergeEvent event, Map copyCache) {
+	protected void entityIsPersistent(MergeEvent event, MergeContext copyCache) {
 		LOG.trace( "Ignoring persistent instance" );
 
 		//TODO: check that entry.getIdentifier().equals(requestedId)
@@ -197,7 +196,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		final EventSource source = event.getSession();
 		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 
-		( (MergeContext) copyCache ).put( entity, entity, true );  //before cascade!
+		copyCache.put( entity, entity, true );  //before cascade!
 
 		cascadeOnMerge( source, persister, entity, copyCache );
 		copyValues( persister, entity, entity, source, copyCache );
@@ -205,7 +204,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		event.setResult( entity );
 	}
 
-	protected void entityIsTransient(MergeEvent event, Map copyCache) {
+	protected void entityIsTransient(MergeEvent event, MergeContext copyCache) {
 
 		LOG.trace( "Merging transient instance" );
 
@@ -229,7 +228,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			copy = session.instantiate( persister, id );
 
 			//before cascade!
-			( (MergeContext) copyCache ).put( entity, copy, true );
+			copyCache.put( entity, copy, true );
 		}
 
 		// cascade first, so that all unsaved objects get their
@@ -261,7 +260,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			String entityName,
 			Object requestedId,
 			EventSource source,
-			Map copyCache) {
+			MergeContext copyCache) {
 		//this bit is only *really* absolutely necessary for handling
 		//requestedId, but is also good if we merge multiple object
 		//graphs, since it helps ensure uniqueness
@@ -273,7 +272,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		}
 	}
 
-	protected void entityIsDetached(MergeEvent event, Map copyCache) {
+	protected void entityIsDetached(MergeEvent event, MergeContext copyCache) {
 
 		LOG.trace( "Merging detached instance" );
 
@@ -317,7 +316,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		}
 		else {
 			// before cascade!
-			( (MergeContext) copyCache ).put( entity, result, true );
+			copyCache.put( entity, result, true );
 
 			final Object target = unproxyManagedForDetachedMerging( entity, result, persister, source );
 
@@ -345,7 +344,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			copyValues( persister, entity, target, source, copyCache );
 
 			//copyValues works by reflection, so explicitly mark the entity instance dirty
-			markInterceptorDirty( entity, target, persister );
+			markInterceptorDirty( entity, target );
 
 			event.setResult( result );
 		}
@@ -390,7 +389,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		return managed;
 	}
 
-	private void markInterceptorDirty(final Object entity, final Object target, EntityPersister persister) {
+	private void markInterceptorDirty(final Object entity, final Object target) {
 		// for enhanced entities, copy over the dirty attributes
 		if ( entity instanceof SelfDirtinessTracker && target instanceof SelfDirtinessTracker ) {
 			// clear, because setting the embedded attributes dirties them
@@ -446,7 +445,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			final Object entity,
 			final Object target,
 			final SessionImplementor source,
-			final Map copyCache) {
+			final MergeContext copyCache) {
 		final Object[] copiedValues = TypeHelper.replace(
 				persister.getValues( entity ),
 				persister.getValues( target ),
@@ -456,7 +455,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 				copyCache
 		);
 
-		persister.setPropertyValues( target, copiedValues );
+		persister.setValues( target, copiedValues );
 	}
 
 	protected void copyValues(
@@ -464,7 +463,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			final Object entity,
 			final Object target,
 			final SessionImplementor source,
-			final Map copyCache,
+			final MergeContext copyCache,
 			final ForeignKeyDirection foreignKeyDirection) {
 
 		final Object[] copiedValues;
@@ -495,7 +494,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			);
 		}
 
-		persister.setPropertyValues( target, copiedValues );
+		persister.setValues( target, copiedValues );
 	}
 
 	/**
@@ -510,7 +509,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			final EventSource source,
 			final EntityPersister persister,
 			final Object entity,
-			final Map copyCache
+			final MergeContext copyCache
 	) {
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();

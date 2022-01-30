@@ -11,6 +11,7 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.event.spi.MergeContext;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
@@ -77,7 +78,7 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	 * @deprecated  OperationalContext should cover this overload I believe
 	 */
 	@Deprecated
-	void merge(String entityName, Object object, Map copiedAlready) throws HibernateException;
+	void merge(String entityName, Object object, MergeContext copiedAlready) throws HibernateException;
 
 	/**
 	 * @deprecated  OperationalContext should cover this overload I believe

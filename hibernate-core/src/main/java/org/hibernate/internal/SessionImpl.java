@@ -69,6 +69,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
+import org.hibernate.event.spi.MergeContext;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.ClearEvent;
@@ -796,7 +797,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public void merge(String entityName, Object object, Map copiedAlready) throws HibernateException {
+	public void merge(String entityName, Object object, MergeContext copiedAlready) throws HibernateException {
 		checkOpenOrWaitingForAutoClose();
 		fireMerge( copiedAlready, new MergeEvent( entityName, object, this ) );
 	}
@@ -822,10 +823,10 @@ public class SessionImpl
 		return event.getResult();
 	}
 
-	private void fireMerge(final Map copiedAlready, final MergeEvent event) {
+	private void fireMerge(final MergeContext mergeContext, final MergeEvent event) {
 		try {
 			pulseTransactionCoordinator();
-			fastSessionServices.eventListenerGroup_MERGE.fireEventOnEachListener( event, copiedAlready, MergeEventListener::onMerge );
+			fastSessionServices.eventListenerGroup_MERGE.fireEventOnEachListener( event, mergeContext, MergeEventListener::onMerge );
 		}
 		catch ( ObjectDeletedException sse ) {
 			throw getExceptionConverter().convert( new IllegalArgumentException( sse ) );

@@ -12,7 +12,6 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.FetchMode;
@@ -483,7 +482,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			Object target,
 			SharedSessionContractImplementor session,
 			Object owner,
-			Map copyCache) {
+			Map<Object, Object> copyCache) {
 
 		if ( original == null ) {
 			return null;
@@ -527,7 +526,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			Object target,
 			SharedSessionContractImplementor session,
 			Object owner,
-			Map copyCache,
+			Map<Object, Object> copyCache,
 			ForeignKeyDirection foreignKeyDirection) {
 
 		if ( original == null ) {

@@ -272,7 +272,7 @@ public abstract class AbstractSaveEventListener
 		}
 
 		if ( substitute ) {
-			persister.setPropertyValues( entity, values );
+			persister.setValues( entity, values );
 		}
 
 		TypeHelper.deepCopy(
@@ -355,7 +355,7 @@ public abstract class AbstractSaveEventListener
 		}
 	}
 
-	protected Map getMergeMap(Object anything) {
+	protected Map<Object,Object> getMergeMap(Object anything) {
 		return null;
 	}
 
@@ -377,7 +377,7 @@ public abstract class AbstractSaveEventListener
 			Type[] types,
 			EventSource source) {
 		WrapVisitor visitor = new WrapVisitor( entity, id, source );
-		// substitutes into values by side-effect
+		// substitutes into values by side effect
 		visitor.processEntityPropertyValues( values, types );
 		return visitor.isSubstitutionRequired();
 	}
@@ -454,7 +454,7 @@ public abstract class AbstractSaveEventListener
 	}
 
 	/**
-	 * Handles to calls needed to perform post-save cascades.
+	 * Handles calls needed to perform post-save cascades.
 	 *
 	 * @param source The session from which the event originated.
 	 * @param persister The entity's persister instance.

@@ -18,7 +18,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hibernate.event.internal.MergeContext;
+import org.hibernate.event.spi.MergeContext;
 import org.hibernate.event.spi.EntityCopyObserver;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

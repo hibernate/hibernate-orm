@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.spi;
 
-import java.util.Map;
-
 import org.hibernate.HibernateException;
 
 /**
@@ -29,6 +27,6 @@ public interface MergeEventListener {
 	 *
 	 * @param event The merge event to be handled.
 	 */
-	void onMerge(MergeEvent event, Map copiedAlready) throws HibernateException;
+	void onMerge(MergeEvent event, MergeContext copiedAlready) throws HibernateException;
 
 }

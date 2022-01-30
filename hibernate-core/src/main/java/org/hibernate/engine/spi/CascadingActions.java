@@ -17,6 +17,7 @@ import org.hibernate.ReplicationMode;
 import org.hibernate.TransientPropertyValueException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.ForeignKeys;
+import org.hibernate.event.spi.MergeContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
@@ -258,7 +259,7 @@ public class CascadingActions {
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
 			LOG.tracev( "Cascading to merge: {0}", entityName );
-			session.merge( entityName, child, (Map<?,?>) anything );
+			session.merge( entityName, child, (MergeContext) anything );
 		}
 
 		@Override

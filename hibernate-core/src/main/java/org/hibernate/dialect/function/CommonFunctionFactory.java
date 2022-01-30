@@ -1972,11 +1972,17 @@ public class CommonFunctionFactory {
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "ln" )
+				.setInvariantType(
+						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
+				)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "exp" )
+				.setInvariantType(
+						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
+				)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();

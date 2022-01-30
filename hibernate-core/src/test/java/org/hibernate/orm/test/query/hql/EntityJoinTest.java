@@ -192,8 +192,9 @@ public class EntityJoinTest {
                             DomainParameterXref.empty(),
                             QueryParameterBindings.NO_PARAM_BINDINGS,
                             LoadQueryInfluencers.NONE,
-                            factory
-                    );
+                            factory,
+							true
+					);
                     final SqmTranslation<SelectStatement> sqmTranslation = selectTranslator.translate();
 
                     final SelectStatement sqlAst = sqmTranslation.getSqlAst();

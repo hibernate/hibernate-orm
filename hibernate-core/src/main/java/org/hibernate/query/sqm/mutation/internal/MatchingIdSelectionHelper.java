@@ -96,7 +96,8 @@ public class MatchingIdSelectionHelper {
 						idSelectionQuery,
 						sqmConverter.getCurrentProcessingState(),
 						sqmConverter.getSqlAstCreationState(),
-						sqmConverter.getCurrentClauseStack()::getCurrent
+						sqmConverter.getCurrentClauseStack()::getCurrent,
+						false
 				)
 		);
 		targetEntityDescriptor.getIdentifierMapping().applySqlSelections(
@@ -240,7 +241,8 @@ public class MatchingIdSelectionHelper {
 						matchingIdSelection.getQuerySpec(),
 						sqmConverter.getCurrentProcessingState(),
 						sqmConverter.getSqlAstCreationState(),
-						sqmConverter.getCurrentClauseStack()::getCurrent
+						sqmConverter.getCurrentClauseStack()::getCurrent,
+						true
 				)
 		);
 		entityDescriptor.visitSubTypeAttributeMappings(

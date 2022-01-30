@@ -31,7 +31,8 @@ public interface SqmTranslatorFactory {
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings,
 			LoadQueryInfluencers loadQueryInfluencers,
-			SqlAstCreationContext creationContext);
+			SqlAstCreationContext creationContext,
+			boolean deduplicateSelectionItems);
 
 	SqmTranslator<DeleteStatement> createSimpleDeleteTranslator(
 			SqmDeleteStatement<?> sqmDeleteStatement,

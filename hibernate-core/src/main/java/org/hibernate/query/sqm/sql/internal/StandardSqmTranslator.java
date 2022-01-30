@@ -11,7 +11,6 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
-import org.hibernate.query.sqm.sql.SqmTranslation;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.tree.Statement;
@@ -29,7 +28,16 @@ public class StandardSqmTranslator<T extends Statement> extends BaseSqmToSqlAstC
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings,
 			LoadQueryInfluencers fetchInfluencers,
-			SqlAstCreationContext creationContext) {
-		super( creationContext, statement, queryOptions, fetchInfluencers, domainParameterXref, domainParameterBindings );
+			SqlAstCreationContext creationContext,
+			boolean deduplicateSelectionItems) {
+		super(
+				creationContext,
+				statement,
+				queryOptions,
+				fetchInfluencers,
+				domainParameterXref,
+				domainParameterBindings,
+				deduplicateSelectionItems
+		);
 	}
 }

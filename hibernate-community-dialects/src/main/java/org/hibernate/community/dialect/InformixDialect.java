@@ -196,14 +196,16 @@ public class InformixDialect extends Dialect {
 					DomainParameterXref domainParameterXref,
 					QueryParameterBindings domainParameterBindings,
 					LoadQueryInfluencers loadQueryInfluencers,
-					SqlAstCreationContext creationContext) {
+					SqlAstCreationContext creationContext,
+					boolean deduplicateSelectionItems) {
 				return new InformixSqmToSqlAstConverter<>(
 						sqmSelectStatement,
 						queryOptions,
 						domainParameterXref,
 						domainParameterBindings,
 						loadQueryInfluencers,
-						creationContext
+						creationContext,
+						deduplicateSelectionItems
 				);
 			}
 		};

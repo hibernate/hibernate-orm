@@ -87,6 +87,14 @@ public class JdbcSelect extends AbstractJdbcOperation {
 	public boolean usesLimitParameters() {
 		return offsetParameter != null || limitParameter != null;
 	}
+	
+	public JdbcParameter getOffsetParameter() {
+		return offsetParameter;
+	}
+	
+	public JdbcParameter getLimitParameter() {
+		return limitParameter;
+	}
 
 	public JdbcLockStrategy getLockStrategy() {
 		return jdbcLockStrategy;

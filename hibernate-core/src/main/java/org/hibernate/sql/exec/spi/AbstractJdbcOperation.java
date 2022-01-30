@@ -78,6 +78,10 @@ public class AbstractJdbcOperation implements JdbcOperation {
 	public boolean dependsOnParameterBindings() {
 		return !appliedParameters.isEmpty();
 	}
+	
+	public Map<JdbcParameter, JdbcParameterBinding> getAppliedParameters() {
+		return appliedParameters;
+	}
 
 	@Override
 	public boolean isCompatibleWith(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions) {

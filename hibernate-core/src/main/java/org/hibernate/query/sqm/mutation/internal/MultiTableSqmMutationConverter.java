@@ -20,15 +20,12 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
-import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.sql.internal.SqlAstProcessingStateImpl;
-import org.hibernate.query.sqm.sql.internal.SqlAstQueryPartProcessingStateImpl;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
-import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -40,7 +37,6 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.ast.tree.update.Assignment;
 
@@ -51,7 +47,6 @@ import org.hibernate.sql.ast.tree.update.Assignment;
  *
  * @see #visitSetClause(SqmSetClause, Consumer, SqmParameterResolutionConsumer)
  * @see #visitWhereClause(SqmWhereClause, Consumer, SqmParameterResolutionConsumer)
- * @see #visitSelectClause(SqmSelectClause, QuerySpec, Consumer, SqmParameterResolutionConsumer)
  *
  * @author Steve Ebersole
  */
@@ -97,7 +92,15 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 			LoadQueryInfluencers loadQueryInfluencers,
 			QueryParameterBindings domainParameterBindings,
 			SqlAstCreationContext creationContext) {
-		super( creationContext, statement, queryOptions, loadQueryInfluencers, domainParameterXref, domainParameterBindings );
+		super(
+				creationContext,
+				statement,
+				queryOptions,
+				loadQueryInfluencers,
+				domainParameterXref,
+				domainParameterBindings,
+				false
+		);
 		this.mutatingEntityDescriptor = mutatingEntityDescriptor;
 
 		final SqlAstProcessingStateImpl rootProcessingState = new SqlAstProcessingStateImpl(
@@ -247,59 +250,4 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 		return expression;
 	}
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	public void visitSelectClause(
-			SqmSelectClause sqmSelectClause,
-			QuerySpec sqlQuerySpec,
-			Consumer<ColumnReference> columnReferenceConsumer,
-			SqmParameterResolutionConsumer parameterResolutionConsumer) {
-		assert sqmSelectClause != null;
-
-		this.parameterResolutionConsumer = parameterResolutionConsumer;
-
-		final SqlAstProcessingState rootProcessingState = getCurrentProcessingState();
-		final SqlAstProcessingStateImpl processingState = new SqlAstQueryPartProcessingStateImpl(
-				sqlQuerySpec,
-				rootProcessingState,
-				this,
-				r -> new SqmAliasedNodePositionTracker(
-						r,
-						sqmSelectClause.getSelections()
-				),
-				getCurrentClauseStack()::getCurrent
-		) {
-			@Override
-			public SqlExpressionResolver getSqlExpressionResolver() {
-				return this;
-			}
-
-			@Override
-			public Expression resolveSqlExpression(
-					String key, Function<SqlAstProcessingState, Expression> creator) {
-				final Expression expression = rootProcessingState.getSqlExpressionResolver().resolveSqlExpression(
-						key,
-						creator
-				);
-				if ( expression instanceof ColumnReference ) {
-					columnReferenceConsumer.accept( (ColumnReference) expression );
-				}
-				return expression;
-			}
-		};
-
-		pushProcessingState( processingState, getFromClauseIndex() );
-		try {
-			for ( int i = 0; i < sqmSelectClause.getSelectionItems().size(); i++ ) {
-				final DomainResultProducer<?> domainResultProducer = (DomainResultProducer<?>) sqmSelectClause.getSelectionItems()
-						.get( i )
-						.accept( this );
-				domainResultProducer.applySqlSelections( this );
-			}
-		}
-		finally {
-			popProcessingStateStack();
-			this.parameterResolutionConsumer = null;
-		}
-	}
 }

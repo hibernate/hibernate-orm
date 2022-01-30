@@ -311,14 +311,16 @@ public class IngresDialect extends Dialect {
 					DomainParameterXref domainParameterXref,
 					QueryParameterBindings domainParameterBindings,
 					LoadQueryInfluencers loadQueryInfluencers,
-					SqlAstCreationContext creationContext) {
+					SqlAstCreationContext creationContext,
+					boolean deduplicateSelectionItems) {
 				return new IngresSqmToSqlAstConverter<>(
 						sqmSelectStatement,
 						queryOptions,
 						domainParameterXref,
 						domainParameterBindings,
 						loadQueryInfluencers,
-						creationContext
+						creationContext,
+						deduplicateSelectionItems
 				);
 			}
 		};

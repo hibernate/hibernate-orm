@@ -78,7 +78,8 @@ public class LoaderSqlAstCreationState
 				queryPart,
 				this,
 				this,
-				() -> Clause.IRRELEVANT
+				() -> Clause.IRRELEVANT,
+				true
 		);
 	}
 

@@ -365,7 +365,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				domainParameterXref,
 				executionContext.getQueryParameterBindings(),
 				executionContext.getSession().getLoadQueryInfluencers(),
-				sessionFactory
+				sessionFactory,
+				true
 		);
 
 //			tableGroupAccess = sqmConverter.getFromClauseAccess();

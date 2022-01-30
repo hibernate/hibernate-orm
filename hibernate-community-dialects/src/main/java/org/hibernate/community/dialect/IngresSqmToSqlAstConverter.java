@@ -37,8 +37,17 @@ public class IngresSqmToSqlAstConverter<T extends Statement> extends BaseSqmToSq
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings,
 			LoadQueryInfluencers fetchInfluencers,
-			SqlAstCreationContext creationContext) {
-		super( creationContext, statement, queryOptions, fetchInfluencers, domainParameterXref, domainParameterBindings );
+			SqlAstCreationContext creationContext,
+			boolean deduplicateSelectionItems) {
+		super(
+				creationContext,
+				statement,
+				queryOptions,
+				fetchInfluencers,
+				domainParameterXref,
+				domainParameterBindings,
+				deduplicateSelectionItems
+		);
 	}
 
 	@Override

@@ -269,7 +269,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			Object target,
 			SharedSessionContractImplementor session,
 			Object owner,
-			Map copyCache) throws HibernateException {
+			Map<Object, Object> copyCache) throws HibernateException {
 		if ( original == null ) {
 			return null;
 		}
@@ -404,7 +404,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @param overridingEager can override eager from the mapping.
 	 *
 	 * @return If {@code overridingEager} is null, then it does not override.
-	 *         If true or false then it overrides the mapping value.
+	 *		 If true or false then it overrides the mapping value.
 	 */
 	public boolean isEager(Boolean overridingEager) {
 		return overridingEager != null ? overridingEager : this.eager;

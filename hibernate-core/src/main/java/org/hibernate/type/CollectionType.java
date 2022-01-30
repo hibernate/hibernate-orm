@@ -651,7 +651,7 @@ public abstract class CollectionType extends AbstractType implements Association
 			final Object target,
 			final SharedSessionContractImplementor session,
 			final Object owner,
-			final Map copyCache) throws HibernateException {
+			final Map<Object, Object> copyCache) throws HibernateException {
 		if ( original == null ) {
 			return null;
 		}

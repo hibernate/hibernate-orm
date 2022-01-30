@@ -119,7 +119,7 @@ public abstract class AbstractType implements Type {
 			Object target,
 			SharedSessionContractImplementor session,
 			Object owner,
-			Map copyCache,
+			Map<Object, Object> copyCache,
 			ForeignKeyDirection foreignKeyDirection)
 	throws HibernateException {
 		boolean include;

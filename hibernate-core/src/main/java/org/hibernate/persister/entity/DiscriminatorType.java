@@ -172,7 +172,7 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 	}
 
 	@Override
-	public Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map copyCache)
+	public Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map<Object, Object> copyCache)
 			throws HibernateException {
 		return original;
 	}

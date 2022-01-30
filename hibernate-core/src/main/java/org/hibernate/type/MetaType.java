@@ -109,11 +109,11 @@ public class MetaType extends AbstractType {
 
 	@Override
 	public Object replace(
-			Object original, 
+			Object original,
 			Object target,
 			SharedSessionContractImplementor session,
-			Object owner, 
-			Map copyCache) {
+			Object owner,
+			Map<Object, Object> copyCache) {
 		return original;
 	}
 

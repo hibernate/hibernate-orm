@@ -158,7 +158,7 @@ public class CustomType<J>
 			Object target,
 			SharedSessionContractImplementor session,
 			Object owner,
-			Map copyCache) throws HibernateException {
+			Map<Object, Object> copyCache) throws HibernateException {
 		return getUserType().replace( original, target, owner );
 	}
 

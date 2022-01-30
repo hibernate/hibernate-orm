@@ -73,10 +73,11 @@ public class TypeHelper {
 			final Type[] types,
 			final SharedSessionContractImplementor session,
 			final Object owner,
-			final Map copyCache) {
+			final Map<Object, Object> copyCache) {
 		Object[] copied = new Object[original.length];
 		for ( int i = 0; i < types.length; i++ ) {
-			if ( original[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY || original[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+			if ( original[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
+					|| original[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				copied[i] = target[i];
 			}
 			else if ( target[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
@@ -108,7 +109,7 @@ public class TypeHelper {
 			final Type[] types,
 			final SharedSessionContractImplementor session,
 			final Object owner,
-			final Map copyCache,
+			final Map<Object, Object> copyCache,
 			final ForeignKeyDirection foreignKeyDirection) {
 		Object[] copied = new Object[original.length];
 		for ( int i = 0; i < types.length; i++ ) {
@@ -149,7 +150,7 @@ public class TypeHelper {
 			final Type[] types,
 			final SharedSessionContractImplementor session,
 			final Object owner,
-			final Map copyCache,
+			final Map<Object, Object> copyCache,
 			final ForeignKeyDirection foreignKeyDirection) {
 		Object[] copied = new Object[original.length];
 		for ( int i = 0; i < types.length; i++ ) {
@@ -161,9 +162,21 @@ public class TypeHelper {
 				// need to extract the component values and check for subtype replacements...
 				CompositeType componentType = ( CompositeType ) types[i];
 				Type[] subtypes = componentType.getSubtypes();
-				Object[] origComponentValues = original[i] == null ? new Object[subtypes.length] : componentType.getPropertyValues( original[i], session );
-				Object[] targetComponentValues = target[i] == null ? new Object[subtypes.length] : componentType.getPropertyValues( target[i], session );
-				replaceAssociations( origComponentValues, targetComponentValues, subtypes, session, null, copyCache, foreignKeyDirection );
+				Object[] origComponentValues = original[i] == null
+						? new Object[subtypes.length]
+						: componentType.getPropertyValues( original[i], session );
+				Object[] targetComponentValues = target[i] == null
+						? new Object[subtypes.length]
+						: componentType.getPropertyValues( target[i], session );
+				replaceAssociations(
+						origComponentValues,
+						targetComponentValues,
+						subtypes,
+						session,
+						null,
+						copyCache,
+						foreignKeyDirection
+				);
 				copied[i] = target[i];
 			}
 			else if ( !types[i].isAssociationType() ) {

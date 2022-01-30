@@ -254,7 +254,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public final Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map copyCache) {
+	public final Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map<Object, Object> copyCache) {
 		if ( original == null && target == null ) {
 			return null;
 		}
@@ -269,7 +269,7 @@ public abstract class AbstractStandardBasicType<T>
 			Object target,
 			SharedSessionContractImplementor session,
 			Object owner,
-			Map copyCache,
+			Map<Object, Object> copyCache,
 			ForeignKeyDirection foreignKeyDirection) {
 		return ForeignKeyDirection.FROM_PARENT == foreignKeyDirection
 				? javaType.getReplacement( (T) original, (T) target, session )

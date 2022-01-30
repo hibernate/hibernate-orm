@@ -20,6 +20,7 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -31,14 +32,17 @@ public class SqlAstQueryPartProcessingStateImpl
 		implements SqlAstQueryPartProcessingState {
 
 	private final QueryPart queryPart;
+	private final boolean deduplicateSelectionItems;
 
 	public SqlAstQueryPartProcessingStateImpl(
 			QueryPart queryPart,
 			SqlAstProcessingState parent,
 			SqlAstCreationState creationState,
-			Supplier<Clause> currentClauseAccess) {
+			Supplier<Clause> currentClauseAccess,
+			boolean deduplicateSelectionItems) {
 		super( parent, creationState, currentClauseAccess );
 		this.queryPart = queryPart;
+		this.deduplicateSelectionItems = deduplicateSelectionItems;
 	}
 
 	public SqlAstQueryPartProcessingStateImpl(
@@ -46,9 +50,11 @@ public class SqlAstQueryPartProcessingStateImpl
 			SqlAstProcessingState parent,
 			SqlAstCreationState creationState,
 			Function<SqlExpressionResolver, SqlExpressionResolver> expressionResolverDecorator,
-			Supplier<Clause> currentClauseAccess) {
+			Supplier<Clause> currentClauseAccess,
+			boolean deduplicateSelectionItems) {
 		super( parent, creationState, expressionResolverDecorator, currentClauseAccess );
 		this.queryPart = queryPart;
+		this.deduplicateSelectionItems = deduplicateSelectionItems;
 	}
 
 	@Override
@@ -79,11 +85,12 @@ public class SqlAstQueryPartProcessingStateImpl
 			existing = sqlSelectionMap.get( expression );
 		}
 
-		if ( existing != null ) {
+		if ( existing != null && deduplicateSelectionItems ) {
 			return existing;
 		}
 
-		final int valuesArrayPosition = sqlSelectionMap.size();
+		final SelectClause selectClause = ( (QuerySpec) queryPart ).getSelectClause();
+		final int valuesArrayPosition = selectClause.getSqlSelections().size();
 		final SqlSelection sqlSelection = expression.createSqlSelection(
 				valuesArrayPosition + 1,
 				valuesArrayPosition,
@@ -93,7 +100,7 @@ public class SqlAstQueryPartProcessingStateImpl
 
 		sqlSelectionMap.put( expression, sqlSelection );
 
-		( (QuerySpec) queryPart ).getSelectClause().addSqlSelection( sqlSelection );
+		selectClause.addSqlSelection( sqlSelection );
 
 		return sqlSelection;
 	}

@@ -395,6 +395,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private int fetchDepth;
 	private String currentBagRole;
 	private boolean resolvingCircularFetch;
+	private boolean deduplicateSelectionItems;
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
 	private SqmQueryPart<?> currentSqmQueryPart;
 	private boolean containsCollectionFetches;
@@ -423,7 +424,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			QueryOptions queryOptions,
 			LoadQueryInfluencers loadQueryInfluencers,
 			DomainParameterXref domainParameterXref,
-			QueryParameterBindings domainParameterBindings) {
+			QueryParameterBindings domainParameterBindings,
+			boolean deduplicateSelectionItems) {
 		super( creationContext.getServiceRegistry() );
 
 		this.creationContext = creationContext;
@@ -434,6 +436,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				.isJpaQueryComplianceEnabled();
 
 		this.statement = statement;
+		this.deduplicateSelectionItems = deduplicateSelectionItems;
 
 		if ( statement instanceof SqmSelectStatement<?> ) {
 			// NOTE: note the difference here between `JpaSelection#getSelectionItems`
@@ -1586,7 +1589,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				getCurrentProcessingState(),
 				this,
 				DelegatingSqmAliasedNodeCollector::new,
-				currentClauseStack::getCurrent
+				currentClauseStack::getCurrent,
+				deduplicateSelectionItems
 		);
 		final DelegatingSqmAliasedNodeCollector collector = (DelegatingSqmAliasedNodeCollector) processingState
 				.getSqlExpressionResolver();
@@ -1656,7 +1660,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							r,
 							selectClause.getSelections()
 					),
-					currentClauseStack::getCurrent
+					currentClauseStack::getCurrent,
+					deduplicateSelectionItems
 			);
 		}
 		else {
@@ -1664,12 +1669,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					sqlQuerySpec,
 					getCurrentProcessingState(),
 					this,
-					currentClauseStack::getCurrent
+					currentClauseStack::getCurrent,
+					deduplicateSelectionItems
 			);
 		}
 
 		final SqmQueryPart<?> sqmQueryPart = currentSqmQueryPart;
+		final boolean originalDeduplicateSelectionItems = deduplicateSelectionItems;
 		currentSqmQueryPart = sqmQuerySpec;
+		// In sub-queries, we can never deduplicate the selection items as that might change semantics
+		deduplicateSelectionItems = false;
 		pushProcessingState( processingState );
 
 		try {
@@ -1719,6 +1728,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			additionalRestrictions = originalAdditionalRestrictions;
 			popProcessingStateStack();
 			currentSqmQueryPart = sqmQueryPart;
+			deduplicateSelectionItems = originalDeduplicateSelectionItems;
 		}
 	}
 
@@ -3370,7 +3380,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						subQuerySpec,
 						getCurrentProcessingState(),
 						this,
-						currentClauseStack::getCurrent
+						currentClauseStack::getCurrent,
+						false
 				)
 		);
 		try {
@@ -3518,7 +3529,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						subQuerySpec,
 						getCurrentProcessingState(),
 						this,
-						currentClauseStack::getCurrent
+						currentClauseStack::getCurrent,
+						false
 				)
 		);
 		try {
@@ -3646,7 +3658,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							subQuerySpec,
 							getCurrentProcessingState(),
 							this,
-							currentClauseStack::getCurrent
+							currentClauseStack::getCurrent,
+							false
 					)
 			);
 			try {
@@ -5365,7 +5378,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						subQuerySpec,
 						getCurrentProcessingState(),
 						this,
-						currentClauseStack::getCurrent
+						currentClauseStack::getCurrent,
+						false
 				)
 		);
 		try {

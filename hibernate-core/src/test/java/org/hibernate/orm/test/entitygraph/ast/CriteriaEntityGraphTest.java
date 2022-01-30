@@ -384,7 +384,8 @@ public class CriteriaEntityGraphTest implements SessionFactoryScopeAware {
 				( (QuerySqmImpl<?>) hqlQuery ).getDomainParameterXref(),
 				query.getParameterBindings(),
 				loadQueryInfluencers,
-				session.getSessionFactory()
+				session.getSessionFactory(),
+				true
 		);
 
 		final SqmTranslation<SelectStatement> sqmInterpretation = sqmConverter.translate();

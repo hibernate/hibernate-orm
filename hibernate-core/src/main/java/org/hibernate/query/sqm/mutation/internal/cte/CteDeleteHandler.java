@@ -63,7 +63,8 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 						idSelectStatement.getQuerySpec(),
 						sqmConverter.getCurrentProcessingState(),
 						sqmConverter.getSqlAstCreationState(),
-						sqmConverter.getCurrentClauseStack()::getCurrent
+						sqmConverter.getCurrentClauseStack()::getCurrent,
+						false
 				)
 		);
 		getEntityDescriptor().visitSubTypeAttributeMappings(

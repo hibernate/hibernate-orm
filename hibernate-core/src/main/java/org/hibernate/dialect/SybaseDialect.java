@@ -123,14 +123,16 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 					DomainParameterXref domainParameterXref,
 					QueryParameterBindings domainParameterBindings,
 					LoadQueryInfluencers loadQueryInfluencers,
-					SqlAstCreationContext creationContext) {
+					SqlAstCreationContext creationContext,
+					boolean deduplicateSelectionItems) {
 				return new SybaseSqmToSqlAstConverter<>(
 						sqmSelectStatement,
 						queryOptions,
 						domainParameterXref,
 						domainParameterBindings,
 						loadQueryInfluencers,
-						creationContext
+						creationContext,
+						deduplicateSelectionItems
 				);
 			}
 		};

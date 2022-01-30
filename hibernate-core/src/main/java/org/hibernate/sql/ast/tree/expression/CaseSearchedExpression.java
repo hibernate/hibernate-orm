@@ -86,15 +86,6 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 	public void applySqlSelections(DomainResultCreationState creationState) {
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlAstCreationState()
 				.getSqlExpressionResolver();
-		final SqlSelection sqlSelection = sqlExpressionResolver
-				.resolveSqlSelection(
-						this,
-						type.getExpressibleJavaType(),
-						creationState.getSqlAstCreationState()
-								.getCreationContext()
-								.getSessionFactory()
-								.getTypeConfiguration()
-				);
 		sqlExpressionResolver.resolveSqlSelection(
 				this,
 				type.getExpressibleJavaType(),

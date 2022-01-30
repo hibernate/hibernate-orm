@@ -35,14 +35,16 @@ public class StandardSqmTranslatorFactory implements SqmTranslatorFactory {
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings,
 			LoadQueryInfluencers loadQueryInfluencers,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationContext creationContext,
+			boolean deduplicateSelectionItems) {
 		return new StandardSqmTranslator<>(
 				sqmSelectStatement,
 				queryOptions,
 				domainParameterXref,
 				domainParameterBindings,
 				loadQueryInfluencers,
-				creationContext
+				creationContext,
+				deduplicateSelectionItems
 		);
 	}
 
@@ -60,7 +62,8 @@ public class StandardSqmTranslatorFactory implements SqmTranslatorFactory {
 				domainParameterXref,
 				domainParameterBindings,
 				loadQueryInfluencers,
-				creationContext
+				creationContext,
+				false
 		);
 	}
 
@@ -78,7 +81,8 @@ public class StandardSqmTranslatorFactory implements SqmTranslatorFactory {
 				domainParameterXref,
 				domainParameterBindings,
 				loadQueryInfluencers,
-				creationContext
+				creationContext,
+				false
 		);
 	}
 
@@ -96,7 +100,8 @@ public class StandardSqmTranslatorFactory implements SqmTranslatorFactory {
 				domainParameterXref,
 				domainParameterBindings,
 				loadQueryInfluencers,
-				creationContext
+				creationContext,
+				false
 		);
 	}
 }

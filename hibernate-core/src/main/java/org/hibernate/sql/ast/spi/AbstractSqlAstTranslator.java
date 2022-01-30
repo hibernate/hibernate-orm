@@ -1012,7 +1012,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected void visitForUpdateClause(QuerySpec querySpec) {
 		if ( querySpec.isRoot() ) {
 			if ( forUpdate != null ) {
-				final Boolean followOnLocking = getLockOptions().getFollowOnLocking();
+				final Boolean followOnLocking = getLockOptions() == null ? Boolean.FALSE : getLockOptions().getFollowOnLocking();
 				if ( Boolean.TRUE.equals( followOnLocking ) ) {
 					lockOptions = null;
 				}
@@ -1041,7 +1041,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				// Since we get here, we know that no alias locks were applied.
 				// We only apply locking on the root query though if there is a global lock mode
 				final LockOptions lockOptions = getLockOptions();
-				final Boolean followOnLocking = lockOptions.getFollowOnLocking();
+				final Boolean followOnLocking = getLockOptions() == null ? Boolean.FALSE : lockOptions.getFollowOnLocking();
 				if ( Boolean.TRUE.equals( followOnLocking ) ) {
 					this.lockOptions = null;
 				}
@@ -1184,6 +1184,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected LockMode getEffectiveLockMode(String alias) {
+		if ( getLockOptions() == null ) {
+			return LockMode.NONE;
+		}
 		final QueryPart currentQueryPart = getQueryPartStack().getCurrent();
 		LockMode lockMode = getLockOptions().getAliasSpecificLockMode( alias );
 		if ( currentQueryPart.isRoot() && lockMode == null ) {
@@ -1193,6 +1196,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected int getEffectiveLockTimeout(LockMode lockMode) {
+		if ( getLockOptions() == null ) {
+			return LockOptions.WAIT_FOREVER;
+		}
 		int timeoutMillis = getLockOptions().getTimeOut();
 		switch ( lockMode ) {
 			//noinspection deprecation

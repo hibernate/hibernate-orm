@@ -37,7 +37,8 @@ public class AbstractResultTests {
 				DomainParameterXref.from( sqm ),
 				parameterBindings,
 				LoadQueryInfluencers.NONE,
-				sessionFactory
+				sessionFactory,
+				true
 		);
 
 		return sqmConverter.translate().getSqlAst();

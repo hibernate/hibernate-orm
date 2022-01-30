@@ -9,6 +9,8 @@ package org.hibernate.event.spi;
 /**
  * An observer for detection of multiple entity representations for a persistent entity being merged.
  *
+ * @see org.hibernate.event.internal.MergeContext
+ *
  * @author Gail Badner
  */
 public interface EntityCopyObserver {

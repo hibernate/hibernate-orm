@@ -17,57 +17,54 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.pretty.MessageHelper;
 
 /**
- * MergeContext is a Map implementation that is intended to be used by a merge
- * event listener to keep track of each entity being merged and their corresponding
- * managed result. Entities to be merged may to be added to the MergeContext before
- * the merge operation has cascaded to that entity.
- * <p>
- * "Merge entity" and "mergeEntity" method parameter refer to an entity that is
- * (or will be) merged via {@link EventSource#merge(Object mergeEntity)}.
- * <p>
- * "Managed entity" and "managedEntity" method parameter refer to the managed entity
- * that is the result of merging an entity.
- * <p>
- * A merge entity can be transient, detached, or managed. If it is managed, then it
- * must be the same as its associated entity result.
+ * {@code MergeContext} is a specialized {@link Map} implementation used by a
+ * {@linkplain org.hibernate.event.spi.MergeEventListener merge event listener}
+ * to keep track of each entity being merged and its corresponding managed result.
+ * An entity to be merged may to be added to the {@code MergeContext} before the
+ * merge operation cascades to the entity.
+ * <ul>
+ * <li>A <em>merge entity</em> (the {@code mergeEntity} method parameter) is an
+ *     entity being merged via {@link EventSource#merge(Object mergeEntity)}.
+ * <li>A <em>managed entity</em> (the {@code managedEntity} method parameter) is
+ *     the managed entity that is the result of merging an entity.
+ * </ul>
+ * A merge entity can be transient, detached, or managed. If it is managed, then
+ * it is identical to its resulting managed entity.
  * <p>
  * If {@link #put(Object mergeEntity, Object managedEntity)} is called, and this
- * MergeContext already contains an entry with a different entity as the key, but
- * with the same (managedEntity) value, this means that multiple entity
- * representations for the same persistent entity are being merged. If this happens,
- * {@link EntityCopyObserver#entityCopyDetected(
+ * {@code MergeContext} already contains an entry with a different entity as the
+ * key, but with the same (managed entity) value, this means that multiple entity
+ * representations for the same persistent entity are being merged. In this
+ * situation, {@link EntityCopyObserver#entityCopyDetected(
  * Object managedEntity, Object mergeEntity1, Object mergeEntity2, EventSource)}
- * will be called. It is up to that method to determine the property course of
- * action for this situation.
+ * is called to determine an appropriate resolution.
  * <p>
  * There are several restrictions.
  * <ul>
- *     <li>Methods that return collections (e.g., {@link #keySet()}, {@link #values()},
- *         {@link #entrySet()}) return an unmodifiable view of the collection;
- *     <li>If {@link #put(Object mergeEntity, Object) managedEntity} or
- *         {@link #put(Object mergeEntity, Object managedEntity, boolean isOperatedOn)}
- *         is executed and this {@link MergeContext} already contains a cross-reference
- *         for {@code mergeEntity}, then {@code managedEntity} must be the same as
- *         what is already associated with {@code mergeEntity} in this
- *         {@link MergeContext}.
- *     <li>If {@link #putAll(Map map)} is executed, the previous restriction applies
- *     to each entry in the {@link Map};
- *     <li>The {@link #remove(Object)} operation is not supported; the only way to
- *         remove data from a {@link MergeContext} is by calling {@link #clear()};
- *      <li>the {@link Map} returned by {@link #invertMap()} will only contain the
- *          managed-to-merge entity cross-reference to its "newest" (most recently
- *          added) merge entity.
+ * <li>Methods that return collections (e.g., {@link #keySet()}, {@link #values()},
+ *     {@link #entrySet()}) return an unmodifiable view of the collection.
+ * <li>If {@link #put(Object mergeEntity, Object) managedEntity} or
+ *     {@link #put(Object mergeEntity, Object managedEntity, boolean isOperatedOn)}
+ *     is executed and this {@code MergeContext} already contains a cross reference
+ *     for {@code mergeEntity}, then {@code managedEntity} must be identical to the
+ *     entity already associated with {@code mergeEntity}.
+ * <li>If {@link #putAll(Map map)} is executed, the previous restriction applies to
+ *     each entry in the {@link Map}.
+ * <li>The {@link #remove(Object)} operation is not supported; the only way to
+ *     remove data from a {@code MergeContext} is by calling {@link #clear()}.
+ * <li>The map returned by {@link #invertMap()} will only contain the "newest"
+ *     (most recently added) managed-to-merge cross-reference to its merge entity.
  * </ul>
- * The following method is intended to be used by a merge event listener (and other
- * classes) in the same package to add a merge entity and its corresponding
- * managed entity to a MergeContext and indicate if the merge operation is
- * being performed on the merge entity yet.
+ * The following method is intended to be used by an implementation of
+ * {@link org.hibernate.event.spi.MergeEventListener} to add a merge entity and its
+ * corresponding managed entity to a {@code MergeContext} and indicate if the merge
+ * operation is being performed on the merge entity yet.
  * <p>
  * {@link MergeContext#put(Object mergeEntity, Object managedEntity, boolean isOperatedOn)}
  * <p>
- * The following method is intended to be used by a merge event listener (and other
- * classes) in the same package to indicate whether the merge operation is being
- * performed on a merge entity already in the {@link MergeContext}:
+ * The following method is intended to be used by a {@code MergeEventListener} to
+ * indicate whether the merge operation is being performed on a merge entity already
+ * in the {@code MergeContext}:
  * <p>
  * {@link MergeContext#setOperatedOn(Object mergeEntity, boolean isOperatedOn)}
  *

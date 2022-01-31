@@ -975,7 +975,7 @@ jpaNonstandardFunctionName
  * The function name, followed by a parenthesized list of comma-separated expressions
  */
 genericFunction
-	: genericFunctionName LEFT_PAREN (genericFunctionArguments | ASTERISK)? RIGHT_PAREN filterClause?
+	: genericFunctionName LEFT_PAREN (genericFunctionArguments | ASTERISK)? RIGHT_PAREN withinGroupClause? filterClause?
 	;
 
 /**
@@ -1045,6 +1045,7 @@ collectionFunctionMisuse
 aggregateFunction
 	: everyFunction
 	| anyFunction
+	| listaggFunction
 	;
 
 /**
@@ -1063,6 +1064,27 @@ anyFunction
 	: (ANY|SOME) LEFT_PAREN predicate RIGHT_PAREN filterClause?
 	| (ANY|SOME) LEFT_PAREN subquery RIGHT_PAREN
 	| (ANY|SOME) (ELEMENTS|INDICES) LEFT_PAREN simplePath RIGHT_PAREN
+	;
+
+/**
+ * The `listagg()` ordered set-aggregate function
+ */
+listaggFunction
+	: LISTAGG LEFT_PAREN DISTINCT? expressionOrPredicate COMMA expressionOrPredicate onOverflowClause? RIGHT_PAREN withinGroupClause? filterClause?
+	;
+
+/**
+ * A `on overflow` clause: what to do when the text data type used for `listagg` overflows
+ */
+onOverflowClause
+	: ON OVERFLOW (ERROR | (TRUNCATE expression? (WITH|WITHOUT) COUNT))
+	;
+
+/**
+ * A 'within group' clause: defines the order in which the ordered set-aggregate function should work
+ */
+withinGroupClause
+	: WITHIN GROUP LEFT_PAREN orderByClause RIGHT_PAREN
 	;
 
 /**
@@ -1387,6 +1409,7 @@ identifier
 	| CASE
 	| CAST
 	| COLLATE
+	| COUNT
 	| CROSS
 	| CUBE
 	| CURRENT
@@ -1406,6 +1429,7 @@ identifier
 	| EMPTY
 	| END
 	| ENTRY
+	| ERROR
 	| ESCAPE
 	| EVERY
 	| EXCEPT
@@ -1441,6 +1465,7 @@ identifier
 	| LIKE
 	| LIMIT
 	| LIST
+	| LISTAGG
 	| LOCAL
 	| LOCAL_DATE
 	| LOCAL_DATETIME
@@ -1472,6 +1497,7 @@ identifier
 	| OR
 	| ORDER
 	| OUTER
+	| OVERFLOW
 	| OVERLAY
 	| PAD
 	| PERCENT
@@ -1498,6 +1524,7 @@ identifier
 	| TRAILING
 	| TREAT
 	| TRIM
+	| TRUNCATE
 	| TYPE
 	| UNION
 	| UPDATE
@@ -1509,6 +1536,8 @@ identifier
 	| WHEN
 	| WHERE
 	| WITH
+	| WITHIN
+	| WITHOUT
 	| YEAR) {
 		logUseOfReservedWordAsIdentifier( getCurrentToken() );
 	}

@@ -14,6 +14,7 @@ import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.select.SortSpecification;
 
 import java.util.List;
 
@@ -77,8 +78,22 @@ public class PatternBasedSqmFunctionDescriptor
 	}
 
 	@Override
-	public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, Predicate filter, SqlAstTranslator<?> walker) {
+	public void render(
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> sqlAstArguments,
+			Predicate filter,
+			SqlAstTranslator<?> walker) {
 		renderer.render( sqlAppender, sqlAstArguments, filter, walker );
+	}
+
+	@Override
+	public void render(
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> sqlAstArguments,
+			Predicate filter,
+			List<SortSpecification> withinGroup,
+			SqlAstTranslator<?> walker) {
+		renderer.render( sqlAppender, sqlAstArguments, filter, withinGroup, walker );
 	}
 
 	@Override

@@ -22,6 +22,7 @@ import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.ModeStatsModeEmulation;
 import org.hibernate.dialect.function.NvlCoalesceEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Oracle12cIdentityColumnSupport;
@@ -188,6 +189,20 @@ public class OracleDialect extends Dialect {
 				"instr(?2,?1,?3)",
 				FunctionParameterType.STRING, FunctionParameterType.STRING, FunctionParameterType.INTEGER
 		).setArgumentListSignature("(pattern, string[, start])");
+		// The within group clause became optional in 18
+		if ( getVersion().isSameOrAfter( 18 ) ) {
+			CommonFunctionFactory.listagg( null, queryEngine );
+		}
+		else {
+			CommonFunctionFactory.listagg( "within group (order by rownum)", queryEngine );
+		}
+		CommonFunctionFactory.hypotheticalOrderedSetAggregates( queryEngine );
+		CommonFunctionFactory.inverseDistributionOrderedSetAggregates( queryEngine );
+		// Oracle has a regular aggregate function named stats_mode
+		queryEngine.getSqmFunctionRegistry().register(
+				"mode",
+				new ModeStatsModeEmulation( queryEngine.getTypeConfiguration() )
+		);
 	}
 
 	@Override

@@ -11,12 +11,15 @@ import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.sqm.FetchClauseType;
@@ -378,6 +381,47 @@ abstract public class DialectFeatureChecks {
 	public static class ForceLobAsLastValue implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.forceLobAsLastValue();
+		}
+	}
+
+	public static class SupportsStringAggregation implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect instanceof H2Dialect
+					|| dialect instanceof HSQLDialect
+					|| dialect instanceof MySQLDialect
+					|| dialect instanceof PostgreSQLDialect
+					|| dialect instanceof AbstractHANADialect
+					|| dialect instanceof CockroachDialect
+					|| dialect instanceof DB2Dialect
+					|| dialect instanceof OracleDialect
+					|| dialect instanceof SpannerDialect
+					|| dialect instanceof SQLServerDialect;
+		}
+	}
+
+	public static class SupportsInverseDistributionFunctions implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect instanceof H2Dialect && dialect.getVersion().isSameOrAfter( 2 )
+					|| dialect instanceof PostgreSQLDialect
+					|| dialect instanceof AbstractHANADialect
+					|| dialect instanceof CockroachDialect
+					|| dialect instanceof DB2Dialect
+					|| dialect instanceof OracleDialect
+					|| dialect instanceof SpannerDialect
+					|| dialect instanceof SQLServerDialect;
+		}
+	}
+
+	public static class SupportsHypotheticalSetFunctions implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect instanceof H2Dialect && dialect.getVersion().isSameOrAfter( 2 )
+					|| dialect instanceof PostgreSQLDialect
+					|| dialect instanceof AbstractHANADialect
+					|| dialect instanceof CockroachDialect
+					|| dialect instanceof DB2Dialect
+					|| dialect instanceof OracleDialect
+					|| dialect instanceof SpannerDialect
+					|| dialect instanceof SQLServerDialect;
 		}
 	}
 }

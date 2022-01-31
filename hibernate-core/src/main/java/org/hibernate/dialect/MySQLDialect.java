@@ -446,6 +446,7 @@ public class MySQLDialect extends Dialect {
 		}
 
 		queryEngine.getSqmFunctionRegistry().register( "field", new FieldFunction( queryEngine.getTypeConfiguration() ) );
+		CommonFunctionFactory.listagg_groupConcat( queryEngine );
 	}
 
 	@Override

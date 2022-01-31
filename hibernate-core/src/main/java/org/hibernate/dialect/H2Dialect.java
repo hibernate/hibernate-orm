@@ -278,6 +278,16 @@ public class H2Dialect extends Dialect {
 			CommonFunctionFactory.format_formatdatetime( queryEngine );
 		}
 		CommonFunctionFactory.rownum( queryEngine );
+		if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
+			CommonFunctionFactory.listagg( null, queryEngine );
+			if ( getVersion().isSameOrAfter( 2 ) ) {
+				CommonFunctionFactory.inverseDistributionOrderedSetAggregates( queryEngine );
+				CommonFunctionFactory.hypotheticalOrderedSetAggregates( queryEngine );
+			}
+		}
+		else {
+			CommonFunctionFactory.listagg_groupConcat( queryEngine );
+		}
 	}
 
 	@Override

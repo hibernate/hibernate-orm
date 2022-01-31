@@ -224,6 +224,7 @@ public class HSQLDialect extends Dialect {
 		if ( getVersion().isSameOrAfter( 2, 2 ) ) {
 			CommonFunctionFactory.rownum( queryEngine );
 		}
+		CommonFunctionFactory.listagg_groupConcat( queryEngine );
 	}
 
 	@Override

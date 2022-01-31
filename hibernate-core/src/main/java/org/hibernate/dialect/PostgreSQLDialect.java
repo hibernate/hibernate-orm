@@ -448,9 +448,13 @@ public class PostgreSQLDialect extends Dialect {
 		CommonFunctionFactory.soundex( queryEngine ); //was introduced in Postgres 9 apparently
 
 		CommonFunctionFactory.locate_positionSubstring( queryEngine );
+		CommonFunctionFactory.listagg_stringAgg( "varchar", queryEngine );
 
 		if ( getVersion().isSameOrAfter( 9, 4 ) ) {
 			CommonFunctionFactory.makeDateTimeTimestamp( queryEngine );
+			// Note that PostgreSQL doesn't support the OVER clause for ordered set-aggregate functions
+			CommonFunctionFactory.inverseDistributionOrderedSetAggregates( queryEngine );
+			CommonFunctionFactory.hypotheticalOrderedSetAggregates( queryEngine );
 		}
 	}
 

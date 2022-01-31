@@ -15,11 +15,13 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -73,6 +75,12 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 			default:
 				return super.columnType(jdbcTypeCode);
 		}
+	}
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
+		CommonFunctionFactory.listagg_list( "varchar", queryEngine );
 	}
 
 	@Override

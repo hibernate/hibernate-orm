@@ -234,6 +234,9 @@ public class CockroachDialect extends Dialect {
 				.setArgumentsValidator( CommonFunctionFactory.formatValidator() )
 				.setArgumentListSignature("(TEMPORAL datetime as STRING pattern)")
 				.register();
+		CommonFunctionFactory.listagg_stringAgg( "string", queryEngine );
+		CommonFunctionFactory.inverseDistributionOrderedSetAggregates( queryEngine );
+		CommonFunctionFactory.hypotheticalOrderedSetAggregates( queryEngine );
 	}
 
 	@Override

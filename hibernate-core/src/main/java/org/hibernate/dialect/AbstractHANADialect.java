@@ -307,6 +307,10 @@ public abstract class AbstractHANADialect extends Dialect {
 		CommonFunctionFactory.currentUtcdatetimetimestamp( queryEngine );
 		CommonFunctionFactory.everyAny_sumCaseCase( queryEngine );
 		CommonFunctionFactory.bitLength_pattern( queryEngine, "length(to_binary(?1))*8" );
+
+		CommonFunctionFactory.listagg_stringAgg( "varchar", queryEngine );
+		CommonFunctionFactory.inverseDistributionOrderedSetAggregates( queryEngine );
+		CommonFunctionFactory.hypotheticalOrderedSetAggregates( queryEngine );
 	}
 
 	@Override

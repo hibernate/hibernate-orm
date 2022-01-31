@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
@@ -19,6 +20,7 @@ import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -49,6 +51,16 @@ public class DB2zDialect extends DB2Dialect {
 
 	public DB2zDialect(DatabaseVersion version) {
 		super(version);
+	}
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
+		if ( getVersion().isSameOrAfter( 12 ) ) {
+			CommonFunctionFactory.listagg( null, queryEngine );
+			CommonFunctionFactory.inverseDistributionOrderedSetAggregates( queryEngine );
+			CommonFunctionFactory.hypotheticalOrderedSetAggregates( queryEngine );
+		}
 	}
 
 	@Override

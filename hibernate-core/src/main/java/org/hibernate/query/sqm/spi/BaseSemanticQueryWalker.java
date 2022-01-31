@@ -53,6 +53,7 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
+import org.hibernate.query.sqm.tree.expression.SqmOverflow;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmStar;
@@ -625,6 +626,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitDistinct(SqmDistinct<?> distinct) {
+		distinct.getExpression().accept( this );
 		return distinct;
 	}
 
@@ -633,7 +635,15 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 		return sqmStar;
 	}
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	@Override
+	public Object visitOverflow(SqmOverflow<?> sqmOverflow) {
+		sqmOverflow.getSeparatorExpression().accept( this );
+		if ( sqmOverflow.getFillerExpression() != null ) {
+			sqmOverflow.getFillerExpression().accept( this );
+		}
+		return sqmOverflow;
+	}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// expressions
 
 

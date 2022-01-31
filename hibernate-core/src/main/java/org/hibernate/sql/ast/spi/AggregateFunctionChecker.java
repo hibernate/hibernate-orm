@@ -27,6 +27,7 @@ import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
 import org.hibernate.sql.ast.tree.expression.Over;
+import org.hibernate.sql.ast.tree.expression.Overflow;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
@@ -162,6 +163,10 @@ public class AggregateFunctionChecker extends AbstractSqlAstWalker {
 
 	@Override
 	public void visitDistinct(Distinct distinct) {
+	}
+
+	@Override
+	public void visitOverflow(Overflow overflow) {
 	}
 
 	@Override

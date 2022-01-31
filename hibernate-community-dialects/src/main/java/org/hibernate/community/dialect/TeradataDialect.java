@@ -284,6 +284,9 @@ public class TeradataDialect extends Dialect {
 			CommonFunctionFactory.varPopSamp( queryEngine );
 		}
 
+		// No idea since when this is supported
+		CommonFunctionFactory.inverseDistributionOrderedSetAggregates( queryEngine );
+		CommonFunctionFactory.hypotheticalOrderedSetAggregates( queryEngine );
 	}
 
 	/**

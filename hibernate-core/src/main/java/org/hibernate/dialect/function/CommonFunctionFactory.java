@@ -1920,6 +1920,75 @@ public class CommonFunctionFactory {
 		);
 	}
 
+	public static void listagg(String emptyWithinReplacement, QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().register(
+				ListaggFunction.FUNCTION_NAME,
+				new ListaggFunction( emptyWithinReplacement, queryEngine.getTypeConfiguration() )
+		);
+	}
+
+	public static void listagg_groupConcat(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().register(
+				ListaggGroupConcatEmulation.FUNCTION_NAME,
+				new ListaggGroupConcatEmulation( queryEngine.getTypeConfiguration() )
+		);
+	}
+
+	public static void listagg_list(String stringType, QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().register(
+				ListaggStringAggEmulation.FUNCTION_NAME,
+				new ListaggStringAggEmulation( "list", stringType, false, queryEngine.getTypeConfiguration() )
+		);
+	}
+
+	public static void listagg_stringAgg(String stringType, QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().register(
+				ListaggStringAggEmulation.FUNCTION_NAME,
+				new ListaggStringAggEmulation( "string_agg", stringType, false, queryEngine.getTypeConfiguration() )
+		);
+	}
+
+	public static void listagg_stringAggWithinGroup(String stringType, QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().register(
+				ListaggStringAggEmulation.FUNCTION_NAME,
+				new ListaggStringAggEmulation( "string_agg", stringType, true, queryEngine.getTypeConfiguration() )
+		);
+	}
+
+	public static void inverseDistributionOrderedSetAggregates(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().register(
+				"mode",
+				new InverseDistributionFunction( "mode", null, queryEngine.getTypeConfiguration() )
+		);
+		queryEngine.getSqmFunctionRegistry().register(
+				"percentile_cont",
+				new InverseDistributionFunction( "percentile_cont", NUMERIC, queryEngine.getTypeConfiguration() )
+		);
+		queryEngine.getSqmFunctionRegistry().register(
+				"percentile_disc",
+				new InverseDistributionFunction( "percentile_disc", NUMERIC, queryEngine.getTypeConfiguration() )
+		);
+	}
+
+	public static void hypotheticalOrderedSetAggregates(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().register(
+				"rank",
+				new HypotheticalSetFunction( "rank", StandardBasicTypes.LONG, queryEngine.getTypeConfiguration() )
+		);
+		queryEngine.getSqmFunctionRegistry().register(
+				"dense_rank",
+				new HypotheticalSetFunction( "dense_rank", StandardBasicTypes.LONG, queryEngine.getTypeConfiguration() )
+		);
+		queryEngine.getSqmFunctionRegistry().register(
+				"percent_rank",
+				new HypotheticalSetFunction( "percent_rank", StandardBasicTypes.DOUBLE, queryEngine.getTypeConfiguration() )
+		);
+		queryEngine.getSqmFunctionRegistry().register(
+				"cume_dist",
+				new HypotheticalSetFunction( "cume_dist", StandardBasicTypes.DOUBLE, queryEngine.getTypeConfiguration() )
+		);
+	}
+
 	public static void math(QueryEngine queryEngine) {
 		final BasicType<Integer> integerType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
 				.resolve( StandardBasicTypes.INTEGER );

@@ -176,6 +176,19 @@ public class SqmFunctionRegistry {
 	}
 
 	/**
+	 * Get a builder for creating and registering a name-based ordered set-aggregate function descriptor
+	 * using the passed name as both the registration key and underlying SQL
+	 * function name
+	 *
+	 * @param name The function name (and registration key)
+	 *
+	 * @return The builder
+	 */
+	public NamedFunctionDescriptorBuilder namedOrderedSetAggregateDescriptorBuilder(String name) {
+		return namedOrderedSetAggregateDescriptorBuilder( name, name );
+	}
+
+	/**
 	 * Get a builder for creating and registering a name-based function descriptor.
 	 *
 	 * @param registrationKey The name under which the descriptor will get registered
@@ -197,6 +210,18 @@ public class SqmFunctionRegistry {
 	 */
 	public NamedFunctionDescriptorBuilder namedAggregateDescriptorBuilder(String registrationKey, String name) {
 		return new NamedFunctionDescriptorBuilder( this, registrationKey, FunctionKind.AGGREGATE, name );
+	}
+
+	/**
+	 * Get a builder for creating and registering a name-based ordered set-aggregate function descriptor.
+	 *
+	 * @param registrationKey The name under which the descriptor will get registered
+	 * @param name The underlying SQL function name to use
+	 *
+	 * @return The builder
+	 */
+	public NamedFunctionDescriptorBuilder namedOrderedSetAggregateDescriptorBuilder(String registrationKey, String name) {
+		return new NamedFunctionDescriptorBuilder( this, registrationKey, FunctionKind.ORDERED_SET_AGGREGATE, name );
 	}
 
 	public NamedFunctionDescriptorBuilder noArgsBuilder(String name) {

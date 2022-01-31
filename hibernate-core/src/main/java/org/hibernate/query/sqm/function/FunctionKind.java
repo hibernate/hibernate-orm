@@ -13,5 +13,6 @@ package org.hibernate.query.sqm.function;
  */
 public enum FunctionKind {
 	NORMAL,
-	AGGREGATE;
+	AGGREGATE,
+	ORDERED_SET_AGGREGATE;
 }

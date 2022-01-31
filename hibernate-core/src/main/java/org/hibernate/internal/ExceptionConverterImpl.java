@@ -28,6 +28,7 @@ import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.sqm.ParsingException;
+import org.hibernate.type.descriptor.java.CoercionException;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -147,6 +148,9 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			return new IllegalArgumentException( exception );
 		}
 		else if ( exception instanceof MultipleBagFetchException ) {
+			return new IllegalArgumentException( exception );
+		}
+		else if ( exception instanceof CoercionException ) {
 			return new IllegalArgumentException( exception );
 		}
 		else if ( exception instanceof TransientObjectException ) {

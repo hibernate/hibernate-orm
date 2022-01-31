@@ -613,8 +613,8 @@ public abstract class AbstractCollectionPersister
 					elementColumnReaderTemplates,
 					elementFormulaTemplates,
 					(CompositeType) elementType,
-					factory
-					);
+					creationContext.getMetadata()
+			);
 		}
 		else if ( !elementType.isEntityType() ) {
 			elementPropertyMapping = new ElementPropertyMapping(

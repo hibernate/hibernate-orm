@@ -13,6 +13,7 @@ import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.CoreLogging;
@@ -134,7 +135,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			String[] columnReaders,
 			String[] columnReaderTemplates,
 			String[] formulaTemplates,
-			Mapping factory) {
+			Metadata factory) {
 		Type existingType = typesByPropertyPath.get( path );
 		if ( existingType != null || ( duplicateIncompatiblePaths != null && duplicateIncompatiblePaths.contains( path ) ) ) {
 			// If types match or the new type is not an association type, there is nothing for us to do
@@ -265,7 +266,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			String[] columnReaders,
 			String[] columnReaderTemplates,
 			final String[] formulaTemplates,
-			final Mapping factory) throws MappingException {
+			final Metadata factory) throws MappingException {
 		assert columns != null : "Incoming columns should not be null : " + path;
 		assert type != null : "Incoming type should not be null : " + path;
 
@@ -344,7 +345,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			final String[] columns,
 			final String[] columnReaders,
 			final String[] columnReaderTemplates,
-			final Mapping factory) throws MappingException {
+			final Metadata factory) throws MappingException {
 		initIdentifierPropertyPaths(path, etype, columns, columnReaders, columnReaderTemplates, null, factory);
 	}
 
@@ -355,7 +356,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			final String[] columnReaders,
 			final String[] columnReaderTemplates,
 			final String[] formulaTemplates,
-			final Mapping factory) throws MappingException {
+			final Metadata factory) throws MappingException {
 
 		Type idtype = etype.getIdentifierOrUniqueKeyType( factory );
 		String idPropName = etype.getIdentifierOrUniqueKeyPropertyName( factory );
@@ -398,7 +399,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			final String[] columnReaders,
 			final String[] columnReaderTemplates,
 			final String[] formulaTemplates,
-			final Mapping factory) throws MappingException {
+			final Metadata factory) throws MappingException {
 
 		Type[] types = type.getSubtypes();
 		String[] properties = type.getPropertyNames();

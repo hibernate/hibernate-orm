@@ -649,6 +649,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private String[] decodeTreatAsRequests(Set<String> treatAsDeclarations) {
 		final List<String> values = new ArrayList<>();
 		for ( String subclass : treatAsDeclarations ) {
+			//TODO: move getDiscriminatorSQLValue() to Loadable to get rid of Queryable
 			final Queryable queryable = (Queryable) getFactory()
 					.getRuntimeMetamodels()
 					.getMappingMetamodel()
@@ -707,7 +708,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			// first access; build it
 			final List<Object> values = new ArrayList<>();
 			for ( String subclass : getSubclassClosure() ) {
-				final Queryable queryable = (Queryable) getFactory().getRuntimeMetamodels()
+				final Loadable queryable = (Loadable) getFactory().getRuntimeMetamodels()
 						.getMappingMetamodel()
 						.getEntityDescriptor( subclass );
 				if ( !queryable.isAbstract() ) {
@@ -795,8 +796,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return index == null ? null : qualifiedTableNames[propertyTableNumbers[index]];
 	}
 
-	@Override @Deprecated
-	public boolean isMultiTable() {
+	@Override
+	protected boolean hasMultipleTables() {
 		return getTableSpan() > 1;
 	}
 

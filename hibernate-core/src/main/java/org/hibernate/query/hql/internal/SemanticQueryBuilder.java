@@ -32,7 +32,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -46,7 +45,6 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.query.ReturnableType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -55,17 +53,9 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
-import org.hibernate.query.sqm.BinaryArithmeticOperator;
-import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.query.sqm.FetchClauseType;
-import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.PathException;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.sqm.SetOperator;
-import org.hibernate.query.sqm.SortOrder;
-import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.sqm.TrimSpec;
-import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
 import org.hibernate.query.hql.spi.SemanticPathPart;
@@ -73,14 +63,23 @@ import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
+import org.hibernate.query.sqm.BinaryArithmeticOperator;
+import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.LiteralNumberFormatException;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.sqm.ParsingException;
+import org.hibernate.query.sqm.SetOperator;
+import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
+import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.sqm.TrimSpec;
+import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.UnknownEntityException;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
@@ -99,10 +98,10 @@ import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
-import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
-import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmIndexAggregateFunction;
+import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
+import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
@@ -124,6 +123,7 @@ import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
+import org.hibernate.query.sqm.tree.expression.SqmOverflow;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
@@ -185,6 +185,7 @@ import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 
 import org.jboss.logging.Logger;
 
+import jakarta.persistence.metamodel.SingularAttribute;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -195,7 +196,15 @@ import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.hibernate.grammars.hql.HqlParser.*;
+import static org.hibernate.grammars.hql.HqlParser.ELEMENTS;
+import static org.hibernate.grammars.hql.HqlParser.EXCEPT;
+import static org.hibernate.grammars.hql.HqlParser.IDENTIFIER;
+import static org.hibernate.grammars.hql.HqlParser.INDICES;
+import static org.hibernate.grammars.hql.HqlParser.INTERSECT;
+import static org.hibernate.grammars.hql.HqlParser.ListaggFunctionContext;
+import static org.hibernate.grammars.hql.HqlParser.OnOverflowClauseContext;
+import static org.hibernate.grammars.hql.HqlParser.PLUS;
+import static org.hibernate.grammars.hql.HqlParser.UNION;
 import static org.hibernate.query.sqm.TemporalUnit.DATE;
 import static org.hibernate.query.sqm.TemporalUnit.DAY_OF_MONTH;
 import static org.hibernate.query.sqm.TemporalUnit.DAY_OF_WEEK;
@@ -3219,9 +3228,17 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			functionArguments = emptyList();
 		}
 
+		final SqmOrderByClause withinGroup = getWithinGroup( ctx );
 		final SqmPredicate filterExpression = getFilterExpression( ctx );
 		SqmFunctionDescriptor functionTemplate = getFunctionDescriptor( functionName );
 		if ( functionTemplate == null ) {
+			FunctionKind functionKind = FunctionKind.NORMAL;
+			if ( withinGroup != null ) {
+				functionKind = FunctionKind.ORDERED_SET_AGGREGATE;
+			}
+			else if ( filterExpression != null ) {
+				functionKind = FunctionKind.AGGREGATE;
+			}
 			functionTemplate = new NamedSqmFunctionDescriptor(
 					functionName,
 					true,
@@ -3230,32 +3247,118 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 							resolveExpressibleTypeBasic( Object.class )
 					),
 					functionName,
-					filterExpression != null ? FunctionKind.AGGREGATE : FunctionKind.NORMAL,
+					functionKind,
 					null,
 					SqlAstNodeRenderingMode.DEFAULT
 			);
 		}
 
-		if ( functionTemplate.getFunctionKind() == FunctionKind.AGGREGATE ) {
-			return functionTemplate.generateAggregateSqmExpression(
-					functionArguments,
-					filterExpression,
-					null,
-					creationContext.getQueryEngine(),
-					creationContext.getJpaMetamodel().getTypeConfiguration()
+		switch ( functionTemplate.getFunctionKind() ) {
+			case ORDERED_SET_AGGREGATE:
+				return functionTemplate.generateOrderedSetAggregateSqmExpression(
+						functionArguments,
+						filterExpression,
+						withinGroup,
+						null,
+						creationContext.getQueryEngine(),
+						creationContext.getJpaMetamodel().getTypeConfiguration()
+				);
+			case AGGREGATE:
+				return functionTemplate.generateAggregateSqmExpression(
+						functionArguments,
+						filterExpression,
+						null,
+						creationContext.getQueryEngine(),
+						creationContext.getJpaMetamodel().getTypeConfiguration()
+				);
+			default:
+				if ( filterExpression != null ) {
+					throw new ParsingException( "Illegal use of a FILTER clause for non-aggregate function: " + originalFunctionName );
+				}
+				return functionTemplate.generateSqmExpression(
+						functionArguments,
+						null,
+						creationContext.getQueryEngine(),
+						creationContext.getJpaMetamodel().getTypeConfiguration()
+				);
+		}
+	}
+
+	@Override
+	public Object visitListaggFunction(ListaggFunctionContext ctx) {
+		if ( creationOptions.useStrictJpaCompliance() ) {
+			throw new StrictJpaComplianceViolation(
+					"Encountered non-compliant non-standard function call [listagg], but strict JPA " +
+							"compliance was requested; use JPA's FUNCTION(functionName[,...]) " +
+							"syntax name instead",
+					StrictJpaComplianceViolation.Type.FUNCTION_CALL
 			);
+		}
+		final SqmFunctionDescriptor functionTemplate = getFunctionDescriptor( "listagg" );
+		if ( functionTemplate == null ) {
+			throw new SemanticException(
+					"The listagg function was not registered for the dialect!"
+			);
+		}
+		final int argumentStartIndex;
+		final ParseTree thirdChild = ctx.getChild( 2 );
+		final boolean distinct;
+		if ( thirdChild instanceof TerminalNode ) {
+			distinct = true;
+			argumentStartIndex = 3;
 		}
 		else {
-			if ( filterExpression != null ) {
-				throw new ParsingException( "Illegal use of a FILTER clause for non-aggregate function: " + originalFunctionName );
-			}
-			return functionTemplate.generateSqmExpression(
-					functionArguments,
-					null,
-					creationContext.getQueryEngine(),
-					creationContext.getJpaMetamodel().getTypeConfiguration()
-			);
+			distinct = false;
+			argumentStartIndex = 2;
 		}
+		final SqmExpression<?> firstArgument = (SqmExpression<?>) ctx.getChild( argumentStartIndex ).accept( this );
+		final SqmExpression<?> secondArgument = (SqmExpression<?>) ctx.getChild( argumentStartIndex + 2 ).accept( this );
+		final ParseTree overflowCtx = ctx.getChild( argumentStartIndex + 3 );
+		final List<SqmTypedNode<?>> functionArguments = new ArrayList<>( 3 );
+		if ( distinct ) {
+			functionArguments.add( new SqmDistinct<>( firstArgument, creationContext.getNodeBuilder() ) );
+		}
+		else {
+			functionArguments.add( firstArgument );
+		}
+		if ( overflowCtx instanceof OnOverflowClauseContext ) {
+			if ( overflowCtx.getChildCount() > 3 ) {
+				// ON OVERFLOW TRUNCATE
+				final TerminalNode countNode = (TerminalNode) overflowCtx.getChild( overflowCtx.getChildCount() - 2 );
+				final boolean withCount = countNode.getSymbol().getType() == HqlParser.WITH;
+				final SqmExpression<?> fillerExpression;
+				if ( overflowCtx.getChildCount() == 6 ) {
+					fillerExpression = (SqmExpression<?>) overflowCtx.getChild( 3 ).accept( this );
+				}
+				else {
+					// The SQL standard says the default is three periods `...`
+					fillerExpression = new SqmLiteral<>(
+							"...",
+							secondArgument.getNodeType(),
+							secondArgument.nodeBuilder()
+					);
+				}
+				//noinspection unchecked,rawtypes
+				functionArguments.add( new SqmOverflow( secondArgument, fillerExpression, withCount ) );
+			}
+			else {
+				// ON OVERFLOW ERROR
+				functionArguments.add( new SqmOverflow<>( secondArgument, null, false ) );
+			}
+		}
+		else {
+			functionArguments.add( secondArgument );
+		}
+		final SqmOrderByClause withinGroup = getWithinGroup( ctx );
+		final SqmPredicate filterExpression = getFilterExpression( ctx );
+		return functionTemplate.generateOrderedSetAggregateSqmExpression(
+				functionArguments,
+				filterExpression,
+				withinGroup,
+				null,
+				creationContext.getQueryEngine(),
+				creationContext.getJpaMetamodel().getTypeConfiguration()
+		);
 	}
 
 	@Override
@@ -3698,6 +3801,21 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		querySpec.setSelectClause( selectClause );
 		//noinspection unchecked
 		return (SqmSubQuery<X>) subQuery;
+	}
+
+	private SqmOrderByClause getWithinGroup(ParseTree functionCtx) {
+		HqlParser.WithinGroupClauseContext ctx = null;
+		for ( int i = functionCtx.getChildCount() - 2; i < functionCtx.getChildCount(); i++ ) {
+			final ParseTree child = functionCtx.getChild( i );
+			if ( child instanceof HqlParser.WithinGroupClauseContext ) {
+				ctx = (HqlParser.WithinGroupClauseContext) child;
+				break;
+			}
+		}
+		if ( ctx != null ) {
+			return visitOrderByClause( (HqlParser.OrderByClauseContext) ctx.getChild( 3 ) );
+		}
+		return null;
 	}
 
 	private SqmPredicate getFilterExpression(ParseTree functionCtx) {

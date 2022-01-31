@@ -299,6 +299,11 @@ public class IngresDialect extends Dialect {
 				.setInvariantType( stringType )
 				.register();
 
+		// No idea since when this is supported
+		CommonFunctionFactory.listagg( null, queryEngine );
+		CommonFunctionFactory.inverseDistributionOrderedSetAggregates( queryEngine );
+		CommonFunctionFactory.hypotheticalOrderedSetAggregates( queryEngine );
+
 	}
 
 	@Override

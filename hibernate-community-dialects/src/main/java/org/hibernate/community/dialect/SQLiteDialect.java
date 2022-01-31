@@ -316,6 +316,7 @@ public class SQLiteDialect extends Dialect {
 					.setParameterTypes(NUMERIC)
 					.register();
 		}
+		CommonFunctionFactory.listagg_groupConcat( queryEngine );
 	}
 
 	@Override

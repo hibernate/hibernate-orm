@@ -15,8 +15,10 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.select.SortSpecification;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -136,13 +138,22 @@ public class PatternRenderer {
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> args,
 			SqlAstTranslator<?> translator) {
-		render( sqlAppender, args, null, translator );
+		render( sqlAppender, args, null, Collections.emptyList(), translator );
 	}
 
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> args,
 			Predicate filter,
+			SqlAstTranslator<?> translator) {
+		render( sqlAppender, args, filter, Collections.emptyList(), translator );
+	}
+
+	public void render(
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> args,
+			Predicate filter,
+			List<SortSpecification> withinGroup,
 			SqlAstTranslator<?> translator) {
 		final int numberOfArguments = args.size();
 		final boolean caseWrapper = filter != null && !translator.supportsFilterClause();
@@ -191,6 +202,16 @@ public class PatternRenderer {
 			else {
 				sqlAppender.appendSql( chunks[i] );
 			}
+		}
+
+		if ( withinGroup != null && !withinGroup.isEmpty() ) {
+			sqlAppender.appendSql( " within group (order by" );
+			translator.render( withinGroup.get( 0 ), argumentRenderingMode );
+			for ( int i = 1; i < withinGroup.size(); i++ ) {
+				sqlAppender.appendSql( SqlAppender.COMA_SEPARATOR_CHAR );
+				translator.render( withinGroup.get( 0 ), argumentRenderingMode );
+			}
+			sqlAppender.appendSql( ')' );
 		}
 
 		if ( filter != null && !caseWrapper ) {

@@ -12,10 +12,12 @@ import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
@@ -56,19 +58,36 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		if ( functionKind == FunctionKind.AGGREGATE ) {
-			return generateAggregateSqmExpression( arguments, null, impliedResultType, queryEngine, typeConfiguration );
-		}
-		return new SelfRenderingSqmFunction<>(
-				this,
-				(sqlAppender, sqlAstArguments, walker) -> render(sqlAppender, sqlAstArguments, walker),
-				arguments,
-				impliedResultType,
-				getArgumentsValidator(),
-				getReturnTypeResolver(),
-				queryEngine.getCriteriaBuilder(),
-				getName()
-		);
+		switch ( functionKind ) {
+			case ORDERED_SET_AGGREGATE:
+				return generateOrderedSetAggregateSqmExpression(
+						arguments,
+						null,
+						null,
+						impliedResultType,
+						queryEngine,
+						typeConfiguration
+				);
+			case AGGREGATE:
+				return generateAggregateSqmExpression(
+						arguments,
+						null,
+						impliedResultType,
+						queryEngine,
+						typeConfiguration
+				);
+			default:
+				return new SelfRenderingSqmFunction<>(
+						this,
+						(sqlAppender, sqlAstArguments, walker) -> render(sqlAppender, sqlAstArguments, walker),
+						arguments,
+						impliedResultType,
+						getArgumentsValidator(),
+						getReturnTypeResolver(),
+						queryEngine.getCriteriaBuilder(),
+						getName()
+				);
+	}
 	}
 
 	@Override
@@ -94,6 +113,31 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 		);
 	}
 
+	@Override
+	public <T> SelfRenderingSqmAggregateFunction<T> generateSqmOrderedSetAggregateFunctionExpression(
+			List<? extends SqmTypedNode<?>> arguments,
+			SqmPredicate filter,
+			SqmOrderByClause withinGroupClause,
+			ReturnableType<T> impliedResultType,
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
+		if ( functionKind != FunctionKind.ORDERED_SET_AGGREGATE ) {
+			throw new UnsupportedOperationException( "The function " + getName() + " is not an ordered set-aggregate function!" );
+		}
+		return new SelfRenderingSqmOrderedSetAggregateFunction<>(
+				this,
+				this,
+				arguments,
+				filter,
+				withinGroupClause,
+				impliedResultType,
+				getArgumentsValidator(),
+				getReturnTypeResolver(),
+				queryEngine.getCriteriaBuilder(),
+				getName()
+		);
+	}
+
 	/**
 	 * Must be overridden by subclasses
 	 */
@@ -106,6 +150,15 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
+			SqlAstTranslator<?> walker) {
+		render( sqlAppender, sqlAstArguments, walker );
+	}
+
+	public void render(
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> sqlAstArguments,
+			Predicate filter,
+			List<SortSpecification> withinGroup,
 			SqlAstTranslator<?> walker) {
 		render( sqlAppender, sqlAstArguments, walker );
 	}

@@ -48,6 +48,7 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
+import org.hibernate.query.sqm.tree.expression.SqmOverflow;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmStar;
@@ -234,6 +235,8 @@ public interface SemanticQueryWalker<T> {
 	T visitDistinct(SqmDistinct<?> distinct);
 
 	T visitStar(SqmStar sqmStar);
+
+	T visitOverflow(SqmOverflow<?> sqmOverflow);
 
 	T visitCoalesce(SqmCoalesce<?> sqmCoalesce);
 

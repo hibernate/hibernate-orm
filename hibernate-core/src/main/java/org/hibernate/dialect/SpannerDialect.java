@@ -427,6 +427,9 @@ public class SpannerDialect extends Dialect {
 				.setArgumentsValidator( CommonFunctionFactory.formatValidator() )
 				.setArgumentListSignature("(TIMESTAMP datetime as STRING pattern)")
 				.register();
+		CommonFunctionFactory.listagg_stringAgg( "string", queryEngine );
+		CommonFunctionFactory.inverseDistributionOrderedSetAggregates( queryEngine );
+		CommonFunctionFactory.hypotheticalOrderedSetAggregates( queryEngine );
 	}
 
 	@Override

@@ -321,6 +321,8 @@ public class FirebirdDialect extends Dialect {
 					integerType
 			);
 		}
+
+		CommonFunctionFactory.listagg_list( "varchar", queryEngine );
 	}
 
 	@Override

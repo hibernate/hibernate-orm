@@ -188,6 +188,7 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
+import org.hibernate.query.sqm.tree.expression.SqmOverflow;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
@@ -283,6 +284,7 @@ import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
 import org.hibernate.sql.ast.tree.expression.Over;
+import org.hibernate.sql.ast.tree.expression.Overflow;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
@@ -4572,6 +4574,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Object visitDistinct(SqmDistinct<?> sqmDistinct) {
 		return new Distinct( (Expression) sqmDistinct.getExpression().accept( this ) );
+	}
+
+	@Override
+	public Object visitOverflow(SqmOverflow<?> sqmOverflow) {
+		return new Overflow(
+				(Expression) sqmOverflow.getSeparatorExpression().accept( this ),
+				sqmOverflow.getFillerExpression() == null
+						? null
+						: (Expression) sqmOverflow.getFillerExpression().accept( this ),
+				sqmOverflow.isWithCount()
+		);
 	}
 
 	@Override

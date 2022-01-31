@@ -30,6 +30,7 @@ import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
 import org.hibernate.sql.ast.tree.expression.Over;
+import org.hibernate.sql.ast.tree.expression.Overflow;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
@@ -121,6 +122,8 @@ public interface SqlAstWalker {
 	void visitFormat(Format format);
 
 	void visitDistinct(Distinct distinct);
+
+	void visitOverflow(Overflow distinct);
 
 	void visitStar(Star star);
 

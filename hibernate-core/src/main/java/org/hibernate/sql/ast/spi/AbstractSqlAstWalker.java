@@ -35,6 +35,7 @@ import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
 import org.hibernate.sql.ast.tree.expression.Over;
+import org.hibernate.sql.ast.tree.expression.Overflow;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
@@ -323,6 +324,14 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 	@Override
 	public void visitDistinct(Distinct distinct) {
 		distinct.getExpression().accept( this );
+	}
+
+	@Override
+	public void visitOverflow(Overflow overflow) {
+		overflow.getSeparatorExpression().accept( this );
+		if ( overflow.getFillerExpression() != null ) {
+			overflow.getFillerExpression().accept( this );
+		}
 	}
 
 	@Override

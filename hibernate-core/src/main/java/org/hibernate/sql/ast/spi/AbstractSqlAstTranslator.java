@@ -102,6 +102,7 @@ import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.LiteralAsParameter;
 import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
 import org.hibernate.sql.ast.tree.expression.Over;
+import org.hibernate.sql.ast.tree.expression.Overflow;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
@@ -4223,6 +4224,25 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitDistinct(Distinct distinct) {
 		appendSql( "distinct " );
 		distinct.getExpression().accept( this );
+	}
+
+	@Override
+	public void visitOverflow(Overflow overflow) {
+		overflow.getSeparatorExpression().accept( this );
+		appendSql( " on overflow " );
+		if ( overflow.getFillerExpression() == null ) {
+			appendSql( "error" );
+		}
+		else {
+			appendSql( " truncate " );
+			overflow.getFillerExpression().accept( this );
+			if ( overflow.isWithCount() ) {
+				appendSql( " with count" );
+			}
+			else {
+				appendSql( " without count" );
+			}
+		}
 	}
 
 	@Override

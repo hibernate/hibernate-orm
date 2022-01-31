@@ -265,6 +265,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 					.setParameterTypes(INTEGER)
 					.register();
 		}
+		CommonFunctionFactory.inverseDistributionOrderedSetAggregates( queryEngine );
+		CommonFunctionFactory.hypotheticalOrderedSetAggregates( queryEngine );
+		if ( getVersion().isSameOrAfter( 14 ) ) {
+			CommonFunctionFactory.listagg_stringAggWithinGroup( "varchar(max)", queryEngine );
+		}
 	}
 
 	@Override

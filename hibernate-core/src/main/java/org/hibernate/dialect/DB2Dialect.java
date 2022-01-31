@@ -261,6 +261,14 @@ public class DB2Dialect extends Dialect {
 				.setParameterTypes(FunctionParameterType.STRING, FunctionParameterType.STRING)
 				.setArgumentListSignature("(STRING string, STRING pattern)")
 				.register();
+
+		if ( getDB2Version().isSameOrAfter( 9, 5 ) ) {
+			CommonFunctionFactory.listagg( null, queryEngine );
+			if ( getDB2Version().isSameOrAfter( 11, 1 ) ) {
+				CommonFunctionFactory.inverseDistributionOrderedSetAggregates( queryEngine );
+				CommonFunctionFactory.hypotheticalOrderedSetAggregates( queryEngine );
+			}
+		}
 	}
 
 	@Override

@@ -108,8 +108,7 @@ public class SqlAstProcessingStateImpl
 
 	protected Expression normalize(Expression expression) {
 		final Clause currentClause = currentClauseAccess.get();
-		if ( currentClause == Clause.ORDER
-				|| currentClause == Clause.GROUP ) {
+		if ( sqlSelectionMap() != null && ( currentClause == Clause.ORDER || currentClause == Clause.GROUP ) ) {
 			// see if this (Sql)Expression is used as a selection, and if so
 			// wrap the (Sql)Expression in a special wrapper with access to both
 			// the (Sql)Expression and the SqlSelection.

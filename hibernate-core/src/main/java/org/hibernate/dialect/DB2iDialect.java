@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -19,6 +20,7 @@ import org.hibernate.dialect.unique.DefaultUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
@@ -38,6 +40,16 @@ public class DB2iDialect extends DB2Dialect {
 	public DB2iDialect(DialectResolutionInfo info) {
 		this( info.makeCopy() );
 		registerKeywords( info );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
+		if ( getVersion().isSameOrAfter( 7, 2 ) ) {
+			CommonFunctionFactory.listagg( null, queryEngine );
+			CommonFunctionFactory.inverseDistributionOrderedSetAggregates( queryEngine );
+			CommonFunctionFactory.hypotheticalOrderedSetAggregates( queryEngine );
+		}
 	}
 
 	public DB2iDialect() {

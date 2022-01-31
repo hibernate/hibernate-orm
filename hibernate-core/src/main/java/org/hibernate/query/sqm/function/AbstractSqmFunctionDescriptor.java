@@ -16,6 +16,7 @@ import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -131,6 +132,26 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 		);
 	}
 
+	@Override
+	public final <T> SelfRenderingSqmFunction<T> generateOrderedSetAggregateSqmExpression(
+			List<? extends SqmTypedNode<?>> arguments,
+			SqmPredicate filter,
+			SqmOrderByClause withinGroupClause,
+			ReturnableType<T> impliedResultType,
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
+		argumentsValidator.validate( arguments, getName(), queryEngine );
+
+		return generateSqmOrderedSetAggregateFunctionExpression(
+				arguments,
+				filter,
+				withinGroupClause,
+				impliedResultType,
+				queryEngine,
+				typeConfiguration
+		);
+	}
+
 	/**
 	 * Return an SQM node or subtree representing an invocation of this function
 	 * with the given arguments. This method may be overridden in the case of
@@ -155,6 +176,29 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 	protected <T> SelfRenderingSqmAggregateFunction<T> generateSqmAggregateFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
+			ReturnableType<T> impliedResultType,
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
+		return (SelfRenderingSqmAggregateFunction<T>) generateSqmExpression(
+				arguments,
+				impliedResultType,
+				queryEngine,
+				typeConfiguration
+		);
+	}
+
+	/**
+	 * Return an SQM node or subtree representing an invocation of this ordered set-aggregate function
+	 * with the given arguments. This method may be overridden in the case of
+	 * function descriptors that wish to customize creation of the node.
+	 *
+	 * @param arguments the arguments of the function invocation
+	 * @param impliedResultType the function return type as inferred from its usage
+	 */
+	protected <T> SelfRenderingSqmAggregateFunction<T> generateSqmOrderedSetAggregateFunctionExpression(
+			List<? extends SqmTypedNode<?>> arguments,
+			SqmPredicate filter,
+			SqmOrderByClause withinGroupClause,
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {

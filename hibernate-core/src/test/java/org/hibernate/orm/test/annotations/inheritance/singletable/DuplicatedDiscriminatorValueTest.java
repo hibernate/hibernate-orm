@@ -43,7 +43,7 @@ public class DuplicatedDiscriminatorValueTest {
 			fail( MappingException.class.getName() + " expected when two subclasses are mapped with the same discriminator value." );
 		}
 		catch ( MappingException e ) {
-			final String errorMsg = e.getCause().getMessage();
+			final String errorMsg = e.getMessage();
 			// Check if error message contains descriptive information.
 			assertTrue( errorMsg.contains( Building1.class.getName() ) );
 			assertTrue( errorMsg.contains( Building2.class.getName() ) );

@@ -25,6 +25,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.MarkerObject;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -127,6 +128,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	//private final Map propertyTableNumbersByName = new HashMap();
 //	private final Map<String, Integer> propertyTableNumbersByNameAndSubclass;
+
+	private final String[] fullDiscriminatorSQLValues;
+	private final Object[] fullDiscriminatorValues;
 
 	private static final Object NULL_DISCRIMINATOR = new MarkerObject( "<null discriminator>" );
 	private static final Object NOT_NULL_DISCRIMINATOR = new MarkerObject( "<not null discriminator>" );
@@ -293,7 +297,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		// DISCRIMINATOR
 
 		if ( persistentClass.isPolymorphic() ) {
-			Value discrimValue = persistentClass.getDiscriminator();
+			final Value discrimValue = persistentClass.getDiscriminator();
 			if ( discrimValue == null ) {
 				throw new MappingException( "discriminator mapping required for single table polymorphic persistence" );
 			}
@@ -318,37 +322,10 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 //				discriminatorFormula = null;
 				discriminatorFormulaTemplate = null;
 			}
-			discriminatorType = (BasicType<?>) persistentClass.getDiscriminator().getType();
-			if ( persistentClass.isDiscriminatorValueNull() ) {
-				discriminatorValue = NULL_DISCRIMINATOR;
-				discriminatorSQLValue = InFragment.NULL;
-				discriminatorInsertable = false;
-			}
-			else if ( persistentClass.isDiscriminatorValueNotNull() ) {
-				discriminatorValue = NOT_NULL_DISCRIMINATOR;
-				discriminatorSQLValue = InFragment.NOT_NULL;
-				discriminatorInsertable = false;
-			}
-			else {
-				discriminatorInsertable = persistentClass.isDiscriminatorInsertable() && !discrimValue.hasFormula();
-				try {
-					discriminatorValue = discriminatorType.getJavaTypeDescriptor()
-							.fromString( persistentClass.getDiscriminatorValue() );
-					JdbcLiteralFormatter literalFormatter = discriminatorType.getJdbcType()
-							.getJdbcLiteralFormatter( discriminatorType.getJavaTypeDescriptor() );
-					discriminatorSQLValue = literalFormatter.toJdbcLiteral(
-							discriminatorValue,
-							dialect,
-							factory.getWrapperOptions()
-					);
-				}
-				catch (ClassCastException cce) {
-					throw new MappingException( "Illegal discriminator type: " + discriminatorType.getName() );
-				}
-				catch (Exception e) {
-					throw new MappingException( "Could not format discriminator value to SQL string", e );
-				}
-			}
+			discriminatorType = getDiscriminatorType( persistentClass );
+			discriminatorValue = getDiscriminatorValue( persistentClass );
+			discriminatorSQLValue = getDiscriminatorSQLValue( persistentClass, dialect, factory );
+			discriminatorInsertable = isDiscriminatorInsertable( persistentClass );
 		}
 		else {
 			forceDiscriminator = false;
@@ -407,6 +384,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 //		subclassFormulaTableNumberClosure = ArrayHelper.toIntArray( formulaJoinedNumbers );
 		subclassPropertyTableNumberClosure = ArrayHelper.toIntArray( propertyJoinNumbers );
 
+		final List<Object> values = new ArrayList<>();
+		final List<String> sqlValues = new ArrayList<>();
 		int subclassSpan = persistentClass.getSubclassSpan() + 1;
 		subclassClosure = new String[subclassSpan];
 		subclassClosure[0] = getEntityName();
@@ -416,53 +395,106 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 					discriminatorValue,
 					getEntityName()
 			);
-		}
 
-		// SUBCLASSES
-		if ( persistentClass.isPolymorphic() ) {
+			if ( !getEntityMetamodel().isAbstract() ) {
+				values.add( discriminatorValue );
+				sqlValues.add( discriminatorSQLValue );
+			}
+
+			// SUBCLASSES
 			int k = 1;
 			for ( Subclass subclass : persistentClass.getSubclasses() ) {
 				subclassClosure[k++] = subclass.getEntityName();
-				if ( subclass.isDiscriminatorValueNull() ) {
-					addSubclassByDiscriminatorValue(
-							subclassesByDiscriminatorValueLocal,
-							NULL_DISCRIMINATOR,
-							subclass.getEntityName()
-					);
-				}
-				else if ( subclass.isDiscriminatorValueNotNull() ) {
-					addSubclassByDiscriminatorValue(
-							subclassesByDiscriminatorValueLocal,
-							NOT_NULL_DISCRIMINATOR,
-							subclass.getEntityName()
-					);
-				}
-				else {
-					try {
-						addSubclassByDiscriminatorValue(
-								subclassesByDiscriminatorValueLocal,
-								discriminatorType.getJavaTypeDescriptor()
-										.fromString( subclass.getDiscriminatorValue() ),
-								subclass.getEntityName()
-						);
-					}
-					catch (ClassCastException cce) {
-						throw new MappingException( "Illegal discriminator type: " + discriminatorType.getName() );
-					}
-					catch (Exception e) {
-						throw new MappingException( "Error parsing discriminator value", e );
-					}
+				Object subclassDiscriminatorValue = getDiscriminatorValue( subclass );
+				addSubclassByDiscriminatorValue(
+						subclassesByDiscriminatorValueLocal,
+						subclassDiscriminatorValue,
+						subclass.getEntityName()
+				);
+
+				//copy/paste from EntityMetamodel:
+				boolean subclassAbstract = subclass.isAbstract() == null
+						? subclass.hasPojoRepresentation() && ReflectHelper.isAbstractClass( subclass.getMappedClass() )
+						: subclass.isAbstract();
+
+				if ( !subclassAbstract ) {
+					values.add(subclassDiscriminatorValue);
+					sqlValues.add( getDiscriminatorSQLValue( subclass, dialect, factory ) );
 				}
 			}
 		}
 
 		// Don't hold a reference to an empty HashMap:
 		subclassesByDiscriminatorValue = CollectionHelper.toSmallMap( subclassesByDiscriminatorValueLocal );
+		fullDiscriminatorSQLValues = ArrayHelper.toStringArray( sqlValues );
+		fullDiscriminatorValues = ArrayHelper.toObjectArray( values );
 
 		initSubclassPropertyAliasesMap( persistentClass );
 
 		postConstruct( creationContext.getMetadata() );
+	}
 
+	private static BasicType<?> getDiscriminatorType(PersistentClass persistentClass) {
+		Type discriminatorType = persistentClass.getDiscriminator().getType();
+		if ( discriminatorType instanceof BasicType ) {
+			return (BasicType<?>) discriminatorType;
+		}
+		else {
+			throw new MappingException( "Illegal discriminator type: " + discriminatorType.getName() );
+		}
+	}
+
+	private static String getDiscriminatorSQLValue(
+			PersistentClass persistentClass,
+			Dialect dialect,
+			SessionFactoryImplementor factory) {
+		if ( persistentClass.isDiscriminatorValueNull() ) {
+			return InFragment.NULL;
+		}
+		else if ( persistentClass.isDiscriminatorValueNotNull() ) {
+			return InFragment.NOT_NULL;
+		}
+		else {
+			BasicType<?> discriminatorType = getDiscriminatorType( persistentClass );
+			Object discriminatorValue = getDiscriminatorValue( persistentClass );
+			try {
+				JdbcLiteralFormatter literalFormatter = discriminatorType.getJdbcType()
+						.getJdbcLiteralFormatter( discriminatorType.getJavaTypeDescriptor() );
+				return literalFormatter.toJdbcLiteral(
+						discriminatorValue,
+						dialect,
+						factory.getWrapperOptions()
+				);
+			}
+			catch (Exception e) {
+				throw new MappingException( "Could not format discriminator value to SQL string", e );
+			}
+		}
+	}
+
+	private static Object getDiscriminatorValue(PersistentClass persistentClass) {
+		if ( persistentClass.isDiscriminatorValueNull() ) {
+			return NULL_DISCRIMINATOR;
+		}
+		else if ( persistentClass.isDiscriminatorValueNotNull() ) {
+			return NOT_NULL_DISCRIMINATOR;
+		}
+		else {
+			BasicType<?> discriminatorType = getDiscriminatorType( persistentClass );
+			try {
+				return discriminatorType.getJavaTypeDescriptor().fromString( persistentClass.getDiscriminatorValue() );
+			}
+			catch (Exception e) {
+				throw new MappingException( "Could not parse discriminator value", e );
+			}
+		}
+	}
+
+	private static boolean isDiscriminatorInsertable(PersistentClass persistentClass) {
+		return !persistentClass.isDiscriminatorValueNull()
+			&& !persistentClass.isDiscriminatorValueNotNull()
+			&& persistentClass.isDiscriminatorInsertable()
+			&& !persistentClass.getDiscriminator().hasFormula();
 	}
 
 	private static void addSubclassByDiscriminatorValue(Map<Object, String> subclassesByDiscriminatorValue, Object discriminatorValue, String entityName) {
@@ -632,12 +664,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			frag.setColumn( alias, getDiscriminatorColumnName() );
 		}
 
-		if ( hasTreatAs ) {
-			frag.addValues( decodeTreatAsRequests( treatAsDeclarations ) );
-		}
-		else {
-			frag.addValues( fullDiscriminatorSQLValues() );
-		}
+		frag.addValues( hasTreatAs ? decodeTreatAsRequests( treatAsDeclarations ) : fullDiscriminatorSQLValues );
 
 		return frag.toFragmentString();
 	}
@@ -649,7 +676,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private String[] decodeTreatAsRequests(Set<String> treatAsDeclarations) {
 		final List<String> values = new ArrayList<>();
 		for ( String subclass : treatAsDeclarations ) {
-			//TODO: move getDiscriminatorSQLValue() to Loadable to get rid of Queryable
 			final Queryable queryable = (Queryable) getFactory()
 					.getRuntimeMetamodels()
 					.getMappingMetamodel()
@@ -677,48 +703,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			}
 		}
 		return ArrayHelper.toStringArray( values );
-	}
-
-	private String[] fullDiscriminatorSQLValues;
-
-	private String[] fullDiscriminatorSQLValues() {
-		String[] fullDiscriminatorSQLValues = this.fullDiscriminatorSQLValues;
-		if ( fullDiscriminatorSQLValues == null ) {
-			// first access; build it
-			final List<String> values = new ArrayList<>();
-			for ( String subclass : getSubclassClosure() ) {
-				final Queryable queryable = (Queryable) getFactory().getRuntimeMetamodels()
-						.getMappingMetamodel()
-						.getEntityDescriptor( subclass );
-				if ( !queryable.isAbstract() ) {
-					values.add( queryable.getDiscriminatorSQLValue() );
-				}
-			}
-			this.fullDiscriminatorSQLValues = fullDiscriminatorSQLValues = ArrayHelper.toStringArray( values );
-		}
-
-		return fullDiscriminatorSQLValues;
-	}
-
-	private Object[] fullDiscriminatorValues;
-
-	private Object[] fullDiscriminatorValues() {
-		Object[] fullDiscriminatorValues = this.fullDiscriminatorValues;
-		if ( fullDiscriminatorValues == null ) {
-			// first access; build it
-			final List<Object> values = new ArrayList<>();
-			for ( String subclass : getSubclassClosure() ) {
-				final Loadable queryable = (Loadable) getFactory().getRuntimeMetamodels()
-						.getMappingMetamodel()
-						.getEntityDescriptor( subclass );
-				if ( !queryable.isAbstract() ) {
-					values.add( queryable.getDiscriminatorValue() );
-				}
-			}
-			this.fullDiscriminatorValues = fullDiscriminatorValues = values.toArray(new Object[0]);
-		}
-
-		return fullDiscriminatorValues;
 	}
 
 	@Override
@@ -903,10 +887,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		);
 
 		if ( hasSubclasses() ) {
-			final Object[] discriminatorValues = fullDiscriminatorValues();
-			final List<Expression> values = new ArrayList<>( discriminatorValues.length );
+			final List<Expression> values = new ArrayList<>( fullDiscriminatorValues.length );
 			boolean hasNull = false, hasNonNull = false;
-			for ( Object discriminatorValue : discriminatorValues ) {
+			for ( Object discriminatorValue : fullDiscriminatorValues) {
 				if ( discriminatorValue == NULL_DISCRIMINATOR ) {
 					hasNull = true;
 				}

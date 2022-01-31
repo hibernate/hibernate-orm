@@ -36,6 +36,7 @@ public final class ArrayHelper {
 		return -1;
 	}
 
+	@SuppressWarnings("unchecked")
 	public static <T> T[] filledArray(T value, Class<T> valueJavaType, int size) {
 		final T[] array = (T[]) Array.newInstance( valueJavaType, size );
 		Arrays.fill( array, value );
@@ -79,6 +80,10 @@ public final class ArrayHelper {
 		return coll.toArray( EMPTY_STRING_ARRAY );
 	}
 
+	public static Object[] toObjectArray(Collection<Object> coll) {
+		return coll.toArray( EMPTY_OBJECT_ARRAY );
+	}
+
 	public static String[][] to2DStringArray(Collection<String[]> coll) {
 		return coll.toArray( new String[0][] );
 	}
@@ -102,11 +107,11 @@ public final class ArrayHelper {
 	}
 
 	public static boolean[] toBooleanArray(Collection<Boolean> coll) {
-		Iterator iter = coll.iterator();
+		Iterator<Boolean> iter = coll.iterator();
 		boolean[] arr = new boolean[coll.size()];
 		int i = 0;
 		while ( iter.hasNext() ) {
-			arr[i++] = (Boolean) iter.next();
+			arr[i++] = iter.next();
 		}
 		return arr;
 	}
@@ -116,17 +121,17 @@ public final class ArrayHelper {
 	}
 
 	//Arrays.asList doesn't do primitive arrays
-	public static List toList(Object array) {
-		if ( array instanceof Object[] ) {
-			return Arrays.asList( (Object[]) array ); //faster?
-		}
-		int size = Array.getLength( array );
-		ArrayList list = new ArrayList( size );
-		for ( int i = 0; i < size; i++ ) {
-			list.add( Array.get( array, i ) );
-		}
-		return list;
-	}
+//	public static List toList(Object array) {
+//		if ( array instanceof Object[] ) {
+//			return Arrays.asList( (Object[]) array ); //faster?
+//		}
+//		int size = Array.getLength( array );
+//		ArrayList<Object> list = new ArrayList<>( size );
+//		for ( int i = 0; i < size; i++ ) {
+//			list.add( Array.get( array, i ) );
+//		}
+//		return list;
+//	}
 
 	public static String[] slice(String[] strings, int begin, int length) {
 		String[] result = new String[length];
@@ -140,8 +145,8 @@ public final class ArrayHelper {
 		return result;
 	}
 
-	public static List toList(Iterator iter) {
-		List list = new ArrayList();
+	public static <T> List<T> toList(Iterator<T> iter) {
+		List<T> list = new ArrayList<>();
 		while ( iter.hasNext() ) {
 			list.add( iter.next() );
 		}

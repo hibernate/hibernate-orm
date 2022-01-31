@@ -13,7 +13,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.orm.test.jpa.Distributor;
 import org.hibernate.orm.test.jpa.Item;
 import org.hibernate.orm.test.jpa.Wallet;
-import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
+import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -108,9 +108,9 @@ public class AddNamedQueryTest {
 					// first, lets check the underlying stored query def
 					SessionFactoryImplementor sfi = scope.getEntityManagerFactory()
 							.unwrap( SessionFactoryImplementor.class );
-					NamedHqlQueryMemento def = sfi.getQueryEngine()
+					NamedSqmQueryMemento def = sfi.getQueryEngine()
 							.getNamedObjectRepository()
-							.getHqlQueryMemento( name );
+							.getSqmQueryMemento( name );
 					assertEquals( LockMode.OPTIMISTIC, def.getLockOptions().getLockMode() );
 
 					// then lets create a query by name and check its setting
@@ -139,9 +139,9 @@ public class AddNamedQueryTest {
 					// first, lets check the underlying stored query def
 					SessionFactoryImplementor sfi = scope.getEntityManagerFactory()
 							.unwrap( SessionFactoryImplementor.class );
-					NamedHqlQueryMemento def = sfi.getQueryEngine()
+					NamedSqmQueryMemento def = sfi.getQueryEngine()
 							.getNamedObjectRepository()
-							.getHqlQueryMemento( name );
+							.getSqmQueryMemento( name );
 					assertEquals( FlushMode.COMMIT, def.getFlushMode() );
 
 					// then lets create a query by name and check its setting

@@ -19,13 +19,13 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.hql.HqlTranslator;
-import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
+import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 
 import org.jboss.logging.Logger;
 
@@ -35,17 +35,17 @@ import org.jboss.logging.Logger;
 public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	private static final Logger log = Logger.getLogger( NamedObjectRepository.class );
 
-	private final Map<String, NamedHqlQueryMemento> hqlMementoMap;
+	private final Map<String, NamedSqmQueryMemento> sqmMementoMap;
 	private final Map<String, NamedNativeQueryMemento> sqlMementoMap;
 	private final Map<String, NamedCallableQueryMemento> callableMementoMap;
 	private final Map<String, NamedResultSetMappingMemento> resultSetMappingMementoMap;
 
 	public NamedObjectRepositoryImpl(
-			Map<String,NamedHqlQueryMemento> hqlMementoMap,
+			Map<String,NamedSqmQueryMemento> sqmMementoMap,
 			Map<String,NamedNativeQueryMemento> sqlMementoMap,
 			Map<String,NamedCallableQueryMemento> callableMementoMap,
 			Map<String,NamedResultSetMappingMemento> resultSetMappingMementoMap) {
-		this.hqlMementoMap = hqlMementoMap;
+		this.sqmMementoMap = sqmMementoMap;
 		this.sqlMementoMap = sqlMementoMap;
 		this.callableMementoMap = callableMementoMap;
 		this.resultSetMappingMementoMap = resultSetMappingMementoMap;
@@ -53,24 +53,23 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// HQL mementos
+	// Named SQM Memento
 
 	@Override
-	public NamedHqlQueryMemento getHqlQueryMemento(String queryName) {
-		return hqlMementoMap.get( queryName );
+	public NamedSqmQueryMemento getSqmQueryMemento(String queryName) {
+		return sqmMementoMap.get( queryName );
 	}
 
 	@Override
-	public void visitHqlQueryMementos(Consumer<NamedHqlQueryMemento> action) {
-		hqlMementoMap.values().forEach( action );
+	public void visitSqmQueryMementos(Consumer<NamedSqmQueryMemento> action) {
+		sqmMementoMap.values().forEach( action );
 	}
 
 	@Override
-	public synchronized void registerHqlQueryMemento(String name, NamedHqlQueryMemento descriptor) {
-		hqlMementoMap.put( name, descriptor );
+	public void registerSqmQueryMemento(String name, NamedSqmQueryMemento descriptor) {
+		sqmMementoMap.put( name, descriptor );
 		sqlMementoMap.remove( name );
 	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SQL mementos
@@ -88,7 +87,7 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	@Override
 	public synchronized void registerNativeQueryMemento(String name, NamedNativeQueryMemento descriptor) {
 		sqlMementoMap.put( name, descriptor );
-		hqlMementoMap.remove( name );
+		sqmMementoMap.remove( name );
 	}
 
 
@@ -138,11 +137,11 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 			SessionFactoryImplementor sessionFactory,
 			MetadataImplementor bootMetamodel,
 			String registrationName) {
-		NamedQueryMemento namedQuery = hqlMementoMap.get( registrationName );
+		NamedQueryMemento namedQuery = sqlMementoMap.get( registrationName );
 		if ( namedQuery != null ) {
 			return namedQuery;
 		}
-		namedQuery = sqlMementoMap.get( registrationName );
+		namedQuery = sqmMementoMap.get( registrationName );
 		if ( namedQuery != null ) {
 			return namedQuery;
 		}
@@ -152,8 +151,8 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 		}
 		final NamedHqlQueryDefinition namedHqlQueryDefinition = bootMetamodel.getNamedHqlQueryMapping( registrationName );
 		if ( namedHqlQueryDefinition != null ) {
-			final NamedHqlQueryMemento resolved = namedHqlQueryDefinition.resolve( sessionFactory );
-			hqlMementoMap.put( namedHqlQueryDefinition.getRegistrationName(), resolved );
+			final NamedSqmQueryMemento resolved = namedHqlQueryDefinition.resolve( sessionFactory );
+			sqmMementoMap.put( namedHqlQueryDefinition.getRegistrationName(), resolved );
 			return resolved;
 		}
 		final NamedNativeQueryDefinition namedNativeQueryDefinition = bootMetamodel.getNamedNativeQueryMapping( registrationName );
@@ -178,8 +177,8 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 			BootstrapContext bootstrapContext) {
 		bootMetamodel.visitNamedHqlQueryDefinitions(
 				namedHqlQueryDefinition -> {
-					final NamedHqlQueryMemento resolved = namedHqlQueryDefinition.resolve( sessionFactory );
-					hqlMementoMap.put( namedHqlQueryDefinition.getRegistrationName(), resolved );
+					final NamedSqmQueryMemento resolved = namedHqlQueryDefinition.resolve( sessionFactory );
+					sqmMementoMap.put( namedHqlQueryDefinition.getRegistrationName(), resolved );
 				}
 		);
 
@@ -218,8 +217,8 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 		final boolean cachingEnabled = interpretationCache.isEnabled();
 
 		// Check named HQL queries
-		log.debugf( "Checking %s named HQL queries", hqlMementoMap.size() );
-		for ( NamedHqlQueryMemento hqlMemento : hqlMementoMap.values() ) {
+		log.debugf( "Checking %s named HQL queries", sqmMementoMap.size() );
+		for ( NamedSqmQueryMemento hqlMemento : sqmMementoMap.values() ) {
 			try {
 				log.debugf( "Checking named HQL query: %s", hqlMemento.getRegistrationName() );
 				String queryString = hqlMemento.getHqlString();
@@ -277,7 +276,7 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 
 	@Override
 	public void close() {
-		hqlMementoMap.clear();
+		sqmMementoMap.clear();
 		sqlMementoMap.clear();
 		callableMementoMap.clear();
 		resultSetMappingMementoMap.clear();

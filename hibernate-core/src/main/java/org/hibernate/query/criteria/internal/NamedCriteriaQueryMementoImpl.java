@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.hql.internal;
+package org.hibernate.query.criteria.internal;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -22,31 +22,18 @@ import org.hibernate.query.sqm.internal.SqmSelectionQueryImpl;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
-import org.jboss.logging.Logger;
+public class NamedCriteriaQueryMementoImpl extends AbstractNamedQueryMemento implements NamedSqmQueryMemento, Serializable {
 
-/**
- * Definition of a named query, defined in the mapping metadata.
- *
- * Additionally, as of JPA 2.1, named query definition can also come
- * from a compiled query.
- *
- * @author Gavin King
- * @author Steve Ebersole
- */
-public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implements NamedSqmQueryMemento, Serializable {
-	private static final Logger log = Logger.getLogger( NamedHqlQueryMementoImpl.class );
-
-	private final String hqlString;
-
+	private final SqmStatement sqmStatement;
 	private final Integer firstResult;
 	private final Integer maxResults;
 
 	private final LockOptions lockOptions;
 	private final Map<String, String> parameterTypes;
 
-	public NamedHqlQueryMementoImpl(
+	public NamedCriteriaQueryMementoImpl(
 			String name,
-			String hqlString,
+			SqmStatement sqmStatement,
 			Integer firstResult,
 			Integer maxResults,
 			Boolean cacheable,
@@ -58,30 +45,49 @@ public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implemen
 			Integer timeout,
 			Integer fetchSize,
 			String comment,
-			Map<String,String> parameterTypes,
-			Map<String,Object> hints) {
-		super(
-				name,
-				cacheable,
-				cacheRegion,
-				cacheMode,
-				flushMode,
-				readOnly,
-				timeout,
-				fetchSize,
-				comment,
-				hints
-		);
-		this.hqlString = hqlString;
+			Map<String, String> parameterTypes,
+			Map<String, Object> hints) {
+		super( name, cacheable, cacheRegion, cacheMode, flushMode, readOnly, timeout, fetchSize, comment, hints );
+		this.sqmStatement = sqmStatement;
 		this.firstResult = firstResult;
 		this.maxResults = maxResults;
 		this.lockOptions = lockOptions;
 		this.parameterTypes = parameterTypes;
 	}
 
+
+	@Override
+	public void validate(QueryEngine queryEngine) {
+
+	}
+
+	@Override
+	public <T> SqmQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType) {
+		return new QuerySqmImpl<>( this, resultType, session );
+	}
+
+	@Override
+	public <T> SqmQueryImplementor<T> toQuery(SharedSessionContractImplementor session) {
+		return toQuery(session, null);
+	}
+
+	@Override
+	public <T> SqmSelectionQuery<T> toSelectionQuery(Class<T> resultType, SharedSessionContractImplementor session) {
+		return new SqmSelectionQueryImpl<>(
+				this,
+				resultType,
+				session
+		);
+	}
+
 	@Override
 	public String getHqlString() {
-		return hqlString;
+		return QuerySqmImpl.CRITERIA_HQL_STRING;
+	}
+
+	@Override
+	public SqmStatement getSqmStatement() {
+		return sqmStatement;
 	}
 
 	@Override
@@ -106,9 +112,9 @@ public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implemen
 
 	@Override
 	public NamedSqmQueryMemento makeCopy(String name) {
-		return new NamedHqlQueryMementoImpl(
+		return new NamedCriteriaQueryMementoImpl(
 				name,
-				hqlString,
+				sqmStatement,
 				firstResult,
 				maxResults,
 				getCacheable(),
@@ -125,32 +131,4 @@ public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implemen
 		);
 	}
 
-	@Override
-	public void validate(QueryEngine queryEngine) {
-		queryEngine.getHqlTranslator().translate( hqlString );
-	}
-
-	@Override
-	public <T> SqmQueryImplementor<T> toQuery(SharedSessionContractImplementor session) {
-		return toQuery( session, null );
-	}
-
-	@Override
-	public <T> SqmSelectionQuery<T> toSelectionQuery(Class<T> resultType, SharedSessionContractImplementor session) {
-		return new SqmSelectionQueryImpl<>(
-				this,
-				resultType,
-				session
-		);
-	}
-
-	@Override
-	public SqmStatement getSqmStatement() {
-		return null;
-	}
-
-	@Override
-	public <T> SqmQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType) {
-		return new QuerySqmImpl<>( this, resultType, session );
-	}
 }

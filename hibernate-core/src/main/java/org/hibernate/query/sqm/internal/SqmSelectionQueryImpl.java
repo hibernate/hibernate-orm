@@ -12,7 +12,6 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.function.Supplier;
 import jakarta.persistence.FlushModeType;
@@ -34,12 +33,11 @@ import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.query.BindableType;
-import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.query.QueryTypeMismatchException;
+import org.hibernate.query.criteria.internal.NamedCriteriaQueryMementoImpl;
+import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.hql.internal.QuerySplitter;
-import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
@@ -56,6 +54,7 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.SqmSelectionQuery;
 import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
+import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
@@ -114,7 +113,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 	}
 
 	public SqmSelectionQueryImpl(
-			NamedHqlQueryMemento memento,
+			NamedHqlQueryMementoImpl memento,
 			Class<R> resultType,
 			SharedSessionContractImplementor session) {
 		super( session );
@@ -143,6 +142,14 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 
 		applyOptions( memento );
 		this.tupleMetadata = buildTupleMetadata( sqm, resultType );
+	}
+
+	public SqmSelectionQueryImpl(
+			NamedCriteriaQueryMementoImpl memento,
+			Class<R> resultType,
+			SharedSessionContractImplementor session) {
+		this( (SqmSelectStatement<R>) memento.getSqmStatement(), session);
+		applyOptions( memento );
 	}
 
 	public SqmSelectionQueryImpl(

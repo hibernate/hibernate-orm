@@ -14,6 +14,6 @@
  *
  * @see org.hibernate.query.hql.HqlTranslator
  * @see org.hibernate.query.hql.spi.SqmQueryImplementor
- * @see org.hibernate.query.hql.spi.NamedHqlQueryMemento
+ * @see org.hibernate.query.sqm.spi.NamedSqmQueryMemento
  */
 package org.hibernate.query.hql;

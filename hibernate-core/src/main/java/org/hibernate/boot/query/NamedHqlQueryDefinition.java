@@ -11,7 +11,7 @@ import java.util.Map;
 
 import org.hibernate.boot.internal.NamedHqlQueryDefinitionImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
+import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 
 /**
  * Boot-time descriptor of a named HQL query, as defined in
@@ -27,7 +27,7 @@ public interface NamedHqlQueryDefinition extends NamedQueryDefinition {
 	String getHqlString();
 
 	@Override
-	NamedHqlQueryMemento resolve(SessionFactoryImplementor factory);
+	NamedSqmQueryMemento resolve(SessionFactoryImplementor factory);
 
 	class Builder extends AbstractNamedQueryBuilder<Builder> {
 		private String hqlString;

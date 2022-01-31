@@ -6,10 +6,16 @@
  */
 package org.hibernate.orm.test.query.sqm.exec;
 
+import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.query.sqm.internal.QuerySqmImpl;
+
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -36,6 +42,29 @@ public class ParameterTest {
 					session.createQuery( "from SalesAssociate p where p.name.familiarName = ?1 or p.name.familyName = ?1" )
 							.setParameter( 1, "a name" )
 							.list();
+				}
+		);
+	}
+
+	@Test
+	public void testParametersWithQueryInterpretationCache(SessionFactoryScope scope) {
+		String query = "from SalesAssociate p where p.name.familiarName in :names";
+		scope.inTransaction(
+				session -> {
+					QueryImplementor q = session.createQuery( query );
+					DomainParameterXref xref = q.unwrap( QuerySqmImpl.class ).getDomainParameterXref();
+					for ( QueryParameterImplementor<?> p : xref.getQueryParameters().keySet() ) {
+						Assertions.assertTrue( q.getParameterMetadata().containsReference( p ) );
+					}
+				}
+		);
+		scope.inTransaction(
+				session -> {
+					QueryImplementor q = session.createQuery( query );
+					DomainParameterXref xref = q.unwrap( QuerySqmImpl.class ).getDomainParameterXref();
+					for ( QueryParameterImplementor<?> p : xref.getQueryParameters().keySet() ) {
+						Assertions.assertTrue( q.getParameterMetadata().containsReference( p ) );
+					}
 				}
 		);
 	}

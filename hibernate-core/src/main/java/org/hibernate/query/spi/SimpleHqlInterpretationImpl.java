@@ -38,6 +38,6 @@ public class SimpleHqlInterpretationImpl implements HqlInterpretation {
 
 	@Override
 	public DomainParameterXref getDomainParameterXref() {
-		return domainParameterXref;
+		return domainParameterXref.copy();
 	}
 }

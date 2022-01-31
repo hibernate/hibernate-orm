@@ -37,6 +37,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.spi.NavigablePath;
@@ -132,11 +133,21 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	//INITIALIZATION:
 
+	@Deprecated(since = "6.0")
 	public SingleTableEntityPersister(
 			final PersistentClass persistentClass,
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final PersisterCreationContext creationContext) throws HibernateException {
+		this( persistentClass,cacheAccessStrategy,naturalIdRegionAccessStrategy,
+				(RuntimeModelCreationContext) creationContext );
+	}
+
+	public SingleTableEntityPersister(
+			final PersistentClass persistentClass,
+			final EntityDataAccess cacheAccessStrategy,
+			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
+			final RuntimeModelCreationContext creationContext) throws HibernateException {
 
 		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 

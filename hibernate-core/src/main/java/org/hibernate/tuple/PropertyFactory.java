@@ -15,12 +15,11 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
@@ -54,7 +53,6 @@ public final class PropertyFactory {
 	public static IdentifierProperty buildIdentifierAttribute(
 			PersistentClass mappedEntity,
 			IdentifierGenerator generator) {
-		String mappedUnsavedValue = mappedEntity.getIdentifier().getNullValue();
 		Type type = mappedEntity.getIdentifier().getType();
 		Property property = mappedEntity.getIdentifierProperty();
 
@@ -92,7 +90,6 @@ public final class PropertyFactory {
 			int attributeNumber,
 			Property property,
 			boolean lazyAvailable) {
-		String mappedUnsavedValue = ( (KeyValue) property.getValue() ).getNullValue();
 
 		boolean lazy = lazyAvailable && property.isLazy();
 
@@ -115,7 +112,7 @@ public final class PropertyFactory {
 		);
 	}
 
-	public static enum NonIdentifierAttributeNature {
+	public enum NonIdentifierAttributeNature {
 		BASIC,
 		COMPOSITE,
 		ANY,
@@ -137,7 +134,7 @@ public final class PropertyFactory {
 			int attributeNumber,
 			Property property,
 			boolean lazyAvailable,
-			PersisterCreationContext creationContext) {
+			RuntimeModelCreationContext creationContext) {
 		final Type type = property.getValue().getType();
 
 		final NonIdentifierAttributeNature nature = decode( type );
@@ -149,14 +146,14 @@ public final class PropertyFactory {
 		// to update the cache (not the database), since in this case a null
 		// entity reference can lose information
 
-		boolean alwaysDirtyCheck = type.isAssociationType() &&
-				( (AssociationType) type ).isAlwaysDirtyChecked();
+		boolean alwaysDirtyCheck = type.isAssociationType()
+				&& ( (AssociationType) type ).isAlwaysDirtyChecked();
 
 		SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
 		final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 				property,
 				lazyAvailable,
-				(entityName) -> {
+				entityName -> {
 					final MetadataImplementor metadata = creationContext.getMetadata();
 					final PersistentClass entityBinding = metadata.getEntityBinding( entityName );
 					assert entityBinding != null;
@@ -269,8 +266,8 @@ public final class PropertyFactory {
 		// to update the cache (not the database), since in this case a null
 		// entity reference can lose information
 
-		boolean alwaysDirtyCheck = type.isAssociationType() &&
-				( (AssociationType) type ).isAlwaysDirtyChecked();
+		boolean alwaysDirtyCheck = type.isAssociationType()
+				&& ( (AssociationType) type ).isAlwaysDirtyChecked();
 
 		return new StandardProperty(
 				property.getName(),
@@ -290,7 +287,7 @@ public final class PropertyFactory {
 	}
 
 
-	private static Constructor getConstructor(PersistentClass persistentClass) {
+	private static Constructor<?> getConstructor(PersistentClass persistentClass) {
 		if ( persistentClass == null || !persistentClass.hasPojoRepresentation() ) {
 			return null;
 		}

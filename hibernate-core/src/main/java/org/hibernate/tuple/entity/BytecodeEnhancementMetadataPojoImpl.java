@@ -9,6 +9,7 @@ package org.hibernate.tuple.entity;
 import java.util.Set;
 
 import org.hibernate.LockMode;
+import org.hibernate.boot.Metadata;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
@@ -24,7 +25,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.type.CompositeType;
 
 /**
@@ -39,11 +39,11 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 			Set<String> identifierAttributeNames,
 			CompositeType nonAggregatedCidMapper,
 			boolean collectionsInDefaultFetchGroupEnabled,
-			PersisterCreationContext creationContext) {
+			Metadata metadata) {
 		final Class<?> mappedClass = persistentClass.getMappedClass();
 		final boolean enhancedForLazyLoading = PersistentAttributeInterceptable.class.isAssignableFrom( mappedClass );
 		final LazyAttributesMetadata lazyAttributesMetadata = enhancedForLazyLoading
-				? LazyAttributesMetadata.from( persistentClass, true, collectionsInDefaultFetchGroupEnabled, creationContext )
+				? LazyAttributesMetadata.from( persistentClass, true, collectionsInDefaultFetchGroupEnabled, metadata )
 				: LazyAttributesMetadata.nonEnhanced( persistentClass.getEntityName() );
 
 		return new BytecodeEnhancementMetadataPojoImpl(

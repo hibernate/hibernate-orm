@@ -42,6 +42,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -88,11 +89,21 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	//INITIALIZATION:
 
+	@Deprecated(since = "6.0")
 	public UnionSubclassEntityPersister(
 			final PersistentClass persistentClass,
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final PersisterCreationContext creationContext) throws HibernateException {
+		this( persistentClass,cacheAccessStrategy,naturalIdRegionAccessStrategy,
+				(RuntimeModelCreationContext) creationContext );
+	}
+
+	public UnionSubclassEntityPersister(
+			final PersistentClass persistentClass,
+			final EntityDataAccess cacheAccessStrategy,
+			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
+			final RuntimeModelCreationContext creationContext) throws HibernateException {
 
 		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 

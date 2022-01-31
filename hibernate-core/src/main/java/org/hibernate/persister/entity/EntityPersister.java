@@ -85,7 +85,7 @@ import org.hibernate.type.descriptor.java.VersionJavaType;
  *         for any natural id defined for this entity
  *     </li>
  *     <li>
- *         {@link org.hibernate.persister.spi.PersisterCreationContext} -
+ *         {@link org.hibernate.metamodel.spi.RuntimeModelCreationContext} -
  *         access to additional information useful while constructing the
  *         persister.
  *     </li>
@@ -503,7 +503,9 @@ public interface EntityPersister
 	 * @deprecated Use {@link #load(Object, Object, LockMode, SharedSessionContractImplementor)}
 	 */
 	@Deprecated(since = "6.0")
-	default Object load(Object id, Object optionalObject, LockMode lockMode, SharedSessionContractImplementor session, Boolean readOnly)
+	default Object load(
+			Object id, Object optionalObject, LockMode lockMode, SharedSessionContractImplementor session,
+			@SuppressWarnings("unused") Boolean readOnly)
 			throws HibernateException {
 		return load( id, optionalObject, lockMode, session );
 	}

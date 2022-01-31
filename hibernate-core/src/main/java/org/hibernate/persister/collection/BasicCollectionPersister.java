@@ -25,6 +25,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.mapping.Collection;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Delete;
@@ -47,10 +48,18 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		return false;
 	}
 
+	@Deprecated(since = "6.0")
 	public BasicCollectionPersister(
 			Collection collectionBinding,
 			CollectionDataAccess cacheAccessStrategy,
 			PersisterCreationContext creationContext) throws MappingException, CacheException {
+		this( collectionBinding, cacheAccessStrategy, (RuntimeModelCreationContext) creationContext );
+	}
+
+	public BasicCollectionPersister(
+			Collection collectionBinding,
+			CollectionDataAccess cacheAccessStrategy,
+			RuntimeModelCreationContext creationContext) throws MappingException, CacheException {
 		super( collectionBinding, cacheAccessStrategy, creationContext );
 	}
 

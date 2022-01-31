@@ -12,7 +12,6 @@ import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,6 +35,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Subclass;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.tuple.GenerationTiming;
@@ -129,10 +129,18 @@ public class EntityMetamodel implements Serializable {
 
 	private final BytecodeEnhancementMetadata bytecodeEnhancementMetadata;
 
+	@Deprecated(since = "6.0")
 	public EntityMetamodel(
 			PersistentClass persistentClass,
 			EntityPersister persister,
 			PersisterCreationContext creationContext) {
+		this( persistentClass, persister, (RuntimeModelCreationContext) creationContext );
+	}
+
+	public EntityMetamodel(
+			PersistentClass persistentClass,
+			EntityPersister persister,
+			RuntimeModelCreationContext creationContext) {
 		this.sessionFactory = creationContext.getSessionFactory();
 
 		name = persistentClass.getEntityName();
@@ -169,7 +177,7 @@ public class EntityMetamodel implements Serializable {
 					idAttributeNames,
 					nonAggregatedCidMapper,
 					sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled(),
-					creationContext
+					creationContext.getMetadata()
 			);
 		}
 		else {
@@ -204,8 +212,6 @@ public class EntityMetamodel implements Serializable {
 		boolean foundPostUpdateGeneratedValues = false;
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		Iterator<Property> props = persistentClass.getPropertyClosureIterator();
-		int i = 0;
 		int tempVersionProperty = NO_VERSION_INDX;
 		boolean foundCascade = false;
 		boolean foundCollection = false;
@@ -213,8 +219,9 @@ public class EntityMetamodel implements Serializable {
 		boolean foundNonIdentifierPropertyNamedId = false;
 		boolean foundUpdateableNaturalIdProperty = false;
 
-		while ( props.hasNext() ) {
-			Property prop = props.next();
+		List<Property> props = persistentClass.getPropertyClosure();
+		for ( int i=0; i<props.size(); i++ ) {
+			Property prop = props.get(i);
 			final NonIdentifierAttribute attribute;
 			if ( prop == persistentClass.getVersion() ) {
 				tempVersionProperty = i;
@@ -333,7 +340,6 @@ public class EntityMetamodel implements Serializable {
 			}
 
 			mapPropertyToIndex(prop, i);
-			i++;
 		}
 
 		if (naturalIdNumbers.size()==0) {

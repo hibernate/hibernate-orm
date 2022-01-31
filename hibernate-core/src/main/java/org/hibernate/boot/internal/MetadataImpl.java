@@ -55,11 +55,11 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
-import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.internal.NamedObjectRepositoryImpl;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -346,8 +346,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		);
 	}
 
-	private Map<String, NamedHqlQueryMemento> buildNamedHqlMementos(SessionFactoryImplementor sessionFactory) {
-		final HashMap<String, NamedHqlQueryMemento> map = new HashMap<>();
+	private Map<String, NamedSqmQueryMemento> buildNamedSqmMementos(SessionFactoryImplementor sessionFactory) {
+		final HashMap<String, NamedSqmQueryMemento> map = new HashMap<>();
 		if ( namedQueryMap != null ) {
 			namedQueryMap.forEach( (key, value) -> map.put( key, value.resolve( sessionFactory ) ) );
 		}

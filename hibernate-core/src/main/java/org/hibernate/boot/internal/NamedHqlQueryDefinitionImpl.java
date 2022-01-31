@@ -15,7 +15,7 @@ import org.hibernate.boot.spi.AbstractNamedQueryDefinition;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
-import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
+import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 
 /**
  * @author Steve Ebersole
@@ -67,7 +67,7 @@ public class NamedHqlQueryDefinitionImpl extends AbstractNamedQueryDefinition im
 	}
 
 	@Override
-	public NamedHqlQueryMemento resolve(SessionFactoryImplementor factory) {
+	public NamedSqmQueryMemento resolve(SessionFactoryImplementor factory) {
 		return new NamedHqlQueryMementoImpl(
 				getRegistrationName(),
 				hqlString,

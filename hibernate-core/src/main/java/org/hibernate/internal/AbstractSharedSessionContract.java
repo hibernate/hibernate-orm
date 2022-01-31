@@ -68,8 +68,8 @@ import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.UnknownNamedQueryException;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
-import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
+import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.QueryEngine;
@@ -82,6 +82,7 @@ import org.hibernate.query.sqm.SqmSelectionQuery;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.internal.SqmSelectionQueryImpl;
 import org.hibernate.query.sqm.internal.SqmUtil;
+import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -872,12 +873,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		// this method can be called for either a named HQL query or a named native query
 
 		// first see if it is a named HQL query
-		final NamedHqlQueryMemento namedHqlDescriptor = getFactory().getQueryEngine()
+		final NamedSqmQueryMemento namedHqlDescriptor = getFactory().getQueryEngine()
 				.getNamedObjectRepository()
-				.getHqlQueryMemento( queryName );
+				.getSqmQueryMemento( queryName );
 
 		if ( namedHqlDescriptor != null ) {
-			return createNamedHqlSelectionQuery( namedHqlDescriptor, expectedResultType );
+			return createNamedSqmSelectionQuery( namedHqlDescriptor, expectedResultType );
 		}
 
 
@@ -906,13 +907,13 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		);
 	}
 
-	private <R> SqmSelectionQueryImpl<R> createNamedHqlSelectionQuery(
-			NamedHqlQueryMemento memento,
+	private <R> SqmSelectionQuery<R> createNamedSqmSelectionQuery(
+			NamedSqmQueryMemento memento,
 			Class<R> expectedResultType) {
-		final SqmSelectionQueryImpl<R> selectionQuery = new SqmSelectionQueryImpl<>( memento, expectedResultType, this );
+		final SqmSelectionQuery<R> selectionQuery = memento.toSelectionQuery( expectedResultType, this );
 
 		if ( StringHelper.isEmpty( memento.getComment() ) ) {
-			selectionQuery.setComment( "Named HQL query : " + memento.getRegistrationName() );
+			selectionQuery.setComment( "Named query : " + memento.getRegistrationName() );
 		}
 		else {
 			selectionQuery.setComment( memento.getComment() );
@@ -958,7 +959,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 						final SqmQueryImplementor query = memento.toQuery( this, resultType );
 
 						if ( StringHelper.isEmpty( query.getComment() ) ) {
-							query.setComment( "dynamic HQL query" );
+							query.setComment( "dynamic query" );
 						}
 						applyQuerySettingsAndHints( query );
 						if ( memento.getLockOptions() != null ) {
@@ -1002,7 +1003,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@SuppressWarnings("rawtypes")
 	protected QueryImplementor buildNamedQuery(
 			String queryName,
-			Function<NamedHqlQueryMemento, SqmQueryImplementor> namedHqlHandler,
+			Function<NamedSqmQueryMemento, SqmQueryImplementor> namedSqmHandler,
 			Function<NamedNativeQueryMemento, NativeQueryImplementor> namedNativeHandler) {
 		checkOpen();
 		pulseTransactionCoordinator();
@@ -1011,17 +1012,17 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		// this method can be called for either a named HQL query or a named native query
 
 		// first see if it is a named HQL query
-		final NamedHqlQueryMemento namedHqlDescriptor = getFactory().getQueryEngine()
-				.getNamedObjectRepository()
-				.getHqlQueryMemento( queryName );
+		final NamedObjectRepository namedObjectRepository = getFactory().getQueryEngine()
+				.getNamedObjectRepository();
 
-		if ( namedHqlDescriptor != null ) {
-			return namedHqlHandler.apply( namedHqlDescriptor );
+
+		final NamedSqmQueryMemento namedSqmQueryMemento = namedObjectRepository.getSqmQueryMemento( queryName );
+		if ( namedSqmQueryMemento != null ) {
+			return namedSqmHandler.apply( namedSqmQueryMemento );
 		}
 
 		// otherwise, see if it is a named native query
-		final NamedNativeQueryMemento namedNativeDescriptor = getFactory().getQueryEngine()
-				.getNamedObjectRepository()
+		final NamedNativeQueryMemento namedNativeDescriptor = namedObjectRepository
 				.getNativeQueryMemento( queryName );
 
 		if ( namedNativeDescriptor != null ) {
@@ -1086,17 +1087,17 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public MutationQuery createNamedMutationQuery(String queryName) {
 		return buildNamedQuery(
 				queryName,
-				(hqlMemento) -> {
-					final SqmQueryImplementor<?> query = hqlMemento.toQuery( this );
+				(sqmMemento) -> {
+					final SqmQueryImplementor<?> query = sqmMemento.toQuery( this );
 
 					final SqmStatement<?> sqmStatement = query.getSqmStatement();
 					if ( !( sqmStatement instanceof SqmDmlStatement ) ) {
 						throw new IllegalMutationQueryException(
-								"Expecting a named mutation query (" + queryName + "), but found `" + hqlMemento.getHqlString() + "`"
+								"Expecting a named mutation query (" + queryName + "), but found a select statement"
 						);
 					}
 
-					if ( hqlMemento.getLockOptions() != null && ! hqlMemento.getLockOptions().isEmpty() ) {
+					if ( sqmMemento.getLockOptions() != null && ! sqmMemento.getLockOptions().isEmpty() ) {
 						throw new IllegalNamedQueryOptionsException(
 								"Named mutation query `" + queryName + "` specified lock-options"
 						);

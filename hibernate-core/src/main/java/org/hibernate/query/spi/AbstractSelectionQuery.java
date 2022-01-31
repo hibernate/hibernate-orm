@@ -48,11 +48,11 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.JpaSelection;
-import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.internal.ScrollableResultsIterator;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -127,7 +127,7 @@ public abstract class AbstractSelectionQuery<R>
 		return null;
 	}
 
-	protected void applyOptions(NamedHqlQueryMemento memento) {
+	protected void applyOptions(NamedSqmQueryMemento memento) {
 		applyOptions( (NamedQueryMemento) memento );
 
 		if ( memento.getFirstResult() != null ) {

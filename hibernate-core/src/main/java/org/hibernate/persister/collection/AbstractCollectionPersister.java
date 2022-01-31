@@ -136,6 +136,7 @@ import org.jboss.logging.Logger;
  * Base implementation of the {@code QueryableCollection} interface.
  *
  * @author Gavin King
+ *
  * @see BasicCollectionPersister
  * @see OneToManyPersister
  */
@@ -277,13 +278,18 @@ public abstract class AbstractCollectionPersister
 	private final JdbcMapping convertedElementType;
 	private final JdbcMapping convertedIndexType;
 
+	@Deprecated(since = "6.0")
 	public AbstractCollectionPersister(
 			Collection collectionBootDescriptor,
 			CollectionDataAccess cacheAccessStrategy,
-			PersisterCreationContext persisterCreationContext) throws MappingException, CacheException {
-		assert persisterCreationContext instanceof RuntimeModelCreationContext;
+			PersisterCreationContext creationContext) throws MappingException, CacheException {
+		this( collectionBootDescriptor, cacheAccessStrategy, (RuntimeModelCreationContext) creationContext );
+	}
 
-		final RuntimeModelCreationContext creationContext = (RuntimeModelCreationContext) persisterCreationContext;
+	public AbstractCollectionPersister(
+			Collection collectionBootDescriptor,
+			CollectionDataAccess cacheAccessStrategy,
+			RuntimeModelCreationContext creationContext) throws MappingException, CacheException {
 
 		final Value elementBootDescriptor = collectionBootDescriptor.getElement();
 		final Value indexBootDescriptor = collectionBootDescriptor instanceof IndexedCollection
@@ -514,7 +520,7 @@ public abstract class AbstractCollectionPersister
 			identifierColumnName = col.getQuotedName( dialect );
 			identifierColumnAlias = col.getAlias( dialect );
 			identifierGenerator = idColl.getIdentifier().createIdentifierGenerator(
-					persisterCreationContext.getBootstrapContext().getIdentifierGeneratorFactory(),
+					creationContext.getBootstrapContext().getIdentifierGeneratorFactory(),
 					factory.getJdbcServices().getDialect(),
 					null
 			);

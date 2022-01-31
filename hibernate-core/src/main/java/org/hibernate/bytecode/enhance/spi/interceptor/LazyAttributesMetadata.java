@@ -16,9 +16,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.boot.Metadata;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.persister.spi.PersisterCreationContext;
 
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
@@ -38,7 +38,7 @@ public class LazyAttributesMetadata implements Serializable {
 			PersistentClass mappedEntity,
 			boolean isEnhanced,
 			boolean collectionsInDefaultFetchGroupEnabled,
-			PersisterCreationContext creationContext) {
+			Metadata metadata) {
 		final Map<String, LazyAttributeDescriptor> lazyAttributeDescriptorMap = new LinkedHashMap<>();
 		final Map<String, Set<String>> fetchGroupToAttributesMap = new HashMap<>();
 
@@ -49,8 +49,8 @@ public class LazyAttributesMetadata implements Serializable {
 			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 					property,
 					isEnhanced,
-					(entityName) -> {
-						final PersistentClass entityBinding = creationContext.getMetadata().getEntityBinding( entityName );
+					entityName -> {
+						final PersistentClass entityBinding = metadata.getEntityBinding( entityName );
 						assert entityBinding != null;
 						return entityBinding.hasSubclasses();
 					},

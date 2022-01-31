@@ -23,6 +23,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.mapping.Collection;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.pretty.MessageHelper;
@@ -60,10 +61,18 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		return cascadeDeleteEnabled;
 	}
 
+	@Deprecated(since = "6.0")
 	public OneToManyPersister(
 			Collection collectionBinding,
 			CollectionDataAccess cacheAccessStrategy,
 			PersisterCreationContext creationContext) throws MappingException, CacheException {
+		this( collectionBinding, cacheAccessStrategy, (RuntimeModelCreationContext) creationContext );
+	}
+
+	public OneToManyPersister(
+			Collection collectionBinding,
+			CollectionDataAccess cacheAccessStrategy,
+			RuntimeModelCreationContext creationContext) throws MappingException, CacheException {
 		super( collectionBinding, cacheAccessStrategy, creationContext );
 		cascadeDeleteEnabled = collectionBinding.getKey().isCascadeDeleteEnabled()
 				&& creationContext.getSessionFactory().getJdbcServices().getDialect().supportsCascadeDelete();

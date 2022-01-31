@@ -673,13 +673,21 @@ public abstract class AbstractEntityPersister
 		return tableNames;
 	}
 
+	@Deprecated(since = "6.0")
 	public AbstractEntityPersister(
 			final PersistentClass bootDescriptor,
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
-			final PersisterCreationContext pcc) throws HibernateException {
+			final PersisterCreationContext creationContext) throws HibernateException {
+		this( bootDescriptor, cacheAccessStrategy, naturalIdRegionAccessStrategy,
+				(RuntimeModelCreationContext) creationContext );
+	}
 
-		final RuntimeModelCreationContext creationContext = (RuntimeModelCreationContext) pcc;
+	public AbstractEntityPersister(
+			final PersistentClass bootDescriptor,
+			final EntityDataAccess cacheAccessStrategy,
+			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
+			final RuntimeModelCreationContext creationContext) throws HibernateException {
 
 		this.factory = creationContext.getSessionFactory();
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( bootDescriptor.getEntityName() );
@@ -1081,7 +1089,7 @@ public abstract class AbstractEntityPersister
 	 */
 	private boolean shouldInvalidateCache(
 			PersistentClass persistentClass,
-			PersisterCreationContext creationContext) {
+			RuntimeModelCreationContext creationContext) {
 		if ( hasFormulaProperties() ) {
 			// we need to evaluate formulas in the database
 			return true;
@@ -1112,7 +1120,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private boolean isCacheComplianceEnabled(PersisterCreationContext creationContext) {
+	private boolean isCacheComplianceEnabled(RuntimeModelCreationContext creationContext) {
 		return creationContext.getSessionFactory()
 				.getSessionFactoryOptions()
 				.getJpaCompliance()

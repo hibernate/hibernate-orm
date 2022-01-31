@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class PersisterTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
-	public void testEntityEntityPersisterAndPersisterSpecified() throws Exception {
+	public void testEntityEntityPersisterAndPersisterSpecified() {
 		//checks to see that the persister specified with the @Persister annotation takes precedence if a @Entity.persister() is also specified		
 		PersistentClass persistentClass = metadata().getEntityBinding( Deck.class.getName() );
 		assertEquals( "Incorrect Persister class for " + persistentClass.getMappedClass(), EntityPersister.class,
@@ -28,7 +28,7 @@ public class PersisterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testEntityEntityPersisterSpecified() throws Exception {
+	public void testEntityEntityPersisterSpecified() {
 		//tests the persister specified with an @Entity.persister()		
 		PersistentClass persistentClass = metadata().getEntityBinding( Card.class.getName() );
 		assertEquals( "Incorrect Persister class for " + persistentClass.getMappedClass(),
@@ -36,7 +36,7 @@ public class PersisterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testCollectionPersisterSpecified() throws Exception {
+	public void testCollectionPersisterSpecified() {
 		//tests the persister specified by the @Persister annotation on a collection
 		Collection collection = metadata().getCollectionBinding( Deck.class.getName() + ".cards" );
 		assertEquals( "Incorrect Persister class for collection " + collection.getRole(), CollectionPersister.class,

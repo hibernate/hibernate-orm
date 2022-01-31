@@ -359,20 +359,7 @@ public class ToOneAttributeMapping
 		isConstrained = bootValue.isConstrained();
 
 		this.navigableRole = navigableRole;
-		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact(
-				getNavigableRole().getParent().getLocalName()
-		);
-		if ( nature == null ) {
-			// This is a simple to-one association
-			this.declaringTableGroupProducer = declaringEntityPersister;
-		}
-		else {
-			// This is a collection part i.e. to-many association
-			final String collectionRoleName = getNavigableRole().getParent().getParent().getLocalName();
-			this.declaringTableGroupProducer = ( (PluralAttributeMapping) declaringEntityPersister.findAttributeMapping(
-					collectionRoleName.substring( collectionRoleName.lastIndexOf( '.' ) + 1 )
-			) );
-		}
+		this.declaringTableGroupProducer = resolveDeclaringTableGroupProducer( declaringEntityPersister );
 		if ( referencedPropertyName == null ) {
 			final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
 			targetKeyPropertyNames.add( EntityIdentifierMapping.ROLE_LOCAL_NAME );
@@ -469,6 +456,31 @@ public class ToOneAttributeMapping
 				}
 			}
 		}
+	}
+
+	private TableGroupProducer resolveDeclaringTableGroupProducer(EntityPersister declaringEntityPersister) {
+		// Also handle cases where a collection contains an embeddable, that contains an association
+		NavigableRole parentRole = getNavigableRole().getParent();
+		String collectionRole = null;
+		do {
+			final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact(
+					parentRole.getLocalName()
+			);
+			if (nature != null) {
+				collectionRole = parentRole.getParent().getFullPath();
+				break;
+			}
+			parentRole = parentRole.getParent();
+		} while (parentRole != null);
+
+		if ( collectionRole != null ) {
+			// This is a collection part i.e. to-many association
+			return declaringEntityPersister.getFactory().getMappingMetamodel()
+					.findCollectionDescriptor( collectionRole )
+					.getAttributeMapping();
+		}
+		// This is a simple to-one association
+		return declaringEntityPersister;
 	}
 
 	private ToOneAttributeMapping(

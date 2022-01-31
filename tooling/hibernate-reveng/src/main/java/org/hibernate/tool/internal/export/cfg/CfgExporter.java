@@ -20,6 +20,7 @@ import java.util.TreeMap;
 import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.mapping.Subclass;
 import org.hibernate.tool.internal.export.common.AbstractExporter;
 
 /**
@@ -143,7 +144,7 @@ public class CfgExporter extends AbstractExporter {
 			pw.println("<mapping resource=\"" + getMappingFileResource(element) + "\"/>");
 		}
 			
-		Iterator<?> directSubclasses = element.getDirectSubclasses();
+		Iterator<Subclass> directSubclasses = element.getDirectSubclasses().iterator();
 		while (directSubclasses.hasNext() ) {
 			PersistentClass subclass = (PersistentClass)directSubclasses.next();
 			dump(pw, useClass, subclass);		

@@ -33,6 +33,7 @@ import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
@@ -65,11 +66,9 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			throw new HibernateException( "Unable to locate persister: " + event.getEntityClassName() );
 		}
 
-		final Class<?> idClass = persister.getIdentifierType().getReturnedClass();
-		if ( idClass != null &&
-				!idClass.isInstance( event.getEntityId() ) &&
-				!(event.getEntityId() instanceof DelayedPostInsertIdentifier) ) {
-			checkIdClass( persister, event, loadType, idClass );
+		if ( !persister.getIdentifierMapping().getJavaType().isInstance( event.getEntityId() ) &&
+				!( event.getEntityId() instanceof DelayedPostInsertIdentifier ) ) {
+			checkIdClass( persister, event, loadType, persister.getIdentifierType().getReturnedClass() );
 		}
 
 		doOnLoad( persister, event, loadType );
@@ -153,6 +152,11 @@ public class DefaultLoadEventListener implements LoadEventListener {
 						);
 						return;
 					}
+				}
+			}
+			else if ( idMapping instanceof NonAggregatedIdentifierMapping ) {
+				if ( idClass.isInstance( event.getEntityId() ) ) {
+					return;
 				}
 			}
 		}

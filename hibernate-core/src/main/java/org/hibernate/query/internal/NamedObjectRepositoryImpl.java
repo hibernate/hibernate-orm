@@ -26,6 +26,7 @@ import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
+import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 
 import org.jboss.logging.Logger;
 
@@ -36,19 +37,41 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	private static final Logger log = Logger.getLogger( NamedObjectRepository.class );
 
 	private final Map<String, NamedHqlQueryMemento> hqlMementoMap;
+	private final Map<String, NamedSqmQueryMemento> sqmMementoMap;
 	private final Map<String, NamedNativeQueryMemento> sqlMementoMap;
 	private final Map<String, NamedCallableQueryMemento> callableMementoMap;
 	private final Map<String, NamedResultSetMappingMemento> resultSetMappingMementoMap;
 
 	public NamedObjectRepositoryImpl(
 			Map<String,NamedHqlQueryMemento> hqlMementoMap,
+			Map<String,NamedSqmQueryMemento> sqmMementoMap,
 			Map<String,NamedNativeQueryMemento> sqlMementoMap,
 			Map<String,NamedCallableQueryMemento> callableMementoMap,
 			Map<String,NamedResultSetMappingMemento> resultSetMappingMementoMap) {
 		this.hqlMementoMap = hqlMementoMap;
+		this.sqmMementoMap = sqmMementoMap;
 		this.sqlMementoMap = sqlMementoMap;
 		this.callableMementoMap = callableMementoMap;
 		this.resultSetMappingMementoMap = resultSetMappingMementoMap;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Named SQM Memento
+
+	@Override
+	public NamedSqmQueryMemento getSqmQueryMemento(String queryName) {
+		return sqmMementoMap.get( queryName );
+	}
+
+	@Override
+	public void visitSqmQueryMementos(Consumer<NamedSqmQueryMemento> action) {
+		sqmMementoMap.values().forEach( action );
+	}
+
+	@Override
+	public void registerSqmQueryMemento(String name, NamedSqmQueryMemento descriptor) {
+		sqmMementoMap.put( name, descriptor );
 	}
 
 
@@ -143,6 +166,10 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 			return namedQuery;
 		}
 		namedQuery = sqlMementoMap.get( registrationName );
+		if ( namedQuery != null ) {
+			return namedQuery;
+		}
+		namedQuery = sqmMementoMap.get( registrationName );
 		if ( namedQuery != null ) {
 			return namedQuery;
 		}

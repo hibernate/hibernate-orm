@@ -7,7 +7,6 @@
 package org.hibernate.query.sqm.internal;
 
 import java.io.Serializable;
-import java.sql.Types;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,7 +15,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -26,7 +24,6 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.Tuple;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -47,8 +44,6 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.IdentitySet;
-import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BindableType;
@@ -57,7 +52,6 @@ import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.TupleTransformer;
@@ -68,6 +62,7 @@ import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
+import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.AbstractSelectionQuery;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.HqlInterpretation;
@@ -80,11 +75,10 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -93,19 +87,15 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
 import org.hibernate.query.sqm.tree.insert.SqmValues;
-import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
-import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.results.internal.TupleMetadata;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
@@ -178,6 +168,15 @@ public class QuerySqmImpl<R>
 
 		applyOptions( memento );
 		this.tupleMetadata = buildTupleMetadata( sqm, resultType );
+	}
+
+	public QuerySqmImpl(
+			NamedSqmQueryMemento memento,
+			Class<R> resultType,
+			SharedSessionContractImplementor session) {
+		this( memento.getSqmStatement(), resultType, session );
+
+		applyOptions( memento );
 	}
 
 	/**
@@ -1008,9 +1007,32 @@ public class QuerySqmImpl<R>
 	// Named query externalization
 
 	@Override
-	public NamedHqlQueryMemento toMemento(String name) {
+	public NamedQueryMemento toMemento(String name) {
 		if ( CRITERIA_HQL_STRING.equals( getQueryString() ) ) {
-			throw new UnsupportedOperationException( "Criteria-based Query cannot be saved as a named query" );
+			final SqmStatement sqmStatement ;
+			if ( getSession().isJpaCriteriaCopyComplianceEnabled() ) {
+				sqmStatement = getSqmStatement().copy( SqmCopyContext.simpleContext() );
+			}
+			else {
+				sqmStatement = getSqmStatement();
+			}
+			return new NamedSqmQueryMementoImpl(
+					name,
+					sqmStatement,
+					getFirstResult(),
+					getMaxResults(),
+					isCacheable(),
+					getCacheRegion(),
+					getCacheMode(),
+					getHibernateFlushMode(),
+					isReadOnly(),
+					getLockOptions(),
+					getTimeout(),
+					getFetchSize(),
+					getComment(),
+					Collections.emptyMap(),
+					getHints()
+			);
 		}
 
 		return new NamedHqlQueryMementoImpl(

@@ -104,12 +104,15 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.QueryLogging;
+import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.named.NamedObjectRepository;
+import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
@@ -871,10 +874,20 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 				}
 				else {
-					namedObjectRepository.registerHqlQueryMemento(
-							name,
-							( (SqmQueryImplementor<?>) hibernateQuery ).toMemento( name )
-					);
+					final NamedQueryMemento namedQueryMemento = ( (SqmQueryImplementor<?>) hibernateQuery ).toMemento(
+							name );
+					if ( namedQueryMemento instanceof NamedHqlQueryMemento ) {
+						namedObjectRepository.registerHqlQueryMemento(
+								name,
+								(NamedHqlQueryMemento) namedQueryMemento
+						);
+					}
+					else {
+						namedObjectRepository.registerSqmQueryMemento(
+								name,
+								(NamedSqmQueryMemento) namedQueryMemento
+						);
+					}
 				}
 				return;
 			}

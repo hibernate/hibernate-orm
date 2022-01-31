@@ -56,7 +56,7 @@ public class InformixDialectTestCase extends BaseUnitTestCase {
 				ValueHandlingMode.BIND,
 				dialect.getPreferredSqlTypeCodeForBoolean(),
 				false,
-				new NamedObjectRepositoryImpl( Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap() ),
+				new NamedObjectRepositoryImpl( Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap() ),
 				null,
 				dialect,
 				ssr

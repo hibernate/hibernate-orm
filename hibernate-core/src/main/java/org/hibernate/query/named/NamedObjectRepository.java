@@ -18,6 +18,7 @@ import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
+import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 
 /**
  * Repository for references to named things related with queries.  This includes
@@ -28,6 +29,13 @@ import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
  */
 @Incubating
 public interface NamedObjectRepository {
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Named SQM Memento
+
+	NamedSqmQueryMemento getSqmQueryMemento(String queryName);
+	void visitSqmQueryMementos(Consumer<NamedSqmQueryMemento> action);
+	void registerSqmQueryMemento(String name, NamedSqmQueryMemento descriptor);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Named HQL Memento

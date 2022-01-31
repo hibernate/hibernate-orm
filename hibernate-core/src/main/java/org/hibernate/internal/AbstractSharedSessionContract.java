@@ -70,6 +70,7 @@ import org.hibernate.query.UnknownNamedQueryException;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
+import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.QueryEngine;
@@ -82,6 +83,7 @@ import org.hibernate.query.sqm.SqmSelectionQuery;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.internal.SqmSelectionQueryImpl;
 import org.hibernate.query.sqm.internal.SqmUtil;
+import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -968,6 +970,19 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 						return query;
 					},
 					(memento) -> {
+						final SqmQueryImplementor query = memento.toQuery( this, resultType );
+
+						if ( StringHelper.isEmpty( query.getComment() ) ) {
+							query.setComment( "dynamic SQM query" );
+						}
+						applyQuerySettingsAndHints( query );
+						if ( memento.getLockOptions() != null ) {
+							query.setLockOptions( memento.getLockOptions() );
+						}
+
+						return query;
+					},
+					(memento) -> {
 						final NativeQueryImplementor query;
 						if ( resultType == null ) {
 							query = memento.toQuery( this );
@@ -1003,6 +1018,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	protected QueryImplementor buildNamedQuery(
 			String queryName,
 			Function<NamedHqlQueryMemento, SqmQueryImplementor> namedHqlHandler,
+			Function<NamedSqmQueryMemento, SqmQueryImplementor> namedSqmHandler,
 			Function<NamedNativeQueryMemento, NativeQueryImplementor> namedNativeHandler) {
 		checkOpen();
 		pulseTransactionCoordinator();
@@ -1011,17 +1027,23 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		// this method can be called for either a named HQL query or a named native query
 
 		// first see if it is a named HQL query
-		final NamedHqlQueryMemento namedHqlDescriptor = getFactory().getQueryEngine()
-				.getNamedObjectRepository()
+		final NamedObjectRepository namedObjectRepository = getFactory().getQueryEngine()
+				.getNamedObjectRepository();
+
+		final NamedHqlQueryMemento namedHqlDescriptor = namedObjectRepository
 				.getHqlQueryMemento( queryName );
 
 		if ( namedHqlDescriptor != null ) {
 			return namedHqlHandler.apply( namedHqlDescriptor );
 		}
 
+		final NamedSqmQueryMemento namedSqmQueryMemento = namedObjectRepository.getSqmQueryMemento( queryName );
+		if ( namedSqmQueryMemento != null ) {
+			return namedSqmHandler.apply( namedSqmQueryMemento );
+		}
+
 		// otherwise, see if it is a named native query
-		final NamedNativeQueryMemento namedNativeDescriptor = getFactory().getQueryEngine()
-				.getNamedObjectRepository()
+		final NamedNativeQueryMemento namedNativeDescriptor = namedObjectRepository
 				.getNativeQueryMemento( queryName );
 
 		if ( namedNativeDescriptor != null ) {
@@ -1097,6 +1119,29 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 					}
 
 					if ( hqlMemento.getLockOptions() != null && ! hqlMemento.getLockOptions().isEmpty() ) {
+						throw new IllegalNamedQueryOptionsException(
+								"Named mutation query `" + queryName + "` specified lock-options"
+						);
+					}
+
+					if ( StringHelper.isEmpty( query.getComment() ) ) {
+						query.setComment( "dynamic HQL query" );
+					}
+					applyQuerySettingsAndHints( query );
+
+					return query;
+				},
+				(sqmMemento) -> {
+					final SqmQueryImplementor<?> query = sqmMemento.toQuery( this );
+
+					final SqmStatement<?> sqmStatement = query.getSqmStatement();
+					if ( !( sqmStatement instanceof SqmDmlStatement ) ) {
+						throw new IllegalMutationQueryException(
+								"Expecting a named mutation query (" + queryName + "), but found a select statement"
+						);
+					}
+
+					if ( sqmMemento.getLockOptions() != null && ! sqmMemento.getLockOptions().isEmpty() ) {
 						throw new IllegalNamedQueryOptionsException(
 								"Named mutation query `" + queryName + "` specified lock-options"
 						);

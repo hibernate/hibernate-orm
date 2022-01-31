@@ -340,6 +340,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	public NamedObjectRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {
 		return new NamedObjectRepositoryImpl(
 				CollectionHelper.mapOfSize( namedQueryMap.size() ),
+				new HashMap<>(),
 				CollectionHelper.mapOfSize( namedNativeQueryMap.size() ),
 				CollectionHelper.mapOfSize( namedProcedureCallMap.size() ),
 				CollectionHelper.mapOfSize( sqlResultSetMappingMap.size() )

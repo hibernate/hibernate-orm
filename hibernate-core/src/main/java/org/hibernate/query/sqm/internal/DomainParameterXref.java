@@ -163,6 +163,14 @@ public class DomainParameterXref {
 		this.parameterResolutions = parameterResolutions;
 	}
 
+	public DomainParameterXref copy() {
+		return new DomainParameterXref(
+				sqmParamsByQueryParam,
+				new IdentityHashMap<>( queryParamBySqmParam ),
+				parameterResolutions
+		);
+	}
+
 	/**
 	 * Does this xref contain any parameters?
 	 */
@@ -256,5 +264,4 @@ public class DomainParameterXref {
 
 		expansions.clear();
 	}
-
 }

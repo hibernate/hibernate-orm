@@ -10,20 +10,21 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.persister.spi.PersisterCreationContext;
 
+import static java.util.Collections.unmodifiableMap;
+import static java.util.Collections.unmodifiableSet;
+
 /**
- * Information about all of the bytecode lazy attributes for an entity
+ * Information about the bytecode lazy attributes for an entity
  *
  * @author Steve Ebersole
  */
@@ -41,18 +42,15 @@ public class LazyAttributesMetadata implements Serializable {
 		final Map<String, LazyAttributeDescriptor> lazyAttributeDescriptorMap = new LinkedHashMap<>();
 		final Map<String, Set<String>> fetchGroupToAttributesMap = new HashMap<>();
 
-		int i = -1;
 		int x = 0;
-		final Iterator itr = mappedEntity.getPropertyClosureIterator();
-		while ( itr.hasNext() ) {
-			i++;
-			final Property property = (Property) itr.next();
+		final List<Property> properties = mappedEntity.getPropertyClosure();
+		for ( int i=0; i<properties.size(); i++ ) {
+			final Property property = properties.get(i);
 			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 					property,
 					isEnhanced,
 					(entityName) -> {
-						final MetadataImplementor metadata = creationContext.getMetadata();
-						final PersistentClass entityBinding = metadata.getEntityBinding( entityName );
+						final PersistentClass entityBinding = creationContext.getMetadata().getEntityBinding( entityName );
 						assert entityBinding != null;
 						return entityBinding.hasSubclasses();
 					},
@@ -75,13 +73,13 @@ public class LazyAttributesMetadata implements Serializable {
 		}
 
 		for ( Map.Entry<String, Set<String>> entry : fetchGroupToAttributesMap.entrySet() ) {
-			entry.setValue( Collections.unmodifiableSet( entry.getValue() ) );
+			entry.setValue( unmodifiableSet( entry.getValue() ) );
 		}
 
 		return new LazyAttributesMetadata(
 				mappedEntity.getEntityName(),
-				Collections.unmodifiableMap( lazyAttributeDescriptorMap ),
-				Collections.unmodifiableMap( fetchGroupToAttributesMap )
+				unmodifiableMap( lazyAttributeDescriptorMap ),
+				unmodifiableMap( fetchGroupToAttributesMap )
 		);
 	}
 
@@ -107,8 +105,8 @@ public class LazyAttributesMetadata implements Serializable {
 		this.entityName = entityName;
 		this.lazyAttributeDescriptorMap = lazyAttributeDescriptorMap;
 		this.fetchGroupToAttributeMap = fetchGroupToAttributeMap;
-		this.fetchGroupNames = Collections.unmodifiableSet( fetchGroupToAttributeMap.keySet() );
-		this.lazyAttributeNames = Collections.unmodifiableSet( lazyAttributeDescriptorMap.keySet() );
+		this.fetchGroupNames = unmodifiableSet( fetchGroupToAttributeMap.keySet() );
+		this.lazyAttributeNames = unmodifiableSet( lazyAttributeDescriptorMap.keySet() );
 	}
 
 	public String getEntityName() {

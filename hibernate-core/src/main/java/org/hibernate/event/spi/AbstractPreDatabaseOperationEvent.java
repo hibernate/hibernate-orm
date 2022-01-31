@@ -64,21 +64,5 @@ public abstract class AbstractPreDatabaseOperationEvent extends AbstractEvent {
 	public EntityPersister getPersister() {
 		return persister;
 	}
-
-	/**
-	 * Getter for property 'source'.  This is the session from which the event
-	 * originated.
-	 * <p/>
-	 * Some of the pre-* events had previous exposed the event source using
-	 * getSource() because they had not originally extended from
-	 * {@link AbstractEvent}.
-	 *
-	 * @return Value for property 'source'.
-	 *
-	 * @deprecated Use {@link #getSession} instead
-	 */
-	@Deprecated
-	public EventSource getSource() {
-		return getSession();
-	}
 }
+

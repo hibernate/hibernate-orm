@@ -14,14 +14,6 @@ import java.sql.NClob;
  * @author Steve Ebersole
  */
 public interface WrappedNClob extends WrappedClob {
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @deprecated Use {@link #getWrappedNClob()} instead
-	 */
-	@Override
-	@Deprecated
-	NClob getWrappedClob();
 
 	/**
 	 * Retrieve the wrapped {@link java.sql.Blob} reference

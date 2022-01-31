@@ -41,7 +41,7 @@ public class PostUpdateEventListenerStandardImpl implements PostUpdateEventListe
 	}
 
 	@Override
-	public boolean requiresPostCommitHanding(EntityPersister persister) {
+	public boolean requiresPostCommitHandling(EntityPersister persister) {
 		return callbackRegistry.hasRegisteredCallbacks( persister.getMappedClass(), CallbackType.POST_UPDATE );
 	}
 }

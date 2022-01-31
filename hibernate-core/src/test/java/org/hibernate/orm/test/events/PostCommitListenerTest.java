@@ -241,7 +241,7 @@ public class PostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		}
 
 		@Override
-		public boolean requiresPostCommitHanding(EntityPersister persister) {
+		public boolean requiresPostCommitHandling(EntityPersister persister) {
 			return true;
 		}
 	}
@@ -261,7 +261,7 @@ public class PostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		}
 
 		@Override
-		public boolean requiresPostCommitHanding(EntityPersister persister) {
+		public boolean requiresPostCommitHandling(EntityPersister persister) {
 			return true;
 		}
 	}
@@ -281,7 +281,7 @@ public class PostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		}
 
 		@Override
-		public boolean requiresPostCommitHanding(EntityPersister persister) {
+		public boolean requiresPostCommitHandling(EntityPersister persister) {
 			return true;
 		}
 	}

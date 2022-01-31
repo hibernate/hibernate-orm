@@ -15,7 +15,6 @@ import java.sql.Statement;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.jdbc.WorkExecutorVisitable;
-import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransactionAccess;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
@@ -27,12 +26,6 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
  * @author Brett Meyer
  */
 public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwner, JdbcResourceTransactionAccess {
-//	/**
-//	 * Retrieve the transaction coordinator associated with this JDBC coordinator.
-//	 *
-//	 * @return The transaction coordinator
-//	 */
-//	public TransactionCoordinator getTransactionCoordinator();
 
 	/**
 	 * Retrieves the logical connection associated with this JDBC coordinator.
@@ -128,10 +121,10 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
     /**
 	 * Calculate the amount of time, in seconds, still remaining before transaction timeout occurs.
 	 *
-	 * @return The number of seconds remaining until until a transaction timeout occurs.  A negative value indicates
+	 * @return The number of seconds remaining until a transaction timeout occurs.  A negative value indicates
 	 * no timeout was requested.
 	 *
-	 * @throws org.hibernate.TransactionException Indicates the time out period has already been exceeded.
+	 * @throws org.hibernate.TransactionException Indicates the timeout period has already been exceeded.
 	 */
 	int determineRemainingTransactionTimeOutPeriod();
 
@@ -158,14 +151,6 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	 * @return {@code true} indicates the coordinator can be serialized.
 	 */
 	boolean isReadyForSerialization();
-
-	/**
-	 * @deprecated access via {@link #getLogicalConnection} instead
-	 */
-	@Deprecated(since = "5.2")
-	default ResourceRegistry getResourceRegistry() {
-		return getLogicalConnection().getResourceRegistry();
-	}
 
 	void serialize(ObjectOutputStream objectOutputStream) throws IOException;
 

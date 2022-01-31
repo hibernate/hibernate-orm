@@ -6,7 +6,7 @@
  */
 package org.hibernate.persister.collection;
 import org.hibernate.MappingException;
-import org.hibernate.engine.spi.Mapping;
+import org.hibernate.boot.Metadata;
 import org.hibernate.persister.entity.AbstractPropertyMapping;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
@@ -24,13 +24,13 @@ public class CompositeElementPropertyMapping extends AbstractPropertyMapping {
 			String[] elementColumnReaderTemplates, 
 			String[] elementFormulaTemplates, 
 			CompositeType compositeType,
-			Mapping factory)
+			Metadata factory)
 	throws MappingException {
 
 		this.compositeType = compositeType;
 
 		initComponentPropertyPaths(null, compositeType, elementColumns, elementColumnReaders,
-				elementColumnReaderTemplates, elementFormulaTemplates, factory);
+				elementColumnReaderTemplates, elementFormulaTemplates, factory );
 
 	}
 

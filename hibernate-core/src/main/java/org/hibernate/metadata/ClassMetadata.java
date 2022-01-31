@@ -201,7 +201,9 @@ public interface ClassMetadata {
 	 * @deprecated Use {@link #getIdentifier(Object,SharedSessionContractImplementor)} instead
 	 */
 	@Deprecated
-	Object getIdentifier(Object object) throws HibernateException;
+	default Object getIdentifier(Object object) throws HibernateException {
+		return getIdentifier( object, null );
+	}
 
 	/**
 	 * Get the identifier of an instance (throw an exception if no identifier property)

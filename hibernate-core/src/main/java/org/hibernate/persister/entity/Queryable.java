@@ -50,7 +50,9 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	 * @deprecated Use {@link EntityPersister#getSqmMultiTableMutationStrategy} instead
 	 */
 	@Deprecated(since = "6.0")
-	boolean isMultiTable();
+	default boolean isMultiTable() {
+		return false;
+	}
 
 	/**
 	 * Get the names of all tables used in the hierarchy (up and down) ordered such

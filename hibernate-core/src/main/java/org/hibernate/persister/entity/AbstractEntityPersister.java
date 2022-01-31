@@ -45,6 +45,7 @@ import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
@@ -85,7 +86,6 @@ import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.NaturalIdResolutions;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
@@ -2694,7 +2694,7 @@ public abstract class AbstractEntityPersister
 		return sqlWhereStringTemplate != null;
 	}
 
-	private void initOrdinaryPropertyPaths(Mapping mapping) throws MappingException {
+	private void initOrdinaryPropertyPaths(Metadata mapping) throws MappingException {
 		for ( int i = 0; i < getSubclassPropertyNameClosure().length; i++ ) {
 			propertyMapping.initPropertyPaths(
 					getSubclassPropertyNameClosure()[i],
@@ -2708,7 +2708,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private void initIdentifierPropertyPaths(Mapping mapping) throws MappingException {
+	private void initIdentifierPropertyPaths(Metadata mapping) throws MappingException {
 		String idProp = getIdentifierPropertyName();
 		if ( idProp != null ) {
 			propertyMapping.initPropertyPaths(
@@ -2730,7 +2730,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private void initDiscriminatorPropertyPath() {
+	private void initDiscriminatorPropertyPath(Metadata mapping) {
 		propertyMapping.initPropertyPaths(
 				ENTITY_CLASS,
 				getDiscriminatorType(),
@@ -2738,16 +2738,16 @@ public abstract class AbstractEntityPersister
 				new String[] {getDiscriminatorColumnReaders()},
 				new String[] {getDiscriminatorColumnReaderTemplate()},
 				new String[] {getDiscriminatorFormulaTemplate()},
-				getFactory()
+				mapping
 		);
 	}
 
-	protected void initPropertyPaths(Mapping mapping) throws MappingException {
+	protected void initPropertyPaths(Metadata mapping) throws MappingException {
 		initOrdinaryPropertyPaths( mapping );
 		initOrdinaryPropertyPaths( mapping ); //do two passes, for collection property-ref!
 		initIdentifierPropertyPaths( mapping );
 		if ( entityMetamodel.isPolymorphic() ) {
-			initDiscriminatorPropertyPath();
+			initDiscriminatorPropertyPath( mapping );
 		}
 	}
 
@@ -4054,7 +4054,7 @@ public abstract class AbstractEntityPersister
 	 *
 	 * @throws MappingException Indicates a problem accessing the Mapping
 	 */
-	protected void postConstruct(Mapping mapping) throws MappingException {
+	protected void postConstruct(Metadata mapping) throws MappingException {
 		initPropertyPaths( mapping );
 
 		//doLateInit();
@@ -5054,11 +5054,6 @@ public abstract class AbstractEntityPersister
 		return getPropertyValue( baseValue, baseValueType, propertyName, nextDotIndex );
 	}
 
-	@Override @Deprecated
-	public Object getIdentifier(Object object) {
-		return getIdentifier( object, null );
-	}
-
 	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
 		return identifierMapping.getIdentifier( entity );
@@ -5160,8 +5155,12 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	@Override @Deprecated
+	@Override @Deprecated(since = "6.0")
 	public boolean isMultiTable() {
+		return hasMultipleTables();
+	}
+
+	protected boolean hasMultipleTables() {
 		return false;
 	}
 
@@ -5585,7 +5584,7 @@ public abstract class AbstractEntityPersister
 				}
 		);
 
-		boolean needsMultiTableInsert = isMultiTable();
+		boolean needsMultiTableInsert = hasMultipleTables();
 		if ( needsMultiTableInsert ) {
 			creationProcess.registerInitializationCallback(
 					"Entity(" + getEntityName() + ") `sqmMultiTableMutationStrategy` interpretation",
@@ -5741,7 +5740,7 @@ public abstract class AbstractEntityPersister
 	protected static SqmMultiTableMutationStrategy interpretSqmMultiTableStrategy(
 			AbstractEntityPersister entityMappingDescriptor,
 			MappingModelCreationProcess creationProcess) {
-		assert entityMappingDescriptor.isMultiTable();
+		assert entityMappingDescriptor.hasMultipleTables();
 
 		EntityMappingType superMappingType = entityMappingDescriptor.getSuperMappingType();
 		if ( superMappingType != null ) {

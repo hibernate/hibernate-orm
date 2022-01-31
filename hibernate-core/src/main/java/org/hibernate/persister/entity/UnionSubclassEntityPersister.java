@@ -23,12 +23,12 @@ import java.util.function.Supplier;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
@@ -212,7 +212,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		}
 		subclassTableExpressions = ArrayHelper.toStringArray( tableExpressions );
 
-		if ( isMultiTable() ) {
+		if ( hasMultipleTables() ) {
 			int idColumnSpan = getIdentifierColumnSpan();
 			ArrayList<String> tableNames = new ArrayList<>();
 			ArrayList<String[]> keyColumns = new ArrayList<>();
@@ -374,8 +374,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return 0;
 	}
 
-	@Override @Deprecated
-	public boolean isMultiTable() {
+	@Override
+	protected boolean hasMultipleTables() {
 		// This could also just be true all the time...
 		return isAbstract() || hasSubclasses();
 	}
@@ -429,7 +429,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return new int[getPropertySpan()];
 	}
 
-	protected String generateSubquery(PersistentClass model, Mapping mapping) {
+	protected String generateSubquery(PersistentClass model, Metadata mapping) {
 
 		Dialect dialect = getFactory().getJdbcServices().getDialect();
 		SqlStringGenerationContext sqlStringGenerationContext = getFactory().getSqlStringGenerationContext();
@@ -460,7 +460,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				buf.append( "select " );
 				for ( Column col : columns ) {
 					if ( !table.containsColumn(col) ) {
-						int sqlType = col.getSqlTypeCode(mapping);
+						int sqlType = col.getSqlTypeCode( mapping );
 						buf.append( dialect.getSelectClauseNullString(sqlType) )
 								.append(" as ");
 					}

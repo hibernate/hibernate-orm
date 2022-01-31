@@ -510,14 +510,14 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			propTableNumbers.add( tableNumber );
 
 			for ( Selectable selectable : property.getSelectables() ) {
-				if ( selectable.isFormula() ) {
-//					formulaTableNumbers.add( tableNumber );
-				}
-				else {
+				if ( !selectable.isFormula() ) {
 					columnTableNumbers.add( tableNumber );
 					Column column = (Column) selectable;
 					columns.add( column.getQuotedName( dialect ) );
 				}
+//				else {
+//					formulaTableNumbers.add( tableNumber );
+//				}
 			}
 		}
 
@@ -1009,8 +1009,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return tableSpan;
 	}
 
-	@Override @Deprecated
-	public boolean isMultiTable() {
+	@Override
+	protected boolean hasMultipleTables() {
 		return true;
 	}
 

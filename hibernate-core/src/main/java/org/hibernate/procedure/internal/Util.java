@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.UnknownSqlResultSetMappingException;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
@@ -57,6 +58,9 @@ public class Util {
 
 		for ( String resultSetMappingName : resultSetMappingNames ) {
 			final NamedResultSetMappingMemento memento = namedObjectRepository.getResultSetMappingMemento( resultSetMappingName );
+			if ( memento == null ) {
+				throw new UnknownSqlResultSetMappingException( "Unknown SqlResultSetMapping [" + resultSetMappingName + "]" );
+			}
 			memento.resolve(
 					resultSetMapping,
 					querySpaceConsumer,

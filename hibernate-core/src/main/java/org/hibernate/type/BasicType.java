@@ -48,8 +48,6 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 		return getJavaTypeDescriptor();
 	}
 
-
-
 	@Override
 	default int forEachJdbcType(IndexedConsumer<JdbcMapping> action) {
 		action.accept( 0, this );

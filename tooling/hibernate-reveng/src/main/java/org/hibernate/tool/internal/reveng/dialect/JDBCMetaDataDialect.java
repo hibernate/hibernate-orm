@@ -32,7 +32,7 @@ public class JDBCMetaDataDialect extends AbstractMetaDataDialect {
 				protected Map<String, Object> convertRow(ResultSet tableResultSet) throws SQLException {
 					element.clear();
 					putTablePart( element, tableResultSet );
-					element.put("TABLE_TYPE", tableResultSet.getString("TABLE_TYPE"));
+					putTableType(element, tableResultSet);
 					element.put("REMARKS", tableResultSet.getString("REMARKS"));
 					return element;					
 				}
@@ -84,6 +84,10 @@ public class JDBCMetaDataDialect extends AbstractMetaDataDialect {
 			throw new RuntimeException(
 					"Exception while getting index info for " + TableNameQualifier.qualify(xcatalog, xschema, xtable), e);
 		} 		
+	}
+	
+	protected void putTableType(Map<String, Object> element, ResultSet tableRs) throws SQLException {
+		element.put("TABLE_TYPE", tableRs.getString("TABLE_TYPE"));
 	}
 
 	protected void putTablePart(Map<String, Object> element, ResultSet tableRs) throws SQLException {

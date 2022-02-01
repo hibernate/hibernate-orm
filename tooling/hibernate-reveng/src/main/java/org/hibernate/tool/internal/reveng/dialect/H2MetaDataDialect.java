@@ -35,6 +35,14 @@ public class H2MetaDataDialect extends JDBCMetaDataDialect {
         }
 	}
 
+	protected void putTableType(Map<String, Object> element, ResultSet tableRs) throws SQLException {
+		String tableType = tableRs.getString("TABLE_TYPE");
+		if ("BASE TABLE".equals(tableType)) {
+			tableType = "TABLE";
+		}
+		element.put("TABLE_TYPE", tableType);
+	}
+
 	protected void putTablePart(Map<String, Object> element, ResultSet tableRs) throws SQLException {		
 		super.putTablePart( element, tableRs );
 		if ( !understandsCatalogName ) {

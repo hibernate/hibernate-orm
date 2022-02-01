@@ -35,22 +35,36 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContainer, Expression, DomainResultProducer {
 
 	private final FromClause fromClause;
-	private final SelectClause selectClause = new SelectClause();
+	private final SelectClause selectClause;
 
 	private Predicate whereClauseRestrictions;
 
-	private boolean hasPositionalGroupItem;
 	private List<Expression> groupByClauseExpressions = Collections.emptyList();
 	private Predicate havingClauseRestrictions;
 
 	public QuerySpec(boolean isRoot) {
 		super( isRoot );
 		this.fromClause = new FromClause();
+		this.selectClause = new SelectClause();
 	}
 
 	public QuerySpec(boolean isRoot, int expectedNumberOfRoots) {
 		super( isRoot );
 		this.fromClause = new FromClause( expectedNumberOfRoots );
+		this.selectClause = new SelectClause();
+	}
+
+	private QuerySpec(QuerySpec original) {
+		super( false, original );
+		this.fromClause = original.fromClause;
+		this.selectClause = original.selectClause;
+		this.whereClauseRestrictions = original.whereClauseRestrictions;
+		this.groupByClauseExpressions = original.groupByClauseExpressions;
+		this.havingClauseRestrictions = original.havingClauseRestrictions;
+	}
+
+	public QuerySpec asSubQuery() {
+		return isRoot() ? new QuerySpec( this ) : this;
 	}
 
 	@Override
@@ -94,20 +108,8 @@ public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContain
 		return groupByClauseExpressions;
 	}
 
-	public boolean hasPositionalGroupItem() {
-		return hasPositionalGroupItem;
-	}
-
 	public void setGroupByClauseExpressions(List<Expression> groupByClauseExpressions) {
 		this.groupByClauseExpressions = groupByClauseExpressions == null ? Collections.emptyList() : groupByClauseExpressions;
-		if ( isRoot() ) {
-			for ( int i = 0; i < groupByClauseExpressions.size(); i++ ) {
-				final Expression groupItem = groupByClauseExpressions.get( i );
-				if ( groupItem instanceof SqmAliasedNodeRef ) {
-					hasPositionalGroupItem = true;
-				}
-			}
-		}
 	}
 
 	public Predicate getHavingClauseRestrictions() {

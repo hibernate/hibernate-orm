@@ -49,7 +49,7 @@ public class DB2iDialect extends DB2Dialect {
 			CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 			functionFactory.listagg( null );
 			functionFactory.inverseDistributionOrderedSetAggregates();
-			functionFactory.hypotheticalOrderedSetAggregates();
+			functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 		}
 	}
 

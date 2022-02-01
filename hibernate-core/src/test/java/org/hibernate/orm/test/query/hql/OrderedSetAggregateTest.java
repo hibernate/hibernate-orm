@@ -10,9 +10,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.dialect.SQLServerDialect;
-
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -21,11 +18,11 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -141,7 +138,6 @@ public class OrderedSetAggregateTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsInverseDistributionFunctions.class)
-	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "The function is only supported as window function and needs emulation")
 	public void testInverseDistribution(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -153,13 +149,37 @@ public class OrderedSetAggregateTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsHypotheticalSetFunctions.class)
-	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "The function is only supported as window function and needs emulation")
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "The function is only supported as window function and needs emulation")
-	public void testHypotheticalSet(SessionFactoryScope scope) {
+	public void testHypotheticalSetPercentRank(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					TypedQuery<Double> q = session.createQuery( "select percent_rank(5) within group (order by eob.theInt asc) from EntityOfBasics eob", Double.class );
 					assertEquals( 0.0D, q.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsHypotheticalSetFunctions.class)
+	public void testHypotheticalSetRank(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					TypedQuery<Long> q = session.createQuery( "select rank(5) within group (order by eob.theInt asc) from EntityOfBasics eob", Long.class );
+					assertEquals( 1L, q.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsHypotheticalSetFunctions.class)
+	public void testHypotheticalSetRankWithGroupByHavingOrderByLimit(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					TypedQuery<Tuple> q = session.createQuery( "select eob2.id, rank(5) within group (order by eob.theInt asc) from EntityOfBasics eob cross join EntityOfBasics eob2 group by eob2.id having eob2.id > 1 order by 1,2 offset 1", Tuple.class );
+					List<Tuple> resultList = q.getResultList();
+					assertEquals( 3, resultList.size() );
+					assertEquals( 1L, resultList.get( 0 ).get( 1, Long.class ) );
+					assertEquals( 1L, resultList.get( 1 ).get( 1, Long.class ) );
+					assertEquals( 1L, resultList.get( 2 ).get( 1, Long.class ) );
 				}
 		);
 	}

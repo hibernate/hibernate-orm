@@ -267,8 +267,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 					.setParameterTypes(INTEGER)
 					.register();
 		}
-		functionFactory.inverseDistributionOrderedSetAggregates();
-		functionFactory.hypotheticalOrderedSetAggregates();
+		functionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
+		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 		if ( getVersion().isSameOrAfter( 14 ) ) {
 			functionFactory.listagg_stringAggWithinGroup( "varchar(max)" );
 		}

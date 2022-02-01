@@ -123,7 +123,7 @@ public interface SqlAstWalker {
 
 	void visitDistinct(Distinct distinct);
 
-	void visitOverflow(Overflow distinct);
+	void visitOverflow(Overflow overflow);
 
 	void visitStar(Star star);
 
@@ -143,7 +143,7 @@ public interface SqlAstWalker {
 
 	void visitSummarization(Summarization every);
 
-	void visitOver(Over over);
+	void visitOver(Over<?> over);
 
 	void visitSelfRenderingExpression(SelfRenderingExpression expression);
 

@@ -57,62 +57,13 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		return new SelfRenderingSqmOrderedSetAggregateFunction<>(
-				this,
-				this,
+		return new SelfRenderingInverseDistributionFunction<>(
 				arguments,
 				filter,
 				withinGroupClause,
 				impliedResultType,
-				getArgumentsValidator(),
-				getReturnTypeResolver(),
-				queryEngine.getCriteriaBuilder(),
-				getName()
-		) {
-
-			@Override
-			protected ReturnableType<?> resolveResultType(TypeConfiguration typeConfiguration) {
-				return (ReturnableType<?>) withinGroupClause.getSortSpecifications().get( 0 ).getSortExpression()
-							.getExpressible();
-			}
-
-			@Override
-			protected MappingModelExpressible<?> getMappingModelExpressible(
-					SqmToSqlAstConverter walker,
-					ReturnableType<?> resultType) {
-				MappingModelExpressible<?> mapping;
-				if ( resultType instanceof MappingModelExpressible) {
-					// here we have a BasicType, which can be cast
-					// directly to BasicValuedMapping
-					mapping = (MappingModelExpressible<?>) resultType;
-				}
-				else {
-					// here we have something that is not a BasicType,
-					// and we have no way to get a BasicValuedMapping
-					// from it directly
-					final Expression expression = (Expression) withinGroupClause.getSortSpecifications().get( 0 )
-							.getSortExpression()
-							.accept( walker );
-					if ( expression.getExpressionType() instanceof BasicValuedMapping ) {
-						return (BasicValuedMapping) expression.getExpressionType();
-					}
-					try {
-						final MappingMetamodelImplementor domainModel = walker.getCreationContext()
-								.getSessionFactory()
-								.getRuntimeMetamodels()
-								.getMappingMetamodel();
-						return domainModel.resolveMappingExpressible(
-								getNodeType(),
-								walker.getFromClauseAccess()::getTableGroup
-						);
-					}
-					catch (Exception e) {
-						return null; // this works at least approximately
-					}
-				}
-				return mapping;
-			}
-		};
+				queryEngine
+		);
 	}
 
 	@Override
@@ -174,4 +125,71 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 		}
 	}
 
+	protected class SelfRenderingInverseDistributionFunction<T> extends SelfRenderingSqmOrderedSetAggregateFunction<T> {
+
+		private final SqmOrderByClause withinGroupClause;
+
+		public SelfRenderingInverseDistributionFunction(
+				List<? extends SqmTypedNode<?>> arguments,
+				SqmPredicate filter,
+				SqmOrderByClause withinGroupClause,
+				ReturnableType<T> impliedResultType, QueryEngine queryEngine) {
+			super(
+					InverseDistributionFunction.this,
+					InverseDistributionFunction.this,
+					arguments,
+					filter,
+					withinGroupClause,
+					impliedResultType,
+					InverseDistributionFunction.this.getArgumentsValidator(),
+					InverseDistributionFunction.this.getReturnTypeResolver(),
+					queryEngine.getCriteriaBuilder(),
+					InverseDistributionFunction.this.getName()
+			);
+			this.withinGroupClause = withinGroupClause;
+		}
+
+		@Override
+		protected ReturnableType<?> resolveResultType(TypeConfiguration typeConfiguration) {
+			return (ReturnableType<?>) withinGroupClause.getSortSpecifications().get( 0 ).getSortExpression()
+						.getExpressible();
+		}
+
+		@Override
+		protected MappingModelExpressible<?> getMappingModelExpressible(
+				SqmToSqlAstConverter walker,
+				ReturnableType<?> resultType) {
+			MappingModelExpressible<?> mapping;
+			if ( resultType instanceof MappingModelExpressible) {
+				// here we have a BasicType, which can be cast
+				// directly to BasicValuedMapping
+				mapping = (MappingModelExpressible<?>) resultType;
+			}
+			else {
+				// here we have something that is not a BasicType,
+				// and we have no way to get a BasicValuedMapping
+				// from it directly
+				final Expression expression = (Expression) withinGroupClause.getSortSpecifications().get( 0 )
+						.getSortExpression()
+						.accept( walker );
+				if ( expression.getExpressionType() instanceof BasicValuedMapping ) {
+					return (BasicValuedMapping) expression.getExpressionType();
+				}
+				try {
+					final MappingMetamodelImplementor domainModel = walker.getCreationContext()
+							.getSessionFactory()
+							.getRuntimeMetamodels()
+							.getMappingMetamodel();
+					return domainModel.resolveMappingExpressible(
+							getNodeType(),
+							walker.getFromClauseAccess()::getTableGroup
+					);
+				}
+				catch (Exception e) {
+					return null; // this works at least approximately
+				}
+			}
+			return mapping;
+		}
+	}
 }

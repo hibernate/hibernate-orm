@@ -60,7 +60,7 @@ public class DB2zDialect extends DB2Dialect {
 			CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 			functionFactory.listagg( null );
 			functionFactory.inverseDistributionOrderedSetAggregates();
-			functionFactory.hypotheticalOrderedSetAggregates();
+			functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 		}
 	}
 

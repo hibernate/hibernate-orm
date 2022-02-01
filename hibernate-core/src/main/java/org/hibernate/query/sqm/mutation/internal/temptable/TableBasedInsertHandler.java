@@ -222,7 +222,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 										new SqlSelectionImpl(
 												1,
 												0,
-												new Over(
+												new Over<>(
 														new SelfRenderingFunctionSqlAstExpression(
 																"row_number",
 																(appender, args, walker) -> appender.appendSql(

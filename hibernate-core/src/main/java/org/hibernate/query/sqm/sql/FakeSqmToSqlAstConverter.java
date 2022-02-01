@@ -21,6 +21,7 @@ import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.QueryTransformer;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
@@ -73,6 +74,10 @@ public class FakeSqmToSqlAstConverter extends BaseSemanticQueryWalker implements
 	@Override
 	public Stack<Clause> getCurrentClauseStack() {
 		return null;
+	}
+
+	@Override
+	public void registerQueryTransformer(QueryTransformer transformer) {
 	}
 
 	@Override

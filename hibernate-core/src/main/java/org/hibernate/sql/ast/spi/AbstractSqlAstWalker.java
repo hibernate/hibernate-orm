@@ -250,7 +250,7 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 
 	@Override
 	public void visitSelectStatement(SelectStatement statement) {
-		for ( CteStatement cteStatement : statement.getCteStatements() ) {
+		for ( CteStatement cteStatement : statement.getCteStatements().values() ) {
 			cteStatement.getCteDefinition().accept( this );
 		}
 		statement.getQueryPart().accept( this );
@@ -258,7 +258,7 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 
 	@Override
 	public void visitDeleteStatement(DeleteStatement statement) {
-		for ( CteStatement cteStatement : statement.getCteStatements() ) {
+		for ( CteStatement cteStatement : statement.getCteStatements().values() ) {
 			cteStatement.getCteDefinition().accept( this );
 		}
 		statement.getRestriction().accept( this );
@@ -266,7 +266,7 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 
 	@Override
 	public void visitUpdateStatement(UpdateStatement statement) {
-		for ( CteStatement cteStatement : statement.getCteStatements() ) {
+		for ( CteStatement cteStatement : statement.getCteStatements().values() ) {
 			cteStatement.getCteDefinition().accept( this );
 		}
 		for ( Assignment assignment : statement.getAssignments() ) {
@@ -277,7 +277,7 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 
 	@Override
 	public void visitInsertStatement(InsertStatement statement) {
-		for ( CteStatement cteStatement : statement.getCteStatements() ) {
+		for ( CteStatement cteStatement : statement.getCteStatements().values() ) {
 			cteStatement.getCteDefinition().accept( this );
 		}
 		if ( statement.getSourceSelectStatement() != null ) {

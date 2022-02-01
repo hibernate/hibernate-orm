@@ -35,8 +35,8 @@ public abstract class AbstractStatement implements Statement, CteContainer {
 	}
 
 	@Override
-	public Collection<CteStatement> getCteStatements() {
-		return cteStatements.values();
+	public Map<String, CteStatement> getCteStatements() {
+		return cteStatements;
 	}
 
 	@Override

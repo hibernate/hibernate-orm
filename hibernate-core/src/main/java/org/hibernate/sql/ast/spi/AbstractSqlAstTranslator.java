@@ -1313,7 +1313,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	public void visitCteContainer(CteContainer cteContainer) {
-		final Collection<CteStatement> cteStatements = cteContainer.getCteStatements();
+		final Collection<CteStatement> cteStatements = cteContainer.getCteStatements().values();
 		if ( cteStatements.isEmpty() ) {
 			return;
 		}

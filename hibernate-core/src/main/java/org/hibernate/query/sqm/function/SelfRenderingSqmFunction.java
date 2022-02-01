@@ -23,6 +23,7 @@ import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Collections.emptyList;
@@ -109,7 +110,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 	}
 
 	@Override
-	public SelfRenderingFunctionSqlAstExpression convertToSqlAst(SqmToSqlAstConverter walker) {
+	public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
 		final ReturnableType<?> resultType = resolveResultType(
 				walker.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);

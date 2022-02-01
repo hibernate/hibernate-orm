@@ -13,6 +13,7 @@ import java.util.Map;
 
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.AbstractStatement;
+import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.results.graph.DomainResult;
 
@@ -29,6 +30,13 @@ public class SelectStatement extends AbstractStatement {
 
 	public SelectStatement(QueryPart queryPart, List<DomainResult<?>> domainResults) {
 		this( false, new LinkedHashMap<>(), queryPart, domainResults );
+	}
+
+	public SelectStatement(
+			CteContainer cteContainer,
+			QueryPart queryPart,
+			List<DomainResult<?>> domainResults) {
+		this( cteContainer.isWithRecursive(), cteContainer.getCteStatements(), queryPart, domainResults );
 	}
 
 	public SelectStatement(

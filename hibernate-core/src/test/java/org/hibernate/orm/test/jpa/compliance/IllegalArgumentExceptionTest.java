@@ -11,12 +11,14 @@ import java.util.List;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Fetch;
 import jakarta.persistence.criteria.From;
@@ -24,8 +26,6 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
-
-import static org.junit.jupiter.api.Assertions.fail;
 
 @Jpa(
 		annotatedClasses = {
@@ -41,17 +41,16 @@ public class IllegalArgumentExceptionTest {
 		final CriteriaQuery<Tuple> query = scope.getEntityManagerFactory().getCriteriaBuilder().createTupleQuery();
 		final Root<Person> person = query.from( Person.class );
 
-		try {
-			List list = new ArrayList();
-			list.add( person.get( "id" ).alias( "a" ) );
-			list.add( person.get( "name" ).alias( "a" ) );
+		Assertions.assertThrows(
+				IllegalArgumentException.class,
+				() -> {
+					List list = new ArrayList();
+					list.add( person.get( "id" ).alias( "a" ) );
+					list.add( person.get( "name" ).alias( "a" ) );
 
-			query.multiselect( list );
-			fail( "TCK expects an IllegalArgumentException" );
-		}
-		catch (IllegalArgumentException iae) {
-			//expected by TCK
-		}
+					query.multiselect( list );
+				}
+		);
 	}
 
 	@Test
@@ -65,13 +64,11 @@ public class IllegalArgumentExceptionTest {
 				person.get( "name" ).alias( "a" )
 		};
 
-		try {
-			query.multiselect( selection );
-			fail( "TCK expects an IllegalArgumentException" );
-		}
-		catch (IllegalArgumentException iae) {
-			//expected by TCK
-		}
+		Assertions.assertThrows(
+				IllegalArgumentException.class,
+				() ->
+						query.multiselect( selection )
+		);
 	}
 
 	@Test
@@ -80,16 +77,14 @@ public class IllegalArgumentExceptionTest {
 		final CriteriaQuery<Tuple> query = scope.getEntityManagerFactory().getCriteriaBuilder().createTupleQuery();
 		final Root<Person> person = query.from( Person.class );
 
-		try {
-			query.multiselect(
-					person.get( "not_existing_attribute_name" ).alias( "a1" ),
-					person.get( "another_not_existing_attribute_name" ).alias( "a2" )
-			);
-			fail( "TCK expects an IllegalArgumentException" );
-		}
-		catch (IllegalArgumentException iae) {
-			// expected
-		}
+		Assertions.assertThrows(
+				IllegalArgumentException.class,
+				() ->
+						query.multiselect(
+								person.get( "not_existing_attribute_name" ).alias( "a1" ),
+								person.get( "another_not_existing_attribute_name" ).alias( "a2" )
+						)
+		);
 	}
 
 	@Test
@@ -98,29 +93,27 @@ public class IllegalArgumentExceptionTest {
 		final CriteriaQuery<String> query = scope.getEntityManagerFactory()
 				.getCriteriaBuilder()
 				.createQuery( String.class );
-		try {
-			final Root<Person> person = query.from( Person.class );
-			person.get( "not_existing_attribute_name" );
+		Assertions.assertThrows(
+				IllegalArgumentException.class,
+				() -> {
+					final Root<Person> person = query.from( Person.class );
+					person.get( "not_existing_attribute_name" );
+				}
 
-			fail( "TCK expects an IllegalArgumentException" );
-		}
-		catch (IllegalArgumentException iae) {
-			//expected by TCK
-		}
+		);
 	}
 
 	@Test
 	public void testGetStringNonExistingAttributeName(EntityManagerFactoryScope scope) {
-		try {
-			final CriteriaQuery<Person> query = scope.getEntityManagerFactory()
-					.getCriteriaBuilder()
-					.createQuery( Person.class );
-			query.from( Person.class ).get( "not_existing_attribute_name" );
-			fail( "TCK expects an IllegalArgumentException" );
-		}
-		catch (IllegalArgumentException iae) {
-			//expected by TCK
-		}
+		Assertions.assertThrows(
+				IllegalArgumentException.class,
+				() -> {
+					final CriteriaQuery<Person> query = scope.getEntityManagerFactory()
+							.getCriteriaBuilder()
+							.createQuery( Person.class );
+					query.from( Person.class ).get( "not_existing_attribute_name" );
+				}
+		);
 	}
 
 	@Test
@@ -129,13 +122,11 @@ public class IllegalArgumentExceptionTest {
 				.getCriteriaBuilder()
 				.createQuery( Person.class );
 		final From<Person, Person> customer = query.from( Person.class );
-		try {
-			customer.join( "not_existing_attribute_name" );
-			fail( "TCK expects an IllegalArgumentException" );
-		}
-		catch (IllegalArgumentException iae) {
-			//expected by TCK
-		}
+		Assertions.assertThrows(
+				IllegalArgumentException.class,
+				() ->
+						customer.join( "not_existing_attribute_name" )
+		);
 	}
 
 	@Test
@@ -144,13 +135,11 @@ public class IllegalArgumentExceptionTest {
 				.getCriteriaBuilder()
 				.createQuery( Person.class );
 		final From<Person, Person> customer = query.from( Person.class );
-		try {
-			customer.join( "not_existing_attribute_name", JoinType.INNER );
-			fail( "TCK expects an IllegalArgumentException" );
-		}
-		catch (IllegalArgumentException iae) {
-			//expected by TCK
-		}
+		Assertions.assertThrows(
+				IllegalArgumentException.class,
+				() ->
+						customer.join( "not_existing_attribute_name", JoinType.INNER )
+		);
 	}
 
 	@Test
@@ -161,13 +150,11 @@ public class IllegalArgumentExceptionTest {
 
 		final Root<Person> customer = query.from( Person.class );
 		final Join<Person, Address> address = customer.join( "address" );
-		try {
-			address.join( "not_existing_attribute_name" );
-			fail( "TCK expects an IllegalArgumentException" );
-		}
-		catch (IllegalArgumentException iae) {
-			//expected by TCK
-		}
+		Assertions.assertThrows(
+				IllegalArgumentException.class,
+				() ->
+						address.join( "not_existing_attribute_name" )
+		);
 	}
 
 	@Test
@@ -178,13 +165,11 @@ public class IllegalArgumentExceptionTest {
 
 		final Root<Person> customer = query.from( Person.class );
 		final Join<Person, Address> address = customer.join( "address" );
-		try {
-			address.join( "not_existing_attribute_name", JoinType.INNER );
-			fail( "TCK expects an IllegalArgumentException" );
-		}
-		catch (IllegalArgumentException iae) {
-			//expected by TCK
-		}
+		Assertions.assertThrows(
+				IllegalArgumentException.class,
+				() ->
+						address.join( "not_existing_attribute_name", JoinType.INNER )
+		);
 	}
 
 	@Test
@@ -196,13 +181,56 @@ public class IllegalArgumentExceptionTest {
 		final From<Person, Person> customer = query.from( Person.class );
 		final Fetch f = customer.fetch( "address" );
 
-		try {
-			f.fetch( "not_existing_attribute_name" );
-			fail( "TCK expects an IllegalArgumentException" );
-		}
-		catch (IllegalArgumentException iae) {
-			//expected by TCK
-		}
+		Assertions.assertThrows(
+				IllegalArgumentException.class,
+				() ->
+						f.fetch( "not_existing_attribute_name" )
+		);
+	}
+
+	@Test
+	public void testHqlQueryWithWrongSemantic(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(
+				entityManager -> {
+					Assertions.assertThrows(
+							IllegalArgumentException.class,
+							() ->
+									entityManager.createQuery( "Seletc p" ).getResultList()
+					);
+				}
+		);
+
+	}
+
+	@Test
+	public void testCriteriaNullReturnType(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(
+				entityManager -> {
+					Assertions.assertThrows(
+							IllegalArgumentException.class,
+							() -> {
+								CriteriaBuilder criteriaBuilder = scope.getEntityManagerFactory().getCriteriaBuilder();
+								CriteriaQuery criteriaQuery = criteriaBuilder.createQuery( null );
+								entityManager.createQuery( criteriaQuery ).getResultList();
+							}
+					);
+				}
+		);
+	}
+
+	@Test
+	public void testQueryWrongReturnType(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(
+				entityManager -> {
+					Assertions.assertThrows(
+							IllegalArgumentException.class,
+							() -> {
+								entityManager.createQuery( "select p from Peron p", Integer.class ).getResultList();
+							}
+					);
+				}
+		);
+
 	}
 
 	@Entity(name = "Person")

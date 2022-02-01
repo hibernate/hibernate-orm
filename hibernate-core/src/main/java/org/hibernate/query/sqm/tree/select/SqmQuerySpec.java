@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.query.sqm.FetchClauseType;
@@ -430,8 +431,14 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			return;
 		}
 		final Set<SqmFrom<?, ?>> selectedFromSet;
+		final List<SqmRoot<?>> roots = getFromClause().getRoots();
 		if ( selectClause == null || selectClause.getSelections().isEmpty() ) {
-			selectedFromSet = Collections.singleton( getFromClause().getRoots().get( 0 ) );
+			if ( CollectionHelper.isEmpty( roots ) ) {
+				throw new SemanticException( "No query roots were specified" );
+			}
+			else {
+				selectedFromSet = Collections.singleton( roots.get( 0 ) );
+			}
 		}
 		else {
 			selectedFromSet = new HashSet<>( selectClause.getSelections().size() );
@@ -440,7 +447,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			}
 		}
 
-		for ( SqmRoot<?> root : getFromClause().getRoots() ) {
+		for ( SqmRoot<?> root : roots ) {
 			validateFetchOwners( selectedFromSet, root );
 		}
 	}

@@ -45,7 +45,7 @@ import org.hibernate.type.descriptor.java.CurrencyJavaType;
 import org.hibernate.type.descriptor.java.DateJavaType;
 import org.hibernate.type.descriptor.java.DoubleJavaType;
 import org.hibernate.type.descriptor.java.DurationJavaType;
-import org.hibernate.type.descriptor.java.FloatTypeDescriptor;
+import org.hibernate.type.descriptor.java.FloatJavaType;
 import org.hibernate.type.descriptor.java.InetAddressJavaType;
 import org.hibernate.type.descriptor.java.InstantJavaType;
 import org.hibernate.type.descriptor.java.IntegerJavaType;
@@ -104,7 +104,7 @@ public class JavaTypeBaseline {
 		primePrimitive( target, ShortJavaType.INSTANCE );
 		primePrimitive( target, IntegerJavaType.INSTANCE );
 		primePrimitive( target, LongJavaType.INSTANCE );
-		primePrimitive( target, FloatTypeDescriptor.INSTANCE );
+		primePrimitive( target, FloatJavaType.INSTANCE );
 		primePrimitive( target, DoubleJavaType.INSTANCE );
 
 		target.addBaselineDescriptor( ObjectJavaType.INSTANCE );

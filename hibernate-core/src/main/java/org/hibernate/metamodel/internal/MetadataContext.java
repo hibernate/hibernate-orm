@@ -44,6 +44,7 @@ import org.hibernate.metamodel.model.domain.internal.EmbeddableTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
+import org.hibernate.metamodel.model.domain.internal.PrimitiveBasicTypeImpl;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.EntityJavaType;
@@ -702,9 +703,11 @@ public class MetadataContext {
 		return (BasicDomainType<J>) basicDomainTypeMap.computeIfAbsent(
 				javaType,
 				jt -> {
-					final JavaTypeRegistry registry =
-							getTypeConfiguration()
-							.getJavaTypeRegistry();
+					final JavaTypeRegistry registry = getTypeConfiguration().getJavaTypeRegistry();
+
+					if ( javaType.isPrimitive() ) {
+						return new PrimitiveBasicTypeImpl<>( registry.resolveDescriptor( javaType ), javaType );
+					}
 					return new BasicTypeImpl<>( registry.resolveDescriptor( javaType ) );
 				}
 		);

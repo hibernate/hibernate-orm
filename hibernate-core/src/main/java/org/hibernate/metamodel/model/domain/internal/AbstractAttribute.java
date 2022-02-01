@@ -17,7 +17,6 @@ import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
-import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -61,6 +60,9 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 
 	@Override
 	public Class<J> getJavaType() {
+		if ( valueType instanceof BasicTypeImpl ) {
+			return ( (BasicTypeImpl) valueType ).getJavaType();
+		}
 		return attributeJtd.getJavaTypeClass();
 	}
 

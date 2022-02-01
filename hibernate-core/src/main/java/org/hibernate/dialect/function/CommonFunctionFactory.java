@@ -37,9 +37,7 @@ public class CommonFunctionFactory {
 
 	public static void cosh(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "cosh" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( getDoubleType( queryEngine ) )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
@@ -49,9 +47,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "cot" )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( getDoubleType( queryEngine ) )
 				.register();
 	}
 
@@ -59,9 +55,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "degrees" )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( getDoubleType( queryEngine ) )
 				.register();
 	}
 
@@ -77,9 +71,7 @@ public class CommonFunctionFactory {
 
 	public static void ln_log(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "ln", "log" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( getDoubleType( queryEngine ) )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
@@ -89,9 +81,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "log10" )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( getDoubleType( queryEngine ) )
 				.register();
 	}
 
@@ -102,17 +92,13 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "log10", "log(10,?1)" )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( getDoubleType( queryEngine ) )
 				.register();
 	}
 
 	public static void log2(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "log2" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( getDoubleType( queryEngine ) )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
@@ -122,9 +108,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "radians" )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( getDoubleType( queryEngine ) )
 				.register();
 	}
 
@@ -132,9 +116,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "sinh" )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( getDoubleType( queryEngine ) )
 				.register();
 	}
 
@@ -142,15 +124,12 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "tanh" )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( getDoubleType( queryEngine ) )
 				.register();
 	}
 
 	public static void moreHyperbolic(QueryEngine queryEngine) {
-		final BasicType<Double> doubleType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
-				.resolve( StandardBasicTypes.DOUBLE );
+		final BasicType<Double> doubleType = getDoubleType( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "acosh" )
 				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
@@ -175,9 +154,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "trunc" )
 				.setArgumentCountBetween( 1, 2 )
 				.setParameterTypes(NUMERIC, INTEGER)
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( getDoubleType( queryEngine ) )
 				.setArgumentListSignature( "(NUMERIC number[, INTEGER places])" )
 				.register();
 	}
@@ -186,9 +163,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "truncate" )
 				.setExactArgumentCount( 2 ) //some databases allow 1 arg but in these it's a synonym for trunc()
 				.setParameterTypes(NUMERIC, INTEGER)
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( getDoubleType( queryEngine ) )
 				.setArgumentListSignature( "(NUMERIC number, INTEGER places)" )
 				.register();
 	}
@@ -200,9 +175,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "truncate", "round(?1,?2,1)" )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(NUMERIC, INTEGER)
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( getDoubleType( queryEngine ) )
 				.setArgumentListSignature( "(NUMERIC number, INTEGER places)" )
 				.register();
 	}
@@ -215,18 +188,14 @@ public class CommonFunctionFactory {
 				.setArgumentCountBetween( 0, 1 )
 				.setParameterTypes(INTEGER)
 				.setUseParenthesesWhenNoArgs( true )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( getDoubleType( queryEngine ) )
 				.setArgumentListSignature( "([INTEGER seed])" )
 				.register();
 	}
 
 	public static void median(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "median" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( getDoubleType( queryEngine ) )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
@@ -238,9 +207,7 @@ public class CommonFunctionFactory {
 						"percentile_cont(0.5) within group (order by ?1)"
 								+ ( over ? " over()" : "" )
 				)
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( getDoubleType( queryEngine ) )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
@@ -254,9 +221,7 @@ public class CommonFunctionFactory {
 	 */
 	public static void stddev(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "stddev" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( getDoubleType( queryEngine ) )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
@@ -270,17 +235,14 @@ public class CommonFunctionFactory {
 	 */
 	public static void variance(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "variance" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( getDoubleType( queryEngine ) )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
 	}
 
 	public static void stddevPopSamp(QueryEngine queryEngine) {
-		final BasicType<Double> doubleType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
-				.resolve( StandardBasicTypes.DOUBLE );
+		final BasicType<Double> doubleType = getDoubleType( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "stddev_pop" )
 				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
@@ -294,8 +256,7 @@ public class CommonFunctionFactory {
 	}
 
 	public static void varPopSamp(QueryEngine queryEngine) {
-		final BasicType<Double> doubleType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
-				.resolve( StandardBasicTypes.DOUBLE );
+		final BasicType<Double> doubleType = getDoubleType( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "var_pop" )
 				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
@@ -309,8 +270,7 @@ public class CommonFunctionFactory {
 	}
 
 	public static void covarPopSamp(QueryEngine queryEngine) {
-		final BasicType<Double> doubleType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
-				.resolve( StandardBasicTypes.DOUBLE );
+		final BasicType<Double> doubleType = getDoubleType( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "covar_pop" )
 				.setInvariantType( doubleType )
 				.setExactArgumentCount( 2 )
@@ -325,9 +285,7 @@ public class CommonFunctionFactory {
 
 	public static void corr(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "corr" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( getDoubleType( queryEngine ) )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(NUMERIC, NUMERIC)
 				.register();
@@ -355,8 +313,8 @@ public class CommonFunctionFactory {
 	 * DB2
 	 */
 	public static void stdevVarianceSamp(QueryEngine queryEngine) {
-		final BasicType<Double> doubleType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
-				.resolve( StandardBasicTypes.DOUBLE );
+		final BasicType<Double> doubleType = getDoubleType( queryEngine );
+
 		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "stddev_samp" )
 				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
@@ -373,9 +331,7 @@ public class CommonFunctionFactory {
 	 * SQL Server-style
 	 */
 	public static void stddevPopSamp_stdevp(QueryEngine queryEngine) {
-		final BasicType<Double> doubleType = queryEngine.getTypeConfiguration()
-				.getBasicTypeRegistry()
-				.resolve( StandardBasicTypes.DOUBLE );
+		final BasicType<Double> doubleType = getDoubleType( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "stdev" )
 				.setInvariantType( doubleType )
@@ -395,9 +351,7 @@ public class CommonFunctionFactory {
 	 * SQL Server-style
 	 */
 	public static void varPopSamp_varp(QueryEngine queryEngine) {
-		BasicType<Double> doubleType = queryEngine.getTypeConfiguration()
-				.getBasicTypeRegistry()
-				.resolve( StandardBasicTypes.DOUBLE );
+		BasicType<Double> doubleType = getDoubleType( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "var" )
 				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
@@ -414,9 +368,7 @@ public class CommonFunctionFactory {
 
 	public static void pi(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "pi" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( getDoubleType( queryEngine ) )
 				.setUseParenthesesWhenNoArgs( true )
 				.register();
 	}
@@ -427,15 +379,12 @@ public class CommonFunctionFactory {
 	public static void soundex(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "soundex" )
 				.setExactArgumentCount( 1 )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.register();
 	}
 
 	public static void trim2(QueryEngine queryEngine) {
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
-		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
+		final BasicType<String> stringType = getStringType( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "ltrim" )
 				.setInvariantType( stringType )
 				.setArgumentCountBetween( 1, 2 )
@@ -451,8 +400,7 @@ public class CommonFunctionFactory {
 	}
 
 	public static void trim1(QueryEngine queryEngine) {
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
-		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
+		final BasicType<String> stringType = getStringType( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "ltrim" )
 				.setInvariantType( stringType )
 				.setExactArgumentCount( 1 )
@@ -468,8 +416,7 @@ public class CommonFunctionFactory {
 	}
 
 	public static void pad(QueryEngine queryEngine) {
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
-		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
+		final BasicType<String> stringType = getStringType( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "lpad" )
 				.setInvariantType( stringType )
 				.setArgumentCountBetween( 2, 3 )
@@ -488,8 +435,7 @@ public class CommonFunctionFactory {
 	 * In MySQL the third argument is required
 	 */
 	public static void pad_space(QueryEngine queryEngine) {
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
-		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
+		final BasicType<String> stringType = getStringType( queryEngine );
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"lpad",
 				stringType,
@@ -510,8 +456,7 @@ public class CommonFunctionFactory {
 	 * Transact-SQL
 	 */
 	public static void pad_replicate(QueryEngine queryEngine) {
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
-		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
+		final BasicType<String> stringType = getStringType( queryEngine );
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"lpad",
 				stringType,
@@ -529,8 +474,7 @@ public class CommonFunctionFactory {
 	}
 
 	public static void pad_repeat(QueryEngine queryEngine) {
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
-		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
+		final BasicType<String> stringType = getStringType( queryEngine );
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"lpad",
 				stringType,
@@ -551,8 +495,7 @@ public class CommonFunctionFactory {
 	 * SAP DB
 	 */
 	public static void pad_fill(QueryEngine queryEngine) {
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
-		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
+		final BasicType<String> stringType = getStringType( queryEngine );
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"lpad",
 				stringType,
@@ -571,9 +514,7 @@ public class CommonFunctionFactory {
 
 	public static void reverse(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "reverse" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING)
 				.register();
@@ -581,9 +522,7 @@ public class CommonFunctionFactory {
 
 	public static void space(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "space" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(INTEGER)
 				.register();
@@ -591,9 +530,7 @@ public class CommonFunctionFactory {
 
 	public static void repeat(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "repeat" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(STRING, INTEGER)
 				.setArgumentListSignature( "(STRING string, INTEGER times)" )
@@ -601,8 +538,7 @@ public class CommonFunctionFactory {
 	}
 
 	public static void leftRight(QueryEngine queryEngine) {
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
-		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
+		final BasicType<String> stringType = getStringType( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "left" )
 				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
@@ -618,8 +554,7 @@ public class CommonFunctionFactory {
 	}
 
 	public static void leftRight_substr(QueryEngine queryEngine) {
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
-		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
+		final BasicType<String> stringType = getStringType( queryEngine );
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "left", "substr(?1,1,?2)" )
 				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
@@ -635,8 +570,7 @@ public class CommonFunctionFactory {
 	}
 
 	public static void leftRight_substrLength(QueryEngine queryEngine) {
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
-		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
+		final BasicType<String> stringType = getStringType( queryEngine );
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "left", "substr(?1,1,?2)" )
 				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
@@ -653,9 +587,7 @@ public class CommonFunctionFactory {
 
 	public static void repeat_replicate(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "replicate" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(STRING, INTEGER)
 				.setArgumentListSignature( "(STRING string, INTEGER times)" )
@@ -666,7 +598,7 @@ public class CommonFunctionFactory {
 	public static void md5(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "md5" )
 				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
+						getStringType( queryEngine )
 				)
 				.setExactArgumentCount( 1 )
 				.register();
@@ -674,18 +606,14 @@ public class CommonFunctionFactory {
 
 	public static void initcap(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "initcap" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setExactArgumentCount( 1 )
 				.register();
 	}
 
 	public static void instr(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "instr" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
-				)
+				.setInvariantType( getIntegerType( queryEngine ) )
 				.setArgumentCountBetween( 2, 4 )
 				.setParameterTypes(STRING, STRING, INTEGER, INTEGER)
 				.setArgumentListSignature( "(STRING string, STRING pattern[, INTEGER start[, INTEGER occurrence]])" )
@@ -694,9 +622,7 @@ public class CommonFunctionFactory {
 
 	public static void substr(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "substr" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setArgumentCountBetween( 2, 3 )
 				.setParameterTypes(STRING, INTEGER, INTEGER)
 				.setArgumentListSignature( "(STRING string, INTEGER start[, INTEGER length])" )
@@ -705,9 +631,7 @@ public class CommonFunctionFactory {
 
 	public static void translate(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "translate" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setExactArgumentCount( 3 )
 				.register();
 	}
@@ -829,9 +753,7 @@ public class CommonFunctionFactory {
 	 * These are aggregate functions taking one argument!
 	 */
 	public static void everyAny(QueryEngine queryEngine) {
-		final BasicType<Boolean> booleanType = queryEngine.getTypeConfiguration()
-				.getBasicTypeRegistry()
-				.resolve( StandardBasicTypes.BOOLEAN );
+		final BasicType<Boolean> booleanType = getBooleanType( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "every" )
 				.setExactArgumentCount( 1 )
@@ -854,9 +776,7 @@ public class CommonFunctionFactory {
 	 * and predicates!
 	 */
 	public static void everyAny_boolAndOr(QueryEngine queryEngine) {
-		final BasicType<Boolean> booleanType = queryEngine.getTypeConfiguration()
-				.getBasicTypeRegistry()
-				.resolve( StandardBasicTypes.BOOLEAN );
+		final BasicType<Boolean> booleanType = getBooleanType(queryEngine);
 
 		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "bool_and" )
 				.setExactArgumentCount( 1 )
@@ -916,8 +836,7 @@ public class CommonFunctionFactory {
 	 * for extract(), they can't actually be called from HQL.
 	 */
 	public static void yearMonthDay(QueryEngine queryEngine) {
-		final BasicType<Integer> integerType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
-				.resolve( StandardBasicTypes.INTEGER );
+		final BasicType<Integer> integerType = getIntegerType( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "day" )
 				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
@@ -941,8 +860,7 @@ public class CommonFunctionFactory {
 	 * for extract(), they can't actually be called from HQL.
 	 */
 	public static void hourMinuteSecond(QueryEngine queryEngine) {
-		final BasicType<Integer> integerType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
-				.resolve( StandardBasicTypes.INTEGER );
+		final BasicType<Integer> integerType = getIntegerType( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "hour" )
 				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
@@ -966,8 +884,7 @@ public class CommonFunctionFactory {
 	}
 
 	public static void dayofweekmonthyear(QueryEngine queryEngine) {
-		final BasicType<Integer> integerType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
-				.resolve( StandardBasicTypes.INTEGER );
+		final BasicType<Integer> integerType = getIntegerType( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "dayofweek" )
 				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
@@ -987,8 +904,7 @@ public class CommonFunctionFactory {
 	}
 
 	public static void dayOfWeekMonthYear(QueryEngine queryEngine) {
-		final BasicType<Integer> integerType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
-				.resolve( StandardBasicTypes.INTEGER );
+		final BasicType<Integer> integerType = getIntegerType( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "day_of_week" )
 				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
@@ -1008,8 +924,7 @@ public class CommonFunctionFactory {
 	}
 
 	public static void daynameMonthname(QueryEngine queryEngine) {
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
-		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
+		final BasicType<String> stringType = getStringType( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "monthname" )
 				.setInvariantType( stringType )
 				.setExactArgumentCount( 1 )
@@ -1023,8 +938,7 @@ public class CommonFunctionFactory {
 	}
 
 	public static void weekQuarter(QueryEngine queryEngine) {
-		final BasicType<Integer> integerType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
-				.resolve( StandardBasicTypes.INTEGER );
+		final BasicType<Integer> integerType = getIntegerType( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "week" )
 				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
@@ -1039,9 +953,7 @@ public class CommonFunctionFactory {
 
 	public static void lastDay(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "last_day" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DATE )
-				)
+				.setInvariantType( getDateType( queryEngine ) )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(DATE)
 				.register();
@@ -1049,9 +961,7 @@ public class CommonFunctionFactory {
 
 	public static void lastDay_eomonth(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "eomonth" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DATE )
-				)
+				.setInvariantType( getDateType( queryEngine ) )
 				.setArgumentCountBetween( 1, 2 )
 				.setParameterTypes(DATE, INTEGER)
 				.register();
@@ -1069,27 +979,26 @@ public class CommonFunctionFactory {
 	}
 
 	public static void toCharNumberDateTimestamp(QueryEngine queryEngine) {
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
 		//argument counts are right for Oracle, TimesTen, and CUBRID
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "to_number" )
 				//always 1 arg on HSQL and Cache, always 2 on Postgres
 				.setArgumentCountBetween( 1, 3 )
-				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE ) )
+				.setInvariantType( getDoubleType( queryEngine ) )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "to_char" )
 				.setArgumentCountBetween( 1, 3 )
 				//always 2 args on HSQL and Postgres
-				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.STRING ) )
+				.setInvariantType( getStringType( queryEngine ) )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "to_date" )
 				//always 2 args on HSQL and Postgres
 				.setArgumentCountBetween( 1, 3 )
-				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.DATE ) )
+				.setInvariantType( getDateType( queryEngine ) )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "to_timestamp" )
 				//always 2 args on HSQL and Postgres
 				.setArgumentCountBetween( 1, 3 )
-				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP ) )
+				.setInvariantType( getTimestampType( queryEngine ) )
 				.register();
 	}
 
@@ -1103,11 +1012,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "timestamp" )
 				.setArgumentCountBetween( 1, 2 )
 				//accepts (DATE,TIME) (DATE,INTEGER) or DATE or STRING
-				.setInvariantType(
-						queryEngine.getTypeConfiguration()
-								.getBasicTypeRegistry()
-								.resolve( StandardBasicTypes.TIMESTAMP )
-				)
+				.setInvariantType( getTimestampType( queryEngine ) )
 				.register();
 	}
 
@@ -1125,49 +1030,43 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "date" )
 				.setExactArgumentCount( 1 )
 				//accepts DATE or STRING
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DATE )
-				)
+				.setInvariantType( getDateType( queryEngine ) )
 				.register();
 	}
 
 	public static void utcDateTimeTimestamp(QueryEngine queryEngine) {
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "utc_date" )
 				.setUseParenthesesWhenNoArgs( false )
-				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.DATE ) )
+				.setInvariantType( getDateType( queryEngine ) )
 				.register();
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "utc_time" )
 				.setUseParenthesesWhenNoArgs( false )
-				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.TIME ) )
+				.setInvariantType( getTimeType( queryEngine ) )
 				.register();
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "utc_timestamp" )
 				.setUseParenthesesWhenNoArgs( false )
-				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP ) )
+				.setInvariantType( getTimestampType( queryEngine ) )
 				.register();
 	}
 
 	public static void currentUtcdatetimetimestamp(QueryEngine queryEngine) {
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_utcdate" )
 				.setUseParenthesesWhenNoArgs( false )
-				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.DATE ) )
+				.setInvariantType( getDateType( queryEngine ) )
 				.register();
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_utctime" )
 				.setUseParenthesesWhenNoArgs( false )
-				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.TIME ) )
+				.setInvariantType( getTimeType( queryEngine ) )
 				.register();
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_utctimestamp" )
 				.setUseParenthesesWhenNoArgs( false )
-				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP ) )
+				.setInvariantType( getTimestampType( queryEngine ) )
 				.register();
 	}
 
 	public static void week_weekofyear(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "weekofyear" )
-				.setInvariantType(
-					queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
-				)
+				.setInvariantType( getIntegerType( queryEngine ) )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(DATE)
 				.register();
@@ -1179,9 +1078,7 @@ public class CommonFunctionFactory {
 	 */
 	public static void concat_pipeOperator(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "concat", "(?1||?2...)" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setMinArgumentCount( 1 )
 				.setParameterTypes(STRING)
 				.setArgumentListSignature( "(STRING string0[, STRING string1[, ...]])" )
@@ -1193,9 +1090,7 @@ public class CommonFunctionFactory {
 	 */
 	public static void concat_plusOperator(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "concat", "(?1+?2...)" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setMinArgumentCount( 1 )
 				.setParameterTypes(STRING)
 				.setArgumentListSignature( "(STRING string0[, STRING string1[, ...]])" )
@@ -1206,9 +1101,7 @@ public class CommonFunctionFactory {
 	 * Oracle-style
 	 */
 	public static void rownumRowid(QueryEngine queryEngine) {
-		final BasicType<Long> longType = queryEngine.getTypeConfiguration()
-				.getBasicTypeRegistry()
-				.resolve( StandardBasicTypes.LONG );
+		final BasicType<Long> longType = getLongType( queryEngine );
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rowid" )
 				.setInvariantType( longType )
 				.setUseParenthesesWhenNoArgs( false )
@@ -1224,9 +1117,7 @@ public class CommonFunctionFactory {
 	 */
 	public static void rownum(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rownum" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.LONG )
-				)
+				.setInvariantType( getLongType( queryEngine ) )
 				.setUseParenthesesWhenNoArgs( true ) //H2 and HSQL require the parens
 				.register();
 	}
@@ -1235,8 +1126,8 @@ public class CommonFunctionFactory {
 	 * CUBRID
 	 */
 	public static void rownumInstOrderbyGroupbyNum(QueryEngine queryEngine) {
-		final BasicType<Integer> integerType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
-				.resolve( StandardBasicTypes.INTEGER );
+		final BasicType<Integer> integerType = getIntegerType( queryEngine );
+
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rownum" )
 				.setInvariantType( integerType )
 				.setUseParenthesesWhenNoArgs( false )
@@ -1260,15 +1151,14 @@ public class CommonFunctionFactory {
 	 * MySQL/CUBRID
 	 */
 	public static void makedateMaketime(QueryEngine queryEngine) {
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "makedate" )
-				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.DATE ) )
+				.setInvariantType( getDateType( queryEngine ) )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(INTEGER, INTEGER)
 				.setArgumentListSignature( "(INTEGER year, INTEGER dayofyear)" )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "maketime" )
-				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.TIME ))
+				.setInvariantType( getTimeType( queryEngine ) )
 				.setExactArgumentCount( 3 )
 				.setParameterTypes(INTEGER, INTEGER, INTEGER)
 				.setArgumentListSignature( "(INTEGER hour, INTEGER min, INTEGER sec)" )
@@ -1279,15 +1169,14 @@ public class CommonFunctionFactory {
 	 * Postgres
 	 */
 	public static void makeDateTimeTimestamp(QueryEngine queryEngine) {
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
-		BasicType<Date> timestampType = basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP );
+		BasicType<Date> timestampType = getTimestampType( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "make_date" )
-				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.DATE ) )
+				.setInvariantType( getDateType( queryEngine ) )
 				.setExactArgumentCount( 3 )
 				.setParameterTypes(INTEGER, INTEGER, INTEGER)
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "make_time" )
-				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.TIME ) )
+				.setInvariantType( getTimeType( queryEngine ) )
 				.setExactArgumentCount( 3 )
 				.setParameterTypes(INTEGER, INTEGER, INTEGER)
 				.register();
@@ -1306,11 +1195,7 @@ public class CommonFunctionFactory {
 	public static void sysdate(QueryEngine queryEngine) {
 		// returns a local timestamp
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "sysdate" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration()
-								.getBasicTypeRegistry()
-								.resolve( StandardBasicTypes.TIMESTAMP )
-				)
+				.setInvariantType( getTimestampType( queryEngine ) )
 				.setUseParenthesesWhenNoArgs( false )
 				.register();
 	}
@@ -1320,11 +1205,7 @@ public class CommonFunctionFactory {
 	 */
 	public static void sysdateParens(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "sysdate" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration()
-								.getBasicTypeRegistry()
-								.resolve( StandardBasicTypes.TIMESTAMP )
-				)
+				.setInvariantType( getTimestampType( queryEngine ) )
 				.setUseParenthesesWhenNoArgs( true )
 				.register();
 	}
@@ -1334,11 +1215,7 @@ public class CommonFunctionFactory {
 	 */
 	public static void sysdateExplicitMicros(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "sysdate", "sysdate(6)" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration()
-								.getBasicTypeRegistry()
-								.resolve( StandardBasicTypes.TIMESTAMP )
-				)
+				.setInvariantType( getTimestampType( queryEngine ) )
 				.setExactArgumentCount( 0 )
 				.register();
 	}
@@ -1346,27 +1223,23 @@ public class CommonFunctionFactory {
 	public static void systimestamp(QueryEngine queryEngine) {
 		// returns a timestamp with timezone
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "systimestamp" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration()
-								.getBasicTypeRegistry()
-								.resolve( StandardBasicTypes.TIMESTAMP )
-				)
+				.setInvariantType( getTimestampType( queryEngine ) )
 				.setUseParenthesesWhenNoArgs( false )
 				.register();
 	}
 
 	public static void localtimeLocaltimestamp(QueryEngine queryEngine) {
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
 		//these functions return times without timezones
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "localtime" )
-				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.TIME ) )
+				.setInvariantType( getTimeType( queryEngine ) )
 				.setUseParenthesesWhenNoArgs( false )
 				.register();
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "localtimestamp" )
-				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP ) )
+				.setInvariantType( getTimestampType( queryEngine ) )
 				.setUseParenthesesWhenNoArgs( false )
 				.register();
 
+		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "local_time", "localtime" )
 				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_TIME ) )
 				.setUseParenthesesWhenNoArgs( false )
@@ -1378,8 +1251,7 @@ public class CommonFunctionFactory {
 	}
 
 	public static void trigonometry(QueryEngine queryEngine) {
-		final BasicType<Double> doubleType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
-				.resolve( StandardBasicTypes.DOUBLE );
+		final BasicType<Double> doubleType = getDoubleType( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "sin" )
 				.setInvariantType( doubleType )
@@ -1429,9 +1301,7 @@ public class CommonFunctionFactory {
 	 */
 	public static void atan2_atn2(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "atan2", "atn2" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( getDoubleType(queryEngine) )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(NUMERIC, NUMERIC)
 				.register();
@@ -1464,9 +1334,7 @@ public class CommonFunctionFactory {
 	 */
 	public static void length_characterLength(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "character_length" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
-				)
+				.setInvariantType( getIntegerType( queryEngine ) )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING)
 				.register();
@@ -1478,9 +1346,7 @@ public class CommonFunctionFactory {
 	 */
 	public static void characterLength_len(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "len" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
-				)
+				.setInvariantType( getIntegerType( queryEngine ) )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING)
 				.register();
@@ -1493,9 +1359,7 @@ public class CommonFunctionFactory {
 	 */
 	public static void characterLength_length(QueryEngine queryEngine, SqlAstNodeRenderingMode argumentRenderingMode) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "length" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
-				)
+				.setInvariantType( getIntegerType( queryEngine ) )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING)
 				.setArgumentRenderingMode( argumentRenderingMode )
@@ -1505,9 +1369,7 @@ public class CommonFunctionFactory {
 
 	public static void octetLength(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "octet_length" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
-				)
+				.setInvariantType( getIntegerType( queryEngine ) )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING)
 				.register();
@@ -1515,9 +1377,7 @@ public class CommonFunctionFactory {
 
 	public static void bitLength(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "bit_length" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
-				)
+				.setInvariantType( getIntegerType( queryEngine ) )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING)
 				.register();
@@ -1525,9 +1385,7 @@ public class CommonFunctionFactory {
 
 	public static void bitLength_pattern(QueryEngine queryEngine, String pattern) {
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "bit_length", pattern )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
-				)
+				.setInvariantType( getIntegerType( queryEngine ) )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING)
 				.register();
@@ -1538,9 +1396,7 @@ public class CommonFunctionFactory {
 	 */
 	public static void position(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "position", "position(?1 in ?2)" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
-				)
+				.setInvariantType( getIntegerType( queryEngine ) )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(STRING, STRING)
 				.setArgumentListSignature( "(STRING pattern in STRING string)" )
@@ -1549,9 +1405,7 @@ public class CommonFunctionFactory {
 
 	public static void locate(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "locate" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
-				)
+				.setInvariantType( getIntegerType( queryEngine ) )
 				.setArgumentCountBetween( 2, 3 )
 				.setParameterTypes(STRING, STRING, INTEGER)
 				.setArgumentListSignature( "(STRING pattern, STRING string[, INTEGER start])" )
@@ -1563,9 +1417,7 @@ public class CommonFunctionFactory {
 	 */
 	public static void locate_charindex(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "charindex" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
-				)
+				.setInvariantType( getIntegerType( queryEngine ) )
 				.setArgumentCountBetween( 2, 3 )
 				.setParameterTypes(STRING, STRING, INTEGER)
 				.setArgumentListSignature( "(STRING pattern, STRING string[, INTEGER start])" )
@@ -1579,7 +1431,7 @@ public class CommonFunctionFactory {
 	public static void locate_positionSubstring(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 						"locate",
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
+						getIntegerType( queryEngine ),
 						"position(?1 in ?2)", "(position(?1 in substring(?2 from ?3))+(?3)-1)",
 						STRING, STRING, INTEGER
 				)
@@ -1591,7 +1443,7 @@ public class CommonFunctionFactory {
 	public static void substringFromFor(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 						"substring",
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING ),
+						getStringType( queryEngine ),
 						"substring(?1 from ?2)", "substring(?1 from ?2 for ?3)",
 						STRING, INTEGER, INTEGER
 				)
@@ -1603,9 +1455,7 @@ public class CommonFunctionFactory {
 	 */
 	public static void substring(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "substring" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setArgumentCountBetween( 2, 3 )
 				.setParameterTypes(STRING, INTEGER, INTEGER)
 				.setArgumentListSignature( "(STRING string{ from|,} INTEGER start[{ for|,} INTEGER length])" )
@@ -1619,7 +1469,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry()
 				.registerBinaryTernaryPattern(
 						"substring",
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING ),
+						getStringType( queryEngine ),
 						"substring(?1,?2,len(?1)-?2+1)",
 						"substring(?1,?2,?3)",
 						STRING, INTEGER, INTEGER
@@ -1633,9 +1483,7 @@ public class CommonFunctionFactory {
 	public static void substring_substr(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "substring", "substr" )
 				.setArgumentListSignature( "(STRING string{ from|,} INTEGER start[{ for|,} INTEGER length])" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setArgumentCountBetween( 2, 3 )
 				.setParameterTypes(STRING, INTEGER, INTEGER)
 				.register();
@@ -1643,9 +1491,7 @@ public class CommonFunctionFactory {
 
 	public static void insert(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "insert" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setParameterTypes(STRING, INTEGER, INTEGER, STRING)
 				.setArgumentListSignature( "(STRING string, INTEGER start, INTEGER length, STRING replacement)" )
 				.register();
@@ -1659,9 +1505,7 @@ public class CommonFunctionFactory {
 						"insert",
 						"overlay(?1 placing ?4 from ?2 for ?3)"
 				)
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setExactArgumentCount( 4 )
 				.setParameterTypes(STRING, INTEGER, INTEGER, STRING)
 				.setArgumentListSignature( "(STRING string, INTEGER start, INTEGER length, STRING replacement)" )
@@ -1674,7 +1518,7 @@ public class CommonFunctionFactory {
 	public static void overlay(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().registerTernaryQuaternaryPattern(
 						"overlay",
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING ),
+						getStringType( queryEngine ),
 						"overlay(?1 placing ?2 from ?3)",
 						"overlay(?1 placing ?2 from ?3 for ?4)",
 						STRING, STRING, INTEGER, INTEGER
@@ -1688,7 +1532,7 @@ public class CommonFunctionFactory {
 	public static void overlayCharacterLength_overlay(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().registerTernaryQuaternaryPattern(
 						"overlay",
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING ),
+						getStringType( queryEngine ),
 						//use character_length() here instead of length()
 						//because DB2 doesn't like "length(?)"
 						"overlay(?1 placing ?2 from ?3 for character_length(?2))",
@@ -1700,9 +1544,7 @@ public class CommonFunctionFactory {
 
 	public static void replace(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "replace" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setExactArgumentCount( 3 )
 				.setParameterTypes(STRING, STRING, STRING)
 				.setArgumentListSignature( "(STRING string, STRING pattern, STRING replacement)" )
@@ -1714,9 +1556,7 @@ public class CommonFunctionFactory {
 	 */
 	public static void replace_strReplace(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "str_replace" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setExactArgumentCount( 3 )
 				.setParameterTypes(STRING, STRING, STRING)
 				.setArgumentListSignature( "(STRING string, STRING pattern, STRING replacement)" )
@@ -1726,9 +1566,7 @@ public class CommonFunctionFactory {
 
 	public static void concat(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "concat" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setMinArgumentCount( 1 )
 				.setParameterTypes(STRING)
 				.setArgumentListSignature( "(STRING string0[, STRING string1[, ...]])" )
@@ -1736,8 +1574,7 @@ public class CommonFunctionFactory {
 	}
 
 	public static void lowerUpper(QueryEngine queryEngine) {
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
-		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
+		final BasicType<String> stringType = getStringType( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "lower" )
 				.setInvariantType( stringType )
 				.setExactArgumentCount( 1 )
@@ -1757,9 +1594,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "ascii" )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING)
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
-				)//should it be BYTE??
+				.setInvariantType( getIntegerType( queryEngine ) )//should it be BYTE??
 				.register();
 	}
 
@@ -1767,9 +1602,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "chr" )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(INTEGER)
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.CHARACTER )
-				)
+				.setInvariantType( getCharacterType(queryEngine) )
 				.register();
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "char", "chr" );
 	}
@@ -1778,9 +1611,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "char" )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(INTEGER)
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.CHARACTER )
-				)
+				.setInvariantType( getCharacterType(queryEngine) )
 				.register();
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "chr", "char" );
 	}
@@ -1797,9 +1628,7 @@ public class CommonFunctionFactory {
 				.setArgumentListSignature( "(TEMPORAL_UNIT field, TEMPORAL arg)" )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "datename" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(TEMPORAL_UNIT, TEMPORAL)
 				.setArgumentListSignature( "(TEMPORAL_UNIT field, TEMPORAL arg)" )
@@ -1812,17 +1641,16 @@ public class CommonFunctionFactory {
 	// CUBRID: now()/curtime()/curdate() mean current_datetime/current_time/current_date
 	// Postgres: now() means current_timestamp
 	public static void nowCurdateCurtime(QueryEngine queryEngine) {
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "curtime" )
-				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.TIME ) )
+				.setInvariantType( getTimeType( queryEngine ) )
 				.setUseParenthesesWhenNoArgs( true )
 				.register();
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "curdate" )
-				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.DATE ) )
+				.setInvariantType( getDateType( queryEngine ) )
 				.setUseParenthesesWhenNoArgs( true )
 				.register();
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "now" )
-				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP ) )
+				.setInvariantType( getTimestampType( queryEngine ) )
 				.setUseParenthesesWhenNoArgs( true )
 				.register();
 	}
@@ -1886,9 +1714,7 @@ public class CommonFunctionFactory {
 
 		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "avg" )
 				.setArgumentRenderingMode( inferenceArgumentRenderingMode )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( getDoubleType( queryEngine ) )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
@@ -1990,8 +1816,10 @@ public class CommonFunctionFactory {
 	}
 
 	public static void math(QueryEngine queryEngine) {
-		final BasicType<Integer> integerType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
-				.resolve( StandardBasicTypes.INTEGER );
+
+		final BasicType<Integer> integerType = getIntegerType( queryEngine );
+		final BasicType<Double> doubleType = getDoubleType( queryEngine );
+
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "round" )
 				// To avoid truncating to a specific data type, we default to using the argument type
 				.setReturnTypeResolver( useArgType( 1 ) )
@@ -2031,35 +1859,29 @@ public class CommonFunctionFactory {
 				.setParameterTypes(NUMERIC)
 				.register();
 
+		//transcendental functions are by nature of floating point type
+
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "sqrt" )
 				// According to JPA spec 4.6.17.2.2.
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "ln" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "exp" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "power" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(NUMERIC, NUMERIC)
 				.register();
@@ -2067,9 +1889,7 @@ public class CommonFunctionFactory {
 
 	public static void mod_operator(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "mod", "(?1%?2)" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
-				)
+				.setInvariantType( getIntegerType( queryEngine ) )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(INTEGER, INTEGER)
 				.register();
@@ -2077,9 +1897,7 @@ public class CommonFunctionFactory {
 
 	public static void power_expLn(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "power", "exp(ln(?1)*?2)" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( getDoubleType(queryEngine) )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(NUMERIC, NUMERIC)
 				.register();
@@ -2094,9 +1912,7 @@ public class CommonFunctionFactory {
 
 	public static void cbrt(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "cbrt" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				.setInvariantType( getDoubleType( queryEngine ) )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
@@ -2104,36 +1920,28 @@ public class CommonFunctionFactory {
 
 	public static void crc32(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "crc32" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
-				)
+				.setInvariantType( getIntegerType( queryEngine ) )
 				.setExactArgumentCount( 1 )
 				.register();
 	}
 
 	public static void sha1(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "sha1" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setExactArgumentCount( 1 )
 				.register();
 	}
 
 	public static void sha2(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "sha2" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setExactArgumentCount( 2 )
 				.register();
 	}
 
 	public static void sha(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "sha" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setExactArgumentCount( 1 )
 				.register();
 	}
@@ -2143,9 +1951,7 @@ public class CommonFunctionFactory {
 	 */
 	public static void datediff(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "datediff" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
-				)
+				.setInvariantType( getIntegerType( queryEngine ) )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(DATE, DATE)
 				.setArgumentListSignature( "(DATE end, DATE start)" )
@@ -2193,9 +1999,7 @@ public class CommonFunctionFactory {
 
 	public static void monthsBetween(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "months_between" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
-				)
+				.setInvariantType( getIntegerType( queryEngine ) )
 				.setExactArgumentCount( 2 )
 				.setArgumentListSignature( "(DATE end, DATE start)" )
 				.setParameterTypes(DATE, DATE)
@@ -2204,9 +2008,7 @@ public class CommonFunctionFactory {
 
 	public static void daysBetween(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "days_between" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
-				)
+				.setInvariantType( getIntegerType( queryEngine ) )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(DATE, DATE)
 				.setArgumentListSignature( "(DATE end, DATE start)" )
@@ -2215,9 +2017,7 @@ public class CommonFunctionFactory {
 
 	public static void secondsBetween(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "seconds_between" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.LONG )
-				)
+				.setInvariantType( getLongType( queryEngine ) )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(TIME, TIME)
 				.setArgumentListSignature( "(TIME end, TIME start)" )
@@ -2225,9 +2025,9 @@ public class CommonFunctionFactory {
 	}
 
 	public static void yearsMonthsDaysHoursMinutesSecondsBetween(QueryEngine queryEngine) {
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
-		final BasicType<Long> longType = basicTypeRegistry.resolve( StandardBasicTypes.LONG );
-		final BasicType<Integer> integerType = basicTypeRegistry.resolve( StandardBasicTypes.INTEGER );
+		final BasicType<Long> longType = getLongType( queryEngine );
+		final BasicType<Integer> integerType = getIntegerType( queryEngine );
+
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "years_between" )
 				.setInvariantType( integerType )
 				.setExactArgumentCount( 2 )
@@ -2310,9 +2110,7 @@ public class CommonFunctionFactory {
 	 */
 	public static void format_formatdatetime(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "format", "formatdatetime" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setArgumentsValidator( formatValidator() )
 				.setArgumentListSignature( "(TEMPORAL datetime as STRING pattern)" )
 				.register();
@@ -2325,9 +2123,7 @@ public class CommonFunctionFactory {
 	 */
 	public static void format_toChar(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "format", "to_char" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setArgumentsValidator( formatValidator() )
 				.setArgumentListSignature( "(TEMPORAL datetime as STRING pattern)" )
 				.register();
@@ -2340,9 +2136,7 @@ public class CommonFunctionFactory {
 	 */
 	public static void format_dateFormat(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "format", "date_format" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setArgumentsValidator( formatValidator() )
 				.setArgumentListSignature( "(TEMPORAL datetime as STRING pattern)" )
 				.register();
@@ -2355,9 +2149,7 @@ public class CommonFunctionFactory {
 	 */
 	public static void format_toVarchar(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "format", "to_varchar" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setArgumentsValidator( formatValidator() )
 				.setArgumentListSignature( "(TEMPORAL datetime as STRING pattern)" )
 				.register();
@@ -2372,9 +2164,7 @@ public class CommonFunctionFactory {
 	 */
 	public static void collate(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder("collate", "(?1 collate ?2)")
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType(queryEngine) )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(STRING, COLLATION)
 				.setArgumentListSignature("(STRING string as COLLATION collation)")
@@ -2386,9 +2176,7 @@ public class CommonFunctionFactory {
 	 */
 	public static void collate_quoted(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder("collate", "(?1 collate '?2')")
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( getStringType( queryEngine ) )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(STRING, ANY)
 				.setArgumentListSignature("(STRING string as COLLATION collation)")
@@ -2397,15 +2185,46 @@ public class CommonFunctionFactory {
 
 	public static void dateTrunc(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "date_trunc", "date_trunc('?1',?2)" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration()
-								.getBasicTypeRegistry()
-								.resolve( StandardBasicTypes.TIMESTAMP )
-				)
+				.setInvariantType( getTimestampType( queryEngine ) )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(TEMPORAL_UNIT, TEMPORAL)
 				.setArgumentListSignature( "(TEMPORAL_UNIT field, TEMPORAL datetime)" )
 				.register();
 	}
 
+	private static BasicType<Boolean> getBooleanType(QueryEngine queryEngine) {
+		return queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve(StandardBasicTypes.BOOLEAN);
+	}
+
+	private static BasicType<String> getStringType(QueryEngine queryEngine) {
+		return queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve(StandardBasicTypes.STRING);
+	}
+
+	private static BasicType<Integer> getIntegerType(QueryEngine queryEngine) {
+		return queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve(StandardBasicTypes.INTEGER);
+	}
+
+	private static BasicType<Double> getDoubleType(QueryEngine queryEngine) {
+		return queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve(StandardBasicTypes.DOUBLE);
+	}
+
+	private static BasicType<Date> getDateType(QueryEngine queryEngine) {
+		return queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve(StandardBasicTypes.DATE);
+	}
+
+	private static BasicType<Date> getTimeType(QueryEngine queryEngine) {
+		return queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve(StandardBasicTypes.TIME);
+	}
+
+	private static BasicType<Date> getTimestampType(QueryEngine queryEngine) {
+		return queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve(StandardBasicTypes.TIMESTAMP);
+	}
+
+	private static BasicType<Long> getLongType(QueryEngine queryEngine) {
+		return queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve(StandardBasicTypes.LONG);
+	}
+
+	private static BasicType<Character> getCharacterType(QueryEngine queryEngine) {
+		return queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve(StandardBasicTypes.CHARACTER);
+	}
 }

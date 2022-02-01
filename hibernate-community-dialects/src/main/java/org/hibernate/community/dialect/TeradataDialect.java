@@ -252,15 +252,16 @@ public class TeradataDialect extends Dialect {
 		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
 		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
 
-		CommonFunctionFactory.concat_pipeOperator( queryEngine );
-		CommonFunctionFactory.octetLength( queryEngine );
-		CommonFunctionFactory.moreHyperbolic( queryEngine );
-		CommonFunctionFactory.instr( queryEngine );
-		CommonFunctionFactory.substr( queryEngine );
-		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		functionFactory.concat_pipeOperator();
+		functionFactory.octetLength();
+		functionFactory.moreHyperbolic();
+		functionFactory.instr();
+		functionFactory.substr();
+		functionFactory.substring_substr();
 		//also natively supports ANSI-style substring()
-		CommonFunctionFactory.position( queryEngine );
-		CommonFunctionFactory.bitLength_pattern( queryEngine, "octet_length(cast(?1 as char))*4" );
+		functionFactory.position();
+		functionFactory.bitLength_pattern( "octet_length(cast(?1 as char))*4" );
 
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "mod", "(?1 mod ?2)" )
 				.setInvariantType( stringType )
@@ -270,23 +271,23 @@ public class TeradataDialect extends Dialect {
 		if ( getVersion().isSameOrAfter( 14 ) ) {
 
 			//list actually taken from Teradata 15 docs
-			CommonFunctionFactory.lastDay( queryEngine );
-			CommonFunctionFactory.initcap( queryEngine );
-			CommonFunctionFactory.trim2( queryEngine );
-			CommonFunctionFactory.soundex( queryEngine );
-			CommonFunctionFactory.ascii( queryEngine );
-			CommonFunctionFactory.char_chr( queryEngine );
-			CommonFunctionFactory.trunc( queryEngine );
-			CommonFunctionFactory.moreHyperbolic( queryEngine );
-			CommonFunctionFactory.monthsBetween( queryEngine );
-			CommonFunctionFactory.addMonths( queryEngine );
-			CommonFunctionFactory.stddevPopSamp( queryEngine );
-			CommonFunctionFactory.varPopSamp( queryEngine );
+			functionFactory.lastDay();
+			functionFactory.initcap();
+			functionFactory.trim2();
+			functionFactory.soundex();
+			functionFactory.ascii();
+			functionFactory.char_chr();
+			functionFactory.trunc();
+			functionFactory.moreHyperbolic();
+			functionFactory.monthsBetween();
+			functionFactory.addMonths();
+			functionFactory.stddevPopSamp();
+			functionFactory.varPopSamp();
 		}
 
 		// No idea since when this is supported
-		CommonFunctionFactory.inverseDistributionOrderedSetAggregates( queryEngine );
-		CommonFunctionFactory.hypotheticalOrderedSetAggregates( queryEngine );
+		functionFactory.inverseDistributionOrderedSetAggregates();
+		functionFactory.hypotheticalOrderedSetAggregates();
 	}
 
 	/**
@@ -489,7 +490,7 @@ public class TeradataDialect extends Dialect {
 		return getVersion().isBefore( 14 ) ? super.getViolatedConstraintNameExtractor() : EXTRACTOR;
 	}
 
-	private static ViolatedConstraintNameExtractor EXTRACTOR =
+	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
 				String constraintName;
 				switch ( sqle.getErrorCode() ) {

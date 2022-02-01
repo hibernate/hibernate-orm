@@ -111,16 +111,17 @@ public class MimerSQLDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		CommonFunctionFactory.soundex( queryEngine );
-		CommonFunctionFactory.octetLength( queryEngine );
-		CommonFunctionFactory.bitLength( queryEngine );
-		CommonFunctionFactory.truncate( queryEngine );
-		CommonFunctionFactory.repeat( queryEngine );
-		CommonFunctionFactory.pad_repeat( queryEngine );
-		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
-		CommonFunctionFactory.concat_pipeOperator( queryEngine );
-		CommonFunctionFactory.position( queryEngine );
-		CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		functionFactory.soundex();
+		functionFactory.octetLength();
+		functionFactory.bitLength();
+		functionFactory.truncate();
+		functionFactory.repeat();
+		functionFactory.pad_repeat();
+		functionFactory.dayofweekmonthyear();
+		functionFactory.concat_pipeOperator();
+		functionFactory.position();
+		functionFactory.localtimeLocaltimestamp();
 	}
 
 	@Override

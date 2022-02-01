@@ -383,70 +383,72 @@ public class MySQLDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		CommonFunctionFactory.soundex( queryEngine );
-		CommonFunctionFactory.radians( queryEngine );
-		CommonFunctionFactory.degrees( queryEngine );
-		CommonFunctionFactory.cot( queryEngine );
-		CommonFunctionFactory.log( queryEngine );
-		CommonFunctionFactory.log2( queryEngine );
-		CommonFunctionFactory.log10( queryEngine );
-		CommonFunctionFactory.pi( queryEngine );
-		CommonFunctionFactory.trim2( queryEngine );
-		CommonFunctionFactory.octetLength( queryEngine );
-		CommonFunctionFactory.reverse( queryEngine );
-		CommonFunctionFactory.space( queryEngine );
-		CommonFunctionFactory.repeat( queryEngine );
-		CommonFunctionFactory.pad_space( queryEngine );
-		CommonFunctionFactory.md5( queryEngine );
-		CommonFunctionFactory.yearMonthDay( queryEngine );
-		CommonFunctionFactory.hourMinuteSecond( queryEngine );
-		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
-		CommonFunctionFactory.weekQuarter( queryEngine );
-		CommonFunctionFactory.daynameMonthname( queryEngine );
-		CommonFunctionFactory.lastDay( queryEngine );
-		CommonFunctionFactory.date( queryEngine );
-		CommonFunctionFactory.timestamp( queryEngine );
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+
+		functionFactory.soundex();
+		functionFactory.radians();
+		functionFactory.degrees();
+		functionFactory.cot();
+		functionFactory.log();
+		functionFactory.log2();
+		functionFactory.log10();
+		functionFactory.pi();
+		functionFactory.trim2();
+		functionFactory.octetLength();
+		functionFactory.reverse();
+		functionFactory.space();
+		functionFactory.repeat();
+		functionFactory.pad_space();
+		functionFactory.md5();
+		functionFactory.yearMonthDay();
+		functionFactory.hourMinuteSecond();
+		functionFactory.dayofweekmonthyear();
+		functionFactory.weekQuarter();
+		functionFactory.daynameMonthname();
+		functionFactory.lastDay();
+		functionFactory.date();
+		functionFactory.timestamp();
 		time( queryEngine );
 
-		CommonFunctionFactory.utcDateTimeTimestamp( queryEngine );
-		CommonFunctionFactory.rand( queryEngine );
-		CommonFunctionFactory.crc32( queryEngine );
-		CommonFunctionFactory.sha1( queryEngine );
-		CommonFunctionFactory.sha2( queryEngine );
-		CommonFunctionFactory.sha( queryEngine );
-		CommonFunctionFactory.bitLength( queryEngine );
-		CommonFunctionFactory.octetLength( queryEngine );
-		CommonFunctionFactory.ascii( queryEngine );
-		CommonFunctionFactory.chr_char( queryEngine );
-		CommonFunctionFactory.instr( queryEngine );
-		CommonFunctionFactory.substr( queryEngine );
+		functionFactory.utcDateTimeTimestamp();
+		functionFactory.rand();
+		functionFactory.crc32();
+		functionFactory.sha1();
+		functionFactory.sha2();
+		functionFactory.sha();
+		functionFactory.bitLength();
+		functionFactory.octetLength();
+		functionFactory.ascii();
+		functionFactory.chr_char();
+		functionFactory.instr();
+		functionFactory.substr();
 		//also natively supports ANSI-style substring()
-		CommonFunctionFactory.position( queryEngine );
-		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
-		CommonFunctionFactory.truncate( queryEngine );
-		CommonFunctionFactory.insert( queryEngine );
-		CommonFunctionFactory.bitandorxornot_operator( queryEngine );
-		CommonFunctionFactory.bitAndOr( queryEngine );
-		CommonFunctionFactory.stddev( queryEngine );
-		CommonFunctionFactory.stddevPopSamp( queryEngine );
-		CommonFunctionFactory.variance( queryEngine );
-		CommonFunctionFactory.varPopSamp( queryEngine );
-		CommonFunctionFactory.datediff( queryEngine );
-		CommonFunctionFactory.adddateSubdateAddtimeSubtime( queryEngine );
-		CommonFunctionFactory.format_dateFormat( queryEngine );
-		CommonFunctionFactory.makedateMaketime( queryEngine );
+		functionFactory.position();
+		functionFactory.nowCurdateCurtime();
+		functionFactory.truncate();
+		functionFactory.insert();
+		functionFactory.bitandorxornot_operator();
+		functionFactory.bitAndOr();
+		functionFactory.stddev();
+		functionFactory.stddevPopSamp();
+		functionFactory.variance();
+		functionFactory.varPopSamp();
+		functionFactory.datediff();
+		functionFactory.adddateSubdateAddtimeSubtime();
+		functionFactory.format_dateFormat();
+		functionFactory.makedateMaketime();
 
 		if ( getMySQLVersion().isBefore( 5, 7 ) ) {
-			CommonFunctionFactory.sysdateParens( queryEngine );
+			functionFactory.sysdateParens();
 		}
 		else {
 			// MySQL timestamp type defaults to precision 0 (seconds) but
 			// we want the standard default precision of 6 (microseconds)
-			CommonFunctionFactory.sysdateExplicitMicros( queryEngine );
+			functionFactory.sysdateExplicitMicros();
 		}
 
 		queryEngine.getSqmFunctionRegistry().register( "field", new FieldFunction( queryEngine.getTypeConfiguration() ) );
-		CommonFunctionFactory.listagg_groupConcat( queryEngine );
+		functionFactory.listagg_groupConcat();
 	}
 
 	@Override

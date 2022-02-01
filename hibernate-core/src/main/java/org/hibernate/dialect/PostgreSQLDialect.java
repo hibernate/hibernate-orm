@@ -402,59 +402,61 @@ public class PostgreSQLDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		CommonFunctionFactory.cot( queryEngine );
-		CommonFunctionFactory.radians( queryEngine );
-		CommonFunctionFactory.degrees( queryEngine );
-		CommonFunctionFactory.trunc( queryEngine );
-		CommonFunctionFactory.log( queryEngine );
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+
+		functionFactory.cot();
+		functionFactory.radians();
+		functionFactory.degrees();
+		functionFactory.trunc();
+		functionFactory.log();
 		if ( getVersion().isSameOrAfter(12) ) {
-			CommonFunctionFactory.log10( queryEngine );
+			functionFactory.log10();
 		}
 		else {
 			queryEngine.getSqmFunctionRegistry().registerAlternateKey( "log10", "log" );
 		}
-		CommonFunctionFactory.cbrt( queryEngine );
-		CommonFunctionFactory.trim2( queryEngine );
-		CommonFunctionFactory.octetLength( queryEngine );
-		CommonFunctionFactory.repeat( queryEngine );
-		CommonFunctionFactory.md5( queryEngine );
-		CommonFunctionFactory.initcap( queryEngine );
-		CommonFunctionFactory.substr( queryEngine );
-		CommonFunctionFactory.substring_substr( queryEngine );
+		functionFactory.cbrt();
+		functionFactory.trim2();
+		functionFactory.octetLength();
+		functionFactory.repeat();
+		functionFactory.md5();
+		functionFactory.initcap();
+		functionFactory.substr();
+		functionFactory.substring_substr();
 		//also natively supports ANSI-style substring()
-		CommonFunctionFactory.translate( queryEngine );
-		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
-		CommonFunctionFactory.concat_pipeOperator( queryEngine );
-		CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
-		CommonFunctionFactory.dateTrunc( queryEngine );
-		CommonFunctionFactory.bitLength( queryEngine );
-		CommonFunctionFactory.octetLength( queryEngine );
-		CommonFunctionFactory.ascii( queryEngine );
-		CommonFunctionFactory.char_chr( queryEngine );
-		CommonFunctionFactory.position( queryEngine );
-		CommonFunctionFactory.bitandorxornot_operator( queryEngine );
-		CommonFunctionFactory.bitAndOr( queryEngine );
-		CommonFunctionFactory.everyAny_boolAndOr( queryEngine );
-		CommonFunctionFactory.median_percentileCont( queryEngine, false );
-		CommonFunctionFactory.stddev( queryEngine );
-		CommonFunctionFactory.stddevPopSamp( queryEngine );
-		CommonFunctionFactory.variance( queryEngine );
-		CommonFunctionFactory.varPopSamp( queryEngine );
-		CommonFunctionFactory.covarPopSamp( queryEngine );
-		CommonFunctionFactory.corr( queryEngine );
-		CommonFunctionFactory.regrLinearRegressionAggregates( queryEngine );
-		CommonFunctionFactory.insert_overlay( queryEngine );
-		CommonFunctionFactory.overlay( queryEngine );
-		CommonFunctionFactory.soundex( queryEngine ); //was introduced in Postgres 9 apparently
+		functionFactory.translate();
+		functionFactory.toCharNumberDateTimestamp();
+		functionFactory.concat_pipeOperator();
+		functionFactory.localtimeLocaltimestamp();
+		functionFactory.dateTrunc();
+		functionFactory.bitLength();
+		functionFactory.octetLength();
+		functionFactory.ascii();
+		functionFactory.char_chr();
+		functionFactory.position();
+		functionFactory.bitandorxornot_operator();
+		functionFactory.bitAndOr();
+		functionFactory.everyAny_boolAndOr();
+		functionFactory.median_percentileCont( false );
+		functionFactory.stddev();
+		functionFactory.stddevPopSamp();
+		functionFactory.variance();
+		functionFactory.varPopSamp();
+		functionFactory.covarPopSamp();
+		functionFactory.corr();
+		functionFactory.regrLinearRegressionAggregates();
+		functionFactory.insert_overlay();
+		functionFactory.overlay();
+		functionFactory.soundex(); //was introduced in Postgres 9 apparently
 
-		CommonFunctionFactory.locate_positionSubstring( queryEngine );
-		CommonFunctionFactory.listagg_stringAgg( "varchar", queryEngine );
+		functionFactory.locate_positionSubstring();
+		functionFactory.listagg_stringAgg( "varchar" );
 
 		if ( getVersion().isSameOrAfter( 9, 4 ) ) {
-			CommonFunctionFactory.makeDateTimeTimestamp( queryEngine );
+			functionFactory.makeDateTimeTimestamp();
 			// Note that PostgreSQL doesn't support the OVER clause for ordered set-aggregate functions
-			CommonFunctionFactory.inverseDistributionOrderedSetAggregates( queryEngine );
-			CommonFunctionFactory.hypotheticalOrderedSetAggregates( queryEngine );
+			functionFactory.inverseDistributionOrderedSetAggregates();
+			functionFactory.hypotheticalOrderedSetAggregates();
 		}
 	}
 

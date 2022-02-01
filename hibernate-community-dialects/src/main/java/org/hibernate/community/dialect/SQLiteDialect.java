@@ -256,20 +256,21 @@ public class SQLiteDialect extends Dialect {
 		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
 		final BasicType<Integer> integerType = basicTypeRegistry.resolve( StandardBasicTypes.INTEGER );
 
-		CommonFunctionFactory.mod_operator( queryEngine );
-		CommonFunctionFactory.leftRight_substr( queryEngine );
-		CommonFunctionFactory.concat_pipeOperator( queryEngine );
-		CommonFunctionFactory.characterLength_length( queryEngine, SqlAstNodeRenderingMode.DEFAULT );
-		CommonFunctionFactory.leastGreatest_minMax( queryEngine );
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		functionFactory.mod_operator();
+		functionFactory.leftRight_substr();
+		functionFactory.concat_pipeOperator();
+		functionFactory.characterLength_length( SqlAstNodeRenderingMode.DEFAULT );
+		functionFactory.leastGreatest_minMax();
 
-		CommonFunctionFactory.radians( queryEngine );
-		CommonFunctionFactory.degrees( queryEngine );
-		CommonFunctionFactory.trunc( queryEngine );
-		CommonFunctionFactory.log( queryEngine );
-		CommonFunctionFactory.trim2( queryEngine );
-		CommonFunctionFactory.substr( queryEngine );
-		CommonFunctionFactory.substring_substr( queryEngine );
-		CommonFunctionFactory.chr_char( queryEngine );
+		functionFactory.radians();
+		functionFactory.degrees();
+		functionFactory.trunc();
+		functionFactory.log();
+		functionFactory.trim2();
+		functionFactory.substr();
+		functionFactory.substring_substr();
+		functionFactory.chr_char();
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
@@ -316,7 +317,7 @@ public class SQLiteDialect extends Dialect {
 					.setParameterTypes(NUMERIC)
 					.register();
 		}
-		CommonFunctionFactory.listagg_groupConcat( queryEngine );
+		functionFactory.listagg_groupConcat();
 	}
 
 	@Override

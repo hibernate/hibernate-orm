@@ -138,34 +138,35 @@ public class CacheDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		CommonFunctionFactory.repeat( queryEngine );
-		CommonFunctionFactory.trim2( queryEngine );
-		CommonFunctionFactory.substr( queryEngine );
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		functionFactory.repeat();
+		functionFactory.trim2();
+		functionFactory.substr();
 		//also natively supports ANSI-style substring()
-		CommonFunctionFactory.concat_pipeOperator( queryEngine );
-		CommonFunctionFactory.cot( queryEngine );
-		CommonFunctionFactory.log10( queryEngine );
-		CommonFunctionFactory.log( queryEngine );
-		CommonFunctionFactory.pi( queryEngine );
-		CommonFunctionFactory.space( queryEngine );
-		CommonFunctionFactory.hourMinuteSecond( queryEngine );
-		CommonFunctionFactory.yearMonthDay( queryEngine );
-		CommonFunctionFactory.weekQuarter( queryEngine );
-		CommonFunctionFactory.daynameMonthname( queryEngine );
-		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
-		CommonFunctionFactory.truncate( queryEngine );
-		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
-		CommonFunctionFactory.repeat_replicate( queryEngine );
-		CommonFunctionFactory.datepartDatename( queryEngine );
-		CommonFunctionFactory.ascii( queryEngine );
-		CommonFunctionFactory.chr_char( queryEngine );
-		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
-		CommonFunctionFactory.sysdate( queryEngine );
-		CommonFunctionFactory.stddev( queryEngine );
-		CommonFunctionFactory.stddevPopSamp( queryEngine );
-		CommonFunctionFactory.variance( queryEngine );
-		CommonFunctionFactory.varPopSamp( queryEngine );
-		CommonFunctionFactory.lastDay( queryEngine );
+		functionFactory.concat_pipeOperator();
+		functionFactory.cot();
+		functionFactory.log10();
+		functionFactory.log();
+		functionFactory.pi();
+		functionFactory.space();
+		functionFactory.hourMinuteSecond();
+		functionFactory.yearMonthDay();
+		functionFactory.weekQuarter();
+		functionFactory.daynameMonthname();
+		functionFactory.toCharNumberDateTimestamp();
+		functionFactory.truncate();
+		functionFactory.dayofweekmonthyear();
+		functionFactory.repeat_replicate();
+		functionFactory.datepartDatename();
+		functionFactory.ascii();
+		functionFactory.chr_char();
+		functionFactory.nowCurdateCurtime();
+		functionFactory.sysdate();
+		functionFactory.stddev();
+		functionFactory.stddevPopSamp();
+		functionFactory.variance();
+		functionFactory.varPopSamp();
+		functionFactory.lastDay();
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
@@ -174,7 +175,7 @@ public class CacheDialect extends Dialect {
 				"$find(?2,?1,?3)",
 				STRING, STRING, INTEGER
 		).setArgumentListSignature("(pattern, string[, start])");
-		CommonFunctionFactory.bitLength_pattern( queryEngine, "($length(?1)*8)" );
+		functionFactory.bitLength_pattern( "($length(?1)*8)" );
 
 		useJdbcEscape(queryEngine, "sin");
 		useJdbcEscape(queryEngine, "cos");
@@ -345,7 +346,7 @@ public class CacheDialect extends Dialect {
 	// callable statement support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
+	public int registerResultSetOutParameter(CallableStatement statement, int col) {
 		return col;
 	}
 

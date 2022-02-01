@@ -223,70 +223,72 @@ public class H2Dialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		// H2 needs an actual argument type for aggregates like SUM, AVG, MIN, MAX to determine the result type
-		CommonFunctionFactory.aggregates( this, queryEngine, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER, "||", null );
-		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
-		CommonFunctionFactory.avg_castingNonDoubleArguments( this, queryEngine, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 
-		CommonFunctionFactory.pi( queryEngine );
-		CommonFunctionFactory.cot( queryEngine );
-		CommonFunctionFactory.radians( queryEngine );
-		CommonFunctionFactory.degrees( queryEngine );
-		CommonFunctionFactory.log10( queryEngine );
-		CommonFunctionFactory.rand( queryEngine );
-		CommonFunctionFactory.truncate( queryEngine );
-		CommonFunctionFactory.soundex( queryEngine );
-		CommonFunctionFactory.translate( queryEngine );
-		CommonFunctionFactory.bitand( queryEngine );
-		CommonFunctionFactory.bitor( queryEngine );
-		CommonFunctionFactory.bitxor( queryEngine );
-		CommonFunctionFactory.bitAndOr( queryEngine );
-		CommonFunctionFactory.yearMonthDay( queryEngine );
-		CommonFunctionFactory.hourMinuteSecond( queryEngine );
-		CommonFunctionFactory.dayOfWeekMonthYear( queryEngine );
-		CommonFunctionFactory.weekQuarter( queryEngine );
-		CommonFunctionFactory.daynameMonthname( queryEngine );
+		// H2 needs an actual argument type for aggregates like SUM, AVG, MIN, MAX to determine the result type
+		functionFactory.aggregates( this, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER, "||", null );
+		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
+		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+
+		functionFactory.pi();
+		functionFactory.cot();
+		functionFactory.radians();
+		functionFactory.degrees();
+		functionFactory.log10();
+		functionFactory.rand();
+		functionFactory.truncate();
+		functionFactory.soundex();
+		functionFactory.translate();
+		functionFactory.bitand();
+		functionFactory.bitor();
+		functionFactory.bitxor();
+		functionFactory.bitAndOr();
+		functionFactory.yearMonthDay();
+		functionFactory.hourMinuteSecond();
+		functionFactory.dayOfWeekMonthYear();
+		functionFactory.weekQuarter();
+		functionFactory.daynameMonthname();
 		if ( useLocalTime ) {
-			CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
+			functionFactory.localtimeLocaltimestamp();
 		}
-		CommonFunctionFactory.bitLength( queryEngine );
-		CommonFunctionFactory.octetLength( queryEngine );
-		CommonFunctionFactory.ascii( queryEngine );
-		CommonFunctionFactory.octetLength( queryEngine );
-		CommonFunctionFactory.space( queryEngine );
-		CommonFunctionFactory.repeat( queryEngine );
-		CommonFunctionFactory.chr_char( queryEngine );
-		CommonFunctionFactory.instr( queryEngine );
-		CommonFunctionFactory.substr( queryEngine );
+		functionFactory.bitLength();
+		functionFactory.octetLength();
+		functionFactory.ascii();
+		functionFactory.octetLength();
+		functionFactory.space();
+		functionFactory.repeat();
+		functionFactory.chr_char();
+		functionFactory.instr();
+		functionFactory.substr();
 		//also natively supports ANSI-style substring()
-		CommonFunctionFactory.position( queryEngine );
-		CommonFunctionFactory.trim1( queryEngine );
-		CommonFunctionFactory.concat_pipeOperator( queryEngine );
-		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
-		CommonFunctionFactory.sysdate( queryEngine );
-		CommonFunctionFactory.insert( queryEngine );
-//		CommonFunctionFactory.everyAny( queryEngine ); //this would work too
-		CommonFunctionFactory.everyAny_boolAndOr( queryEngine );
-		CommonFunctionFactory.median( queryEngine );
-		CommonFunctionFactory.stddevPopSamp( queryEngine );
-		CommonFunctionFactory.varPopSamp( queryEngine );
+		functionFactory.position();
+		functionFactory.trim1();
+		functionFactory.concat_pipeOperator();
+		functionFactory.nowCurdateCurtime();
+		functionFactory.sysdate();
+		functionFactory.insert();
+//		functionFactory.everyAny(); //this would work too
+		functionFactory.everyAny_boolAndOr();
+		functionFactory.median();
+		functionFactory.stddevPopSamp();
+		functionFactory.varPopSamp();
 		if ( getVersion().isSame( 1, 4, 200 ) ) {
 			// See https://github.com/h2database/h2database/issues/2518
-			CommonFunctionFactory.format_toChar( queryEngine );
+			functionFactory.format_toChar();
 		}
 		else {
-			CommonFunctionFactory.format_formatdatetime( queryEngine );
+			functionFactory.format_formatdatetime();
 		}
-		CommonFunctionFactory.rownum( queryEngine );
+		functionFactory.rownum();
 		if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
-			CommonFunctionFactory.listagg( null, queryEngine );
+			functionFactory.listagg( null );
 			if ( getVersion().isSameOrAfter( 2 ) ) {
-				CommonFunctionFactory.inverseDistributionOrderedSetAggregates( queryEngine );
-				CommonFunctionFactory.hypotheticalOrderedSetAggregates( queryEngine );
+				functionFactory.inverseDistributionOrderedSetAggregates();
+				functionFactory.hypotheticalOrderedSetAggregates();
 			}
 		}
 		else {
-			CommonFunctionFactory.listagg_groupConcat( queryEngine );
+			functionFactory.listagg_groupConcat();
 		}
 	}
 

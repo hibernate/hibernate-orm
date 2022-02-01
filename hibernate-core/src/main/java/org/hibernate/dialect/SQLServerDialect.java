@@ -209,20 +209,22 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		BasicType<Date> timeType = basicTypeRegistry.resolve( StandardBasicTypes.TIME );
 		BasicType<Date> timestampType = basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP );
 
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+
 		// For SQL-Server we need to cast certain arguments to varchar(max) to be able to concat them
-		CommonFunctionFactory.aggregates( this, queryEngine, SqlAstNodeRenderingMode.DEFAULT, "+", "varchar(max)" );
+		functionFactory.aggregates( this, SqlAstNodeRenderingMode.DEFAULT, "+", "varchar(max)" );
 
 		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
-		CommonFunctionFactory.avg_castingNonDoubleArguments( this, queryEngine, SqlAstNodeRenderingMode.DEFAULT );
+		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.DEFAULT );
 
-		CommonFunctionFactory.truncate_round( queryEngine );
-		CommonFunctionFactory.everyAny_sumIif( queryEngine );
-		CommonFunctionFactory.bitLength_pattern( queryEngine, "datalength(?1) * 8" );
+		functionFactory.truncate_round();
+		functionFactory.everyAny_sumIif();
+		functionFactory.bitLength_pattern( "datalength(?1) * 8" );
 
 		if ( getVersion().isSameOrAfter( 10 ) ) {
-			CommonFunctionFactory.locate_charindex( queryEngine );
-			CommonFunctionFactory.stddevPopSamp_stdevp( queryEngine );
-			CommonFunctionFactory.varPopSamp_varp( queryEngine );
+			functionFactory.locate_charindex();
+			functionFactory.stddevPopSamp_stdevp();
+			functionFactory.varPopSamp_varp();
 		}
 
 		if ( getVersion().isSameOrAfter( 11 ) ) {
@@ -230,9 +232,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 			//actually translate() was added in 2017 but
 			//it's not worth adding a new dialect for that!
-			CommonFunctionFactory.translate( queryEngine );
+			functionFactory.translate();
 
-			CommonFunctionFactory.median_percentileCont( queryEngine, true );
+			functionFactory.median_percentileCont( true );
 
 			queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "datefromparts" )
 					.setInvariantType( dateType )
@@ -265,10 +267,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 					.setParameterTypes(INTEGER)
 					.register();
 		}
-		CommonFunctionFactory.inverseDistributionOrderedSetAggregates( queryEngine );
-		CommonFunctionFactory.hypotheticalOrderedSetAggregates( queryEngine );
+		functionFactory.inverseDistributionOrderedSetAggregates();
+		functionFactory.hypotheticalOrderedSetAggregates();
 		if ( getVersion().isSameOrAfter( 14 ) ) {
-			CommonFunctionFactory.listagg_stringAggWithinGroup( "varchar(max)", queryEngine );
+			functionFactory.listagg_stringAggWithinGroup( "varchar(max)" );
 		}
 	}
 

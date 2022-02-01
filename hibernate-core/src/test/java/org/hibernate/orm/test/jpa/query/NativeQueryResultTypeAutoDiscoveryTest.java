@@ -40,7 +40,7 @@ import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.java.BigDecimalJavaType;
-import org.hibernate.type.descriptor.java.FloatTypeDescriptor;
+import org.hibernate.type.descriptor.java.FloatJavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.BinaryJdbcType;
@@ -576,7 +576,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 		public static final String NAME = "float_as_real";
 
 		public FloatAsRealType() {
-			super( RealJdbcType.INSTANCE, FloatTypeDescriptor.INSTANCE );
+			super( RealJdbcType.INSTANCE, FloatJavaType.INSTANCE );
 		}
 
 		@Override

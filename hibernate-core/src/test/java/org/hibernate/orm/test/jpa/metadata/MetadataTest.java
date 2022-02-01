@@ -26,6 +26,7 @@ import jakarta.persistence.metamodel.Type;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.orm.test.legacy.I;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -226,8 +227,8 @@ public class MetadataTest {
                 "temperature",
                 Integer.class
         );
-		assertEquals( Integer.class, singularAttribute.getBindableJavaType() );
-		assertEquals( Integer.class, singularAttribute.getType().getJavaType() );
+		assertEquals( int.class, singularAttribute.getBindableJavaType() );
+		assertEquals( int.class, singularAttribute.getType().getJavaType() );
         assertEquals(Bindable.BindableType.SINGULAR_ATTRIBUTE, singularAttribute.getBindableType());
         assertFalse(singularAttribute.isId());
         assertFalse(singularAttribute.isOptional());
@@ -238,7 +239,7 @@ public class MetadataTest {
         assertEquals("temperature", attribute.getName());
         assertEquals(Fridge.class, attribute.getDeclaringType().getJavaType());
         assertEquals(Attribute.PersistentAttributeType.BASIC, attribute.getPersistentAttributeType());
-		assertEquals( Integer.class, attribute.getJavaType() );
+		assertEquals( int.class, attribute.getJavaType() );
         assertFalse(attribute.isAssociation());
         assertFalse(attribute.isCollection());
 

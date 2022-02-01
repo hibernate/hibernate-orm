@@ -62,7 +62,7 @@ public class StaticMetadataTest {
 		assertTrue( Animal_.id.isId() );
 		assertEquals( Long.class, Animal_.id.getJavaType() );
 		assertNotNull( Animal_.legNbr );
-		assertEquals( Integer.class, Animal_.legNbr.getJavaType() );
+		assertEquals( int.class, Animal_.legNbr.getJavaType() );
 
 		// Cat (hierarchy)
 		assertNotNull( Cat_.id );
@@ -81,9 +81,9 @@ public class StaticMetadataTest {
 		assertNotNull( Fridge_.temperature );
 		assertEquals( "temperature", Fridge_.temperature.getName() );
 		assertEquals( Fridge.class, Fridge_.temperature.getDeclaringType().getJavaType() );
-		assertEquals( Integer.class, Fridge_.temperature.getJavaType() );
-		assertEquals( Integer.class, Fridge_.temperature.getBindableJavaType() );
-		assertEquals( Integer.class, Fridge_.temperature.getType().getJavaType() );
+		assertEquals( int.class, Fridge_.temperature.getJavaType() );
+		assertEquals( int.class, Fridge_.temperature.getBindableJavaType() );
+		assertEquals( int.class, Fridge_.temperature.getType().getJavaType() );
 		assertEquals( Bindable.BindableType.SINGULAR_ATTRIBUTE, Fridge_.temperature.getBindableType() );
 		assertEquals( Type.PersistenceType.BASIC, Fridge_.temperature.getType().getPersistenceType() );
 		assertEquals( Attribute.PersistentAttributeType.BASIC, Fridge_.temperature.getPersistentAttributeType() );

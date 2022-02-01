@@ -22,10 +22,10 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
  *
  * @author Steve Ebersole
  */
-public class FloatTypeDescriptor extends AbstractClassJavaType<Float> implements PrimitiveJavaType<Float> {
-	public static final FloatTypeDescriptor INSTANCE = new FloatTypeDescriptor();
+public class FloatJavaType extends AbstractClassJavaType<Float> implements PrimitiveJavaType<Float> {
+	public static final FloatJavaType INSTANCE = new FloatJavaType();
 
-	public FloatTypeDescriptor() {
+	public FloatJavaType() {
 		super( Float.class );
 	}
 

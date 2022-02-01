@@ -82,7 +82,7 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 
 	protected void copyTo(AbstractSqmAttributeJoin<O, T> target, SqmCopyContext context) {
 		super.copyTo( target, context );
-		this.onClausePredicate = onClausePredicate == null ? null : onClausePredicate.copy( context );
+		target.onClausePredicate = onClausePredicate == null ? null : onClausePredicate.copy( context );
 	}
 
 	@Override

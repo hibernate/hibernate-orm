@@ -11,8 +11,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.hibernate.cfg.AvailableSettings;
+
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -40,7 +43,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 				CriteriaPredicateTest.Person.class,
 				CriteriaPredicateTest.Account.class,
 				CriteriaPredicateTest.Deposit.class
-		}
+		},
+		properties = {
+		@Setting(name = AvailableSettings.JPA_CRITERIA_COPY_COMPLIANCE, value = "true"),
+}
 )
 public class CriteriaPredicateTest {
 

@@ -4589,7 +4589,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	@Override
-	public void acceptConvertedQueryLiteral(ConvertedQueryLiteral<?, ?> convertedQueryLiteral) {
+	public void visitConvertedQueryLiteral(ConvertedQueryLiteral<?, ?> convertedQueryLiteral) {
 		visitLiteral( convertedQueryLiteral );
 	}
 

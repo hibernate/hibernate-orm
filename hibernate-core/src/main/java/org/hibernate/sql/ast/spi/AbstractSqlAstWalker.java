@@ -34,6 +34,7 @@ import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
+import org.hibernate.sql.ast.tree.expression.OrderedSetAggregateFunctionExpression;
 import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.Overflow;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
@@ -105,6 +106,11 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 				final AggregateFunctionExpression aggregateFunctionExpression = (AggregateFunctionExpression) expression;
 				if ( aggregateFunctionExpression.getFilter() != null ) {
 					aggregateFunctionExpression.getFilter().accept( this );
+				}
+				if ( expression instanceof OrderedSetAggregateFunctionExpression ) {
+					for ( SortSpecification specification : ( (OrderedSetAggregateFunctionExpression) expression ).getWithinGroup() ) {
+						specification.accept( this );
+					}
 				}
 			}
 		}
@@ -480,7 +486,7 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 	}
 
 	@Override
-	public void acceptConvertedQueryLiteral(ConvertedQueryLiteral<?,?> convertedQueryLiteral) {
+	public void visitConvertedQueryLiteral(ConvertedQueryLiteral<?,?> convertedQueryLiteral) {
 	}
 
 	@Override

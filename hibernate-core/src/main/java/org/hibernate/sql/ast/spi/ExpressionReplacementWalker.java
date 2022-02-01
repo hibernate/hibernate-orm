@@ -219,7 +219,7 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 	}
 
 	@Override
-	public void acceptConvertedQueryLiteral(ConvertedQueryLiteral<?, ?> convertedQueryLiteral) {
+	public void visitConvertedQueryLiteral(ConvertedQueryLiteral<?, ?> convertedQueryLiteral) {
 		doReplaceExpression( convertedQueryLiteral );
 	}
 

@@ -161,7 +161,7 @@ public interface SqlAstWalker {
 
 	void visitQueryLiteral(QueryLiteral<?> queryLiteral);
 
-	void acceptConvertedQueryLiteral(ConvertedQueryLiteral<?,?> convertedQueryLiteral);
+	void visitConvertedQueryLiteral(ConvertedQueryLiteral<?,?> convertedQueryLiteral);
 
 	void visitUnaryOperationExpression(UnaryOperation unaryOperationExpression);
 

@@ -97,7 +97,7 @@ public class ConvertedQueryLiteral<D,R> implements Literal, DomainResultProducer
 
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
-		sqlTreeWalker.acceptConvertedQueryLiteral( this );
+		sqlTreeWalker.visitConvertedQueryLiteral( this );
 	}
 
 	@Override

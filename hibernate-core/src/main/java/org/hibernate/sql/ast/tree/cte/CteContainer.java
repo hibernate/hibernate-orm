@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.cte;
 
-import java.util.Collection;
+import java.util.Map;
 
 /**
  * The consumer part of a CTE statement - the select or insert or delete or update that uses
@@ -21,7 +21,7 @@ public interface CteContainer {
 
 	void setWithRecursive(boolean recursive);
 
-	Collection<CteStatement> getCteStatements();
+	Map<String, CteStatement> getCteStatements();
 
 	CteStatement getCteStatement(String cteLabel);
 

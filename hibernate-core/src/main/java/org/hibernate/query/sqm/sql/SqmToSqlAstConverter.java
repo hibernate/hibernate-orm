@@ -15,6 +15,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.QueryTransformer;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
@@ -24,6 +25,8 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
  */
 public interface SqmToSqlAstConverter extends SemanticQueryWalker<Object>, SqlAstCreationState {
 	Stack<Clause> getCurrentClauseStack();
+
+	void registerQueryTransformer(QueryTransformer transformer);
 
 	List<Expression> expandSelfRenderingFunctionMultiValueParameter(SqmParameter<?> sqmParameter);
 

@@ -21,6 +21,8 @@ import org.hibernate.query.sqm.tree.expression.SqmDistinct;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
  * @author Christian Beikov
@@ -73,7 +75,7 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 	}
 
 	@Override
-	public SelfRenderingFunctionSqlAstExpression convertToSqlAst(SqmToSqlAstConverter walker) {
+	public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
 		final ReturnableType<?> resultType = resolveResultType(
 				walker.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);

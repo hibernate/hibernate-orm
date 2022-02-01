@@ -14,6 +14,7 @@ import java.util.Map;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.tree.AbstractMutationStatement;
+import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -43,6 +44,22 @@ public class UpdateStatement extends AbstractMutationStatement {
 		super( new LinkedHashMap<>(), targetTable, returningColumns );
 		this.assignments = assignments;
 		this.restriction = restriction;
+	}
+
+	public UpdateStatement(
+			CteContainer cteContainer,
+			NamedTableReference targetTable,
+			List<Assignment> assignments,
+			Predicate restriction,
+			List<ColumnReference> returningColumns) {
+		this(
+				cteContainer.isWithRecursive(),
+				cteContainer.getCteStatements(),
+				targetTable,
+				assignments,
+				restriction,
+				returningColumns
+		);
 	}
 
 	public UpdateStatement(

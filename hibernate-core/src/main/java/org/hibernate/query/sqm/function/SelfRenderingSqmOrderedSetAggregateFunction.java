@@ -25,6 +25,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 
@@ -91,7 +92,7 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 	}
 
 	@Override
-	public SelfRenderingFunctionSqlAstExpression convertToSqlAst(SqmToSqlAstConverter walker) {
+	public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
 		final ReturnableType<?> resultType = resolveResultType(
 				walker.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);

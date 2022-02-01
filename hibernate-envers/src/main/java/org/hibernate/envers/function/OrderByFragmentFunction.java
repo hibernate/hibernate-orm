@@ -20,7 +20,6 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionRenderingSupport;
-import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -31,9 +30,9 @@ import org.hibernate.query.sqm.sql.FromClauseIndex;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.expression.SqmAny;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.DelegatingTableGroup;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -174,7 +173,7 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 		}
 
 		@Override
-		public SelfRenderingFunctionSqlAstExpression convertToSqlAst(SqmToSqlAstConverter walker) {
+		public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
 			final ReturnableType<?> resultType = resolveResultType(
 					walker.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 			);

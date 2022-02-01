@@ -13,6 +13,7 @@ import java.util.Map;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAstHelper;
 import org.hibernate.sql.ast.tree.AbstractMutationStatement;
+import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -38,6 +39,20 @@ public class DeleteStatement extends AbstractMutationStatement {
 			List<ColumnReference> returningColumns) {
 		super( new LinkedHashMap<>(), targetTable, returningColumns );
 		this.restriction = restriction;
+	}
+
+	public DeleteStatement(
+			CteContainer cteContainer,
+			NamedTableReference targetTable,
+			Predicate restriction,
+			List<ColumnReference> returningColumns) {
+		this(
+				cteContainer.isWithRecursive(),
+				cteContainer.getCteStatements(),
+				targetTable,
+				restriction,
+				returningColumns
+		);
 	}
 
 	public DeleteStatement(

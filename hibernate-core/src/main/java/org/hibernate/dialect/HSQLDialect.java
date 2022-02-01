@@ -167,64 +167,66 @@ public class HSQLDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
-		CommonFunctionFactory.avg_castingNonDoubleArguments( this, queryEngine, SqlAstNodeRenderingMode.DEFAULT );
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 
-		CommonFunctionFactory.cot( queryEngine );
-		CommonFunctionFactory.radians( queryEngine );
-		CommonFunctionFactory.degrees( queryEngine );
-		CommonFunctionFactory.log10( queryEngine );
-		CommonFunctionFactory.rand( queryEngine );
-		CommonFunctionFactory.trunc( queryEngine );
-		CommonFunctionFactory.truncate( queryEngine );
-		CommonFunctionFactory.pi( queryEngine );
-		CommonFunctionFactory.soundex( queryEngine );
-		CommonFunctionFactory.reverse( queryEngine );
-		CommonFunctionFactory.space( queryEngine );
-		CommonFunctionFactory.repeat( queryEngine );
-		CommonFunctionFactory.translate( queryEngine );
-		CommonFunctionFactory.bitand( queryEngine );
-		CommonFunctionFactory.bitor( queryEngine );
-		CommonFunctionFactory.bitxor( queryEngine );
-		CommonFunctionFactory.bitnot( queryEngine );
-		CommonFunctionFactory.yearMonthDay( queryEngine );
-		CommonFunctionFactory.hourMinuteSecond( queryEngine );
-		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
-		CommonFunctionFactory.weekQuarter( queryEngine );
-		CommonFunctionFactory.daynameMonthname( queryEngine );
-		CommonFunctionFactory.lastDay( queryEngine );
-		CommonFunctionFactory.trim1( queryEngine );
-		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
-		CommonFunctionFactory.concat_pipeOperator( queryEngine );
-		CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
-		CommonFunctionFactory.bitLength( queryEngine );
-		CommonFunctionFactory.octetLength( queryEngine );
-		CommonFunctionFactory.ascii( queryEngine );
-		CommonFunctionFactory.chr_char( queryEngine );
-		CommonFunctionFactory.instr( queryEngine );
-		CommonFunctionFactory.substr( queryEngine );
+		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
+		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.DEFAULT );
+
+		functionFactory.cot();
+		functionFactory.radians();
+		functionFactory.degrees();
+		functionFactory.log10();
+		functionFactory.rand();
+		functionFactory.trunc();
+		functionFactory.truncate();
+		functionFactory.pi();
+		functionFactory.soundex();
+		functionFactory.reverse();
+		functionFactory.space();
+		functionFactory.repeat();
+		functionFactory.translate();
+		functionFactory.bitand();
+		functionFactory.bitor();
+		functionFactory.bitxor();
+		functionFactory.bitnot();
+		functionFactory.yearMonthDay();
+		functionFactory.hourMinuteSecond();
+		functionFactory.dayofweekmonthyear();
+		functionFactory.weekQuarter();
+		functionFactory.daynameMonthname();
+		functionFactory.lastDay();
+		functionFactory.trim1();
+		functionFactory.toCharNumberDateTimestamp();
+		functionFactory.concat_pipeOperator();
+		functionFactory.localtimeLocaltimestamp();
+		functionFactory.bitLength();
+		functionFactory.octetLength();
+		functionFactory.ascii();
+		functionFactory.chr_char();
+		functionFactory.instr();
+		functionFactory.substr();
 		//also natively supports ANSI-style substring()
-		CommonFunctionFactory.position( queryEngine );
-		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
-		CommonFunctionFactory.insert( queryEngine );
-		CommonFunctionFactory.overlay( queryEngine );
-		CommonFunctionFactory.median( queryEngine );
-		CommonFunctionFactory.stddevPopSamp( queryEngine );
-		CommonFunctionFactory.varPopSamp( queryEngine );
-		CommonFunctionFactory.addMonths( queryEngine );
-		CommonFunctionFactory.monthsBetween( queryEngine );
-		CommonFunctionFactory.collate_quoted( queryEngine );
+		functionFactory.position();
+		functionFactory.nowCurdateCurtime();
+		functionFactory.insert();
+		functionFactory.overlay();
+		functionFactory.median();
+		functionFactory.stddevPopSamp();
+		functionFactory.varPopSamp();
+		functionFactory.addMonths();
+		functionFactory.monthsBetween();
+		functionFactory.collate_quoted();
 
 		if ( getVersion().isSameOrAfter( 2 ) ) {
 			//SYSDATE is similar to LOCALTIMESTAMP but it returns the timestamp when it is called
-			CommonFunctionFactory.sysdate( queryEngine );
+			functionFactory.sysdate();
 		}
 
 		// from v. 2.2.0 ROWNUM() is supported in all modes as the equivalent of Oracle ROWNUM
 		if ( getVersion().isSameOrAfter( 2, 2 ) ) {
-			CommonFunctionFactory.rownum( queryEngine );
+			functionFactory.rownum();
 		}
-		CommonFunctionFactory.listagg_groupConcat( queryEngine );
+		functionFactory.listagg_groupConcat();
 	}
 
 	@Override

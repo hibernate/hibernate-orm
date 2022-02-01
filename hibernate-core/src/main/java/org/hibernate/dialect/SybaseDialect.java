@@ -205,20 +205,22 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry(queryEngine);
 
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+
 		// For SQL-Server we need to cast certain arguments to varchar(16384) to be able to concat them
-		CommonFunctionFactory.aggregates( this, queryEngine, SqlAstNodeRenderingMode.DEFAULT, "+", "varchar(16384)" );
+		functionFactory.aggregates( this, SqlAstNodeRenderingMode.DEFAULT, "+", "varchar(16384)" );
 
 		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
-		CommonFunctionFactory.avg_castingNonDoubleArguments( this, queryEngine, SqlAstNodeRenderingMode.DEFAULT );
+		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.DEFAULT );
 
 		//this doesn't work 100% on earlier versions of Sybase
 		//which were missing the third parameter in charindex()
 		//TODO: we could emulate it with substring() like in Postgres
-		CommonFunctionFactory.locate_charindex( queryEngine );
+		functionFactory.locate_charindex();
 
-		CommonFunctionFactory.replace_strReplace( queryEngine );
-		CommonFunctionFactory.everyAny_sumCaseCase( queryEngine );
-		CommonFunctionFactory.bitLength_pattern( queryEngine, "datalength(?1) * 8" );
+		functionFactory.replace_strReplace();
+		functionFactory.everyAny_sumCaseCase();
+		functionFactory.bitLength_pattern( "datalength(?1) * 8" );
 	}
 
 	@Override

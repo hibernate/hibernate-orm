@@ -57,9 +57,10 @@ public class DB2zDialect extends DB2Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 		if ( getVersion().isSameOrAfter( 12 ) ) {
-			CommonFunctionFactory.listagg( null, queryEngine );
-			CommonFunctionFactory.inverseDistributionOrderedSetAggregates( queryEngine );
-			CommonFunctionFactory.hypotheticalOrderedSetAggregates( queryEngine );
+			CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+			functionFactory.listagg( null );
+			functionFactory.inverseDistributionOrderedSetAggregates();
+			functionFactory.hypotheticalOrderedSetAggregates();
 		}
 	}
 

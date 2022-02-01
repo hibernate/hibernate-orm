@@ -179,17 +179,19 @@ public class SpannerDialect extends Dialect {
 				.setArgumentCountBetween( 1, 2 )
 				.register();
 
-		// Mathematical Functions
-		CommonFunctionFactory.log( queryEngine );
-		CommonFunctionFactory.log10( queryEngine );
-		CommonFunctionFactory.trunc( queryEngine );
-		CommonFunctionFactory.ceiling_ceil( queryEngine );
-		CommonFunctionFactory.cosh( queryEngine );
-		CommonFunctionFactory.sinh( queryEngine );
-		CommonFunctionFactory.tanh( queryEngine );
-		CommonFunctionFactory.moreHyperbolic( queryEngine );
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 
-		CommonFunctionFactory.bitandorxornot_bitAndOrXorNot( queryEngine );
+		// Mathematical Functions
+		functionFactory.log();
+		functionFactory.log10();
+		functionFactory.trunc();
+		functionFactory.ceiling_ceil();
+		functionFactory.cosh();
+		functionFactory.sinh();
+		functionFactory.tanh();
+		functionFactory.moreHyperbolic();
+
+		functionFactory.bitandorxornot_bitAndOrXorNot();
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "is_inf" )
 				.setInvariantType( booleanType )
@@ -208,7 +210,7 @@ public class SpannerDialect extends Dialect {
 				.setExactArgumentCount( 2 )
 				.register();
 
-		CommonFunctionFactory.sha1( queryEngine );
+		functionFactory.sha1();
 
 		// Hash Functions
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "farm_fingerprint" )
@@ -225,12 +227,12 @@ public class SpannerDialect extends Dialect {
 				.register();
 
 		// String Functions
-		CommonFunctionFactory.concat_pipeOperator( queryEngine );
-		CommonFunctionFactory.trim2( queryEngine );
-		CommonFunctionFactory.reverse( queryEngine );
-		CommonFunctionFactory.repeat( queryEngine );
-		CommonFunctionFactory.substr( queryEngine );
-		CommonFunctionFactory.substring_substr( queryEngine );
+		functionFactory.concat_pipeOperator();
+		functionFactory.trim2();
+		functionFactory.reverse();
+		functionFactory.repeat();
+		functionFactory.substr();
+		functionFactory.substring_substr();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "byte_length" )
 				.setInvariantType( longType )
 				.setExactArgumentCount( 1 )
@@ -427,9 +429,9 @@ public class SpannerDialect extends Dialect {
 				.setArgumentsValidator( CommonFunctionFactory.formatValidator() )
 				.setArgumentListSignature("(TIMESTAMP datetime as STRING pattern)")
 				.register();
-		CommonFunctionFactory.listagg_stringAgg( "string", queryEngine );
-		CommonFunctionFactory.inverseDistributionOrderedSetAggregates( queryEngine );
-		CommonFunctionFactory.hypotheticalOrderedSetAggregates( queryEngine );
+		functionFactory.listagg_stringAgg( "string" );
+		functionFactory.inverseDistributionOrderedSetAggregates();
+		functionFactory.hypotheticalOrderedSetAggregates();
 	}
 
 	@Override

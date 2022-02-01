@@ -152,33 +152,34 @@ public class InformixDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		CommonFunctionFactory.instr( queryEngine );
-		CommonFunctionFactory.substr( queryEngine );
-		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		functionFactory.instr();
+		functionFactory.substr();
+		functionFactory.substring_substr();
 		//also natively supports ANSI-style substring()
-		CommonFunctionFactory.trunc( queryEngine );
-		CommonFunctionFactory.trim2( queryEngine );
-		CommonFunctionFactory.space( queryEngine );
-		CommonFunctionFactory.reverse( queryEngine );
-		CommonFunctionFactory.octetLength( queryEngine );
-		CommonFunctionFactory.degrees( queryEngine );
-		CommonFunctionFactory.radians( queryEngine );
-		CommonFunctionFactory.sinh( queryEngine );
-		CommonFunctionFactory.tanh( queryEngine );
-		CommonFunctionFactory.cosh( queryEngine );
-		CommonFunctionFactory.moreHyperbolic( queryEngine );
-		CommonFunctionFactory.log10( queryEngine );
-		CommonFunctionFactory.initcap( queryEngine );
-		CommonFunctionFactory.yearMonthDay( queryEngine );
-		CommonFunctionFactory.ceiling_ceil( queryEngine );
-		CommonFunctionFactory.concat_pipeOperator( queryEngine );
-		CommonFunctionFactory.ascii( queryEngine );
-		CommonFunctionFactory.char_chr( queryEngine );
-		CommonFunctionFactory.addMonths( queryEngine );
-		CommonFunctionFactory.monthsBetween( queryEngine );
-		CommonFunctionFactory.stddev( queryEngine );
-		CommonFunctionFactory.variance( queryEngine );
-		CommonFunctionFactory.locate_positionSubstring( queryEngine );
+		functionFactory.trunc();
+		functionFactory.trim2();
+		functionFactory.space();
+		functionFactory.reverse();
+		functionFactory.octetLength();
+		functionFactory.degrees();
+		functionFactory.radians();
+		functionFactory.sinh();
+		functionFactory.tanh();
+		functionFactory.cosh();
+		functionFactory.moreHyperbolic();
+		functionFactory.log10();
+		functionFactory.initcap();
+		functionFactory.yearMonthDay();
+		functionFactory.ceiling_ceil();
+		functionFactory.concat_pipeOperator();
+		functionFactory.ascii();
+		functionFactory.char_chr();
+		functionFactory.addMonths();
+		functionFactory.monthsBetween();
+		functionFactory.stddev();
+		functionFactory.variance();
+		functionFactory.locate_positionSubstring();
 
 		//coalesce() and nullif() both supported since Informix 12
 

@@ -169,38 +169,39 @@ public class RDMSOS2200Dialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		CommonFunctionFactory.cosh( queryEngine );
-		CommonFunctionFactory.sinh( queryEngine );
-		CommonFunctionFactory.tanh( queryEngine );
-		CommonFunctionFactory.cot( queryEngine );
-		CommonFunctionFactory.log( queryEngine );
-		CommonFunctionFactory.log10( queryEngine );
-		CommonFunctionFactory.pi( queryEngine );
-		CommonFunctionFactory.rand( queryEngine );
-		CommonFunctionFactory.trunc( queryEngine );
-		CommonFunctionFactory.truncate( queryEngine );
-		CommonFunctionFactory.soundex( queryEngine );
-		CommonFunctionFactory.trim2( queryEngine );
-		CommonFunctionFactory.space( queryEngine );
-		CommonFunctionFactory.repeat( queryEngine );
-//		CommonFunctionFactory.replicate( queryEngine ); //synonym for more common repeat()
-		CommonFunctionFactory.initcap( queryEngine );
-		CommonFunctionFactory.instr( queryEngine );
-		CommonFunctionFactory.substr( queryEngine );
-		CommonFunctionFactory.translate( queryEngine );
-		CommonFunctionFactory.yearMonthDay( queryEngine );
-		CommonFunctionFactory.hourMinuteSecond( queryEngine );
-		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
-		CommonFunctionFactory.weekQuarter( queryEngine );
-		CommonFunctionFactory.daynameMonthname( queryEngine );
-		CommonFunctionFactory.lastDay( queryEngine );
-		CommonFunctionFactory.ceiling_ceil( queryEngine );
-		CommonFunctionFactory.concat_pipeOperator( queryEngine );
-		CommonFunctionFactory.ascii( queryEngine );
-		CommonFunctionFactory.chr_char( queryEngine );
-		CommonFunctionFactory.insert( queryEngine );
-		CommonFunctionFactory.addMonths( queryEngine );
-		CommonFunctionFactory.monthsBetween( queryEngine );
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		functionFactory.cosh();
+		functionFactory.sinh();
+		functionFactory.tanh();
+		functionFactory.cot();
+		functionFactory.log();
+		functionFactory.log10();
+		functionFactory.pi();
+		functionFactory.rand();
+		functionFactory.trunc();
+		functionFactory.truncate();
+		functionFactory.soundex();
+		functionFactory.trim2();
+		functionFactory.space();
+		functionFactory.repeat();
+//		functionFactory.replicate(); //synonym for more common repeat()
+		functionFactory.initcap();
+		functionFactory.instr();
+		functionFactory.substr();
+		functionFactory.translate();
+		functionFactory.yearMonthDay();
+		functionFactory.hourMinuteSecond();
+		functionFactory.dayofweekmonthyear();
+		functionFactory.weekQuarter();
+		functionFactory.daynameMonthname();
+		functionFactory.lastDay();
+		functionFactory.ceiling_ceil();
+		functionFactory.concat_pipeOperator();
+		functionFactory.ascii();
+		functionFactory.chr_char();
+		functionFactory.insert();
+		functionFactory.addMonths();
+		functionFactory.monthsBetween();
 	}
 
 	@Override

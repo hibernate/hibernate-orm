@@ -779,15 +779,17 @@ public abstract class Dialect implements ConversionContext {
 		final BasicType<LocalTime> localTimeType = basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_TIME );
 		final BasicType<LocalDate> localDateType = basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_DATE );
 
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+
 		//aggregate functions, supported on every database
 
-		CommonFunctionFactory.aggregates( this, queryEngine, SqlAstNodeRenderingMode.DEFAULT, "||", null );
+		functionFactory.aggregates( this, SqlAstNodeRenderingMode.DEFAULT, "||", null );
 
 		//the ANSI SQL-defined aggregate functions any() and every() are only
 		//supported on one database, but can be emulated using sum() and case,
 		//though there is a more natural mapping on some databases
 
-		CommonFunctionFactory.everyAny_sumCase( queryEngine );
+		functionFactory.everyAny_sumCase();
 
 		//math functions supported on almost every database
 
@@ -799,42 +801,42 @@ public abstract class Dialect implements ConversionContext {
 		//decimal" version of these functions, and if any database attempted
 		//to implement such a silly thing, it would be dog slow.
 
-		CommonFunctionFactory.math( queryEngine );
+		functionFactory.math();
 
 		//trig functions supported on almost every database
 
-		CommonFunctionFactory.trigonometry( queryEngine );
+		functionFactory.trigonometry();
 
 		//coalesce() function, supported by most databases, must be emulated
 		//in terms of nvl() for platforms which don't support it natively
 
-		CommonFunctionFactory.coalesce( queryEngine );
+		functionFactory.coalesce();
 
 		//nullif() function, supported on almost every database
 
-		CommonFunctionFactory.nullif( queryEngine );
+		functionFactory.nullif();
 
 		//string functions, must be emulated where not supported
 
-		CommonFunctionFactory.leftRight( queryEngine );
-		CommonFunctionFactory.replace( queryEngine );
-		CommonFunctionFactory.concat( queryEngine );
-		CommonFunctionFactory.lowerUpper( queryEngine );
+		functionFactory.leftRight();
+		functionFactory.replace();
+		functionFactory.concat();
+		functionFactory.lowerUpper();
 
 		//there are two forms of substring(), the JPA standard syntax, which
 		//separates arguments using commas, and the ANSI SQL standard syntax
 		//with named arguments (we support both)
 
-		CommonFunctionFactory.substring( queryEngine );
+		functionFactory.substring();
 
 		//the JPA locate() function is especially tricky to emulate, calling
 		//for lots of Dialect-specific customization
 
-		CommonFunctionFactory.locate( queryEngine );
+		functionFactory.locate();
 
 		//JPA string length() function, a synonym for ANSI SQL character_length()
 
-		CommonFunctionFactory.length_characterLength( queryEngine );
+		functionFactory.length_characterLength();
 
 		//only some databases support the ANSI SQL-style position() function, so
 		//define it here as an alias for locate()
@@ -870,7 +872,7 @@ public abstract class Dialect implements ConversionContext {
 
 		//There is a 'collate' operator in a number of major databases
 
-		CommonFunctionFactory.collate( queryEngine );
+		functionFactory.collate();
 
 		//ANSI SQL extract() function is supported on the databases we care most
 		//about (though it is called datepart() in some of them) but HQL defines
@@ -881,7 +883,7 @@ public abstract class Dialect implements ConversionContext {
 
 		//comparison functions supported on every known database
 
-		CommonFunctionFactory.leastGreatest( queryEngine );
+		functionFactory.leastGreatest();
 
 		//two-argument synonym for coalesce() supported on most but not every
 		//database, so define it here as an alias for coalesce(arg1,arg2)
@@ -892,7 +894,7 @@ public abstract class Dialect implements ConversionContext {
 		//where not supported, but they're not considered "standard" ... instead
 		//they're used to implement pad()
 
-		CommonFunctionFactory.pad( queryEngine );
+		functionFactory.pad();
 
 		//pad() is a function we've designed to look like ANSI trim()
 
@@ -907,7 +909,7 @@ public abstract class Dialect implements ConversionContext {
 		//Oracle-style to_char() function, and on others using their native
 		//formatting functions
 
-		CommonFunctionFactory.format_toChar( queryEngine );
+		functionFactory.format_toChar();
 
 		//timestampadd()/timestampdiff() delegated back to the Dialect itself
 		//since there is a great variety of different ways to emulate them

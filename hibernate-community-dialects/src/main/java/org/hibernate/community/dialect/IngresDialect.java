@@ -253,32 +253,33 @@ public class IngresDialect extends Dialect {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Common functions
 
-		CommonFunctionFactory.log( queryEngine );
-		CommonFunctionFactory.rand( queryEngine );
-		CommonFunctionFactory.soundex( queryEngine );
-		CommonFunctionFactory.octetLength( queryEngine );
-		CommonFunctionFactory.repeat( queryEngine );
-		CommonFunctionFactory.trim2( queryEngine );
-		CommonFunctionFactory.trunc( queryEngine );
-		CommonFunctionFactory.truncate( queryEngine );
-		CommonFunctionFactory.initcap( queryEngine );
-		CommonFunctionFactory.yearMonthDay( queryEngine );
-		CommonFunctionFactory.hourMinuteSecond( queryEngine );
-		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
-		CommonFunctionFactory.weekQuarter( queryEngine );
-		CommonFunctionFactory.lastDay( queryEngine );
-		CommonFunctionFactory.concat_pipeOperator( queryEngine );
-		CommonFunctionFactory.substr( queryEngine );
-		CommonFunctionFactory.monthsBetween( queryEngine );
-		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		functionFactory.log();
+		functionFactory.rand();
+		functionFactory.soundex();
+		functionFactory.octetLength();
+		functionFactory.repeat();
+		functionFactory.trim2();
+		functionFactory.trunc();
+		functionFactory.truncate();
+		functionFactory.initcap();
+		functionFactory.yearMonthDay();
+		functionFactory.hourMinuteSecond();
+		functionFactory.dayofweekmonthyear();
+		functionFactory.weekQuarter();
+		functionFactory.lastDay();
+		functionFactory.concat_pipeOperator();
+		functionFactory.substr();
+		functionFactory.monthsBetween();
+		functionFactory.substring_substr();
 		//also natively supports ANSI-style substring()
-		CommonFunctionFactory.ascii( queryEngine );
-		CommonFunctionFactory.char_chr( queryEngine );
-		CommonFunctionFactory.sysdate( queryEngine );
-		CommonFunctionFactory.position( queryEngine );
-		CommonFunctionFactory.format_dateFormat( queryEngine );
-		CommonFunctionFactory.dateTrunc( queryEngine );
-		CommonFunctionFactory.bitLength_pattern( queryEngine, "octet_length(hex(?1))*4" );
+		functionFactory.ascii();
+		functionFactory.char_chr();
+		functionFactory.sysdate();
+		functionFactory.position();
+		functionFactory.format_dateFormat();
+		functionFactory.dateTrunc();
+		functionFactory.bitLength_pattern( "octet_length(hex(?1))*4" );
 
 		final BasicType<Integer> integerType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
 				.resolve( StandardBasicTypes.INTEGER );
@@ -292,7 +293,7 @@ public class IngresDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "date_part('?1',?2)", integerType );
 
-		CommonFunctionFactory.bitandorxornot_bitAndOrXorNot(queryEngine);
+		functionFactory.bitandorxornot_bitAndOrXorNot();
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "squeeze" )
 				.setExactArgumentCount( 1 )
@@ -300,9 +301,9 @@ public class IngresDialect extends Dialect {
 				.register();
 
 		// No idea since when this is supported
-		CommonFunctionFactory.listagg( null, queryEngine );
-		CommonFunctionFactory.inverseDistributionOrderedSetAggregates( queryEngine );
-		CommonFunctionFactory.hypotheticalOrderedSetAggregates( queryEngine );
+		functionFactory.listagg( null );
+		functionFactory.inverseDistributionOrderedSetAggregates();
+		functionFactory.hypotheticalOrderedSetAggregates();
 
 	}
 

@@ -217,38 +217,39 @@ public class DerbyDialect extends Dialect {
 		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
 		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
 
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+
 		// Derby needs an actual argument type for aggregates like SUM, AVG, MIN, MAX to determine the result type
-		CommonFunctionFactory.aggregates(
+		functionFactory.aggregates(
 				this,
-				queryEngine,
 				SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER,
 				"||",
 				getCastTypeName( stringType, null, null, null )
 		);
 		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
-		CommonFunctionFactory.avg_castingNonDoubleArguments( this, queryEngine, SqlAstNodeRenderingMode.DEFAULT );
+		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.DEFAULT );
 
-		CommonFunctionFactory.concat_pipeOperator( queryEngine );
-		CommonFunctionFactory.cot( queryEngine );
-		CommonFunctionFactory.chr_char( queryEngine );
-		CommonFunctionFactory.degrees( queryEngine );
-		CommonFunctionFactory.radians( queryEngine );
-		CommonFunctionFactory.log10( queryEngine );
-		CommonFunctionFactory.sinh( queryEngine );
-		CommonFunctionFactory.cosh( queryEngine );
-		CommonFunctionFactory.tanh( queryEngine );
-		CommonFunctionFactory.pi( queryEngine );
-		CommonFunctionFactory.rand( queryEngine );
-		CommonFunctionFactory.trim1( queryEngine );
-		CommonFunctionFactory.hourMinuteSecond( queryEngine );
-		CommonFunctionFactory.yearMonthDay( queryEngine );
-		CommonFunctionFactory.varPopSamp( queryEngine );
-		CommonFunctionFactory.stddevPopSamp( queryEngine );
-		CommonFunctionFactory.substring_substr( queryEngine );
-		CommonFunctionFactory.leftRight_substrLength( queryEngine );
-		CommonFunctionFactory.characterLength_length( queryEngine, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
-		CommonFunctionFactory.power_expLn( queryEngine );
-		CommonFunctionFactory.bitLength_pattern( queryEngine, "length(?1)*8" );
+		functionFactory.concat_pipeOperator();
+		functionFactory.cot();
+		functionFactory.chr_char();
+		functionFactory.degrees();
+		functionFactory.radians();
+		functionFactory.log10();
+		functionFactory.sinh();
+		functionFactory.cosh();
+		functionFactory.tanh();
+		functionFactory.pi();
+		functionFactory.rand();
+		functionFactory.trim1();
+		functionFactory.hourMinuteSecond();
+		functionFactory.yearMonthDay();
+		functionFactory.varPopSamp();
+		functionFactory.stddevPopSamp();
+		functionFactory.substring_substr();
+		functionFactory.leftRight_substrLength();
+		functionFactory.characterLength_length( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+		functionFactory.power_expLn();
+		functionFactory.bitLength_pattern( "length(?1)*8" );
 
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "round", "floor(?1*1e?2+0.5)/1e?2")
 				.setReturnTypeResolver( useArgType(1) )

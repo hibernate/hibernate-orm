@@ -137,49 +137,50 @@ public class OracleDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		CommonFunctionFactory.cosh( queryEngine );
-		CommonFunctionFactory.sinh( queryEngine );
-		CommonFunctionFactory.tanh( queryEngine );
-		CommonFunctionFactory.trunc( queryEngine );
-		CommonFunctionFactory.log( queryEngine );
-		CommonFunctionFactory.log10_log( queryEngine );
-		CommonFunctionFactory.soundex( queryEngine );
-		CommonFunctionFactory.trim2( queryEngine );
-		CommonFunctionFactory.initcap( queryEngine );
-		CommonFunctionFactory.instr( queryEngine );
-		CommonFunctionFactory.substr( queryEngine );
-		CommonFunctionFactory.substring_substr( queryEngine );
-		CommonFunctionFactory.leftRight_substr( queryEngine );
-		CommonFunctionFactory.translate( queryEngine );
-		CommonFunctionFactory.bitand( queryEngine );
-		CommonFunctionFactory.lastDay( queryEngine );
-		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
-		CommonFunctionFactory.ceiling_ceil( queryEngine );
-		CommonFunctionFactory.concat_pipeOperator( queryEngine );
-		CommonFunctionFactory.rownumRowid( queryEngine );
-		CommonFunctionFactory.sysdate( queryEngine );
-		CommonFunctionFactory.systimestamp( queryEngine );
-		CommonFunctionFactory.characterLength_length( queryEngine, SqlAstNodeRenderingMode.DEFAULT );
-		CommonFunctionFactory.addMonths( queryEngine );
-		CommonFunctionFactory.monthsBetween( queryEngine );
-		CommonFunctionFactory.everyAny_sumCaseCase( queryEngine );
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		functionFactory.cosh();
+		functionFactory.sinh();
+		functionFactory.tanh();
+		functionFactory.trunc();
+		functionFactory.log();
+		functionFactory.log10_log();
+		functionFactory.soundex();
+		functionFactory.trim2();
+		functionFactory.initcap();
+		functionFactory.instr();
+		functionFactory.substr();
+		functionFactory.substring_substr();
+		functionFactory.leftRight_substr();
+		functionFactory.translate();
+		functionFactory.bitand();
+		functionFactory.lastDay();
+		functionFactory.toCharNumberDateTimestamp();
+		functionFactory.ceiling_ceil();
+		functionFactory.concat_pipeOperator();
+		functionFactory.rownumRowid();
+		functionFactory.sysdate();
+		functionFactory.systimestamp();
+		functionFactory.characterLength_length( SqlAstNodeRenderingMode.DEFAULT );
+		functionFactory.addMonths();
+		functionFactory.monthsBetween();
+		functionFactory.everyAny_sumCaseCase();
 
-		CommonFunctionFactory.median( queryEngine );
-		CommonFunctionFactory.stddev( queryEngine );
-		CommonFunctionFactory.stddevPopSamp( queryEngine );
-		CommonFunctionFactory.variance( queryEngine );
-		CommonFunctionFactory.varPopSamp( queryEngine );
-		CommonFunctionFactory.covarPopSamp( queryEngine );
-		CommonFunctionFactory.corr( queryEngine );
-		CommonFunctionFactory.regrLinearRegressionAggregates( queryEngine );
-		CommonFunctionFactory.bitLength_pattern( queryEngine, "vsize(?1)*8" );
+		functionFactory.median();
+		functionFactory.stddev();
+		functionFactory.stddevPopSamp();
+		functionFactory.variance();
+		functionFactory.varPopSamp();
+		functionFactory.covarPopSamp();
+		functionFactory.corr();
+		functionFactory.regrLinearRegressionAggregates();
+		functionFactory.bitLength_pattern( "vsize(?1)*8" );
 
 		if ( getVersion().isBefore( 9 ) ) {
 			queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
 		}
 		else {
 			//Oracle has had coalesce() since 9.0.1
-			CommonFunctionFactory.coalesce( queryEngine );
+			functionFactory.coalesce();
 		}
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
@@ -191,13 +192,13 @@ public class OracleDialect extends Dialect {
 		).setArgumentListSignature("(pattern, string[, start])");
 		// The within group clause became optional in 18
 		if ( getVersion().isSameOrAfter( 18 ) ) {
-			CommonFunctionFactory.listagg( null, queryEngine );
+			functionFactory.listagg( null );
 		}
 		else {
-			CommonFunctionFactory.listagg( "within group (order by rownum)", queryEngine );
+			functionFactory.listagg( "within group (order by rownum)" );
 		}
-		CommonFunctionFactory.hypotheticalOrderedSetAggregates( queryEngine );
-		CommonFunctionFactory.inverseDistributionOrderedSetAggregates( queryEngine );
+		functionFactory.hypotheticalOrderedSetAggregates();
+		functionFactory.inverseDistributionOrderedSetAggregates();
 		// Oracle has a regular aggregate function named stats_mode
 		queryEngine.getSqmFunctionRegistry().register(
 				"mode",

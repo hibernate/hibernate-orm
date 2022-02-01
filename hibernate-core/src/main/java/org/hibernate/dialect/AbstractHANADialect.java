@@ -282,35 +282,36 @@ public abstract class AbstractHANADialect extends Dialect {
 				FunctionParameterType.STRING, FunctionParameterType.STRING, FunctionParameterType.INTEGER
 		).setArgumentListSignature("(pattern, string[, start])");
 
-		CommonFunctionFactory.ceiling_ceil( queryEngine );
-		CommonFunctionFactory.concat_pipeOperator( queryEngine );
-		CommonFunctionFactory.trim2( queryEngine );
-		CommonFunctionFactory.cot( queryEngine );
-		CommonFunctionFactory.cosh( queryEngine );
-		CommonFunctionFactory.sinh( queryEngine );
-		CommonFunctionFactory.tanh( queryEngine );
-		CommonFunctionFactory.log10_log( queryEngine );
-		CommonFunctionFactory.bitand( queryEngine );
-		CommonFunctionFactory.hourMinuteSecond( queryEngine );
-		CommonFunctionFactory.yearMonthDay( queryEngine );
-		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
-		CommonFunctionFactory.weekQuarter( queryEngine );
-		CommonFunctionFactory.daynameMonthname( queryEngine );
-		CommonFunctionFactory.lastDay( queryEngine );
-		CommonFunctionFactory.characterLength_length( queryEngine, SqlAstNodeRenderingMode.DEFAULT );
-		CommonFunctionFactory.ascii( queryEngine );
-		CommonFunctionFactory.chr_char( queryEngine );
-		CommonFunctionFactory.addYearsMonthsDaysHoursMinutesSeconds( queryEngine );
-		CommonFunctionFactory.daysBetween( queryEngine );
-		CommonFunctionFactory.secondsBetween( queryEngine );
-		CommonFunctionFactory.format_toVarchar( queryEngine );
-		CommonFunctionFactory.currentUtcdatetimetimestamp( queryEngine );
-		CommonFunctionFactory.everyAny_sumCaseCase( queryEngine );
-		CommonFunctionFactory.bitLength_pattern( queryEngine, "length(to_binary(?1))*8" );
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		functionFactory.ceiling_ceil();
+		functionFactory.concat_pipeOperator();
+		functionFactory.trim2();
+		functionFactory.cot();
+		functionFactory.cosh();
+		functionFactory.sinh();
+		functionFactory.tanh();
+		functionFactory.log10_log();
+		functionFactory.bitand();
+		functionFactory.hourMinuteSecond();
+		functionFactory.yearMonthDay();
+		functionFactory.dayofweekmonthyear();
+		functionFactory.weekQuarter();
+		functionFactory.daynameMonthname();
+		functionFactory.lastDay();
+		functionFactory.characterLength_length( SqlAstNodeRenderingMode.DEFAULT );
+		functionFactory.ascii();
+		functionFactory.chr_char();
+		functionFactory.addYearsMonthsDaysHoursMinutesSeconds();
+		functionFactory.daysBetween();
+		functionFactory.secondsBetween();
+		functionFactory.format_toVarchar();
+		functionFactory.currentUtcdatetimetimestamp();
+		functionFactory.everyAny_sumCaseCase();
+		functionFactory.bitLength_pattern( "length(to_binary(?1))*8" );
 
-		CommonFunctionFactory.listagg_stringAgg( "varchar", queryEngine );
-		CommonFunctionFactory.inverseDistributionOrderedSetAggregates( queryEngine );
-		CommonFunctionFactory.hypotheticalOrderedSetAggregates( queryEngine );
+		functionFactory.listagg_stringAgg( "varchar" );
+		functionFactory.inverseDistributionOrderedSetAggregates();
+		functionFactory.hypotheticalOrderedSetAggregates();
 	}
 
 	@Override

@@ -188,19 +188,20 @@ public class DB2Dialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
-		CommonFunctionFactory.avg_castingNonDoubleArguments( this, queryEngine, SqlAstNodeRenderingMode.DEFAULT );
+		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.DEFAULT );
 
-		CommonFunctionFactory.cot( queryEngine );
-		CommonFunctionFactory.degrees( queryEngine );
-		CommonFunctionFactory.log( queryEngine );
-		CommonFunctionFactory.log10( queryEngine );
-		CommonFunctionFactory.radians( queryEngine );
-		CommonFunctionFactory.rand( queryEngine );
-		CommonFunctionFactory.soundex( queryEngine );
-		CommonFunctionFactory.trim2( queryEngine );
-		CommonFunctionFactory.space( queryEngine );
-		CommonFunctionFactory.repeat( queryEngine );
+		functionFactory.cot();
+		functionFactory.degrees();
+		functionFactory.log();
+		functionFactory.log10();
+		functionFactory.radians();
+		functionFactory.rand();
+		functionFactory.soundex();
+		functionFactory.trim2();
+		functionFactory.space();
+		functionFactory.repeat();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "substr" )
 				.setInvariantType(
 						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
@@ -217,38 +218,38 @@ public class DB2Dialect extends Dialect {
 				.setParameterTypes(FunctionParameterType.STRING, FunctionParameterType.INTEGER, FunctionParameterType.INTEGER, FunctionParameterType.ANY)
 				.setArgumentListSignature( "(STRING string{ INTEGER from|,} start[{ INTEGER for|,} length[, units]])" )
 				.register();
-		CommonFunctionFactory.translate( queryEngine );
-		CommonFunctionFactory.bitand( queryEngine );
-		CommonFunctionFactory.bitor( queryEngine );
-		CommonFunctionFactory.bitxor( queryEngine );
-		CommonFunctionFactory.bitnot( queryEngine );
-		CommonFunctionFactory.yearMonthDay( queryEngine );
-		CommonFunctionFactory.hourMinuteSecond( queryEngine );
-		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
-		CommonFunctionFactory.weekQuarter( queryEngine );
-		CommonFunctionFactory.daynameMonthname( queryEngine );
-		CommonFunctionFactory.lastDay( queryEngine );
-		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
-		CommonFunctionFactory.dateTimeTimestamp( queryEngine );
-		CommonFunctionFactory.concat_pipeOperator( queryEngine );
-		CommonFunctionFactory.octetLength( queryEngine );
-		CommonFunctionFactory.ascii( queryEngine );
-		CommonFunctionFactory.char_chr( queryEngine );
-		CommonFunctionFactory.position( queryEngine );
-		CommonFunctionFactory.trunc( queryEngine );
-		CommonFunctionFactory.truncate( queryEngine );
-		CommonFunctionFactory.insert( queryEngine );
-		CommonFunctionFactory.overlayCharacterLength_overlay( queryEngine );
-		CommonFunctionFactory.median( queryEngine );
-		CommonFunctionFactory.stddev( queryEngine );
-		CommonFunctionFactory.stddevPopSamp( queryEngine );
-		CommonFunctionFactory.regrLinearRegressionAggregates( queryEngine );
-		CommonFunctionFactory.variance( queryEngine );
-		CommonFunctionFactory.stdevVarianceSamp( queryEngine );
-		CommonFunctionFactory.addYearsMonthsDaysHoursMinutesSeconds( queryEngine );
-		CommonFunctionFactory.yearsMonthsDaysHoursMinutesSecondsBetween( queryEngine );
-		CommonFunctionFactory.dateTrunc( queryEngine );
-		CommonFunctionFactory.bitLength_pattern( queryEngine, "length(?1)*8" );
+		functionFactory.translate();
+		functionFactory.bitand();
+		functionFactory.bitor();
+		functionFactory.bitxor();
+		functionFactory.bitnot();
+		functionFactory.yearMonthDay();
+		functionFactory.hourMinuteSecond();
+		functionFactory.dayofweekmonthyear();
+		functionFactory.weekQuarter();
+		functionFactory.daynameMonthname();
+		functionFactory.lastDay();
+		functionFactory.toCharNumberDateTimestamp();
+		functionFactory.dateTimeTimestamp();
+		functionFactory.concat_pipeOperator();
+		functionFactory.octetLength();
+		functionFactory.ascii();
+		functionFactory.char_chr();
+		functionFactory.position();
+		functionFactory.trunc();
+		functionFactory.truncate();
+		functionFactory.insert();
+		functionFactory.overlayCharacterLength_overlay();
+		functionFactory.median();
+		functionFactory.stddev();
+		functionFactory.stddevPopSamp();
+		functionFactory.regrLinearRegressionAggregates();
+		functionFactory.variance();
+		functionFactory.stdevVarianceSamp();
+		functionFactory.addYearsMonthsDaysHoursMinutesSeconds();
+		functionFactory.yearsMonthsDaysHoursMinutesSecondsBetween();
+		functionFactory.dateTrunc();
+		functionFactory.bitLength_pattern( "length(?1)*8" );
 
 		queryEngine.getSqmFunctionRegistry().register( "format",
 				new DB2FormatEmulation( queryEngine.getTypeConfiguration() ) );
@@ -263,10 +264,10 @@ public class DB2Dialect extends Dialect {
 				.register();
 
 		if ( getDB2Version().isSameOrAfter( 9, 5 ) ) {
-			CommonFunctionFactory.listagg( null, queryEngine );
+			functionFactory.listagg( null );
 			if ( getDB2Version().isSameOrAfter( 11, 1 ) ) {
-				CommonFunctionFactory.inverseDistributionOrderedSetAggregates( queryEngine );
-				CommonFunctionFactory.hypotheticalOrderedSetAggregates( queryEngine );
+				functionFactory.inverseDistributionOrderedSetAggregates();
+				functionFactory.hypotheticalOrderedSetAggregates();
 			}
 		}
 	}

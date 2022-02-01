@@ -208,35 +208,36 @@ public class CockroachDialect extends Dialect {
 		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
 		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
 
-		CommonFunctionFactory.ascii( queryEngine );
-		CommonFunctionFactory.char_chr( queryEngine );
-		CommonFunctionFactory.overlay( queryEngine );
-		CommonFunctionFactory.position( queryEngine );
-		CommonFunctionFactory.substringFromFor( queryEngine );
-		CommonFunctionFactory.locate_positionSubstring( queryEngine );
-		CommonFunctionFactory.trim2( queryEngine );
-		CommonFunctionFactory.substr( queryEngine );
-		CommonFunctionFactory.reverse( queryEngine );
-		CommonFunctionFactory.repeat( queryEngine );
-		CommonFunctionFactory.md5( queryEngine );
-		CommonFunctionFactory.sha1( queryEngine );
-		CommonFunctionFactory.octetLength( queryEngine );
-		CommonFunctionFactory.bitLength( queryEngine );
-		CommonFunctionFactory.cbrt( queryEngine );
-		CommonFunctionFactory.cot( queryEngine );
-		CommonFunctionFactory.degrees( queryEngine );
-		CommonFunctionFactory.radians( queryEngine );
-		CommonFunctionFactory.pi( queryEngine );
-		CommonFunctionFactory.trunc( queryEngine ); //TODO: emulate second arg
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		functionFactory.ascii();
+		functionFactory.char_chr();
+		functionFactory.overlay();
+		functionFactory.position();
+		functionFactory.substringFromFor();
+		functionFactory.locate_positionSubstring();
+		functionFactory.trim2();
+		functionFactory.substr();
+		functionFactory.reverse();
+		functionFactory.repeat();
+		functionFactory.md5();
+		functionFactory.sha1();
+		functionFactory.octetLength();
+		functionFactory.bitLength();
+		functionFactory.cbrt();
+		functionFactory.cot();
+		functionFactory.degrees();
+		functionFactory.radians();
+		functionFactory.pi();
+		functionFactory.trunc(); //TODO: emulate second arg
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("format", "experimental_strftime")
 				.setInvariantType( stringType )
 				.setArgumentsValidator( CommonFunctionFactory.formatValidator() )
 				.setArgumentListSignature("(TEMPORAL datetime as STRING pattern)")
 				.register();
-		CommonFunctionFactory.listagg_stringAgg( "string", queryEngine );
-		CommonFunctionFactory.inverseDistributionOrderedSetAggregates( queryEngine );
-		CommonFunctionFactory.hypotheticalOrderedSetAggregates( queryEngine );
+		functionFactory.listagg_stringAgg( "string" );
+		functionFactory.inverseDistributionOrderedSetAggregates();
+		functionFactory.hypotheticalOrderedSetAggregates();
 	}
 
 	@Override

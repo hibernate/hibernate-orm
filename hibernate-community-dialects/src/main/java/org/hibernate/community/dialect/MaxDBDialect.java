@@ -120,36 +120,37 @@ public class MaxDBDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		CommonFunctionFactory.log( queryEngine );
-		CommonFunctionFactory.pi( queryEngine );
-		CommonFunctionFactory.cot( queryEngine );
-		CommonFunctionFactory.cosh( queryEngine );
-		CommonFunctionFactory.sinh( queryEngine );
-		CommonFunctionFactory.tanh( queryEngine );
-		CommonFunctionFactory.radians( queryEngine );
-		CommonFunctionFactory.degrees( queryEngine );
-		CommonFunctionFactory.trunc( queryEngine );
-		CommonFunctionFactory.trim2( queryEngine );
-		CommonFunctionFactory.substr( queryEngine );
-		CommonFunctionFactory.substring_substr( queryEngine );
-		CommonFunctionFactory.translate( queryEngine );
-		CommonFunctionFactory.initcap( queryEngine );
-		CommonFunctionFactory.soundex( queryEngine );
-		CommonFunctionFactory.yearMonthDay( queryEngine );
-		CommonFunctionFactory.hourMinuteSecond( queryEngine );
-		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
-		CommonFunctionFactory.daynameMonthname( queryEngine );
-		CommonFunctionFactory.dateTimeTimestamp( queryEngine );
-		CommonFunctionFactory.ceiling_ceil( queryEngine );
-		CommonFunctionFactory.week_weekofyear( queryEngine );
-		CommonFunctionFactory.concat_pipeOperator( queryEngine );
-		CommonFunctionFactory.coalesce_value( queryEngine );
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		functionFactory.log();
+		functionFactory.pi();
+		functionFactory.cot();
+		functionFactory.cosh();
+		functionFactory.sinh();
+		functionFactory.tanh();
+		functionFactory.radians();
+		functionFactory.degrees();
+		functionFactory.trunc();
+		functionFactory.trim2();
+		functionFactory.substr();
+		functionFactory.substring_substr();
+		functionFactory.translate();
+		functionFactory.initcap();
+		functionFactory.soundex();
+		functionFactory.yearMonthDay();
+		functionFactory.hourMinuteSecond();
+		functionFactory.dayofweekmonthyear();
+		functionFactory.daynameMonthname();
+		functionFactory.dateTimeTimestamp();
+		functionFactory.ceiling_ceil();
+		functionFactory.week_weekofyear();
+		functionFactory.concat_pipeOperator();
+		functionFactory.coalesce_value();
 		//since lpad/rpad are not actually useful padding
 		//functions, map them to lfill/rfill
-		CommonFunctionFactory.pad_fill( queryEngine );
-		CommonFunctionFactory.datediff( queryEngine );
-		CommonFunctionFactory.adddateSubdateAddtimeSubtime( queryEngine );
-		CommonFunctionFactory.addMonths( queryEngine );
+		functionFactory.pad_fill();
+		functionFactory.datediff();
+		functionFactory.adddateSubdateAddtimeSubtime();
+		functionFactory.addMonths();
 
 		final BasicType<Integer> integerType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
 				.resolve( StandardBasicTypes.INTEGER );

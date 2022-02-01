@@ -247,35 +247,36 @@ public class FirebirdDialect extends Dialect {
 		final BasicType<Double> doubleType = basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE );
 		final BasicType<Character> characterType = basicTypeRegistry.resolve( StandardBasicTypes.CHARACTER );
 
-		CommonFunctionFactory.concat_pipeOperator( queryEngine );
-		CommonFunctionFactory.cot( queryEngine );
-		CommonFunctionFactory.cosh( queryEngine );
-		CommonFunctionFactory.sinh( queryEngine );
-		CommonFunctionFactory.tanh( queryEngine );
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		functionFactory.concat_pipeOperator();
+		functionFactory.cot();
+		functionFactory.cosh();
+		functionFactory.sinh();
+		functionFactory.tanh();
 		if ( getVersion().isSameOrAfter( 3, 0 ) ) {
-			CommonFunctionFactory.moreHyperbolic( queryEngine );
-			CommonFunctionFactory.stddevPopSamp( queryEngine );
-			CommonFunctionFactory.varPopSamp( queryEngine );
-			CommonFunctionFactory.covarPopSamp( queryEngine );
-			CommonFunctionFactory.corr( queryEngine );
-			CommonFunctionFactory.regrLinearRegressionAggregates( queryEngine );
+			functionFactory.moreHyperbolic();
+			functionFactory.stddevPopSamp();
+			functionFactory.varPopSamp();
+			functionFactory.covarPopSamp();
+			functionFactory.corr();
+			functionFactory.regrLinearRegressionAggregates();
 		}
-		CommonFunctionFactory.log( queryEngine );
-		CommonFunctionFactory.log10( queryEngine );
-		CommonFunctionFactory.pi( queryEngine );
-		CommonFunctionFactory.rand( queryEngine );
-		CommonFunctionFactory.sinh( queryEngine );
-		CommonFunctionFactory.tanh( queryEngine );
-		CommonFunctionFactory.cosh( queryEngine );
-		CommonFunctionFactory.trunc( queryEngine );
-		CommonFunctionFactory.octetLength( queryEngine );
-		CommonFunctionFactory.bitLength( queryEngine );
-		CommonFunctionFactory.substringFromFor( queryEngine );
-		CommonFunctionFactory.overlay( queryEngine );
-		CommonFunctionFactory.position( queryEngine );
-		CommonFunctionFactory.reverse( queryEngine );
-		CommonFunctionFactory.bitandorxornot_binAndOrXorNot( queryEngine );
-		CommonFunctionFactory.leastGreatest_minMaxValue( queryEngine );
+		functionFactory.log();
+		functionFactory.log10();
+		functionFactory.pi();
+		functionFactory.rand();
+		functionFactory.sinh();
+		functionFactory.tanh();
+		functionFactory.cosh();
+		functionFactory.trunc();
+		functionFactory.octetLength();
+		functionFactory.bitLength();
+		functionFactory.substringFromFor();
+		functionFactory.overlay();
+		functionFactory.position();
+		functionFactory.reverse();
+		functionFactory.bitandorxornot_binAndOrXorNot();
+		functionFactory.leastGreatest_minMaxValue();
 
 		SqmFunctionRegistry functionRegistry = queryEngine.getSqmFunctionRegistry();
 		functionRegistry.registerBinaryTernaryPattern(
@@ -322,7 +323,7 @@ public class FirebirdDialect extends Dialect {
 			);
 		}
 
-		CommonFunctionFactory.listagg_list( "varchar", queryEngine );
+		functionFactory.listagg_list( "varchar" );
 	}
 
 	@Override

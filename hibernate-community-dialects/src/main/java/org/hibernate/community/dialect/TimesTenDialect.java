@@ -147,20 +147,21 @@ public class TimesTenDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		CommonFunctionFactory.trim2( queryEngine );
-		CommonFunctionFactory.soundex( queryEngine );
-		CommonFunctionFactory.trunc( queryEngine );
-		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
-		CommonFunctionFactory.ceiling_ceil( queryEngine );
-		CommonFunctionFactory.instr( queryEngine );
-		CommonFunctionFactory.substr( queryEngine );
-		CommonFunctionFactory.substring_substr( queryEngine );
-		CommonFunctionFactory.leftRight_substr( queryEngine );
-		CommonFunctionFactory.char_chr( queryEngine );
-		CommonFunctionFactory.rownumRowid( queryEngine );
-		CommonFunctionFactory.sysdate( queryEngine );
-		CommonFunctionFactory.addMonths( queryEngine );
-		CommonFunctionFactory.monthsBetween( queryEngine );
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		functionFactory.trim2();
+		functionFactory.soundex();
+		functionFactory.trunc();
+		functionFactory.toCharNumberDateTimestamp();
+		functionFactory.ceiling_ceil();
+		functionFactory.instr();
+		functionFactory.substr();
+		functionFactory.substring_substr();
+		functionFactory.leftRight_substr();
+		functionFactory.char_chr();
+		functionFactory.rownumRowid();
+		functionFactory.sysdate();
+		functionFactory.addMonths();
+		functionFactory.monthsBetween();
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",

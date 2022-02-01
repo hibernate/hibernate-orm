@@ -9,6 +9,8 @@
 // Applies details for `https://ge.hibernate.org`
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+apply from: file( 'system-information.gradle' )
+
 gradleEnterprise {
     server = 'https://ge.hibernate.org'
 
@@ -17,10 +19,9 @@ gradleEnterprise {
         publishAlways()
         publishIfAuthenticated()
 
-        def isCi = System.getenv("CI") != null || System.getProperty("CI") != null
-        uploadInBackground = !isCi
+        uploadInBackground = !settings.ext.isCiEnvironment
 
-        if ( isCi ) {
+        if ( settings.ext.isCiEnvironment ) {
             tag "JOB ${System.getenv('JOB_NAME')}"
         }
         tag "JDK ${JavaVersion.current().toString()}"

@@ -31,17 +31,13 @@ if ( !JavaVersion.current().java11Compatible ) {
 }
 
 buildCache {
-    // duplicated from `gradle-enterprise.gradle` but not sure how to share it...
-    def isCi = System.getenv("CI") != null || System.getProperty("CI") != null
-    def populateRemote = System.getenv("POPULATE_REMOTE") != null || System.getProperty("POPULATE_REMOTE") != null
-
     local {
         // do not use local build cache for CI jobs, period!
-        enabled = !isCi
+        enabled = !settings.ext.isCiEnvironment
     }
     remote(HttpBuildCache) {
         enabled = true
-        push = populateRemote
+        push = settings.ext.populateRemoteBuildCache
         url = 'https://ge.hibernate.org/cache/'
     }
 }

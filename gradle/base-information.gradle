@@ -7,7 +7,6 @@
 
 apply plugin: 'base'
 
-
 buildscript {
 	dependencies {
 		constraints {

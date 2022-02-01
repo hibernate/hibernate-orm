@@ -100,7 +100,7 @@ public class AggregateFunctionChecker extends AbstractSqlAstWalker {
 	}
 
 	@Override
-	public void visitOver(Over over) {
+	public void visitOver(Over<?> over) {
 		// Only need to visit the expression over which the window is created as the window definition can't have aggregates
 		// If the expression is an aggregate function, this means the aggregate is used as window function, which is fine
 		// We only care about actually aggregating functions, which might be an argument of this function though

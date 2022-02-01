@@ -232,7 +232,7 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 	}
 
 	@Override
-	public void visitOver(Over over) {
+	public void visitOver(Over<?> over) {
 		over.getExpression().accept( this );
 		for ( Expression partition : over.getPartitions() ) {
 			partition.accept( this );

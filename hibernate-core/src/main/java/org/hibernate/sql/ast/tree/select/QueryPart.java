@@ -34,6 +34,15 @@ public abstract class QueryPart implements SqlAstNode, Expression, DomainResultP
 		this.isRoot = isRoot;
 	}
 
+	protected QueryPart(boolean isRoot, QueryPart original) {
+		this.isRoot = isRoot;
+		this.hasPositionalSortItem = original.hasPositionalSortItem;
+		this.sortSpecifications = original.sortSpecifications;
+		this.offsetClauseExpression = original.offsetClauseExpression;
+		this.fetchClauseExpression = original.fetchClauseExpression;
+		this.fetchClauseType = original.fetchClauseType;
+	}
+
 	public abstract QuerySpec getFirstQuerySpec();
 
 	public abstract QuerySpec getLastQuerySpec();
@@ -100,7 +109,7 @@ public abstract class QueryPart implements SqlAstNode, Expression, DomainResultP
 	public void setFetchClauseExpression(Expression fetchClauseExpression, FetchClauseType fetchClauseType) {
 		if ( fetchClauseExpression == null ) {
 			this.fetchClauseExpression = null;
-			this.fetchClauseType = null;
+			this.fetchClauseType = FetchClauseType.ROWS_ONLY;
 		}
 		else {
 			if ( fetchClauseType == null ) {

@@ -313,7 +313,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		functionFactory.listagg_stringAgg( "varchar" );
 		functionFactory.inverseDistributionOrderedSetAggregates();
-		functionFactory.hypotheticalOrderedSetAggregates();
+		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 
 		queryEngine.getSqmFunctionRegistry().register( "timestampadd",
 				new IntegralTimestampaddFunction( this, queryEngine.getTypeConfiguration() ) );

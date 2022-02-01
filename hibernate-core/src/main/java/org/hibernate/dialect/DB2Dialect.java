@@ -267,7 +267,7 @@ public class DB2Dialect extends Dialect {
 			functionFactory.listagg( null );
 			if ( getDB2Version().isSameOrAfter( 11, 1 ) ) {
 				functionFactory.inverseDistributionOrderedSetAggregates();
-				functionFactory.hypotheticalOrderedSetAggregates();
+				functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 			}
 		}
 	}

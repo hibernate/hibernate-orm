@@ -1296,7 +1296,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							identifierSelection = new SqlSelectionImpl(
 									1,
 									0,
-									new Over(
+									new Over<>(
 										new SelfRenderingFunctionSqlAstExpression(
 												"row_number",
 												(appender, args, walker) -> appender.appendSql( "row_number()" ),

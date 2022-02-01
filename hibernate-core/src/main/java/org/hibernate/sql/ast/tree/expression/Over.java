@@ -9,13 +9,19 @@ package org.hibernate.sql.ast.tree.expression;
 import java.util.List;
 
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.basic.BasicResult;
 
 /**
  * @author Christian Beikov
  */
-public class Over implements Expression {
+public class Over<T> implements Expression, DomainResultProducer<T> {
 
 	private final Expression expression;
 	private final List<Expression> partitions;
@@ -107,6 +113,29 @@ public class Over implements Expression {
 	@Override
 	public void accept(SqlAstWalker walker) {
 		walker.visitOver( this );
+	}
+
+	@Override
+	public DomainResult<T> createDomainResult(String resultVariable, DomainResultCreationState creationState) {
+		final SqlSelection sqlSelection = createSelection( creationState.getSqlAstCreationState() );
+		return new BasicResult(
+				sqlSelection.getValuesArrayPosition(),
+				resultVariable,
+				expression.getExpressionType().getJdbcMappings().get( 0 ).getMappedJavaType()
+		);
+	}
+
+	@Override
+	public void applySqlSelections(DomainResultCreationState creationState) {
+		createSelection( creationState.getSqlAstCreationState() );
+	}
+
+	private SqlSelection createSelection(SqlAstCreationState creationState) {
+		return creationState.getSqlExpressionResolver().resolveSqlSelection(
+				this,
+				expression.getExpressionType().getJdbcMappings().get( 0 ).getMappedJavaType(),
+				creationState.getCreationContext().getSessionFactory().getTypeConfiguration()
+		);
 	}
 
 	public static enum FrameMode {

@@ -43,14 +43,14 @@ public class CommonFunctionFactory {
 	private final BasicType<Date> dateType;
 	private final BasicType<Date> timeType;
 	private final BasicType<Date> timestampType;
-	
+
 	private final SqmFunctionRegistry functionRegistry;
 	private final TypeConfiguration typeConfiguration;
 
 	public CommonFunctionFactory(QueryEngine queryEngine) {
 		functionRegistry = queryEngine.getSqmFunctionRegistry();
 		typeConfiguration = queryEngine.getTypeConfiguration();
-		
+
 		BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 		dateType = basicTypeRegistry.resolve(StandardBasicTypes.DATE);
 		timeType = basicTypeRegistry.resolve(StandardBasicTypes.TIME);
@@ -1778,6 +1778,17 @@ public class CommonFunctionFactory {
 		);
 	}
 
+	public void inverseDistributionOrderedSetAggregates_windowEmulation() {
+		functionRegistry.register(
+				"percentile_cont",
+				new InverseDistributionWindowEmulation( "percentile_cont", NUMERIC, typeConfiguration )
+		);
+		functionRegistry.register(
+				"percentile_disc",
+				new InverseDistributionWindowEmulation( "percentile_disc", NUMERIC, typeConfiguration )
+		);
+	}
+
 	public void hypotheticalOrderedSetAggregates() {
 		functionRegistry.register(
 				"rank",
@@ -1794,6 +1805,25 @@ public class CommonFunctionFactory {
 		functionRegistry.register(
 				"cume_dist",
 				new HypotheticalSetFunction( "cume_dist", StandardBasicTypes.DOUBLE, typeConfiguration )
+		);
+	}
+
+	public void hypotheticalOrderedSetAggregates_windowEmulation() {
+		functionRegistry.register(
+				"rank",
+				new HypotheticalSetWindowEmulation( "rank", StandardBasicTypes.LONG, typeConfiguration )
+		);
+		functionRegistry.register(
+				"dense_rank",
+				new HypotheticalSetWindowEmulation( "dense_rank", StandardBasicTypes.LONG, typeConfiguration )
+		);
+		functionRegistry.register(
+				"percent_rank",
+				new HypotheticalSetWindowEmulation( "percent_rank", StandardBasicTypes.DOUBLE, typeConfiguration )
+		);
+		functionRegistry.register(
+				"cume_dist",
+				new HypotheticalSetWindowEmulation( "cume_dist", StandardBasicTypes.DOUBLE, typeConfiguration )
 		);
 	}
 

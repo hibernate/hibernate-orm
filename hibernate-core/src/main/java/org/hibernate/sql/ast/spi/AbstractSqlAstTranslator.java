@@ -101,6 +101,7 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.LiteralAsParameter;
 import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
+import org.hibernate.sql.ast.tree.expression.OrderedSetAggregateFunctionExpression;
 import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.Overflow;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
@@ -3242,8 +3243,17 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	@Override
-	public void visitOver(Over over) {
-		over.getExpression().accept( this );
+	public void visitOver(Over<?> over) {
+		final Expression overExpression = over.getExpression();
+		overExpression.accept( this );
+		final boolean orderedSetAggregate;
+		if ( overExpression instanceof OrderedSetAggregateFunctionExpression ) {
+			final OrderedSetAggregateFunctionExpression expression = (OrderedSetAggregateFunctionExpression) overExpression;
+			orderedSetAggregate = expression.getWithinGroup() != null && !expression.getWithinGroup().isEmpty();
+		}
+		else {
+			orderedSetAggregate = false;
+		}
 		visitOverClause(
 				over.getPartitions(),
 				over.getOrderList(),
@@ -3252,7 +3262,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				over.getStartExpression(),
 				over.getEndKind(),
 				over.getEndExpression(),
-				over.getExclusion()
+				over.getExclusion(),
+				orderedSetAggregate
 		);
 	}
 
@@ -3267,7 +3278,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				null,
 				Over.FrameKind.CURRENT_ROW,
 				null,
-				Over.FrameExclusion.NO_OTHERS
+				Over.FrameExclusion.NO_OTHERS,
+				false
 		);
 	}
 
@@ -3279,12 +3291,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			Expression startExpression,
 			Over.FrameKind endKind,
 			Expression endExpression,
-			Over.FrameExclusion exclusion) {
+			Over.FrameExclusion exclusion,
+			boolean orderedSetAggregate) {
 		try {
 			clauseStack.push( Clause.OVER );
 			appendSql( " over(" );
 			visitPartitionByClause( partitionExpressions );
-			renderOrderBy( !partitionExpressions.isEmpty(), sortSpecifications );
+			if ( !orderedSetAggregate ) {
+				renderOrderBy( !partitionExpressions.isEmpty(), sortSpecifications );
+			}
 			if ( mode == Over.FrameMode.ROWS && startKind == Over.FrameKind.UNBOUNDED_PRECEDING && endKind == Over.FrameKind.CURRENT_ROW && exclusion == Over.FrameExclusion.NO_OTHERS ) {
 				// This is the default, so we don't need to render anything
 			}

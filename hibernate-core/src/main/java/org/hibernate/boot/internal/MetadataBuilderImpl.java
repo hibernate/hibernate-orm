@@ -478,7 +478,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 						}
 						return classification;
 					},
-					CollectionClassification.LIST
+					CollectionClassification.BAG
 			);
 		}
 

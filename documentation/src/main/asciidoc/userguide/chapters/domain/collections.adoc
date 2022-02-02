@@ -84,21 +84,17 @@ include::{classificationTestsDir}/list/EntityWithList.java[tags=collections-list
 ----
 ====
 
-The ordering of a list is maintained as a column in the database to hold the element's index.
-This column can be configured via the `jakarta.persistence.OrderColumn` annotation.
+Contrary to natural expectations, the ordering of a list is by default not maintained.
+To maintain the order, it is necessary to explicitly use the `jakarta.persistence.OrderColumn` annotation.
 
 [[NOTE]]
 ====
-Historically, Hibernate interpreted a `List` attribute without `@OrderColumn` as a BAG.
+Starting in 6.0, Hibernate allows to configure the default semantics of `List` without `@OrderColumn`
+via the `hibernate.mapping.default_list_semantics` setting.
+To switch to the more natural LIST semantics with an implicit order-column, set the setting to `LIST`.
 
-Starting in 6.0, however, Hibernate has moved to the more natural choice to map such
-Lists using LIST semantics with an implicit order-column.  For applications needing backwards
-compatibility, Hibernate has added the `hibernate.mapping.default_list_semantics` setting.  To
-achieve the legacy behavior, set `hibernate.mapping.default_list_semantics=bag`
+The default column name that stores the index is derived from the attribute name, by suffixing `_ORDER`.
 ====
-
-The mapping above would store the index in a column named `names_ORDER`, per the default
-for `jakarta.persistence.OrderColumn#name`.  We can also explicitly name the column to use; e.g.
 
 [[collection-list-ordercolumn-ex]]
 .@OrderColumn

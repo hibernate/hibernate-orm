@@ -1277,7 +1277,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 			return new QuerySqmImpl<>( selectStatement, criteriaQuery.getResultType(), this );
 		}
-		catch ( RuntimeException e ) {
+		catch (RuntimeException e) {
+			if ( getSessionFactory().getJpaMetamodel().getJpaCompliance().isJpaTransactionComplianceEnabled() ) {
+				markForRollbackOnly();
+			}
 			throw getExceptionConverter().convert( e );
 		}
 	}
@@ -1292,7 +1295,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 					this
 			);
 		}
-		catch ( RuntimeException e ) {
+		catch (RuntimeException e) {
+			if ( getSessionFactory().getJpaMetamodel().getJpaCompliance().isJpaTransactionComplianceEnabled() ) {
+				markForRollbackOnly();
+			}
 			throw getExceptionConverter().convert( e );
 		}
 	}
@@ -1307,7 +1313,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 					this
 			);
 		}
-		catch ( RuntimeException e ) {
+		catch (RuntimeException e) {
+			if ( getSessionFactory().getJpaMetamodel().getJpaCompliance().isJpaTransactionComplianceEnabled() ) {
+				markForRollbackOnly();
+			}
 			throw getExceptionConverter().convert( e );
 		}
 	}

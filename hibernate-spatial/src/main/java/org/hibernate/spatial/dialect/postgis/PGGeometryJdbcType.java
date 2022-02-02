@@ -46,8 +46,6 @@ public class PGGeometryJdbcType implements JdbcType {
 
 	private final Wkb.Dialect wkbDialect;
 
-	// Type descriptor instance using EWKB v1 (postgis versions < 2.2.2)
-	public static final PGGeometryJdbcType INSTANCE_WKB_1 = new PGGeometryJdbcType( Wkb.Dialect.POSTGIS_EWKB_1 );
 	// Type descriptor instance using EWKB v2 (postgis versions >= 2.2.2, see: https://trac.osgeo.org/postgis/ticket/3181)
 	public static final PGGeometryJdbcType INSTANCE_WKB_2 = new PGGeometryJdbcType( Wkb.Dialect.POSTGIS_EWKB_2 );
 
@@ -118,7 +116,7 @@ public class PGGeometryJdbcType implements JdbcType {
 			}
 
 			private PGobject toPGobject(X value, WrapperOptions options) throws SQLException {
-				final WkbEncoder encoder = Wkb.newEncoder( Wkb.Dialect.POSTGIS_EWKB_1 );
+				final WkbEncoder encoder = Wkb.newEncoder( wkbDialect );
 				final Geometry<?> geometry = getJavaType().unwrap( value, Geometry.class, options );
 				final String hexString = encoder.encode( geometry, ByteOrder.NDR ).toString();
 				final PGobject obj = new PGobject();

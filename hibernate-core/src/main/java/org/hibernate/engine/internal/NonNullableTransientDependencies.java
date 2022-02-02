@@ -24,7 +24,7 @@ public final class NonNullableTransientDependencies {
 	// for the map value.
 	private Map<Object,Set<String>> propertyPathsByTransientEntity; // lazily initialized
 
-	void add(String propertyName, Object transientEntity) {
+	public void add(String propertyName, Object transientEntity) {
 		if ( propertyPathsByTransientEntity == null ) {
 			propertyPathsByTransientEntity = new IdentityHashMap<>();
 		}

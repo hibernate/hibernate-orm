@@ -45,7 +45,7 @@ public class HypotheticalSetWindowEmulation extends HypotheticalSetFunction {
 	}
 
 	@Override
-	public <T> SelfRenderingSqmAggregateFunction<T> generateSqmOrderedSetAggregateFunctionExpression(
+	public <T> SelfRenderingSqmOrderedSetAggregateFunction<T> generateSqmOrderedSetAggregateFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			SqmOrderByClause withinGroupClause,

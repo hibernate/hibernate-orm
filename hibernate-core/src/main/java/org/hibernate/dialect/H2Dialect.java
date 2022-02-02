@@ -281,6 +281,7 @@ public class H2Dialect extends Dialect {
 		}
 		functionFactory.rownum();
 		if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
+			functionFactory.windowFunctions();
 			functionFactory.listagg( null );
 			if ( getVersion().isSameOrAfter( 2 ) ) {
 				functionFactory.inverseDistributionOrderedSetAggregates();
@@ -578,6 +579,11 @@ public class H2Dialect extends Dialect {
 	@Override
 	public boolean supportsOffsetInSubquery() {
 		return true;
+	}
+
+	@Override
+	public boolean supportsWindowFunctions() {
+		return getVersion().isSameOrAfter( 1, 4, 200 );
 	}
 
 	@Override

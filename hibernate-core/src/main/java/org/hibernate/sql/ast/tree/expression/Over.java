@@ -9,6 +9,9 @@ package org.hibernate.sql.ast.tree.expression;
 import java.util.List;
 
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.query.sqm.FrameExclusion;
+import org.hibernate.query.sqm.FrameKind;
+import org.hibernate.query.sqm.FrameMode;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -138,24 +141,4 @@ public class Over<T> implements Expression, DomainResultProducer<T> {
 		);
 	}
 
-	public static enum FrameMode {
-		ROWS,
-		RANGE,
-		GROUPS
-	}
-
-	public static enum FrameKind {
-		UNBOUNDED_PRECEDING,
-		OFFSET_PRECEDING,
-		CURRENT_ROW,
-		OFFSET_FOLLOWING,
-		UNBOUNDED_FOLLOWING
-	}
-
-	public static enum FrameExclusion {
-		CURRENT_ROW,
-		GROUP,
-		TIES,
-		NO_OTHERS
-	}
 }

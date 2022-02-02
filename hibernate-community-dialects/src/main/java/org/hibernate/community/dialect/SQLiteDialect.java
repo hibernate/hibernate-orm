@@ -317,6 +317,7 @@ public class SQLiteDialect extends Dialect {
 					.setParameterTypes(NUMERIC)
 					.register();
 		}
+		functionFactory.windowFunctions();
 		functionFactory.listagg_groupConcat();
 	}
 

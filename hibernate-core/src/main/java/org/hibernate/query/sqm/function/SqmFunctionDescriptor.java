@@ -76,6 +76,21 @@ public interface SqmFunctionDescriptor {
 	}
 
 	/**
+	 * Like {@link #generateSqmExpression(List, ReturnableType, QueryEngine, TypeConfiguration)}
+	 * but also accepts a filter predicate. This method is intended for aggregate functions.
+	 */
+	default <T> SelfRenderingSqmFunction<T> generateWindowSqmExpression(
+			List<? extends SqmTypedNode<?>> arguments,
+			SqmPredicate filter,
+			Boolean respectNulls,
+			Boolean fromFirst,
+			ReturnableType<T> impliedResultType,
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
+		throw new UnsupportedOperationException( "Not an aggregate function!" );
+	}
+
+	/**
 	 * Convenience for single argument
 	 */
 	default <T> SelfRenderingSqmFunction<T> generateSqmExpression(

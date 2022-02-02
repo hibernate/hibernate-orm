@@ -267,6 +267,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 					.setParameterTypes(INTEGER)
 					.register();
 		}
+		functionFactory.windowFunctions();
 		functionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 		if ( getVersion().isSameOrAfter( 14 ) ) {

@@ -97,6 +97,17 @@ public class PatternBasedSqmFunctionDescriptor
 	}
 
 	@Override
+	public void render(
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> sqlAstArguments,
+			Predicate filter,
+			Boolean respectNulls,
+			Boolean fromFirst,
+			SqlAstTranslator<?> walker) {
+		renderer.render( sqlAppender, sqlAstArguments, filter, respectNulls, fromFirst, walker );
+	}
+
+	@Override
 	public String getArgumentListSignature() {
 		return argumentListSignature == null ? super.getArgumentListSignature() : argumentListSignature;
 	}

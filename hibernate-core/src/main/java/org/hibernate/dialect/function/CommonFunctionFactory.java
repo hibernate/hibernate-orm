@@ -1827,6 +1827,38 @@ public class CommonFunctionFactory {
 		);
 	}
 
+	public void windowFunctions() {
+		functionRegistry.namedWindowDescriptorBuilder( "row_number" )
+				.setExactArgumentCount( 0 )
+				.setInvariantType( longType )
+				.register();
+		functionRegistry.namedWindowDescriptorBuilder( "lag" )
+				.setArgumentCountBetween( 1, 3 )
+				.setParameterTypes( ANY, INTEGER, ANY )
+				.setArgumentListSignature( "ANY value[, INTEGER offset[, ANY default]]" )
+				.register();
+		functionRegistry.namedWindowDescriptorBuilder( "lead" )
+				.setArgumentCountBetween( 1, 3 )
+				.setParameterTypes( ANY, INTEGER, ANY )
+				.setArgumentListSignature( "ANY value[, INTEGER offset[, ANY default]]" )
+				.register();
+		functionRegistry.namedWindowDescriptorBuilder( "first_value" )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( ANY )
+				.setArgumentListSignature( "ANY value" )
+				.register();
+		functionRegistry.namedWindowDescriptorBuilder( "last_value" )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( ANY )
+				.setArgumentListSignature( "ANY value" )
+				.register();
+		functionRegistry.namedWindowDescriptorBuilder( "nth_value" )
+				.setExactArgumentCount( 2 )
+				.setParameterTypes( ANY, INTEGER )
+				.setArgumentListSignature( "ANY value, INTEGER nth" )
+				.register();
+	}
+
 	public void math() {
 		functionRegistry.namedDescriptorBuilder( "round" )
 				// To avoid truncating to a specific data type, we default to using the argument type

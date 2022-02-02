@@ -197,6 +197,7 @@ public class OracleDialect extends Dialect {
 		else {
 			functionFactory.listagg( "within group (order by rownum)" );
 		}
+		functionFactory.windowFunctions();
 		functionFactory.hypotheticalOrderedSetAggregates();
 		functionFactory.inverseDistributionOrderedSetAggregates();
 		// Oracle has a regular aggregate function named stats_mode

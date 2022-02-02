@@ -35,6 +35,9 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.sqm.FrameExclusion;
+import org.hibernate.query.sqm.FrameKind;
+import org.hibernate.query.sqm.FrameMode;
 import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
@@ -3273,12 +3276,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		visitOverClause(
 				partitionExpressions,
 				sortSpecifications,
-				Over.FrameMode.ROWS,
-				Over.FrameKind.UNBOUNDED_PRECEDING,
+				FrameMode.ROWS,
+				FrameKind.UNBOUNDED_PRECEDING,
 				null,
-				Over.FrameKind.CURRENT_ROW,
+				FrameKind.CURRENT_ROW,
 				null,
-				Over.FrameExclusion.NO_OTHERS,
+				FrameExclusion.NO_OTHERS,
 				false
 		);
 	}
@@ -3286,12 +3289,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected void visitOverClause(
 			List<Expression> partitionExpressions,
 			List<SortSpecification> sortSpecifications,
-			Over.FrameMode mode,
-			Over.FrameKind startKind,
+			FrameMode mode,
+			FrameKind startKind,
 			Expression startExpression,
-			Over.FrameKind endKind,
+			FrameKind endKind,
 			Expression endExpression,
-			Over.FrameExclusion exclusion,
+			FrameExclusion exclusion,
 			boolean orderedSetAggregate) {
 		try {
 			clauseStack.push( Clause.OVER );
@@ -3300,7 +3303,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			if ( !orderedSetAggregate ) {
 				renderOrderBy( !partitionExpressions.isEmpty(), sortSpecifications );
 			}
-			if ( mode == Over.FrameMode.ROWS && startKind == Over.FrameKind.UNBOUNDED_PRECEDING && endKind == Over.FrameKind.CURRENT_ROW && exclusion == Over.FrameExclusion.NO_OTHERS ) {
+			if ( mode == FrameMode.ROWS && startKind == FrameKind.UNBOUNDED_PRECEDING && endKind == FrameKind.CURRENT_ROW && exclusion == FrameExclusion.NO_OTHERS ) {
 				// This is the default, so we don't need to render anything
 			}
 			else {
@@ -3318,7 +3321,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						append( "rows " );
 						break;
 				}
-				if ( endKind == Over.FrameKind.CURRENT_ROW ) {
+				if ( endKind == FrameKind.CURRENT_ROW ) {
 					renderFrameKind( startKind, startExpression );
 				}
 				else {
@@ -3346,7 +3349,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	private void renderFrameKind(Over.FrameKind kind, Expression expression) {
+	private void renderFrameKind(FrameKind kind, Expression expression) {
 		switch ( kind ) {
 			case CURRENT_ROW:
 				append( "current row" );

@@ -16,7 +16,6 @@ import org.hibernate.query.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
-import org.hibernate.query.sqm.function.SelfRenderingSqmAggregateFunction;
 import org.hibernate.query.sqm.function.SelfRenderingSqmOrderedSetAggregateFunction;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
@@ -50,7 +49,7 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 	}
 
 	@Override
-	public <T> SelfRenderingSqmAggregateFunction<T> generateSqmOrderedSetAggregateFunctionExpression(
+	public <T> SelfRenderingSqmOrderedSetAggregateFunction<T> generateSqmOrderedSetAggregateFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			SqmOrderByClause withinGroupClause,
@@ -90,23 +89,17 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 			Predicate filter,
 			List<SortSpecification> withinGroup,
 			SqlAstTranslator<?> translator) {
-		final boolean caseWrapper = filter != null && !translator.supportsFilterClause();
+		if ( filter != null && !translator.supportsFilterClause() ) {
+			throw new IllegalArgumentException( "Can't emulate filter clause for inverse distribution function [" + getName() + "]!" );
+		}
 		sqlAppender.appendSql( getName() );
 		sqlAppender.appendSql( '(' );
 		if ( !sqlAstArguments.isEmpty() ) {
-			if ( caseWrapper ) {
-				sqlAppender.appendSql( "case when " );
-				filter.accept( translator );
-				sqlAppender.appendSql( " then " );
-				sqlAstArguments.get( 0 ).accept( translator );
-				sqlAppender.appendSql( " else null end" );
+			sqlAstArguments.get( 0 ).accept( translator );
+			for ( int i = 1; i < sqlAstArguments.size(); i++ ) {
+				sqlAppender.append( ',' );
+				sqlAstArguments.get( i ).accept( translator );
 			}
-			else {
-				sqlAstArguments.get( 0 ).accept( translator );
-			}
-		}
-		else if ( caseWrapper ) {
-			throw new IllegalArgumentException( "Can't emulate filter clause for function [" + getName() + "] without arguments!" );
 		}
 		sqlAppender.appendSql( ')' );
 		if ( withinGroup != null && !withinGroup.isEmpty() ) {

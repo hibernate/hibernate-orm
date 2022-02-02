@@ -451,6 +451,7 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.soundex(); //was introduced in Postgres 9 apparently
 
 		functionFactory.locate_positionSubstring();
+		functionFactory.windowFunctions();
 		functionFactory.listagg_stringAgg( "varchar" );
 
 		if ( getVersion().isSameOrAfter( 9, 4 ) ) {

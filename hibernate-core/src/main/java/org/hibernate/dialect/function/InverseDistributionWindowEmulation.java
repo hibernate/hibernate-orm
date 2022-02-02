@@ -15,6 +15,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingOrderedSetAggregateFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingSqmAggregateFunction;
+import org.hibernate.query.sqm.function.SelfRenderingSqmOrderedSetAggregateFunction;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -44,7 +45,7 @@ public class InverseDistributionWindowEmulation extends InverseDistributionFunct
 	}
 
 	@Override
-	public <T> SelfRenderingSqmAggregateFunction<T> generateSqmOrderedSetAggregateFunctionExpression(
+	public <T> SelfRenderingSqmOrderedSetAggregateFunction<T> generateSqmOrderedSetAggregateFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			SqmOrderByClause withinGroupClause,

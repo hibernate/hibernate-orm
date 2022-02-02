@@ -146,7 +146,7 @@ public class PatternRenderer {
 			List<? extends SqlAstNode> args,
 			Predicate filter,
 			SqlAstTranslator<?> translator) {
-		render( sqlAppender, args, filter, Collections.emptyList(), translator );
+		render( sqlAppender, args, filter, Collections.emptyList(), null, null, translator );
 	}
 
 	public void render(
@@ -154,6 +154,27 @@ public class PatternRenderer {
 			List<? extends SqlAstNode> args,
 			Predicate filter,
 			List<SortSpecification> withinGroup,
+			SqlAstTranslator<?> translator) {
+		render( sqlAppender, args, filter, withinGroup, null, null, translator );
+	}
+
+	public void render(
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> args,
+			Predicate filter,
+			Boolean respectNulls,
+			Boolean fromFirst,
+			SqlAstTranslator<?> translator) {
+		render( sqlAppender, args, filter, Collections.emptyList(), respectNulls, fromFirst, translator );
+	}
+
+	private void render(
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> args,
+			Predicate filter,
+			List<SortSpecification> withinGroup,
+			Boolean respectNulls,
+			Boolean fromFirst,
 			SqlAstTranslator<?> translator) {
 		final int numberOfArguments = args.size();
 		final boolean caseWrapper = filter != null && !translator.supportsFilterClause();
@@ -212,6 +233,23 @@ public class PatternRenderer {
 				translator.render( withinGroup.get( 0 ), argumentRenderingMode );
 			}
 			sqlAppender.appendSql( ')' );
+		}
+
+		if ( fromFirst != null ) {
+			if ( fromFirst ) {
+				sqlAppender.appendSql( " from first" );
+			}
+			else {
+				sqlAppender.appendSql( " from last" );
+			}
+		}
+		if ( respectNulls != null ) {
+			if ( respectNulls ) {
+				sqlAppender.appendSql( " respect nulls" );
+			}
+			else {
+				sqlAppender.appendSql( " ignore nulls" );
+			}
 		}
 
 		if ( filter != null && !caseWrapper ) {

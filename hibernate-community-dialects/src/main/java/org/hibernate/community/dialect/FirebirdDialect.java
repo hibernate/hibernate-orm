@@ -308,19 +308,22 @@ public class FirebirdDialect extends Dialect {
 				doubleType
 		);
 
-		if ( getVersion().isSameOrAfter( 4, 0 ) ) {
-			Arrays.asList( "md5", "sha1", "sha256", "sha512" )
-					.forEach( hash -> functionRegistry.registerPattern(
-							hash,
-							"crypt_hash(?1 using " + hash + ")",
-							byteArrayType
-					) );
-			functionRegistry.registerAlternateKey( "sha", "sha1" );
-			functionRegistry.registerPattern(
-					"crc32",
-					"hash(?1 using crc32)",
-					integerType
-			);
+		if ( getVersion().isSameOrAfter( 3 ) ) {
+			functionFactory.windowFunctions();
+			if ( getVersion().isSameOrAfter( 4, 0 ) ) {
+				Arrays.asList( "md5", "sha1", "sha256", "sha512" )
+						.forEach( hash -> functionRegistry.registerPattern(
+								hash,
+								"crypt_hash(?1 using " + hash + ")",
+								byteArrayType
+						) );
+				functionRegistry.registerAlternateKey( "sha", "sha1" );
+				functionRegistry.registerPattern(
+						"crc32",
+						"hash(?1 using crc32)",
+						integerType
+				);
+			}
 		}
 
 		functionFactory.listagg_list( "varchar" );

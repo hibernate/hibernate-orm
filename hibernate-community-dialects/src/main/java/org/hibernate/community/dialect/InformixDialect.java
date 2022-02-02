@@ -185,6 +185,9 @@ public class InformixDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
 		queryEngine.getSqmFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
+		if ( supportsWindowFunctions() ) {
+			functionFactory.windowFunctions();
+		}
 	}
 
 	@Override

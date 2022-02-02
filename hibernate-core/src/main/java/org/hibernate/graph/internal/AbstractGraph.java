@@ -8,7 +8,7 @@ package org.hibernate.graph.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,10 +21,9 @@ import org.hibernate.graph.SubGraph;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 
 /**
  *  Base class for {@link RootGraph} and {@link SubGraph} implementations.
@@ -47,7 +46,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	protected AbstractGraph(boolean mutable, GraphImplementor<J> original) {
 		this( original.getGraphedType(), mutable, original.sessionFactory() );
 
-		this.attrNodeMap = CollectionHelper.concurrentMap( original.getAttributeNodeList().size() );
+		this.attrNodeMap = new LinkedHashMap<>( original.getAttributeNodeList().size() );
 		original.visitAttributeNodes(
 				node -> attrNodeMap.put(
 						node.getAttributeDescriptor(),
@@ -111,7 +110,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 
 		AttributeNodeImplementor<?> attributeNode = null;
 		if ( attrNodeMap == null ) {
-			attrNodeMap = new HashMap<>();
+			attrNodeMap = new LinkedHashMap<>();
 		}
 		else {
 			attributeNode = attrNodeMap.get( incomingAttributeNode.getAttributeDescriptor() );
@@ -188,7 +187,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 
 		AttributeNodeImplementor attrNode = null;
 		if ( attrNodeMap == null ) {
-			attrNodeMap = new HashMap<>();
+			attrNodeMap = new LinkedHashMap<>();
 		}
 		else {
 			attrNode = attrNodeMap.get( attribute );

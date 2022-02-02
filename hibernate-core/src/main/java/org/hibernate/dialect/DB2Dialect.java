@@ -263,6 +263,7 @@ public class DB2Dialect extends Dialect {
 				.setArgumentListSignature("(STRING string, STRING pattern)")
 				.register();
 
+		functionFactory.windowFunctions();
 		if ( getDB2Version().isSameOrAfter( 9, 5 ) ) {
 			functionFactory.listagg( null );
 			if ( getDB2Version().isSameOrAfter( 11, 1 ) ) {

@@ -49,4 +49,15 @@ public interface FunctionRenderingSupport {
 		// Ignore the filter by default. Subclasses will override this
 		render( sqlAppender, sqlAstArguments, walker );
 	}
+
+	default void render(
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> sqlAstArguments,
+			Predicate filter,
+			Boolean respectNulls,
+			Boolean fromFirst,
+			SqlAstTranslator<?> walker) {
+		// Ignore the filter by default. Subclasses will override this
+		render( sqlAppender, sqlAstArguments, walker );
+	}
 }

@@ -7,7 +7,6 @@
 package org.hibernate.query.sqm.function;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.query.ReturnableType;
@@ -18,53 +17,44 @@ import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmDistinct;
-import org.hibernate.query.sqm.tree.expression.SqmOrderedSetAggregateFunction;
+import org.hibernate.query.sqm.tree.expression.SqmWindowFunction;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
-import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
-import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.SortSpecification;
 
 /**
  * @author Christian Beikov
  */
-public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderingSqmAggregateFunction<T>
-		implements SqmOrderedSetAggregateFunction<T> {
+public class SelfRenderingSqmWindowFunction<T> extends SelfRenderingSqmFunction<T>
+		implements SqmWindowFunction<T> {
 
-	private final SqmOrderByClause withinGroup;
+	private final SqmPredicate filter;
+	private final Boolean respectNulls;
+	private final Boolean fromFirst;
 
-	public SelfRenderingSqmOrderedSetAggregateFunction(
+	public SelfRenderingSqmWindowFunction(
 			SqmFunctionDescriptor descriptor,
 			FunctionRenderingSupport renderingSupport,
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
-			SqmOrderByClause withinGroup,
+			Boolean respectNulls,
+			Boolean fromFirst,
 			ReturnableType<T> impliedResultType,
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver,
 			NodeBuilder nodeBuilder,
 			String name) {
-		super(
-				descriptor,
-				renderingSupport,
-				arguments,
-				filter,
-				impliedResultType,
-				argumentsValidator,
-				returnTypeResolver,
-				nodeBuilder,
-				name
-		);
-		this.withinGroup = withinGroup;
+		super( descriptor, renderingSupport, arguments, impliedResultType, argumentsValidator, returnTypeResolver, nodeBuilder, name );
+		this.filter = filter;
+		this.respectNulls = respectNulls;
+		this.fromFirst = fromFirst;
 	}
 
 	@Override
-	public SelfRenderingSqmOrderedSetAggregateFunction<T> copy(SqmCopyContext context) {
-		final SelfRenderingSqmOrderedSetAggregateFunction<T> existing = context.getCopy( this );
+	public SelfRenderingSqmWindowFunction<T> copy(SqmCopyContext context) {
+		final SelfRenderingSqmWindowFunction<T> existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
@@ -72,14 +62,15 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 		for ( SqmTypedNode<?> argument : getArguments() ) {
 			arguments.add( argument.copy( context ) );
 		}
-		final SelfRenderingSqmOrderedSetAggregateFunction<T> expression = context.registerCopy(
+		final SelfRenderingSqmWindowFunction<T> expression = context.registerCopy(
 				this,
-				new SelfRenderingSqmOrderedSetAggregateFunction<>(
+				new SelfRenderingSqmWindowFunction<>(
 						getFunctionDescriptor(),
 						getRenderingSupport(),
 						arguments,
-						getFilter() == null ? null : getFilter().copy( context ),
-						withinGroup == null ? null : withinGroup.copy( context ),
+						filter == null ? null : filter.copy( context ),
+						respectNulls,
+						fromFirst,
 						getImpliedResultType(),
 						getArgumentsValidator(),
 						getReturnTypeResolver(),
@@ -102,40 +93,31 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 		if ( argumentsValidator != null ) {
 			argumentsValidator.validateSqlTypes( arguments, getFunctionName() );
 		}
-		List<SortSpecification> withinGroup;
-		if ( this.withinGroup == null ) {
-			withinGroup = Collections.emptyList();
-		}
-		else {
-			walker.getCurrentClauseStack().push( Clause.ORDER );
-			try {
-				final List<SqmSortSpecification> sortSpecifications = this.withinGroup.getSortSpecifications();
-				withinGroup = new ArrayList<>( sortSpecifications.size() );
-				for ( SqmSortSpecification sortSpecification : sortSpecifications ) {
-					final SortSpecification specification = (SortSpecification) walker.visitSortSpecification( sortSpecification );
-					if ( specification != null ) {
-						withinGroup.add( specification );
-					}
-				}
-			}
-			finally {
-				walker.getCurrentClauseStack().pop();
-			}
-		}
-		return new SelfRenderingOrderedSetAggregateFunctionSqlAstExpression(
+		return new SelfRenderingWindowFunctionSqlAstExpression(
 				getFunctionName(),
 				getRenderingSupport(),
 				arguments,
-				getFilter() == null ? null : walker.visitNestedTopLevelPredicate( getFilter() ),
-				withinGroup,
+				filter == null ? null : walker.visitNestedTopLevelPredicate( filter ),
+				respectNulls,
+				fromFirst,
 				resultType,
 				getMappingModelExpressible( walker, resultType )
 		);
 	}
 
 	@Override
-	public SqmOrderByClause getWithinGroup() {
-		return withinGroup;
+	public SqmPredicate getFilter() {
+		return filter;
+	}
+
+	@Override
+	public Boolean getRespectNulls() {
+		return respectNulls;
+	}
+
+	@Override
+	public Boolean getFromFirst() {
+		return fromFirst;
 	}
 
 	@Override
@@ -156,20 +138,25 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 		}
 
 		sb.append( ')' );
-		if ( withinGroup != null ) {
-			sb.append( " within group (order by " );
-			final List<SqmSortSpecification> sortSpecifications = withinGroup.getSortSpecifications();
-			sortSpecifications.get( 0 ).appendHqlString( sb );
-			for ( int j = 1; j < sortSpecifications.size(); j++ ) {
-				sb.append( ", " );
-				sortSpecifications.get( j ).appendHqlString( sb );
+		if ( fromFirst != null ) {
+			if ( fromFirst ) {
+				sb.append( " from first" );
 			}
-			sb.append( ')' );
+			else {
+				sb.append( " from last" );
+			}
 		}
-
-		if ( getFilter() != null ) {
+		if ( respectNulls != null ) {
+			if ( respectNulls ) {
+				sb.append( " respect nulls" );
+			}
+			else {
+				sb.append( " ignore nulls" );
+			}
+		}
+		if ( filter != null ) {
 			sb.append( " filter (where " );
-			getFilter().appendHqlString( sb );
+			filter.appendHqlString( sb );
 			sb.append( ')' );
 		}
 	}

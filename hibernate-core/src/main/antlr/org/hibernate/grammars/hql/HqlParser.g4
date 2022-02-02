@@ -975,7 +975,7 @@ jpaNonstandardFunctionName
  * The function name, followed by a parenthesized list of comma-separated expressions
  */
 genericFunction
-	: genericFunctionName LEFT_PAREN (genericFunctionArguments | ASTERISK)? RIGHT_PAREN withinGroupClause? filterClause?
+	: genericFunctionName LEFT_PAREN (genericFunctionArguments | ASTERISK)? RIGHT_PAREN nthSideClause? nullsClause? withinGroupClause? filterClause? overClause?
 	;
 
 /**
@@ -1052,7 +1052,7 @@ aggregateFunction
  * The functions 'every()' and 'all()' are synonyms
  */
 everyFunction
-	: (EVERY|ALL) LEFT_PAREN predicate RIGHT_PAREN filterClause?
+	: (EVERY|ALL) LEFT_PAREN predicate RIGHT_PAREN filterClause? overClause?
 	| (EVERY|ALL) LEFT_PAREN subquery RIGHT_PAREN
 	| (EVERY|ALL) (ELEMENTS|INDICES) LEFT_PAREN simplePath RIGHT_PAREN
 	;
@@ -1061,7 +1061,7 @@ everyFunction
  * The functions 'any()' and 'some()' are synonyms
  */
 anyFunction
-	: (ANY|SOME) LEFT_PAREN predicate RIGHT_PAREN filterClause?
+	: (ANY|SOME) LEFT_PAREN predicate RIGHT_PAREN filterClause? overClause?
 	| (ANY|SOME) LEFT_PAREN subquery RIGHT_PAREN
 	| (ANY|SOME) (ELEMENTS|INDICES) LEFT_PAREN simplePath RIGHT_PAREN
 	;
@@ -1070,7 +1070,7 @@ anyFunction
  * The 'listagg()' ordered set-aggregate function
  */
 listaggFunction
-	: LISTAGG LEFT_PAREN DISTINCT? expressionOrPredicate COMMA expressionOrPredicate onOverflowClause? RIGHT_PAREN withinGroupClause? filterClause?
+	: LISTAGG LEFT_PAREN DISTINCT? expressionOrPredicate COMMA expressionOrPredicate onOverflowClause? RIGHT_PAREN withinGroupClause? filterClause? overClause?
 	;
 
 /**
@@ -1092,6 +1092,74 @@ withinGroupClause
  */
 filterClause
 	: FILTER LEFT_PAREN whereClause RIGHT_PAREN
+	;
+
+/**
+ * A `nulls` clause: what should a value access window function do when encountering a `null`
+ */
+nullsClause
+	: RESPECT NULLS
+	| IGNORE NULLS
+	;
+
+/**
+ * A `nulls` clause: what should a value access window function do when encountering a `null`
+ */
+nthSideClause
+	: FROM FIRST
+	| FROM LAST
+	;
+
+/**
+ * A 'over' clause: the specification of a window within which the function should act
+ */
+overClause
+	: OVER LEFT_PAREN partitionClause? orderByClause? frameClause? RIGHT_PAREN
+	;
+
+/**
+ * A 'partition' clause: the specification the group within which a function should act in a window
+ */
+partitionClause
+	: PARTITION BY expression (COMMA expression)*
+	;
+
+/**
+ * A 'frame' clause: the specification the content of the window
+ */
+frameClause
+	: (RANGE|ROWS|GROUPS) frameStart frameExclusion?
+	| (RANGE|ROWS|GROUPS) BETWEEN frameStart AND frameEnd frameExclusion?
+	;
+
+/**
+ * The start of the window content
+ */
+frameStart
+	: UNBOUNDED PRECEDING
+    | expression PRECEDING
+    | CURRENT ROW
+    | expression FOLLOWING
+	;
+
+/**
+ * The end of the window content
+ */
+frameEnd
+    : expression PRECEDING
+    | CURRENT ROW
+    | expression FOLLOWING
+    | UNBOUNDED FOLLOWING
+	;
+
+/**
+ * A 'exclusion' clause: the specification what to exclude from the window content
+ */
+frameExclusion
+	: EXCLUDE CURRENT ROW
+    | EXCLUDE GROUP
+    | EXCLUDE TIES
+    | EXCLUDE NO OTHERS
 	;
 
 /**
@@ -1418,8 +1486,8 @@ identifier
 	| CURRENT_TIME
 	| CURRENT_TIMESTAMP
 	| DATE
-	| DAY
 	| DATETIME
+	| DAY
 	| DELETE
 	| DESC
 	| DISTINCT
@@ -1433,20 +1501,24 @@ identifier
 	| ESCAPE
 	| EVERY
 	| EXCEPT
+	| EXCLUDE
 	| EXISTS
 	| EXTRACT
 	| FETCH
 	| FILTER
 	| FIRST
+	| FOLLOWING
 	| FOR
 	| FORMAT
 	| FROM
 	| FULL
 	| FUNCTION
 	| GROUP
+	| GROUPS
 	| HAVING
 	| HOUR
 	| ID
+	| IGNORE
 	| ILIKE
 	| IN
 	| INDEX
@@ -1486,6 +1558,7 @@ identifier
 	| NATURALID
 	| NEW
 	| NEXT
+	| NO
 	| NOT
 	| NULLS
 	| OBJECT
@@ -1496,14 +1569,20 @@ identifier
 	| ONLY
 	| OR
 	| ORDER
+	| OTHERS
 	| OUTER
+	| OVER
 	| OVERFLOW
 	| OVERLAY
 	| PAD
+	| PARTITION
 	| PERCENT
 	| PLACING
 	| POSITION
+	| PRECEDING
 	| QUARTER
+	| RANGE
+	| RESPECT
 	| RIGHT
 	| ROLLUP
 	| ROW
@@ -1526,6 +1605,7 @@ identifier
 	| TRIM
 	| TRUNCATE
 	| TYPE
+	| UNBOUNDED
 	| UNION
 	| UPDATE
 	| VALUE

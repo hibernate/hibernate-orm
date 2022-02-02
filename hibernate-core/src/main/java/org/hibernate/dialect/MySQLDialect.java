@@ -444,6 +444,12 @@ public class MySQLDialect extends Dialect {
 			// MySQL timestamp type defaults to precision 0 (seconds) but
 			// we want the standard default precision of 6 (microseconds)
 			functionFactory.sysdateExplicitMicros();
+			if ( getMySQLVersion().isSameOrAfter( 8, 2 ) ) {
+				functionFactory.windowFunctions();
+				if ( getMySQLVersion().isSameOrAfter( 8, 11 ) ) {
+					functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+				}
+			}
 		}
 
 		functionFactory.listagg_groupConcat();

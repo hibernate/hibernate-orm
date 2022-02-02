@@ -311,6 +311,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		functionFactory.everyAny_minMaxCase();
 		functionFactory.bitLength_pattern( "length(to_binary(?1))*8" );
 
+		functionFactory.windowFunctions();
 		functionFactory.listagg_stringAgg( "varchar" );
 		functionFactory.inverseDistributionOrderedSetAggregates();
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();

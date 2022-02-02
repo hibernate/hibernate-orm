@@ -152,6 +152,28 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 		);
 	}
 
+	@Override
+	public final <T> SelfRenderingSqmFunction<T> generateWindowSqmExpression(
+			List<? extends SqmTypedNode<?>> arguments,
+			SqmPredicate filter,
+			Boolean respectNulls,
+			Boolean fromFirst,
+			ReturnableType<T> impliedResultType,
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
+		argumentsValidator.validate( arguments, getName(), queryEngine );
+
+		return generateSqmWindowFunctionExpression(
+				arguments,
+				filter,
+				respectNulls,
+				fromFirst,
+				impliedResultType,
+				queryEngine,
+				typeConfiguration
+		);
+	}
+
 	/**
 	 * Return an SQM node or subtree representing an invocation of this function
 	 * with the given arguments. This method may be overridden in the case of
@@ -203,6 +225,31 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
 		return (SelfRenderingSqmAggregateFunction<T>) generateSqmExpression(
+				arguments,
+				impliedResultType,
+				queryEngine,
+				typeConfiguration
+		);
+	}
+
+	/**
+	 * Return an SQM node or subtree representing an invocation of this window function
+	 * with the given arguments. This method may be overridden in the case of
+	 * function descriptors that wish to customize creation of the node.
+	 *  @param arguments the arguments of the function invocation
+	 * @param respectNulls
+	 * @param fromFirst
+	 * @param impliedResultType the function return type as inferred from its usage
+	 */
+	protected <T> SelfRenderingSqmWindowFunction<T> generateSqmWindowFunctionExpression(
+			List<? extends SqmTypedNode<?>> arguments,
+			SqmPredicate filter,
+			Boolean respectNulls,
+			Boolean fromFirst,
+			ReturnableType<T> impliedResultType,
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
+		return (SelfRenderingSqmWindowFunction<T>) generateSqmExpression(
 				arguments,
 				impliedResultType,
 				queryEngine,

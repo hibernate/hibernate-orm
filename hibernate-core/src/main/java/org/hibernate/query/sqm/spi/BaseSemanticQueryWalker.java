@@ -54,6 +54,7 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmOrderedSetAggregateFunction;
+import org.hibernate.query.sqm.tree.expression.SqmOver;
 import org.hibernate.query.sqm.tree.expression.SqmOverflow;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
@@ -637,6 +638,24 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	@Override
 	public Object visitStar(SqmStar sqmStar) {
 		return sqmStar;
+	}
+
+	@Override
+	public Object visitOver(SqmOver<?> over) {
+		over.getExpression().accept( this );
+		for ( SqmExpression<?> partition : over.getPartitions() ) {
+			partition.accept( this );
+		}
+		for ( SqmSortSpecification sqmSortSpecification : over.getOrderList() ) {
+			visitSortSpecification( sqmSortSpecification );
+		}
+		if ( over.getStartExpression() != null ) {
+			over.getStartExpression().accept( this );
+		}
+		if ( over.getEndExpression() != null ) {
+			over.getEndExpression().accept( this );
+		}
+		return over;
 	}
 
 	@Override

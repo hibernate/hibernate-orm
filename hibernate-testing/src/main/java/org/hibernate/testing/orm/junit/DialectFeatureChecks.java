@@ -424,4 +424,18 @@ abstract public class DialectFeatureChecks {
 					|| dialect instanceof SQLServerDialect;
 		}
 	}
+
+	public static class SupportsWindowFunctions implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			// Derby doesn't really support window functions, only row_number()
+			return dialect.supportsWindowFunctions() && !( dialect instanceof DerbyDialect );
+		}
+	}
+
+	public static class SupportsFilterClause implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			// Derby doesn't really support window functions, only row_number()
+			return dialect instanceof PostgreSQLDialect;
+		}
+	}
 }

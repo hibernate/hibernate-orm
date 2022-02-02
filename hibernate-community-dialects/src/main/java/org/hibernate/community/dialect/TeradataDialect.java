@@ -286,6 +286,7 @@ public class TeradataDialect extends Dialect {
 		}
 
 		// No idea since when this is supported
+		functionFactory.windowFunctions();
 		functionFactory.inverseDistributionOrderedSetAggregates();
 		functionFactory.hypotheticalOrderedSetAggregates();
 	}

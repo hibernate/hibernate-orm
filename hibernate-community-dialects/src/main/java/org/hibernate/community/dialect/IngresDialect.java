@@ -301,6 +301,7 @@ public class IngresDialect extends Dialect {
 				.register();
 
 		// No idea since when this is supported
+		functionFactory.windowFunctions();
 		functionFactory.listagg( null );
 		functionFactory.inverseDistributionOrderedSetAggregates();
 		functionFactory.hypotheticalOrderedSetAggregates();

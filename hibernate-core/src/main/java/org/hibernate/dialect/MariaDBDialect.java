@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.sequence.MariaDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -65,12 +66,18 @@ public class MariaDBDialect extends MySQLDialect {
 		super.initializeFunctionRegistry(queryEngine);
 
 		if ( getVersion().isSameOrAfter( 10, 2 ) ) {
+			CommonFunctionFactory commonFunctionFactory = new CommonFunctionFactory( queryEngine );
+			commonFunctionFactory.windowFunctions();
+			commonFunctionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 			queryEngine.getSqmFunctionRegistry().registerNamed(
 					"json_valid",
 					queryEngine.getTypeConfiguration()
 							.getBasicTypeRegistry()
 							.resolve( StandardBasicTypes.BOOLEAN )
 			);
+			if ( getVersion().isSameOrAfter( 10, 3, 3 ) ) {
+				commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
+			}
 		}
 	}
 

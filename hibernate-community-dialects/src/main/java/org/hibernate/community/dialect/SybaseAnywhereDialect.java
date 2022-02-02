@@ -80,7 +80,11 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
-		new CommonFunctionFactory( queryEngine ).listagg_list( "varchar" );
+		final CommonFunctionFactory functionFactory = new CommonFunctionFactory( queryEngine );
+		functionFactory.listagg_list( "varchar" );
+		if ( getVersion().isSameOrAfter( 12 ) ) {
+			functionFactory.windowFunctions();
+		}
 	}
 
 	@Override

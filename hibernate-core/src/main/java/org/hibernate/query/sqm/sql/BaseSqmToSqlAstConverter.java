@@ -189,6 +189,7 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
+import org.hibernate.query.sqm.tree.expression.SqmOver;
 import org.hibernate.query.sqm.tree.expression.SqmOverflow;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
@@ -4758,6 +4759,33 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Star visitStar(SqmStar sqmStar) {
 		return new Star();
+	}
+
+	@Override
+	public Object visitOver(SqmOver<?> over) {
+		currentClauseStack.push( Clause.OVER );
+		final Expression expression = (Expression) over.getExpression().accept( this );
+		final List<Expression> partitions = new ArrayList<>(over.getPartitions().size());
+		for ( SqmExpression<?> partition : over.getPartitions() ) {
+			partitions.add( (Expression) partition.accept( this ) );
+		}
+		final List<SortSpecification> orderList = new ArrayList<>( over.getOrderList().size() );
+		for ( SqmSortSpecification sortSpecification : over.getOrderList() ) {
+			orderList.add( visitSortSpecification( sortSpecification ) );
+		}
+		final Over<Object> overExpression = new Over<>(
+				expression,
+				partitions,
+				orderList,
+				over.getMode(),
+				over.getStartKind(),
+				over.getStartExpression() == null ? null : (Expression) over.getStartExpression().accept( this ),
+				over.getEndKind(),
+				over.getEndExpression() == null ? null : (Expression) over.getEndExpression().accept( this ),
+				over.getExclusion()
+		);
+		currentClauseStack.pop();
+		return overExpression;
 	}
 
 	@Override

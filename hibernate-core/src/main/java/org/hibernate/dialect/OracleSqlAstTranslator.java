@@ -14,6 +14,8 @@ import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.sqm.FrameExclusion;
+import org.hibernate.query.sqm.FrameKind;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -334,9 +336,9 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		final Expression expression = over.getExpression();
 		if ( expression instanceof FunctionExpression && "row_number".equals( ( (FunctionExpression) expression ).getFunctionName() ) ) {
 			if ( over.getPartitions().isEmpty() && over.getOrderList().isEmpty()
-					&& over.getStartKind() == Over.FrameKind.UNBOUNDED_PRECEDING
-					&& over.getEndKind() == Over.FrameKind.CURRENT_ROW
-					&& over.getExclusion() == Over.FrameExclusion.NO_OTHERS ) {
+					&& over.getStartKind() == FrameKind.UNBOUNDED_PRECEDING
+					&& over.getEndKind() == FrameKind.CURRENT_ROW
+					&& over.getExclusion() == FrameExclusion.NO_OTHERS ) {
 				// Oracle doesn't allow an empty over clause for the row_number() function
 				append( "rownum" );
 				return;

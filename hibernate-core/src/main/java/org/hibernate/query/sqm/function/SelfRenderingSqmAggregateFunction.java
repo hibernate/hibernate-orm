@@ -88,7 +88,7 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 		return new SelfRenderingAggregateFunctionSqlAstExpression(
 				getFunctionName(),
 				getRenderingSupport(),
-				resolveSqlAstArguments( getArguments(), walker ),
+				arguments,
 				filter == null ? null : walker.visitNestedTopLevelPredicate( filter ),
 				resultType,
 				getMappingModelExpressible( walker, resultType )

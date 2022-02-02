@@ -76,6 +76,16 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 						queryEngine,
 						typeConfiguration
 				);
+			case WINDOW:
+				return generateWindowSqmExpression(
+						arguments,
+						null,
+						null,
+						null,
+						impliedResultType,
+						queryEngine,
+						typeConfiguration
+				);
 			default:
 				return new SelfRenderingSqmFunction<>(
 						this,
@@ -114,7 +124,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 	}
 
 	@Override
-	public <T> SelfRenderingSqmAggregateFunction<T> generateSqmOrderedSetAggregateFunctionExpression(
+	public <T> SelfRenderingSqmOrderedSetAggregateFunction<T> generateSqmOrderedSetAggregateFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			SqmOrderByClause withinGroupClause,
@@ -138,28 +148,31 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 		);
 	}
 
-	/**
-	 * Must be overridden by subclasses
-	 */
-	public abstract void render(
-			SqlAppender sqlAppender,
-			List<? extends SqlAstNode> sqlAstArguments,
-			SqlAstTranslator<?> walker);
-
-	public void render(
-			SqlAppender sqlAppender,
-			List<? extends SqlAstNode> sqlAstArguments,
-			Predicate filter,
-			SqlAstTranslator<?> walker) {
-		render( sqlAppender, sqlAstArguments, walker );
+	@Override
+	protected <T> SelfRenderingSqmWindowFunction<T> generateSqmWindowFunctionExpression(
+			List<? extends SqmTypedNode<?>> arguments,
+			SqmPredicate filter,
+			Boolean respectNulls,
+			Boolean fromFirst,
+			ReturnableType<T> impliedResultType,
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
+		if ( functionKind != FunctionKind.WINDOW ) {
+			throw new UnsupportedOperationException( "The function " + getName() + " is not a window function!" );
+		}
+		return new SelfRenderingSqmWindowFunction<>(
+				this,
+				this,
+				arguments,
+				filter,
+				respectNulls,
+				fromFirst,
+				impliedResultType,
+				getArgumentsValidator(),
+				getReturnTypeResolver(),
+				queryEngine.getCriteriaBuilder(),
+				getName()
+		);
 	}
 
-	public void render(
-			SqlAppender sqlAppender,
-			List<? extends SqlAstNode> sqlAstArguments,
-			Predicate filter,
-			List<SortSpecification> withinGroup,
-			SqlAstTranslator<?> walker) {
-		render( sqlAppender, sqlAstArguments, walker );
-	}
 }

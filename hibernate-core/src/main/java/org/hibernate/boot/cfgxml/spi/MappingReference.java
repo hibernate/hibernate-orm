@@ -19,7 +19,7 @@ import org.hibernate.internal.util.config.ConfigurationException;
  * @author Steve Ebersole
  */
 public class MappingReference {
-	public static enum Type {
+	public enum Type {
 		RESOURCE,
 		CLASS,
 		FILE,

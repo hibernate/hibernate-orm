@@ -17,7 +17,7 @@ package org.hibernate.boot;
  * @author Steve Ebersole
  */
 public class CacheRegionDefinition {
-	public static enum CacheRegionType {
+	public enum CacheRegionType {
 		ENTITY,
 		COLLECTION,
 		QUERY

@@ -23,7 +23,6 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("deprecation")
 public class DialectResolverInitiator implements StandardServiceInitiator<DialectResolver> {
 	/**
 	 * Singleton access
@@ -55,9 +54,8 @@ public class DialectResolverInitiator implements StandardServiceInitiator<Dialec
 		if ( StringHelper.isNotEmpty( resolverImplNames ) ) {
 			for ( String resolverImplName : StringHelper.split( ", \n\r\f\t", resolverImplNames ) ) {
 				try {
-					resolverSet.addResolver(
-							(DialectResolver) classLoaderService.classForName( resolverImplName ).newInstance()
-					);
+					DialectResolver dialectResolver = (DialectResolver) classLoaderService.classForName(resolverImplName).newInstance();
+					resolverSet.addResolver( dialectResolver );
 				}
 				catch (HibernateException e) {
 					throw e;

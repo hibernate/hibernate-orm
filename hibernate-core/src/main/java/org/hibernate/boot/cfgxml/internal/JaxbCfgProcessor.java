@@ -87,14 +87,12 @@ public class JaxbCfgProcessor {
 		return staxFactory;
 	}
 
-	@SuppressWarnings( { "UnnecessaryLocalVariable" })
 	private XMLInputFactory buildStaxFactory() {
 		XMLInputFactory staxFactory = XMLInputFactory.newInstance();
 		staxFactory.setXMLResolver( xmlResourceResolver );
 		return staxFactory;
 	}
 
-	@SuppressWarnings( { "unchecked" })
 	private JaxbCfgHibernateConfiguration unmarshal(XMLEventReader staxEventReader, final Origin origin) {
 		XMLEvent event;
 		try {
@@ -165,10 +163,7 @@ public class JaxbCfgProcessor {
 				SchemaFactory schemaFactory = SchemaFactory.newInstance( schemaLanguage );
 				return schemaFactory.newSchema( source );
 			}
-			catch ( SAXException e ) {
-				throw new XsdException( "Unable to load schema [" + schemaName + "]", e, schemaName );
-			}
-			catch ( IOException e ) {
+			catch ( SAXException | IOException e ) {
 				throw new XsdException( "Unable to load schema [" + schemaName + "]", e, schemaName );
 			}
 			finally {

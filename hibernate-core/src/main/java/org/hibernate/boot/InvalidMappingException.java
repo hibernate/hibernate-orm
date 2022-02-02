@@ -9,6 +9,8 @@ package org.hibernate.boot;
 import org.hibernate.boot.jaxb.Origin;
 
 /**
+ * Indicates a problem parsing the mapping document at a given {@link Origin}.
+ *
  * @author Brett Meyer
  */
 public class InvalidMappingException extends org.hibernate.InvalidMappingException {

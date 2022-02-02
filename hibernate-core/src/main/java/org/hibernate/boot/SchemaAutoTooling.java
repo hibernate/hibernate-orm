@@ -10,7 +10,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
 
 /**
- * Defines the possible values for "hbm2ddl_auto"
+ * Defines the possible values for {@value AvailableSettings#HBM2DDL_AUTO}.
  *
  * @author Steve Ebersole
  */

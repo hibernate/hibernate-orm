@@ -31,7 +31,6 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  *
  * @since 5.0
  */
-@SuppressWarnings("UnusedReturnValue")
 public interface SessionFactoryBuilder {
 	/**
 	 * Specifies a Bean Validation {@link jakarta.validation.ValidatorFactory}.

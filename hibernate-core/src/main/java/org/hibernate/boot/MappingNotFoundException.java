@@ -9,6 +9,8 @@ package org.hibernate.boot;
 import org.hibernate.boot.jaxb.Origin;
 
 /**
+ * Indicates that a mapping document could not be found at a given {@link Origin}.
+ *
  * @author Steve Ebersole
  */
 public class MappingNotFoundException extends MappingException {

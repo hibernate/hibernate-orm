@@ -43,7 +43,7 @@ import static org.hibernate.procedure.spi.NamedCallableQueryMemento.ParameterMem
 public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefinition {
 	private final String registeredName;
 	private final String procedureName;
-	private final Class[] resultClasses;
+	private final Class<?>[] resultClasses;
 	private final String[] resultSetMappings;
 	private final ParameterDefinitions parameterDefinitions;
 	private final Map<String, Object> hints;
@@ -205,7 +205,7 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 		private final Integer position;
 		private final String name;
 		private final ParameterMode parameterMode;
-		private final Class type;
+		private final Class<?> type;
 
 		static ParameterDefinition from(
 				ParameterStrategy parameterStrategy,
@@ -234,7 +234,6 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 			this.type = annotation.type();
 		}
 
-		@SuppressWarnings("UnnecessaryUnboxing")
 		public ParameterMemento toMemento(SessionFactoryImplementor sessionFactory) {
 			// todo (6.0): figure out how to handle this
 //			final boolean initialPassNullSetting = explicitPassNullSetting != null

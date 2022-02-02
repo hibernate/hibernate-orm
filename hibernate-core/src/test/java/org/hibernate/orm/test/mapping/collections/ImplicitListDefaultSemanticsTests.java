@@ -10,11 +10,17 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Property;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
+import org.hibernate.testing.orm.junit.ImplicitListAsListProvider;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
@@ -25,6 +31,7 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 
 /**
  * Uses the default {@value AvailableSettings#DEFAULT_LIST_SEMANTICS} value of LIST
@@ -32,6 +39,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Steve Ebersole
  */
+@ServiceRegistry(
+		settingProviders = @SettingProvider(
+				settingName = DEFAULT_LIST_SEMANTICS,
+				provider = ImplicitListAsListProvider.class
+		)
+)
 @DomainModel( annotatedClasses = ImplicitListDefaultSemanticsTests.AnEntity.class )
 public class ImplicitListDefaultSemanticsTests {
 	@Test

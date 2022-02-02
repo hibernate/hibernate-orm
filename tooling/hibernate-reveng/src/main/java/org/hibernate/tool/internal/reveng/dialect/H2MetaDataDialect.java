@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.tool.util.ReflectionUtil;
 
 
@@ -24,8 +23,7 @@ public class H2MetaDataDialect extends JDBCMetaDataDialect {
 			"  idx.TABLE_CATALOG TABLE_CAT, " + 
 			"  idx.TABLE_SCHEMA TABLE_SCHEM, " + 
 			"  idx.TABLE_NAME, " + 
-			"  idx.COLUMN_NAME, " + 
-			"  cols.COLUMN_DEFAULT COLUMN_DEFAULT " + 
+			"  idx.COLUMN_NAME " + 
 			"FROM " +
 			"  INFORMATION_SCHEMA.INDEXES idx, " + 
 			"  INFORMATION_SCHEMA.COLUMNS cols " +
@@ -34,24 +32,25 @@ public class H2MetaDataDialect extends JDBCMetaDataDialect {
 			"  idx.TABLE_SCHEMA = cols.TABLE_SCHEMA AND " +
 			"  idx.TABLE_NAME = cols.TABLE_NAME AND " +
             "  idx.PRIMARY_KEY = TRUE AND " +
-            "  COLUMN_DEFAULT like '%NEXT VALUE FOR%' ";	
+            "  cols.COLUMN_DEFAULT like '%NEXT VALUE FOR%' ";	
 	
 	private static final String SPKSQ_H2_2_X =
 			"SELECT " +
 			"  idx.TABLE_CATALOG TABLE_CAT, " +
 			"  idx.TABLE_SCHEMA TABLE_SCHEM, " +
 			"  idx.TABLE_NAME, " +
-			"  cols.COLUMN_NAME, " +
-			"  cols.COLUMN_DEFAULT " +
+			"  cols.COLUMN_NAME " +
 			"FROM " + 
 			"  INFORMATION_SCHEMA.INDEXES idx, " + 
+			"  INFORMATION_SCHEMA.INDEX_COLUMNS idx_cols, " +
 			"  INFORMATION_SCHEMA.COLUMNS cols " +
 			"WHERE                                     " +
 			"   idx.TABLE_CATALOG = cols.TABLE_CATALOG AND " + 
 			"   idx.TABLE_SCHEMA = cols.TABLE_SCHEMA   AND " +
 			"   idx.TABLE_NAME = cols.TABLE_NAME AND " + 
 			"   idx.INDEX_TYPE_NAME = 'PRIMARY KEY' AND " +
-			"   cols.COLUMN_DEFAULT LIKE '%NEXT VALUE FOR%'";
+			"   cols.COLUMN_NAME = idx_cols.COLUMN_NAME AND " +
+			"   cols.IS_IDENTITY = 'YES'";
 
 	private static boolean understandsCatalogName = true;
 	
@@ -112,6 +111,8 @@ public class H2MetaDataDialect extends JDBCMetaDataDialect {
 				if(table!=null) {
 					sql += "AND idx.TABLE_NAME like '" + table + "' ";
 				}
+				
+				System.out.println(sql);
 									
 				PreparedStatement statement = getConnection().prepareStatement( sql );
 				
@@ -121,8 +122,7 @@ public class H2MetaDataDialect extends JDBCMetaDataDialect {
 					protected Map<String, Object> convertRow(ResultSet tableRs) throws SQLException {
 						element.clear();
 						putTablePart( element, tableRs );
-						String string = tableRs.getString("COLUMN_DEFAULT");
-						element.put("HIBERNATE_STRATEGY", StringHelper.isEmpty( string )?null:"identity");						
+						element.put("HIBERNATE_STRATEGY", "identity");						
 						return element;					
 					}
 					protected Throwable handleSQLException(SQLException e) {

@@ -34,8 +34,8 @@ public class ConfigLoader {
 
 	private final BootstrapServiceRegistry bootstrapServiceRegistry;
 
-	private ValueHolder<JaxbCfgProcessor> jaxbProcessorHolder = new ValueHolder<>(
-			new ValueHolder.DeferredInitializer<JaxbCfgProcessor>() {
+	private final ValueHolder<JaxbCfgProcessor> jaxbProcessorHolder = new ValueHolder<>(
+			new ValueHolder.DeferredInitializer<>() {
 				@Override
 				public JaxbCfgProcessor initialize() {
 					return new JaxbCfgProcessor( bootstrapServiceRegistry.getService( ClassLoaderService.class ) );

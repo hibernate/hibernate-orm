@@ -23,7 +23,7 @@ public class ComparableComparator<T extends Comparable> implements Comparator<T>
 		return INSTANCE;
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public int compare(Comparable one, Comparable another) {
 		return one.compareTo( another );
 	}

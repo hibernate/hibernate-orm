@@ -232,7 +232,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 			javaTypeRegistry.resolveDescriptor(
 					basicType.getJavaType(),
-					() -> basicType.getJavaTypeDescriptor()
+					basicType::getJavaTypeDescriptor
 			);
 
 			jdbcToHibernateTypeContributionMap.computeIfAbsent(

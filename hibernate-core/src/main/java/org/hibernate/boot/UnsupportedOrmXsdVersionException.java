@@ -19,7 +19,6 @@ public class UnsupportedOrmXsdVersionException extends MappingException {
 		this.requestedVersion = requestedVersion;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
 	public String getRequestedVersion() {
 		return requestedVersion;
 	}

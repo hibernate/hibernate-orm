@@ -12,7 +12,7 @@ import java.util.Iterator;
  * @author Gavin King
  */
 public final class SingletonIterator<T> implements Iterator<T> {
-	private T value;
+	private final T value;
 	private boolean hasNext = true;
 
 	public boolean hasNext() {

@@ -21,7 +21,7 @@ public class BasicDialectResolver implements DialectResolver {
 	private final int majorVersionToMatch;
 	private final int minorVersionToMatch;
 
-	private final Class dialectClass;
+	private final Class<?> dialectClass;
 
 	/**
 	 * Constructs a BasicDialectResolver

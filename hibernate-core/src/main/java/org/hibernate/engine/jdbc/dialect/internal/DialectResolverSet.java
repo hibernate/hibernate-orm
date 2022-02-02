@@ -27,7 +27,7 @@ import org.hibernate.internal.CoreMessageLogger;
 public class DialectResolverSet implements DialectResolver {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DialectResolverSet.class );
 
-	private List<DialectResolver> resolvers;
+	private final List<DialectResolver> resolvers;
 
 	public DialectResolverSet() {
 		this( new ArrayList<>() );

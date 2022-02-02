@@ -15,7 +15,7 @@ package org.hibernate.tool.schema;
 public enum Action {
 	/**
 	 * No action will be performed.  Valid in JPA; compatible with Hibernate's
-	 * hbm2ddl action of the same name..
+	 * hbm2ddl action of the same name.
 	 */
 	NONE( "none" ),
 	/**

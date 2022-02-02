@@ -34,14 +34,14 @@ public final class StandardStack<T> implements Stack<T> {
 
 	@Override
 	public void push(T newCurrent) {
-		Object toStore = newCurrent;
+		T toStore = newCurrent;
 		if ( newCurrent == null ) {
-			toStore = NULL_TOKEN;
+			toStore = (T) NULL_TOKEN;
 		}
 		stackInstanceExpected().addFirst( toStore );
 	}
 
-	private Deque stackInstanceExpected() {
+	private Deque<T> stackInstanceExpected() {
 		if ( internalStack == null ) {
 			//"7" picked to use 8, but skipping the odd initialCapacity method
 			internalStack = new ArrayDeque<>( 7 );
@@ -108,10 +108,9 @@ public final class StandardStack<T> implements Stack<T> {
 		if ( internalStack == null ) {
 			return null;
 		}
-		final Iterator<T> iterator = internalStack.iterator();
-		while ( iterator.hasNext() ) {
-			final X result = function.apply( iterator.next() );
-			if ( result != null ) {
+		for (T t : internalStack) {
+			final X result = function.apply(t);
+			if (result != null) {
 				return result;
 			}
 		}

@@ -45,8 +45,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
 
-import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
-
 /**
  * @author Andrea Boriero
  */
@@ -78,7 +76,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private ArrayList<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
 	private HashMap<Class<?>, ConverterDescriptor> attributeConverterDescriptorMap;
 	private ArrayList<CacheRegionDefinition> cacheRegionDefinitions;
-	private ManagedTypeRepresentationResolver representationStrategySelector;
+	private final ManagedTypeRepresentationResolver representationStrategySelector;
 
 	public BootstrapContextImpl(
 			StandardServiceRegistry serviceRegistry,

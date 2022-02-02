@@ -13,6 +13,7 @@ import org.hibernate.collection.spi.PersistentList;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
@@ -68,7 +69,11 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer {
 			CollectionKey collectionKey,
 			List<Object> loadingState,
 			RowProcessingState rowProcessingState) {
-		int index = listIndexAssembler.assemble( rowProcessingState );
+		final Integer indexValue = listIndexAssembler.assemble( rowProcessingState );
+		if ( indexValue == null ) {
+			throw new SemanticException( "Illegal null index value encountered while reading: " + getCollectionAttributeMapping().getNavigableRole() );
+		}
+		int index = indexValue;
 
 		if ( listIndexBase != 0 ) {
 			index -= listIndexBase;

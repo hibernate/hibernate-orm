@@ -56,28 +56,16 @@ public enum SchemaAutoTooling {
 			return null;
 		}
 		configurationValue = configurationValue.trim();
-		if ( configurationValue.isEmpty() || NONE.externalForm.equals( configurationValue ) ) {
+		if ( configurationValue.isEmpty()
+				|| NONE.externalForm.equals( configurationValue ) ) {
 			return null;
 		}
-		else if ( VALIDATE.externalForm.equals( configurationValue ) ) {
-			return VALIDATE;
-		}
-		else if ( UPDATE.externalForm.equals( configurationValue ) ) {
-			return UPDATE;
-		}
-		else if ( CREATE.externalForm.equals( configurationValue ) ) {
-			return CREATE;
-		}
-		else if ( CREATE_DROP.externalForm.equals( configurationValue ) ) {
-			return CREATE_DROP;
-		}
-		else if ( CREATE_ONLY.externalForm.equals( configurationValue ) ) {
-			return CREATE_ONLY;
-		}
-		else if ( DROP.externalForm.equals( configurationValue ) ) {
-			return DROP;
-		}
 		else {
+			for ( SchemaAutoTooling sat : values() ) {
+				if ( sat.externalForm.equals( configurationValue ) ) {
+					return sat;
+				}
+			}
 			throw new HibernateException(
 					"Unrecognized " + AvailableSettings.HBM2DDL_AUTO + " value: '" + configurationValue
 							+ "'.  Supported values include 'create', 'create-drop', 'create-only', 'drop', 'update', 'none' and 'validate'."

@@ -25,7 +25,7 @@ public class PostgisPG95Dialect extends PostgreSQL95Dialect implements PGSpatial
 	public PostgisPG95Dialect() {
 		super();
 		registerColumnType(
-				PGGeometryTypeDescriptor.INSTANCE_WKB_1.getSqlType(),
+				PGGeometryTypeDescriptor.INSTANCE_WKB_2.getSqlType(),
 				"GEOMETRY"
 		);
 		for ( Map.Entry<String, SQLFunction> entry : functionsToRegister() ) {

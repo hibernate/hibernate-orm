@@ -260,42 +260,6 @@ plural attribute classification
 See https://docs.jboss.org/hibernate/orm/6.0/userguide/html_single/Hibernate_User_Guide.html#collection-type-reg-ann
 for details of using `@CollectionTypeRegistration`
 
-
-[[collection-list-as-bag]]
-==== List as BAG
-
-Historically, Hibernate treated `List` attributes with no explicit ordering details using its
-BAG semantics.
-
-```
-@ElementCollection
-List<String> names;
-```
-
-
-
-This is not the most natural decision and is rooted in the original annotation
-support being too closely related to the `hbm.xml` mapping format.
-
-Starting in 6.0, Hibernate now makes the more natural interpretation of such a mapping using its
-LIST semantics.  It treats the above example with an implicit an `@OrderColumn`.  The above mapping
-is now equivalent to
-
-```
-@ElementCollection
-@OrderColumn(...)
-List<String> names;
-```
-
-A new "compatibility flag" has been added to allow continuing with the legacy behavior:
-
-```
-hibernate.mapping.default_list_semantics=bag
-```
-
-The same can be achieved for specific attributes using the new `@Bag` annotation as well.
-
-
 === Misc
 
 * The default type for `Duration` was changed to `NUMERIC` which could lead to schema validation errors

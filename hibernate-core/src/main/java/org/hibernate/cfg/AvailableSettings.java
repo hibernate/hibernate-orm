@@ -812,19 +812,13 @@ public interface AvailableSettings {
 	 * Hibernate detects a plural attribute typed as {@link java.util.List} with no explicit
 	 * list index configuration.
 	 * <p/>
-	 * Historically Hibernate interpreted this using
-	 * {@linkplain  org.hibernate.metamodel.CollectionClassification#BAG BAG} semantics.
-	 * Starting in 6.0, Hibernate now interprets this situation using
-	 * {@linkplain  org.hibernate.metamodel.CollectionClassification#LIST LIST} semantics.
-	 * <p/>
 	 * Accepts any of:
 	 * <ul>
 	 *     <li>an instance of {@code CollectionClassification}
-	 *     <li>the (case insensitive) name of a {@code CollectionClassification} (bag e.g.)
+	 *     <li>the (case insensitive) name of a {@code CollectionClassification} (list e.g.)
 	 *     <li>a {@link Class} representing either {@link java.util.List} or {@link java.util.Collection}
 	 * </ul>
 	 * <p/>
-	 * Backwards compatibility can be achieved by specifying `hibernate.mapping.default_list_semantics=bag` e.g.
 	 *
 	 * @since 6.0
 	 */

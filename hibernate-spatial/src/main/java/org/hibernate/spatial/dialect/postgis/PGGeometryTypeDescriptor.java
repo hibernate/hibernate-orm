@@ -53,10 +53,11 @@ public class PGGeometryTypeDescriptor implements SqlTypeDescriptor {
 		if ( object == null ) {
 			return null;
 		}
-		ByteBuffer buffer = null;
+		ByteBuffer buffer;
 		if ( object instanceof PGobject ) {
 			String pgValue = ( (PGobject) object ).getValue();
 
+			assert pgValue != null;
 			if ( pgValue.startsWith( "00" ) || pgValue.startsWith( "01" ) ) {
 				//we have a WKB because this pgValue starts with the bit-order byte
 				buffer = ByteBuffer.from( pgValue );
@@ -91,7 +92,7 @@ public class PGGeometryTypeDescriptor implements SqlTypeDescriptor {
 		return new ValueBinder<X>() {
 
 			@Override
-			public final void bind(PreparedStatement st, X value, int index, WrapperOptions options)
+			public void bind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
 				if ( value == null ) {
 					st.setNull( index, Types.OTHER );
@@ -102,7 +103,7 @@ public class PGGeometryTypeDescriptor implements SqlTypeDescriptor {
 			}
 
 			@Override
-			public final void bind(CallableStatement st, X value, String name, WrapperOptions options)
+			public void bind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
 				if ( value == null ) {
 					st.setNull( name, Types.OTHER );
@@ -112,21 +113,21 @@ public class PGGeometryTypeDescriptor implements SqlTypeDescriptor {
 				}
 			}
 
-			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
+			private void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
 				final PGobject obj = toPGobject( value, options );
 				st.setObject( index, obj );
 			}
 
-			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+			private void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
 				final PGobject obj = toPGobject( value, options );
 				st.setObject( name, obj );
 			}
 
 			private PGobject toPGobject(X value, WrapperOptions options) throws SQLException {
-				final WkbEncoder encoder = Wkb.newEncoder( Wkb.Dialect.POSTGIS_EWKB_1 );
-				final Geometry geometry = javaTypeDescriptor.unwrap( value, Geometry.class, options );
+				final WkbEncoder encoder = Wkb.newEncoder( wkbDialect );
+				final Geometry<?> geometry = javaTypeDescriptor.unwrap( value, Geometry.class, options );
 				final String hexString = encoder.encode( geometry, ByteOrder.NDR ).toString();
 				final PGobject obj = new PGobject();
 				obj.setType( "geometry" );

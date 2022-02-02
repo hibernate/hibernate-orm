@@ -19,6 +19,7 @@ import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * Created by Karel Maesen, Geovise BVBA on 29/10/16.
@@ -35,12 +36,19 @@ public class PostgisSupport implements SpatialDialect, Serializable {
 		postgisFunctions = new PostgisFunctions();
 	}
 
-	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		typeContributions.contributeType( new GeolatteGeometryType( PGGeometryTypeDescriptor.INSTANCE_WKB_1 ) );
-		typeContributions.contributeType( new JTSGeometryType( PGGeometryTypeDescriptor.INSTANCE_WKB_1 ) );
+	public void contributeTypes(
+			TypeContributions typeContributions,
+			ServiceRegistry serviceRegistry,
+			SqlTypeDescriptor wkbType) {
+		typeContributions.contributeType( new GeolatteGeometryType( wkbType ) );
+		typeContributions.contributeType( new JTSGeometryType( wkbType ) );
 
 		typeContributions.contributeJavaTypeDescriptor( GeolatteGeometryJavaTypeDescriptor.INSTANCE );
 		typeContributions.contributeJavaTypeDescriptor( JTSGeometryJavaTypeDescriptor.INSTANCE );
+	}
+
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		contributeTypes( typeContributions, serviceRegistry, PGGeometryTypeDescriptor.INSTANCE_WKB_2 );
 	}
 
 	public SpatialFunctionsRegistry functionsToRegister() {
@@ -112,17 +120,13 @@ public class PostgisSupport implements SpatialDialect, Serializable {
 	 */
 	@Override
 	public String getSpatialAggregateSQL(String columnName, int aggregation) {
-		switch ( aggregation ) {
-			case SpatialAggregate.EXTENT:
-				final StringBuilder stbuf = new StringBuilder();
-				stbuf.append( "st_extent(" ).append( columnName ).append( ")::geometry" );
-				return stbuf.toString();
-			default:
-				throw new IllegalArgumentException(
-						"Aggregation of type "
-								+ aggregation + " are not supported by this dialect"
-				);
+		if ( aggregation == SpatialAggregate.EXTENT ) {
+			return "st_extent(" + columnName + ")::geometry";
 		}
+		throw new IllegalArgumentException(
+				"Aggregation of type "
+						+ aggregation + " are not supported by this dialect"
+		);
 	}
 
 	/**

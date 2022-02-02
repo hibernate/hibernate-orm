@@ -31,6 +31,7 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.QueryProducer;
@@ -1454,7 +1455,9 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		});
 	}
 
-	@Test @SkipForDialect(DerbyDialect.class)
+	@Test
+	@SkipForDialect(DerbyDialect.class)
+	@SkipForDialect(SybaseASEDialect.class)
 	public void test_hql_aggregate_functions_within_group_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-aggregate-functions-within-group-example[]

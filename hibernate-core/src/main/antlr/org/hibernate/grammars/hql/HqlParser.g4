@@ -356,7 +356,7 @@ simplePathElement
  * any path-like structure.  Generally, the path is semantically
  * interpreted by the consumer of the parse-tree.  However, there
  * are certain cases where we can syntactically recognize a navigable
- * path; see `syntacticNavigablePath` rule
+ * path; see 'syntacticNavigablePath' rule
  */
 path
 	: syntacticDomainPath pathContinuation?
@@ -475,7 +475,7 @@ orderByClause
 	;
 
 /**
- * Specialized rule for ordered Map and Set `@OrderBy` handling
+ * Specialized rule for ordered Map and Set '@OrderBy' handling
  */
 orderByFragment
 	: sortSpecification (COMMA sortSpecification)*
@@ -623,7 +623,7 @@ comparisonOperator
 /**
  * Any right operand of the 'in' operator
  *
- * A list of values, a parameter (for a parameterized list of values), a subquery, or an `elements()` or `indices()` function
+ * A list of values, a parameter (for a parameterized list of values), a subquery, or an 'elements()' or 'indices()' function
  */
 inList
 	: (ELEMENTS|INDICES) LEFT_PAREN simplePath RIGHT_PAREN				# PersistentCollectionReferenceInList
@@ -1038,7 +1038,7 @@ collectionFunctionMisuse
 	;
 
 /**
- * The special `every()`, `all()`, `any()` and `some()` functions defined by HQL
+ * The special 'every()', 'all()', 'any()' and 'some()' functions defined by HQL
  *
  * May be applied to a subquery or collection reference, or may occur as an aggregate function in the 'select' clause
  */
@@ -1049,7 +1049,7 @@ aggregateFunction
 	;
 
 /**
- * The functions `every()` and `all()` are synonyms
+ * The functions 'every()' and 'all()' are synonyms
  */
 everyFunction
 	: (EVERY|ALL) LEFT_PAREN predicate RIGHT_PAREN filterClause?
@@ -1058,7 +1058,7 @@ everyFunction
 	;
 
 /**
- * The functions `any()` and `some()` are synonyms
+ * The functions 'any()' and 'some()' are synonyms
  */
 anyFunction
 	: (ANY|SOME) LEFT_PAREN predicate RIGHT_PAREN filterClause?
@@ -1067,14 +1067,14 @@ anyFunction
 	;
 
 /**
- * The `listagg()` ordered set-aggregate function
+ * The 'listagg()' ordered set-aggregate function
  */
 listaggFunction
 	: LISTAGG LEFT_PAREN DISTINCT? expressionOrPredicate COMMA expressionOrPredicate onOverflowClause? RIGHT_PAREN withinGroupClause? filterClause?
 	;
 
 /**
- * A `on overflow` clause: what to do when the text data type used for `listagg` overflows
+ * A 'on overflow' clause: what to do when the text data type used for 'listagg' overflows
  */
 onOverflowClause
 	: ON OVERFLOW (ERROR | (TRUNCATE expression? (WITH|WITHOUT) COUNT))
@@ -1138,7 +1138,7 @@ castTarget
 /**
  * The name of the target type in a typecast
  *
- * Like the `entityName` rule, we have a specialized dotIdentifierSequence rule
+ * Like the 'entityName' rule, we have a specialized dotIdentifierSequence rule
  */
 castTargetType
 	returns [String fullTargetName]
@@ -1385,7 +1385,7 @@ rollup
 /**
  * Support for "soft" keywords which may be used as identifiers
  *
- * The `identifier` rule is used to provide "keyword as identifier" handling.
+ * The 'identifier' rule is used to provide "keyword as identifier" handling.
  *
  * The lexer hands us recognized keywords using their specific tokens.  This is important
  * for the recognition of sqm structure, especially in terms of performance!

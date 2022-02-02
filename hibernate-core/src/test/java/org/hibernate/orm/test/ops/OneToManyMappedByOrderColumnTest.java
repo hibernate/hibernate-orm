@@ -6,20 +6,19 @@
  */
 package org.hibernate.orm.test.ops;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
+import org.hibernate.query.SemanticException;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -27,14 +26,18 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderColumn;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 
-@SessionFactory(generateStatistics = true)
+@SessionFactory
 @DomainModel(annotatedClasses = {
-		OneToManyMappedByCascadeDeleteTest.Parent.class,
-		OneToManyMappedByCascadeDeleteTest.Child.class
+		OneToManyMappedByOrderColumnTest.Parent.class,
+		OneToManyMappedByOrderColumnTest.Child.class
 })
-public class OneToManyMappedByCascadeDeleteTest {
+public class OneToManyMappedByOrderColumnTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
@@ -45,7 +48,7 @@ public class OneToManyMappedByCascadeDeleteTest {
 	}
 
 	@Test
-	public void testRemoveCascadeDelete(SessionFactoryScope scope) {
+	public void testReadNullIndex(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			Parent parent = new Parent();
 			parent.setId( 1 );
@@ -55,23 +58,17 @@ public class OneToManyMappedByCascadeDeleteTest {
 			child.setId( 2 );
 			child.setParent( parent );
 			s.persist( child );
-
-			parent.children.add( child );
 		} );
-
-		getStatistics( scope ).clear();
 
 		scope.inTransaction( s -> {
-			Parent parent = s.get( Parent.class, 1 );
-			s.remove( parent );
+			try {
+				s.get( Parent.class, 1 );
+				Assertions.fail( "Expected to fail because list index is null" );
+			}
+			catch (SemanticException ex) {
+				Assertions.assertTrue( ex.getMessage().contains( "children" ) );
+			}
 		} );
-
-		int deletes = (int) getStatistics( scope ).getEntityDeleteCount();
-		assertThat( "unexpected delete counts", deletes, is( 2 ) );
-	}
-
-	private StatisticsImplementor getStatistics(SessionFactoryScope scope) {
-		return scope.getSessionFactory().getStatistics();
 	}
 
 	@Entity(name = "parent")
@@ -79,7 +76,8 @@ public class OneToManyMappedByCascadeDeleteTest {
 
 		@Id
 		private Integer id;
-		@OneToMany(targetEntity = Child.class, mappedBy = "parent", fetch = FetchType.LAZY)
+		@OrderColumn(name = "list_idx")
+		@OneToMany(targetEntity = Child.class, mappedBy = "parent", fetch = FetchType.EAGER)
 		@Cascade(CascadeType.DELETE)
 		private List<Child> children = new ArrayList<>();
 

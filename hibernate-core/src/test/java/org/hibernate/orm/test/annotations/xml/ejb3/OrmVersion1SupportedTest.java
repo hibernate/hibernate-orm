@@ -10,7 +10,6 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.xml.ErrorLogger;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -36,7 +35,7 @@ public class OrmVersion1SupportedTest extends BaseCoreFunctionalTestCase {
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
 			Logger.getMessageLogger(
 					CoreMessageLogger.class,
-					ErrorLogger.class.getName()
+					"org.hibernate.internal.util.xml.ErrorLogger"
 			)
 		);
 

@@ -10,7 +10,6 @@ import org.hibernate.InvalidMappingException;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.internal.util.xml.UnsupportedOrmXsdVersionException;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -29,8 +28,6 @@ public class NonExistentOrmVersionTest extends BaseUnitTestCase {
 			fail( "Expecting failure due to unsupported xsd version" );
 		}
 		catch ( InvalidMappingException expected ) {
-		}
-		catch ( UnsupportedOrmXsdVersionException expected ) {
 		}
 	}
 }

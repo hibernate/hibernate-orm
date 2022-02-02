@@ -1454,6 +1454,22 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		});
 	}
 
+	@Test @SkipForDialect(DerbyDialect.class)
+	public void test_hql_aggregate_functions_within_group_example() {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			//tag::hql-aggregate-functions-within-group-example[]
+
+			List<String> callCount = entityManager.createQuery(
+				"select listagg(p.number, ', ') within group (order by p.type,p.number) " +
+				"from Phone p " +
+				"group by p.person",
+				String.class)
+			.getResultList();
+			//end::hql-aggregate-functions-within-group-example[]
+			assertNotNull(callCount.get(0));
+		});
+	}
+
 	@Test
 	@SkipForDialect(value = DerbyDialect.class, comment = "See https://issues.apache.org/jira/browse/DERBY-2072")
 	public void test_hql_concat_function_example() {

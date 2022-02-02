@@ -1915,6 +1915,36 @@ include::{sourcedir}/HQLTest.java[tags=hql-aggregate-functions-filter-example]
 ----
 ====
 
+[[hql-aggregate-functions-orderedset]]
+==== Ordered set aggregate functions
+
+_Ordered set aggregate functions_ are special aggregate functions that have:
+
+- not only an optional filter clause, but also
+- a _within group clause_, a mini-`order by` clause.
+
+IMPORTANT: Ordered set aggregate functions are not available on every database.
+
+The most widely-supported ordered set aggregate function is one which builds a string by concatenating the values within a group.
+This function has different names on different databases, but HQL abstracts these differences, and&mdash;following ANSI SQL&mdash;calls it `listagg()`.
+
+[[hql-aggregate-functions-within-group-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-aggregate-functions-within-group-example]
+----
+====
+
+The following ordered set aggregate functions are also available on many platforms:
+
+|===
+| Type | functions
+
+| Inverse distribution functions | `mode()`, `percentile_cont()`, `percentile_disc()`
+| Hypothetical set functions | `rank()`, `dense_rank()`, `percent_rank()`, `cume_dist()`
+|===
+
 [[hql-where-clause]]
 === Restriction: `where`
 

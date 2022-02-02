@@ -15,6 +15,7 @@ import org.hibernate.metamodel.CollectionClassification;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.ImplicitListAsListProvider;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.Test;
@@ -35,7 +36,7 @@ import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 @ServiceRegistry(
 		settingProviders = @SettingProvider(
 				settingName = DEFAULT_LIST_SEMANTICS,
-				provider = ImplicitListAsListSemanticsTests.ImplicitListAsListProvider.class )
+				provider = ImplicitListAsListProvider.class )
 )
 @DomainModel( annotatedClasses = ImplicitListAsListSemanticsTests.AnEntity.class )
 public class ImplicitListAsListSemanticsTests {
@@ -98,13 +99,6 @@ public class ImplicitListAsListSemanticsTests {
 
 		public void setName(String name) {
 			this.name = name;
-		}
-	}
-
-	public static class ImplicitListAsListProvider implements SettingProvider.Provider<CollectionClassification> {
-		@Override
-		public CollectionClassification getSetting() {
-			return CollectionClassification.LIST;
 		}
 	}
 }

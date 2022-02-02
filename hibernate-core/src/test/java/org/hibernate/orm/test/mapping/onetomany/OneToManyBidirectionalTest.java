@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.mapping.onetomany;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -616,8 +617,8 @@ public class OneToManyBidirectionalTest {
 			assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 			assertTrue( Hibernate.isInitialized( order.getLineItems() ) );
 
-
-			assertThat( order.getLineItems().size(), is( 2 ) );
+			// With BAG semantics, the list will contain duplicates, so filter that
+			assertThat( new HashSet<>( order.getLineItems()).size(), is( 2 ) );
 		} );
 	}
 

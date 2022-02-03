@@ -7,14 +7,12 @@
 package org.hibernate.sql.results.graph.entity;
 
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.entity.internal.EntityAssembler;
 
 /**
@@ -25,11 +23,11 @@ import org.hibernate.sql.results.graph.entity.internal.EntityAssembler;
 public abstract class AbstractNonLazyEntityFetch extends AbstractFetchParent implements EntityFetch {
 	private final FetchParent fetchParent;
 	private final boolean nullable;
-	private final EntityValuedModelPart referencedModelPart;
+	private final EntityValuedFetchable referencedModelPart;
 
 	public AbstractNonLazyEntityFetch(
 			FetchParent fetchParent,
-			EntityValuedModelPart fetchedPart,
+			EntityValuedFetchable fetchedPart,
 			NavigablePath navigablePath,
 			boolean nullable) {
 		super( fetchedPart.getEntityMappingType(), navigablePath );
@@ -39,8 +37,18 @@ public abstract class AbstractNonLazyEntityFetch extends AbstractFetchParent imp
 	}
 
 	@Override
-	public EntityMappingType getReferencedMappingType() {
-		return getEntityValuedModelPart().getEntityMappingType();
+	public EntityValuedFetchable getEntityValuedModelPart() {
+		return referencedModelPart;
+	}
+
+	@Override
+	public EntityValuedFetchable getReferencedModePart() {
+		return getEntityValuedModelPart();
+	}
+
+	@Override
+	public EntityValuedFetchable getReferencedMappingType() {
+		return getEntityValuedModelPart();
 	}
 
 	@Override
@@ -49,13 +57,13 @@ public abstract class AbstractNonLazyEntityFetch extends AbstractFetchParent imp
 	}
 
 	@Override
-	public FetchParent getFetchParent() {
-		return fetchParent;
+	public EntityValuedFetchable getFetchedMapping() {
+		return getEntityValuedModelPart();
 	}
 
 	@Override
-	public Fetchable getFetchedMapping() {
-		return (Fetchable) getEntityValuedModelPart();
+	public FetchParent getFetchParent() {
+		return fetchParent;
 	}
 
 	@Override
@@ -69,9 +77,4 @@ public abstract class AbstractNonLazyEntityFetch extends AbstractFetchParent imp
 	protected abstract EntityInitializer getEntityInitializer(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState);
-
-	@Override
-	public EntityValuedModelPart getEntityValuedModelPart() {
-		return referencedModelPart;
-	}
 }

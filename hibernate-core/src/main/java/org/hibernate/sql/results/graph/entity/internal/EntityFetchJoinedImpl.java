@@ -51,7 +51,7 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 			AssemblerCreationState creationState) {
 		return (EntityInitializer) creationState.resolveInitializer(
 				getNavigablePath(),
-				getEntityValuedModelPart(),
+				getReferencedModePart(),
 				() -> new EntityJoinedFetchInitializer(
 						entityResult,
 						getReferencedModePart(),

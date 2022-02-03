@@ -29,6 +29,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAstHelper;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.Statement;
@@ -57,6 +58,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 
 	private final EntityMappingType mutatingEntityDescriptor;
 	private final TableGroup mutatingTableGroup;
+	private Predicate discriminatorPredicate;
 
 	private SqmParameterResolutionConsumer parameterResolutionConsumer;
 
@@ -115,9 +117,9 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 				true,
 				sqmRoot.getNavigablePath(),
 				sourceAlias,
-				// We don't care about the discriminator predicate,
-				// but we pass non-null to ensure table reference join predicates are generated
-				() -> predicate -> {},
+				() -> predicate -> {
+					this.discriminatorPredicate = predicate;
+				},
 				this,
 				creationContext.getSessionFactory() );
 
@@ -220,7 +222,10 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 
 		pushProcessingState( restrictionProcessingState, getFromClauseIndex() );
 		try {
-			return (Predicate) sqmWhereClause.getPredicate().accept( this );
+			return SqlAstHelper.combinePredicates(
+					(Predicate) sqmWhereClause.getPredicate().accept( this ),
+					discriminatorPredicate
+			);
 		}
 		finally {
 			popProcessingStateStack();

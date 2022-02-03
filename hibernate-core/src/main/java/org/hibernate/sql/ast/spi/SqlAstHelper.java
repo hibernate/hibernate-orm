@@ -26,6 +26,9 @@ public class SqlAstHelper {
 		if ( baseRestriction == null ) {
 			return incomingRestriction;
 		}
+		if ( incomingRestriction == null ) {
+			return baseRestriction;
+		}
 
 		final Junction combinedPredicate;
 
@@ -45,6 +48,7 @@ public class SqlAstHelper {
 		}
 		else {
 			combinedPredicate = new Junction( Junction.Nature.CONJUNCTION );
+			combinedPredicate.add( baseRestriction );
 		}
 
 		combinedPredicate.add( incomingRestriction );

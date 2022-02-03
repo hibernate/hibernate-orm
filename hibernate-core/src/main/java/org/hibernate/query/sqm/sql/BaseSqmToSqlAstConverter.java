@@ -4040,25 +4040,43 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else if ( expressible instanceof EntityValuedModelPart ) {
 			final EntityValuedModelPart entityValuedModelPart = (EntityValuedModelPart) expressible;
-			final EntityIdentifierMapping identifierMapping = entityValuedModelPart.getEntityMappingType()
-					.getIdentifierMapping();
-			final Object associationKey = identifierMapping.getIdentifier( literal.getLiteralValue() );
-			if ( identifierMapping instanceof BasicValuedMapping ) {
+			final Object associationKey;
+			final ModelPart associationKeyPart;
+			if ( entityValuedModelPart instanceof Association ) {
+				final Association association = (Association) entityValuedModelPart;
+				final ForeignKeyDescriptor foreignKeyDescriptor = association.getForeignKeyDescriptor();
+				associationKey = foreignKeyDescriptor.getAssociationKeyFromSide(
+						literal.getLiteralValue(),
+						association.getSideNature().inverse(),
+						null
+				);
+				associationKeyPart = foreignKeyDescriptor.getPart( association.getSideNature() );
+			}
+			else {
+				final EntityIdentifierMapping identifierMapping = entityValuedModelPart.getEntityMappingType()
+						.getIdentifierMapping();
+				associationKeyPart = identifierMapping;
+				associationKey = identifierMapping.getIdentifier(
+						literal.getLiteralValue(),
+						null
+				);
+			}
+			if ( associationKeyPart instanceof BasicValuedMapping ) {
 				return new QueryLiteral<>(
 						associationKey,
-						(BasicValuedMapping) identifierMapping
+						(BasicValuedMapping) associationKeyPart
 				);
 			}
 			else {
-				final List<Expression> list = new ArrayList<>( identifierMapping.getJdbcTypeCount() );
-				identifierMapping.forEachJdbcValue(
+				final List<Expression> list = new ArrayList<>( associationKeyPart.getJdbcTypeCount() );
+				associationKeyPart.forEachJdbcValue(
 						associationKey,
 						null,
 						(selectionIndex, value, jdbcMapping)
 								-> list.add( new QueryLiteral<>( value, (BasicValuedMapping) jdbcMapping ) ),
 						null
 				);
-				return new SqlTuple( list, identifierMapping );
+				return new SqlTuple( list, associationKeyPart );
 			}
 		}
 		else {

@@ -6,9 +6,14 @@
  */
 package org.hibernate.resource.beans.internal;
 
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
 import org.hibernate.resource.beans.container.internal.ContainerManagedLifecycleStrategy;
 import org.hibernate.resource.beans.container.internal.JpaCompliantLifecycleStrategy;
+import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * @author Steve Ebersole
@@ -28,6 +33,21 @@ public class Helper {
 
 	public String determineBeanCacheKey(String name, Class<?> beanType) {
 		return beanType.getName() + ':' + name;
+	}
+
+	public boolean shouldIgnoreBeanContainer(ServiceRegistry serviceRegistry) {
+		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+		final Object beanManagerRef = configService.getSettings().get( AvailableSettings.JAKARTA_CDI_BEAN_MANAGER );
+
+		if ( beanManagerRef instanceof ExtendedBeanManager ) {
+			return true;
+		}
+
+		if ( configService.getSetting( AvailableSettings.DELAY_CDI_ACCESS, StandardConverters.BOOLEAN, false ) ) {
+			return true;
+		}
+
+		return false;
 	}
 
 	@SuppressWarnings("unused")

@@ -45,6 +45,7 @@ import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
+import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
@@ -76,22 +77,7 @@ public class StandardIdentifierGeneratorFactory
 	 * Constructs a new factory
 	 */
 	public StandardIdentifierGeneratorFactory(ServiceRegistry serviceRegistry) {
-		this( serviceRegistry, shouldIgnoreBeanContainer( serviceRegistry ) );
-	}
-
-	private static boolean shouldIgnoreBeanContainer(ServiceRegistry serviceRegistry) {
-		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
-		final Object beanManagerRef = configService.getSettings().get( AvailableSettings.JAKARTA_CDI_BEAN_MANAGER );
-
-		if ( beanManagerRef instanceof ExtendedBeanManager ) {
-			return true;
-		}
-
-		if ( configService.getSetting( AvailableSettings.DELAY_CDI_ACCESS, StandardConverters.BOOLEAN, false ) ) {
-			return true;
-		}
-
-		return false;
+		this( serviceRegistry, Helper.INSTANCE.shouldIgnoreBeanContainer( serviceRegistry ) );
 	}
 
 	/**

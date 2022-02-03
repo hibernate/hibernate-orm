@@ -16,12 +16,14 @@ import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.boot.model.process.internal.UserTypeResolution;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -144,21 +146,8 @@ public class TypeDefinition implements Serializable {
 
 		// support for AttributeConverter would be nice too
 		if ( isKnownType ) {
-			final ManagedBean typeBean;
-			if ( name != null ) {
-				typeBean = bootstrapContext
-						.getServiceRegistry()
-						.getService( ManagedBeanRegistry.class )
-						.getBean( name, typeImplementorClass, instanceProducer );
-			}
-			else {
-				typeBean = bootstrapContext
-						.getServiceRegistry()
-						.getService( ManagedBeanRegistry.class )
-						.getBean( typeImplementorClass, instanceProducer );
-			}
-
-			final Object typeInstance = typeBean.getBeanInstance();
+			final Object typeInstance = instantiateType( bootstrapContext.getServiceRegistry(),
+					name, typeImplementorClass, instanceProducer );
 
 			if ( typeInstance instanceof TypeConfigurationAware ) {
 				( (TypeConfigurationAware) typeInstance ).setTypeConfiguration( typeConfiguration );
@@ -286,6 +275,32 @@ public class TypeDefinition implements Serializable {
 		throw new IllegalArgumentException(
 				"Named type [" + typeImplementorClass + "] did not implement BasicType nor UserType"
 		);
+	}
+
+	private static Object instantiateType(StandardServiceRegistry serviceRegistry,
+			String name, Class<?> typeImplementorClass,
+			BeanInstanceProducer instanceProducer) {
+		if ( Helper.INSTANCE.shouldIgnoreBeanContainer( serviceRegistry ) ) {
+			if ( name != null ) {
+				return instanceProducer.produceBeanInstance( name, typeImplementorClass );
+			}
+			else {
+				return instanceProducer.produceBeanInstance( typeImplementorClass );
+			}
+		}
+		else {
+			final ManagedBean typeBean;
+			if ( name != null ) {
+				typeBean = serviceRegistry.getService( ManagedBeanRegistry.class )
+						.getBean( name, typeImplementorClass, instanceProducer );
+			}
+			else {
+				typeBean = serviceRegistry.getService( ManagedBeanRegistry.class )
+						.getBean( typeImplementorClass, instanceProducer );
+			}
+
+			return typeBean.getBeanInstance();
+		}
 	}
 
 	public static BasicValue.Resolution<?> createLocalResolution(

@@ -68,10 +68,10 @@ public class TableBasedDeleteHandler
 		return new RestrictedDeleteExecutionDelegate(
 				getEntityDescriptor(),
 				idTable,
-				afterUseAction, getSqmDeleteOrUpdateStatement(),
+				afterUseAction,
+				getSqmDeleteOrUpdateStatement(),
 				domainParameterXref,
 				sessionUidAccess,
-
 				executionContext.getQueryOptions(),
 				executionContext.getSession().getLoadQueryInfluencers(),
 				executionContext.getQueryParameterBindings(),

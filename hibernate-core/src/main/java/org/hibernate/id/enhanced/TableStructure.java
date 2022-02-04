@@ -55,6 +55,8 @@ public class TableStructure implements DatabaseStructure {
 	private final Class numberType;
 
 	private QualifiedName physicalTableName;
+	@Deprecated
+	private String formattedTableNameForLegacyGetter;
 	private String valueColumnNameText;
 
 	private String selectQuery;
@@ -76,6 +78,12 @@ public class TableStructure implements DatabaseStructure {
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
 		this.numberType = numberType;
+	}
+
+	@Override
+	@Deprecated
+	public String getName() {
+		return formattedTableNameForLegacyGetter;
 	}
 
 	@Override
@@ -246,6 +254,9 @@ public class TableStructure implements DatabaseStructure {
 			tableCreated = true;
 		}
 		this.physicalTableName = table.getQualifiedTableName();
+
+		this.formattedTableNameForLegacyGetter = jdbcEnvironment.getQualifiedObjectNameFormatter()
+				.format( physicalTableName, dialect );
 
 		valueColumnNameText = logicalValueColumnNameIdentifier.render( dialect );
 		if ( tableCreated ) {

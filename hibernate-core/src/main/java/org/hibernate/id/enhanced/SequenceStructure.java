@@ -43,6 +43,8 @@ public class SequenceStructure implements DatabaseStructure {
 	private String sql;
 	private boolean applyIncrementSizeToSourceValues;
 	private int accessCounter;
+	@Deprecated
+	private String formattedSequenceNameForLegacyGetter;
 	protected QualifiedName physicalSequenceName;
 
 	public SequenceStructure(
@@ -56,6 +58,12 @@ public class SequenceStructure implements DatabaseStructure {
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
 		this.numberType = numberType;
+	}
+
+	@Override
+	@Deprecated
+	public String getName() {
+		return formattedSequenceNameForLegacyGetter;
 	}
 
 	@Override
@@ -181,5 +189,9 @@ public class SequenceStructure implements DatabaseStructure {
 		}
 
 		this.physicalSequenceName = sequence.getName();
+
+		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
+		this.formattedSequenceNameForLegacyGetter = jdbcEnvironment.getQualifiedObjectNameFormatter()
+				.format( physicalSequenceName, jdbcEnvironment.getDialect() );
 	}
 }

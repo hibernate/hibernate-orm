@@ -9,11 +9,8 @@ package org.hibernate.orm.test.query.hql;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.DerbyDialect;
 
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -94,14 +91,6 @@ public class FunctionTests {
 	}
 
 	@Test
-	@RequiresDialect(H2Dialect.class)
-	@RequiresDialect(HSQLDialect.class)
-	@RequiresDialect(DerbyDialect.class)
-	@RequiresDialect(MySQLDialect.class)
-	@RequiresDialect(SybaseDialect.class)
-	@RequiresDialect(MariaDBDialect.class)
-	@RequiresDialect(TiDBDialect.class)
-	// it's failing on the other dialects due to a bug in query translator
 	public void testMaxMinSumIndexElement(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -133,14 +122,6 @@ public class FunctionTests {
 	}
 
 	@Test
-	@RequiresDialect(H2Dialect.class)
-	@RequiresDialect(HSQLDialect.class)
-	@RequiresDialect(DerbyDialect.class)
-	@RequiresDialect(MySQLDialect.class)
-	@RequiresDialect(SybaseDialect.class)
-	@RequiresDialect(MariaDBDialect.class)
-	@RequiresDialect(TiDBDialect.class)
-	// it's failing on the other dialects due to a bug in query translator
 	public void testMaxindexMaxelement(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

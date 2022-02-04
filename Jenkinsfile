@@ -16,14 +16,6 @@ import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 @Field final String NODE_PATTERN_BASE = 'Worker&&Containers'
 @Field List<BuildEnvironment> environments
 
-// Cancel previous runs automatically by reaching milestones
-// See https://issues.jenkins.io/browse/JENKINS-43353
-def buildNumber = BUILD_NUMBER as int;
-if (buildNumber > 1) {
-	milestone(buildNumber - 1)
-}
-milestone(buildNumber)
-
 this.helper = new JobHelper(this)
 
 helper.runWithNotification {
@@ -63,6 +55,9 @@ stage('Configure') {
 			buildDiscarder(
 					logRotator(daysToKeepStr: '90')
 			),
+			// If two builds are about the same branch or pull request,
+			// the older one will be aborted when the newer one starts.
+			disableConcurrentBuilds(abortPrevious: true),
 			helper.generateNotificationProperty()
 	])
 }

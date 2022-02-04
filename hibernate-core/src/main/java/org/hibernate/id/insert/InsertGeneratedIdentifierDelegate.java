@@ -26,10 +26,24 @@ public interface InsertGeneratedIdentifierDelegate {
 	 * Build a {@link org.hibernate.sql.Insert} specific to the delegate's mode
 	 * of handling generated key values.
 	 *
+	 * @return The insert object.
+	 * @deprecated Implement {@link #prepareIdentifierGeneratingInsert(SqlStringGenerationContext)} instead.
+	 */
+	@Deprecated
+	default IdentifierGeneratingInsert prepareIdentifierGeneratingInsert() {
+		throw new IllegalStateException("prepareIdentifierGeneratingInsert(...) was not implemented!");
+	}
+
+	/**
+	 * Build a {@link org.hibernate.sql.Insert} specific to the delegate's mode
+	 * of handling generated key values.
+	 *
 	 * @param context A context to help generate SQL strings
 	 * @return The insert object.
 	 */
-	IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context);
+	default IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context) {
+		return prepareIdentifierGeneratingInsert();
+	}
 
 	/**
 	 * Perform the indicated insert SQL statement and determine the identifier value

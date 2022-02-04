@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model.relational.internal;
 
+import java.sql.SQLException;
 import java.util.Map;
 
 import org.hibernate.boot.model.naming.Identifier;
@@ -17,13 +18,18 @@ import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.internal.QualifiedObjectNameFormatterStandardImpl;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 
+import org.jboss.logging.Logger;
+
 public class SqlStringGenerationContextImpl
 		implements SqlStringGenerationContext {
+	private static final Logger log = Logger.getLogger( SqlStringGenerationContextImpl.class );
 
 	/**
 	 * @param jdbcEnvironment The JDBC environment, to extract the dialect, identifier helper, etc.
@@ -67,6 +73,37 @@ public class SqlStringGenerationContextImpl
 		return new SqlStringGenerationContextImpl( jdbcEnvironment, actualDefaultCatalog, actualDefaultSchema );
 	}
 
+	/**
+	 * @param dialect The dialect to use.
+	 * @param defaultCatalog The default catalog to use.
+	 * @param defaultSchema The default schema to use.
+	 * @return An {@link SqlStringGenerationContext}.
+	 * @deprecated Only use for backwards compatibility in deprecated methods.
+	 * New methods should take the {@link SqlStringGenerationContext} as an argument,
+	 * and should not need to create their own context.
+	 */
+	@Deprecated
+	public static SqlStringGenerationContext forBackwardsCompatibility(Dialect dialect, String defaultCatalog, String defaultSchema) {
+		NameQualifierSupport nameQualifierSupport = dialect.getNameQualifierSupport();
+		if ( nameQualifierSupport == null ) {
+			// assume both catalogs and schemas are supported
+			nameQualifierSupport = NameQualifierSupport.BOTH;
+		}
+		QualifiedObjectNameFormatter qualifiedObjectNameFormatter =
+				new QualifiedObjectNameFormatterStandardImpl( nameQualifierSupport );
+
+		Identifier actualDefaultCatalog = null;
+		if ( nameQualifierSupport.supportsCatalogs() ) {
+			actualDefaultCatalog = Identifier.toIdentifier( defaultCatalog );
+		}
+		Identifier actualDefaultSchema = null;
+		if ( nameQualifierSupport.supportsSchemas() ) {
+			actualDefaultSchema = Identifier.toIdentifier( defaultSchema );
+		}
+		return new SqlStringGenerationContextImpl( dialect, null, qualifiedObjectNameFormatter,
+				actualDefaultCatalog, actualDefaultSchema );
+	}
+
 	public static SqlStringGenerationContext forTests(JdbcEnvironment jdbcEnvironment) {
 		return forTests( jdbcEnvironment, null, null );
 	}
@@ -87,9 +124,17 @@ public class SqlStringGenerationContextImpl
 	@SuppressWarnings("deprecation")
 	private SqlStringGenerationContextImpl(JdbcEnvironment jdbcEnvironment,
 			Identifier defaultCatalog, Identifier defaultSchema) {
-		this.dialect = jdbcEnvironment.getDialect();
-		this.identifierHelper = jdbcEnvironment.getIdentifierHelper();
-		this.qualifiedObjectNameFormatter = jdbcEnvironment.getQualifiedObjectNameFormatter();
+		this( jdbcEnvironment.getDialect(), jdbcEnvironment.getIdentifierHelper(),
+				jdbcEnvironment.getQualifiedObjectNameFormatter(),
+				defaultCatalog, defaultSchema );
+	}
+
+	private SqlStringGenerationContextImpl(Dialect dialect, IdentifierHelper identifierHelper,
+			QualifiedObjectNameFormatter qualifiedObjectNameFormatter,
+			Identifier defaultCatalog, Identifier defaultSchema) {
+		this.dialect = dialect;
+		this.identifierHelper = identifierHelper;
+		this.qualifiedObjectNameFormatter = qualifiedObjectNameFormatter;
 		this.defaultCatalog = defaultCatalog;
 		this.defaultSchema = defaultSchema;
 	}

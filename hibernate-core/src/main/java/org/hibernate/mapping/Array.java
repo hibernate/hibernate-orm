@@ -35,6 +35,16 @@ public class Array extends List {
 		super( customTypeBeanResolver, owner, buildingContext );
 	}
 
+	protected Array(Array original) {
+		super( original );
+		this.elementClassName = original.elementClassName;
+	}
+
+	@Override
+	public Array copy() {
+		return new Array( this );
+	}
+
 	public Class<?> getElementClass() throws MappingException {
 		if ( elementClassName == null ) {
 			final org.hibernate.type.Type elementType = getElement().getType();

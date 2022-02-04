@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.model.domain;
 
+import org.hibernate.query.sqm.SqmPathSource;
+
 import jakarta.persistence.metamodel.MappedSuperclassType;
 
 /**
@@ -13,5 +15,5 @@ import jakarta.persistence.metamodel.MappedSuperclassType;
  *
  * @author Steve Ebersole
  */
-public interface MappedSuperclassDomainType<J> extends IdentifiableDomainType<J>, MappedSuperclassType<J> {
+public interface MappedSuperclassDomainType<J> extends IdentifiableDomainType<J>, MappedSuperclassType<J>, SqmPathSource<J> {
 }

@@ -16,7 +16,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -47,7 +46,6 @@ public class JoinedSubclassTest {
 	}
 
 	@Test
-	@NotImplementedYet( strict = false )
 	public void testJoinedSubclass(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 
@@ -75,8 +73,6 @@ public class JoinedSubclassTest {
 			s.save( yomomma );
 			s.save( mark );
 			s.save( joe );
-
-			assertEquals( s.createQuery( "from java.lang.Object" ).list().size(), 0 );
 
 			assertEquals( s.createQuery( "from Person" ).list().size(), 3 );
 			assertEquals( s.createQuery( "from Person p where p.class = Customer" ).list().size(), 1 );

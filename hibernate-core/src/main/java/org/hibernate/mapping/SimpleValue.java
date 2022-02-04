@@ -108,6 +108,33 @@ public abstract class SimpleValue implements KeyValue {
 		this.table = table;
 	}
 
+	protected SimpleValue(SimpleValue original) {
+		this.buildingContext = original.buildingContext;
+		this.metadata = original.metadata;
+		this.columns.addAll( original.columns );
+		this.insertability.addAll( original.insertability );
+		this.updatability.addAll( original.updatability );
+		this.typeName = original.typeName;
+		this.typeParameters = original.typeParameters == null ? null : new Properties( original.typeParameters );
+		this.isVersion = original.isVersion;
+		this.isNationalized = original.isNationalized;
+		this.isLob = original.isLob;
+		this.identifierGeneratorProperties = original.identifierGeneratorProperties == null
+				? null
+				: new Properties( original.identifierGeneratorProperties );
+		this.identifierGeneratorStrategy = original.identifierGeneratorStrategy;
+		this.nullValue = original.nullValue;
+		this.table = original.table;
+		this.foreignKeyName = original.foreignKeyName;
+		this.foreignKeyDefinition = original.foreignKeyDefinition;
+		this.alternateUniqueKey = original.alternateUniqueKey;
+		this.cascadeDeleteEnabled = original.cascadeDeleteEnabled;
+		this.attributeConverterDescriptor = original.attributeConverterDescriptor;
+		this.type = original.type;
+		this.customIdGeneratorCreator = original.customIdGeneratorCreator;
+		this.identifierGenerator = original.identifierGenerator;
+	}
+
 	public MetadataBuildingContext getBuildingContext() {
 		return buildingContext;
 	}

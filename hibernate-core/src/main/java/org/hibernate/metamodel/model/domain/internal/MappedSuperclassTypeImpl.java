@@ -7,23 +7,33 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.mapping.MappedSuperclass;
+import org.hibernate.metamodel.UnsupportedMappingException;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
+import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
-public class MappedSuperclassTypeImpl<X> extends AbstractIdentifiableType<X> implements MappedSuperclassDomainType<X> {
+public class MappedSuperclassTypeImpl<J> extends AbstractIdentifiableType<J> implements MappedSuperclassDomainType<J> {
 	public MappedSuperclassTypeImpl(
-			JavaType<X> javaType,
+			JavaType<J> javaType,
 			MappedSuperclass mappedSuperclass,
-			IdentifiableDomainType<? super X> superType,
+			IdentifiableDomainType<? super J> superType,
 			JpaMetamodel jpaMetamodel) {
 		super(
 				javaType.getJavaType().getTypeName(),
@@ -36,18 +46,91 @@ public class MappedSuperclassTypeImpl<X> extends AbstractIdentifiableType<X> imp
 		);
 	}
 
+
+	@Override
+	public String getPathName() {
+		return getTypeName();
+	}
+
+	@Override
+	public MappedSuperclassDomainType<J> getSqmPathType() {
+		return this;
+	}
+
+	@Override
+	public SqmPathSource<?> findSubPathSource(String name) {
+		final PersistentAttribute<?,?> attribute = findAttribute( name );
+		if ( attribute != null ) {
+			return (SqmPathSource<?>) attribute;
+		}
+
+		if ( "id".equalsIgnoreCase( name ) ) {
+			if ( hasIdClass() ) {
+				return getIdentifierDescriptor();
+			}
+		}
+
+		return null;
+	}
+
+	@Override
+	public PersistentAttribute<? super J, ?> findAttribute(String name) {
+		final PersistentAttribute<? super J, ?> attribute = super.findAttribute( name );
+		if ( attribute != null ) {
+			return attribute;
+		}
+
+		if ( "id".equalsIgnoreCase( name ) || EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( name ) ) {
+			final SingularPersistentAttribute<J, ?> idAttribute = findIdAttribute();
+			//noinspection RedundantIfStatement
+			if ( idAttribute != null ) {
+				return idAttribute;
+			}
+		}
+
+		return null;
+	}
+
+	@Override
+	public BindableType getBindableType() {
+		return BindableType.ENTITY_TYPE;
+	}
+
 	@Override
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.MAPPED_SUPERCLASS;
 	}
 
 	@Override
-	public <S extends X> SubGraphImplementor<S> makeSubGraph(Class<S> subType) {
-		throw new NotYetImplementedException(  );
+	@SuppressWarnings("unchecked")
+	public <S extends J> SubGraphImplementor<S> makeSubGraph(Class<S> subType) {
+		if ( ! getBindableJavaType().isAssignableFrom( subType ) ) {
+			throw new IllegalArgumentException(
+					String.format(
+							"MappedSuperclass type [%s] cannot be treated as requested sub-type [%s]",
+							getTypeName(),
+							subType.getName()
+					)
+			);
+		}
+
+		return new SubGraphImpl( this, true, jpaMetamodel() );
+	}
+
+	@Override
+	public SubGraphImplementor<J> makeSubGraph() {
+		return makeSubGraph( getBindableJavaType() );
 	}
 
 	@Override
 	protected boolean isIdMappingRequired() {
 		return false;
+	}
+
+	@Override
+	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
+		throw new UnsupportedMappingException(
+				"MappedSuperclassType cannot be used to create an SqmPath - that would be an SqmFrom which are created directly"
+		);
 	}
 }

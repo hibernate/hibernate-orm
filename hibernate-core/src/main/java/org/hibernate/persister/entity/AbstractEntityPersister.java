@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -164,6 +165,7 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.metamodel.mapping.MappingModelHelper;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
@@ -202,6 +204,7 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sql.internal.SQLQueryParser;
@@ -6337,12 +6340,35 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			if ( subclassMappingTypes != null && !subclassMappingTypes.isEmpty() ) {
+				ModelPart attribute = null;
 				for ( EntityMappingType subMappingType : subclassMappingTypes.values() ) {
 					final ModelPart subDefinedAttribute = subMappingType.findSubTypesSubPart( name, treatTargetType );
-
 					if ( subDefinedAttribute != null ) {
-						return subDefinedAttribute;
+						if ( attribute != null && !MappingModelHelper.isCompatibleModelPart( attribute, subDefinedAttribute ) ) {
+							throw new IllegalArgumentException(
+									new SemanticException(
+											String.format(
+													Locale.ROOT,
+													"Could not resolve attribute '%s' of '%s' due to the attribute being declared in multiple sub types: ['%s', '%s']",
+													name,
+													getJavaType().getJavaType().getTypeName(),
+													( (AttributeMapping) attribute ).getDeclaringType()
+															.getJavaType()
+															.getJavaType()
+															.getTypeName(),
+													( (AttributeMapping) subDefinedAttribute ).getDeclaringType()
+															.getJavaType()
+															.getJavaType()
+															.getTypeName()
+											)
+									)
+							);
+						}
+						attribute = subDefinedAttribute;
 					}
+				}
+				if ( attribute != null ) {
+					return attribute;
 				}
 			}
 		}

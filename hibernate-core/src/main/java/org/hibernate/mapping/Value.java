@@ -100,4 +100,5 @@ public interface Value extends Serializable {
 	boolean hasAnyUpdatableColumns();
 
 	ServiceRegistry getServiceRegistry();
+	Value copy();
 }

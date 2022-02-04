@@ -35,6 +35,21 @@ public class OneToOne extends ToOne {
 		this.entityName = owner.getEntityName();
 	}
 
+	private OneToOne(OneToOne original) {
+		super( original );
+		this.constrained = original.constrained;
+		this.foreignKeyType = original.foreignKeyType;
+		this.identifier = original.identifier == null ? null : (KeyValue) original.identifier.copy();
+		this.propertyName = original.propertyName;
+		this.entityName = original.entityName;
+		this.mappedByProperty = original.mappedByProperty;
+	}
+
+	@Override
+	public OneToOne copy() {
+		return new OneToOne( this );
+	}
+
 	public String getPropertyName() {
 		return propertyName;
 	}

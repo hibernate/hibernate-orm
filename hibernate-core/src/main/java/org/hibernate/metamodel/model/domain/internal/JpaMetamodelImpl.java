@@ -490,16 +490,21 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 		context.wrapUp();
 
-		this.jpaEntityTypeMap.putAll( context.getEntityTypesByEntityName() );
+		for ( Map.Entry<String, IdentifiableDomainType<?>> entry : context.getIdentifiableTypesByName().entrySet() ) {
+			if ( entry.getValue() instanceof EntityDomainType<?> ) {
+				this.jpaEntityTypeMap.put( entry.getKey(), (EntityDomainType<?>) entry.getValue() );
+			}
+		}
+
 		this.jpaManagedTypeMap.putAll( context.getEntityTypeMap() );
 		this.jpaManagedTypeMap.putAll( context.getMappedSuperclassTypeMap() );
-		this.jpaManagedTypes.addAll( context.getMappedSuperclassTypeMap().values() );
 		switch ( jpaMetaModelPopulationSetting ) {
 			case IGNORE_UNSUPPORTED:
 				this.jpaManagedTypes.addAll( context.getEntityTypeMap().values() );
+				this.jpaManagedTypes.addAll( context.getMappedSuperclassTypeMap().values() );
 				break;
 			case ENABLED:
-				this.jpaManagedTypes.addAll( context.getEntityTypesByEntityName().values() );
+				this.jpaManagedTypes.addAll( context.getIdentifiableTypesByName().values() );
 				break;
 		}
 
@@ -562,11 +567,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	private static Stream<ManagedDomainType<?>> domainTypeStream(MetadataContext context) {
 		return Stream.concat(
-				context.getEntityTypesByEntityName().values().stream(),
-				Stream.concat(
-						context.getMappedSuperclassTypeMap().values().stream(),
-						context.getEmbeddableTypeSet().stream()
-				)
+				context.getIdentifiableTypesByName().values().stream(),
+				context.getEmbeddableTypeSet().stream()
 		);
 	}
 

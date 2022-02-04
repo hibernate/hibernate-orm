@@ -121,6 +121,55 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		this.buildingContext = buildingContext;
 	}
 
+	protected Collection(Collection original) {
+		this.buildingContext = original.buildingContext;
+		this.owner = original.owner;
+		this.key = original.key == null ? null : (KeyValue) original.key.copy();
+		this.element = original.element == null ? null : original.element.copy();
+		this.collectionTable = original.collectionTable;
+		this.role = original.role;
+		this.lazy = original.lazy;
+		this.extraLazy = original.extraLazy;
+		this.inverse = original.inverse;
+		this.mutable = original.mutable;
+		this.subselectLoadable = original.subselectLoadable;
+		this.cacheConcurrencyStrategy = original.cacheConcurrencyStrategy;
+		this.cacheRegionName = original.cacheRegionName;
+		this.orderBy = original.orderBy;
+		this.where = original.where;
+		this.manyToManyWhere = original.manyToManyWhere;
+		this.manyToManyOrderBy = original.manyToManyOrderBy;
+		this.referencedPropertyName = original.referencedPropertyName;
+		this.mappedByProperty = original.mappedByProperty;
+		this.sorted = original.sorted;
+		this.comparator = original.comparator;
+		this.comparatorClassName = original.comparatorClassName;
+		this.orphanDelete = original.orphanDelete;
+		this.batchSize = original.batchSize;
+		this.fetchMode = original.fetchMode;
+		this.optimisticLocked = original.optimisticLocked;
+		this.typeName = original.typeName;
+		this.typeParameters = original.typeParameters == null ? null : new Properties(original.typeParameters);
+		this.customTypeBeanResolver = original.customTypeBeanResolver;
+		this.collectionPersisterClass = original.collectionPersisterClass;
+		this.filters.addAll( original.filters );
+		this.manyToManyFilters.addAll( original.manyToManyFilters );
+		this.synchronizedTables.addAll( original.synchronizedTables );
+		this.customSQLInsert = original.customSQLInsert;
+		this.customInsertCallable = original.customInsertCallable;
+		this.insertCheckStyle = original.insertCheckStyle;
+		this.customSQLUpdate = original.customSQLUpdate;
+		this.customUpdateCallable = original.customUpdateCallable;
+		this.updateCheckStyle = original.updateCheckStyle;
+		this.customSQLDelete = original.customSQLDelete;
+		this.customDeleteCallable = original.customDeleteCallable;
+		this.deleteCheckStyle = original.deleteCheckStyle;
+		this.customSQLDeleteAll = original.customSQLDeleteAll;
+		this.customDeleteAllCallable = original.customDeleteAllCallable;
+		this.deleteAllCheckStyle = original.deleteAllCheckStyle;
+		this.loaderName = original.loaderName;
+	}
+
 	public MetadataBuildingContext getBuildingContext() {
 		return buildingContext;
 	}

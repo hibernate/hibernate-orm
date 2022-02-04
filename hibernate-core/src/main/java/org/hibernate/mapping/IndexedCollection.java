@@ -33,6 +33,11 @@ public abstract class IndexedCollection extends Collection {
 		super( customTypeBeanResolver, owner, buildingContext );
 	}
 
+	protected IndexedCollection(IndexedCollection original) {
+		super( original );
+		this.index = original.index == null ? null : original.index.copy();
+	}
+
 	public Value getIndex() {
 		return index;
 	}

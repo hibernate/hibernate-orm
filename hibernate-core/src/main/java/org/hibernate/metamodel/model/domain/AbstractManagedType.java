@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -31,8 +32,12 @@ import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.metamodel.RuntimeMetamodels;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.MappingModelHelper;
 import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
 import org.hibernate.metamodel.model.domain.internal.DomainModelHelper;
+import org.hibernate.query.SemanticException;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -167,11 +172,45 @@ public abstract class AbstractManagedType<J>
 		for ( ManagedDomainType subType : subTypes ) {
 			PersistentAttribute subTypeAttribute = subType.findSubTypesAttribute( name );
 			if ( subTypeAttribute != null ) {
-				return subTypeAttribute;
+				if ( attribute != null && !isCompatible( attribute, subTypeAttribute ) ) {
+					throw new IllegalArgumentException(
+							new SemanticException(
+									String.format(
+											Locale.ROOT,
+											"Could not resolve attribute '%s' of '%s' due to the attribute being declared in multiple sub types: ['%s', '%s']",
+											name,
+											getExpressibleJavaType().getJavaType().getTypeName(),
+											attribute.getDeclaringType().getExpressibleJavaType().getJavaType().getTypeName(),
+											subTypeAttribute.getDeclaringType().getExpressibleJavaType().getJavaType().getTypeName()
+									)
+							)
+					);
+				}
+				attribute = subTypeAttribute;
 			}
 		}
 
-		return null;
+		return attribute;
+	}
+
+	private boolean isCompatible(PersistentAttribute<?, ?> attribute1, PersistentAttribute<?, ?> attribute2) {
+		if ( attribute1 == attribute2 ) {
+			return true;
+		}
+		final RuntimeMetamodels runtimeMetamodels = jpaMetamodel().getTypeConfiguration()
+				.getSessionFactory()
+				.getRuntimeMetamodels();
+		final EntityMappingType entity1 = runtimeMetamodels.getEntityMappingType(
+				attribute1.getDeclaringType().getTypeName()
+		);
+		final EntityMappingType entity2 = runtimeMetamodels.getEntityMappingType(
+				attribute2.getDeclaringType().getTypeName()
+		);
+
+		return entity1 != null && entity2 != null && MappingModelHelper.isCompatibleModelPart(
+				entity1.findSubPart( attribute1.getName() ),
+				entity2.findSubPart( attribute2.getName() )
+		);
 	}
 
 	@Override

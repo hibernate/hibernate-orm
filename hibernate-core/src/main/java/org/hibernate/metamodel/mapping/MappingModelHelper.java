@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -22,6 +23,11 @@ import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnRefere
  * @author Steve Ebersole
  */
 public class MappingModelHelper {
+
+	private MappingModelHelper() {
+		// disallow direct instantiation
+	}
+
 	public static Expression buildColumnReferenceExpression(
 			ModelPart modelPart,
 			SqlExpressionResolver sqlExpressionResolver,
@@ -99,8 +105,60 @@ public class MappingModelHelper {
 			}
 		}
 	}
-
-	private MappingModelHelper() {
-		// disallow direct instantiation
+	public static boolean isCompatibleModelPart(ModelPart attribute1, ModelPart attribute2) {
+		if ( attribute1 == attribute2 ) {
+			return true;
+		}
+		if ( attribute1.getClass() != attribute2.getClass() || attribute1.getJavaType() != attribute2.getJavaType() ) {
+			return false;
+		}
+		if ( attribute1 instanceof Association ) {
+			final Association association1 = (Association) attribute1;
+			final Association association2 = (Association) attribute2;
+			return association1.getForeignKeyDescriptor().getAssociationKey().equals(
+					association2.getForeignKeyDescriptor().getAssociationKey()
+			);
+		}
+		else if ( attribute1 instanceof PluralAttributeMapping ) {
+			final PluralAttributeMapping plural1 = (PluralAttributeMapping) attribute1;
+			final PluralAttributeMapping plural2 = (PluralAttributeMapping) attribute2;
+			final CollectionPart element1 = plural1.getElementDescriptor();
+			final CollectionPart element2 = plural2.getElementDescriptor();
+			final CollectionPart index1 = plural1.getIndexDescriptor();
+			final CollectionPart index2 = plural2.getIndexDescriptor();
+			return plural1.getKeyDescriptor().getAssociationKey().equals(
+					plural2.getKeyDescriptor().getAssociationKey()
+			) && ( index1 == null && index2 == null || isCompatibleModelPart( index1, index2 ) )
+					&& isCompatibleModelPart( element1, element2 );
+		}
+		else if ( attribute1 instanceof EmbeddableValuedModelPart ) {
+			final EmbeddableValuedModelPart embedded1 = (EmbeddableValuedModelPart) attribute1;
+			final EmbeddableValuedModelPart embedded2 = (EmbeddableValuedModelPart) attribute2;
+			final List<AttributeMapping> attrs1 = embedded1.getEmbeddableTypeDescriptor().getAttributeMappings();
+			final List<AttributeMapping> attrs2 = embedded2.getEmbeddableTypeDescriptor().getAttributeMappings();
+			if ( attrs1.size() != attrs2.size() ) {
+				return false;
+			}
+			for ( int i = 0; i < attrs1.size(); i++ ) {
+				if ( !isCompatibleModelPart( attrs1.get( i ), attrs2.get( i ) ) ) {
+					return false;
+				}
+			}
+			return true;
+		}
+		else if ( attribute1 instanceof BasicValuedModelPart ) {
+			final BasicValuedModelPart basic1 = (BasicValuedModelPart) attribute1;
+			final BasicValuedModelPart basic2 = (BasicValuedModelPart) attribute2;
+			if ( !basic1.getSelectionExpression().equals( basic2.getSelectionExpression() ) ) {
+				return false;
+			}
+			if ( basic1.getContainingTableExpression().equals( basic2.getContainingTableExpression() ) ) {
+				return true;
+			}
+			// For union subclass mappings we also consider mappings compatible that just match the selection expression,
+			// because we match up columns of disjoint union subclass types by column name
+			return attribute1.findContainingEntityMapping().getEntityPersister() instanceof UnionSubclassEntityPersister;
+		}
+		return false;
 	}
 }

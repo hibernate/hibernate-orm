@@ -57,6 +57,30 @@ public class Any extends SimpleValue {
 
 	}
 
+	public Any(Any original) {
+		super( original );
+
+		this.metaMapping = original.metaMapping == null ? null : original.metaMapping.copy();
+		this.keyMapping = original.keyMapping == null ? null : (SimpleValue) original.keyMapping.copy();
+
+		// annotations
+		this.discriminatorDescriptor = original.discriminatorDescriptor == null
+				? null
+				: original.discriminatorDescriptor.copy();
+		this.keyDescriptor = original.keyDescriptor == null ? null : original.keyDescriptor.copy();
+
+		// common
+		this.metaValueToEntityNameMap = original.metaValueToEntityNameMap == null
+				? null
+				: new HashMap<>(original.metaValueToEntityNameMap);
+		this.lazy = original.lazy;
+	}
+
+	@Override
+	public Any copy() {
+		return new Any( this );
+	}
+
 	public void addSelectable(Selectable selectable) {
 		if ( selectable == null ) {
 			return;
@@ -281,6 +305,18 @@ public class Any extends SimpleValue {
 			this.selectableConsumer = selectableConsumer;
 		}
 
+		private MetaValue(MetaValue original) {
+			super( original );
+			this.typeName = original.typeName;
+			this.columnName = original.columnName;
+			this.selectableConsumer = original.selectableConsumer;
+		}
+
+		@Override
+		public MetaValue copy() {
+			return new MetaValue( this );
+		}
+
 		@Override
 		public Type getType() throws MappingException {
 			return getMetadata().getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( typeName );
@@ -363,6 +399,17 @@ public class Any extends SimpleValue {
 				Table table) {
 			super( buildingContext, table );
 			this.selectableConsumer = selectableConsumer;
+		}
+
+		private KeyValue(KeyValue original) {
+			super( original );
+			this.typeName = original.typeName;
+			this.selectableConsumer = original.selectableConsumer;
+		}
+
+		@Override
+		public KeyValue copy() {
+			return new KeyValue( this );
 		}
 
 		@Override

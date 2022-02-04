@@ -34,6 +34,19 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 		super( buildingContext, table );
 	}
 
+	protected ToOne(ToOne original) {
+		super( original );
+		this.fetchMode = original.fetchMode;
+		this.referencedPropertyName = original.referencedPropertyName;
+		this.referencedEntityName = original.referencedEntityName;
+		this.propertyName = original.propertyName;
+		this.lazy = original.lazy;
+		this.sorted = original.sorted;
+		this.unwrapProxy = original.unwrapProxy;
+		this.isUnwrapProxyImplicit = original.isUnwrapProxyImplicit;
+		this.referenceToPrimaryKey = original.referenceToPrimaryKey;
+	}
+
 	public FetchMode getFetchMode() {
 		return fetchMode;
 	}

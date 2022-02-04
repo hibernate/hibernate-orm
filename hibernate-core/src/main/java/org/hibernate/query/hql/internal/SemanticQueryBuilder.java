@@ -1965,7 +1965,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmPredicate visitMemberOfPredicate(HqlParser.MemberOfPredicateContext ctx) {
-		final boolean negated = ctx.getChildCount() == 5;
+		final boolean negated = ctx.NOT() != null;
 		final SqmPath<?> sqmPluralPath = consumeDomainPath(
 				(HqlParser.PathContext) ctx.getChild( ctx.getChildCount() - 1 )
 		);

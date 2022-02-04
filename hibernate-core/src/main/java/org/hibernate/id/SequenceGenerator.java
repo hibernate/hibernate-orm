@@ -20,6 +20,7 @@ import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -64,11 +65,24 @@ public class SequenceGenerator
 
 	private QualifiedName logicalQualifiedSequenceName;
 	private QualifiedName physicalSequenceName;
+	@Deprecated
+	private String formattedSequenceNameForLegacyGetter;
 	private Type identifierType;
 	private String sql;
 
 	protected Type getIdentifierType() {
 		return identifierType;
+	}
+
+	@Override
+	@Deprecated
+	public Object generatorKey() {
+		return getSequenceName();
+	}
+
+	@Deprecated
+	public String getSequenceName() {
+		return formattedSequenceNameForLegacyGetter;
 	}
 
 	public QualifiedName getPhysicalSequenceName() {
@@ -174,6 +188,10 @@ public class SequenceGenerator
 			);
 		}
 		this.physicalSequenceName = sequence.getName();
+
+		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
+		this.formattedSequenceNameForLegacyGetter = jdbcEnvironment.getQualifiedObjectNameFormatter()
+				.format( physicalSequenceName, jdbcEnvironment.getDialect() );
 	}
 
 	@Override

@@ -22,6 +22,7 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -93,6 +94,8 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 
 	private QualifiedName qualifiedTableName;
 	private QualifiedName physicalTableName;
+	@Deprecated
+	private String formattedTableNameForLegacyGetter;
 	private String segmentColumnName;
 	private String segmentName;
 	private String valueColumnName;
@@ -343,6 +346,13 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 
 		// allow physical naming strategies a chance to kick in
 		physicalTableName = table.getQualifiedTableName();
+
+		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
+		final Dialect dialect = jdbcEnvironment.getDialect();
+		this.formattedTableNameForLegacyGetter = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+				physicalTableName,
+				dialect
+		);
 	}
 
 	@Override
@@ -376,4 +386,8 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 
 	}
 
+	@Deprecated
+	public Object generatorKey() {
+		return formattedTableNameForLegacyGetter;
+	}
 }

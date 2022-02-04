@@ -534,6 +534,16 @@ public class SequenceStyleGenerator
 		return optimizer.generate( databaseStructure.buildCallback( session ) );
 	}
 
+
+	// PersistentIdentifierGenerator implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	@Deprecated
+	public Object generatorKey() {
+		return databaseStructure.getName();
+	}
+
+
 	// BulkInsertionCapableIdentifierGenerator implementation ~~~~~~~~~~~~~~~~~
 
 	@Override

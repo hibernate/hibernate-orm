@@ -19,6 +19,17 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Steve Ebersole
  */
 public interface DatabaseStructure extends ExportableProducer {
+
+	/**
+	 * The name of the database structure (table or sequence).
+	 * @deprecated Use {@link #getPhysicalName()} instead.
+	 */
+	@Deprecated
+	default String getName() {
+		// Not a great implementation, but that'll have to do: it's only for backwards compatibility.
+		return getPhysicalName().render();
+	}
+
 	/**
 	 * The physical name of the database structure (table or sequence).
 	 * <p>

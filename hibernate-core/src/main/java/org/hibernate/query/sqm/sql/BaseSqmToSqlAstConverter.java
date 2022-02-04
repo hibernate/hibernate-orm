@@ -3755,12 +3755,23 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 								creationContext
 						)
 				);
+				final String compatibleTableExpression;
+				if ( modelPart instanceof BasicValuedModelPart ) {
+					compatibleTableExpression = ( (BasicValuedModelPart) modelPart ).getContainingTableExpression();
+				}
+				else if ( modelPart instanceof EmbeddableValuedModelPart ) {
+					compatibleTableExpression = ( (EmbeddableValuedModelPart) modelPart ).getContainingTableExpression();
+				}
+				else {
+					compatibleTableExpression = null;
+				}
 				lateralTableGroup = new QueryPartTableGroup(
 						queryPath,
 						null,
 						subQuerySpec,
 						identifierVariable,
 						columnNames,
+						compatibleTableExpression,
 						true,
 						false,
 						creationContext.getSessionFactory()
@@ -3801,7 +3812,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				}
 				parentFromClauseAccess.registerTableGroup( lateralTableGroup.getNavigablePath(), lateralTableGroup );
 				if ( jdbcTypeCount == 1 ) {
-					return resultColumnReferences.get( 0 );
+					return new BasicValuedPathInterpretation<>(
+							resultColumnReferences.get( 0 ),
+							queryPath,
+							(BasicValuedModelPart) modelPart,
+							lateralTableGroup
+					);
 				}
 				else {
 					return new SqlTuple( resultColumnReferences, modelPart );
@@ -3813,7 +3829,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		final QueryPartTableReference tableReference = (QueryPartTableReference) lateralTableGroup.getPrimaryTableReference();
 		if ( jdbcTypeCount == 1 ) {
-			return new ColumnReference(
+			return new BasicValuedPathInterpretation<>(
+				new ColumnReference(
 					identifierVariable,
 					tableReference.getColumnNames().get( 0 ),
 					false,
@@ -3821,6 +3838,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					null,
 					modelPart.getJdbcMappings().get( 0 ),
 					creationContext.getSessionFactory()
+				),
+				queryPath,
+				(BasicValuedModelPart) modelPart,
+				lateralTableGroup
 			);
 		}
 		else {

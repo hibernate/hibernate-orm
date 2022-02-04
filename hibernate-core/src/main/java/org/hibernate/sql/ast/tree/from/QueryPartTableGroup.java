@@ -8,6 +8,7 @@ package org.hibernate.sql.ast.tree.from;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -22,6 +23,7 @@ import org.hibernate.sql.ast.tree.select.QueryPart;
 public class QueryPartTableGroup extends AbstractTableGroup {
 
 	private final QueryPartTableReference queryPartTableReference;
+	private final String compatibleTableExpression;
 
 	public QueryPartTableGroup(
 			NavigablePath navigablePath,
@@ -32,6 +34,28 @@ public class QueryPartTableGroup extends AbstractTableGroup {
 			boolean lateral,
 			boolean canUseInnerJoins,
 			SessionFactoryImplementor sessionFactory) {
+		this(
+				navigablePath,
+				tableGroupProducer,
+				queryPart,
+				sourceAlias,
+				columnNames,
+				null,
+				lateral,
+				canUseInnerJoins,
+				sessionFactory
+		);
+	}
+
+	public QueryPartTableGroup(
+			NavigablePath navigablePath,
+			TableGroupProducer tableGroupProducer,
+			QueryPart queryPart,
+			String sourceAlias,
+			List<String> columnNames,
+			String compatibleTableExpression, boolean lateral,
+			boolean canUseInnerJoins,
+			SessionFactoryImplementor sessionFactory) {
 		super(
 				canUseInnerJoins,
 				navigablePath,
@@ -40,6 +64,7 @@ public class QueryPartTableGroup extends AbstractTableGroup {
 				null,
 				sessionFactory
 		);
+		this.compatibleTableExpression = compatibleTableExpression;
 		this.queryPartTableReference = new QueryPartTableReference(
 				queryPart,
 				sourceAlias,
@@ -60,7 +85,7 @@ public class QueryPartTableGroup extends AbstractTableGroup {
 			String tableExpression,
 			boolean allowFkOptimization,
 			boolean resolve) {
-		if ( tableExpression == null ) {
+		if ( Objects.equals( tableExpression, compatibleTableExpression ) ) {
 			return getPrimaryTableReference();
 		}
 		for ( TableGroupJoin tableGroupJoin : getNestedTableGroupJoins() ) {

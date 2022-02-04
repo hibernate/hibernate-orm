@@ -39,19 +39,15 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.query.sqm.InterpretationException;
-
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.Assert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -109,7 +105,6 @@ public class JoinedInheritanceEagerTest {
 
 	@Test
 	@JiraKey("HHH-12375")
-	@NotImplementedYet( strict = false )
 	public void joinUnrelatedCollectionOnBaseType(SessionFactoryScope scope) {
 		scope.inSession(
 				session -> {
@@ -119,8 +114,8 @@ public class JoinedInheritanceEagerTest {
 						session.createQuery( "from BaseEntity b join b.attributes" ).list();
 						fail( "Expected a resolution exception for property 'attributes'!" );
 					}
-					catch (InterpretationException ex) {
-						assertTrue( ex.getMessage().contains( "could not resolve property: attributes " ) );
+					catch (IllegalArgumentException ex) {
+						Assert.assertTrue( ex.getCause().getCause().getMessage().contains( "Could not resolve attribute 'attributes' "));
 					}
 					finally {
 						session.getTransaction().commit();

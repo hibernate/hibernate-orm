@@ -8,6 +8,7 @@ package org.hibernate.mapping;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +80,27 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		this.owner = owner;
 
 		metadata.getMetadataCollector().registerComponent( this );
+	}
+
+	private Component(Component original) {
+		super( original );
+		this.properties.addAll( original.properties );
+		this.originalPropertyOrder = original.originalPropertyOrder.clone();
+		this.componentClassName = original.componentClassName;
+		this.embedded = original.embedded;
+		this.parentProperty = original.parentProperty;
+		this.owner = original.owner;
+		this.dynamic = original.dynamic;
+		this.metaAttributes = original.metaAttributes == null ? null : new HashMap(original.metaAttributes);
+		this.isKey = original.isKey;
+		this.roleName = original.roleName;
+		this.customInstantiator = original.customInstantiator;
+		this.type = original.type;
+	}
+
+	@Override
+	public Component copy() {
+		return new Component( this );
 	}
 
 	public int getPropertySpan() {

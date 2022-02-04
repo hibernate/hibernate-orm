@@ -426,4 +426,27 @@ public class Property implements Serializable, MetaAttributable {
 	public void setReturnedClassName(String returnedClassName) {
 		this.returnedClassName = returnedClassName;
 	}
+	
+	public Property copy() {
+		final Property prop = new Property();
+		prop.setName( getName() );
+		prop.setValue( getValue() );
+		prop.setCascade( getCascade() );
+		prop.setUpdateable( isUpdateable() );
+		prop.setInsertable( isInsertable() );
+		prop.setSelectable( isSelectable() );
+		prop.setOptimisticLocked( isOptimisticLocked() );
+		prop.setValueGenerationStrategy( getValueGenerationStrategy() );
+		prop.setPropertyAccessorName( getPropertyAccessorName() );
+		prop.setLazy( isLazy() );
+		prop.setLazyGroup( getLazyGroup() );
+		prop.setOptional( isOptional() );
+		prop.setMetaAttributes( getMetaAttributes() );
+		prop.setPersistentClass( getPersistentClass() );
+		prop.setNaturalIdentifier( isNaturalIdentifier() );
+		prop.setLob( isLob() );
+		prop.addCallbackDefinitions( getCallbackDefinitions() );
+		prop.setReturnedClassName( getReturnedClassName() );
+		return prop;
+	}
 }

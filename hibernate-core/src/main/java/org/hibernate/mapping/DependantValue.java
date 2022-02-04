@@ -28,6 +28,19 @@ public class DependantValue extends SimpleValue implements Resolvable, SortableV
 		this.wrappedValue = prototype;
 	}
 
+	private DependantValue(DependantValue original) {
+		super( original );
+		this.wrappedValue = (KeyValue) original.wrappedValue.copy();
+		this.nullable = original.nullable;
+		this.updateable = original.updateable;
+		this.sorted = original.sorted;
+	}
+
+	@Override
+	public DependantValue copy() {
+		return new DependantValue( this );
+	}
+
 	public KeyValue getWrappedValue() {
 		return wrappedValue;
 	}

@@ -36,6 +36,19 @@ public class OneToMany implements Value {
 		this.referencingTable = owner == null ? null : owner.getTable();
 	}
 
+	private OneToMany(OneToMany original) {
+		this.buildingContext = original.buildingContext;
+		this.referencingTable = original.referencingTable;
+		this.referencedEntityName = original.referencedEntityName;
+		this.associatedClass = original.associatedClass;
+		this.ignoreNotFound = original.ignoreNotFound;
+	}
+
+	@Override
+	public Value copy() {
+		return new OneToMany( this );
+	}
+
 	public MetadataBuildingContext getBuildingContext() {
 		return buildingContext;
 	}

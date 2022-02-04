@@ -38,6 +38,16 @@ public class List extends IndexedCollection {
 		super( customTypeBeanResolver, owner, buildingContext );
 	}
 
+	protected List(List original) {
+		super( original );
+		this.baseIndex = original.baseIndex;
+	}
+
+	@Override
+	public List copy() {
+		return new List( this );
+	}
+
 	public boolean isList() {
 		return true;
 	}

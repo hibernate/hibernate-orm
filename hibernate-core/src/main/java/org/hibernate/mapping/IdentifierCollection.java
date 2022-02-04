@@ -31,6 +31,11 @@ public abstract class IdentifierCollection extends Collection {
 		super( customTypeBeanResolver, owner, buildingContext );
 	}
 
+	protected IdentifierCollection(IdentifierCollection original) {
+		super( original );
+		this.identifier = (KeyValue) original.identifier.copy();
+	}
+
 	public KeyValue getIdentifier() {
 		return identifier;
 	}

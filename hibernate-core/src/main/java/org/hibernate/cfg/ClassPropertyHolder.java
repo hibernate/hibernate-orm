@@ -13,19 +13,25 @@ import jakarta.persistence.Converts;
 import jakarta.persistence.JoinTable;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ToOne;
+import org.hibernate.mapping.Value;
 
 /**
  * @author Emmanuel Bernard
@@ -234,7 +240,82 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	private void addPropertyToMappedSuperclass(Property prop, XClass declaringClass) {
 		final Class<?> type = getContext().getBootstrapContext().getReflectionManager().toClass( declaringClass );
 		MappedSuperclass superclass = getContext().getMetadataCollector().getMappedSuperclass( type );
-		superclass.addDeclaredProperty( prop );
+		if ( type.getTypeParameters().length == 0 ) {
+			superclass.addDeclaredProperty( prop );
+		}
+		else {
+			// If the type has type parameters, we have to look up the XClass and actual property again
+			// because the given XClass has a TypeEnvironment based on the type variable assignments of a subclass
+			// and that might result in a wrong property type being used for a property which uses a type variable
+			final XClass actualDeclaringClass = getContext().getBootstrapContext().getReflectionManager().toXClass( type );
+			for ( XProperty declaredProperty : actualDeclaringClass.getDeclaredProperties( prop.getPropertyAccessorName() ) ) {
+				if ( prop.getName().equals( declaredProperty.getName() ) ) {
+					final PropertyData inferredData = new PropertyInferredData(
+							actualDeclaringClass,
+							declaredProperty,
+							null,
+							getContext().getBootstrapContext().getReflectionManager()
+					);
+					final Value originalValue = prop.getValue();
+					if ( originalValue instanceof SimpleValue ) {
+						// Avoid copying when the property doesn't depend on a type variable
+						if ( inferredData.getTypeName().equals( ( (SimpleValue) originalValue ).getTypeName() ) ) {
+							superclass.addDeclaredProperty( prop );
+							return;
+						}
+					}
+					// If the property depends on a type variable, we have to copy it and the Value
+					final Property actualProperty = prop.copy();
+					actualProperty.setReturnedClassName( inferredData.getTypeName() );
+					final Value value = actualProperty.getValue().copy();
+					if ( value instanceof Collection ) {
+						final Collection collection = (Collection) value;
+						// The owner is a MappedSuperclass which is not a PersistentClass, so set it to null
+//						collection.setOwner( null );
+						collection.setRole( type.getName() + "." + prop.getName() );
+						// To copy the element and key values, we need to defer setting the type name until the CollectionBinder ran
+						getContext().getMetadataCollector().addSecondPass(
+								new SecondPass() {
+									@Override
+									public void doSecondPass(Map persistentClasses) throws MappingException {
+										final Collection initializedCollection = (Collection) originalValue;
+										final Value element = initializedCollection.getElement().copy();
+										setTypeName( element, inferredData.getProperty().getElementClass().getName() );
+										if ( initializedCollection instanceof IndexedCollection ) {
+											final Value index = ( (IndexedCollection) initializedCollection ).getIndex().copy();
+											setTypeName( index, inferredData.getProperty().getMapKey().getName() );
+											( (IndexedCollection) collection ).setIndex( index );
+										}
+										collection.setElement( element );
+									}
+								}
+						);
+					}
+					else {
+						setTypeName( value, inferredData.getTypeName() );
+					}
+					actualProperty.setValue( value );
+					superclass.addDeclaredProperty( actualProperty );
+					break;
+				}
+			}
+		}
+	}
+
+	private void setTypeName(Value value, String typeName) {
+		if ( value instanceof ToOne ) {
+			final ToOne toOne = (ToOne) value;
+			toOne.setReferencedEntityName( typeName );
+			toOne.setTypeName( typeName );
+		}
+		else if ( value instanceof Component ) {
+			final Component component = (Component) value;
+			component.setComponentClassName( typeName );
+			component.setTypeName( typeName );
+		}
+		else if ( value instanceof SimpleValue ) {
+			( (SimpleValue) value ).setTypeName( typeName );
+		}
 	}
 
 	private void addPropertyToJoin(Property prop, XClass declaringClass, Join join) {

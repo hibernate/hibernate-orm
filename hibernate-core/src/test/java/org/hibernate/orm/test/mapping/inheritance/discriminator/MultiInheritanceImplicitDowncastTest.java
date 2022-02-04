@@ -37,6 +37,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.AssociationOverrides;
 import jakarta.persistence.Basic;
@@ -57,14 +65,6 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 
-import org.hibernate.NotYetImplementedFor6Exception;
-
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.Test;
-
 /**
  * @author Christian Beikov
  */
@@ -79,68 +79,60 @@ import org.junit.jupiter.api.Test;
 				MultiInheritanceImplicitDowncastTest.PolymorphicPropertySub2.class,
 				MultiInheritanceImplicitDowncastTest.PolymorphicSub1.class,
 				MultiInheritanceImplicitDowncastTest.PolymorphicSub2.class
-		}
-)
-@SessionFactory
-@NotImplementedYet( strict = false )
+		})
+@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
 public class MultiInheritanceImplicitDowncastTest {
-	@Test
-	public void testQueryingSingle(SessionFactoryScope scope) {
-		scope.inTransaction( (s) -> {
-			final String base = "from PolymorphicPropertyBase p left join ";
-			s.createQuery( base + "p.base b left join b.relation1 " ).getResultList();
-			s.createQuery( base + "p.base b left join b.relation2 " ).getResultList();
-			s.createQuery( base + "p.baseEmbeddable.embeddedRelation1 b left join b.relation1" ).getResultList();
-			s.createQuery( base + "p.baseEmbeddable.embeddedRelation2 b left join b.relation2" ).getResultList();
-			s.createQuery( base + "p.baseEmbeddable.embeddedBase b left join b.relation1" ).getResultList();
-			s.createQuery( base + "p.baseEmbeddable.embeddedBase b left join b.relation2" ).getResultList();
-		} );
-	}
 
 	@Test
-	public void testQueryingMultiple(SessionFactoryScope scope) {
-		scope.inTransaction( (s) -> {
-			final String base = "from PolymorphicPropertyBase p left join ";
-			s.createQuery( base + "p.base b left join b.relation1 left join b.relation2" ).getResultList();
-			s.createQuery( base + "p.base b left join b.relation2 left join b.relation1" ).getResultList();
-			s.createQuery( base + "p.baseEmbeddable.embeddedBase b left join b.relation1 left join b.relation2" ).getResultList();
-			s.createQuery( base + "p.baseEmbeddable.embeddedBase b left join b.relation2 left join b.relation1" ).getResultList();
-		} );
+	public void testIllegalBaseJoin(SessionFactoryScope scope) {
+		try {
+			scope.inSession(
+					s -> s.createQuery( "from PolymorphicPropertyBase p left join p.base b left join b.relation1" )
+			);
+		}
+		catch (IllegalArgumentException ex) {
+			Assertions.assertTrue( ex.getCause()
+										   .getCause()
+										   .getMessage()
+										   .contains( "Could not resolve attribute 'base' " ) );
+		}
 	}
 
 	@Test
 	public void testMultiJoinAddition1(SessionFactoryScope scope) {
-		testMultiJoinAddition( "from PolymorphicPropertyBase p left join p.base b left join b.relation1", scope );
+		testMultiJoinAddition(
+				scope,
+				"base_sub_1",
+				"select 1 from PolymorphicPropertyBase p left join treat(p as PolymorphicPropertySub1).base b left join b.relation1"
+		);
 	}
 
 	@Test
 	public void testMultiJoinAddition2(SessionFactoryScope scope) {
-		testMultiJoinAddition( "from PolymorphicPropertyBase p left join p.base b left join b.relation2", scope );
+		testMultiJoinAddition(
+				scope,
+				"base_sub_2",
+				"select 1 from PolymorphicPropertyBase p left join treat(p as PolymorphicPropertySub2).base b left join b.relation2"
+		);
 	}
 
-	private void testMultiJoinAddition(String hql, SessionFactoryScope scope) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-//		final HQLQueryPlan plan = sessionFactory().getQueryInterpretationCache().getHQLQueryPlan(
-//				hql,
-//				false,
-//				Collections.EMPTY_MAP
-//		);
-//		assertEquals( 1, plan.getTranslators().length );
-//		final QueryTranslator translator = plan.getTranslators()[0];
-//		final String generatedSql = translator.getSQLString();
-//
-//		int sub1JoinColumnIndex = generatedSql.indexOf( ".base_sub_1" );
-//		assertNotEquals(
-//				"Generated SQL doesn't contain a join for 'base' with 'PolymorphicSub1' via 'base_sub_1':\n" + generatedSql,
-//				-1,
-//				sub1JoinColumnIndex
-//		);
-//		int sub2JoinColumnIndex = generatedSql.indexOf( ".base_sub_2" );
-//		assertNotEquals(
-//				"Generated SQL doesn't contain a join for 'base' with 'PolymorphicSub2' via 'base_sub_2':\n" + generatedSql,
-//				-1,
-//				sub2JoinColumnIndex
-//		);
+	private void testMultiJoinAddition(SessionFactoryScope scope, String joinColumnBase, String hql) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		scope.inTransaction(
+				s -> {
+					sqlStatementInterceptor.clear();
+					s.createQuery( hql ).getResultList();
+					sqlStatementInterceptor.assertExecutedCount( 1 );
+					final String generatedSql = sqlStatementInterceptor.getSqlQueries().get( 0 );
+
+					int sub1JoinColumnIndex = generatedSql.indexOf( "." + joinColumnBase );
+					Assertions.assertNotEquals(
+							-1,
+							sub1JoinColumnIndex,
+							"Generated SQL doesn't contain a join for 'base' via '" + joinColumnBase + "':\n" + generatedSql
+					);
+				}
+		);
 	}
 
 	@MappedSuperclass
@@ -466,13 +458,12 @@ public class MultiInheritanceImplicitDowncastTest {
 	}
 
 	@MappedSuperclass
-	public abstract static class PolymorphicPropertyMapBase<T extends PolymorphicBase, E extends BaseEmbeddable> extends
-			PolymorphicPropertyBase {
+	public abstract static class PolymorphicPropertyMapBase<T extends PolymorphicBase> extends PolymorphicPropertyBase {
 
 		private static final long serialVersionUID = 1L;
 
 		private T base;
-		private E baseEmbeddable;
+		private Set<T> bases;
 
 		public PolymorphicPropertyMapBase() {
 		}
@@ -486,21 +477,22 @@ public class MultiInheritanceImplicitDowncastTest {
 			this.base = base;
 		}
 
-		@Embedded
-		public E getBaseEmbeddable() {
-			return baseEmbeddable;
+		@OneToMany
+		public Set<T> getBases() {
+			return bases;
 		}
 
-		public void setBaseEmbeddable(E baseEmbeddable) {
-			this.baseEmbeddable = baseEmbeddable;
+		public void setBases(Set<T> bases) {
+			this.bases = bases;
 		}
+
 	}
 
 	@Entity(name = "PolymorphicPropertySub1")
 	@AssociationOverrides({
 			@AssociationOverride(name = "base", joinColumns = @JoinColumn(name = "base_sub_1"))
 	})
-	public static class PolymorphicPropertySub1 extends PolymorphicPropertyMapBase<PolymorphicSub1, Embeddable1> {
+	public static class PolymorphicPropertySub1 extends PolymorphicPropertyMapBase<PolymorphicSub1> {
 		private static final long serialVersionUID = 1L;
 
 		public PolymorphicPropertySub1() {
@@ -511,7 +503,7 @@ public class MultiInheritanceImplicitDowncastTest {
 	@AssociationOverrides({
 			@AssociationOverride(name = "base", joinColumns = @JoinColumn(name = "base_sub_2"))
 	})
-	public static class PolymorphicPropertySub2 extends PolymorphicPropertyMapBase<PolymorphicSub2, Embeddable2> {
+	public static class PolymorphicPropertySub2 extends PolymorphicPropertyMapBase<PolymorphicSub2> {
 		private static final long serialVersionUID = 1L;
 
 		public PolymorphicPropertySub2() {

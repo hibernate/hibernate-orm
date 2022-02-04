@@ -29,6 +29,18 @@ public class DependantBasicValue extends BasicValue {
 		this.updateable = updateable;
 	}
 
+	private DependantBasicValue(DependantBasicValue original) {
+		super( original );
+		this.referencedValue = original.referencedValue.copy();
+		this.nullable = original.nullable;
+		this.updateable = original.updateable;
+	}
+
+	@Override
+	public DependantBasicValue copy() {
+		return new DependantBasicValue( this );
+	}
+
 	@Override
 	protected Resolution<?> buildResolution() {
 		return referencedValue.resolve();

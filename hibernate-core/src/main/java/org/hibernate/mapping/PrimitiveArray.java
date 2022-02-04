@@ -24,6 +24,15 @@ public class PrimitiveArray extends Array {
 		super( customTypeBeanResolver, owner, buildingContext );
 	}
 
+	private PrimitiveArray(PrimitiveArray original) {
+		super( original );
+	}
+
+	@Override
+	public Array copy() {
+		return new PrimitiveArray( this );
+	}
+
 	public boolean isPrimitiveArray() {
 		return true;
 	}

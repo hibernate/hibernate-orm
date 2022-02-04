@@ -83,7 +83,7 @@ public class MetadataContext {
 	private final AttributeFactory attributeFactory = new AttributeFactory( this );
 
 	private final Map<Class<?>, EntityDomainType<?>> entityTypes = new HashMap<>();
-	private final Map<String, EntityDomainType<?>> entityTypesByEntityName = new HashMap<>();
+	private final Map<String, IdentifiableDomainType<?>> identifiableTypesByName = new HashMap<>();
 	private final Map<PersistentClass, EntityDomainType<?>> entityTypesByPersistentClass = new HashMap<>();
 
 	private final Map<Class<?>, EmbeddableDomainType<?>> embeddables = new HashMap<>();
@@ -172,7 +172,7 @@ public class MetadataContext {
 			entityTypes.put( entityType.getBindableJavaType(), entityType );
 		}
 
-		entityTypesByEntityName.put( persistentClass.getEntityName(), entityType );
+		identifiableTypesByName.put( persistentClass.getEntityName(), entityType );
 		entityTypesByPersistentClass.put( persistentClass, entityType );
 		orderedMappings.add( persistentClass );
 	}
@@ -202,6 +202,7 @@ public class MetadataContext {
 	public void registerMappedSuperclassType(
 			MappedSuperclass mappedSuperclass,
 			MappedSuperclassDomainType<?> mappedSuperclassType) {
+		identifiableTypesByName.put( mappedSuperclassType.getTypeName(), mappedSuperclassType );
 		mappedSuperclassByMappedSuperclassMapping.put( mappedSuperclass, mappedSuperclassType );
 		orderedMappings.add( mappedSuperclass );
 		mappedSuperClassTypeToPersistentClass.put( mappedSuperclassType, getEntityWorkedOn() );
@@ -242,12 +243,12 @@ public class MetadataContext {
 	 * @return The corresponding JPA {@link org.hibernate.type.EntityType}, or null.
 	 */
 	@SuppressWarnings("unchecked")
-	public <E> EntityDomainType<E> locateEntityType(String entityName) {
-		return (EntityDomainType<E>) entityTypesByEntityName.get( entityName );
+	public <E> IdentifiableDomainType<E> locateIdentifiableType(String entityName) {
+		return (IdentifiableDomainType<E>) identifiableTypesByName.get( entityName );
 	}
 
-	public Map<String, EntityDomainType<?>> getEntityTypesByEntityName() {
-		return Collections.unmodifiableMap( entityTypesByEntityName );
+	public Map<String, IdentifiableDomainType<?>> getIdentifiableTypesByName() {
+		return Collections.unmodifiableMap( identifiableTypesByName );
 	}
 
 	@SuppressWarnings("unchecked")
@@ -452,7 +453,7 @@ public class MetadataContext {
 			assert cidValue.isEmbedded();
 
 			AbstractIdentifiableType<?> idType = (AbstractIdentifiableType<?>)
-					entityTypesByEntityName.get( cidValue.getOwner().getEntityName() );
+					identifiableTypesByName.get( cidValue.getOwner().getEntityName() );
 			//noinspection rawtypes
 			Set idAttributes = idType.getIdClassAttributesSafely();
 			if ( idAttributes == null ) {

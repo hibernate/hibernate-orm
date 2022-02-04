@@ -245,7 +245,12 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		public void consumeTreat(String entityName, boolean isTerminal) {
 			final EntityDomainType<Object> entityDomainType = creationState.getCreationContext().getJpaMetamodel()
 					.entity( entityName );
-			currentPath = currentPath.treatAs( entityDomainType, isTerminal ? alias : null );
+			if ( isTerminal ) {
+				currentPath = currentPath.treatAs( entityDomainType, alias );
+			}
+			else {
+				currentPath = currentPath.treatAs( entityDomainType );
+			}
 			creationState.getCurrentProcessingState().getPathRegistry().register( currentPath );
 		}
 

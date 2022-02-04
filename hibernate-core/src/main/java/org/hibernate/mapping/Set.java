@@ -38,6 +38,15 @@ public class Set extends Collection {
 		super( customTypeBeanResolver, persistentClass, buildingContext );
 	}
 
+	private Set(Collection original) {
+		super( original );
+	}
+
+	@Override
+	public Set copy() {
+		return new Set( this );
+	}
+
 	public void validate(Mapping mapping) throws MappingException {
 		super.validate( mapping );
 		//for backward compatibility, disable this:

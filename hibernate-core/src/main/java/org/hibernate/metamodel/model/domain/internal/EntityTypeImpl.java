@@ -82,6 +82,20 @@ public class EntityTypeImpl<J>
 				entityDescriptor
 		);
 	}
+	public EntityTypeImpl(JavaType<J> javaTypeDescriptor, JpaMetamodel jpaMetamodel) {
+		super(
+				javaTypeDescriptor.getJavaTypeClass().getName(),
+				javaTypeDescriptor,
+				null,
+				false,
+				false,
+				false,
+				jpaMetamodel
+		);
+
+		this.jpaEntityName = javaTypeDescriptor.getJavaTypeClass().getName();
+		this.discriminatorPathSource = null;
+	}
 
 	@Override
 	public String getName() {
@@ -131,7 +145,6 @@ public class EntityTypeImpl<J>
 		}
 
 		if ( "id".equalsIgnoreCase( name ) || EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( name ) ) {
-			//noinspection unchecked
 			final SingularPersistentAttribute<J, ?> idAttribute = findIdAttribute();
 			//noinspection RedundantIfStatement
 			if ( idAttribute != null ) {

@@ -33,6 +33,15 @@ public class Map extends IndexedCollection {
 		super( customTypeBeanResolver, owner, buildingContext );
 	}
 
+	private Map(Map original) {
+		super( original );
+	}
+
+	@Override
+	public Map copy() {
+		return new Map( this );
+	}
+
 	public boolean isMap() {
 		return true;
 	}

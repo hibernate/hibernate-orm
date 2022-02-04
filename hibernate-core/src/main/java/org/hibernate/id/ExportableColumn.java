@@ -64,6 +64,11 @@ public class ExportableColumn extends Column {
 		}
 
 		@Override
+		public Value copy() {
+			return new ValueImpl( column, table, type, database );
+		}
+
+		@Override
 		public int getColumnSpan() {
 			return 1;
 		}

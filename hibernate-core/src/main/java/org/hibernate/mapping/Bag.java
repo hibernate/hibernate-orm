@@ -34,6 +34,15 @@ public class Bag extends Collection {
 		super( customTypeBeanResolver, owner, buildingContext );
 	}
 
+	private Bag(Collection original) {
+		super( original );
+	}
+
+	@Override
+	public Bag copy() {
+		return new Bag( this );
+	}
+
 	public CollectionType getDefaultCollectionType() {
 		return new BagType( getRole(), getReferencedPropertyName() );
 	}

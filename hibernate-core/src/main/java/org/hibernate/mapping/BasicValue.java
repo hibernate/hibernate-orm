@@ -6,6 +6,7 @@
  */
 package org.hibernate.mapping;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Consumer;
@@ -109,6 +110,29 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		buildingContext.getMetadataCollector().registerValueMappingResolver( this::resolve );
 	}
 
+	public BasicValue(BasicValue original) {
+		super( original );
+		this.typeConfiguration = original.typeConfiguration;
+		this.explicitTypeName = original.explicitTypeName;
+		this.explicitLocalTypeParams = original.explicitLocalTypeParams == null
+				? null
+				: new HashMap(original.explicitLocalTypeParams);
+		this.explicitJavaTypeAccess = original.explicitJavaTypeAccess;
+		this.explicitJdbcTypeAccess = original.explicitJdbcTypeAccess;
+		this.explicitMutabilityPlanAccess = original.explicitMutabilityPlanAccess;
+		this.implicitJavaTypeAccess = original.implicitJavaTypeAccess;
+		this.enumerationStyle = original.enumerationStyle;
+		this.temporalPrecision = original.temporalPrecision;
+		this.timeZoneStorageType = original.timeZoneStorageType;
+		this.resolvedJavaType = original.resolvedJavaType;
+		this.ownerName = original.ownerName;
+		this.propertyName = original.propertyName;
+	}
+
+	@Override
+	public BasicValue copy() {
+		return new BasicValue( this );
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Setters - in preparation of resolution

@@ -20,11 +20,13 @@ import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.model.domain.internal.AnyMappingSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
 import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.model.domain.internal.MappedSuperclassSqmPathSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.SqmExpressible;
@@ -75,7 +77,7 @@ public class SqmMappingModelHelper {
 			DomainType<J> valueDomainType,
 			Bindable.BindableType jpaBindableType) {
 
-		if ( valueDomainType instanceof BasicDomainType ) {
+		if ( valueDomainType instanceof BasicDomainType<?> ) {
 			return new BasicSqmPathSource<>(
 					name,
 					(BasicDomainType<J>) valueDomainType,
@@ -83,7 +85,7 @@ public class SqmMappingModelHelper {
 			);
 		}
 
-		if ( valueDomainType instanceof AnyMappingDomainType ) {
+		if ( valueDomainType instanceof AnyMappingDomainType<?> ) {
 			return new AnyMappingSqmPathSource<>(
 					name,
 					(AnyMappingDomainType<J>) valueDomainType,
@@ -91,7 +93,7 @@ public class SqmMappingModelHelper {
 			);
 		}
 
-		if ( valueDomainType instanceof EmbeddableDomainType ) {
+		if ( valueDomainType instanceof EmbeddableDomainType<?> ) {
 			return new EmbeddedSqmPathSource<>(
 					name,
 					(EmbeddableDomainType<J>) valueDomainType,
@@ -99,10 +101,18 @@ public class SqmMappingModelHelper {
 			);
 		}
 
-		if ( valueDomainType instanceof EntityDomainType ) {
+		if ( valueDomainType instanceof EntityDomainType<?> ) {
 			return new EntitySqmPathSource<>(
 					name,
 					(EntityDomainType<J>) valueDomainType,
+					jpaBindableType
+			);
+		}
+
+		if ( valueDomainType instanceof MappedSuperclassDomainType<?> ) {
+			return new MappedSuperclassSqmPathSource<>(
+					name,
+					(MappedSuperclassDomainType<J>) valueDomainType,
 					jpaBindableType
 			);
 		}
@@ -169,8 +179,9 @@ public class SqmMappingModelHelper {
 	public static EntityMappingType resolveExplicitTreatTarget(
 			SqmPath<?> sqmPath,
 			SqmToSqlAstConverter converter) {
-		if ( sqmPath instanceof SqmTreatedPath ) {
-			final SqmTreatedPath treatedPath = (SqmTreatedPath) sqmPath;
+		final SqmPath<?> parentPath = sqmPath.getLhs();
+		if ( parentPath instanceof SqmTreatedPath ) {
+			final SqmTreatedPath<?, ?> treatedPath = (SqmTreatedPath<?, ?>) parentPath;
 			return resolveEntityPersister( treatedPath.getTreatTarget(), converter.getCreationContext().getSessionFactory() );
 		}
 

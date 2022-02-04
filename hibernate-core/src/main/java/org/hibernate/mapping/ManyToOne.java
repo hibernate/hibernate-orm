@@ -28,6 +28,17 @@ public class ManyToOne extends ToOne {
 		super( buildingContext, table );
 	}
 
+	private ManyToOne(ManyToOne original) {
+		super( original );
+		this.ignoreNotFound = original.ignoreNotFound;
+		this.isLogicalOneToOne = original.isLogicalOneToOne;
+	}
+
+	@Override
+	public ManyToOne copy() {
+		return new ManyToOne( this );
+	}
+
 	public Type getType() throws MappingException {
 		if ( resolvedType == null ) {
 			resolvedType = MappingHelper.manyToOne(

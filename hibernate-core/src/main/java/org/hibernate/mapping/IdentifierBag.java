@@ -34,6 +34,15 @@ public class IdentifierBag extends IdentifierCollection {
 		super( customTypeBeanResolver, owner, buildingContext );
 	}
 
+	public IdentifierBag(IdentifierBag original) {
+		super( original );
+	}
+
+	@Override
+	public IdentifierBag copy() {
+		return new IdentifierBag( this );
+	}
+
 	public CollectionType getDefaultCollectionType() {
 		return new IdentifierBagType( getRole(), getReferencedPropertyName() );
 	}

@@ -4259,8 +4259,16 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmPath<?> visitTreatedNavigablePath(HqlParser.TreatedNavigablePathContext ctx) {
 		final DotIdentifierConsumer consumer = dotIdentifierConsumerStack.getCurrent();
+		final boolean madeNested;
 		if ( consumer instanceof QualifiedJoinPathConsumer) {
-			( (QualifiedJoinPathConsumer) consumer ).setNested( true );
+			final QualifiedJoinPathConsumer qualifiedJoinPathConsumer = (QualifiedJoinPathConsumer) consumer;
+			madeNested = !qualifiedJoinPathConsumer.isNested();
+			if ( madeNested ) {
+				qualifiedJoinPathConsumer.setNested( true );
+			}
+		}
+		else {
+			madeNested = false;
 		}
 		consumeManagedTypeReference( (HqlParser.PathContext) ctx.getChild( 2 ) );
 
@@ -4272,18 +4280,27 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		SqmPath<?> result = (SqmPath<?>) consumer.getConsumedPart();
 
 		if ( hasContinuation ) {
-			dotIdentifierConsumerStack.push(
-					new BasicDotIdentifierConsumer( result, this ) {
-						@Override
-						protected void reset() {
+			if ( madeNested ) {
+				// Reset the nested state before consuming the terminal identifier
+				( (QualifiedJoinPathConsumer) consumer ).setNested( false );
+			}
+			final boolean addConsumer = !( consumer instanceof QualifiedJoinPathConsumer );
+			if ( addConsumer ) {
+				dotIdentifierConsumerStack.push(
+						new BasicDotIdentifierConsumer( result, this ) {
+							@Override
+							protected void reset() {
+							}
 						}
-					}
-			);
+				);
+			}
 			try {
 				result = consumeDomainPath( (HqlParser.SimplePathContext) ctx.getChild( 6 ).getChild( 1 ) );
 			}
 			finally {
-				dotIdentifierConsumerStack.pop();
+				if ( addConsumer ) {
+					dotIdentifierConsumerStack.pop();
+				}
 			}
 		}
 

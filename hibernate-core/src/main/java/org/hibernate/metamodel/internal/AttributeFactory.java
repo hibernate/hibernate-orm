@@ -40,6 +40,7 @@ import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AnyMappingDomainTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.EmbeddableTypeImpl;
+import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.MapMember;
 import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.PluralAttributeBuilder;
@@ -223,7 +224,17 @@ public class AttributeFactory {
 				final org.hibernate.type.Type type = typeContext.getHibernateValue().getType();
 				if ( type instanceof EntityType ) {
 					final EntityType entityType = (EntityType) type;
-					return context.locateEntityType( entityType.getAssociatedEntityName() );
+					final IdentifiableDomainType<Y> domainType = context.locateIdentifiableType( entityType.getAssociatedEntityName() );
+					if ( domainType == null ) {
+						// Due to the use of generics, it can happen that a mapped super class uses a type
+						// for an attribute that is not a managed type. Since this case is not specifically mentioned
+						// in the Jakarta Persistence spec, we handle this by returning a "dummy" entity type
+						final JavaType<Y> domainJavaType = context.getJavaTypeRegistry().resolveDescriptor(
+								typeContext.getJpaBindableType()
+						);
+						return new EntityTypeImpl<>( domainJavaType, context.getJpaMetamodel() );
+					}
+					return domainType;
 				}
 
 				assert type instanceof AnyType;

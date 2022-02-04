@@ -14,6 +14,14 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -29,12 +37,6 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
-
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -107,6 +109,17 @@ public class OneToManyHqlMemberOfQueryTest {
 		);
 	}
 
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete from Call" ).executeUpdate();
+					session.createQuery( "delete from Phone" ).executeUpdate();
+					session.createQuery( "delete from Person" ).executeUpdate();
+				}
+		);
+	}
+
 	@Test
 	public void testMemberOf(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -114,13 +127,67 @@ public class OneToManyHqlMemberOfQueryTest {
 					Call call = session.createQuery( "select c from Call c", Call.class ).getResultList().get( 0 );
 					Phone phone = call.getPhone();
 
-					List<Person> persons = session.createQuery(
-							"select p " +
-									"from Person p " +
-									"where :phone member of p.phones", Person.class )
+					List<Person> people = session.createQuery(
+									"select p " +
+											"from Person p " +
+											"where :phone member of p.phones", Person.class )
 							.setParameter( "phone", phone )
 							.getResultList();
-					assertEquals( 1, persons.size() );
+					assertEquals( 1, people.size() );
+				}
+		);
+	}
+
+	@Test
+	public void testNegatedMemberOf(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Call call = session.createQuery( "select c from Call c", Call.class ).getResultList().get( 0 );
+					Phone phone = call.getPhone();
+
+					List<Person> people = session.createQuery(
+									"select p " +
+											"from Person p " +
+											"where :phone not member of p.phones", Person.class )
+							.setParameter( "phone", phone )
+							.getResultList();
+					assertEquals( 2, people.size() );
+				}
+		);
+	}
+
+	@Test
+	public void testMember(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Call call = session.createQuery( "select c from Call c", Call.class ).getResultList().get( 0 );
+					Phone phone = call.getPhone();
+
+					List<Person> people = session.createQuery(
+									"select p " +
+											"from Person p " +
+											"where :phone member p.phones", Person.class )
+							.setParameter( "phone", phone )
+							.getResultList();
+					assertEquals( 1, people.size() );
+				}
+		);
+	}
+
+	@Test
+	public void testNegatedMember(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Call call = session.createQuery( "select c from Call c", Call.class ).getResultList().get( 0 );
+					Phone phone = call.getPhone();
+
+					List<Person> people = session.createQuery(
+									"select p " +
+											"from Person p " +
+											"where :phone not member p.phones", Person.class )
+							.setParameter( "phone", phone )
+							.getResultList();
+					assertEquals( 2, people.size() );
 				}
 		);
 	}
@@ -131,14 +198,14 @@ public class OneToManyHqlMemberOfQueryTest {
 				session -> {
 					Call call = session.createQuery( "select c from Call c", Call.class ).getResultList().get( 0 );
 
-					List<Person> persons = session.createQuery(
-							"select p " +
-									"from Person p " +
-									"join p.phones phone " +
-									"where :call member of phone.calls", Person.class )
+					List<Person> people = session.createQuery(
+									"select p " +
+											"from Person p " +
+											"join p.phones phone " +
+											"where :call member of phone.calls", Person.class )
 							.setParameter( "call", call )
 							.getResultList();
-					assertEquals( 1, persons.size() );
+					assertEquals( 1, people.size() );
 				}
 		);
 	}

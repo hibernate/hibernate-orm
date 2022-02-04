@@ -282,6 +282,8 @@ public class FunctionTests {
 							.list();
 					session.createQuery("select ceiling(e.theDouble), floor(e.theDouble) from EntityOfBasics e")
 							.list();
+					session.createQuery("select round(e.theDouble, 2) from EntityOfBasics e")
+							.list();
 					session.createQuery("select round(cast(e.theDouble as BigDecimal), 3) from EntityOfBasics e")
 							.list();
 					assertThat( session.createQuery("select abs(-2)").getSingleResult(), is(2) );

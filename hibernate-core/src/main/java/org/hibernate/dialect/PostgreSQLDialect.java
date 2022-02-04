@@ -404,6 +404,7 @@ public class PostgreSQLDialect extends Dialect {
 
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 
+		functionFactory.round_floor(); //Postgres round(x,n) does not accept double
 		functionFactory.cot();
 		functionFactory.radians();
 		functionFactory.degrees();
@@ -602,13 +603,9 @@ public class PostgreSQLDialect extends Dialect {
 		return false;
 	}
 
-	/**
-	 * Workaround for postgres bug #1453
-	 * <p/>
-	 * {@inheritDoc}
-	 */
 	@Override
 	public String getSelectClauseNullString(int sqlType) {
+		// Workaround for postgres bug #1453
 		return "null::" + getRawTypeName( sqlType );
 	}
 

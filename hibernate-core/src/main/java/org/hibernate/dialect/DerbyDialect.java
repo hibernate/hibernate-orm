@@ -72,7 +72,6 @@ import java.sql.Types;
 
 import jakarta.persistence.TemporalType;
 
-import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 import static org.hibernate.type.SqlTypes.*;
 
 /**
@@ -249,12 +248,8 @@ public class DerbyDialect extends Dialect {
 		functionFactory.leftRight_substrLength();
 		functionFactory.characterLength_length( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 		functionFactory.power_expLn();
+		functionFactory.round_floor();
 		functionFactory.bitLength_pattern( "length(?1)*8" );
-
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "round", "floor(?1*1e?2+0.5)/1e?2")
-				.setReturnTypeResolver( useArgType(1) )
-				.setExactArgumentCount( 2 )
-				.register();
 
 		queryEngine.getSqmFunctionRegistry().register(
 				"concat",

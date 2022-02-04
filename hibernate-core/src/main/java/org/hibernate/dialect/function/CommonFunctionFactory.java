@@ -1883,6 +1883,14 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public void round_floor() {
+		functionRegistry.patternDescriptorBuilder( "round", "floor(?1*1e?2+0.5)/1e?2")
+				.setReturnTypeResolver( useArgType(1) )
+				.setExactArgumentCount( 2 )
+				.setParameterTypes(NUMERIC, INTEGER)
+				.register();
+	}
+
 	public void square() {
 		functionRegistry.namedDescriptorBuilder( "square" )
 				.setExactArgumentCount( 1 )

@@ -79,7 +79,8 @@ public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerat
 		 *
 		 * @param context A context to help generate SQL strings
 		 */
-		void initialize(SqlStringGenerationContext context);
+		default void initialize(SqlStringGenerationContext context) {
+		}
 
 		/**
 		 * Execute the value generation.

@@ -112,8 +112,6 @@ public class H2MetaDataDialect extends JDBCMetaDataDialect {
 					sql += "AND idx.TABLE_NAME like '" + table + "' ";
 				}
 				
-				System.out.println(sql);
-									
 				PreparedStatement statement = getConnection().prepareStatement( sql );
 				
 				return new ResultSetIterator(statement.executeQuery()) {

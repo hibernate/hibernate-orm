@@ -205,6 +205,7 @@ import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sql.internal.SQLQueryParser;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
@@ -768,16 +769,15 @@ public abstract class AbstractEntityPersister
 
 		multiIdEntityLoader = new MultiIdLoaderStandard<>( this, bootDescriptor, factory );
 
-		int i = 0;
-		for ( Column column: bootDescriptor.getIdentifier().getColumns() ) {
+		SqmFunctionRegistry functionRegistry = factory.getQueryEngine().getSqmFunctionRegistry();
+
+		List<Column> columns = bootDescriptor.getIdentifier().getColumns();
+		for ( int i = 0; i < columns.size(); i++ ) {
+			Column column = columns.get(i);
 			rootTableKeyColumnNames[i] = column.getQuotedName( dialect );
 			rootTableKeyColumnReaders[i] = column.getReadExpr( dialect );
-			rootTableKeyColumnReaderTemplates[i] = column.getTemplate(
-					dialect,
-					factory.getQueryEngine().getSqmFunctionRegistry()
-			);
+			rootTableKeyColumnReaderTemplates[i] = column.getTemplate( dialect, functionRegistry );
 			identifierAliases[i] = column.getAlias( dialect, bootDescriptor.getRootTable() );
-			i++;
 		}
 
 		// VERSION
@@ -805,7 +805,7 @@ public abstract class AbstractEntityPersister
 			sqlWhereStringTemplate = Template.renderWhereStringTemplate(
 					"(" + bootDescriptor.getWhere() + ")",
 					dialect,
-					factory.getQueryEngine().getSqmFunctionRegistry()
+					functionRegistry
 			);
 		}
 		// PROPERTIES
@@ -830,9 +830,10 @@ public abstract class AbstractEntityPersister
 		ArrayList<String[]> lazyColAliases = new ArrayList<>();
 
 		final ArrayList<Integer> lobPropertiesLocalCollector = new ArrayList<>();
-		i = 0;
 		boolean foundFormula = false;
-		for ( Property prop : bootDescriptor.getPropertyClosure() ) {
+		List<Property> propertyClosure = bootDescriptor.getPropertyClosure();
+		for ( int i = 0; i < propertyClosure.size(); i++ ) {
+			Property prop = propertyClosure.get(i);
 			thisClassProperties.add( prop );
 
 			int span = prop.getColumnSpan();
@@ -843,14 +844,15 @@ public abstract class AbstractEntityPersister
 //			String[] colReaderTemplates = new String[span];
 			String[] colWriters = new String[span];
 			String[] formulaTemplates = new String[span];
-			int k = 0;
-			for ( Selectable selectable: prop.getSelectables() ) {
+			List<Selectable> selectables = prop.getSelectables();
+			for ( int k = 0; k < selectables.size(); k++ ) {
+				Selectable selectable = selectables.get(k);
 				colAliases[k] = selectable.getAlias( dialect, prop.getValue().getTable() );
 				if ( selectable.isFormula() ) {
 					foundFormula = true;
 					Formula formula = (Formula) selectable;
 					formula.setFormula( substituteBrackets( formula.getFormula() ) );
-					formulaTemplates[k] = selectable.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
+					formulaTemplates[k] = selectable.getTemplate( dialect, functionRegistry );
 				}
 				else {
 					Column column = (Column) selectable;
@@ -858,7 +860,6 @@ public abstract class AbstractEntityPersister
 //					colReaderTemplates[k] = column.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
 					colWriters[k] = column.getWriteExpr();
 				}
-				k++;
 			}
 			propertyColumnNames[i] = colNames;
 			propertyColumnFormulaTemplates[i] = formulaTemplates;
@@ -895,9 +896,6 @@ public abstract class AbstractEntityPersister
 			if ( prop.isLob() && dialect.forceLobAsLastValue() ) {
 				lobPropertiesLocalCollector.add( i );
 			}
-
-			i++;
-
 		}
 		this.lobProperties = CollectionHelper.toSmallList( lobPropertiesLocalCollector );
 		hasFormulaProperties = foundFormula;
@@ -947,7 +945,6 @@ public abstract class AbstractEntityPersister
 //			int[] colnos = new int[ prop.getColumnSpan() ];
 //			int[] formnos = new int[ prop.getColumnSpan() ];
 
-			int l = 0;
 //			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 //					prop,
 //					entityMetamodel.isInstrumented(),
@@ -959,36 +956,34 @@ public abstract class AbstractEntityPersister
 //					},
 //					sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled()
 //			);
-			for ( Selectable selectable : prop.getSelectables() ) {
+			List<Selectable> selectables = prop.getSelectables();
+			for ( int i = 0; i < selectables.size(); i++ ) {
+				Selectable selectable = selectables.get(i);
 				if ( selectable.isFormula() ) {
-					String template = selectable.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
+					String template = selectable.getTemplate( dialect, functionRegistry );
 //					formnos[l] = formulaTemplates.size();
 //					colnos[l] = -1;
 //					formulaTemplates.add( template );
-					forms[l] = template;
+					forms[i] = template;
 //					formulas.add( selectable.getText( dialect ) );
 					formulaAliases.add( selectable.getAlias( dialect ) );
 //					formulasLazy.add( lazy );
 				}
 				else {
 					Column column = (Column) selectable;
-					String colName = column.getQuotedName( dialect );
+					String colName = column.getQuotedName(dialect);
 //					colnos[l] = columns.size(); //before add :-)
 //					formnos[l] = -1;
 //					columns.add( colName );
-					cols[l] = colName;
+					cols[i] = colName;
 					aliases.add( selectable.getAlias( dialect, prop.getValue().getTable() ) );
 //					columnsLazy.add( lazy );
 					columnSelectables.add( prop.isSelectable() );
 
-					readers[l] = column.getReadExpr( dialect );
-					readerTemplates[l] = column.getTemplate(
-							dialect,
-							factory.getQueryEngine().getSqmFunctionRegistry()
-					);
+					readers[i] = column.getReadExpr( dialect );
+					readerTemplates[i] = column.getTemplate( dialect, functionRegistry );
 //					columnReaderTemplates.add( readerTemplate );
 				}
-				l++;
 			}
 			propColumns.add( cols );
 			propColumnReaders.add( readers );

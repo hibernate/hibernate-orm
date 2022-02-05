@@ -197,8 +197,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		// JOINS
 
-		int j = 1;
-		for ( Join join : persistentClass.getJoinClosure() ) {
+		List<Join> joinClosure = persistentClass.getJoinClosure();
+		for ( int j = 1; j-1 < joinClosure.size(); j++ ) {
+			Join join = joinClosure.get(j-1);
 			qualifiedTableNames[j] = determineTableName( join.getTable() );
 			isInverseTable[j] = join.isInverse();
 			isNullableTable[j] = join.isOptional();
@@ -221,12 +222,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 					: join.getCustomSQLDeleteCheckStyle();
 
 			keyColumnNames[j] = new String[join.getKey().getColumnSpan()];
-			int i = 0;
-			for ( Column col : join.getKey().getColumns() ) {
-				keyColumnNames[j][i++] = col.getQuotedName( dialect );
-			}
 
-			j++;
+			List<Column> columns = join.getKey().getColumns();
+			for ( int i = 0; i < columns.size(); i++ ) {
+				keyColumnNames[j][i] = columns.get(i).getQuotedName( dialect );
+			}
 		}
 
 		constraintOrderedTableNames = new String[qualifiedTableNames.length];
@@ -273,9 +273,10 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			subclassTables.add( joinTableName );
 
 			String[] keyCols = new String[join.getKey().getColumnSpan()];
-			int i = 0;
-			for ( Column col : join.getKey().getColumns() ) {
-				keyCols[i++] = col.getQuotedName( dialect );
+			List<Column> columns = join.getKey().getColumns();
+			for ( int i = 0; i < columns.size(); i++ ) {
+				Column col = columns.get(i);
+				keyCols[i] = col.getQuotedName(dialect);
 			}
 			joinKeyColumns.add( keyCols );
 		}
@@ -339,9 +340,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		// PROPERTIES
 
 		propertyTableNumbers = new int[getPropertySpan()];
-		int i = 0;
-		for ( Property property : persistentClass.getPropertyClosure() ) {
-			propertyTableNumbers[i++] = persistentClass.getJoinNumber( property );
+		List<Property> propertyClosure = persistentClass.getPropertyClosure();
+		for ( int k = 0; k < propertyClosure.size(); k++ ) {
+			propertyTableNumbers[k] = persistentClass.getJoinNumber( propertyClosure.get(k) );
 		}
 
 		//TODO: code duplication with JoinedSubclassEntityPersister
@@ -397,9 +398,10 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			}
 
 			// SUBCLASSES
-			int k = 1;
-			for ( Subclass subclass : persistentClass.getSubclasses() ) {
-				subclassClosure[k++] = subclass.getEntityName();
+			List<Subclass> subclasses = persistentClass.getSubclasses();
+			for ( int k = 0; k < subclasses.size(); k++ ) {
+				Subclass subclass = subclasses.get(k);
+				subclassClosure[k] = subclass.getEntityName();
 				Object subclassDiscriminatorValue = DiscriminatorHelper.getDiscriminatorValue( subclass );
 				addSubclassByDiscriminatorValue(
 						subclassesByDiscriminatorValueLocal,
@@ -413,7 +415,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 						: subclass.isAbstract();
 
 				if ( !subclassAbstract ) {
-					values.add(subclassDiscriminatorValue);
+					values.add( subclassDiscriminatorValue );
 					sqlValues.add( DiscriminatorHelper.getDiscriminatorSQLValue( subclass, dialect, factory ) );
 				}
 			}

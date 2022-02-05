@@ -235,13 +235,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		ArrayList<String[]> keyColumnReaders = new ArrayList<>();
 		ArrayList<String[]> keyColumnReaderTemplates = new ArrayList<>();
 		ArrayList<Boolean> cascadeDeletes = new ArrayList<>();
-		List<Table> tItr = persistentClass.getTableClosure();
-		List<KeyValue> kItr = persistentClass.getKeyClosure();
-		for ( int i = 0; i < tItr.size() && i < kItr.size(); i++ ) {
-			final Table table = tItr.get(i);
-			final KeyValue key = kItr.get(i);
-			final String tableName = determineTableName( table );
-			tableNames.add( tableName );
+		List<Table> tableClosure = persistentClass.getTableClosure();
+		List<KeyValue> keyClosure = persistentClass.getKeyClosure();
+		for ( int i = 0; i < tableClosure.size() && i < keyClosure.size(); i++ ) {
+			tableNames.add( determineTableName( tableClosure.get(i) ) );
+
+			final KeyValue key = keyClosure.get(i);
 			String[] keyCols = new String[idColumnSpan];
 			String[] keyColReaders = new String[idColumnSpan];
 			String[] keyColReaderTemplates = new String[idColumnSpan];
@@ -265,14 +264,13 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		isNullableTable = new boolean[tableSpan];
 		isInverseTable = new boolean[tableSpan];
 
-		int tableIndex = 0;
-		for ( Join join : persistentClass.getJoinClosure() ) {
-			isNullableTable[tableIndex] = join.isOptional();
-			isInverseTable[tableIndex] = join.isInverse();
+		List<Join> joinClosure = persistentClass.getJoinClosure();
+		for ( int i = 0; i < joinClosure.size(); i++ ) {
+			Join join = joinClosure.get(i);
+			isNullableTable[i] = join.isOptional();
+			isInverseTable[i] = join.isInverse();
 
-			Table table = join.getTable();
-			final String tableName = determineTableName( table );
-			tableNames.add( tableName );
+			tableNames.add( determineTableName( join.getTable() ) );
 
 			KeyValue key = join.getKey();
 			int joinIdColumnSpan = key.getColumnSpan();
@@ -292,8 +290,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			keyColumnReaders.add( keyColReaders );
 			keyColumnReaderTemplates.add( keyColReaderTemplates );
 			cascadeDeletes.add( key.isCascadeDeleteEnabled() && dialect.supportsCascadeDelete() );
-
-			tableIndex++;
 		}
 
 		naturalOrderTableNames = ArrayHelper.toStringArray( tableNames );
@@ -450,14 +446,13 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		int hydrateSpan = getPropertySpan();
 		naturalOrderPropertyTableNumbers = new int[hydrateSpan];
 		propertyTableNumbers = new int[hydrateSpan];
-		int i = 0;
-		for ( Property property : persistentClass.getPropertyClosure() ) {
-			String tableName = property.getValue().getTable().getQualifiedName(
+		List<Property> propertyClosure = persistentClass.getPropertyClosure();
+		for ( int i = 0; i < propertyClosure.size(); i++ ) {
+			String tableName = propertyClosure.get(i).getValue().getTable().getQualifiedName(
 					factory.getSqlStringGenerationContext()
 			);
 			propertyTableNumbers[i] = getTableId( tableName, this.tableNames );
 			naturalOrderPropertyTableNumbers[i] = getTableId( tableName, naturalOrderTableNames );
-			i++;
 		}
 
 		// subclass closure properties
@@ -470,8 +465,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		ArrayList<String> columns = new ArrayList<>();
 
 		for ( Property property : persistentClass.getSubclassPropertyClosure() ) {
-			Table table = property.getValue().getTable();
-			String tableName = table.getQualifiedName(
+			String tableName = property.getValue().getTable().getQualifiedName(
 					factory.getSqlStringGenerationContext()
 			);
 			Integer tableNumber = getTableId( tableName, subclassTableNameClosure );

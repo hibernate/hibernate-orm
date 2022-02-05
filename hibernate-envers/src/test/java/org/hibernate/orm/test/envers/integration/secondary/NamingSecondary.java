@@ -68,7 +68,7 @@ public class NamingSecondary extends BaseEnversJPAFunctionalTestCase {
 		assert getAuditReader().find( SecondaryNamingTestEntity.class, id, 2 ).equals( ver2 );
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testTableNames() {
 		assert "sec_versions".equals(

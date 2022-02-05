@@ -92,7 +92,7 @@ public class C3P0ConnectionProvider
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> unwrapType) {
 		if ( ConnectionProvider.class.equals( unwrapType ) ||
 				C3P0ConnectionProvider.class.isAssignableFrom( unwrapType ) ) {

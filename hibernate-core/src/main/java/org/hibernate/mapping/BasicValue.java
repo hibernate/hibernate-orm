@@ -147,7 +147,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		super.setJpaAttributeConverterDescriptor( descriptor );
 	}
 
-	@SuppressWarnings({"rawtypes"})
+	@SuppressWarnings("rawtypes")
 	public void setExplicitJavaTypeAccess(Function<TypeConfiguration, BasicJavaType> explicitJavaTypeAccess) {
 		this.explicitJavaTypeAccess = explicitJavaTypeAccess;
 	}

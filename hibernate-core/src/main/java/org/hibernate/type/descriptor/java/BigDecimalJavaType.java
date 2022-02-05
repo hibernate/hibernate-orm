@@ -44,7 +44,7 @@ public class BigDecimalJavaType extends AbstractClassJavaType<BigDecimal> {
 		return value.intValue();
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <X> X unwrap(BigDecimal value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

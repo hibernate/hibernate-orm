@@ -41,7 +41,7 @@ public class ListCollectionInitializor extends AbstractCollectionInitializor<Lis
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	protected List initializeCollection(int size) {
 		// There are two types of List collections that this class may generate
 		//
@@ -61,7 +61,7 @@ public class ListCollectionInitializor extends AbstractCollectionInitializor<Lis
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	protected void addToCollection(List collection, Object collectionRow) {
 		// collectionRow will be the actual object if retrieved from audit relation or middle table
 		// otherwise it will be a List

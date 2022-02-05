@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class DiscrimSubclassFilterTest {
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testFiltersWithSubclass(SessionFactoryScope scope) {
 		scope.inTransaction(
 				s -> {
@@ -92,7 +92,7 @@ public class DiscrimSubclassFilterTest {
 		);
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	private void prepareTestData(Session s) {
 		Employee john = new Employee( "John Doe" );
 		john.setCompany( "JBoss" );

@@ -28,7 +28,7 @@ public class ValueConverterTypeAdapter<J> extends AbstractSingleColumnStandardBa
 
 	private final ValueBinder<Object> valueBinder;
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public ValueConverterTypeAdapter(
 			String description,
 			BasicValueConverter<J, ?> converter,

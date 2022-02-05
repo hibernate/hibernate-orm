@@ -40,7 +40,7 @@ public class ByteJavaType extends AbstractClassJavaType<Byte>
 		return Byte.valueOf( string.toString() );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Byte value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {

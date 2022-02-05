@@ -100,7 +100,7 @@ public class EntityInstantiator {
 		return ret;
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	private void replaceNonAuditIdProxies(Map versionsEntity, Number revision) {
 		final Map originalId = (Map) versionsEntity.get( enversService.getConfig().getOriginalIdPropertyName() );
 		for ( Object key : originalId.keySet() ) {
@@ -141,7 +141,7 @@ public class EntityInstantiator {
 		}
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public void addInstancesFromVersionsEntities(
 			String entityName,
 			Collection addTo,

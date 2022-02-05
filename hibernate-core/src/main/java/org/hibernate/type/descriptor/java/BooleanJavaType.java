@@ -51,7 +51,7 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 		return Boolean.valueOf( string.toString() );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Boolean value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {

@@ -64,7 +64,7 @@ public class ObjectArrayJavaType extends AbstractClassJavaType<Object[]> {
 		return hashCode;
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Object[] value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {

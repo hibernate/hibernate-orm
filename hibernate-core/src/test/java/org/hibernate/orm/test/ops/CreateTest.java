@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class CreateTest extends AbstractOperationTestCase {
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testNoUpdatesOnCreateVersionedWithCollection(SessionFactoryScope scope) {
 		clearCounts( scope );
 
@@ -212,7 +212,7 @@ public class CreateTest extends AbstractOperationTestCase {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testBasic(SessionFactoryScope scope) throws Exception {
 		Employer er = new Employer();

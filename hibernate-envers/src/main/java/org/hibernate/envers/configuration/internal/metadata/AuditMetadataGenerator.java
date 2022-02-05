@@ -143,7 +143,7 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 		return true;
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	private void createJoins(PersistentClass persistentClass, JoinAwarePersistentEntity entity, ClassAuditingData auditingData) {
 		final Iterator<org.hibernate.mapping.Join> joins = persistentClass.getJoinIterator();
 		final Map<org.hibernate.mapping.Join, Join> joinElements = new HashMap<>();
@@ -190,7 +190,7 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 		}
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	private void addJoins(
 			PersistentClass persistentClass,
 			CompositeMapperBuilder currentMapper,

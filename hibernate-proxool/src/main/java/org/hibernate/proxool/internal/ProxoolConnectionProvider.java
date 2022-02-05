@@ -89,7 +89,7 @@ public class ProxoolConnectionProvider
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> unwrapType) {
 		if ( ConnectionProvider.class.equals( unwrapType ) ||
 				ProxoolConnectionProvider.class.isAssignableFrom( unwrapType ) ) {

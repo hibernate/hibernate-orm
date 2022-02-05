@@ -48,7 +48,7 @@ public class BitSetJavaType extends AbstractClassJavaType<BitSet> {
         return BitSetHelper.stringToBitSet(string.toString());
     }
 
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings("unchecked")
     public <X> X unwrap(BitSet value, Class<X> type, WrapperOptions options) {
         if (value == null) {
             return null;

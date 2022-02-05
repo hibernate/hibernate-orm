@@ -67,7 +67,7 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 		void perform(TestData data);
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	private void performWithStandardData(TestCode testCode) {
 		final Department literatureDepartment = new Department( "lit", "Literature" );
 		final Student me = new Student( "Steve" );

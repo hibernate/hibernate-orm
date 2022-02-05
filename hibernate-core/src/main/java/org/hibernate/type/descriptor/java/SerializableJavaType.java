@@ -39,7 +39,7 @@ public class SerializableJavaType<T extends Serializable> extends AbstractClassJ
 		}
 
 		@Override
-		@SuppressWarnings({ "unchecked" })
+		@SuppressWarnings("unchecked")
 		public S deepCopyNotNull(S value) {
 			return (S) SerializationHelper.clone( value );
 		}
@@ -94,7 +94,7 @@ public class SerializableJavaType<T extends Serializable> extends AbstractClassJ
 		return PrimitiveByteArrayJavaType.INSTANCE.extractHashCode( toBytes( value ) );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <X> X unwrap(T value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -147,7 +147,7 @@ public class SerializableJavaType<T extends Serializable> extends AbstractClassJ
 		return SerializationHelper.serialize( value );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	protected T fromBytes(byte[] bytes) {
 		return (T) SerializationHelper.deserialize( bytes, getJavaTypeClass().getClassLoader() );
 	}

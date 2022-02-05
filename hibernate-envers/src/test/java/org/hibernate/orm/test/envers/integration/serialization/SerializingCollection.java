@@ -71,7 +71,7 @@ public class SerializingCollection extends BaseEnversJPAFunctionalTestCase {
 
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public static <T> T serializeDeserialize(T o) throws Exception {
 		if ( o == null ) {
 			return null;

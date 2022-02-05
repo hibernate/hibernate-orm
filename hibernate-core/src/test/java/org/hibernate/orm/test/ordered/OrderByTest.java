@@ -43,7 +43,7 @@ public class OrderByTest {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testOrderBy(SessionFactoryScope scope) {
 
 		scope.inTransaction(

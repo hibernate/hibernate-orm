@@ -36,7 +36,7 @@ public final class ComponentMetadataGenerator extends AbstractMetadataGenerator 
 		this.valueGenerator = valueGenerator;
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public void addComponent(
 			AttributeContainer attributeContainer,
 			PropertyAuditingData propertyAuditingData,

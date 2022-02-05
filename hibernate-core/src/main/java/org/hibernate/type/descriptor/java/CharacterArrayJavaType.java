@@ -23,7 +23,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 public class CharacterArrayJavaType extends AbstractClassJavaType<Character[]> {
 	public static final CharacterArrayJavaType INSTANCE = new CharacterArrayJavaType();
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public CharacterArrayJavaType() {
 		super( Character[].class, ArrayMutabilityPlan.INSTANCE, IncomparableComparator.INSTANCE );
 	}
@@ -53,7 +53,7 @@ public class CharacterArrayJavaType extends AbstractClassJavaType<Character[]> {
 		return hashCode;
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Character[] value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {

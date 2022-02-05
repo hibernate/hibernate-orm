@@ -27,7 +27,7 @@ public class NoneAudited extends BaseEnversJPAFunctionalTestCase {
 
 	@Test
 	public void testRevisionInfoTableNotCreated() {
-		@SuppressWarnings({"unchecked"}) List<PersistentClass> pcs = collectionToList( metadata().getEntityBindings() );
+		@SuppressWarnings("unchecked") List<PersistentClass> pcs = collectionToList( metadata().getEntityBindings() );
 		Assert.assertEquals( 1, pcs.size() );
 		Assert.assertTrue( pcs.get( 0 ).getClassName().contains( "BasicTestEntity3" ) );
 	}

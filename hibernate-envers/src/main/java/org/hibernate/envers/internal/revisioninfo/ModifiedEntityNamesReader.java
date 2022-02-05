@@ -28,7 +28,7 @@ public class ModifiedEntityNamesReader {
 		modifiedEntityNamesGetter = ReflectionTools.getGetter( revisionInfoClass, modifiedEntityNamesData, serviceRegistry );
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public Set<String> getModifiedEntityNames(Object revisionEntity) {
 		return (Set<String>) modifiedEntityNamesGetter.get( revisionEntity );
 	}

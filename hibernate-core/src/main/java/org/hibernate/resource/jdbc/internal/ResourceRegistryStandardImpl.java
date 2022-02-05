@@ -159,7 +159,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		close( s );
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	private static void close(final ResultSet resultSet) {
 		log.tracef( "Closing result set [%s]", resultSet );
 
@@ -175,7 +175,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		}
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public static void close(Statement statement) {
 		log.tracef( "Closing prepared statement [%s]", statement );
 

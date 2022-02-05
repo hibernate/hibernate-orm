@@ -44,7 +44,7 @@ public class BasicCollectionInitializor<T extends Collection> extends AbstractCo
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	protected void addToCollection(T collection, Object collectionRow) {
 		// collectionRow will be the actual object if retrieved from audit relation or middle table
 		// otherwise it will be a List

@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 public class MergeMultipleEntityCopiesAllowedTest {
 
 	@AfterEach
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	void cleanup(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {

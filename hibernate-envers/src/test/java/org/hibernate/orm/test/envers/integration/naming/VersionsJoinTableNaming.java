@@ -96,7 +96,7 @@ public class VersionsJoinTableNaming extends BaseEnversJPAFunctionalTestCase {
 		);
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testJoinColumnName() {
 		Iterator<Column> columns =

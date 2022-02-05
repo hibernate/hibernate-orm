@@ -48,7 +48,7 @@ public class ZoneOffsetJavaType extends AbstractClassJavaType<ZoneOffset> {
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <X> X unwrap(ZoneOffset value, Class<X> type, WrapperOptions wrapperOptions) {
 		if ( value == null ) {
 			return null;

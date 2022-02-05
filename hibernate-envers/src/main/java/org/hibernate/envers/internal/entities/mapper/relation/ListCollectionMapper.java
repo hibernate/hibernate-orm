@@ -69,7 +69,7 @@ public final class ListCollectionMapper extends AbstractCollectionMapper<List> i
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	protected Collection getNewCollectionContent(PersistentCollection newCollection) {
 		if ( newCollection == null ) {
 			return null;
@@ -80,7 +80,7 @@ public final class ListCollectionMapper extends AbstractCollectionMapper<List> i
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	protected Collection getOldCollectionContent(Serializable oldCollection) {
 		if ( oldCollection == null ) {
 			return null;
@@ -91,7 +91,7 @@ public final class ListCollectionMapper extends AbstractCollectionMapper<List> i
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	protected void mapToMapFromObject(
 			SessionImplementor session,
 			Map<String, Object> idData,

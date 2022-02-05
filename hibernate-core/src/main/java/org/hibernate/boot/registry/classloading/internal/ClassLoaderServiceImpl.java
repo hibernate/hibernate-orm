@@ -99,7 +99,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	 * @deprecated No longer used/supported!
 	 */
 	@Deprecated
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public static ClassLoaderServiceImpl fromConfigSettings(Map configValues) {
 		final List<ClassLoader> providedClassLoaders = new ArrayList<>();
 
@@ -112,7 +112,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public <T> Class<T> classForName(String className) {
 		try {
 			return (Class<T>) Class.forName( className, true, getAggregatedClassLoader() );

@@ -49,7 +49,7 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 		}
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Short value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {

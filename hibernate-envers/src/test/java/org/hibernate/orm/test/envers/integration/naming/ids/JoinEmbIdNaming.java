@@ -121,7 +121,7 @@ public class JoinEmbIdNaming extends BaseEnversJPAFunctionalTestCase {
 		);
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testJoinColumnNames() {
 		Iterator<Selectable> columns = metadata().getEntityBinding(

@@ -41,7 +41,7 @@ public class OrphanTest {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testOrphanDeleteOnDelete(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -75,7 +75,7 @@ public class OrphanTest {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testOrphanDeleteAfterPersist(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -105,7 +105,7 @@ public class OrphanTest {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testOrphanDeleteAfterPersistAndFlush(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -136,7 +136,7 @@ public class OrphanTest {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testOrphanDeleteAfterLock(SessionFactoryScope scope) {
 		Product prod = new Product();
 		Part part = new Part();
@@ -172,7 +172,7 @@ public class OrphanTest {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testOrphanDeleteOnSaveOrUpdate(SessionFactoryScope scope) {
 		Product prod = new Product();
 		Part part = new Part();
@@ -207,7 +207,7 @@ public class OrphanTest {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testOrphanDeleteOnSaveOrUpdateAfterSerialization(SessionFactoryScope scope) {
 		Product prod = new Product();
 		Part part = new Part();
@@ -244,7 +244,7 @@ public class OrphanTest {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testOrphanDelete(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -285,7 +285,7 @@ public class OrphanTest {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testOrphanDeleteOnMerge(SessionFactoryScope scope) {
 		Product prod = new Product();
 		Part part = new Part();
@@ -321,7 +321,7 @@ public class OrphanTest {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testOrphanDeleteOnMergeRemoveElementMerge(SessionFactoryScope scope) {
 		Product prod = new Product();
 		Part part = new Part();
@@ -352,7 +352,7 @@ public class OrphanTest {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	@TestForIssue(jiraKey = "HHH-9171")
 	public void testOrphanDeleteOnAddElementMergeRemoveElementMerge(SessionFactoryScope scope) {
 		Product prod = new Product();

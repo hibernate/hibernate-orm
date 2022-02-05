@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class AuctionTest {
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testLazy(SessionFactoryScope scope) {
 		Auction auction = new Auction();
 		auction.setEnd( new Date() );

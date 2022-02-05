@@ -39,7 +39,7 @@ public class ImmutableMutabilityPlan<T> implements MutabilityPlan<T> {
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public T assemble(Serializable cached, SharedSessionContract session) {
 		return (T) cached;
 	}

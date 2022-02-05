@@ -91,7 +91,7 @@ public class OneToManyUnidirectionalNaming extends BaseEnversJPAFunctionalTestCa
 		);
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testJoinColumnName() {
 		Iterator<Column> columns =

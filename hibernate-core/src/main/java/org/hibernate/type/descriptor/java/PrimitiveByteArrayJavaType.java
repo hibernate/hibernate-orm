@@ -29,7 +29,7 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 		implements VersionJavaType<byte[]> {
 	public static final PrimitiveByteArrayJavaType INSTANCE = new PrimitiveByteArrayJavaType();
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public PrimitiveByteArrayJavaType() {
 		super( byte[].class, ArrayMutabilityPlan.INSTANCE, RowVersionComparator.INSTANCE );
 	}
@@ -86,7 +86,7 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 		return bytes;
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <X> X unwrap(byte[] value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

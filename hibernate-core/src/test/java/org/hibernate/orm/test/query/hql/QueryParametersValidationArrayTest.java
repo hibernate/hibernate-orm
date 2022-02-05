@@ -167,7 +167,7 @@ public class QueryParametersValidationArrayTest {
 			return null;
 		}
 
-		@SuppressWarnings({"unchecked"})
+		@SuppressWarnings("unchecked")
 		@Override
 		public <X> X unwrap(String[] value, Class<X> type, WrapperOptions options) {
 			return (X) value;

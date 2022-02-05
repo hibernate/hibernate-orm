@@ -57,7 +57,7 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
 		assert javaType.getJavaTypeClass() == null
 				|| jtd.getJavaTypeClass().isAssignableFrom( javaType.getJavaTypeClass() );
@@ -65,7 +65,7 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
 		assert javaType.getJavaTypeClass() == null
 				|| javaType.getJavaTypeClass().isAssignableFrom( jtd.getJavaTypeClass() );

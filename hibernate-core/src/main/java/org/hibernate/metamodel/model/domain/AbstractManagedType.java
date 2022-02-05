@@ -259,7 +259,7 @@ public abstract class AbstractManagedType<J>
 	// Singular attributes
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public Set<SingularAttribute<? super J, ?>> getSingularAttributes() {
 		HashSet attributes = new HashSet<>( declaredSingularAttributes.values() );
 		if ( getSuperType() != null ) {
@@ -292,7 +292,7 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <Y> SingularPersistentAttribute<? super J, Y> getSingularAttribute(String name, Class<Y> type) {
 		SingularAttribute attribute = findSingularAttribute( name );
 		checkTypeForSingleAttribute( attribute, name, type );
@@ -462,7 +462,7 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <E> BagPersistentAttribute<? super J, E> getCollection(String name, Class<E> elementType) {
 		PluralAttribute<? super J, ?, ?> attribute = findPluralAttribute( name );
 		checkCollectionElementType( attribute, name, elementType );
@@ -486,7 +486,7 @@ public abstract class AbstractManagedType<J>
 	// Set attributes
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public SetPersistentAttribute<? super J, ?> getSet(String name) {
 		final PluralAttribute attribute = findPluralAttribute( name );
 		basicSetCheck( attribute, name );
@@ -509,7 +509,7 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <E> SetAttribute<? super J, E> getSet(String name, Class<E> elementType) {
 		PluralAttribute<? super J, ?, ?> attribute = findPluralAttribute( name );
 		checkSetElementType( attribute, name, elementType );
@@ -533,7 +533,7 @@ public abstract class AbstractManagedType<J>
 	// List attributes
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public ListPersistentAttribute<? super J, ?> getList(String name) {
 		PluralAttribute<? super J, ?, ?> attribute = findPluralAttribute( name );
 		basicListCheck( attribute, name );
@@ -556,7 +556,7 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <E> ListAttribute<? super J, E> getList(String name, Class<E> elementType) {
 		PluralAttribute<? super J, ?, ?> attribute = findPluralAttribute( name );
 		checkListElementType( attribute, name, elementType );
@@ -580,7 +580,7 @@ public abstract class AbstractManagedType<J>
 	// Map attributes
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public MapPersistentAttribute<? super J, ?, ?> getMap(String name) {
 		PluralAttribute<? super J, ?, ?> attribute = findPluralAttribute( name );
 		basicMapCheck( attribute, name );
@@ -603,7 +603,7 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <K, V> MapAttribute<? super J, K, V> getMap(String name, Class<K> keyType, Class<V> valueType) {
 		PluralAttribute<? super J, ?, ?> attribute = findPluralAttribute( name );
 		checkMapValueType( attribute, name, valueType );

@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 public class DeleteTest extends AbstractOperationTestCase {
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testDeleteVersionedWithCollectionNoUpdate(SessionFactoryScope scope) {
 		// test adapted from HHH-1564...
 		scope.inTransaction(
@@ -66,7 +66,7 @@ public class DeleteTest extends AbstractOperationTestCase {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testNoUpdateOnDeleteWithCollection(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

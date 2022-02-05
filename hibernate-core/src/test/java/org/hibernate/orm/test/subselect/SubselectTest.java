@@ -36,7 +36,7 @@ public class SubselectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testEntitySubselect() {
 		inTransaction(
 				s -> {

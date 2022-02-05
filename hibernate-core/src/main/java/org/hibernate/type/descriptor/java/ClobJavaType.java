@@ -79,7 +79,7 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy().mergeClob( original, target, session );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <X> X unwrap(final Clob value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

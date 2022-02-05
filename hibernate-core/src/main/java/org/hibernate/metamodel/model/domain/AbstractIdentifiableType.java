@@ -108,7 +108,7 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <Y> SingularPersistentAttribute<? super J, Y> getId(Class<Y> javaType) {
 		ensureNoIdClass();
 		SingularPersistentAttribute<J, ?> id = findIdAttribute();
@@ -163,7 +163,7 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <Y> SingularPersistentAttribute<J, Y> getDeclaredId(Class<Y> javaType) {
 		ensureNoIdClass();
 		if ( id == null ) {
@@ -287,7 +287,7 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <Y> SingularPersistentAttribute<J, Y> getDeclaredVersion(Class<Y> javaType) {
 		checkDeclaredVersion();
 		checkType( versionAttribute, javaType );

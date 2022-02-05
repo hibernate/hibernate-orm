@@ -97,7 +97,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 		this.eventListeners = eventListeners;
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <T> EventListenerGroup<T> getEventListenerGroup(EventType<T> eventType) {
 		if ( eventListeners.length < eventType.ordinal() + 1 ) {
 			// eventTpe is a custom EventType that has not been registered.

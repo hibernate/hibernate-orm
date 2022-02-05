@@ -116,7 +116,7 @@ public class MergeMultipleEntityCopiesDisallowedByDefaultTest {
 		cleanup( scope );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	private void cleanup(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -67,7 +67,7 @@ public class EmbIdSecondary extends BaseEnversJPAFunctionalTestCase {
 		assert getAuditReader().find( SecondaryEmbIdTestEntity.class, id, 2 ).equals( ver2 );
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testTableNames() {
 		assert "sec_embid_versions".equals(

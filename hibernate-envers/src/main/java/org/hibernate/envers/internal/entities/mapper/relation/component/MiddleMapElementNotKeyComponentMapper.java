@@ -36,7 +36,7 @@ public class MiddleMapElementNotKeyComponentMapper extends AbstractMiddleCompone
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public Object mapToObjectFromFullMap(
 			EntityInstantiator entityInstantiator,
 			Map<String, Object> data,

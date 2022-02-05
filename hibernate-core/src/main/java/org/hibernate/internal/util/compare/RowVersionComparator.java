@@ -19,7 +19,7 @@ public final class RowVersionComparator implements Comparator<byte[]> {
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public int compare(byte[] o1, byte[] o2) {
 		final int lengthToCheck = Math.min( o1.length, o2.length );
 

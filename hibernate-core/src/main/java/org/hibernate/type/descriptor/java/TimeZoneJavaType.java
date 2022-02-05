@@ -39,7 +39,7 @@ public class TimeZoneJavaType extends AbstractClassJavaType<TimeZone> {
 		return TimeZone.getTimeZone( string.toString() );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <X> X unwrap(TimeZone value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

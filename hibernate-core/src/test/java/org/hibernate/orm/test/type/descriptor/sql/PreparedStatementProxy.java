@@ -37,7 +37,7 @@ public class PreparedStatementProxy<T> implements InvocationHandler {
 		return cl;
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 		if ( value == null ) {
 			assertEquals( "setNull", method.getName(), "Expecting setNull call" );

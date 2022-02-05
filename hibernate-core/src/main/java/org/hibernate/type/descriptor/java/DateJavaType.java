@@ -108,7 +108,7 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 		return CalendarJavaType.INSTANCE.extractHashCode( calendar );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Date value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {

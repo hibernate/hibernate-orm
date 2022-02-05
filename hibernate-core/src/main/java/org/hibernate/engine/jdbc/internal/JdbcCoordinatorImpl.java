@@ -318,7 +318,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void registerLastQuery(Statement statement) {
 		LOG.tracev( "Registering last query statement [{0}]", statement );
 		if ( statement instanceof JdbcWrapper ) {
@@ -359,7 +359,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		releasesEnabled = false;
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	protected void close(Statement statement) {
 		LOG.tracev( "Closing prepared statement [{0}]", statement );
 		
@@ -408,7 +408,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		LOG.tracev( "Closing result set [{0}]", resultSet );
 
 		if ( resultSet instanceof InvalidatableWrapper ) {
-			@SuppressWarnings({ "unchecked" })
+			@SuppressWarnings("unchecked")
 			final InvalidatableWrapper<ResultSet> wrapper = (InvalidatableWrapper<ResultSet>) resultSet;
 			close( wrapper.getWrappedObject() );
 			wrapper.invalidate();

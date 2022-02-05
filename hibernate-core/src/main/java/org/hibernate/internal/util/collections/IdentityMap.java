@@ -87,7 +87,7 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public boolean containsKey(Object key) {
 		return map.containsKey( new IdentityKey( key ) );
 	}

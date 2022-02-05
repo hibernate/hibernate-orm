@@ -44,7 +44,7 @@ public class DoubleJavaType extends AbstractClassJavaType<Double> implements
 		return Double.valueOf( string.toString() );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Double value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {

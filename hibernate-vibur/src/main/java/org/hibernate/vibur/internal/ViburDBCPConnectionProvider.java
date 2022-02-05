@@ -86,7 +86,7 @@ public class ViburDBCPConnectionProvider implements ConnectionProvider, Configur
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> unwrapType) {
 		if ( isUnwrappableAs( unwrapType ) ) {
 			return (T) this;

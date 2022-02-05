@@ -37,7 +37,7 @@ public class CharacterJavaType extends AbstractClassJavaType<Character> implemen
 		return string.charAt( 0 );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Character value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {

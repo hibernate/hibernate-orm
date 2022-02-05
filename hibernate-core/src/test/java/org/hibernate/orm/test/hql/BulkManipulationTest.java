@@ -715,7 +715,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testUpdateWithWhereExistsSubquery() {
 		// multi-table ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

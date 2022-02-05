@@ -66,7 +66,7 @@ public class AnnotationsIllustrationTest extends TestCase {
 		}
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testBasicUsage() {
 		// create a couple of events...
 		Session session = sessionFactory.openSession();

@@ -29,7 +29,7 @@ public class RowVersionJavaType extends AbstractClassJavaType<byte[]>
 		implements VersionJavaType<byte[]> {
 	public static final RowVersionJavaType INSTANCE = new RowVersionJavaType();
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public RowVersionJavaType() {
 		super( byte[].class, ArrayMutabilityPlan.INSTANCE, RowVersionComparator.INSTANCE );
 	}
@@ -81,7 +81,7 @@ public class RowVersionJavaType extends AbstractClassJavaType<byte[]>
 		return bytes;
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <X> X unwrap(byte[] value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

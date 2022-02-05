@@ -46,7 +46,7 @@ public class InetJavaType extends AbstractClassJavaType<Inet> {
 		return value.hashCode();
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <X> X unwrap(Inet value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

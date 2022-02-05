@@ -45,7 +45,7 @@ public class UrlJavaType extends AbstractClassJavaType<URL> {
 		}
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <X> X unwrap(URL value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

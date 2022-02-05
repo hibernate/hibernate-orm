@@ -208,13 +208,13 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public boolean isEqual(Object one, Object another) {
 		return javaType.areEqual( (T) one, (T) another );
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public final int getHashCode(Object x) {
 		return javaType.extractHashCode( (T) x );
 	}
@@ -225,7 +225,7 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public final int compare(Object x, Object y) {
 		return javaType.getComparator().compare( (T) x, (T) y );
 	}
@@ -268,7 +268,7 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public final String toLoggableString(Object value, SessionFactoryImplementor factory) {
 		if ( value == LazyPropertyInitializer.UNFETCHED_PROPERTY || !Hibernate.isInitialized( value ) ) {
 			return  "<uninitialized>";
@@ -282,7 +282,7 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public final Object deepCopy(Object value, SessionFactoryImplementor factory) {
 		return deepCopy( (T) value );
 	}
@@ -292,7 +292,7 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public final Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
 		return getMutabilityPlan().disassemble( (T) value, session );
 	}
@@ -317,7 +317,7 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 	}
 
 	@Override
-//	@SuppressWarnings({ "unchecked" })
+//	@SuppressWarnings("unchecked")
 	public Object replace(
 			Object original,
 			Object target,

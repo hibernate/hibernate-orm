@@ -76,7 +76,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public void perform(Session session, Object revisionData) {
 		final Configuration configuration = enversService.getConfig();
 

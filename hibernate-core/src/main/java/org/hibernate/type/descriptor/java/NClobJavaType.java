@@ -84,7 +84,7 @@ public class NClobJavaType extends AbstractClassJavaType<NClob> {
 		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy().mergeNClob( original, target, session );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <X> X unwrap(final NClob value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

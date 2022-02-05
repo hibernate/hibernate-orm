@@ -180,7 +180,7 @@ public class MergeTest extends AbstractOperationTestCase {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testNoExtraUpdatesOnMergeWithCollection(SessionFactoryScope scope) {
 		Node parent = new Node( "parent" );
 		scope.inTransaction(
@@ -259,7 +259,7 @@ public class MergeTest extends AbstractOperationTestCase {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testNoExtraUpdatesOnMergeVersionedWithCollection(SessionFactoryScope scope) {
 		VersionedEntity parent = new VersionedEntity( "parent", "parent" );
 		VersionedEntity child = new VersionedEntity( "child", "child" );
@@ -730,7 +730,7 @@ public class MergeTest extends AbstractOperationTestCase {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testRecursiveMergeTransient(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -776,7 +776,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup( scope );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	@Test
 	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testMergeManyToManyWithCollectionDeference(SessionFactoryScope scope) {

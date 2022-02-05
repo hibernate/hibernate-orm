@@ -26,7 +26,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-@SuppressWarnings({"unchecked"})
+@SuppressWarnings("unchecked")
 public class MulIdOneToManyQuery extends BaseEnversJPAFunctionalTestCase {
 	private MulId id1;
 	private MulId id2;

@@ -71,7 +71,7 @@ public abstract class EntityTools {
 	 * @return Returns target class in case it has been wrapped with a proxy. If {@code null} reference is passed,
 	 *         method returns {@code null}.
 	 */
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public static <T> Class<T> getTargetClassIfProxied(Class<T> clazz) {
 		if ( clazz == null ) {
 			return null;

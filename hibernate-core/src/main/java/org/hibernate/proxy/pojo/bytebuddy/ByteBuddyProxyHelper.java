@@ -42,7 +42,7 @@ public class ByteBuddyProxyHelper implements Serializable {
 		this.byteBuddyState = byteBuddyState;
 	}
 
-	@SuppressWarnings({ "rawtypes" })
+	@SuppressWarnings("rawtypes")
 	public Class buildProxy(
 			final Class<?> persistentClass,
 			final Class<?>[] interfaces) {

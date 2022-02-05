@@ -67,7 +67,7 @@ public class MulIdSecondary extends BaseEnversJPAFunctionalTestCase {
 		assert getAuditReader().find( SecondaryMulIdTestEntity.class, id, 2 ).equals( ver2 );
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testTableNames() {
 		assert "sec_mulid_versions".equals(

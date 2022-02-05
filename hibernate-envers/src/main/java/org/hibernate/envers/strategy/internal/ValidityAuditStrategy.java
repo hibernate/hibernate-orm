@@ -216,7 +216,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public void performCollectionChange(
 			Session session,
 			String entityName,
@@ -340,12 +340,12 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		subParm.addWhere( revisionEndProperty, addAlias, "is", "null", false );
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	private RevisionType getRevisionType(Configuration configuration, Object data) {
 		return (RevisionType) ( (Map<String, Object>) data ).get( configuration.getRevisionTypePropertyName() );
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	private void updateLastRevision(
 			Session session,
 			Configuration configuration,

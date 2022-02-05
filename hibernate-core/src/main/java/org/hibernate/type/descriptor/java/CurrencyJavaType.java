@@ -32,7 +32,7 @@ public class CurrencyJavaType extends AbstractClassJavaType<Currency> {
 		return Currency.getInstance( string.toString() );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <X> X unwrap(Currency value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

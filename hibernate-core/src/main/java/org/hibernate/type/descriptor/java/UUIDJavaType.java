@@ -52,7 +52,7 @@ public class UUIDJavaType extends AbstractClassJavaType<UUID> {
 		return super.getDefaultSqlLength( dialect, jdbcType );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <X> X unwrap(UUID value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

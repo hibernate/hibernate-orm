@@ -94,7 +94,7 @@ public class AttributeFactory {
 		return buildAttribute( ownerType, property, context );
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public static <X, Y> PersistentAttribute<X, Y> buildAttribute(
 			ManagedDomainType<X> ownerType,
 			Property property,

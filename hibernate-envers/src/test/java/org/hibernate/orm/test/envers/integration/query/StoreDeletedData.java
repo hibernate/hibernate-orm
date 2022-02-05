@@ -30,7 +30,7 @@ import junit.framework.Assert;
  *
  * @author Adam Warski (adam at warski dot org)
  */
-@SuppressWarnings({"unchecked"})
+@SuppressWarnings("unchecked")
 public class StoreDeletedData extends BaseEnversJPAFunctionalTestCase {
 	private Integer id1;
 	private Integer id2;

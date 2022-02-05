@@ -38,7 +38,7 @@ public class ClassJavaType extends AbstractClassJavaType<Class> {
 		}
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <X> X unwrap(Class value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

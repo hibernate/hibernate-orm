@@ -24,7 +24,7 @@ import org.junit.Test;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-@SuppressWarnings({"unchecked"})
+@SuppressWarnings("unchecked")
 public class EmbIdOneToManyQuery extends BaseEnversJPAFunctionalTestCase {
 	private EmbId id1;
 	private EmbId id2;

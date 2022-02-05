@@ -35,7 +35,7 @@ public abstract class MutableMutabilityPlan<T> implements MutabilityPlan<T> {
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public T assemble(Serializable cached, SharedSessionContract session) {
 		return deepCopy( (T) cached );
 	}

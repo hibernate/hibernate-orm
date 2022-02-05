@@ -121,7 +121,7 @@ public class MapIndexFormulaTest {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testSQLQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

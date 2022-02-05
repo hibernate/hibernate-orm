@@ -56,7 +56,7 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 		return super.getRecommendedJdbcType( stdIndicators );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <X> X unwrap(String value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

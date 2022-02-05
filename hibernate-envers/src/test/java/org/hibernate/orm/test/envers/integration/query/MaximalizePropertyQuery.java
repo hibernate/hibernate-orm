@@ -28,7 +28,7 @@ import org.junit.Test;
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@SuppressWarnings({"unchecked"})
+@SuppressWarnings("unchecked")
 public class MaximalizePropertyQuery extends BaseEnversJPAFunctionalTestCase {
 	Integer id1;
 	Integer id2;

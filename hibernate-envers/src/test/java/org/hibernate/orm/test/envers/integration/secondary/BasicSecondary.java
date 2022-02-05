@@ -68,7 +68,7 @@ public class BasicSecondary extends BaseEnversJPAFunctionalTestCase {
 		assert getAuditReader().find( SecondaryTestEntity.class, id, 2 ).equals( ver2 );
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testTableNames() {
 		assert "secondary_AUD".equals(

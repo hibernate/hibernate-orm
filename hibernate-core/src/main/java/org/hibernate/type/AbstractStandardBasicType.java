@@ -154,13 +154,13 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public boolean isEqual(Object one, Object another) {
 		return javaType.areEqual( (T) one, (T) another );
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public final int getHashCode(Object x) {
 		return javaType.extractHashCode( (T) x );
 	}
@@ -171,7 +171,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public final int compare(Object x, Object y) {
 		return javaType.getComparator().compare( (T) x, (T) y );
 	}
@@ -214,7 +214,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public final String toLoggableString(Object value, SessionFactoryImplementor factory) {
 		if ( value == LazyPropertyInitializer.UNFETCHED_PROPERTY || !Hibernate.isInitialized( value ) ) {
 			return  "<uninitialized>";
@@ -228,7 +228,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public final Object deepCopy(Object value, SessionFactoryImplementor factory) {
 		return deepCopy( (T) value );
 	}
@@ -238,7 +238,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public final Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
 		return getMutabilityPlan().disassemble( (T) value, session );
 	}
@@ -253,7 +253,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public final Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map<Object, Object> copyCache) {
 		if ( original == null && target == null ) {
 			return null;
@@ -263,7 +263,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public Object replace(
 			Object original,
 			Object target,

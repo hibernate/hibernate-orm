@@ -43,7 +43,7 @@ public class DefaultTrackingModifiedEntitiesRevisionInfoGenerator extends Defaul
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public void entityChanged(
 			Class entityClass,
 			String entityName,

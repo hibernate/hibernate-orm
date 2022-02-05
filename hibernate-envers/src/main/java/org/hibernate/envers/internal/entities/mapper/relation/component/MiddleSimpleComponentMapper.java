@@ -27,7 +27,7 @@ public final class MiddleSimpleComponentMapper extends AbstractMiddleComponentMa
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public Object mapToObjectFromFullMap(
 			EntityInstantiator entityInstantiator, Map<String, Object> data,
 			Object dataObject, Number revision) {

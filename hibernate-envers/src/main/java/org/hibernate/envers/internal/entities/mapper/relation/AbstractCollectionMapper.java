@@ -130,7 +130,7 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public List<PersistentCollectionChangeData> mapCollectionChanges(
 			SessionImplementor session,
 			String referencingPropertyName,

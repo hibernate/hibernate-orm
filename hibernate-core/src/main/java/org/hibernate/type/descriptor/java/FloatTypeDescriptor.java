@@ -43,7 +43,7 @@ public class FloatTypeDescriptor extends AbstractClassJavaType<Float> implements
 		return Float.valueOf( string.toString() );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Float value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {

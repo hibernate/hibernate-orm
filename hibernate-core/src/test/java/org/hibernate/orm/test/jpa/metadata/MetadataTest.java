@@ -104,7 +104,7 @@ public class MetadataTest {
     }
 
     @Test
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings("unchecked")
     public void testBuildingMetamodelWithParameterizedCollection() {
         Metadata metadata = new MetadataSources()
                 .addAnnotatedClass(WithGenericCollection.class)

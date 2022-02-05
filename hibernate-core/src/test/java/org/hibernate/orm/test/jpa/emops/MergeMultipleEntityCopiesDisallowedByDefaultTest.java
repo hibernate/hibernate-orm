@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class MergeMultipleEntityCopiesDisallowedByDefaultTest {
 
 	@AfterEach
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	void cleanup(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {

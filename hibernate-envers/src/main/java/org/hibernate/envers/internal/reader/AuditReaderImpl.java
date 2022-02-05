@@ -96,7 +96,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public <T> T find(
 			Class<T> cls,
 			String entityName,
@@ -145,7 +145,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public List<Number> getRevisions(Class<?> cls, String entityName, Object primaryKey)
 			throws IllegalArgumentException, NotAuditedException, IllegalStateException {
 		// todo: if a class is not versioned from the beginning, there's a missing ADD rev - what then?
@@ -226,7 +226,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public <T> T findRevision(Class<T> revisionEntityClass, Number revision)
 			throws IllegalArgumentException, RevisionDoesNotExistException, IllegalStateException {
 		revisionEntityClass = getTargetClassIfProxied( revisionEntityClass );
@@ -253,7 +253,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public <T> Map<Number, T> findRevisions(Class<T> revisionEntityClass, Set<Number> revisions)
 			throws IllegalArgumentException,
 			IllegalStateException {
@@ -295,7 +295,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public <T> T getCurrentRevision(Class<T> revisionEntityClass, boolean persist) {
 		revisionEntityClass = getTargetClassIfProxied( revisionEntityClass );
 		if ( !(session instanceof EventSource) ) {

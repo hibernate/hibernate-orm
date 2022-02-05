@@ -47,7 +47,7 @@ public class BigIntegerJavaType extends AbstractClassJavaType<BigInteger> {
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <X> X unwrap(BigInteger value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

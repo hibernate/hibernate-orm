@@ -102,7 +102,7 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <X> X unwrap(Blob value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

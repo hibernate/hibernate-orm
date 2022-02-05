@@ -52,7 +52,7 @@ public class MapElementFormulaTest {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testManyToManyFormula(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -30,7 +30,7 @@ import org.junit.Test;
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@SuppressWarnings({"unchecked"})
+@SuppressWarnings("unchecked")
 public class DefaultTrackingEntitiesTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer steId = null;
 	private Integer siteId = null;

@@ -20,7 +20,7 @@ import org.junit.Test;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-@SuppressWarnings({"unchecked"})
+@SuppressWarnings("unchecked")
 public class CustomRevEntityQuery extends BaseEnversJPAFunctionalTestCase {
 	private Integer id1;
 	private Integer id2;

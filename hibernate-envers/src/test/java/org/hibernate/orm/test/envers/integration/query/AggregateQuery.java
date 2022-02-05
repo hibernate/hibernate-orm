@@ -24,7 +24,7 @@ import org.junit.Test;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-@SuppressWarnings({"unchecked"})
+@SuppressWarnings("unchecked")
 public class AggregateQuery extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

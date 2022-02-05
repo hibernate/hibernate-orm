@@ -59,7 +59,7 @@ public class TestConsole {
         }
     }
 
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings("unchecked")
     private void printPersons(StringBuilder sb) {
         List<Person> persons = entityManager.createQuery(
                 "select p from Person p order by p.id").getResultList();
@@ -196,7 +196,7 @@ public class TestConsole {
         sb.append(")");
     }
 
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings("unchecked")
     private void printAddresses(StringBuilder sb) {
         List<Address> addresses = entityManager.createQuery(
                 "select a from Address a order by a.id").getResultList();

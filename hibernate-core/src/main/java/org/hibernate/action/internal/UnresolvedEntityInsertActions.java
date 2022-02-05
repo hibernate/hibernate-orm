@@ -160,7 +160,7 @@ public class UnresolvedEntityInsertActions {
 		return dependenciesByAction.isEmpty();
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	private void addDependenciesByTransientEntity(AbstractEntityInsertAction insert, NonNullableTransientDependencies dependencies) {
 		for ( Object transientEntity : dependencies.getNonNullableTransientEntities() ) {
 			Set<AbstractEntityInsertAction> dependentActions = dependentActionsByTransientEntity.get( transientEntity );
@@ -182,7 +182,7 @@ public class UnresolvedEntityInsertActions {
 	 *
 	 * @throws IllegalArgumentException if {@code managedEntity} did not have managed or read-only status.
 	 */
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public Set<AbstractEntityInsertAction> resolveDependentActions(Object managedEntity, SessionImplementor session) {
 		final EntityEntry entityEntry = session.getPersistenceContextInternal().getEntry( managedEntity );
 		if ( entityEntry.getStatus() != Status.MANAGED && entityEntry.getStatus() != Status.READ_ONLY ) {

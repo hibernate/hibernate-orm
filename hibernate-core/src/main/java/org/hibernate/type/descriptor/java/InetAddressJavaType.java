@@ -48,7 +48,7 @@ public class InetAddressJavaType extends AbstractClassJavaType<InetAddress> {
 		return indicators.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( SqlTypes.INET );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(InetAddress value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {

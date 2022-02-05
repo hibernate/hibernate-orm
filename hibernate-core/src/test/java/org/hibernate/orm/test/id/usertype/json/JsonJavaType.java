@@ -38,7 +38,7 @@ public class JsonJavaType extends AbstractClassJavaType<Json> {
 		return value.hashCode();
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <X> X unwrap(Json value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

@@ -261,7 +261,7 @@ public final class ConfigurationHelper {
 	 *
 	 * @return The clone
 	 */
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public static Map clone(Map<?,?> configurationValues) {
 		if ( configurationValues == null ) {
 			return null;

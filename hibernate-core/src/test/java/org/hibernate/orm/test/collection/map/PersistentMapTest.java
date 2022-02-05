@@ -59,7 +59,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class PersistentMapTest {
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testWriteMethodDirtying(SessionFactoryScope scope) {
 		Parent parent = new Parent( "p1" );
 		Child child = new Child( "c1" );

@@ -39,7 +39,7 @@ public class LongJavaType extends AbstractClassJavaType<Long>
 		return Long.valueOf( string.toString() );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Long value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {

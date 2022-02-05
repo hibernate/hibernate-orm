@@ -806,7 +806,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public SqmExpression<Number> quot(Number x, Expression<? extends Number> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.QUOT,
@@ -1669,7 +1669,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <Y extends Comparable<? super Y>> SqmPredicate between(Expression<? extends Y> value, Y lower, Y upper) {
 		final SqmExpression<? extends Y> valueExpression = (SqmExpression<? extends Y>) value;
 		return new SqmBetweenPredicate(

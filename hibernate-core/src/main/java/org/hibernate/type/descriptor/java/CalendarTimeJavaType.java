@@ -93,7 +93,7 @@ public class CalendarTimeJavaType extends AbstractTemporalJavaType<Calendar> {
 		return hashCode;
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <X> X unwrap(Calendar value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

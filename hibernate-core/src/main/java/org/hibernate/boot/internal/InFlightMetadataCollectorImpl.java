@@ -1344,7 +1344,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void addUniqueConstraints(Table table, List uniqueConstraints) {
 		List<UniqueConstraintHolder> constraintHolders = new ArrayList<>( uniqueConstraints.size() );
 

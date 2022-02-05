@@ -46,7 +46,7 @@ public class IdClassGeneratedValueTest {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testBaseLine(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -69,7 +69,7 @@ public class IdClassGeneratedValueTest {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testBaseLine2(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -89,7 +89,7 @@ public class IdClassGeneratedValueTest {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testSingleGeneratedValue(SessionFactoryScope scope) {
 		Long s1Id1 = scope.fromTransaction(
 				session -> {
@@ -113,7 +113,7 @@ public class IdClassGeneratedValueTest {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testMultipleGeneratedValue(SessionFactoryScope scope) {
 		List<Long> m1Ids = scope.fromTransaction(
 				session -> {

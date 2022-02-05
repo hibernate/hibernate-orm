@@ -42,7 +42,7 @@ public class CrossTypeRevisionChangesReaderImpl implements CrossTypeRevisionChan
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public List<Object> findEntities(Number revision) throws IllegalStateException, IllegalArgumentException {
 		final Set<Pair<String, Class>> entityTypes = findEntityTypes( revision );
 		final List<Object> result = new ArrayList<>();
@@ -60,7 +60,7 @@ public class CrossTypeRevisionChangesReaderImpl implements CrossTypeRevisionChan
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public List<Object> findEntities(Number revision, RevisionType revisionType)
 			throws IllegalStateException, IllegalArgumentException {
 		final Set<Pair<String, Class>> entityTypes = findEntityTypes( revision );
@@ -79,7 +79,7 @@ public class CrossTypeRevisionChangesReaderImpl implements CrossTypeRevisionChan
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public Map<RevisionType, List<Object>> findEntitiesGroupByRevisionType(Number revision)
 			throws IllegalStateException, IllegalArgumentException {
 		final Set<Pair<String, Class>> entityTypes = findEntityTypes( revision );
@@ -98,7 +98,7 @@ public class CrossTypeRevisionChangesReaderImpl implements CrossTypeRevisionChan
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public Set<Pair<String, Class>> findEntityTypes(Number revision)
 			throws IllegalStateException, IllegalArgumentException {
 		checkNotNull( revision, "Entity revision" );

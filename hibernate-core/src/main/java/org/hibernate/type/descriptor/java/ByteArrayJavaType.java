@@ -25,7 +25,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 	public static final ByteArrayJavaType INSTANCE = new ByteArrayJavaType();
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public ByteArrayJavaType() {
 		super( Byte[].class, ArrayMutabilityPlan.INSTANCE, IncomparableComparator.INSTANCE );
 	}
@@ -71,7 +71,7 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 		return bytes;
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Byte[] value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {

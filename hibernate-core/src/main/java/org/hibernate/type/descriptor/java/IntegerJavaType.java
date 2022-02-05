@@ -39,7 +39,7 @@ public class IntegerJavaType extends AbstractClassJavaType<Integer>
 		return string == null ? null : Integer.valueOf( string.toString() );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Integer value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {

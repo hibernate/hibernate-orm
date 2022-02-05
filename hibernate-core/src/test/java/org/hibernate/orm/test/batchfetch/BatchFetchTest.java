@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 )
 public class BatchFetchTest {
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testBatchFetch(SessionFactoryScope scope) {
 		ProductLine ossProductLine = new ProductLine();
@@ -134,7 +134,7 @@ public class BatchFetchTest {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void testBatchFetch2(SessionFactoryScope scope) {
 		int size = 32 + 14;
 		scope.inTransaction(

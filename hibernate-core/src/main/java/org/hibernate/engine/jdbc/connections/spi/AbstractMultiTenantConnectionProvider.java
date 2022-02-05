@@ -54,7 +54,7 @@ public abstract class AbstractMultiTenantConnectionProvider implements MultiTena
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> unwrapType) {
 		if ( MultiTenantConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
 			return (T) this;

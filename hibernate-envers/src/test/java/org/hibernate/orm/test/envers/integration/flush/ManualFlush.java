@@ -89,7 +89,7 @@ public class ManualFlush extends AbstractFlushTest {
 
 	@Test
 	public void testRevisionTypes() {
-		@SuppressWarnings({"unchecked"}) List<Object[]> results =
+		@SuppressWarnings("unchecked") List<Object[]> results =
 				getAuditReader().createQuery()
 						.forRevisionsOfEntity( StrTestEntity.class, false, true )
 						.add( AuditEntity.id().eq( id ) )

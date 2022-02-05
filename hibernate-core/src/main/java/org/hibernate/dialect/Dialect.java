@@ -3479,34 +3479,32 @@ public abstract class Dialect implements ConversionContext {
 		return null;
 	}
 
-	protected final BatchLoadSizingStrategy STANDARD_DEFAULT_BATCH_LOAD_SIZING_STRATEGY = new BatchLoadSizingStrategy() {
-		@Override
-		public int determineOptimalBatchLoadSize(int numberOfKeyColumns, int numberOfKeys, boolean inClauseParameterPaddingEnabled) {
-			final int paddedSize;
+	protected final BatchLoadSizingStrategy STANDARD_DEFAULT_BATCH_LOAD_SIZING_STRATEGY =
+			(numberOfKeyColumns, numberOfKeys, inClauseParameterPaddingEnabled) -> {
+		final int paddedSize;
 
-			if ( inClauseParameterPaddingEnabled ) {
-				paddedSize = MathHelper.ceilingPowerOfTwo( numberOfKeys );
-			}
-			else {
-				paddedSize = numberOfKeys;
-			}
+		if ( inClauseParameterPaddingEnabled ) {
+			paddedSize = MathHelper.ceilingPowerOfTwo( numberOfKeys );
+		}
+		else {
+			paddedSize = numberOfKeys;
+		}
 
-			// For tuples, there is no limit, so we can just use the power of two padding approach
-			if ( numberOfKeyColumns > 1 ) {
-				return paddedSize;
-			}
-			final int inExpressionCountLimit = getInExpressionCountLimit();
-			if ( inExpressionCountLimit > 0 ) {
-				if ( paddedSize < inExpressionCountLimit ) {
-					return paddedSize;
-				}
-				else if ( numberOfKeys < inExpressionCountLimit ) {
-					return numberOfKeys;
-				}
-				return getInExpressionCountLimit();
-			}
+		// For tuples, there is no limit, so we can just use the power of two padding approach
+		if ( numberOfKeyColumns > 1 ) {
 			return paddedSize;
 		}
+		final int inExpressionCountLimit = getInExpressionCountLimit();
+		if ( inExpressionCountLimit > 0 ) {
+			if ( paddedSize < inExpressionCountLimit ) {
+				return paddedSize;
+			}
+			else if ( numberOfKeys < inExpressionCountLimit ) {
+				return numberOfKeys;
+			}
+			return getInExpressionCountLimit();
+		}
+		return paddedSize;
 	};
 
 	public BatchLoadSizingStrategy getDefaultBatchLoadSizingStrategy() {
@@ -4058,9 +4056,10 @@ public abstract class Dialect implements ConversionContext {
 	 * </ul>
 	 * In addition, punctuation characters and
 	 * single-quoted literal strings are accepted.
-	 *
-	 * @return a pattern accepted by the function that
-	 *         formats dates and times in this dialect
+	 * <p>
+	 * Appends a pattern accepted by the function that
+	 * formats dates and times in this dialect to a
+	 * SQL fragment that is being constructed.
 	 */
 	public void appendDatetimeFormat(SqlAppender appender, String format) {
 		//most databases support a datetime format

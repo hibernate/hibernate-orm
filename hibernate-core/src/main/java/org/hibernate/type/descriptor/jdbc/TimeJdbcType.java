@@ -59,14 +59,13 @@ public class TimeJdbcType implements JdbcType {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
-		return new JdbcLiteralFormatterTemporal( javaType, TemporalType.TIME );
+		return new JdbcLiteralFormatterTemporal<>( javaType, TemporalType.TIME );
 	}
 
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
-		return new BasicBinder<X>( javaType, this ) {
+		return new BasicBinder<>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 				final Time time = javaType.unwrap( value, Time.class, options );
@@ -100,7 +99,7 @@ public class TimeJdbcType implements JdbcType {
 
 	@Override
 	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
-		return new BasicExtractor<X>( javaType, this ) {
+		return new BasicExtractor<>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				return options.getJdbcTimeZone() != null ?

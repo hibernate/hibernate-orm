@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.ast.spi;
 
-import java.io.IOException;
-
 /**
  * Access to appending SQL fragments to an in-flight buffer
  *

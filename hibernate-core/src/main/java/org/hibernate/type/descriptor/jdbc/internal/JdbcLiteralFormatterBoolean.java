@@ -13,12 +13,13 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
 
 /**
- * JdbcLiteralFormatter implementation for handling boolean literals
+ * {@link org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter}
+ * implementation for handling boolean literals
  *
  * @author Steve Ebersole
  */
-public class JdbcLiteralFormatterBoolean extends BasicJdbcLiteralFormatter {
-	public JdbcLiteralFormatterBoolean(JavaType<?> javaType) {
+public class JdbcLiteralFormatterBoolean<T> extends BasicJdbcLiteralFormatter<T> {
+	public JdbcLiteralFormatterBoolean(JavaType<T> javaType) {
 		super( javaType );
 	}
 

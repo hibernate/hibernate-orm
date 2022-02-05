@@ -76,7 +76,7 @@ public class JdbcTypeBaseline {
 		target.addDescriptor( ClobJdbcType.DEFAULT );
 
 		// Assume `NationalizationSupport#IMPLICIT`.  Dialects needing the
-		// explicit type will map them..
+		// explicit type will map them.
 		target.addDescriptor( Types.NCHAR, CharJdbcType.INSTANCE );
 		target.addDescriptor( Types.NVARCHAR, VarcharJdbcType.INSTANCE );
 		target.addDescriptor( Types.LONGNVARCHAR, LongVarcharJdbcType.INSTANCE );

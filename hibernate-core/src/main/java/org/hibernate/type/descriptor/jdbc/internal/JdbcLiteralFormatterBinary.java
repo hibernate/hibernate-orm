@@ -13,12 +13,13 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
 
 /**
- * JdbcLiteralFormatter implementation for handling binary literals
+ * {@link org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter}
+ * implementation for handling binary literals
  *
  * @author Gavin King
  */
-public class JdbcLiteralFormatterBinary extends BasicJdbcLiteralFormatter {
-	public JdbcLiteralFormatterBinary(JavaType<?> javaType) {
+public class JdbcLiteralFormatterBinary<T> extends BasicJdbcLiteralFormatter<T> {
+	public JdbcLiteralFormatterBinary(JavaType<T> javaType) {
 		super( javaType );
 	}
 

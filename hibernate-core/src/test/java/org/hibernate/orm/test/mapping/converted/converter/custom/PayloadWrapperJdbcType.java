@@ -47,7 +47,7 @@ public class PayloadWrapperJdbcType implements JdbcType {
 
 	@Override
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
-		return new BasicBinder<X>( javaType, this ) {
+		return new BasicBinder<>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 				final String valueStr = javaType.unwrap( value, String.class, options );

@@ -91,7 +91,7 @@ public class PostgreSQLIntervalSecondJdbcType implements AdjustableJdbcType {
 
 	@Override
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
-		return new BasicBinder<X>( javaType, this ) {
+		return new BasicBinder<>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
@@ -136,7 +136,7 @@ public class PostgreSQLIntervalSecondJdbcType implements AdjustableJdbcType {
 
 	@Override
 	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
-		return new BasicExtractor<X>( javaType, this ) {
+		return new BasicExtractor<>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				return getJavaType().wrap( rs.getString( paramIndex ), options );

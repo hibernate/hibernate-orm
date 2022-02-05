@@ -35,7 +35,7 @@ public class StoredPrefixedStringType
 	public static final JdbcType PREFIXED_VARCHAR_TYPE_DESCRIPTOR =
 			new VarcharJdbcType() {
 				public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
-					return new BasicBinder<X>( javaType, this ) {
+					return new BasicBinder<>( javaType, this ) {
 						@Override
 						protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 							String stringValue = javaType.unwrap( value, String.class, options );
@@ -52,7 +52,7 @@ public class StoredPrefixedStringType
 				}
 
 				public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
-					return new BasicExtractor<X>( javaType, this ) {
+					return new BasicExtractor<>( javaType, this ) {
 						@Override
 						protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 							String stringValue = rs.getString( paramIndex );

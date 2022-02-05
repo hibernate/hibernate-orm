@@ -10,18 +10,18 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
 /**
- * Abstract JdbcLiteralFormatter implementation managing the JavaTypeDescriptor
+ * Abstract {@link JdbcLiteralFormatter} implementation managing the {@link JavaType}
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractJdbcLiteralFormatter<T> implements JdbcLiteralFormatter {
-	private final JavaType javaType;
+public abstract class AbstractJdbcLiteralFormatter<T> implements JdbcLiteralFormatter<T> {
+	private final JavaType<T> javaType;
 
-	public AbstractJdbcLiteralFormatter(JavaType javaType) {
+	public AbstractJdbcLiteralFormatter(JavaType<T> javaType) {
 		this.javaType = javaType;
 	}
 
-	protected JavaType getJavaType() {
+	protected JavaType<T> getJavaType() {
 		return javaType;
 	}
 }

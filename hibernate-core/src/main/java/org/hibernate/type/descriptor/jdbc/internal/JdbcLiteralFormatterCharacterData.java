@@ -13,20 +13,21 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
 
 /**
- * JdbcLiteralFormatter implementation for handling character data
+ * {@link org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter}
+ * implementation for handling character data
  *
  * @author Steve Ebersole
  */
-public class JdbcLiteralFormatterCharacterData extends BasicJdbcLiteralFormatter {
+public class JdbcLiteralFormatterCharacterData<T> extends BasicJdbcLiteralFormatter<T> {
 	public static final String NATIONALIZED_PREFIX = "n";
 
 	private final boolean isNationalized;
 
-	public JdbcLiteralFormatterCharacterData(JavaType<?> javaType) {
+	public JdbcLiteralFormatterCharacterData(JavaType<T> javaType) {
 		this( javaType, false );
 	}
 
-	public JdbcLiteralFormatterCharacterData(JavaType<?> javaType, boolean isNationalized) {
+	public JdbcLiteralFormatterCharacterData(JavaType<T> javaType, boolean isNationalized) {
 		super( javaType );
 		this.isNationalized = isNationalized;
 	}

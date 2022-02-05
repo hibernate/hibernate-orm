@@ -13,12 +13,15 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
 
 /**
+ * {@link org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter}
+ * implementation for handling numeric data
+ *
  * @author Steve Ebersole
  */
-public class JdbcLiteralFormatterNumericData extends BasicJdbcLiteralFormatter {
+public class JdbcLiteralFormatterNumericData<T> extends BasicJdbcLiteralFormatter<T> {
 	private final Class<? extends Number> unwrapJavaType;
 
-	public JdbcLiteralFormatterNumericData(JavaType<?> javaType, Class<? extends Number> unwrapJavaType) {
+	public JdbcLiteralFormatterNumericData(JavaType<T> javaType, Class<? extends Number> unwrapJavaType) {
 		super( javaType );
 		this.unwrapJavaType = unwrapJavaType;
 	}

@@ -55,8 +55,7 @@ public class BooleanJdbcType implements AdjustableJdbcType {
 
 	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
-		//noinspection unchecked
-		return new JdbcLiteralFormatterBoolean( javaType );
+		return new JdbcLiteralFormatterBoolean<>( javaType );
 	}
 
 	@Override
@@ -72,7 +71,7 @@ public class BooleanJdbcType implements AdjustableJdbcType {
 	}
 
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
-		return new BasicBinder<X>( javaType, this ) {
+		return new BasicBinder<>( javaType, this ) {
 			@Override
 			protected void doBindNull(PreparedStatement st, int index, WrapperOptions options) throws SQLException {
 				st.setNull( index, options.getPreferredSqlTypeCodeForBoolean() );
@@ -80,7 +79,7 @@ public class BooleanJdbcType implements AdjustableJdbcType {
 
 			@Override
 			protected void doBindNull(CallableStatement st, String name, WrapperOptions options) throws SQLException {
-				st.setNull( name, options.getPreferredSqlTypeCodeForBoolean() );;
+				st.setNull( name, options.getPreferredSqlTypeCodeForBoolean() );
 			}
 
 			@Override
@@ -97,7 +96,7 @@ public class BooleanJdbcType implements AdjustableJdbcType {
 	}
 
 	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
-		return new BasicExtractor<X>( javaType, this ) {
+		return new BasicExtractor<>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				return javaType.wrap( rs.getBoolean( paramIndex ), options );

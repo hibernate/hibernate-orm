@@ -56,7 +56,7 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 
 	@Override
 	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
-		return new BasicExtractor<X>( javaType, this ) {
+		return new BasicExtractor<>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				return javaType.wrap( rs.getClob( paramIndex ), options );
@@ -92,7 +92,7 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 
 		@Override
 		public <X> BasicBinder<X> getClobBinder(final JavaType<X> javaType) {
-			return new BasicBinder<X>( javaType, this ) {
+			return new BasicBinder<>( javaType, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
@@ -126,7 +126,7 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 
 		@Override
 		public <X> BasicBinder<X> getClobBinder(final JavaType<X> javaType) {
-			return new BasicBinder<X>( javaType, this ) {
+			return new BasicBinder<>( javaType, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
@@ -143,7 +143,7 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 
 		@Override
 		public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
-			return new BasicExtractor<X>( javaType, this ) {
+			return new BasicExtractor<>( javaType, this ) {
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 					return javaType.wrap( rs.getString( paramIndex ), options );
@@ -172,7 +172,7 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 
 		@Override
 		public <X> BasicBinder<X> getClobBinder(final JavaType<X> javaType) {
-			return new BasicBinder<X>( javaType, this ) {
+			return new BasicBinder<>( javaType, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
@@ -196,7 +196,7 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 
 		@Override
 		public <X> BasicBinder<X> getClobBinder(final JavaType<X> javaType) {
-			return new BasicBinder<X>( javaType, this ) {
+			return new BasicBinder<>( javaType, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
@@ -230,7 +230,7 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 
 		@Override
 		public <X> BasicBinder<X> getClobBinder(final JavaType<X> javaType) {
-			return new BasicBinder<X>( javaType, this ) {
+			return new BasicBinder<>( javaType, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
@@ -257,7 +257,7 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 
 		@Override
 		public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
-			return new BasicExtractor<X>( javaType, this ) {
+			return new BasicExtractor<>( javaType, this ) {
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 					return javaType.wrap( rs.getCharacterStream( paramIndex ), options );

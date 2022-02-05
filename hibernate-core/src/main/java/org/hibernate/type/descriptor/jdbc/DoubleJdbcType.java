@@ -67,13 +67,12 @@ public class DoubleJdbcType implements JdbcType {
 
 	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
-		//noinspection unchecked
-		return new JdbcLiteralFormatterNumericData( javaType, Double.class );
+		return new JdbcLiteralFormatterNumericData<>( javaType, Double.class );
 	}
 
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
-		return new BasicBinder<X>( javaType, this ) {
+		return new BasicBinder<>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 				st.setDouble( index, javaType.unwrap( value, Double.class, options ) );
@@ -89,7 +88,7 @@ public class DoubleJdbcType implements JdbcType {
 
 	@Override
 	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
-		return new BasicExtractor<X>( javaType, this ) {
+		return new BasicExtractor<>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				return javaType.wrap( rs.getDouble( paramIndex ), options );

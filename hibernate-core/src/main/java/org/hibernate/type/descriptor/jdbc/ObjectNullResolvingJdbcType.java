@@ -37,7 +37,7 @@ public class ObjectNullResolvingJdbcType extends ObjectJdbcType {
 			return VarbinaryJdbcType.INSTANCE.getBinder( javaType );
 		}
 
-		return new BasicBinder<X>( javaType, this ) {
+		return new BasicBinder<>( javaType, this ) {
 
 			@Override
 			protected void doBindNull(PreparedStatement st, int index, WrapperOptions options)

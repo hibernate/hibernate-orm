@@ -51,15 +51,14 @@ public class QueryParametersValidationArrayTest {
 	@Test
 	public void setParameterWithWrongTypeShouldNotThrowIllegalArgumentException(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
-				(entityManager) -> {
+				entityManager ->
 					entityManager.createNativeQuery(
 							"select id " +
 									"from Event " +
 									"where readings = :readings" )
 							.unwrap( NativeQuery.class )
 							.setParameter( "readings", new String[]{null, "a"}, StringArrayType.INSTANCE )
-							.getResultList();
-				}
+							.getResultList()
 		);
 	}
 
@@ -104,7 +103,7 @@ public class QueryParametersValidationArrayTest {
 
 		@Override
 		public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
-			return new BasicBinder<X>( javaType, this) {
+			return new BasicBinder<>( javaType, this) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 					StringArrayTypeDescriptor arrayTypeDescriptor = (StringArrayTypeDescriptor) javaType;
@@ -115,8 +114,7 @@ public class QueryParametersValidationArrayTest {
 				}
 
 				@Override
-				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
-						throws SQLException {
+				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options) {
 					throw new UnsupportedOperationException("Binding by name is not supported!");
 				}
 			};
@@ -124,7 +122,7 @@ public class QueryParametersValidationArrayTest {
 
 		@Override
 		public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
-			return new BasicExtractor<X>( javaType, this) {
+			return new BasicExtractor<>( javaType, this) {
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 					return javaType.wrap( rs.getArray( paramIndex ), options);

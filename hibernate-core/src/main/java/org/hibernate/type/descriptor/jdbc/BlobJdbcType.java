@@ -57,7 +57,7 @@ public abstract class BlobJdbcType implements JdbcType {
 
 	@Override
 	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
-		return new BasicExtractor<X>( javaType, this ) {
+		return new BasicExtractor<>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				return javaType.wrap( rs.getBlob( paramIndex ), options );
@@ -91,7 +91,7 @@ public abstract class BlobJdbcType implements JdbcType {
 
 		@Override
 		public <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaType) {
-			return new BasicBinder<X>( javaType, this ) {
+			return new BasicBinder<>( javaType, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
@@ -131,7 +131,7 @@ public abstract class BlobJdbcType implements JdbcType {
 
 		@Override
 		public <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaType) {
-			return new BasicBinder<X>( javaType, this ) {
+			return new BasicBinder<>( javaType, this ) {
 				@Override
 				public void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
@@ -155,7 +155,7 @@ public abstract class BlobJdbcType implements JdbcType {
 
 		@Override
 		public <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaType) {
-			return new BasicBinder<X>( javaType, this ) {
+			return new BasicBinder<>( javaType, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
@@ -179,7 +179,7 @@ public abstract class BlobJdbcType implements JdbcType {
 
 		@Override
 		public <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaType) {
-			return new BasicBinder<X>( javaType, this ) {
+			return new BasicBinder<>( javaType, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {

@@ -17,12 +17,15 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
 
 /**
+ * {@link org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter}
+ * implementation for handling date/time literals
+ *
  * @author Steve Ebersole
  */
-public class JdbcLiteralFormatterTemporal extends BasicJdbcLiteralFormatter {
+public class JdbcLiteralFormatterTemporal<T> extends BasicJdbcLiteralFormatter<T> {
 	private final TemporalType precision;
 
-	public JdbcLiteralFormatterTemporal(JavaType<?> javaType, TemporalType precision) {
+	public JdbcLiteralFormatterTemporal(JavaType<T> javaType, TemporalType precision) {
 		super( javaType );
 		this.precision = precision;
 	}

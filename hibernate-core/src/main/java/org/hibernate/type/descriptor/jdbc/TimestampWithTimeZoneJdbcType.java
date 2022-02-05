@@ -58,14 +58,13 @@ public class TimestampWithTimeZoneJdbcType implements JdbcType {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
-		return new JdbcLiteralFormatterTemporal( javaType, TemporalType.TIMESTAMP );
+		return new JdbcLiteralFormatterTemporal<>( javaType, TemporalType.TIMESTAMP );
 	}
 
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
-		return new BasicBinder<X>( javaType, this ) {
+		return new BasicBinder<>( javaType, this ) {
 			@Override
 			protected void doBind(
 					PreparedStatement st,
@@ -107,7 +106,7 @@ public class TimestampWithTimeZoneJdbcType implements JdbcType {
 
 	@Override
 	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
-		return new BasicExtractor<X>( javaType, this ) {
+		return new BasicExtractor<>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int position, WrapperOptions wrapperOptions) throws SQLException {
 				try {

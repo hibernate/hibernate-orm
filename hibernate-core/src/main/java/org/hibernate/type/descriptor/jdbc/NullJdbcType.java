@@ -39,7 +39,7 @@ public class NullJdbcType implements JdbcType {
 
 	@Override
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
-		return new BasicBinder<X>( javaType, this ) {
+		return new BasicBinder<>( javaType, this ) {
 
 			@Override
 			protected void doBindNull(PreparedStatement st, int index, WrapperOptions options) throws SQLException {

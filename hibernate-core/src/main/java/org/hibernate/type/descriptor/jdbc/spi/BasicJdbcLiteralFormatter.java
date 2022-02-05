@@ -10,12 +10,13 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * Support for JdbcLiteralFormatter implementations with a basic implementation of an unwrap method
+ * Support for {@link org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter}
+ * implementations with a basic implementation of an {@link #unwrap} method
  *
  * @author Steve Ebersole
  */
-public abstract class BasicJdbcLiteralFormatter extends AbstractJdbcLiteralFormatter {
-	public BasicJdbcLiteralFormatter(JavaType<?> javaType) {
+public abstract class BasicJdbcLiteralFormatter<T> extends AbstractJdbcLiteralFormatter<T> {
+	public BasicJdbcLiteralFormatter(JavaType<T> javaType) {
 		super( javaType );
 	}
 
@@ -29,17 +30,17 @@ public abstract class BasicJdbcLiteralFormatter extends AbstractJdbcLiteralForma
 		}
 
 		if ( !getJavaType().isInstance( value ) ) {
-			final Object coerce = getJavaType().coerce( value, wrapperOptions.getSession() );
+			final T coerce = getJavaType().coerce( value, wrapperOptions.getSession() );
 			if ( unwrapType.isInstance( coerce ) ) {
 				return (X) coerce;
 			}
-			return (X) getJavaType().unwrap(
+			return getJavaType().unwrap(
 					coerce,
 					unwrapType,
 					wrapperOptions
 			);
 		}
 
-		return (X) getJavaType().unwrap( value, unwrapType, wrapperOptions );
+		return getJavaType().unwrap( (T) value, unwrapType, wrapperOptions );
 	}
 }

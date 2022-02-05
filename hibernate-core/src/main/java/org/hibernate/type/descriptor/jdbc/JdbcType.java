@@ -18,10 +18,20 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Descriptor for the {@code SQL}/{@code JDBC} side of a value mapping.
- * <p/>
- * NOTE : Implementations should be registered with the {@link JdbcType}.  The built-in Hibernate
- * implementations register themselves on construction.
+ * Descriptor for the SQL/JDBC side of a value mapping.
+ * <p>
+ * An instance of this type need not correspond directly to a SQL column type on
+ * a particular database. Rather, a {@code JdbcType} defines how values are read
+ * from and written to JDBC. Therefore, implementations of this interface map more
+ * directly to the JDBC type codes defined by {@link Types} and {@link SqlTypes}.
+ * <p>
+ * A JDBC type may be selected when mapping an entity attribute using the
+ * {@link org.hibernate.annotations.JdbcType} annotation, or, indirectly, using
+ * the {@link org.hibernate.annotations.JdbcTypeCode} annotation.
+ * <p>
+ * Custom implementations should be registered with the
+ * {@link org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry} at startup.
+ * The built-in implementations are registered automatically.
  *
  * @author Steve Ebersole
  */
@@ -34,9 +44,8 @@ public interface JdbcType extends Serializable {
 	}
 
 	/**
-	 * Return the {@linkplain Types JDBC type code} used when interacting
-	 * with JDBC APIs.
-	 *
+	 * The {@linkplain SqlTypes JDBC type code} used when interacting with JDBC APIs.
+	 * <p>
 	 * For example, it's used when calling {@link java.sql.PreparedStatement#setNull(int, int)}.
 	 *
 	 * @return a JDBC type code
@@ -44,9 +53,9 @@ public interface JdbcType extends Serializable {
 	int getJdbcTypeCode();
 
 	/**
-	 * Get a JDBC type code that identifies the SQL column type to be used for
-	 * schema generation.
-	 * 
+	 * A {@linkplain SqlTypes JDBC type code} that identifies the SQL column type to
+	 * be used for schema generation.
+	 * <p>
 	 * This value is passed to {@link org.hibernate.dialect.Dialect#getTypeName(int)}
 	 * to obtain the SQL column type.
 	 *
@@ -67,15 +76,19 @@ public interface JdbcType extends Serializable {
 	}
 
 	/**
-	 * todo (6.0) : move to {@link org.hibernate.metamodel.mapping.JdbcMapping}?
+	 * Obtain a {@linkplain JdbcLiteralFormatter formatter} object capable of rendering
+	 * values of the given {@linkplain JavaType Java type} as SQL literals of the type
+	 * represented by this object.
 	 */
+	// todo (6.0) : move to {@link org.hibernate.metamodel.mapping.JdbcMapping}?
 	default <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
 		return (appender, value, dialect, wrapperOptions) -> appender.appendSql( value.toString() );
 	}
 
 	/**
-	 * Get the binder (setting JDBC in-going parameter values) capable of handling values of the type described by the
-	 * passed descriptor.
+	 * Obtain a {@linkplain ValueBinder binder} object capable of binding values of the
+	 * given {@linkplain JavaType Java type} to parameters of a JDBC
+	 * {@link java.sql.PreparedStatement}.
 	 *
 	 * @param javaType The descriptor describing the types of Java values to be bound
 	 *
@@ -84,8 +97,9 @@ public interface JdbcType extends Serializable {
 	<X> ValueBinder<X> getBinder(JavaType<X> javaType);
 
 	/**
-	 * Get the extractor (pulling out-going values from JDBC objects) capable of handling values of the type described
-	 * by the passed descriptor.
+	 * Obtain an {@linkplain ValueExtractor extractor} object capable of extracting
+	 * values of the given {@linkplain JavaType Java type} from a JDBC
+	 * {@link java.sql.ResultSet}.
 	 *
 	 * @param javaType The descriptor describing the types of Java values to be extracted
 	 *

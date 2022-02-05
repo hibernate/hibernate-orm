@@ -101,9 +101,8 @@ public abstract class AbstractConverterDescriptor implements ConverterDescriptor
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public JpaAttributeConverter createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
-		final JavaType<Object> converterJtd = context
+	public JpaAttributeConverter<?,?> createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
+		final JavaType<?> converterJtd = context
 				.getJavaTypeRegistry()
 				.getDescriptor( getAttributeConverterClass() );
 

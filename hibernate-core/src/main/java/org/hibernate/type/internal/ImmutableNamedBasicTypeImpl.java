@@ -25,7 +25,6 @@ public class ImmutableNamedBasicTypeImpl<J> extends NamedBasicTypeImpl<J> {
 
 	@Override
 	protected MutabilityPlan<J> getMutabilityPlan() {
-		//noinspection unchecked
-		return ImmutableMutabilityPlan.INSTANCE;
+		return ImmutableMutabilityPlan.instance();
 	}
 }

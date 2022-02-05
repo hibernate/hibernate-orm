@@ -31,7 +31,7 @@ public class ZoneOffsetJavaType extends AbstractClassJavaType<ZoneOffset> {
 	}
 
 	public ZoneOffsetJavaType() {
-		super( ZoneOffset.class, ImmutableMutabilityPlan.INSTANCE, ZoneOffsetComparator.INSTANCE );
+		super( ZoneOffset.class, ImmutableMutabilityPlan.instance(), ZoneOffsetComparator.INSTANCE );
 	}
 
 	public String toString(ZoneOffset value) {

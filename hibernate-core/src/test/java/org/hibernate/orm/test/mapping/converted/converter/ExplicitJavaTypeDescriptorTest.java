@@ -89,7 +89,7 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 	@After
 	public void dropTestData() {
 		inTransaction(
-				(session) -> session.createQuery( "delete TheEntity" ).executeUpdate()
+				session -> session.createQuery( "delete TheEntity" ).executeUpdate()
 		);
 	}
 
@@ -320,8 +320,7 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 
 		@Override
 		public MutabilityPlan<PseudoMutableState> getMutabilityPlan() {
-			//noinspection unchecked
-			return ImmutableMutabilityPlan.INSTANCE;
+			return ImmutableMutabilityPlan.instance();
 		}
 
 		@Override

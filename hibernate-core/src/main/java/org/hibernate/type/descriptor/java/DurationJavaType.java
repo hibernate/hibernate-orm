@@ -38,9 +38,8 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 	 */
 	public static final DurationJavaType INSTANCE = new DurationJavaType();
 
-	@SuppressWarnings("unchecked")
 	public DurationJavaType() {
-		super( Duration.class, ImmutableMutabilityPlan.INSTANCE );
+		super( Duration.class, ImmutableMutabilityPlan.instance() );
 	}
 
 	@Override

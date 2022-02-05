@@ -54,10 +54,9 @@ public class SerializableJavaType<T extends Serializable> extends AbstractClassJ
 		super( type, mutabilityPlan == null ? createMutabilityPlan( type ) : mutabilityPlan );
 	}
 
-	@SuppressWarnings({ "unchecked" })
 	private static <T> MutabilityPlan<T> createMutabilityPlan(Class<T> type) {
 		if ( type.isAnnotationPresent( Immutable.class ) ) {
-			return ImmutableMutabilityPlan.INSTANCE;
+			return ImmutableMutabilityPlan.instance();
 		}
 		return (MutabilityPlan<T>) SerializableMutabilityPlan.INSTANCE;
 	}

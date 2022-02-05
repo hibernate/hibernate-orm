@@ -215,7 +215,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				final MutabilityPlan<?> mutabilityPlan;
 
 				if ( updateable ) {
-					mutabilityPlan = new MutabilityPlan<Object>() {
+					mutabilityPlan = new MutabilityPlan<>() {
 						@Override
 						public boolean isMutable() {
 							return true;

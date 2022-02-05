@@ -52,12 +52,11 @@ public class RegistryHelper {
 		);
 	}
 
-	@SuppressWarnings("unchecked")
 	public <J> MutabilityPlan<J> determineMutabilityPlan(Type javaType, TypeConfiguration typeConfiguration) {
 		final Class<J> javaTypeClass = determineJavaTypeClass( javaType );
 
 		if ( javaTypeClass.isAnnotationPresent( Immutable.class ) ) {
-			return ImmutableMutabilityPlan.INSTANCE;
+			return ImmutableMutabilityPlan.instance();
 		}
 
 		if ( javaTypeClass.isAnnotationPresent( Mutability.class ) ) {
@@ -71,11 +70,11 @@ public class RegistryHelper {
 		}
 
 		if ( javaTypeClass.isEnum() ) {
-			return ImmutableMutabilityPlan.INSTANCE;
+			return ImmutableMutabilityPlan.instance();
 		}
 
 		if ( javaTypeClass.isPrimitive() ) {
-			return ImmutableMutabilityPlan.INSTANCE;
+			return ImmutableMutabilityPlan.instance();
 		}
 
 		if ( Serializable.class.isAssignableFrom( javaTypeClass ) ) {
@@ -85,7 +84,6 @@ public class RegistryHelper {
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
 	private  <J> JavaType<J> createTypeDescriptor(
 			Type javaType,
 			Function<Class<J>,MutabilityPlan<J>> mutabilityPlanResolver) {
@@ -93,14 +91,14 @@ public class RegistryHelper {
 
 		if ( javaTypeClass.isEnum() ) {
 			// enums are unequivocally immutable
-			//noinspection rawtypes
+			//noinspection rawtypes, unchecked
 			return new EnumJavaType( javaTypeClass );
 		}
 
 		final MutabilityPlan<J> plan = mutabilityPlanResolver.apply( javaTypeClass );
 
 		if ( Serializable.class.isAssignableFrom( javaTypeClass ) ) {
-			//noinspection rawtypes
+			//noinspection rawtypes, unchecked
 			return new SerializableJavaType( javaTypeClass, plan );
 		}
 

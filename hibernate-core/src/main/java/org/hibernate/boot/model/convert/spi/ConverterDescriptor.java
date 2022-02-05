@@ -45,5 +45,5 @@ public interface ConverterDescriptor {
 	/**
 	 * Factory for the runtime representation of the converter
 	 */
-	JpaAttributeConverter createJpaAttributeConverter(JpaAttributeConverterCreationContext context);
+	JpaAttributeConverter<?,?> createJpaAttributeConverter(JpaAttributeConverterCreationContext context);
 }

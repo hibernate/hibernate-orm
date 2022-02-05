@@ -28,7 +28,7 @@ public class LocaleJavaType extends AbstractClassJavaType<Locale> {
 	}
 
 	public LocaleJavaType() {
-		super( Locale.class, ImmutableMutabilityPlan.INSTANCE, LocaleComparator.INSTANCE );
+		super( Locale.class, ImmutableMutabilityPlan.instance(), LocaleComparator.INSTANCE );
 	}
 
 	public String toString(Locale value) {

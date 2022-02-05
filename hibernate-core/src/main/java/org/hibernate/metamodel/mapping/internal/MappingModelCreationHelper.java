@@ -184,7 +184,7 @@ public class MappingModelCreationHelper {
 		final Value value = bootProperty.getValue();
 		final BasicValue.Resolution<?> resolution = ( (Resolvable) value ).resolve();
 
-		final BasicValueConverter valueConverter = resolution.getValueConverter();
+		final BasicValueConverter<?,?> valueConverter = resolution.getValueConverter();
 
 		final StateArrayContributorMetadataAccess attributeMetadataAccess = entityMappingType -> new StateArrayContributorMetadata() {
 			private final MutabilityPlan mutabilityPlan = resolution.getMutabilityPlan();
@@ -258,7 +258,6 @@ public class MappingModelCreationHelper {
 			// we want to "decompose" the "type" into its various pieces as expected by the mapping
 			assert valueConverter.getRelationalJavaType() == resolution.getRelationalJavaType();
 
-			//noinspection unchecked
 			final BasicType<?> mappingBasicType = creationProcess.getCreationContext()
 					.getDomainModel()
 					.getTypeConfiguration()

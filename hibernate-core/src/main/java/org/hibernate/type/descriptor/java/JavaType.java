@@ -59,9 +59,8 @@ public interface JavaType<T> extends Serializable {
 	/**
 	 * Retrieve the mutability plan for this Java type.
 	 */
-	@SuppressWarnings("unchecked")
 	default MutabilityPlan<T> getMutabilityPlan() {
-		return ImmutableMutabilityPlan.INSTANCE;
+		return ImmutableMutabilityPlan.instance();
 	}
 
 	default T getReplacement(T original, T target, SharedSessionContractImplementor session) {

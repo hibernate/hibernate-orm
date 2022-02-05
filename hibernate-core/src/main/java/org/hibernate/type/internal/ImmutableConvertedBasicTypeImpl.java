@@ -27,7 +27,6 @@ public class ImmutableConvertedBasicTypeImpl<J> extends ConvertedBasicTypeImpl<J
 
 	@Override
 	protected MutabilityPlan<J> getMutabilityPlan() {
-		//noinspection unchecked
-		return ImmutableMutabilityPlan.INSTANCE;
+		return ImmutableMutabilityPlan.instance();
 	}
 }

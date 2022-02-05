@@ -40,9 +40,8 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 	 */
 	public static final OffsetDateTimeJavaType INSTANCE = new OffsetDateTimeJavaType();
 
-	@SuppressWarnings("unchecked")
 	public OffsetDateTimeJavaType() {
-		super( OffsetDateTime.class, ImmutableMutabilityPlan.INSTANCE, OffsetDateTime.timeLineOrder() );
+		super( OffsetDateTime.class, ImmutableMutabilityPlan.instance(), OffsetDateTime.timeLineOrder() );
 	}
 
 	@Override

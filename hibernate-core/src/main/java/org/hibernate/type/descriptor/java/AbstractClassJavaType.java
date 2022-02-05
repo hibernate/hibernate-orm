@@ -35,9 +35,8 @@ public abstract class AbstractClassJavaType<T> implements BasicJavaType<T>, Seri
 	 *
 	 * @see #AbstractClassJavaType(Class, MutabilityPlan)
 	 */
-	@SuppressWarnings({ "unchecked" })
 	protected AbstractClassJavaType(Class<? extends T> type) {
-		this( type, (MutabilityPlan<T>) ImmutableMutabilityPlan.INSTANCE );
+		this( type, ImmutableMutabilityPlan.instance() );
 	}
 
 	/**

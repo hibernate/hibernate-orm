@@ -40,9 +40,8 @@ public class ZonedDateTimeJavaType extends AbstractTemporalJavaType<ZonedDateTim
 	 */
 	public static final ZonedDateTimeJavaType INSTANCE = new ZonedDateTimeJavaType();
 
-	@SuppressWarnings("unchecked")
 	public ZonedDateTimeJavaType() {
-		super( ZonedDateTime.class, ImmutableMutabilityPlan.INSTANCE, ZonedDateTimeComparator.INSTANCE );
+		super( ZonedDateTime.class, ImmutableMutabilityPlan.instance(), ZonedDateTimeComparator.INSTANCE );
 	}
 
 	@Override

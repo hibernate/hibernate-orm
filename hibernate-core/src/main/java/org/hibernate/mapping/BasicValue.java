@@ -756,8 +756,11 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			// envers - grr
 			setTypeParameters( properties );
 
-			final CustomType<Object> customType = new CustomType<>( (UserType<Object>) typeInstance, typeConfiguration );
-			this.resolution = new UserTypeResolution( customType, null, properties );
+			this.resolution = new UserTypeResolution(
+					new CustomType<>( (UserType<Object>) typeInstance, typeConfiguration ),
+					null,
+					properties
+			);
 		}
 	}
 
@@ -817,7 +820,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		 * Converter, if any, to convert values between the
 		 * domain and relational JavaType representations
 		 */
-		BasicValueConverter getValueConverter();
+		BasicValueConverter<J,?> getValueConverter();
 
 		/**
 		 * The resolved MutabilityPlan

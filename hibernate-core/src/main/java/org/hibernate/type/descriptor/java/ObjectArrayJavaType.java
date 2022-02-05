@@ -15,15 +15,15 @@ import org.hibernate.type.descriptor.WrapperOptions;
  */
 public class ObjectArrayJavaType extends AbstractClassJavaType<Object[]> {
 
-	private final JavaType<Object>[] components;
+	private final JavaType[] components;
 
-	public ObjectArrayJavaType(JavaType<?>[] components) {
+	public ObjectArrayJavaType(JavaType[] components) {
 		super(
 				Object[].class,
-				ImmutableMutabilityPlan.INSTANCE,
-				new ComponentArrayComparator( (JavaType<Object>[]) components )
+				ImmutableMutabilityPlan.instance(),
+				new ComponentArrayComparator( components )
 		);
-		this.components = (JavaType<Object>[]) components;
+		this.components = components;
 	}
 
 	@Override

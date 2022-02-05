@@ -39,9 +39,8 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 	 */
 	public static final LocalTimeJavaType INSTANCE = new LocalTimeJavaType();
 
-	@SuppressWarnings("unchecked")
 	public LocalTimeJavaType() {
-		super( LocalTime.class, ImmutableMutabilityPlan.INSTANCE );
+		super( LocalTime.class, ImmutableMutabilityPlan.instance() );
 	}
 
 	@Override

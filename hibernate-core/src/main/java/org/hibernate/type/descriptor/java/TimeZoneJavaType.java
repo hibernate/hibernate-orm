@@ -28,7 +28,7 @@ public class TimeZoneJavaType extends AbstractClassJavaType<TimeZone> {
 	}
 
 	public TimeZoneJavaType() {
-		super( TimeZone.class, ImmutableMutabilityPlan.INSTANCE, TimeZoneComparator.INSTANCE );
+		super( TimeZone.class, ImmutableMutabilityPlan.instance(), TimeZoneComparator.INSTANCE );
 	}
 
 	public String toString(TimeZone value) {

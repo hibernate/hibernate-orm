@@ -4000,10 +4000,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else {
 			final MappingModelExpressible<?> elementExpressible = getElementExpressible( localExpressible );
-			if ( elementExpressible instanceof BasicType<?> ) {
+			if ( elementExpressible instanceof BasicType ) {
 				expressible = InferredBasicValueResolver.resolveSqlTypeIndicators(
 						this,
-						(BasicType<?>) elementExpressible,
+						(BasicType) elementExpressible,
 						literal.getJavaTypeDescriptor()
 				);
 			}
@@ -4080,21 +4080,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 		else {
-			if ( literal instanceof SqmLiteral ) {
-				return new QueryLiteral<>(
-						literal.getLiteralValue(),
-						creationContext.getSessionFactory()
-								.getTypeConfiguration()
-								.getBasicTypeRegistry()
-								.getRegisteredType(
-										( (BasicSqmPathSource) literal.getNodeType() ).getSqmPathType()
-												.getJavaType()
-												.getName()
-								)
-				);
-			}
-			throw new NotYetImplementedFor6Exception(
-					expressible == null ? literal.getLiteralValue().getClass() : expressible.getClass()
+			return new QueryLiteral<>(
+					literal.getLiteralValue(),
+					creationContext.getSessionFactory()
+							.getTypeConfiguration()
+							.getBasicTypeRegistry()
+							.getRegisteredType(
+									( (BasicSqmPathSource<?>) literal.getNodeType() ).getSqmPathType()
+											.getJavaType()
+											.getName()
+							)
 			);
 		}
 	}
@@ -4613,10 +4608,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Object visitCastTarget(SqmCastTarget<?> target) {
 		BasicValuedMapping targetType = (BasicValuedMapping) target.getType();
-		if ( targetType instanceof BasicType<?> ) {
+		if ( targetType instanceof BasicType ) {
 			targetType = InferredBasicValueResolver.resolveSqlTypeIndicators(
 					this,
-					(BasicType<?>) targetType,
+					(BasicType) targetType,
 					target.getNodeJavaType()
 			);
 		}
@@ -5320,7 +5315,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final BasicValuedMapping inferrableType = (BasicValuedMapping) resolveInferredType();
 		if ( inferrableType instanceof ConvertibleModelPart ) {
 			final ConvertibleModelPart inferredPart = (ConvertibleModelPart) inferrableType;
-			@SuppressWarnings("unchecked")
 			final BasicValueConverter<Enum<?>,?> valueConverter = inferredPart.getValueConverter();
 			final Object jdbcValue = valueConverter.toRelationalValue( sqmEnumLiteral.getEnumValue() );
 			return new QueryLiteral<>( jdbcValue, inferredPart );
@@ -5335,7 +5329,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		return new ConvertedQueryLiteral(
 				sqmEnumLiteral.getEnumValue(),
-				new OrdinalEnumValueConverter( enumJtd, jdbcType, relationalJtd ),
+				new OrdinalEnumValueConverter<>( enumJtd, jdbcType, relationalJtd ),
 				jdbcMappingType
 		);
 	}

@@ -39,9 +39,8 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 	 */
 	public static final OffsetTimeJavaType INSTANCE = new OffsetTimeJavaType();
 
-	@SuppressWarnings("unchecked")
 	public OffsetTimeJavaType() {
-		super( OffsetTime.class, ImmutableMutabilityPlan.INSTANCE );
+		super( OffsetTime.class, ImmutableMutabilityPlan.instance() );
 	}
 
 	@Override

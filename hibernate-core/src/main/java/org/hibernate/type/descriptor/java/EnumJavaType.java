@@ -21,9 +21,8 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
  * @author Steve Ebersole
  */
 public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
-	@SuppressWarnings("unchecked")
 	public EnumJavaType(Class<T> type) {
-		super( type, ImmutableMutabilityPlan.INSTANCE );
+		super( type, ImmutableMutabilityPlan.instance() );
 	}
 
 	@Override

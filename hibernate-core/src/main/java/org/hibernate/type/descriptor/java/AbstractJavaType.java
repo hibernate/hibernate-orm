@@ -36,9 +36,8 @@ public abstract class AbstractJavaType<T> implements BasicJavaType<T>, Serializa
 	 *
 	 * @see #AbstractJavaType(Type, MutabilityPlan)
 	 */
-	@SuppressWarnings({ "unchecked" })
 	protected AbstractJavaType(Type type) {
-		this( type, (MutabilityPlan<T>) ImmutableMutabilityPlan.INSTANCE );
+		this( type, ImmutableMutabilityPlan.instance() );
 	}
 
 	/**
@@ -47,7 +46,7 @@ public abstract class AbstractJavaType<T> implements BasicJavaType<T>, Serializa
 	 * @param type The Java type.
 	 * @param mutabilityPlan The plan for handling mutability aspects of the java type.
 	 */
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	protected AbstractJavaType(Type type, MutabilityPlan<T> mutabilityPlan) {
 		this.type = type;
 		this.mutabilityPlan = mutabilityPlan;
@@ -86,13 +85,13 @@ public abstract class AbstractJavaType<T> implements BasicJavaType<T>, Serializa
 		return (value == null) ? "null" : value.toString();
 	}
 
-	protected HibernateException unknownUnwrap(Class conversionType) {
+	protected HibernateException unknownUnwrap(Class<?> conversionType) {
 		throw new HibernateException(
 				"Unknown unwrap conversion requested: " + type.getTypeName() + " to " + conversionType.getName()
 		);
 	}
 
-	protected HibernateException unknownWrap(Class conversionType) {
+	protected HibernateException unknownWrap(Class<?> conversionType) {
 		throw new HibernateException(
 				"Unknown wrap conversion requested: " + conversionType.getName() + " to " + type.getTypeName()
 		);

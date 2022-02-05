@@ -52,7 +52,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.converter.AttributeConverterJdbcTypeAdapter;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
-import org.hibernate.type.descriptor.java.BasicJavaType;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.LobTypeMappings;
@@ -728,8 +728,7 @@ public abstract class SimpleValue implements KeyValue {
 	 */
 	private Type buildAttributeConverterTypeAdapter() {
 		// todo : validate the number of columns present here?
-
-		final JpaAttributeConverter jpaAttributeConverter = attributeConverterDescriptor.createJpaAttributeConverter(
+		return buildAttributeConverterTypeAdapter( attributeConverterDescriptor.createJpaAttributeConverter(
 				new JpaAttributeConverterCreationContext() {
 					@Override
 					public ManagedBeanRegistry getManagedBeanRegistry() {
@@ -744,9 +743,13 @@ public abstract class SimpleValue implements KeyValue {
 						return getMetadata().getTypeConfiguration();
 					}
 				}
-		);
+		) );
+	}
 
-		final BasicJavaType<?> domainJtd = (BasicJavaType<?>) jpaAttributeConverter.getDomainJavaType();
+	private <T> AttributeConverterTypeAdapter<T> buildAttributeConverterTypeAdapter(
+			JpaAttributeConverter<T, ?> jpaAttributeConverter) {
+		JavaType<T> domainJavaType = jpaAttributeConverter.getDomainJavaType();
+		JavaType<?> relationalJavaType = jpaAttributeConverter.getRelationalJavaType();
 
 		// build the SqlTypeDescriptor adapter ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Going back to the illustration, this should be a SqlTypeDescriptor that handles the Integer <-> String
@@ -754,7 +757,7 @@ public abstract class SimpleValue implements KeyValue {
 		//		corresponding to the AttributeConverter's declared "databaseColumnJavaType" (how we read that value out
 		// 		of ResultSets).  See JdbcTypeJavaClassMappings for details.  Again, given example, this should return
 		// 		VARCHAR/CHAR
-		final JdbcType recommendedJdbcType = jpaAttributeConverter.getRelationalJavaType().getRecommendedJdbcType(
+		final JdbcType recommendedJdbcType = relationalJavaType.getRecommendedJdbcType(
 				// todo (6.0) : handle the other JdbcRecommendedSqlTypeMappingContext methods
 				new JdbcTypeIndicators() {
 					@Override
@@ -774,7 +777,7 @@ public abstract class SimpleValue implements KeyValue {
 				jdbcTypeCode = LobTypeMappings.getLobCodeTypeMapping( jdbcTypeCode );
 			}
 			else {
-				if ( Serializable.class.isAssignableFrom( domainJtd.getJavaTypeClass() ) ) {
+				if ( Serializable.class.isAssignableFrom( domainJavaType.getJavaTypeClass() ) ) {
 					jdbcTypeCode = Types.BLOB;
 				}
 				else {
@@ -793,33 +796,26 @@ public abstract class SimpleValue implements KeyValue {
 			jdbcTypeCode = NationalizedTypeMappings.toNationalizedTypeCode( jdbcTypeCode );
 		}
 
-		final JdbcType jdbcType = metadata.getTypeConfiguration()
-								.getJdbcTypeRegistry()
-								.getDescriptor( jdbcTypeCode );
-
-		// and finally construct the adapter, which injects the AttributeConverter calls into the binding/extraction
-		// 		process...
-		final JdbcType jdbcTypeAdapter = new AttributeConverterJdbcTypeAdapter(
-				jpaAttributeConverter,
-				jdbcType,
-				jpaAttributeConverter.getRelationalJavaType()
-		);
 
 		// todo : cache the AttributeConverterTypeAdapter in case that AttributeConverter is applied multiple times.
-
-		final String name = ConverterDescriptor.TYPE_NAME_PREFIX + jpaAttributeConverter.getConverterJavaType().getJavaType().getTypeName();
-		final String description = String.format(
-				"BasicType adapter for AttributeConverter<%s,%s>",
-				jpaAttributeConverter.getDomainJavaType().getJavaType().getTypeName(),
-				jpaAttributeConverter.getRelationalJavaType().getJavaType().getTypeName()
-		);
 		return new AttributeConverterTypeAdapter<>(
-				name,
-				description,
+				ConverterDescriptor.TYPE_NAME_PREFIX
+						+ jpaAttributeConverter.getConverterJavaType().getJavaType().getTypeName(),
+				String.format(
+						"BasicType adapter for AttributeConverter<%s,%s>",
+						domainJavaType.getJavaType().getTypeName(),
+						relationalJavaType.getJavaType().getTypeName()
+				),
 				jpaAttributeConverter,
-				jdbcTypeAdapter,
-				jpaAttributeConverter.getRelationalJavaType(),
-				jpaAttributeConverter.getDomainJavaType(),
+				// and finally construct the adapter, which injects the AttributeConverter
+				// calls into the binding/extraction process...
+				new AttributeConverterJdbcTypeAdapter(
+						jpaAttributeConverter,
+						metadata.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( jdbcTypeCode ),
+						relationalJavaType
+				),
+				relationalJavaType,
+				domainJavaType,
 				null
 		);
 	}

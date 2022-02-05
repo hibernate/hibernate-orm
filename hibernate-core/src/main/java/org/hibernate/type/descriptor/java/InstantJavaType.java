@@ -38,9 +38,8 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 	 */
 	public static final InstantJavaType INSTANCE = new InstantJavaType();
 
-	@SuppressWarnings("unchecked")
 	public InstantJavaType() {
-		super( Instant.class, ImmutableMutabilityPlan.INSTANCE );
+		super( Instant.class, ImmutableMutabilityPlan.instance() );
 	}
 
 	@Override

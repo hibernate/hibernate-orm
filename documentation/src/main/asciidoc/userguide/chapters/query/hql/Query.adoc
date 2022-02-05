@@ -21,6 +21,12 @@ However, HQL is the most convenient option for most people most of the time.
 The actual query language itself is discussed the <<chapters/query/criteria/QueryLanguage.adoc#query-language,next chapter>>.
 This chapter describes the Java APIs for executing HQL and JPQL queries.
 
+Most of this chapter is dedicated to discussing `org.hibernate.query.Query`, `jakarta.persistence.Query` and
+`jakarta.persistence.TypedQuery`.  These `Query` contracts mix the ability to perform selections as well mutations.
+Hibernate additionally offers the more targeted `SelectionQuery` and `MutationQuery` contracts.  See
+<<hql-SelectionQuery>> and <<hql-MutationQuery>> for additional details.
+
+
 [[hql-examples-domain-model]]
 === Example domain model
 
@@ -573,3 +579,71 @@ The setting gives the maximum number of `ParameterMetadataImpl` instances mainta
 Now, if you have many JPQL or Criteria API queries, it's a good idea to increase the query plan cache size so that the vast majority of executing entity queries can skip the compilation phase, therefore reducing execution time.
 
 To get a better understanding of the query plan cache effectiveness, Hibernate offers several statistics you can use. For more details, check out the <<chapters/statistics/Statistics.adoc#statistics-query-plan-cache,Query plan cache statistics>> section.
+
+
+[[hql-SelectionQuery]]
+=== SelectionQuery
+
+Hibernate's `SelectionQuery` contract is similar to `Query` but only exposes methods which are relevant to selection queries.  For example,
+it does not expose a `#executeUpdate` method.  This allows for earlier validation of the query as a selection.
+
+
+[[hql-examples-selection-query]]
+.Selection query validation
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SelectionQueryExampleTests.java[tags=example-hql-selection-query]
+
+include::{sourcedir}/SelectionQueryExampleTests.java[tags=example-hql-selection-query-query]
+----
+====
+
+`SelectionQuery` may also be used with named-queries
+
+[[hql-examples-named-selection-query]]
+.NamedQuery selection validation
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SelectionQueryExampleTests.java[tags=example-hql-named-selection-query]
+
+include::{sourcedir}/SelectionQueryExampleTests.java[tags=example-hql-named-selection-query-query]
+----
+====
+
+
+
+
+[[hql-MutationQuery]]
+=== MutationQuery
+
+Along the same lines as `SelectionQuery`, `MutationQuery` is similar to `Query` but only exposes methods which are relevant to mutation queries.
+For example, in terms of execution, it only exposes `#executeUpdate` method.  This allows for earlier validation of the query as a mutation.
+
+[[hql-examples-mutation-query]]
+.Mutation query validation
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/MutationQueryExampleTests.java[tags=example-hql-mutation-query]
+
+include::{sourcedir}/MutationQueryExampleTests.java[tags=example-hql-mutation-query-query]
+----
+====
+
+
+`MutationQuery` may also be used with named-queries
+
+[[hql-examples-named-mutation-query]]
+.NamedQuery mutation validation
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/MutationQueryExampleTests.java[tags=example-hql-named-mutation-query]
+
+include::{sourcedir}/MutationQueryExampleTests.java[tags=example-hql-named-mutation-query-query]
+----
+====
+
+

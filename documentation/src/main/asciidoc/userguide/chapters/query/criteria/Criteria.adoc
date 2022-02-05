@@ -28,6 +28,8 @@ Each serves a different purpose depending on the expected type of the query resu
 ====
 The chapter 6 (i.e., Criteria API) of the Jakarta Persistence Specification already contains a decent amount of reference material pertaining to the various parts of a criteria query.
 So rather than duplicate all that content here, let's instead look at some of the more widely anticipated usages of the API.
+
+
 ====
 
 [[criteria-typedquery]]

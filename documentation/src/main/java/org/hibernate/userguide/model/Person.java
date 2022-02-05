@@ -160,6 +160,10 @@ import jakarta.persistence.Version;
     }
 )
 //end::jpa-read-only-entities-native-example[]
+@NamedQuery(
+        name = "delete_person",
+        query = "delete Person"
+)
 //tag::sql-sp-ref-cursor-oracle-named-query-example[]
 @NamedStoredProcedureQuery(
     name = "sp_person_phones",

@@ -3845,11 +3845,20 @@ public final class AnnotationBinder {
 			JoinColumns joinColumns,
 			MetadataBuildingContext context) {
 		final boolean noConstraintByDefault = context.getBuildingOptions().isNoConstraintByDefault();
-		if ( ( joinColumn != null && ( joinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
-				|| joinColumn.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) )
-				|| ( joinColumns != null && ( joinColumns.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
-				|| joinColumns.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) ) ) {
-			value.disableForeignKey();
+
+		final NotFound notFoundAnn= property.getAnnotation( NotFound.class );
+		if ( notFoundAnn != null ) {
+			value.setForeignKeyName( "none" );
+		}
+		else if ( joinColumn != null && (
+				joinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
+						|| ( joinColumn.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) ) ) {
+			value.setForeignKeyName( "none" );
+		}
+		else if ( joinColumns != null && (
+				joinColumns.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
+						|| ( joinColumns.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) ) ) {
+			value.setForeignKeyName( "none" );
 		}
 		else {
 			final ForeignKey fk = property.getAnnotation( ForeignKey.class );

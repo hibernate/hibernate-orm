@@ -27,7 +27,6 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
-import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Column;
@@ -53,7 +52,6 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -68,7 +66,6 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
-import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.emptyMap;
@@ -89,8 +86,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	private static final Logger log = Logger.getLogger( JoinedSubclassEntityPersister.class );
 
 	private static final String IMPLICIT_DISCRIMINATOR_ALIAS = "clazz_";
-	private static final Object NULL_DISCRIMINATOR = new MarkerObject("<null discriminator>");
-	private static final Object NOT_NULL_DISCRIMINATOR = new MarkerObject("<not null discriminator>");
 
 	// the class hierarchy structure
 	private final int tableSpan;
@@ -198,34 +193,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					explicitDiscriminatorColumnName = column.getQuotedName( dialect );
 					discriminatorAlias = column.getAlias( dialect, persistentClass.getRootTable() );
 				}
-				discriminatorType = (BasicType<?>) persistentClass.getDiscriminator().getType();
-				if ( persistentClass.isDiscriminatorValueNull() ) {
-					discriminatorValue = NULL_DISCRIMINATOR;
-					discriminatorSQLString = InFragment.NULL;
-				}
-				else if ( persistentClass.isDiscriminatorValueNotNull() ) {
-					discriminatorValue = NOT_NULL_DISCRIMINATOR;
-					discriminatorSQLString = InFragment.NOT_NULL;
-				}
-				else {
-					try {
-						discriminatorValue = discriminatorType.getJavaTypeDescriptor()
-								.fromString( persistentClass.getDiscriminatorValue() );
-						JdbcLiteralFormatter literalFormatter = discriminatorType.getJdbcType()
-								.getJdbcLiteralFormatter( discriminatorType.getJavaTypeDescriptor() );
-						discriminatorSQLString = literalFormatter.toJdbcLiteral(
-								discriminatorValue,
-								dialect,
-								factory.getWrapperOptions()
-						);
-					}
-					catch (ClassCastException cce) {
-						throw new MappingException("Illegal discriminator type: " + discriminatorType.getName() );
-					}
-					catch (Exception e) {
-						throw new MappingException("Could not format discriminator value to SQL string", e);
-					}
-				}
+				discriminatorType = DiscriminatorHelper.getDiscriminatorType( persistentClass );
+				discriminatorValue = DiscriminatorHelper.getDiscriminatorValue( persistentClass );
+				discriminatorSQLString = DiscriminatorHelper.getDiscriminatorSQLValue( persistentClass, dialect, factory );
 			}
 			else {
 				explicitDiscriminatorColumnName = null;
@@ -433,9 +403,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			customSQLInsert[jk] = pc.getCustomSQLInsert();
 			insertCallable[jk] = customSQLInsert[jk] != null && pc.isCustomInsertCallable();
 			insertResultCheckStyles[jk] = pc.getCustomSQLInsertCheckStyle() == null
-					? ExecuteUpdateResultCheckStyle.determineDefault(
-					customSQLInsert[jk], insertCallable[jk]
-			)
+					? ExecuteUpdateResultCheckStyle.determineDefault( customSQLInsert[jk], insertCallable[jk] )
 					: pc.getCustomSQLInsertCheckStyle();
 			customSQLUpdate[jk] = pc.getCustomSQLUpdate();
 			updateCallable[jk] = customSQLUpdate[jk] != null && pc.isCustomUpdateCallable();
@@ -532,44 +500,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 //		subclassClosure = new String[subclassSpan];
 		int subclassSpanMinusOne = subclassSpan - 1;
 //		subclassClosure[subclassSpanMinusOne] = getEntityName();
-		if ( persistentClass.isPolymorphic() ) {
-			subclassesByDiscriminatorValue.put( discriminatorValue, getEntityName() );
-
-			discriminatorValuesByTableName = CollectionHelper.linkedMapOfSize( subclassSpan + 1 );
-			discriminatorColumnNameByTableName = CollectionHelper.linkedMapOfSize( subclassSpan + 1 );
-			subclassNameByTableName = CollectionHelper.mapOfSize( subclassSpan + 1 );
-			// We need to convert the `discriminatorSQLString` (which is a String read from boot-mapping) into
-			// 	the type indicated by `#discriminatorType` (String -> Integer, e.g.).
-			try {
-				Table table = persistentClass.getTable();
-				final Object convertedDiscriminatorValue = discriminatorType.getJavaTypeDescriptor().fromString( discriminatorSQLString );
-				discriminatorValues = new String[subclassSpan];
-				initDiscriminatorProperties( factory, subclassSpanMinusOne, table, convertedDiscriminatorValue
-				);
-
-				notNullColumnTableNumbers = new int[subclassSpan];
-				final int id = getTableId(
-						table.getQualifiedName(
-								factory.getSqlStringGenerationContext()
-					),
-					subclassTableNameClosure
-			);
-			notNullColumnTableNumbers[subclassSpanMinusOne] = id;
-				notNullColumnNames = new String[subclassSpan];
-				notNullColumnNames[subclassSpanMinusOne] = subclassTableKeyColumnClosure[id][0]; //( (Column) model.getTable().getPrimaryKey().getColumnIterator().next() ).getName();
-			}
-			catch (HibernateException e) {
-				throw e;
-			}
-			catch (Exception e) {
-				throw new MappingException(
-						"Could not resolve specified discriminator value [" + discriminatorSQLString
-								+ "] to discriminator type [" + discriminatorType + "]"
-
-				);
-			}
-		}
-		else {
+		if ( !persistentClass.isPolymorphic() ) {
 			subclassNameByTableName = emptyMap();
 			discriminatorValuesByTableName = emptyMap();
 			discriminatorColumnNameByTableName = emptyMap();
@@ -577,55 +508,49 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			notNullColumnTableNumbers = null;
 			notNullColumnNames = null;
 		}
+		else {
+			subclassesByDiscriminatorValue.put( discriminatorValue, getEntityName() );
 
-		int k = 0;
-		for ( Subclass subclass : persistentClass.getSubclasses() ) {
-//			subclassClosure[k] = subclass.getEntityName();
-			final Table table = subclass.getTable();
-			subclassNameByTableName.put( table.getName(), subclass.getEntityName() );
-			try {
+			discriminatorValuesByTableName = CollectionHelper.linkedMapOfSize( subclassSpan + 1 );
+			discriminatorColumnNameByTableName = CollectionHelper.linkedMapOfSize( subclassSpan + 1 );
+			subclassNameByTableName = CollectionHelper.mapOfSize( subclassSpan + 1 );
+
+			Table table = persistentClass.getTable();
+			discriminatorValues = new String[subclassSpan];
+			initDiscriminatorProperties( dialect, subclassSpanMinusOne, table, discriminatorValue );
+
+			notNullColumnTableNumbers = new int[subclassSpan];
+			final int id = getTableId(
+					table.getQualifiedName( factory.getSqlStringGenerationContext() ),
+					subclassTableNameClosure
+			);
+			notNullColumnTableNumbers[subclassSpanMinusOne] = id;
+			notNullColumnNames = new String[subclassSpan];
+			notNullColumnNames[subclassSpanMinusOne] = subclassTableKeyColumnClosure[id][0]; //( (Column) model.getTable().getPrimaryKey().getColumnIterator().next() ).getName();
+
+			List<Subclass> subclasses = persistentClass.getSubclasses();
+			for ( int k = 0; k < subclasses.size(); k++ ) {
+				Subclass subclass = subclasses.get(k);
+//				subclassClosure[k] = subclass.getEntityName();
+				final Table subclassTable = subclass.getTable();
+				subclassNameByTableName.put( subclassTable.getName(), subclass.getEntityName() );
 				if ( persistentClass.isPolymorphic() ) {
-					final Object discriminatorValue;
-					if ( explicitDiscriminatorColumnName != null ) {
-						if ( subclass.isDiscriminatorValueNull() ) {
-							discriminatorValue = NULL_DISCRIMINATOR;
-						}
-						else if ( subclass.isDiscriminatorValueNotNull() ) {
-							discriminatorValue = NOT_NULL_DISCRIMINATOR;
-						}
-						else {
-							try {
-								discriminatorValue = discriminatorType.getJavaTypeDescriptor()
-										.fromString( subclass.getDiscriminatorValue() );
-							}
-							catch (ClassCastException cce) {
-								throw new MappingException( "Illegal discriminator type: " + discriminatorType.getName() );
-							}
-							catch (Exception e) {
-								throw new MappingException( "Could not format discriminator value to SQL string", e);
-							}
-						}
-					}
-					else {
-						// we now use subclass ids that are consistent across all
-						// persisters for a class hierarchy, so that the use of
-						// "foo.class = Bar" works in HQL
-						discriminatorValue = subclass.getSubclassId();
-					}
-					initDiscriminatorProperties( factory, k, table, discriminatorValue );
+					final Object discriminatorValue = explicitDiscriminatorColumnName != null
+							? DiscriminatorHelper.getDiscriminatorValue( subclass )
+							// we now use subclass ids that are consistent across all
+							// persisters for a class hierarchy, so that the use of
+							// "foo.class = Bar" works in HQL
+							: subclass.getSubclassId();
+					initDiscriminatorProperties( dialect, k, subclassTable, discriminatorValue );
 					subclassesByDiscriminatorValue.put( discriminatorValue, subclass.getEntityName() );
-					int id = getTableId(
-							table.getQualifiedName( factory.getSqlStringGenerationContext() ),
+					int tableId = getTableId(
+							subclassTable.getQualifiedName( factory.getSqlStringGenerationContext() ),
 							subclassTableNameClosure
 					);
-					notNullColumnTableNumbers[k] = id;
-					notNullColumnNames[k] = subclassTableKeyColumnClosure[id][0]; //( (Column) sc.getTable().getPrimaryKey().getColumnIterator().next() ).getName();
+					notNullColumnTableNumbers[k] = tableId;
+					notNullColumnNames[k] = subclassTableKeyColumnClosure[tableId][0]; //( (Column) sc.getTable().getPrimaryKey().getColumnIterator().next() ).getName();
 				}
 			}
-			catch ( Exception e ) {
-				throw new MappingException( "Error parsing discriminator value", e );
-			}
-			k++;
 		}
 
 		subclassNamesBySubclassTable = buildSubclassNamesBySubclassTableMapping( persistentClass, factory );
@@ -636,18 +561,13 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	}
 
-	private void initDiscriminatorProperties(
-			SessionFactoryImplementor factory,
-			int k,
-			Table table,
-			Object discriminatorValue) {
+	private void initDiscriminatorProperties(Dialect dialect, int k, Table table, Object discriminatorValue) {
 		final String tableName = determineTableName( table );
-		final String columnName = table.getPrimaryKey().getColumn( 0 ).getQuotedName( factory.getJdbcServices().getDialect() );
+		final String columnName = table.getPrimaryKey().getColumn( 0 ).getQuotedName( dialect );
 		discriminatorValuesByTableName.put( tableName, discriminatorValue );
 		discriminatorColumnNameByTableName.put( tableName, columnName );
 		discriminatorValues[k] = discriminatorValue.toString();
 	}
-
 
 	/**
 	 * Used to hold the name of subclasses that each "subclass table" is part of.  For example, given a hierarchy like:
@@ -870,12 +790,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	@Override
 	public String getSubclassForDiscriminatorValue(Object value) {
 		if ( value == null ) {
-			return subclassesByDiscriminatorValue.get( NULL_DISCRIMINATOR );
+			return subclassesByDiscriminatorValue.get( DiscriminatorHelper.NULL_DISCRIMINATOR );
 		}
 		else {
 			String result = subclassesByDiscriminatorValue.get( value );
 			if ( result == null ) {
-				result = subclassesByDiscriminatorValue.get( NOT_NULL_DISCRIMINATOR );
+				result = subclassesByDiscriminatorValue.get( DiscriminatorHelper.NOT_NULL_DISCRIMINATOR );
 			}
 			return result;
 		}

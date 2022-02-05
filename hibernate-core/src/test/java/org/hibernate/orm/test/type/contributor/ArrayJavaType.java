@@ -60,7 +60,7 @@ public class ArrayJavaType extends AbstractClassJavaType<Array> {
         return array;
     }
 
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings("unchecked")
     public <X> X unwrap(Array value, Class<X> type, WrapperOptions options) {
         if ( value == null ) {
             return null;
@@ -78,10 +78,10 @@ public class ArrayJavaType extends AbstractClassJavaType<Array> {
         if ( value == null ) {
             return null;
         }
-        if ( String.class.isInstance( value ) ) {
+        if ( value instanceof String ) {
             return fromString( (String) value );
         }
-        if ( Array.class.isInstance( value ) ) {
+        if ( value instanceof Array ) {
             return (Array) value;
         }
         throw unknownWrap( value.getClass() );

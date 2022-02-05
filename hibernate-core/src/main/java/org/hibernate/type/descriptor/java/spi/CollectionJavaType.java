@@ -43,7 +43,7 @@ public class CollectionJavaType<C> extends AbstractClassJavaType<C> {
 
 	@Override
 	public C fromString(CharSequence string) {
-		throw new UnsupportedOperationException(  );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

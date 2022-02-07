@@ -19,7 +19,6 @@ import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.FieldFunction;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
@@ -447,7 +446,6 @@ public class MySQLDialect extends Dialect {
 			functionFactory.sysdateExplicitMicros();
 		}
 
-		queryEngine.getSqmFunctionRegistry().register( "field", new FieldFunction( queryEngine.getTypeConfiguration() ) );
 		functionFactory.listagg_groupConcat();
 	}
 

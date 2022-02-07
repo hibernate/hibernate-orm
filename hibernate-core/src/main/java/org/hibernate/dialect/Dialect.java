@@ -841,18 +841,21 @@ public abstract class Dialect implements ConversionContext {
 		//only some databases support the ANSI SQL-style position() function, so
 		//define it here as an alias for locate()
 
-		queryEngine.getSqmFunctionRegistry().register( "position", new LocatePositionEmulation( queryEngine.getTypeConfiguration() ) );
+		queryEngine.getSqmFunctionRegistry().register( "position",
+				new LocatePositionEmulation( queryEngine.getTypeConfiguration() ) );
 
 		//very few databases support ANSI-style overlay() function, so emulate
 		//it here in terms of either insert() or concat()/substring()
 
-		queryEngine.getSqmFunctionRegistry().register( "overlay", new InsertSubstringOverlayEmulation( queryEngine.getTypeConfiguration(), false ) );
+		queryEngine.getSqmFunctionRegistry().register( "overlay",
+				new InsertSubstringOverlayEmulation( queryEngine.getTypeConfiguration(), false ) );
 
 		//ANSI SQL trim() function is supported on almost all of the databases
 		//we care about, but on some it must be emulated using ltrim(), rtrim(),
 		//and replace()
 
-		queryEngine.getSqmFunctionRegistry().register( "trim", new TrimFunction( this, queryEngine.getTypeConfiguration() ) );
+		queryEngine.getSqmFunctionRegistry().register( "trim",
+				new TrimFunction( this, queryEngine.getTypeConfiguration() ) );
 
 		//ANSI SQL cast() function is supported on the databases we care most
 		//about but in certain cases it doesn't allow some useful typecasts,
@@ -879,7 +882,8 @@ public abstract class Dialect implements ConversionContext {
 		//additional non-standard temporal field types, which must be emulated in
 		//a very dialect-specific way
 
-		queryEngine.getSqmFunctionRegistry().register( "extract", new ExtractFunction( this ) );
+		queryEngine.getSqmFunctionRegistry().register( "extract",
+				new ExtractFunction( this ) );
 
 		//comparison functions supported on every known database
 
@@ -888,7 +892,8 @@ public abstract class Dialect implements ConversionContext {
 		//two-argument synonym for coalesce() supported on most but not every
 		//database, so define it here as an alias for coalesce(arg1,arg2)
 
-		queryEngine.getSqmFunctionRegistry().register( "ifnull", new CoalesceIfnullEmulation() );
+		queryEngine.getSqmFunctionRegistry().register( "ifnull",
+				new CoalesceIfnullEmulation() );
 
 		//rpad() and pad() are supported on almost every database, and emulated
 		//where not supported, but they're not considered "standard" ... instead
@@ -898,12 +903,14 @@ public abstract class Dialect implements ConversionContext {
 
 		//pad() is a function we've designed to look like ANSI trim()
 
-		queryEngine.getSqmFunctionRegistry().register( "pad", new LpadRpadPadEmulation( queryEngine.getTypeConfiguration() ) );
+		queryEngine.getSqmFunctionRegistry().register( "pad",
+				new LpadRpadPadEmulation( queryEngine.getTypeConfiguration() ) );
 
 		//legacy Hibernate convenience function for casting to string, defined
 		//here as an alias for cast(arg as String)
 
-		queryEngine.getSqmFunctionRegistry().register( "str", new CastStrEmulation( queryEngine.getTypeConfiguration() ) );
+		queryEngine.getSqmFunctionRegistry().register( "str",
+				new CastStrEmulation( queryEngine.getTypeConfiguration() ) );
 
 		//format() function for datetimes, emulated on many databases using the
 		//Oracle-style to_char() function, and on others using their native
@@ -914,8 +921,10 @@ public abstract class Dialect implements ConversionContext {
 		//timestampadd()/timestampdiff() delegated back to the Dialect itself
 		//since there is a great variety of different ways to emulate them
 
-		queryEngine.getSqmFunctionRegistry().register( "timestampadd", new TimestampaddFunction( this, queryEngine.getTypeConfiguration() ) );
-		queryEngine.getSqmFunctionRegistry().register( "timestampdiff", new TimestampdiffFunction( this, queryEngine.getTypeConfiguration() ) );
+		queryEngine.getSqmFunctionRegistry().register( "timestampadd",
+				new TimestampaddFunction( this ) );
+		queryEngine.getSqmFunctionRegistry().register( "timestampdiff",
+				new TimestampdiffFunction( this, queryEngine.getTypeConfiguration() ) );
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "dateadd", "timestampadd" );
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "datediff", "timestampdiff" );
 

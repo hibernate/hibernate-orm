@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.IntegralTimestampaddFunction;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -221,6 +222,9 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		functionFactory.replace_strReplace();
 		functionFactory.everyAny_sumCaseCase();
 		functionFactory.bitLength_pattern( "datalength(?1) * 8" );
+
+		queryEngine.getSqmFunctionRegistry().register( "timestampadd",
+				new IntegralTimestampaddFunction( this, queryEngine.getTypeConfiguration() ) );
 	}
 
 	@Override

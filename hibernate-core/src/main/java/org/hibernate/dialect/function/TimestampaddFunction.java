@@ -8,9 +8,7 @@ package org.hibernate.dialect.function;
 
 import jakarta.persistence.TemporalType;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.ReturnableType;
-import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
@@ -22,17 +20,9 @@ import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.spi.TypeConfiguration;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Arrays.asList;
@@ -43,16 +33,20 @@ import static org.hibernate.type.spi.TypeConfiguration.getSqlIntervalType;
 import static org.hibernate.type.spi.TypeConfiguration.getSqlTemporalType;
 
 /**
+ * The {@code timestampadd()} or {@code dateadd()} function has a funny
+ * syntax which accepts a {@link TemporalUnit} as the first argument,
+ * and the actual set of accepted units varies widely. This class uses
+ * {@link Dialect#timestampaddPattern(TemporalUnit, TemporalType, IntervalType)}
+ * to abstract these differences.
+ *
  * @author Gavin King
  */
 public class TimestampaddFunction
 		extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	private final Dialect dialect;
-	private final CastFunction castFunction;
-	private final BasicType<Integer> integerType;
 
-	public TimestampaddFunction(Dialect dialect, TypeConfiguration typeConfiguration) {
+	public TimestampaddFunction(Dialect dialect) {
 		super(
 				"timestampadd",
 				new ArgumentTypesValidator(
@@ -62,10 +56,6 @@ public class TimestampaddFunction
 				StandardFunctionReturnTypeResolvers.useArgType( 3 )
 		);
 		this.dialect = dialect;
-		this.integerType = typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER );
-		//This is kinda wrong, we're supposed to use findFunctionDescriptor("cast"), not instantiate CastFunction
-		//However, since no Dialects currently override the cast() function, it's OK for now
-		this.castFunction = new CastFunction( dialect, dialect.getPreferredSqlTypeCodeForBoolean() );
 	}
 
 	@Override
@@ -78,87 +68,13 @@ public class TimestampaddFunction
 		final Expression magnitude = (Expression) arguments.get(1);
 		final Expression to = (Expression) arguments.get( 2 );
 
-		final TemporalUnit unit = bestTemporalUnit( magnitude, field );
-		if ( unit != field.getUnit() ) {
-			renderWithUnitConversion( sqlAppender, arguments, walker, field, unit );
-		}
-		else {
-			patternRenderer( to, magnitude, unit ).render( sqlAppender, arguments, walker );
-		}
+		patternRenderer( field.getUnit(), magnitude, to ).render( sqlAppender, arguments, walker );
 	}
 
-	private PatternRenderer patternRenderer(Expression to, Expression interval, TemporalUnit unit) {
+	PatternRenderer patternRenderer(TemporalUnit unit, Expression interval, Expression to) {
 		TemporalType temporalType = getSqlTemporalType( to.getExpressionType() );
 		IntervalType intervalType = getSqlIntervalType( interval.getExpressionType().getJdbcMappings().get(0) );
 		return new PatternRenderer( dialect.timestampaddPattern( unit, temporalType, intervalType ) );
-	}
-
-	private void renderWithUnitConversion(
-			SqlAppender sqlAppender,
-			List<? extends SqlAstNode> arguments,
-			SqlAstTranslator<?> walker,
-			DurationUnit field,
-			TemporalUnit unit) {
-		final Expression magnitude = (Expression) arguments.get( 1 );
-		final Expression to = (Expression) arguments.get( 2 );
-		final Expression interval = (Expression) arguments.get(1);
-
-		final List<SqlAstNode> castArguments = new ArrayList<>( 2 );
-		final List<SqlAstNode> newArguments = new ArrayList<>( arguments );
-
-		castArguments.add( convertedArgument( field, unit, magnitude ) );
-		castArguments.add( new CastTarget( integerType ) );
-		newArguments.set( 0, new DurationUnit( unit, field.getExpressionType() ) );
-		newArguments.set(
-				1,
-				new SelfRenderingFunctionSqlAstExpression(
-						"cast",
-						castFunction,
-						castArguments,
-						integerType,
-						integerType
-				)
-
-		);
-		patternRenderer( to, interval, unit ).render( sqlAppender, newArguments, walker );
-	}
-
-	private Expression convertedArgument(DurationUnit field, TemporalUnit unit, Expression magnitude) {
-		final BasicValuedMapping expressionType = (BasicValuedMapping) magnitude.getExpressionType();
-		final String conversionFactor = field.getUnit().conversionFactor( unit, dialect );
-		return conversionFactor.isEmpty()
-				? magnitude
-				: new BinaryArithmeticExpression(
-						magnitude,
-						conversionFactor.charAt(0) == '*'
-								? BinaryArithmeticOperator.MULTIPLY
-								: BinaryArithmeticOperator.DIVIDE,
-						new QueryLiteral<>(
-								expressionType.getExpressibleJavaType().fromString( conversionFactor.substring(1) ),
-								expressionType
-						),
-						expressionType
-				);
-	}
-
-	private TemporalUnit bestTemporalUnit(Expression magnitude, DurationUnit field) {
-		if ( dialect.supportsFractionalTimestampArithmetic() ) {
-			return field.getUnit();
-		}
-		else {
-			final JdbcType jdbcType = magnitude.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType();
-			if ( jdbcType.isFloat() ) {
-				// Some databases don't support fractional seconds
-				// We need to multiply the magnitude by the conversion factor and cast to int
-				// Use second by default and nanosecond if we encounter fractional seconds
-				return field.getUnit() == TemporalUnit.SECOND
-						? TemporalUnit.NANOSECOND
-						: TemporalUnit.SECOND;
-			}
-			else {
-				return field.getUnit();
-			}
-		}
 	}
 
 //	@Override

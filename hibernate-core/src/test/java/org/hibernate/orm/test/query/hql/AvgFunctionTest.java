@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-@DomainModel(annotatedClasses = AvgFunctionTest.Value.class)
+@DomainModel(annotatedClasses = AvgFunctionTest.Score.class)
 @SessionFactory
 public class AvgFunctionTest {
 
@@ -18,17 +18,17 @@ public class AvgFunctionTest {
     public void test(SessionFactoryScope scope) {
         scope.inTransaction(
                 session -> {
-                    session.persist( new Value(0) );
-                    session.persist( new Value(1) );
-                    session.persist( new Value(2) );
-                    session.persist( new Value(3) );
+                    session.persist( new Score(0) );
+                    session.persist( new Score(1) );
+                    session.persist( new Score(2) );
+                    session.persist( new Score(3) );
                     assertThat(
-                            session.createQuery("select avg(value) from Value", Double.class)
+                            session.createQuery("select avg(doubleValue) from ScoreForAvg", Double.class)
                                     .getSingleResult(),
                             is(1.5)
                     );
                     assertThat(
-                            session.createQuery("select avg(integerValue) from Value", Double.class)
+                            session.createQuery("select avg(integerValue) from ScoreForAvg", Double.class)
                                     .getSingleResult(),
                             is(1.5)
                     );
@@ -36,15 +36,15 @@ public class AvgFunctionTest {
         );
     }
 
-    @Entity(name="Value")
-    public static class Value {
-        public Value() {}
-        public Value(int value) {
-            this.value = value;
+    @Entity(name="ScoreForAvg")
+    public static class Score {
+        public Score() {}
+        public Score(int value) {
+            this.doubleValue = value;
             this.integerValue = value;
         }
         @Id
-        double value;
+        double doubleValue;
         int integerValue;
     }
 

@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.notfound.exception;
 
 import java.io.Serializable;
+import java.util.List;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -66,8 +67,7 @@ public class NotFoundExceptionManyToOneTest {
 	@Test
 	@JiraKey( "HHH-15060" )
 	@FailureExpected(
-			reason = "ObjectNotFoundException is thrown but caught and null is returned - see " +
-					"org.hibernate.internal.SessionImpl.IdentifierLoadAccessImpl#doLoad"
+			reason = "ObjectNotFoundException is thrown, but caught in `IdentifierLoadAccessImpl#doLoad` and null returned instead"
 	)
 	public void testGet(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
@@ -94,26 +94,28 @@ public class NotFoundExceptionManyToOneTest {
 	@Test
 	@JiraKey( "HHH-15060" )
 	@FailureExpected(
-			reason = "EntityNotFoundException thrown rather than ObjectNotFoundException; " +
-					"ObjectNotFoundException is thrown but caught and then converted to EntityNotFoundException"
+			reason = "Does not do the join.  Instead selects the Coin based on `currency_id` and then " +
+					"subsequent-selects the Currency.  Ultimately results in a `Coin#1` reference with a " +
+					"null Currency."
 	)
 	public void testQueryImplicitPathDereferencePredicate(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
-			final String hql = "select c from Coin c where c.currency.id = 1";
 			try {
+				final String hql = "select c from Coin c where c.currency.id = 1";
 				session.createQuery( hql, Coin.class ).getResultList();
+
 				fail( "Expecting ObjectNotFoundException for broken fk" );
 			}
 			catch (ObjectNotFoundException expected) {
+				assertThat( expected.getEntityName() ).isEqualTo( Currency.class.getName() );
+				assertThat( expected.getIdentifier() ).isEqualTo( 1 );
+
 				assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
 				assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
 				assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
-
-				assertThat( expected.getEntityName() ).isEqualTo( Currency.class.getName() );
-				assertThat( expected.getIdentifier() ).isEqualTo( 1 );
 			}
 		} );
 	}
@@ -121,27 +123,28 @@ public class NotFoundExceptionManyToOneTest {
 	@Test
 	@JiraKey( "HHH-15060" )
 	@FailureExpected(
-			reason = "EntityNotFoundException thrown rather than ObjectNotFoundException; " +
-					"ObjectNotFoundException is thrown but caught and then converted to EntityNotFoundException"
+			reason = "Does not do the join.  Instead selects the Coin based on `currency_id` and then " +
+					"subsequent-selects the Currency.  Ultimately results in a `Coin#1` reference with a " +
+					"null Currency."
 	)
 	public void testQueryOwnerSelection(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
-			final String hql = "select c from Coin c";
+			final String hql = "select c from Coin c where c.id = 1";
 			try {
 				session.createQuery( hql, Coin.class ).getResultList();
 				fail( "Expecting ObjectNotFoundException for broken fk" );
 			}
 			catch (ObjectNotFoundException expected) {
+				assertThat( expected.getEntityName() ).isEqualTo( Currency.class.getName() );
+				assertThat( expected.getIdentifier() ).isEqualTo( 1 );
+
 				// technically we could use a subsequent-select rather than a join...
 				assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
 				assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
 				assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
-
-				assertThat( expected.getEntityName() ).isEqualTo( Currency.class.getName() );
-				assertThat( expected.getIdentifier() ).isEqualTo( 1 );
 			}
 		} );
 	}
@@ -156,7 +159,7 @@ public class NotFoundExceptionManyToOneTest {
 		//		- we are selecting the association so from that perspective, throwing the ObjectNotFoundException is nice
 		//		- the other way to look at it is that there are simply no matching results, so nothing to return
 		scope.inTransaction( (session) -> {
-			final String hql = "select c.currency from Coin c";
+			final String hql = "select c.currency from Coin c where c.id = 1";
 			try {
 				session.createQuery( hql, Currency.class ).getResultList();
 				fail( "Expecting ObjectNotFoundException for broken fk" );
@@ -173,9 +176,13 @@ public class NotFoundExceptionManyToOneTest {
 		scope.inTransaction( (session) -> {
 			Currency euro = new Currency( 1, "Euro" );
 			Coin fiveC = new Coin( 1, "Five cents", euro );
-
 			session.persist( euro );
 			session.persist( fiveC );
+
+			Currency usd = new Currency( 2, "USD" );
+			Coin penny = new Coin( 2, "Penny", usd );
+			session.persist( usd );
+			session.persist( penny );
 		} );
 
 		scope.inTransaction( (session) -> {
@@ -184,9 +191,10 @@ public class NotFoundExceptionManyToOneTest {
 	}
 
 	@AfterEach
-	protected void dropTestData(SessionFactoryScope scope) {
+	public void cleanupTest(SessionFactoryScope scope) throws Exception {
 		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete Coin where id = 1" ).executeUpdate();
+			session.createMutationQuery( "delete Coin" ).executeUpdate();
+			session.createMutationQuery( "delete Currency" ).executeUpdate();
 		} );
 	}
 

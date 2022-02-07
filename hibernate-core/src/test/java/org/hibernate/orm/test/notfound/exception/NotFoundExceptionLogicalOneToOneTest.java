@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.notfound.exception;
 
 import java.io.Serializable;
+import java.util.List;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -17,6 +18,7 @@ import org.hibernate.ObjectNotFoundException;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -42,13 +44,13 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Steve Ebersole
  */
 @DomainModel( annotatedClasses = { NotFoundExceptionLogicalOneToOneTest.Coin.class, NotFoundExceptionLogicalOneToOneTest.Currency.class } )
-@SessionFactory
+@SessionFactory( useCollectingStatementInspector = true )
 public class NotFoundExceptionLogicalOneToOneTest {
 	@Test
 	@JiraKey( "HHH-15060" )
 	public void testProxy(SessionFactoryScope scope) {
+		// test handling of a proxy for the missing Coin
 		scope.inTransaction( (session) -> {
-			// the non-existent Child
 			final Currency proxy = session.byId( Currency.class ).getReference( 1 );
 			try {
 				Hibernate.initialize( proxy );
@@ -63,11 +65,20 @@ public class NotFoundExceptionLogicalOneToOneTest {
 
 	@Test
 	@JiraKey( "HHH-15060" )
-	@FailureExpected(
-			reason = "We return a proxy here for `Coin#currency`, which violates NOTE #1.  The exception happens " +
-					"when we reference the proxy, but thats not correct"
-	)
+	@FailureExpected( reason = "We return a proxy here for `Coin#currency`, which violates NOTE #1." )
 	public void testGet(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		scope.inTransaction( (session) -> {
+			session.get( Coin.class, 2 );
+
+			// here we assume join, but this could use subsequent-select instead
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
+		} );
+
 		scope.inTransaction( (session) -> {
 			try {
 				session.get( Coin.class, 1 );
@@ -82,15 +93,43 @@ public class NotFoundExceptionLogicalOneToOneTest {
 
 	@Test
 	@JiraKey( "HHH-15060" )
-	@FailureExpected(
-			reason = "We return a proxy here for `Coin#currency`, which violates NOTE #1.  The exception happens " +
-					"when we reference the proxy, but thats not correct"
-	)
+	@FailureExpected( reason = "We return a proxy for `Coin#currency`, which violates NOTE #1." )
 	public void testQueryImplicitPathDereferencePredicate(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
 		scope.inTransaction( (session) -> {
 			final String hql = "select c from Coin c where c.currency.id = 1";
+			final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
+			assertThat( coins ).isEmpty();
+
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
+		} );
+
+		statementInspector.clear();
+
+		scope.inTransaction( (session) -> {
+			final String hql = "select c from Coin c where c.currency.id = 2";
+			final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
+			assertThat( coins ).hasSize( 1 );
+
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-15060" )
+	@FailureExpected( reason = "We return a proxy for `Coin#currency`, which violates NOTE #1." )
+	public void testQueryOwnerSelection(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			final String hql = "select c from Coin c where c.id = 1";
 			try {
-				session.createQuery( hql, Coin.class ).getResultList();
+				//noinspection unused (debugging)
+				final Coin coin = session.createQuery( hql, Coin.class ).uniqueResult();
 				fail( "Expecting ObjectNotFoundException for broken fk" );
 			}
 			catch (ObjectNotFoundException expected) {
@@ -98,25 +137,12 @@ public class NotFoundExceptionLogicalOneToOneTest {
 				assertThat( expected.getIdentifier() ).isEqualTo( 1 );
 			}
 		} );
-	}
 
-	@Test
-	@JiraKey( "HHH-15060" )
-	@FailureExpected(
-			reason = "We return a proxy here for `Coin#currency`, which violates NOTE #1.  The exception happens " +
-					"when we reference the proxy, but thats not correct"
-	)
-	public void testQueryOwnerSelection(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final String hql = "select c from Coin c";
-			try {
-				session.createQuery( hql, Coin.class ).getResultList();
-				fail( "Expecting ObjectNotFoundException for broken fk" );
-			}
-			catch (ObjectNotFoundException expected) {
-				assertThat( expected.getEntityName() ).isEqualTo( Currency.class.getName() );
-				assertThat( expected.getIdentifier() ).isEqualTo( 1 );
-			}
+			final String hql = "select c from Coin c where c.id = 2";
+			final Coin coin = session.createQuery( hql, Coin.class ).uniqueResult();
+			assertThat( Hibernate.isPropertyInitialized( coin, "currency" ) ).isTrue();
+			assertThat( Hibernate.isInitialized( coin.getCurrency() ) ).isTrue();
 		} );
 	}
 
@@ -125,9 +151,13 @@ public class NotFoundExceptionLogicalOneToOneTest {
 		scope.inTransaction( (session) -> {
 			Currency euro = new Currency( 1, "Euro" );
 			Coin fiveC = new Coin( 1, "Five cents", euro );
-
 			session.persist( euro );
 			session.persist( fiveC );
+
+			Currency usd = new Currency( 2, "USD" );
+			Coin penny = new Coin( 2, "Penny", usd );
+			session.persist( usd );
+			session.persist( penny );
 		} );
 
 		scope.inTransaction( (session) -> {
@@ -138,7 +168,8 @@ public class NotFoundExceptionLogicalOneToOneTest {
 	@AfterEach
 	public void cleanupTest(SessionFactoryScope scope) throws Exception {
 		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete Coin where id = 1" ).executeUpdate();
+			session.createMutationQuery( "delete Coin" ).executeUpdate();
+			session.createMutationQuery( "delete Currency" ).executeUpdate();
 		} );
 	}
 

@@ -53,7 +53,7 @@ stage('Configure') {
 	}
 	properties([
 			buildDiscarder(
-					logRotator(daysToKeepStr: '90')
+					logRotator(daysToKeepStr: '30', numToKeepStr: '10')
 			),
 			// If two builds are about the same branch or pull request,
 			// the older one will be aborted when the newer one starts.

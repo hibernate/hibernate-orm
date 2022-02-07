@@ -52,11 +52,11 @@ public class QueryParameterBindingValidator {
 		}
 
 		final Class<?> parameterJavaType;
+		final SqmExpressible<?> sqmExpressible = paramType.resolveExpressible( sessionFactory );
 		if ( paramType.getBindableJavaType() != null ) {
 			parameterJavaType = paramType.getBindableJavaType();
 		}
 		else {
-			final SqmExpressible<?> sqmExpressible = paramType.resolveExpressible( sessionFactory );
 			parameterJavaType = sqmExpressible.getBindableJavaType();
 		}
 
@@ -70,13 +70,26 @@ public class QueryParameterBindingValidator {
 			// 		NOTE : this can happen in Hibernate's notion of "parameter list" binding
 			// 		NOTE2 : the case of a collection value and an expected collection (if that can even happen)
 			//			will fall through to the main check.
-			validateCollectionValuedParameterBinding( parameterJavaType, (Collection<?>) bind, temporalPrecision );
+			validateCollectionValuedParameterBinding(
+					parameterJavaType,
+					(Collection<?>) bind,
+					temporalPrecision
+			);
 		}
 		else if ( bind.getClass().isArray() ) {
-			validateArrayValuedParameterBinding( parameterJavaType, bind, temporalPrecision );
+			validateArrayValuedParameterBinding(
+					parameterJavaType,
+					bind,
+					temporalPrecision
+			);
 		}
 		else {
-			if ( !isValidBindValue( parameterJavaType, bind, temporalPrecision ) ) {
+			if ( !isValidBindValue(
+					sqmExpressible.getExpressibleJavaType(),
+					parameterJavaType,
+					bind,
+					temporalPrecision
+			) ) {
 				throw new IllegalArgumentException(
 						String.format(
 								"Argument [%s] of type [%s] did not match parameter type [%s (%s)]",
@@ -113,7 +126,33 @@ public class QueryParameterBindingValidator {
 		}
 	}
 
-	private static boolean isValidBindValue(Class<?> expectedType, Object value, TemporalType temporalType) {
+	private static boolean isValidBindValue(
+			JavaType<?> expectedJavaType,
+			Class<?> expectedType,
+			Object value,
+			TemporalType temporalType) {
+		if ( value == null ) {
+			return true;
+		}
+		else if ( expectedJavaType.isInstance( value ) ) {
+			return true;
+		}
+		else if ( temporalType != null ) {
+			final boolean parameterDeclarationIsTemporal = Date.class.isAssignableFrom( expectedType )
+					|| Calendar.class.isAssignableFrom( expectedType );
+			final boolean bindIsTemporal = value instanceof Date
+					|| value instanceof Calendar;
+
+			return parameterDeclarationIsTemporal && bindIsTemporal;
+		}
+
+		return false;
+	}
+
+	private static boolean isValidBindValue(
+			Class<?> expectedType,
+			Object value,
+			TemporalType temporalType) {
 		if ( expectedType.isPrimitive() ) {
 			if ( expectedType == boolean.class ) {
 				return value instanceof Boolean;

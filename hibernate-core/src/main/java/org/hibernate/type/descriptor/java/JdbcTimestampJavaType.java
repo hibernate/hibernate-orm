@@ -206,6 +206,11 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 	}
 
 	@Override
+	protected <X> TemporalJavaType<X> forDatePrecision(TypeConfiguration typeConfiguration) {
+		return (TemporalJavaType<X>) JdbcDateJavaType.INSTANCE;
+	}
+
+	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
 		return dialect.getDefaultTimestampPrecision();
 	}

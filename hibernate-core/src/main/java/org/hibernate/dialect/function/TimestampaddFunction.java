@@ -60,8 +60,10 @@ public class TimestampaddFunction
 				StandardFunctionReturnTypeResolvers.useArgType( 3 )
 		);
 		this.dialect = dialect;
-		this.castFunction = new CastFunction( dialect, Types.BOOLEAN );
 		this.integerType = typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER );
+		//This is kinda wrong, we're supposed to use findFunctionDescriptor("cast"), not instantiate CastFunction
+		//However, since no Dialects currently override the cast() function, it's OK for now
+		this.castFunction = new CastFunction( dialect, dialect.getPreferredSqlTypeCodeForBoolean() );
 	}
 
 	@Override

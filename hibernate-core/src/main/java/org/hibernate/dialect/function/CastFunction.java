@@ -67,10 +67,7 @@ public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	private CastType getCastType(JdbcMapping sourceMapping) {
 		final CastType castType = sourceMapping.getCastType();
-		if ( castType == CastType.BOOLEAN ) {
-			return booleanCastType;
-		}
-		return castType;
+		return castType == CastType.BOOLEAN ? booleanCastType : castType;
 	}
 
 //	@Override

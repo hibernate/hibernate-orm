@@ -41,7 +41,6 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
-	public static final String FUNCTION_NAME = "count";
 	private final Dialect dialect;
 	private final SqlAstNodeRenderingMode defaultArgumentRenderingMode;
 	private final String concatOperator;
@@ -54,7 +53,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			String concatOperator,
 			String concatArgumentCastType) {
 		super(
-				FUNCTION_NAME,
+				"count",
 				FunctionKind.AGGREGATE,
 				StandardArgumentsValidators.exactly( 1 ),
 				StandardFunctionReturnTypeResolvers.invariant(

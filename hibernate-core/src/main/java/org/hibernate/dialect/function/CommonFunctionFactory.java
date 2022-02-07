@@ -19,7 +19,6 @@ import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -1705,7 +1704,7 @@ public class CommonFunctionFactory {
 				.register();
 
 		functionRegistry.register(
-				CountFunction.FUNCTION_NAME,
+				"count",
 				new CountFunction(
 						dialect,
 						typeConfiguration,
@@ -1720,19 +1719,18 @@ public class CommonFunctionFactory {
 			Dialect dialect,
 			SqlAstNodeRenderingMode inferenceArgumentRenderingMode) {
 		functionRegistry.register(
-				AvgFunction.FUNCTION_NAME,
+				"avg",
 				new AvgFunction(
 						dialect,
 						typeConfiguration,
-						inferenceArgumentRenderingMode,
-						dialect.getTypeName( SqlTypes.DOUBLE )
+						inferenceArgumentRenderingMode
 				)
 		);
 	}
 
 	public void listagg(String emptyWithinReplacement) {
 		functionRegistry.register(
-				ListaggFunction.FUNCTION_NAME,
+				"listagg",
 				new ListaggFunction( emptyWithinReplacement, typeConfiguration )
 		);
 	}

@@ -22,6 +22,8 @@ import java.util.List;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 
 /**
+ * Emulates the ANSI SQL-standard {@code position()} function using {@code locate()}.
+ *
  * @author Gavin King
  */
 public class LocatePositionEmulation extends AbstractSqmFunctionDescriptor {

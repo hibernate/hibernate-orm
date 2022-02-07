@@ -885,7 +885,8 @@ public abstract class Dialect implements ConversionContext {
 		queryEngine.getSqmFunctionRegistry().register( "extract",
 				new ExtractFunction( this ) );
 
-		//comparison functions supported on every known database
+		//comparison functions supported on most databases, emulated on others
+		//using a case expression
 
 		functionFactory.leastGreatest();
 

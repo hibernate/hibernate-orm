@@ -22,8 +22,9 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * A special function that renders to the T-SQL "str" function if more than a single argument is given,
- * otherwise renders a cast expression like {@link CastStrEmulation}.
+ * A special function that renders a T-SQL {@code str()} function
+ * if more than a single argument is given, or otherwise renders
+ * a {@code cast()} expression just like {@link CastStrEmulation}.
  *
  * @author Christian Beikov
  */

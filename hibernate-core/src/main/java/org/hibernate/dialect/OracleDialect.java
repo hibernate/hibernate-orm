@@ -163,7 +163,7 @@ public class OracleDialect extends Dialect {
 		functionFactory.characterLength_length( SqlAstNodeRenderingMode.DEFAULT );
 		functionFactory.addMonths();
 		functionFactory.monthsBetween();
-		functionFactory.everyAny_sumCaseCase();
+		functionFactory.everyAny_minMaxCase();
 
 		functionFactory.median();
 		functionFactory.stddev();

@@ -812,7 +812,7 @@ public class CommonFunctionFactory {
 	 * These are aggregate functions taking one argument,
 	 * for SQL Server.
 	 */
-	public void everyAny_sumIif() {
+	public void everyAny_minMaxIif() {
 		functionRegistry.register( "every",
 				new SQLServerEveryAnyEmulation( typeConfiguration, true ) );
 		functionRegistry.register( "any",
@@ -824,11 +824,11 @@ public class CommonFunctionFactory {
 	 * These are aggregate functions taking one argument,
 	 * for Oracle and Sybase.
 	 */
-	public void everyAny_sumCaseCase() {
+	public void everyAny_minMaxCase() {
 		functionRegistry.register( "every",
-				new CaseWhenEveryAnyEmulation( typeConfiguration, true ) );
+				new MinMaxCaseEveryAnyEmulation( typeConfiguration, true ) );
 		functionRegistry.register( "any",
-				new CaseWhenEveryAnyEmulation( typeConfiguration, false ) );
+				new MinMaxCaseEveryAnyEmulation( typeConfiguration, false ) );
 	}
 
 	/**

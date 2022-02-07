@@ -33,6 +33,10 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEM
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 
 /**
+ * ANSI SQL-inspired {@code extract()} function, where the date/time fields
+ * are enumerated by {@link TemporalUnit}, and portability is achieved
+ * by delegating to {@link Dialect#extractPattern(TemporalUnit)}.
+ *
  * @author Gavin King
  */
 public class ExtractFunction

@@ -23,6 +23,12 @@ import org.hibernate.type.spi.TypeConfiguration;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.BOOLEAN;
 
 /**
+ * SQL Server doesn't have a function like {@code every()} or {@code any()}.
+ * We emulate the function using {@code min()} or {@code max()} together with
+ * {@code iif()}.
+ *
+ * @see EveryAnyEmulation
+ *
  * @author Jan Schatteman
  */
 public class SQLServerEveryAnyEmulation extends AbstractSqmSelfRenderingFunctionDescriptor {

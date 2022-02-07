@@ -23,6 +23,10 @@ import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
 /**
+ * ANSI SQL-inspired {@code cast()} function, where the target types
+ * are enumerated by {@link CastType}, and portability is achieved
+ * by delegating to {@link Dialect#castPattern(CastType, CastType)}.
+ *
  * @author Gavin King
  */
 public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {

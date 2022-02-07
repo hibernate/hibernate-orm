@@ -22,13 +22,19 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
+ * Most databases don't have a function like {@code every()} or {@code any()}.
+ * On some platforms we emulate the function using {@code min()} or {@code max()}
+ * together with {@code case}.
+ *
+ * @see EveryAnyEmulation
+ *
  * @author Jan Schatteman
  */
-public class CaseWhenEveryAnyEmulation extends AbstractSqmSelfRenderingFunctionDescriptor {
+public class MinMaxCaseEveryAnyEmulation extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	private final boolean every;
 
-	public CaseWhenEveryAnyEmulation(TypeConfiguration typeConfiguration, boolean every) {
+	public MinMaxCaseEveryAnyEmulation(TypeConfiguration typeConfiguration, boolean every) {
 		super(
 				every ? "every" : "any",
 				FunctionKind.AGGREGATE,

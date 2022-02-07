@@ -14,6 +14,7 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.IntegralTimestampaddFunction;
 import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -283,6 +284,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		).setArgumentListSignature("(pattern, string[, start])");
 
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+
 		functionFactory.ceiling_ceil();
 		functionFactory.concat_pipeOperator();
 		functionFactory.trim2();
@@ -312,6 +314,9 @@ public abstract class AbstractHANADialect extends Dialect {
 		functionFactory.listagg_stringAgg( "varchar" );
 		functionFactory.inverseDistributionOrderedSetAggregates();
 		functionFactory.hypotheticalOrderedSetAggregates();
+
+		queryEngine.getSqmFunctionRegistry().register( "timestampadd",
+				new IntegralTimestampaddFunction( this, queryEngine.getTypeConfiguration() ) );
 	}
 
 	@Override
@@ -1659,7 +1664,7 @@ public abstract class AbstractHANADialect extends Dialect {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 					JdbcType descriptor = BlobJdbcType.BLOB_BINDING;
-					if ( byte[].class.isInstance( value ) ) {
+					if ( value instanceof byte[] ) {
 						// performance shortcut for binding BLOB data in byte[] format
 						descriptor = BlobJdbcType.PRIMITIVE_ARRAY_BINDING;
 					}

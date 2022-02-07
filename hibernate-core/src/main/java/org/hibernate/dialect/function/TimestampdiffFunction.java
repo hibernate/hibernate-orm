@@ -8,8 +8,10 @@ package org.hibernate.dialect.function;
 
 import java.util.List;
 
+import jakarta.persistence.TemporalType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.query.ReturnableType;
+import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
@@ -27,8 +29,15 @@ import org.hibernate.type.spi.TypeConfiguration;
 import static java.util.Arrays.asList;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL_UNIT;
+import static org.hibernate.type.spi.TypeConfiguration.getSqlTemporalType;
 
 /**
+ * The {@code timestampdiff()} or {@code datediff()} function has a funny
+ * syntax which accepts a {@link TemporalUnit} as the first argument, and
+ * the actual set of accepted units varies widely. This class uses
+ * {@link Dialect#timestampdiffPattern(TemporalUnit, TemporalType, TemporalType)}
+ * to abstract these differences.
+ *
  * @author Gavin King
  */
 public class TimestampdiffFunction
@@ -59,13 +68,14 @@ public class TimestampdiffFunction
 		final DurationUnit field = (DurationUnit) arguments.get( 0 );
 		final Expression from = (Expression) arguments.get( 1 );
 		final Expression to = (Expression) arguments.get( 2 );
-		final String pattern = dialect.timestampdiffPattern(
-				field.getUnit(),
-				TypeConfiguration.getSqlTemporalType( from.getExpressionType() ),
-				TypeConfiguration.getSqlTemporalType( to.getExpressionType() )
-		);
 
-		new PatternRenderer( pattern ).render( sqlAppender, arguments, walker );
+		patternRenderer( field.getUnit(), from, to ).render( sqlAppender, arguments, walker );
+	}
+
+	private PatternRenderer patternRenderer(TemporalUnit unit, Expression from, Expression to) {
+		TemporalType lhsTemporalType = getSqlTemporalType( from.getExpressionType() );
+		TemporalType rhsTemporalType = getSqlTemporalType( to.getExpressionType() );
+		return new PatternRenderer( dialect.timestampdiffPattern( unit, lhsTemporalType, rhsTemporalType ) );
 	}
 
 //	@Override

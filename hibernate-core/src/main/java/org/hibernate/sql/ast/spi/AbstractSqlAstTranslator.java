@@ -3710,7 +3710,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	private boolean hasNestedTableGroupsToRender(List<TableGroupJoin> nestedTableGroupJoins) {
+	protected boolean hasNestedTableGroupsToRender(List<TableGroupJoin> nestedTableGroupJoins) {
 		for ( TableGroupJoin nestedTableGroupJoin : nestedTableGroupJoins ) {
 			final TableGroup joinedGroup = nestedTableGroupJoin.getJoinedGroup();
 			final TableGroup realTableGroup;

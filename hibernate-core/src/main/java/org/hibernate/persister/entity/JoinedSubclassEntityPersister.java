@@ -48,6 +48,7 @@ import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl
 import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.spi.NavigablePath;
@@ -1214,16 +1215,13 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public void pruneForSubclasses(TableGroup tableGroup, Set<String> treatedEntityNames) {
-		// If the base type is part of the treatedEntityNames this means we can't optimize this,
-		// as the table group is e.g. returned through a select
-		if ( treatedEntityNames.contains( getEntityName() ) ) {
-			return;
-		}
 		final Set<TableReference> retainedTableReferences = new HashSet<>( treatedEntityNames.size() );
 		final Set<String> sharedSuperclassTables = new HashSet<>();
+		final MappingMetamodelImplementor metamodel = getFactory().getRuntimeMetamodels().getMappingMetamodel();
 
 		for ( String treatedEntityName : treatedEntityNames ) {
-			final JoinedSubclassEntityPersister subPersister = (JoinedSubclassEntityPersister) getSubclassMappingType( treatedEntityName );
+			final JoinedSubclassEntityPersister subPersister =
+					(JoinedSubclassEntityPersister) metamodel.findEntityDescriptor( treatedEntityName );
 			final String[] subclassTableNames = subPersister.getSubclassTableNames();
 			// For every treated entity name, we collect table names that are needed by all treated entity names
 			// In mathematical terms, sharedSuperclassTables will be the "intersection" of the table names of all treated entities

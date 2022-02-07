@@ -880,11 +880,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public void pruneForSubclasses(TableGroup tableGroup, Set<String> treatedEntityNames) {
-		// If the base type is part of the treatedEntityNames this means we can't optimize this,
-		// as the table group is e.g. returned through a select
-		if ( treatedEntityNames.contains( getEntityName() ) ) {
-			return;
-		}
 		// The optimization is to simply add the discriminator filter fragment for all treated entity names
 		final NamedTableReference tableReference = (NamedTableReference) tableGroup.getPrimaryTableReference();
 		tableReference.setPrunedTableExpression(

@@ -6497,11 +6497,6 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	protected EntityMappingType getSubclassMappingType(String subclassName) {
-		return subclassMappingTypes != null ? subclassMappingTypes.get( subclassName ) : null;
-	}
-
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// EntityDefinition impl (walking model - deprecated)
 

@@ -92,7 +92,12 @@ public class ColumnReference implements Expression, Assignable {
 			this.readExpression = this.columnExpression;
 		}
 		else if ( customReadExpression != null ) {
-			this.readExpression = StringHelper.replace( customReadExpression, Template.TEMPLATE, qualifier );
+			if ( this.qualifier == null ) {
+				this.readExpression = StringHelper.replace( customReadExpression, Template.TEMPLATE + ".", "" );
+			}
+			else {
+				this.readExpression = StringHelper.replace( customReadExpression, Template.TEMPLATE, qualifier );
+			}
 		}
 		else {
 			this.readExpression = this.qualifier == null
@@ -104,7 +109,12 @@ public class ColumnReference implements Expression, Assignable {
 			this.writeExpression = null;
 		}
 		else if ( customWriteExpression != null ) {
-			this.writeExpression = StringHelper.replace( customWriteExpression, Template.TEMPLATE, qualifier );
+			if ( this.qualifier == null ) {
+				this.writeExpression = StringHelper.replace( customWriteExpression, Template.TEMPLATE + ".", "" );
+			}
+			else {
+				this.writeExpression = StringHelper.replace( customWriteExpression, Template.TEMPLATE, qualifier );
+			}
 		}
 		else {
 			this.writeExpression = DEFAULT_COLUMN_WRITE_EXPRESSION;

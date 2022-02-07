@@ -21,7 +21,6 @@ import org.hibernate.query.sqm.tree.expression.SqmDistinct;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
  * @author Christian Beikov
@@ -88,7 +87,7 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 				getFunctionName(),
 				getRenderingSupport(),
 				resolveSqlAstArguments( getArguments(), walker ),
-				filter == null ? null : (Predicate) filter.accept( walker ),
+				filter == null ? null : walker.visitNestedTopLevelPredicate( filter ),
 				resultType,
 				getMappingModelExpressible( walker, resultType )
 		);

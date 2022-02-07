@@ -21,10 +21,16 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 
+import org.jboss.logging.Logger;
+
+import jakarta.persistence.ParameterMode;
+
 /**
  * @author Steve Ebersole
  */
 public class ProcedureParamBindings implements QueryParameterBindings {
+	private static final Logger LOG = Logger.getLogger( QueryParameterBindings.class );
+
 	private final ProcedureParameterMetadataImpl parameterMetadata;
 	private final SessionFactoryImplementor sessionFactory;
 
@@ -91,19 +97,28 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 
 	@Override
 	public void validate() {
-//		parameterMetadata.visitRegistrations(
-//				queryParameter -> {
-//					final ProcedureParameterImplementor procParam = (ProcedureParameterImplementor) queryParameter;
-//					if ( procParam.getMode() == ParameterMode.IN
-//							|| procParam.getMode() == ParameterMode.INOUT ) {
-//						if ( !getBinding( procParam ).isBound() ) {
-//							// depending on "pass nulls" this might be ok...
-//							//  for now, just log a warning
-//						}
-//					}
-//				}
-//		);
-		throw new NotYetImplementedFor6Exception( getClass() );
+		parameterMetadata.visitRegistrations(
+				queryParameter -> {
+					final ProcedureParameterImplementor procParam = (ProcedureParameterImplementor) queryParameter;
+					if ( procParam.getMode() == ParameterMode.IN
+							|| procParam.getMode() == ParameterMode.INOUT ) {
+						if ( !getBinding( procParam ).isBound() ) {
+							// depending on "pass nulls" this might be ok...
+							//  for now, just log a warning
+							if ( procParam.getPosition() != null ) {
+								LOG.debugf(
+										"Procedure parameter at position %s is not bound",
+										procParam.getPosition()
+								);
+
+							}
+							else {
+								LOG.debugf( "Procedure parameter %s is not bound", procParam.getName() );
+							}
+						}
+					}
+				}
+		);
 	}
 
 	@Override

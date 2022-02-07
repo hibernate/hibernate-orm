@@ -12,6 +12,7 @@ import org.hibernate.LockMode;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
@@ -20,6 +21,7 @@ import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
  *
@@ -76,5 +78,10 @@ public class FakeSqmToSqlAstConverter extends BaseSemanticQueryWalker implements
 	@Override
 	public List<Expression> expandSelfRenderingFunctionMultiValueParameter(SqmParameter<?> sqmParameter) {
 		return null;
+	}
+
+	@Override
+	public Predicate visitNestedTopLevelPredicate(SqmPredicate predicate) {
+		return (Predicate) predicate.accept( this );
 	}
 }

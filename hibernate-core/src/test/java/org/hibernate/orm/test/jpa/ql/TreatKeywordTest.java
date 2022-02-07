@@ -124,6 +124,8 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 2, result.size() );
 		result = s.createQuery( "select treat (e as JoinedEntitySubclass) from JoinedEntity e" ).list();
 		assertEquals( 1, result.size() );
+		result = s.createQuery( "select e from JoinedEntity e where treat (e as JoinedEntitySubclass) is not null" ).list();
+		assertEquals( 1, result.size() );
 		result = s.createQuery( "select treat (e as JoinedEntitySubSubclass) from JoinedEntity e" ).list();
 		assertEquals( 0, result.size() );
 

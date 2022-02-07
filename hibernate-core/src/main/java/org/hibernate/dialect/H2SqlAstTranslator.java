@@ -8,7 +8,9 @@ package org.hibernate.dialect;
 
 import java.util.List;
 
+import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
@@ -21,6 +23,11 @@ import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.DerivedTableReference;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -154,6 +161,23 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
 		render( arithmeticExpression.getRightHandOperand(), SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 		appendSql( CLOSE_PARENTHESIS );
+	}
+
+	@Override
+	protected boolean renderPrimaryTableReference(TableGroup tableGroup, LockMode lockMode) {
+		final TableReference tableRef = tableGroup.getPrimaryTableReference();
+		// The H2 parser can't handle a sub-query as first element in a nested join
+		// i.e. `join ( (select ...) alias join ... )`, so we have to introduce a dummy table reference
+		if ( tableRef instanceof QueryPartTableReference || tableRef.getTableId().startsWith( "(select" ) ) {
+			final boolean realTableGroup = tableGroup.isRealTableGroup()
+					&& ( CollectionHelper.isNotEmpty( tableGroup.getTableReferenceJoins() )
+					|| hasNestedTableGroupsToRender( tableGroup.getNestedTableGroupJoins() ) );
+			if ( realTableGroup ) {
+				appendSql( "dual cross join " );
+			}
+		}
+		return super.renderPrimaryTableReference( tableGroup, lockMode );
+
 	}
 
 	@Override

@@ -408,9 +408,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
 	private final Stack<SqlAstProcessingState> processingStateStack = new StandardStack<>();
 	private final Stack<FromClauseIndex> fromClauseIndexStack = new StandardStack<>();
+	/*
+	 * Captures all entity names as which a table group was treated.
+	 * This information is used to prune tables from the table group.
+	 */
+	private final Map<TableGroup, Set<String>> tableGroupTreatUsages = new IdentityHashMap<>();
+	/*
+	 * Used to capture the treat usages within the current conjunct.
+	 * The top level conjunct contexts like visitWhereClause, visitHavingClause, visitOrPredicate and
+	 * visitNestedTopLevelPredicate consume these treat usages by rendering a type restriction
+	 */
+	private final Map<SqmPath<?>, Set<String>> conjunctTreatUsages = new IdentityHashMap<>();
 	private SqlAstProcessingState lastPoppedProcessingState;
 	private FromClauseIndex lastPoppedFromClauseIndex;
 	private SqmJoin<?, ?> currentlyProcessingJoin;
+	protected Predicate additionalRestrictions;
 
 	private final Stack<Clause> currentClauseStack = new StandardStack<>();
 	private final Stack<Supplier<MappingModelExpressible<?>>> inferrableTypeAccessStack = new StandardStack<>(
@@ -700,14 +712,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			Predicate suppliedPredicate = null;
 			final SqmWhereClause whereClause = sqmStatement.getWhereClause();
-			if ( whereClause != null && whereClause.getPredicate() != null ) {
-				getCurrentClauseStack().push( Clause.WHERE );
-				try {
-					suppliedPredicate = (Predicate) whereClause.getPredicate().accept( this );
-				}
-				finally {
-					getCurrentClauseStack().pop();
-				}
+			if ( whereClause != null ) {
+				suppliedPredicate = visitWhereClause( whereClause.getPredicate() );
 			}
 
 			return new UpdateStatement(
@@ -934,14 +940,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			Predicate suppliedPredicate = null;
 			final SqmWhereClause whereClause = statement.getWhereClause();
-			if ( whereClause != null && whereClause.getPredicate() != null ) {
-				getCurrentClauseStack().push( Clause.WHERE );
-				try {
-					suppliedPredicate = (Predicate) whereClause.getPredicate().accept( this );
-				}
-				finally {
-					getCurrentClauseStack().pop();
-				}
+			if ( whereClause != null ) {
+				suppliedPredicate = visitWhereClause( whereClause.getPredicate() );
 			}
 
 			return new DeleteStatement(
@@ -1635,7 +1635,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 		final SqmSelectClause selectClause = sqmQuerySpec.getSelectClause();
 
-		Predicate originalAdditionalRestrictions = additionalRestrictions;
+		final Predicate originalAdditionalRestrictions = additionalRestrictions;
 		additionalRestrictions = null;
 
 		final boolean trackAliasedNodePositions;
@@ -1694,14 +1694,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			visitSelectClause( selectClause );
 
 			final SqmWhereClause whereClause = sqmQuerySpec.getWhereClause();
-			if ( whereClause != null && whereClause.getPredicate() != null ) {
-				currentClauseStack.push( Clause.WHERE );
-				try {
-					sqlQuerySpec.applyPredicate( (Predicate) whereClause.getPredicate().accept( this ) );
-				}
-				finally {
-					currentClauseStack.pop();
-				}
+			if ( whereClause != null ) {
+				sqlQuerySpec.applyPredicate( visitWhereClause( whereClause.getPredicate() ) );
 			}
 
 			sqlQuerySpec.setGroupByClauseExpressions( visitGroupByClause( sqmQuerySpec.getGroupByClauseExpressions() ) );
@@ -2067,6 +2061,22 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return Collections.emptyList();
 	}
 
+	private Predicate visitWhereClause(SqmPredicate sqmPredicate) {
+		if ( sqmPredicate == null ) {
+			return null;
+		}
+		currentClauseStack.push( Clause.WHERE );
+		try {
+			return SqlAstTreeHelper.combinePredicates(
+					(Predicate) sqmPredicate.accept( this ),
+					consumeConjunctTreatTypeRestrictions()
+			);
+		}
+		finally {
+			currentClauseStack.pop();
+		}
+	}
+
 	@Override
 	public Predicate visitHavingClause(SqmPredicate sqmPredicate) {
 		if ( sqmPredicate == null ) {
@@ -2074,7 +2084,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		currentClauseStack.push( Clause.HAVING );
 		try {
-			return (Predicate) sqmPredicate.accept( this );
+			return SqlAstTreeHelper.combinePredicates(
+					(Predicate) sqmPredicate.accept( this ),
+					consumeConjunctTreatTypeRestrictions()
+			);
 		}
 		finally {
 			currentClauseStack.pop();
@@ -2099,14 +2112,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				sortSpecification.getNullPrecedence()
 		);
 	}
-
-//	public QuerySpec visitOffsetAndFetchExpressions(QuerySpec sqlQuerySpec, SqmQuerySpec<?> sqmQuerySpec) {
-//		final Expression offsetExpression = visitOffsetExpression( sqmQuerySpec.getOffsetExpression() );
-//		final Expression fetchExpression = visitFetchExpression( sqmQuerySpec.getFetchExpression() );
-//		sqlQuerySpec.setOffsetClauseExpression( offsetExpression );
-//		sqlQuerySpec.setFetchClauseExpression( fetchExpression, sqmQuerySpec.getFetchClauseType() );
-//		return sqlQuerySpec;
-//	}
 
 	@Override
 	public Expression visitOffsetExpression(SqmExpression<?> expression) {
@@ -2155,8 +2160,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		return null;
 	}
-
-	protected Predicate additionalRestrictions;
 
 	protected void consumeFromClauseRoot(SqmRoot<?> sqmRoot) {
 		log.tracef( "Resolving SqmRoot [%s] to TableGroup", sqmRoot );
@@ -2392,15 +2395,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				.getEntityDescriptor( entityDomainType.getHibernateEntityName() );
 	}
 
-	private final Map<TableGroup, Set<String>> tableGroupTreatUsages = new IdentityHashMap<>();
-
-	protected void registerUsage(SqmFrom<?, ?> sqmFrom, TableGroup tableGroup) {
+	protected void registerTreatUsage(SqmFrom<?, ?> sqmFrom, TableGroup tableGroup) {
 		final EntityDomainType<?> treatedType;
 		if ( sqmFrom instanceof SqmTreatedPath<?, ?> ) {
 			treatedType = ( (SqmTreatedPath<?, ?>) sqmFrom ).getTreatTarget();
-		}
-		else if ( sqmFrom.getReferencedPathSource().getSqmPathType() instanceof EntityDomainType<?> ) {
-			treatedType = (EntityDomainType<?>) sqmFrom.getReferencedPathSource().getSqmPathType();
 		}
 		else {
 			return;
@@ -2458,13 +2456,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		sqmFrom.visitSqmJoins(
 				sqmJoin -> {
 					final TableGroup actualTableGroup = findActualTableGroup( lhsTableGroup, sqmJoin );
-					registerUsage( (SqmFrom<?, ?>) sqmJoin.getLhs(), actualTableGroup );
+					registerTreatUsage( (SqmFrom<?, ?>) sqmJoin.getLhs(), actualTableGroup );
 					consumeExplicitJoin( sqmJoin, actualTableGroup, actualTableGroup, true );
 				}
 		);
 		for ( SqmFrom<?, ?> sqmTreat : sqmFrom.getSqmTreats() ) {
 			final TableGroup actualTableGroup = findActualTableGroup( lhsTableGroup, sqmTreat );
-			registerUsage( sqmTreat, actualTableGroup );
+			registerTreatUsage( sqmTreat, actualTableGroup );
 			consumeExplicitJoins( sqmTreat, actualTableGroup );
 		}
 	}
@@ -2633,7 +2631,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			final SqmJoin<?, ?> oldJoin = currentlyProcessingJoin;
 			currentlyProcessingJoin = sqmJoin;
-			joinedTableGroupJoin.applyPredicate( (Predicate) sqmJoin.getJoinPredicate().accept( this ) );
+			joinedTableGroupJoin.applyPredicate( visitNestedTopLevelPredicate( sqmJoin.getJoinPredicate() ) );
 			currentlyProcessingJoin = oldJoin;
 		}
 
@@ -2702,7 +2700,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( sqmJoin.getJoinPredicate() != null ) {
 			final SqmJoin<?, ?> oldJoin = currentlyProcessingJoin;
 			currentlyProcessingJoin = sqmJoin;
-			tableGroupJoin.applyPredicate( (Predicate) sqmJoin.getJoinPredicate().accept( this ) );
+			tableGroupJoin.applyPredicate( visitNestedTopLevelPredicate( sqmJoin.getJoinPredicate() ) );
 			currentlyProcessingJoin = oldJoin;
 		}
 
@@ -2782,7 +2780,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( newTableGroup != null ) {
 				implicitJoinChecker.accept( newTableGroup );
 				if ( sqmPath instanceof SqmFrom<?, ?> ) {
-					registerUsage( (SqmFrom<?, ?>) sqmPath, newTableGroup );
+					registerTreatUsage( (SqmFrom<?, ?>) sqmPath, newTableGroup );
 				}
 			}
 			return newTableGroup;
@@ -2790,11 +2788,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else if ( sqmPath instanceof SqmTreatedPath<?, ?> ) {
 			fromClauseIndex.register( (SqmPath<?>) sqmPath, tableGroup );
 			if ( sqmPath instanceof SqmFrom<?, ?> ) {
-				registerUsage( (SqmFrom<?, ?>) sqmPath, tableGroup );
+				registerTreatUsage( (SqmFrom<?, ?>) sqmPath, tableGroup );
 			}
 		}
 		else if ( parentPath instanceof SqmFrom<?, ?> ) {
-			registerUsage( (SqmFrom<?, ?>) parentPath, tableGroup );
+			registerTreatUsage( (SqmFrom<?, ?>) parentPath, tableGroup );
 		}
 		return tableGroup;
 	}
@@ -2819,12 +2817,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					fromClauseIndex.getTableGroup( navigablePath ),
 					joinedPath
 			);
-			if ( createdTableGroup != null && joinedPath instanceof SqmTreatedPath<?, ?> ) {
-				fromClauseIndex.register( joinedPath, createdTableGroup );
+			if ( createdTableGroup != null ) {
+				if ( joinedPath instanceof SqmTreatedPath<?, ?> ) {
+					fromClauseIndex.register( joinedPath, createdTableGroup );
+				}
+				if ( joinedPath instanceof SqmFrom<?, ?> ) {
+					registerTreatUsage( (SqmFrom<?, ?>) joinedPath, createdTableGroup );
+				}
 			}
 		}
 		else if ( joinedPath instanceof SqmFrom<?, ?> ) {
-			registerUsage( (SqmFrom<?, ?>) joinedPath, tableGroup );
+			registerTreatUsage( (SqmFrom<?, ?>) joinedPath, tableGroup );
 		}
 	}
 
@@ -3356,6 +3359,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Expression visitTreatedPath(SqmTreatedPath<?, ?> sqmTreatedPath) {
+		prepareReusablePath( sqmTreatedPath, () -> null );
 		final TableGroup resolved = getFromClauseAccess().findTableGroup( sqmTreatedPath.getNavigablePath() );
 		if ( resolved != null ) {
 			log.tracef( "SqmTreatedPath [%s] resolved to existing TableGroup [%s]", sqmTreatedPath, resolved );
@@ -3864,7 +3868,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private Expression withTreatRestriction(Expression expression, SqmPath<?> path) {
-		final SqmPath<?> lhs = path.getLhs();
+		final SqmPath<?> lhs;
+		if ( path instanceof SqmTreatedPath<?, ?> ) {
+			lhs = path;
+		}
+		else {
+			lhs = path.getLhs();
+		}
 		if ( lhs instanceof SqmTreatedPath<?, ?> ) {
 			final SqmTreatedPath<?, ?> treatedPath = (SqmTreatedPath<?, ?>) lhs;
 			final Class<?> treatTargetJavaType = treatedPath.getTreatTarget().getJavaType();
@@ -3873,6 +3883,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// Treating a node to a super type can be ignored
 				return expression;
 			}
+			if ( !( expression.getExpressionType() instanceof BasicValuedMapping ) ) {
+				// A case wrapper for non-basic paths is not possible,
+				// because a case expression must return a scalar value,
+				// so we instead add the type restriction predicate as conjunct
+				final MappingMetamodel domainModel = creationContext.getSessionFactory()
+						.getRuntimeMetamodels()
+						.getMappingMetamodel();
+				final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(
+						treatedPath.getTreatTarget().getHibernateEntityName()
+				);
+				conjunctTreatUsages.computeIfAbsent( treatedPath.getWrappedPath(), p -> new HashSet<>( 1 ) )
+								.addAll( entityDescriptor.getEntityMetamodel().getSubclassEntityNames() );
+				return expression;
+			}
+			// Note: If the columns that are accessed are not shared with other entities, we could avoid this wrapping
 			return createCaseExpression( treatedPath.getWrappedPath(), treatedPath.getTreatTarget(), expression );
 		}
 		return expression;
@@ -3894,18 +3919,49 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 	}
 
+	private Predicate consumeConjunctTreatTypeRestrictions() {
+		return consumeConjunctTreatTypeRestrictions( conjunctTreatUsages );
+	}
+
+	private Predicate consumeConjunctTreatTypeRestrictions(Map<SqmPath<?>, Set<String>> conjunctTreatUsages) {
+		if ( conjunctTreatUsages == null || conjunctTreatUsages.isEmpty() ) {
+			return null;
+		}
+		Predicate predicate = null;
+		for ( Map.Entry<SqmPath<?>, Set<String>> entry : conjunctTreatUsages.entrySet() ) {
+			predicate = SqlAstTreeHelper.combinePredicates(
+					predicate,
+					createTreatTypeRestriction( entry.getKey(), entry.getValue() )
+			);
+		}
+
+		conjunctTreatUsages.clear();
+		return predicate;
+	}
+
 	private Predicate createTreatTypeRestriction(SqmPath<?> lhs, EntityDomainType<?> treatTarget) {
 		final MappingMetamodel domainModel = creationContext.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( treatTarget.getHibernateEntityName() );
 		final Set<String> subclassEntityNames = entityDescriptor.getEntityMetamodel().getSubclassEntityNames();
-		final Expression typeExpression = (Expression) lhs.type().accept( this );
+		return createTreatTypeRestriction( lhs, subclassEntityNames );
+	}
+
+	private Predicate createTreatTypeRestriction(SqmPath<?> lhs, Set<String> subclassEntityNames) {
+		final MappingMetamodel domainModel = creationContext.getSessionFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel();
+		// Do what visitSelfInterpretingSqmPath does, except for calling preparingReusablePath
+		// as that would register a type usage for the table group that we don't want here
+		final DiscriminatorSqmPath discriminatorSqmPath = (DiscriminatorSqmPath) lhs.type();
+		registerTypeUsage( discriminatorSqmPath );
+		final Expression typeExpression = discriminatorSqmPath.interpret( this, this, jpaQueryComplianceEnabled );
 		if ( subclassEntityNames.size() == 1 ) {
 			return new ComparisonPredicate(
 					typeExpression,
 					ComparisonOperator.EQUAL,
-					new EntityTypeLiteral( entityDescriptor )
+					new EntityTypeLiteral( domainModel.findEntityDescriptor( subclassEntityNames.iterator().next() ) )
 			);
 		}
 		else {
@@ -5200,7 +5256,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		Expression otherwise = null;
 		for ( SqmCaseSearched.WhenFragment<?> whenFragment : expression.getWhenFragments() ) {
 			inferrableTypeAccessStack.push( () -> null );
-			final Predicate whenPredicate = (Predicate) whenFragment.getPredicate().accept( this );
+			final Predicate whenPredicate = visitNestedTopLevelPredicate( whenFragment.getPredicate() );
 			inferrableTypeAccessStack.pop();
 			final MappingModelExpressible<?> alreadyKnown = resolved;
 			inferrableTypeAccessStack.push(
@@ -5366,6 +5422,26 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Predicates
 
+	@Override
+	public Predicate visitNestedTopLevelPredicate(SqmPredicate predicate) {
+		final Map<SqmPath<?>, Set<String>> originalConjunctTableGroupTreatUsages;
+		if ( conjunctTreatUsages.isEmpty() ) {
+			originalConjunctTableGroupTreatUsages = null;
+		}
+		else {
+			originalConjunctTableGroupTreatUsages = new IdentityHashMap<>( conjunctTreatUsages );
+		}
+		conjunctTreatUsages.clear();
+		final Predicate result = (Predicate) predicate.accept( this );
+		final Predicate finalPredicate = SqlAstTreeHelper.combinePredicates(
+				result,
+				consumeConjunctTreatTypeRestrictions()
+		);
+		if ( originalConjunctTableGroupTreatUsages != null ) {
+			conjunctTreatUsages.putAll( originalConjunctTableGroupTreatUsages );
+		}
+		return finalPredicate;
+	}
 
 	@Override
 	public GroupedPredicate visitGroupedPredicate(SqmGroupedPredicate predicate) {
@@ -5383,8 +5459,68 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Junction visitOrPredicate(SqmOrPredicate predicate) {
 		final Junction disjunction = new Junction( Junction.Nature.DISJUNCTION, getBooleanType() );
-		disjunction.add( (Predicate) predicate.getLeftHandPredicate().accept( this ) );
-		disjunction.add( (Predicate) predicate.getRightHandPredicate().accept( this ) );
+		final Predicate predicate1 = (Predicate) predicate.getLeftHandPredicate().accept( this );
+		final Map<SqmPath<?>, Set<String>> conjunctTreatUsages1;
+		if ( conjunctTreatUsages.isEmpty() ) {
+			conjunctTreatUsages1 = null;
+		}
+		else {
+			conjunctTreatUsages1 = new IdentityHashMap<>( conjunctTreatUsages );
+			conjunctTreatUsages.clear();
+		}
+		final Predicate predicate2 = (Predicate) predicate.getRightHandPredicate().accept( this );
+		if ( conjunctTreatUsages.isEmpty() || conjunctTreatUsages1 == null ) {
+			disjunction.add(
+					SqlAstTreeHelper.combinePredicates(
+							consumeConjunctTreatTypeRestrictions( conjunctTreatUsages1 ),
+							predicate1
+					)
+			);
+			disjunction.add( predicate2 );
+		}
+		else {
+			// If both disjunctions have treat type restrictions build the intersection of the two,
+			// so that we can push that up and infer during pruning, which entity subclasses can be omitted
+			final Map<SqmPath<?>, Set<String>> conjunctTreatUsages2 = new IdentityHashMap<>( conjunctTreatUsages );
+			final Iterator<Map.Entry<SqmPath<?>, Set<String>>> iterator = conjunctTreatUsages.entrySet().iterator();
+			while ( iterator.hasNext() ) {
+				final Map.Entry<SqmPath<?>, Set<String>> entry = iterator.next();
+				final Set<String> entityNames1 = conjunctTreatUsages1.get( entry.getKey() );
+				if ( entityNames1 == null ) {
+					iterator.remove();
+					continue;
+				}
+				// Intersect the two sets and transfer the common elements to the intersection
+				final Set<String> entityNames2 = entry.getValue();
+				final Set<String> intersected = new HashSet<>( entityNames1 );
+				intersected.retainAll( entityNames2 );
+				if ( intersected.isEmpty() ) {
+					iterator.remove();
+					continue;
+				}
+				entry.setValue( intersected );
+				entityNames1.removeAll( intersected );
+				entityNames2.removeAll( intersected );
+				if ( entityNames1.isEmpty() ) {
+					conjunctTreatUsages1.remove( entry.getKey() );
+				}
+				if ( entityNames2.isEmpty() ) {
+					conjunctTreatUsages2.remove( entry.getKey() );
+				}
+			}
+			disjunction.add(
+					SqlAstTreeHelper.combinePredicates(
+							consumeConjunctTreatTypeRestrictions( conjunctTreatUsages1 ),
+							predicate1
+					)
+			);
+			disjunction.add(
+					SqlAstTreeHelper.combinePredicates(
+							consumeConjunctTreatTypeRestrictions( conjunctTreatUsages2 ),
+							predicate2
+					)
+			);
+		}
 		return disjunction;
 	}
 

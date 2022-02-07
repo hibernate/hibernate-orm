@@ -17,6 +17,9 @@ import org.hibernate.type.BasicType;
 import java.util.List;
 
 /**
+ * A "function" with no parameters that returns the current date, time, or timestamp.
+ * For example, {@code current_date}.
+ *
  * @author Gavin King
  */
 public class CurrentFunction

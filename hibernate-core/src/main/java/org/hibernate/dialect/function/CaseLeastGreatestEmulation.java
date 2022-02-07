@@ -19,6 +19,8 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.COMPARABLE;
 
 /**
+ * Some databases don't have a function like {@code least()} or {@code greatest()},
+ * and on those platforms we emulate the function using {@code case}.
  *
  * @author Christian Beikov
  */

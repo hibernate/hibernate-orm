@@ -218,7 +218,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.DEFAULT );
 
 		functionFactory.truncate_round();
-		functionFactory.everyAny_sumIif();
+		functionFactory.everyAny_minMaxIif();
 		functionFactory.bitLength_pattern( "datalength(?1) * 8" );
 
 		if ( getVersion().isSameOrAfter( 10 ) ) {

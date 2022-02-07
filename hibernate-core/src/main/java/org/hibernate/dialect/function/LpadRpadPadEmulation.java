@@ -27,6 +27,12 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STR
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TRIM_SPEC;
 
 /**
+ * HQL function inspired by the {@linkplain TrimFunction ANSI SQL trim function},
+ * with a funny syntax involving a {@link TrimSpec}. Emulated using {@code rpad()}
+ * and {@code lpad()} or by equivalent emulations of those functions.
+ * <p>
+ * For example, {@code pad(text with 5 leading ' ')}.
+ *
  * @author Gavin King
  */
 public class LpadRpadPadEmulation

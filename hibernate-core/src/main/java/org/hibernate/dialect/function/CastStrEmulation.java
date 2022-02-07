@@ -24,6 +24,8 @@ import java.util.List;
 import static java.util.Arrays.asList;
 
 /**
+ * The HQL {@code str()} function is now considered a synonym for {@code cast(x as String)}.
+ *
  * @author Gavin King
  */
 public class CastStrEmulation

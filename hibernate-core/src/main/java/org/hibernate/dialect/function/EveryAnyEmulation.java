@@ -23,6 +23,13 @@ import org.hibernate.type.spi.TypeConfiguration;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.BOOLEAN;
 
 /**
+ * Most databases don't have a function like {@code every()} or {@code any()}.
+ * On many platforms we emulate the function using {@code sum()} together with
+ * {@code case}.
+ *
+ * @see MinMaxCaseEveryAnyEmulation
+ * @see SQLServerEveryAnyEmulation
+ *
  * @author Jan Schatteman
  */
 public class EveryAnyEmulation extends AbstractSqmSelfRenderingFunctionDescriptor {

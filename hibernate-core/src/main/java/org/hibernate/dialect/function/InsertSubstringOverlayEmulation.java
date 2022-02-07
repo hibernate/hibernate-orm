@@ -35,6 +35,9 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INT
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 
 /**
+ * Emulates the ANSI SQL-standard {@code overlay()} function using {@code insert()}
+ * {@code substring()}, and {@code concat()}.
+ *
  * @author Gavin King
  */
 public class InsertSubstringOverlayEmulation

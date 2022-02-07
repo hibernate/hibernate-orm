@@ -29,6 +29,12 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TRI
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 
 /**
+ * ANSI SQL-standard {@code trim()} function, which has a funny syntax
+ * involving a {@link TrimSpec}, and portability is achieved using
+ * {@link Dialect#trimPattern(TrimSpec, char)}.
+ * <p>
+ * For example, {@code trim(leading ' ' from text)}.
+ *
  * @author Gavin King
  */
 public class TrimFunction extends AbstractSqmSelfRenderingFunctionDescriptor {

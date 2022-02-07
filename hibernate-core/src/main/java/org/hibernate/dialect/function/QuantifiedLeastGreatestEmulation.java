@@ -19,6 +19,7 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.COMPARABLE;
 
 /**
+ * @see CaseLeastGreatestEmulation
  *
  * @author Christian Beikov
  */

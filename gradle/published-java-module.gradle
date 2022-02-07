@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 
+apply plugin: 'signing'
 apply from: rootProject.file( 'gradle/java-module.gradle' )
 apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 apply plugin: 'org.hibernate.orm.build.post-collector'
@@ -19,6 +20,7 @@ dependencies {
 	javadocSources sourceSets.main.allJava
 }
 
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Publishing
 
@@ -27,13 +29,14 @@ java {
 	withSourcesJar()
 }
 
-
 publishing {
 	publications {
+		// main publication
 		publishedArtifacts {
 			from components.java
 		}
 
+		// relocation for the published artifacts based on the old groupId
 		relocationPom( MavenPublication ) {
 			pom {
 				name = project.name + ' - relocation'
@@ -90,13 +93,15 @@ publishing {
 	}
 }
 
+signing {
+	required { !rootProject.ormVersion.isSnapshot && gradle.taskGraph.hasTask("publish") }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Relocation for the published artifacts based on the old groupId
+	def signingKey = findProperty('signingKey')
+	def signingPassword = findProperty('signingPassword')
 
-publishing {
-	publications {
-	}
+	useInMemoryPgpKeys(signingKey, signingPassword)
+
+	sign publishing.publications.publishedArtifacts
 }
 
 

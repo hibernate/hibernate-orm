@@ -108,6 +108,16 @@ public class FunctionTests {
 //							.getSingleResult(),
 							is(3.0) );
 
+					//TODO: why does this fail??
+//					assertThat( session.createQuery("select avg(index eol.listOfNumbers) from EntityOfLists eol")
+//							.list().get(0),
+////							.getSingleResult(),
+//							is(0.5) );
+					assertThat( session.createQuery("select avg(element eol.listOfNumbers) from EntityOfLists eol")
+									.list().get(0),
+//							.getSingleResult(),
+							is(1.5) );
+
 					assertThat( session.createQuery("select max(index eom.numberByNumber) from EntityOfMaps eom")
 							.getSingleResult(), is(1) );
 					assertThat( session.createQuery("select max(element eom.numberByNumber) from EntityOfMaps eom")
@@ -116,6 +126,11 @@ public class FunctionTests {
 					assertThat( session.createQuery("select sum(index eom.numberByNumber) from EntityOfMaps eom")
 							.getSingleResult(), is(1) );
 					assertThat( session.createQuery("select sum(element eom.numberByNumber) from EntityOfMaps eom")
+							.getSingleResult(), is(1.0) );
+
+					assertThat( session.createQuery("select avg(index eom.numberByNumber) from EntityOfMaps eom")
+							.getSingleResult(), is(1) );
+					assertThat( session.createQuery("select avg(element eom.numberByNumber) from EntityOfMaps eom")
 							.getSingleResult(), is(1.0) );
 				}
 		);

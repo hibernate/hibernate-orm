@@ -27,8 +27,6 @@ jobs:
   build:
     name: Java 11
     runs-on: ubuntu-latest
-    # We want to know the test results of all matrix entries
-    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:

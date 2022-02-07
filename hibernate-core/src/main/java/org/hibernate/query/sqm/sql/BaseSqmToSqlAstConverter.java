@@ -4683,7 +4683,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		SqmExpression<?> leftOperand = expression.getLeftHandOperand();
 		SqmExpression<?> rightOperand = expression.getRightHandOperand();
 
-		boolean durationToRight = TypeConfiguration.isDuration( rightOperand.getNodeType() );
+		boolean durationToRight = isDuration( rightOperand.getNodeType() );
 		TypeConfiguration typeConfiguration = getCreationContext().getMappingMetamodel().getTypeConfiguration();
 		TemporalType temporalTypeToLeft = typeConfiguration.getSqlTemporalType( leftOperand.getNodeType() );
 		TemporalType temporalTypeToRight = typeConfiguration.getSqlTemporalType( rightOperand.getNodeType() );

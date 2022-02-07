@@ -31,13 +31,11 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STR
  */
 public class ListaggFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
-	public static final String FUNCTION_NAME = "listagg";
-
 	private final String emptyWithinReplacement;
 
 	public ListaggFunction(String emptyWithinReplacement, TypeConfiguration typeConfiguration) {
 		super(
-				FUNCTION_NAME,
+				"listagg",
 				FunctionKind.ORDERED_SET_AGGREGATE,
 				new ArgumentTypesValidator( StandardArgumentsValidators.exactly( 2 ), STRING, STRING ),
 				StandardFunctionReturnTypeResolvers.invariant(

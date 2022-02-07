@@ -6,25 +6,25 @@
  */
 package org.hibernate.dialect.function;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
-import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -35,27 +35,27 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUM
  */
 public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
-	public static final String FUNCTION_NAME = "avg";
-	private final Dialect dialect;
 	private final SqlAstNodeRenderingMode defaultArgumentRenderingMode;
-	private final String doubleCastType;
+	private final CastFunction castFunction;
+	private final BasicType<Double> doubleType;
 
 	public AvgFunction(
 			Dialect dialect,
 			TypeConfiguration typeConfiguration,
-			SqlAstNodeRenderingMode defaultArgumentRenderingMode,
-			String doubleCastType) {
+			SqlAstNodeRenderingMode defaultArgumentRenderingMode) {
 		super(
-				FUNCTION_NAME,
+				"avg",
 				FunctionKind.AGGREGATE,
 				new ArgumentTypesValidator( StandardArgumentsValidators.exactly( 1 ), NUMERIC ),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
 				)
 		);
-		this.dialect = dialect;
 		this.defaultArgumentRenderingMode = defaultArgumentRenderingMode;
-		this.doubleCastType = doubleCastType;
+		doubleType = typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE );
+		//This is kinda wrong, we're supposed to use findFunctionDescriptor("cast"), not instantiate CastFunction
+		//However, since no Dialects currently override the cast() function, it's OK for now
+		castFunction = new CastFunction( dialect, dialect.getPreferredSqlTypeCodeForBoolean() );
 	}
 
 	@Override
@@ -101,9 +101,7 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		final JdbcMapping sourceMapping = realArg.getExpressionType().getJdbcMappings().get( 0 );
 		// Only cast to float/double if this is an integer
 		if ( sourceMapping.getJdbcType().isInteger() ) {
-			final String cast = dialect.castPattern( sourceMapping.getCastType(), CastType.DOUBLE );
-			new PatternRenderer( cast.replace( "?2", doubleCastType ) )
-					.render( sqlAppender, Collections.singletonList( realArg ), translator );
+			castFunction.render( sqlAppender, Arrays.asList( realArg, new CastTarget(doubleType) ), translator );
 		}
 		else {
 			translator.render( realArg, defaultArgumentRenderingMode );

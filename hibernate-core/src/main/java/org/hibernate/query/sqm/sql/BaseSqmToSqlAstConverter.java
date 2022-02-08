@@ -94,6 +94,7 @@ import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
+import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.CastType;
@@ -2425,6 +2426,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final TableGroup tableGroup = getFromClauseAccess().getTableGroup( path.getNavigablePath().getParent() );
 		final EntityMappingType mappingType = (EntityMappingType) tableGroup.getModelPart().getPartMappingType();
 		final AbstractEntityPersister persister = (AbstractEntityPersister) mappingType.getEntityPersister();
+		// Avoid doing this for single table entity persisters, as the table span includes secondary tables,
+		// which we don't want to resolve, though we know that there is only a single table anyway
+		if ( persister instanceof SingleTableEntityPersister ) {
+			return;
+		}
 		final int subclassTableSpan = persister.getSubclassTableSpan();
 		for ( int i = 0; i < subclassTableSpan; i++ ) {
 			tableGroup.resolveTableReference( persister.getSubclassTableName( i ) );

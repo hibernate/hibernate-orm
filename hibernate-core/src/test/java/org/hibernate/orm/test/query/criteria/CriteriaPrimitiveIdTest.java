@@ -62,6 +62,8 @@ public class CriteriaPrimitiveIdTest extends BaseCoreFunctionalTestCase {
 		@Id
 		private long id;
 
+		private String name;
+
 		public MyEntity() {
 		}
 

@@ -129,6 +129,44 @@ public class FunctionTests {
 	}
 
 	@Test
+	public void testNoMaxMinSumIndexElement(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery("select max(index(l)) from EntityOfLists eol join eol.listOfNumbers l group by eol")
+							.getSingleResult(), is(1) );
+					assertThat( session.createQuery("select max(element(l)) from EntityOfLists eol join eol.listOfNumbers l group by eol")
+							.getSingleResult(), is(2.0) );
+
+					assertThat( session.createQuery("select sum(index(l)) from EntityOfLists eol join eol.listOfNumbers l group by eol")
+							.getSingleResult(), is(1L) );
+					assertThat( session.createQuery("select sum(element(l)) from EntityOfLists eol join eol.listOfNumbers l group by eol")
+							.getSingleResult(), is(3.0) );
+
+					//TODO: why does this fail??
+					assertThat( session.createQuery("select avg(index(l)) from EntityOfLists eol join eol.listOfNumbers l group by eol")
+							.getSingleResult(), is(0.5) );
+					assertThat( session.createQuery("select avg(element(l)) from EntityOfLists eol join eol.listOfNumbers l group by eol")
+							.getSingleResult(), is(1.5) );
+
+					assertThat( session.createQuery("select max(index(m)) from EntityOfMaps eom join eom.numberByNumber m group by eom")
+							.getSingleResult(), is(1) );
+					assertThat( session.createQuery("select max(element(m)) from EntityOfMaps eom join eom.numberByNumber m group by eom")
+							.getSingleResult(), is(1.0) );
+
+					assertThat( session.createQuery("select sum(index(m)) from EntityOfMaps eom join eom.numberByNumber m group by eom")
+							.getSingleResult(), is(1L) );
+					assertThat( session.createQuery("select sum(element(m))from EntityOfMaps eom join eom.numberByNumber m group by eom")
+							.getSingleResult(), is(1.0) );
+
+					assertThat( session.createQuery("select avg(index(m)) from EntityOfMaps eom join eom.numberByNumber m group by eom")
+							.getSingleResult(), is(1.0) );
+					assertThat( session.createQuery("select avg(element(m)) from EntityOfMaps eom join eom.numberByNumber m group by eom")
+							.getSingleResult(), is(1.0) );
+				}
+		);
+	}
+
+	@Test
 	public void testMaxindexMaxelement(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

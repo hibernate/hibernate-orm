@@ -9,8 +9,6 @@ package org.hibernate.orm.test.query.criteria;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.hibernate.Session;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.TestForIssue;
@@ -23,6 +21,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
+import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.SingularAttribute;
 
 @TestForIssue(jiraKey = "HHH-15073")
@@ -41,17 +40,15 @@ public class CriteriaPrimitiveIdTest extends BaseCoreFunctionalTestCase {
 			session.persist( new MyEntity( 3L ) );
 		} );
 		inTransaction( session -> {
-			EntityDomainType<MyEntity> type = sessionFactory().getJpaMetamodel().entity( MyEntity.class );
-			@SuppressWarnings("unchecked")
-			SingularPersistentAttribute<MyEntity, Long> idAttribute =
-					(SingularPersistentAttribute<MyEntity, Long>) type.findIdAttribute();
+			EntityType<MyEntity> type = sessionFactory().getJpaMetamodel().entity( MyEntity.class );
+			SingularAttribute<? super MyEntity, Long> idAttribute = type.getId( long.class );
 			Query<Long> query = createQueryForIdentifierListing( session, type, idAttribute );
 			assertThat( query.list() ).containsExactlyInAnyOrder( 1L, 2L, 3L );
 		} );
 	}
 
 	private <E, I> Query<I> createQueryForIdentifierListing(Session session,
-			EntityDomainType<E> type, SingularAttribute<? super E, I> idAttribute) {
+			EntityType<E> type, SingularAttribute<? super E, I> idAttribute) {
 		CriteriaBuilder criteriaBuilder = session.getSessionFactory().getCriteriaBuilder();
 		CriteriaQuery<I> criteriaQuery = criteriaBuilder.createQuery( idAttribute.getJavaType() );
 		Root<E> root = criteriaQuery.from( type );

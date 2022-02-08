@@ -3996,13 +3996,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmFrom<?, ?> sqmFrom = processingStateStack.getCurrent().getPathRegistry().findFromByAlias( alias );
 
 		if ( sqmFrom == null ) {
-			throw new ParsingException( "Could not resolve identification variable [" + alias + "] to SqmFrom" );
+			throw new ParsingException( "Alias '" + alias + "' did not resolve to a declared identification variable" );
 		}
 
 		final SqmPathSource<?> pluralAttribute = sqmFrom.getReferencedPathSource();
 
 		if ( !( pluralAttribute instanceof PluralPersistentAttribute<?, ?, ?> ) ) {
-			throw new ParsingException( "Could not resolve identification variable [" + alias + "] as plural-attribute" );
+			throw new ParsingException( "Alias '" + alias + "' did not resolve to a many-valued attribute" );
 		}
 
 		return sqmFrom.resolvePathPart( CollectionPart.Nature.INDEX.getName(), true, this );

@@ -33,10 +33,6 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 	private final FunctionReturnTypeResolver returnTypeResolver;
 	private final String name;
 
-	protected FunctionReturnTypeResolver getReturnTypeResolver() {
-		return returnTypeResolver;
-	}
-
 	public AbstractSqmFunctionDescriptor(String name) {
 		this( name, null, null );
 	}
@@ -69,6 +65,10 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 	@Override
 	public ArgumentsValidator getArgumentsValidator() {
 		return argumentsValidator;
+	}
+
+	public FunctionReturnTypeResolver getReturnTypeResolver() {
+		return returnTypeResolver;
 	}
 
 	public String getReturnSignature() {

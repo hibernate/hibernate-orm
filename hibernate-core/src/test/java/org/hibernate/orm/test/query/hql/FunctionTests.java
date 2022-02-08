@@ -100,13 +100,12 @@ public class FunctionTests {
 							.getSingleResult(), is(2.0) );
 
 					assertThat( session.createQuery("select sum(index eol.listOfNumbers) from EntityOfLists eol")
-							.getSingleResult(), is(1) );
+							.getSingleResult(), is(1L) );
 					assertThat( session.createQuery("select sum(element eol.listOfNumbers) from EntityOfLists eol")
 							.getSingleResult(), is(3.0) );
 
-					//TODO: why does this fail??
-//					assertThat( session.createQuery("select avg(index eol.listOfNumbers) from EntityOfLists eol")
-//							.getSingleResult(), is(0.5) );
+					assertThat( session.createQuery("select avg(index eol.listOfNumbers) from EntityOfLists eol")
+							.getSingleResult(), is(0.5) );
 					assertThat( session.createQuery("select avg(element eol.listOfNumbers) from EntityOfLists eol")
 							.getSingleResult(), is(1.5) );
 
@@ -116,12 +115,12 @@ public class FunctionTests {
 							.getSingleResult(), is(1.0) );
 
 					assertThat( session.createQuery("select sum(index eom.numberByNumber) from EntityOfMaps eom")
-							.getSingleResult(), is(1) );
+							.getSingleResult(), is(1L) );
 					assertThat( session.createQuery("select sum(element eom.numberByNumber) from EntityOfMaps eom")
 							.getSingleResult(), is(1.0) );
 
 					assertThat( session.createQuery("select avg(index eom.numberByNumber) from EntityOfMaps eom")
-							.getSingleResult(), is(1) );
+							.getSingleResult(), is(1.0) );
 					assertThat( session.createQuery("select avg(element eom.numberByNumber) from EntityOfMaps eom")
 							.getSingleResult(), is(1.0) );
 				}

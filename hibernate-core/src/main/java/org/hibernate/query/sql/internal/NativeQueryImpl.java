@@ -360,6 +360,13 @@ public class NativeQueryImpl<R>
 	protected void applyOptions(NamedNativeQueryMemento memento) {
 		super.applyOptions( memento );
 
+		if ( memento.getMaxResults() != null ) {
+			setMaxResults( memento.getMaxResults() );
+		}
+		if ( memento.getFirstResult() != null ) {
+			setFirstResult( memento.getFirstResult() );
+		}
+
 		final Set<String> copy = CollectionHelper.makeCopy( memento.getQuerySpaces() );
 		if ( copy != null ) {
 			this.querySpaces = copy;
@@ -457,8 +464,9 @@ public class NativeQueryImpl<R>
 				getTimeout(),
 				getFetchSize(),
 				getComment(),
+				getFirstResult(),
+				getMaxResults(),
 				getHints()
-
 		);
 	}
 

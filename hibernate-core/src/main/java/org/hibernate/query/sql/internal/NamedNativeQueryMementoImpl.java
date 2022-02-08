@@ -14,7 +14,6 @@ import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.named.AbstractNamedQueryMemento;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
@@ -32,6 +31,10 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 
 	private final Set<String> querySpaces;
 
+	private final Integer firstResult;
+
+	private final Integer maxResults;
+
 	public NamedNativeQueryMementoImpl(
 			String name,
 			String sqlString,
@@ -46,6 +49,8 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 			Integer timeout,
 			Integer fetchSize,
 			String comment,
+			Integer firstResult,
+			Integer maxResults,
 			Map<String,Object> hints) {
 		super(
 				name,
@@ -65,6 +70,8 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 				: resultSetMappingName;
 		this.resultSetMappingClass = resultSetMappingClass;
 		this.querySpaces = querySpaces;
+		this.firstResult = firstResult;
+		this.maxResults = maxResults;
 	}
 
 	public String getResultSetMappingName() {
@@ -95,6 +102,16 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 	}
 
 	@Override
+	public Integer getFirstResult() {
+		return firstResult;
+	}
+
+	@Override
+	public Integer getMaxResults() {
+		return maxResults;
+	}
+
+	@Override
 	public NamedNativeQueryMemento makeCopy(String name) {
 		return new NamedNativeQueryMementoImpl(
 				name,
@@ -110,6 +127,8 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 				getTimeout(),
 				getFetchSize(),
 				getComment(),
+				getFirstResult(),
+				getMaxResults(),
 				getHints()
 		);
 	}

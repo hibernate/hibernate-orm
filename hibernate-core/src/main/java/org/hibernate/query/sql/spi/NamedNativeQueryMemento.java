@@ -47,6 +47,10 @@ public interface NamedNativeQueryMemento extends NamedQueryMemento {
 	 */
 	Class<?> getResultMappingClass();
 
+	Integer getFirstResult();
+
+	Integer getMaxResults();
+
 	/**
 	 * Convert the memento into an untyped executable query
 	 */
@@ -142,6 +146,8 @@ public interface NamedNativeQueryMemento extends NamedQueryMemento {
 					timeout,
 					fetchSize,
 					comment,
+					firstResult,
+					maxResults,
 					hints
 			);
 		}

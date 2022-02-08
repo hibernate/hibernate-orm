@@ -970,6 +970,8 @@ The following functions may be applied to a collection-valued path expression to
 | Only legal as a terminal path, and only allowed in the `select` clause.
 |===
 
+We've intentionally left two functions off this list, so we can come back to them <<hql-elements-indices,later>>.
+
 NOTE: Of these, only `index()` is defined by the JPQL specification.
 
 [[hql-collection-qualification-example]]
@@ -992,37 +994,6 @@ An element of an indexed collection (an array, list, or map) may even be identif
 ----
 include::{sourcedir}/HQLTest.java[tags=hql-collection-index-operator-example]
 ----
-====
-
-There are even more functions which accept a collection-valued attribute or to-many association:
-
-|===
-| HQL Function | Synonym | Old syntax | Applies to | Purpose
-
-| `max(element&nbsp;x)` | `max(value&nbsp;x)` | `maxelement(x)` | Any collection with sortable elements | The maximum element or map value
-| `min(element&nbsp;x)` | `min(value&nbsp;x)` | `minelement(x)` | Any collection with sortable elements | The minimum element or map value
-| `sum(element&nbsp;x)` | `sum(value&nbsp;x)` | &mdash; | Any collection with numeric elements | The sum of the elements or map values
-| `avg(element&nbsp;x)` | `avg(value&nbsp;x)` | &mdash; | Any collection with numeric elements | The sum of the elements or map values
-| `max(index&nbsp;x)` | `max(key&nbsp;x)` | `maxindex(x)` | Indexed collections (lists and maps) | The maximum list index or map key
-| `min(index&nbsp;x)` | `min(key&nbsp;x)` | `minindex(x)` | Indexed collections (lists and maps) | The minimum list index or map key
-| `sum(index&nbsp;x)` | `sum(key&nbsp;x)` | &mdash; | Indexed collections (lists and maps) | The sum of the list indexes or map keys
-| `avg(index&nbsp;x)` | `avg(key&nbsp;x)`| &mdash; | Indexed collections (lists and maps) | The average of the list indexes or map keys
-|===
-
-We've intentionally left two functions off this list, so we can come back to them <<hql-elements-indices,later>>.
-
-[[hql-collection-expressions-example]]
-//.Collection-related expressions examples
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/HQLTest.java[tags=hql-collection-expressions-example]
-----
-====
-
-[TIP]
-====
-These operations can almost always be written in another way, without the use of these convenience functions.
 ====
 
 [[hql-more-functions]]
@@ -1223,7 +1194,7 @@ As you can guess, `not like` and `not ilike` are the enemies of `like` and `ilik
 [[hql-elements-indices]]
 ==== Elements and indices
 
-There's two special HQL functions that we didn't mention <<hql-more-functions,earlier>>, since they're only useful in conjunction with the predicate operators we're about to meet.
+There's two special HQL functions that we didn't mention <<hql-collection-qualification,earlier>>, since they're only useful in conjunction with the predicate operators we're about to meet.
 
 These functions are only allowed in the `where` clause, and result in a subquery in the generated SQL.
 Indeed, you can think of them as just a shortcut way to write a subquery.
@@ -1895,6 +1866,38 @@ HQL defines the two additional aggregate functions which accept a logical predic
 |===
 
 NOTE: Aggregate functions usually appear in the `select` clause, but control over aggregation is the responsibility of the `group by` clause, as described <<hql-group-by,below>>.
+
+[[hql-aggregate-functions-collections]]
+==== Aggregate functions and collections
+
+The `elements()` and `indices()` functions we met <<hql-elements-indices,earlier>> let us apply aggregate functions to a collection:
+
+|===
+| New syntax | Legacy HQL function | Applies to | Purpose
+
+| `max(elements(x))` | `maxelement(x)` | Any collection with sortable elements | The maximum element or map value
+| `min(elements(x))` | `minelement(x)` | Any collection with sortable elements | The minimum element or map value
+| `sum(elements(x))` | &mdash; | Any collection with numeric elements | The sum of the elements or map values
+| `avg(elements(x))` | &mdash; | Any collection with numeric elements | The average of the elements or map values
+| `max(indices(x))` | `maxindex(x)` | Indexed collections (lists and maps) | The maximum list index or map key
+| `min(indices(x))` | `minindex(x)` | Indexed collections (lists and maps) | The minimum list index or map key
+| `sum(indices(x))` | &mdash; | Indexed collections (lists and maps) | The sum of the list indexes or map keys
+| `avg(indices(x))` | &mdash; | Indexed collections (lists and maps) | The average of the list indexes or map keys
+|===
+
+[[hql-collection-expressions-example]]
+//.Collection-related expressions examples
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-collection-expressions-example]
+----
+====
+
+[TIP]
+====
+These operations can almost always be written in another way, without the use of these convenience functions.
+====
 
 [[hql-aggregate-functions-filter]]
 ==== `filter`

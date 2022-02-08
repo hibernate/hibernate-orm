@@ -597,7 +597,7 @@ predicate
 	| expression NOT? BETWEEN expression AND expression							# BetweenPredicate
 	| expression NOT? (LIKE | ILIKE) expression likeEscape?						# LikePredicate
 	| expression comparisonOperator expression									# ComparisonPredicate
-	| EXISTS (ELEMENTS|INDICES) LEFT_PAREN simplePath RIGHT_PAREN	# ExistsCollectionPartPredicate
+	| EXISTS (ELEMENTS|INDICES) LEFT_PAREN simplePath RIGHT_PAREN				# ExistsCollectionPartPredicate
 	| EXISTS expression															# ExistsPredicate
 	| expression NOT? MEMBER OF? path											# MemberOfPredicate
 	| NOT predicate																# NegatedPredicate
@@ -626,7 +626,7 @@ comparisonOperator
  * A list of values, a parameter (for a parameterized list of values), a subquery, or an 'elements()' or 'indices()' function
  */
 inList
-	: (ELEMENTS|INDICES) LEFT_PAREN simplePath RIGHT_PAREN				# PersistentCollectionReferenceInList
+	: (ELEMENTS|INDICES) LEFT_PAREN simplePath RIGHT_PAREN							# PersistentCollectionReferenceInList
 	| LEFT_PAREN (expressionOrPredicate (COMMA expressionOrPredicate)*)? RIGHT_PAREN# ExplicitTupleInList
 	| LEFT_PAREN subquery RIGHT_PAREN												# SubqueryInList
 	| parameter 																	# ParamInList
@@ -1008,10 +1008,10 @@ jpaCollectionFunction
 indexAggregateFunction
 	: MAXINDEX LEFT_PAREN path RIGHT_PAREN
 	| MININDEX LEFT_PAREN path RIGHT_PAREN
-	| MAX LEFT_PAREN (INDEX|KEY) path RIGHT_PAREN
-	| MIN LEFT_PAREN (INDEX|KEY) path RIGHT_PAREN
-	| SUM LEFT_PAREN (INDEX|KEY) path RIGHT_PAREN
-	| AVG LEFT_PAREN (INDEX|KEY) path RIGHT_PAREN
+	| MAX LEFT_PAREN INDICES LEFT_PAREN path RIGHT_PAREN RIGHT_PAREN
+	| MIN LEFT_PAREN INDICES LEFT_PAREN path RIGHT_PAREN RIGHT_PAREN
+	| SUM LEFT_PAREN INDICES LEFT_PAREN path RIGHT_PAREN RIGHT_PAREN
+	| AVG LEFT_PAREN INDICES LEFT_PAREN path RIGHT_PAREN RIGHT_PAREN
 	;
 
 /**
@@ -1020,10 +1020,10 @@ indexAggregateFunction
 elementAggregateFunction
 	: MAXELEMENT LEFT_PAREN path RIGHT_PAREN
 	| MINELEMENT LEFT_PAREN path RIGHT_PAREN
-	| MAX LEFT_PAREN (ELEMENT|VALUE) path RIGHT_PAREN
-	| MIN LEFT_PAREN (ELEMENT|VALUE) path RIGHT_PAREN
-	| SUM LEFT_PAREN (ELEMENT|VALUE) path RIGHT_PAREN
-	| AVG LEFT_PAREN (ELEMENT|VALUE) path RIGHT_PAREN
+	| MAX LEFT_PAREN ELEMENTS LEFT_PAREN path RIGHT_PAREN RIGHT_PAREN
+	| MIN LEFT_PAREN ELEMENTS LEFT_PAREN path RIGHT_PAREN RIGHT_PAREN
+	| SUM LEFT_PAREN ELEMENTS LEFT_PAREN path RIGHT_PAREN RIGHT_PAREN
+	| AVG LEFT_PAREN ELEMENTS LEFT_PAREN path RIGHT_PAREN RIGHT_PAREN
 	;
 
 /**

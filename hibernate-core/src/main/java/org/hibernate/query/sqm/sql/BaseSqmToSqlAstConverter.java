@@ -2803,37 +2803,46 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return tableGroup;
 	}
 
-	private void prepareForSelection(SqmPath<?> joinedPath) {
+	private void prepareForSelection(SqmPath<?> selectionPath) {
+		final SqmPath<?> path;
+		// Don't create joins for plural part paths as that will be handled
+		// through a cardinality preserving mechanism in visitIndexAggregateFunction/visitElementAggregateFunction
+		if ( selectionPath instanceof AbstractSqmSpecificPluralPartPath<?> ) {
+			path = selectionPath.getLhs().getLhs();
+		}
+		else {
+			path = selectionPath;
+		}
 		final FromClauseIndex fromClauseIndex = getFromClauseIndex();
-		final TableGroup tableGroup = fromClauseIndex.findTableGroup( joinedPath.getNavigablePath() );
+		final TableGroup tableGroup = fromClauseIndex.findTableGroup( path.getNavigablePath() );
 		if ( tableGroup == null ) {
-			prepareReusablePath( joinedPath, () -> null );
+			prepareReusablePath( path, () -> null );
 
 			final NavigablePath navigablePath;
-			if ( CollectionPart.Nature.fromNameExact( joinedPath.getNavigablePath().getUnaliasedLocalName() ) != null ) {
-				navigablePath = joinedPath.getLhs().getLhs().getNavigablePath();
+			if ( CollectionPart.Nature.fromNameExact( path.getNavigablePath().getUnaliasedLocalName() ) != null ) {
+				navigablePath = path.getLhs().getLhs().getNavigablePath();
 			}
-			else if ( joinedPath instanceof SqmTreatedRoot<?, ?> ) {
-				navigablePath = ( (SqmTreatedRoot<?, ?>) joinedPath ).getWrappedPath().getNavigablePath();
+			else if ( path instanceof SqmTreatedRoot<?, ?> ) {
+				navigablePath = ( (SqmTreatedRoot<?, ?>) path ).getWrappedPath().getNavigablePath();
 			}
 			else {
-				navigablePath = joinedPath.getLhs().getNavigablePath();
+				navigablePath = path.getLhs().getNavigablePath();
 			}
 			final TableGroup createdTableGroup = createTableGroup(
 					fromClauseIndex.getTableGroup( navigablePath ),
-					joinedPath
+					path
 			);
 			if ( createdTableGroup != null ) {
-				if ( joinedPath instanceof SqmTreatedPath<?, ?> ) {
-					fromClauseIndex.register( joinedPath, createdTableGroup );
+				if ( path instanceof SqmTreatedPath<?, ?> ) {
+					fromClauseIndex.register( path, createdTableGroup );
 				}
-				if ( joinedPath instanceof SqmFrom<?, ?> ) {
-					registerTreatUsage( (SqmFrom<?, ?>) joinedPath, createdTableGroup );
+				if ( path instanceof SqmFrom<?, ?> ) {
+					registerTreatUsage( (SqmFrom<?, ?>) path, createdTableGroup );
 				}
 			}
 		}
-		else if ( joinedPath instanceof SqmFrom<?, ?> ) {
-			registerTreatUsage( (SqmFrom<?, ?>) joinedPath, tableGroup );
+		else if ( path instanceof SqmFrom<?, ?> ) {
+			registerTreatUsage( (SqmFrom<?, ?>) path, tableGroup );
 		}
 	}
 

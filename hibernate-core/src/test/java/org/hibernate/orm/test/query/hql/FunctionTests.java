@@ -97,26 +97,18 @@ public class FunctionTests {
 					assertThat( session.createQuery("select max(index eol.listOfNumbers) from EntityOfLists eol")
 							.getSingleResult(), is(1) );
 					assertThat( session.createQuery("select max(element eol.listOfNumbers) from EntityOfLists eol")
-							.list().get(0),
-//							.getSingleResult(),
-							is(2.0) );
+							.getSingleResult(), is(2.0) );
 
 					assertThat( session.createQuery("select sum(index eol.listOfNumbers) from EntityOfLists eol")
 							.getSingleResult(), is(1) );
 					assertThat( session.createQuery("select sum(element eol.listOfNumbers) from EntityOfLists eol")
-							.list().get(0),
-//							.getSingleResult(),
-							is(3.0) );
+							.getSingleResult(), is(3.0) );
 
 					//TODO: why does this fail??
 //					assertThat( session.createQuery("select avg(index eol.listOfNumbers) from EntityOfLists eol")
-//							.list().get(0),
-////							.getSingleResult(),
-//							is(0.5) );
+//							.getSingleResult(), is(0.5) );
 					assertThat( session.createQuery("select avg(element eol.listOfNumbers) from EntityOfLists eol")
-									.list().get(0),
-//							.getSingleResult(),
-							is(1.5) );
+							.getSingleResult(), is(1.5) );
 
 					assertThat( session.createQuery("select max(index eom.numberByNumber) from EntityOfMaps eom")
 							.getSingleResult(), is(1) );

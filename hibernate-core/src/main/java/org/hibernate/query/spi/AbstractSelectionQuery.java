@@ -65,6 +65,8 @@ import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
@@ -279,9 +281,16 @@ public abstract class AbstractSelectionQuery<R>
 			SqmExpressible<?> sqmExpressible,
 			SessionFactoryImplementor sessionFactory) {
 		assert sqmExpressible != null;
-		assert sqmExpressible.getExpressibleJavaType() != null;
-		final Class<?> javaTypeClass = sqmExpressible.getExpressibleJavaType().getJavaTypeClass();
+		final JavaType<?> expressibleJavaType = sqmExpressible.getExpressibleJavaType();
+		assert expressibleJavaType != null;
+		final Class<?> javaTypeClass = expressibleJavaType.getJavaTypeClass();
 		if ( !resultClass.isAssignableFrom( javaTypeClass ) ) {
+			if ( expressibleJavaType instanceof PrimitiveJavaType ) {
+				if ( ( (PrimitiveJavaType) expressibleJavaType ).getPrimitiveClass() == resultClass ) {
+					return;
+				}
+				throwQueryTypeMismatchException( resultClass, sqmExpressible );
+			}
 			// Special case for date because we always report java.util.Date as expression type
 			// But the expected resultClass could be a subtype of that, so we need to check the JdbcType
 			if ( javaTypeClass == Date.class ) {
@@ -315,13 +324,17 @@ public abstract class AbstractSelectionQuery<R>
 					}
 				}
 			}
-			final String errorMessage = String.format(
-					"Specified result type [%s] did not match Query selection type [%s] - multiple selections: use Tuple or array",
-					resultClass.getName(),
-					sqmExpressible.getExpressibleJavaType().getJavaType().getTypeName()
-			);
-			throw new QueryTypeMismatchException( errorMessage );
+			throwQueryTypeMismatchException( resultClass, sqmExpressible );
 		}
+	}
+
+	private static <T> void throwQueryTypeMismatchException(Class<T> resultClass, SqmExpressible<?> sqmExpressible) {
+		final String errorMessage = String.format(
+				"Specified result type [%s] did not match Query selection type [%s] - multiple selections: use Tuple or array",
+				resultClass.getName(),
+				sqmExpressible.getExpressibleJavaType().getJavaType().getTypeName()
+		);
+		throw new QueryTypeMismatchException( errorMessage );
 	}
 
 

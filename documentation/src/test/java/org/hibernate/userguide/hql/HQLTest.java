@@ -35,7 +35,6 @@ import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.QueryProducer;
-import org.hibernate.testing.Skip;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.userguide.model.Account;
 import org.hibernate.userguide.model.AddressType;
@@ -1801,7 +1800,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			List<Phone> phones = entityManager.createQuery(
 				"select p " +
 				"from Phone p " +
-				"where max(element p.calls) = :call",
+				"where max(elements(p.calls)) = :call",
 				Phone.class)
 			.setParameter("call", call)
 			.getResultList();
@@ -1819,7 +1818,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			List<Phone> phones = entityManager.createQuery(
 				"select p " +
 				"from Phone p " +
-				"where min(element p.calls) = :call",
+				"where min(elements(p.calls)) = :call",
 				Phone.class)
 			.setParameter("call", call)
 			.getResultList();
@@ -1836,7 +1835,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			List<Person> persons = entityManager.createQuery(
 				"select p " +
 				"from Person p " +
-				"where max(index p.phones) = 0",
+				"where max(indices(p.phones)) = 0",
 				Person.class)
 			.getResultList();
 			//end::hql-collection-expressions-example[]
@@ -1993,7 +1992,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			List<Person> persons = entityManager.createQuery(
 				"select pr " +
 				"from Person pr " +
-				"where pr.phones[max(index pr.phones)].type = 'LAND_LINE'",
+				"where pr.phones[max(indices(pr.phones))].type = 'LAND_LINE'",
 				Person.class)
 			.getResultList();
 			//end::hql-collection-index-operator-example[]

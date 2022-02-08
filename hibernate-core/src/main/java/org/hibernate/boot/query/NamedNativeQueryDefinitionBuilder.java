@@ -28,6 +28,8 @@ public class NamedNativeQueryDefinitionBuilder extends AbstractNamedQueryBuilder
 	private Set<String> querySpaces;
 
 	private Map<String, String> parameterTypes;
+	private Integer firstResult;
+	private Integer maxResults;
 
 	public NamedNativeQueryDefinitionBuilder(String name) {
 		super( name );
@@ -35,6 +37,16 @@ public class NamedNativeQueryDefinitionBuilder extends AbstractNamedQueryBuilder
 
 	public NamedNativeQueryDefinitionBuilder setSqlString(String sqlString) {
 		this.sqlString = sqlString;
+		return getThis();
+	}
+
+	public NamedNativeQueryDefinitionBuilder setFirstResult(Integer firstResult) {
+		this.firstResult = firstResult;
+		return getThis();
+	}
+
+	public NamedNativeQueryDefinitionBuilder setMaxResults(Integer maxResults) {
+		this.maxResults = maxResults;
 		return getThis();
 	}
 
@@ -53,6 +65,8 @@ public class NamedNativeQueryDefinitionBuilder extends AbstractNamedQueryBuilder
 				getTimeout(),
 				getFetchSize(),
 				getComment(),
+				firstResult,
+				maxResults,
 				getHints()
 		);
 	}

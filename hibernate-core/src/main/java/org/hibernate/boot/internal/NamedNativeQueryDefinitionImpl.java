@@ -27,6 +27,8 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 	private final String resultSetMappingName;
 	private final String resultSetMappingClassName;
 	private final Set<String> querySpaces;
+	private Integer firstResult;
+	private Integer maxResults;
 
 	public NamedNativeQueryDefinitionImpl(
 			String name,
@@ -42,6 +44,8 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 			Integer timeout,
 			Integer fetchSize,
 			String comment,
+			Integer firstResult,
+			Integer maxResults,
 			Map<String,Object> hints) {
 		super(
 				name,
@@ -60,6 +64,8 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 		this.resultSetMappingName = resultSetMappingName;
 		this.resultSetMappingClassName = resultSetMappingClassName;
 		this.querySpaces = querySpaces;
+		this.firstResult = firstResult;
+		this.maxResults = maxResults;
 	}
 
 	@Override
@@ -97,6 +103,8 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 				getTimeout(),
 				getFetchSize(),
 				getComment(),
+				firstResult,
+				maxResults,
 				getHints()
 		);
 	}

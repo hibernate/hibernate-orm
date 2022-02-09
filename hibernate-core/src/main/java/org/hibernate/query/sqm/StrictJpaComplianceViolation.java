@@ -21,6 +21,7 @@ public class StrictJpaComplianceViolation extends SemanticException {
 		FUNCTION_CALL( "improper non-standard function call" ),
 		HQL_COLLECTION_FUNCTION( "use of HQL collection functions (maxelement, minelement, maxindex, minindex, elements, indices)"),
 		VALUE_FUNCTION_ON_NON_MAP( "use of value() function for non-Map type" ),
+		KEY_FUNCTION_ON_NON_MAP( "use of key() function for non-Map type" ),
 		RESERVED_WORD_USED_AS_ALIAS( "use of reserved word as alias (identification variable or result variable)" ),
 		INDEXED_ELEMENT_REFERENCE( "use of HQL indexed element reference syntax" ),
 		TUPLES( "use of tuples/row value constructors" ),

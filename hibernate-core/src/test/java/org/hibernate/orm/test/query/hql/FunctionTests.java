@@ -16,6 +16,7 @@ import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
 import org.hibernate.testing.orm.domain.gambit.EntityOfMaps;
+import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -66,6 +67,12 @@ public class FunctionTests {
 					eol.addBasic("hello");
 					eol.addNumber(1.0);
 					eol.addNumber(2.0);
+					SimpleEntity hello = new SimpleEntity(3, "hello", 5L, 7);
+					SimpleEntity goodbye = new SimpleEntity(6, "goodbye", 10L, 9);
+					em.persist(hello);
+					em.persist(goodbye);
+					eol.addOneToMany(hello);
+					eol.addManyToMany(goodbye);
 					em.persist(eol);
 
 					EntityOfMaps eom = new EntityOfMaps(2,"");
@@ -89,85 +96,112 @@ public class FunctionTests {
 				}
 		);
 	}
-//
-//	@Test
-//	public void testMaxMinSumIndexElement(SessionFactoryScope scope) {
-//		scope.inTransaction(
-//				session -> {
-//					assertThat( session.createQuery("select max(index eol.listOfNumbers) from EntityOfLists eol")
-//							.getSingleResult(), is(1) );
-//					assertThat( session.createQuery("select max(element eol.listOfNumbers) from EntityOfLists eol")
-//							.getSingleResult(), is(2.0) );
-//
-//					assertThat( session.createQuery("select sum(index eol.listOfNumbers) from EntityOfLists eol")
-//							.getSingleResult(), is(1) );
-//					assertThat( session.createQuery("select sum(element eol.listOfNumbers) from EntityOfLists eol")
-//							.getSingleResult(), is(3.0) );
-//
-//					//TODO: why does this fail??
-////					assertThat( session.createQuery("select avg(index eol.listOfNumbers) from EntityOfLists eol")
-////							.getSingleResult(), is(0.5) );
-//					assertThat( session.createQuery("select avg(element eol.listOfNumbers) from EntityOfLists eol")
-//							.getSingleResult(), is(1.5) );
-//
-//					assertThat( session.createQuery("select max(index eom.numberByNumber) from EntityOfMaps eom")
-//							.getSingleResult(), is(1) );
-//					assertThat( session.createQuery("select max(element eom.numberByNumber) from EntityOfMaps eom")
-//							.getSingleResult(), is(1.0) );
-//
-//					assertThat( session.createQuery("select sum(index eom.numberByNumber) from EntityOfMaps eom")
-//							.getSingleResult(), is(1) );
-//					assertThat( session.createQuery("select sum(element eom.numberByNumber) from EntityOfMaps eom")
-//							.getSingleResult(), is(1.0) );
-//
-//					assertThat( session.createQuery("select avg(index eom.numberByNumber) from EntityOfMaps eom")
-//							.getSingleResult(), is(1) );
-//					assertThat( session.createQuery("select avg(element eom.numberByNumber) from EntityOfMaps eom")
-//							.getSingleResult(), is(1.0) );
-//				}
-//		);
-//	}
-//
+
 	@Test
-	public void testAltMaxMinSumIndexElement(SessionFactoryScope scope) {
-		//TODO: make the commented tests work!
+	public void testImplicitCollectionJoinInSelect(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-//					assertThat( session.createQuery("select max(index(eol.listOfNumbers)) from EntityOfLists eol group by eol")
-//							.getSingleResult(), is(1) );
+					assertThat( session.createQuery("select index(eol.listOfNumbers) from EntityOfLists eol", Integer.class)
+							.getResultList(), hasItems(0,1) );
+					assertThat( session.createQuery("select element(eol.listOfNumbers) from EntityOfLists eol", Double.class)
+							.getResultList(), hasItems(1.0, 2.0) );
+
+					assertThat( session.createQuery("select key(eom.numberByNumber) from EntityOfMaps eom", Integer.class)
+							.getResultList(), hasItems(1) );
+					assertThat( session.createQuery("select value(eom.numberByNumber) from EntityOfMaps eom", Double.class)
+							.getResultList(), hasItems(1.0) );
+
+					assertThat( session.createQuery("select key(eom.basicByBasic) from EntityOfMaps eom", String.class)
+							.getResultList(), hasItems("hello") );
+					assertThat( session.createQuery("select value(eom.basicByBasic) from EntityOfMaps eom", String.class)
+							.getResultList(), hasItems("world") );
+
+					assertThat( session.createQuery("select element(eol.listOfOneToMany) from EntityOfLists eol", SimpleEntity.class).getSingleResult().getId(), is(3) ) ;
+					assertThat( session.createQuery("select element(eol.listOfManyToMany) from EntityOfLists eol", SimpleEntity.class).getSingleResult().getId(), is(6) );
+
+					assertThat( session.createQuery("select element(se).someLong from EntityOfLists eol join eol.listOfOneToMany se", Long.class)
+							.getSingleResult(), is(5L) );
+					assertThat( session.createQuery("select element(eol.listOfOneToMany).someLong from EntityOfLists eol", Long.class)
+							.getSingleResult(), is(5L) );
+
+					assertThat( session.createQuery("select element(se).someLong from EntityOfLists eol join eol.listOfManyToMany se", Long.class)
+							.getSingleResult(), is(10L) );
+					assertThat( session.createQuery("select element(eol.listOfManyToMany).someLong from EntityOfLists eol", Long.class)
+							.getSingleResult(), is(10L) );
+				}
+		);
+	}
+
+	@Test
+	public void testImplicitCollectionJoinInWhere(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("from EntityOfLists eol where index(eol.listOfNumbers)=0")
+							.getResultList();
+					session.createQuery("from EntityOfLists eol where element(eol.listOfNumbers)=1.0")
+							.getResultList();
+
+					session.createQuery("from EntityOfMaps eom where key(eom.numberByNumber)=1")
+							.getResultList();
+					session.createQuery("from EntityOfMaps eom where value(eom.numberByNumber)=1.0")
+							.getResultList();
+
+					session.createQuery("from EntityOfMaps eom where key(eom.basicByBasic)='hello'")
+							.getResultList();
+					session.createQuery("from EntityOfMaps eom where value(eom.basicByBasic)='world'")
+							.getResultList();
+
+					session.createQuery("from EntityOfLists eol join eol.listOfOneToMany se where element(se).someLong=5")
+							.getSingleResult();
+					session.createQuery("from EntityOfLists eol where element(eol.listOfOneToMany).someLong=5")
+							.getSingleResult();
+					session.createQuery("from EntityOfLists eol join eol.listOfManyToMany se where element(se).someLong=10")
+							.getSingleResult();
+					session.createQuery("from EntityOfLists eol where element(eol.listOfManyToMany).someLong=10")
+							.getSingleResult();
+				}
+		);
+	}
+
+	@Test
+	public void testImplicitCollectionJoinInSelectAggregate(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery("select max(index(eol.listOfNumbers)) from EntityOfLists eol group by eol")
+							.getSingleResult(), is(1) );
 					assertThat( session.createQuery("select max(element(eol.listOfNumbers)) from EntityOfLists eol group by eol")
 							.getSingleResult(), is(2.0) );
 
-//					assertThat( session.createQuery("select sum(index(eol.listOfNumbers)) from EntityOfLists eol group by eol")
-//							.getSingleResult(), is(1) );
+					assertThat( session.createQuery("select sum(index(eol.listOfNumbers)) from EntityOfLists eol group by eol")
+							.getSingleResult(), is(1L) );
 					assertThat( session.createQuery("select sum(element(eol.listOfNumbers)) from EntityOfLists eol group by eol")
 							.getSingleResult(), is(3.0) );
 
-//					assertThat( session.createQuery("select avg(index(eol.listOfNumbers)) from EntityOfLists eol group by eol")
-//							.getSingleResult(), is(0.5) );
+					assertThat( session.createQuery("select avg(index(eol.listOfNumbers)) from EntityOfLists eol group by eol")
+							.getSingleResult(), is(0.5) );
 					assertThat( session.createQuery("select avg(element(eol.listOfNumbers)) from EntityOfLists eol group by eol")
 							.getSingleResult(), is(1.5) );
 
-//					assertThat( session.createQuery("select max(index(eom.numberByNumber)) from EntityOfMaps eom group by eom")
-//							.getSingleResult(), is(1) );
-					assertThat( session.createQuery("select max(element(eom.numberByNumber)) from EntityOfMaps eom group by eom")
+					assertThat( session.createQuery("select max(key(eom.numberByNumber)) from EntityOfMaps eom group by eom")
+							.getSingleResult(), is(1) );
+					assertThat( session.createQuery("select max(value(eom.numberByNumber)) from EntityOfMaps eom group by eom")
 							.getSingleResult(), is(1.0) );
 
-//					assertThat( session.createQuery("select sum(index(eom.numberByNumber)) from EntityOfMaps eom group by eom")
-//							.getSingleResult(), is(1) );
-					assertThat( session.createQuery("select sum(element(eom.numberByNumber)) from EntityOfMaps eom group by eom")
+					assertThat( session.createQuery("select sum(key(eom.numberByNumber)) from EntityOfMaps eom group by eom")
+							.getSingleResult(), is(1L) );
+					assertThat( session.createQuery("select sum(value(eom.numberByNumber)) from EntityOfMaps eom group by eom")
 							.getSingleResult(), is(1.0) );
 
-//					assertThat( session.createQuery("select avg(index(eom.numberByNumber)) from EntityOfMaps eom group by eom")
-//							.getSingleResult(), is(1) );
-					assertThat( session.createQuery("select avg(element(eom.numberByNumber)) from EntityOfMaps eom group by eom")
+					assertThat( session.createQuery("select avg(key(eom.numberByNumber)) from EntityOfMaps eom group by eom")
+							.getSingleResult(), is(1.0) );
+					assertThat( session.createQuery("select avg(value(eom.numberByNumber)) from EntityOfMaps eom group by eom")
 							.getSingleResult(), is(1.0) );
 				}
 		);
 	}
 
 	@Test
-	public void testMaxMinSumIndicesElements(SessionFactoryScope scope) {
+	public void testAggregateIndicesElementsWithPath(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					assertThat( session.createQuery("select max(indices(eol.listOfNumbers)) from EntityOfLists eol")
@@ -176,12 +210,12 @@ public class FunctionTests {
 							.getSingleResult(), is(2.0) );
 
 					assertThat( session.createQuery("select sum(indices(eol.listOfNumbers)) from EntityOfLists eol")
-							.getSingleResult(), is(1) ); //TODO: should be Long
+							.getSingleResult(), is(1L) );
 					assertThat( session.createQuery("select sum(elements(eol.listOfNumbers)) from EntityOfLists eol")
 							.getSingleResult(), is(3.0) );
 
-//					assertThat( session.createQuery("select avg(indices(eol.listOfNumbers)) from EntityOfLists eol")
-//							.getSingleResult(), is(0.5) ); //TODO: FIX!!
+					assertThat( session.createQuery("select avg(indices(eol.listOfNumbers)) from EntityOfLists eol")
+							.getSingleResult(), is(0.5) );
 					assertThat( session.createQuery("select avg(elements(eol.listOfNumbers)) from EntityOfLists eol")
 							.getSingleResult(), is(1.5) );
 
@@ -191,12 +225,12 @@ public class FunctionTests {
 							.getSingleResult(), is(1.0) );
 
 					assertThat( session.createQuery("select sum(indices(eom.numberByNumber)) from EntityOfMaps eom")
-							.getSingleResult(), is(1) ); //TODO: should be Long
+							.getSingleResult(), is(1L) );
 					assertThat( session.createQuery("select sum(elements(eom.numberByNumber)) from EntityOfMaps eom")
 							.getSingleResult(), is(1.0) );
 
 					assertThat( session.createQuery("select avg(indices(eom.numberByNumber)) from EntityOfMaps eom")
-							.getSingleResult(), is(1) ); //TODO: should be Double
+							.getSingleResult(), is(1.0) );
 					assertThat( session.createQuery("select avg(elements(eom.numberByNumber)) from EntityOfMaps eom")
 							.getSingleResult(), is(1.0) );
 				}
@@ -204,7 +238,7 @@ public class FunctionTests {
 	}
 
 	@Test
-	public void testNoMaxMinSumIndexElement(SessionFactoryScope scope) {
+	public void testAggregateIndexElementKeyValueWithAlias(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					assertThat( session.createQuery("select max(index(l)) from EntityOfLists eol join eol.listOfNumbers l group by eol")
@@ -222,19 +256,19 @@ public class FunctionTests {
 					assertThat( session.createQuery("select avg(element(l)) from EntityOfLists eol join eol.listOfNumbers l group by eol")
 							.getSingleResult(), is(1.5) );
 
-					assertThat( session.createQuery("select max(index(m)) from EntityOfMaps eom join eom.numberByNumber m group by eom")
+					assertThat( session.createQuery("select max(key(m)) from EntityOfMaps eom join eom.numberByNumber m group by eom")
 							.getSingleResult(), is(1) );
-					assertThat( session.createQuery("select max(element(m)) from EntityOfMaps eom join eom.numberByNumber m group by eom")
+					assertThat( session.createQuery("select max(value(m)) from EntityOfMaps eom join eom.numberByNumber m group by eom")
 							.getSingleResult(), is(1.0) );
 
-					assertThat( session.createQuery("select sum(index(m)) from EntityOfMaps eom join eom.numberByNumber m group by eom")
+					assertThat( session.createQuery("select sum(key(m)) from EntityOfMaps eom join eom.numberByNumber m group by eom")
 							.getSingleResult(), is(1L) );
-					assertThat( session.createQuery("select sum(element(m)) from EntityOfMaps eom join eom.numberByNumber m group by eom")
+					assertThat( session.createQuery("select sum(value(m)) from EntityOfMaps eom join eom.numberByNumber m group by eom")
 							.getSingleResult(), is(1.0) );
 
-					assertThat( session.createQuery("select avg(index(m)) from EntityOfMaps eom join eom.numberByNumber m group by eom")
+					assertThat( session.createQuery("select avg(key(m)) from EntityOfMaps eom join eom.numberByNumber m group by eom")
 							.getSingleResult(), is(1.0) );
-					assertThat( session.createQuery("select avg(element(m)) from EntityOfMaps eom join eom.numberByNumber m group by eom")
+					assertThat( session.createQuery("select avg(value(m)) from EntityOfMaps eom join eom.numberByNumber m group by eom")
 							.getSingleResult(), is(1.0) );
 				}
 		);

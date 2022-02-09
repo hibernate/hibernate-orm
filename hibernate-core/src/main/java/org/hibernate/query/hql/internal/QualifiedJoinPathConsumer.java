@@ -6,11 +6,8 @@
  */
 package org.hibernate.query.hql.internal;
 
-import java.util.Locale;
-
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.hql.HqlInterpretationException;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmPathRegistry;

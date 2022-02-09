@@ -7,6 +7,7 @@
 package org.hibernate.query.internal;
 
 import java.time.Instant;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
@@ -162,6 +163,14 @@ public class BindingTypeHelper {
 
 		if ( java.util.Date.class.isAssignableFrom( javaType ) ) {
 			return typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.TIME );
+		}
+
+		if ( LocalTime.class.isAssignableFrom( javaType ) ) {
+			return typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.LOCAL_TIME );
+		}
+
+		if ( OffsetTime.class.isAssignableFrom( javaType ) ) {
+			return typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.OFFSET_TIME );
 		}
 
 		throw new IllegalArgumentException( "Unsure how to handle given Java type [" + javaType.getName() + "] as TemporalType#TIME" );

@@ -226,7 +226,7 @@ ext {
                         'jdbc.driver': 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
                         'jdbc.user'  : 'sa',
                         'jdbc.pass'  : 'Hibernate_orm_test',
-                        'jdbc.url'   : 'jdbc:sqlserver://' + dbHost + ';databaseName=hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:sqlserver://' + dbHost + ';databaseName=hibernate_orm_test;sendTimeAsDatetime=false',
                         'connection.init_sql' : ''
                 ],
                 informix : [

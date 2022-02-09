@@ -570,6 +570,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			//tag::hql-collection-qualification-example[]
 
 			// select all the calls (the map value) for a given Phone
+			// note that here we don't need to use value() or element()
+			// since it is implicit
 			List<Call> calls = entityManager.createQuery(
 				"select ch " +
 				"from Phone ph " +
@@ -590,7 +592,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			Long id = 1L;
 			//tag::hql-collection-qualification-example[]
 
-			// same as above
+			// same as above, but with value() explicit
 			List<Call> calls = entityManager.createQuery(
 				"select value(ch) " +
 				"from Phone ph " +
@@ -611,6 +613,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			//tag::hql-collection-qualification-example[]
 
 			// select all the Call timestamps (the map key) for a given Phone
+			// note that here we *do* need to explicitly specify key()
 			List<LocalDateTime> timestamps = entityManager.createQuery(
 				"select key(ch) " +
 				"from Phone ph " +
@@ -626,7 +629,6 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void test_hql_collection_qualification_associations_4() {
-	try {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 
 			Long id = 1L;
@@ -643,9 +645,6 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			//end::hql-collection-qualification-example[]
 
 		});
-	} catch(Exception e) {
-		//@see https://hibernate.atlassian.net/browse/HHH-10491
-	}
 	}
 
 	@Test
@@ -671,6 +670,44 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			//end::hql-collection-qualification-example[]
 			assertEquals(45, duration.intValue());
 
+		});
+	}
+
+	@Test
+	public void test_hql_collection_implicit_join_1() {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Long id = 1L;
+			//tag::hql-collection-implicit-join-example[]
+
+			// implicit join to a map value()
+			List<Call> calls = entityManager.createQuery(
+				"select value(ph.callHistory) " +
+				"from Phone ph " +
+				"where ph.id = :id ",
+				Call.class)
+			.setParameter("id", id)
+			.getResultList();
+			//end::hql-collection-implicit-join-example[]
+			assertEquals(2, calls.size());
+		});
+	}
+
+	@Test
+	public void test_hql_collection_implicit_join_2() {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Long id = 1L;
+			//tag::hql-collection-implicit-join-example[]
+
+			// implicit join to a map key()
+			List<LocalDateTime> timestamps = entityManager.createQuery(
+				"select key(ph.callHistory) " +
+				"from Phone ph " +
+				"where ph.id = :id ",
+				LocalDateTime.class)
+			.setParameter("id", id)
+			.getResultList();
+			//end::hql-collection-implicit-join-example[]
+			assertEquals(2, timestamps.size());
 		});
 	}
 

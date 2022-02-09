@@ -6,14 +6,12 @@
  */
 package org.hibernate.orm.test.cache;
 
+import static org.junit.Assert.assertEquals;
+
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Version;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.Cache;
@@ -21,13 +19,16 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
-
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 
 /**
  * @author Zhenlei Huang
@@ -130,6 +131,61 @@ public class RefreshUpdatedDataTest extends BaseCoreFunctionalTestCase {
 		s.delete( readWriteVersionedCacheableItem );
 		s.getTransaction().commit();
 		s.close();
+	}
+
+	@Test
+	public void testExternalUpdateRefresh() {
+		// prepare data
+		Session s = openSession();
+		s.beginTransaction();
+
+		final String BEFORE = "before";
+
+		ReadWriteVersionedCacheableItem readWriteVersionedCacheableItem = new ReadWriteVersionedCacheableItem( BEFORE );
+		readWriteVersionedCacheableItem.getTags().add( "Hibernate" );
+		readWriteVersionedCacheableItem.getTags().add( "ORM" );
+		s.persist( readWriteVersionedCacheableItem );
+
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+
+		// Read the entry in to populate 2LC
+		readWriteVersionedCacheableItem = s.get( ReadWriteVersionedCacheableItem.class, readWriteVersionedCacheableItem.getId() );
+
+		// open another session
+		Session s2 = sessionFactory().openSession();
+		s2.beginTransaction();
+		// Read from 2LC
+		readWriteVersionedCacheableItem = s2.get( ReadWriteVersionedCacheableItem.class, readWriteVersionedCacheableItem.getId() );
+
+		assertEquals( BEFORE, readWriteVersionedCacheableItem.getName() );
+		assertEquals( 2, readWriteVersionedCacheableItem.getTags().size() );
+
+		// Change the value externally
+		int version = readWriteVersionedCacheableItem.version + 1;
+		long id = readWriteVersionedCacheableItem.id;
+
+		s.doWork(connection -> {
+			try (Statement stmt = connection.createStatement()) {
+				stmt.executeUpdate("UPDATE ReadWriteVersionedCacheableItem SET version = " + version + " WHERE id = " + id);
+			}
+		});
+
+		s.getTransaction().commit();
+
+		s.close();
+
+		s2.refresh(readWriteVersionedCacheableItem);
+
+		assertEquals( version, readWriteVersionedCacheableItem.version );
+		assertEquals( 2, readWriteVersionedCacheableItem.getTags().size() );
+
+		s2.delete( readWriteVersionedCacheableItem );
+		s2.getTransaction().commit();
+		s2.close();
 	}
 
 	@Entity(name = "ReadWriteCacheableItem")

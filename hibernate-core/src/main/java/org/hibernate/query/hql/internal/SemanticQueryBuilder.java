@@ -104,6 +104,7 @@ import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmIndexAggregateFunction;
+import org.hibernate.query.sqm.tree.domain.SqmListJoin;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
 import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -4210,24 +4211,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		);
 	}
 
-	@Override
-	public SqmPath<?> visitCollectionIndexFunction(HqlParser.CollectionIndexFunctionContext ctx) {
-		final String alias = ctx.getChild( 2 ).getText();
-		final SqmFrom<?, ?> sqmFrom = processingStateStack.getCurrent().getPathRegistry().findFromByAlias( alias );
-
-		if ( sqmFrom == null ) {
-			throw new ParsingException( "Alias '" + alias + "' did not resolve to a declared identification variable" );
-		}
-
-		final SqmPathSource<?> pluralAttribute = sqmFrom.getReferencedPathSource();
-
-		if ( !( pluralAttribute instanceof PluralPersistentAttribute<?, ?, ?> ) ) {
-			throw new ParsingException( "Alias '" + alias + "' did not resolve to a many-valued attribute" );
-		}
-
-		return sqmFrom.resolvePathPart( CollectionPart.Nature.INDEX.getName(), true, this );
-	}
-
 	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
 	private boolean isIndexedPluralAttribute(SqmPath<?> path) {
 		return path.getReferencedPathSource() instanceof PluralPersistentAttribute;
@@ -4529,41 +4512,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmPath<?> visitCollectionValueNavigablePath(HqlParser.CollectionValueNavigablePathContext ctx) {
-		final SqmPath<?> pluralAttributePath = consumeDomainPath( (HqlParser.PathContext) ctx.getChild( 2 ) );
-		final SqmPathSource<?> referencedPathSource = pluralAttributePath.getReferencedPathSource();
-		final TerminalNode firstNode = (TerminalNode) ctx.getChild( 0 );
-
-		if ( !(referencedPathSource instanceof PluralPersistentAttribute<?, ?, ?> ) ) {
-			throw new PathException(
-					String.format(
-							"Argument of '%s' is not a plural path '%s'",
-							firstNode.getSymbol().getText(),
-							pluralAttributePath.getNavigablePath()
-					)
-			);
-		}
-
-		final PluralPersistentAttribute<?, ?, ?> attribute = (PluralPersistentAttribute<?, ?, ?>) referencedPathSource;
-
-		if ( getCreationOptions().useStrictJpaCompliance() ) {
-			if ( attribute.getCollectionClassification() != CollectionClassification.MAP ) {
-				throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.VALUE_FUNCTION_ON_NON_MAP );
-			}
-		}
-
-		SqmPath<?> result = pluralAttributePath.resolvePathPart( CollectionPart.Nature.ELEMENT.getName(), true, this );
-
-		if ( ctx.getChildCount() == 5 ) {
-			result = consumeDomainPath( (HqlParser.SimplePathContext) ctx.getChild( 4 ).getChild( 1 ) );
-		}
-
-		return result;
-	}
-
-
-	@Override
-	@SuppressWarnings("rawtypes")
-	public SqmPath visitMapKeyNavigablePath(HqlParser.MapKeyNavigablePathContext ctx) {
 		final DotIdentifierConsumer consumer = dotIdentifierConsumerStack.getCurrent();
 		final boolean madeNested;
 		if ( consumer instanceof QualifiedJoinPathConsumer) {
@@ -4579,6 +4527,91 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmPath<?> sqmPath = consumeDomainPath( (HqlParser.PathContext) ctx.getChild( 2 ) );
 		final boolean hasContinuation = ctx.getChildCount() == 5;
 
+		final SqmPathSource<?> referencedPathSource = sqmPath.getReferencedPathSource();
+		final TerminalNode firstNode = (TerminalNode) ctx.getChild( 0 );
+		checkPluralPath( sqmPath, referencedPathSource, firstNode );
+
+		if ( getCreationOptions().useStrictJpaCompliance() ) {
+			final PluralPersistentAttribute<?, ?, ?> attribute = (PluralPersistentAttribute<?, ?, ?>) referencedPathSource;
+			if ( attribute.getCollectionClassification() != CollectionClassification.MAP
+					&& firstNode.getSymbol().getType() == HqlParser.VALUE ) {
+				throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.VALUE_FUNCTION_ON_NON_MAP );
+			}
+		}
+
+		SqmPath<?> result;
+		if ( consumer instanceof QualifiedJoinPathConsumer) {
+			if ( madeNested && !hasContinuation ) {
+				// Reset the nested state before consuming the terminal identifier
+				( (QualifiedJoinPathConsumer) consumer ).setNested( false );
+			}
+			consumer.consumeIdentifier( CollectionPart.Nature.ELEMENT.getName(), false, !hasContinuation );
+			result = (SqmPath<?>) consumer.getConsumedPart();
+		}
+		else {
+			result = sqmPath.resolvePathPart( CollectionPart.Nature.ELEMENT.getName(), true, this );
+		}
+
+		if ( hasContinuation ) {
+			if ( madeNested ) {
+				// Reset the nested state before consuming the terminal identifier
+				( (QualifiedJoinPathConsumer) consumer ).setNested( false );
+			}
+			final HqlParser.SimplePathContext identCtx = (HqlParser.SimplePathContext) ctx.getChild( 4 )
+					.getChild( 1 );
+			if ( consumer instanceof QualifiedJoinPathConsumer) {
+				result = consumeDomainPath( identCtx );
+			}
+			else {
+				dotIdentifierConsumerStack.push(
+						new BasicDotIdentifierConsumer( result, this ) {
+							@Override
+							protected void reset() {
+							}
+						}
+				);
+				try {
+					result = consumeDomainPath( identCtx );
+				}
+				finally {
+					dotIdentifierConsumerStack.pop();
+				}
+			}
+		}
+
+		return result;
+	}
+
+
+	@Override
+	public SqmPath<?> visitMapKeyNavigablePath(HqlParser.MapKeyNavigablePathContext ctx) {
+		final DotIdentifierConsumer consumer = dotIdentifierConsumerStack.getCurrent();
+		final boolean madeNested;
+		if ( consumer instanceof QualifiedJoinPathConsumer) {
+			final QualifiedJoinPathConsumer qualifiedJoinPathConsumer = (QualifiedJoinPathConsumer) consumer;
+			madeNested = !qualifiedJoinPathConsumer.isNested();
+			if ( madeNested ) {
+				qualifiedJoinPathConsumer.setNested( true );
+			}
+		}
+		else {
+			madeNested = false;
+		}
+		final SqmPath<?> sqmPath = consumeDomainPath( (HqlParser.PathContext) ctx.getChild( 2 ) );
+		final boolean hasContinuation = ctx.getChildCount() == 5;
+
+		final SqmPathSource<?> referencedPathSource = sqmPath.getReferencedPathSource();
+		final TerminalNode firstNode = (TerminalNode) ctx.getChild( 0 );
+		checkPluralPath( sqmPath, referencedPathSource, firstNode );
+
+		if ( getCreationOptions().useStrictJpaCompliance() ) {
+			final PluralPersistentAttribute<?, ?, ?> attribute = (PluralPersistentAttribute<?, ?, ?>) referencedPathSource;
+			if ( attribute.getCollectionClassification() != CollectionClassification.MAP
+					&& firstNode.getSymbol().getType() == HqlParser.KEY ) {
+				throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.KEY_FUNCTION_ON_NON_MAP );
+			}
+		}
+
 		SqmPath<?> result;
 		if ( sqmPath instanceof SqmMapJoin ) {
 			final SqmMapJoin<?, ?, ?> sqmMapJoin = (SqmMapJoin<?, ?, ?>) sqmPath;
@@ -4593,6 +4626,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			else {
 				result = sqmMapJoin.key();
 			}
+		}
+		else if ( sqmPath instanceof SqmListJoin ) {
+			if ( hasContinuation ) {
+				throw new SemanticException("list index may not be dereferenced");
+			}
+			SqmListJoin<?,?> listJoin = (SqmListJoin<?,?>) sqmPath;
+			result = listJoin.resolvePathPart( CollectionPart.Nature.INDEX.getName(), true, this );
 		}
 		else {
 			assert sqmPath instanceof SqmPluralValuedSimplePath;
@@ -4628,6 +4668,18 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 
 		return result;
+	}
+
+	private void checkPluralPath(SqmPath<?> pluralAttributePath, SqmPathSource<?> referencedPathSource, TerminalNode firstNode) {
+		if ( !(referencedPathSource instanceof PluralPersistentAttribute<?, ?, ?> ) ) {
+			throw new PathException(
+					String.format(
+							"Argument of '%s' is not a plural path '%s'",
+							firstNode.getSymbol().getText(),
+							pluralAttributePath.getNavigablePath()
+					)
+			);
+		}
 	}
 
 	private <X> SqmPath<X> consumeDomainPath(HqlParser.PathContext parserPath) {
@@ -4667,7 +4719,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return sqmPath;
 		}
 
-		throw new SemanticException( "Expecting plural attribute valued path [" + sqmPath.getNavigablePath() + "], but found : " + sqmPath.getReferencedPathSource().getSqmPathType() );
+		throw new SemanticException( "Expecting plural attribute valued path [" + sqmPath.getNavigablePath() + "], but found : "
+				+ sqmPath.getReferencedPathSource().getSqmPathType() );
 	}
 
 	private void checkFQNEntityNameJpaComplianceViolationIfNeeded(String name, EntityDomainType<?> entityDescriptor) {

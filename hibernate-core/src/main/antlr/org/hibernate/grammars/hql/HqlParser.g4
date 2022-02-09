@@ -425,10 +425,10 @@ collectionValueNavigablePath
 	;
 
 /**
- * A 'key()' function that "breaks" a path expression
+ * A 'key()' or 'index()' function that "breaks" a path expression
  */
 mapKeyNavigablePath
-	: KEY LEFT_PAREN path RIGHT_PAREN pathContinuation?
+	: (KEY|INDEX) LEFT_PAREN path RIGHT_PAREN pathContinuation?
 	;
 
 
@@ -947,7 +947,7 @@ parameter
 function
 	: standardFunction
 	| aggregateFunction
-	| jpaCollectionFunction
+	| collectionSizeFunction
 	| indexAggregateFunction
 	| elementAggregateFunction
 	| collectionFunctionMisuse
@@ -995,11 +995,10 @@ genericFunctionArguments
 	;
 
 /**
- * The special 'size()' and 'index()' functions defined by JPQL
+ * The special 'size()' function defined by JPQL
  */
-jpaCollectionFunction
-	: SIZE LEFT_PAREN path RIGHT_PAREN					# CollectionSizeFunction
-	| INDEX LEFT_PAREN identifier RIGHT_PAREN			# CollectionIndexFunction
+collectionSizeFunction
+	: SIZE LEFT_PAREN path RIGHT_PAREN
 	;
 
 /**

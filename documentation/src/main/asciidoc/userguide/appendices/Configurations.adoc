@@ -79,17 +79,6 @@ Traditionally, Hibernate has considered the names locally scoped.
 If enabled, the names used by `@TableGenerator` and `@SequenceGenerator` will be considered global so configuring two different generators
 with the same name will cause a `java.lang.IllegalArgumentException` to be thrown at boot time.
 
-`*hibernate.jpa.compliance.criteria_copy*` (e.g. `true` (default value) or `false` )::
-The Jakarta Persistence spec says that mutations done to `CriteriaQuery`, `CriteriaUpdate` and `CriteriaDelete`
-after such objects were used to create a `jakarta.persistence.Query` may not affect that query.
-This requirement makes it necessary to copy these objects because the APIs allow mutations.
-+
-If disabled, it is assumed that users do not mutate the criteria query afterwards
-and due to that, no copy will be created, which will improve performance.
-+
-By default, no copies are created to not hurt performance. When enabled,
-criteria query objects are copied, as required by the JPA specification.
-
 [[configurations-database-connection]]
 === Database connection properties
 
@@ -508,6 +497,19 @@ The {@link org.hibernate.query.criteria.ValueHandlingMode#INLINE} mode will inli
 +
 The default value is {@link org.hibernate.query.criteria.ValueHandlingMode#BIND}.
 Valid options are defined by the `org.hibernate.query.criteria.ValueHandlingMode` enum.
+
+`*hibernate.criteria.copy_tree*` (e.g. `true` or `false` (default value) )::
+The Jakarta Persistence spec says that mutations done to `CriteriaQuery`, `CriteriaUpdate` and `CriteriaDelete`
+after such objects were used to create a `jakarta.persistence.Query` may not affect that query.
+This requirement makes it necessary to copy these objects because the APIs allow mutations.
++
+If disabled, it is assumed that users do not mutate the criteria query afterwards
+and due to that, no copy will be created, which will improve performance.
++
+When bootstrapping Hibernate through the native bootstrap APIs this setting is disabled
+i.e. no copies are created to not hurt performance.
+When bootstrapping Hibernate through the JPA SPI this setting is enabled.
+When enabled, criteria query objects are copied, as required by the Jakarta Persistence specification.
 
 `*hibernate.query.fail_on_pagination_over_collection_fetch*` (e.g. `true` or `false` (default value))::
 Raises an exception when in-memory pagination over collection fetch is about to be performed.

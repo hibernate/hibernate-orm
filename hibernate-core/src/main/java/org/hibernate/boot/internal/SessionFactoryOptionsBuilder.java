@@ -238,6 +238,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean connectionProviderDisablesAutoCommit;
 	private TimeZone jdbcTimeZone;
 	private ValueHandlingMode criteriaValueHandlingMode;
+	private boolean criteriaCopyTreeEnabled;
 	private ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
 	// These two settings cannot be modified from the builder,
 	// in order to maintain consistency.
@@ -533,6 +534,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		this.criteriaValueHandlingMode = ValueHandlingMode.interpret(
 				configurationSettings.get( CRITERIA_VALUE_HANDLING_MODE )
+		);
+		this.criteriaCopyTreeEnabled = ConfigurationHelper.getBoolean(
+				AvailableSettings.CRITERIA_COPY_TREE,
+				configurationSettings,
+				jpaBootstrap
 		);
 
 		// added the boolean parameter in case we want to define some form of "all" as discussed
@@ -1130,6 +1136,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public ValueHandlingMode getCriteriaValueHandlingMode() {
 		return criteriaValueHandlingMode;
+	}
+
+	@Override
+	public boolean isCriteriaCopyTreeEnabled() {
+		return criteriaCopyTreeEnabled;
 	}
 
 	@Override

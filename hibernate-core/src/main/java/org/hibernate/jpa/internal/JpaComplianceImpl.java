@@ -21,7 +21,6 @@ public class JpaComplianceImpl implements JpaCompliance {
 	private final boolean closedCompliance;
 	private final boolean cachingCompliance;
 	private final boolean loadByIdCompliance;
-	private final boolean criteriaCopyCompliance;
 
 	public JpaComplianceImpl(
 			boolean listCompliance,
@@ -32,8 +31,7 @@ public class JpaComplianceImpl implements JpaCompliance {
 			boolean transactionCompliance,
 			boolean closedCompliance,
 			boolean cachingCompliance,
-			boolean loadByIdCompliance,
-			boolean criteriaCopyCompliance) {
+			boolean loadByIdCompliance) {
 		this.queryCompliance = queryCompliance;
 		this.transactionCompliance = transactionCompliance;
 		this.listCompliance = listCompliance;
@@ -43,7 +41,6 @@ public class JpaComplianceImpl implements JpaCompliance {
 		this.globalGeneratorNameScopeCompliance = globalGeneratorNameScopeCompliance;
 		this.orderByMappingCompliance = orderByMappingCompliance;
 		this.loadByIdCompliance = loadByIdCompliance;
-		this.criteriaCopyCompliance = criteriaCopyCompliance;
 	}
 
 	@Override
@@ -91,11 +88,6 @@ public class JpaComplianceImpl implements JpaCompliance {
 		return loadByIdCompliance;
 	}
 
-	@Override
-	public boolean isJpaCriteriaCopyComplianceEnabled() {
-		return criteriaCopyCompliance;
-	}
-
 	public static class JpaComplianceBuilder {
 		private boolean queryCompliance;
 		private boolean listCompliance;
@@ -106,7 +98,6 @@ public class JpaComplianceImpl implements JpaCompliance {
 		private boolean transactionCompliance;
 		private boolean closedCompliance;
 		private boolean loadByIdCompliance;
-		private boolean criteriaCopyCompliance;
 
 		public JpaComplianceBuilder() {
 		}
@@ -156,11 +147,6 @@ public class JpaComplianceImpl implements JpaCompliance {
 			return this;
 		}
 
-		public JpaComplianceBuilder setJpaCriteriaCopyComplianceEnabled(boolean jpaCriteriaCopyComplianceEnabled) {
-			this.criteriaCopyCompliance = jpaCriteriaCopyComplianceEnabled;
-			return this;
-		}
-
 		JpaCompliance createJpaCompliance() {
 			return new JpaComplianceImpl(
 					listCompliance,
@@ -171,8 +157,7 @@ public class JpaComplianceImpl implements JpaCompliance {
 					transactionCompliance,
 					closedCompliance,
 					cachingCompliance,
-					loadByIdCompliance,
-					criteriaCopyCompliance
+					loadByIdCompliance
 			);
 		}
 	}

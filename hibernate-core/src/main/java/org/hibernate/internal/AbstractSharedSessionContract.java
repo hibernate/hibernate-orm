@@ -143,7 +143,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private final PhysicalConnectionHandlingMode connectionHandlingMode;
 
 	private CacheMode cacheMode;
-	private boolean jpaCriteriaCopyComplianceEnabled;
+	private boolean criteriaCopyTreeEnabled;
 
 	protected boolean closed;
 	protected boolean waitingForAutoClose;
@@ -161,7 +161,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		this.factory = factory;
 		this.fastSessionServices = factory.getFastSessionServices();
 		this.cacheTransactionSync = factory.getCache().getRegionFactory().createTransactionContext( this );
-		setJpaCriteriaCopyComplianceEnabled( factory.getJpaMetamodel().getJpaCompliance().isJpaCriteriaCopyComplianceEnabled() );
+		setCriteriaCopyTreeEnabled( factory.getSessionFactoryOptions().isCriteriaCopyTreeEnabled() );
 
 		this.flushMode = options.getInitialSessionFlushMode();
 
@@ -647,13 +647,13 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public void setJpaCriteriaCopyComplianceEnabled(boolean jpaCriteriaCopyComplianceEnabled) {
-		this.jpaCriteriaCopyComplianceEnabled = jpaCriteriaCopyComplianceEnabled;
+	public void setCriteriaCopyTreeEnabled(boolean jpaCriteriaCopyComplianceEnabled) {
+		this.criteriaCopyTreeEnabled = jpaCriteriaCopyComplianceEnabled;
 	}
 
 	@Override
-	public boolean isJpaCriteriaCopyComplianceEnabled() {
-		return jpaCriteriaCopyComplianceEnabled;
+	public boolean isCriteriaCopyTreeEnabled() {
+		return criteriaCopyTreeEnabled;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -8,7 +8,6 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
@@ -595,22 +594,22 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 	@Override
 	public SelectableMapping getSelectable(int columnIndex) {
-		return selectableMappings.getSelectable( columnIndex );
+		return getSelectableMappings().getSelectable( columnIndex );
 	}
 
 	@Override
 	public int getJdbcTypeCount() {
-		return selectableMappings.getJdbcTypeCount();
+		return getSelectableMappings().getJdbcTypeCount();
 	}
 
 	@Override
 	public List<JdbcMapping> getJdbcMappings() {
-		return selectableMappings.getJdbcMappings();
+		return getSelectableMappings().getJdbcMappings();
 	}
 
 	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		return selectableMappings.forEachSelectable(
+		return getSelectableMappings().forEachSelectable(
 				offset,
 				(index, selectable) -> action.accept( index, selectable.getJdbcMapping() )
 		);
@@ -690,12 +689,24 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 	@Override
 	public int forEachSelectable(SelectableConsumer consumer) {
-		return selectableMappings.forEachSelectable( 0, consumer );
+		return getSelectableMappings().forEachSelectable( 0, consumer );
 	}
 
 	@Override
 	public int forEachSelectable(int offset, SelectableConsumer consumer) {
-		return selectableMappings.forEachSelectable( offset, consumer );
+		return getSelectableMappings().forEachSelectable( offset, consumer );
+	}
+
+	private SelectableMappings getSelectableMappings() {
+		if (selectableMappings == null) {
+			// This is expected to happen when processing a
+			// PostInitCallbackEntry because the callbacks
+			// are not ordered. The exception is caught in
+			// MappingModelCreationProcess.executePostInitCallbacks()
+			// and the callback is re-queued.
+			throw new IllegalStateException("not yet ready");
+		}
+		return selectableMappings;
 	}
 
 	@Override

@@ -2377,6 +2377,17 @@ public final class AnnotationBinder {
 			);
 		}
 
+		if ( property.isAnnotationPresent( OrderColumn.class )
+				&& manyToManyAnn != null && !manyToManyAnn.mappedBy().isEmpty() ) {
+			throw new AnnotationException(
+					"Explicit @OrderColumn on inverse side of @ManyToMany is illegal: "
+							+ BinderHelper.getPath(
+							propertyHolder,
+							inferredData
+					)
+			);
+		}
+
 		final IndexColumn indexColumn = IndexColumn.fromAnnotations(
 				property.getAnnotation( OrderColumn.class ),
 				property.getAnnotation( org.hibernate.annotations.IndexColumn.class ),

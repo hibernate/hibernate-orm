@@ -565,6 +565,11 @@ public abstract class CollectionBinder {
 				// We don't support @OrderColumn on the non-owning side of a many-to-many association.
 				return CollectionClassification.BAG;
 			}
+			OneToMany oneToMany = property.getAnnotation( OneToMany.class );
+			if ( oneToMany != null && ! StringHelper.isEmpty( oneToMany.mappedBy() ) ) {
+				// Unowned to-many mappings are always considered BAG by default
+				return CollectionClassification.BAG;
+			}
 			// otherwise, return the implicit classification for List attributes
 			return buildingContext.getBuildingOptions().getMappingDefaults().getImplicitListClassification();
 		}

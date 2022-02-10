@@ -216,10 +216,10 @@ task buildTutorialZip(type: Zip) {
 	from 'src/main/asciidoc/quickstart/tutorials'
 	destinationDir = tasks.renderGettingStartedGuides.outputDir
 	archiveName = 'hibernate-tutorials.zip'
-	expand(
+ 	expand(
 			version: project.version,
 			slf4j: "1.7.5",
-			junit: project.junitVersion,
+			junit: project.junit4Version,
 			h2: project.h2Version
 	)
 }

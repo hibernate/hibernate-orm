@@ -13,19 +13,26 @@ import org.hibernate.HibernateException;
  */
 
 public enum JoinType {
-	NONE( -666 ),
-	INNER_JOIN( 0 ),
-	LEFT_OUTER_JOIN( 1 ),
-	RIGHT_OUTER_JOIN( 2 ),
-	FULL_JOIN( 4 );
-	private int joinTypeValue;
+	NONE( -666, null ),
+	INNER_JOIN( 0, "inner" ),
+	LEFT_OUTER_JOIN( 1, "left" ),
+	RIGHT_OUTER_JOIN( 2, "right" ),
+	FULL_JOIN( 4, "full" );
 
-	JoinType(int joinTypeValue) {
+	private final int joinTypeValue;
+	private final String sqlText;
+
+	JoinType(int joinTypeValue, String sqlText) {
 		this.joinTypeValue = joinTypeValue;
+		this.sqlText = sqlText;
 	}
 
 	public int getJoinTypeValue() {
 		return joinTypeValue;
+	}
+
+	public String getSqlText() {
+		return sqlText;
 	}
 
 	public static JoinType parse(int joinType) {

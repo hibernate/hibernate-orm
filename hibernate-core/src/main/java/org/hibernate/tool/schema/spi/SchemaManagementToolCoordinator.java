@@ -7,7 +7,9 @@
 package org.hibernate.tool.schema.spi;
 
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -41,6 +43,8 @@ import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DROP_SOURCE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET;
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
+import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 
 /**
  * Responsible for coordinating SchemaManagementTool execution(s) for auto-tooling whether
@@ -527,27 +531,71 @@ public class SchemaManagementToolCoordinator {
 		}
 
 		public static ActionGrouping interpret(Map configurationValues) {
-			Object databaseActionSetting = configurationValues.get( HBM2DDL_DATABASE_ACTION );
-			Object scriptsActionSetting = configurationValues.get( HBM2DDL_SCRIPTS_ACTION );
-			if ( databaseActionSetting == null ) {
-				databaseActionSetting = configurationValues.get( JAKARTA_HBM2DDL_DATABASE_ACTION );
-			}
-			if ( scriptsActionSetting == null ) {
-				scriptsActionSetting = configurationValues.get( JAKARTA_HBM2DDL_SCRIPTS_ACTION );
-			}
-			// interpret the JPA settings first
-			Action databaseAction = Action.interpretJpaSetting( databaseActionSetting );
-			Action scriptAction = Action.interpretJpaSetting( scriptsActionSetting );
+			// default to the JPA settings
+			Action databaseActionToUse = determineJpaDbActionSetting( configurationValues );
+			Action scriptActionToUse = determineJpaScriptActionSetting( configurationValues );
+			Action autoAction = determineAutoSettingImpliedAction( configurationValues, null );
 
-			// if no JPA settings were specified, look at the legacy HBM2DDL_AUTO setting...
-			if ( databaseAction == Action.NONE && scriptAction == Action.NONE ) {
-				final Action hbm2ddlAutoAction = Action.interpretHbm2ddlSetting( configurationValues.get( HBM2DDL_AUTO ) );
-				if ( hbm2ddlAutoAction != Action.NONE ) {
-					databaseAction = hbm2ddlAutoAction;
+			if ( databaseActionToUse == null && scriptActionToUse == null ) {
+				// no JPA (jakarta nor javax) settings were specified, use the legacy Hibernate
+				// `hbm2ddl.auto` setting to possibly set the database-action
+				if ( autoAction != null ) {
+					databaseActionToUse = autoAction;
 				}
 			}
 
-			return new ActionGrouping( databaseAction, scriptAction );
+			if ( databaseActionToUse == null ) {
+				databaseActionToUse = Action.NONE;
+			}
+
+			if ( scriptActionToUse == null ) {
+				scriptActionToUse = Action.NONE;
+			}
+
+			if ( databaseActionToUse == Action.NONE &&  scriptActionToUse == Action.NONE ) {
+				log.debugf( "No schema actions specified" );
+			}
+
+			return new ActionGrouping( databaseActionToUse, scriptActionToUse );
+		}
+
+		private static Action determineJpaDbActionSetting(Map<?,?> configurationValues) {
+			final Object scriptsActionSetting = coalesceSuppliedValues(
+					() -> configurationValues.get( JAKARTA_HBM2DDL_DATABASE_ACTION ),
+					() -> {
+						final Object setting = configurationValues.get( HBM2DDL_DATABASE_ACTION );
+						if ( setting != null ) {
+							DEPRECATION_LOGGER.deprecatedSetting( HBM2DDL_DATABASE_ACTION, JAKARTA_HBM2DDL_DATABASE_ACTION );
+						}
+						return setting;
+					}
+			);
+
+			return scriptsActionSetting == null ? null : Action.interpretJpaSetting( scriptsActionSetting );
+		}
+
+		private static Action determineJpaScriptActionSetting(Map<?,?> configurationValues) {
+			final Object scriptsActionSetting = coalesceSuppliedValues(
+					() -> configurationValues.get( JAKARTA_HBM2DDL_SCRIPTS_ACTION ),
+					() -> {
+						final Object setting = configurationValues.get( HBM2DDL_SCRIPTS_ACTION );
+						if ( setting != null ) {
+							DEPRECATION_LOGGER.deprecatedSetting( HBM2DDL_SCRIPTS_ACTION, JAKARTA_HBM2DDL_SCRIPTS_ACTION );
+						}
+						return setting;
+					}
+			);
+
+			return scriptsActionSetting == null ? null : Action.interpretJpaSetting( scriptsActionSetting );
+		}
+
+		public static Action determineAutoSettingImpliedAction(Map<?,?> settings, Action defaultValue) {
+			final Object autoActionSetting = settings.get( HBM2DDL_AUTO );
+			if ( autoActionSetting == null ) {
+				return defaultValue;
+			}
+
+			return Action.interpretHbm2ddlSetting( autoActionSetting );
 		}
 	}
 }

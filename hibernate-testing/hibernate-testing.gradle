@@ -13,12 +13,22 @@ apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 dependencies {
     compile project( ':hibernate-core' )
     compile( libraries.jta )
-    compile( libraries.junit )
+
+    compile libraries.junit
+    compile libraries.junit5_api
+    compile libraries.junit5_params
+
+    compile libraries.assertj
+
+    compile libraries.log4j2
+
+    compile 'javax.money:money-api:1.0.1'
+    compile 'org.javamoney:moneta:1.1'
+
     compile( libraries.byteman )
     compile( libraries.byteman_install )
     compile( libraries.byteman_bmunit )
     compile( libraries.xapool )
-    compile( libraries.log4j2 )
     compile( libraries.jboss_tx_spi ) {
         transitive=false;
     }

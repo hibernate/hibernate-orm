@@ -19,16 +19,16 @@ import org.jboss.logging.DelegatingBasicLogger;
  *
  * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero</a> (C) 2015 Red Hat Inc.
  */
-final class LogInspectionHelper {
+public final class LogInspectionHelper {
 
 	private LogInspectionHelper() {
 	}
 
-	static void registerListener(LogListener listener, BasicLogger log) {
+	public static void registerListener(LogListener listener, BasicLogger log) {
 		convertType( log ).registerListener( listener );
 	}
 
-	static void clearAllListeners(BasicLogger log) {
+	public static void clearAllListeners(BasicLogger log) {
 		convertType( log ).clearAllListeners();
 	}
 

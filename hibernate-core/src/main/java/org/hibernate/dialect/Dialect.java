@@ -160,6 +160,7 @@ import org.hibernate.type.descriptor.jdbc.NCharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.NVarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
 
@@ -769,7 +770,8 @@ public abstract class Dialect implements ConversionContext {
 	 * same names.
 	 */
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
+		final TypeConfiguration typeConfiguration = queryEngine.getTypeConfiguration();
+		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 		final BasicType<Date> timestampType = basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP );
 		final BasicType<Date> dateType = basicTypeRegistry.resolve( StandardBasicTypes.DATE );
 		final BasicType<Date> timeType = basicTypeRegistry.resolve( StandardBasicTypes.TIME );
@@ -842,20 +844,20 @@ public abstract class Dialect implements ConversionContext {
 		//define it here as an alias for locate()
 
 		queryEngine.getSqmFunctionRegistry().register( "position",
-				new LocatePositionEmulation( queryEngine.getTypeConfiguration() ) );
+				new LocatePositionEmulation( typeConfiguration ) );
 
 		//very few databases support ANSI-style overlay() function, so emulate
 		//it here in terms of either insert() or concat()/substring()
 
 		queryEngine.getSqmFunctionRegistry().register( "overlay",
-				new InsertSubstringOverlayEmulation( queryEngine.getTypeConfiguration(), false ) );
+				new InsertSubstringOverlayEmulation( typeConfiguration, false ) );
 
 		//ANSI SQL trim() function is supported on almost all of the databases
 		//we care about, but on some it must be emulated using ltrim(), rtrim(),
 		//and replace()
 
 		queryEngine.getSqmFunctionRegistry().register( "trim",
-				new TrimFunction( this, queryEngine.getTypeConfiguration() ) );
+				new TrimFunction( this, typeConfiguration ) );
 
 		//ANSI SQL cast() function is supported on the databases we care most
 		//about but in certain cases it doesn't allow some useful typecasts,
@@ -883,7 +885,7 @@ public abstract class Dialect implements ConversionContext {
 		//a very dialect-specific way
 
 		queryEngine.getSqmFunctionRegistry().register( "extract",
-				new ExtractFunction( this ) );
+				new ExtractFunction( this, typeConfiguration ) );
 
 		//comparison functions supported on most databases, emulated on others
 		//using a case expression
@@ -905,13 +907,13 @@ public abstract class Dialect implements ConversionContext {
 		//pad() is a function we've designed to look like ANSI trim()
 
 		queryEngine.getSqmFunctionRegistry().register( "pad",
-				new LpadRpadPadEmulation( queryEngine.getTypeConfiguration() ) );
+				new LpadRpadPadEmulation( typeConfiguration ) );
 
 		//legacy Hibernate convenience function for casting to string, defined
 		//here as an alias for cast(arg as String)
 
 		queryEngine.getSqmFunctionRegistry().register( "str",
-				new CastStrEmulation( queryEngine.getTypeConfiguration() ) );
+				new CastStrEmulation( typeConfiguration ) );
 
 		//format() function for datetimes, emulated on many databases using the
 		//Oracle-style to_char() function, and on others using their native
@@ -923,9 +925,9 @@ public abstract class Dialect implements ConversionContext {
 		//since there is a great variety of different ways to emulate them
 
 		queryEngine.getSqmFunctionRegistry().register( "timestampadd",
-				new TimestampaddFunction( this ) );
+				new TimestampaddFunction( this, typeConfiguration ) );
 		queryEngine.getSqmFunctionRegistry().register( "timestampdiff",
-				new TimestampdiffFunction( this, queryEngine.getTypeConfiguration() ) );
+				new TimestampdiffFunction( this, typeConfiguration ) );
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "dateadd", "timestampadd" );
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "datediff", "timestampdiff" );
 

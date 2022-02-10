@@ -12,7 +12,9 @@ import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescript
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -43,7 +45,8 @@ public class EveryAnyEmulation extends AbstractSqmSelfRenderingFunctionDescripto
 				new ArgumentTypesValidator( StandardArgumentsValidators.exactly( 1 ), BOOLEAN ),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.BOOLEAN )
-				)
+				),
+				StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, BOOLEAN )
 		);
 		this.every = every;
 	}
@@ -56,7 +59,9 @@ public class EveryAnyEmulation extends AbstractSqmSelfRenderingFunctionDescripto
 			SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( "(sum(case when " );
 		if ( filter != null ) {
+			walker.getCurrentClauseStack().push( Clause.WHERE );
 			filter.accept( walker );
+			walker.getCurrentClauseStack().pop();
 			sqlAppender.appendSql( " then case when " );
 			sqlAstArguments.get( 0 ).accept( walker );
 			if ( every ) {

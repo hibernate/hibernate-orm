@@ -26,6 +26,7 @@ public class PatternFunctionDescriptorBuilder {
 
 	private ArgumentsValidator argumentsValidator;
 	private FunctionReturnTypeResolver returnTypeResolver;
+	private FunctionArgumentTypeResolver argumentTypeResolver;
 	private SqlAstNodeRenderingMode argumentRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 
 	public PatternFunctionDescriptorBuilder(
@@ -44,8 +45,14 @@ public class PatternFunctionDescriptorBuilder {
 		return this;
 	}
 
+	public PatternFunctionDescriptorBuilder setArgumentTypeResolver(FunctionArgumentTypeResolver argumentTypeResolver) {
+		this.argumentTypeResolver = argumentTypeResolver;
+		return this;
+	}
+
 	public PatternFunctionDescriptorBuilder setParameterTypes(FunctionParameterType... types) {
 		setArgumentsValidator( new ArgumentTypesValidator(argumentsValidator, types) );
+		setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.invariant( types ) );
 		return this;
 	}
 
@@ -62,7 +69,7 @@ public class PatternFunctionDescriptorBuilder {
 		return this;
 	}
 
-	public PatternFunctionDescriptorBuilder setInvariantType(BasicType invariantType) {
+	public PatternFunctionDescriptorBuilder setInvariantType(BasicType<?> invariantType) {
 		setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( invariantType ) );
 		return this;
 	}
@@ -86,6 +93,7 @@ public class PatternFunctionDescriptorBuilder {
 				new PatternRenderer( pattern, argumentRenderingMode ),
 				argumentsValidator,
 				returnTypeResolver,
+				argumentTypeResolver,
 				registrationKey,
 				functionKind,
 				argumentListSignature

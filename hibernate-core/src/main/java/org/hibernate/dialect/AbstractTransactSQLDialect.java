@@ -142,7 +142,6 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 		functionFactory.yearMonthDay();
 		functionFactory.ascii();
 		functionFactory.chr_char();
-		functionFactory.concat_plusOperator();
 		functionFactory.trim1();
 		functionFactory.repeat_replicate();
 		functionFactory.characterLength_len();

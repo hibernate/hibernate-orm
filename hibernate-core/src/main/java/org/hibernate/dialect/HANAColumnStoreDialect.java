@@ -19,6 +19,7 @@ import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY;
 
@@ -102,20 +103,22 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
+		final TypeConfiguration typeConfiguration = queryEngine.getTypeConfiguration();
 
 		// full-text search functions
 		queryEngine.getSqmFunctionRegistry().registerNamed(
 				"score",
-				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
+				typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
 		);
 		queryEngine.getSqmFunctionRegistry().registerNamed( "snippets" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "highlighted" );
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"contains",
-				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.BOOLEAN ),
+				typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.BOOLEAN ),
 				"contains(?1,?2)",
 				"contains(?1,?2,?3)",
-				ANY, ANY, ANY
+				ANY, ANY, ANY,
+				typeConfiguration
 		);
 	}
 

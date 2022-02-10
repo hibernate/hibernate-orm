@@ -7,10 +7,14 @@
 package org.hibernate.query.sqm.sql;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
 import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmVisitableNode;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.sql.ast.Clause;
@@ -78,6 +82,23 @@ public class FakeSqmToSqlAstConverter extends BaseSemanticQueryWalker implements
 
 	@Override
 	public void registerQueryTransformer(QueryTransformer transformer) {
+	}
+
+	@Override
+	public MappingModelExpressible<?> resolveFunctionImpliedReturnType() {
+		return null;
+	}
+
+	@Override
+	public MappingModelExpressible<?> determineValueMapping(SqmExpression<?> sqmExpression) {
+		return null;
+	}
+
+	@Override
+	public Object visitWithInferredType(
+			SqmVisitableNode node,
+			Supplier<MappingModelExpressible<?>> inferredTypeAccess) {
+		return node.accept( this );
 	}
 
 	@Override

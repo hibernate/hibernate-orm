@@ -16,6 +16,7 @@ import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.*;
@@ -44,14 +45,15 @@ public class ExtractFunction
 
 	private final Dialect dialect;
 
-	public ExtractFunction(Dialect dialect) {
+	public ExtractFunction(Dialect dialect, TypeConfiguration typeConfiguration) {
 		super(
 				"extract",
 				new ArgumentTypesValidator(
 						StandardArgumentsValidators.exactly( 2 ),
 						TEMPORAL_UNIT, TEMPORAL
 				),
-				StandardFunctionReturnTypeResolvers.useArgType( 1 )
+				StandardFunctionReturnTypeResolvers.useArgType( 1 ),
+				StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, TEMPORAL_UNIT, TEMPORAL )
 		);
 		this.dialect = dialect;
 	}

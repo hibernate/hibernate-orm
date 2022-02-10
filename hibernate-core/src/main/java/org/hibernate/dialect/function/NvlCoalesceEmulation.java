@@ -12,6 +12,7 @@ import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -35,7 +36,8 @@ public class NvlCoalesceEmulation
 		super(
 				"coalesce",
 				StandardArgumentsValidators.min( 2 ),
-				StandardFunctionReturnTypeResolvers.useFirstNonNull()
+				StandardFunctionReturnTypeResolvers.useFirstNonNull(),
+				StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE
 		);
 	}
 

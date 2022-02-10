@@ -15,6 +15,7 @@ import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
@@ -54,7 +55,8 @@ public class InsertSubstringOverlayEmulation
 				),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				),
+				StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, STRING, STRING, INTEGER, INTEGER )
 		);
 		this.strictSubstring = strictSubstring;
 	}

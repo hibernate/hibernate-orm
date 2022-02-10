@@ -52,6 +52,7 @@ public enum Clause {
 	FETCH,
 	FOR_UPDATE,
 	OVER,
+	WITHIN_GROUP,
 	PARTITION,
 	CALL,
 

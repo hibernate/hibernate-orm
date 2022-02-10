@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.function;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
+import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
@@ -33,8 +34,9 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 	public AbstractSqmSelfRenderingFunctionDescriptor(
 			String name,
 			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver) {
-		super( name, argumentsValidator, returnTypeResolver );
+			FunctionReturnTypeResolver returnTypeResolver,
+			FunctionArgumentTypeResolver argumentTypeResolver) {
+		super( name, argumentsValidator, returnTypeResolver, argumentTypeResolver );
 		this.functionKind = FunctionKind.NORMAL;
 	}
 
@@ -42,8 +44,9 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 			String name,
 			FunctionKind functionKind,
 			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver) {
-		super( name, argumentsValidator, returnTypeResolver );
+			FunctionReturnTypeResolver returnTypeResolver,
+			FunctionArgumentTypeResolver argumentTypeResolver) {
+		super( name, argumentsValidator, returnTypeResolver, argumentTypeResolver );
 		this.functionKind = functionKind;
 	}
 

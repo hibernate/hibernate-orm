@@ -16,6 +16,7 @@ import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
@@ -454,14 +455,16 @@ public class CommonFunctionFactory {
 				stringType,
 				"lpad(?1,?2,' ')",
 				"lpad(?1,?2,?3)",
-				STRING, INTEGER, STRING
+				STRING, INTEGER, STRING,
+				typeConfiguration
 		).setArgumentListSignature( "(string, length[, padding])" );
 		functionRegistry.registerBinaryTernaryPattern(
 				"rpad",
 				stringType,
 				"rpad(?1,?2,' ')",
 				"rpad(?1,?2,?3)",
-				STRING, INTEGER, STRING
+				STRING, INTEGER, STRING,
+				typeConfiguration
 		).setArgumentListSignature( "(string, length[, padding])" );
 	}
 
@@ -474,14 +477,16 @@ public class CommonFunctionFactory {
 				stringType,
 				"(space(?2-len(?1))+?1)",
 				"(replicate(?3,?2-len(?1))+?1)",
-				STRING, INTEGER, STRING
+				STRING, INTEGER, STRING,
+				typeConfiguration
 		).setArgumentListSignature( "(string, length[, padding])" );
 		functionRegistry.registerBinaryTernaryPattern(
 				"rpad",
 				stringType,
 				"(?1+space(?2-len(?1)))",
 				"(?1+replicate(?3,?2-len(?1)))",
-				STRING, INTEGER, STRING
+				STRING, INTEGER, STRING,
+				typeConfiguration
 		).setArgumentListSignature( "(string, length[, padding])" );
 	}
 
@@ -491,14 +496,16 @@ public class CommonFunctionFactory {
 				stringType,
 				"(repeat(' ',?2-character_length(?1))||?1)",
 				"(repeat(?3,?2-character_length(?1))||?1)",
-				STRING, INTEGER, STRING
+				STRING, INTEGER, STRING,
+				typeConfiguration
 		).setArgumentListSignature( "(string, length[, padding])" );
 		functionRegistry.registerBinaryTernaryPattern(
 				"rpad",
 				stringType,
 				"(?1||repeat(' ',?2-character_length(?1)))",
 				"(?1||repeat(?3,?2-character_length(?1)))",
-				STRING, INTEGER, STRING
+				STRING, INTEGER, STRING,
+				typeConfiguration
 		).setArgumentListSignature( "(string, length[, padding])" );
 	}
 
@@ -511,14 +518,16 @@ public class CommonFunctionFactory {
 				stringType,
 				"lfill(?1,' ',?2)",
 				"lfill(?1,?3,?2)",
-				STRING, INTEGER, STRING
+				STRING, INTEGER, STRING,
+				typeConfiguration
 		).setArgumentListSignature( "(string, length[, padding])" );
 		functionRegistry.registerBinaryTernaryPattern(
 				"rpad",
 				stringType,
 				"rfill(?1,' ',?2)",
 				"rfill(?1,?3,?2)",
-				STRING, INTEGER, STRING
+				STRING, INTEGER, STRING,
+				typeConfiguration
 		).setArgumentListSignature( "(string, length[, padding])" );
 	}
 
@@ -606,6 +615,7 @@ public class CommonFunctionFactory {
 		functionRegistry.namedDescriptorBuilder( "md5" )
 				.setInvariantType(stringType)
 				.setExactArgumentCount( 1 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
@@ -613,6 +623,7 @@ public class CommonFunctionFactory {
 		functionRegistry.namedDescriptorBuilder( "initcap" )
 				.setInvariantType(stringType)
 				.setExactArgumentCount( 1 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
@@ -638,30 +649,35 @@ public class CommonFunctionFactory {
 		functionRegistry.namedDescriptorBuilder( "translate" )
 				.setInvariantType(stringType)
 				.setExactArgumentCount( 3 )
+				.setParameterTypes( STRING, STRING, STRING )
 				.register();
 	}
 
 	public void bitand() {
 		functionRegistry.namedDescriptorBuilder( "bitand" )
 				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
 	public void bitor() {
 		functionRegistry.namedDescriptorBuilder( "bitor" )
 				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
 	public void bitxor() {
 		functionRegistry.namedDescriptorBuilder( "bitxor" )
 				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
 	public void bitnot() {
 		functionRegistry.namedDescriptorBuilder( "bitnot" )
 				.setExactArgumentCount( 1 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
@@ -671,21 +687,25 @@ public class CommonFunctionFactory {
 	public void bitandorxornot_bitAndOrXorNot() {
 		functionRegistry.namedDescriptorBuilder( "bit_and" )
 				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.registerAlternateKey( "bitand", "bit_and" );
 
 		functionRegistry.namedDescriptorBuilder( "bit_or" )
 				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.registerAlternateKey( "bitor", "bit_or" );
 
 		functionRegistry.namedDescriptorBuilder( "bit_xor" )
 				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.registerAlternateKey( "bitxor", "bit_xor" );
 
 		functionRegistry.namedDescriptorBuilder( "bit_not" )
 				.setExactArgumentCount( 1 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.registerAlternateKey( "bitnot", "bit_not" );
 	}
@@ -696,21 +716,25 @@ public class CommonFunctionFactory {
 	public void bitandorxornot_binAndOrXorNot() {
 		functionRegistry.namedDescriptorBuilder( "bin_and" )
 				.setMinArgumentCount( 1 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.registerAlternateKey( "bitand", "bin_and" );
 
 		functionRegistry.namedDescriptorBuilder( "bin_or" )
 				.setMinArgumentCount( 1 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.registerAlternateKey( "bitor", "bin_or" );
 
 		functionRegistry.namedDescriptorBuilder( "bin_xor" )
 				.setMinArgumentCount( 1 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.registerAlternateKey( "bitxor", "bin_xor" );
 
 		functionRegistry.namedDescriptorBuilder( "bin_not" )
 				.setExactArgumentCount( 1 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.registerAlternateKey( "bitnot", "bin_not" );
 	}
@@ -721,18 +745,22 @@ public class CommonFunctionFactory {
 	public void bitandorxornot_operator() {
 		functionRegistry.patternDescriptorBuilder( "bitand", "(?1&?2)" )
 				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 
 		functionRegistry.patternDescriptorBuilder( "bitor", "(?1|?2)" )
 				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 
 		functionRegistry.patternDescriptorBuilder( "bitxor", "(?1^?2)" )
 				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 
 		functionRegistry.patternDescriptorBuilder( "bitnot", "~?1" )
 				.setExactArgumentCount( 1 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
@@ -742,10 +770,12 @@ public class CommonFunctionFactory {
 	public void bitAndOr() {
 		functionRegistry.namedAggregateDescriptorBuilder( "bit_and" )
 				.setExactArgumentCount( 1 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 
 		functionRegistry.namedAggregateDescriptorBuilder( "bit_or" )
 				.setExactArgumentCount( 1 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 
 		//MySQL has it but how is that even useful?
@@ -978,21 +1008,25 @@ public class CommonFunctionFactory {
 		functionRegistry.namedDescriptorBuilder( "to_number" )
 				//always 1 arg on HSQL and Cache, always 2 on Postgres
 				.setArgumentCountBetween( 1, 3 )
+				.setParameterTypes( STRING, STRING, STRING )
 				.setInvariantType(doubleType)
 				.register();
 		functionRegistry.namedDescriptorBuilder( "to_char" )
 				.setArgumentCountBetween( 1, 3 )
+				.setParameterTypes( ANY, STRING, STRING )
 				//always 2 args on HSQL and Postgres
 				.setInvariantType(stringType)
 				.register();
 		functionRegistry.namedDescriptorBuilder( "to_date" )
 				//always 2 args on HSQL and Postgres
 				.setArgumentCountBetween( 1, 3 )
+				.setParameterTypes( STRING, STRING, STRING )
 				.setInvariantType(dateType)
 				.register();
 		functionRegistry.namedDescriptorBuilder( "to_timestamp" )
 				//always 2 args on HSQL and Postgres
 				.setArgumentCountBetween( 1, 3 )
+				.setParameterTypes( STRING, STRING, STRING )
 				.setInvariantType(timestampType)
 				.register();
 	}
@@ -1073,19 +1107,9 @@ public class CommonFunctionFactory {
 		functionRegistry.patternDescriptorBuilder( "concat", "(?1||?2...)" )
 				.setInvariantType(stringType)
 				.setMinArgumentCount( 1 )
-				.setParameterTypes(STRING)
-				.setArgumentListSignature( "(STRING string0[, STRING string1[, ...]])" )
-				.register();
-	}
-
-	/**
-	 * Transact SQL-style
-	 */
-	public void concat_plusOperator() {
-		functionRegistry.patternDescriptorBuilder( "concat", "(?1+?2...)" )
-				.setInvariantType(stringType)
-				.setMinArgumentCount( 1 )
-				.setParameterTypes(STRING)
+				.setArgumentTypeResolver(
+						StandardFunctionArgumentTypeResolvers.impliedOrInvariant( typeConfiguration, STRING )
+				)
 				.setArgumentListSignature( "(STRING string0[, STRING string1[, ...]])" )
 				.register();
 	}
@@ -1297,6 +1321,7 @@ public class CommonFunctionFactory {
 	public void coalesce() {
 		functionRegistry.namedDescriptorBuilder( "coalesce" )
 				.setMinArgumentCount( 1 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
@@ -1306,6 +1331,7 @@ public class CommonFunctionFactory {
 	public void coalesce_value() {
 		functionRegistry.namedDescriptorBuilder( "value" )
 				.setMinArgumentCount( 1 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.registerAlternateKey( "coalesce", "value" );
 	}
@@ -1313,6 +1339,7 @@ public class CommonFunctionFactory {
 	public void nullif() {
 		functionRegistry.namedDescriptorBuilder( "nullif" )
 				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
@@ -1420,7 +1447,8 @@ public class CommonFunctionFactory {
 						"locate",
 						integerType,
 						"position(?1 in ?2)", "(position(?1 in substring(?2 from ?3))+(?3)-1)",
-						STRING, STRING, INTEGER
+						STRING, STRING, INTEGER,
+						typeConfiguration
 				)
 				.setArgumentListSignature( "(STRING pattern, STRING string[, INTEGER start])" );
 	}
@@ -1432,7 +1460,8 @@ public class CommonFunctionFactory {
 						"substring",
 						stringType,
 						"substring(?1 from ?2)", "substring(?1 from ?2 for ?3)",
-						STRING, INTEGER, INTEGER
+						STRING, INTEGER, INTEGER,
+						typeConfiguration
 				)
 				.setArgumentListSignature( "(STRING string{ from|,} INTEGER start[{ for|,} INTEGER length])" );
 	}
@@ -1459,7 +1488,8 @@ public class CommonFunctionFactory {
 						stringType,
 						"substring(?1,?2,len(?1)-?2+1)",
 						"substring(?1,?2,?3)",
-						STRING, INTEGER, INTEGER
+						STRING, INTEGER, INTEGER,
+						typeConfiguration
 				)
 				.setArgumentListSignature( "(STRING string{ from|,} INTEGER start[{ for|,} INTEGER length])" );
 	}
@@ -1508,7 +1538,8 @@ public class CommonFunctionFactory {
 						stringType,
 						"overlay(?1 placing ?2 from ?3)",
 						"overlay(?1 placing ?2 from ?3 for ?4)",
-						STRING, STRING, INTEGER, INTEGER
+						STRING, STRING, INTEGER, INTEGER,
+						typeConfiguration
 				)
 				.setArgumentListSignature( "(string placing replacement from start[ for length])" );
 	}
@@ -1524,7 +1555,8 @@ public class CommonFunctionFactory {
 						//because DB2 doesn't like "length(?)"
 						"overlay(?1 placing ?2 from ?3 for character_length(?2))",
 						"overlay(?1 placing ?2 from ?3 for ?4)",
-						STRING, STRING, INTEGER, INTEGER
+						STRING, STRING, INTEGER, INTEGER,
+						typeConfiguration
 				)
 				.setArgumentListSignature( "(string placing replacement from start[ for length])" );
 	}
@@ -1555,7 +1587,9 @@ public class CommonFunctionFactory {
 		functionRegistry.namedDescriptorBuilder( "concat" )
 				.setInvariantType(stringType)
 				.setMinArgumentCount( 1 )
-				.setParameterTypes(STRING)
+				.setArgumentTypeResolver(
+						StandardFunctionArgumentTypeResolvers.impliedOrInvariant( typeConfiguration, STRING )
+				)
 				.setArgumentListSignature( "(STRING string0[, STRING string1[, ...]])" )
 				.register();
 	}
@@ -1644,10 +1678,12 @@ public class CommonFunctionFactory {
 		functionRegistry.namedDescriptorBuilder( "least" )
 				.setMinArgumentCount( 2 )
 				.setParameterTypes(COMPARABLE, COMPARABLE)
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "greatest" )
 				.setMinArgumentCount( 2 )
 				.setParameterTypes(COMPARABLE, COMPARABLE)
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
@@ -1655,10 +1691,12 @@ public class CommonFunctionFactory {
 		functionRegistry.namedDescriptorBuilder( "least", "min" )
 				.setMinArgumentCount( 2 )
 				.setParameterTypes(COMPARABLE, COMPARABLE)
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "greatest", "max" )
 				.setMinArgumentCount( 2 )
 				.setParameterTypes(COMPARABLE, COMPARABLE)
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
@@ -1666,10 +1704,12 @@ public class CommonFunctionFactory {
 		functionRegistry.namedDescriptorBuilder( "least", "minvalue" )
 				.setMinArgumentCount( 2 )
 				.setParameterTypes(COMPARABLE, COMPARABLE)
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "greatest", "maxvalue" )
 				.setMinArgumentCount( 2 )
 				.setParameterTypes(COMPARABLE, COMPARABLE)
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
@@ -1682,12 +1722,14 @@ public class CommonFunctionFactory {
 				.setArgumentRenderingMode( inferenceArgumentRenderingMode )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(COMPARABLE)
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
 				.register();
 
 		functionRegistry.namedAggregateDescriptorBuilder( "min" )
 				.setArgumentRenderingMode( inferenceArgumentRenderingMode )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(COMPARABLE)
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
 				.register();
 
 		functionRegistry.namedAggregateDescriptorBuilder( "sum" )
@@ -1835,26 +1877,43 @@ public class CommonFunctionFactory {
 		functionRegistry.namedWindowDescriptorBuilder( "lag" )
 				.setArgumentCountBetween( 1, 3 )
 				.setParameterTypes( ANY, INTEGER, ANY )
+				.setArgumentTypeResolver(
+						StandardFunctionArgumentTypeResolvers.composite(
+								StandardFunctionArgumentTypeResolvers.argumentsOrImplied( 2 ),
+								StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, INTEGER ),
+								StandardFunctionArgumentTypeResolvers.argumentsOrImplied( 0 )
+						)
+				)
 				.setArgumentListSignature( "ANY value[, INTEGER offset[, ANY default]]" )
 				.register();
 		functionRegistry.namedWindowDescriptorBuilder( "lead" )
 				.setArgumentCountBetween( 1, 3 )
 				.setParameterTypes( ANY, INTEGER, ANY )
+				.setArgumentTypeResolver(
+						StandardFunctionArgumentTypeResolvers.composite(
+								StandardFunctionArgumentTypeResolvers.argumentsOrImplied( 2 ),
+								StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, INTEGER ),
+								StandardFunctionArgumentTypeResolvers.argumentsOrImplied( 0 )
+						)
+				)
 				.setArgumentListSignature( "ANY value[, INTEGER offset[, ANY default]]" )
 				.register();
 		functionRegistry.namedWindowDescriptorBuilder( "first_value" )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes( ANY )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
 				.setArgumentListSignature( "ANY value" )
 				.register();
 		functionRegistry.namedWindowDescriptorBuilder( "last_value" )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes( ANY )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
 				.setArgumentListSignature( "ANY value" )
 				.register();
 		functionRegistry.namedWindowDescriptorBuilder( "nth_value" )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes( ANY, INTEGER )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
 				.setArgumentListSignature( "ANY value, INTEGER nth" )
 				.register();
 	}
@@ -1969,6 +2028,7 @@ public class CommonFunctionFactory {
 	public void crc32() {
 		functionRegistry.namedDescriptorBuilder( "crc32" )
 				.setInvariantType(integerType)
+				.setParameterTypes( STRING )
 				.setExactArgumentCount( 1 )
 				.register();
 	}
@@ -1976,6 +2036,7 @@ public class CommonFunctionFactory {
 	public void sha1() {
 		functionRegistry.namedDescriptorBuilder( "sha1" )
 				.setInvariantType(stringType)
+				.setParameterTypes( STRING )
 				.setExactArgumentCount( 1 )
 				.register();
 	}
@@ -1983,6 +2044,7 @@ public class CommonFunctionFactory {
 	public void sha2() {
 		functionRegistry.namedDescriptorBuilder( "sha2" )
 				.setInvariantType(stringType)
+				.setParameterTypes( STRING, INTEGER )
 				.setExactArgumentCount( 2 )
 				.register();
 	}
@@ -1990,6 +2052,7 @@ public class CommonFunctionFactory {
 	public void sha() {
 		functionRegistry.namedDescriptorBuilder( "sha" )
 				.setInvariantType(stringType)
+				.setParameterTypes( STRING )
 				.setExactArgumentCount( 1 )
 				.register();
 	}
@@ -2156,6 +2219,7 @@ public class CommonFunctionFactory {
 	public void format_formatdatetime() {
 		functionRegistry.namedDescriptorBuilder( "format", "formatdatetime" )
 				.setInvariantType(stringType)
+				.setParameterTypes( TEMPORAL, STRING )
 				.setArgumentsValidator( formatValidator() )
 				.setArgumentListSignature( "(TEMPORAL datetime as STRING pattern)" )
 				.register();
@@ -2169,6 +2233,7 @@ public class CommonFunctionFactory {
 	public void format_toChar() {
 		functionRegistry.namedDescriptorBuilder( "format", "to_char" )
 				.setInvariantType(stringType)
+				.setParameterTypes( TEMPORAL, STRING )
 				.setArgumentsValidator( formatValidator() )
 				.setArgumentListSignature( "(TEMPORAL datetime as STRING pattern)" )
 				.register();
@@ -2182,6 +2247,7 @@ public class CommonFunctionFactory {
 	public void format_dateFormat() {
 		functionRegistry.namedDescriptorBuilder( "format", "date_format" )
 				.setInvariantType(stringType)
+				.setParameterTypes( TEMPORAL, STRING )
 				.setArgumentsValidator( formatValidator() )
 				.setArgumentListSignature( "(TEMPORAL datetime as STRING pattern)" )
 				.register();
@@ -2195,6 +2261,7 @@ public class CommonFunctionFactory {
 	public void format_toVarchar() {
 		functionRegistry.namedDescriptorBuilder( "format", "to_varchar" )
 				.setInvariantType(stringType)
+				.setParameterTypes( TEMPORAL, STRING )
 				.setArgumentsValidator( formatValidator() )
 				.setArgumentListSignature( "(TEMPORAL datetime as STRING pattern)" )
 				.register();
@@ -2223,7 +2290,7 @@ public class CommonFunctionFactory {
 		functionRegistry.patternDescriptorBuilder("collate", "(?1 collate '?2')")
 				.setInvariantType(stringType)
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(STRING, ANY)
+				.setParameterTypes(STRING, COLLATION)
 				.setArgumentListSignature("(STRING string as COLLATION collation)")
 				.register();
 	}

@@ -6,24 +6,20 @@
  */
 package org.hibernate.query.sqm.function;
 
+import java.util.List;
+
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
+import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
-import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
-import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.spi.TypeConfiguration;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static java.util.Collections.emptyList;
 
 /**
  * @author Steve Ebersole
@@ -31,20 +27,31 @@ import static java.util.Collections.emptyList;
 public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescriptor {
 	private final ArgumentsValidator argumentsValidator;
 	private final FunctionReturnTypeResolver returnTypeResolver;
+	private final FunctionArgumentTypeResolver functionArgumentTypeResolver;
 	private final String name;
 
 	public AbstractSqmFunctionDescriptor(String name) {
-		this( name, null, null );
+		this( name, null, null, null );
 	}
 
-	public AbstractSqmFunctionDescriptor(String name, ArgumentsValidator argumentsValidator) {
-		this( name, argumentsValidator, null );
+	public AbstractSqmFunctionDescriptor(
+			String name,
+			ArgumentsValidator argumentsValidator) {
+		this( name, argumentsValidator, null, null );
 	}
 
 	public AbstractSqmFunctionDescriptor(
 			String name,
 			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver) {
+			FunctionArgumentTypeResolver argumentTypeResolver) {
+		this( name, argumentsValidator, null, argumentTypeResolver );
+	}
+
+	public AbstractSqmFunctionDescriptor(
+			String name,
+			ArgumentsValidator argumentsValidator,
+			FunctionReturnTypeResolver returnTypeResolver,
+			FunctionArgumentTypeResolver argumentTypeResolver) {
 		this.name = name;
 		this.argumentsValidator = argumentsValidator == null
 				? StandardArgumentsValidators.NONE
@@ -52,6 +59,9 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 		this.returnTypeResolver = returnTypeResolver == null
 				? StandardFunctionReturnTypeResolvers.useFirstNonNull()
 				: returnTypeResolver;
+		this.functionArgumentTypeResolver = argumentTypeResolver == null
+				? StandardFunctionArgumentTypeResolvers.NULL
+				: argumentTypeResolver;
 	}
 
 	public String getName() {
@@ -71,6 +81,10 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 		return returnTypeResolver;
 	}
 
+	public FunctionArgumentTypeResolver getArgumentTypeResolver() {
+		return functionArgumentTypeResolver;
+	}
+
 	public String getReturnSignature() {
 		String result = returnTypeResolver.getReturnType();
 		return result.isEmpty() ? "" : result + " ";
@@ -79,23 +93,6 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 	public String getArgumentListSignature() {
 		String args = argumentsValidator.getSignature();
 		return alwaysIncludesParentheses() ? args : "()".equals(args) ? "" : "[" + args + "]";
-	}
-
-	private static SqlAstNode toSqlAstNode(Object arg, SqmToSqlAstConverter walker) {
-		return (SqlAstNode) arg;
-	}
-
-
-	public static List<SqlAstNode> resolveSqlAstArguments(List<? extends SqmTypedNode<?>> sqmArguments, SqmToSqlAstConverter walker) {
-		if ( sqmArguments == null || sqmArguments.isEmpty() ) {
-			return emptyList();
-		}
-
-		final ArrayList<SqlAstNode> sqlAstArguments = new ArrayList<>();
-		for ( SqmTypedNode<?> sqmArgument : sqmArguments ) {
-			sqlAstArguments.add( toSqlAstNode( ((SqmVisitableNode) sqmArgument).accept( walker ), walker ) );
-		}
-		return sqlAstArguments;
 	}
 
 	@Override

@@ -107,7 +107,7 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 			withinGroup = Collections.emptyList();
 		}
 		else {
-			walker.getCurrentClauseStack().push( Clause.ORDER );
+			walker.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
 			try {
 				final List<SqmSortSpecification> sortSpecifications = this.withinGroup.getSortSpecifications();
 				withinGroup = new ArrayList<>( sortSpecifications.size() );

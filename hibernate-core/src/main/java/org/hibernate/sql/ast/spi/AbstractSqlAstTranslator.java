@@ -587,11 +587,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return ( (ComparisonPredicate) predicate ).getLeftHandExpression();
 	}
 
-	protected boolean inOverClause() {
+	protected boolean inOverOrWithinGroupClause() {
 		return clauseStack.findCurrentFirst(
 				clause -> {
-					if ( clause == Clause.OVER ) {
-						return true;
+					switch ( clause ) {
+						case OVER:
+						case WITHIN_GROUP:
+							return true;
 					}
 					return null;
 				}
@@ -609,6 +611,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public QueryPart getCurrentQueryPart() {
 		return queryPartStack.getCurrent();
+	}
+
+	@Override
+	public Stack<Clause> getCurrentClauseStack() {
+		return clauseStack;
 	}
 
 	@Override
@@ -2208,7 +2215,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			emulateSortSpecificationNullPrecedence( sortExpression, nullPrecedence );
 		}
 
-		if ( inOverClause() ) {
+		if ( inOverOrWithinGroupClause() ) {
 			resolveAliasedExpression( sortExpression ).accept( this );
 		}
 		else {

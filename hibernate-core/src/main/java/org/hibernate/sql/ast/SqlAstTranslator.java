@@ -8,6 +8,7 @@ package org.hibernate.sql.ast;
 
 import java.util.Set;
 
+import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -33,6 +34,8 @@ public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker 
 	 * Returns the current query part that is translated.
 	 */
 	QueryPart getCurrentQueryPart();
+
+	Stack<Clause> getCurrentClauseStack();
 
 	/**
 	 * Not the best spot for this.  Its the table names collected while walking the SQL AST.

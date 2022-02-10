@@ -26,6 +26,7 @@ public class NamedFunctionDescriptorBuilder {
 
 	private ArgumentsValidator argumentsValidator;
 	private FunctionReturnTypeResolver returnTypeResolver;
+	private FunctionArgumentTypeResolver argumentTypeResolver;
 
 	private boolean useParenthesesWhenNoArgs = true;
 	private String argumentListSignature;
@@ -44,6 +45,11 @@ public class NamedFunctionDescriptorBuilder {
 
 	public NamedFunctionDescriptorBuilder setArgumentsValidator(ArgumentsValidator argumentsValidator) {
 		this.argumentsValidator = argumentsValidator;
+		return this;
+	}
+
+	public NamedFunctionDescriptorBuilder setArgumentTypeResolver(FunctionArgumentTypeResolver argumentTypeResolver) {
+		this.argumentTypeResolver = argumentTypeResolver;
 		return this;
 	}
 
@@ -71,6 +77,7 @@ public class NamedFunctionDescriptorBuilder {
 
 	public NamedFunctionDescriptorBuilder setParameterTypes(FunctionParameterType... types) {
 		setArgumentsValidator( new ArgumentTypesValidator(argumentsValidator, types) );
+		setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.invariant( types ) );
 		return this;
 	}
 
@@ -99,6 +106,7 @@ public class NamedFunctionDescriptorBuilder {
 				useParenthesesWhenNoArgs,
 				argumentsValidator,
 				returnTypeResolver,
+				argumentTypeResolver,
 				registrationKey,
 				functionKind,
 				argumentListSignature,

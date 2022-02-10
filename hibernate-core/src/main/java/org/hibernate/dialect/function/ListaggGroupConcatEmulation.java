@@ -13,7 +13,9 @@ import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescript
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -41,7 +43,8 @@ public class ListaggGroupConcatEmulation extends AbstractSqmSelfRenderingFunctio
 				new ArgumentTypesValidator( StandardArgumentsValidators.exactly( 2 ), STRING, STRING ),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				),
+				StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, STRING, STRING )
 		);
 	}
 
@@ -81,22 +84,26 @@ public class ListaggGroupConcatEmulation extends AbstractSqmSelfRenderingFunctio
 			arg = (Expression) firstArg;
 		}
 		if ( caseWrapper ) {
+			translator.getCurrentClauseStack().push( Clause.WHERE );
 			sqlAppender.appendSql( "case when " );
 			filter.accept( translator );
 			sqlAppender.appendSql( " then " );
 			arg.accept( translator );
 			sqlAppender.appendSql( " else null end" );
+			translator.getCurrentClauseStack().pop();
 		}
 		else {
 			arg.accept( translator );
 		}
 		if ( withinGroup != null && !withinGroup.isEmpty() ) {
+			translator.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
 			sqlAppender.appendSql( " order by " );
 			withinGroup.get( 0 ).accept( translator );
 			for ( int i = 1; i < withinGroup.size(); i++ ) {
 				sqlAppender.appendSql( ',' );
 				withinGroup.get( i ).accept( translator );
 			}
+			translator.getCurrentClauseStack().pop();
 		}
 		if ( sqlAstArguments.size() != 1 ) {
 			SqlAstNode separator = sqlAstArguments.get( 1 );
@@ -109,9 +116,11 @@ public class ListaggGroupConcatEmulation extends AbstractSqmSelfRenderingFunctio
 		}
 		sqlAppender.appendSql( ')' );
 		if ( !caseWrapper && filter != null ) {
+			translator.getCurrentClauseStack().push( Clause.WHERE );
 			sqlAppender.appendSql( " filter (where " );
 			filter.accept( translator );
 			sqlAppender.appendSql( ')' );
+			translator.getCurrentClauseStack().pop();
 		}
 	}
 

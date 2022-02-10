@@ -14,6 +14,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -38,7 +39,8 @@ public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		super(
 				"cast",
 				StandardArgumentsValidators.exactly( 2 ),
-				StandardFunctionReturnTypeResolvers.useArgType( 2 )
+				StandardFunctionReturnTypeResolvers.useArgType( 2 ),
+				StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE
 		);
 		this.dialect = dialect;
 		this.booleanCastType = getBooleanCastType( preferredSqlTypeCodeForBoolean );

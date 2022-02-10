@@ -284,7 +284,8 @@ public class FirebirdDialect extends Dialect {
 				integerType,
 				"position(?1 in ?2)",
 				"position(?1,?2,?3)",
-				STRING, STRING, INTEGER
+				STRING, STRING, INTEGER,
+				queryEngine.getTypeConfiguration()
 		).setArgumentListSignature( "(pattern, string[, start])" );
 		functionRegistry.namedDescriptorBuilder( "ascii_val" )
 				.setExactArgumentCount( 1 )

@@ -15,6 +15,7 @@ import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -42,10 +43,11 @@ public class CastingConcatFunction extends AbstractSqmSelfRenderingFunctionDescr
 			TypeConfiguration typeConfiguration) {
 		super(
 				"concat",
-				new ArgumentTypesValidator( StandardArgumentsValidators.min( 1 ), STRING ),
+				StandardArgumentsValidators.min( 1 ),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				),
+				StandardFunctionArgumentTypeResolvers.impliedOrInvariant( typeConfiguration, STRING )
 		);
 		this.dialect = dialect;
 		this.concatOperator = concatOperator;

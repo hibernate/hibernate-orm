@@ -29,7 +29,8 @@ public class SqlFunction
 		super(
 				"sql",
 				StandardArgumentsValidators.min( 1 ),
-				StandardFunctionReturnTypeResolvers.invariant( JavaObjectType.INSTANCE )
+				StandardFunctionReturnTypeResolvers.invariant( JavaObjectType.INSTANCE ),
+				null
 		);
 	}
 

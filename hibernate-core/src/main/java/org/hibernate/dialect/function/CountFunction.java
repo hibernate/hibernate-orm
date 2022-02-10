@@ -20,6 +20,7 @@ import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.sql.internal.AbstractSqmPathInterpretation;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -58,7 +59,8 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 				StandardArgumentsValidators.exactly( 1 ),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.LONG )
-				)
+				),
+				null
 		);
 		this.dialect = dialect;
 		this.defaultArgumentRenderingMode = defaultArgumentRenderingMode;
@@ -102,9 +104,11 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 					// In the end, the expression looks like the following:
 					// count(distinct coalesce(nullif(coalesce(col1 || '', '\0'), ''), '\01') || '\0' || coalesce(nullif(coalesce(col2 || '', '\0'), ''), '\02'))
 					if ( caseWrapper ) {
+						translator.getCurrentClauseStack().push( Clause.WHERE );
 						sqlAppender.appendSql( "case when " );
 						filter.accept( translator );
 						sqlAppender.appendSql( " then " );
+						translator.getCurrentClauseStack().pop();
 					}
 					sqlAppender.appendSql( "coalesce(nullif(coalesce(" );
 					renderCastedArgument( sqlAppender, translator, expressions.get( 0 ) );
@@ -162,7 +166,9 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 				else if ( !dialect.supportsTupleCounts() ) {
 					sqlAppender.appendSql( "case when " );
 					if ( caseWrapper ) {
+						translator.getCurrentClauseStack().push( Clause.WHERE );
 						filter.accept( translator );
+						translator.getCurrentClauseStack().pop();
 						sqlAppender.appendSql( " and " );
 					}
 					translator.render( expressions.get( 0 ), defaultArgumentRenderingMode );
@@ -193,9 +199,11 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		}
 		sqlAppender.appendSql( ')' );
 		if ( filter != null && !caseWrapper ) {
+			translator.getCurrentClauseStack().push( Clause.WHERE );
 			sqlAppender.appendSql( " filter (where " );
 			filter.accept( translator );
 			sqlAppender.appendSql( ')' );
+			translator.getCurrentClauseStack().pop();
 		}
 	}
 
@@ -250,8 +258,10 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			boolean caseWrapper,
 			SqlAstNode realArg) {
 		if ( caseWrapper ) {
+			translator.getCurrentClauseStack().push( Clause.WHERE );
 			sqlAppender.appendSql( "case when " );
 			filter.accept( translator );
+			translator.getCurrentClauseStack().pop();
 			sqlAppender.appendSql( " then " );
 			if ( realArg instanceof Star ) {
 				sqlAppender.appendSql( "1" );

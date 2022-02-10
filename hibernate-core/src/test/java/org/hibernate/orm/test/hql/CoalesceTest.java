@@ -62,7 +62,6 @@ public class CoalesceTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    @SkipForDialect(jiraKey = "HHH-10463", value =  PostgreSQLDialect.class)
     public void HHH_10463_NullInCoalesce() {
         doInHibernate( this::sessionFactory, session -> {
             TypedQuery<Person> query = session.createQuery( "from Person p where p.name = coalesce(:name, p.name) ", Person.class );

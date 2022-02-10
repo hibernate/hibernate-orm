@@ -15,6 +15,7 @@ import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescript
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -22,6 +23,7 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
 
@@ -46,14 +48,15 @@ public class TimestampaddFunction
 
 	private final Dialect dialect;
 
-	public TimestampaddFunction(Dialect dialect) {
+	public TimestampaddFunction(Dialect dialect, TypeConfiguration typeConfiguration) {
 		super(
 				"timestampadd",
 				new ArgumentTypesValidator(
 						StandardArgumentsValidators.exactly( 3 ),
 						TEMPORAL_UNIT, INTEGER, TEMPORAL
 				),
-				StandardFunctionReturnTypeResolvers.useArgType( 3 )
+				StandardFunctionReturnTypeResolvers.useArgType( 3 ),
+				StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, TEMPORAL_UNIT, INTEGER, TEMPORAL )
 		);
 		this.dialect = dialect;
 	}

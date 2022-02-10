@@ -8,6 +8,7 @@ package org.hibernate.dialect.function;
 
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -19,6 +20,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
 import jakarta.persistence.TemporalType;
+
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL;
 
 /**
  * DB2's varchar_format() can't handle quoted literal strings in
@@ -37,7 +41,8 @@ public class DB2FormatEmulation
 				CommonFunctionFactory.formatValidator(),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				),
+				StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, TEMPORAL, STRING )
 		);
 	}
 

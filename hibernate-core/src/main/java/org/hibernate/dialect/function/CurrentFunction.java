@@ -31,7 +31,8 @@ public class CurrentFunction
 		super(
 				name,
 				StandardArgumentsValidators.NO_ARGS,
-				StandardFunctionReturnTypeResolvers.invariant( type )
+				StandardFunctionReturnTypeResolvers.invariant( type ),
+				null
 		);
 		this.sql = sql;
 	}

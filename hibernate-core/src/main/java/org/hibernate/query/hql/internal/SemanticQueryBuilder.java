@@ -3188,7 +3188,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					null,
 					StandardFunctionReturnTypeResolvers.invariant(
 							resolveExpressibleTypeBasic( Object.class )
-					)
+					),
+					null
 			);
 		}
 		return functionTemplate.generateSqmExpression(
@@ -3259,6 +3260,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					StandardFunctionReturnTypeResolvers.invariant(
 							resolveExpressibleTypeBasic( Object.class )
 					),
+					null,
 					functionName,
 					functionKind,
 					null,

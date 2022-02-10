@@ -277,21 +277,24 @@ public class SQLiteDialect extends Dialect {
 				integerType,
 				"instr(?2,?1)",
 				"instr(?2,?1,?3)",
-				STRING, STRING, INTEGER
+				STRING, STRING, INTEGER,
+				queryEngine.getTypeConfiguration()
 		).setArgumentListSignature("(pattern, string[, start])");
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"lpad",
 				stringType,
 				"(substr(replace(hex(zeroblob(?2)),'00',' '),1,?2-length(?1))||?1)",
 				"(substr(replace(hex(zeroblob(?2)),'00',?3),1,?2-length(?1))||?1)",
-				STRING, INTEGER, STRING
+				STRING, INTEGER, STRING,
+				queryEngine.getTypeConfiguration()
 		).setArgumentListSignature("(string, length[, padding])");
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"rpad",
 				stringType,
 				"(?1||substr(replace(hex(zeroblob(?2)),'00',' '),1,?2-length(?1)))",
 				"(?1||substr(replace(hex(zeroblob(?2)),'00',?3),1,?2-length(?1)))",
-				STRING, INTEGER, STRING
+				STRING, INTEGER, STRING,
+				queryEngine.getTypeConfiguration()
 		).setArgumentListSignature("(string, length[, padding])");
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("format", "strftime")

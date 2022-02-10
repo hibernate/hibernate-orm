@@ -13,7 +13,9 @@ import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -41,7 +43,8 @@ public class MinMaxCaseEveryAnyEmulation extends AbstractSqmSelfRenderingFunctio
 				new ArgumentTypesValidator( StandardArgumentsValidators.exactly( 1 ), FunctionParameterType.BOOLEAN ),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.BOOLEAN )
-				)
+				),
+				StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, FunctionParameterType.BOOLEAN )
 		);
 		this.every = every;
 	}
@@ -59,7 +62,9 @@ public class MinMaxCaseEveryAnyEmulation extends AbstractSqmSelfRenderingFunctio
 			sqlAppender.appendSql( "max(case when " );
 		}
 		if ( filter != null ) {
+			walker.getCurrentClauseStack().push( Clause.WHERE );
 			filter.accept( walker );
+			walker.getCurrentClauseStack().pop();
 			sqlAppender.appendSql( " then case when " );
 			sqlAstArguments.get( 0 ).accept( walker );
 			sqlAppender.appendSql( " then 1 else 0 end else null end)" );

@@ -41,7 +41,7 @@ public class IntegralTimestampaddFunction
 	private final BasicType<Integer> integerType;
 
 	public IntegralTimestampaddFunction(Dialect dialect, TypeConfiguration typeConfiguration) {
-		super( dialect );
+		super( dialect, typeConfiguration );
 		this.dialect = dialect;
 		this.integerType = typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER );
 		//This is kinda wrong, we're supposed to use findFunctionDescriptor("cast"), not instantiate CastFunction

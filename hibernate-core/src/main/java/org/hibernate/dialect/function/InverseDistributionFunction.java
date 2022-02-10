@@ -20,10 +20,12 @@ import org.hibernate.query.sqm.function.SelfRenderingSqmOrderedSetAggregateFunct
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -44,7 +46,10 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 				parameterType == null
 						? StandardArgumentsValidators.exactly( 0 )
 						: new ArgumentTypesValidator( StandardArgumentsValidators.exactly( 1 ), parameterType ),
-				null
+				null,
+				parameterType == null
+						? null
+						: StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, parameterType )
 		);
 	}
 
@@ -103,6 +108,7 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 		}
 		sqlAppender.appendSql( ')' );
 		if ( withinGroup != null && !withinGroup.isEmpty() ) {
+			translator.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
 			sqlAppender.appendSql( " within group (order by " );
 			withinGroup.get( 0 ).accept( translator );
 			for ( int i = 1; i < withinGroup.size(); i++ ) {
@@ -110,11 +116,14 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 				withinGroup.get( i ).accept( translator );
 			}
 			sqlAppender.appendSql( ')' );
+			translator.getCurrentClauseStack().pop();
 		}
 		if ( filter != null ) {
+			translator.getCurrentClauseStack().push( Clause.WHERE );
 			sqlAppender.appendSql( " filter (where " );
 			filter.accept( translator );
 			sqlAppender.appendSql( ')' );
+			translator.getCurrentClauseStack().pop();
 		}
 	}
 

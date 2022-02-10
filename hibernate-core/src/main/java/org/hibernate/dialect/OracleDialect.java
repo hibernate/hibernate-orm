@@ -93,6 +93,8 @@ import static org.hibernate.query.sqm.TemporalUnit.SECOND;
 import static org.hibernate.query.sqm.TemporalUnit.YEAR;
 
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
+import org.hibernate.type.spi.TypeConfiguration;
+
 import static org.hibernate.type.SqlTypes.*;
 
 /**
@@ -136,6 +138,7 @@ public class OracleDialect extends Dialect {
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
+		final TypeConfiguration typeConfiguration = queryEngine.getTypeConfiguration();
 
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 		functionFactory.cosh();
@@ -185,10 +188,11 @@ public class OracleDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
-				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
+				typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
 				"instr(?2,?1)",
 				"instr(?2,?1,?3)",
-				FunctionParameterType.STRING, FunctionParameterType.STRING, FunctionParameterType.INTEGER
+				FunctionParameterType.STRING, FunctionParameterType.STRING, FunctionParameterType.INTEGER,
+				typeConfiguration
 		).setArgumentListSignature("(pattern, string[, start])");
 		// The within group clause became optional in 18
 		if ( getVersion().isSameOrAfter( 18 ) ) {
@@ -203,7 +207,7 @@ public class OracleDialect extends Dialect {
 		// Oracle has a regular aggregate function named stats_mode
 		queryEngine.getSqmFunctionRegistry().register(
 				"mode",
-				new ModeStatsModeEmulation( queryEngine.getTypeConfiguration() )
+				new ModeStatsModeEmulation( typeConfiguration )
 		);
 	}
 

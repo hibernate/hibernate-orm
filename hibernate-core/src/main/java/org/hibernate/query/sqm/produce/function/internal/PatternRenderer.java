@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.produce.function.internal;
 
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -189,8 +190,10 @@ public class PatternRenderer {
 					if ( arg != null ) {
 						sqlAppender.appendSql( chunks[i] );
 						if ( caseWrapper && !( arg instanceof Distinct ) && !( arg instanceof Star ) ) {
+							translator.getCurrentClauseStack().push( Clause.WHERE );
 							sqlAppender.appendSql( "case when " );
 							filter.accept( translator );
+							translator.getCurrentClauseStack().pop();
 							sqlAppender.appendSql( " then " );
 							translator.render( arg, argumentRenderingMode );
 							sqlAppender.appendSql( " else null end" );
@@ -209,8 +212,10 @@ public class PatternRenderer {
 				}
 				if ( arg != null ) {
 					if ( caseWrapper && !( arg instanceof Distinct ) && !( arg instanceof Star ) ) {
+						translator.getCurrentClauseStack().push( Clause.WHERE );
 						sqlAppender.appendSql( "case when " );
 						filter.accept( translator );
+						translator.getCurrentClauseStack().pop();
 						sqlAppender.appendSql( " then " );
 						translator.render( arg, argumentRenderingMode );
 						sqlAppender.appendSql( " else null end" );
@@ -226,6 +231,7 @@ public class PatternRenderer {
 		}
 
 		if ( withinGroup != null && !withinGroup.isEmpty() ) {
+			translator.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
 			sqlAppender.appendSql( " within group (order by" );
 			translator.render( withinGroup.get( 0 ), argumentRenderingMode );
 			for ( int i = 1; i < withinGroup.size(); i++ ) {
@@ -233,6 +239,7 @@ public class PatternRenderer {
 				translator.render( withinGroup.get( 0 ), argumentRenderingMode );
 			}
 			sqlAppender.appendSql( ')' );
+			translator.getCurrentClauseStack().pop();
 		}
 
 		if ( fromFirst != null ) {
@@ -253,9 +260,11 @@ public class PatternRenderer {
 		}
 
 		if ( filter != null && !caseWrapper ) {
+			translator.getCurrentClauseStack().push( Clause.WHERE );
 			sqlAppender.appendSql( " filter (where " );
 			filter.accept( translator );
 			sqlAppender.appendSql( ')' );
+			translator.getCurrentClauseStack().pop();
 		}
 	}
 }

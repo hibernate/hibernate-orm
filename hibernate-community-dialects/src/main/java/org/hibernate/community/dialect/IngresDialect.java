@@ -288,7 +288,8 @@ public class IngresDialect extends Dialect {
 				integerType,
 				"position(?1 in ?2)",
 				"(position(?1 in substring(?2 from ?3))+(?3)-1)",
-				STRING, STRING, INTEGER
+				STRING, STRING, INTEGER,
+				queryEngine.getTypeConfiguration()
 		).setArgumentListSignature("(pattern, string[, start])");
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "date_part('?1',?2)", integerType );

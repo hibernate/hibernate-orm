@@ -79,6 +79,7 @@ import java.util.regex.Pattern;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * An abstract base class for SAP HANA dialects.
@@ -274,13 +275,15 @@ public abstract class AbstractHANADialect extends Dialect {
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
+		final TypeConfiguration typeConfiguration = queryEngine.getTypeConfiguration();
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
-				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
+				typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
 				"locate(?2,?1)",
 				"locate(?2,?1,?3)",
-				FunctionParameterType.STRING, FunctionParameterType.STRING, FunctionParameterType.INTEGER
+				FunctionParameterType.STRING, FunctionParameterType.STRING, FunctionParameterType.INTEGER,
+				typeConfiguration
 		).setArgumentListSignature("(pattern, string[, start])");
 
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
@@ -317,7 +320,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 
 		queryEngine.getSqmFunctionRegistry().register( "timestampadd",
-				new IntegralTimestampaddFunction( this, queryEngine.getTypeConfiguration() ) );
+				new IntegralTimestampaddFunction( this, typeConfiguration ) );
 	}
 
 	@Override

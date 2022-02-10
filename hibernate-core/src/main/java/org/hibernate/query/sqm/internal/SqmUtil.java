@@ -402,16 +402,16 @@ public class SqmUtil {
 			List<SqmParameter<?>> sqmParameters,
 			SqmParameterMappingModelResolutionAccess mappingModelResolutionAccess,
 			SessionFactoryImplementor sessionFactory) {
-		if ( binding.getType() != null ) {
-			return binding.getType();
-		}
-
-		if ( binding.getBindType() != null && binding.getBindType() instanceof Bindable ) {
+		if ( binding.getBindType() instanceof Bindable ) {
 			return (Bindable) binding.getBindType();
 		}
 
-		if ( parameter.getHibernateType() != null && parameter.getHibernateType() instanceof Bindable ) {
+		if ( parameter.getHibernateType() instanceof Bindable ) {
 			return (Bindable) parameter.getHibernateType();
+		}
+
+		if ( binding.getType() != null ) {
+			return binding.getType();
 		}
 
 		for ( int i = 0; i < sqmParameters.size(); i++ ) {
@@ -425,8 +425,7 @@ public class SqmUtil {
 		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 
 		// assume we have (or can create) a mapping for the parameter's Java type
-		BasicType basicType = typeConfiguration.standardBasicTypeForJavaType( parameter.getParameterType() );
-		return basicType;
+		return typeConfiguration.standardBasicTypeForJavaType( parameter.getParameterType() );
 	}
 
 	public static SqmStatement.ParameterResolutions resolveParameters(SqmStatement<?> statement) {

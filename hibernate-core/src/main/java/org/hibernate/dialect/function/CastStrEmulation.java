@@ -37,7 +37,8 @@ public class CastStrEmulation
 				StandardArgumentsValidators.exactly( 1 ),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				),
+				null
 		);
 	}
 
@@ -45,7 +46,7 @@ public class CastStrEmulation
 			String name,
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver) {
-		super( name, argumentsValidator, returnTypeResolver );
+		super( name, argumentsValidator, returnTypeResolver, null );
 	}
 
 	@Override

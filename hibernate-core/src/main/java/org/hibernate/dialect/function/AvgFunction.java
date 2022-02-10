@@ -15,7 +15,9 @@ import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescript
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -49,7 +51,8 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 				new ArgumentTypesValidator( StandardArgumentsValidators.exactly( 1 ), NUMERIC ),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-				)
+				),
+				StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, NUMERIC )
 		);
 		this.defaultArgumentRenderingMode = defaultArgumentRenderingMode;
 		doubleType = typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE );
@@ -80,8 +83,10 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			arg = (Expression) sqlAstArguments.get( 0 );
 		}
 		if ( caseWrapper ) {
+			translator.getCurrentClauseStack().push( Clause.WHERE );
 			sqlAppender.appendSql( "case when " );
 			filter.accept( translator );
+			translator.getCurrentClauseStack().pop();
 			sqlAppender.appendSql( " then " );
 			renderArgument( sqlAppender, translator, arg );
 			sqlAppender.appendSql( " else null end)" );
@@ -90,9 +95,11 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			renderArgument( sqlAppender, translator, arg );
 			sqlAppender.appendSql( ')' );
 			if ( filter != null ) {
+				translator.getCurrentClauseStack().push( Clause.WHERE );
 				sqlAppender.appendSql( " filter (where " );
 				filter.accept( translator );
 				sqlAppender.appendSql( ')' );
+				translator.getCurrentClauseStack().pop();
 			}
 		}
 	}

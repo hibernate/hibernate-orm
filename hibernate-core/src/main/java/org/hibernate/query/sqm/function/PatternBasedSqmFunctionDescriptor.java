@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.function;
 
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
+import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
@@ -48,6 +49,7 @@ public class PatternBasedSqmFunctionDescriptor
 			PatternRenderer renderer,
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver,
+			FunctionArgumentTypeResolver argumentTypeResolver,
 			String name,
 			FunctionKind functionKind,
 			String argumentListSignature) {
@@ -63,7 +65,8 @@ public class PatternBasedSqmFunctionDescriptor
 						: renderer.hasVarargs()
 						? StandardArgumentsValidators.min( renderer.getParamCount() )
 						: StandardArgumentsValidators.exactly( renderer.getParamCount() ),
-					returnTypeResolver
+				returnTypeResolver,
+				argumentTypeResolver
 		);
 		this.renderer = renderer;
 		this.argumentListSignature = argumentListSignature;

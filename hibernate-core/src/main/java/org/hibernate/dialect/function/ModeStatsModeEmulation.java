@@ -8,6 +8,7 @@ package org.hibernate.dialect.function;
 
 import java.util.List;
 
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -43,19 +44,27 @@ public class ModeStatsModeEmulation extends InverseDistributionFunction {
 			throw new IllegalArgumentException( "MODE function requires a WITHIN GROUP clause with exactly one order by item!" );
 		}
 		if ( caseWrapper ) {
+			translator.getCurrentClauseStack().push( Clause.WHERE );
 			sqlAppender.appendSql( "case when " );
 			filter.accept( translator );
+			translator.getCurrentClauseStack().pop();
 			sqlAppender.appendSql( " then " );
+			translator.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
 			withinGroup.get( 0 ).accept( translator );
 			sqlAppender.appendSql( " else null end)" );
+			translator.getCurrentClauseStack().pop();
 		}
 		else {
+			translator.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
 			withinGroup.get( 0 ).accept( translator );
+			translator.getCurrentClauseStack().pop();
 			sqlAppender.appendSql( ')' );
 			if ( filter != null ) {
+				translator.getCurrentClauseStack().push( Clause.WHERE );
 				sqlAppender.appendSql( " filter (where " );
 				filter.accept( translator );
 				sqlAppender.appendSql( ')' );
+				translator.getCurrentClauseStack().pop();
 			}
 		}
 	}

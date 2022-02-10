@@ -11,6 +11,7 @@ import java.util.List;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -33,7 +34,8 @@ public class CaseLeastGreatestEmulation
 		super(
 				least ? "least" : "greatest",
 				new ArgumentTypesValidator( StandardArgumentsValidators.min( 2 ), COMPARABLE, COMPARABLE ),
-				StandardFunctionReturnTypeResolvers.useFirstNonNull()
+				StandardFunctionReturnTypeResolvers.useFirstNonNull(),
+				StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE
 		);
 		this.operator = least ? "<=" : ">=";
 	}

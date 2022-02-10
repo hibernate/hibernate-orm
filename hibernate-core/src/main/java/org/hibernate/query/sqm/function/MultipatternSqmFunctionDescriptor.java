@@ -11,6 +11,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.type.BasicType;
@@ -60,6 +61,7 @@ public class MultipatternSqmFunctionDescriptor extends AbstractSqmFunctionDescri
 			String name,
 			SqmFunctionDescriptor[] functions,
 			BasicType<?> type,
+			TypeConfiguration typeConfiguration,
 			FunctionParameterType... parameterTypes) {
 		super(
 				name,
@@ -70,7 +72,8 @@ public class MultipatternSqmFunctionDescriptor extends AbstractSqmFunctionDescri
 						),
 						parameterTypes
 				),
-				StandardFunctionReturnTypeResolvers.invariant( type )
+				StandardFunctionReturnTypeResolvers.invariant( type ),
+				StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, parameterTypes )
 		);
 		this.functions = functions;
 	}

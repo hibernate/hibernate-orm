@@ -54,7 +54,8 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 		super(
 				FUNCTION_NAME,
 				StandardArgumentsValidators.exactly( 2 ),
-				StandardFunctionReturnTypeResolvers.useArgType( 1 )
+				StandardFunctionReturnTypeResolvers.useArgType( 1 ),
+				null
 		);
 	}
 	@Override
@@ -174,9 +175,6 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 
 		@Override
 		public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
-			final ReturnableType<?> resultType = resolveResultType(
-					walker.getCreationContext().getMappingMetamodel().getTypeConfiguration()
-			);
 			final String sqmAlias = ( (SqmLiteral<String>) getArguments().get( 0 ) ).getLiteralValue();
 			final String attributeRole = ( (SqmLiteral<String>) getArguments().get( 1 ) ).getLiteralValue();
 			final TableGroup tableGroup = ( (FromClauseIndex) walker.getFromClauseAccess() ).findTableGroup(

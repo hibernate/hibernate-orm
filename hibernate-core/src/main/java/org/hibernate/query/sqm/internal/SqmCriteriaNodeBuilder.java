@@ -1340,7 +1340,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 					name,
 					true,
 					null,
-					StandardFunctionReturnTypeResolvers.invariant( resultType )
+					StandardFunctionReturnTypeResolvers.invariant( resultType ),
+					null
 			);
 		}
 

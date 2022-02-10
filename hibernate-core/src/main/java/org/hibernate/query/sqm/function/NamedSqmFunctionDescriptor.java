@@ -7,7 +7,9 @@
 package org.hibernate.query.sqm.function;
 
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
+import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -47,6 +49,7 @@ public class NamedSqmFunctionDescriptor
 				useParenthesesWhenNoArgs,
 				argumentsValidator,
 				returnTypeResolver,
+				null,
 				functionName,
 				FunctionKind.NORMAL,
 				null,
@@ -59,11 +62,31 @@ public class NamedSqmFunctionDescriptor
 			boolean useParenthesesWhenNoArgs,
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver,
+			FunctionArgumentTypeResolver argumentTypeResolver) {
+		this(
+				functionName,
+				useParenthesesWhenNoArgs,
+				argumentsValidator,
+				returnTypeResolver,
+				argumentTypeResolver,
+				functionName,
+				FunctionKind.NORMAL,
+				null,
+				SqlAstNodeRenderingMode.DEFAULT
+		);
+	}
+
+	public NamedSqmFunctionDescriptor(
+			String functionName,
+			boolean useParenthesesWhenNoArgs,
+			ArgumentsValidator argumentsValidator,
+			FunctionReturnTypeResolver returnTypeResolver,
+			FunctionArgumentTypeResolver argumentTypeResolver,
 			String name,
 			FunctionKind functionKind,
 			String argumentListSignature,
 			SqlAstNodeRenderingMode argumentRenderingMode) {
-		super( name, functionKind, argumentsValidator, returnTypeResolver );
+		super( name, functionKind, argumentsValidator, returnTypeResolver, argumentTypeResolver );
 
 		this.functionName = functionName;
 		this.useParenthesesWhenNoArgs = useParenthesesWhenNoArgs;
@@ -150,8 +173,10 @@ public class NamedSqmFunctionDescriptor
 				sqlAppender.appendSql( "," );
 			}
 			if ( caseWrapper && !( arg instanceof Distinct ) ) {
+				translator.getCurrentClauseStack().push( Clause.WHERE );
 				sqlAppender.appendSql( "case when " );
 				filter.accept( translator );
+				translator.getCurrentClauseStack().pop();
 				sqlAppender.appendSql( " then " );
 				if ( ( arg instanceof Star ) ) {
 					sqlAppender.appendSql( "1" );
@@ -172,6 +197,7 @@ public class NamedSqmFunctionDescriptor
 		}
 
 		if ( withinGroup != null && !withinGroup.isEmpty() ) {
+			translator.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
 			sqlAppender.appendSql( " within group (order by" );
 			translator.render( withinGroup.get( 0 ), argumentRenderingMode );
 			for ( int i = 1; i < withinGroup.size(); i++ ) {
@@ -179,6 +205,7 @@ public class NamedSqmFunctionDescriptor
 				translator.render( withinGroup.get( 0 ), argumentRenderingMode );
 			}
 			sqlAppender.appendSql( ')' );
+			translator.getCurrentClauseStack().pop();
 		}
 
 		if ( fromFirst != null ) {
@@ -199,9 +226,11 @@ public class NamedSqmFunctionDescriptor
 		}
 
 		if ( filter != null && !caseWrapper ) {
+			translator.getCurrentClauseStack().push( Clause.WHERE );
 			sqlAppender.appendSql( " filter (where " );
 			filter.accept( translator );
 			sqlAppender.appendSql( ')' );
+			translator.getCurrentClauseStack().pop();
 		}
 	}
 

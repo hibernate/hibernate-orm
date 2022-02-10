@@ -168,7 +168,8 @@ public class TimesTenDialect extends Dialect {
 				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
 				"instr(?2,?1)",
 				"instr(?2,?1,?3)",
-				STRING, STRING, INTEGER
+				STRING, STRING, INTEGER,
+				queryEngine.getTypeConfiguration()
 		).setArgumentListSignature("(pattern, string[, start])");
 	}
 

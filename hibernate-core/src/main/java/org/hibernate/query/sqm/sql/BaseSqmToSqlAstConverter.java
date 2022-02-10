@@ -140,6 +140,7 @@ import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteTable;
@@ -393,6 +394,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private final QueryOptions queryOptions;
 	private final LoadQueryInfluencers loadQueryInfluencers;
 
+	private final Map<SqmParameter<?>, List<List<JdbcParameter>>> jdbcParamsBySqmParam = new IdentityHashMap<>();
+	private final JdbcParameters jdbcParameters = new JdbcParametersImpl();
 	private final DomainParameterXref domainParameterXref;
 	private final QueryParameterBindings domainParameterBindings;
 	private final Map<SqmParameter<?>, MappingModelExpressible<?>> sqmParameterMappingModelTypes = new LinkedHashMap<>();
@@ -407,6 +410,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
 	private SqmQueryPart<?> currentSqmQueryPart;
 	private boolean containsCollectionFetches;
+	private boolean trackSelectionsForGroup;
 
 	private final Map<String, PredicateCollector> collectionFilterPredicates = new HashMap<>();
 	private List<Map.Entry<OrderByFragment, TableGroup>> orderByFragments;
@@ -436,6 +440,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	);
 	private final Stack<List<QueryTransformer>> queryTransformers = new StandardStack<>();
 	private boolean inTypeInference;
+	private Supplier<MappingModelExpressible<?>> functionImpliedResultTypeAccess;
 
 	private SqmByUnit appliedByUnit;
 	private Expression adjustedTimestamp;
@@ -1572,8 +1577,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		return cteContainer;
 	}
-
-	private boolean trackSelectionsForGroup;
 
 	@Override
 	public QueryPart visitQueryPart(SqmQueryPart<?> queryPart) {
@@ -4079,6 +4082,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return inferredType;
 	}
 
+	@Override
+	public MappingModelExpressible<?> resolveFunctionImpliedReturnType() {
+		if ( inTypeInference || functionImpliedResultTypeAccess == null ) {
+			return null;
+		}
+		inTypeInference = true;
+		final MappingModelExpressible<?> inferredType = functionImpliedResultTypeAccess.get();
+		inTypeInference = false;
+		return inferredType;
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// General expressions
 
@@ -4284,9 +4298,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 	}
 
-	private final Map<SqmParameter<?>, List<List<JdbcParameter>>> jdbcParamsBySqmParam = new IdentityHashMap<>();
-	private final JdbcParameters jdbcParameters = new JdbcParametersImpl();
-
 	@Override
 	public Map<SqmParameter<?>, List<List<JdbcParameter>>> getJdbcParamsBySqmParam() {
 		return jdbcParamsBySqmParam;
@@ -4434,7 +4445,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 	}
 
-	protected MappingModelExpressible<?> determineValueMapping(SqmExpression<?> sqmExpression) {
+	@Override
+	public MappingModelExpressible<?> determineValueMapping(SqmExpression<?> sqmExpression) {
 		if ( sqmExpression instanceof SqmParameter ) {
 			return determineValueMapping( (SqmParameter<?>) sqmExpression );
 		}
@@ -4562,16 +4574,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final QueryParameterImplementor<?> queryParameter = domainParameterXref.getQueryParameter( sqmParameter );
 		final QueryParameterBinding<?> binding = domainParameterBindings.getBinding( queryParameter );
 
-		if ( sqmParameter.getAnticipatedType() == null ) {
-			// this should indicate the condition that the user query did not define an
-			// explicit type in regard to this parameter.  Here we should prefer the
-			// inferrable type and fallback to the binding type
-			final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
-			if ( inferredValueMapping != null ) {
-				return inferredValueMapping;
-			}
-		}
-
 		BindableType<?> paramType = binding.getBindType();
 		if ( paramType == null ) {
 			paramType = queryParameter.getHibernateType();
@@ -4581,11 +4583,24 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 
 		if ( paramType == null ) {
+			final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
+			if ( inferredValueMapping != null ) {
+				return inferredValueMapping;
+			}
 			// Default to the Object type
 			return basicType( Object.class );
 		}
-		else if ( paramType instanceof MappingModelExpressible<?> && paramType.getBindableJavaType() == Object.class ) {
+		else if ( paramType instanceof MappingModelExpressible<?> ) {
 			return (MappingModelExpressible<?>) paramType;
+		}
+		else if ( sqmParameter.getAnticipatedType() == null ) {
+			// this should indicate the condition that the user query did not define an
+			// explicit type in regard to this parameter.  Here we should prefer the
+			// inferrable type and fallback to resolving the binding type
+			final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
+			if ( inferredValueMapping != null ) {
+				return inferredValueMapping;
+			}
 		}
 
 		final SqmExpressible<?> paramSqmType = paramType.resolveExpressible( creationContext.getSessionFactory() );
@@ -4742,12 +4757,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Expression visitFunction(SqmFunction<?> sqmFunction) {
+		final Supplier<MappingModelExpressible<?>> oldFunctionImpliedResultTypeAccess = functionImpliedResultTypeAccess;
+		functionImpliedResultTypeAccess = inferrableTypeAccessStack.getCurrent();
 		inferrableTypeAccessStack.push( () -> null );
 		try {
 			return sqmFunction.convertToSqlAst( this );
 		}
 		finally {
 			inferrableTypeAccessStack.pop();
+			functionImpliedResultTypeAccess = oldFunctionImpliedResultTypeAccess;
 		}
 	}
 
@@ -5426,35 +5444,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 	}
 
-//	private <X> X visitWithLenientInferredType(SqmExpression<?> expression, SqmExpression<?> inferred) {
-//		inferrableTypeAccessStack.push(
-//				() -> {
-//					MappingModelExpressible<?> definedType = creationContext
-//							.getDomainModel()
-//							.resolveMappingExpressible(
-//									expression.getNodeType(),
-//									getFromClauseIndex()::findTableGroup
-//							);
-//					if ( definedType != null ) {
-//						return definedType;
-//					}
-//					definedType = creationContext
-//							.getDomainModel()
-//							.lenientlyResolveMappingExpressible(
-//									inferred.getNodeType(),
-//									getFromClauseIndex()::findTableGroup
-//							);
-//					return definedType;
-//				}
-//		);
-//
-//		try {
-//			return (X) expression.accept( this );
-//		}
-//		finally {
-//			inferrableTypeAccessStack.pop();
-//		}
-//	}
+	@Override
+	public Object visitWithInferredType(
+			SqmVisitableNode node,
+			Supplier<MappingModelExpressible<?>> inferredTypeAccess) {
+		inferrableTypeAccessStack.push( inferredTypeAccess );
+		try {
+			return node.accept( this );
+		}
+		finally {
+			inferrableTypeAccessStack.pop();
+		}
+	}
 
 	@Override
 	public Object visitAny(SqmAny<?> sqmAny) {

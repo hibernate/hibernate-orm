@@ -54,7 +54,7 @@ public class SubqueryTest extends BaseSessionFactoryFunctionalTest {
 				String name,
 				ArgumentsValidator argumentsValidator,
 				FunctionReturnTypeResolver returnTypeResolver) {
-			super( name, argumentsValidator, returnTypeResolver );
+			super( name, argumentsValidator, returnTypeResolver, null );
 		}
 
 		@Override

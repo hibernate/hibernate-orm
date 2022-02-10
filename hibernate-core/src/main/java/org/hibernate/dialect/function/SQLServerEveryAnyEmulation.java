@@ -11,8 +11,11 @@ import java.util.List;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
+import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -42,7 +45,8 @@ public class SQLServerEveryAnyEmulation extends AbstractSqmSelfRenderingFunction
 				new ArgumentTypesValidator( StandardArgumentsValidators.exactly( 1 ), BOOLEAN ),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.BOOLEAN )
-				)
+				),
+				StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, FunctionParameterType.BOOLEAN )
 		);
 		this.every = every;
 	}
@@ -60,7 +64,9 @@ public class SQLServerEveryAnyEmulation extends AbstractSqmSelfRenderingFunction
 			sqlAppender.appendSql( "max(iif(" );
 		}
 		if ( filter != null ) {
+			walker.getCurrentClauseStack().push( Clause.WHERE );
 			filter.accept( walker );
+			walker.getCurrentClauseStack().pop();
 			sqlAppender.appendSql( ",iif(" );
 			sqlAstArguments.get( 0 ).accept( walker );
 			sqlAppender.appendSql( ",1,0),null))" );

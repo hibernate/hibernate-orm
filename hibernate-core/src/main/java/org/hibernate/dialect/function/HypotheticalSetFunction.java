@@ -12,6 +12,7 @@ import java.util.List;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -32,7 +33,8 @@ public class HypotheticalSetFunction extends AbstractSqmSelfRenderingFunctionDes
 				null,
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( returnType )
-				)
+				),
+				null
 		);
 	}
 
@@ -74,6 +76,7 @@ public class HypotheticalSetFunction extends AbstractSqmSelfRenderingFunctionDes
 		}
 		sqlAppender.appendSql( ')' );
 		if ( withinGroup != null && !withinGroup.isEmpty() ) {
+			translator.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
 			sqlAppender.appendSql( " within group (order by " );
 			withinGroup.get( 0 ).accept( translator );
 			for ( int i = 1; i < withinGroup.size(); i++ ) {
@@ -81,11 +84,14 @@ public class HypotheticalSetFunction extends AbstractSqmSelfRenderingFunctionDes
 				withinGroup.get( i ).accept( translator );
 			}
 			sqlAppender.appendSql( ')' );
+			translator.getCurrentClauseStack().pop();
 		}
 		if ( filter != null ) {
+			translator.getCurrentClauseStack().push( Clause.WHERE );
 			sqlAppender.appendSql( " filter (where " );
 			filter.accept( translator );
 			sqlAppender.appendSql( ')' );
+			translator.getCurrentClauseStack().pop();
 		}
 	}
 

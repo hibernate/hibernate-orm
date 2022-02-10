@@ -149,32 +149,44 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 
 	@Override
 	public SelectableMapping getSelectable(int columnIndex) {
-		return selectableMappings.getSelectable( columnIndex );
+		return getSelectableMappings().getSelectable( columnIndex );
 	}
 
 	@Override
 	public int forEachSelectable(SelectableConsumer consumer) {
-		return selectableMappings.forEachSelectable( 0, consumer );
+		return getSelectableMappings().forEachSelectable( 0, consumer );
 	}
 
 	@Override
 	public int forEachSelectable(int offset, SelectableConsumer consumer) {
-		return selectableMappings.forEachSelectable( offset, consumer );
+		return getSelectableMappings().forEachSelectable( offset, consumer );
 	}
 
 	@Override
 	public int getJdbcTypeCount() {
-		return selectableMappings.getJdbcTypeCount();
+		return getSelectableMappings().getJdbcTypeCount();
 	}
 
 	@Override
 	public List<JdbcMapping> getJdbcMappings() {
-		return selectableMappings.getJdbcMappings();
+		return getSelectableMappings().getJdbcMappings();
+	}
+
+	private SelectableMappings getSelectableMappings() {
+		if (selectableMappings == null) {
+			// This is expected to happen when processing a
+			// PostInitCallbackEntry because the callbacks
+			// are not ordered. The exception is caught in
+			// MappingModelCreationProcess.executePostInitCallbacks()
+			// and the callback is re-queued.
+			throw new IllegalStateException("Not yet ready");
+		}
+		return selectableMappings;
 	}
 
 	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		return selectableMappings.forEachSelectable(
+		return getSelectableMappings().forEachSelectable(
 				offset,
 				(index, selectable) -> action.accept( index, selectable.getJdbcMapping() )
 		);

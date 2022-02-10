@@ -38,6 +38,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -195,6 +196,15 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						}
 						else if ( attributeMapping instanceof ToOneAttributeMapping ) {
 							final ToOneAttributeMapping original = (ToOneAttributeMapping) attributeMapping;
+							ForeignKeyDescriptor foreignKeyDescriptor = original.getForeignKeyDescriptor();
+							if ( foreignKeyDescriptor==null ) {
+								// This is expected to happen when processing a
+								// PostInitCallbackEntry because the callbacks
+								// are not ordered. The exception is caught in
+								// MappingModelCreationProcess.executePostInitCallbacks()
+								// and the callback is re-queued.
+								throw new IllegalStateException( "Not yet ready: " + original );
+							}
 							final ToOneAttributeMapping toOne = original.copy(
 									declaringType,
 									declaringTableGroupProducer
@@ -204,7 +214,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 									selectableMappings.getSelectable( offset ).getContainingTableExpression()
 							);
 							toOne.setForeignKeyDescriptor(
-									original.getForeignKeyDescriptor().withKeySelectionMapping(
+									foreignKeyDescriptor.withKeySelectionMapping(
 											declaringType,
 											declaringTableGroupProducer,
 											index -> selectableMappings.getSelectable( offset + index ),
@@ -704,7 +714,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			// are not ordered. The exception is caught in
 			// MappingModelCreationProcess.executePostInitCallbacks()
 			// and the callback is re-queued.
-			throw new IllegalStateException("not yet ready");
+			throw new IllegalStateException("Not yet ready");
 		}
 		return selectableMappings;
 	}

@@ -31,6 +31,7 @@ import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -149,7 +150,16 @@ public class TemporaryTable implements Exportable, Contributable {
 
 									if ( pluralAttribute.getSeparateCollectionTable() != null ) {
 										// Ensure that the FK target columns are available
-										final ModelPart fkTarget = pluralAttribute.getKeyDescriptor().getTargetPart();
+										ForeignKeyDescriptor keyDescriptor = pluralAttribute.getKeyDescriptor();
+										if ( keyDescriptor==null ) {
+											// This is expected to happen when processing a
+											// PostInitCallbackEntry because the callbacks
+											// are not ordered. The exception is caught in
+											// MappingModelCreationProcess.executePostInitCallbacks()
+											// and the callback is re-queued.
+											throw new IllegalStateException( "Not yet ready: " + pluralAttribute );
+										}
+										final ModelPart fkTarget = keyDescriptor.getTargetPart();
 										if ( !( fkTarget instanceof EntityIdentifierMapping ) ) {
 											final Value value = entityBinding.getSubclassProperty( pluralAttribute.getAttributeName() )
 													.getValue();

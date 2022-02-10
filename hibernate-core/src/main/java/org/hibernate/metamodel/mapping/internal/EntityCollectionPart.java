@@ -213,7 +213,12 @@ public class EntityCollectionPart
 							.getAssociatedEntityPersister( creationProcess.getCreationContext().getSessionFactory() );
 					fkTargetModelPart = elementPersister.findByPath( mapKeyPropertyName );
 					if ( fkTargetModelPart == null ) {
-						throw new RuntimeException( "Couldn't find model part for path [" + mapKeyPropertyName + "] on entity: " + elementPersister.getEntityName() );
+						// This is expected to happen when processing a
+						// PostInitCallbackEntry because the callbacks
+						// are not ordered. The exception is caught in
+						// MappingModelCreationProcess.executePostInitCallbacks()
+						// and the callback is re-queued.
+						throw new IllegalStateException( "Couldn't find model part for path [" + mapKeyPropertyName + "] on entity: " + elementPersister.getEntityName() );
 					}
 				}
 			}
@@ -222,7 +227,12 @@ public class EntityCollectionPart
 				if ( collectionDescriptor.isOneToMany() && mappedByProperty != null && !mappedByProperty.isEmpty() ) {
 					fkTargetModelPart = entityMappingType.findByPath( mappedByProperty );
 					if ( fkTargetModelPart == null ) {
-						throw new RuntimeException( "Couldn't find model part for path [" + mappedByProperty + "] on entity: " + entityMappingType.getEntityName() );
+						// This is expected to happen when processing a
+						// PostInitCallbackEntry because the callbacks
+						// are not ordered. The exception is caught in
+						// MappingModelCreationProcess.executePostInitCallbacks()
+						// and the callback is re-queued.
+						throw new IllegalStateException( "Couldn't find model part for path [" + mappedByProperty + "] on entity: " + entityMappingType.getEntityName() );
 					}
 				}
 				else {
@@ -261,7 +271,7 @@ public class EntityCollectionPart
 		if ( fkTargetModelPart instanceof ToOneAttributeMapping ) {
 			final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) fkTargetModelPart;
 			if ( toOneAttributeMapping.getForeignKeyDescriptor() == null ) {
-				throw new RuntimeException( "Not yet ready: " + toOneAttributeMapping );
+				throw new IllegalStateException( "Not yet ready: " + toOneAttributeMapping );
 			}
 			return toOneAttributeMapping.getForeignKeyDescriptor();
 		}

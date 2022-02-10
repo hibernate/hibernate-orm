@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		}
 		,
 		properties = {
-				@Setting(name = AvailableSettings.JPA_CRITERIA_COPY_COMPLIANCE, value = "true"),
+				@Setting(name = AvailableSettings.CRITERIA_COPY_TREE, value = "true"),
 		}
 )
 public class JoinTest {

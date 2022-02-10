@@ -2184,6 +2184,26 @@ public interface AvailableSettings {
 	String CRITERIA_VALUE_HANDLING_MODE = "hibernate.criteria.value_handling_mode";
 
 	/**
+	 * When enabled, specifies that {@linkplain org.hibernate.query.Query queries}
+	 * created through {@link jakarta.persistence.EntityManager#createQuery(CriteriaQuery)},
+	 * {@link jakarta.persistence.EntityManager#createQuery(CriteriaUpdate)} or
+	 * {@link jakarta.persistence.EntityManager#createQuery(CriteriaDelete)}
+	 * must create a copy of the passed object such that the resulting {@link jakarta.persistence.Query}
+	 * is not affected by any mutations to the original criteria query.
+	 * <p>
+	 * If disabled, it is assumed that users do not mutate the criteria query afterwards
+	 * and due to that, no copy will be created, which will improve performance.
+	 * <p>
+	 * When bootstrapping Hibernate through the native bootstrap APIs this setting is disabled
+	 * i.e. no copies are created to not hurt performance.
+	 * When bootstrapping Hibernate through the JPA SPI this setting is enabled.
+	 * When enabled, criteria query objects are copied, as required by the Jakarta Persistence specification.
+	 *
+	 * @since 6.0
+	 */
+	String CRITERIA_COPY_TREE = "hibernate.criteria.copy_tree";
+
+	/**
 	 * Specifies a default value for all {@link org.hibernate.jpa.spi.JpaCompliance}
 	 * flags. Each individual flag may still be overridden by explicitly specifying
 	 * its specific configuration property.
@@ -2367,24 +2387,6 @@ public interface AvailableSettings {
 	 * @since 6.0
 	 */
 	String JPA_LOAD_BY_ID_COMPLIANCE = "hibernate.jpa.compliance.load_by_id";
-
-	/**
-	 * When enabled, specifies that {@linkplain org.hibernate.query.Query queries}
-	 * created through {@link jakarta.persistence.EntityManager#createQuery(CriteriaQuery)},
-	 * {@link jakarta.persistence.EntityManager#createQuery(CriteriaUpdate)} or
-	 * {@link jakarta.persistence.EntityManager#createQuery(CriteriaDelete)}
-	 * must create a copy of the passed object such that the resulting {@link jakarta.persistence.Query}
-	 * is not affected by any mutations to the original criteria query.
-	 * <p>
-	 * If disabled, it is assumed that users do not mutate the criteria query afterwards
-	 * and due to that, no copy will be created, which will improve performance.
-	 * <p>
-	 * By default, no copies are created to not hurt performance. When enabled,
-	 * criteria query objects are copied, as required by the JPA specification.
-	 *
-	 * @since 6.0
-	 */
-	String JPA_CRITERIA_COPY_COMPLIANCE = "hibernate.jpa.compliance.criteria_copy";
 
 	/**
 	 * Determines if the identifier value stored in the database table backing a

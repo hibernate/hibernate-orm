@@ -332,9 +332,9 @@ public interface SharedSessionContractImplementor
 
 	void setCacheMode(CacheMode cm);
 
-	void setJpaCriteriaCopyComplianceEnabled(boolean jpaCriteriaCopyComplianceEnabled);
+	void setCriteriaCopyTreeEnabled(boolean jpaCriteriaCopyComplianceEnabled);
 
-	boolean isJpaCriteriaCopyComplianceEnabled();
+	boolean isCriteriaCopyTreeEnabled();
 
 	/**
 	 * Set the flush mode for this session.

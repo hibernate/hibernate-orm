@@ -26,7 +26,6 @@ import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
-import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
@@ -89,6 +88,7 @@ public class EntityManagerFactoryExtension
 		pui.setExcludeUnlistedClasses( emfAnn.excludeUnlistedClasses() );
 
 		// JpaCompliance
+		pui.getProperties().put( AvailableSettings.JPA_COMPLIANCE, emfAnn.jpaComplianceEnabled() );
 		pui.getProperties().put( AvailableSettings.JPA_QUERY_COMPLIANCE, emfAnn.queryComplianceEnabled() );
 		pui.getProperties().put( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, emfAnn.transactionComplianceEnabled() );
 		pui.getProperties().put( AvailableSettings.JPA_LIST_COMPLIANCE, emfAnn.listMappingComplianceEnabled() );
@@ -98,7 +98,6 @@ public class EntityManagerFactoryExtension
 		pui.getProperties().put( AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, emfAnn.generatorScopeComplianceEnabled() );
 		pui.getProperties().put( AvailableSettings.JPA_ORDER_BY_MAPPING_COMPLIANCE, emfAnn.orderByMappingComplianceEnabled() );
 		pui.getProperties().put( AvailableSettings.JPA_LOAD_BY_ID_COMPLIANCE, emfAnn.loadByIdComplianceEnabled() );
-		pui.getProperties().put( AvailableSettings.JPA_CRITERIA_COPY_COMPLIANCE, emfAnn.criteriaCopyComplianceEnabled() );
 
 		final Setting[] properties = emfAnn.properties();
 		for ( int i = 0; i < properties.length; i++ ) {

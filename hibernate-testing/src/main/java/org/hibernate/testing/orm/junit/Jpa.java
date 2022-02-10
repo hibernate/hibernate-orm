@@ -64,6 +64,11 @@ public @interface Jpa {
 	ValidationMode validationMode() default ValidationMode.NONE;
 
 	/**
+	 * @see org.hibernate.cfg.AvailableSettings#JPA_COMPLIANCE
+	 */
+	boolean jpaComplianceEnabled() default false;
+
+	/**
 	 * @see JpaCompliance#isJpaQueryComplianceEnabled()
 	 */
 	boolean queryComplianceEnabled() default false;
@@ -108,11 +113,6 @@ public @interface Jpa {
 	 * @see JpaCompliance#isLoadByIdComplianceEnabled()
 	 */
 	boolean loadByIdComplianceEnabled() default false;
-
-	/**
-	 * @see JpaCompliance#isLoadByIdComplianceEnabled()
-	 */
-	boolean criteriaCopyComplianceEnabled() default false;
 
 	boolean excludeUnlistedClasses() default false;
 

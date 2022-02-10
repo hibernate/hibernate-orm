@@ -379,6 +379,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isCriteriaCopyTreeEnabled() {
+		return delegate.isCriteriaCopyTreeEnabled();
+	}
+
+	@Override
 	public JpaCompliance getJpaCompliance() {
 		return delegate.getJpaCompliance();
 	}

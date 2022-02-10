@@ -26,7 +26,6 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	private boolean closedCompliance;
 	private boolean cachingCompliance;
 	private boolean loadByIdCompliance;
-	private boolean criteriaCopyCompliance;
 
 	public MutableJpaComplianceImpl(Map configurationSettings) {
 		this(
@@ -93,12 +92,6 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 				configurationSettings,
 				jpaByDefault
 		);
-
-		criteriaCopyCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_CRITERIA_COPY_COMPLIANCE,
-				configurationSettings,
-				jpaByDefault
-		);
 	}
 
 	@Override
@@ -144,11 +137,6 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	@Override
 	public boolean isLoadByIdComplianceEnabled() {
 		return loadByIdCompliance;
-	}
-
-	@Override
-	public boolean isJpaCriteriaCopyComplianceEnabled() {
-		return criteriaCopyCompliance;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -199,11 +187,6 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	}
 
 	@Override
-	public void setJpaCriteriaCopyComplianceEnabled(boolean jpaCriteriaCopyComplianceEnabled) {
-		this.criteriaCopyCompliance = jpaCriteriaCopyComplianceEnabled;
-	}
-
-	@Override
 	public JpaCompliance immutableCopy() {
 		JpaComplianceImpl.JpaComplianceBuilder builder = new JpaComplianceImpl.JpaComplianceBuilder();
 		builder = builder.setListCompliance( listCompliance )
@@ -214,8 +197,7 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 				.setTransactionCompliance( transactionCompliance )
 				.setClosedCompliance( closedCompliance )
 				.setCachingCompliance( cachingCompliance )
-				.setLoadByIdCompliance( loadByIdCompliance )
-				.setJpaCriteriaCopyComplianceEnabled( criteriaCopyCompliance );
+				.setLoadByIdCompliance( loadByIdCompliance );
 		return builder.createJpaCompliance();
 	}
 }

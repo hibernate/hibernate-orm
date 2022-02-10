@@ -233,8 +233,18 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	TimeZone getJdbcTimeZone();
 
+	/**
+	 * @see org.hibernate.cfg.AvailableSettings#CRITERIA_VALUE_HANDLING_MODE
+	 */
 	default ValueHandlingMode getCriteriaValueHandlingMode() {
 		return ValueHandlingMode.BIND;
+	}
+
+	/**
+	 * @see org.hibernate.cfg.AvailableSettings#CRITERIA_COPY_TREE
+	 */
+	default boolean isCriteriaCopyTreeEnabled() {
+		return false;
 	}
 
 	JpaCompliance getJpaCompliance();

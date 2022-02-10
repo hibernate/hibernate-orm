@@ -58,9 +58,4 @@ public class JpaComplianceStub implements JpaCompliance {
 	public boolean isLoadByIdComplianceEnabled() {
 		return false;
 	}
-
-	@Override
-	public boolean isJpaCriteriaCopyComplianceEnabled() {
-		return false;
-	}
 }

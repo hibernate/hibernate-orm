@@ -54,7 +54,6 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.SqmSelectionQuery;
 import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
-import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
@@ -157,7 +156,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 			SharedSessionContractImplementor session) {
 		super( session );
 		this.hql = CRITERIA_HQL_STRING;
-		if ( session.isJpaCriteriaCopyComplianceEnabled() ) {
+		if ( session.isCriteriaCopyTreeEnabled() ) {
 			this.sqm = criteria.copy( SqmCopyContext.simpleContext() );
 		}
 		else {

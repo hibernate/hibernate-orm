@@ -28,7 +28,5 @@ public interface MutableJpaCompliance extends JpaCompliance {
 
 	void setLoadByIdCompliance(boolean enabled);
 
-	void setJpaCriteriaCopyComplianceEnabled(boolean jpaCriteriaCopyComplianceEnabled);
-
 	JpaCompliance immutableCopy();
 }

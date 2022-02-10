@@ -214,7 +214,7 @@ public class QuerySqmImpl<R>
 			SharedSessionContractImplementor producer) {
 		super( producer );
 		this.hql = CRITERIA_HQL_STRING;
-		if ( producer.isJpaCriteriaCopyComplianceEnabled() ) {
+		if ( producer.isCriteriaCopyTreeEnabled() ) {
 			this.sqm = criteria.copy( SqmCopyContext.simpleContext() );
 		}
 		else {
@@ -1010,7 +1010,7 @@ public class QuerySqmImpl<R>
 	public NamedQueryMemento toMemento(String name) {
 		if ( CRITERIA_HQL_STRING.equals( getQueryString() ) ) {
 			final SqmStatement sqmStatement ;
-			if ( !getSession().isJpaCriteriaCopyComplianceEnabled() ) {
+			if ( !getSession().isCriteriaCopyTreeEnabled() ) {
 				sqmStatement = getSqmStatement().copy( SqmCopyContext.simpleContext() );
 			}
 			else {

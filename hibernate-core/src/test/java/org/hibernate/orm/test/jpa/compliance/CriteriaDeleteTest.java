@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Jpa(
 		annotatedClasses = CriteriaDeleteTest.Person.class,
-		criteriaCopyComplianceEnabled = true
+		jpaComplianceEnabled = true
 )
 public class CriteriaDeleteTest {
 

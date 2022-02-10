@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Jpa(
 		annotatedClasses = NamedQueryTest.Person.class,
-		properties = @Setting(name = AvailableSettings.JPA_CRITERIA_COPY_COMPLIANCE, value = "true")
+		properties = @Setting(name = AvailableSettings.CRITERIA_COPY_TREE, value = "true")
 )
 public class NamedQueryTest {
 

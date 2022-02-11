@@ -18,7 +18,7 @@
 
 	<class name="Product" table="t_product">
 		<id name="name"/>
-		<set name="parts" cascade="all,delete-orphan" fetch="join">
+		<set name="parts" cascade="all,delete-orphan" fetch="join" lazy="false">
 			<key column="productName" not-null="true"/>
 			<one-to-many class="Part"/>
 		</set>

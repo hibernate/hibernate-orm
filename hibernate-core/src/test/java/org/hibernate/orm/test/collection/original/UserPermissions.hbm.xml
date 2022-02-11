@@ -29,7 +29,7 @@
 				<property name="type" column="permissionType"/>
 			</composite-element>
 		</list>
-		<list name="emailAddresses" fetch="join">
+		<list name="emailAddresses" fetch="join" lazy="false">
 			<key column="userName"/>
 			<list-index column="displayOrder" base="1"/>
 			<composite-element class="Email">

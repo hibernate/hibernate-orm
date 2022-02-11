@@ -126,6 +126,25 @@ public final class FetchOptionsHelper {
 		}
 	}
 
+	public static FetchTiming determineFetchTiming(
+			FetchStyle style,
+			AssociationType type,
+			boolean lazy,
+			SessionFactoryImplementor sessionFactory) {
+		switch ( style ) {
+			case JOIN: {
+				return lazy ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE;
+			}
+			case BATCH:
+			case SUBSELECT:
+			default: {
+				return isSubsequentSelectDelayed( type, sessionFactory )
+						? FetchTiming.DELAYED
+						: FetchTiming.IMMEDIATE;
+			}
+		}
+	}
+
 	private static boolean isSubsequentSelectDelayed(AssociationType type, SessionFactoryImplementor sessionFactory) {
 		if ( type.isAnyType() ) {
 			// we'd need more context here.  this is only kept as part of the property state on the owning entity

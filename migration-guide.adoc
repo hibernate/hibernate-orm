@@ -700,3 +700,10 @@ The SQL generation is now fully handled through the `SqlAstTranslator` which a `
 Legacy `hbm.xml` mapping format is considered deprecated and will no longer supported beyond 6.x.
 
 
+== Association laziness now respected
+
+Prior to Hibernate 6.0, lazy associations that used `fetch="join"` or `@Fetch(FetchMode.JOIN)` were considered eager
+when loaded by-id i.e. through `Session#get`/`EntityManager#find`, even though for queries the association was treated as lazy.
+
+Starting with Hibernate 6.0, the laziness of such associations is properly respected, regardless of the fetch mechanism.
+Backwards compatibility can be achieved by specifying `lazy="false"` or `@ManyToOne(fetch = EAGER)`/`@OneToOne(fetch = EAGER)`/`@OneToMany(fetch = EAGER)`/`@ManyToMany(fetch = EAGER)`.

@@ -28,10 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SessionFactory
 public class TypedManyToOneTest {
 	@Test
-	@NotImplementedYet(
-			strict = false,
-			reason = "fetch=\"join\" in `hbm.xml` mappings for collection (lazy v. eager)"
-	)
 	public void testCreateQuery(SessionFactoryScope scope) {
 		final Customer cust = new Customer();
 		cust.setCustomerId("abc123");

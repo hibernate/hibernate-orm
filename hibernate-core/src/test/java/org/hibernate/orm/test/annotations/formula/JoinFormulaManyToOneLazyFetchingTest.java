@@ -91,15 +91,9 @@ public class JoinFormulaManyToOneLazyFetchingTest extends BaseEntityManagerFunct
 			assertEquals( 2, stocks.size() );
 			assertEquals( "ABC", stocks.get( 0 ).getCode().getRefNumber() );
 
-			try {
-				stocks.get( 1 ).getCode().getRefNumber();
-
-				fail( "Should have thrown EntityNotFoundException" );
-			}
-			catch (EntityNotFoundException expected) {
-
-			}
-
+			// In 5.x, for some reason, we didn't understand that a component is a FK,
+			// hence a partial null was wrongly handled, but in 6.0 we handle this in a unified way
+			assertNull( stocks.get( 1 ).getCode() );
 		} );
 	}
 

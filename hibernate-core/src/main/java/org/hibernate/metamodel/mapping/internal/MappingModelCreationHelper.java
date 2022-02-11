@@ -754,6 +754,7 @@ public class MappingModelCreationHelper {
 		final FetchTiming timing = FetchOptionsHelper.determineFetchTiming(
 				style,
 				collectionDescriptor.getCollectionType(),
+				collectionDescriptor.isLazy(),
 				sessionFactory
 		);
 
@@ -1583,23 +1584,22 @@ public class MappingModelCreationHelper {
 			final boolean lazy = value.isLazy();
 			if ( lazy && entityPersister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
 				if ( value.isUnwrapProxy() ) {
-					fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, sessionFactory );
+					fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, lazy, sessionFactory );
 				}
 				else if ( value instanceof ManyToOne && value.isNullable() && ( (ManyToOne) value ).isIgnoreNotFound() ) {
 					fetchTiming = FetchTiming.IMMEDIATE;
 				}
 				else {
-					fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, sessionFactory );
+					fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, lazy, sessionFactory );
 				}
 			}
-			else if ( fetchStyle == FetchStyle.JOIN
-					|| !lazy
+			else if ( !lazy
 					|| value instanceof OneToOne && value.isNullable()
 					|| value instanceof ManyToOne && value.isNullable() && ( (ManyToOne) value ).isIgnoreNotFound() ) {
 				fetchTiming = FetchTiming.IMMEDIATE;
 			}
 			else {
-				fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, sessionFactory );
+				fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, lazy, sessionFactory );
 			}
 
 			final ToOneAttributeMapping attributeMapping = new ToOneAttributeMapping(

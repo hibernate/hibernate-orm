@@ -806,6 +806,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	public Object getParameterValue(int position) {
+		getSession().checkOpen( false );
+
 		final QueryParameterImplementor<?> parameter = getParameterMetadata().getQueryParameter( position );
 		if ( parameter == null ) {
 			throw new IllegalArgumentException( "Could not resolve parameter by position - " + position );
@@ -825,6 +827,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 	@Override
 	public CommonQueryContract setParameter(String name, Object value) {
+		getSession().checkOpen( false );
+
 		if ( value instanceof TypedParameterValue ) {
 			@SuppressWarnings("unchecked")
 			final TypedParameterValue<Object> typedValue = (TypedParameterValue<Object>) value;

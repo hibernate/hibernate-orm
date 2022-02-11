@@ -33,7 +33,7 @@
 		    <one-to-many class="LineItem"/>
 	    </set>
 
-	    <set cascade="all" inverse="false" name="categories" fetch="join" table="PROD_CAT" >
+	    <set cascade="all" inverse="false" name="categories" fetch="join" lazy="false" table="PROD_CAT" >
 		    <key column="PROD_ID"/>
 		    <many-to-many class="Category" column="CAT_ID" fetch="join" >
 	            <filter name="effectiveDate" condition=":asOfDate BETWEEN eff_start_dt and eff_end_dt"/>

@@ -47,7 +47,7 @@
 
         <many-to-one name="person" column="PERS_ID" class="Person" cascade="all"/>
         <many-to-one name="oldPerson" column="OLD_PERS_ID" class="Person" cascade="all" fetch="select"/>
-        <many-to-one name="veryOldPerson" column="VERY_OLD_PERS_ID" class="Person" cascade="all" fetch="join"/>
+        <many-to-one name="veryOldPerson" column="VERY_OLD_PERS_ID" class="Person" cascade="all" fetch="join" lazy="false"/>
 
     </class>
 

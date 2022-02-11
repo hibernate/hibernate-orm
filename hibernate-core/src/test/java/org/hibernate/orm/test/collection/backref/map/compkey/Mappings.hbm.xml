@@ -19,7 +19,7 @@
 
     <class name="Product" table="t_product">
         <id name="name"/>
-        <map name="parts" table="Parts" cascade="all,delete-orphan" fetch="join">
+        <map name="parts" table="Parts" cascade="all,delete-orphan" fetch="join" lazy="false">
             <key column="productName" not-null="true"/>
             <composite-map-key class="MapKey">
                 <key-property name="role" column="role_"/>

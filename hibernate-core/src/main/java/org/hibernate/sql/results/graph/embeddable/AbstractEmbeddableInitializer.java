@@ -254,6 +254,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 	private void extractRowState(RowProcessingState processingState) {
 		stateAllNull = true;
+		final boolean isKey = ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
+				|| EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( embedded.getFetchableName() );
 		for ( int i = 0; i < assemblers.size(); i++ ) {
 			final DomainResultAssembler<?> assembler = assemblers.get( i );
 			final Object contributorValue = assembler.assemble(
@@ -264,6 +266,11 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			rowState[i] = contributorValue;
 			if ( contributorValue != null ) {
 				stateAllNull = false;
+			}
+			else if ( isKey ) {
+				// If this is a foreign key and there is a null part, the whole thing has to be turned into null
+				stateAllNull = true;
+				break;
 			}
 		}
 

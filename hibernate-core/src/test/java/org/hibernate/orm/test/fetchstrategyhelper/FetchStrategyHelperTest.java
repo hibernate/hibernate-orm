@@ -22,7 +22,7 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
-import org.hibernate.persister.walking.internal.FetchOptionsHelper;
+import org.hibernate.metamodel.mapping.internal.FetchOptionsHelper;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.AssociationType;
 

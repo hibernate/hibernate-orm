@@ -37,7 +37,6 @@ public abstract class AbstractNonIdentifierAttribute extends AbstractAttribute i
 		this.attributeInformation = attributeInformation;
 	}
 
-	@Override
 	public AttributeSource getSource() {
 		return source();
 	}

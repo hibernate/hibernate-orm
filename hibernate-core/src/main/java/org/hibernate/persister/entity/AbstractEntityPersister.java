@@ -196,9 +196,6 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.persister.walking.internal.EntityIdentifierDefinitionHelper;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
-import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.Setter;
@@ -4056,7 +4053,6 @@ public abstract class AbstractEntityPersister
 		initPropertyPaths( mapping );
 
 		//doLateInit();
-		prepareEntityIdentifierDefinition();
 	}
 
 	private void doLateInit() {
@@ -6526,17 +6522,6 @@ public abstract class AbstractEntityPersister
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// EntityDefinition impl (walking model - deprecated)
 
-	private EntityIdentifierDefinition entityIdentifierDefinition;
-	private final SortedSet<AttributeDefinition> attributeDefinitions = new TreeSet<>(
-			Comparator.comparing( AttributeDefinition::getName )
-	);
-
-	@Override
-	public void generateEntityDefinition() {
-		prepareEntityIdentifierDefinition();
-		collectAttributeDefinitions();
-	}
-
 	@Override
 	public int getJdbcTypeCount() {
 		return getIdentifierMapping().getJdbcTypeCount();
@@ -6595,173 +6580,6 @@ public abstract class AbstractEntityPersister
 				consumer,
 				session
 		);
-	}
-
-	@Override
-	public EntityIdentifierDefinition getEntityKeyDefinition() {
-		return entityIdentifierDefinition;
-	}
-
-	@Override
-	public Iterable<AttributeDefinition> getAttributes() {
-		return attributeDefinitions;
-	}
-
-	private void prepareEntityIdentifierDefinition() {
-		if ( entityIdentifierDefinition != null ) {
-			return;
-		}
-		final Type idType = getIdentifierType();
-
-		if ( !idType.isComponentType() ) {
-			entityIdentifierDefinition =
-					EntityIdentifierDefinitionHelper.buildSimpleEncapsulatedIdentifierDefinition( this );
-			return;
-		}
-
-		final CompositeType cidType = (CompositeType) idType;
-		if ( !cidType.isEmbedded() ) {
-			entityIdentifierDefinition =
-					EntityIdentifierDefinitionHelper.buildEncapsulatedCompositeIdentifierDefinition( this );
-			return;
-		}
-
-		entityIdentifierDefinition =
-				EntityIdentifierDefinitionHelper.buildNonEncapsulatedCompositeIdentifierDefinition( this );
-	}
-
-	private void collectAttributeDefinitions(
-			Map<String, AttributeDefinition> attributeDefinitionsByName,
-			EntityMetamodel metamodel) {
-		for ( int i = 0; i < metamodel.getPropertySpan(); i++ ) {
-			final AttributeDefinition attributeDefinition = metamodel.getProperties()[i];
-			// Don't replace an attribute definition if it is already in attributeDefinitionsByName
-			// because the new value will be from a subclass.
-			final AttributeDefinition oldAttributeDefinition = attributeDefinitionsByName.get(
-					attributeDefinition.getName()
-			);
-			if ( oldAttributeDefinition != null ) {
-				if ( LOG.isTraceEnabled() ) {
-					LOG.tracef(
-							"Ignoring subclass attribute definition [%s.%s] because it is defined in a superclass ",
-							entityMetamodel.getName(),
-							attributeDefinition.getName()
-					);
-				}
-			}
-			else {
-				attributeDefinitionsByName.put( attributeDefinition.getName(), attributeDefinition );
-			}
-		}
-
-		// see if there are any subclass persisters...
-		final Set<String> subClassEntityNames = metamodel.getSubclassEntityNames();
-		if ( subClassEntityNames == null ) {
-			return;
-		}
-
-		// see if we can find the persisters...
-		for ( String subClassEntityName : subClassEntityNames ) {
-			if ( metamodel.getName().equals( subClassEntityName ) ) {
-				// skip it
-				continue;
-			}
-			try {
-				final EntityPersister subClassEntityPersister = factory.getRuntimeMetamodels()
-						.getMappingMetamodel()
-						.getEntityDescriptor( subClassEntityName );
-				collectAttributeDefinitions( attributeDefinitionsByName, subClassEntityPersister.getEntityMetamodel() );
-			}
-			catch (MappingException e) {
-				throw new IllegalStateException(
-						String.format(
-								"Could not locate subclass EntityPersister [%s] while processing EntityPersister [%s]",
-								subClassEntityName,
-								metamodel.getName()
-						),
-						e
-				);
-			}
-		}
-	}
-
-	private void collectAttributeDefinitions() {
-		// todo : I think this works purely based on luck atm
-		// 		specifically in terms of the sub/super class entity persister(s) being available.  Bit of chicken-egg
-		// 		problem there:
-		//			* If I do this during postConstruct (as it is now), it works as long as the
-		//			super entity persister is already registered, but I don't think that is necessarily true.
-		//			* If I do this during postInstantiate then lots of stuff in postConstruct breaks if we want
-		//			to try and drive SQL generation on these (which we do ultimately).  A possible solution there
-		//			would be to delay all SQL generation until postInstantiate
-
-		Map<String, AttributeDefinition> attributeDefinitionsByName = new LinkedHashMap<>();
-		collectAttributeDefinitions( attributeDefinitionsByName, getEntityMetamodel() );
-
-
-//		EntityMetamodel currentEntityMetamodel = this.getEntityMetamodel();
-//		while ( currentEntityMetamodel != null ) {
-//			for ( int i = 0; i < currentEntityMetamodel.getPropertySpan(); i++ ) {
-//				attributeDefinitions.add( currentEntityMetamodel.getProperties()[i] );
-//			}
-//			// see if there is a super class EntityMetamodel
-//			final String superEntityName = currentEntityMetamodel.getSuperclass();
-//			if ( superEntityName != null ) {
-//				currentEntityMetamodel = factory.getEntityPersister( superEntityName ).getEntityMetamodel();
-//			}
-//			else {
-//				currentEntityMetamodel = null;
-//			}
-//		}
-
-//		// todo : leverage the attribute definitions housed on EntityMetamodel
-//		// 		for that to work, we'd have to be able to walk our super entity persister(s)
-//		this.attributeDefinitions = new Iterable<AttributeDefinition>() {
-//			@Override
-//			public Iterator<AttributeDefinition> iterator() {
-//				return new Iterator<AttributeDefinition>() {
-////					private final int numberOfAttributes = countSubclassProperties();
-////					private final int numberOfAttributes = entityMetamodel.getPropertySpan();
-//
-//					EntityMetamodel currentEntityMetamodel = entityMetamodel;
-//					int numberOfAttributesInCurrentEntityMetamodel = currentEntityMetamodel.getPropertySpan();
-//
-//					private int currentAttributeNumber;
-//
-//					@Override
-//					public boolean hasNext() {
-//						return currentEntityMetamodel != null
-//								&& currentAttributeNumber < numberOfAttributesInCurrentEntityMetamodel;
-//					}
-//
-//					@Override
-//					public AttributeDefinition next() {
-//						final int attributeNumber = currentAttributeNumber;
-//						currentAttributeNumber++;
-//						final AttributeDefinition next = currentEntityMetamodel.getProperties()[ attributeNumber ];
-//
-//						if ( currentAttributeNumber >= numberOfAttributesInCurrentEntityMetamodel ) {
-//							// see if there is a super class EntityMetamodel
-//							final String superEntityName = currentEntityMetamodel.getSuperclass();
-//							if ( superEntityName != null ) {
-//								currentEntityMetamodel = factory.getEntityPersister( superEntityName ).getEntityMetamodel();
-//								if ( currentEntityMetamodel != null ) {
-//									numberOfAttributesInCurrentEntityMetamodel = currentEntityMetamodel.getPropertySpan();
-//									currentAttributeNumber = 0;
-//								}
-//							}
-//						}
-//
-//						return next;
-//					}
-//
-//					@Override
-//					public void remove() {
-//						throw new UnsupportedOperationException( "Remove operation not supported here" );
-//					}
-//				};
-//			}
-//		};
 	}
 
 	protected Insert createInsert() {

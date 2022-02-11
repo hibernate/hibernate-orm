@@ -88,17 +88,6 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.persister.walking.internal.CompositionSingularSubAttributesHelper;
-import org.hibernate.persister.walking.internal.StandardAnyTypeDefinition;
-import org.hibernate.persister.walking.spi.AnyMappingDefinition;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
-import org.hibernate.persister.walking.spi.AttributeSource;
-import org.hibernate.persister.walking.spi.CollectionDefinition;
-import org.hibernate.persister.walking.spi.CollectionElementDefinition;
-import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
-import org.hibernate.persister.walking.spi.CompositeCollectionElementDefinition;
-import org.hibernate.persister.walking.spi.CompositionDefinition;
-import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.named.NamedQueryMemento;
@@ -123,8 +112,6 @@ import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.type.AnyType;
-import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
@@ -2268,185 +2255,9 @@ public abstract class AbstractCollectionPersister
 		return mappedByProperty;
 	}
 
-//	private class StandardOrderByAliasResolver implements OrderByAliasResolver {
-//		private final String rootAlias;
-//
-//		private StandardOrderByAliasResolver(String rootAlias) {
-//			this.rootAlias = rootAlias;
-//		}
-//
-//		@Override
-//		public String resolveTableAlias(String columnReference) {
-//			if ( elementPersister == null ) {
-//				// we have collection of non-entity elements...
-//				return rootAlias;
-//			}
-//			else {
-//				return ( (Loadable) elementPersister ).getTableAliasForColumn( columnReference, rootAlias );
-//			}
-//		}
-//	}
-
 	public abstract FilterAliasGenerator getFilterAliasGenerator(String rootAlias);
 
 	public abstract FilterAliasGenerator getFilterAliasGenerator(TableGroup tableGroup);
-
-	// ColectionDefinition impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public CollectionPersister getCollectionPersister() {
-		return this;
-	}
-
-	@Override
-	public CollectionIndexDefinition getIndexDefinition() {
-		if ( ! hasIndex() ) {
-			return null;
-		}
-
-		return new CollectionIndexDefinition() {
-			@Override
-			public CollectionDefinition getCollectionDefinition() {
-				return AbstractCollectionPersister.this;
-			}
-
-			@Override
-			public Type getType() {
-				return getIndexType();
-			}
-
-			@Override
-			public EntityDefinition toEntityDefinition() {
-				if ( !getType().isEntityType() ) {
-					throw new IllegalStateException( "Cannot treat collection index type as entity" );
-				}
-				return (EntityPersister) ( (AssociationType) getIndexType() ).getAssociatedJoinable( getFactory() );
-			}
-
-			@Override
-			public CompositionDefinition toCompositeDefinition() {
-				if ( ! getType().isComponentType() ) {
-					throw new IllegalStateException( "Cannot treat collection index type as composite" );
-				}
-				return new CompositeCollectionElementDefinition() {
-					@Override
-					public String getName() {
-						return "index";
-					}
-
-					@Override
-					public CompositeType getType() {
-						return (CompositeType) getIndexType();
-					}
-
-					@Override
-					public boolean isNullable() {
-						return false;
-					}
-
-					@Override
-					public AttributeSource getSource() {
-						// TODO: what if this is a collection w/in an encapsulated composition attribute?
-						// should return the encapsulated composition attribute instead???
-						return getOwnerEntityPersister();
-					}
-
-					@Override
-					public Iterable<AttributeDefinition> getAttributes() {
-						return CompositionSingularSubAttributesHelper.getCompositeCollectionIndexSubAttributes( this );
-					}
-					@Override
-					public CollectionDefinition getCollectionDefinition() {
-						return AbstractCollectionPersister.this;
-					}
-				};
-			}
-
-			@Override
-			public AnyMappingDefinition toAnyMappingDefinition() {
-				final Type type = getType();
-				if ( ! type.isAnyType() ) {
-					throw new IllegalStateException( "Cannot treat collection index type as ManyToAny" );
-				}
-				return new StandardAnyTypeDefinition( (AnyType) type, isLazy() || isExtraLazy() );
-			}
-		};
-	}
-
-	@Override
-	public CollectionElementDefinition getElementDefinition() {
-		return new CollectionElementDefinition() {
-			@Override
-			public CollectionDefinition getCollectionDefinition() {
-				return AbstractCollectionPersister.this;
-			}
-
-			@Override
-			public Type getType() {
-				return getElementType();
-			}
-
-			@Override
-			public AnyMappingDefinition toAnyMappingDefinition() {
-				final Type type = getType();
-				if ( ! type.isAnyType() ) {
-					throw new IllegalStateException( "Cannot treat collection element type as ManyToAny" );
-				}
-				return new StandardAnyTypeDefinition( (AnyType) type, isLazy() || isExtraLazy() );
-			}
-
-			@Override
-			public EntityDefinition toEntityDefinition() {
-				if ( !getType().isEntityType() ) {
-					throw new IllegalStateException( "Cannot treat collection element type as entity" );
-				}
-				return getElementPersister();
-			}
-
-			@Override
-			public CompositeCollectionElementDefinition toCompositeElementDefinition() {
-
-				if ( ! getType().isComponentType() ) {
-					throw new IllegalStateException( "Cannot treat entity collection element type as composite" );
-				}
-
-				return new CompositeCollectionElementDefinition() {
-					@Override
-					public String getName() {
-						return "";
-					}
-
-					@Override
-					public CompositeType getType() {
-						return (CompositeType) getElementType();
-					}
-
-					@Override
-					public boolean isNullable() {
-						return false;
-					}
-
-					@Override
-					public AttributeSource getSource() {
-						// TODO: what if this is a collection w/in an encapsulated composition attribute?
-						// should return the encapsulated composition attribute instead???
-						return getOwnerEntityPersister();
-					}
-
-					@Override
-					public Iterable<AttributeDefinition> getAttributes() {
-						return CompositionSingularSubAttributesHelper.getCompositeCollectionElementSubAttributes( this );
-					}
-
-					@Override
-					public CollectionDefinition getCollectionDefinition() {
-						return AbstractCollectionPersister.this;
-					}
-				};
-			}
-		};
-	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// "mapping model"

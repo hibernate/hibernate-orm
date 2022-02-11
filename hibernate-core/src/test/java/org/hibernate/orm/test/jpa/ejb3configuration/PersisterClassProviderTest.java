@@ -56,8 +56,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.internal.PersisterClassResolverInitiator;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
-import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
@@ -130,10 +128,6 @@ public class PersisterClassProviderTest {
 		@Override
 		public BytecodeEnhancementMetadata getInstrumentationMetadata() {
 			return new BytecodeEnhancementMetadataNonPojoImpl( getEntityName() );
-		}
-
-		@Override
-		public void generateEntityDefinition() {
 		}
 
 		@Override
@@ -712,16 +706,6 @@ public class PersisterClassProviderTest {
 		@Override
 		public EntityPersister getEntityPersister() {
 			return this;
-		}
-
-		@Override
-		public EntityIdentifierDefinition getEntityKeyDefinition() {
-			return null;
-		}
-
-		@Override
-		public Iterable<AttributeDefinition> getAttributes() {
-			return null;
 		}
 
 		@Override

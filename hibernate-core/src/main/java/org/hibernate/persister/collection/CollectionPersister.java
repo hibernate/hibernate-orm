@@ -30,7 +30,6 @@ import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -86,7 +85,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public interface CollectionPersister extends CollectionDefinition, Restrictable {
+public interface CollectionPersister extends Restrictable {
 	NavigableRole getNavigableRole();
 
 	/**

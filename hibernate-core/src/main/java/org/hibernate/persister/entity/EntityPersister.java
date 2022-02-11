@@ -38,7 +38,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
-import org.hibernate.persister.walking.spi.EntityDefinition;
+import org.hibernate.persister.walking.spi.AttributeSource;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
@@ -99,23 +99,12 @@ import org.hibernate.type.descriptor.java.VersionJavaType;
  * @see org.hibernate.persister.spi.PersisterClassResolver
  */
 public interface EntityPersister
-		extends EntityMappingType, Loadable, RootTableGroupProducer, EntityDefinition {
+		extends EntityMappingType, Loadable, RootTableGroupProducer, AttributeSource {
 
 	/**
 	 * The property name of the "special" identifier property in HQL
 	 */
 	String ENTITY_ID = "id";
-
-	/**
-	 * Generate the entity definition for this object. This must be done for all
-	 * entity persisters before calling {@link #postInstantiate()}.
-	 *
-	 * @deprecated The legacy "walking model" is deprecated in favor of the newer "mapping model".
-	 * This method is no longer called by Hibernate.
-	 * See {@link InFlightEntityMappingType#prepareMappingModel} instead
-	 */
-	@Deprecated(since = "6.0")
-	void generateEntityDefinition();
 
 	/**
 	 * Finish the initialization of this object. {@link InFlightEntityMappingType#prepareMappingModel}

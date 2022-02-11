@@ -7,29 +7,32 @@
 package org.hibernate.orm.test.notfound.exception;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
 
+import org.hibernate.FetchNotFoundException;
 import org.hibernate.Hibernate;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.resource.jdbc.spi.StatementInspector;
 
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import org.assertj.core.api.Assertions;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Tests for `@ManyToOne @NotFound(EXCEPTION)`
@@ -41,11 +44,14 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
-public class NotFoundExceptionManyToOneTest extends BaseCoreFunctionalTestCase {
+@DomainModel( annotatedClasses = { NotFoundExceptionManyToOneTest.Coin.class, NotFoundExceptionManyToOneTest.Currency.class } )
+@SessionFactory( useCollectingStatementInspector = true )
+public class NotFoundExceptionManyToOneTest {
 
 	@Test
-	public void testProxy() {
-		inTransaction( (session) -> {
+	@JiraKey( "HHH-15060" )
+	public void testProxy(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
 			// the non-existent Child
 			final Currency proxy = session.byId( Currency.class ).getReference( 1 );
 			try {
@@ -60,148 +66,130 @@ public class NotFoundExceptionManyToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(
-			jiraKey = "HHH-15060",
-			message = "ObjectNotFoundException is thrown but caught and null is returned - see " +
-					"org.hibernate.internal.SessionImpl.IdentifierLoadAccessImpl#doLoad"
-	)
-	public void testGet() {
-		inTransaction( (session) -> {
+	@JiraKey( "HHH-15060" )
+	public void testGet(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		scope.inTransaction( (session) -> {
 			try {
+				// should fail here loading the Coin due to missing currency (see NOTE#1)
 				final Coin coin = session.get( Coin.class, 1 );
-				coin.getCurrency().getName();
-				fail( "Expecting ObjectNotFoundException for broken fk" );
+				fail( "Expecting FetchNotFoundException for broken fk" );
 			}
-			catch (ObjectNotFoundException expected) {
+			catch (FetchNotFoundException expected) {
 				assertThat( expected.getEntityName() ).isEqualTo( Currency.class.getName() );
 				assertThat( expected.getIdentifier() ).isEqualTo( 1 );
+
+				// atm, 5.x generates 2 selects here; which wouldn't be bad, except that
+				// the first one contains a join
+				//
+				// what "should" happen
+//				assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+//				assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+//				assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
+				// what actually happens
+				assertThat( statementInspector.getSqlQueries() ).hasSize( 2 );
+				assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Coin " );
+				assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+				assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Currency " );
+				assertThat( statementInspector.getSqlQueries().get( 1 ) ).doesNotContain( " Coin " );
 			}
 		} );
 	}
 
 	@Test
-	@FailureExpected(
-			jiraKey = "HHH-15060",
-			message = "EntityNotFoundException thrown rather than ObjectNotFoundException; " +
-					"ObjectNotFoundException is thrown but caught and then converted to EntityNotFoundException"
-	)
-	public void testQueryImplicitPathDereferencePredicate() {
+	@JiraKey( "HHH-15060" )
+	public void testQueryImplicitPathDereferencePredicate(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
-		inTransaction( (session) -> {
-			final String hql = "select c from Coin c where c.currency.id = 1";
+		scope.inTransaction( (session) -> {
+			try {
+				final String hql = "select c from Coin c where c.currency.id = 1";
+				session.createQuery( hql, Coin.class ).getResultList();
+
+				fail( "Expecting FetchNotFoundException for broken fk" );
+			}
+			catch (FetchNotFoundException expected) {
+				assertThat( expected.getEntityName() ).isEqualTo( Currency.class.getName() );
+				assertThat( expected.getIdentifier() ).isEqualTo( 1 );
+
+				// join may be better here.  but for now, 5.x generates 2 selects here
+				// which is not wrong
+//				assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+//				assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+//				assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
+				assertThat( statementInspector.getSqlQueries() ).hasSize( 2 );
+				assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " Currency " );
+				assertThat( statementInspector.getSqlQueries().get( 1 ) ).doesNotContain( " Coin " );
+			}
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-15060" )
+	public void testQueryOwnerSelection(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		scope.inTransaction( (session) -> {
+			final String hql = "select c from Coin c where c.id = 1";
 			try {
 				session.createQuery( hql, Coin.class ).getResultList();
 				fail( "Expecting ObjectNotFoundException for broken fk" );
 			}
-			catch (ObjectNotFoundException expected) {
+			catch (FetchNotFoundException expected) {
 				assertThat( expected.getEntityName() ).isEqualTo( Currency.class.getName() );
 				assertThat( expected.getIdentifier() ).isEqualTo( 1 );
+
+				// join may be better here.  but for now, 5.x generates 2 selects here
+				// which is not wrong
+//				assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+//				assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+//				assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
+				assertThat( statementInspector.getSqlQueries() ).hasSize( 2 );
+				assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " Currency " );
+				assertThat( statementInspector.getSqlQueries().get( 1 ) ).doesNotContain( " Coin " );
 			}
 		} );
 	}
 
 	@Test
-	@FailureExpected(
-			jiraKey = "HHH-15060",
-			message = "EntityNotFoundException thrown rather than ObjectNotFoundException; " +
-					"ObjectNotFoundException is thrown but caught and then converted to EntityNotFoundException"
-	)
-	public void testQueryOwnerSelection() {
-		statementInspector.clear();
-
-		inTransaction( (session) -> {
-			final String hql = "select c from Coin c";
-			try {
-				session.createQuery( hql, Coin.class ).getResultList();
-				fail( "Expecting ObjectNotFoundException for broken fk" );
-			}
-			catch (ObjectNotFoundException expected) {
-				assertThat( expected.getEntityName() ).isEqualTo( Currency.class.getName() );
-				assertThat( expected.getIdentifier() ).isEqualTo( 1 );
-			}
+	@JiraKey( "HHH-15060" )
+	public void testQueryAssociationSelection(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			final String hql = "select c.currency from Coin c where c.id = 1";
+			final List<Currency> currencies = session.createQuery( hql, Currency.class ).getResultList();
+			assertThat( currencies ).isEmpty();
 		} );
 	}
 
-	@Test
-	@FailureExpected(
-			jiraKey = "HHH-15060",
-			message = "This one is somewhat debatable.  Is this selecting the association?  Or simply matching Currencies?"
-	)
-	public void testQueryAssociationSelection() {
-		// NOTE: this one is not obvious
-		//		- we are selecting the association so from that perspective, throwing the ObjectNotFoundException is nice
-		//		- the other way to look at it is that there are simply no matching results, so nothing to return
-		statementInspector.clear();
-
-		inTransaction( (session) -> {
-			final String hql = "select c.currency from Coin c";
-			try {
-				session.createQuery( hql, Currency.class ).getResultList();
-				fail( "Expecting ObjectNotFoundException for broken fk" );
-			}
-			catch (ObjectNotFoundException expected) {
-				assertThat( expected.getEntityName() ).isEqualTo( Currency.class.getName() );
-				assertThat( expected.getIdentifier() ).isEqualTo( 1 );
-			}
-		} );
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Coin.class, Currency.class };
-	}
-
-	public static class CollectionStatementInspector implements StatementInspector {
-		private List<String> queries = new ArrayList<>();
-
-		@Override
-		public String inspect(String sql) {
-			queries.add( sql );
-			return sql;
-		}
-
-		public void clear() {
-			queries.clear();
-		}
-
-		public List<String> getQueries() {
-			return queries;
-		}
-	}
-
-	private final CollectionStatementInspector statementInspector = new CollectionStatementInspector();
-
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		configuration.getProperties().put( AvailableSettings.STATEMENT_INSPECTOR, statementInspector );
-	}
-
-	@Override
-	protected void prepareTest() throws Exception {
-		super.prepareTest();
-
-		inTransaction( (session) -> {
+	@BeforeEach
+	public void prepareTestData(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
 			Currency euro = new Currency( 1, "Euro" );
 			Coin fiveC = new Coin( 1, "Five cents", euro );
-
 			session.persist( euro );
 			session.persist( fiveC );
+
+			Currency usd = new Currency( 2, "USD" );
+			Coin penny = new Coin( 2, "Penny", usd );
+			session.persist( usd );
+			session.persist( penny );
 		} );
 
-		inTransaction( (session) -> {
+		scope.inTransaction( (session) -> {
 			session.createQuery( "delete Currency where id = 1" ).executeUpdate();
 		} );
 	}
 
-	@Override
-	protected void cleanupTest() throws Exception {
-		inTransaction( (session) -> {
-			session.createQuery( "delete Coin where id = 1" ).executeUpdate();
+	@AfterEach
+	public void cleanupTest(SessionFactoryScope scope) throws Exception {
+		scope.inTransaction( (session) -> {
+			session.createQuery( "delete Coin" ).executeUpdate();
+			session.createQuery( "delete Currency" ).executeUpdate();
 		} );
-
-		super.cleanupTest();
 	}
 
 	@Entity(name = "Coin")

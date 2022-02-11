@@ -28,9 +28,8 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 
 /**
  * @author Gail Badner
@@ -70,8 +69,12 @@ public class LazyNotFoundManyToOneNonUpdatableNonInsertableTest extends BaseCore
 		doInHibernate(
 				this::sessionFactory, session -> {
 					User user = session.find( User.class, ID );
-					assertFalse( Hibernate.isPropertyInitialized( user, "lazy" ) );
-					assertNull( user.getLazy() );
+					assertThat( Hibernate.isPropertyInitialized( user, "lazy" ) )
+							.describedAs( "Expecting `User#lazy to be (bytecode) initialized due to `@NotFound`" )
+							.isTrue();
+					assertThat( user.getLazy() )
+							.describedAs( "Expecting `User#lazy to null due to `NotFoundAction#IGNORE`" )
+							.isNull();
 				}
 		);
 	}

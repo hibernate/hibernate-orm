@@ -8,26 +8,34 @@ package org.hibernate.orm.test.notfound.ignore;
 
 import java.io.Serializable;
 import java.util.List;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.OneToOne;
 
+import org.hibernate.FetchNotFoundException;
 import org.hibernate.Hibernate;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.OneToOne;
+import javax.persistence.Tuple;
 import org.assertj.core.api.Assertions;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for `@ManyToOne @NotFound(IGNORE)`
+ * Tests for `@OneToOne @NotFound(IGNORE)`
  *
  * NOTES:<ol>
  *     <li>`@NotFound` should force the association to be eager - `Coin#currency` should be loaded immediately</li>
@@ -36,11 +44,14 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Steve Ebersole
  */
-public class NotFoundIgnoreOneToOneTest extends BaseCoreFunctionalTestCase {
+@DomainModel( annotatedClasses = { NotFoundIgnoreOneToOneTest.Coin.class, NotFoundIgnoreOneToOneTest.Currency.class } )
+@SessionFactory( useCollectingStatementInspector = true )
+public class NotFoundIgnoreOneToOneTest {
 
 	@Test
-	public void testProxy() {
-		inTransaction( (session) -> {
+	@JiraKey( "HHH-15060" )
+	public void testProxy(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
 			// the non-existent Child
 			// 	- this is the one valid deviation from treating the broken fk as null
 			try {
@@ -56,62 +67,89 @@ public class NotFoundIgnoreOneToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testGet() {
-		inTransaction( (session) -> {
-			final Coin coin = session.get( Coin.class, 1 );
-			assertThat( coin.getCurrency() ).isNull();
+	@JiraKey( "HHH-15060" )
+	public void testGet(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		scope.inTransaction( (session) -> {
+			try {
+				final Coin coin = session.get( Coin.class, 1 );
+			}
+			catch (FetchNotFoundException expected) {
+				// technically we could use a subsequent-select rather than a join...
+				assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+				assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+				assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
+			}
 		} );
 	}
 
 	@Test
-	@FailureExpected(
-			jiraKey = "HHH-15060",
-			message = "Bad results due to cross-join"
-	)
-	public void testQueryImplicitPathDereferencePredicate() {
-		inTransaction( (session) -> {
+	@JiraKey( "HHH-15060" )
+	@FailureExpected( reason = "No results due to bad join" )
+	public void testQueryImplicitPathDereferencePredicate(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		scope.inTransaction( (session) -> {
 			final String hql = "select c from Coin c where c.currency.id = 1";
 			final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
 			assertThat( coins ).hasSize( 1 );
 			assertThat( coins.get( 0 ).getCurrency() ).isNull();
+
+			// technically we could use a subsequent-select rather than a join...
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
 		} );
 	}
 
 	@Test
-	public void testQueryOwnerSelection() {
-		inTransaction( (session) -> {
+	@JiraKey( "HHH-15060" )
+	public void testQueryOwnerSelection(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		scope.inTransaction( (session) -> {
 			final String hql = "select c from Coin c";
 			final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
 			assertThat( coins ).hasSize( 1 );
 			assertThat( coins.get( 0 ).getCurrency() ).isNull();
+
+			// at the moment this uses a subsequent-select.  on the bright side, it is at least eagerly fetched.
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 2 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " from Coin " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " join " );
+			assertThat( statementInspector.getSqlQueries().get( 1 ) ).contains( " from Currency " );
+			assertThat( statementInspector.getSqlQueries().get( 1 ) ).doesNotContain( " join " );
 		} );
 	}
 
 	@Test
-	@FailureExpected(
-			jiraKey = "HHH-15060",
-			message = "Has zero results because of inner-join - the select w/ inner-join is executed twice for some odd reason"
-	)
-	public void testQueryAssociationSelection() {
-		inTransaction( (session) -> {
+	@JiraKey( "HHH-15060" )
+	@FailureExpected( reason = "No results because of join" )
+	public void testQueryAssociationSelection(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			final String hql = "select c.id, c.currency from Coin c";
+			final List<Tuple> tuples = session.createQuery( hql, Tuple.class ).getResultList();
+			assertThat( tuples ).hasSize( 1 );
+			final Tuple tuple = tuples.get( 0 );
+			assertThat( tuple.get( 0 ) ).isEqualTo( 1 );
+			assertThat( tuple.get( 1 ) ).isNull();
+		} );
+
+		scope.inTransaction( (session) -> {
 			final String hql = "select c.currency from Coin c";
-			session.createQuery( hql, Currency.class ).getResultList();
 			final List<Currency> currencies = session.createQuery( hql, Currency.class ).getResultList();
 			assertThat( currencies ).hasSize( 1 );
 			assertThat( currencies.get( 0 ) ).isNull();
 		} );
 	}
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Coin.class, Currency.class };
-	}
-
-	@Override
-	protected void prepareTest() throws Exception {
-		super.prepareTest();
-
-		inTransaction( (session) -> {
+	@BeforeEach
+	public void prepareTestData(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
 			Currency euro = new Currency( 1, "Euro" );
 			Coin fiveC = new Coin( 1, "Five cents", euro );
 
@@ -119,18 +157,16 @@ public class NotFoundIgnoreOneToOneTest extends BaseCoreFunctionalTestCase {
 			session.persist( fiveC );
 		} );
 
-		inTransaction( (session) -> {
+		scope.inTransaction( (session) -> {
 			session.createQuery( "delete Currency where id = 1" ).executeUpdate();
 		} );
 	}
 
-	@Override
-	protected void cleanupTest() throws Exception {
-		inTransaction( (session) -> {
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
 			session.createQuery( "delete Coin where id = 1" ).executeUpdate();
 		} );
-
-		super.cleanupTest();
 	}
 
 	@Entity(name = "Coin")

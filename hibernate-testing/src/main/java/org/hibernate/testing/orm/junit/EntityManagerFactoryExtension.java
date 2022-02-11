@@ -11,21 +11,15 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
+import javax.persistence.spi.PersistenceUnitInfo;
 
-import org.hibernate.SessionFactoryObserver;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.tool.schema.Action;
-import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
-import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.orm.domain.DomainModelDescriptor;
@@ -38,8 +32,6 @@ import org.junit.jupiter.api.extension.TestInstancePostProcessor;
 import org.junit.platform.commons.support.AnnotationSupport;
 
 import org.jboss.logging.Logger;
-
-import javax.persistence.spi.PersistenceUnitInfo;
 
 /**
  * hibernate-testing implementation of a few JUnit5 contracts to support SessionFactory-based testing,
@@ -89,7 +81,6 @@ public class EntityManagerFactoryExtension
 		// JpaCompliance
 		pui.getProperties().put( AvailableSettings.JPA_QUERY_COMPLIANCE, emfAnn.queryComplianceEnabled() );
 		pui.getProperties().put( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, emfAnn.transactionComplianceEnabled() );
-		pui.getProperties().put( AvailableSettings.JPA_LIST_COMPLIANCE, emfAnn.listMappingComplianceEnabled() );
 		pui.getProperties().put( AvailableSettings.JPA_CLOSED_COMPLIANCE, emfAnn.closedComplianceEnabled() );
 		pui.getProperties().put( AvailableSettings.JPA_PROXY_COMPLIANCE, emfAnn.proxyComplianceEnabled() );
 		pui.getProperties().put( AvailableSettings.JPA_CACHING_COMPLIANCE, emfAnn.cacheComplianceEnabled() );

@@ -106,7 +106,9 @@ public class ToOneFkSecondPass extends FkSecondPass {
 			/*
 			 * HbmMetadataSourceProcessorImpl does this only when property-ref != null, but IMO, it makes sense event if it is null
 			 */
-			if ( !manyToOne.isIgnoreNotFound() ) manyToOne.createPropertyRefConstraints( persistentClasses );
+			if ( manyToOne.getNotFoundAction() == null ) {
+				manyToOne.createPropertyRefConstraints( persistentClasses );
+			}
 		}
 		else if ( value instanceof OneToOne ) {
 			value.createForeignKey();

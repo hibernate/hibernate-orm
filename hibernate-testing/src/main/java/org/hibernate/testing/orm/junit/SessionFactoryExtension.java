@@ -143,21 +143,21 @@ public class SessionFactoryExtension
 			SessionFactoryImplementor sessionFactory,
 			MetadataImplementor model,
 			boolean createSecondarySchemas) {
-		final Map<String, Object> baseProperties = sessionFactory.getProperties();
-
-		final ActionGrouping grouping = ActionGrouping.interpret( baseProperties );
-		if ( grouping.getDatabaseAction() == Action.NONE && grouping.getScriptAction() == Action.NONE ) {
+		final ActionGrouping grouping = ActionGrouping.interpret( sessionFactory.getProperties() );
+		if ( grouping.getDatabaseAction() != Action.NONE || grouping.getScriptAction() != Action.NONE ) {
+			// the properties contained explicit settings for auto schema tooling; skip here as part of
+			// @SessionFactory handling
 			return;
 		}
 
-		final HashMap<String,Object> settings = new HashMap<>( baseProperties );
-		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP );
+		final HashMap<String,Object> settings = new HashMap<>( sessionFactory.getProperties() );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP );
 		if ( createSecondarySchemas ) {
 			if ( !( model.getDatabase().getDialect().canCreateSchema() ) ) {
 				throw new UnsupportedOperationException(
 						model.getDatabase().getDialect() + " does not support schema creation" );
 			}
-			settings.put( AvailableSettings.HBM2DDL_CREATE_SCHEMAS, true );
+			settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS, true );
 		}
 
 		final StandardServiceRegistry serviceRegistry = model.getMetadataBuildingOptions().getServiceRegistry();

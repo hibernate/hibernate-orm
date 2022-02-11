@@ -8,6 +8,8 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.function.Consumer;
 
+import org.hibernate.FetchNotFoundException;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -19,14 +21,14 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.query.sqm.spi.EntityIdentifierNavigablePath;
 import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.sqm.spi.EntityIdentifierNavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
-import org.hibernate.sql.results.graph.entity.EntityLoadingLogger;
+import org.hibernate.sql.results.graph.entity.EntityLoadingLogging;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
@@ -43,28 +45,30 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 	private final boolean isEnhancedForLazyLoading;
 
 	protected final EntityPersister concreteDescriptor;
-	protected final DomainResultAssembler identifierAssembler;
-	private final ToOneAttributeMapping referencedModelPart;
+	protected final DomainResultAssembler<?> keyAssembler;
+	private final ToOneAttributeMapping toOneMapping;
+
+	private Object entityIdentifier;
 	protected boolean isInitialized;
 
 	protected Object entityInstance;
 
 	public EntitySelectFetchInitializer(
 			FetchParentAccess parentAccess,
-			ToOneAttributeMapping referencedModelPart,
+			ToOneAttributeMapping toOneMapping,
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
-			DomainResultAssembler identifierAssembler) {
+			DomainResultAssembler<?> keyAssembler) {
 		this.parentAccess = parentAccess;
-		this.referencedModelPart = referencedModelPart;
+		this.toOneMapping = toOneMapping;
 		this.navigablePath = fetchedNavigable;
 		this.concreteDescriptor = concreteDescriptor;
-		this.identifierAssembler = identifierAssembler;
+		this.keyAssembler = keyAssembler;
 		this.isEnhancedForLazyLoading = concreteDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 	}
 
 	public ModelPart getInitializedPart(){
-		return referencedModelPart;
+		return toOneMapping;
 	}
 
 	@Override
@@ -101,15 +105,15 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			return;
 		}
 
-		final Object entityIdentifier = identifierAssembler.assemble( rowProcessingState );
+		final Object entityIdentifier = keyAssembler.assemble( rowProcessingState );
 
 		if ( entityIdentifier == null ) {
 			isInitialized = true;
 			return;
 		}
 
-		if ( EntityLoadingLogger.TRACE_ENABLED ) {
-			EntityLoadingLogger.LOGGER.tracef(
+		if ( EntityLoadingLogging.TRACE_ENABLED ) {
+			EntityLoadingLogging.ENTITY_LOADING_LOGGER.tracef(
 					"(%s) Beginning Initializer#resolveInstance process for entity (%s) : %s",
 					StringHelper.collapse( this.getClass().getName() ),
 					getNavigablePath(),
@@ -132,8 +136,8 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 				.findInitializer( entityKey );
 
 		if ( initializer != null ) {
-			if ( EntityLoadingLogger.DEBUG_ENABLED ) {
-				EntityLoadingLogger.LOGGER.debugf(
+			if ( EntityLoadingLogging.DEBUG_ENABLED ) {
+				EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 						"(%s) Found an initializer for entity (%s) : %s",
 						CONCRETE_NAME,
 						toLoggableString( getNavigablePath(), entityIdentifier ),
@@ -152,8 +156,8 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 				.findLoadingEntityEntry( entityKey );
 
 		if ( existingLoadingEntry != null ) {
-			if ( EntityLoadingLogger.DEBUG_ENABLED ) {
-				EntityLoadingLogger.LOGGER.debugf(
+			if ( EntityLoadingLogging.DEBUG_ENABLED ) {
+				EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 						"(%s) Found existing loading entry [%s] - using loading instance",
 						CONCRETE_NAME,
 						toLoggableString(
@@ -166,8 +170,8 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 
 			if ( existingLoadingEntry.getEntityInitializer() != this ) {
 				// the entity is already being loaded elsewhere
-				if ( EntityLoadingLogger.DEBUG_ENABLED ) {
-					EntityLoadingLogger.LOGGER.debugf(
+				if ( EntityLoadingLogging.DEBUG_ENABLED ) {
+					EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 							"(%s) Entity [%s] being loaded by another initializer [%s] - skipping processing",
 							CONCRETE_NAME,
 							toLoggableString( getNavigablePath(), entityIdentifier ),
@@ -181,8 +185,8 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			}
 		}
 
-		if ( EntityLoadingLogger.DEBUG_ENABLED ) {
-			EntityLoadingLogger.LOGGER.debugf(
+		if ( EntityLoadingLogging.DEBUG_ENABLED ) {
+			EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 					"(%s) Invoking session#internalLoad for entity (%s) : %s",
 					CONCRETE_NAME,
 					toLoggableString( getNavigablePath(), entityIdentifier ),
@@ -193,11 +197,17 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 				entityName,
 				entityIdentifier,
 				true,
-				referencedModelPart.isNullable() || referencedModelPart.isIgnoreNotFound()
+				toOneMapping.isNullable() || toOneMapping.isIgnoreNotFound()
 		);
 
-		if ( EntityLoadingLogger.DEBUG_ENABLED ) {
-			EntityLoadingLogger.LOGGER.debugf(
+		if ( entityInstance == null ) {
+			if ( toOneMapping.getNotFoundAction() == NotFoundAction.EXCEPTION ) {
+				throw new FetchNotFoundException( entityName, entityIdentifier );
+			}
+		}
+
+		if ( EntityLoadingLogging.DEBUG_ENABLED ) {
+			EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 					"(%s) Entity [%s] : %s has being loaded by session.internalLoad.",
 					CONCRETE_NAME,
 					toLoggableString( getNavigablePath(), entityIdentifier ),
@@ -205,7 +215,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			);
 		}
 
-		final boolean unwrapProxy = referencedModelPart.isUnwrapProxy() && isEnhancedForLazyLoading;
+		final boolean unwrapProxy = toOneMapping.isUnwrapProxy() && isEnhancedForLazyLoading;
 		if ( entityInstance instanceof HibernateProxy ) {
 			( (HibernateProxy) entityInstance ).getHibernateLazyInitializer().setUnwrap( unwrapProxy );
 		}
@@ -216,7 +226,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 		if ( parentAccess instanceof EntityInitializer ) {
 			final AbstractEntityPersister concreteDescriptor = (AbstractEntityPersister) ( (EntityInitializer) parentAccess ).getConcreteDescriptor();
 			if ( concreteDescriptor.isPolymorphic() ) {
-				final AbstractEntityPersister declaringType = (AbstractEntityPersister) referencedModelPart.getDeclaringType();
+				final AbstractEntityPersister declaringType = (AbstractEntityPersister) toOneMapping.getDeclaringType();
 				if ( concreteDescriptor != declaringType ) {
 					if ( !declaringType.getSubclassEntityNames().contains( concreteDescriptor.getName() ) ) {
 						return false;
@@ -229,6 +239,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
+		entityIdentifier = null;
 		entityInstance = null;
 		isInitialized = false;
 		clearResolutionListeners();

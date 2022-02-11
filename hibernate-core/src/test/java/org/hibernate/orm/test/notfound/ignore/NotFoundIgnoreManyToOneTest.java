@@ -114,13 +114,14 @@ public class NotFoundIgnoreManyToOneTest {
 
 			// at the moment this uses a subsequent-select.  on the bright side, it is at least eagerly fetched.
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 2 );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " from Coin " );
-			assertThat( statementInspector.getSqlQueries().get( 1 ) ).contains( " from Currency " );
 
-			// but I believe a jon would be better
-//			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-//			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
-//			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Coin " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " Currency " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " join " );
+
+			assertThat( statementInspector.getSqlQueries().get( 1 ) ).contains( " Currency " );
+			assertThat( statementInspector.getSqlQueries().get( 1 ) ).doesNotContain( " Coin " );
+			assertThat( statementInspector.getSqlQueries().get( 1 ) ).doesNotContain( " join " );
 		} );
 	}
 

@@ -8,6 +8,7 @@ package org.hibernate.sql.ast.tree.from;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -81,7 +82,16 @@ public class NamedTableReference extends AbstractTableReference {
 		if ( tableExpression.equals( getTableExpression() ) ) {
 			return this;
 		}
-		throw new IllegalStateException( "Could not resolve binding for table `" + tableExpression + "`" );
+
+		throw new UnknownTableReferenceException(
+				tableExpression,
+				String.format(
+						Locale.ROOT,
+						"Unable to determine TableReference (`%s`) for `%s`",
+						tableExpression,
+						navigablePath.getFullPath()
+				)
+		);
 	}
 
 	@Override

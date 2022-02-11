@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.BiConsumer;
 import java.util.function.IntFunction;
 
@@ -41,6 +42,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.UnknownTableReferenceException;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -230,10 +232,25 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
-		final TableReference tableReference = tableGroup.resolveTableReference(
-				navigablePath.append( getTargetPart().getFetchableName() ),
-				selectableMapping.getContainingTableExpression()
-		);
+		final TableReference tableReference;
+		try {
+			tableReference = tableGroup.resolveTableReference(
+					navigablePath.append( getTargetPart().getFetchableName() ),
+					selectableMapping.getContainingTableExpression()
+			);
+		}
+		catch (IllegalStateException tableNotFoundException) {
+			throw new UnknownTableReferenceException(
+					selectableMapping.getContainingTableExpression(),
+					String.format(
+							Locale.ROOT,
+							"Unable to determine TableReference (`%s`) for `%s`",
+							selectableMapping.getContainingTableExpression(),
+							getNavigableRole().getFullPath()
+					)
+			);
+		}
+
 		final String identificationVariable = tableReference.getIdentificationVariable();
 
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(

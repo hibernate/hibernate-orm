@@ -14,6 +14,7 @@ import jakarta.persistence.JoinColumns;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.LazyGroup;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.PropertyBinder;
@@ -39,7 +40,7 @@ public class OneToOneSecondPass implements SecondPass {
 	private final String ownerEntity;
 	private final String ownerProperty;
 	private final PropertyHolder propertyHolder;
-	private final boolean ignoreNotFound;
+	private final NotFoundAction notFoundAction;
 	private final PropertyData inferredData;
 	private final XClass targetEntity;
 	private final boolean cascadeOnDelete;
@@ -55,7 +56,7 @@ public class OneToOneSecondPass implements SecondPass {
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			XClass targetEntity,
-			boolean ignoreNotFound,
+			NotFoundAction notFoundAction,
 			boolean cascadeOnDelete,
 			boolean optional,
 			String cascadeStrategy,
@@ -66,7 +67,7 @@ public class OneToOneSecondPass implements SecondPass {
 		this.mappedBy = mappedBy;
 		this.propertyHolder = propertyHolder;
 		this.buildingContext = buildingContext;
-		this.ignoreNotFound = ignoreNotFound;
+		this.notFoundAction = notFoundAction;
 		this.inferredData = inferredData;
 		this.targetEntity = targetEntity;
 		this.cascadeOnDelete = cascadeOnDelete;
@@ -187,7 +188,7 @@ public class OneToOneSecondPass implements SecondPass {
 					);
 					ManyToOne manyToOne = new ManyToOne( buildingContext, mappedByJoin.getTable() );
 					//FIXME use ignore not found here
-					manyToOne.setIgnoreNotFound( ignoreNotFound );
+					manyToOne.setNotFoundAction( notFoundAction );
 					manyToOne.setCascadeDeleteEnabled( value.isCascadeDeleteEnabled() );
 					manyToOne.setFetchMode( value.getFetchMode() );
 					manyToOne.setLazy( value.isLazy() );

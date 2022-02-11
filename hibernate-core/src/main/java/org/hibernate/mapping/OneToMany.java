@@ -12,6 +12,7 @@ import java.util.Objects;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.service.ServiceRegistry;
@@ -29,7 +30,7 @@ public class OneToMany implements Value {
 
 	private String referencedEntityName;
 	private PersistentClass associatedClass;
-	private boolean ignoreNotFound;
+	private NotFoundAction notFoundAction;
 
 	public OneToMany(MetadataBuildingContext buildingContext, PersistentClass owner) throws MappingException {
 		this.buildingContext = buildingContext;
@@ -41,7 +42,7 @@ public class OneToMany implements Value {
 		this.referencingTable = original.referencingTable;
 		this.referencedEntityName = original.referencedEntityName;
 		this.associatedClass = original.associatedClass;
-		this.ignoreNotFound = original.ignoreNotFound;
+		this.notFoundAction = original.notFoundAction;
 	}
 
 	@Override
@@ -197,12 +198,22 @@ public class OneToMany implements Value {
 		return false;
 	}
 
+	public NotFoundAction getNotFoundAction() {
+		return notFoundAction;
+	}
+
+	public void setNotFoundAction(NotFoundAction notFoundAction) {
+		this.notFoundAction = notFoundAction;
+	}
+
 	public boolean isIgnoreNotFound() {
-		return ignoreNotFound;
+		return notFoundAction == NotFoundAction.IGNORE;
 	}
 
 	public void setIgnoreNotFound(boolean ignoreNotFound) {
-		this.ignoreNotFound = ignoreNotFound;
+		this.notFoundAction = ignoreNotFound
+				? NotFoundAction.IGNORE
+				: null;
 	}
 
 }

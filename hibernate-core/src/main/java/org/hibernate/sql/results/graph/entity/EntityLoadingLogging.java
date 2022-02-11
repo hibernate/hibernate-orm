@@ -13,14 +13,11 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
-public interface EntityLoadingLogger {
-	String LOGGER_NAME = LoadingLogger.subLoggerName( "entity" );
+public interface EntityLoadingLogging {
+	String LOCAL_NAME = "entity";
+	String LOGGER_NAME = LoadingLogger.subLoggerName( LOCAL_NAME );
+	Logger ENTITY_LOADING_LOGGER = LoadingLogger.subLogger( LOCAL_NAME );
 
-	/**
-	 * Static access to the logging instance
-	 */
-	Logger LOGGER = LoadingLogger.subLogger( "entity" );
-
-	boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
-	boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
+	boolean TRACE_ENABLED = ENTITY_LOADING_LOGGER.isTraceEnabled();
+	boolean DEBUG_ENABLED = ENTITY_LOADING_LOGGER.isDebugEnabled();
 }

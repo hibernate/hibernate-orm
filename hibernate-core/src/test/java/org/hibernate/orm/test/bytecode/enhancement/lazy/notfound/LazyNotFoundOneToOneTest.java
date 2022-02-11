@@ -30,11 +30,11 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Gail Badner
@@ -85,8 +85,16 @@ public class LazyNotFoundOneToOneTest extends BaseCoreFunctionalTestCase {
 				this::sessionFactory, session -> {
 					User user = session.find( User.class, ID );
 
-					assertThat( sqlInterceptor.getQueryCount(), is( 1 ) );
-					assertFalse( Hibernate.isPropertyInitialized( user, "lazy" ) );
+					// per UserGuide (and simply correct behavior), `@NotFound` forces EAGER fetching
+					assertThat( sqlInterceptor.getQueryCount() ).
+							describedAs( "Expecting 2 queries due to `@NotFound`" )
+							.isEqualTo( 2 );
+					assertThat( Hibernate.isPropertyInitialized( user, "lazy" ) )
+							.describedAs( "Expecting `User#lazy` to be eagerly fetched due to `@NotFound`" )
+							.isTrue();
+					assertThat( Hibernate.isInitialized( user.getLazy() ) )
+							.describedAs( "Expecting `User#lazy` to be eagerly fetched due to `@NotFound`" )
+							.isTrue();
 
 					assertNull( user.getLazy() );
 				}

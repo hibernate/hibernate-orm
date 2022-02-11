@@ -7,6 +7,7 @@
 package org.hibernate.sql.ast.tree.from;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.spi.NavigablePath;
@@ -37,8 +38,17 @@ public abstract class AbstractColumnReferenceQualifier implements ColumnReferenc
 				allowFkOptimization,
 				true
 		);
+
 		if ( tableReference == null ) {
-			throw new IllegalStateException( "Could not resolve binding for table `" + tableExpression + "`" );
+			throw new UnknownTableReferenceException(
+					tableExpression,
+					String.format(
+							Locale.ROOT,
+							"Unable to determine TableReference (`%s`) for `%s`",
+							tableExpression,
+							navigablePath.getFullPath()
+					)
+			);
 		}
 
 		return tableReference;

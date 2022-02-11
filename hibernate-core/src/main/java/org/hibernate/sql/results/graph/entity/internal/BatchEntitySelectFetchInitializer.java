@@ -28,7 +28,7 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.AbstractEntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
-import org.hibernate.sql.results.graph.entity.EntityLoadingLogger;
+import org.hibernate.sql.results.graph.entity.EntityLoadingLogging;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
@@ -109,8 +109,8 @@ public class BatchEntitySelectFetchInitializer extends AbstractFetchParentAccess
 				.findInitializer( entityKey );
 
 		if ( initializer != null ) {
-			if ( EntityLoadingLogger.DEBUG_ENABLED ) {
-				EntityLoadingLogger.LOGGER.debugf(
+			if ( EntityLoadingLogging.DEBUG_ENABLED ) {
+				EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 						"(%s) Found an initializer for entity (%s) : %s",
 						CONCRETE_NAME,
 						toLoggableString( getNavigablePath(), entityIdentifier ),
@@ -131,8 +131,8 @@ public class BatchEntitySelectFetchInitializer extends AbstractFetchParentAccess
 		if ( existingLoadingEntry != null ) {
 			if ( existingLoadingEntry.getEntityInitializer() != this ) {
 				// the entity is already being loaded elsewhere
-				if ( EntityLoadingLogger.DEBUG_ENABLED ) {
-					EntityLoadingLogger.LOGGER.debugf(
+				if ( EntityLoadingLogging.DEBUG_ENABLED ) {
+					EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 							"(%s) Entity [%s] being loaded by another initializer [%s] - skipping processing",
 							CONCRETE_NAME,
 							toLoggableString( getNavigablePath(), entityIdentifier ),

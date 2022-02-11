@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionId;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -61,7 +62,7 @@ public class IdBagBinder extends BagBinder {
 			XProperty property,
 			boolean unique,
 			TableBinder associationTableBinder,
-			boolean ignoreNotFound,
+			NotFoundAction notFoundAction,
 			MetadataBuildingContext buildingContext) {
 		boolean result = super.bindStarToManySecondPass(
 				persistentClasses,
@@ -74,7 +75,7 @@ public class IdBagBinder extends BagBinder {
 				property,
 				unique,
 				associationTableBinder,
-				ignoreNotFound,
+				notFoundAction,
 				getBuildingContext()
 		);
 

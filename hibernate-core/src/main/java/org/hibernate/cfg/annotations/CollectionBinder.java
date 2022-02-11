@@ -13,6 +13,22 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Supplier;
+import jakarta.persistence.Access;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.MapKey;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderColumn;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -44,7 +60,8 @@ import org.hibernate.annotations.ListIndexJdbcType;
 import org.hibernate.annotations.ListIndexJdbcTypeCode;
 import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.ManyToAny;
-import org.hibernate.annotations.MapKeyCustomCompositeType;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.OptimisticLock;
@@ -115,23 +132,6 @@ import org.hibernate.usertype.UserCollectionType;
 
 import org.jboss.logging.Logger;
 
-import jakarta.persistence.Access;
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.ConstraintMode;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.MapKey;
-import jakarta.persistence.MapKeyColumn;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OrderColumn;
-
 import static jakarta.persistence.AccessType.PROPERTY;
 import static org.hibernate.cfg.AnnotatedColumn.checkPropertyConsistency;
 import static org.hibernate.cfg.AnnotationBinder.fillComponent;
@@ -186,7 +186,7 @@ public abstract class CollectionBinder {
 	private AnnotatedColumn[] elementColumns;
 	private boolean isEmbedded;
 	private XProperty property;
-	private boolean ignoreNotFound;
+	private NotFoundAction notFoundAction;
 	private TableBinder tableBinder;
 	private AnnotatedColumn[] mapKeyColumns;
 	private AnnotatedJoinColumn[] mapKeyManyToManyColumns;
@@ -719,7 +719,7 @@ public abstract class CollectionBinder {
 				isEmbedded,
 				property,
 				collectionType,
-				ignoreNotFound,
+				notFoundAction,
 				oneToMany,
 				tableBinder,
 				buildingContext
@@ -970,6 +970,8 @@ public abstract class CollectionBinder {
 		ManyToMany manyToMany = property.getAnnotation( ManyToMany.class );
 		ElementCollection elementCollection = property.getAnnotation( ElementCollection.class );
 		ManyToAny manyToAny = property.getAnnotation( ManyToAny.class );
+		NotFound notFound = property.getAnnotation( NotFound.class );
+
 		FetchType fetchType;
 		if ( oneToMany != null ) {
 			fetchType = oneToMany.fetch();
@@ -985,36 +987,58 @@ public abstract class CollectionBinder {
 		}
 		else {
 			throw new AssertionFailure(
-					"Define fetch strategy on a property not annotated with @ManyToOne nor @OneToMany nor @ElementCollection"
+					"Define fetch strategy on a property not annotated with @ManyToOne nor @OneToMany nor @CollectionOfElements"
 			);
 		}
-		if ( lazy != null ) {
-			collection.setLazy( !( lazy.value() == LazyCollectionOption.FALSE ) );
-			collection.setExtraLazy( lazy.value() == LazyCollectionOption.EXTRA );
-		}
-		else {
-			collection.setLazy( fetchType == FetchType.LAZY );
-			collection.setExtraLazy( false );
-		}
-		if ( fetch != null ) {
-			if ( fetch.value() == org.hibernate.annotations.FetchMode.JOIN ) {
-				collection.setFetchMode( FetchMode.JOIN );
-				collection.setLazy( false );
+		if ( notFound != null ) {
+			collection.setLazy( false );
+
+			if ( lazy != null ) {
+				collection.setExtraLazy( lazy.value() == LazyCollectionOption.EXTRA );
 			}
-			else if ( fetch.value() == org.hibernate.annotations.FetchMode.SELECT ) {
-				collection.setFetchMode( FetchMode.SELECT );
-			}
-			else if ( fetch.value() == org.hibernate.annotations.FetchMode.SUBSELECT ) {
-				collection.setFetchMode( FetchMode.SELECT );
-				collection.setSubselectLoadable( true );
-				collection.getOwner().setSubselectLoadableCollections( true );
+
+			if ( fetch != null ) {
+				if ( fetch.value() != null ) {
+					collection.setFetchMode( fetch.value().getHibernateFetchMode() );
+					if ( fetch.value() == org.hibernate.annotations.FetchMode.SUBSELECT ) {
+						collection.setSubselectLoadable( true );
+						collection.getOwner().setSubselectLoadableCollections( true );
+					}
+				}
 			}
 			else {
-				throw new AssertionFailure( "Unknown FetchMode: " + fetch.value() );
+				collection.setFetchMode( AnnotationBinder.getFetchMode( fetchType ) );
 			}
 		}
 		else {
-			collection.setFetchMode( AnnotationBinder.getFetchMode( fetchType ) );
+			if ( lazy != null ) {
+				collection.setLazy( !( lazy.value() == LazyCollectionOption.FALSE ) );
+				collection.setExtraLazy( lazy.value() == LazyCollectionOption.EXTRA );
+			}
+			else {
+				collection.setLazy( fetchType == FetchType.LAZY );
+				collection.setExtraLazy( false );
+			}
+			if ( fetch != null ) {
+				if ( fetch.value() == org.hibernate.annotations.FetchMode.JOIN ) {
+					collection.setFetchMode( FetchMode.JOIN );
+					collection.setLazy( false );
+				}
+				else if ( fetch.value() == org.hibernate.annotations.FetchMode.SELECT ) {
+					collection.setFetchMode( FetchMode.SELECT );
+				}
+				else if ( fetch.value() == org.hibernate.annotations.FetchMode.SUBSELECT ) {
+					collection.setFetchMode( FetchMode.SELECT );
+					collection.setSubselectLoadable( true );
+					collection.getOwner().setSubselectLoadableCollections( true );
+				}
+				else {
+					throw new AssertionFailure( "Unknown FetchMode: " + fetch.value() );
+				}
+			}
+			else {
+				collection.setFetchMode( AnnotationBinder.getFetchMode( fetchType ) );
+			}
 		}
 	}
 
@@ -1044,7 +1068,7 @@ public abstract class CollectionBinder {
 			final boolean isEmbedded,
 			final XProperty property,
 			final XClass collType,
-			final boolean ignoreNotFound,
+			final NotFoundAction notFoundAction,
 			final boolean unique,
 			final TableBinder assocTableBinder,
 			final MetadataBuildingContext buildingContext) {
@@ -1062,7 +1086,7 @@ public abstract class CollectionBinder {
 						property,
 						unique,
 						assocTableBinder,
-						ignoreNotFound,
+						notFoundAction,
 						buildingContext
 				);
 			}
@@ -1083,7 +1107,7 @@ public abstract class CollectionBinder {
 			XProperty property,
 			boolean unique,
 			TableBinder associationTableBinder,
-			boolean ignoreNotFound,
+			NotFoundAction notFoundAction,
 			MetadataBuildingContext buildingContext) {
 		PersistentClass persistentClass = persistentClasses.get( collType.getName() );
 		boolean reversePropertyInJoin = false;
@@ -1118,7 +1142,7 @@ public abstract class CollectionBinder {
 					fkJoinColumns,
 					collType,
 					cascadeDeleteEnabled,
-					ignoreNotFound,
+					notFoundAction,
 					buildingContext,
 					inheritanceStatePerClass
 			);
@@ -1132,8 +1156,10 @@ public abstract class CollectionBinder {
 					keyColumns,
 					inverseColumns,
 					elementColumns,
-					isEmbedded, collType,
-					ignoreNotFound, unique,
+					isEmbedded,
+					collType,
+					notFoundAction,
+					unique,
 					cascadeDeleteEnabled,
 					associationTableBinder,
 					property,
@@ -1150,7 +1176,7 @@ public abstract class CollectionBinder {
 			AnnotatedJoinColumn[] fkJoinColumns,
 			XClass collectionType,
 			boolean cascadeDeleteEnabled,
-			boolean ignoreNotFound,
+			NotFoundAction notFoundAction,
 			MetadataBuildingContext buildingContext,
 			Map<XClass, InheritanceState> inheritanceStatePerClass) {
 
@@ -1166,7 +1192,7 @@ public abstract class CollectionBinder {
 				new org.hibernate.mapping.OneToMany( buildingContext, collection.getOwner() );
 		collection.setElement( oneToMany );
 		oneToMany.setReferencedEntityName( collectionType.getName() );
-		oneToMany.setIgnoreNotFound( ignoreNotFound );
+		oneToMany.setNotFoundAction( notFoundAction );
 
 		String assocClass = oneToMany.getReferencedEntityName();
 		PersistentClass associatedClass = persistentClasses.get( assocClass );
@@ -1589,7 +1615,8 @@ public abstract class CollectionBinder {
 			AnnotatedColumn[] elementColumns,
 			boolean isEmbedded,
 			XClass collType,
-			boolean ignoreNotFound, boolean unique,
+			NotFoundAction notFoundAction,
+			boolean unique,
 			boolean cascadeDeleteEnabled,
 			TableBinder associationTableBinder,
 			XProperty property,
@@ -1656,7 +1683,7 @@ public abstract class CollectionBinder {
 			element = handleCollectionOfEntities(
 					collValue,
 					collType,
-					ignoreNotFound,
+					notFoundAction,
 					property,
 					buildingContext,
 					collectionEntity,
@@ -1841,7 +1868,14 @@ public abstract class CollectionBinder {
 		}
 	}
 
-	private ManyToOne handleCollectionOfEntities(Collection collValue, XClass collType, boolean ignoreNotFound, XProperty property, MetadataBuildingContext buildingContext, PersistentClass collectionEntity, String hqlOrderBy) {
+	private ManyToOne handleCollectionOfEntities(
+			Collection collValue,
+			XClass collType,
+			NotFoundAction notFoundAction,
+			XProperty property,
+			MetadataBuildingContext buildingContext,
+			PersistentClass collectionEntity,
+			String hqlOrderBy) {
 		ManyToOne element;
 		element = new ManyToOne(buildingContext,  collValue.getCollectionTable() );
 		collValue.setElement( element );
@@ -1851,7 +1885,7 @@ public abstract class CollectionBinder {
 		//make the second join non lazy
 		element.setFetchMode( FetchMode.JOIN );
 		element.setLazy( false );
-		element.setIgnoreNotFound(ignoreNotFound);
+		element.setNotFoundAction( notFoundAction );
 		// as per 11.1.38 of JPA 2.0 spec, default to primary key if no column is specified by @OrderBy.
 		if ( hqlOrderBy != null ) {
 			collValue.setManyToManyOrdering(
@@ -2276,8 +2310,18 @@ public abstract class CollectionBinder {
 		this.property = property;
 	}
 
+	public NotFoundAction getNotFoundAction() {
+		return notFoundAction;
+	}
+
+	public void setNotFoundAction(NotFoundAction notFoundAction) {
+		this.notFoundAction = notFoundAction;
+	}
+
 	public void setIgnoreNotFound(boolean ignoreNotFound) {
-		this.ignoreNotFound = ignoreNotFound;
+		this.notFoundAction = ignoreNotFound
+				? NotFoundAction.IGNORE
+				: null;
 	}
 
 	public void setMapKeyColumns(AnnotatedColumn[] mapKeyColumns) {

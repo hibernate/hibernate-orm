@@ -30,8 +30,8 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 			ToOneAttributeMapping fetchedAttribute,
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
-			DomainResultAssembler identifierAssembler) {
-		super( parentAccess, fetchedAttribute, fetchedNavigable, concreteDescriptor, identifierAssembler );
+			DomainResultAssembler<?> keyAssembler) {
+		super( parentAccess, fetchedAttribute, fetchedNavigable, concreteDescriptor, keyAssembler );
 		this.fetchedAttribute = fetchedAttribute;
 	}
 
@@ -46,7 +46,7 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 			return;
 		}
 
-		final Object entityIdentifier = identifierAssembler.assemble( rowProcessingState );
+		final Object entityIdentifier = keyAssembler.assemble( rowProcessingState );
 		if ( entityIdentifier == null ) {
 			isInitialized = true;
 			return;

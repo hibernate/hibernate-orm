@@ -28,6 +28,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -70,7 +71,10 @@ public class LazyNotFoundManyToOneNonUpdatableNonInsertableTest extends BaseCore
 		doInHibernate(
 				this::sessionFactory, session -> {
 					User user = session.find( User.class, ID );
-					assertFalse( Hibernate.isPropertyInitialized( user, "lazy" ) );
+					// per UserGuide (and simply correct behavior), `@NotFound` forces EAGER fetching
+					assertThat( Hibernate.isPropertyInitialized( user, "lazy" ) )
+							.describedAs( "`User#lazy` is not eagerly initialized due to presence of `@NotFound`" )
+							.isTrue();
 					assertNull( user.getLazy() );
 				}
 		);

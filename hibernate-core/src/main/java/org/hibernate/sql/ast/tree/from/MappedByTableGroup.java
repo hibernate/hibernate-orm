@@ -8,6 +8,7 @@ package org.hibernate.sql.ast.tree.from;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
@@ -121,8 +122,17 @@ public class MappedByTableGroup extends DelegatingTableGroup implements VirtualT
 				allowFkOptimization,
 				true
 		);
+
 		if ( tableReference == null ) {
-			throw new IllegalStateException( "Could not resolve binding for table `" + tableExpression + "`" );
+			throw new UnknownTableReferenceException(
+					tableExpression,
+					String.format(
+							Locale.ROOT,
+							"Unable to determine TableReference (`%s`) for `%s`",
+							tableExpression,
+							navigablePath.getFullPath()
+					)
+			);
 		}
 
 		return tableReference;

@@ -234,7 +234,9 @@ Problems can arise when returning multiple entities of the same type or when the
 Until now, the result set column names are assumed to be the same as the column names specified in the mapping document.
 This can be problematic for SQL queries that join multiple tables since the same column names can appear in more than one table.
 
-Column alias injection is needed in the following query which otherwise throws `NonUniqueDiscoveredSqlAliasException`.
+As of Hibernate 6.0, the source table for selected columns is determined through the JDBC driver to disambiguate same named column,
+which shifts the limits a bit further until changing the SQL is necessary.
+Prior to 6.0, the following queries would fail with a `NonUniqueDiscoveredSqlAliasException`.
 
 [[sql-jpa-multi-entity-query-example]]
 .Jakarta Persistence native query selecting entities with the same column names
@@ -254,8 +256,9 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-multi-entity-query-example]
 ----
 ====
 
-The query was intended to return all `Person` and `Partner` instances with the same name.
-The query fails because there is a conflict of names since the two entities are mapped to the same column names (e.g. `id`, `name`, `version`).
+The query should return all `Person` and `Partner` instances with the same name.
+Since the two entities are mapped to the same column names (e.g. `id`, `name`, `version`),
+the query might fail if the JDBC driver can't provide the source table name for selected columns.
 Also, on some databases, the returned column aliases will most likely be on the form `pr.id`, `pr.name`, etc.
 which are not equal to the columns specified in the mappings (`id` and `name`).
 

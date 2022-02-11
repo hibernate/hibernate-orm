@@ -102,6 +102,13 @@ import jakarta.persistence.Version;
     resultSetMapping = "person_with_phones"
 )
 //end::sql-entity-associations-NamedNativeQuery-example[]
+@SqlResultSetMapping(
+        name = "person_and_same_named_partner",
+        entities = {
+                @EntityResult(entityClass = Person.class),
+                @EntityResult(entityClass = Partner.class)
+        }
+)
 //tag::sql-entity-associations-NamedNativeQuery-example[]
 @SqlResultSetMapping(
      name = "person_with_phones",

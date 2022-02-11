@@ -40,6 +40,7 @@ import org.hibernate.userguide.model.Account;
 import org.hibernate.userguide.model.AddressType;
 import org.hibernate.userguide.model.Call;
 import org.hibernate.userguide.model.CreditCardPayment;
+import org.hibernate.userguide.model.Partner;
 import org.hibernate.userguide.model.Payment;
 import org.hibernate.userguide.model.Person;
 import org.hibernate.userguide.model.PersonNames;
@@ -70,6 +71,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 			Person.class,
+			Partner.class,
 			Phone.class,
 			Call.class,
 			Account.class,

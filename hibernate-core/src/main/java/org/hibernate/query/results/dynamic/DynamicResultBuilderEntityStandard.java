@@ -204,6 +204,7 @@ public class DynamicResultBuilderEntityStandard
 						resolveSqlSelection(
 								idColumnAliases.get( selectionIndex ),
 								createColumnReferenceKey( tableReference, selectableMapping.getSelectionExpression() ),
+								selectableMapping.getContainingTableExpression(),
 								selectableMapping.getJdbcMapping(),
 								jdbcResultsMetadata,
 								domainResultCreationState
@@ -219,6 +220,7 @@ public class DynamicResultBuilderEntityStandard
 							tableReference,
 							entityMapping.getDiscriminatorMapping().getSelectionExpression()
 					),
+					entityMapping.getDiscriminatorMapping().getContainingTableExpression(),
 					entityMapping.getDiscriminatorMapping().getJdbcMapping(),
 					jdbcResultsMetadata,
 					domainResultCreationState
@@ -267,6 +269,7 @@ public class DynamicResultBuilderEntityStandard
 	private void resolveSqlSelection(
 			String columnAlias,
 			String columnKey,
+			String tableExpression,
 			JdbcMapping jdbcMapping,
 			JdbcValuesMetadata jdbcResultsMetadata,
 			DomainResultCreationState domainResultCreationState) {
@@ -275,7 +278,7 @@ public class DynamicResultBuilderEntityStandard
 				sqlExpressionResolver.resolveSqlExpression(
 						columnKey,
 						state -> {
-							final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
+							final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias, tableExpression );
 							final int valuesArrayPosition = jdbcPosition - 1;
 							return new ResultSetMappingSqlSelection( valuesArrayPosition, jdbcMapping );
 						}

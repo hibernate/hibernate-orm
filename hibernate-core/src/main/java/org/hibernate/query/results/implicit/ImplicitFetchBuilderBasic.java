@@ -77,7 +77,7 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, BasicVal
 						fetchable.getSelectionExpression()
 				),
 				processingState -> {
-					final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( column );
+					final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( column, table );
 					final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
 					return new ResultSetMappingSqlSelection( valuesArrayPosition, fetchable );
 				}

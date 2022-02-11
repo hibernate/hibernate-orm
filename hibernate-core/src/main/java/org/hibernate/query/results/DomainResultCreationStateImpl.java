@@ -272,7 +272,7 @@ public class DomainResultCreationStateImpl
 		else if ( created instanceof ColumnReference ) {
 			final ColumnReference columnReference = (ColumnReference) created;
 			final String columnExpression = columnReference.getColumnExpression();
-			final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnExpression );
+			final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnExpression, null );
 			final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
 
 			final ResultSetMappingSqlSelection sqlSelection = new ResultSetMappingSqlSelection(

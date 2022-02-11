@@ -82,7 +82,7 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Basi
 
 		if ( selectionAlias != null ) {
 			try {
-				jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( selectionAlias );
+				jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( selectionAlias, mappedTable );
 			}
 			catch (Exception e) {
 				throw new MissingSqlSelectionException(

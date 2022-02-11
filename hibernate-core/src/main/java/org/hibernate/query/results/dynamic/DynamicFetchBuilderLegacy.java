@@ -172,6 +172,7 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 										tableGroup.resolveTableReference( selectableMapping.getContainingTableExpression() ),
 										selectableMapping.getSelectionExpression()
 								),
+								selectableMapping.getContainingTableExpression(),
 								selectableMapping.getJdbcMapping(),
 								jdbcResultsMetadata,
 								domainResultCreationState
@@ -204,6 +205,7 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 	private void resolveSqlSelection(
 			String columnAlias,
 			String columnKey,
+			String tableExpression,
 			JdbcMapping jdbcMapping,
 			JdbcValuesMetadata jdbcResultsMetadata,
 			DomainResultCreationState domainResultCreationState) {
@@ -212,7 +214,7 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 				sqlExpressionResolver.resolveSqlExpression(
 						columnKey,
 						state -> {
-							final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
+							final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias, tableExpression );
 							final int valuesArrayPosition = jdbcPosition - 1;
 							return new ResultSetMappingSqlSelection( valuesArrayPosition, jdbcMapping );
 						}

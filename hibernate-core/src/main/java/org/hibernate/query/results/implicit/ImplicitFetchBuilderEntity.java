@@ -19,17 +19,24 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.query.results.ResultSetMappingSqlSelection;
+import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.results.Builders;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 import static org.hibernate.query.results.ResultsHelper.impl;
+import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * @author Steve Ebersole
@@ -48,7 +55,7 @@ public class ImplicitFetchBuilderEntity implements ImplicitFetchBuilder {
 		final DomainResultCreationStateImpl creationStateImpl = impl( creationState );
 		final NavigablePath relativePath = creationStateImpl.getCurrentRelativePath();
 		final Function<String, FetchBuilder> fetchBuilderResolver = creationStateImpl.getCurrentExplicitFetchMementoResolver();
-		ForeignKeyDescriptor foreignKeyDescriptor = fetchable.getForeignKeyDescriptor();
+		final ForeignKeyDescriptor foreignKeyDescriptor = fetchable.getForeignKeyDescriptor();
 		final String associationKeyPropertyName;
 		if ( fetchable.getReferencedPropertyName() == null ) {
 			associationKeyPropertyName = fetchable.getEntityMappingType().getIdentifierMapping().getPartName();
@@ -121,6 +128,40 @@ public class ImplicitFetchBuilderEntity implements ImplicitFetchBuilder {
 			JdbcValuesMetadata jdbcResultsMetadata,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState creationState) {
+		if ( fetchBuilders.isEmpty() ) {
+			// If no fetch builders exist, we must ensure we resolve selections for the FK ourselves
+			// otherwise we might run into duplicate alias issues on certain queries,
+			// because selections that are created in DomainResultCreationStateImpl don't consider the table name
+			final DomainResultCreationStateImpl creationStateImpl = ResultsHelper.impl( creationState );
+			final TableGroup ownerTableGroup = creationStateImpl.getFromClauseAccess().getTableGroup( parent.getNavigablePath() );
+			final SqlExpressionResolver sqlExpressionResolver = creationStateImpl.getSqlAstCreationState().getSqlExpressionResolver();
+			fetchable.getForeignKeyDescriptor().getSide( fetchable.getSideNature() ).getModelPart().forEachSelectable(
+					(selectionIndex, selectableMapping) -> {
+						final TableReference tableReference = ownerTableGroup.resolveTableReference(
+								fetchPath,
+								selectableMapping.getContainingTableExpression()
+						);
+						sqlExpressionResolver.resolveSqlSelection(
+								sqlExpressionResolver.resolveSqlExpression(
+										createColumnReferenceKey( tableReference, selectableMapping.getSelectionExpression() ),
+										state -> {
+											final int resultSetPosition = jdbcResultsMetadata.resolveColumnPosition(
+													selectableMapping.getSelectionExpression(),
+													selectableMapping.getContainingTableExpression()
+											);
+											final int valuesArrayPosition = resultSetPosition - 1;
+											return new ResultSetMappingSqlSelection( valuesArrayPosition, selectableMapping.getJdbcMapping() );
+										}
+								),
+								selectableMapping.getJdbcMapping().getMappedJavaType(),
+								creationState.getSqlAstCreationState()
+										.getCreationContext()
+										.getSessionFactory()
+										.getTypeConfiguration()
+						);
+					}
+			);
+		}
 		final Fetch fetch = parent.generateFetchableFetch(
 				fetchable,
 				fetchPath,

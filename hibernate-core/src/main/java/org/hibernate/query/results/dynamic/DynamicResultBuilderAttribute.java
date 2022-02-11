@@ -83,7 +83,10 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 				sqlExpressionResolver.resolveSqlExpression(
 						columnAlias,
 						state -> {
-							final int resultSetPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
+							final int resultSetPosition = jdbcResultsMetadata.resolveColumnPosition(
+									columnAlias,
+									attributeMapping.getContainingTableExpression()
+							);
 							final int valuesArrayPosition = resultSetPosition - 1;
 							return new ResultSetMappingSqlSelection( valuesArrayPosition, attributeMapping );
 						}

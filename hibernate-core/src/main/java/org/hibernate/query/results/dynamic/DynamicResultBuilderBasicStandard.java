@@ -133,7 +133,7 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 						jdbcPosition = columnPosition;
 					}
 					else {
-						jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnName );
+						jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnName, null );
 					}
 					final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
 

@@ -109,7 +109,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 
 							final int jdbcPosition;
 							if ( columnAlias != null ) {
-								jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
+								jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias, null );
 							}
 							else {
 								jdbcPosition = currentJdbcPosition;

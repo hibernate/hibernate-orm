@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -24,6 +25,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.NonUniqueDiscoveredSqlAliasException;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
@@ -33,6 +35,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
+import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -230,30 +233,58 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 
 			domainResults.add( domainResult );
 		}
-
-		if ( resultBuilders == null ) {
-			final String[] aliases = new String[rowSize];
-			final Map<String, Boolean> aliasHasDuplicates = new HashMap<>( rowSize );
-			if ( validateAliases( domainResults ) ) {
-				for ( int i = 0; i < rowSize; i++ ) {
-					aliasHasDuplicates.compute(
-							aliases[i] = jdbcResultsMetadata.resolveColumnName( i + 1 ),
-							(k, v) -> v == null ? Boolean.FALSE : Boolean.TRUE
-					);
-				}
-				// Only check for duplicates for the selections that we actually use
-				for ( SqlSelection sqlSelection : sqlSelections ) {
-					final String alias = aliases[sqlSelection.getValuesArrayPosition()];
-					if ( aliasHasDuplicates.get( alias ) == Boolean.TRUE ) {
-						throw new NonUniqueDiscoveredSqlAliasException(
-								"Encountered a duplicated sql alias [" + alias + "] during auto-discovery of a native-sql query"
+		// We only need this check when we actually have result builders
+		// As people should be able to just run native queries and work with tuples
+		if ( resultBuilders != null ) {
+			final Set<String> knownDuplicateAliases = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
+			if ( resultBuilders.size() == 1 && domainResults.size()  == 1 && domainResults.get( 0 ) instanceof EntityResult ) {
+				// Special case for result set mappings that just fetch a single polymorphic entity
+				final EntityResult entityResult = (EntityResult) domainResults.get( 0 );
+				final boolean polymorphic = entityResult.getReferencedMappingContainer()
+						.getEntityPersister()
+						.getEntityMetamodel()
+						.isPolymorphic();
+				// We only need to check for duplicate aliases if we have join fetches,
+				// otherwise we assume that even if there are duplicate aliases, the values are equivalent.
+				// If we don't do that, there is no way to fetch joined inheritance entities
+				if ( polymorphic && ( legacyFetchBuilders == null || legacyFetchBuilders.isEmpty() )
+						&& !hasJoinFetches( entityResult.getFetches() ) ) {
+					final Set<String> aliases = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
+					final AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityResult.getReferencedMappingContainer()
+							.getEntityPersister();
+					for ( String[] columns : entityPersister.getContraintOrderedTableKeyColumnClosure() ) {
+						addColumns( aliases, knownDuplicateAliases, columns );
+					}
+					addColumn( aliases, knownDuplicateAliases, entityPersister.getDiscriminatorColumnName() );
+					addColumn( aliases, knownDuplicateAliases, entityPersister.getVersionColumnName() );
+					for ( int i = 0; i < entityPersister.countSubclassProperties(); i++ ) {
+						addColumns(
+								aliases,
+								knownDuplicateAliases,
+								entityPersister.getSubclassPropertyColumnNames( i )
 						);
 					}
 				}
 			}
-			else {
-				for ( int i = 0; i < rowSize; i++ ) {
-					aliases[i] = jdbcResultsMetadata.resolveColumnName( i + 1 );
+			final Selection[] selections = new Selection[rowSize];
+			final Map<Selection, Object> duplicateSelections = new HashMap<>( rowSize );
+			for ( int i = 0; i < rowSize; i++ ) {
+				duplicateSelections.compute(
+						selections[i] = new Selection(
+								jdbcResultsMetadata.resolveColumnTableName( i + 1 ),
+								jdbcResultsMetadata.resolveColumnName( i + 1 )
+						),
+						(k, v) -> v == null ? Boolean.FALSE : Boolean.TRUE
+				);
+			}
+			// Only check for duplicates for the selections that we actually use
+			for ( SqlSelection sqlSelection : sqlSelections ) {
+				final Selection selection = selections[sqlSelection.getValuesArrayPosition()];
+				final String alias = selection.columnName;
+				if ( !knownDuplicateAliases.contains( alias ) && duplicateSelections.get( selection ) == Boolean.TRUE ) {
+					throw new NonUniqueDiscoveredSqlAliasException(
+							"Encountered a duplicated sql alias [" + alias + "] during auto-discovery of a native-sql query"
+					);
 				}
 			}
 		}
@@ -264,15 +295,6 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 				rowSize,
 				creationState.getRegisteredLockModes()
 		);
-	}
-
-	private boolean validateAliases(List<DomainResult<?>> domainResults) {
-		for ( DomainResult result : domainResults ) {
-			if ( result instanceof BasicResult ) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	private static void addColumns(Set<String> aliases, Set<String> knownDuplicateAliases, String[] columns) {
@@ -363,6 +385,37 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 		}
 		else {
 			return !that.isDynamic && mappingIdentifier.equals( that.mappingIdentifier );
+		}
+	}
+
+	private static class Selection {
+		private final String tableName;
+		private final String columnName;
+
+		public Selection(String tableName, String columnName) {
+			this.tableName = tableName;
+			this.columnName = columnName;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if ( this == o ) {
+				return true;
+			}
+			if ( o == null ) {
+				return false;
+			}
+
+			final Selection selection = (Selection) o;
+			return columnName.equals( selection.columnName )
+					&& Objects.equals( tableName, selection.tableName );
+		}
+
+		@Override
+		public int hashCode() {
+			int result = tableName != null ? tableName.hashCode() : 0;
+			result = 31 * result + columnName.hashCode();
+			return result;
 		}
 	}
 }

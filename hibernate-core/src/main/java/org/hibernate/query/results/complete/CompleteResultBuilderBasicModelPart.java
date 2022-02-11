@@ -81,7 +81,10 @@ public class CompleteResultBuilderBasicModelPart
 				creationStateImpl.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey( tableReference, mappedColumn ),
 						processingState -> {
-							final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
+							final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition(
+									columnAlias,
+									modelPart.getContainingTableExpression()
+							);
 							final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
 							return new ResultSetMappingSqlSelection( valuesArrayPosition, modelPart );
 						}

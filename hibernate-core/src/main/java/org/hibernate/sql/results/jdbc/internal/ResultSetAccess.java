@@ -44,9 +44,21 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 		}
 	}
 
-	default int resolveColumnPosition(String columnName) {
+	default int resolveColumnPosition(String columnName, String tableName) {
 		try {
-			return getResultSet().findColumn( columnName );
+			if ( tableName == null ) {
+				return getResultSet().findColumn( columnName );
+			}
+			else {
+				final ResultSetMetaData metaData = getResultSet().getMetaData();
+				for ( int i = 1; i <= metaData.getColumnCount(); i++ ) {
+					if ( columnName.equals( metaData.getColumnLabel( i ) )
+							&& tableName.equals( metaData.getTableName( i ) ) ) {
+						return i;
+					}
+				}
+				return getResultSet().findColumn( columnName );
+			}
 		}
 		catch (SQLException e) {
 			throw getFactory().getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper().convert(
@@ -67,6 +79,18 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 			throw getFactory().getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper().convert(
 					e,
 					"Unable to find column name by position"
+			);
+		}
+	}
+
+	default String resolveColumnTableName(int position) {
+		try {
+			return getResultSet().getMetaData().getTableName( position );
+		}
+		catch (SQLException e) {
+			throw getFactory().getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper().convert(
+					e,
+					"Unable to find column table name by position"
 			);
 		}
 	}

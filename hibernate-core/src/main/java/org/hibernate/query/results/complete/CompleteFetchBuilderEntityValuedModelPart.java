@@ -86,7 +86,10 @@ public class CompleteFetchBuilderEntityValuedModelPart
 							creationStateImpl.resolveSqlExpression(
 									SqlExpressionResolver.createColumnReferenceKey( tableReference, mappedColumn ),
 									processingState -> {
-										final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
+										final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition(
+												columnAlias,
+												selectableMapping.getContainingTableExpression()
+										);
 										final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
 										return new ResultSetMappingSqlSelection( valuesArrayPosition, selectableMapping.getJdbcMapping() );
 									}

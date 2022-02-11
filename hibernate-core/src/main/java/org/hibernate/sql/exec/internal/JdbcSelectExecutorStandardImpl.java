@@ -9,6 +9,7 @@ package org.hibernate.sql.exec.internal;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -583,6 +584,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 	private static class CapturingJdbcValuesMetadata implements JdbcValuesMetadata {
 		private final ResultSetAccess resultSetAccess;
 		private String[] columnNames;
+		private String[] tableNames;
 		private BasicType<?>[] types;
 
 		public CapturingJdbcValuesMetadata(ResultSetAccess resultSetAccess) {
@@ -592,6 +594,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		private void initializeArrays() {
 			final int columnCount = resultSetAccess.getColumnCount();
 			columnNames = new String[columnCount];
+			tableNames = new String[columnCount];
 			types = new BasicType[columnCount];
 		}
 
@@ -604,18 +607,20 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		}
 
 		@Override
-		public int resolveColumnPosition(String columnName) {
+		public int resolveColumnPosition(String columnName, String tableName) {
 			if ( columnNames == null ) {
 				initializeArrays();
 			}
 			int position;
 			if ( columnNames == null ) {
-				position = resultSetAccess.resolveColumnPosition( columnName );
+				position = resultSetAccess.resolveColumnPosition( columnName, tableName );
 				columnNames[position - 1] = columnName;
+				tableNames[position - 1] = tableName;
 			}
 			else if ( ( position = ArrayHelper.indexOf( columnNames, columnName ) + 1 ) == 0 ) {
-				position = resultSetAccess.resolveColumnPosition( columnName );
+				position = resultSetAccess.resolveColumnPosition( columnName, tableName );
 				columnNames[position - 1] = columnName;
+				tableNames[position - 1] = tableName;
 			}
 			return position;
 		}
@@ -626,13 +631,22 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				initializeArrays();
 			}
 			String name;
-			if ( columnNames == null ) {
+			if ( ( name = columnNames[position - 1] ) == null ) {
 				name = resultSetAccess.resolveColumnName( position );
 				columnNames[position - 1] = name;
 			}
-			else if ( ( name = columnNames[position - 1] ) == null ) {
-				name = resultSetAccess.resolveColumnName( position );
-				columnNames[position - 1] = name;
+			return name;
+		}
+
+		@Override
+		public String resolveColumnTableName(int position) {
+			if ( columnNames == null ) {
+				initializeArrays();
+			}
+			String name;
+			if ( ( name = columnNames[position - 1] ) == null ) {
+				name = resultSetAccess.resolveColumnTableName( position );
+				tableNames[position - 1] = name;
 			}
 			return name;
 		}
@@ -658,16 +672,18 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			if ( columnNames == null ) {
 				return null;
 			}
-			return new CachedJdbcValuesMetadata( columnNames, types );
+			return new CachedJdbcValuesMetadata( columnNames, tableNames, types );
 		}
 	}
 
 	private static class CachedJdbcValuesMetadata implements JdbcValuesMetadata, Serializable {
 		private final String[] columnNames;
+		private final String[] tableNames;
 		private final BasicType<?>[] types;
 
-		public CachedJdbcValuesMetadata(String[] columnNames, BasicType<?>[] types) {
+		public CachedJdbcValuesMetadata(String[] columnNames, String[] tableNames, BasicType<?>[] types) {
 			this.columnNames = columnNames;
+			this.tableNames = tableNames;
 			this.types = types;
 		}
 
@@ -677,12 +693,20 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		}
 
 		@Override
-		public int resolveColumnPosition(String columnName) {
-			final int position = ArrayHelper.indexOf( columnNames, columnName ) + 1;
-			if ( position == 0 ) {
-				throw new IllegalStateException( "Unexpected resolving of unavailable column: " + columnName );
+		public int resolveColumnPosition(String columnName, String tableName) {
+			if ( tableName == null ) {
+				final int position = ArrayHelper.indexOf( columnNames, columnName ) + 1;
+				if ( position == 0 ) {
+					throw new IllegalStateException( "Unexpected resolving of unavailable column: " + columnName );
+				}
+				return position;
 			}
-			return position;
+			for ( int i = 0; i < columnNames.length; i++ ) {
+				if ( columnName.equals( columnNames[i] ) && tableName.equals( tableNames[i] ) ) {
+					return i + 1;
+				}
+			}
+			throw new IllegalStateException( "Unexpected resolving of unavailable column: " + tableName + "." + columnName );
 		}
 
 		@Override
@@ -690,6 +714,15 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			final String name = columnNames[position - 1];
 			if ( name == null ) {
 				throw new IllegalStateException( "Unexpected resolving of unavailable column at position: " + position );
+			}
+			return name;
+		}
+
+		@Override
+		public String resolveColumnTableName(int position) {
+			final String name = tableNames[position - 1];
+			if ( name == null ) {
+				throw new IllegalStateException( "Unexpected resolving of unavailable column table at position: " + position );
 			}
 			return name;
 		}

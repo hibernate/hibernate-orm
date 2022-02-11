@@ -157,7 +157,10 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 									selectableMapping.getSelectionExpression()
 							),
 							processingState -> {
-								final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnName );
+								final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition(
+										columnName,
+										selectableMapping.getContainingTableExpression()
+								);
 								final BasicValuedMapping basicType = (BasicValuedMapping) selectableMapping.getJdbcMapping();
 								final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition(
 										jdbcPosition );

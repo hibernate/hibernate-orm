@@ -460,15 +460,15 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 		try {
 			doInJPA(this::entityManagerFactory, entityManager -> {
 				//tag::sql-jpa-multi-entity-query-example[]
-				List<Person> entities = entityManager.createNativeQuery(
+				List<Object[]> entities = entityManager.createNativeQuery(
 					"SELECT * " +
 					"FROM Person pr, Partner pt " +
-					"WHERE pr.name = pt.name")
+					"WHERE pr.name = pt.name", "person_and_same_named_partner")
 				.getResultList();
 				//end::sql-jpa-multi-entity-query-example[]
-				assertEquals(2, entities.size());
+				assertEquals(1, entities.size());
 			});
-			fail("Should throw NonUniqueDiscoveredSqlAliasException!");
+//			fail("Should throw NonUniqueDiscoveredSqlAliasException!");
 		}
 		catch (PersistenceException expected) {
 			assertEquals(NonUniqueDiscoveredSqlAliasException.class, expected.getCause().getClass());
@@ -485,11 +485,13 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 					"SELECT * " +
 					"FROM Person pr, Partner pt " +
 					"WHERE pr.name = pt.name")
+				.addEntity( Person.class )
+				.addEntity( Partner.class )
 				.list();
 				//end::sql-hibernate-multi-entity-query-example[]
-				assertEquals(2, entities.size());
+				assertEquals(1, entities.size());
 			});
-			fail("Should throw NonUniqueDiscoveredSqlAliasException!");
+//			fail("Should throw NonUniqueDiscoveredSqlAliasException!");
 		}
 		catch (NonUniqueDiscoveredSqlAliasException e) {
 			// expected

@@ -101,7 +101,10 @@ public class DynamicFetchBuilderStandard
 					sqlExpressionResolver.resolveSqlExpression(
 							createColumnReferenceKey( tableReference, selectableMapping.getSelectionExpression() ),
 							state -> {
-								final int resultSetPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
+								final int resultSetPosition = jdbcResultsMetadata.resolveColumnPosition(
+										columnAlias,
+										selectableMapping.getContainingTableExpression()
+								);
 								final int valuesArrayPosition = resultSetPosition - 1;
 								return new ResultSetMappingSqlSelection( valuesArrayPosition, selectableMapping.getJdbcMapping() );
 							}
@@ -126,7 +129,9 @@ public class DynamicFetchBuilderStandard
 		}
 		else if ( attributeMapping instanceof ToOneAttributeMapping ) {
 			final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
-			toOneAttributeMapping.getForeignKeyDescriptor().visitKeySelectables( selectableConsumer );
+			toOneAttributeMapping.getForeignKeyDescriptor().getSide( toOneAttributeMapping.getSideNature() )
+					.getModelPart()
+					.forEachSelectable( selectableConsumer );
 			return parent.generateFetchableFetch(
 					attributeMapping,
 					fetchPath,

@@ -11,11 +11,8 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 
-import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -120,9 +117,6 @@ public class ColumnTransformerTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = PostgreSQLDialect.class, reason = "The dialect returns the same alias for the 3 selected columns ", matchSubTypes = true)
-	@SkipForDialect(dialectClass = AbstractTransactSQLDialect.class, reason = "The dialect returns the same alias for the 3 selected columns ", matchSubTypes = true)
-	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "The dialect returns the same alias for the 3 selected columns ", matchSubTypes = true)
 	public void testStoredValues(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -131,50 +125,6 @@ public class ColumnTransformerTest {
 							"select size_in_cm / 2.54E0"
 							+ ", radiusS / 2.54E0"
 							+ ", diamet / 2.54E0"
-							+ " from t_staff"
-							+ " where t_staff.id = 4";
-
-					final Object result = session
-							.createNativeQuery( sqlString )
-							.getSingleResult();
-					assertThat( result, notNullValue() );
-					assertThat( result, instanceOf( Object[].class ) );
-
-					final Object[] values = (Object[]) result;
-					assertThat( values.length, is( 3 ) );
-
-					assertThat( ( (Number) values[0] ).doubleValue(), closeTo( 1, 0.01d ) );
-					assertThat( ( (Number) values[1] ).doubleValue(), closeTo( 2, 0.01d ) );
-					assertThat( ( (Number) values[2] ).doubleValue(), closeTo( 3, 0.01d ) );
-				}
-		);
-
-		scope.inTransaction(
-				session -> {
-					final String sqlString =
-							// represents how each is mapped in the mappings - see their @ColumnTransformer#read
-							"select i.integer_val"
-							+ " from t_staff s join integers i on s.id = i.Staff_id"
-							+ " where s.id = 12";
-
-					final List<?> results = session
-							.createNativeQuery( sqlString )
-							.getResultList();
-
-					assertThat( results, contains( 1-20, 2-20, 3-20, 4-20 ) );
-				}
-		);
-	}
-
-	@Test
-	public void testStoredValues2(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					final String sqlString =
-							// represents how each is mapped in the mappings - see their @ColumnTransformer#read
-							"select size_in_cm / 2.54E0 as a"
-							+ ", radiusS / 2.54E0 as b"
-							+ ", diamet / 2.54E0 as c"
 							+ " from t_staff"
 							+ " where t_staff.id = 4";
 

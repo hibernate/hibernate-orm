@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.CollectionId;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
@@ -50,11 +51,11 @@ public class IdBagBinder extends BagBinder {
 			XProperty property,
 			boolean unique,
 			TableBinder associationTableBinder,
-			boolean ignoreNotFound,
+			NotFoundAction notFoundAction,
 			MetadataBuildingContext buildingContext) {
 		boolean result = super.bindStarToManySecondPass(
 				persistentClasses, collType, fkJoinColumns, keyColumns, inverseColumns, elementColumns, isEmbedded,
-				property, unique, associationTableBinder, ignoreNotFound, getBuildingContext()
+				property, unique, associationTableBinder, notFoundAction, getBuildingContext()
 		);
 		CollectionId collectionIdAnn = property.getAnnotation( CollectionId.class );
 		if ( collectionIdAnn != null ) {

@@ -11,6 +11,7 @@ import java.util.Comparator;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
@@ -42,7 +43,7 @@ public final class TypeFactory implements Serializable {
 	private static final CoreMessageLogger LOG = messageLogger( TypeFactory.class );
 
 	/**
-	 * @deprecated Use {@link TypeConfiguration}/{@link TypeConfiguration.Scope} instead
+	 * @deprecated Use {@link TypeConfiguration}
 	 */
 	@Deprecated
 	public interface TypeScope extends Serializable {
@@ -279,7 +280,7 @@ public final class TypeFactory implements Serializable {
 	}
 
 	/**
-	 * @deprecated Use {@link #manyToOne(String, boolean, String, boolean, boolean, boolean, boolean)} instead.
+	 * @deprecated Use {@link #manyToOne(String, boolean, String, boolean, boolean, NotFoundAction, boolean)} instead.
 	 */
 	@Deprecated
 	public EntityType manyToOne(
@@ -287,7 +288,7 @@ public final class TypeFactory implements Serializable {
 			String uniqueKeyPropertyName,
 			boolean lazy,
 			boolean unwrapProxy,
-			boolean ignoreNotFound,
+			NotFoundAction notFoundAction,
 			boolean isLogicalOneToOne) {
 		return manyToOne(
 				persistentClass,
@@ -295,13 +296,13 @@ public final class TypeFactory implements Serializable {
 				uniqueKeyPropertyName,
 				lazy,
 				unwrapProxy,
-				ignoreNotFound,
+				notFoundAction,
 				isLogicalOneToOne
 		);
 	}
 
 	/**
-	 * @deprecated Use {@link #manyToOne(String, boolean, String, String, boolean, boolean, boolean, boolean)} instead.
+	 * @deprecated Use {@link #manyToOne(String, boolean, String, String, boolean, boolean, NotFoundAction, boolean)} instead.
 	 */
 	@Deprecated
 	public EntityType manyToOne(
@@ -310,7 +311,7 @@ public final class TypeFactory implements Serializable {
 			String uniqueKeyPropertyName,
 			boolean lazy,
 			boolean unwrapProxy,
-			boolean ignoreNotFound,
+			NotFoundAction notFoundAction,
 			boolean isLogicalOneToOne) {
 		return manyToOne(
 				persistentClass,
@@ -319,7 +320,7 @@ public final class TypeFactory implements Serializable {
 				null,
 				lazy,
 				unwrapProxy,
-				ignoreNotFound,
+				notFoundAction,
 				isLogicalOneToOne
 		);
 	}
@@ -331,7 +332,7 @@ public final class TypeFactory implements Serializable {
 			String propertyName,
 			boolean lazy,
 			boolean unwrapProxy,
-			boolean ignoreNotFound,
+			NotFoundAction notFoundAction,
 			boolean isLogicalOneToOne) {
 		return new ManyToOneType(
 				typeScope,
@@ -341,7 +342,7 @@ public final class TypeFactory implements Serializable {
 				propertyName,
 				lazy,
 				unwrapProxy,
-				ignoreNotFound,
+				notFoundAction,
 				isLogicalOneToOne
 		);
 	}

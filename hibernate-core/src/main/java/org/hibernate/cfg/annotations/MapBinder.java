@@ -23,7 +23,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.ClassLoadingException;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -87,16 +87,15 @@ public class MapBinder extends CollectionBinder {
 			final boolean isEmbedded,
 			final XProperty property,
 			final XClass collType,
-			final boolean ignoreNotFound,
+			final NotFoundAction notFoundAction,
 			final boolean unique,
 			final TableBinder assocTableBinder,
 			final MetadataBuildingContext buildingContext) {
 		return new CollectionSecondPass( buildingContext, MapBinder.this.collection ) {
-			public void secondPass(Map persistentClasses, Map inheritedMetas)
-					throws MappingException {
+			public void secondPass(Map persistentClasses, Map inheritedMetas) {
 				bindStarToManySecondPass(
 						persistentClasses, collType, fkJoinColumns, keyColumns, inverseColumns, elementColumns,
-						isEmbedded, property, unique, assocTableBinder, ignoreNotFound, buildingContext
+						isEmbedded, property, unique, assocTableBinder, notFoundAction, buildingContext
 				);
 				bindKeyFromAssociationTable(
 						collType, persistentClasses, mapKeyPropertyName, property, isEmbedded, buildingContext,

@@ -27,6 +27,8 @@ public interface ColumnReferenceQualifier {
 	 * @param navigablePath The path for which to look up the table reference, may be null
 	 * @param tableExpression The table expression for which to look up the table reference
 	 * @param allowFkOptimization Whether a foreign key optimization is allowed i.e. use the FK column on the key-side
+	 *
+	 * @throws UnknownTableReferenceException to indicate that the given tableExpression could not be resolved
 	 */
 	TableReference resolveTableReference(
 			NavigablePath navigablePath,

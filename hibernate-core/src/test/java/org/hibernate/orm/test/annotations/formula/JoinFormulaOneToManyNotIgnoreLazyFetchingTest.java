@@ -23,18 +23,22 @@ import org.hibernate.LazyInitializationException;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.cfg.AnnotationBinder;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
+import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.Rule;
 import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.hibernate.testing.transaction.TransactionUtil2.fromTransaction;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -84,21 +88,17 @@ public class JoinFormulaOneToManyNotIgnoreLazyFetchingTest extends BaseEntityMan
 
 		assertFalse( triggerable.wasTriggered() );
 
-		List<Stock> stocks = doInJPA( this::entityManagerFactory, entityManager -> {
-			return entityManager.createQuery(
-					"SELECT s FROM Stock s", Stock.class )
-					.getResultList();
+		List<Stock> stocks = fromTransaction( entityManagerFactory().unwrap( SessionFactoryImplementor.class ), (session) -> {
+			return session.createQuery("SELECT s FROM Stock s order by id", Stock.class ).getResultList();
 		} );
-		assertEquals( 2, stocks.size() );
 
-		try {
-			assertEquals( "ABC", stocks.get( 0 ).getCodes().get( 0 ).getRefNumber() );
+		assertThat( stocks ).hasSize( 2 );
 
-			fail( "Should have thrown LazyInitializationException" );
-		}
-		catch (LazyInitializationException expected) {
+		final Stock firstStock = stocks.get( 0 );
+		final Stock secondStock = stocks.get( 1 );
 
-		}
+		assertThat( firstStock.getCodes() ).hasSize( 1 );
+		assertThat( secondStock.getCodes() ).hasSize( 0 );
 	}
 
 	@Entity(name = "Stock")

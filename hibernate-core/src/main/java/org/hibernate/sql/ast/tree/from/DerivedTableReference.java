@@ -47,7 +47,10 @@ public abstract class DerivedTableReference extends AbstractTableReference {
 			NavigablePath navigablePath,
 			String tableExpression,
 			boolean allowFkOptimization) {
-		throw new IllegalStateException( "Could not resolve binding for table `" + tableExpression + "`" );
+		throw new UnknownTableReferenceException(
+				tableExpression,
+				"TableReferences cannot be resolved relative to DerivedTableReferences - `" + tableExpression + "` : " + navigablePath.getFullPath()
+		);
 	}
 
 	@Override

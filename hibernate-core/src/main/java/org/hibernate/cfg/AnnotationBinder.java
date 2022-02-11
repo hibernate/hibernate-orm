@@ -2415,7 +2415,7 @@ public final class AnnotationBinder {
 		collectionBinder.setPropertyHolder(propertyHolder);
 		Cascade hibernateCascade = property.getAnnotation( Cascade.class );
 		NotFound notFound = property.getAnnotation( NotFound.class );
-		collectionBinder.setIgnoreNotFound( notFound != null && notFound.action() == NotFoundAction.IGNORE );
+		collectionBinder.setNotFoundAction( notFound == null ? null : notFound.action() );
 		collectionBinder.setCollectionType( inferredData.getProperty().getElementClass() );
 		collectionBinder.setAccessType( inferredData.getDefaultAccess() );
 
@@ -2652,7 +2652,8 @@ public final class AnnotationBinder {
 				|| property.isAnnotationPresent( PrimaryKeyJoinColumns.class );
 		Cascade hibernateCascade = property.getAnnotation( Cascade.class );
 		NotFound notFound = property.getAnnotation( NotFound.class );
-		boolean ignoreNotFound = notFound != null && notFound.action() == NotFoundAction.IGNORE;
+		NotFoundAction notFoundAction = notFound == null ? null : notFound.action();
+
 		// MapsId means the columns belong to the pk;
 		// A @MapsId association (obviously) must be non-null when the entity is first persisted.
 		// If a @MapsId association is not mapped with @NotFound(IGNORE), then the association
@@ -2662,8 +2663,8 @@ public final class AnnotationBinder {
 		// @OneToOne(optional = true) with @PKJC makes the association optional.
 		final boolean mandatory = !ann.optional()
 				|| property.isAnnotationPresent( Id.class )
-				|| property.isAnnotationPresent( MapsId.class ) && !ignoreNotFound;
-		matchIgnoreNotFoundWithFetchType( propertyHolder.getEntityName(), property.getName(), ignoreNotFound, ann.fetch() );
+				|| property.isAnnotationPresent( MapsId.class ) && notFoundAction != NotFoundAction.IGNORE;
+		matchIgnoreNotFoundWithFetchType( propertyHolder.getEntityName(), property.getName(), notFoundAction, ann.fetch() );
 		OnDelete onDeleteAnn = property.getAnnotation( OnDelete.class );
 		JoinTable assocTable = propertyHolder.getJoinTable(property);
 		if ( assocTable != null ) {
@@ -2677,7 +2678,7 @@ public final class AnnotationBinder {
 				joinColumns,
 				!mandatory,
 				getFetchMode( ann.fetch() ),
-				ignoreNotFound,
+				notFoundAction,
 				onDeleteAnn != null && OnDeleteAction.CASCADE == onDeleteAnn.action(),
 				ToOneBinder.getTargetEntity(inferredData, context),
 				propertyHolder,
@@ -2714,8 +2715,8 @@ public final class AnnotationBinder {
 
 		Cascade hibernateCascade = property.getAnnotation( Cascade.class );
 		NotFound notFound = property.getAnnotation( NotFound.class );
-		boolean ignoreNotFound = notFound != null && notFound.action() == NotFoundAction.IGNORE;
-		matchIgnoreNotFoundWithFetchType( propertyHolder.getEntityName(), property.getName(), ignoreNotFound, ann.fetch() );
+		NotFoundAction notFoundAction = notFound == null ? null : notFound.action();
+		matchIgnoreNotFoundWithFetchType( propertyHolder.getEntityName(), property.getName(), notFoundAction, ann.fetch() );
 		OnDelete onDeleteAnn = property.getAnnotation( OnDelete.class );
 		JoinTable assocTable = propertyHolder.getJoinTable(property);
 		if ( assocTable != null ) {
@@ -2732,12 +2733,12 @@ public final class AnnotationBinder {
 		// the association is optional.
 		final boolean mandatory = !ann.optional()
 				|| property.isAnnotationPresent( Id.class )
-				|| property.isAnnotationPresent( MapsId.class ) && !ignoreNotFound;
+				|| property.isAnnotationPresent( MapsId.class ) && notFoundAction != null;
 		bindManyToOne(
 				getCascadeStrategy( ann.cascade(), hibernateCascade, false, forcePersist),
 				joinColumns,
 				!mandatory,
-				ignoreNotFound,
+				notFoundAction,
 				onDeleteAnn != null && OnDeleteAction.CASCADE == onDeleteAnn.action(),
 				ToOneBinder.getTargetEntity(inferredData, context),
 				propertyHolder,
@@ -3545,7 +3546,7 @@ public final class AnnotationBinder {
 			String cascadeStrategy,
 			AnnotatedJoinColumn[] columns,
 			boolean optional,
-			boolean ignoreNotFound,
+			NotFoundAction notFoundAction,
 			boolean cascadeOnDelete,
 			XClass targetEntity,
 			PropertyHolder propertyHolder,
@@ -3565,7 +3566,7 @@ public final class AnnotationBinder {
 		final XProperty property = inferredData.getProperty();
 		defineFetchingStrategy( value, property );
 		//value.setFetchMode( fetchMode );
-		value.setIgnoreNotFound( ignoreNotFound );
+		value.setNotFoundAction( notFoundAction );
 		value.setCascadeDeleteEnabled( cascadeOnDelete );
 		//value.setLazy( fetchMode != FetchMode.JOIN );
 		if ( !optional ) {
@@ -3671,6 +3672,8 @@ public final class AnnotationBinder {
 		Fetch fetch = property.getAnnotation( Fetch.class );
 		ManyToOne manyToOne = property.getAnnotation( ManyToOne.class );
 		OneToOne oneToOne = property.getAnnotation( OneToOne.class );
+		NotFound notFound = property.getAnnotation( NotFound.class );
+
 		FetchType fetchType;
 		if ( manyToOne != null ) {
 			fetchType = manyToOne.fetch();
@@ -3683,7 +3686,12 @@ public final class AnnotationBinder {
 					"Define fetch strategy on a property not annotated with @OneToMany nor @OneToOne"
 			);
 		}
-		if ( lazy != null ) {
+
+		if ( notFound != null ) {
+			toOne.setLazy( false );
+			toOne.setUnwrapProxy( true );
+		}
+		else if ( lazy != null ) {
 			toOne.setLazy( !( lazy.value() == LazyToOneOption.FALSE ) );
 			toOne.setUnwrapProxy( ( lazy.value() == LazyToOneOption.NO_PROXY ) );
 		}
@@ -3692,6 +3700,7 @@ public final class AnnotationBinder {
 			toOne.setUnwrapProxy( fetchType != FetchType.LAZY );
 			toOne.setUnwrapProxyImplicit( true );
 		}
+
 		if ( fetch != null ) {
 			if ( fetch.value() == org.hibernate.annotations.FetchMode.JOIN ) {
 				toOne.setFetchMode( FetchMode.JOIN );
@@ -3718,7 +3727,7 @@ public final class AnnotationBinder {
 			AnnotatedJoinColumn[] joinColumns,
 			boolean optional,
 			FetchMode fetchMode,
-			boolean ignoreNotFound,
+			NotFoundAction notFoundAction,
 			boolean cascadeOnDelete,
 			XClass targetEntity,
 			PropertyHolder propertyHolder,
@@ -3769,7 +3778,7 @@ public final class AnnotationBinder {
 					propertyHolder,
 					inferredData,
 					targetEntity,
-					ignoreNotFound,
+					notFoundAction,
 					cascadeOnDelete,
 					optional,
 					cascadeStrategy,
@@ -3789,7 +3798,7 @@ public final class AnnotationBinder {
 		else {
 			//has a FK on the table
 			bindManyToOne(
-					cascadeStrategy, joinColumns, optional, ignoreNotFound, cascadeOnDelete,
+					cascadeStrategy, joinColumns, optional, notFoundAction, cascadeOnDelete,
 					targetEntity,
 					propertyHolder, inferredData, true, isIdentifierMapper, inSecondPass,
 					propertyBinder, context
@@ -4137,9 +4146,9 @@ public final class AnnotationBinder {
 	private static void matchIgnoreNotFoundWithFetchType(
 			String entity,
 			String association,
-			boolean ignoreNotFound,
+			NotFoundAction notFoundAction,
 			FetchType fetchType) {
-		if ( ignoreNotFound && fetchType == FetchType.LAZY ) {
+		if ( notFoundAction != null && fetchType == FetchType.LAZY ) {
 			LOG.ignoreNotFoundWithFetchTypeLazy( entity, association );
 		}
 	}

@@ -13,6 +13,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -82,6 +83,7 @@ public class EntityCollectionPart
 	private final Nature nature;
 	private final EntityMappingType entityMappingType;
 	private final Set<String> targetKeyPropertyNames;
+	private final NotFoundAction notFoundAction;
 
 	private ModelPart fkTargetModelPart;
 	private ForeignKeyDescriptor fkDescriptor;
@@ -90,12 +92,15 @@ public class EntityCollectionPart
 			CollectionPersister collectionDescriptor,
 			Nature nature,
 			Value bootModelValue,
+			NotFoundAction notFoundAction,
 			EntityMappingType entityMappingType,
 			MappingModelCreationProcess creationProcess) {
+		this.notFoundAction = notFoundAction;
 		this.navigableRole = collectionDescriptor.getNavigableRole().appendContainer( nature.getName() );
 		this.collectionDescriptor = collectionDescriptor;
 		this.nature = nature;
 		this.entityMappingType = entityMappingType;
+
 		final String referencedPropertyName;
 		final PersistentClass entityBinding;
 		if ( bootModelValue instanceof OneToMany ) {
@@ -112,6 +117,7 @@ public class EntityCollectionPart
 			entityBinding = toOne.getBuildingContext().getMetadataCollector()
 					.getEntityBinding( entityMappingType.getEntityName() );
 		}
+
 		if ( referencedPropertyName == null ) {
 			final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
 			targetKeyPropertyNames.add( EntityIdentifierMapping.ROLE_LOCAL_NAME );
@@ -460,7 +466,8 @@ public class EntityCollectionPart
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final boolean added = creationState.registerVisitedAssociationKey( getForeignKeyDescriptor().getAssociationKey() );
+		final ForeignKeyDescriptor foreignKeyDescriptor = getForeignKeyDescriptor();
+		final boolean added = creationState.registerVisitedAssociationKey( foreignKeyDescriptor.getAssociationKey() );
 
 		final TableGroup partTableGroup = resolveTableGroup( fetchablePath, creationState );
 		final EntityFetchJoinedImpl fetch = new EntityFetchJoinedImpl(
@@ -470,9 +477,11 @@ public class EntityCollectionPart
 				fetchablePath,
 				creationState
 		);
+
 		if ( added ) {
-			creationState.removeVisitedAssociationKey( getForeignKeyDescriptor().getAssociationKey() );
+			creationState.removeVisitedAssociationKey( foreignKeyDescriptor.getAssociationKey() );
 		}
+
 		return fetch;
 	}
 

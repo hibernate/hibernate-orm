@@ -15,6 +15,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -51,9 +52,9 @@ import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.query.sqm.spi.EntityIdentifierNavigablePath;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.spi.TreatedNavigablePath;
+import org.hibernate.query.sqm.spi.EntityIdentifierNavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -132,7 +133,7 @@ public class ToOneAttributeMapping
 	 */
 	private final boolean isKeyTableNullable;
 	private final boolean isConstrained;
-	private final boolean isIgnoreNotFound;
+	private final NotFoundAction notFoundAction;
 	private final boolean unwrapProxy;
 	private final boolean isOptional;
 	private final EntityMappingType entityMappingType;
@@ -193,7 +194,7 @@ public class ToOneAttributeMapping
 				name,
 				stateArrayPosition,
 				attributeMetadataAccess,
-				mappedFetchTiming,
+				adjustFetchTiming( mappedFetchTiming, bootValue ),
 				mappedFetchStyle,
 				declaringType,
 				propertyAccess,
@@ -208,7 +209,7 @@ public class ToOneAttributeMapping
 
 		if ( bootValue instanceof ManyToOne ) {
 			final ManyToOne manyToOne = (ManyToOne) bootValue;
-			this.isIgnoreNotFound = ( (ManyToOne) bootValue ).isIgnoreNotFound();
+			this.notFoundAction = ( (ManyToOne) bootValue ).getNotFoundAction();
 			if ( manyToOne.isLogicalOneToOne() ) {
 				cardinality = Cardinality.LOGICAL_ONE_TO_ONE;
 			}
@@ -350,7 +351,7 @@ public class ToOneAttributeMapping
 			else {
 				this.bidirectionalAttributeName = bidirectionalAttributeName;
 			}
-			isIgnoreNotFound = isNullable();
+			notFoundAction = isNullable() ? NotFoundAction.IGNORE : null;
 			isKeyTableNullable = isNullable();
 			isOptional = ! bootValue.isConstrained();
 		}
@@ -454,6 +455,15 @@ public class ToOneAttributeMapping
 		}
 	}
 
+	private static FetchTiming adjustFetchTiming(FetchTiming mappedFetchTiming, ToOne bootValue) {
+		if ( bootValue instanceof ManyToOne ) {
+			if ( ( (ManyToOne) bootValue ).getNotFoundAction() != null ) {
+				return FetchTiming.IMMEDIATE;
+			}
+		}
+		return mappedFetchTiming;
+	}
+
 	private TableGroupProducer resolveDeclaringTableGroupProducer(EntityPersister declaringEntityPersister) {
 		// Also handle cases where a collection contains an embeddable, that contains an association
 		NavigableRole parentRole = getNavigableRole().getParent();
@@ -497,7 +507,7 @@ public class ToOneAttributeMapping
 		this.isNullable = original.isNullable;
 		this.isKeyTableNullable = original.isKeyTableNullable;
 		this.isOptional = original.isOptional;
-		this.isIgnoreNotFound = original.isIgnoreNotFound;
+		this.notFoundAction = original.notFoundAction;
 		this.unwrapProxy = original.unwrapProxy;
 		this.entityMappingType = original.entityMappingType;
 		this.referencedPropertyName = original.referencedPropertyName;
@@ -606,7 +616,8 @@ public class ToOneAttributeMapping
 
 		// We can only use the parent table group if the FK is located there and ignoreNotFound is false
 		// If this is not the case, the FK is not constrained or on a join/secondary table, so we need a join
-		this.canUseParentTableGroup = !isIgnoreNotFound && sideNature == ForeignKeyDescriptor.Nature.KEY
+		this.canUseParentTableGroup = notFoundAction != NotFoundAction.IGNORE
+				&& sideNature == ForeignKeyDescriptor.Nature.KEY
 				&& declaringTableGroupProducer.containsTableReference( identifyingColumnsTableExpression );
 	}
 
@@ -928,23 +939,24 @@ public class ToOneAttributeMapping
 		}
 		// The referencedNavigablePath can be null if this is a collection initialization
 		if ( referencedNavigablePath != null ) {
+			// If this is the key side, we must ensure that the key is not null, so we create a domain result for it
+			// In the CircularBiDirectionalFetchImpl we return null if the key is null instead of the bidirectional value
+			final DomainResult<?> keyDomainResult;
+			// For now, we don't do this if the key table is nullable to avoid an additional join
+			if ( sideNature == ForeignKeyDescriptor.Nature.KEY && !isKeyTableNullable ) {
+				keyDomainResult = foreignKeyDescriptor.createKeyDomainResult(
+						fetchablePath,
+						creationState.getSqlAstCreationState()
+								.getFromClauseAccess()
+								.findTableGroup( realFetchParent.getNavigablePath() ),
+						creationState
+				);
+			}
+			else {
+				keyDomainResult = null;
+			}
+
 			if ( hasBidirectionalFetchParent ) {
-				// If this is the key side, we must ensure that the key is not null, so we create a domain result for it
-				// In the CircularBiDirectionalFetchImpl we return null if the key is null instead of the bidirectional value
-				final DomainResult<?> keyDomainResult;
-				// For now, we don't do this if the key table is nullable to avoid an additional join
-				if ( sideNature == ForeignKeyDescriptor.Nature.KEY && !isKeyTableNullable ) {
-					keyDomainResult = foreignKeyDescriptor.createKeyDomainResult(
-							fetchablePath,
-							creationState.getSqlAstCreationState()
-									.getFromClauseAccess()
-									.findTableGroup( realFetchParent.getNavigablePath() ),
-							creationState
-					);
-				}
-				else {
-					keyDomainResult = null;
-				}
 				return new CircularBiDirectionalFetchImpl(
 						FetchTiming.IMMEDIATE,
 						fetchablePath,
@@ -968,6 +980,7 @@ public class ToOneAttributeMapping
 						fetchParent,
 						this,
 						tableGroup,
+						keyDomainResult,
 						fetchablePath,
 						creationState
 				);
@@ -1012,9 +1025,7 @@ public class ToOneAttributeMapping
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 		final FromClauseAccess fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
 
-		final TableGroup parentTableGroup = fromClauseAccess.getTableGroup(
-				fetchParent.getNavigablePath()
-		);
+		final TableGroup parentTableGroup = fromClauseAccess.getTableGroup( fetchParent.getNavigablePath() );
 
 		final NavigablePath parentNavigablePath = fetchablePath.getParent();
 		assert parentNavigablePath.equals( fetchParent.getNavigablePath() )
@@ -1072,10 +1083,33 @@ public class ToOneAttributeMapping
 					}
 				}
 			}
+
+			final DomainResult<?> keyResult;
+			if ( notFoundAction != null ) {
+				if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
+					keyResult = foreignKeyDescriptor.createKeyDomainResult(
+							fetchablePath,
+							parentTableGroup,
+							creationState
+					);
+				}
+				else {
+					keyResult = foreignKeyDescriptor.createTargetDomainResult(
+							fetchablePath,
+							parentTableGroup,
+							creationState
+					);
+				}
+			}
+			else {
+				keyResult = null;
+			}
+
 			final EntityFetchJoinedImpl entityFetchJoined = new EntityFetchJoinedImpl(
 					fetchParent,
 					this,
 					tableGroup,
+					keyResult,
 					fetchablePath,
 					creationState
 			);
@@ -1555,8 +1589,12 @@ public class ToOneAttributeMapping
 		return isConstrained;
 	}
 
+	public NotFoundAction getNotFoundAction() {
+		return notFoundAction;
+	}
+
 	public boolean isIgnoreNotFound(){
-		return isIgnoreNotFound;
+		return notFoundAction == NotFoundAction.IGNORE;
 	}
 
 	@Override

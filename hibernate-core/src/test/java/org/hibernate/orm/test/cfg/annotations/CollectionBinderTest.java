@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -78,7 +79,7 @@ public class CollectionBinderTest extends BaseUnitTestCase {
 						AnnotatedJoinColumn[] fkJoinColumns,
 						XClass collectionType,
 						boolean cascadeDeleteEnabled,
-						boolean ignoreNotFound,
+						NotFoundAction notFoundAction,
 						MetadataBuildingContext buildingContext,
 						Map<XClass, InheritanceState> inheritanceStatePerClass) {
 					super.bindOneToManySecondPass(
@@ -87,12 +88,12 @@ public class CollectionBinderTest extends BaseUnitTestCase {
 							fkJoinColumns,
 							collectionType,
 							cascadeDeleteEnabled,
-							ignoreNotFound,
+							notFoundAction,
 							buildingContext,
 							inheritanceStatePerClass
 					);
 				}
-			}.bindOneToManySecondPass( collection, new HashMap(), null, collectionType, false, false, buildingContext, null);
+			}.bindOneToManySecondPass( collection, new HashMap(), null, collectionType, false, null, buildingContext, null);
 		} catch (MappingException e) {
 			assertEquals(expectMessage, e.getMessage());
 		}

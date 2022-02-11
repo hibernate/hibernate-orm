@@ -106,10 +106,10 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 	}
 
 	@Override
-	public DomainResultAssembler createAssembler(
+	public DomainResultAssembler<?> createAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
-		final DomainResultAssembler resultAssembler = keyResult.createResultAssembler( parentAccess, creationState );
+		final DomainResultAssembler<?> keyAssembler = keyResult.createResultAssembler( parentAccess, creationState );
 
 		final EntityInitializer initializer = (EntityInitializer) creationState.resolveInitializer(
 				getNavigablePath(),
@@ -122,7 +122,7 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 									fetchable,
 									getNavigablePath(),
 									entityMappingType.getEntityPersister(),
-									resultAssembler
+									keyAssembler
 							);
 						}
 						final EntityPersister entityPersister = entityMappingType.getEntityPersister();
@@ -132,7 +132,7 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 									(ToOneAttributeMapping) referencedModelPart,
 									getReferencedPath(),
 									entityPersister,
-									resultAssembler
+									keyAssembler
 							);
 						}
 						else {
@@ -141,7 +141,7 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 									(ToOneAttributeMapping) referencedModelPart,
 									getReferencedPath(),
 									entityPersister,
-									resultAssembler
+									keyAssembler
 							);
 						}
 					}
@@ -151,7 +151,7 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 								getReferencedPath(),
 								fetchable,
 								selectByUniqueKey,
-								resultAssembler
+								keyAssembler
 						);
 					}
 				}

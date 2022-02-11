@@ -16,6 +16,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.collection.internal.StandardArraySemantics;
 import org.hibernate.collection.internal.StandardBagSemantics;
@@ -1376,6 +1377,7 @@ public class MappingModelCreationHelper {
 					collectionDescriptor,
 					CollectionPart.Nature.INDEX,
 					bootMapKeyDescriptor,
+					null,
 					associatedEntity,
 					creationProcess
 			);
@@ -1473,10 +1475,22 @@ public class MappingModelCreationHelper {
 			final EntityType elementEntityType = (EntityType) collectionDescriptor.getElementType();
 			final EntityPersister associatedEntity = creationProcess.getEntityPersister( elementEntityType.getAssociatedEntityName() );
 
+			final NotFoundAction notFoundAction;
+			if ( element instanceof ManyToOne ) {
+				notFoundAction = ( (ManyToOne) element ).getNotFoundAction();
+			}
+			else if ( element instanceof OneToMany ) {
+				notFoundAction = ( (OneToMany) element ).getNotFoundAction();
+			}
+			else {
+				throw new IllegalArgumentException( "Just seeing if this happens" );
+			}
+
 			final EntityCollectionPart elementDescriptor = new EntityCollectionPart(
 					collectionDescriptor,
 					CollectionPart.Nature.ELEMENT,
 					bootDescriptor.getElement(),
+					notFoundAction,
 					associatedEntity,
 					creationProcess
 			);

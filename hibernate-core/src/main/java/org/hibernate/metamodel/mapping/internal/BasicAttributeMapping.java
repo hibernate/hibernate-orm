@@ -277,6 +277,7 @@ public class BasicAttributeMapping
 				getContainingTableExpression(),
 				allowFkOptimization
 		);
+
 		return expressionResolver.resolveSqlSelection(
 				expressionResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey(

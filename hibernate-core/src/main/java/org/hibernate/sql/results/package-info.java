@@ -10,4 +10,7 @@
  * defined by a "domain result graph" - one or more {@link org.hibernate.sql.results.graph.DomainResult} nodes
  * with zero-or-more {@link org.hibernate.sql.results.graph.Fetch} nodes
  */
+@Incubating
 package org.hibernate.sql.results;
+
+import org.hibernate.Incubating;

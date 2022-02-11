@@ -34,6 +34,7 @@ import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -79,8 +80,9 @@ public class JoinFormulaOneToOneNotIgnoreLazyFetchingTest extends BaseEntityMana
 
 	@Test
 	public void testLazyLoading() {
-
-		assertEquals( "HHH000491: The [code] association in the [" + Stock.class.getName() + "] entity uses both @NotFound(action = NotFoundAction.IGNORE) and FetchType.LAZY. The NotFoundAction.IGNORE @ManyToOne and @OneToOne associations are always fetched eagerly.", triggerable.triggerMessage() );
+		assertThat( triggerable.wasTriggered() )
+				.describedAs( "Expecting WARN message to be logged" )
+				.isTrue();
 
 		List<Stock> stocks = doInJPA( this::entityManagerFactory, entityManager -> {
 			return entityManager.createQuery(

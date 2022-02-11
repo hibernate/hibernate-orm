@@ -155,13 +155,13 @@ public class SessionFactoryExtension
 		}
 
 		final HashMap<String,Object> settings = new HashMap<>( baseProperties );
-		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP );
 		if ( createSecondarySchemas ) {
 			if ( !( model.getDatabase().getDialect().canCreateSchema() ) ) {
 				throw new UnsupportedOperationException(
 						model.getDatabase().getDialect() + " does not support schema creation" );
 			}
-			settings.put( AvailableSettings.HBM2DDL_CREATE_SCHEMAS, true );
+			settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS, true );
 		}
 		final StandardServiceRegistry serviceRegistry = model.getMetadataBuildingOptions().getServiceRegistry();
 
@@ -169,7 +169,7 @@ public class SessionFactoryExtension
 				model,
 				serviceRegistry,
 				settings,
-				action -> sessionFactory.addObserver(
+				(action) -> sessionFactory.addObserver(
 						new SessionFactoryObserver() {
 							@Override
 							public void sessionFactoryClosing(org.hibernate.SessionFactory factory) {

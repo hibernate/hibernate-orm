@@ -9,10 +9,12 @@ package org.hibernate.orm.test.notfound.exception;
 import java.io.Serializable;
 import java.util.List;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 
+import org.hibernate.FetchNotFoundException;
 import org.hibernate.Hibernate;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.annotations.NotFound;
@@ -65,7 +67,6 @@ public class NotFoundExceptionLogicalOneToOneTest {
 
 	@Test
 	@JiraKey( "HHH-15060" )
-	@FailureExpected( reason = "We return a proxy here for `Coin#currency`, which violates NOTE #1." )
 	public void testGet(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -73,18 +74,24 @@ public class NotFoundExceptionLogicalOneToOneTest {
 		scope.inTransaction( (session) -> {
 			session.get( Coin.class, 2 );
 
-			// here we assume join, but this could use subsequent-select instead
-			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
+			// at the moment this is handled as SELECT fetch
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 2 );
+
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Coin " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " Currency " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " join " );
+
+			assertThat( statementInspector.getSqlQueries().get( 1 ) ).contains( " Currency " );
+			assertThat( statementInspector.getSqlQueries().get( 1 ) ).doesNotContain( " Coin " );
+			assertThat( statementInspector.getSqlQueries().get( 1 ) ).doesNotContain( " join " );
 		} );
 
 		scope.inTransaction( (session) -> {
 			try {
-				session.get( Coin.class, 1 );
-				fail( "Expecting ObjectNotFoundException" );
+				final Coin coin = session.get( Coin.class, 1 );
+				fail( "Expecting ObjectNotFoundException, got - coin = " + coin + "; currency = " + coin.currency );
 			}
-			catch (ObjectNotFoundException expected) {
+			catch (FetchNotFoundException expected) {
 				assertThat( expected.getEntityName() ).isEqualTo( Currency.class.getName() );
 				assertThat( expected.getIdentifier() ).isEqualTo( 1 );
 			}
@@ -93,7 +100,7 @@ public class NotFoundExceptionLogicalOneToOneTest {
 
 	@Test
 	@JiraKey( "HHH-15060" )
-	@FailureExpected( reason = "We return a proxy for `Coin#currency`, which violates NOTE #1." )
+	@FailureExpected( reason = "Join is not used in the SQL" )
 	public void testQueryImplicitPathDereferencePredicate(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -123,16 +130,15 @@ public class NotFoundExceptionLogicalOneToOneTest {
 
 	@Test
 	@JiraKey( "HHH-15060" )
-	@FailureExpected( reason = "We return a proxy for `Coin#currency`, which violates NOTE #1." )
 	public void testQueryOwnerSelection(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final String hql = "select c from Coin c where c.id = 1";
 			try {
 				//noinspection unused (debugging)
 				final Coin coin = session.createQuery( hql, Coin.class ).uniqueResult();
-				fail( "Expecting ObjectNotFoundException for broken fk" );
+				fail( "Expecting ObjectNotFoundException; got - currency = " + coin.currency + "; coin = " + coin );
 			}
-			catch (ObjectNotFoundException expected) {
+			catch (FetchNotFoundException expected) {
 				assertThat( expected.getEntityName() ).isEqualTo( Currency.class.getName() );
 				assertThat( expected.getIdentifier() ).isEqualTo( 1 );
 			}

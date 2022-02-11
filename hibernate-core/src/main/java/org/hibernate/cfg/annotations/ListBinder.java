@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OrderBy;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
@@ -71,7 +72,7 @@ public class ListBinder extends CollectionBinder {
 			final boolean isEmbedded,
 			final XProperty property,
 			final XClass collType,
-			final boolean ignoreNotFound,
+			final NotFoundAction notFoundAction,
 			final boolean unique,
 			final TableBinder assocTableBinder,
 			final MetadataBuildingContext buildingContext) {
@@ -90,7 +91,7 @@ public class ListBinder extends CollectionBinder {
 						property,
 						unique,
 						assocTableBinder,
-						ignoreNotFound,
+						notFoundAction,
 						buildingContext
 				);
 				bindIndex( property, collType, buildingContext );

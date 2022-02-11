@@ -8,4 +8,7 @@
 /**
  * Package defining a SQL AST for use in creating and executing various JDBC operations
  */
+@Incubating
 package org.hibernate.sql.ast;
+
+import org.hibernate.Incubating;

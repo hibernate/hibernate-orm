@@ -6,10 +6,16 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
@@ -22,25 +28,54 @@ import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
  * @author Steve Ebersole
  */
 public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
-
 	private final EntityResultImpl entityResult;
+	private final DomainResult<?> keyResult;
+	private final NotFoundAction notFoundAction;
+
 	private final String sourceAlias;
 
 	public EntityFetchJoinedImpl(
 			FetchParent fetchParent,
-			EntityValuedFetchable fetchedAttribute,
+			ToOneAttributeMapping toOneMapping,
 			TableGroup tableGroup,
+			DomainResult<?> keyResult,
 			NavigablePath navigablePath,
 			DomainResultCreationState creationState) {
-		super( fetchParent, fetchedAttribute, navigablePath );
+		super( fetchParent, toOneMapping, navigablePath );
+		this.keyResult = keyResult;
+		this.notFoundAction = toOneMapping.getNotFoundAction();
 		this.sourceAlias = tableGroup.getSourceAlias();
+
 		this.entityResult = new EntityResultImpl(
 				navigablePath,
-				fetchedAttribute,
+				toOneMapping,
 				tableGroup,
 				null,
 				creationState
 		);
+
+		this.entityResult.afterInitialize( this, creationState );
+	}
+
+	public EntityFetchJoinedImpl(
+			FetchParent fetchParent,
+			EntityCollectionPart collectionPart,
+			TableGroup tableGroup,
+			NavigablePath navigablePath,
+			DomainResultCreationState creationState) {
+		super( fetchParent, collectionPart, navigablePath );
+		this.notFoundAction = null;
+		this.keyResult = null;
+		this.sourceAlias = tableGroup.getSourceAlias();
+
+		this.entityResult = new EntityResultImpl(
+				navigablePath,
+				collectionPart,
+				tableGroup,
+				null,
+				creationState
+		);
+
 		this.entityResult.afterInitialize( this, creationState );
 	}
 
@@ -56,6 +91,8 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 						getReferencedModePart(),
 						getNavigablePath(),
 						creationState.determineEffectiveLockMode( sourceAlias ),
+						notFoundAction,
+						keyResult,
 						entityResult.getIdentifierFetch(),
 						entityResult.getDiscriminatorFetch(),
 						creationState

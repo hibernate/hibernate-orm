@@ -35,7 +35,6 @@ import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
@@ -59,10 +58,6 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
-import org.hibernate.persister.walking.spi.CollectionElementDefinition;
-import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
-import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.sql.ast.Clause;
@@ -112,10 +107,6 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		@Override
 		public BytecodeEnhancementMetadata getInstrumentationMetadata() {
 			return new BytecodeEnhancementMetadataNonPojoImpl( null );
-		}
-
-		@Override
-		public void generateEntityDefinition() {
 		}
 
 		@Override
@@ -734,16 +725,6 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 			return null;
 		}
 
-		@Override
-		public EntityIdentifierDefinition getEntityKeyDefinition() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public Iterable<AttributeDefinition> getAttributes() {
-			throw new NotYetImplementedException();
-		}
-
         @Override
         public int[] resolveAttributeIndexes(String[] attributeNames) {
             return null;
@@ -815,22 +796,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		@Override
-		public CollectionPersister getCollectionPersister() {
-			return this;
-		}
-
 		public CollectionType getCollectionType() {
-			throw new NotYetImplementedException();
-		}
-
-		@Override
-		public CollectionIndexDefinition getIndexDefinition() {
-			throw new NotYetImplementedException();
-		}
-
-		@Override
-		public CollectionElementDefinition getElementDefinition() {
 			throw new NotYetImplementedException();
 		}
 

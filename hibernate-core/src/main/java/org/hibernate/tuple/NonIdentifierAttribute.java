@@ -8,12 +8,11 @@ package org.hibernate.tuple;
 
 import org.hibernate.FetchMode;
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
 
 /**
  * @author Steve Ebersole
  */
-public interface NonIdentifierAttribute extends Attribute, AttributeDefinition {
+public interface NonIdentifierAttribute extends Attribute {
 	boolean isLazy();
 
 	boolean isInsertable();

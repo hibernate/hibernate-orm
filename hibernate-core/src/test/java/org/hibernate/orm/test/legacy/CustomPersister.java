@@ -55,8 +55,6 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
-import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
@@ -117,10 +115,6 @@ public class CustomPersister implements EntityPersister {
 	@Override
 	public Class<?> getMappedClass() {
 		return Custom.class;
-	}
-
-	@Override
-	public void generateEntityDefinition() {
 	}
 
 	public void postInstantiate() throws MappingException {}
@@ -820,16 +814,6 @@ public class CustomPersister implements EntityPersister {
 	@Override
 	public EntityRepresentationStrategy getRepresentationStrategy() {
 		return null;
-	}
-
-	@Override
-	public EntityIdentifierDefinition getEntityKeyDefinition() {
-		throw new NotYetImplementedException();
-	}
-
-	@Override
-	public Iterable<AttributeDefinition> getAttributes() {
-		throw new NotYetImplementedException();
 	}
 
     @Override

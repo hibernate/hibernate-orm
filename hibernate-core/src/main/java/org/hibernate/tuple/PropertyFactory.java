@@ -286,40 +286,4 @@ public final class PropertyFactory {
 		);
 	}
 
-
-	private static Constructor<?> getConstructor(PersistentClass persistentClass) {
-		if ( persistentClass == null || !persistentClass.hasPojoRepresentation() ) {
-			return null;
-		}
-
-		try {
-			return ReflectHelper.getDefaultConstructor( persistentClass.getMappedClass() );
-		}
-		catch (Throwable t) {
-			return null;
-		}
-	}
-
-	private static Getter getGetter(Property mappingProperty) {
-		if ( mappingProperty == null || !mappingProperty.getPersistentClass().hasPojoRepresentation() ) {
-			return null;
-		}
-
-		final PropertyAccessStrategyResolver propertyAccessStrategyResolver =
-				mappingProperty.getPersistentClass().getServiceRegistry().getService( PropertyAccessStrategyResolver.class );
-
-		final PropertyAccessStrategy propertyAccessStrategy = propertyAccessStrategyResolver.resolvePropertyAccessStrategy(
-				mappingProperty.getClass(),
-				mappingProperty.getPropertyAccessorName(),
-				RepresentationMode.POJO
-		);
-
-		final PropertyAccess propertyAccess = propertyAccessStrategy.buildPropertyAccess(
-				mappingProperty.getPersistentClass().getMappedClass(),
-				mappingProperty.getName(),
-				true );
-
-		return propertyAccess.getGetter();
-	}
-
 }

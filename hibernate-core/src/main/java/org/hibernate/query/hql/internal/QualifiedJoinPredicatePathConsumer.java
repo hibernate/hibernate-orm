@@ -10,12 +10,15 @@ import java.util.Locale;
 
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.spi.SemanticPathPart;
+import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmQuery;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
+import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
 /**
@@ -40,16 +43,28 @@ public class QualifiedJoinPredicatePathConsumer extends BasicDotIdentifierConsum
 			@Override
 			protected void validateAsRoot(SqmFrom<?, ?> pathRoot) {
 				final SqmRoot<?> root = pathRoot.findRoot();
-				if ( root != sqmJoin.findRoot() ) {
-					final SqmQuery<?> processingQuery = getCreationState().getCurrentProcessingState().getProcessingQuery();
-					if ( processingQuery instanceof SqmSubQuery<?> ) {
-						final SqmQuerySpec<?> querySpec = ( (SqmSubQuery<?>) processingQuery ).getQuerySpec();
-						// If this "foreign" from element is used in a sub query
-						// This is only an error if the from element is actually part of the sub query
-						if ( querySpec.getFromClause() == null || !querySpec.getFromClause().getRoots().contains( root ) ) {
-							super.validateAsRoot( pathRoot );
+				final SqmRoot<?> joinRoot = sqmJoin.findRoot();
+				if ( root != joinRoot ) {
+					// The root of a path within a query doesn't have the same root as the current join we are processing.
+					// The aim of this check is to prevent uses of different "spaces" i.e. `from A a, B b join b.id = a.id` would be illegal
+					SqmCreationProcessingState processingState = getCreationState().getCurrentProcessingState();
+					// First, we need to find out if the current join is part of current processing query
+					final SqmQuery<?> currentProcessingQuery = processingState.getProcessingQuery();
+					if ( currentProcessingQuery instanceof SqmSelectQuery<?> ) {
+						final SqmQuerySpec<?> querySpec = ( (SqmSelectQuery<?>) currentProcessingQuery ).getQuerySpec();
+						final SqmFromClause fromClause = querySpec.getFromClause();
+						// If the current processing query contains the root of the current join,
+						// then the root of the processing path must be a root of one of the parent queries
+						if ( fromClause != null && fromClause.getRoots().contains( joinRoot ) ) {
+							validateAsRootOnParentQueryClosure( pathRoot, root, processingState.getParentProcessingState() );
 							return;
 						}
+					}
+					// If the current join is not part of the processing query, this must be a sub query in the ON clause
+					// in which case the path root is allowed to occur in the current processing query as root
+					if ( currentProcessingQuery instanceof SqmSubQuery<?> ) {
+						validateAsRootOnParentQueryClosure( pathRoot, root, processingState );
+						return;
 					}
 					throw new SemanticException(
 							String.format(
@@ -62,6 +77,35 @@ public class QualifiedJoinPredicatePathConsumer extends BasicDotIdentifierConsum
 				}
 
 				super.validateAsRoot( pathRoot );
+			}
+
+			private void validateAsRootOnParentQueryClosure(
+					SqmFrom<?, ?> pathRoot,
+					SqmRoot<?> root,
+					SqmCreationProcessingState processingState) {
+				while ( processingState != null ) {
+					final SqmQuery<?> processingQuery = processingState.getProcessingQuery();
+					if ( processingQuery instanceof SqmSelectQuery<?> ) {
+						final SqmQuerySpec<?> querySpec = ( (SqmSelectQuery<?>) processingQuery ).getQuerySpec();
+						final SqmFromClause fromClause = querySpec.getFromClause();
+						// If we are in a sub query, the "foreign" from element could be one of the sub query roots,
+						// which is totally fine. The aim of this check is to prevent uses of different "spaces"
+						// i.e. `from A a, B b join b.id = a.id` would be illegal
+						if ( fromClause != null && fromClause.getRoots().contains( root ) ) {
+							super.validateAsRoot( pathRoot );
+							return;
+						}
+					}
+					processingState = processingState.getParentProcessingState();
+				}
+				throw new SemanticException(
+						String.format(
+								Locale.ROOT,
+								"SqmQualifiedJoin predicate referred to SqmRoot [`%s`] other than the join's root [`%s`]",
+								pathRoot.getNavigablePath().getFullPath(),
+								sqmJoin.getNavigablePath().getFullPath()
+						)
+				);
 			}
 		};
 	}

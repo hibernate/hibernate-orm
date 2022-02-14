@@ -395,10 +395,15 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			// parent refers to the associated entity's PK (because 'our' table would know the FK).
 			parentAsDotNode = (DotNode) parent;
 			property = parentAsDotNode.propertyName;
-			joinIsNeeded = generateJoin && (
-					entityType.isNullable() ||
-							!isReferenceToPrimaryKey( parentAsDotNode.propertyName, entityType )
-			);
+			final boolean referenceToPrimaryKey = isReferenceToPrimaryKey( parentAsDotNode.propertyName, entityType );
+			joinIsNeeded = generateJoin && ( entityType.isNullable() || !referenceToPrimaryKey );
+
+			if ( generateJoin
+					&& implicitJoin
+					&& entityType.isNullable()
+					&& referenceToPrimaryKey ) {
+				joinType = JoinType.LEFT_OUTER_JOIN;
+			}
 		}
 		else if ( !getWalker().isSelectStatement() ) {
 			// in non-select queries, the only time we should need to join is if we are in a subquery from clause

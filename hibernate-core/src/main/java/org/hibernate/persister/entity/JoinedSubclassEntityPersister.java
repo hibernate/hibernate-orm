@@ -40,14 +40,26 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SingularAttributeMapping;
+import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
+import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl;
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -108,7 +120,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	// properties of this class, including inherited properties
 	private final int[] naturalOrderPropertyTableNumbers;
-	private final int[] propertyTableNumbers;
+//	private final int[] propertyTableNumbers;
 
 	// the closure of all properties in the entire hierarchy including
 	// subclasses and superclasses of this class
@@ -446,13 +458,13 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		// PROPERTIES
 		int hydrateSpan = getPropertySpan();
 		naturalOrderPropertyTableNumbers = new int[hydrateSpan];
-		propertyTableNumbers = new int[hydrateSpan];
+//		propertyTableNumbers = new int[hydrateSpan];
 		List<Property> propertyClosure = persistentClass.getPropertyClosure();
 		for ( int i = 0; i < propertyClosure.size(); i++ ) {
 			String tableName = propertyClosure.get(i).getValue().getTable().getQualifiedName(
 					factory.getSqlStringGenerationContext()
 			);
-			propertyTableNumbers[i] = getTableId( tableName, this.tableNames );
+//			propertyTableNumbers[i] = getTableId( tableName, this.tableNames );
 			naturalOrderPropertyTableNumbers[i] = getTableId( tableName, naturalOrderTableNames );
 		}
 
@@ -880,16 +892,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected String filterFragment(String alias) {
-		return hasWhere() ? getSQLWhereString( generateFilterConditionAlias( alias ) ) : "";
-	}
-
-	@Override
-	protected String filterFragment(String alias, Set<String> treatAsDeclarations) {
-		return filterFragment( alias );
-	}
-
-	@Override
 	public String generateFilterConditionAlias(String rootAlias) {
 		return generateTableAlias( rootAlias, tableSpan - 1 );
 	}
@@ -997,15 +999,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 
 		return subclassNamesBySubclassTable[index];
-	}
-
-	@Override
-	public String getPropertyTableName(String propertyName) {
-		Integer index = getEntityMetamodel().getPropertyIndexOrNull( propertyName );
-		if ( index == null ) {
-			return null;
-		}
-		return tableNames[propertyTableNumbers[index]];
 	}
 
 	@Override

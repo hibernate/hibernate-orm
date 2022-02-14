@@ -21,6 +21,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.Map;
 import org.hibernate.mapping.OneToMany;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
@@ -66,8 +67,6 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl;
-import org.hibernate.tuple.IdentifierProperty;
-import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -98,24 +97,26 @@ public class EntityCollectionPart
 		this.nature = nature;
 		this.entityMappingType = entityMappingType;
 		final String referencedPropertyName;
+		final PersistentClass entityBinding;
 		if ( bootModelValue instanceof OneToMany ) {
 			final String mappedByProperty = collectionDescriptor.getMappedByProperty();
 			referencedPropertyName = mappedByProperty == null || mappedByProperty.isEmpty()
 					? null
 					: mappedByProperty;
+			entityBinding = ( (OneToMany) bootModelValue ).getBuildingContext().getMetadataCollector()
+					.getEntityBinding( entityMappingType.getEntityName() );
 		}
 		else {
-			referencedPropertyName = ( (ToOne) bootModelValue ).getReferencedPropertyName();
+			final ToOne toOne = (ToOne) bootModelValue;
+			referencedPropertyName = toOne.getReferencedPropertyName();
+			entityBinding = toOne.getBuildingContext().getMetadataCollector()
+					.getEntityBinding( entityMappingType.getEntityName() );
 		}
 		if ( referencedPropertyName == null ) {
 			final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
 			targetKeyPropertyNames.add( EntityIdentifierMapping.ROLE_LOCAL_NAME );
-			final IdentifierProperty identifierProperty = getEntityMappingType()
-					.getEntityPersister()
-					.getEntityMetamodel()
-					.getIdentifierProperty();
-			final Type propertyType = identifierProperty.getType();
-			if ( identifierProperty.getName() == null ) {
+			final Type propertyType = entityBinding.getIdentifier().getType();
+			if ( entityBinding.getIdentifierProperty() == null ) {
 				final CompositeType compositeType;
 				if ( propertyType.isComponentType() && ( compositeType = (CompositeType) propertyType ).isEmbedded()
 						&& compositeType.getPropertyNames().length == 1 ) {
@@ -138,7 +139,7 @@ public class EntityCollectionPart
 			else {
 				ToOneAttributeMapping.addPrefixedPropertyNames(
 						targetKeyPropertyNames,
-						identifierProperty.getName(),
+						entityBinding.getIdentifierProperty().getName(),
 						propertyType,
 						creationProcess.getCreationContext().getSessionFactory()
 				);
@@ -162,9 +163,7 @@ public class EntityCollectionPart
 			this.targetKeyPropertyNames = targetKeyPropertyNames;
 		}
 		else {
-			final EntityMetamodel entityMetamodel = entityMappingType.getEntityPersister().getEntityMetamodel();
-			final int propertyIndex = entityMetamodel.getPropertyIndex( referencedPropertyName );
-			final Type propertyType = entityMetamodel.getPropertyTypes()[propertyIndex];
+			final Type propertyType = entityBinding.getProperty( referencedPropertyName ).getType();
 			final CompositeType compositeType;
 			if ( propertyType.isComponentType() && ( compositeType = (CompositeType) propertyType ).isEmbedded()
 					&& compositeType.getPropertyNames().length == 1 ) {

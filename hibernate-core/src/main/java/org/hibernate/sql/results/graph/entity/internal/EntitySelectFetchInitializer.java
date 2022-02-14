@@ -218,7 +218,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			if ( concreteDescriptor.isPolymorphic() ) {
 				final AbstractEntityPersister declaringType = (AbstractEntityPersister) referencedModelPart.getDeclaringType();
 				if ( concreteDescriptor != declaringType ) {
-					if ( !declaringType.getEntityMetamodel().getSubclassEntityNames().contains( concreteDescriptor.getEntityMetamodel().getName() ) ) {
+					if ( !declaringType.getSubclassEntityNames().contains( concreteDescriptor.getName() ) ) {
 						return false;
 					}
 				}

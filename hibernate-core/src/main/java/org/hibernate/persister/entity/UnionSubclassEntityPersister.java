@@ -352,16 +352,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected String filterFragment(String name) {
-		return hasWhere() ? getSQLWhereString( name ) : "";
-	}
-
-	@Override
-	protected String filterFragment(String alias, Set<String> treatAsDeclarations) {
-		return filterFragment( alias );
-	}
-
-	@Override
 	public String getSubclassPropertyTableName(int i) {
 		return getTableName();//ie. the subquery! yuck!
 	}
@@ -524,7 +514,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		final StringBuilder buf = new StringBuilder( subquery.length() )
 				.append( "( " );
 
-		for ( String name : getEntityMetamodel().getSubclassEntityNames() ) {
+		for ( String name : getSubclassEntityNames() ) {
 			final AbstractEntityPersister persister = (AbstractEntityPersister) metamodel.findEntityDescriptor( name );
 			final String subclassTableName = persister.getTableName();
 			if ( treatedTableNames.contains( subclassTableName ) ) {
@@ -593,12 +583,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			throw new AssertionFailure( "only one table" );
 		}
 		return true;
-	}
-
-	@Override
-	public String getPropertyTableName(String propertyName) {
-		//TODO: check this....
-		return getTableName();
 	}
 
 	@Override

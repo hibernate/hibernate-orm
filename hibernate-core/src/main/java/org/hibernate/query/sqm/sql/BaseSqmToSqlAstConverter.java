@@ -3989,7 +3989,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						treatedPath.getTreatTarget().getHibernateEntityName()
 				);
 				conjunctTreatUsages.computeIfAbsent( treatedPath.getWrappedPath(), p -> new HashSet<>( 1 ) )
-								.addAll( entityDescriptor.getEntityMetamodel().getSubclassEntityNames() );
+								.addAll( entityDescriptor.getSubclassEntityNames() );
 				return expression;
 			}
 			// Note: If the columns that are accessed are not shared with other entities, we could avoid this wrapping
@@ -4039,7 +4039,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( treatTarget.getHibernateEntityName() );
-		final Set<String> subclassEntityNames = entityDescriptor.getEntityMetamodel().getSubclassEntityNames();
+		final Set<String> subclassEntityNames = entityDescriptor.getSubclassEntityNames();
 		return createTreatTypeRestriction( lhs, subclassEntityNames );
 	}
 

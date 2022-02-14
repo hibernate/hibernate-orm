@@ -91,7 +91,7 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 			if ( concreteDescriptor.isPolymorphic() ) {
 				final AbstractEntityPersister declaringType = (AbstractEntityPersister) collectionAttributeMapping.getDeclaringType();
 				if ( concreteDescriptor != declaringType ) {
-					if ( !declaringType.getEntityMetamodel().getSubclassEntityNames().contains( concreteDescriptor.getEntityMetamodel().getName() ) ) {
+					if ( !declaringType.getSubclassEntityNames().contains( concreteDescriptor.getName() ) ) {
 						return false;
 					}
 				}

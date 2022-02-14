@@ -11,18 +11,13 @@ import org.hibernate.type.Type;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractAttribute implements Attribute, Property {
+public abstract class AbstractAttribute implements Attribute {
 	private final String attributeName;
 	private final Type attributeType;
 
 	protected AbstractAttribute(String attributeName, Type attributeType) {
 		this.attributeName = attributeName;
 		this.attributeType = attributeType;
-	}
-
-	@Override
-	public String getNode() {
-		return null;
 	}
 
 	@Override

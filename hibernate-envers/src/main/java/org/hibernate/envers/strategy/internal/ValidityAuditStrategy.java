@@ -511,7 +511,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 									revision
 							)
 					);
-					entityName = entity.getEntityMetamodel().getSuperclass();
+					entityName = entity.getEntityMappingType().getSuperMappingType().getEntityName();
 					auditEntityName = configuration.getAuditEntityName( entityName );
 					entity = getQueryable( entityName, session );
 				}

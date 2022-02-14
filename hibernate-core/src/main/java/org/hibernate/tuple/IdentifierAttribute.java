@@ -11,7 +11,7 @@ import org.hibernate.id.IdentifierGenerator;
 /**
  * @author Steve Ebersole
  */
-public interface IdentifierAttribute extends Attribute, Property {
+public interface IdentifierAttribute extends Attribute {
 	boolean isVirtual();
 
 	boolean isEmbedded();

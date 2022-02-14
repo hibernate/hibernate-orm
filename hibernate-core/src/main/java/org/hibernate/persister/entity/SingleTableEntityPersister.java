@@ -37,6 +37,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -562,88 +563,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return getTableName() + ' ' + name;
 	}
 
-	@Override
-	protected String filterFragment(String alias) throws MappingException {
-		if ( hasWhere() ) {
-			return discriminatorFilterFragment( alias ) + " and " + getSQLWhereString( alias );
-		}
-		else {
-			return "";
-		}
-	}
-
-	private String discriminatorFilterFragment(String alias) throws MappingException {
-		return discriminatorFilterFragment( alias, null );
-	}
-
-	@Override
-	protected String filterFragment(String alias, Set<String> treatAsDeclarations) {
-		if ( hasWhere() ) {
-			final String discriminatorFilterFragment = discriminatorFilterFragment( alias, treatAsDeclarations );
-			if ( StringHelper.isNotEmpty( discriminatorFilterFragment ) ) {
-				return discriminatorFilterFragment + " and " + getSQLWhereString( alias );
-			}
-			return getSQLWhereString( alias );
-		}
-		else {
-			return "";
-		}
-	}
-
-	private String discriminatorFilterFragment(String alias, Set<String> treatAsDeclarations) {
-		final boolean hasTreatAs = treatAsDeclarations != null && !treatAsDeclarations.isEmpty();
-
-		if ( !needsDiscriminator() && !hasTreatAs ) {
-			return "";
-		}
-
-		final InFragment frag = new InFragment();
-		if ( isDiscriminatorFormula() ) {
-			frag.setFormula( alias, getDiscriminatorFormulaTemplate() );
-		}
-		else {
-			frag.setColumn( alias, getDiscriminatorColumnName() );
-		}
-
-		frag.addValues( hasTreatAs ? decodeTreatAsRequests( treatAsDeclarations ) : fullDiscriminatorSQLValues );
-
-		return frag.toFragmentString();
-	}
-
 	private boolean needsDiscriminator() {
 		return forceDiscriminator || isInherited();
-	}
-
-	private String[] decodeTreatAsRequests(Set<String> treatAsDeclarations) {
-		final List<String> values = new ArrayList<>();
-		for ( String subclass : treatAsDeclarations ) {
-			final Queryable queryable = (Queryable) getFactory()
-					.getRuntimeMetamodels()
-					.getMappingMetamodel()
-					.getEntityDescriptor( subclass );
-			if ( !queryable.isAbstract() ) {
-				values.add( queryable.getDiscriminatorSQLValue() );
-			}
-			if ( queryable.hasSubclasses() ) {
-				// if the treat is an abstract class, add the concrete implementations to values if any
-				Set<String> actualSubClasses = queryable.getEntityMetamodel().getSubclassEntityNames();
-
-				for ( String actualSubClass : actualSubClasses ) {
-					if ( actualSubClass.equals( subclass ) ) {
-						continue;
-					}
-
-					final Queryable actualQueryable = (Queryable) getFactory()
-							.getRuntimeMetamodels()
-							.getMappingMetamodel()
-							.getEntityDescriptor( actualSubClass );
-					if ( !actualQueryable.hasSubclasses() ) {
-						values.add( actualQueryable.getDiscriminatorSQLValue() );
-					}
-				}
-			}
-		}
-		return ArrayHelper.toStringArray( values );
 	}
 
 	@Override
@@ -713,12 +634,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	@Override
 	protected boolean isNullableSubclassTable(int j) {
 		return isNullableSubclassTable[j];
-	}
-
-	@Override
-	public String getPropertyTableName(String propertyName) {
-		Integer index = getEntityMetamodel().getPropertyIndexOrNull( propertyName );
-		return index == null ? null : qualifiedTableNames[propertyTableNumbers[index]];
 	}
 
 	@Override
@@ -880,10 +795,47 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public void pruneForSubclasses(TableGroup tableGroup, Set<String> treatedEntityNames) {
+		if ( !needsDiscriminator() && treatedEntityNames.isEmpty() ) {
+			return;
+		}
 		// The optimization is to simply add the discriminator filter fragment for all treated entity names
 		final NamedTableReference tableReference = (NamedTableReference) tableGroup.getPrimaryTableReference();
+
+		final InFragment frag = new InFragment();
+		if ( isDiscriminatorFormula() ) {
+			frag.setFormula( "t", getDiscriminatorFormulaTemplate() );
+		}
+		else {
+			frag.setColumn( "t", getDiscriminatorColumnName() );
+		}
+
+		final MappingMetamodelImplementor mappingMetamodel = getFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel();
+		for ( String subclass : treatedEntityNames ) {
+			final Queryable queryable = (Queryable) mappingMetamodel.getEntityDescriptor( subclass );
+			if ( !queryable.isAbstract() ) {
+				frag.addValue( queryable.getDiscriminatorSQLValue() );
+			}
+			if ( queryable.hasSubclasses() ) {
+				// if the treat is an abstract class, add the concrete implementations to values if any
+				Set<String> actualSubClasses = queryable.getSubclassEntityNames();
+
+				for ( String actualSubClass : actualSubClasses ) {
+					if ( actualSubClass.equals( subclass ) ) {
+						continue;
+					}
+
+					final Queryable actualQueryable = (Queryable) mappingMetamodel.getEntityDescriptor( actualSubClass );
+					if ( !actualQueryable.hasSubclasses() ) {
+						frag.addValue( actualQueryable.getDiscriminatorSQLValue() );
+					}
+				}
+			}
+		}
+
 		tableReference.setPrunedTableExpression(
-				"(select * from " + getTableName() + " t where " + discriminatorFilterFragment( "t", treatedEntityNames ) + ")"
+				"(select * from " + getTableName() + " t where " + frag.toFragmentString() + ")"
 		);
 	}
 

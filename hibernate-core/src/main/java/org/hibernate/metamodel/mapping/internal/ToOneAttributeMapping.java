@@ -91,8 +91,6 @@ import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultJoinedSubclassImpl;
 import org.hibernate.sql.results.internal.domain.CircularBiDirectionalFetchImpl;
 import org.hibernate.sql.results.internal.domain.CircularFetchImpl;
-import org.hibernate.tuple.IdentifierProperty;
-import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
@@ -363,12 +361,10 @@ public class ToOneAttributeMapping
 		if ( referencedPropertyName == null ) {
 			final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
 			targetKeyPropertyNames.add( EntityIdentifierMapping.ROLE_LOCAL_NAME );
-			final IdentifierProperty identifierProperty = getEntityMappingType()
-					.getEntityPersister()
-					.getEntityMetamodel()
-					.getIdentifierProperty();
-			final Type propertyType = identifierProperty.getType();
-			if ( identifierProperty.getName() == null ) {
+			final PersistentClass entityBinding = bootValue.getBuildingContext().getMetadataCollector()
+					.getEntityBinding( entityMappingType.getEntityName() );
+			final Type propertyType = entityBinding.getIdentifier().getType();
+			if ( entityBinding.getIdentifierProperty() == null ) {
 				final CompositeType compositeType;
 				if ( propertyType.isComponentType() && ( compositeType = (CompositeType) propertyType ).isEmbedded()
 						&& compositeType.getPropertyNames().length == 1 ) {
@@ -397,7 +393,7 @@ public class ToOneAttributeMapping
 				}
 			}
 			else {
-				this.targetKeyPropertyName = identifierProperty.getName();
+				this.targetKeyPropertyName = entityBinding.getIdentifierProperty().getName();
 				addPrefixedPropertyNames(
 						targetKeyPropertyNames,
 						targetKeyPropertyName,
@@ -419,9 +415,9 @@ public class ToOneAttributeMapping
 			this.targetKeyPropertyNames = targetKeyPropertyNames;
 		}
 		else {
-			final EntityMetamodel entityMetamodel = entityMappingType.getEntityPersister().getEntityMetamodel();
-			final int propertyIndex = entityMetamodel.getPropertyIndex( referencedPropertyName );
-			final Type propertyType = entityMetamodel.getPropertyTypes()[propertyIndex];
+			final PersistentClass entityBinding = bootValue.getBuildingContext().getMetadataCollector()
+					.getEntityBinding( entityMappingType.getEntityName() );
+			final Type propertyType = entityBinding.getProperty( referencedPropertyName ).getType();
 			final CompositeType compositeType;
 			if ( propertyType.isComponentType() && ( compositeType = (CompositeType) propertyType ).isEmbedded()
 					&& compositeType.getPropertyNames().length == 1 ) {
@@ -1165,8 +1161,11 @@ public class ToOneAttributeMapping
 		else {
 			// case 1.1
 			// Make sure the entity identifier is not a target key property i.e. this really is a unique key mapping
-			return bidirectionalAttributeName != null && !targetKeyPropertyNames.contains(
-					entityMappingType.getEntityPersister().getEntityMetamodel().getIdentifierProperty().getName()
+			return bidirectionalAttributeName != null && (
+					!( entityMappingType.getIdentifierMapping() instanceof SingleAttributeIdentifierMapping )
+							|| !targetKeyPropertyNames.contains(
+							( (SingleAttributeIdentifierMapping) entityMappingType.getIdentifierMapping() ).getAttributeName()
+					)
 			);
 		}
 	}

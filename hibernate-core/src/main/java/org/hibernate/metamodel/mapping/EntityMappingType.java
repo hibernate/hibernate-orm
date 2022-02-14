@@ -170,6 +170,10 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 		return getEntityPersister().getEntityMetamodel().hasSubclasses();
 	}
 
+	default Set<String> getSubclassEntityNames() {
+		return getEntityPersister().getEntityMetamodel().getSubclassEntityNames();
+	}
+
 	AttributeMapping findDeclaredAttributeMapping(String name);
 
 	/**

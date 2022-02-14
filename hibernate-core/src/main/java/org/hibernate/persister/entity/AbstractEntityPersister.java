@@ -26,9 +26,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
-import java.util.SortedSet;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -156,6 +154,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -172,6 +171,7 @@ import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.Queryable;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
@@ -188,6 +188,7 @@ import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
@@ -2313,6 +2314,32 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
+	@Override
+	public String getPropertyTableName(String propertyName) {
+		final AttributeMapping attributeMapping = findAttributeMapping( propertyName );
+		if ( attributeMapping instanceof SelectableMapping ) {
+			return ( (SelectableMapping) attributeMapping ).getContainingTableExpression();
+		}
+		else if ( attributeMapping instanceof EmbeddableValuedModelPart ) {
+			return ( (EmbeddableValuedModelPart) attributeMapping ).getContainingTableExpression();
+		}
+		else if ( attributeMapping instanceof DiscriminatedAssociationModelPart ) {
+			return ( (DiscriminatedAssociationModelPart) attributeMapping ).getDiscriminatorPart()
+					.getContainingTableExpression();
+		}
+		else if ( attributeMapping instanceof ToOneAttributeMapping ) {
+			final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
+			if ( toOneAttributeMapping.getSideNature() == ForeignKeyDescriptor.Nature.KEY ) {
+				return toOneAttributeMapping.getForeignKeyDescriptor().getKeyTable();
+			}
+			else {
+				return toOneAttributeMapping.getForeignKeyDescriptor().getTargetTable();
+			}
+		}
+		assert attributeMapping instanceof PluralAttributeMapping;
+		return ( (PluralAttributeMapping) attributeMapping ).getKeyDescriptor().getKeyTable();
+	}
+
 	private DiscriminatorMetadata discriminatorMetadata;
 
 	@Override
@@ -2441,27 +2468,38 @@ public abstract class AbstractEntityPersister
 		if ( attributeNames == null || attributeNames.length == 0 ) {
 			return ArrayHelper.EMPTY_INT_ARRAY;
 		}
-		int[] fields = new int[attributeNames.length];
-		int counter = 0;
+		final List<Integer> fields = new ArrayList<>( attributeNames.length );
 
-		// We sort to get rid of duplicates
+		// Sort attribute names so that we can traverse mappings efficiently
 		Arrays.sort( attributeNames );
 
-		Integer index0 = entityMetamodel.getPropertyIndexOrNull( attributeNames[0] );
-		if ( index0 != null ) {
-			fields[counter++] = index0;
-		}
-
-		for ( int i = 0, j = 1; j < attributeNames.length; ++i, ++j ) {
-			if ( !attributeNames[i].equals( attributeNames[j] ) ) {
-				Integer index = entityMetamodel.getPropertyIndexOrNull( attributeNames[j] );
-				if ( index != null ) {
-					fields[counter++] = index;
+		int index = 0;
+		for ( final AttributeMapping attributeMapping : attributeMappings ) {
+			final String attributeName = attributeMapping.getAttributeName();
+			final int nameLength = attributeName.length();
+			final String currentAttributeName = attributeNames[index];
+			if ( currentAttributeName.startsWith( attributeName ) && (
+					( currentAttributeName.length() == nameLength || currentAttributeName.charAt( nameLength ) == '.' ) ) ) {
+				fields.add( ( (StateArrayContributorMapping) attributeMapping ).getStateArrayPosition() );
+				index++;
+				if ( index < attributeNames.length ) {
+					// Skip duplicates
+					do {
+						if ( attributeNames[index].equals( attributeMapping.getAttributeName() ) ) {
+							index++;
+						}
+						else {
+							break;
+						}
+					} while ( index < attributeNames.length );
+				}
+				else {
+					break;
 				}
 			}
 		}
 
-		return Arrays.copyOf( fields, counter );
+		return ArrayHelper.toIntArray( fields );
 	}
 
 	@Override
@@ -2498,11 +2536,38 @@ public abstract class AbstractEntityPersister
 			} );
 		}
 
-		final boolean[] propertyUpdateability = entityMetamodel.getPropertyUpdateability();
-		for ( String attributeName : attributeNames ) {
-			final Integer index = entityMetamodel.getPropertyIndexOrNull( attributeName );
-			if ( index != null && propertyUpdateability[index] && !fields.contains( index ) ) {
-				fields.add( index );
+		if ( attributeNames.length != 0 ) {
+			final boolean[] propertyUpdateability = entityMetamodel.getPropertyUpdateability();
+
+			// Sort attribute names so that we can traverse mappings efficiently
+			Arrays.sort( attributeNames );
+			int index = 0;
+			for ( final AttributeMapping attributeMapping : attributeMappings ) {
+				final String attributeName = attributeMapping.getAttributeName();
+				final int nameLength = attributeName.length();
+				final String currentAttributeName = attributeNames[index];
+				int position = ( (StateArrayContributorMapping) attributeMapping ).getStateArrayPosition();
+				if ( currentAttributeName.startsWith( attributeName ) && (
+						( currentAttributeName.length() == nameLength || currentAttributeName.charAt( nameLength ) == '.' ) ) ) {
+					if ( propertyUpdateability[position] && !fields.contains( position ) ) {
+						fields.add( position );
+					}
+					index++;
+					if ( index < attributeNames.length ) {
+						// Skip duplicates
+						do {
+							if ( attributeNames[index].equals( attributeName ) ) {
+								index++;
+							}
+							else {
+								break;
+							}
+						} while ( index < attributeNames.length );
+					}
+					else {
+						break;
+					}
+				}
 			}
 		}
 
@@ -2679,14 +2744,6 @@ public abstract class AbstractEntityPersister
 	@Override
 	public int getPropertyIndex(String propertyName) {
 		return entityMetamodel.getPropertyIndex( propertyName );
-	}
-
-	protected String getSQLWhereString(String alias) {
-		return StringHelper.replace( sqlWhereStringTemplate, Template.TEMPLATE, alias );
-	}
-
-	protected boolean hasWhere() {
-		return sqlWhereStringTemplate != null;
 	}
 
 	private void initOrdinaryPropertyPaths(Metadata mapping) throws MappingException {
@@ -4002,12 +4059,6 @@ public abstract class AbstractEntityPersister
 		final String fragment = StringHelper.replace( sqlWhereStringTemplate, Template.TEMPLATE, alias );
 		predicateConsumer.accept( new SqlFragmentPredicate( fragment ) );
 	}
-
-	protected String filterFragment(String alias) throws MappingException {
-		return filterFragment( alias, Collections.emptySet() );
-	}
-
-	protected abstract String filterFragment(String alias, Set<String> treatAsDeclarations);
 
 	@Override
 	public String generateFilterConditionAlias(String rootAlias) {
@@ -6031,7 +6082,7 @@ public abstract class AbstractEntityPersister
 
 		final int propertyIndex = getPropertyIndex( bootProperty.getName() );
 
-		final String tableExpression = getPropertyTableName( attrName );
+		final String tableExpression = getTableName( getPropertyTableNumbers()[propertyIndex] );
 		final String[] attrColumnNames = getPropertyColumnNames( propertyIndex );
 
 		final PropertyAccess propertyAccess = getRepresentationStrategy().resolvePropertyAccess( bootProperty );

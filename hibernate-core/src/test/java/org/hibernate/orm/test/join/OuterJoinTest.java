@@ -377,6 +377,40 @@ public class OuterJoinTest {
 		} );
 	}
 
+	@Test
+	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB db does not support subqueries for ON condition")
+	public void testSubQueryInOnClause(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				em -> {
+					List<Tuple> resultList = em.createQuery(
+							"SELECT 1 " +
+									"FROM A a " +
+									"INNER JOIN B b ON exists(select 1 from C c where c.key = a.key) ",
+							Tuple.class
+					).getResultList();
+
+					assertEquals( 6, resultList.size() );
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB db does not support subqueries for ON condition")
+	public void testSubQueryCorrelationInOnClause(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				em -> {
+					List<Tuple> resultList = em.createQuery(
+							"SELECT 1 " +
+									"FROM A a " +
+									"INNER JOIN B b ON exists(select 1 from a.association c where c.key = a.key) ",
+							Tuple.class
+					).getResultList();
+
+					assertEquals( 3, resultList.size() );
+				}
+		);
+	}
+
 	@MappedSuperclass
 	public static class BaseEntity {
 

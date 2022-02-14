@@ -810,7 +810,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 
 		// visit from-clause first!!!
-		sqmQuerySpec.setFromClause( visitFromClause( (HqlParser.FromClauseContext) ctx.getChild( fromIndex ) ) );
+		visitFromClause( (HqlParser.FromClauseContext) ctx.getChild( fromIndex ) );
 
 		final SqmSelectClause selectClause;
 		if ( fromIndex == 1 ) {
@@ -1392,16 +1392,18 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmFromClause fromClause;
 		if ( parserFromClause == null ) {
 			fromClause = new SqmFromClause();
+			currentQuerySpec().setFromClause( fromClause );
 		}
 		else {
 			final int size = parserFromClause.getChildCount();
 			// Shift 1 bit instead of division by 2
 			final int estimatedSize = size >> 1;
 			fromClause = new SqmFromClause( estimatedSize );
+			currentQuerySpec().setFromClause( fromClause );
 			for ( int i = 0; i < size; i++ ) {
 				final ParseTree parseTree = parserFromClause.getChild( i );
 				if ( parseTree instanceof HqlParser.EntityWithJoinsContext ) {
-					fromClause.addRoot( visitEntityWithJoins( (HqlParser.EntityWithJoinsContext) parseTree ) );
+					visitEntityWithJoins( (HqlParser.EntityWithJoinsContext) parseTree );
 				}
 			}
 		}
@@ -1411,6 +1413,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmRoot<?> visitEntityWithJoins(HqlParser.EntityWithJoinsContext parserSpace) {
 		final SqmRoot<?> sqmRoot = visitRootEntity( (HqlParser.RootEntityContext) parserSpace.getChild( 0 ) );
+		currentQuerySpec().getFromClause().addRoot( sqmRoot );
 		final int size = parserSpace.getChildCount();
 		for ( int i = 1; i < size; i++ ) {
 			final ParseTree parseTree = parserSpace.getChild( i );

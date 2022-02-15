@@ -560,6 +560,21 @@ The legacy Hibernate Criteria API which was deprecated back in Hibernate 5.x and
 Usually, all queries using the legacy API can be modeled with the JPA Criteria API.
 In some cases it is necessary to use the Hibernate JPA Criteria extensions.
 
+=== HQL fetch all properties clause
+
+The `fetch all properties` clause was removed from the HQL language without a replacement.
+A similar behavior can be achieved by constructing an entity graph and applying that as load graph:
+
+```java
+EntityGraph<Document> entityGraph = entityManager.createEntityGraph( Document.class );
+for ( Attribute<Document, ?> attr : entityManager.getMetamodel().entity( Document.class ).getAttributes() ) {
+    entityGraph.addAttributeNodes( attr.getName() );
+}
+List<Document> documents = s.createQuery( "from Document", Document.class )
+        .setHint( "jakarta.persistence.loadgraph", entityGraph )
+        .getResultList();
+```
+
 === JMX integration
 
 Hibernate no longer provides built-in support for integrating itself with JMX environments.

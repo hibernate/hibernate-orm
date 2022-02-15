@@ -10,6 +10,8 @@ import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -20,6 +22,9 @@ import org.hibernate.type.AssociationType;
  * @author Steve Ebersole
  */
 public final class FetchOptionsHelper {
+
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( FetchOptionsHelper.class );
+
 	private FetchOptionsHelper() {
 	}
 
@@ -90,10 +95,15 @@ public final class FetchOptionsHelper {
 			FetchStyle style,
 			AssociationType type,
 			boolean lazy,
+			String role,
 			SessionFactoryImplementor sessionFactory) {
 		switch ( style ) {
 			case JOIN: {
-				return lazy ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE;
+				if ( lazy ) {
+					LOG.fetchModeJoinWithLazyWarning( role );
+					return FetchTiming.DELAYED;
+				}
+				return FetchTiming.IMMEDIATE;
 			}
 			case BATCH:
 			case SUBSELECT:

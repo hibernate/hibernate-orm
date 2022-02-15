@@ -1788,4 +1788,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Multi-table insert is not available due to missing identity and window function support for: %s", id = 509)
 	void multiTableInsertNotAvailable(String entityName);
 
+	@LogMessage(level = WARN)
+	@Message(value = "Association with `fetch=\"join\"`/`@Fetch(FetchMode.JOIN)` and `lazy=\"true\"`/`FetchType.LAZY` found. This will be interpreted as lazy: %s", id = 510)
+	void fetchModeJoinWithLazyWarning(String role);
+
 }

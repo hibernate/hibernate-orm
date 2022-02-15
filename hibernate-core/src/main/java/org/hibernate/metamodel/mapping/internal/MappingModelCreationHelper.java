@@ -754,6 +754,7 @@ public class MappingModelCreationHelper {
 				style,
 				collectionDescriptor.getCollectionType(),
 				collectionDescriptor.isLazy(),
+				collectionDescriptor.getRole(),
 				sessionFactory
 		);
 
@@ -1579,17 +1580,17 @@ public class MappingModelCreationHelper {
 					);
 
 			final FetchTiming fetchTiming;
-
+			final String role = declaringType.getNavigableRole().toString() + "." + bootProperty.getName();
 			final boolean lazy = value.isLazy();
 			if ( lazy && entityPersister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
 				if ( value.isUnwrapProxy() ) {
-					fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, lazy, sessionFactory );
+					fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
 				}
 				else if ( value instanceof ManyToOne && value.isNullable() && ( (ManyToOne) value ).isIgnoreNotFound() ) {
 					fetchTiming = FetchTiming.IMMEDIATE;
 				}
 				else {
-					fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, lazy, sessionFactory );
+					fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
 				}
 			}
 			else if ( !lazy
@@ -1598,7 +1599,7 @@ public class MappingModelCreationHelper {
 				fetchTiming = FetchTiming.IMMEDIATE;
 			}
 			else {
-				fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, lazy, sessionFactory );
+				fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
 			}
 
 			final ToOneAttributeMapping attributeMapping = new ToOneAttributeMapping(

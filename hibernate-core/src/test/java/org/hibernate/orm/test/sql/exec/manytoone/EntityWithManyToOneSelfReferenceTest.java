@@ -194,7 +194,6 @@ public class EntityWithManyToOneSelfReferenceTest {
 	}
 
 	@Test
-	@NotImplementedYet(strict = false)
 	public void testGetByMultipleIds(SessionFactoryScope scope) {
 
 		scope.inTransaction(
@@ -202,10 +201,11 @@ public class EntityWithManyToOneSelfReferenceTest {
 					final List<EntityWithManyToOneSelfReference> list = session.byMultipleIds(
 							EntityWithManyToOneSelfReference.class )
 							.multiLoad( 1, 3 );
-					assert list.size() == 1;
+					assertThat( list.size(), equalTo( 2 ) );
 					final EntityWithManyToOneSelfReference loaded = list.get( 0 );
-					assert loaded != null;
+					assertThat( loaded, is(notNullValue()) );
 					assertThat( loaded.getName(), equalTo( "first" ) );
+					assertThat( list.get( 1 ), is(nullValue()) );
 				}
 		);
 
@@ -214,11 +214,44 @@ public class EntityWithManyToOneSelfReferenceTest {
 					final List<EntityWithManyToOneSelfReference> list = session.byMultipleIds(
 							EntityWithManyToOneSelfReference.class )
 							.multiLoad( 2, 3 );
-					assert list.size() == 1;
+					assertThat( list.size(), equalTo( 2 ) );
 					final EntityWithManyToOneSelfReference loaded = list.get( 0 );
-					assert loaded != null;
+					assertThat( loaded, is(notNullValue()) );
 					assertThat( loaded.getName(), equalTo( "second" ) );
-					assert loaded.getOther() != null;
+					assertThat( loaded.getOther(), is(notNullValue()) );
+					assertThat( loaded.getOther().getName(), equalTo( "first" ) );
+					assertThat( list.get( 1 ), is(nullValue()) );
+				}
+		);
+	}
+
+	@Test
+	public void testGetByMultipleIdsUnordered(SessionFactoryScope scope) {
+
+		scope.inTransaction(
+				session -> {
+					final List<EntityWithManyToOneSelfReference> list = session.byMultipleIds(
+									EntityWithManyToOneSelfReference.class )
+							.enableOrderedReturn( false )
+							.multiLoad( 1, 3 );
+					assertThat( list.size(), equalTo( 1 ) );
+					final EntityWithManyToOneSelfReference loaded = list.get( 0 );
+					assertThat( loaded, is(notNullValue()) );
+					assertThat( loaded.getName(), equalTo( "first" ) );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					final List<EntityWithManyToOneSelfReference> list = session.byMultipleIds(
+									EntityWithManyToOneSelfReference.class )
+							.enableOrderedReturn( false )
+							.multiLoad( 2, 3 );
+					assertThat( list.size(), equalTo( 1 ) );
+					final EntityWithManyToOneSelfReference loaded = list.get( 0 );
+					assertThat( loaded, is(notNullValue()) );
+					assertThat( loaded.getName(), equalTo( "second" ) );
+					assertThat( loaded.getOther(), is(notNullValue()) );
 					assertThat( loaded.getOther().getName(), equalTo( "first" ) );
 				}
 		);

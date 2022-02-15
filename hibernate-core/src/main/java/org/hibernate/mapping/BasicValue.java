@@ -411,11 +411,15 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 		// determine JavaType if we can
 
+		final BasicJavaType explicitJtd;
 		if ( explicitJavaTypeAccess != null ) {
-			final BasicJavaType<?> explicitJtd = explicitJavaTypeAccess.apply( typeConfiguration );
+			explicitJtd = explicitJavaTypeAccess.apply( typeConfiguration );
 			if ( explicitJtd != null ) {
 				jtd = explicitJtd;
 			}
+		}
+		else {
+			explicitJtd = null;
 		}
 
 		if ( jtd == null ) {
@@ -434,12 +438,17 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			}
 		}
 
+		final JdbcType jdbcType;
+		if ( explicitJdbcTypeAccess != null ) {
+			jdbcType = explicitJdbcTypeAccess.apply( typeConfiguration );
+		}
+		else {
+			jdbcType = null;
+		}
+
 		if ( jtd == null ) {
-			if ( explicitJdbcTypeAccess != null ) {
-				final JdbcType jdbcType = explicitJdbcTypeAccess.apply( typeConfiguration );
-				if ( jdbcType != null ) {
-					jtd = jdbcType.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration );
-				}
+			if ( jdbcType != null ) {
+				jtd = jdbcType.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration );
 			}
 		}
 
@@ -460,8 +469,8 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		}
 
 		return InferredBasicValueResolver.from(
-				explicitJavaTypeAccess,
-				explicitJdbcTypeAccess,
+				explicitJtd,
+				jdbcType,
 				resolvedJavaType,
 				this::determineReflectedJavaType,
 				this,

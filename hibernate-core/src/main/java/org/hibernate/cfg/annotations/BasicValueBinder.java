@@ -522,7 +522,8 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 			final MapKeyClass mapKeyClassAnn = mapAttribute.getAnnotation( MapKeyClass.class );
 			if ( mapKeyClassAnn != null ) {
-				return (BasicJavaType<?>) typeConfiguration.getJavaTypeRegistry().getDescriptor( mapKeyClassAnn.value() );
+				return (BasicJavaType<?>) typeConfiguration.getJavaTypeRegistry()
+						.getDescriptor( mapKeyClassAnn.value() );
 			}
 
 			return null;

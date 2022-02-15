@@ -32,74 +32,73 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Steve Ebersole
  */
 @Jpa
-@NotImplementedYet( strict = false, reason = "This is something Christian is working on" )
 @RequiresDialect( H2Dialect.class )
 @JiraKey("https://hibernate.atlassian.net/browse/HHH-11447")
 public class ProcedureParameterTests {
-//
-//	@Test
-//	public void testRegisteredParameter(EntityManagerFactoryScope scope) {
-//		// locate takes 2 parameters with an optional 3rd.  Here, we will call it
-//		// registering and binding all 3 parameters
-//		scope.inTransaction( (em) -> {
-//			final StoredProcedureQuery query = em.createStoredProcedureQuery("locate" );
-//			query.setHint( QueryHints.CALLABLE_FUNCTION, "true" );
-//			// search-tring
-//			query.registerStoredProcedureParameter( 1, String.class, ParameterMode.IN );
-//			// source-string
-//			query.registerStoredProcedureParameter( 2, String.class, ParameterMode.IN );
-//			// start-position
-//			query.registerStoredProcedureParameter( 3, Integer.class, ParameterMode.IN );
-//
-//			query.setParameter( 1, "." );
-//			query.setParameter( 2, "org.hibernate.query" );
-//			query.setParameter( 3, 5 );
-//
-//			final Object singleResult = query.getSingleResult();
-//			assertThat( singleResult ).isInstanceOf( Integer.class );
-//			assertThat( singleResult ).isEqualTo( 14 );
-//		} );
-//
-//		// explicit start-position baseline for no-arg
-//
-//		scope.inTransaction( (em) -> {
-//			final StoredProcedureQuery query = em.createStoredProcedureQuery("locate" );
-//			query.setHint( QueryHints.CALLABLE_FUNCTION, "true" );
-//			// search-string
-//			query.registerStoredProcedureParameter( 1, String.class, ParameterMode.IN );
-//			// source-string
-//			query.registerStoredProcedureParameter( 2, String.class, ParameterMode.IN );
-//			// start-position
-//			query.registerStoredProcedureParameter( 3, Integer.class, ParameterMode.IN );
-//
-//			query.setParameter( 1, "." );
-//			query.setParameter( 2, "org.hibernate.query" );
-//			query.setParameter( 3, 0 );
-//
-//			final Object singleResult = query.getSingleResult();
-//			assertThat( singleResult ).isInstanceOf( Integer.class );
-//			assertThat( singleResult ).isEqualTo( 4 );
-//		} );
-//	}
-//
-//	@Test
-//	public void testUnRegisteredParameter(EntityManagerFactoryScope scope) {
-//		// next, skip start-position registration which should trigger the
-//		// function's default value defined on the database to be applied
-//		scope.inTransaction( (em) -> {
-//			final StoredProcedureQuery query = em.createStoredProcedureQuery("locate" );
-//			query.setHint( QueryHints.CALLABLE_FUNCTION, "true" );
-//			// search-string
-//			query.registerStoredProcedureParameter( 1, String.class, ParameterMode.IN );
-//			// source-string
-//			query.registerStoredProcedureParameter( 2, String.class, ParameterMode.IN );
-//
-//			query.setParameter( 1, "." );
-//			query.setParameter( 2, "org.hibernate.query" );
-//
-//			final Object singleResult = query.getSingleResult();
-//			assertThat( singleResult ).isInstanceOf( Integer.class );
-//			assertThat( singleResult ).isEqualTo( 4 );
-//		} );
-//	}
+
+	@Test
+	public void testRegisteredParameter(EntityManagerFactoryScope scope) {
+		// locate takes 2 parameters with an optional 3rd.  Here, we will call it
+		// registering and binding all 3 parameters
+		scope.inTransaction( (em) -> {
+			final StoredProcedureQuery query = em.createStoredProcedureQuery("locate" );
+			query.setHint( QueryHints.CALLABLE_FUNCTION, "true" );
+			// search-tring
+			query.registerStoredProcedureParameter( 1, String.class, ParameterMode.IN );
+			// source-string
+			query.registerStoredProcedureParameter( 2, String.class, ParameterMode.IN );
+			// start-position
+			query.registerStoredProcedureParameter( 3, Integer.class, ParameterMode.IN );
+
+			query.setParameter( 1, "." );
+			query.setParameter( 2, "org.hibernate.query" );
+			query.setParameter( 3, 5 );
+
+			final Object singleResult = query.getSingleResult();
+			assertThat( singleResult ).isInstanceOf( Integer.class );
+			assertThat( singleResult ).isEqualTo( 14 );
+		} );
+
+		// explicit start-position baseline for no-arg
+
+		scope.inTransaction( (em) -> {
+			final StoredProcedureQuery query = em.createStoredProcedureQuery("locate" );
+			query.setHint( QueryHints.CALLABLE_FUNCTION, "true" );
+			// search-string
+			query.registerStoredProcedureParameter( 1, String.class, ParameterMode.IN );
+			// source-string
+			query.registerStoredProcedureParameter( 2, String.class, ParameterMode.IN );
+			// start-position
+			query.registerStoredProcedureParameter( 3, Integer.class, ParameterMode.IN );
+
+			query.setParameter( 1, "." );
+			query.setParameter( 2, "org.hibernate.query" );
+			query.setParameter( 3, 0 );
+
+			final Object singleResult = query.getSingleResult();
+			assertThat( singleResult ).isInstanceOf( Integer.class );
+			assertThat( singleResult ).isEqualTo( 4 );
+		} );
+	}
+
+	@Test
+	public void testUnRegisteredParameter(EntityManagerFactoryScope scope) {
+		// next, skip start-position registration which should trigger the
+		// function's default value defined on the database to be applied
+		scope.inTransaction( (em) -> {
+			final StoredProcedureQuery query = em.createStoredProcedureQuery("locate" );
+			query.setHint( QueryHints.CALLABLE_FUNCTION, "true" );
+			// search-string
+			query.registerStoredProcedureParameter( 1, String.class, ParameterMode.IN );
+			// source-string
+			query.registerStoredProcedureParameter( 2, String.class, ParameterMode.IN );
+
+			query.setParameter( 1, "." );
+			query.setParameter( 2, "org.hibernate.query" );
+
+			final Object singleResult = query.getSingleResult();
+			assertThat( singleResult ).isInstanceOf( Integer.class );
+			assertThat( singleResult ).isEqualTo( 4 );
+		} );
+	}
 }

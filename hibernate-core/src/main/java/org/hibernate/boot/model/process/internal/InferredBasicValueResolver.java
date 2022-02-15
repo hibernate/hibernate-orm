@@ -41,12 +41,10 @@ import org.hibernate.type.spi.TypeConfiguration;
  * type info was supplied.
  */
 public class InferredBasicValueResolver {
-	/**
-	 * Create an inference-based resolution
-	 */
+
 	public static <T> BasicValue.Resolution<T> from(
-			Function<TypeConfiguration, BasicJavaType> explicitJavaTypeAccess,
-			Function<TypeConfiguration, JdbcType> explicitSqlTypeAccess,
+			BasicJavaType<T> explicitJavaType,
+			JdbcType explicitJdbcType,
 			Type resolvedJavaType,
 			Supplier<JavaType<T>> reflectedJtdResolver,
 			JdbcTypeIndicators stdIndicators,
@@ -55,14 +53,6 @@ public class InferredBasicValueResolver {
 			String ownerName,
 			String propertyName,
 			TypeConfiguration typeConfiguration) {
-
-		final BasicJavaType<T> explicitJavaType = explicitJavaTypeAccess != null
-				? explicitJavaTypeAccess.apply( typeConfiguration )
-				: null;
-		final JdbcType explicitJdbcType = explicitSqlTypeAccess
-				!= null ? explicitSqlTypeAccess.apply( typeConfiguration )
-				: null;
-
 		final JavaType<T> reflectedJtd = reflectedJtdResolver.get();
 
 		// NOTE : the distinction that is made below wrt `explicitJavaType` and `reflectedJtd` is
@@ -85,6 +75,16 @@ public class InferredBasicValueResolver {
 				legacyType = jdbcMapping;
 			}
 			else {
+				if ( explicitJavaType instanceof TemporalJavaType ) {
+					return fromTemporal(
+							(TemporalJavaType<T>) explicitJavaType,
+							null,
+							null,
+							resolvedJavaType,
+							stdIndicators,
+							typeConfiguration
+					);
+				}
 				// we need to infer the JdbcType and use that to build the value-mapping
 				final JdbcType inferredJdbcType = explicitJavaType.getRecommendedJdbcType( stdIndicators );
 				if ( inferredJdbcType instanceof ObjectJdbcType ) {
@@ -268,6 +268,41 @@ public class InferredBasicValueResolver {
 				null,
 				legacyType,
 				null
+		);
+	}
+
+	/**
+	 * Create an inference-based resolution
+	 */
+	public static <T> BasicValue.Resolution<T> from(
+			Function<TypeConfiguration, BasicJavaType> explicitJavaTypeAccess,
+			Function<TypeConfiguration, JdbcType> explicitSqlTypeAccess,
+			Type resolvedJavaType,
+			Supplier<JavaType<T>> reflectedJtdResolver,
+			JdbcTypeIndicators stdIndicators,
+			Table table,
+			Selectable selectable,
+			String ownerName,
+			String propertyName,
+			TypeConfiguration typeConfiguration) {
+
+		final BasicJavaType<T> explicitJavaType = explicitJavaTypeAccess != null
+				? explicitJavaTypeAccess.apply( typeConfiguration )
+				: null;
+		final JdbcType explicitJdbcType = explicitSqlTypeAccess
+				!= null ? explicitSqlTypeAccess.apply( typeConfiguration )
+				: null;
+		return InferredBasicValueResolver.from(
+				explicitJavaType,
+				explicitJdbcType,
+				resolvedJavaType,
+				reflectedJtdResolver,
+				stdIndicators,
+				table,
+				selectable,
+				ownerName,
+				propertyName,
+				typeConfiguration
 		);
 	}
 

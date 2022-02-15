@@ -7,18 +7,23 @@
 package org.hibernate.orm.test.mapping.generated;
 
 import java.time.Instant;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import org.hibernate.HibernateError;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
+import org.hibernate.dialect.PostgreSQLDialect;
 
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,13 +33,35 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @DomainModel( annotatedClasses = GeneratedAnnotationTests.AuditedEntity.class )
 @SessionFactory
-@NotImplementedYet(
-		strict = false,
-		reason = "Currently `@Generated` will never work unless a db trigger is used to set the 'update ts'"
-				+ "; see `GeneratedValueGenerator#referenceColumnInSql`" +
-				" and `GeneratedValueGenerator#getDatabaseGeneratedReferencedColumnValue`"
-)
+@RequiresDialect(value = PostgreSQLDialect.class, comment = "To write a trigger only once")
 public class GeneratedAnnotationTests {
+
+	private static final String TRIGGER = "begin NEW.lastUpdatedAt = current_timestamp; return NEW; end;";
+
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction(
+				s -> {
+					s.createNativeMutationQuery( "create function update_ts_func() returns trigger language plpgsql as $$ " + TRIGGER + " $$" )
+							.executeUpdate();
+					s.createNativeMutationQuery( "create trigger update_ts before update on gen_ann_baseline for each row execute procedure update_ts_func()" )
+							.executeUpdate();
+				}
+		);
+	}
+
+	@AfterEach
+	public void cleanup(SessionFactoryScope scope) {
+		scope.inTransaction(
+				s -> {
+					s.createNativeMutationQuery( "drop trigger if exists update_ts on gen_ann_baseline" )
+							.executeUpdate();
+					s.createNativeMutationQuery( "drop function if exists update_ts_func()" )
+							.executeUpdate();
+				}
+		);
+	}
+
 	@Test
 	public void test(SessionFactoryScope scope) {
 		final AuditedEntity created = scope.fromTransaction( (session) -> {
@@ -49,6 +76,9 @@ public class GeneratedAnnotationTests {
 
 		created.name = "changed";
 
+		//We need to wait a little to make sure the timestamps produced are different
+		waitALittle();
+
 		// then changing
 		final AuditedEntity merged = scope.fromTransaction( (session) -> {
 			return (AuditedEntity) session.merge( created );
@@ -58,6 +88,9 @@ public class GeneratedAnnotationTests {
 		assertThat( merged.createdAt ).isNotNull();
 		assertThat( merged.lastUpdatedAt ).isNotNull();
 		assertThat( merged.lastUpdatedAt ).isNotEqualTo( merged.createdAt );
+
+		//We need to wait a little to make sure the timestamps produced are different
+		waitALittle();
 
 		// lastly, make sure we can load it..
 		final AuditedEntity loaded = scope.fromTransaction( (session) -> {
@@ -88,6 +121,15 @@ public class GeneratedAnnotationTests {
 		public AuditedEntity(Integer id, String name) {
 			this.id = id;
 			this.name = name;
+		}
+	}
+
+	private static void waitALittle() {
+		try {
+			Thread.sleep( 10 );
+		}
+		catch (InterruptedException e) {
+			throw new HibernateError( "Unexpected wakeup from test sleep" );
 		}
 	}
 }

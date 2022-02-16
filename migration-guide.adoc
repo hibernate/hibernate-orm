@@ -474,11 +474,47 @@ should be changed to use `@NamedStoredProcedureQuery` instead -
 @NamedStoredProcedureQuery(
     name = "personAndPhones",
     procedureName = "fn_person_and_phones",
-    resultSetMapping = "personWithPhonesResultMapping",
+    resultSetMappings = "personWithPhonesResultMapping",
     hints = @QueryHint(name = "org.hibernate.callableFunction", value = "true"),
     parameters = @StoredProcedureParameter(type = Long.class)
 )
 ```
+
+Callable named native queries in hbm.xml files should be migrated to the orm.xml version.
+
+E.g., the following `<sql-query callable="true">` -
+
+```
+<sql-query name="simpleScalar" callable="true">
+    <return-scalar column="name" type="string"/>
+    <return-scalar column="`value`" type="long"/>
+    { ? = call simpleScalar(:number) }
+</sql-query>
+
+...
+
+final List<Object[]> results = entityManager
+        .createNamedQuery("simpleScalar" )
+        .setParameter( 1, 1L )
+        .getResultList();
+```
+
+should be changed to use `<named-stored-procedure-query/>` instead -
+
+```xml
+<named-stored-procedure-query name="simpleScalar" procedure-name="simpleScalar">
+    <parameter class="java.lang.Integer" mode="IN" name="number"/>
+    <result-set-mapping>simpleScalar</result-set-mapping>
+    <hint name="org.hibernate.callableFunction" value="true"/>
+</named-stored-procedure-query>
+<sql-result-set-mapping name="simpleScalar">
+    <column-result name="name" class="java.lang.String"/>
+    <column-result name="value" class="java.lang.Long"/>
+</sql-result-set-mapping>
+```
+
+TIP: To ease the migration, `<sql-query callable="true"/>` and `@NamedNativeQuery(callable = true)` queries
+will be translated and registered as named stored procedure in 6.0, but future versions will drop this automatic translation.
 
 Either `org.hibernate.procedure.ProcedureCall` or `jakarta.persistence.StoredProcedureQuery`
 can be used to execute the named query -
@@ -486,14 +522,14 @@ can be used to execute the named query -
 ```
 // Use StoredProcedureQuery
 final List<Object[]> personAndPhones = entityManager
-        .createNamedStoredProcedureQuery( "personAndPhones" )
+        .createNamedStoredProcedureQuery( "simpleScalar" )
         .setParameter( 1, 1L )
         .getResultList();
 
 // Use ProcedureCall
 final List<Object[]> personAndPhones = entityManager
         .unwrap( Session.class )
-        .getNamedProcedureCall( "personAndPhones" )
+        .getNamedProcedureCall( "simpleScalar" )
         .setParameter( 1, 1L )
         .getResultList();
 ```

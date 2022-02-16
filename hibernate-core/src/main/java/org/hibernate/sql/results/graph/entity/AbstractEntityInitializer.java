@@ -455,7 +455,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				final EntityEntry entry = session.getPersistenceContextInternal().getEntry( this.entityInstance );
 				if ( entry != null && entry.getLockMode().lessThan( lockMode ) ) {
 					//we only check the version when _upgrading_ lock modes
-					if ( versionAssembler != null && entry.getLockMode() != LockMode.NONE) {
+					if ( versionAssembler != null && entry.getLockMode() != LockMode.NONE ) {
 						checkVersion( entry, rowProcessingState );
 					}
 					//we need to upgrade the lock mode to the mode requested

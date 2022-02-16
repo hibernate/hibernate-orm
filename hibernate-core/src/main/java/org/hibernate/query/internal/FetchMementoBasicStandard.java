@@ -39,6 +39,14 @@ public class FetchMementoBasicStandard implements FetchMementoBasic {
 		return navigablePath;
 	}
 
+	public BasicValuedModelPart getFetchedAttribute() {
+		return fetchedAttribute;
+	}
+
+	public String getColumnAlias() {
+		return columnAlias;
+	}
+
 	@Override
 	public FetchBuilder resolve(
 			Parent parent,

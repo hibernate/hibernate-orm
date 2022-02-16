@@ -14,6 +14,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.spi.NavigablePath;
@@ -38,24 +39,15 @@ import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnRefere
 public class DynamicFetchBuilderStandard
 		implements DynamicFetchBuilder, NativeQuery.ReturnProperty {
 
-	private final DynamicFetchBuilderContainer container;
 	private final String fetchableName;
-
 	private final List<String> columnNames;
 
-	public DynamicFetchBuilderStandard(
-			DynamicFetchBuilderContainer container,
-			String fetchableName) {
-		this.container = container;
+	public DynamicFetchBuilderStandard(String fetchableName) {
 		this.fetchableName = fetchableName;
 		this.columnNames = new ArrayList<>();
 	}
 
-	private DynamicFetchBuilderStandard(
-			DynamicFetchBuilderContainer container,
-			String fetchableName,
-			List<String> columnNames) {
-		this.container = container;
+	private DynamicFetchBuilderStandard(String fetchableName, List<String> columnNames) {
 		this.fetchableName = fetchableName;
 		this.columnNames = columnNames;
 	}
@@ -63,7 +55,6 @@ public class DynamicFetchBuilderStandard
 	@Override
 	public DynamicFetchBuilderStandard cacheKeyInstance() {
 		return new DynamicFetchBuilderStandard(
-				container,
 				fetchableName,
 				List.copyOf( columnNames )
 		);
@@ -71,7 +62,6 @@ public class DynamicFetchBuilderStandard
 
 	public DynamicFetchBuilderStandard cacheKeyInstance(DynamicFetchBuilderContainer container) {
 		return new DynamicFetchBuilderStandard(
-				container,
 				fetchableName,
 				List.copyOf( columnNames )
 		);
@@ -120,6 +110,17 @@ public class DynamicFetchBuilderStandard
 					fetchPath,
 					FetchTiming.IMMEDIATE,
 					true,
+					null,
+					creationStateImpl
+			);
+		}
+		else if ( attributeMapping instanceof EmbeddedAttributeMapping ) {
+			attributeMapping.forEachSelectable( selectableConsumer );
+			return parent.generateFetchableFetch(
+					attributeMapping,
+					fetchPath,
+					FetchTiming.IMMEDIATE,
+					false,
 					null,
 					creationStateImpl
 			);

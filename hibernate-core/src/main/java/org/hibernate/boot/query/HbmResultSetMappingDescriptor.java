@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
@@ -27,11 +28,23 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmResultSetMappingType;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.Component;
+import org.hibernate.mapping.IndexedCollection;
+import org.hibernate.mapping.OneToMany;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.ToOne;
+import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.query.internal.FetchMementoEmbeddableStandard;
+import org.hibernate.query.internal.FetchMementoEntityStandard;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.internal.FetchMementoBasicStandard;
 import org.hibernate.query.internal.FetchMementoHbmStandard;
@@ -47,6 +60,7 @@ import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.named.ResultMemento;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
+import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.type.BasicType;
 
 /**
@@ -498,6 +512,21 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			this.propertyPathParts = propertyPath.split( "\\." );
 			this.columnAliases = extractColumnAliases( hbmPropertyMapping, context );
 
+			if ( columnAliases.size() > 1 ) {
+				// We have to reorder the columns according to the property reordering
+				final Value value = getValue( parent, propertyPath, context );
+				assert value instanceof Component;
+				final Component component = (Component) value;
+				int[] originalPropertyOrder = component.sortProperties();
+				if ( originalPropertyOrder != null ) {
+					final String[] originalColumns = columnAliases.toArray( new String[0] );
+					for ( int i = 0; i < originalPropertyOrder.length; i++ ) {
+						final int originalIndex = originalPropertyOrder[i];
+						columnAliases.set( i, originalColumns[originalIndex] );
+					}
+				}
+			}
+
 			BootQueryLogging.LOGGER.debugf(
 					"Creating PropertyFetchDescriptor (%s : %s) for ResultSet mapping - %s",
 					parent,
@@ -506,9 +535,98 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			);
 		}
 
+		private static Value getValue(HbmFetchParent parent, String propertyPath, MetadataBuildingContext context) {
+			if ( parent instanceof EntityResultDescriptor ) {
+				final PersistentClass entityBinding = context.getMetadataCollector()
+						.getEntityBinding( ( (EntityResultDescriptor) parent ).entityName );
+				Value value = null;
+				StringTokenizer st = new StringTokenizer( propertyPath, ".", false );
+				try {
+					while ( st.hasMoreElements() ) {
+						final String element = (String) st.nextElement();
+						if ( value == null ) {
+							Property identifierProperty = entityBinding.getIdentifierProperty();
+							if ( identifierProperty != null && identifierProperty.getName().equals( element ) ) {
+								// we have a mapped identifier property and the root of
+								// the incoming property path matched that identifier
+								// property
+								value = identifierProperty.getValue();
+							}
+							else if ( identifierProperty == null && entityBinding.getIdentifierMapper() != null ) {
+								// we have an embedded composite identifier
+								try {
+									identifierProperty = entityBinding.getIdentifierMapper().getProperty( element );
+									// the root of the incoming property path matched one
+									// of the embedded composite identifier properties
+									value = identifierProperty.getValue();
+								}
+								catch (MappingException ignore) {
+									// ignore it...
+								}
+							}
+
+							if ( value == null ) {
+								value = entityBinding.getProperty( element ).getValue();
+							}
+						}
+						else if ( value instanceof Component ) {
+							value = ( (Component) value ).getProperty( element ).getValue();
+						}
+						else if ( value instanceof ToOne ) {
+							value = context.getMetadataCollector()
+									.getEntityBinding( ( (ToOne) value ).getReferencedEntityName() )
+									.getProperty( element )
+									.getValue();
+						}
+						else if ( value instanceof OneToMany ) {
+							value = ( (OneToMany) value ).getAssociatedClass().getProperty( element ).getValue();
+						}
+						else {
+							final Collection collection = (Collection) value;
+							switch ( element ) {
+								case "key":
+									value = collection.getKey();
+									break;
+								case "element":
+									value = collection.getElement();
+									break;
+								case "index":
+									if ( collection instanceof IndexedCollection ) {
+										value = ( (IndexedCollection) collection ).getIndex();
+										break;
+									}
+								default:
+									throw new MappingException( "property [" + element + "] not found on collection [" + collection.getRole() + "]" );
+							}
+						}
+					}
+					return value;
+				}
+				catch (MappingException e) {
+					throw new MappingException( "property [" + propertyPath + "] not found on entity [" + entityBinding.getEntityName() + "]" );
+				}
+			}
+			else if ( parent instanceof CollectionResultDescriptor ) {
+				final Collection collectionBinding = context.getMetadataCollector()
+						.getCollectionBinding( ( (CollectionResultDescriptor) parent ).collectionPath.getFullPath() );
+				return collectionBinding.getElement();
+			}
+			else {
+				assert parent instanceof JoinDescriptor;
+				final JoinDescriptor joinDescriptor = (JoinDescriptor) parent;
+				final HbmFetchParent joinParent = joinDescriptor.fetchParentByAliasAccess.get()
+						.get( joinDescriptor.ownerTableAlias );
+				return getValue( joinParent, joinDescriptor.propertyPath + "." + propertyPath, context );
+			}
+		}
+
 		@Override
 		public String getFetchablePath() {
 			return propertyPath;
+		}
+
+		public List<String> getColumnAliases() {
+			return columnAliases;
 		}
 
 		private static List<String> extractColumnAliases(
@@ -520,7 +638,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 			final List<String> columnAliases = new ArrayList<>( hbmPropertyMapping.getReturnColumn().size() );
 			hbmPropertyMapping.getReturnColumn().forEach(
-					(column) -> columnAliases.add( column.getName() )
+					column -> columnAliases.add( column.getName() )
 			);
 			return columnAliases;
 		}
@@ -552,7 +670,28 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				fetchable = (Fetchable) ( (FetchableContainer) fetchable ).findSubPart( propertyPathParts[i], null );
 			}
 
-			return new FetchMementoBasicStandard( navigablePath, (BasicValuedModelPart) fetchable, columnAliases.get( 0 ) );
+			if ( fetchable instanceof BasicValuedModelPart ) {
+				return new FetchMementoBasicStandard(
+						navigablePath,
+						(BasicValuedModelPart) fetchable,
+						columnAliases.get( 0 )
+				);
+			}
+			else if ( fetchable instanceof EntityValuedFetchable ) {
+				return new FetchMementoEntityStandard(
+						navigablePath,
+						(EntityValuedFetchable) fetchable,
+						columnAliases
+				);
+			}
+			else {
+				assert fetchable instanceof EmbeddableValuedModelPart;
+				return new FetchMementoEmbeddableStandard(
+						navigablePath,
+						(EmbeddableValuedModelPart) fetchable,
+						columnAliases
+				);
+			}
 		}
 
 		@Override
@@ -632,16 +771,26 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				applyFetchJoins( joinDescriptorsAccess, tableAlias, propertyFetchDescriptors );
 
 				final Map<String, FetchMemento> fetchDescriptorMap = new HashMap<>();
+				final List<String> keyColumnNames = new ArrayList<>();
+				final boolean isPlural = thisAsParentMemento.getFetchableContainer() instanceof PluralAttributeMapping;
 				propertyFetchDescriptors.forEach(
-						hbmFetchDescriptor -> fetchDescriptorMap.put(
-								hbmFetchDescriptor.getFetchablePath(),
-								hbmFetchDescriptor.resolve( resolutionContext )
-						)
+						hbmFetchDescriptor -> {
+							if ( isPlural && "key".equals( hbmFetchDescriptor.getFetchablePath() ) ) {
+								keyColumnNames.addAll( ( (PropertyFetchDescriptor) hbmFetchDescriptor ).getColumnAliases() );
+							}
+							else {
+								fetchDescriptorMap.put(
+										hbmFetchDescriptor.getFetchablePath(),
+										hbmFetchDescriptor.resolve( resolutionContext )
+								);
+							}
+						}
 				);
 				memento = new FetchMementoHbmStandard(
 						thisAsParentMemento.getNavigablePath(),
 						ownerTableAlias,
 						tableAlias,
+						keyColumnNames,
 						lockMode,
 						thisAsParentMemento,
 						fetchDescriptorMap,
@@ -665,7 +814,14 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				final FetchParentMemento ownerMemento = hbmFetchParent.resolveParentMemento( resolutionContext );
 
 				final String[] parts = propertyPath.split( "\\." );
-				NavigablePath navigablePath = ownerMemento.getNavigablePath().append( parts[ 0 ] );
+				NavigablePath navigablePath;
+				if ( ownerMemento.getFetchableContainer() instanceof PluralAttributeMapping ) {
+					navigablePath = ownerMemento.getNavigablePath().append( CollectionPart.Nature.ELEMENT.getName() );
+				}
+				else {
+					navigablePath = ownerMemento.getNavigablePath();
+				}
+				navigablePath = navigablePath.append( parts[ 0 ] );
 				FetchableContainer fetchable = (FetchableContainer) ownerMemento.getFetchableContainer().findSubPart( parts[ 0 ], null );
 
 				for ( int i = 1; i < parts.length; i++ ) {

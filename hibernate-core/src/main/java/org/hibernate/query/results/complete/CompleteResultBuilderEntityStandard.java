@@ -22,6 +22,7 @@ import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -83,6 +84,11 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 	}
 
 	@Override
+	public LockMode getLockMode() {
+		return lockMode;
+	}
+
+	@Override
 	public NativeQuery.RootReturn setLockMode(LockMode lockMode) {
 		throw new UnsupportedOperationException();
 	}
@@ -131,9 +137,11 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 							// since this is only used for result set mappings, the canUseInnerJoins value is irrelevant.
 							true,
 							navigablePath,
+							tableAlias,
 							null,
-							null,
-							impl,
+							new SqlAliasBaseConstant( tableAlias ),
+							impl.getSqlExpressionResolver(),
+							impl.getFromClauseAccess(),
 							impl.getCreationContext()
 					)
 			);
@@ -141,7 +149,7 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 			return new EntityResultImpl(
 					navigablePath,
 					entityDescriptor,
-					null,
+					tableAlias,
 					lockMode,
 					(entityResult) -> {
 						if ( discriminatorFetchBuilder == null ) {

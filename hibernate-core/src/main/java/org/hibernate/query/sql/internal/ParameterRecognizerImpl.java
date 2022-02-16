@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.QueryException;
+import org.hibernate.engine.query.ParameterRecognitionException;
 import org.hibernate.query.internal.QueryParameterNamedImpl;
 import org.hibernate.query.internal.QueryParameterPositionalImpl;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -125,7 +126,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 			parameterStyle = ParameterStyle.NAMED;
 		}
 		else if ( parameterStyle != ParameterStyle.NAMED ) {
-			throw new IllegalStateException( "Cannot mix parameter styles between JDBC-style, ordinal and named in the same query" );
+			throw new ParameterRecognitionException( "Cannot mix parameter styles between JDBC-style, ordinal and named in the same query" );
 		}
 
 		QueryParameterImplementor<?> parameter = null;

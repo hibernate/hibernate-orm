@@ -33,7 +33,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Queryable;
 import org.hibernate.procedure.NoSuchParameterException;
 import org.hibernate.procedure.ParameterStrategyException;
 import org.hibernate.procedure.ProcedureCall;
@@ -591,7 +590,7 @@ public class ProcedureCallImpl<R>
 
 		final Map<ProcedureParameter<?>, JdbcCallParameterRegistration> parameterRegistrations = new IdentityHashMap<>();
 		final List<JdbcCallRefCursorExtractor> refCursorExtractors = new ArrayList<>();
-		if ( functionReturn != null ) {
+		if ( call.getFunctionReturn() != null ) {
 			parameterRegistrations.put( functionReturn, call.getFunctionReturn() );
 			final JdbcCallRefCursorExtractorImpl refCursorExtractor = call.getFunctionReturn().getRefCursorExtractor();
 			if ( refCursorExtractor != null ) {
@@ -620,7 +619,6 @@ public class ProcedureCallImpl<R>
 				procedureName,
 				call,
 				statement,
-				parameterMetadata.getParameterStrategy(),
 				parameterMetadata,
 				getSession()
 		);
@@ -690,7 +688,7 @@ public class ProcedureCallImpl<R>
 		// Note that this should actually happen in an executor
 
 		try {
-			int paramBindingPosition = functionReturn == null ? 1 : 2;
+			int paramBindingPosition = call.getFunctionReturn() == null ? 1 : 2;
 			for ( JdbcParameterBinder parameterBinder : call.getParameterBinders() ) {
 				parameterBinder.bindParameterValue(
 						statement,

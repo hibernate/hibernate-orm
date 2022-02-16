@@ -404,6 +404,8 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 
 		NavigablePath getNavigablePath();
 
+		LockMode getLockMode();
+
 		/**
 		 * Set the lock mode for this return.
 		 *

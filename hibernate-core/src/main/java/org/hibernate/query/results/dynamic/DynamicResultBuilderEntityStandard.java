@@ -104,6 +104,11 @@ public class DynamicResultBuilderEntityStandard
 	}
 
 	@Override
+	public LockMode getLockMode() {
+		return lockMode;
+	}
+
+	@Override
 	public NativeQuery.RootReturn addIdColumnAliases(String... aliases) {
 		if ( idColumnNames == null ) {
 			idColumnNames = new ArrayList<>( aliases.length );
@@ -153,7 +158,7 @@ public class DynamicResultBuilderEntityStandard
 		return buildResultOrFetch(
 				(tableGroup) -> parent.generateFetchableFetch(
 						fetchable,
-						navigablePath,
+						parent.resolveNavigablePath( fetchable ),
 						FetchTiming.IMMEDIATE,
 						true,
 						null,

@@ -24,6 +24,7 @@ import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -105,7 +106,9 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 				navigablePath,
 				tableAlias,
 				null,
-				creationStateImpl,
+				new SqlAliasBaseConstant( tableAlias ),
+				creationStateImpl.getSqlExpressionResolver(),
+				creationStateImpl.getFromClauseAccess(),
 				sessionFactory
 		);
 		fromClauseAccess.registerTableGroup( navigablePath, rootTableGroup );

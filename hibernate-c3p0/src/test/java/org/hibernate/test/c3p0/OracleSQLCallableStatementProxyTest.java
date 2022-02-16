@@ -7,13 +7,15 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EntityResult;
 import jakarta.persistence.FieldResult;
 import jakarta.persistence.Id;
+import jakarta.persistence.NamedStoredProcedureQuery;
+import jakarta.persistence.QueryHint;
 import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.SqlResultSetMappings;
+import jakarta.persistence.StoredProcedureParameter;
 
-import org.hibernate.annotations.NamedNativeQuery;
 import org.hibernate.c3p0.internal.C3P0ConnectionProvider;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.OracleDialect;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
@@ -27,7 +29,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(Oracle8iDialect.class)
+@RequiresDialect(OracleDialect.class)
 @TestForIssue( jiraKey = "HHH-10256" )
 public class OracleSQLCallableStatementProxyTest extends
 		BaseCoreFunctionalTestCase {
@@ -95,19 +97,19 @@ public class OracleSQLCallableStatementProxyTest extends
 	public void testStoredProcedureOutParameter() {
 		doInHibernate( this::sessionFactory, session -> {
 			List<Object[]> persons = session
-					.createNamedQuery(
-							"getPerson")
+					.createNamedStoredProcedureQuery( "getPerson" )
 					.setParameter(1, 1L)
 					.getResultList();
 			assertEquals(1, persons.size());
 		} );
 	}
 
-	@NamedNativeQuery(
+	@NamedStoredProcedureQuery(
 			name = "getPerson",
-			query = "{ ? = call fn_person( ? ) }",
-			callable = true,
-			resultSetMapping = "person"
+			procedureName = "fn_person",
+			resultSetMappings = "person",
+			hints = @QueryHint(name = "org.hibernate.callableFunction", value = "true"),
+			parameters = @StoredProcedureParameter(type = Long.class)
 	)
 	@SqlResultSetMappings({
 		@SqlResultSetMapping(

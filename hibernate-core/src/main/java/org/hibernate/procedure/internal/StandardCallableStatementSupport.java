@@ -18,6 +18,7 @@ import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.sql.exec.internal.JdbcCallImpl;
 import org.hibernate.sql.exec.spi.JdbcCall;
+import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 
 import jakarta.persistence.ParameterMode;
 
@@ -38,9 +39,11 @@ public class StandardCallableStatementSupport extends AbstractStandardCallableSt
 	public static final StandardCallableStatementSupport REF_CURSOR_INSTANCE = new StandardCallableStatementSupport( true );
 
 	private final boolean supportsRefCursors;
+	private final boolean implicitReturn;
 
 	public StandardCallableStatementSupport(boolean supportsRefCursors) {
 		this.supportsRefCursors = supportsRefCursors;
+		this.implicitReturn = !supportsRefCursors;
 	}
 
 	@Override
@@ -50,14 +53,13 @@ public class StandardCallableStatementSupport extends AbstractStandardCallableSt
 		final ProcedureParameterMetadataImplementor parameterMetadata = procedureCall.getParameterMetadata();
 		final SharedSessionContractImplementor session = procedureCall.getSession();
 		final List<? extends ProcedureParameterImplementor<?>> registrations = parameterMetadata.getRegistrationsAsList();
-		final JdbcCallImpl.Builder builder = new JdbcCallImpl.Builder(
-				parameterMetadata.hasNamedParameters() ?
-						ParameterStrategy.NAMED :
-						ParameterStrategy.POSITIONAL
-		);
+		final ParameterStrategy parameterStrategy = functionReturn == null && parameterMetadata.hasNamedParameters() ?
+				ParameterStrategy.NAMED :
+				ParameterStrategy.POSITIONAL;
+		final JdbcCallImpl.Builder builder = new JdbcCallImpl.Builder( parameterStrategy );
 		final StringBuilder buffer;
 		final int offset;
-		if ( functionReturn != null ) {
+		if ( functionReturn != null && !implicitReturn ) {
 			offset = 2;
 			buffer = new StringBuilder( 11 + procedureName.length() + registrations.size() * 2 ).append( "{?=call " );
 			builder.setFunctionReturn( functionReturn.toJdbcFunctionReturn( session ) );
@@ -75,9 +77,19 @@ public class StandardCallableStatementSupport extends AbstractStandardCallableSt
 			if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
 				verifyRefCursorSupport( session.getJdbcServices().getJdbcEnvironment().getDialect() );
 			}
-			buffer.append( sep ).append( "?" );
+			buffer.append( sep );
+			final JdbcCallParameterRegistration registration = parameter.toJdbcParameterRegistration(
+					i + offset,
+					procedureCall
+			);
+			if ( registration.getName() != null ) {
+				buffer.append( ':' ).append( registration.getName() );
+			}
+			else {
+				buffer.append( "?" );
+			}
 			sep = ",";
-			builder.addParameterRegistration( parameter.toJdbcParameterRegistration( i + offset, procedureCall ) );
+			builder.addParameterRegistration( registration );
 		}
 
 		buffer.append( ")}" );

@@ -50,6 +50,11 @@ public class JdbcCallParameterRegistrationImpl implements JdbcCallParameterRegis
 	}
 
 	@Override
+	public String getName() {
+		return name;
+	}
+
+	@Override
 	public JdbcParameterBinder getParameterBinder() {
 		return parameterBinder;
 	}

@@ -44,7 +44,6 @@ import static org.hibernate.jpa.HibernateHints.HINT_CALLABLE_FUNCTION;
 @NamedNativeQuery(
         name = "fn_person_and_phones_hana",
         query = "select \"pr.id\", \"pr.name\", \"pr.nickName\", \"pr.address\", \"pr.createdOn\", \"pr.version\", \"ph.id\", \"ph.person_id\", \"ph.phone_number\", \"ph.valid\" from fn_person_and_phones( ? )",
-        callable = false,
         resultSetMapping = "person_with_phones_hana"
 )
 @SqlResultSetMappings({

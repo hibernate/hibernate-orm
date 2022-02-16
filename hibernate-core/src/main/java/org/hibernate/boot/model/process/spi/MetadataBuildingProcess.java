@@ -288,9 +288,6 @@ public class MetadataBuildingProcess {
 		processor.postProcessEntityHierarchies();
 
 		processor.processResultSetMappings();
-		processor.processNamedQueries();
-
-		processor.finishUp();
 
 		for ( MetadataContributor contributor : classLoaderService.loadJavaServices( MetadataContributor.class ) ) {
 			log.tracef( "Calling MetadataContributor : %s", contributor );
@@ -298,6 +295,11 @@ public class MetadataBuildingProcess {
 		}
 
 		metadataCollector.processSecondPasses( rootMetadataBuildingContext );
+
+		// Make sure collections are fully bound before processing named queries as hbm result set mappings require it
+		processor.processNamedQueries();
+
+		processor.finishUp();
 
 		if ( options.isXmlMappingEnabled() ) {
 			final Iterable<AdditionalJaxbMappingProducer> producers = classLoaderService.loadJavaServices( AdditionalJaxbMappingProducer.class );

@@ -6,6 +6,7 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -13,6 +14,8 @@ import org.hibernate.loader.ast.spi.SingleIdEntityLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.QueryImplementor;
+
+import jakarta.persistence.Parameter;
 
 /**
  * Implementation of SingleIdEntityLoader for cases where the application has
@@ -44,7 +47,9 @@ public class SingleIdEntityLoaderProvidedQueryImpl<T> implements SingleIdEntityL
 				entityDescriptor.getMappedJavaType().getJavaTypeClass()
 		);
 
-		query.setParameter( 1, pkValue );
+		//noinspection unchecked
+		query.setParameter( (Parameter<Object>) query.getParameters().iterator().next(), pkValue );
+		query.setHibernateFlushMode( FlushMode.MANUAL );
 
 		return query.uniqueResult();
 	}

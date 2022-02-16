@@ -6,6 +6,7 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import org.hibernate.FlushMode;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.CollectionLoader;
@@ -13,6 +14,8 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.QueryImplementor;
+
+import jakarta.persistence.Parameter;
 
 /**
  * @author Steve Ebersole
@@ -34,7 +37,9 @@ public class CollectionLoaderNamedQuery implements CollectionLoader {
 	@Override
 	public PersistentCollection<?> load(Object key, SharedSessionContractImplementor session) {
 		final QueryImplementor<PersistentCollection<?>> query = namedQueryMemento.toQuery( session );
-		query.setParameter( 1, key );
+		//noinspection unchecked
+		query.setParameter( (Parameter<Object>) query.getParameters().iterator().next(), key );
+		query.setHibernateFlushMode( FlushMode.MANUAL );
 		return query.getResultList().get( 0 );
 	}
 }

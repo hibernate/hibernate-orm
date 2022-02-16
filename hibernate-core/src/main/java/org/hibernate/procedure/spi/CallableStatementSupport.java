@@ -22,7 +22,6 @@ public interface CallableStatementSupport {
 			String procedureName,
 			JdbcCall procedureCall,
 			CallableStatement statement,
-			ParameterStrategy parameterStrategy,
 			ProcedureParameterMetadataImplementor parameterMetadata,
 			SharedSessionContractImplementor session);
 }

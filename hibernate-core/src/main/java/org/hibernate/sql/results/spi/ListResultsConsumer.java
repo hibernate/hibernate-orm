@@ -12,6 +12,7 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.query.ResultListTransformer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.persister.entity.EntityPersister;
@@ -124,6 +125,13 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 				persistenceContext.getLoadContexts().deregister( jdbcValuesSourceProcessingState );
 			}
 
+			//noinspection unchecked
+			final ResultListTransformer<R> resultListTransformer = (ResultListTransformer<R>) jdbcValuesSourceProcessingState.getExecutionContext()
+					.getQueryOptions()
+					.getResultListTransformer();
+			if ( resultListTransformer != null ) {
+				return resultListTransformer.transformList( results );
+			}
 			return results;
 		}
 		catch (RuntimeException e) {

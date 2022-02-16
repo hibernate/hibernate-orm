@@ -173,16 +173,17 @@ public class ParameterParser {
 	}
 
 	private static void checkIsNotAFunctionCall(String sqlString) {
-		if ( !( sqlString.startsWith( "{" ) && sqlString.endsWith( "}" ) ) ) {
+		final String trimmed = sqlString.trim();
+		if ( !( trimmed.startsWith( "{" ) && trimmed.endsWith( "}" ) ) ) {
 			return;
 		}
 
-		final int chopLocation = sqlString.indexOf( "call" );
+		final int chopLocation = trimmed.indexOf( "call" );
 		if ( chopLocation <= 0 ) {
 			return;
 		}
 
-		final String checkString = sqlString.substring( 1, chopLocation + 4 );
+		final String checkString = trimmed.substring( 1, chopLocation + 4 );
 		final String fixture = "?=call";
 		int fixturePosition = 0;
 		boolean matches = true;

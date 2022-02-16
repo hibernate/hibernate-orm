@@ -201,10 +201,10 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 				.getJdbcSessionContext()
 				.getServiceRegistry().getService( JdbcEnvironment.class )
 				.getExtractedDatabaseMetaData();
-		return
-				databaseMetaData.supportsNamedParameters()
-						&& hibernateType instanceof ProcedureParameterNamedBinder
-						&& ( (ProcedureParameterNamedBinder<?>) hibernateType ).canDoSetting();
+		return procedureCall.getFunctionReturn() == null
+				&& databaseMetaData.supportsNamedParameters()
+				&& hibernateType instanceof ProcedureParameterNamedBinder
+				&& ( (ProcedureParameterNamedBinder<?>) hibernateType ).canDoSetting();
 	}
 
 	@Override

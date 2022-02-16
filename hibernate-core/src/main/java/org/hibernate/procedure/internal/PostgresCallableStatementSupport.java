@@ -17,6 +17,7 @@ import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.sql.exec.internal.JdbcCallImpl;
 import org.hibernate.sql.exec.spi.JdbcCall;
+import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 
 import jakarta.persistence.ParameterMode;
 
@@ -38,7 +39,7 @@ public class PostgresCallableStatementSupport extends AbstractStandardCallableSt
 		final boolean firstParamIsRefCursor = parameterMetadata.getParameterCount() != 0
 				&& isFirstParameterModeRefCursor( parameterMetadata );
 
-		if ( firstParamIsRefCursor ) {
+		if ( firstParamIsRefCursor || functionReturn != null ) {
 			// validate that the parameter strategy is positional (cannot mix, and REF_CURSOR is inherently positional)
 			if ( parameterMetadata.hasNamedParameters() ) {
 				throw new HibernateException( "Cannot mix named parameters and REF_CURSOR parameter on PostgreSQL" );
@@ -46,11 +47,10 @@ public class PostgresCallableStatementSupport extends AbstractStandardCallableSt
 		}
 
 		final List<? extends ProcedureParameterImplementor<?>> registrations = parameterMetadata.getRegistrationsAsList();
-		final JdbcCallImpl.Builder builder = new JdbcCallImpl.Builder(
-				parameterMetadata.hasNamedParameters() ?
-						ParameterStrategy.NAMED :
-						ParameterStrategy.POSITIONAL
-		);
+		final ParameterStrategy parameterStrategy = parameterMetadata.hasNamedParameters() ?
+				ParameterStrategy.NAMED :
+				ParameterStrategy.POSITIONAL;
+		final JdbcCallImpl.Builder builder = new JdbcCallImpl.Builder( parameterStrategy );
 
 		final StringBuilder buffer;
 		final int offset;
@@ -82,9 +82,19 @@ public class PostgresCallableStatementSupport extends AbstractStandardCallableSt
 				throw new HibernateException(
 						"PostgreSQL supports only one REF_CURSOR parameter, but multiple were registered" );
 			}
-			buffer.append( sep ).append( "?" );
+			buffer.append( sep );
+			final JdbcCallParameterRegistration registration = parameter.toJdbcParameterRegistration(
+					i + offset,
+					procedureCall
+			);
+			if ( registration.getName() != null ) {
+				buffer.append( ':' ).append( registration.getName() );
+			}
+			else {
+				buffer.append( "?" );
+			}
 			sep = ",";
-			builder.addParameterRegistration( parameter.toJdbcParameterRegistration( i + offset, procedureCall ) );
+			builder.addParameterRegistration( registration );
 		}
 
 		buffer.append( ")}" );

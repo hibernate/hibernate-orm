@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.query;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -76,8 +77,24 @@ public class NamedNativeQueryDefinitionBuilder extends AbstractNamedQueryBuilder
 		return this;
 	}
 
+	public String getSqlString() {
+		return sqlString;
+	}
+
 	public Set<String> getQuerySpaces() {
 		return querySpaces;
+	}
+
+	public Map<String, String> getParameterTypes() {
+		return parameterTypes == null ? Collections.emptyMap() : parameterTypes;
+	}
+
+	public String getResultSetMappingName() {
+		return resultSetMappingName;
+	}
+
+	public String getResultSetMappingClassName() {
+		return resultSetMappingClassName;
 	}
 
 	public NamedNativeQueryDefinitionBuilder addSynchronizedQuerySpaces(Set<String> querySpaces) {

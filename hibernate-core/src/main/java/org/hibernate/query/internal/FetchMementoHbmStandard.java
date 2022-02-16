@@ -6,12 +6,16 @@
  */
 package org.hibernate.query.internal;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.named.FetchMemento;
 import org.hibernate.query.results.FetchBuilder;
@@ -31,6 +35,7 @@ public class FetchMementoHbmStandard implements FetchMemento, FetchMemento.Paren
 	private final NavigablePath navigablePath;
 	private final String ownerTableAlias;
 	private final String tableAlias;
+	private final List<String> keyColumnNames;
 	private final LockMode lockMode;
 	private final FetchParentMemento parent;
 	private final Map<String, FetchMemento> fetchMementoMap;
@@ -40,6 +45,7 @@ public class FetchMementoHbmStandard implements FetchMemento, FetchMemento.Paren
 			NavigablePath navigablePath,
 			String ownerTableAlias,
 			String tableAlias,
+			List<String> keyColumnNames,
 			LockMode lockMode,
 			FetchParentMemento parent,
 			Map<String, FetchMemento> fetchMementoMap,
@@ -47,6 +53,7 @@ public class FetchMementoHbmStandard implements FetchMemento, FetchMemento.Paren
 		this.navigablePath = navigablePath;
 		this.ownerTableAlias = ownerTableAlias;
 		this.tableAlias = tableAlias;
+		this.keyColumnNames = keyColumnNames;
 		this.lockMode = lockMode;
 		this.parent = parent;
 		this.fetchMementoMap = fetchMementoMap;
@@ -64,19 +71,34 @@ public class FetchMementoHbmStandard implements FetchMemento, FetchMemento.Paren
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
 		final Map<String, FetchBuilder> fetchBuilderMap = new HashMap<>();
-
 		fetchMementoMap.forEach(
 				(attrName, fetchMemento) -> fetchBuilderMap.put(
 						attrName,
 						fetchMemento.resolve(this, querySpaceConsumer, context )
 				)
 		);
+		final DynamicResultBuilderEntityStandard resultBuilder;
+		if ( fetchable instanceof PluralAttributeMapping ) {
+			resultBuilder = new DynamicResultBuilderEntityStandard(
+					(EntityMappingType) ( (PluralAttributeMapping) fetchable ).getElementDescriptor().getPartMappingType(),
+					tableAlias,
+					navigablePath
+			);
+		}
+		else {
+			resultBuilder = new DynamicResultBuilderEntityStandard(
+					( (ToOneAttributeMapping) fetchable ).getEntityMappingType(),
+					tableAlias,
+					navigablePath
+			);
+		}
 		return new DynamicFetchBuilderLegacy(
 				tableAlias,
 				ownerTableAlias,
 				fetchable.getFetchableName(),
-				new ArrayList<>(),
-				fetchBuilderMap
+				keyColumnNames,
+				fetchBuilderMap,
+				resultBuilder
 		);
 	}
 }

@@ -10,7 +10,6 @@ import java.sql.CallableStatement;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.CallableStatementSupport;
-import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.sql.exec.spi.JdbcCall;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
@@ -22,7 +21,6 @@ public abstract class AbstractStandardCallableStatementSupport implements Callab
 			String procedureName,
 			JdbcCall procedureCall,
 			CallableStatement statement,
-			ParameterStrategy parameterStrategy,
 			ProcedureParameterMetadataImplementor parameterMetadata,
 			SharedSessionContractImplementor session) {
 		if ( procedureCall.getFunctionReturn() != null ) {

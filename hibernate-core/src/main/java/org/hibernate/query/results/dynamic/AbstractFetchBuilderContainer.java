@@ -85,7 +85,6 @@ public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuild
 		}
 
 		final DynamicFetchBuilderStandard fetchBuilder = new DynamicFetchBuilderStandard(
-				this,
 				propertyName
 		);
 

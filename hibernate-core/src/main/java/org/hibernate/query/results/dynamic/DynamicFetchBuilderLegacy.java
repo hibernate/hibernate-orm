@@ -55,6 +55,8 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 	private final Map<String, FetchBuilder> fetchBuilderMap;
 	private final DynamicResultBuilderEntityStandard resultBuilderEntity;
 
+	private LockMode lockMode;
+
 	public DynamicFetchBuilderLegacy(
 			String tableAlias,
 			String ownerTableAlias,
@@ -164,41 +166,41 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 				keyDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
 			}
 
-			keyDescriptor.forEachSelectable(
-					(selectionIndex, selectableMapping) -> {
-						resolveSqlSelection(
-								columnNames.get( selectionIndex ),
-								createColumnReferenceKey(
-										tableGroup.resolveTableReference( selectableMapping.getContainingTableExpression() ),
-										selectableMapping.getSelectionExpression()
-								),
-								selectableMapping.getJdbcMapping(),
-								jdbcResultsMetadata,
-								domainResultCreationState
-						);
-					}
-			);
+			if ( !columnNames.isEmpty() ) {
+				keyDescriptor.forEachSelectable(
+						(selectionIndex, selectableMapping) -> {
+							resolveSqlSelection(
+									columnNames.get( selectionIndex ),
+									createColumnReferenceKey(
+											tableGroup.resolveTableReference( selectableMapping.getContainingTableExpression() ),
+											selectableMapping.getSelectionExpression()
+									),
+									selectableMapping.getJdbcMapping(),
+									jdbcResultsMetadata,
+									domainResultCreationState
+							);
+						}
+				);
+			}
 
 			// We process the fetch builder such that it contains a resultBuilderEntity before calling this method in ResultSetMappingProcessor
-			assert resultBuilderEntity != null;
-
-			return resultBuilderEntity.buildFetch(
-					parent,
-					attributeMapping,
-					jdbcResultsMetadata,
-					creationState
-			);
+			if ( resultBuilderEntity != null ) {
+				return resultBuilderEntity.buildFetch(
+						parent,
+						attributeMapping,
+						jdbcResultsMetadata,
+						creationState
+				);
+			}
 		}
-		else {
-			return parent.generateFetchableFetch(
-					attributeMapping,
-					fetchPath,
-					FetchTiming.IMMEDIATE,
-					true,
-					null,
-					domainResultCreationState
-			);
-		}
+		return parent.generateFetchableFetch(
+				attributeMapping,
+				parent.resolveNavigablePath( attributeMapping ),
+				FetchTiming.IMMEDIATE,
+				true,
+				null,
+				domainResultCreationState
+		);
 	}
 
 	private void resolveSqlSelection(
@@ -235,17 +237,21 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 
 	@Override
 	public NativeQuery.FetchReturn setLockMode(LockMode lockMode) {
-		return null;
+		this.lockMode = lockMode;
+		return this;
 	}
 
 	@Override
 	public NativeQuery.FetchReturn addProperty(String propertyName, String columnAlias) {
-		return null;
+		addProperty( propertyName ).addColumnAlias( columnAlias );
+		return this;
 	}
 
 	@Override
 	public NativeQuery.ReturnProperty addProperty(String propertyName) {
-		return null;
+		DynamicFetchBuilderStandard fetchBuilder = new DynamicFetchBuilderStandard( propertyName );
+		fetchBuilderMap.put( propertyName, fetchBuilder );
+		return fetchBuilder;
 	}
 
 	@Override

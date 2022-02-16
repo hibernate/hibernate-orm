@@ -153,7 +153,7 @@ public class Identifier implements Comparable<Identifier> {
 	public static String unQuote(String name) {
 		assert isQuoted( name );
 
-		return name.substring( 1, name.length() - 2 );
+		return name.substring( 1, name.length() - 1 );
 	}
 
 	/**

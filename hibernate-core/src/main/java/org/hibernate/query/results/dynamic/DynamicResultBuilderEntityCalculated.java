@@ -70,6 +70,11 @@ public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilde
 	}
 
 	@Override
+	public LockMode getLockMode() {
+		return explicitLockMode;
+	}
+
+	@Override
 	public NativeQuery.RootReturn setLockMode(LockMode lockMode) {
 		throw new UnsupportedOperationException();
 	}

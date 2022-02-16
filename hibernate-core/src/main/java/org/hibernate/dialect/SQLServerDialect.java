@@ -884,7 +884,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		return exporter;
 	}
 
-	private class SqlServerSequenceExporter extends StandardSequenceExporter {
+	private static class SqlServerSequenceExporter extends StandardSequenceExporter {
 
 		public SqlServerSequenceExporter(Dialect dialect) {
 			super( dialect );
@@ -898,6 +898,12 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			// Keeping the catalog in the name does not break on ORM, but it fails using Vert.X for Reactive.
 			return context.formatWithoutCatalog( name );
 		}
+	}
+
+	@Override
+	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) {
+		// Not sure if it's a JDBC driver issue, but it doesn't work
+		return false;
 	}
 
 	@Override

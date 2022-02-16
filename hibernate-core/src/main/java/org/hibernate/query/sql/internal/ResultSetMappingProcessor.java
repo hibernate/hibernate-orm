@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
@@ -233,6 +234,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 					alias2Persister.get( fetchBuilder.getTableAlias() ).findContainingEntityMapping(),
 					fetchBuilder.getTableAlias(),
 					suffix,
+					null,
 					determineNavigablePath( fetchBuilder )
 			);
 			final SQLLoadable loadable = (SQLLoadable) alias2Persister.get( fetchBuilder.getOwnerAlias() );
@@ -296,6 +298,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 				rootReturn.getEntityMapping(),
 				rootReturn.getTableAlias(),
 				suffix,
+				rootReturn.getLockMode(),
 				new NavigablePath( rootReturn.getEntityMapping().getEntityName() )
 		);
 	}
@@ -304,6 +307,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			EntityMappingType entityMapping,
 			String tableAlias,
 			String suffix,
+			LockMode lockMode,
 			NavigablePath navigablePath) {
 		final SQLLoadable loadable = (SQLLoadable) entityMapping.getEntityPersister();
 		final DynamicResultBuilderEntityStandard resultBuilderEntity = new DynamicResultBuilderEntityStandard(
@@ -311,6 +315,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 				tableAlias,
 				navigablePath
 		);
+		resultBuilderEntity.setLockMode( lockMode );
 
 		final String[] identifierAliases = loadable.getIdentifierAliases( suffix );
 		resultBuilderEntity.addIdColumnAliases( identifierAliases );

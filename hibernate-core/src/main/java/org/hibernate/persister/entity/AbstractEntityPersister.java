@@ -2678,20 +2678,19 @@ public abstract class AbstractEntityPersister
 				Component component = (Component) property.getValue();
 				internalInitSubclassPropertyAliasesMap( name, component.getProperties() );
 			}
-			else {
-				String[] aliases = new String[property.getColumnSpan()];
-				String[] cols = new String[property.getColumnSpan()];
-				int l = 0;
-				for ( Selectable selectable: property.getSelectables() ) {
-					Dialect dialect = getFactory().getJdbcServices().getDialect();
-					aliases[l] = selectable.getAlias( dialect, property.getValue().getTable() );
-					cols[l] = selectable.getText(dialect); // TODO: skip formulas?
-					l++;
-				}
 
-				subclassPropertyAliases.put( name, aliases );
-				subclassPropertyColumnNames.put( name, cols );
+			String[] aliases = new String[property.getColumnSpan()];
+			String[] cols = new String[property.getColumnSpan()];
+			int l = 0;
+			for ( Selectable selectable: property.getSelectables() ) {
+				Dialect dialect = getFactory().getJdbcServices().getDialect();
+				aliases[l] = selectable.getAlias( dialect, property.getValue().getTable() );
+				cols[l] = selectable.getText(dialect); // TODO: skip formulas?
+				l++;
 			}
+
+			subclassPropertyAliases.put( name, aliases );
+			subclassPropertyColumnNames.put( name, cols );
 		}
 
 	}

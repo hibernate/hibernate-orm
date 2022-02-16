@@ -7,8 +7,10 @@
 package org.hibernate.boot.model.source.internal.hbm;
 
 import java.util.Locale;
+
 import jakarta.xml.bind.JAXBElement;
 
+import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryCollectionLoadReturnType;
@@ -20,6 +22,8 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSynchronizeType;
 import org.hibernate.boot.query.ImplicitHbmResultSetMappingDescriptorBuilder;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinitionBuilder;
+import org.hibernate.boot.query.NamedProcedureCallDefinition;
+import org.hibernate.cfg.annotations.QueryBinder;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
 
@@ -160,7 +164,33 @@ public class NamedQueryBinder {
 			builder.setResultSetMappingName( implicitResultSetMappingBuilder.getRegistrationName() );
 		}
 
-		context.getMetadataCollector().addNamedNativeQuery( builder.build() );
+		if ( namedQueryBinding.isCallable() ) {
+			final NamedProcedureCallDefinition definition = QueryBinder.createStoredProcedure(
+					builder, context,
+					() -> illegalCallSyntax( context, namedQueryBinding, builder.getSqlString() )
+			);
+			context.getMetadataCollector().addNamedProcedureCallDefinition( definition );
+			DeprecationLogger.DEPRECATION_LOGGER.warn(
+					"Marking named native queries as callable is deprecated; use `<named-stored-procedure-query/>` instead."
+			);
+		}
+		else {
+			context.getMetadataCollector().addNamedNativeQuery( builder.build() );
+		}
+	}
+
+	private static MappingException illegalCallSyntax(
+			HbmLocalMetadataBuildingContext context,
+			JaxbHbmNamedNativeQueryType namedQueryBinding,
+			String sqlString) {
+		return new MappingException(
+				String.format(
+						"Callable named native query [%s] doesn't use the JDBC call syntax: %s",
+						namedQueryBinding.getName(),
+						sqlString
+				),
+				context.getOrigin()
+		);
 	}
 
 	private static boolean processNamedQueryContentItem(

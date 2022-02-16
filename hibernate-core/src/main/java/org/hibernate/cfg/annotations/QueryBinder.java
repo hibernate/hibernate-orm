@@ -6,21 +6,33 @@
  */
 package org.hibernate.cfg.annotations;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.annotations.CacheModeType;
 import org.hibernate.annotations.FlushModeType;
+import org.hibernate.annotations.common.annotationfactory.AnnotationDescriptor;
+import org.hibernate.annotations.common.annotationfactory.AnnotationFactory;
 import org.hibernate.boot.internal.NamedHqlQueryDefinitionImpl;
 import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinitionBuilder;
+import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.log.DeprecationLogger;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.HibernateHints;
+import org.hibernate.query.sql.internal.ParameterParser;
+import org.hibernate.query.sql.spi.ParameterRecognizer;
+import org.hibernate.type.BasicType;
 
 import org.jboss.logging.Logger;
 
@@ -29,8 +41,11 @@ import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.NamedStoredProcedureQuery;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.QueryHint;
 import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.SqlResultSetMappings;
+import jakarta.persistence.StoredProcedureParameter;
 
 /**
  * Query binder
@@ -166,16 +181,116 @@ public abstract class QueryBinder {
 				.setFetchSize( queryAnn.fetchSize() < 0 ? null : queryAnn.fetchSize() )
 				.setFlushMode( getFlushMode( queryAnn.flushMode() ) )
 				.setReadOnly( queryAnn.readOnly() )
+				.setQuerySpaces( CollectionHelper.setOf( queryAnn.querySpaces() ) )
 				.setComment( BinderHelper.getAnnotationValueStringOrNull( queryAnn.comment() ) );
 
-		final NamedNativeQueryDefinition queryDefinition = builder.build();
+		if ( queryAnn.callable() ) {
+			final NamedProcedureCallDefinition definition = createStoredProcedure(
+					builder, context,
+					() -> illegalCallSyntax(
+							queryAnn,
+							queryAnn.query()
+					)
+			);
+			context.getMetadataCollector().addNamedProcedureCallDefinition( definition );
+			DeprecationLogger.DEPRECATION_LOGGER.warn(
+					"Marking named native queries as callable is no longer supported; use `@jakarta.persistence.NamedStoredProcedureQuery` instead.  Ignoring."
+			);
+		}
+		else {
+			final NamedNativeQueryDefinition queryDefinition = builder.build();
 
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Binding named native query: %s => %s", queryDefinition.getRegistrationName(), queryDefinition.getSqlQueryString() );
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debugf(
+						"Binding named native query: %s => %s",
+						queryDefinition.getRegistrationName(),
+						queryDefinition.getSqlQueryString()
+				);
+			}
+
+			context.getMetadataCollector().addNamedNativeQuery( queryDefinition );
 		}
 
-		context.getMetadataCollector().addNamedNativeQuery( queryDefinition );
+	}
 
+	public static NamedProcedureCallDefinition createStoredProcedure(
+			NamedNativeQueryDefinitionBuilder builder,
+			MetadataBuildingContext context,
+			Supplier<RuntimeException> exceptionProducer) {
+		List<StoredProcedureParameter> storedProcedureParameters = new ArrayList<>();
+		List<QueryHint> queryHints = new ArrayList<>();
+		List<String> parameterNames = new ArrayList<>();
+		final String sqlString = builder.getSqlString().trim();
+		if ( !sqlString.startsWith( "{" ) || !sqlString.endsWith( "}" ) ) {
+			throw exceptionProducer.get();
+		}
+		final String procedureName = QueryBinder.parseJdbcCall(
+				sqlString,
+				parameterNames,
+				exceptionProducer
+		);
+
+		AnnotationDescriptor ann = new AnnotationDescriptor( NamedStoredProcedureQuery.class );
+		ann.setValue( "name", builder.getName() );
+		ann.setValue( "procedureName", procedureName );
+
+		for ( String parameterName : parameterNames ) {
+			AnnotationDescriptor parameterDescriptor = new AnnotationDescriptor( StoredProcedureParameter.class );
+			parameterDescriptor.setValue( "name", parameterName );
+			parameterDescriptor.setValue( "mode", ParameterMode.IN );
+			final String typeName = builder.getParameterTypes().get( parameterName );
+			if ( typeName == null ) {
+				parameterDescriptor.setValue( "type", Object.class );
+			}
+			else {
+				final BasicType<Object> registeredType = context.getBootstrapContext()
+						.getTypeConfiguration()
+						.getBasicTypeRegistry()
+						.getRegisteredType( typeName );
+				parameterDescriptor.setValue( "type", registeredType.getJavaType() );
+			}
+			storedProcedureParameters.add( AnnotationFactory.create( parameterDescriptor ) );
+		}
+		ann.setValue(
+				"parameters",
+				storedProcedureParameters.toArray( new StoredProcedureParameter[storedProcedureParameters.size()] )
+		);
+
+		if ( builder.getResultSetMappingName() != null ) {
+			ann.setValue( "resultSetMappings", new String[]{ builder.getResultSetMappingName() } );
+		}
+		else {
+			ann.setValue( "resultSetMappings", new String[0]  );
+		}
+
+		if ( builder.getResultSetMappingClassName() != null ) {
+			ann.setValue(
+					"resultClasses",
+					new Class[] {
+							context.getBootstrapContext()
+									.getClassLoaderAccess().classForName( builder.getResultSetMappingClassName() )
+					}
+			);
+		}
+		else {
+			ann.setValue( "resultClasses", new Class[0]  );
+		}
+
+		if ( builder.getQuerySpaces() != null ) {
+			AnnotationDescriptor hintDescriptor = new AnnotationDescriptor( QueryHint.class );
+			hintDescriptor.setValue( "name", HibernateHints.HINT_NATIVE_SPACES );
+			hintDescriptor.setValue( "value", String.join( " ", builder.getQuerySpaces() ) );
+			queryHints.add( AnnotationFactory.create( hintDescriptor ) );
+		}
+
+		AnnotationDescriptor hintDescriptor2 = new AnnotationDescriptor( QueryHint.class );
+		hintDescriptor2.setValue( "name", HibernateHints.HINT_CALLABLE_FUNCTION );
+		hintDescriptor2.setValue( "value", "true" );
+		queryHints.add( AnnotationFactory.create( hintDescriptor2 ) );
+
+		ann.setValue( "hints", queryHints.toArray( new QueryHint[queryHints.size()] ) );
+
+		return new NamedProcedureCallDefinitionImpl( AnnotationFactory.create( ann ) );
 	}
 
 	public static void bindQueries(NamedQueries queriesAnn, MetadataBuildingContext context, boolean isDefault) {
@@ -349,5 +464,84 @@ public abstract class QueryBinder {
 		context.getMetadataCollector().addSecondPass( new ResultsetMappingSecondPass( ann, context, isDefault ) );
 	}
 
+	public static String parseJdbcCall(
+			String sqlString,
+			List<String> parameterNames,
+			Supplier<RuntimeException> exceptionProducer) {
+		String procedureName = null;
+		int index = skipWhitespace( sqlString, 1 );
+		// Parse the out param `?=` part
+		if ( sqlString.charAt( index ) == '?' ) {
+			index++;
+			index = skipWhitespace( sqlString, index );
+			if ( sqlString.charAt( index ) != '=' ) {
+				throw exceptionProducer.get();
+			}
+			index++;
+			index = skipWhitespace( sqlString, index );
+		}
+		// Parse the call keyword
+		if ( !sqlString.regionMatches( true, index, "call", 0, 4 ) ) {
+			throw exceptionProducer.get();
+		}
+		index += 4;
+		index = skipWhitespace( sqlString, index );
 
+		// Parse the procedure name
+		final int procedureStart = index;
+		for ( ; index < sqlString.length(); index++ ) {
+			final char c = sqlString.charAt( index );
+			if ( c == '(' || Character.isWhitespace( c ) ) {
+				procedureName = sqlString.substring( procedureStart, index );
+				break;
+			}
+		}
+		index = skipWhitespace( sqlString, index );
+		ParameterParser.parse(
+				sqlString.substring( index, sqlString.length() - 1 ),
+				new ParameterRecognizer() {
+					@Override
+					public void ordinalParameter(int sourcePosition) {
+						parameterNames.add( "" );
+					}
+
+					@Override
+					public void namedParameter(String name, int sourcePosition) {
+						parameterNames.add( name );
+					}
+
+					@Override
+					public void jpaPositionalParameter(int label, int sourcePosition) {
+						parameterNames.add( "" );
+					}
+
+					@Override
+					public void other(char character) {
+					}
+				}
+		);
+		return procedureName;
+	}
+
+	private static int skipWhitespace(String sqlString, int i) {
+		while ( i < sqlString.length() ) {
+			if ( !Character.isWhitespace( sqlString.charAt( i ) ) ) {
+				break;
+			}
+			i++;
+		}
+		return i;
+	}
+
+	private static AnnotationException illegalCallSyntax(
+			org.hibernate.annotations.NamedNativeQuery queryAnn,
+			String sqlString) {
+		return new AnnotationException(
+				String.format(
+						"Callable named native query [%s] doesn't use the JDBC call syntax: %s",
+						queryAnn.name(),
+						sqlString
+				)
+		);
+	}
 }

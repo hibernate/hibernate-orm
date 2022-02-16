@@ -16,7 +16,7 @@ import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.mapping.BasicValue;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -31,6 +31,8 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 import org.junit.jupiter.api.extension.TestInstancePostProcessor;
 import org.junit.platform.commons.support.AnnotationSupport;
+
+import jakarta.persistence.SharedCacheMode;
 
 /**
  * hibernate-testing implementation of a few JUnit5 contracts to support SessionFactory-based testing,
@@ -132,6 +134,11 @@ public class DomainModelExtension
 					final TypeContributor contributor = managedBeanRegistry.getBean( contributorType ).getBeanInstance();
 					contributor.contribute( metadataBuilder, serviceRegistry );
 				}
+
+				final SharedCacheMode sharedCacheMode = domainModelAnnotation.sharedCacheMode();
+				final AccessType accessType = domainModelAnnotation.accessType();
+				metadataBuilder.applySharedCacheMode( sharedCacheMode );
+				metadataBuilder.applyAccessType( accessType );
 
 				MetadataImplementor metadataImplementor = metadataBuilder.build();
 				applyCacheSettings(

@@ -2584,19 +2584,36 @@ public class SessionImpl
 				setHibernateFlushMode( ConfigurationHelper.getFlushMode(value, FlushMode.AUTO) );
 				break;
 			case JPA_LOCK_SCOPE:
-			case JPA_LOCK_TIMEOUT:
 			case JAKARTA_LOCK_SCOPE:
+				properties.put( JPA_LOCK_SCOPE, value );
+				properties.put( JAKARTA_LOCK_SCOPE, value );
+				LockOptionsHelper.applyPropertiesToLockOptions(properties, this::getLockOptionsForWrite);
+				break;
+			case JPA_LOCK_TIMEOUT:
 			case JAKARTA_LOCK_TIMEOUT:
+				properties.put( JPA_LOCK_TIMEOUT, value );
+				properties.put( JAKARTA_LOCK_TIMEOUT, value );
 				LockOptionsHelper.applyPropertiesToLockOptions(properties, this::getLockOptionsForWrite);
 				break;
 			case JPA_SHARED_CACHE_RETRIEVE_MODE:
-			case JPA_SHARED_CACHE_STORE_MODE:
 			case JAKARTA_SHARED_CACHE_RETRIEVE_MODE:
-			case JAKARTA_SHARED_CACHE_STORE_MODE:
+				properties.put( JPA_SHARED_CACHE_RETRIEVE_MODE, value );
+				properties.put( JAKARTA_SHARED_CACHE_RETRIEVE_MODE, value );
 				setCacheMode(
 						CacheModeHelper.interpretCacheMode(
-								determineCacheStoreMode(properties),
-								determineCacheRetrieveMode(properties)
+								determineCacheStoreMode( properties ),
+								(CacheRetrieveMode) value
+						)
+				);
+				break;
+			case JPA_SHARED_CACHE_STORE_MODE:
+			case JAKARTA_SHARED_CACHE_STORE_MODE:
+				properties.put( JPA_SHARED_CACHE_STORE_MODE, value );
+				properties.put( JAKARTA_SHARED_CACHE_STORE_MODE, value );
+				setCacheMode(
+						CacheModeHelper.interpretCacheMode(
+								(CacheStoreMode) value,
+								determineCacheRetrieveMode( properties )
 						)
 				);
 				break;

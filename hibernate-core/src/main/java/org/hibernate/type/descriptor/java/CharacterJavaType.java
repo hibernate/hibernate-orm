@@ -62,7 +62,10 @@ public class CharacterJavaType extends AbstractClassJavaType<Character> implemen
 		if (value instanceof Character) {
 			return (Character) value;
 		}
-		if (value instanceof String) {
+		if ( value instanceof String ) {
+			if ( value.equals( "" ) ) {
+				return ' ';
+			}
 			final String str = (String) value;
 			return str.charAt( 0 );
 		}

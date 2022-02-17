@@ -198,6 +198,32 @@ identifiers cannot use constructor injection.
 
 See https://docs.jboss.org/hibernate/orm/6.0/userguide/html_single/Hibernate_User_Guide.html#embeddable-instantiator for details.
 
+==== CompositeUserType changes
+
+The `CompositeUserType` interface was re-implemented to be able to model user types as proper embeddable types.
+A major difference to 5.x is the introduction of an "embeddable projection" that is used to determine the mapping structure.
+
+Previously, a `CompositeUserType` had to provide property names and types through dedicated accessor methods,
+but this was complicated for non-basic mappings and required quite some knowledge about Hibernate internals.
+With 6.0 these methods are replaced with a method that returns an "embeddable projection" class.
+The class is like a regular `@Embeddable` class and is used to determine the mapping structure for the `CompositeUserType`.
+
+Component values of a user type object are accessed by property index. The property index is 0-based and can be determined
+by sorting the persistent attribute names lexicographically ascending and using the 0-based position as property index.
+
+For example, the following component:
+
+```java
+public class MonetaryAmountEmbeddable {
+	BigDecimal value;
+	Currency currency;
+}
+```
+
+will assign property index 0 to `currency` and index 1 to `value`.
+
+Note that it is not possible anymore to use `@Columns` to specify the names of columns of a composite user type mapping.
+Since a `CompositeUserType` now constructs a proper component, it is necessary to use the `@AttributeOverride` annotation.
 
 === Plural attributes
 
@@ -758,3 +784,53 @@ when loaded by-id i.e. through `Session#get`/`EntityManager#find`, even though f
 
 Starting with Hibernate 6.0, the laziness of such associations is properly respected, regardless of the fetch mechanism.
 Backwards compatibility can be achieved by specifying `lazy="false"` or `@ManyToOne(fetch = EAGER)`/`@OneToOne(fetch = EAGER)`/`@OneToMany(fetch = EAGER)`/`@ManyToMany(fetch = EAGER)`.
+
+== hbm.xml <return-join/> behavior change
+
+As of Hibernate 6.0, a `<return-join/>` will cause a fetch of an association, rather than adding a selection item.
+Consider the following example:
+
+```xml
+<sql-query name="organizationreturnproperty">
+    <return alias="org" class="Organization">
+        <return-property name="id" column="ORGID"/>
+        <return-property name="name" column="NAME"/>
+    </return>
+    <return-join alias="emp" property="org.employments">
+        <return-property name="key" column="EMPLOYER"/>
+        <return-property name="element" column="EMPID"/>
+        <return-property name="element.employee" column="EMPLOYEE"/>
+    </return-join>
+    ...
+</sql-query>
+```
+
+Prior to 6.0, a query would return a list of tuples [`Organization`, `Employee`],
+but now this will return a list of `Organization` with an initialized `employments` collection.
+
+== hbm.xml multiple <column/> now disallowed
+
+In 6.0 the support for basic property mappings with multiple columns was removed. The only use case for that was when a
+`CompositeUserType` was in use, which was reworked to now work on top of components.
+
+Uses like:
+
+```xml
+<property name="salary" type="org.hibernate.orm.test.sql.hand.MonetaryAmountUserType">
+    <column name="CURRENCY"/>
+    <column name="AMOUNT" sql-type="float"/>
+</property>
+```
+
+have to be migrated to proper components:
+
+```xml
+<component name="salary" class="org.hibernate.orm.test.sql.hand.MonetaryAmountUserType">
+    <property name="value" column="AMOUNT">
+        <type name="float"/>
+    </property>
+    <property name="currency" column="CURRENCY"/>
+</component>
+```
+
+The component class attribute now supports interpreting a `CompositeUserType` class properly.

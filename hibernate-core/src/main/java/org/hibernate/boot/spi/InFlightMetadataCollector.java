@@ -7,6 +7,7 @@
 package org.hibernate.boot.spi;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -53,6 +54,7 @@ import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserCollectionType;
 
 import jakarta.persistence.AttributeConverter;
@@ -311,6 +313,9 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 
 	void registerEmbeddableInstantiator(Class<?> embeddableType, Class<? extends EmbeddableInstantiator> instantiator);
 	Class<? extends EmbeddableInstantiator> findRegisteredEmbeddableInstantiator(Class<?> embeddableType);
+
+	void registerCompositeUserType(Class<?> embeddableType, Class<? extends CompositeUserType<?>> userType);
+	Class<? extends CompositeUserType<?>> findRegisteredCompositeUserType(Class<?> embeddableType);
 
 	void addCollectionTypeRegistration(CollectionTypeRegistration registrationAnnotation);
 	void addCollectionTypeRegistration(CollectionClassification classification, CollectionTypeRegistrationDescriptor descriptor);

@@ -66,6 +66,10 @@ public class CompleteFetchBuilderEntityValuedModelPart
 		return modelPart;
 	}
 
+	public List<String> getColumnAliases() {
+		return columnAliases;
+	}
+
 	@Override
 	public Fetch buildFetch(
 			FetchParent parent,

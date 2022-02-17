@@ -120,6 +120,21 @@ public class SinglePropertyMapper extends AbstractPropertyMapper implements Simp
 		}
 	}
 
+	@Override
+	public Object mapToEntityFromMap(
+			final EnversService enversService,
+			final Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision) {
+		// synthetic properties are not part of the entity model; therefore they should be ignored.
+		if ( data == null || propertyData.isSynthetic() ) {
+			return null;
+		}
+
+		return data.get( propertyData.getName() );
+	}
+
 	private boolean isPrimitive(Setter setter, PropertyData propertyData, Class<?> cls) {
 		if ( cls == null ) {
 			throw new HibernateException( "No field found for property: " + propertyData.getName() );

@@ -45,6 +45,17 @@ public abstract class AbstractOneToOneMapper extends AbstractToOneMapper {
 			Object primaryKey,
 			AuditReaderImplementor versionsReader,
 			Number revision) {
+		Object value = nullSafeMapToEntityFromMap( enversService, data, primaryKey, versionsReader, revision );
+		setPropertyValue( obj, value );
+	}
+
+	@Override
+	public Object nullSafeMapToEntityFromMap(
+			EnversService enversService,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision) {
 		final EntityInfo referencedEntity = getEntityInfo( enversService, referencedEntityName );
 
 		Object value;
@@ -60,8 +71,7 @@ public abstract class AbstractOneToOneMapper extends AbstractToOneMapper {
 							"." + getPropertyData().getBeanName() + ".", e
 			);
 		}
-
-		setPropertyValue( obj, value );
+		return value;
 	}
 
 	/**

@@ -8,6 +8,7 @@ package org.hibernate.envers.internal.entities;
 
 import java.util.Objects;
 
+import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.type.Type;
 
 /**
@@ -30,6 +31,7 @@ public class PropertyData {
 	private boolean synthetic;
 	private Type propertyType;
 	private Class<?> virtualReturnClass;
+	private PropertyAccessStrategy propertyAccessStrategy;
 
 	/**
 	 * Copies the given property data, except the name.
@@ -91,8 +93,9 @@ public class PropertyData {
 			boolean usingModifiedFlag,
 			String modifiedFlagName,
 			boolean synthetic,
-			Type propertyType) {
-		this( name, beanName, accessType, usingModifiedFlag, modifiedFlagName, synthetic, propertyType, null );
+			Type propertyType,
+			PropertyAccessStrategy propertyAccessStrategy) {
+		this( name, beanName, accessType, usingModifiedFlag, modifiedFlagName, synthetic, propertyType, null, propertyAccessStrategy );
 	}
 
 	public PropertyData(
@@ -103,10 +106,12 @@ public class PropertyData {
 			String modifiedFlagName,
 			boolean synthetic,
 			Type propertyType,
-			Class<?> virtualReturnClass) {
+			Class<?> virtualReturnClass,
+			PropertyAccessStrategy propertyAccessStrategy) {
 		this( name, beanName, accessType, usingModifiedFlag, modifiedFlagName, synthetic );
 		this.propertyType = propertyType;
 		this.virtualReturnClass = virtualReturnClass;
+		this.propertyAccessStrategy = propertyAccessStrategy;
 	}
 
 	public String getName() {
@@ -139,6 +144,10 @@ public class PropertyData {
 
 	public Class<?> getVirtualReturnClass() {
 		return virtualReturnClass;
+	}
+
+	public PropertyAccessStrategy getPropertyAccessStrategy() {
+		return propertyAccessStrategy;
 	}
 
 	@Override

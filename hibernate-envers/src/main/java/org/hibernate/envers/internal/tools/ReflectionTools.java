@@ -47,7 +47,23 @@ public abstract class ReflectionTools {
 	}
 
 	public static Getter getGetter(Class cls, PropertyData propertyData, ServiceRegistry serviceRegistry) {
-		return getGetter( cls, propertyData.getBeanName(), propertyData.getAccessType(), serviceRegistry );
+		if ( propertyData.getPropertyAccessStrategy() == null ) {
+			return getGetter( cls, propertyData.getBeanName(), propertyData.getAccessType(), serviceRegistry );
+		}
+		else {
+			final String propertyName = propertyData.getName();
+			final Pair<Class, String> key = Pair.make( cls, propertyName );
+			Getter value = GETTER_CACHE.get( key );
+			if ( value == null ) {
+				value = propertyData.getPropertyAccessStrategy().buildPropertyAccess(
+						cls,
+						propertyData.getBeanName(), false
+				).getGetter();
+				// It's ok if two getters are generated concurrently
+				GETTER_CACHE.put( key, value );
+			}
+			return value;
+		}
 	}
 
 	public static Getter getGetter(Class cls, String propertyName, String accessorType, ServiceRegistry serviceRegistry) {

@@ -19,6 +19,10 @@ import org.hibernate.envers.internal.entities.mapper.CompositeMapperBuilder;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.internal.EmbeddableCompositeUserTypeInstantiator;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.usertype.CompositeUserType;
 
 /**
  * Generates metadata for components.
@@ -46,19 +50,50 @@ public final class ComponentMetadataGenerator extends AbstractMetadataGenerator 
 			EntityMappingData mappingData,
 			boolean firstPass) {
 		final Component propComponent = (Component) value;
-
+		final Class<? extends EmbeddableInstantiator> instantiatorClass;
+		if ( propComponent.getCustomInstantiator() != null ) {
+			instantiatorClass = propComponent.getCustomInstantiator();
+		}
+		else {
+			instantiatorClass = null;
+		}
+		final EmbeddableInstantiator instantiator;
+		if ( propComponent.getCustomInstantiator() != null ) {
+			instantiator = getMetadataBuildingContext().getBootstrapContext()
+					.getServiceRegistry()
+					.getService( ManagedBeanRegistry.class )
+					.getBean( propComponent.getCustomInstantiator() )
+					.getBeanInstance();
+		}
+		else if ( propComponent.getTypeName() != null ) {
+			final CompositeUserType<Object> compositeUserType = (CompositeUserType<Object>) getMetadataBuildingContext().getBootstrapContext()
+					.getServiceRegistry()
+					.getService( ManagedBeanRegistry.class )
+					.getBean(
+							getMetadataBuildingContext().getBootstrapContext()
+									.getClassLoaderAccess()
+									.classForName( propComponent.getTypeName() )
+					)
+					.getBeanInstance();
+			instantiator = new EmbeddableCompositeUserTypeInstantiator( compositeUserType );
+		}
+		else {
+			instantiator = null;
+		}
 		final CompositeMapperBuilder componentMapper = mapper.addComponent(
 				propertyAuditingData.resolvePropertyData(),
 				ClassLoaderAccessHelper.loadClass(
 						getMetadataBuildingContext(),
 						getClassNameForComponent( propComponent )
-				)
+				),
+				instantiator
 		);
 
 		// The property auditing data must be for a component.
 		final ComponentAuditingData componentAuditingData = (ComponentAuditingData) propertyAuditingData;
 
 		// Adding all properties of the component
+		propComponent.sortProperties();
 		final Iterator<Property> properties = propComponent.getPropertyIterator();
 		while ( properties.hasNext() ) {
 			final Property property = properties.next();
@@ -71,6 +106,7 @@ public final class ComponentMetadataGenerator extends AbstractMetadataGenerator 
 				valueGenerator.addValue(
 						attributeContainer,
 						property.getValue(),
+						property.getPropertyAccessStrategy(),
 						componentMapper,
 						entityName,
 						mappingData,

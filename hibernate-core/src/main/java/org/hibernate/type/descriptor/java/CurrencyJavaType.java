@@ -8,7 +8,9 @@ package org.hibernate.type.descriptor.java;
 
 import java.util.Currency;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * Descriptor for {@link Currency} handling.
@@ -52,5 +54,10 @@ public class CurrencyJavaType extends AbstractClassJavaType<Currency> {
 			return Currency.getInstance( (String) value );
 		}
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
+		return 3;
 	}
 }

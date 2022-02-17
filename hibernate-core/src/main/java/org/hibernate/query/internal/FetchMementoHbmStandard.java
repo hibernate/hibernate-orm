@@ -12,9 +12,12 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.query.results.complete.CompleteFetchBuilderEntityValuedModelPart;
+import org.hibernate.query.results.dynamic.DynamicFetchBuilder;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.named.FetchMemento;
@@ -27,6 +30,9 @@ import org.hibernate.sql.results.graph.FetchableContainer;
  * @author Steve Ebersole
  */
 public class FetchMementoHbmStandard implements FetchMemento, FetchMemento.Parent {
+
+	private static final String ELEMENT_PREFIX = "element.";
+
 	public interface FetchParentMemento {
 		NavigablePath getNavigablePath();
 		FetchableContainer getFetchableContainer();
@@ -84,6 +90,28 @@ public class FetchMementoHbmStandard implements FetchMemento, FetchMemento.Paren
 					tableAlias,
 					navigablePath
 			);
+			FetchBuilder element = fetchBuilderMap.get( "element" );
+			if ( element != null ) {
+				if ( element instanceof DynamicFetchBuilder ) {
+					resultBuilder.addIdColumnAliases(
+							( (DynamicFetchBuilder) element ).getColumnAliases().toArray( new String[0] )
+					);
+				}
+				else {
+					resultBuilder.addIdColumnAliases(
+							( (CompleteFetchBuilderEntityValuedModelPart) element ).getColumnAliases().toArray( new String[0] )
+					);
+				}
+			}
+			FetchBuilder index = fetchBuilderMap.get( "index" );
+			if ( index != null ) {
+				resultBuilder.addFetchBuilder( CollectionPart.Nature.INDEX.getName(), index );
+			}
+			for ( Map.Entry<String, FetchBuilder> entry : fetchBuilderMap.entrySet() ) {
+				if ( entry.getKey().startsWith( ELEMENT_PREFIX ) ) {
+					resultBuilder.addFetchBuilder( entry.getKey().substring( ELEMENT_PREFIX.length() ), entry.getValue() );
+				}
+			}
 		}
 		else {
 			resultBuilder = new DynamicResultBuilderEntityStandard(
@@ -91,6 +119,7 @@ public class FetchMementoHbmStandard implements FetchMemento, FetchMemento.Paren
 					tableAlias,
 					navigablePath
 			);
+			fetchBuilderMap.forEach( resultBuilder::addFetchBuilder );
 		}
 		return new DynamicFetchBuilderLegacy(
 				tableAlias,

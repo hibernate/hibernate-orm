@@ -21,6 +21,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.query.NativeQuery;
+import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultSetMappingSqlSelection;
@@ -49,6 +50,7 @@ public class DynamicResultBuilderEntityStandard
 		implements DynamicResultBuilderEntity, NativeQuery.RootReturn {
 
 	private static final String ELEMENT_PREFIX = CollectionPart.Nature.ELEMENT.getName() + ".";
+	private static final String INDEX_PREFIX = CollectionPart.Nature.INDEX.getName() + ".";
 
 	private final NavigablePath navigablePath;
 
@@ -192,12 +194,12 @@ public class DynamicResultBuilderEntityStandard
 		);
 		final TableReference tableReference = tableGroup.getPrimaryTableReference();
 		final List<String> idColumnAliases;
-		final DynamicFetchBuilder idFetchBuilder;
+		final FetchBuilder idFetchBuilder;
 		if ( this.idColumnNames != null ) {
 			idColumnAliases = this.idColumnNames;
 		}
 		else if ( ( idFetchBuilder = findIdFetchBuilder() ) != null ) {
-			idColumnAliases = idFetchBuilder.getColumnAliases();
+			idColumnAliases = ( (DynamicFetchBuilder) idFetchBuilder ).getColumnAliases();
 		}
 		else {
 			idColumnAliases = null;
@@ -237,7 +239,9 @@ public class DynamicResultBuilderEntityStandard
 				prefix = "";
 			}
 			else {
-				prefix = currentRelativePath.getFullPath() + ".";
+				prefix = currentRelativePath.getFullPath()
+						.replace( ELEMENT_PREFIX, "" )
+						.replace( INDEX_PREFIX, "" ) + ".";
 			}
 			creationState.pushExplicitFetchMementoResolver(
 					relativePath -> {
@@ -261,7 +265,7 @@ public class DynamicResultBuilderEntityStandard
 		}
 	}
 
-	private DynamicFetchBuilder findIdFetchBuilder() {
+	private FetchBuilder findIdFetchBuilder() {
 		final EntityIdentifierMapping identifierMapping = entityMapping.getIdentifierMapping();
 		if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
 			return findFetchBuilder( ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName() );

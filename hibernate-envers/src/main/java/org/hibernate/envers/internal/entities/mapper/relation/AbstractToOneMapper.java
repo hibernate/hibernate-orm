@@ -59,6 +59,16 @@ public abstract class AbstractToOneMapper extends AbstractPropertyMapper {
 	}
 
 	@Override
+	public Object mapToEntityFromMap(
+			EnversService enversService,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision) {
+		return nullSafeMapToEntityFromMap( enversService, data, primaryKey, versionsReader, revision );
+	}
+
+	@Override
 	public List<PersistentCollectionChangeData> mapCollectionChanges(
 			SessionImplementor session,
 			String referencingPropertyName,
@@ -110,6 +120,13 @@ public abstract class AbstractToOneMapper extends AbstractPropertyMapper {
 	public abstract void nullSafeMapToEntityFromMap(
 			EnversService enversService,
 			Object obj,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision);
+
+	public abstract Object nullSafeMapToEntityFromMap(
+			EnversService enversService,
 			Map data,
 			Object primaryKey,
 			AuditReaderImplementor versionsReader,

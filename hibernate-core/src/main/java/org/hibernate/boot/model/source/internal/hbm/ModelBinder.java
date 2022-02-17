@@ -153,6 +153,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 
@@ -2636,6 +2637,22 @@ public class ModelBinder {
 		else {
 			log.debugf( "Binding component [%s]", role );
 			if ( StringHelper.isNotEmpty( explicitComponentClassName ) ) {
+				try {
+					final Class<Object> componentClass = sourceDocument.getBootstrapContext().getClassLoaderAccess()
+							.classForName( explicitComponentClassName );
+					if ( CompositeUserType.class.isAssignableFrom( componentClass ) ) {
+						componentBinding.setTypeName( explicitComponentClassName );
+						CompositeUserType<?> compositeUserType = (CompositeUserType<?>) sourceDocument.getBootstrapContext()
+								.getServiceRegistry()
+								.getService( ManagedBeanRegistry.class )
+								.getBean( componentClass )
+								.getBeanInstance();
+						explicitComponentClassName = compositeUserType.embeddable().getName();
+					}
+				}
+				catch (ClassLoadingException ex) {
+					log.debugf( ex, "Could load component class [%s]", explicitComponentClassName );
+				}
 				log.debugf( "Binding component [%s] to explicitly specified class", role, explicitComponentClassName );
 				componentBinding.setComponentClassName( explicitComponentClassName );
 			}

@@ -32,6 +32,8 @@ public interface PersistentPropertiesSource {
 
 	boolean isDynamicComponent();
 
+	boolean hasCompositeUserType();
+
 	/**
 	 * Get a persistent properties source for a persistent class.
 	 *
@@ -58,6 +60,11 @@ public interface PersistentPropertiesSource {
 
 			@Override
 			public boolean isDynamicComponent() {
+				return false;
+			}
+
+			@Override
+			public boolean hasCompositeUserType() {
 				return false;
 			}
 		};
@@ -114,6 +121,11 @@ public interface PersistentPropertiesSource {
 			@Override
 			public boolean isDynamicComponent() {
 				return dynamic;
+			}
+
+			@Override
+			public boolean hasCompositeUserType() {
+				return component.getTypeName() != null;
 			}
 		};
 	}

@@ -4,12 +4,17 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.sql.hand.query;
+package org.hibernate.orm.test.sql.hand.query;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -35,13 +40,13 @@ import org.hibernate.orm.test.sql.hand.Speech;
 import org.hibernate.orm.test.sql.hand.TextHolder;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
+import org.hibernate.query.ResultListTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -73,7 +78,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 		xmlMappings = { "org/hibernate/orm/test/sql/hand/query/NativeSQLQueries.hbm.xml" }
 )
 @SessionFactory
-@NotImplementedYet( strict = false, reason = "needs a composite user type mechanism e.g. by providing a custom embeddable strategy or instantiator" )
 public class NativeSQLQueriesTest {
 
 	protected String getOrganizationFetchJoinEmploymentSQL() {
@@ -99,7 +103,7 @@ public class NativeSQLQueriesTest {
 	}
 
 	protected String getEmploymentSQLMixedScalarEntity() {
-		return "SELECT e.*, e.employer as employerid  FROM EMPLOYMENT e" ;
+		return "SELECT e.*, e.EMPLOYER as employerid  FROM EMPLOYMENT e" ;
 	}
 
 	protected String getOrgEmpRegionSQL() {
@@ -190,6 +194,7 @@ public class NativeSQLQueriesTest {
 					session.persist(jboss);
 					session.persist(gavin);
 					session.persist(emp);
+					session.flush();
 
 					List l = session.createNativeQuery( getOrgEmpRegionSQL() )
 							.addEntity("org", Organization.class)
@@ -203,7 +208,7 @@ public class NativeSQLQueriesTest {
 							.addJoin("emp", "org.employments")
 							.addJoin("pers", "emp.employee")
 							.list();
-					assertEquals( l.size(), 1 );
+					assertEquals( 1, l.size() );
 				}
 		);
 
@@ -214,14 +219,21 @@ public class NativeSQLQueriesTest {
 																"     left outer join EMPLOYMENT emp on org.ORGID = emp.EMPLOYER, ORGANIZATION org2" )
 							.addEntity("org", Organization.class)
 							.addJoin("emp", "org.employments")
-							.setResultTransformer(new ResultTransformer() {
+							.setResultListTransformer( new ResultListTransformer() {
 								@Override
-								public Object transformTuple(Object[] tuple, String[] aliases) {
-									return tuple[0];
+								public List transformList(List list) {
+									List<Object> result = new ArrayList<>( list.size() );
+									Map<Object, Object> distinct = new IdentityHashMap<>();
+									for ( Object entity : list ) {
+										if ( distinct.put( entity, entity ) == null ) {
+											result.add( entity );
+										}
+									}
+									return result;
 								}
-							})
+							} )
 							.list();
-					assertEquals( l.size(), 2 );
+					assertEquals( 2, l.size() );
 				}
 		);
 
@@ -248,12 +260,13 @@ public class NativeSQLQueriesTest {
 					session.persist(jboss);
 					session.persist(gavin);
 					session.persist(emp);
+					session.flush();
 
 					List l = session.createNativeQuery( getOrgEmpRegionSQL(), "org-emp-regionCode" ).list();
-					assertEquals( l.size(), 2 );
+					assertEquals( 2, l.size() );
 
 					l = session.createNativeQuery( getOrgEmpPersonSQL(), "org-emp-person" ).list();
-					assertEquals( l.size(), 1 );
+					assertEquals( 1, l.size() );
 
 					session.delete(emp);
 					session.delete(gavin);
@@ -276,12 +289,13 @@ public class NativeSQLQueriesTest {
 					session.persist(jboss);
 					session.persist(gavin);
 					session.persist(emp);
+					session.flush();
 
 					List<Object[]> l = session.createNativeQuery( getOrgEmpRegionSQL(), "org-emp-regionCode", Object[].class ).list();
-					assertEquals( l.size(), 2 );
+					assertEquals( 2, l.size() );
 
 					l = session.createNativeQuery( getOrgEmpPersonSQL(), "org-emp-person", Object[].class ).list();
-					assertEquals( l.size(), 1 );
+					assertEquals( 1, l.size() );
 
 					session.delete(emp);
 					session.delete(gavin);
@@ -410,20 +424,18 @@ public class NativeSQLQueriesTest {
 					List list = sqlQuery.list();
 					assertEquals( 2,list.size() );
 					Map m = (Map) list.get(0);
-					assertEquals( 2, m.size() );
+					assertEquals( 1, m.size() );
 					assertTrue( m.containsKey("org") );
-					assertTrue( m.containsKey("emp") );
 					assertClassAssignability( m.get("org").getClass(), Organization.class );
 					if ( jboss.getId() == ( (Organization) m.get("org") ).getId() ) {
-						assertClassAssignability( m.get("emp").getClass(), Employment.class );
+						assertTrue( Hibernate.isInitialized( ( (Organization) m.get("org") ).getEmployments() ) );
 					}
 					Map m2 = (Map) list.get(1);
-					assertEquals( 2, m.size() );
+					assertEquals( 1, m.size() );
 					assertTrue( m2.containsKey("org") );
-					assertTrue( m2.containsKey("emp") );
 					assertClassAssignability( m2.get("org").getClass(), Organization.class );
-					if ( jboss.getId() == ( (Organization) m2.get("org") ).getId() ) {
-						assertClassAssignability( m2.get("emp").getClass(), Employment.class );
+					if ( ifa.getId() == ( (Organization) m2.get("org") ).getId() ) {
+						assertTrue( Hibernate.isInitialized( ( (Organization) m2.get("org") ).getEmployments() ) );
 					}
 				}
 		);
@@ -643,6 +655,7 @@ public class NativeSQLQueriesTest {
 					Dimension d = new Dimension(45, 10);
 					enterprise.setDimensions( d );
 					session.save( enterprise );
+					session.flush();
 					Object[] result = (Object[]) session.getNamedQuery( "spaceship" ).uniqueResult();
 					assertEquals( 3, result.length, "expecting 3 result values" );
 					enterprise = ( SpaceShip ) result[0];
@@ -674,7 +687,6 @@ public class NativeSQLQueriesTest {
 					String sql =
 							"SELECT org.ORGID 		as orgid," +
 									"       org.NAME 		as name," +
-									"       emp.EMPLOYER 	as employer," +
 									"       emp.EMPID 		as empid," +
 									"       emp.EMPLOYEE 	as employee," +
 									"       emp.EMPLOYER 	as employer," +
@@ -823,7 +835,6 @@ public class NativeSQLQueriesTest {
 		);
 	}
 
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = "On HANA, this returns an clob for the text column which doesn't get mapped to a String")
 	@Test
 	public void testTextTypeInSQLQuery(SessionFactoryScope scope) {
 		String description = buildLongString( 15000, 'a' );
@@ -835,18 +846,31 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					String descriptionRead = ( String ) session.createNativeQuery( getDescriptionsSQL() )
-							.uniqueResult();
+					Object result = session.createNativeQuery( getDescriptionsSQL() ).uniqueResult();
+
+					String descriptionRead;
+					if ( result instanceof String ) {
+						descriptionRead = (String) result;
+					}
+					else {
+						Clob clob = (Clob) result;
+						try {
+							descriptionRead = clob.getSubString( 1L, (int) clob.length() );
+						}
+						catch (SQLException e) {
+							throw new RuntimeException( e );
+						}
+					}
 					assertEquals( description, descriptionRead );
 					session.delete( holder );
 				}
 		);
 	}
 
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = "On HANA, this returns a blob for the image column which doesn't get mapped to a byte[]")
 	@Test
 	public void testImageTypeInSQLQuery(SessionFactoryScope scope) {
-		byte[] photo = buildLongByteArray( 15000, true );
+		// Make sure the last byte is non-zero as Sybase cuts that off
+		byte[] photo = buildLongByteArray( 14999, true );
 		ImageHolder holder = new ImageHolder( photo );
 
 		scope.inTransaction(
@@ -855,8 +879,20 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					byte[] photoRead = ( byte[] ) session.createNativeQuery( getPhotosSQL() )
-							.uniqueResult();
+					Object result = session.createNativeQuery( getPhotosSQL() ).uniqueResult();
+					byte[] photoRead;
+					if ( result instanceof byte[] ) {
+						photoRead = (byte[]) result;
+					}
+					else {
+						Blob blob = (Blob) result;
+						try {
+							photoRead = blob.getBytes( 1L, (int) blob.length() );
+						}
+						catch (SQLException e) {
+							throw new RuntimeException( e );
+						}
+					}
 					assertTrue( Arrays.equals( photo, photoRead ) );
 					session.delete( holder );
 				}

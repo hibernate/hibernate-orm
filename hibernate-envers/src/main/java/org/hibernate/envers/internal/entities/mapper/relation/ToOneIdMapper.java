@@ -149,6 +149,17 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 			Object primaryKey,
 			AuditReaderImplementor versionsReader,
 			Number revision) {
+		Object value = nullSafeMapToEntityFromMap( enversService, data, primaryKey, versionsReader, revision );
+		setPropertyValue( obj, value );
+	}
+
+	@Override
+	public Object nullSafeMapToEntityFromMap(
+			EnversService enversService,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision) {
 		final Object entityId = delegate.mapToIdFromMap( data );
 		Object value = null;
 		if ( entityId != null ) {
@@ -183,8 +194,7 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 				}
 			}
 		}
-
-		setPropertyValue( obj, value );
+		return value;
 	}
 
 	public void addMiddleEqualToQuery(

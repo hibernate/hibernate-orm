@@ -16,6 +16,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 
 /**
  * A mapper which maps from a parent mapper and a "main" one, but adds only to the "main". The "main" mapper
@@ -88,6 +89,16 @@ public class SubclassPropertyMapper extends AbstractPropertyMapper implements Ex
 	}
 
 	@Override
+	public Object mapToEntityFromMap(
+			EnversService enversService,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision) {
+		return null;
+	}
+
+	@Override
 	public List<PersistentCollectionChangeData> mapCollectionChanges(
 			SessionImplementor session, String referencingPropertyName,
 			PersistentCollection newColl,
@@ -120,8 +131,10 @@ public class SubclassPropertyMapper extends AbstractPropertyMapper implements Ex
 	}
 
 	@Override
-	public CompositeMapperBuilder addComponent(PropertyData propertyData, Class componentClass) {
-		return main.addComponent( propertyData, componentClass );
+	public CompositeMapperBuilder addComponent(
+			PropertyData propertyData,
+			Class componentClass, EmbeddableInstantiator instantiator) {
+		return main.addComponent( propertyData, componentClass, instantiator );
 	}
 
 	@Override

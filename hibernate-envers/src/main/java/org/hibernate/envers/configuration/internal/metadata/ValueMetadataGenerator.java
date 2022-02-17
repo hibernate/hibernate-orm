@@ -18,6 +18,7 @@ import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
@@ -52,6 +53,7 @@ public class ValueMetadataGenerator extends AbstractMetadataGenerator {
 	public void addValue(
 			AttributeContainer attributeContainer,
 			Value value,
+			PropertyAccessStrategy propertyAccessStrategy,
 			CompositeMapperBuilder currentMapper,
 			String entityName,
 			EntityMappingData mappingData,
@@ -63,6 +65,7 @@ public class ValueMetadataGenerator extends AbstractMetadataGenerator {
 			addValueInFirstPass(
 					attributeContainer,
 					value,
+					propertyAccessStrategy,
 					currentMapper,
 					entityName,
 					mappingData,
@@ -75,6 +78,7 @@ public class ValueMetadataGenerator extends AbstractMetadataGenerator {
 			addValueInSecondPass(
 					attributeContainer,
 					value,
+					propertyAccessStrategy,
 					currentMapper,
 					entityName,
 					mappingData,
@@ -88,6 +92,7 @@ public class ValueMetadataGenerator extends AbstractMetadataGenerator {
 	private void addValueInFirstPass(
 			AttributeContainer attributeContainer,
 			Value value,
+			PropertyAccessStrategy propertyAccessStrategy,
 			CompositeMapperBuilder currentMapper,
 			String entityName,
 			EntityMappingData mappingData,
@@ -95,6 +100,7 @@ public class ValueMetadataGenerator extends AbstractMetadataGenerator {
 			boolean insertable,
 			boolean processModifiedFlag) {
 		final Type type = value.getType();
+		propertyAuditingData.setPropertyAccessStrategy( propertyAccessStrategy );
 
 		if ( type instanceof BasicType ) {
 			basicMetadataGenerator.addBasic(
@@ -134,6 +140,7 @@ public class ValueMetadataGenerator extends AbstractMetadataGenerator {
 	private void addValueInSecondPass(
 			AttributeContainer attributeContainer,
 			Value value,
+			PropertyAccessStrategy propertyAccessStrategy,
 			CompositeMapperBuilder currentMapper,
 			String entityName,
 			EntityMappingData mappingData,

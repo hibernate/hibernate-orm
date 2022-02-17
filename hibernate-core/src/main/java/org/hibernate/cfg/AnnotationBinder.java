@@ -11,6 +11,7 @@ import java.lang.annotation.Repeatable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,6 +40,9 @@ import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.annotations.CollectionTypeRegistrations;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Comment;
+import org.hibernate.annotations.CompositeType;
+import org.hibernate.annotations.CompositeTypeRegistration;
+import org.hibernate.annotations.CompositeTypeRegistrations;
 import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.DialectOverride.OverridesAnnotation;
 import org.hibernate.annotations.DiscriminatorFormula;
@@ -139,6 +143,9 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.property.access.internal.PropertyAccessStrategyCompositeUserTypeImpl;
+import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
+import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.CustomType;
@@ -147,6 +154,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
 import jakarta.persistence.AttributeConverter;
@@ -392,6 +400,7 @@ public final class AnnotationBinder {
 
 		handleTypeDescriptorRegistrations( pckg, context );
 		bindEmbeddableInstantiatorRegistrations( pckg, context );
+		bindCompositeUserTypeRegistrations( pckg, context );
 
 		bindGenericGenerators( pckg, context );
 		bindQueries( pckg, context );
@@ -651,6 +660,7 @@ public final class AnnotationBinder {
 		HashMap<String, IdentifierGeneratorDefinition> classGenerators = buildGenerators( clazzToProcess, context );
 		handleTypeDescriptorRegistrations( clazzToProcess, context );
 		bindEmbeddableInstantiatorRegistrations( clazzToProcess, context );
+		bindCompositeUserTypeRegistrations( clazzToProcess, context );
 
 		// check properties
 		final InheritanceState.ElementsToProcess elementsToProcess = inheritanceState.getElementsToProcess();
@@ -1111,6 +1121,32 @@ public final class AnnotationBinder {
 		);
 	}
 
+	private static void bindCompositeUserTypeRegistrations(XAnnotatedElement annotatedElement, MetadataBuildingContext context) {
+		final CompositeTypeRegistration singleRegistration =
+				annotatedElement.getAnnotation( CompositeTypeRegistration.class );
+		if ( singleRegistration != null ) {
+			handleCompositeUserTypeRegistration( context, singleRegistration );
+		}
+		else {
+			final CompositeTypeRegistrations annotation = annotatedElement.getAnnotation( CompositeTypeRegistrations.class );
+			if ( annotation != null ) {
+				final CompositeTypeRegistration[] registrations = annotation.value();
+				for ( CompositeTypeRegistration registration : registrations ) {
+					handleCompositeUserTypeRegistration(context, registration);
+				}
+			}
+		}
+	}
+
+	private static void handleCompositeUserTypeRegistration(
+			MetadataBuildingContext context,
+			CompositeTypeRegistration annotation) {
+		context.getMetadataCollector().registerCompositeUserType(
+				annotation.embeddableClass(),
+				annotation.userType()
+		);
+	}
+
 	/**
 	 * Process all discriminator-related metadata per rules for "single table" inheritance
 	 */
@@ -1349,6 +1385,7 @@ public final class AnnotationBinder {
 					true,
 					true,
 					false,
+					null,
 					null,
 					context,
 					inheritanceStatePerClass
@@ -2191,9 +2228,13 @@ public final class AnnotationBinder {
 				|| property.isAnnotationPresent( Embedded.class )
 				|| property.isAnnotationPresent( EmbeddedId.class )
 				|| returnedClass.isAnnotationPresent( Embeddable.class );
+		final Class<? extends CompositeUserType<?>> compositeUserType = resolveCompositeUserType(
+				inferredData.getProperty(),
+				inferredData.getClassOrElement(),
+				context
+		);
 
-
-		if ( isComponent ) {
+		if ( isComponent || compositeUserType != null ) {
 			String referencedEntityName = null;
 			if ( isOverridden ) {
 				PropertyData mapsIdProperty = getPropertyOverriddenByMapperOrMapsId(
@@ -2214,6 +2255,7 @@ public final class AnnotationBinder {
 					inheritanceStatePerClass,
 					referencedEntityName,
 					determineCustomInstantiator(property, returnedClass, context),
+					compositeUserType,
 					isOverridden ? ( AnnotatedJoinColumn[] ) columns : null
 			);
 		}
@@ -2829,6 +2871,29 @@ public final class AnnotationBinder {
 		return null;
 	}
 
+	private static Class<? extends CompositeUserType<?>> resolveCompositeUserType(
+			XProperty property,
+			XClass returnedClass,
+			MetadataBuildingContext context) {
+		if ( property != null ) {
+			final CompositeType compositeType = property.getAnnotation( CompositeType.class );
+			if ( compositeType != null ) {
+				return compositeType.value();
+			}
+		}
+
+		if ( returnedClass != null ) {
+			final Class<?> embeddableClass = context.getBootstrapContext()
+					.getReflectionManager()
+					.toClass( returnedClass );
+			if ( embeddableClass != null ) {
+				return context.getMetadataCollector().findRegisteredCompositeUserType( embeddableClass );
+			}
+		}
+
+		return null;
+	}
+
 	private static boolean isGlobalGeneratorNameGlobal(MetadataBuildingContext context) {
 		return context.getBootstrapContext().getJpaCompliance().isGlobalGeneratorScopeEnabled();
 	}
@@ -3051,6 +3116,7 @@ public final class AnnotationBinder {
 			Map<XClass, InheritanceState> inheritanceStatePerClass,
 			String referencedEntityName, //is a component who is overridden by a @MapsId
 			Class<? extends EmbeddableInstantiator> customInstantiatorImpl,
+			Class<? extends CompositeUserType<?>> compositeUserTypeClass,
 			AnnotatedJoinColumn[] columns) {
 		Component comp;
 		if ( referencedEntityName != null ) {
@@ -3081,6 +3147,7 @@ public final class AnnotationBinder {
 					isIdentifierMapper,
 					false,
 					customInstantiatorImpl,
+					compositeUserTypeClass,
 					buildingContext,
 					inheritanceStatePerClass
 			);
@@ -3128,6 +3195,7 @@ public final class AnnotationBinder {
 			boolean isIdentifierMapper,
 			boolean inSecondPass,
 			Class<? extends EmbeddableInstantiator> customInstantiatorImpl,
+			Class<? extends CompositeUserType<?>> compositeUserTypeClass,
 			MetadataBuildingContext buildingContext,
 			Map<XClass, InheritanceState> inheritanceStatePerClass) {
 		return fillComponent(
@@ -3141,6 +3209,7 @@ public final class AnnotationBinder {
 				isIdentifierMapper,
 				inSecondPass,
 				customInstantiatorImpl,
+				compositeUserTypeClass,
 				buildingContext,
 				inheritanceStatePerClass
 		);
@@ -3157,6 +3226,7 @@ public final class AnnotationBinder {
 			boolean isIdentifierMapper,
 			boolean inSecondPass,
 			Class<? extends EmbeddableInstantiator> customInstantiatorImpl,
+			Class<? extends CompositeUserType<?>> compositeUserTypeClass,
 			MetadataBuildingContext buildingContext,
 			Map<XClass, InheritanceState> inheritanceStatePerClass) {
 		/*
@@ -3190,7 +3260,22 @@ public final class AnnotationBinder {
 
 		final XClass xClassProcessed = inferredData.getPropertyClass();
 		List<PropertyData> classElements = new ArrayList<>();
-		XClass returnedClassOrElement = inferredData.getClassOrElement();
+
+		final CompositeUserType<?> compositeUserType;
+		XClass returnedClassOrElement;
+		if ( compositeUserTypeClass == null ) {
+			compositeUserType = null;
+			returnedClassOrElement = inferredData.getClassOrElement();
+		}
+		else {
+			compositeUserType = buildingContext.getBootstrapContext()
+					.getServiceRegistry()
+					.getService( ManagedBeanRegistry.class )
+					.getBean( compositeUserTypeClass )
+					.getBeanInstance();
+			comp.setTypeName( compositeUserTypeClass.getName() );
+			returnedClassOrElement = buildingContext.getBootstrapContext().getReflectionManager().toXClass( compositeUserType.embeddable() );
+		}
 
 		List<PropertyData> baseClassElements = null;
 		Map<String, PropertyData> orderedBaseClassElements = new HashMap<>();
@@ -3295,6 +3380,7 @@ public final class AnnotationBinder {
 
 					handleTypeDescriptorRegistrations( property, buildingContext );
 					bindEmbeddableInstantiatorRegistrations( property, buildingContext );
+					bindCompositeUserTypeRegistrations( property, buildingContext );
 				}
 				else {
 					Map<String, IdentifierGeneratorDefinition> localGenerators =
@@ -3308,6 +3394,24 @@ public final class AnnotationBinder {
 							localGenerators
 					);
 				}
+			}
+		}
+
+		if ( compositeUserType != null ) {
+			comp.sortProperties();
+			final List<String> sortedPropertyNames = new ArrayList<>( comp.getPropertySpan() );
+			final List<Type> sortedPropertyTypes = new ArrayList<>( comp.getPropertySpan() );
+			final PropertyAccessStrategy strategy = new PropertyAccessStrategyCompositeUserTypeImpl( compositeUserType, sortedPropertyNames, sortedPropertyTypes );
+			for ( Property property : comp.getProperties() ) {
+				sortedPropertyNames.add( property.getName() );
+				sortedPropertyTypes.add(
+						PropertyAccessStrategyMixedImpl.INSTANCE.buildPropertyAccess(
+								compositeUserType.embeddable(),
+								property.getName(),
+								false
+						).getGetter().getReturnType()
+				);
+				property.setPropertyAccessStrategy( strategy );
 			}
 		}
 		return comp;
@@ -3370,6 +3474,7 @@ public final class AnnotationBinder {
 				true,
 				false,
 				false,
+				null,
 				null,
 				buildingContext,
 				inheritanceStatePerClass

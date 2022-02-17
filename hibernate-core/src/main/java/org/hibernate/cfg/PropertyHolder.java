@@ -11,6 +11,7 @@ import jakarta.persistence.ForeignKey;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 
+import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -75,6 +76,8 @@ public interface PropertyHolder {
 		// todo: does this necessarily need to be a default method?
 		return null;
 	}
+
+	ColumnTransformer getOverriddenColumnTransformer(String logicalColumnName);
 
 	/**
 	 * return

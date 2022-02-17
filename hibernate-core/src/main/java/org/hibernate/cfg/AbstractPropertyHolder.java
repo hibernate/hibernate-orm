@@ -25,6 +25,8 @@ import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.annotations.ColumnTransformer;
+import org.hibernate.annotations.ColumnTransformers;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
@@ -47,6 +49,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	protected AbstractPropertyHolder parent;
 	private Map<String, Column[]> holderColumnOverride;
 	private Map<String, Column[]> currentPropertyColumnOverride;
+	private Map<String, ColumnTransformer> holderColumnTransformerOverride;
+	private Map<String, ColumnTransformer> currentPropertyColumnTransformerOverride;
 	private Map<String, JoinColumn[]> holderJoinColumnOverride;
 	private Map<String, JoinColumn[]> currentPropertyJoinColumnOverride;
 	private Map<String, JoinTable> holderJoinTableOverride;
@@ -170,6 +174,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	protected void setCurrentProperty(XProperty property) {
 		if ( property == null ) {
 			this.currentPropertyColumnOverride = null;
+			this.currentPropertyColumnTransformerOverride = null;
 			this.currentPropertyJoinColumnOverride = null;
 			this.currentPropertyJoinTableOverride = null;
 			this.currentPropertyForeignKeyOverride = null;
@@ -178,6 +183,11 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			this.currentPropertyColumnOverride = buildColumnOverride( property, getPath() );
 			if ( this.currentPropertyColumnOverride.size() == 0 ) {
 				this.currentPropertyColumnOverride = null;
+			}
+
+			this.currentPropertyColumnTransformerOverride = buildColumnTransformerOverride( property, getPath() );
+			if ( this.currentPropertyColumnTransformerOverride.size() == 0 ) {
+				this.currentPropertyColumnTransformerOverride = null;
 			}
 
 			this.currentPropertyJoinColumnOverride = buildJoinColumnOverride( property, getPath() );
@@ -245,6 +255,21 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			}
 		}
 		return result;
+	}
+
+	@Override
+	public ColumnTransformer getOverriddenColumnTransformer(String logicalColumnName) {
+		ColumnTransformer override = null;
+		if ( parent != null ) {
+			override = parent.getOverriddenColumnTransformer( logicalColumnName );
+		}
+		if ( override == null && currentPropertyColumnTransformerOverride != null ) {
+			override = currentPropertyColumnTransformerOverride.get( logicalColumnName );
+		}
+		if ( override == null && holderColumnTransformerOverride != null ) {
+			override = holderColumnTransformerOverride.get( logicalColumnName );
+		}
+		return override;
 	}
 
 	/**
@@ -375,6 +400,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	private void buildHierarchyColumnOverride(XClass element) {
 		XClass current = element;
 		Map<String, Column[]> columnOverride = new HashMap<>();
+		Map<String, ColumnTransformer> columnTransformerOverride = new HashMap<>();
 		Map<String, JoinColumn[]> joinColumnOverride = new HashMap<>();
 		Map<String, JoinTable> joinTableOverride = new HashMap<>();
 		Map<String, ForeignKey> foreignKeyOverride = new HashMap<>();
@@ -383,14 +409,17 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 					|| current.isAnnotationPresent( Embeddable.class ) ) {
 				//FIXME is embeddable override?
 				Map<String, Column[]> currentOverride = buildColumnOverride( current, getPath() );
+				Map<String, ColumnTransformer> currentTransformerOverride = buildColumnTransformerOverride( current, getPath() );
 				Map<String, JoinColumn[]> currentJoinOverride = buildJoinColumnOverride( current, getPath() );
 				Map<String, JoinTable> currentJoinTableOverride = buildJoinTableOverride( current, getPath() );
 				Map<String, ForeignKey> currentForeignKeyOverride = buildForeignKeyOverride( current, getPath() );
 				currentOverride.putAll( columnOverride ); //subclasses have precedence over superclasses
+				currentTransformerOverride.putAll( columnTransformerOverride ); //subclasses have precedence over superclasses
 				currentJoinOverride.putAll( joinColumnOverride ); //subclasses have precedence over superclasses
 				currentJoinTableOverride.putAll( joinTableOverride ); //subclasses have precedence over superclasses
 				currentForeignKeyOverride.putAll( foreignKeyOverride ); //subclasses have precedence over superclasses
 				columnOverride = currentOverride;
+				columnTransformerOverride = currentTransformerOverride;
 				joinColumnOverride = currentJoinOverride;
 				joinTableOverride = currentJoinTableOverride;
 				foreignKeyOverride = currentForeignKeyOverride;
@@ -399,6 +428,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		}
 
 		holderColumnOverride = columnOverride.size() > 0 ? columnOverride : null;
+		holderColumnTransformerOverride = columnTransformerOverride.size() > 0 ? columnTransformerOverride : null;
 		holderJoinColumnOverride = joinColumnOverride.size() > 0 ? joinColumnOverride : null;
 		holderJoinTableOverride = joinTableOverride.size() > 0 ? joinTableOverride : null;
 		holderForeignKeyOverride = foreignKeyOverride.size() > 0 ? foreignKeyOverride : null;
@@ -441,6 +471,34 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 					columnOverride.put(
 						entry.getKey(),
 						entry.getValue().toArray( new Column[entry.getValue().size()] )
+					);
+				}
+			}
+		}
+		return columnOverride;
+	}
+
+	private static Map<String, ColumnTransformer> buildColumnTransformerOverride(XAnnotatedElement element, String path) {
+		Map<String, ColumnTransformer> columnOverride = new HashMap<>();
+		if ( element != null ) {
+			ColumnTransformer singleOverride = element.getAnnotation( ColumnTransformer.class );
+			ColumnTransformers multipleOverrides = element.getAnnotation( ColumnTransformers.class );
+			ColumnTransformer[] overrides;
+			if ( singleOverride != null ) {
+				overrides = new ColumnTransformer[]{ singleOverride };
+			}
+			else if ( multipleOverrides != null ) {
+				overrides = multipleOverrides.value();
+			}
+			else {
+				overrides = null;
+			}
+
+			if ( overrides != null ) {
+				for ( ColumnTransformer depAttr : overrides ) {
+					columnOverride.put(
+							depAttr.forColumn(),
+							depAttr
 					);
 				}
 			}

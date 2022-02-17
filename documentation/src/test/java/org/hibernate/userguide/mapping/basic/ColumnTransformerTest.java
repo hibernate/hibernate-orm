@@ -11,12 +11,16 @@ import java.util.Currency;
 import java.util.Locale;
 
 import org.hibernate.annotations.ColumnTransformer;
+import org.hibernate.annotations.CompositeType;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
 
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
@@ -43,15 +47,14 @@ public class ColumnTransformerTest extends BaseEntityManagerFunctionalTestCase {
 			//tag::basic-datetime-temporal-date-persist-example[]
 			Savings savings = new Savings();
 			savings.setId(1L);
-			savings.setCurrency(Currency.getInstance(Locale.US));
-			savings.setAmount(BigDecimal.TEN);
+			savings.setWallet(new MonetaryAmount(BigDecimal.TEN, Currency.getInstance(Locale.US)));
 			entityManager.persist(savings);
 		});
 
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Savings savings = entityManager.find(Savings.class, 1L);
-			assertEquals(10, savings.getAmount().intValue());
-			assertEquals(Currency.getInstance(Locale.US), savings.getCurrency());
+			assertEquals(10, savings.getWallet().getAmount().intValue());
+			assertEquals(Currency.getInstance(Locale.US), savings.getWallet().getCurrency());
 		});
 		//end::mapping-column-read-and-write-composite-type-persistence-example[]
 	}
@@ -63,12 +66,17 @@ public class ColumnTransformerTest extends BaseEntityManagerFunctionalTestCase {
 		@Id
 		private Long id;
 
+		@CompositeType(MonetaryAmountUserType.class)
+		@AttributeOverrides({
+			@AttributeOverride(name = "amount", column = @Column(name = "money")),
+			@AttributeOverride(name = "currency", column = @Column(name = "currency"))
+		})
 		@ColumnTransformer(
-				read = "amount / 100",
+				forColumn = "money",
+				read = "money / 100",
 				write = "? * 100"
 		)
-		private BigDecimal amount;
-		private Currency currency;
+		private MonetaryAmount wallet;
 
 		//Getters and setters omitted for brevity
 
@@ -81,20 +89,12 @@ public class ColumnTransformerTest extends BaseEntityManagerFunctionalTestCase {
 			this.id = id;
 		}
 
-		public BigDecimal getAmount() {
-			return amount;
+		public MonetaryAmount getWallet() {
+			return wallet;
 		}
 
-		public void setAmount(BigDecimal amount) {
-			this.amount = amount;
-		}
-
-		public Currency getCurrency() {
-			return currency;
-		}
-
-		public void setCurrency(Currency currency) {
-			this.currency = currency;
+		public void setWallet(MonetaryAmount wallet) {
+			this.wallet = wallet;
 		}
 
 

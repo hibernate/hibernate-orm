@@ -105,6 +105,7 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 				valueMetadataGenerator.addValue(
 						attributeContainer,
 						property.getValue(),
+						property.getPropertyAccessStrategy(),
 						currentMapper,
 						entityName,
 						mappingData,
@@ -370,6 +371,7 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 			valueMetadataGenerator.addValue(
 					entity,
 					propertyAuditingData.getValue(),
+					null,
 					currentMapper,
 					entityName,
 					mappingData,

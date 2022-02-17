@@ -24,6 +24,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.internal.AliasConstantsHelper;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -33,6 +34,7 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.SQLLoadable;
 import org.hibernate.query.NativeQuery;
+import org.hibernate.query.results.dynamic.DynamicFetchBuilderContainer;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultSetMapping;
@@ -41,6 +43,7 @@ import org.hibernate.query.results.complete.CompleteResultBuilderCollectionStand
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
@@ -254,7 +257,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 					columnNames = Arrays.asList( keyColumnAliases );
 					if ( collectionPersister.hasIndex() ) {
 						resultBuilderEntity.addProperty(
-								"{key}", // That's what BasicValuedCollectionPart returns..
+								CollectionPart.Nature.INDEX.getName(),
 								collectionPersister.getIndexColumnAliases( collectionSuffix )
 						);
 					}
@@ -326,28 +329,77 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 
 		for ( String propertyName : loadable.getPropertyNames() ) {
 			final String[] columnAliases = loadable.getSubclassPropertyColumnAliases( propertyName, suffix );
-			if ( columnAliases.length == 0 ) {
-				final Type propertyType = loadable.getPropertyType( propertyName );
-				if ( propertyType instanceof CollectionType ) {
-					final CollectionType collectionType = (CollectionType) propertyType;
-					final String[] keyColumnAliases;
-					if ( collectionType.useLHSPrimaryKey() ) {
-						keyColumnAliases = identifierAliases;
-					}
-					else {
-						keyColumnAliases = loadable.getSubclassPropertyColumnAliases(
-								collectionType.getLHSPropertyName(),
-								suffix
-						);
-					}
-					resultBuilderEntity.addProperty( propertyName, keyColumnAliases );
-				}
-			}
-			else {
-				resultBuilderEntity.addProperty( propertyName, columnAliases );
-			}
+			final Type propertyType = loadable.getPropertyType( propertyName );
+			addFetchBuilder(
+					suffix,
+					loadable,
+					resultBuilderEntity,
+					tableAlias,
+					identifierAliases,
+					propertyName,
+					columnAliases,
+					propertyType
+			);
 		}
 		return resultBuilderEntity;
+	}
+
+	private void addFetchBuilder(
+			String suffix,
+			SQLLoadable loadable,
+			DynamicFetchBuilderContainer resultBuilderEntity,
+			String tableAlias,
+			String[] identifierAliases,
+			String propertyName,
+			String[] columnAliases,
+			Type propertyType) {
+		if ( propertyType instanceof CollectionType ) {
+			final CollectionType collectionType = (CollectionType) propertyType;
+			final String[] keyColumnAliases;
+			if ( collectionType.useLHSPrimaryKey() ) {
+				keyColumnAliases = identifierAliases;
+			}
+			else {
+				keyColumnAliases = loadable.getSubclassPropertyColumnAliases(
+						collectionType.getLHSPropertyName(),
+						suffix
+				);
+			}
+			resultBuilderEntity.addProperty( propertyName, keyColumnAliases );
+		}
+		else if ( propertyType instanceof ComponentType ) {
+			final Map<String, FetchBuilder> fetchBuilderMap = new HashMap<>();
+			final DynamicFetchBuilderLegacy fetchBuilder = new DynamicFetchBuilderLegacy(
+					"",
+					tableAlias,
+					propertyName,
+					null,
+					fetchBuilderMap
+			);
+			final ComponentType componentType = (ComponentType) propertyType;
+			final String[] propertyNames = componentType.getPropertyNames();
+			final Type[] propertyTypes = componentType.getSubtypes();
+			int aliasIndex = 0;
+			for ( int i = 0; i < propertyNames.length; i++ ) {
+				final int columnSpan = propertyTypes[i].getColumnSpan( loadable.getFactory() );
+				addFetchBuilder(
+						suffix,
+						loadable,
+						fetchBuilder,
+						tableAlias,
+						identifierAliases,
+						propertyNames[i],
+						ArrayHelper.slice( columnAliases, aliasIndex, columnSpan ),
+						propertyTypes[i]
+				);
+				aliasIndex += columnSpan;
+			}
+
+			resultBuilderEntity.addFetchBuilder( propertyName, fetchBuilder );
+		}
+		else if ( columnAliases.length != 0 ) {
+			resultBuilderEntity.addProperty( propertyName, columnAliases );
+		}
 	}
 
 	private CompleteResultBuilderCollectionStandard createSuffixedResultBuilder(

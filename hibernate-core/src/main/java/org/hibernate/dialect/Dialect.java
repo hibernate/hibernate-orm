@@ -3951,33 +3951,21 @@ public abstract class Dialect implements ConversionContext {
 				Long length) {
 			final Size size = new Size();
 			int jdbcTypeCode = jdbcType.getDefaultSqlTypeCode();
+			// Set the explicit length to null if we encounter the JPA default 255
+			if ( length != null && length == Size.DEFAULT_LENGTH ) {
+				length = null;
+			}
 
-			switch (jdbcTypeCode) {
+			switch ( jdbcTypeCode ) {
 				case Types.BIT:
-					// Use the default length for Boolean if we encounter the JPA default 255 instead
-					if ( javaType.getJavaTypeClass() == Boolean.class && length != null && length == Size.DEFAULT_LENGTH ) {
-						length = null;
-					}
-					size.setLength( javaType.getDefaultSqlLength( Dialect.this, jdbcType ) );
-					break;
 				case Types.CHAR:
 				case Types.NCHAR:
-					// Use the default length for char and UUID if we encounter the JPA default 255 instead
-					if ( length != null && length == Size.DEFAULT_LENGTH ) {
-						if ( javaType.getJavaTypeClass() == Character.class || javaType.getJavaTypeClass() == UUID.class ) {
-							length = null;
-						}
-					}
-					size.setLength( javaType.getDefaultSqlLength( Dialect.this, jdbcType ) );
-					break;
 				case Types.VARCHAR:
 				case Types.NVARCHAR:
 				case Types.BINARY:
 				case Types.VARBINARY:
-					// Use the default length for UUID if we encounter the JPA default 255 instead
-					if ( javaType.getJavaTypeClass() == UUID.class && length != null && length == Size.DEFAULT_LENGTH ) {
-						length = null;
-					}
+				case Types.CLOB:
+				case Types.BLOB:
 					size.setLength( javaType.getDefaultSqlLength( Dialect.this, jdbcType ) );
 					break;
 				case Types.LONGVARCHAR:
@@ -4009,13 +3997,6 @@ public abstract class Dialect implements ConversionContext {
 					break;
 				case Types.NUMERIC:
 				case Types.DECIMAL:
-					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
-					size.setScale( javaType.getDefaultSqlScale( Dialect.this, jdbcType ) );
-					break;
-				case Types.CLOB:
-				case Types.BLOB:
-					size.setLength( javaType.getDefaultSqlLength( Dialect.this, jdbcType ) );
-					break;
 				case SqlTypes.INTERVAL_SECOND:
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
 					size.setScale( javaType.getDefaultSqlScale( Dialect.this, jdbcType ) );

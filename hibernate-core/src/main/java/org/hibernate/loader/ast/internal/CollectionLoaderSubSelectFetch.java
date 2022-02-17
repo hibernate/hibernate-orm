@@ -145,7 +145,7 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 
 					@Override
 					public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
-						subSelectFetchableKeysHandler.addKey( entityKey );
+						subSelectFetchableKeysHandler.addKey( entityKey, entry );
 					}
 
 					@Override

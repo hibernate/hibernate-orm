@@ -170,7 +170,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 			value = entityBinding.getIdentifier();
 		}
 		else {
-			value = entityBinding.getProperty( getReferencedPropertyName() ).getValue();
+			value = entityBinding.getRecursiveProperty( getReferencedPropertyName() ).getValue();
 		}
 		if ( value instanceof Component ) {
 			final Component component = (Component) value;

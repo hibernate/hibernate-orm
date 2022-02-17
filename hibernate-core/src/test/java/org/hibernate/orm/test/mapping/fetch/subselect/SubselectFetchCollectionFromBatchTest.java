@@ -43,7 +43,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -191,7 +190,6 @@ public class SubselectFetchCollectionFromBatchTest {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10679")
-	@NotImplementedYet( strict = false, reason = "Need to check why this fails" )
 	public void testMultiSubselectFetchSamePersisterQueryList(SessionFactoryScope scope) {
 		final Long[] createdIds = scope.fromTransaction( (s) -> {
 			EmployeeGroup group1 = new EmployeeGroup();

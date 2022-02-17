@@ -9,14 +9,10 @@ package org.hibernate.orm.test.propertyref.partial;
 import org.hibernate.Hibernate;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -26,14 +22,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Gavin King
  */
-@ServiceRegistry( settings = @Setting( name = DEFAULT_CACHE_CONCURRENCY_STRATEGY, value = "nonstrict-read-write" ) )
 @DomainModel( xmlMappings = "org/hibernate/orm/test/propertyref/partial/Mapping.hbm.xml" )
 @SessionFactory
-@NotImplementedYet( strict = false )
 public class PartialComponentPropertyRefTest {
 
-// need to simply comment this out as the failure here occurs while building the SF which is the fixture
-//	@Test
+	@Test
 	public void testComponentPropertyRef(SessionFactoryScope scope) {
 		scope.inTransaction( (s) -> {
 			Person p = new Person();

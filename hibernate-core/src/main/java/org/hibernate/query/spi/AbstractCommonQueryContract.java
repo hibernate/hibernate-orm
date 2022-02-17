@@ -850,9 +850,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		if ( param.allowsMultiValuedBinding() ) {
 			final BindableType<?> hibernateType = param.getHibernateType();
 			if ( hibernateType == null || isInstance( hibernateType, value ) ) {
-				if ( value instanceof Collection ) {
+				if ( value instanceof Collection && !isRegisteredAsBasicType( value.getClass() ) ) {
 					//noinspection rawtypes
-					setParameterList( name, (Collection) value );
+					return setParameterList( name, (Collection) value );
 				}
 			}
 		}
@@ -939,15 +939,19 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		if ( param.allowsMultiValuedBinding() ) {
 			final BindableType<?> hibernateType = param.getHibernateType();
 			if ( hibernateType == null || isInstance( hibernateType, value ) ) {
-				if ( value instanceof Collection ) {
+				if ( value instanceof Collection && !isRegisteredAsBasicType( value.getClass() ) ) {
 					//noinspection rawtypes,unchecked
-					setParameterList( param, (Collection) value );
+					return setParameterList( param, (Collection) value );
 				}
 			}
 		}
 
 		locateBinding( position ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
 		return this;
+	}
+
+	private boolean isRegisteredAsBasicType(Class<?> valueClass) {
+		return getSession().getTypeConfiguration().getBasicTypeForJavaType( valueClass ) != null;
 	}
 
 	@Override

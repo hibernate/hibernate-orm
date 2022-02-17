@@ -40,7 +40,7 @@ public class QueryParameterNamedImpl<T> extends AbstractQueryParameter<T> {
 	public static <T> QueryParameterNamedImpl<T> fromNativeQuery(String name) {
 		return new QueryParameterNamedImpl<>(
 				name,
-				false,
+				true,
 				null
 		);
 	}

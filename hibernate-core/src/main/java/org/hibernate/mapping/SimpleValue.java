@@ -199,6 +199,9 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public void sortColumns(int[] originalOrder) {
+		if ( columns.size() == 1 ) {
+			return;
+		}
 		final Selectable[] originalColumns = columns.toArray(new Selectable[0]);
 		final boolean[] originalInsertability = ArrayHelper.toBooleanArray( insertability );
 		final boolean[] originalUpdatability = ArrayHelper.toBooleanArray( updatability );

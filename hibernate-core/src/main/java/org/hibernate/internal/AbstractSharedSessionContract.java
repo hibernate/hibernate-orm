@@ -757,7 +757,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	// dynamic native (SQL) query handling
 
 	@Override @SuppressWarnings("rawtypes")
-	public NativeQueryImplementor createNativeQuery(String sqlString) {
+	public NativeQueryImpl createNativeQuery(String sqlString) {
 		checkOpen();
 		pulseTransactionCoordinator();
 		delayedAfterCompletion();
@@ -808,12 +808,15 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	//note: we're doing something a bit funny here to work around
 	//      the clashing signatures declared by the supertypes
 	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass) {
-		NativeQueryImplementor query = createNativeQuery( sqlString );
+		NativeQueryImpl query = createNativeQuery( sqlString );
 		if ( Tuple.class.equals(resultClass) ) {
 			query.setTupleTransformer( new NativeQueryTupleTransformer() );
 		}
 		else if ( getFactory().getMappingMetamodel().isEntityClass(resultClass) ) {
 			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
+		}
+		else {
+			query.addScalar( 1, resultClass );
 		}
 		return query;
 	}

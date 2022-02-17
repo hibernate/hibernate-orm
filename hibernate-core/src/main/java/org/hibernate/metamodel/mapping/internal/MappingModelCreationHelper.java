@@ -950,7 +950,7 @@ public class MappingModelCreationHelper {
 				);
 			}
 
-			final ModelPart modelPart = referencedEntityDescriptor.findSubPart( referencedPropertyName );
+			final ModelPart modelPart = referencedEntityDescriptor.findByPath( referencedPropertyName );
 			if ( modelPart instanceof ToOneAttributeMapping ) {
 				setReferencedAttributeForeignKeyDescriptor(
 						attributeMapping,
@@ -991,7 +991,7 @@ public class MappingModelCreationHelper {
 			fkTarget = referencedEntityDescriptor.getIdentifierMapping();
 		}
 		else {
-			fkTarget = referencedEntityDescriptor.findAttributeMapping( bootValueMapping.getReferencedPropertyName() );
+			fkTarget = referencedEntityDescriptor.findByPath( bootValueMapping.getReferencedPropertyName() );
 		}
 
 		if ( fkTarget instanceof BasicValuedModelPart ) {
@@ -1277,7 +1277,7 @@ public class MappingModelCreationHelper {
 					.getBootModel()
 					.getEntityBinding(
 							referencedEntityDescriptor.getEntityName() );
-			Property property = entityBinding.getProperty( referencedPropertyName );
+			Property property = entityBinding.getRecursiveProperty( referencedPropertyName );
 			interpretToOneKeyDescriptor(
 					referencedAttributeMapping,
 					property,

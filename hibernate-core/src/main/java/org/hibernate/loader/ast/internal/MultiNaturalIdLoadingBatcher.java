@@ -194,7 +194,7 @@ public class MultiNaturalIdLoadingBatcher {
 					@Override
 					public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
 						if ( subSelectFetchableKeysHandler != null ) {
-							subSelectFetchableKeysHandler.addKey( entityKey );
+							subSelectFetchableKeysHandler.addKey( entityKey, entry );
 						}
 					}
 				},

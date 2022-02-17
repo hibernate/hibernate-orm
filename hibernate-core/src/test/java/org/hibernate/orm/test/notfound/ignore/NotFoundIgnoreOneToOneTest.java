@@ -21,7 +21,6 @@ import org.hibernate.annotations.NotFoundAction;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -75,16 +74,17 @@ public class NotFoundIgnoreOneToOneTest {
 			final Coin coin = session.get( Coin.class, 1 );
 			assertThat( coin.getCurrency() ).isNull();
 
-			// technically we could use a subsequent-select rather than a join...
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Coin " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Currency " );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " left " );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
 		} );
 	}
 
 	@Test
 	@JiraKey( "HHH-15060" )
-	@FailureExpected( reason = "Bad results due to join" )
 	public void testQueryImplicitPathDereferencePredicate(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -92,11 +92,11 @@ public class NotFoundIgnoreOneToOneTest {
 		scope.inTransaction( (session) -> {
 			final String hql = "select c from Coin c where c.currency.id = 1";
 			final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
-			assertThat( coins ).hasSize( 1 );
-			assertThat( coins.get( 0 ).getCurrency() ).isNull();
+			assertThat( coins ).isEmpty();
 
-			// technically we could use a subsequent-select rather than a join...
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Coin " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Currency " );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
 		} );
@@ -114,37 +114,42 @@ public class NotFoundIgnoreOneToOneTest {
 			assertThat( coins ).hasSize( 1 );
 			assertThat( coins.get( 0 ).getCurrency() ).isNull();
 
-			// at the moment this uses a subsequent-select.  on the bright side, it is at least eagerly fetched.
-			assertThat( statementInspector.getSqlQueries() ).hasSize( 2 );
-
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Coin " );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " Currency " );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " join " );
-
-			assertThat( statementInspector.getSqlQueries().get( 1 ) ).contains( " Currency " );
-			assertThat( statementInspector.getSqlQueries().get( 1 ) ).doesNotContain( " Coin " );
-			assertThat( statementInspector.getSqlQueries().get( 1 ) ).doesNotContain( " join " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Currency " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " left " );
 		} );
 	}
 
 	@Test
 	@JiraKey( "HHH-15060" )
-	@FailureExpected( reason = "Has zero results because of join; & the select w/ join is executed twice for some yet-unknown reason" )
 	public void testQueryAssociationSelection(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
 		scope.inTransaction( (session) -> {
 			final String hql = "select c.id, c.currency from Coin c";
 			final List<Tuple> tuples = session.createQuery( hql, Tuple.class ).getResultList();
-			assertThat( tuples ).hasSize( 1 );
-			final Tuple tuple = tuples.get( 0 );
-			assertThat( tuple.get( 0 ) ).isEqualTo( 1 );
-			assertThat( tuple.get( 1 ) ).isNull();
+			assertThat( tuples ).hasSize( 0 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Coin " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Currency " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " left " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " cross " );
 		} );
+
+		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
 			final String hql = "select c.currency from Coin c";
 			final List<Currency> currencies = session.createQuery( hql, Currency.class ).getResultList();
-			assertThat( currencies ).hasSize( 1 );
-			assertThat( currencies.get( 0 ) ).isNull();
+			assertThat( currencies ).hasSize( 0 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Coin " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Currency " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " left " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " cross " );
 		} );
 	}
 

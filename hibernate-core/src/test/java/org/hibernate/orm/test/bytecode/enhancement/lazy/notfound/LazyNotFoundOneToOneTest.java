@@ -85,10 +85,10 @@ public class LazyNotFoundOneToOneTest extends BaseCoreFunctionalTestCase {
 				this::sessionFactory, session -> {
 					User user = session.find( User.class, ID );
 
-					// per UserGuide (and simply correct behavior), `@NotFound` forces EAGER fetching
+					// `@NotFound` forces EAGER join fetching
 					assertThat( sqlInterceptor.getQueryCount() ).
-							describedAs( "Expecting 2 queries due to `@NotFound`" )
-							.isEqualTo( 2 );
+							describedAs( "Expecting 1 query (w/ join) due to `@NotFound`" )
+							.isEqualTo( 1 );
 					assertThat( Hibernate.isPropertyInitialized( user, "lazy" ) )
 							.describedAs( "Expecting `User#lazy` to be eagerly fetched due to `@NotFound`" )
 							.isTrue();

@@ -16,13 +16,11 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.SingularAttributeMapping;
-import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.sql.FromClauseIndex;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -44,7 +42,6 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.internal.RowTransformerDatabaseSnapshotImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.StandardBasicTypes;
@@ -145,44 +142,19 @@ class DatabaseSnapshotExecutor {
 				}
 		);
 
-		entityDescriptor.visitStateArrayContributors(
-				contributorMapping -> {
-					final NavigablePath navigablePath = rootPath.append( contributorMapping.getAttributeName() );
-					if ( contributorMapping instanceof SingularAttributeMapping ) {
-						if ( contributorMapping instanceof EntityAssociationMapping ) {
-							domainResults.add(
-									( (EntityAssociationMapping) contributorMapping ).createDelayedDomainResult(
-											navigablePath,
-											rootTableGroup,
-											null,
-											state
-									)
-							);
-						}
-						else {
-							domainResults.add(
-									contributorMapping.createDomainResult(
-											navigablePath,
-											rootTableGroup,
-											null,
-											state
-									)
-							);
-						}
-					}
-					else {
-						// TODO: Instead use a delayed collection result? Or will we remove this when redesigning this
-						//noinspection unchecked
-						domainResults.add(
-								new BasicResult(
-										0,
-										null,
-										contributorMapping.getJavaType()
-								)
-						);
-					}
-				}
-		);
+
+		entityDescriptor.visitStateArrayContributors( (contributorMapping) -> {
+			final NavigablePath navigablePath = rootPath.append( contributorMapping.getAttributeName() );
+			domainResults.add(
+					contributorMapping.createSnapshotDomainResult(
+							navigablePath,
+							rootTableGroup,
+							null,
+							state
+					)
+			);
+		} );
+
 		final SelectStatement selectStatement = new SelectStatement( rootQuerySpec, domainResults );
 
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();

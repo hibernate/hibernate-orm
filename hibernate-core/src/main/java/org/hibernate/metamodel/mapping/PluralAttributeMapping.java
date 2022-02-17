@@ -20,8 +20,11 @@ import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
+import org.hibernate.sql.results.graph.basic.BasicResult;
 
 /**
  * Mapping of a plural (collection-valued) attribute
@@ -66,6 +69,16 @@ public interface PluralAttributeMapping
 	@Override
 	default void visitFetchables(Consumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
 		fetchableConsumer.accept( getElementDescriptor() );
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Override
+	default <T> DomainResult<T> createSnapshotDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		return new BasicResult( 0, null, getJavaType() );
 	}
 
 	String getSeparateCollectionTable();

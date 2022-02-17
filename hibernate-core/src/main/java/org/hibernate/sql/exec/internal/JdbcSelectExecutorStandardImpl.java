@@ -16,6 +16,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -28,10 +30,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.query.spi.Limit;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.internal.ScrollableResultsIterator;
+import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
@@ -64,9 +66,6 @@ import org.hibernate.sql.results.spi.ScrollableResultsConsumer;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
-
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
 
 /**
  * @author Steve Ebersole
@@ -478,20 +477,14 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			SqlExecLogger.INSTANCE.debugf( "Reading Query result cache data per CacheMode#isGetEnabled [%s]", cacheMode.name() );
 			final Set<String> querySpaces = jdbcSelect.getAffectedTableNames();
 			if ( querySpaces == null || querySpaces.size() == 0 ) {
-				SqlExecLogger.INSTANCE.tracev( "Unexpected querySpaces is {0}", ( querySpaces == null ? querySpaces : "empty" ) );
+				SqlExecLogger.INSTANCE.tracef( "Unexpected querySpaces is empty" );
 			}
 			else {
-				SqlExecLogger.INSTANCE.tracev( "querySpaces is {0}", querySpaces );
+				SqlExecLogger.INSTANCE.tracef( "querySpaces is `%s`", querySpaces );
 			}
 
 			final QueryResultsCache queryCache = factory.getCache()
 					.getQueryResultsCache( executionContext.getQueryOptions().getResultCacheRegionName() );
-
-			// todo (6.0) : not sure that it is at all important that we account for QueryResults
-			//		these cached values are "lower level" than that, representing the
-			// 		"raw" JDBC values.
-			//
-			// todo (6.0) : relatedly ^^, pretty sure that SqlSelections are also irrelevant
 
 			queryResultsCacheKey = QueryKey.from(
 					jdbcSelect.getSql(),
@@ -558,6 +551,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				jdbcValuesMapping = mappingProducer.resolve( capturingMetadata, factory );
 				metadataForCache = capturingMetadata.resolveMetadataForCache();
 			}
+
 			return new JdbcValuesResultSetImpl(
 					resultSetAccess,
 					queryResultsCacheKey,

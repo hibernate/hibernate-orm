@@ -33,8 +33,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -115,33 +115,9 @@ public class BatchFetchNotFoundIgnoreDynamicStyleTest {
 
 		final List<Integer> paramterCounts = statementInspector.parameterCounts;
 
-		// there should be 4 SQL statements executed
-		assertEquals( 4, paramterCounts.size() );
-
-		// query loading Employee entities shouldn't have any parameters
-		assertEquals( 0, paramterCounts.get( 0 ).intValue() );
-
-		// query specifically for Task with ID == 0 will result in 1st batch;
-		// query should have 5 parameters for [0,1,2,3,4];
-		// Task with ID == 1 won't be found; the rest will be found.
-		assertEquals( 5, paramterCounts.get( 1 ).intValue() );
-
-		// query specifically for Task with ID == 1 will result in 2nd batch;
-		// query should have 4 parameters [1,5,6,7];
-		// Task with IDs == [1,7] won't be found; the rest will be found.
-		assertEquals( 4, paramterCounts.get( 2 ).intValue() );
-
-		// no extra queries required to load entities with IDs [2,3,4] because they
-		// were already loaded from 1st batch
-
-		// no extra queries required to load entities with IDs [5,6] because they
-		// were already loaded from 2nd batch
-
-		// query specifically for Task with ID == 7 will result in just querying
-		// Task with ID == 7 (because the batch is empty).
-		// query should have 1 parameter [7];
-		// Task with ID == 7 won't be found.
-		assertEquals( 1, paramterCounts.get( 3 ).intValue() );
+		// there should be 1 SQL statement with a join executed
+		assertThat( paramterCounts ).hasSize( 1 );
+		assertThat( paramterCounts.get( 0 ) ).isEqualTo( 0 );
 
 		assertEquals( NUMBER_OF_EMPLOYEES, employees.size() );
 		for ( int i = 0; i < NUMBER_OF_EMPLOYEES; i++ ) {
@@ -182,54 +158,9 @@ public class BatchFetchNotFoundIgnoreDynamicStyleTest {
 
 		final List<Integer> paramterCounts = statementInspector.parameterCounts;
 
-		// there should be 8 SQL statements executed
-		assertEquals( 8, paramterCounts.size() );
-
-		// query loading Employee entities shouldn't have any parameters
-		assertEquals( 0, paramterCounts.get( 0 ).intValue() );
-
-		// query specifically for Task with ID == 0 will result in 1st batch;
-		// query should have 5 parameters for [0,1,2,3,4];
-		// Task with IDs == [0,1,2,3,4] won't be found
-		assertEquals( 5, paramterCounts.get( 1 ).intValue() );
-
-		// query specifically for Task with ID == 1 will result in 2nd batch;
-		// query should have 4 parameters [1,5,6,7];
-		// Task with IDs == [1,5,6] won't be found; Task with ID == 7 will be found.
-		assertEquals( 4, paramterCounts.get( 2 ).intValue() );
-
-		// query specifically for Task with ID == 2 will result in just querying
-		// Task with ID == 2 (because the batch is empty).
-		// query should have 1 parameter [2];
-		// Task with ID == 2 won't be found.
-		assertEquals( 1, paramterCounts.get( 3 ).intValue() );
-
-		// query specifically for Task with ID == 3 will result in just querying
-		// Task with ID == 3 (because the batch is empty).
-		// query should have 1 parameter [3];
-		// Task with ID == 3 won't be found.
-		assertEquals( 1, paramterCounts.get( 4 ).intValue() );
-
-		// query specifically for Task with ID == 4 will result in just querying
-		// Task with ID == 4 (because the batch is empty).
-		// query should have 1 parameter [4];
-		// Task with ID == 4 won't be found.
-		assertEquals( 1, paramterCounts.get( 5 ).intValue() );
-
-		// query specifically for Task with ID == 5 will result in just querying
-		// Task with ID == 5 (because the batch is empty).
-		// query should have 1 parameter [5];
-		// Task with ID == 5 won't be found.
-		assertEquals( 1, paramterCounts.get( 6 ).intValue() );
-
-		// query specifically for Task with ID == 6 will result in just querying
-		// Task with ID == 6 (because the batch is empty).
-		// query should have 1 parameter [6];
-		// Task with ID == 6 won't be found.
-		assertEquals( 1, paramterCounts.get( 7 ).intValue() );
-
-		// no extra queries required to load entity with ID == 7 because it
-		// was already loaded from 2nd batch
+		// there should be 1 SQL statement with a join executed
+		assertThat( paramterCounts ).hasSize( 1 );
+		assertThat( paramterCounts.get( 0 ) ).isEqualTo( 0 );
 
 		assertEquals( NUMBER_OF_EMPLOYEES, employees.size() );
 
@@ -288,11 +219,9 @@ public class BatchFetchNotFoundIgnoreDynamicStyleTest {
 				.getEntityDescriptor( Task.class );
 		final BatchFetchQueue batchFetchQueue =
 				sessionImplementor.getPersistenceContextInternal().getBatchFetchQueue();
-		assertThat(
-				"Checking BatchFetchQueue for entry for Task#" + id,
-				batchFetchQueue.containsEntityKey( new EntityKey( id, persister ) ),
-				is( expected )
-		);
+		assertThat( batchFetchQueue.containsEntityKey( new EntityKey( id, persister ) ) )
+				.describedAs( "Checking BatchFetchQueue for entry for Task#" + id )
+						.isEqualTo( expected );
 	}
 
 	@Entity(name = "Employee")

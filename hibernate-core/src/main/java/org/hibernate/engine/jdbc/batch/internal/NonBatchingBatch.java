@@ -52,7 +52,7 @@ public class NonBatchingBatch extends AbstractBatchImpl {
 				abortBatch();
 				throw sqlExceptionHelper().convert( e, "could not execute non-batched batch statement", statementSQL );
 			}
-			catch (JDBCException e) {
+			catch (RuntimeException e) {
 				abortBatch();
 				throw e;
 			}

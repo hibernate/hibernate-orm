@@ -3382,7 +3382,7 @@ public abstract class AbstractEntityPersister
 					);
 				}
 			}
-			catch (SQLException | JDBCException e) {
+			catch (SQLException | RuntimeException e) {
 				if ( useBatch ) {
 					session.getJdbcCoordinator().abortBatch();
 				}
@@ -3583,7 +3583,7 @@ public abstract class AbstractEntityPersister
 				}
 
 			}
-			catch (SQLException e) {
+			catch (SQLException | RuntimeException e) {
 				if ( useBatch ) {
 					session.getJdbcCoordinator().abortBatch();
 				}
@@ -3709,11 +3709,11 @@ public abstract class AbstractEntityPersister
 				}
 
 			}
-			catch (SQLException sqle) {
+			catch (SQLException | RuntimeException e) {
 				if ( useBatch ) {
 					session.getJdbcCoordinator().abortBatch();
 				}
-				throw sqle;
+				throw e;
 			}
 			finally {
 				if ( !useBatch ) {

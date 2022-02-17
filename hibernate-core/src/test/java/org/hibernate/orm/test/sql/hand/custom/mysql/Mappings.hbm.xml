@@ -57,10 +57,12 @@
 		<property name="startDate" not-null="true" update="false" insert="false"/>
 		<property name="endDate" insert="false"/>
 		<property name="regionCode" update="false"/>
-	  <property name="salary" type="org.hibernate.orm.test.sql.hand.MonetaryAmountUserType">
-			<column name="`VALUE`" sql-type="float"/>
-			<column name="CURRENCY"/>			
-		</property>
+		<component name="salary" class="org.hibernate.orm.test.sql.hand.MonetaryAmountUserType">
+			<property name="value" column="`VALUE`">
+				<type name="float"/>
+			</property>
+			<property name="currency" column="CURRENCY"/>
+		</component>
 		<loader query-ref="employment"/>
    		<sql-insert>
 			INSERT INTO Employment 
@@ -163,12 +165,10 @@
 
 	<sql-query name="organizationCurrentEmployments">
 		<return alias="emp" class="Employment">		    
-			<return-property name="salary"> 
-		      <!-- as multi column properties are not supported via the
-		      {}-syntax, we need to provide an explicit column list for salary via <return-property> -->
-  			  <return-column name="`VALUE`"/>
-			  <return-column name="CURRENCY"/>			
-			</return-property>
+		    <!-- as multi column properties are not supported via the
+		    {}-syntax, we need to provide an explicit column list for salary via <return-property> -->
+			<return-property name="salary.value" column="`VALUE`"/>
+			<return-property name="salary.currency" column="CURRENCY"/>
 			<!-- Here we are remapping endDate. Notice that we can still use {emp.endDate} in the SQL. -->
 			<return-property name="endDate" column="myEndDate"/>
 		</return>
@@ -206,13 +206,10 @@
 			<return-property name="startDate" column="STARTDATE"/>
 			<return-property name="endDate" column="ENDDATE"/>			
 			<return-property name="regionCode" column="REGIONCODE"/>			
-			<return-property name="id" column="EMPID"/>						
-			<return-property name="salary"> 
-				<!-- as multi column properties are not supported via the
-				{}-syntax, we need to provide an explicit column list for salary via <return-property> -->
-				<return-column name="`VALUE`"/>
-				<return-column name="CURRENCY"/>			
-			</return-property>
+			<return-property name="id" column="EMPID"/>						<!-- as multi column properties are not supported via the
+		    {}-syntax, we need to provide an explicit column list for salary via <return-property> -->
+			<return-property name="salary.value" column="`VALUE`"/>
+			<return-property name="salary.currency" column="CURRENCY"/>
 		</return>
 		{ call selectAllEmployments() }
 	</sql-query>

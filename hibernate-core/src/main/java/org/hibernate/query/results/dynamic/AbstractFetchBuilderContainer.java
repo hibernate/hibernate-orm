@@ -19,16 +19,16 @@ import org.hibernate.query.results.FetchBuilder;
  */
 public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuilderContainer<T>>
 		implements DynamicFetchBuilderContainer {
-	private Map<String, DynamicFetchBuilder> fetchBuilderMap;
+	private Map<String, FetchBuilder> fetchBuilderMap;
 
 	protected AbstractFetchBuilderContainer() {
 	}
 
 	protected AbstractFetchBuilderContainer(AbstractFetchBuilderContainer<T> original) {
 		if ( original.fetchBuilderMap != null ) {
-			final Map<String, DynamicFetchBuilder> fetchBuilderMap = new HashMap<>( original.fetchBuilderMap.size() );
-			for ( Map.Entry<String, DynamicFetchBuilder> entry : original.fetchBuilderMap.entrySet() ) {
-				final DynamicFetchBuilder fetchBuilder;
+			final Map<String, FetchBuilder> fetchBuilderMap = new HashMap<>( original.fetchBuilderMap.size() );
+			for ( Map.Entry<String, FetchBuilder> entry : original.fetchBuilderMap.entrySet() ) {
+				final FetchBuilder fetchBuilder;
 				if ( entry.getValue() instanceof DynamicFetchBuilderStandard ) {
 					fetchBuilder = ( (DynamicFetchBuilderStandard) entry.getValue() ).cacheKeyInstance( this );
 				}
@@ -44,7 +44,7 @@ public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuild
 	protected abstract String getPropertyBase();
 
 	@Override
-	public DynamicFetchBuilder findFetchBuilder(String fetchableName) {
+	public FetchBuilder findFetchBuilder(String fetchableName) {
 		return fetchBuilderMap == null ? null : fetchBuilderMap.get( fetchableName );
 	}
 
@@ -93,7 +93,7 @@ public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuild
 		return fetchBuilder;
 	}
 
-	public void addFetchBuilder(String propertyName, DynamicFetchBuilder fetchBuilder) {
+	public void addFetchBuilder(String propertyName, FetchBuilder fetchBuilder) {
 		if ( fetchBuilderMap == null ) {
 			fetchBuilderMap = new HashMap<>();
 		}

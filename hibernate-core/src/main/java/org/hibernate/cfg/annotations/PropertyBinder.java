@@ -40,6 +40,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.tuple.AnnotationValueGeneration;
 import org.hibernate.tuple.AttributeBinder;
 import org.hibernate.tuple.GenerationTiming;
@@ -78,6 +79,7 @@ public class PropertyBinder {
 	private EntityBinder entityBinder;
 	private boolean isXToMany;
 	private String referencedEntityName;
+	private PropertyAccessStrategy propertyAccessStrategy;
 
 	public void setReferencedEntityName(String referencedEntityName) {
 		this.referencedEntityName = referencedEntityName;
@@ -149,6 +151,10 @@ public class PropertyBinder {
 
 	public void setBuildingContext(MetadataBuildingContext buildingContext) {
 		this.buildingContext = buildingContext;
+	}
+
+	public void setPropertyAccessStrategy(PropertyAccessStrategy propertyAccessStrategy) {
+		this.propertyAccessStrategy = propertyAccessStrategy;
 	}
 
 	public void setDeclaringClass(XClass declaringClass) {
@@ -319,6 +325,7 @@ public class PropertyBinder {
 
 		property.setInsertable( insertable );
 		property.setUpdateable( updatable );
+		property.setPropertyAccessStrategy( propertyAccessStrategy );
 
 		inferOptimisticLocking(property);
 

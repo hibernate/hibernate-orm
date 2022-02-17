@@ -335,6 +335,7 @@ public abstract class AbstractCollectionMetadataGenerator extends AbstractMetada
 			valueMetadataGenerator.addValue(
 					entity,
 					component.getProperty( auditedPropertyName ).getValue(),
+					component.getProperty( auditedPropertyName ).getPropertyAccessStrategy(),
 					componentMapper,
 					prefix,
 					context.getEntityMappingData(),
@@ -351,6 +352,7 @@ public abstract class AbstractCollectionMetadataGenerator extends AbstractMetada
 			valueMetadataGenerator.addValue(
 					entity,
 					component.getProperty( auditedPropertyName ).getValue(),
+					component.getProperty( auditedPropertyName ).getPropertyAccessStrategy(),
 					componentMapper,
 					context.getReferencingEntityName(),
 					context.getEntityMappingData(),

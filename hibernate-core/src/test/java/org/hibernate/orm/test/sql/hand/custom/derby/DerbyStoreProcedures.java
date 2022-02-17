@@ -22,7 +22,7 @@ public class DerbyStoreProcedures {
 
 		PreparedStatement statement = conn.prepareStatement(
 				"select EMPLOYEE, EMPLOYER, STARTDATE, ENDDATE," +
-						" REGIONCODE, EMPID, 'VALUE', CURRENCY" +
+						" REGIONCODE, EMPID, \"VALUE\", CURRENCY" +
 						" FROM EMPLOYMENT"
 		);
 		resultSets[0] = statement.executeQuery();

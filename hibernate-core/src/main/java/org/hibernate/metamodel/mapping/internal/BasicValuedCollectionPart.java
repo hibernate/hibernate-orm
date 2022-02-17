@@ -213,7 +213,7 @@ public class BasicValuedCollectionPart
 
 	@Override
 	public String getFetchableName() {
-		return nature == Nature.ELEMENT ? "{value}" : "{key}";
+		return nature.getName();
 	}
 
 	@Override

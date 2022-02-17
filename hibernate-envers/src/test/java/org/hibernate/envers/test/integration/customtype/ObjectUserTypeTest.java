@@ -10,12 +10,10 @@ import java.util.Arrays;
 import java.util.Map;
 import jakarta.persistence.EntityManager;
 
-import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
@@ -24,7 +22,6 @@ import org.junit.Test;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @TestForIssue(jiraKey = "HHH-7870")
-@RequiresDialect(Oracle8iDialect.class)
 public class ObjectUserTypeTest extends BaseEnversJPAFunctionalTestCase {
 	private int id;
 

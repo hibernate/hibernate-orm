@@ -127,7 +127,8 @@ public class DynamicFetchBuilderStandard
 		}
 		else if ( attributeMapping instanceof ToOneAttributeMapping ) {
 			final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
-			toOneAttributeMapping.getForeignKeyDescriptor().visitKeySelectables( selectableConsumer );
+			toOneAttributeMapping.getForeignKeyDescriptor().getPart( toOneAttributeMapping.getSideNature() )
+							.forEachSelectable( selectableConsumer );
 			return parent.generateFetchableFetch(
 					attributeMapping,
 					fetchPath,

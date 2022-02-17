@@ -122,4 +122,14 @@ public class MultiDynamicComponentMapper extends MultiPropertyMapper {
 			mapper.mapToEntityFromMap( enversService, obj, data, primaryKey, versionsReader, revision );
 		}
 	}
+
+	@Override
+	public Object mapToEntityFromMap(
+			EnversService enversService,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision) {
+		return null;
+	}
 }

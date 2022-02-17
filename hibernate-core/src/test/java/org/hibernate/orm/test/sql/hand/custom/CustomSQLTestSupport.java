@@ -135,7 +135,8 @@ public abstract class CustomSQLTestSupport extends BaseCoreFunctionalTestCase {
 	public void testImageProperty() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		byte[] photo = buildLongByteArray( 15000, true );
+		// Make sure the last byte is non-zero as Sybase cuts that off
+		byte[] photo = buildLongByteArray( 14999, true );
 		ImageHolder holder = new ImageHolder( photo );
 		s.save( holder );
 		t.commit();

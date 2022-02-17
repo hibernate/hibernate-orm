@@ -7,11 +7,11 @@
 package org.hibernate.orm.test.sql.hand.custom.mysql;
 
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.orm.test.sql.hand.custom.CustomStoredProcTestSupport;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
-import org.junit.Ignore;
+import org.hibernate.testing.SkipForDialect;
 
 /**
  * Custom SQL tests for MySQL
@@ -19,9 +19,7 @@ import org.junit.Ignore;
  * @author Gavin King
  */
 @RequiresDialect( MySQLDialect.class )
-// todo (6.0): needs a composite user type mechanism e.g. by providing a custom embeddable strategy or istantiator
-@Ignore( "Missing support for composite user types" )
-@NotImplementedYet
+@SkipForDialect(value = TiDBDialect.class, comment = "TiDB doesn't support stored procedures")
 public class MySQLCustomSQLTest extends CustomStoredProcTestSupport {
 	public String[] getMappings() {
 		return new String[] { "sql/hand/custom/mysql/Mappings.hbm.xml" };

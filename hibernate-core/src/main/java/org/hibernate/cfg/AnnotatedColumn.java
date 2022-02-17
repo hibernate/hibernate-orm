@@ -843,6 +843,9 @@ public class AnnotatedColumn {
 		if ( inferredData != null ) {
 			XProperty property = inferredData.getProperty();
 			if ( property != null ) {
+				if ( propertyHolder.isComponent() ) {
+					processExpression( propertyHolder.getOverriddenColumnTransformer( logicalColumnName ) );
+				}
 				processExpression( property.getAnnotation( ColumnTransformer.class ) );
 				ColumnTransformers annotations = property.getAnnotation( ColumnTransformers.class );
 				if (annotations != null) {

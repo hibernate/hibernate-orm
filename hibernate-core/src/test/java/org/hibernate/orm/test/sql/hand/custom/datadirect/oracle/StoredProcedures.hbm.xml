@@ -38,11 +38,11 @@
 			<return-property name="startDate" column="STARTDATE"/>
 			<return-property name="endDate" column="ENDDATE"/>			
 			<return-property name="regionCode" column="REGIONCODE"/>			
-			<return-property name="employmentId" column="EMPID"/>						
-			<return-property name="salary">
-  			  <return-column name="`VALUE`"/>
-			  <return-column name="CURRENCY"/>			
-			</return-property>
+			<return-property name="employmentId" column="EMPID"/>
+			<!-- as multi column properties are not supported via the
+		    {}-syntax, we need to provide an explicit column list for salary via <return-property> -->
+			<return-property name="salary.value" column="`VALUE`"/>
+			<return-property name="salary.currency" column="CURRENCY"/>
 		</return>
 	 { call allEmployments() }
 	</sql-query>

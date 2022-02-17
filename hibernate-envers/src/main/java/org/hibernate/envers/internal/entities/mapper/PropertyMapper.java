@@ -51,6 +51,13 @@ public interface PropertyMapper extends ModifiedFlagMapperSupport, DynamicCompon
 			AuditReaderImplementor versionsReader,
 			Number revision);
 
+	Object mapToEntityFromMap(
+			EnversService enversService,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision);
+
 	/**
 	 * Maps collection changes.
 	 *

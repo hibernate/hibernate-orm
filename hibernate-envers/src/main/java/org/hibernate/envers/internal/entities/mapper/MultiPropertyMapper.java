@@ -19,6 +19,7 @@ import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.Tools;
 import org.hibernate.envers.tools.Pair;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.Getter;
 
 /**
@@ -45,7 +46,9 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 	}
 
 	@Override
-	public CompositeMapperBuilder addComponent(PropertyData propertyData, Class componentClass) {
+	public CompositeMapperBuilder addComponent(
+			PropertyData propertyData,
+			Class componentClass, EmbeddableInstantiator instantiator) {
 		if ( properties.get( propertyData ) != null ) {
 			// This is needed for second pass to work properly in the components mapper
 			return (CompositeMapperBuilder) properties.get( propertyData );
@@ -53,7 +56,8 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 
 		final ComponentPropertyMapper componentMapperBuilder = new ComponentPropertyMapper(
 				propertyData,
-				componentClass
+				componentClass,
+				instantiator
 		);
 		addComposite( propertyData, componentMapperBuilder );
 
@@ -196,6 +200,16 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 		for ( PropertyMapper mapper : properties.values() ) {
 			mapper.mapToEntityFromMap( enversService, obj, data, primaryKey, versionsReader, revision );
 		}
+	}
+
+	@Override
+	public Object mapToEntityFromMap(
+			EnversService enversService,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision) {
+		return null;
 	}
 
 	private Pair<PropertyMapper, String> getMapperAndDelegatePropName(String referencingPropertyName) {

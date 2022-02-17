@@ -104,6 +104,7 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Embeddable;
@@ -408,6 +409,25 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 
 		return registeredInstantiators.get( embeddableType );
+	}
+
+	private Map<Class<?>, Class<? extends CompositeUserType<?>>> registeredCompositeUserTypes;
+
+	@Override
+	public void registerCompositeUserType(Class<?> embeddableType, Class<? extends CompositeUserType<?>> userType) {
+		if ( registeredCompositeUserTypes == null ) {
+			registeredCompositeUserTypes = new HashMap<>();
+		}
+		registeredCompositeUserTypes.put( embeddableType, userType );
+	}
+
+	@Override
+	public Class<? extends CompositeUserType<?>> findRegisteredCompositeUserType(Class<?> embeddableType) {
+		if ( registeredCompositeUserTypes == null ) {
+			return null;
+		}
+
+		return registeredCompositeUserTypes.get( embeddableType );
 	}
 
 	private Map<CollectionClassification, CollectionTypeRegistrationDescriptor> collectionTypeRegistrations;

@@ -37,11 +37,13 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.StandardProperty;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
+import org.hibernate.usertype.CompositeUserType;
 
 /**
  * Handles "component" mappings
@@ -63,6 +65,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	private final boolean isKey;
 	private boolean hasNotNullProperty;
 	private final boolean createEmptyCompositesEnabled;
+	private final CompositeUserType<Object> compositeUserType;
 
 	private EmbeddableValuedModelPart mappingModelPart;
 
@@ -102,6 +105,21 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 				buildingContext.getBootstrapContext().getServiceRegistry().getService( ConfigurationService.class ).getSettings(),
 				false
 		);
+		if ( component.getTypeName() != null ) {
+			//noinspection unchecked
+			this.compositeUserType = (CompositeUserType<Object>) buildingContext.getBootstrapContext()
+					.getServiceRegistry()
+					.getService( ManagedBeanRegistry.class )
+					.getBean(
+							buildingContext.getBootstrapContext()
+									.getClassLoaderAccess()
+									.classForName( component.getTypeName() )
+					)
+					.getBeanInstance();
+		}
+		else {
+			this.compositeUserType = null;
+		}
 	}
 
 	public boolean isKey() {
@@ -162,6 +180,9 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		if ( x == y ) {
 			return true;
 		}
+		if ( compositeUserType != null ) {
+			return compositeUserType.equals( x, y );
+		}
 		// null value and empty component are considered equivalent
 		for ( int i = 0; i < propertySpan; i++ ) {
 			if ( !propertyTypes[i].isEqual( getPropertyValue( x, i ), getPropertyValue( y, i ) ) ) {
@@ -176,6 +197,9 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			throws HibernateException {
 		if ( x == y ) {
 			return true;
+		}
+		if ( compositeUserType != null ) {
+			return compositeUserType.equals( x, y );
 		}
 		// null value and empty component are considered equivalent
 		for ( int i = 0; i < propertySpan; i++ ) {
@@ -206,6 +230,9 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 
 	@Override
 	public int getHashCode(final Object x) {
+		if ( compositeUserType != null ) {
+			return compositeUserType.hashCode( x );
+		}
 		int result = 17;
 		for ( int i = 0; i < propertySpan; i++ ) {
 			Object y = getPropertyValue( x, i );
@@ -219,6 +246,9 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 
 	@Override
 	public int getHashCode(final Object x, final SessionFactoryImplementor factory) {
+		if ( compositeUserType != null ) {
+			return compositeUserType.hashCode( x );
+		}
 		int result = 17;
 		for ( int i = 0; i < propertySpan; i++ ) {
 			Object y = getPropertyValue( x, i );
@@ -456,6 +486,9 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			return null;
 		}
 
+		if ( compositeUserType != null ) {
+			return compositeUserType.deepCopy( component );
+		}
 		final Object[] values = getPropertyValues( component );
 		for ( int i = 0; i < propertySpan; i++ ) {
 			values[i] = propertyTypes[i].deepCopy( values[i], factory );
@@ -486,6 +519,9 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 
 		if ( original == null ) {
 			return null;
+		}
+		if ( compositeUserType != null ) {
+			return compositeUserType.replace( original, target, owner );
 		}
 		//if ( original == target ) return target;
 
@@ -532,6 +568,9 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		if ( original == null ) {
 			return null;
 		}
+		if ( compositeUserType != null ) {
+			return compositeUserType.replace( original, target, owner );
+		}
 		//if ( original == target ) return target;
 
 
@@ -574,7 +613,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 
 	@Override
 	public boolean isMutable() {
-		return true;
+		return compositeUserType == null || compositeUserType.isMutable();
 	}
 
 	@Override
@@ -583,6 +622,9 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 
 		if ( value == null ) {
 			return null;
+		}
+		else if ( compositeUserType != null ) {
+			return compositeUserType.disassemble( value );
 		}
 		else {
 			Object[] values = getPropertyValues( value );
@@ -599,6 +641,9 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 
 		if ( object == null ) {
 			return null;
+		}
+		else if ( compositeUserType != null ) {
+			return compositeUserType.assemble( object, owner );
 		}
 		else {
 			Object[] values = (Object[]) object;

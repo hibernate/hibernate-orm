@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test.sql.hand;
+package org.hibernate.userguide.mapping.basic;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -16,10 +16,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.usertype.CompositeUserType;
 
 /**
- * This is a simple Hibernate custom mapping type for MonetaryAmount value types.
- * <p>
- *
- * @author Max & Christian
+ * @author Emmanuel Bernard
  */
 public class MonetaryAmountUserType implements CompositeUserType<MonetaryAmount> {
 
@@ -27,9 +24,9 @@ public class MonetaryAmountUserType implements CompositeUserType<MonetaryAmount>
 	public Object getPropertyValue(MonetaryAmount component, int property) throws HibernateException {
 		switch ( property ) {
 			case 0:
-				return component.getCurrency();
+				return component.getAmount();
 			case 1:
-				return component.getValue();
+				return component.getCurrency();
 		}
 		throw new HibernateException( "Illegal property index: " + property );
 	}
@@ -52,12 +49,13 @@ public class MonetaryAmountUserType implements CompositeUserType<MonetaryAmount>
 
 	@Override
 	public boolean isMutable() {
-		return false;
+		return true;
 	}
 
 	@Override
 	public Object deepCopy(Object value) {
-		return value; // MonetaryAmount is immutable
+		MonetaryAmount ma = (MonetaryAmount) value;
+		return new MonetaryAmount( ma.getAmount(), ma.getCurrency() );
 	}
 
 	@Override
@@ -73,17 +71,17 @@ public class MonetaryAmountUserType implements CompositeUserType<MonetaryAmount>
 
 	@Override
 	public Serializable disassemble(Object value) throws HibernateException {
-		return (Serializable) value;
+		return (Serializable) deepCopy( value );
 	}
 
 	@Override
 	public Object assemble(Serializable cached, Object owner) throws HibernateException {
-		return cached;
+		return deepCopy( cached );
 	}
 
 	@Override
 	public Object replace(Object original, Object target, Object owner) throws HibernateException {
-		return original;
+		return deepCopy( original ); //TODO: improve
 	}
 
 	@Override
@@ -92,7 +90,7 @@ public class MonetaryAmountUserType implements CompositeUserType<MonetaryAmount>
 	}
 
 	public static class MonetaryAmountEmbeddable {
-		private BigDecimal value;
+		private BigDecimal amount;
 		private Currency currency;
 	}
 }

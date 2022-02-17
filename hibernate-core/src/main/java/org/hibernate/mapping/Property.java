@@ -45,6 +45,7 @@ public class Property implements Serializable, MetaAttributable {
 	private boolean optimisticLocked = true;
 	private ValueGeneration valueGenerationStrategy;
 	private String propertyAccessorName;
+	private PropertyAccessStrategy propertyAccessStrategy;
 	private boolean lazy;
 	private String lazyGroup;
 	private boolean optional;
@@ -237,6 +238,14 @@ public class Property implements Serializable, MetaAttributable {
 		propertyAccessorName = string;
 	}
 
+	public PropertyAccessStrategy getPropertyAccessStrategy() {
+		return propertyAccessStrategy;
+	}
+
+	public void setPropertyAccessStrategy(PropertyAccessStrategy propertyAccessStrategy) {
+		this.propertyAccessStrategy = propertyAccessStrategy;
+	}
+
 	/**
 	 * Approximate!
 	 */
@@ -355,6 +364,10 @@ public class Property implements Serializable, MetaAttributable {
 
 	// todo : remove
 	public PropertyAccessStrategy getPropertyAccessStrategy(Class clazz) throws MappingException {
+		final PropertyAccessStrategy propertyAccessStrategy = getPropertyAccessStrategy();
+		if ( propertyAccessStrategy != null ) {
+			return propertyAccessStrategy;
+		}
 		String accessName = getPropertyAccessorName();
 		if ( accessName == null ) {
 			if ( clazz == null || java.util.Map.class.equals( clazz ) ) {
@@ -438,6 +451,7 @@ public class Property implements Serializable, MetaAttributable {
 		prop.setOptimisticLocked( isOptimisticLocked() );
 		prop.setValueGenerationStrategy( getValueGenerationStrategy() );
 		prop.setPropertyAccessorName( getPropertyAccessorName() );
+		prop.setPropertyAccessStrategy( getPropertyAccessStrategy() );
 		prop.setLazy( isLazy() );
 		prop.setLazyGroup( getLazyGroup() );
 		prop.setOptional( isOptional() );

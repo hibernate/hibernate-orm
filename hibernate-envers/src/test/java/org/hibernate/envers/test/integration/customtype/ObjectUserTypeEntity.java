@@ -7,13 +7,15 @@
 package org.hibernate.envers.test.integration.customtype;
 
 import java.io.Serializable;
+
+import org.hibernate.annotations.CompositeType;
+import org.hibernate.envers.Audited;
+
+import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-
-import org.hibernate.annotations.Columns;
-import org.hibernate.envers.Audited;
 
 /**
  * Entity encapsulating {@link Object} property which concrete type may change during subsequent updates.
@@ -29,8 +31,10 @@ public class ObjectUserTypeEntity implements Serializable {
 
 	private String buildInType;
 
-//	@Type(type = "org.hibernate.envers.test.integration.customtype.ObjectUserType")
-	@Columns(columns = {@Column(name = "OBJ_TYPE"), @Column(name = "OBJ_VALUE")})
+	@Audited
+	@CompositeType(ObjectUserType.class)
+	@AttributeOverride( name = "type", column = @Column(name = "OBJ_TYPE"))
+	@AttributeOverride( name = "object", column = @Column(name = "OBJ_VALUE"))
 	private Object userType;
 
 	public ObjectUserTypeEntity() {

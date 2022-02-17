@@ -20,6 +20,7 @@ import org.hibernate.envers.RelationTargetNotFoundAction;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.mapping.Value;
+import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.type.Type;
 
 /**
@@ -50,6 +51,7 @@ public class PropertyAuditingData {
 	private Value value;
 	private Type propertyType;
 	private Type virtualPropertyType;
+	private PropertyAccessStrategy propertyAccessStrategy;
 	// Synthetic properties are ones which are not part of the actual java model.
 	// They're properties used for bookkeeping by Hibernate
 	private boolean synthetic;
@@ -323,6 +325,14 @@ public class PropertyAuditingData {
 		this.propertyType = propertyType;
 	}
 
+	public PropertyAccessStrategy getPropertyAccessStrategy() {
+		return propertyAccessStrategy;
+	}
+
+	public void setPropertyAccessStrategy(PropertyAccessStrategy propertyAccessStrategy) {
+		this.propertyAccessStrategy = propertyAccessStrategy;
+	}
+
 	public Type getVirtualPropertyType() {
 		return virtualPropertyType;
 	}
@@ -349,7 +359,8 @@ public class PropertyAuditingData {
 					modifiedFlagName,
 					synthetic,
 					propertyType,
-					virtualPropertyType.getReturnedClass()
+					virtualPropertyType.getReturnedClass(),
+					propertyAccessStrategy
 			);
 		}
 		else if ( propertyType != null ) {
@@ -360,7 +371,8 @@ public class PropertyAuditingData {
 					usingModifiedFlag,
 					modifiedFlagName,
 					synthetic,
-					propertyType
+					propertyType,
+					propertyAccessStrategy
 			);
 		}
 		return new PropertyData(
@@ -370,7 +382,8 @@ public class PropertyAuditingData {
 				usingModifiedFlag,
 				modifiedFlagName,
 				synthetic,
-				null
+				null,
+				propertyAccessStrategy
 		);
 	}
 }

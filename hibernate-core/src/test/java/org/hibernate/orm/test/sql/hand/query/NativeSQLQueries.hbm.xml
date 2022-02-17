@@ -58,12 +58,12 @@
 		<property name="startDate" column="STARTDATE" not-null="false"/>
 		<property name="endDate" column="ENDDATE" insert="false"/>
 		<property name="regionCode" column="REGIONCODE" update="false"/>
-<!--
-	    <property name="salary" type="org.hibernate.orm.test.sql.hand.MonetaryAmountUserType">
-			<column name="AMOUNT" sql-type="float"/>
-			<column name="CURRENCY"/>			
-		</property>
--->
+		<component name="salary" class="org.hibernate.orm.test.sql.hand.MonetaryAmountUserType">
+			<property name="value" column="AMOUNT">
+				<type name="float"/>
+			</property>
+			<property name="currency" column="CURRENCY"/>
+		</component>
 	</class>
 	
 	<class name="Order" table="TBL_ORDER">
@@ -129,14 +129,14 @@
         <id name="id" column="id">
             <generator class="increment"/>
         </id>
-        <property name="description" type="text" length="15000"/>
+        <property name="description" column="DESCRIPTION" type="text" length="15000"/>
     </class>
 
     <class name="ImageHolder" table="IMAGE_HOLDER">
         <id name="id" column="id">
             <generator class="increment"/>
         </id>
-        <property name="photo" type="image" length="15000"/>
+        <property name="photo" column="PHOTO" type="image" length="15000"/>
     </class>    
 
     <resultset name="org-emp-regionCode">
@@ -221,13 +221,13 @@
 	</sql-query>
 
 	<sql-query name="AllEmploymentAsMapped">
-		<return class="Employment"/>
+		<return alias="emp" class="Employment"/>
 		SELECT * FROM EMPLOYMENT
 	</sql-query>
 
 	<sql-query name="EmploymentAndPerson">
-		<return class="Employment"/>
-		<return class="Person"/>
+		<return alias="emp" class="Employment"/>
+		<return alias="pers" class="Person"/>
 		SELECT * FROM EMPLOYMENT, PERSON
 	</sql-query>
 
@@ -253,24 +253,22 @@
 			<return-property name="element.endDate" column="ENDDATE"/>			
 			<return-property name="element.regionCode" column="REGIONCODE"/>			
 			<return-property name="element.employmentId" column="EMPID"/>						
-			<return-property name="element.salary">
-                <return-column name="AMOUNT"/>
-                <return-column name="CURRENCY"/>
-			</return-property>
+			<return-property name="element.salary.value" column="AMOUNT1"/>
+			<return-property name="element.salary.currency" column="CURRENCY"/>
 		</return-join>
 		SELECT org.ORGID as orgid,
             org.NAME as name,
-            emp.EMPLOYER as employer,
             emp.EMPID as empid,
             emp.EMPLOYEE as employee,
             emp.EMPLOYER as employer,
             emp.STARTDATE as xstartDate,
             emp.ENDDATE as endDate,
             emp.REGIONCODE as regionCode,
-            emp.AMOUNT as AMOUNT,
+            emp.AMOUNT as AMOUNT1,
             emp.CURRENCY as CURRENCY
         FROM ORGANIZATION org
 			LEFT OUTER JOIN EMPLOYMENT emp ON org.ORGID = emp.EMPLOYER
+		ORDER BY org.NAME DESC
 	</sql-query>
 
     
@@ -278,7 +276,6 @@
 	<!--  equal to "organizationpropertyreturn" but since no {} nor return-property are used hibernate will fallback to use the columns directly from the mapping -->
         SELECT org.ORGID as orgid,
             org.NAME as name,
-            emp.EMPLOYER as employer,
             emp.EMPID as empid,
             emp.EMPLOYEE as employee,
             emp.EMPLOYER as employer,

@@ -653,11 +653,11 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 			final FetchParentMemento fetchParentMemento = parent.resolveParentMemento( resolutionContext );
 
-			NavigablePath navigablePath = fetchParentMemento.getNavigablePath().append( propertyPathParts[ 0 ] );
 			Fetchable fetchable = (Fetchable) fetchParentMemento.getFetchableContainer().findSubPart(
 					propertyPathParts[ 0 ],
 					null
 			);
+			NavigablePath navigablePath = fetchParentMemento.getNavigablePath().append( fetchable.getFetchableName() );
 
 			for ( int i = 1; i < propertyPathParts.length; i++ ) {
 				if ( ! ( fetchable instanceof FetchableContainer ) ) {
@@ -666,8 +666,8 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 									+ " did not reference FetchableContainer"
 					);
 				}
-				navigablePath = navigablePath.append( propertyPathParts[ i ] );
 				fetchable = (Fetchable) ( (FetchableContainer) fetchable ).findSubPart( propertyPathParts[i], null );
+				navigablePath = navigablePath.append( fetchable.getFetchableName() );
 			}
 
 			if ( fetchable instanceof BasicValuedModelPart ) {

@@ -20,6 +20,7 @@ import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.usertype.CompositeUserType;
 
 /**
  * @author Steve Ebersole
@@ -76,6 +77,21 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 			}
 		}
 
+		final CompositeUserType<Object> compositeUserType;
+		if ( bootDescriptor.getTypeName() != null ) {
+			compositeUserType = (CompositeUserType<Object>) creationContext.getBootstrapContext()
+					.getServiceRegistry()
+					.getService( ManagedBeanRegistry.class )
+					.getBean(
+							creationContext.getBootstrapContext()
+									.getClassLoaderAccess()
+									.classForName( bootDescriptor.getTypeName() )
+					)
+					.getBeanInstance();
+		}
+		else {
+			compositeUserType = null;
+		}
 		final EmbeddableInstantiator customInstantiator;
 		if ( bootDescriptor.getCustomInstantiator() != null ) {
 			final Class<? extends EmbeddableInstantiator> customInstantiatorImpl = bootDescriptor.getCustomInstantiator();
@@ -84,6 +100,9 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 					.getService( ManagedBeanRegistry.class )
 					.getBean( customInstantiatorImpl )
 					.getBeanInstance();
+		}
+		else if ( compositeUserType != null ) {
+			customInstantiator = new EmbeddableCompositeUserTypeInstantiator( compositeUserType );
 		}
 		else {
 			customInstantiator = null;
@@ -108,6 +127,7 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 					bootDescriptor,
 					runtimeDescriptorAccess,
 					customInstantiator,
+					compositeUserType,
 					creationContext
 			);
 		}

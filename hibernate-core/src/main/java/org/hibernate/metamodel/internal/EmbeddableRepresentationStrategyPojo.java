@@ -31,6 +31,10 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyIndexBackRef
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
+import org.hibernate.type.internal.CompositeUserTypeJavaTypeWrapper;
+import org.hibernate.usertype.CompositeUserType;
 
 /**
  * @author Steve Ebersole
@@ -45,12 +49,11 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 			Component bootDescriptor,
 			Supplier<EmbeddableMappingType> runtimeDescriptorAccess,
 			EmbeddableInstantiator customInstantiator,
+			CompositeUserType<Object> compositeUserType,
 			RuntimeModelCreationContext creationContext) {
 		super(
 				bootDescriptor,
-				creationContext.getTypeConfiguration()
-						.getJavaTypeRegistry()
-						.resolveDescriptor( bootDescriptor.getComponentClass() ),
+				resolveEmbeddableJavaType( bootDescriptor, compositeUserType, creationContext ),
 				creationContext
 		);
 
@@ -73,6 +76,20 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 		this.instantiator = customInstantiator != null
 				? customInstantiator
 				: determineInstantiator( bootDescriptor, runtimeDescriptorAccess, creationContext );
+	}
+
+	private static <T> JavaType<T> resolveEmbeddableJavaType(
+			Component bootDescriptor,
+			CompositeUserType<T> compositeUserType,
+			RuntimeModelCreationContext creationContext) {
+		final JavaTypeRegistry javaTypeRegistry = creationContext.getTypeConfiguration().getJavaTypeRegistry();
+		if ( compositeUserType == null ) {
+			return javaTypeRegistry.resolveDescriptor( bootDescriptor.getComponentClass() );
+		}
+		return javaTypeRegistry.resolveDescriptor(
+				compositeUserType.returnedClass(),
+				() -> new CompositeUserTypeJavaTypeWrapper<>( compositeUserType )
+		);
 	}
 
 	private EmbeddableInstantiator determineInstantiator(

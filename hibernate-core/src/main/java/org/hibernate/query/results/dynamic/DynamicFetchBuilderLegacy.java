@@ -16,6 +16,7 @@ import java.util.function.BiFunction;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -44,7 +45,10 @@ import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnRefere
  * @author Steve Ebersole
  * @author Christian Beikov
  */
-public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQuery.FetchReturn {
+public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQuery.FetchReturn, DynamicFetchBuilderContainer {
+
+	private static final String ELEMENT_PREFIX = CollectionPart.Nature.ELEMENT.getName() + ".";
+	private static final String INDEX_PREFIX = CollectionPart.Nature.INDEX.getName() + ".";
 
 	private final String tableAlias;
 
@@ -112,7 +116,7 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 				tableAlias,
 				ownerTableAlias,
 				fetchableName,
-				List.copyOf( columnNames ),
+				columnNames == null ? null : List.copyOf( columnNames ),
 				fetchBuilderMap,
 				resultBuilderEntity == null ? null : resultBuilderEntity.cacheKeyInstance()
 		);
@@ -193,14 +197,37 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 				);
 			}
 		}
-		return parent.generateFetchableFetch(
-				attributeMapping,
-				parent.resolveNavigablePath( attributeMapping ),
-				FetchTiming.IMMEDIATE,
-				true,
-				null,
-				domainResultCreationState
-		);
+		try {
+			final NavigablePath currentRelativePath = creationState.getCurrentRelativePath();
+			final String prefix;
+			if ( currentRelativePath == null ) {
+				prefix = "";
+			}
+			else {
+				prefix = currentRelativePath.getFullPath()
+						.replace( ELEMENT_PREFIX, "" )
+						.replace( INDEX_PREFIX, "" ) + ".";
+			}
+			creationState.pushExplicitFetchMementoResolver(
+					relativePath -> {
+						if ( relativePath.startsWith( prefix ) ) {
+							return findFetchBuilder( relativePath.substring( prefix.length() ) );
+						}
+						return null;
+					}
+			);
+			return parent.generateFetchableFetch(
+					attributeMapping,
+					parent.resolveNavigablePath( attributeMapping ),
+					FetchTiming.IMMEDIATE,
+					true,
+					null,
+					domainResultCreationState
+			);
+		}
+		finally {
+			creationState.popExplicitFetchMementoResolver();
+		}
 	}
 
 	private void resolveSqlSelection(
@@ -242,16 +269,35 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 	}
 
 	@Override
-	public NativeQuery.FetchReturn addProperty(String propertyName, String columnAlias) {
+	public DynamicFetchBuilderLegacy addProperty(String propertyName, String columnAlias) {
 		addProperty( propertyName ).addColumnAlias( columnAlias );
 		return this;
 	}
 
 	@Override
-	public NativeQuery.ReturnProperty addProperty(String propertyName) {
+	public DynamicFetchBuilder addProperty(String propertyName) {
 		DynamicFetchBuilderStandard fetchBuilder = new DynamicFetchBuilderStandard( propertyName );
 		fetchBuilderMap.put( propertyName, fetchBuilder );
 		return fetchBuilder;
+	}
+
+	@Override
+	public FetchBuilder findFetchBuilder(String fetchableName) {
+		return fetchBuilderMap.get( fetchableName );
+	}
+
+	@Override
+	public DynamicFetchBuilderContainer addProperty(String propertyName, String... columnAliases) {
+		final DynamicFetchBuilder fetchBuilder = addProperty( propertyName );
+		for ( String columnAlias : columnAliases ) {
+			fetchBuilder.addColumnAlias( columnAlias );
+		}
+		return this;
+	}
+
+	@Override
+	public void addFetchBuilder(String propertyName, FetchBuilder fetchBuilder) {
+		fetchBuilderMap.put( propertyName, fetchBuilder );
 	}
 
 	@Override

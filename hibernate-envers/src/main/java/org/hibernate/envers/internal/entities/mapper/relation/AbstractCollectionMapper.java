@@ -276,6 +276,25 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 			final Object primaryKey,
 			final AuditReaderImplementor versionsReader,
 			final Number revision) {
+		final Object collectionProxy = mapToEntityFromMap( enversService, data, primaryKey, versionsReader, revision );
+		final PropertyData collectionPropertyData = commonCollectionMapperData.getCollectionReferencingPropertyData();
+
+		if ( isDynamicComponentMap() ) {
+			final Map<String, Object> map = (Map<String, Object>) obj;
+			map.put( collectionPropertyData.getBeanName(), collectionProxy );
+		}
+		else {
+			setValueOnObject( collectionPropertyData, obj, collectionProxy, enversService.getServiceRegistry() );
+		}
+	}
+
+	@Override
+	public Object mapToEntityFromMap(
+			EnversService enversService,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision) {
 		final String revisionTypePropertyName = enversService.getConfig().getRevisionTypePropertyName();
 
 		// construct the collection proxy
@@ -294,16 +313,7 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 		catch ( Exception e ) {
 			throw new AuditException( "Failed to construct collection proxy", e );
 		}
-
-		final PropertyData collectionPropertyData = commonCollectionMapperData.getCollectionReferencingPropertyData();
-
-		if ( isDynamicComponentMap() ) {
-			final Map<String, Object> map = (Map<String, Object>) obj;
-			map.put( collectionPropertyData.getBeanName(), collectionProxy );
-		}
-		else {
-			setValueOnObject( collectionPropertyData, obj, collectionProxy, enversService.getServiceRegistry() );
-		}
+		return collectionProxy;
 	}
 
 	/**

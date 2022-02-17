@@ -9,6 +9,7 @@ package org.hibernate.envers.configuration.internal.metadata.reader;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -116,6 +117,10 @@ public class AuditedPropertiesReader {
 	}
 
 	public void read() {
+		read(null);
+	}
+
+	public void read(Audited allClassAudited) {
 		// First reading the access types for the persistent properties.
 		readPersistentPropertiesAccess();
 
@@ -126,10 +131,33 @@ public class AuditedPropertiesReader {
 			// Retrieve classes and properties that are explicitly marked for auditing process by any superclass
 			// of currently mapped entity or itself.
 			final XClass clazz = persistentPropertiesSource.getXClass();
-			readAuditOverrides( clazz );
-
-			// Adding all properties from the given class.
-			addPropertiesFromClass( clazz );
+			if ( persistentPropertiesSource.hasCompositeUserType() ) {
+				for ( String propertyName : fieldAccessedPersistentProperties ) {
+					final Property property = persistentPropertiesSource.getProperty( propertyName );
+					final Value propertyValue = property.getValue();
+					if ( propertyValue instanceof Component ) {
+						this.addFromComponentProperty( property, "field", (Component) propertyValue, allClassAudited );
+					}
+					else {
+						this.addFromNotComponentProperty( property, "field", allClassAudited );
+					}
+				}
+				for ( String propertyName : propertyAccessedPersistentProperties.keySet() ) {
+					final Property property = persistentPropertiesSource.getProperty( propertyName );
+					final Value propertyValue = property.getValue();
+					if ( propertyValue instanceof Component ) {
+						this.addFromComponentProperty( property, "property", (Component) propertyValue, allClassAudited );
+					}
+					else {
+						this.addFromNotComponentProperty( property, "property", allClassAudited );
+					}
+				}
+			}
+			else {
+				readAuditOverrides( clazz );
+				// Adding all properties from the given class.
+				addPropertiesFromClass( clazz );
+			}
 		}
 	}
 
@@ -475,7 +503,7 @@ public class AuditedPropertiesReader {
 				componentData,
 				propertyNamePrefix + MappingTools.createComponentPrefix( property.getName() )
 		);
-		audPropReader.read();
+		audPropReader.read( allClassAudited );
 
 		if ( isAudited ) {
 			// Now we know that the property is audited
@@ -554,6 +582,82 @@ public class AuditedPropertiesReader {
 		return true;
 	}
 
+	private void addFromComponentProperty(
+			Property property,
+			String accessType,
+			Component propertyValue,
+			Audited allClassAudited) {
+		final ComponentAuditingData componentData = new ComponentAuditingData();
+		final boolean isAudited = fillPropertyData( property, componentData, accessType, allClassAudited );
+
+		final PersistentPropertiesSource componentPropertiesSource;
+		if ( propertyValue.isDynamic() ) {
+			final XClass xClass = metadataBuildingContext.getReflectionManager().toXClass( Map.class );
+			componentPropertiesSource = PersistentPropertiesSource.forComponent( propertyValue, xClass, true );
+		}
+		else {
+			componentPropertiesSource = PersistentPropertiesSource.forComponent( metadataBuildingContext, propertyValue );
+		}
+
+		final ComponentAuditedPropertiesReader audPropReader = new ComponentAuditedPropertiesReader(
+				metadataBuildingContext,
+				componentPropertiesSource,
+				componentData,
+				propertyNamePrefix + MappingTools.createComponentPrefix( property.getName() )
+		);
+		audPropReader.read( allClassAudited );
+
+		if ( isAudited ) {
+			// Now we know that the property is audited
+			auditedPropertiesHolder.addPropertyAuditingData( property.getName(), componentData );
+		}
+	}
+
+	private void addFromNotComponentProperty(Property property, String accessType, Audited allClassAudited) {
+		final PropertyAuditingData propertyData = new PropertyAuditingData();
+		final boolean isAudited = fillPropertyData( property, propertyData, accessType, allClassAudited );
+
+		if ( isAudited ) {
+			// Now we know that the property is audited
+			auditedPropertiesHolder.addPropertyAuditingData( property.getName(), propertyData );
+		}
+	}
+
+
+	/**
+	 * Checks if a property is audited and if yes, fills all of its data.
+	 *
+	 * @param property Property to check.
+	 * @param propertyData Property data, on which to set this property's modification store.
+	 * @param accessType Access type for the property.
+	 *
+	 * @return False if this property is not audited.
+	 */
+	private boolean fillPropertyData(
+			Property property,
+			PropertyAuditingData propertyData,
+			String accessType,
+			Audited allClassAudited) {
+
+		final String propertyName = propertyNamePrefix + property.getName();
+		final String modifiedFlagsSuffix = metadataBuildingContext.getConfiguration().getModifiedFlagsSuffix();
+		if ( !this.checkAudited( property, propertyData,propertyName, allClassAudited, modifiedFlagsSuffix ) ) {
+			return false;
+		}
+
+		propertyData.setName( propertyName );
+		propertyData.setBeanName( property.getName() );
+		propertyData.setAccessType( accessType );
+
+		propertyData.setJoinTable( DEFAULT_AUDIT_JOIN_TABLE );
+		if ( !processPropertyAuditingOverrides( property, propertyData ) ) {
+			// not audited due to AuditOverride annotation
+			return false;
+		}
+
+		return true;
+	}
+
 	private void validateLobMappingSupport(XProperty property) {
 		// HHH-9834 - Sanity check
 		try {
@@ -602,6 +706,30 @@ public class AuditedPropertiesReader {
 			propertyData.setModifiedFlagName( ModifiedColumnNameResolver.getName( propertyName, modifiedFlagSuffix ) );
 			if ( !StringTools.isEmpty( aud.modifiedColumnName() ) ) {
 				propertyData.setExplicitModifiedFlagName( aud.modifiedColumnName() );
+			}
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	protected boolean checkAudited(
+			Property property,
+			PropertyAuditingData propertyData, String propertyName,
+			Audited allClassAudited, String modifiedFlagSuffix) {
+		// Checking if this property is explicitly audited or if all properties are.
+		if ( allClassAudited != null ) {
+			propertyData.setRelationTargetAuditMode( allClassAudited.targetAuditMode() );
+			propertyData.setRelationTargetNotFoundAction(
+					allClassAudited == null ?
+							RelationTargetNotFoundAction.DEFAULT :
+							allClassAudited.targetNotFoundAction()
+			);
+			propertyData.setUsingModifiedFlag( checkUsingModifiedFlag( allClassAudited ) );
+			propertyData.setModifiedFlagName( ModifiedColumnNameResolver.getName( propertyName, modifiedFlagSuffix ) );
+			if ( !StringTools.isEmpty( allClassAudited.modifiedColumnName() ) ) {
+				propertyData.setExplicitModifiedFlagName( allClassAudited.modifiedColumnName() );
 			}
 			return true;
 		}
@@ -713,6 +841,24 @@ public class AuditedPropertiesReader {
 	 * @return {@code false} if isAudited() of the override annotation was set to
 	 */
 	private boolean processPropertyAuditingOverrides(XProperty property, PropertyAuditingData propertyData) {
+		// Only components register audit overrides, classes will have no entries.
+		for ( AuditOverrideData override : auditedPropertiesHolder.getAuditingOverrides() ) {
+			if ( property.getName().equals( override.getName() ) ) {
+				// the override applies to this property
+				if ( !override.isAudited() ) {
+					return false;
+				}
+				else {
+					if ( override.getAuditJoinTableData() != null ) {
+						propertyData.setJoinTable( override.getAuditJoinTableData() );
+					}
+				}
+			}
+		}
+		return true;
+	}
+
+	private boolean processPropertyAuditingOverrides(Property property, PropertyAuditingData propertyData) {
 		// Only components register audit overrides, classes will have no entries.
 		for ( AuditOverrideData override : auditedPropertiesHolder.getAuditingOverrides() ) {
 			if ( property.getName().equals( override.getName() ) ) {

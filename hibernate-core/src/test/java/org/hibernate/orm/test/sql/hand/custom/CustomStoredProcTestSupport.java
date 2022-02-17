@@ -12,10 +12,9 @@ import java.util.List;
 import org.junit.Test;
 
 import org.hibernate.HibernateException;
-import org.hibernate.query.Query;
+import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.engine.query.ParameterRecognitionException;
 import org.hibernate.orm.test.sql.hand.Employment;
 import org.hibernate.orm.test.sql.hand.Organization;
 import org.hibernate.orm.test.sql.hand.Person;
@@ -41,9 +40,10 @@ public abstract class CustomStoredProcTestSupport extends CustomSQLTestSupport {
 	@Test
 	public void testScalarStoredProcedure() throws HibernateException, SQLException {
 		Session s = openSession();
-		Query namedQuery = s.getNamedQuery( "simpleScalar" );
+//		Query namedQuery = s.getNamedQuery( "simpleScalar" );
+		ProcedureCall namedQuery = s.createNamedStoredProcedureQuery( "simpleScalar" );
 		namedQuery.setParameter( "number", 43 );
-		List list = namedQuery.list();
+		List list = namedQuery.getResultList();
 		Object o[] = ( Object[] ) list.get( 0 );
 		assertEquals( o[0], "getAll" );
 		assertEquals( o[1], Long.valueOf( 43 ) );
@@ -54,10 +54,11 @@ public abstract class CustomStoredProcTestSupport extends CustomSQLTestSupport {
 	public void testParameterHandling() throws HibernateException, SQLException {
 		Session s = openSession();
 
-		Query namedQuery = s.getNamedQuery( "paramhandling" );
+//		Query namedQuery = s.getNamedQuery( "paramhandling" );
+		ProcedureCall namedQuery = s.createNamedStoredProcedureQuery( "paramhandling" );
 		namedQuery.setParameter( 1, 10 );
 		namedQuery.setParameter( 2, 20 );
-		List list = namedQuery.list();
+		List list = namedQuery.getResultList();
 		Object[] o = ( Object[] ) list.get( 0 );
 		assertEquals( o[0], Long.valueOf( 10 ) );
 		assertEquals( o[1], Long.valueOf( 20 ) );
@@ -69,11 +70,14 @@ public abstract class CustomStoredProcTestSupport extends CustomSQLTestSupport {
 		inTransaction(
 				session -> {
 					try {
-						session.getNamedQuery( "paramhandling_mixed" );
+						session.createNamedStoredProcedureQuery( "paramhandling_mixed" );
 						fail( "Expecting an exception" );
 					}
-					catch (ParameterRecognitionException expected) {
-						// expected outcome
+					catch (IllegalArgumentException expected) {
+						assertEquals(
+								"Cannot mix named parameter with positional parameter registrations",
+								expected.getMessage()
+						);
 					}
 					catch (Exception other) {
 						throw new AssertionError( "Expecting a ParameterRecognitionException, but encountered " + other.getClass().getSimpleName(), other );
@@ -95,9 +99,11 @@ public abstract class CustomStoredProcTestSupport extends CustomSQLTestSupport {
 		s.persist( jboss );
 		s.persist( gavin );
 		s.persist( emp );
+		s.flush();
 
-		Query namedQuery = s.getNamedQuery( "selectAllEmployments" );
-		List list = namedQuery.list();
+//		Query namedQuery = s.getNamedQuery( "selectAllEmployments" );
+		ProcedureCall namedQuery = s.createNamedStoredProcedureQuery( "selectAllEmployments" );
+		List list = namedQuery.getResultList();
 		assertTrue( list.get( 0 ) instanceof Employment );
 		s.delete( emp );
 		s.delete( ifa );

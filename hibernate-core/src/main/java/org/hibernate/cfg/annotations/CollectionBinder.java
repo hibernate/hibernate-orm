@@ -26,6 +26,7 @@ import org.hibernate.annotations.CollectionIdJavaType;
 import org.hibernate.annotations.CollectionIdJdbcType;
 import org.hibernate.annotations.CollectionIdJdbcTypeCode;
 import org.hibernate.annotations.CollectionType;
+import org.hibernate.annotations.CompositeType;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterJoinTable;
@@ -43,6 +44,7 @@ import org.hibernate.annotations.ListIndexJdbcType;
 import org.hibernate.annotations.ListIndexJdbcTypeCode;
 import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.ManyToAny;
+import org.hibernate.annotations.MapKeyCustomCompositeType;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.OptimisticLock;
@@ -107,6 +109,7 @@ import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserCollectionType;
 
@@ -1731,7 +1734,12 @@ public abstract class CollectionBinder {
 			}
 		}
 
-		if ( AnnotatedClassType.EMBEDDABLE == classType ) {
+		final Class<? extends CompositeUserType<?>> compositeUserType = resolveCompositeUserType(
+				property,
+				elementClass,
+				buildingContext
+		);
+		if ( AnnotatedClassType.EMBEDDABLE == classType || compositeUserType != null ) {
 			holder.prepare(property);
 
 			EntityBinder entityBinder = new EntityBinder();
@@ -1774,6 +1782,7 @@ public abstract class CollectionBinder {
 					false,
 					true,
 					resolveCustomInstantiator(property, elementClass, buildingContext),
+					compositeUserType,
 					buildingContext,
 					inheritanceStatePerClass
 			);
@@ -2099,6 +2108,27 @@ public abstract class CollectionBinder {
 		final Class<?> embeddableClass = context.getBootstrapContext().getReflectionManager().toClass( propertyClass );
 		if ( embeddableClass != null ) {
 			return context.getMetadataCollector().findRegisteredEmbeddableInstantiator( embeddableClass );
+		}
+
+		return null;
+	}
+
+	private static Class<? extends CompositeUserType<?>> resolveCompositeUserType(
+			XProperty property,
+			XClass returnedClass,
+			MetadataBuildingContext context) {
+		final CompositeType compositeType = property.getAnnotation( CompositeType.class );
+		if ( compositeType != null ) {
+			return compositeType.value();
+		}
+
+		if ( returnedClass != null ) {
+			final Class<?> embeddableClass = context.getBootstrapContext()
+					.getReflectionManager()
+					.toClass( returnedClass );
+			if ( embeddableClass != null ) {
+				return context.getMetadataCollector().findRegisteredCompositeUserType( embeddableClass );
+			}
 		}
 
 		return null;

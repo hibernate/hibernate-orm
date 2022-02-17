@@ -15,6 +15,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.MapKeyCustomCompositeType;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -48,6 +49,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserCollectionType;
 
 import jakarta.persistence.AttributeOverride;
@@ -275,8 +277,12 @@ public class MapBinder extends CollectionBinder {
 				else {
 					throw new AssertionFailure( "Unable to guess collection property accessor name" );
 				}
-
-				if ( AnnotatedClassType.EMBEDDABLE.equals( classType ) ) {
+				final Class<? extends CompositeUserType<?>> compositeUserType = resolveCompositeUserType(
+						property,
+						keyXClass,
+						buildingContext
+				);
+				if ( AnnotatedClassType.EMBEDDABLE.equals( classType ) || compositeUserType != null ) {
 					EntityBinder entityBinder = new EntityBinder();
 
 					PropertyData inferredData = isHibernateExtensionMapping()
@@ -295,6 +301,7 @@ public class MapBinder extends CollectionBinder {
 							false,
 							true,
 							null,
+							compositeUserType,
 							buildingContext,
 							inheritanceStatePerClass
 					);
@@ -369,6 +376,27 @@ public class MapBinder extends CollectionBinder {
 				);
 			}
 		}
+	}
+
+	private static Class<? extends CompositeUserType<?>> resolveCompositeUserType(
+			XProperty property,
+			XClass returnedClass,
+			MetadataBuildingContext context) {
+		final MapKeyCustomCompositeType compositeType = property.getAnnotation( MapKeyCustomCompositeType.class );
+		if ( compositeType != null ) {
+			return compositeType.value();
+		}
+
+		if ( returnedClass != null ) {
+			final Class<?> embeddableClass = context.getBootstrapContext()
+					.getReflectionManager()
+					.toClass( returnedClass );
+			if ( embeddableClass != null ) {
+				return context.getMetadataCollector().findRegisteredCompositeUserType( embeddableClass );
+			}
+		}
+
+		return null;
 	}
 
 	private jakarta.persistence.ForeignKey getMapKeyForeignKey(XProperty property) {

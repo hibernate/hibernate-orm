@@ -50,15 +50,30 @@ public class NotFoundExceptionManyToOneTest {
 
 	@Test
 	@JiraKey( "HHH-15060" )
-	public void testProxy(SessionFactoryScope scope) {
+	public void testProxyCurrency(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			// the non-existent Child
 			final Currency proxy = session.byId( Currency.class ).getReference( 1 );
 			try {
 				Hibernate.initialize( proxy );
 				Assertions.fail( "Expecting ObjectNotFoundException" );
 			}
 			catch (ObjectNotFoundException expected) {
+				assertThat( expected.getEntityName() ).endsWith( "Currency" );
+				assertThat( expected.getIdentifier() ).isEqualTo( 1 );
+			}
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-15060" )
+	public void testProxyCoin(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			final Coin proxy = session.byId( Coin.class ).getReference( 1 );
+			try {
+				Hibernate.initialize( proxy );
+				Assertions.fail( "Expecting ObjectNotFoundException" );
+			}
+			catch (FetchNotFoundException expected) {
 				assertThat( expected.getEntityName() ).endsWith( "Currency" );
 				assertThat( expected.getIdentifier() ).isEqualTo( 1 );
 			}
@@ -78,8 +93,9 @@ public class NotFoundExceptionManyToOneTest {
 				fail( "Expecting ObjectNotFoundException - " + coin.getCurrency() );
 			}
 			catch (FetchNotFoundException expected) {
-				// technically we could use a subsequent-select rather than a join...
 				assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+				assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Coin " );
+				assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Currency " );
 				assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
 				assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
 
@@ -89,32 +105,109 @@ public class NotFoundExceptionManyToOneTest {
 		} );
 	}
 
+	/**
+	 * Baseline for {@link  #testQueryImplicitPathDereferencePredicate}.  Ultimately, we want
+	 * SQL generated there to behave exactly the same as this query - specifically forcing the
+	 * join
+	 */
 	@Test
 	@JiraKey( "HHH-15060" )
-	@FailureExpected(
-			reason = "Does not do the join.  Instead selects the Coin based on `currency_id` and then " +
-					"subsequent-selects the Currency.  Ultimately results in a `Coin#1` reference with a " +
-					"null Currency."
-	)
+	public void testQueryImplicitPathDereferencePredicateBaseline(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		scope.inTransaction( (session) -> {
+			final String hql = "select c from Coin c where c.currency.name = 'Euro'";
+			final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
+			assertThat( coins ).isEmpty();
+		} );
+
+		assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Coin " );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Currency " );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " cross " );
+	}
+
+	/**
+	 * Baseline for {@link  #testQueryImplicitPathDereferencePredicate}.  Ultimately, we want
+	 * SQL generated there to behave exactly the same as this query - specifically forcing the
+	 * join
+	 */
+	@Test
+	@JiraKey( "HHH-15060" )
+	public void testQueryImplicitPathDereferencePredicateBaseline2(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		scope.inTransaction( (session) -> {
+			final String hql = "select c from Coin c where c.currency.id = 2";
+			final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
+			assertThat( coins ).hasSize( 1 );
+
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Coin " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Currency " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " cross " );
+		} );
+	}
+
+	/**
+	 * Baseline for {@link  #testQueryImplicitPathDereferencePredicate}.  Ultimately, we want
+	 * SQL generated there to behave exactly the same as this query
+	 */
+	@Test
+	@JiraKey( "HHH-15060" )
+	public void testQueryImplicitPathDereferencePredicateBaseline3(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		scope.inTransaction( (session) -> {
+			// NOTE : this query is conceptually the same as the one from
+			// `#testQueryImplicitPathDereferencePredicateBaseline` in that we want
+			// a join and we want to use the fk target column (here, `Currency.id`)
+			// rather than the normal perf-opt strategy of using the fk key column
+			// (here, `Coin.currency_fk`).
+			final String hql = "select c from Coin c join fetch c.currency c2 where c2.name = 'USD'";
+			final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
+			assertThat( coins ).hasSize( 1 );
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+		} );
+
+		statementInspector.clear();
+
+		scope.inTransaction( (session) -> {
+			// NOTE : this query is conceptually the same as the one from
+			// `#testQueryImplicitPathDereferencePredicateBaseline` in that we want
+			// a join and we want to use the fk target column (here, `Currency.id`)
+			// rather than the normal perf-opt strategy of using the fk key column
+			// (here, `Coin.currency_fk`).
+			final String hql = "select c from Coin c join fetch c.currency c2 where c2.name = 'Euro'";
+			final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
+			assertThat( coins ).hasSize( 0 );
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-15060" )
 	public void testQueryImplicitPathDereferencePredicate(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
-			try {
-				final String hql = "select c from Coin c where c.currency.id = 1";
-				session.createQuery( hql, Coin.class ).getResultList();
+			final String hql = "select c from Coin c where c.currency.id = 1";
+			final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
+			assertThat( coins ).isEmpty();
 
-				fail( "Expecting ObjectNotFoundException for broken fk" );
-			}
-			catch (ObjectNotFoundException expected) {
-				assertThat( expected.getEntityName() ).isEqualTo( Currency.class.getName() );
-				assertThat( expected.getIdentifier() ).isEqualTo( 1 );
-
-				assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-				assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
-				assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
-			}
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Coin " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Currency " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
 		} );
 	}
 
@@ -140,13 +233,20 @@ public class NotFoundExceptionManyToOneTest {
 	@Test
 	@JiraKey( "HHH-15060" )
 	public void testQueryAssociationSelection(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
 		// NOTE: this one is not obvious
 		//		- we are selecting the association so from that perspective, throwing the ObjectNotFoundException is nice
 		//		- the other way to look at it is that there are simply no matching results, so nothing to return
 		scope.inTransaction( (session) -> {
 			final String hql = "select c.currency from Coin c where c.id = 1";
 			final List<Currency> resultList = session.createQuery( hql, Currency.class ).getResultList();
-			assertThat( resultList ).isEmpty();
+			assertThat( resultList ).hasSize( 0 );
+
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " left " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " cross " );
 		} );
 	}
 

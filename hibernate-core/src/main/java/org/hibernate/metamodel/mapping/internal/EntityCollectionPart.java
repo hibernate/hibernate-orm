@@ -73,6 +73,8 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static java.util.Objects.requireNonNullElse;
+
 /**
  * @author Steve Ebersole
  */
@@ -381,15 +383,6 @@ public class EntityCollectionPart
 	}
 
 	@Override
-	public <T> DomainResult<T> createDelayedDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	@Override
 	public JavaType<?> getJavaType() {
 		return getEntityMappingType().getJavaType();
 	}
@@ -583,13 +576,8 @@ public class EntityCollectionPart
 			SqlExpressionResolver sqlExpressionResolver,
 			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
-		final SqlAstJoinType joinType;
-		if ( requestedJoinType == null ) {
-			joinType = SqlAstJoinType.INNER;
-		}
-		else {
-			joinType = requestedJoinType;
-		}
+		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
+
 		if ( collectionDescriptor.isOneToMany() && nature == Nature.ELEMENT ) {
 			// If this is a one-to-many, the element part is already available, so we return a TableGroupJoin "hull"
 			return new TableGroupJoin(
@@ -645,15 +633,10 @@ public class EntityCollectionPart
 			SqlExpressionResolver sqlExpressionResolver,
 			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
-		final SqlAstJoinType joinType;
-		if ( requestedJoinType == null ) {
-			joinType = SqlAstJoinType.INNER;
-		}
-		else {
-			joinType = requestedJoinType;
-		}
+		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
 		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
 		final boolean canUseInnerJoin = joinType == SqlAstJoinType.INNER || lhs.canUseInnerJoins();
+
 		final LazyTableGroup lazyTableGroup = new LazyTableGroup(
 				canUseInnerJoin,
 				navigablePath,
@@ -670,7 +653,7 @@ public class EntityCollectionPart
 				(np, tableExpression) -> {
 					NavigablePath path = np.getParent();
 					// Fast path
-					if ( path != null && navigablePath.equals( path ) ) {
+					if ( navigablePath.equals( path ) ) {
 						return targetKeyPropertyNames.contains( np.getUnaliasedLocalName() )
 								&& fkDescriptor.getKeyTable().equals( tableExpression );
 					}
@@ -681,7 +664,7 @@ public class EntityCollectionPart
 						sb.insert( 0, path.getUnaliasedLocalName() );
 						path = path.getParent();
 					}
-					return path != null && navigablePath.equals( path )
+					return navigablePath.equals( path )
 							&& targetKeyPropertyNames.contains( sb.toString() )
 							&& fkDescriptor.getKeyTable().equals( tableExpression );
 				},

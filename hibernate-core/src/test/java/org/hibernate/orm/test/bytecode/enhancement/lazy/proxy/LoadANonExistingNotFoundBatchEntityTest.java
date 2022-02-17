@@ -26,8 +26,6 @@ import jakarta.persistence.ManyToOne;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.SessionFactoryBuilder;
@@ -44,6 +42,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -58,7 +57,7 @@ import static org.junit.Assert.assertTrue;
 @EnhancementOptions(lazyLoading = true)
 public class LoadANonExistingNotFoundBatchEntityTest extends BaseNonConfigCoreFunctionalTestCase {
 
-	private static int NUMBER_OF_ENTITIES = 20;
+	private static final int NUMBER_OF_ENTITIES = 20;
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11147")
@@ -66,24 +65,20 @@ public class LoadANonExistingNotFoundBatchEntityTest extends BaseNonConfigCoreFu
 		final StatisticsImplementor statistics = sessionFactory().getStatistics();
 		statistics.clear();
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					List<Employee> employees = new ArrayList<>( NUMBER_OF_ENTITIES );
-					for ( int i = 0 ; i < NUMBER_OF_ENTITIES ; i++ ) {
-						employees.add( session.load( Employee.class, i + 1 ) );
-					}
-					for ( int i = 0 ; i < NUMBER_OF_ENTITIES ; i++ ) {
-						Hibernate.initialize( employees.get( i ) );
-						assertNull( employees.get( i ).employer );
-					}
-				}
-		);
+		inTransaction( (session) -> {
+			List<Employee> employees = new ArrayList<>( NUMBER_OF_ENTITIES );
+			for ( int i = 0 ; i < NUMBER_OF_ENTITIES ; i++ ) {
+				employees.add( session.load( Employee.class, i + 1 ) );
+			}
+			for ( int i = 0 ; i < NUMBER_OF_ENTITIES ; i++ ) {
+				Hibernate.initialize( employees.get( i ) );
+				assertNull( employees.get( i ).employer );
+			}
+		} );
 
-		// A "not found" association cannot be batch fetched because
-		// Employee#employer must be initialized immediately.
-		// Enhanced proxies (and HibernateProxy objects) should never be created
-		// for a "not found" association.
-		assertEquals( 2 * NUMBER_OF_ENTITIES, statistics.getPrepareStatementCount() );
+		// not-found associations are always join-fetched, so we should
+		// get `NUMBER_OF_ENTITIES` queries
+		assertEquals( NUMBER_OF_ENTITIES, statistics.getPrepareStatementCount() );
 	}
 
 	@Test
@@ -92,20 +87,16 @@ public class LoadANonExistingNotFoundBatchEntityTest extends BaseNonConfigCoreFu
 		final StatisticsImplementor statistics = sessionFactory().getStatistics();
 		statistics.clear();
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					for ( int i = 0 ; i < NUMBER_OF_ENTITIES ; i++ ) {
-						Employee employee = session.get( Employee.class, i + 1 );
-						assertNull( employee.employer );
-					}
-				}
-		);
+		inTransaction( (session) -> {
+			for ( int i = 0 ; i < NUMBER_OF_ENTITIES ; i++ ) {
+				Employee employee = session.get( Employee.class, i + 1 );
+				assertNull( employee.employer );
+			}
+		} );
 
-		// A "not found" association cannot be batch fetched because
-		// Employee#employer must be initialized immediately.
-		// Enhanced proxies (and HibernateProxy objects) should never be created
-		// for a "not found" association.
-		assertEquals( 2 * NUMBER_OF_ENTITIES, statistics.getPrepareStatementCount() );
+		// not-found associations are always join-fetched, so we should
+		// get `NUMBER_OF_ENTITIES` queries
+		assertThat( statistics.getPrepareStatementCount() ).isEqualTo( NUMBER_OF_ENTITIES  );
 	}
 
 	@Test
@@ -114,28 +105,24 @@ public class LoadANonExistingNotFoundBatchEntityTest extends BaseNonConfigCoreFu
 		final StatisticsImplementor statistics = sessionFactory().getStatistics();
 		statistics.clear();
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					for ( int i = 0; i < NUMBER_OF_ENTITIES; i++ ) {
-						Employee employee = session.get( Employee.class, i + 1 );
-						Employer employer = new Employer();
-						employer.id = 2 * employee.id;
-						employer.name = "Employer #" + employer.id;
-						employee.employer = employer;
-					}
-				}
-		);
+		inTransaction( (session) -> {
+			for ( int i = 0; i < NUMBER_OF_ENTITIES; i++ ) {
+				Employee employee = session.get( Employee.class, i + 1 );
+				Employer employer = new Employer();
+				employer.id = 2 * employee.id;
+				employer.name = "Employer #" + employer.id;
+				employee.employer = employer;
+			}
+		} );
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					for ( int i = 0; i < NUMBER_OF_ENTITIES; i++ ) {
-						Employee employee = session.get( Employee.class, i + 1 );
-						assertTrue( Hibernate.isInitialized( employee.employer ) );
-						assertEquals( employee.id * 2, employee.employer.id );
-						assertEquals( "Employer #" + employee.employer.id, employee.employer.name );
-					}
-				}
-		);
+		inTransaction( (session) -> {
+			for ( int i = 0; i < NUMBER_OF_ENTITIES; i++ ) {
+				Employee employee = session.get( Employee.class, i + 1 );
+				assertTrue( Hibernate.isInitialized( employee.employer ) );
+				assertEquals( employee.id * 2, employee.employer.id );
+				assertEquals( "Employer #" + employee.employer.id, employee.employer.name );
+			}
+		} );
 	}
 
 	@Override

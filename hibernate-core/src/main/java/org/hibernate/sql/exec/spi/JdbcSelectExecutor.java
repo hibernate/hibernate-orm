@@ -22,8 +22,6 @@ import org.hibernate.sql.results.spi.RowTransformer;
  */
 @Incubating
 public interface JdbcSelectExecutor {
-	// todo (6.0) : Ideally we'd have a singular place (JdbcServices? ServiceRegistry?) to obtain these executors
-
 	<R> List<R> list(
 			JdbcSelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,

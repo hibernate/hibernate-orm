@@ -6,11 +6,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
-import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 /**
  * Commonality between `many-to-one`, `one-to-one` and `any`, as well as entity-valued collection elements and map-keys
@@ -35,13 +31,4 @@ public interface EntityAssociationMapping extends ModelPart, Association, TableG
 	default boolean incrementFetchDepth(){
 		return true;
 	}
-
-	/**
-	 * Create a delayed DomainResult for a specific reference to this ModelPart.
-	 */
-	<T> DomainResult<T> createDelayedDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState);
 }

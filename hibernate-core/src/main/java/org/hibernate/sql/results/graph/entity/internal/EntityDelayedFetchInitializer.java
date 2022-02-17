@@ -40,7 +40,7 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 	private final NavigablePath navigablePath;
 	private final ToOneAttributeMapping referencedModelPart;
 	private final boolean selectByUniqueKey;
-	private final DomainResultAssembler identifierAssembler;
+	private final DomainResultAssembler<?> identifierAssembler;
 
 	private Object entityInstance;
 	private Object identifier;
@@ -50,7 +50,10 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 			NavigablePath fetchedNavigable,
 			ToOneAttributeMapping referencedModelPart,
 			boolean selectByUniqueKey,
-			DomainResultAssembler identifierAssembler) {
+			DomainResultAssembler<?> identifierAssembler) {
+		// associations marked with `@NotFound` are ALWAYS eagerly fetched
+		assert referencedModelPart.getNotFoundAction() == null;
+
 		this.parentAccess = parentAccess;
 		this.navigablePath = fetchedNavigable;
 		this.referencedModelPart = referencedModelPart;

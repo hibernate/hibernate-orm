@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.mapping;
 
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.sql.results.graph.DatabaseSnapshotContributor;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -17,7 +18,8 @@ import org.hibernate.type.descriptor.java.MutabilityPlanExposer;
  *
  * @author Steve Ebersole
  */
-public interface AttributeMapping extends ModelPart, ValueMapping, Fetchable, PropertyBasedMapping, MutabilityPlanExposer {
+public interface AttributeMapping
+		extends ModelPart, ValueMapping, Fetchable, DatabaseSnapshotContributor, PropertyBasedMapping, MutabilityPlanExposer {
 	/**
 	 * The name of the mapped attribute
 	 */

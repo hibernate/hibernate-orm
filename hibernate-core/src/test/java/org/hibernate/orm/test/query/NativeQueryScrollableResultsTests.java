@@ -18,7 +18,6 @@ import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -36,11 +35,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class NativeQueryScrollableResultsTests {
 
 	@Test
-	@NotImplementedYet(
-			strict = false,
-			reason = "java.lang.NullPointerException\n" +
-					"\tat org.hibernate.sql.exec.internal.AbstractJdbcParameter.bindParameterValue(AbstractJdbcParameter.java:102)"
-	)
 	public void testSetParameters(SessionFactoryScope scope) {
 		scope.inTransaction( (s) -> {
 			final List<BigInteger> params = new ArrayList<>();

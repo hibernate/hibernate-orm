@@ -14,7 +14,6 @@ import org.hibernate.transform.ResultTransformer;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -33,7 +32,6 @@ public class ResultTransformerTest {
 
 	@Test
 	@JiraKey( "HHH-3694" )
-	@NotImplementedYet( strict = false, reason = "More problems with hbm.xml sql resultset mappings" )
 	public void testResultTransformerIsAppliedToScrollableResults(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final PartnerA a = new PartnerA();
@@ -58,7 +56,7 @@ public class ResultTransformerTest {
 			q.setResultTransformer(
 					(ResultTransformer) (arg0, arg1) -> {
 						// return only the PartnerA object from the query
-						return arg0[1];
+						return ( (Contract) arg0[0] ).getA();
 					}
 			);
 

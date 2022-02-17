@@ -417,7 +417,7 @@ public class ToOneAttributeMapping
 		else {
 			final PersistentClass entityBinding = bootValue.getBuildingContext().getMetadataCollector()
 					.getEntityBinding( entityMappingType.getEntityName() );
-			final Type propertyType = entityBinding.getProperty( referencedPropertyName ).getType();
+			final Type propertyType = entityBinding.getRecursiveProperty( referencedPropertyName ).getType();
 			final CompositeType compositeType;
 			if ( propertyType.isComponentType() && ( compositeType = (CompositeType) propertyType ).isEmbedded()
 					&& compositeType.getPropertyNames().length == 1 ) {

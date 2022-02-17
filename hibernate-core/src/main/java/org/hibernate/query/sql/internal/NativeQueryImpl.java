@@ -851,6 +851,15 @@ public class NativeQueryImpl<R>
 		return registerBuilder( Builders.scalar( columnAlias ) );
 	}
 
+	public NativeQueryImplementor<R> addScalar(int position, Class<?> type) {
+		return registerBuilder(
+				Builders.scalar(
+						position,
+						getSessionFactory().getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( type )
+				)
+		);
+	}
+
 	protected NativeQueryImplementor<R> registerBuilder(ResultBuilder builder) {
 		resultSetMapping.addResultBuilder( builder );
 		return this;

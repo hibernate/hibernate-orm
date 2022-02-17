@@ -163,7 +163,7 @@ public class EntityCollectionPart
 			this.targetKeyPropertyNames = targetKeyPropertyNames;
 		}
 		else {
-			final Type propertyType = entityBinding.getProperty( referencedPropertyName ).getType();
+			final Type propertyType = entityBinding.getRecursiveProperty( referencedPropertyName ).getType();
 			final CompositeType compositeType;
 			if ( propertyType.isComponentType() && ( compositeType = (CompositeType) propertyType ).isEmbedded()
 					&& compositeType.getPropertyNames().length == 1 ) {

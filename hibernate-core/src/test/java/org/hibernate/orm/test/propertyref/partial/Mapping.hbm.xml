@@ -17,6 +17,7 @@
 <hibernate-mapping package="org.hibernate.orm.test.propertyref.partial">
 	
 	<class name="Person" table="PART_COMP_PROPREF_PERS">
+		<cache usage="nonstrict-read-write"/>
 		<id name="id">
 			<generator class="increment"/>
 		</id>
@@ -27,6 +28,7 @@
 	</class>
 	
 	<class name="Account" table="PART_COMP_PROPREF_ACCT">
+		<cache usage="nonstrict-read-write"/>
 		<id name="number" column="accnum"/>
 		<many-to-one name="owner" property-ref="identity.ssn"/>
 	</class>

@@ -6,16 +6,20 @@
  */
 package org.hibernate.engine.spi;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 
 /**
  * Encapsulates details related to entities which contain sub-select-fetchable
@@ -97,16 +101,14 @@ public class SubselectFetch {
 			TableGroup tableGroup,
 			List<JdbcParameter> jdbcParameters,
 			JdbcParameterBindings jdbcParameterBindings) {
-		final SubselectFetch subselectFetch = new SubselectFetch(
-				null,
+
+		return new StandardRegistrationHandler(
+				batchFetchQueue,
 				sqlAst.getQuerySpec(),
 				tableGroup,
 				jdbcParameters,
-				jdbcParameterBindings,
-				new HashSet<>()
+				jdbcParameterBindings
 		);
-
-		return new StandardRegistrationHandler( batchFetchQueue, subselectFetch );
 	}
 
 	public static RegistrationHandler createRegistrationHandler(
@@ -124,25 +126,48 @@ public class SubselectFetch {
 	}
 
 	public interface RegistrationHandler {
-		void addKey(EntityKey key);
+		void addKey(EntityKey key, LoadingEntityEntry entry);
 	}
 
 	private static final RegistrationHandler NO_OP_REG_HANDLER = new RegistrationHandler() {
 		@Override
-		public void addKey(EntityKey key) {
+		public void addKey(EntityKey key, LoadingEntityEntry entry) {
 		}
 	} ;
 
 	public static class StandardRegistrationHandler implements RegistrationHandler {
 		private final BatchFetchQueue batchFetchQueue;
-		private final SubselectFetch subselectFetch;
+		private final QuerySpec loadingSqlAst;
+		private final TableGroup ownerTableGroup;
+		private final List<JdbcParameter> loadingJdbcParameters;
+		private final JdbcParameterBindings loadingJdbcParameterBindings;
+		private final Map<NavigablePath, SubselectFetch> subselectFetches = new HashMap<>();
 
-		private StandardRegistrationHandler(BatchFetchQueue batchFetchQueue, SubselectFetch subselectFetch) {
+		private StandardRegistrationHandler(
+				BatchFetchQueue batchFetchQueue,
+				QuerySpec loadingSqlAst,
+				TableGroup ownerTableGroup,
+				List<JdbcParameter> loadingJdbcParameters,
+				JdbcParameterBindings loadingJdbcParameterBindings) {
 			this.batchFetchQueue = batchFetchQueue;
-			this.subselectFetch = subselectFetch;
+			this.loadingSqlAst = loadingSqlAst;
+			this.ownerTableGroup = ownerTableGroup;
+			this.loadingJdbcParameters = loadingJdbcParameters;
+			this.loadingJdbcParameterBindings = loadingJdbcParameterBindings;
 		}
 
-		public void addKey(EntityKey key) {
+		public void addKey(EntityKey key, LoadingEntityEntry entry) {
+			final SubselectFetch subselectFetch = subselectFetches.computeIfAbsent(
+					entry.getEntityInitializer().getNavigablePath(),
+					navigablePath -> new SubselectFetch(
+						null,
+						loadingSqlAst,
+						ownerTableGroup,
+						loadingJdbcParameters,
+						loadingJdbcParameterBindings,
+						new HashSet<>()
+				)
+			);
 			subselectFetch.resultingEntityKeys.add( key );
 			batchFetchQueue.addSubselect( key, subselectFetch );
 		}

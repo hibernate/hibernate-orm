@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +24,6 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.TupleTransformer;
-import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
@@ -56,10 +54,6 @@ import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
 import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
-
-import jakarta.persistence.Tuple;
-import jakarta.persistence.TupleElement;
-import jakarta.persistence.criteria.CompoundSelection;
 
 import static org.hibernate.query.sqm.internal.QuerySqmImpl.CRITERIA_HQL_STRING;
 
@@ -112,7 +106,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						new SqmJdbcExecutionContextAdapter( executionContext, jdbcSelect ) {
 							@Override
 							public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
-								subSelectFetchKeyHandler.addKey( entityKey );
+								subSelectFetchKeyHandler.addKey( entityKey, entry );
 							}
 
 							@Override

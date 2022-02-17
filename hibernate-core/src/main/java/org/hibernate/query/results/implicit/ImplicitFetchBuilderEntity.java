@@ -50,13 +50,19 @@ public class ImplicitFetchBuilderEntity implements ImplicitFetchBuilder {
 		final Function<String, FetchBuilder> fetchBuilderResolver = creationStateImpl.getCurrentExplicitFetchMementoResolver();
 		ForeignKeyDescriptor foreignKeyDescriptor = fetchable.getForeignKeyDescriptor();
 		final String associationKeyPropertyName;
+		final NavigablePath associationKeyFetchPath;
 		if ( fetchable.getReferencedPropertyName() == null ) {
 			associationKeyPropertyName = fetchable.getEntityMappingType().getIdentifierMapping().getPartName();
+			associationKeyFetchPath = relativePath.append( associationKeyPropertyName );
 		}
 		else {
 			associationKeyPropertyName = fetchable.getReferencedPropertyName();
+			NavigablePath path = relativePath;
+			for ( String part : associationKeyPropertyName.split( "\\." ) ) {
+				path = path.append( part );
+			}
+			associationKeyFetchPath = path;
 		}
-		final NavigablePath associationKeyFetchPath = relativePath.append( associationKeyPropertyName );
 		final FetchBuilder explicitAssociationKeyFetchBuilder = fetchBuilderResolver
 				.apply( associationKeyFetchPath.getFullPath() );
 		final Map<NavigablePath, FetchBuilder> fetchBuilders;

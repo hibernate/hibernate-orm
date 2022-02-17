@@ -82,6 +82,10 @@ public class BatchingBatch extends AbstractBatchImpl {
 			LOG.debug( "SQLException escaped proxy", e );
 			throw sqlExceptionHelper().convert( e, "could not perform addBatch", currentStatementSql );
 		}
+		catch (RuntimeException e) {
+			abortBatch();
+			throw e;
+		}
 		statementPosition++;
 		if ( statementPosition >= getKey().getBatchedStatementCount() ) {
 			batchPosition++;

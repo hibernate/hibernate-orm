@@ -113,7 +113,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 			}
 
 			try {
-				this.injectionTarget = beanManager.createInjectionTarget( annotatedType );
+				this.injectionTarget = beanManager.getInjectionTargetFactory( annotatedType ).createInjectionTarget( (Bean) null );
 				this.creationalContext = beanManager.createCreationalContext( null );
 
 				this.beanInstance = this.injectionTarget.produce( creationalContext );

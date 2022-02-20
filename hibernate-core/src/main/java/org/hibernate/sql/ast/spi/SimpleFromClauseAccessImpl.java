@@ -32,17 +32,17 @@ public class SimpleFromClauseAccessImpl implements FromClauseAccess {
 	}
 
 	@Override
-	public TableGroup findTableGroupOnLeaf(NavigablePath navigablePath) {
-		return tableGroupMap.get( navigablePath );
+	public TableGroup findTableGroupOnParents(NavigablePath navigablePath) {
+		final TableGroup tableGroup = tableGroupMap.get( navigablePath );
+		if ( tableGroup == null && parent != null ) {
+			return parent.findTableGroupOnParents( navigablePath );
+		}
+		return tableGroup;
 	}
 
 	@Override
 	public TableGroup findTableGroup(NavigablePath navigablePath) {
-		final TableGroup tableGroup = tableGroupMap.get( navigablePath );
-		if ( tableGroup == null && parent != null ) {
-			return parent.findTableGroup( navigablePath );
-		}
-		return tableGroup;
+		return tableGroupMap.get( navigablePath );
 	}
 
 	@Override

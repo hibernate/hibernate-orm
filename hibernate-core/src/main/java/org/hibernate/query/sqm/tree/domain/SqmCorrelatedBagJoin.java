@@ -26,8 +26,9 @@ public class SqmCorrelatedBagJoin<O, T> extends SqmBagJoin<O, T> implements SqmC
 	public SqmCorrelatedBagJoin(SqmBagJoin<O, T> correlationParent) {
 		super(
 				correlationParent.getLhs(),
+				correlationParent.getNavigablePath(),
 				correlationParent.getAttribute(),
-				null,
+				correlationParent.getExplicitAlias(),
 				SqmJoinType.INNER,
 				false,
 				correlationParent.nodeBuilder()

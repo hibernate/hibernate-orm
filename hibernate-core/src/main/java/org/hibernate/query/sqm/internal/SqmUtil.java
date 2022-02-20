@@ -26,6 +26,7 @@ import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
+import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -352,9 +353,6 @@ public class SqmUtil {
 		if ( parameterType == null ) {
 			throw new SqlTreeCreationException( "Unable to interpret mapping-model type for Query parameter : " + domainParam );
 		}
-		if ( parameterType instanceof CollectionPart && ( (CollectionPart) parameterType ).getPartMappingType() instanceof Bindable ) {
-			parameterType = (Bindable) ( (CollectionPart) parameterType ).getPartMappingType();
-		}
 
 		if ( parameterType instanceof EntityIdentifierMapping ) {
 			final EntityIdentifierMapping identifierMapping = (EntityIdentifierMapping) parameterType;
@@ -371,8 +369,8 @@ public class SqmUtil {
 				bindValue = identifierMapping.getIdentifier( bindValue );
 			}
 		}
-		else if ( parameterType instanceof ToOneAttributeMapping ) {
-			ToOneAttributeMapping association = (ToOneAttributeMapping) parameterType;
+		else if ( parameterType instanceof EntityAssociationMapping ) {
+			EntityAssociationMapping association = (EntityAssociationMapping) parameterType;
 			bindValue = association.getForeignKeyDescriptor().getAssociationKeyFromSide(
 					bindValue,
 					association.getSideNature().inverse(),

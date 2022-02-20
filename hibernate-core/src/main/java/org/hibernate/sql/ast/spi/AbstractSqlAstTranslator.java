@@ -24,51 +24,49 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
-import org.hibernate.internal.util.MathHelper;
-import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.EntityAssociationMapping;
-import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Queryable;
-import org.hibernate.persister.internal.SqlFragmentPredicate;
-import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.sqm.FrameExclusion;
-import org.hibernate.query.sqm.FrameKind;
-import org.hibernate.query.sqm.FrameMode;
-import org.hibernate.query.sqm.SetOperator;
-import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
-import org.hibernate.sql.ast.tree.cte.CteMaterialization;
-import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
-import org.hibernate.query.sqm.FetchClauseType;
-import org.hibernate.LockOptions;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.AbstractDelegatingWrapperOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.FilterJdbcParameter;
+import org.hibernate.internal.util.MathHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
-import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.persister.entity.Queryable;
+import org.hibernate.persister.internal.SqlFragmentPredicate;
+import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.spi.Limit;
+import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.sqm.FrameExclusion;
+import org.hibernate.query.sqm.FrameKind;
+import org.hibernate.query.sqm.FrameMode;
 import org.hibernate.query.sqm.NullPrecedence;
+import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
-import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
+import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
@@ -80,6 +78,8 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
+import org.hibernate.sql.ast.tree.cte.CteMaterialization;
+import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.cte.SearchClauseSpecification;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
@@ -3608,9 +3608,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				clauseStack.push( Clause.FROM );
 				String separator = NO_SEPARATOR;
 				for ( TableGroup root : fromClause.getRoots() ) {
-					appendSql( separator );
-					renderRootTableGroup( root, null );
-					separator = COMA_SEPARATOR;
+					// Skip virtual table group roots which we use for simple correlations
+					if ( !( root instanceof VirtualTableGroup ) ) {
+						appendSql( separator );
+						renderRootTableGroup( root, null );
+						separator = COMA_SEPARATOR;
+					}
 				}
 			}
 			finally {

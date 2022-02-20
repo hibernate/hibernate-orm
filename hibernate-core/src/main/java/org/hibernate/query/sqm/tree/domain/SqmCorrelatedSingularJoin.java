@@ -26,8 +26,9 @@ public class SqmCorrelatedSingularJoin<O, T> extends SqmSingularJoin<O, T> imple
 	public SqmCorrelatedSingularJoin(SqmSingularJoin<O, T> correlationParent) {
 		super(
 				correlationParent.getLhs(),
+				correlationParent.getNavigablePath(),
 				correlationParent.getAttribute(),
-				null,
+				correlationParent.getExplicitAlias(),
 				SqmJoinType.INNER,
 				false,
 				correlationParent.nodeBuilder()

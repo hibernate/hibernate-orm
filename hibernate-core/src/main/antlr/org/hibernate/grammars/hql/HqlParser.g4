@@ -191,15 +191,14 @@ entityName
  */
 variable
 	: AS identifier
-	| IDENTIFIER
-	| QUOTED_IDENTIFIER
+	| nakedIdentifier
 	;
 
 /**
  * A 'cross join' to a second root entity (a cartesian product)
  */
 crossJoin
-	: CROSS JOIN rootEntity variable?
+	: CROSS JOIN entityName variable?
 	;
 
 /**
@@ -1461,7 +1460,8 @@ rollup
  * This parser rule helps with that.  Here we expect that the caller already understands their
  * context enough to know that keywords-as-identifiers are allowed.
  */
-identifier
+ // All except the possible optional following keywords LEFT, RIGHT, INNER, FULL, OUTER
+ nakedIdentifier
 	: IDENTIFIER
 	| QUOTED_IDENTIFIER
 	| (ALL
@@ -1510,7 +1510,7 @@ identifier
 	| FOR
 	| FORMAT
 	| FROM
-	| FULL
+//	| FULL
 	| FUNCTION
 	| GROUP
 	| GROUPS
@@ -1522,7 +1522,7 @@ identifier
 	| IN
 	| INDEX
 	| INDICES
-	| INNER
+//	| INNER
 	| INSERT
 	| INSTANT
 	| INTERSECT
@@ -1532,7 +1532,7 @@ identifier
 	| KEY
 	| LAST
 	| LEADING
-	| LEFT
+//	| LEFT
 	| LIKE
 	| LIMIT
 	| LIST
@@ -1569,7 +1569,7 @@ identifier
 	| OR
 	| ORDER
 	| OTHERS
-	| OUTER
+//	| OUTER
 	| OVER
 	| OVERFLOW
 	| OVERLAY
@@ -1582,7 +1582,7 @@ identifier
 	| QUARTER
 	| RANGE
 	| RESPECT
-	| RIGHT
+//	| RIGHT
 	| ROLLUP
 	| ROW
 	| ROWS
@@ -1618,6 +1618,16 @@ identifier
 	| WITHIN
 	| WITHOUT
 	| YEAR) {
+		logUseOfReservedWordAsIdentifier( getCurrentToken() );
+	}
+	;
+identifier
+	: nakedIdentifier
+	| (FULL
+	| INNER
+	| LEFT
+	| OUTER
+	| RIGHT) {
 		logUseOfReservedWordAsIdentifier( getCurrentToken() );
 	}
 	;

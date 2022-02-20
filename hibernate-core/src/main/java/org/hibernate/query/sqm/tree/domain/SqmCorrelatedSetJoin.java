@@ -26,8 +26,9 @@ public class SqmCorrelatedSetJoin<O, T> extends SqmSetJoin<O, T> implements SqmC
 	public SqmCorrelatedSetJoin(SqmSetJoin<O, T> correlationParent) {
 		super(
 				correlationParent.getLhs(),
+				correlationParent.getNavigablePath(),
 				correlationParent.getAttribute(),
-				null,
+				correlationParent.getExplicitAlias(),
 				SqmJoinType.INNER,
 				false,
 				correlationParent.nodeBuilder()

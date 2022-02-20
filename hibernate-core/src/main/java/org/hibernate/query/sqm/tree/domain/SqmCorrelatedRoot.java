@@ -22,7 +22,7 @@ public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T
 		super(
 				correlationParent.getNavigablePath(),
 				correlationParent.getReferencedPathSource(),
-				null,
+				correlationParent.getExplicitAlias(),
 				correlationParent.nodeBuilder()
 		);
 		this.correlationParent = correlationParent;

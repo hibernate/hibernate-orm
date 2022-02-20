@@ -20,7 +20,12 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
  */
 public interface FromClauseAccess {
 
-	TableGroup findTableGroupOnLeaf(NavigablePath navigablePath);
+	/**
+	 * Find a TableGroup by the NavigablePath it is registered under,
+	 * and if not found on the current from clause level, ask the parent.  Returns
+	 * {@code null} if no TableGroup is registered under that NavigablePath
+	 */
+	TableGroup findTableGroupOnParents(NavigablePath navigablePath);
 
 	/**
 	 * Find a TableGroup by the NavigablePath it is registered under.  Returns

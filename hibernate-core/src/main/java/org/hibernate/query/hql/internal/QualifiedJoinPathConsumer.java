@@ -110,7 +110,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		final SqmCreationProcessingState processingState = creationState.getCurrentProcessingState();
 		final SqmPathRegistry pathRegistry = processingState.getPathRegistry();
 
-		final SqmFrom<?, Object> pathRootByAlias = pathRegistry.findFromByAlias( identifier );
+		final SqmFrom<?, Object> pathRootByAlias = pathRegistry.findFromByAlias( identifier, true );
 		if ( pathRootByAlias != null ) {
 			// identifier is an alias (identification variable)
 

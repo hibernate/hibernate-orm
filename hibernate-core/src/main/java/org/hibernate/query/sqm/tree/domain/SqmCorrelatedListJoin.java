@@ -26,8 +26,9 @@ public class SqmCorrelatedListJoin<O, T> extends SqmListJoin<O, T> implements Sq
 	public SqmCorrelatedListJoin(SqmListJoin<O, T> correlationParent) {
 		super(
 				correlationParent.getLhs(),
+				correlationParent.getNavigablePath(),
 				correlationParent.getAttribute(),
-				null,
+				correlationParent.getExplicitAlias(),
 				SqmJoinType.INNER,
 				false,
 				correlationParent.nodeBuilder()

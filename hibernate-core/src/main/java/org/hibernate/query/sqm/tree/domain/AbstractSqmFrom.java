@@ -153,7 +153,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		SqmPath<?> resolvedPath = null;
 		ModelPartContainer modelPartContainer = null;
 		for ( SqmJoin<?, ?> sqmJoin : getSqmJoins() ) {
-			if ( sqmJoin instanceof SqmAttributeJoin<?, ?>
+			// We can only match singular joins here, as plural path parts are interpreted like sub-queries
+			if ( sqmJoin instanceof SqmSingularJoin<?, ?>
 					&& name.equals( sqmJoin.getReferencedPathSource().getPathName() ) ) {
 				final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) sqmJoin;
 				if ( attributeJoin.getOn() == null ) {

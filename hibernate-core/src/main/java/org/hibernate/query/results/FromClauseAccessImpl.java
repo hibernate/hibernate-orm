@@ -43,8 +43,8 @@ public class FromClauseAccessImpl implements FromClauseAccess {
 	}
 
 	@Override
-	public TableGroup findTableGroupOnLeaf(NavigablePath navigablePath) {
-		return findTableGroup( navigablePath );
+	public TableGroup findTableGroupOnParents(NavigablePath navigablePath) {
+		return null;
 	}
 
 	@Override

@@ -12,6 +12,7 @@ import java.util.function.Function;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.BindableType;
@@ -51,7 +52,11 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 		this.queryParameter = queryParameter;
 		this.queryParameterBindingResolver = queryParameterBindingResolver;
 
-		if ( valueMapping instanceof EntityValuedModelPart ) {
+		if ( valueMapping instanceof EntityAssociationMapping ) {
+			final EntityAssociationMapping mapping = (EntityAssociationMapping) valueMapping;
+			this.valueMapping = mapping.getForeignKeyDescriptor().getPart( mapping.getSideNature() );
+		}
+		else if ( valueMapping instanceof EntityValuedModelPart ) {
 			this.valueMapping = ( (EntityValuedModelPart) valueMapping ).getEntityMappingType().getIdentifierMapping();
 		}
 		else {

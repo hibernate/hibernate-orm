@@ -23,8 +23,9 @@ public class SqmCorrelatedCrossJoin<T> extends SqmCrossJoin<T> implements SqmCor
 
 	public SqmCorrelatedCrossJoin(SqmCrossJoin<T> correlationParent) {
 		super(
+				correlationParent.getNavigablePath(),
 				correlationParent.getReferencedPathSource(),
-				null,
+				correlationParent.getExplicitAlias(),
 				correlationParent.getRoot()
 		);
 		this.correlatedRootJoin = SqmCorrelatedRootJoin.create( correlationParent, this );

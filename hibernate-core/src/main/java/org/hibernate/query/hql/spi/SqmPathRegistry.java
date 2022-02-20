@@ -33,12 +33,12 @@ public interface SqmPathRegistry {
 	void register(SqmPath<?> sqmPath);
 
 	/**
-	 * Find a SqmFrom by its identification variable (alias).  Will search any
-	 * parent contexts as well
+	 * Find a SqmFrom by its identification variable (alias).
+	 * If the SqmFrom is found in a parent context, the correlation for the path will be returned.
 	 *
 	 * @return matching SqmFrom or {@code null}
 	 */
-	<X extends SqmFrom<?, ?>> X findFromByAlias(String identificationVariable);
+	<X extends SqmFrom<?, ?>> X findFromByAlias(String identificationVariable, boolean searchParent);
 
 	/**
 	 * Find a SqmFrom by its NavigablePath.  Will search any parent contexts as well

@@ -12,13 +12,13 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -46,22 +46,67 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 
 	public static <T> EntityValuedPathInterpretation<T> from(
 			SqmEntityValuedSimplePath<T> sqmPath,
+			MappingModelExpressible<?> inferredMapping,
 			SqmToSqlAstConverter sqlAstCreationState) {
 		final TableGroup tableGroup = sqlAstCreationState
 				.getFromClauseAccess()
 				.findTableGroup( sqmPath.getLhs().getNavigablePath() );
-
-		final EntityValuedModelPart mapping = (EntityValuedModelPart) sqlAstCreationState
+		final EntityValuedModelPart pathMapping = (EntityValuedModelPart) sqlAstCreationState
 				.getFromClauseAccess()
 				.findTableGroup( sqmPath.getLhs().getNavigablePath() )
 				.getModelPart()
 				.findSubPart( sqmPath.getReferencedPathSource().getPathName(), null );
+		final EntityValuedModelPart mapping;
+		if ( inferredMapping instanceof EntityAssociationMapping ) {
+			final EntityAssociationMapping inferredAssociation = (EntityAssociationMapping) inferredMapping;
+			if ( pathMapping instanceof EntityAssociationMapping && inferredMapping != pathMapping ) {
+				// In here, the inferred mapping and the actual path mapping are association mappings,
+				// but for different associations, so we have to check if both associations point to the same target
+				final EntityAssociationMapping pathAssociation = (EntityAssociationMapping) pathMapping;
+				final ModelPart pathTargetPart = pathAssociation.getForeignKeyDescriptor()
+						.getPart( pathAssociation.getSideNature().inverse() );
+				final ModelPart inferredTargetPart = inferredAssociation.getForeignKeyDescriptor()
+						.getPart( inferredAssociation.getSideNature().inverse() );
+				// If the inferred association and path association targets are the same, we can use the path mapping type
+				// which will render the FK of the path association
+				if ( pathTargetPart == inferredTargetPart ) {
+					mapping = pathMapping;
+				}
+				else {
+					// Otherwise, we need to use the entity mapping type to force rendering the PK
+					// for e.g. `a.assoc1 = a.assoc2` when both associations have different target join columns
+					mapping = pathMapping.getEntityMappingType();
+				}
+			}
+			else {
+				// This is the case when the inferred mapping is an association, but the path mapping is not,
+				// or the path mapping and the inferred mapping are for the same association
+				mapping = (EntityValuedModelPart) inferredMapping;
+			}
+		}
+		else {
+			mapping = pathMapping;
+		}
+		final ModelPart resultModelPart;
+		if ( mapping instanceof EntityAssociationMapping ) {
+			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) mapping;
+			final ModelPart keyTargetMatchPart = associationMapping.getKeyTargetMatchPart();
+			if ( keyTargetMatchPart instanceof ToOneAttributeMapping ) {
+				resultModelPart = ( (ToOneAttributeMapping) keyTargetMatchPart ).getKeyTargetMatchPart();
+			}
+			else {
+				resultModelPart = keyTargetMatchPart;
+			}
+		}
+		else {
+			resultModelPart = mapping.getEntityMappingType().getIdentifierMapping();
+		}
 		return from(
 				sqmPath.getNavigablePath(),
 				tableGroup,
+				resultModelPart,
 				mapping,
 				mapping,
-				false,
 				sqlAstCreationState
 		);
 	}
@@ -69,15 +114,15 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 	public static <T> EntityValuedPathInterpretation<T> from(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
+			ModelPart resultModelPart,
 			EntityValuedModelPart mapping,
 			EntityValuedModelPart treatedMapping,
-			boolean expandToAllColumns,
 			SqmToSqlAstConverter sqlAstCreationState) {
 		final SqlExpressionResolver sqlExprResolver = sqlAstCreationState.getSqlExpressionResolver();
 		final SessionFactoryImplementor sessionFactory = sqlAstCreationState.getCreationContext().getSessionFactory();
 		final Expression sqlExpression;
 
-		if ( expandToAllColumns ) {
+		if ( resultModelPart == null ) {
 			final EntityMappingType entityMappingType = mapping.getEntityMappingType();
 			final EntityIdentifierMapping identifierMapping = entityMappingType.getIdentifierMapping();
 			final EntityDiscriminatorMapping discriminatorMapping = entityMappingType.getDiscriminatorMapping();
@@ -113,19 +158,9 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			entityMappingType.forEachSelectable( selectableConsumer );
 			sqlExpression = new SqlTuple( expressions, entityMappingType );
 		}
-		else if ( mapping instanceof EntityAssociationMapping ) {
-			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) mapping;
-			final ModelPart keyTargetMatchPart = associationMapping.getKeyTargetMatchPart();
-			final ModelPart lhsPart;
-			if ( keyTargetMatchPart instanceof ToOneAttributeMapping ) {
-				lhsPart = ( (ToOneAttributeMapping) keyTargetMatchPart ).getKeyTargetMatchPart();
-			}
-			else {
-				lhsPart = keyTargetMatchPart;
-			}
-
-			if ( lhsPart instanceof BasicValuedModelPart ) {
-				final BasicValuedModelPart basicValuedModelPart = (BasicValuedModelPart) lhsPart;
+		else {
+			if ( resultModelPart instanceof BasicValuedModelPart ) {
+				final BasicValuedModelPart basicValuedModelPart = (BasicValuedModelPart) resultModelPart;
 				final TableReference tableReference = tableGroup.resolveTableReference(
 						navigablePath,
 						basicValuedModelPart.getContainingTableExpression()
@@ -140,8 +175,8 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				);
 			}
 			else {
-				final List<Expression> expressions = new ArrayList<>( lhsPart.getJdbcTypeCount() );
-				lhsPart.forEachSelectable(
+				final List<Expression> expressions = new ArrayList<>( resultModelPart.getJdbcTypeCount() );
+				resultModelPart.forEachSelectable(
 						(selectionIndex, selectableMapping) -> {
 							final TableReference tableReference = tableGroup.resolveTableReference(
 									navigablePath,
@@ -162,59 +197,9 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 							);
 						}
 				);
-				sqlExpression = new SqlTuple( expressions, lhsPart );
+				sqlExpression = new SqlTuple( expressions, resultModelPart );
 			}
 		}
-		else {
-			assert mapping instanceof EntityMappingType;
-
-			final TableGroup parentTableGroup = tableGroup;
-			final EntityMappingType entityMappingType = (EntityMappingType) mapping;
-			final EntityIdentifierMapping identifierMapping = entityMappingType.getIdentifierMapping();
-			if ( identifierMapping instanceof BasicEntityIdentifierMapping ) {
-				final BasicEntityIdentifierMapping simpleIdMapping = (BasicEntityIdentifierMapping) identifierMapping;
-
-				final TableReference tableReference = parentTableGroup.resolveTableReference(
-						navigablePath,
-						simpleIdMapping.getContainingTableExpression()
-				);
-				assert tableReference != null : "Could not resolve table-group : " + simpleIdMapping.getContainingTableExpression();
-
-				sqlExpression = sqlExprResolver.resolveSqlExpression(
-						createColumnReferenceKey( tableReference, simpleIdMapping.getSelectionExpression() ),
-						processingState -> new ColumnReference(
-								tableReference,
-								simpleIdMapping,
-								sessionFactory
-						)
-				);
-			}
-			else {
-				final List<Expression> expressions = new ArrayList<>();
-				identifierMapping.forEachSelectable(
-						(selectionIndex, selectableMapping) -> {
-							final TableReference tableReference = parentTableGroup.resolveTableReference(
-									navigablePath, selectableMapping.getContainingTableExpression() );
-
-							expressions.add(
-									sqlExprResolver.resolveSqlExpression(
-											createColumnReferenceKey(
-													tableReference,
-													selectableMapping.getSelectionExpression()
-											),
-											processingState -> new ColumnReference(
-													tableReference,
-													selectableMapping,
-													sessionFactory
-											)
-									)
-							);
-						}
-				);
-				sqlExpression = new SqlTuple( expressions, identifierMapping );
-			}
-		}
-
 		return new EntityValuedPathInterpretation<>(
 				sqlExpression,
 				navigablePath,

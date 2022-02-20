@@ -52,6 +52,15 @@ public class IsEmptyPredicateTest {
 		} );
 	}
 
+	@Test
+	public void testEmptinessPredicatesWithJoin(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			final List<Integer> ids = session.createQuery( "select p.id from Person p left join p.nicknames n where p.nicknames is not empty", Integer.class ).list();
+			assertThat( ids ).contains( personaWithSingleNicknameId, personWithMultipleNicknamesId );
+			assertThat( ids ).doesNotContain( personWithoutNicknameId );
+		} );
+	}
+
 	@BeforeEach
 	protected void prepareTestData(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {

@@ -24,8 +24,9 @@ public class SqmCorrelatedEntityJoin<T> extends SqmEntityJoin<T> implements SqmC
 
 	public SqmCorrelatedEntityJoin(SqmEntityJoin<T> correlationParent) {
 		super(
+				correlationParent.getNavigablePath(),
 				correlationParent.getReferencedPathSource(),
-				null,
+				correlationParent.getExplicitAlias(),
 				SqmJoinType.INNER,
 				correlationParent.getRoot()
 		);

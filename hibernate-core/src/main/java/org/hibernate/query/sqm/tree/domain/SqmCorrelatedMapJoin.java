@@ -26,8 +26,9 @@ public class SqmCorrelatedMapJoin<O, K, V> extends SqmMapJoin<O, K, V> implement
 	public SqmCorrelatedMapJoin(SqmMapJoin<O, K, V> correlationParent) {
 		super(
 				correlationParent.getLhs(),
+				correlationParent.getNavigablePath(),
 				correlationParent.getAttribute(),
-				null,
+				correlationParent.getExplicitAlias(),
 				SqmJoinType.INNER,
 				false,
 				correlationParent.nodeBuilder()

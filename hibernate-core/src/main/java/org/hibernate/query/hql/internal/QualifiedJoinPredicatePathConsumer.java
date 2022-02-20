@@ -13,6 +13,7 @@ import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmQuery;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
@@ -45,7 +46,7 @@ public class QualifiedJoinPredicatePathConsumer extends BasicDotIdentifierConsum
 				final SqmRoot<?> root = pathRoot.findRoot();
 				final SqmRoot<?> joinRoot = sqmJoin.findRoot();
 				if ( root != joinRoot ) {
-					// The root of a path within a query doesn't have the same root as the current join we are processing.
+					// The root of a path within a join condition doesn't have the same root as the current join we are processing.
 					// The aim of this check is to prevent uses of different "spaces" i.e. `from A a, B b join b.id = a.id` would be illegal
 					SqmCreationProcessingState processingState = getCreationState().getCurrentProcessingState();
 					// First, we need to find out if the current join is part of current processing query
@@ -56,7 +57,14 @@ public class QualifiedJoinPredicatePathConsumer extends BasicDotIdentifierConsum
 						// If the current processing query contains the root of the current join,
 						// then the root of the processing path must be a root of one of the parent queries
 						if ( fromClause != null && fromClause.getRoots().contains( joinRoot ) ) {
-							validateAsRootOnParentQueryClosure( pathRoot, root, processingState.getParentProcessingState() );
+							// It is allowed to use correlations from the same query
+							if ( !( root instanceof SqmCorrelation<?, ?> ) || !fromClause.getRoots().contains( root ) ) {
+								validateAsRootOnParentQueryClosure(
+										pathRoot,
+										root,
+										processingState.getParentProcessingState()
+								);
+							}
 							return;
 						}
 					}

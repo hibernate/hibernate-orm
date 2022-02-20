@@ -16,7 +16,7 @@ import org.hibernate.query.spi.NavigablePath;
 /**
  * @author Andrea Boriero
  */
-public class UnionTableGroup extends AbstractTableGroup implements VirtualTableGroup {
+public class UnionTableGroup extends AbstractTableGroup {
 	private final UnionTableReference tableReference;
 
 	public UnionTableGroup(

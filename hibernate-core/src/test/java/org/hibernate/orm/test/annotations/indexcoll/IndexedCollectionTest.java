@@ -869,4 +869,12 @@ public class IndexedCollectionTest {
 				}
 		);
 	}
+
+	@Test
+	public void testQueryWithKeywordAsFromAlias(SessionFactoryScope scope) {
+		// This test would fail if we didn't use the proper parsing rule for the FROM alias
+		scope.inSession(
+				s -> s.createQuery( "from Version version" ).getResultList()
+		);
+	}
 }

@@ -9,12 +9,10 @@ package org.hibernate.orm.test.jpa.criteria.valuehandlingmode.inline;
 import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.CockroachDialect;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
@@ -25,20 +23,18 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Path;
-import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Jpa(
 		annotatedClasses = {
-				NonPkAssociationEqualityPredicateTest.Customer.class,
-				NonPkAssociationEqualityPredicateTest.Order.class
+				NonPkAssociationEqualityPredicateParameterTest.Customer.class,
+				NonPkAssociationEqualityPredicateParameterTest.Order.class
 		}
-		, properties = @Setting(name = AvailableSettings.CRITERIA_VALUE_HANDLING_MODE, value = "inline")
+		, properties = @Setting(name = AvailableSettings.CRITERIA_VALUE_HANDLING_MODE, value = "bind")
 )
-public class NonPkAssociationEqualityPredicateTest {
+public class NonPkAssociationEqualityPredicateParameterTest {
 
 	@Test
 	public void testEqualityCheck(EntityManagerFactoryScope scope) {
@@ -60,17 +56,8 @@ public class NonPkAssociationEqualityPredicateTest {
 				}
 		);
 	}
-	@Test
-	public void testDifferentAssociationsEqualityCheck(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					// This fails because we compare a ToOne with non-PK to something with a EntityValuedModelPart which defaults to the PK mapping
-					entityManager.createQuery( "from Order o, Customer c where o.customer = c" ).getResultList();
-				}
-		);
-	}
 
-	@Entity(name = "Order")
+	@Entity
 	@Table(name = "ORDER_TABLE")
 	public static class Order {
 		private String id;
@@ -124,7 +111,7 @@ public class NonPkAssociationEqualityPredicateTest {
 		}
 	}
 
-	@Entity(name = "Customer")
+	@Entity
 	@Table(name = "CUSTOMER_TABLE")
 	public static class Customer {
 		private String id;

@@ -20,7 +20,7 @@ import org.hibernate.query.spi.NavigablePath;
  *
  * @author Steve Ebersole
  */
-public class MutatingTableReferenceGroupWrapper implements VirtualTableGroup {
+public class MutatingTableReferenceGroupWrapper implements TableGroup {
 	private final NavigablePath navigablePath;
 	private final ModelPartContainer modelPart;
 	private final NamedTableReference mutatingTableReference;

@@ -86,7 +86,6 @@ import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.UnknownEntityException;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
-import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.internal.ParameterCollector;
 import org.hibernate.query.sqm.internal.SqmCreationProcessingStateImpl;
@@ -1047,7 +1046,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmPath<?> visitJpaSelectObjectSyntax(HqlParser.JpaSelectObjectSyntaxContext ctx) {
 		final String alias = ctx.getChild( 2 ).getText();
-		final SqmFrom<?, ?> sqmFromByAlias = processingStateStack.getCurrent().getPathRegistry().findFromByAlias( alias );
+		final SqmFrom<?, ?> sqmFromByAlias = processingStateStack.getCurrent().getPathRegistry().findFromByAlias(
+				alias,
+				true
+		);
 		if ( sqmFromByAlias == null ) {
 			throw new SemanticException( "Unable to resolve alias [" +  alias + "] in selection [" + ctx.getText() + "]" );
 		}
@@ -1102,7 +1104,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				return new SqmAliasedNodeRef( correspondingPosition, integerDomainType, creationContext.getNodeBuilder() );
 			}
 
-			final SqmFrom<?, ?> sqmFrom = getCurrentProcessingState().getPathRegistry().findFromByAlias( identifierText );
+			final SqmFrom<?, ?> sqmFrom = getCurrentProcessingState().getPathRegistry().findFromByAlias(
+					identifierText,
+					true
+			);
 			if ( sqmFrom != null ) {
 				if ( definedCollate ) {
 					// This is syntactically disallowed
@@ -1360,6 +1365,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public String visitIdentifier(HqlParser.IdentifierContext ctx) {
+		final ParseTree child = ctx.getChild( 0 );
+		if ( child instanceof TerminalNode ) {
+			return child.getText();
+		}
+		return visitNakedIdentifier( (HqlParser.NakedIdentifierContext) child );
+	}
+
+	@Override
+	public String visitNakedIdentifier(HqlParser.NakedIdentifierContext ctx) {
 		final TerminalNode node = (TerminalNode) ctx.getChild( 0 );
 		if ( node.getSymbol().getType() == HqlParser.QUOTED_IDENTIFIER ) {
 			return QuotingHelper.unquoteIdentifier( node.getText() );
@@ -1413,7 +1427,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmRoot<?> visitEntityWithJoins(HqlParser.EntityWithJoinsContext parserSpace) {
 		final SqmRoot<?> sqmRoot = visitRootEntity( (HqlParser.RootEntityContext) parserSpace.getChild( 0 ) );
-		currentQuerySpec().getFromClause().addRoot( sqmRoot );
+		final SqmFromClause fromClause = currentQuerySpec().getFromClause();
+		// Correlations are implicitly added to the from clause
+		if ( !( sqmRoot instanceof SqmCorrelation<?, ?> ) ) {
+			fromClause.addRoot( sqmRoot );
+		}
 		final int size = parserSpace.getChildCount();
 		for ( int i = 1; i < size; i++ ) {
 			final ParseTree parseTree = parserSpace.getChild( i );
@@ -1461,12 +1479,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			// Handle the use of a correlation path in subqueries
 			if ( processingStateStack.depth() > 1 && size > 2 ) {
 				final String parentAlias = entityNameParseTreeChildren.get( 0 ).getText();
-				final AbstractSqmFrom<?, ?> correlationBasis = processingState.getParentProcessingState()
-						.getPathRegistry()
-						.findFromByAlias( parentAlias );
-				if ( correlationBasis != null ) {
-					final SqmCorrelation<?, ?> correlation = correlationBasis.createCorrelation();
-					pathRegistry.register( correlation );
+				final AbstractSqmFrom<?, ?> correlation = processingState.getPathRegistry()
+						.findFromByAlias( parentAlias, true );
+				if ( correlation instanceof SqmCorrelation<?, ?> ) {
 					final DotIdentifierConsumer dotIdentifierConsumer = new QualifiedJoinPathConsumer(
 							correlation,
 							SqmJoinType.INNER,
@@ -1487,7 +1502,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 							false,
 							true
 					);
-					return correlation.getCorrelatedRoot();
+					return ( (SqmCorrelation<?, ?>) correlation ).getCorrelatedRoot();
 				}
 				throw new SemanticException( "Could not resolve entity or correlation path '" + name + "'" );
 			}
@@ -1545,11 +1560,24 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return visitIdentifier( identifierContext );
 		}
 		else {
-			final TerminalNode node = (TerminalNode) lastChild;
-			if ( node.getSymbol().getType() == HqlParser.QUOTED_IDENTIFIER ) {
-				return QuotingHelper.unquoteIdentifier( node.getText() );
+			final HqlParser.NakedIdentifierContext identifierContext = (HqlParser.NakedIdentifierContext) lastChild;
+			// in this branch, the alias could be a reserved word ("keyword as identifier")
+			// which JPA disallows...
+			if ( getCreationOptions().useStrictJpaCompliance() ) {
+				final Token identificationVariableToken = identifierContext.getStart();
+				if ( identificationVariableToken.getType() != IDENTIFIER ) {
+					throw new StrictJpaComplianceViolation(
+							String.format(
+									Locale.ROOT,
+									"Strict JPQL compliance was violated : %s [%s]",
+									StrictJpaComplianceViolation.Type.RESERVED_WORD_USED_AS_ALIAS.description(),
+									identificationVariableToken.getText()
+							),
+							StrictJpaComplianceViolation.Type.RESERVED_WORD_USED_AS_ALIAS
+					);
+				}
 			}
-			return node.getText();
+			return visitNakedIdentifier( identifierContext );
 		}
 	}
 
@@ -1571,8 +1599,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private <T> void consumeCrossJoin(HqlParser.CrossJoinContext parserJoin, SqmRoot<T> sqmRoot) {
-		final HqlParser.RootEntityContext pathRootContext = (HqlParser.RootEntityContext) parserJoin.getChild( 2 );
-		final HqlParser.EntityNameContext entityNameContext = (HqlParser.EntityNameContext) pathRootContext.getChild( 0 );
+		final HqlParser.EntityNameContext entityNameContext = (HqlParser.EntityNameContext) parserJoin.getChild( 2 );
 		final String name = getEntityName( entityNameContext );
 
 		SqmTreeCreationLogger.LOGGER.debugf( "Handling root path - %s", name );
@@ -1584,8 +1611,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			throw new SemanticException( "Unmapped polymorphic reference cannot be used as a CROSS JOIN target" );
 		}
 		final HqlParser.VariableContext identificationVariableDefContext;
-		if ( pathRootContext.getChildCount() > 1 ) {
-			identificationVariableDefContext = (HqlParser.VariableContext) pathRootContext.getChild( 1 );
+		if ( parserJoin.getChildCount() > 3 ) {
+			identificationVariableDefContext = (HqlParser.VariableContext) parserJoin.getChild( 3 );
 		}
 		else {
 			identificationVariableDefContext = null;
@@ -3628,6 +3655,16 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		else {
 			//for the shorter legacy Hibernate syntax "field(arg)"
 			extractFieldExpression = (SqmExtractUnit<?>) ctx.getChild( 0 ).accept(this);
+//			//Prefer an existing native version if available
+//			final SqmFunctionDescriptor functionDescriptor = getFunctionDescriptor( extractFieldExpression.getUnit().name() );
+//			if ( functionDescriptor != null ) {
+//				return functionDescriptor.generateSqmExpression(
+//						expressionToExtract,
+//						null,
+//						creationContext.getQueryEngine(),
+//						creationContext.getJpaMetamodel().getTypeConfiguration()
+//				);
+//			}
 		}
 
 		return getFunctionDescriptor("extract").generateSqmExpression(

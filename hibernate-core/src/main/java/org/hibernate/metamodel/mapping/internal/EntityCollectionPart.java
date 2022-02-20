@@ -548,7 +548,9 @@ public class EntityCollectionPart
 
 	@Override
 	public ForeignKeyDescriptor.Nature getSideNature() {
-		return ForeignKeyDescriptor.Nature.TARGET;
+		return collectionDescriptor.isOneToMany()
+				? ForeignKeyDescriptor.Nature.TARGET
+				: ForeignKeyDescriptor.Nature.KEY;
 	}
 
 	@Override

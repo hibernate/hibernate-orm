@@ -14,17 +14,23 @@ import java.util.Map;
 import java.util.function.Function;
 
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.AliasCollisionException;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
+import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.select.SqmAliasedNode;
+import org.hibernate.query.sqm.tree.select.SqmSubQuery;
+
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Root;
 
 /**
  * Container for indexing needed while building an SQM tree.
@@ -117,27 +123,12 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 	@Override
 	public <X extends SqmFrom<?, ?>> X findFromByPath(NavigablePath navigablePath) {
-		final SqmFrom<?, ?> found = sqmFromByPath.get( navigablePath );
-		if ( found != null ) {
-			//noinspection unchecked
-			return (X) found;
-		}
-
-		if ( associatedProcessingState.getParentProcessingState() != null ) {
-			final X containingQueryFrom = associatedProcessingState.getParentProcessingState()
-					.getPathRegistry()
-					.findFromByPath( navigablePath );
-			if ( containingQueryFrom != null ) {
-				// todo (6.0) create a correlation?
-				return containingQueryFrom;
-			}
-		}
-
-		return null;
+		//noinspection unchecked
+		return (X) sqmFromByPath.get( navigablePath );
 	}
 
 	@Override
-	public <X extends SqmFrom<?, ?>> X findFromByAlias(String alias) {
+	public <X extends SqmFrom<?, ?>> X findFromByAlias(String alias, boolean searchParent) {
 		final String localAlias = jpaCompliance.isJpaQueryComplianceEnabled()
 				? alias.toLowerCase( Locale.getDefault() )
 				: alias;
@@ -149,8 +140,39 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 			return (X) registered;
 		}
 
-		if ( associatedProcessingState.getParentProcessingState() != null ) {
-			return associatedProcessingState.getParentProcessingState().getPathRegistry().findFromByAlias( alias );
+		SqmCreationProcessingState parentProcessingState = associatedProcessingState.getParentProcessingState();
+		if ( searchParent && parentProcessingState != null ) {
+			X parentRegistered;
+			do {
+				parentRegistered = parentProcessingState.getPathRegistry().findFromByAlias(
+						alias,
+						false
+				);
+				parentProcessingState = parentProcessingState.getParentProcessingState();
+			} while (parentProcessingState != null && parentRegistered == null);
+			if ( parentRegistered != null ) {
+				// If a parent query contains the alias, we need to create a correlation on the subquery
+				final SqmSubQuery<?> selectQuery = ( SqmSubQuery<?> ) associatedProcessingState.getProcessingQuery();
+				SqmFrom<?, ?> correlated;
+				if ( parentRegistered instanceof Root<?> ) {
+					correlated = selectQuery.correlate( (Root<?>) parentRegistered );
+				}
+				else if ( parentRegistered instanceof Join<?, ?> ) {
+					correlated = selectQuery.correlate( (Join<?, ?>) parentRegistered );
+				}
+				else if ( parentRegistered instanceof SqmCrossJoin<?> ) {
+					correlated = selectQuery.correlate( (SqmCrossJoin<?>) parentRegistered );
+				}
+				else if ( parentRegistered instanceof SqmEntityJoin<?> ) {
+					correlated = selectQuery.correlate( (SqmEntityJoin<?>) parentRegistered );
+				}
+				else {
+					throw new UnsupportedOperationException( "Can't correlate from node: " + parentRegistered );
+				}
+				register( correlated );
+				//noinspection unchecked
+				return (X) correlated;
+			}
 		}
 
 		return null;

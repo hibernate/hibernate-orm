@@ -130,7 +130,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 						.getCurrent()
 						.getPathRegistry();
 
-				final SqmFrom<?,?> pathRootByAlias = sqmPathRegistry.findFromByAlias( identifier );
+				final SqmFrom<?,?> pathRootByAlias = sqmPathRegistry.findFromByAlias( identifier, true );
 				if ( pathRootByAlias != null ) {
 					// identifier is an alias (identification variable)
 					validateAsRoot( pathRootByAlias );

@@ -7,14 +7,15 @@
 package org.hibernate.query.sqm.internal;
 
 import java.util.function.Function;
-import jakarta.persistence.metamodel.Bindable;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -25,7 +26,6 @@ import org.hibernate.metamodel.model.domain.internal.AnyMappingSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
-import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.model.domain.internal.MappedSuperclassSqmPathSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.NavigablePath;
@@ -38,6 +38,8 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.BasicType;
+
+import jakarta.persistence.metamodel.Bindable;
 
 /**
  * Helper for dealing with Hibernate's "mapping model" while processing an SQM which is defined
@@ -165,7 +167,17 @@ public class SqmMappingModelHelper {
 					sqmPath.getLhs().getReferencedPathSource().getPathName(),
 					null
 			);
-			return pluralPart.findSubPart( sqmPath.getReferencedPathSource().getPathName(), null );
+			final CollectionPart collectionPart = (CollectionPart) pluralPart.findSubPart(
+					sqmPath.getReferencedPathSource()
+							.getPathName(),
+					null
+			);
+			// For entity collection parts, we must return the entity mapping type,
+			// as that is the mapping type of the expression
+			if ( collectionPart instanceof EntityCollectionPart ) {
+				return ( (EntityCollectionPart) collectionPart ).getEntityMappingType();
+			}
+			return collectionPart;
 		}
 
 		if ( sqmPath.getLhs() == null ) {

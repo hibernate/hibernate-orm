@@ -22,8 +22,9 @@ public class SqmCorrelatedPluralPartJoin<O, T> extends SqmPluralPartJoin<O, T> i
 	public SqmCorrelatedPluralPartJoin(SqmPluralPartJoin<O, T> correlationParent) {
 		super(
 				(SqmFrom<?, O>) correlationParent.getLhs(),
+				correlationParent.getNavigablePath(),
 				correlationParent.getReferencedPathSource(),
-				null,
+				correlationParent.getExplicitAlias(),
 				SqmJoinType.INNER,
 				correlationParent.nodeBuilder()
 		);

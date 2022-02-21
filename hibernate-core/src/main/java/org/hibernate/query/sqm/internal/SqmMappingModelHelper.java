@@ -185,7 +185,14 @@ public class SqmMappingModelHelper {
 			return domainModel.findEntityDescriptor( entityDomainType.getHibernateEntityName() );
 		}
 		final TableGroup lhsTableGroup = tableGroupLocator.apply( sqmPath.getLhs().getNavigablePath() );
-		return lhsTableGroup.getModelPart().findSubPart( sqmPath.getReferencedPathSource().getPathName(), null );
+		final ModelPartContainer modelPart;
+		if ( lhsTableGroup == null ) {
+			modelPart = (ModelPartContainer) resolveSqmPath( sqmPath.getLhs(), domainModel, tableGroupLocator );
+		}
+		else {
+			modelPart = lhsTableGroup.getModelPart();
+		}
+		return modelPart.findSubPart( sqmPath.getReferencedPathSource().getPathName(), null );
 	}
 
 	public static EntityMappingType resolveExplicitTreatTarget(

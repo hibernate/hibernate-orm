@@ -4555,7 +4555,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else if ( sqmExpression instanceof SqmPath ) {
 			log.debugf( "Determining mapping-model type for SqmPath : %s ", sqmExpression );
-			prepareReusablePath( (SqmPath<?>) sqmExpression, fromClauseIndex, () -> null );
 			final MappingMetamodel domainModel = creationContext.getSessionFactory()
 					.getRuntimeMetamodels()
 					.getMappingMetamodel();
@@ -4577,40 +4576,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final SqmSelectClause selectClause = subQuery.getQuerySpec().getSelectClause();
 			if ( selectClause.getSelections().size() == 1 ) {
 				final SqmSelection<?> subQuerySelection = selectClause.getSelections().get( 0 );
+				final SqmSelectableNode<?> selectableNode = subQuerySelection.getSelectableNode();
+				if ( selectableNode instanceof SqmExpression<?> ) {
+					return determineValueMapping( (SqmExpression<?>) selectableNode, fromClauseIndex );
+				}
 				final SqmExpressible<?> selectionNodeType = subQuerySelection.getNodeType();
 				if ( selectionNodeType != null ) {
-					final SqmExpressible<?> sqmExpressible;
-					if ( selectionNodeType instanceof PluralPersistentAttribute ) {
-						sqmExpressible = ( (PluralPersistentAttribute<?,?,?>) selectionNodeType ).getElementPathSource();
-					}
-					else if ( selectionNodeType instanceof SqmPathSource<?>) {
-						final SqmPathSource<?> pathSource = (SqmPathSource<?>) selectionNodeType;
-						final CollectionPart.Nature partNature = CollectionPart.Nature.fromName(
-								pathSource.getPathName()
-						);
-						if ( partNature == null ) {
-							sqmExpressible = selectionNodeType;
-						}
-						else {
-							final SqmPath<?> sqmPath = (SqmPath<?>) subQuerySelection.getSelectableNode();
-							final NavigablePath navigablePath = sqmPath.getNavigablePath().getParent();
-							if ( navigablePath.getParent() != null ) {
-								final TableGroup parentTableGroup = fromClauseIndex.findTableGroup( navigablePath.getParent() );
-								final PluralAttributeMapping pluralPart = (PluralAttributeMapping) parentTableGroup.getModelPart()
-										.findSubPart( navigablePath.getUnaliasedLocalName(), null );
-								return pluralPart.findSubPart( pathSource.getPathName(), null );
-							}
-							return fromClauseIndex.findTableGroup( navigablePath ).getModelPart();
-						}
-					}
-					else {
-						sqmExpressible = selectionNodeType;
-					}
-
 					final MappingMetamodel domainModel = creationContext.getSessionFactory()
 							.getRuntimeMetamodels()
 							.getMappingMetamodel();
-					final MappingModelExpressible<?> expressible = domainModel.resolveMappingExpressible(sqmExpressible, this::findTableGroupByPath );
+					final MappingModelExpressible<?> expressible = domainModel.resolveMappingExpressible(selectionNodeType, this::findTableGroupByPath );
 
 					if ( expressible != null ) {
 						return expressible;

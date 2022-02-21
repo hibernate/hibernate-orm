@@ -9,7 +9,6 @@ package org.hibernate.orm.test.mapping.collections.mapcompelem;
 import java.util.List;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -61,7 +60,6 @@ public class MapCompositeElementTest {
 
 	@SuppressWarnings( {"unchecked"})
 	@Test
-	@NotImplementedYet( strict = false )
 	public void testQueryMapCompositeElement(SessionFactoryScope scope) {
 		scope.inTransaction( (s) -> {
 			Part top = new Part("top", "The top part");

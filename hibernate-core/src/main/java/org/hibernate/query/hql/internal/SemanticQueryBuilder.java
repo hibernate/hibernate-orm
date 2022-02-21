@@ -3871,8 +3871,19 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		);
 		final SqmSelectClause selectClause = new SqmSelectClause( false, 1, creationContext.getNodeBuilder() );
 		final SqmFromClause fromClause = new SqmFromClause( 1 );
-		final SqmCorrelation<?, ?> correlation = ( (AbstractSqmFrom<?, ?>) pluralAttributePath.getLhs() ).createCorrelation();
-		final SqmAttributeJoin<?, ?> collectionJoin = correlation.join( pluralAttributePath.getNavigablePath().getUnaliasedLocalName() );
+		SqmPath<?> lhs = pluralAttributePath.getLhs();
+		final List<String> implicitJoinPaths = new ArrayList<>();
+		while ( !( lhs instanceof AbstractSqmFrom<?, ?> ) ) {
+			implicitJoinPaths.add( lhs.getNavigablePath().getUnaliasedLocalName() );
+			lhs = lhs.getLhs();
+		}
+		final AbstractSqmFrom<?, ?> correlationBase = (AbstractSqmFrom<?, ?>) lhs;
+		final SqmCorrelation<?, ?> correlation = correlationBase.createCorrelation();
+		SqmFrom<?, ?> joinBase = correlation;
+		for ( int i = implicitJoinPaths.size() - 1; i >= 0; i-- ) {
+			joinBase = joinBase.join( implicitJoinPaths.get( i ) );
+		}
+		final SqmAttributeJoin<?, ?> collectionJoin = joinBase.join( pluralAttributePath.getNavigablePath().getUnaliasedLocalName() );
 		fromClause.addRoot( correlation.getCorrelatedRoot() );
 		if ( collectionReferenceCtx == null ) {
 			final SqmLiteral<Integer> literal = new SqmLiteral<>(

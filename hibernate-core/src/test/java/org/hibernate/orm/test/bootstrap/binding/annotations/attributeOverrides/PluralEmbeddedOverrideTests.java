@@ -92,7 +92,6 @@ public class PluralEmbeddedOverrideTests {
 	}
 
 	@Test
-	@NotImplementedYet(strict = false,reason = "Some problem with NavigablePath creation and/or TableGroup registration under those paths")
 	public void testOperations(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -102,7 +101,7 @@ public class PluralEmbeddedOverrideTests {
 					assertThat( loaded, sameInstance( queried ) );
 
 					assertThat( loaded.content.type, is( "notes" ) );
-					assertThat( loaded.content.type, is( "Something worth noting" ) );
+					assertThat( loaded.content.value, is( "Something worth noting" ) );
 
 					assertThat( loaded.attributes, notNullValue() );
 					assertThat( loaded.attributes.size(), is( 2 ) );

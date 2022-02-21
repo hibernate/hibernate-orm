@@ -12,12 +12,12 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.orm.test.util.SchemaUtil;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.AttributeOverride;
@@ -51,7 +51,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class TablePerClassOverrideTests {
 
 	@Test
-	@NotImplementedYet(strict = false, reason = "@AttributeOverrides not applied for Table per class")
+	@Disabled("@AttributeOverrides is not supported for inheritance. See CoreMessageLogger#unsupportedAttributeOverrideWithEntityInheritance")
 	public void testSchema(SessionFactoryScope scope) {
 		MetadataImplementor metadata = scope.getMetadataImplementor();
 		assertTrue( SchemaUtil.isColumnPresent( "CUSTOMER", "STREET", metadata ) );

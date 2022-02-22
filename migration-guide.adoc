@@ -84,6 +84,127 @@ to define custom generators to use for identifier generation.
 
 // todo (6.0 - @Steve - need to add content about this to the User Guide
 
+[[id-sequence-generation]]
+== Id Sequence generation
+
+For a sequence id generation strategy Hibernate 6.0 does not create anymore a single sequence named `hibernate_sequence` but it creates one sequence for each entity id.
+
+When using `@GeneratedValue` without specifying a  `generator` value the default increment size also changed from 1 to 50.
+
+These changes require that code using a `@GeneratedValue` with a `GenerationType.SEQUENCE` or `GenerationType.AUTO` strategy with no `generator` value needs to be modified as follows:
+```
+@Id
+@GeneratedValue
+```
+and
+```
+@Id
+@GeneratedValue(stratefy = "GenerationType.AUTO")
+```
+need to be changed to
+```
+@Id
+@GeneratedValue(generator = "id_generator")
+@SequenceGenerator(
+	name = "id_generator",
+	sequenceName = "hibernate_sequence",
+	allocationSize = 1
+)
+```
+while
+```
+@Id
+@GeneratedValue(strategy = GenerationType.SEQUENCE)
+```
+needs to be changed to
+```
+@Id
+@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "id_generator")
+@SequenceGenerator(
+	name = "id_generator",
+	sequenceName = "hibernate_sequence",
+	allocationSize = 1
+)
+```
+To avoid repeating the `@SequenceGenerator` for each entity a `@org.hibernate.annotations.GenericGenerator` can be defined in a `package-info.java` file
+```
+@org.hibernate.annotations.GenericGenerator(
+    name = "id_generator",
+	strategy = "enhanced-sequence",
+	parameters = {
+		@org.hibernate.annotations.Parameter(
+			name = "sequence_name",
+			value = "hibernate_sequence"
+		),
+		@org.hibernate.annotations.Parameter(
+			name = "increment_size",
+			value = "1"
+			)
+})
+```
+
+In case the mapping is not using annotations but an `orm.xml` file then you can define a
+```
+<sequence-generator
+    name="hibernate_sequence_generator"
+    sequence-name="hibernate_sequence"
+    allocation-size="1"/>
+```
+and change all
+```
+<id name=...>
+    <generated-value strategy="AUTO" />
+</id>
+```
+and
+```
+<id ...>
+<generated-value strategy="SEQUENCE" />
+</id>
+```
+respectively into
+```
+ <id name=...>
+    <generated-value strategy="AUTO" generator="hibernate_sequence_generator"/>
+</id
+```
+and
+```
+ <id ...>
+    <generated-value strategy="SEQUENCE" generator="hibernate_sequence_generator"/>
+</id
+```
+
+For `hbm.xml` mapping all the
+```
+<id ...>
+    <generator class="native"/>
+</id>
+```
+and
+```
+<id ...>
+    <generator class="sequence"/>
+</id>
+```
+have to be changed respectively into
+```
+<id name="id">
+    <generator class="hilo">
+        <param name="native">hibernate_sequence</param>
+        <param name="increment_size">1</param>
+    </generator>
+</id>
+```
+and
+```
+<id name="id">
+    <generator class="hilo">
+        <param name="sequence">hibernate_sequence</param>
+        <param name="increment_size">1</param>
+    </generator>
+</id>
+```
 
 [[type]]
 == Type system

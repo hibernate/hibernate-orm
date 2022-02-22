@@ -14,470 +14,557 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.jta.TestingJtaBootstrap;
+import org.hibernate.testing.jta.JtaAwareConnectionProviderImpl;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SettingProvider;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.transaction.Transaction;
+import jakarta.transaction.TransactionManager;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * @author Gavin King
  */
-@SkipForDialect(SQLServerDialect.class)
-public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected String getBaseForMappings() {
-		return "";
-	}
+@SkipForDialect(dialectClass = SQLServerDialect.class, matchSubTypes = true)
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/tm/Item.hbm.xml",
+		concurrencyStrategy = "transactional"
+)
+@SessionFactory(
+		generateStatistics = true
+)
+@ServiceRegistry(
+		settings = {
+				@Setting(name = AvailableSettings.AUTO_CLOSE_SESSION, value = "true"),
+				@Setting(name = AvailableSettings.FLUSH_BEFORE_COMPLETION, value = "true"),
+				@Setting(name = AvailableSettings.USE_QUERY_CACHE, value = "true"),
+				@Setting(name = AvailableSettings.CACHE_REGION_PREFIX, value = ""),
+				@Setting(name = "javax.persistence.transactionType", value = "JTA"),
 
-	@Override
-	public String[] getMappings() {
-		return new String[] { "org/hibernate/orm/test/tm/Item.hbm.xml" };
-	}
-
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		TestingJtaBootstrap.prepare( settings );
-		//settings.put( AvailableSettings.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
-		settings.put( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, JtaTransactionCoordinatorBuilderImpl.class.getName() );
-		settings.put( AvailableSettings.AUTO_CLOSE_SESSION, "true" );
-		settings.put( AvailableSettings.FLUSH_BEFORE_COMPLETION, "true" );
-		settings.put( AvailableSettings.CONNECTION_HANDLING, PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT.toString() );
-		settings.put( AvailableSettings.GENERATE_STATISTICS, "true" );
-		settings.put( AvailableSettings.USE_QUERY_CACHE, "true" );
-		settings.put( AvailableSettings.CACHE_REGION_PREFIX, "" );
-	}
-
-	@Override
-	public String getCacheConcurrencyStrategy() {
-		return "transactional";
-	}
-
-	@Test
-	public void testConcurrent() throws Exception {
-		sessionFactory().getStatistics().clear();
-		assertEquals( 0, sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount() );
-		assertEquals( 0, sessionFactory().getStatistics().getUpdateTimestampsCachePutCount() );
-		assertEquals( 0, sessionFactory().getStatistics().getUpdateTimestampsCacheMissCount() );
-        assertNotNull( sessionFactory().getMappingMetamodel().getEntityDescriptor("Item").getCacheAccessStrategy() );
-		assertEquals( 0, sessionFactory().getStatistics().getEntityLoadCount() );
-
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		Session s = openSession();
-		Map foo = new HashMap();
-		foo.put( "name", "Foo" );
-		foo.put( "description", "a big foo" );
-		s.persist( "Item", foo );
-		Map bar = new HashMap();
-		bar.put( "name", "Bar" );
-		bar.put( "description", "a small bar" );
-		s.persist( "Item", bar );
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
-		assertEquals(0, sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount());
-		assertEquals(2, sessionFactory().getStatistics().getUpdateTimestampsCachePutCount()); // One preinvalidate & one invalidate
-		assertEquals(0, sessionFactory().getStatistics().getUpdateTimestampsCacheMissCount());
-
-		sessionFactory().getCache().evictEntityData( "Item" );
-
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		Session s1 = openSession();
-		foo = ( Map ) s1.get( "Item", "Foo" );
-		//foo.put("description", "a big red foo");
-		//s1.flush();
-		Transaction tx = TestingJtaPlatformImpl.INSTANCE.getTransactionManager().suspend();
-
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		Session s2 = openSession();
-		foo = ( Map ) s2.get( "Item", "Foo" );
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
-
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().resume( tx );
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
-
-		sessionFactory().getCache().evictEntityData( "Item" );
-
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		s1 = openSession();
-		s1.createQuery( "from Item" ).list();
-		//foo.put("description", "a big red foo");
-		//s1.flush();
-		tx = TestingJtaPlatformImpl.INSTANCE.getTransactionManager().suspend();
-
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		s2 = openSession();
-		s2.createQuery( "from Item" ).list();
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
-
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().resume( tx );
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
-
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		s2 = openSession();
-		s2.createQuery( "from Item" ).list();
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
-
-		assertEquals( 7, sessionFactory().getStatistics().getEntityLoadCount() );
-		assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
-		assertEquals( 3, sessionFactory().getStatistics().getQueryExecutionCount() );
-		assertEquals( 0, sessionFactory().getStatistics().getQueryCacheHitCount() );
-		assertEquals( 0, sessionFactory().getStatistics().getQueryCacheMissCount() );
-		assertEquals( 0, sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount() );
-		assertEquals( 2, sessionFactory().getStatistics().getUpdateTimestampsCachePutCount() );
-
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		s = openSession();
-		s.createQuery( "delete from Item" ).executeUpdate();
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
-	}
-
-	@Test
-	@NotImplementedYet( reason = "Second-level cache statistics" )
-	@FailureExpected( jiraKey = "n/a" )
-	public void testConcurrentCachedQueries() throws Exception {
-		sessionFactory().getStatistics().clear();
-		cleanupCache();
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		Session s = openSession();
-		Map foo = new HashMap();
-		foo.put( "name", "Foo" );
-		foo.put( "description", "a big foo" );
-		s.persist( "Item", foo );
-		Map bar = new HashMap();
-		bar.put( "name", "Bar" );
-		bar.put( "description", "a small bar" );
-		s.persist( "Item", bar );
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
-
-		synchronized ( this ) {
-			wait( 1000 );
+		},
+		settingProviders = {
+				@SettingProvider(
+						settingName = AvailableSettings.JTA_PLATFORM,
+						provider = CMTTest.JtaPlatfomProvider.class
+				),
+				@SettingProvider(
+						settingName = AvailableSettings.CONNECTION_PROVIDER,
+						provider = CMTTest.ConnectionProvider.class
+				),
+				@SettingProvider(
+						settingName = AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY,
+						provider = CMTTest.TransactionCoordinatorStrategyProvider.class
+				),
+				@SettingProvider(
+						settingName = AvailableSettings.CONNECTION_HANDLING,
+						provider = CMTTest.ConnectionHandlingProvider.class
+				)
 		}
 
-		sessionFactory().getStatistics().clear();
+)
+public class CMTTest {
 
-		sessionFactory().getCache().evictEntityData( "Item" );
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session ->
+						session.createQuery( "delete from Item" ).executeUpdate()
+		);
+	}
 
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		Session s4 = openSession();
-		Transaction tx4 = TestingJtaPlatformImpl.INSTANCE.getTransactionManager().suspend();
+	@Test
+	public void testConcurrent(SessionFactoryScope scope) throws Exception {
+		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
+		sessionFactory.getStatistics().clear();
+		assertEquals( 0, sessionFactory.getStatistics().getUpdateTimestampsCacheHitCount() );
+		assertEquals( 0, sessionFactory.getStatistics().getUpdateTimestampsCachePutCount() );
+		assertEquals( 0, sessionFactory.getStatistics().getUpdateTimestampsCacheMissCount() );
+		assertNotNull( sessionFactory.getMappingMetamodel().getEntityDescriptor( "Item" ).getCacheAccessStrategy() );
+		assertEquals( 0, sessionFactory.getStatistics().getEntityLoadCount() );
 
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		Session s1 = openSession();
-		List r1 = s1.createQuery( "from Item order by description" ).setCacheable( true ).list();
-		assertEquals( r1.size(), 2 );
-		Transaction tx1 = TestingJtaPlatformImpl.INSTANCE.getTransactionManager().suspend();
+		final TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
+		try {
+			transactionManager.begin();
+			Session s = sessionFactory.openSession();
+			Map foo = new HashMap();
+			foo.put( "name", "Foo" );
+			foo.put( "description", "a big foo" );
+			s.persist( "Item", foo );
+			Map bar = new HashMap();
+			bar.put( "name", "Bar" );
+			bar.put( "description", "a small bar" );
+			s.persist( "Item", bar );
+			transactionManager.commit();
+			assertEquals( 0, sessionFactory.getStatistics().getUpdateTimestampsCacheHitCount() );
+			assertEquals(
+					2,
+					sessionFactory.getStatistics().getUpdateTimestampsCachePutCount()
+			); // One preinvalidate & one invalidate
+			assertEquals( 0, sessionFactory.getStatistics().getUpdateTimestampsCacheMissCount() );
 
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		Session s2 = openSession();
-		List r2 = s2.createQuery( "from Item order by description" ).setCacheable( true ).list();
-		assertEquals( r2.size(), 2 );
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+			sessionFactory.getCache().evictEntityData( "Item" );
 
-		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheHitCount(), 2 );
-		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheMissCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getEntityLoadCount(), 2 );
-		assertEquals( sessionFactory().getStatistics().getEntityFetchCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 1 );
-		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 1 );
-		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 1 );
-		assertEquals( sessionFactory().getStatistics().getQueryCacheMissCount(), 1 );
-		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount(), 1 );
-		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCachePutCount(), 0 );
+			transactionManager.begin();
+			Session s1 = sessionFactory.openSession();
+			foo = (Map) s1.get( "Item", "Foo" );
+			//foo.put("description", "a big red foo");
+			//s1.flush();
+			Transaction tx = transactionManager.suspend();
 
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().resume( tx1 );
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+			transactionManager.begin();
+			Session s2 = sessionFactory.openSession();
+			foo = (Map) s2.get( "Item", "Foo" );
+			transactionManager.commit();
 
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		Session s3 = openSession();
-		s3.createQuery( "from Item order by description" ).setCacheable( true ).list();
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+			transactionManager.resume( tx );
+			transactionManager.commit();
 
-		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheHitCount(), 4 );
-		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheMissCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getEntityLoadCount(), 2 );
-		assertEquals( sessionFactory().getStatistics().getEntityFetchCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 1 );
-		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 1 );
-		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 2 );
-		assertEquals( sessionFactory().getStatistics().getQueryCacheMissCount(), 1 );
-		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount(), 2 );
-		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCachePutCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCacheMissCount(), 0 );
+			sessionFactory.getCache().evictEntityData( "Item" );
 
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().resume( tx4 );
-		List r4 = s4.createQuery( "from Item order by description" ).setCacheable( true ).list();
-		assertEquals( r4.size(), 2 );
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+			transactionManager.begin();
+			s1 = sessionFactory.openSession();
+			s1.createQuery( "from Item" ).list();
+			//foo.put("description", "a big red foo");
+			//s1.flush();
+			tx = transactionManager.suspend();
 
-		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheHitCount(), 6 );
-		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheMissCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getEntityLoadCount(), 2 );
-		assertEquals( sessionFactory().getStatistics().getEntityFetchCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 1 );
-		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 1 );
-		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 3 );
-		assertEquals( sessionFactory().getStatistics().getQueryCacheMissCount(), 1 );
-		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount(), 3 );
-		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCachePutCount(), 0 );
+			transactionManager.begin();
+			s2 = sessionFactory.openSession();
+			s2.createQuery( "from Item" ).list();
+			transactionManager.commit();
 
+			transactionManager.resume( tx );
+			transactionManager.commit();
 
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		s = openSession();
-		s.createQuery( "delete from Item" ).executeUpdate();
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+			transactionManager.begin();
+			s2 = sessionFactory.openSession();
+			s2.createQuery( "from Item" ).list();
+			transactionManager.commit();
+
+			assertEquals( 7, sessionFactory.getStatistics().getEntityLoadCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getEntityFetchCount() );
+			assertEquals( 3, sessionFactory.getStatistics().getQueryExecutionCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getQueryCacheHitCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getQueryCacheMissCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getUpdateTimestampsCacheHitCount() );
+			assertEquals( 2, sessionFactory.getStatistics().getUpdateTimestampsCachePutCount() );
+		}
+		finally {
+			final Transaction transaction = transactionManager.getTransaction();
+			if ( transaction != null && JtaStatusHelper.isActive( transaction.getStatus() ) ) {
+				transactionManager.rollback();
+			}
+		}
+	}
+
+	@Test
+	public void testConcurrentCachedQueries(SessionFactoryScope scope) throws Exception {
+		final TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
+		try {
+			final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
+			sessionFactory.getStatistics().clear();
+			transactionManager.begin();
+			Session s = sessionFactory.openSession();
+			Map foo = new HashMap();
+			foo.put( "name", "Foo" );
+			foo.put( "description", "a big foo" );
+			s.persist( "Item", foo );
+			Map bar = new HashMap();
+			bar.put( "name", "Bar" );
+			bar.put( "description", "a small bar" );
+			s.persist( "Item", bar );
+			transactionManager.commit();
+
+			synchronized (this) {
+				wait( 1000 );
+			}
+
+			sessionFactory.getStatistics().clear();
+
+			sessionFactory.getCache().evictEntityData( "Item" );
+
+			transactionManager.begin();
+			Session s4 = sessionFactory.openSession();
+			Transaction tx4 = transactionManager.suspend();
+
+			transactionManager.begin();
+			Session s1 = sessionFactory.openSession();
+			List r1 = s1.createQuery( "from Item order by description" ).setCacheable( true ).list();
+			assertEquals( r1.size(), 2 );
+			Transaction tx1 = transactionManager.suspend();
+
+			transactionManager.begin();
+			Session s2 = sessionFactory.openSession();
+			List r2 = s2.createQuery( "from Item order by description" ).setCacheable( true ).list();
+			assertEquals( r2.size(), 2 );
+			transactionManager.commit();
+
+//		assertEquals( 2, sessionFactory().getStatistics().getSecondLevelCacheHitCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheMissCount() );
+			assertEquals( 2, sessionFactory.getStatistics().getEntityLoadCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getEntityFetchCount() );
+			assertEquals( 1, sessionFactory.getStatistics().getQueryExecutionCount() );
+			assertEquals( 1, sessionFactory.getStatistics().getQueryCachePutCount() );
+			assertEquals( 1, sessionFactory.getStatistics().getQueryCacheHitCount() );
+			assertEquals( 1, sessionFactory.getStatistics().getQueryCacheMissCount() );
+			assertEquals( 1, sessionFactory.getStatistics().getUpdateTimestampsCacheHitCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getUpdateTimestampsCachePutCount() );
+
+			transactionManager.resume( tx1 );
+			transactionManager.commit();
+
+			transactionManager.begin();
+			Session s3 = sessionFactory.openSession();
+			s3.createQuery( "from Item order by description" ).setCacheable( true ).list();
+			transactionManager.commit();
+
+//		assertEquals( 4, sessionFactory().getStatistics().getSecondLevelCacheHitCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheMissCount() );
+			assertEquals( 2, sessionFactory.getStatistics().getEntityLoadCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getEntityFetchCount() );
+			assertEquals( 1, sessionFactory.getStatistics().getQueryExecutionCount() );
+			assertEquals( 1, sessionFactory.getStatistics().getQueryCachePutCount() );
+			assertEquals( 2, sessionFactory.getStatistics().getQueryCacheHitCount() );
+			assertEquals( 1, sessionFactory.getStatistics().getQueryCacheMissCount() );
+			assertEquals( 2, sessionFactory.getStatistics().getUpdateTimestampsCacheHitCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getUpdateTimestampsCachePutCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getUpdateTimestampsCacheMissCount() );
+
+			transactionManager.resume( tx4 );
+			List r4 = s4.createQuery( "from Item order by description" ).setCacheable( true ).list();
+			assertEquals( r4.size(), 2 );
+			transactionManager.commit();
+
+//		assertEquals( 6, sessionFactory().getStatistics().getSecondLevelCacheHitCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheMissCount() );
+			assertEquals( 2, sessionFactory.getStatistics().getEntityLoadCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getEntityFetchCount() );
+			assertEquals( 1, sessionFactory.getStatistics().getQueryExecutionCount() );
+			assertEquals( 1, sessionFactory.getStatistics().getQueryCachePutCount() );
+			assertEquals( 3, sessionFactory.getStatistics().getQueryCacheHitCount() );
+			assertEquals( 1, sessionFactory.getStatistics().getQueryCacheMissCount() );
+			assertEquals( 3, sessionFactory.getStatistics().getUpdateTimestampsCacheHitCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getUpdateTimestampsCachePutCount() );
+		}
+		finally {
+			final Transaction transaction = transactionManager.getTransaction();
+			if ( transaction != null && JtaStatusHelper.isActive( transaction.getStatus() ) ) {
+				transactionManager.rollback();
+			}
+		}
 	}
 
 	@Test
 	@RequiresDialectFeature(
-			value = DialectChecks.DoesReadCommittedNotCauseWritersToBlockReadersCheck.class,
+			feature = DialectFeatureChecks.DoesReadCommittedNotCauseWritersToBlockReadersCheck.class,
 			comment = "write locks block readers"
 	)
-	@NotImplementedYet( reason = "Second-level cache statistics" )
-	@FailureExpected( jiraKey = "n/a" )
-	public void testConcurrentCachedDirtyQueries() throws Exception {
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		Session s = openSession();
-		Map foo = new HashMap();
-		foo.put( "name", "Foo" );
-		foo.put( "description", "a big foo" );
-		s.persist( "Item", foo );
-		Map bar = new HashMap();
-		bar.put( "name", "Bar" );
-		bar.put( "description", "a small bar" );
-		s.persist( "Item", bar );
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+	public void testConcurrentCachedDirtyQueries(SessionFactoryScope scope) throws Exception {
+		final TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
+		try {
+			transactionManager.begin();
+			final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
+			Session s = sessionFactory.openSession();
+			Map foo = new HashMap();
+			foo.put( "name", "Foo" );
+			foo.put( "description", "a big foo" );
+			s.persist( "Item", foo );
+			Map bar = new HashMap();
+			bar.put( "name", "Bar" );
+			bar.put( "description", "a small bar" );
+			s.persist( "Item", bar );
+			transactionManager.commit();
 
-		synchronized ( this ) {
-			wait( 1000 );
+			synchronized (this) {
+				wait( 1000 );
+			}
+
+			sessionFactory.getStatistics().clear();
+			sessionFactory.getCache().evictAllRegions();  // we need a clean 2L cache here.
+
+			// open a TX and suspend it
+			transactionManager.begin();
+			Session s4 = sessionFactory.openSession();
+			Transaction tx4 = transactionManager.suspend();
+
+			// open a new TX and execute a query, this would fill the query cache.
+			transactionManager.begin();
+			Session s1 = sessionFactory.openSession();
+			List r1 = s1.createQuery( "from Item order by description" ).setCacheable( true ).list();
+			assertEquals( r1.size(), 2 );
+			foo = (Map) r1.get( 0 );
+			// update data and make query cache stale, but TX is suspended
+			foo.put( "description", "a big red foo" );
+			s1.flush();
+			Transaction tx1 = transactionManager.suspend();
+
+			// open a new TX and run query again
+			// this TX is committed after query
+			transactionManager.begin();
+			Session s2 = sessionFactory.openSession();
+			List r2 = s2.createQuery( "from Item order by description" ).setCacheable( true ).list();
+			assertEquals( r2.size(), 2 );
+
+			transactionManager.commit();
+
+			assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheMissCount() );
+			assertEquals( 4, sessionFactory.getStatistics().getEntityLoadCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getEntityFetchCount() );
+			assertEquals( 2, sessionFactory.getStatistics().getQueryExecutionCount() );
+			assertEquals( 2, sessionFactory.getStatistics().getQueryCachePutCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getQueryCacheHitCount() );
+			assertEquals( 2, sessionFactory.getStatistics().getQueryCacheMissCount() );
+
+			// updateTimestampsCache put happens at two places
+			// 1. {@link org.hibernate.engine.spi.ActionQueue#registerCleanupActions} calls preinvalidate
+			// 2. {@link org.hibernate.engine.spi.ActionQueue.AfterTransactionCompletionProcessQueue#afterTransactionCompletion} calls invalidate
+			// but since the TX which the update action happened is not committed yet, so there should be only 1 updateTimestamps put.
+			assertEquals( 1, sessionFactory.getStatistics().getUpdateTimestampsCachePutCount() );
+
+			// updateTimestampsCache hit only happens when the query cache data's timestamp is newer
+			// than the timestamp of when update happens
+			// since there is only 1 update action
+			assertEquals( 1, sessionFactory.getStatistics().getUpdateTimestampsCacheHitCount() );
+
+			transactionManager.resume( tx1 );
+			transactionManager.commit();
+
+			// update action's TX committed, so, invalidate is called, put new timestamp into UpdateTimestampsCache
+			assertEquals( 2, sessionFactory.getStatistics().getUpdateTimestampsCachePutCount() );
+			// but no more query cache lookup here, so it should still 1
+			assertEquals( 1, sessionFactory.getStatistics().getUpdateTimestampsCacheHitCount() );
+
+			transactionManager.begin();
+			Session s3 = sessionFactory.openSession();
+			s3.createQuery( "from Item order by description" ).setCacheable( true ).list();
+			transactionManager.commit();
+
+			assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheMissCount() );
+			assertEquals( 6, sessionFactory.getStatistics().getEntityLoadCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getEntityFetchCount() );
+			assertEquals( 3, sessionFactory.getStatistics().getQueryExecutionCount() );
+			assertEquals( 3, sessionFactory.getStatistics().getQueryCachePutCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getQueryCacheHitCount() );
+			assertEquals( 3, sessionFactory.getStatistics().getQueryCacheMissCount() );
+			// a new query cache hit and one more update timestamps cache hit, so should be 2
+			assertEquals( 2, sessionFactory.getStatistics().getUpdateTimestampsCacheHitCount() );
+
+			transactionManager.resume( tx4 );
+			List r4 = s4.createQuery( "from Item order by description" ).setCacheable( true ).list();
+			assertEquals( r4.size(), 2 );
+			transactionManager.commit();
+
+//		assertEquals( 2, sessionFactory().getStatistics().getSecondLevelCacheHitCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheMissCount() );
+			assertEquals( 6, sessionFactory.getStatistics().getEntityLoadCount() );
+			assertEquals( 0, sessionFactory.getStatistics().getEntityFetchCount() );
+			assertEquals( 3, sessionFactory.getStatistics().getQueryExecutionCount() );
+			assertEquals( 3, sessionFactory.getStatistics().getQueryCachePutCount() );
+			assertEquals( 1, sessionFactory.getStatistics().getQueryCacheHitCount() );
+			assertEquals( 3, sessionFactory.getStatistics().getQueryCacheMissCount() );
+			assertEquals( 3, sessionFactory.getStatistics().getUpdateTimestampsCacheHitCount() );
 		}
-
-		sessionFactory().getStatistics().clear();
-		cleanupCache();  // we need a clean 2L cache here.
-
-		// open a TX and suspend it
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		Session s4 = openSession();
-		Transaction tx4 = TestingJtaPlatformImpl.INSTANCE.getTransactionManager().suspend();
-
-		// open a new TX and execute a query, this would fill the query cache.
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		Session s1 = openSession();
-		List r1 = s1.createQuery( "from Item order by description" ).setCacheable( true ).list();
-		assertEquals( r1.size(), 2 );
-		foo = ( Map ) r1.get( 0 );
-		// update data and make query cache stale, but TX is suspended
-		foo.put( "description", "a big red foo" );
-		s1.flush();
-		Transaction tx1 = TestingJtaPlatformImpl.INSTANCE.getTransactionManager().suspend();
-
-		// open a new TX and run query again
-		// this TX is committed after query
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		Session s2 = openSession();
-		List r2 = s2.createQuery( "from Item order by description" ).setCacheable( true ).list();
-		assertEquals( r2.size(), 2 );
-
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
-
-		assertEquals( 0, sessionFactory().getStatistics().getSecondLevelCacheHitCount() );
-		assertEquals( 0, sessionFactory().getStatistics().getSecondLevelCacheMissCount() );
-		assertEquals( 4, sessionFactory().getStatistics().getEntityLoadCount() );
-		assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
-		assertEquals( 2, sessionFactory().getStatistics().getQueryExecutionCount() );
-		assertEquals( 2, sessionFactory().getStatistics().getQueryCachePutCount() );
-		assertEquals( 0, sessionFactory().getStatistics().getQueryCacheHitCount() );
-		assertEquals( 2, sessionFactory().getStatistics().getQueryCacheMissCount() );
-
-		// updateTimestampsCache put happens at two places
-		// 1. {@link org.hibernate.engine.spi.ActionQueue#registerCleanupActions} calls preinvalidate
-		// 2. {@link org.hibernate.engine.spi.ActionQueue.AfterTransactionCompletionProcessQueue#afterTransactionCompletion} calls invalidate
-		// but since the TX which the update action happened is not committed yet, so there should be only 1 updateTimestamps put.
-		assertEquals( 1, sessionFactory().getStatistics().getUpdateTimestampsCachePutCount() );
-
-		// updateTimestampsCache hit only happens when the query cache data's timestamp is newer
-		// than the timestamp of when update happens
-		// since there is only 1 update action
-		assertEquals( 1, sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount() );
-
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().resume( tx1 );
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
-
-		// update action's TX committed, so, invalidate is called, put new timestamp into UpdateTimestampsCache
-		assertEquals( 2, sessionFactory().getStatistics().getUpdateTimestampsCachePutCount() );
-		// but no more query cache lookup here, so it should still 1
-		assertEquals( 1, sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount() );
-
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		Session s3 = openSession();
-		s3.createQuery( "from Item order by description" ).setCacheable( true ).list();
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
-
-		assertEquals( 0, sessionFactory().getStatistics().getSecondLevelCacheHitCount() );
-		assertEquals( 0, sessionFactory().getStatistics().getSecondLevelCacheMissCount() );
-		assertEquals( 6, sessionFactory().getStatistics().getEntityLoadCount() );
-		assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
-		assertEquals( 3, sessionFactory().getStatistics().getQueryExecutionCount() );
-		assertEquals( 3, sessionFactory().getStatistics().getQueryCachePutCount() );
-		assertEquals( 0, sessionFactory().getStatistics().getQueryCacheHitCount() );
-		assertEquals( 3, sessionFactory().getStatistics().getQueryCacheMissCount() );
-		// a new query cache hit and one more update timestamps cache hit, so should be 2
-		assertEquals( 2, sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount() );
-
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().resume( tx4 );
-		List r4 = s4.createQuery( "from Item order by description" ).setCacheable( true ).list();
-		assertEquals( r4.size(), 2 );
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
-
-		assertEquals( 2, sessionFactory().getStatistics().getSecondLevelCacheHitCount() );
-		assertEquals( 0, sessionFactory().getStatistics().getSecondLevelCacheMissCount() );
-		assertEquals( 6, sessionFactory().getStatistics().getEntityLoadCount() );
-		assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
-		assertEquals( 3, sessionFactory().getStatistics().getQueryExecutionCount() );
-		assertEquals( 3, sessionFactory().getStatistics().getQueryCachePutCount() );
-		assertEquals( 1, sessionFactory().getStatistics().getQueryCacheHitCount() );
-		assertEquals( 3, sessionFactory().getStatistics().getQueryCacheMissCount() );
-		assertEquals( 3, sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount() );
-
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		s = openSession();
-		s.createQuery( "delete from Item" ).executeUpdate();
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+		finally {
+			final Transaction transaction = transactionManager.getTransaction();
+			if ( transaction != null && JtaStatusHelper.isActive( transaction.getStatus() ) ) {
+				transactionManager.rollback();
+			}
+		}
 	}
 
 	@Test
-	public void testCMT() throws Exception {
-		sessionFactory().getStatistics().clear();
+	public void testCMT(SessionFactoryScope scope) throws Exception {
+		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
+		sessionFactory.getStatistics().clear();
 
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		Session s = openSession();
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
-		assertFalse( s.isOpen() );
+		final TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 
-		assertEquals( sessionFactory().getStatistics().getFlushCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getEntityInsertCount(), 0 );
+		try {
+			transactionManager.begin();
+			Session s = sessionFactory.openSession();
+			transactionManager.commit();
+			assertFalse( s.isOpen() );
 
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		s = openSession();
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
-		assertFalse( s.isOpen() );
+			assertEquals( sessionFactory.getStatistics().getFlushCount(), 0 );
+			assertEquals( sessionFactory.getStatistics().getEntityInsertCount(), 0 );
 
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		s = openSession();
-		Map item = new HashMap();
-		item.put( "name", "The Item" );
-		item.put( "description", "The only item we have" );
-		s.persist( "Item", item );
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
-		assertFalse( s.isOpen() );
-		assertEquals( sessionFactory().getStatistics().getFlushCount(), 1 );
-		assertEquals( sessionFactory().getStatistics().getEntityInsertCount(), 1 );
+			transactionManager.begin();
+			s = sessionFactory.openSession();
+			transactionManager.rollback();
+			assertFalse( s.isOpen() );
 
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		s = openSession();
-		item = ( Map ) s.createQuery( "from Item" ).uniqueResult();
-		assertNotNull( item );
-		s.delete( item );
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
-		assertFalse( s.isOpen() );
+			transactionManager.begin();
+			s = sessionFactory.openSession();
+			Map item = new HashMap();
+			item.put( "name", "The Item" );
+			item.put( "description", "The only item we have" );
+			s.persist( "Item", item );
+			transactionManager.commit();
+			assertFalse( s.isOpen() );
+			assertEquals( sessionFactory.getStatistics().getFlushCount(), 1 );
+			assertEquals( sessionFactory.getStatistics().getEntityInsertCount(), 1 );
 
-		assertEquals( sessionFactory().getStatistics().getTransactionCount(), 4 );
-		assertEquals( sessionFactory().getStatistics().getSuccessfulTransactionCount(), 3 );
-		assertEquals( sessionFactory().getStatistics().getEntityDeleteCount(), 1 );
-		assertEquals( sessionFactory().getStatistics().getEntityInsertCount(), 1 );
-		assertEquals( sessionFactory().getStatistics().getSessionOpenCount(), 4 );
-		assertEquals( sessionFactory().getStatistics().getSessionCloseCount(), 4 );
-		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 1 );
-		assertEquals( sessionFactory().getStatistics().getFlushCount(), 2 );
+			transactionManager.begin();
+			s = sessionFactory.openSession();
+			item = (Map) s.createQuery( "from Item" ).uniqueResult();
+			assertNotNull( item );
+			s.delete( item );
+			transactionManager.commit();
+			assertFalse( s.isOpen() );
 
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		s = openSession();
-		s.createQuery( "delete from Item" ).executeUpdate();
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+			assertEquals( sessionFactory.getStatistics().getTransactionCount(), 4 );
+			assertEquals( sessionFactory.getStatistics().getSuccessfulTransactionCount(), 3 );
+			assertEquals( sessionFactory.getStatistics().getEntityDeleteCount(), 1 );
+			assertEquals( sessionFactory.getStatistics().getEntityInsertCount(), 1 );
+			assertEquals( sessionFactory.getStatistics().getSessionOpenCount(), 4 );
+			assertEquals( sessionFactory.getStatistics().getSessionCloseCount(), 4 );
+			assertEquals( sessionFactory.getStatistics().getQueryExecutionCount(), 1 );
+			assertEquals( sessionFactory.getStatistics().getFlushCount(), 2 );
+		}
+		finally {
+			final Transaction transaction = transactionManager.getTransaction();
+			if ( transaction != null && JtaStatusHelper.isActive( transaction.getStatus() ) ) {
+				transactionManager.rollback();
+			}
+		}
 	}
 
 	@Test
-	public void testCurrentSession() throws Exception {
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		Session s = sessionFactory().getCurrentSession();
-		Session s2 = sessionFactory().getCurrentSession();
-		assertSame( s, s2 );
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
-		assertFalse( s.isOpen() );
+	public void testCurrentSession(SessionFactoryScope scope) throws Exception {
+		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
+
+		final TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
+		try {
+			transactionManager.begin();
+			Session s = sessionFactory.getCurrentSession();
+			Session s2 = sessionFactory.getCurrentSession();
+			assertSame( s, s2 );
+			transactionManager.commit();
+			assertFalse( s.isOpen() );
+		}
+		finally {
+			final Transaction transaction = transactionManager.getTransaction();
+			if ( transaction != null && JtaStatusHelper.isActive( transaction.getStatus() ) ) {
+				transactionManager.rollback();
+			}
+		}
 
 		// TODO : would be nice to automate-test that the SF internal map actually gets cleaned up
 		//      i verified that is does currently in my debugger...
 	}
 
 	@Test
-	public void testCurrentSessionWithScroll() throws Exception {
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		Session s = sessionFactory().getCurrentSession();
-		Map item1 = new HashMap();
-		item1.put( "name", "Item - 1" );
-		item1.put( "description", "The first item" );
-		s.persist( "Item", item1 );
+	public void testCurrentSessionWithScroll(SessionFactoryScope scope) throws Exception {
+		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 
-		Map item2 = new HashMap();
-		item2.put( "name", "Item - 2" );
-		item2.put( "description", "The second item" );
-		s.persist( "Item", item2 );
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+		final TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
+		try {
+			transactionManager.begin();
+			Session s = sessionFactory.getCurrentSession();
+			Map item1 = new HashMap();
+			item1.put( "name", "Item - 1" );
+			item1.put( "description", "The first item" );
+			s.persist( "Item", item1 );
 
-		// First, test partially scrolling the result with out closing
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		s = sessionFactory().getCurrentSession();
-		ScrollableResults results = s.createQuery( "from Item" ).scroll();
-		results.next();
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+			Map item2 = new HashMap();
+			item2.put( "name", "Item - 2" );
+			item2.put( "description", "The second item" );
+			s.persist( "Item", item2 );
+			transactionManager.commit();
 
-		// Next, test partially scrolling the result with closing
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		s = sessionFactory().getCurrentSession();
-		results = s.createQuery( "from Item" ).scroll();
-		results.next();
-		results.close();
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+			// First, test partially scrolling the result with out closing
+			transactionManager.begin();
+			s = sessionFactory.getCurrentSession();
+			ScrollableResults results = s.createQuery( "from Item" ).scroll();
+			results.next();
+			transactionManager.commit();
 
-		// Next, scroll the entire result (w/o closing)
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		s = sessionFactory().getCurrentSession();
-		results = s.createQuery( "from Item" ).scroll();
-		while ( results.next() ) {
-			// do nothing
+			// Next, test partially scrolling the result with closing
+			transactionManager.begin();
+			s = sessionFactory.getCurrentSession();
+			results = s.createQuery( "from Item" ).scroll();
+			results.next();
+			results.close();
+			transactionManager.commit();
+
+			// Next, scroll the entire result (w/o closing)
+			transactionManager.begin();
+			s = sessionFactory.getCurrentSession();
+			results = s.createQuery( "from Item" ).scroll();
+			while ( results.next() ) {
+				// do nothing
+			}
+			transactionManager.commit();
+
+			// Next, scroll the entire result (closing)
+			transactionManager.begin();
+			s = sessionFactory.getCurrentSession();
+			results = s.createQuery( "from Item" ).scroll();
+			while ( results.next() ) {
+				// do nothing
+			}
+			results.close();
+			transactionManager.commit();
 		}
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
-
-		// Next, scroll the entire result (closing)
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		s = sessionFactory().getCurrentSession();
-		results = s.createQuery( "from Item" ).scroll();
-		while ( results.next() ) {
-			// do nothing
+		finally {
+			final Transaction transaction = transactionManager.getTransaction();
+			if ( transaction != null && JtaStatusHelper.isActive( transaction.getStatus() ) ) {
+				transactionManager.rollback();
+			}
 		}
-		results.close();
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
-
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		s = sessionFactory().getCurrentSession();
-		s.createQuery( "delete from Item" ).executeUpdate();
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 	}
 
-	protected boolean rebuildSessionFactoryOnError() {
-		return false;
+	public static class JtaPlatfomProvider implements SettingProvider.Provider<Class> {
+		@Override
+		public Class getSetting() {
+			return TestingJtaPlatformImpl.class;
+		}
+	}
+
+	public static class ConnectionProvider implements SettingProvider.Provider<String> {
+		@Override
+		public String getSetting() {
+			return JtaAwareConnectionProviderImpl.class.getName();
+		}
+	}
+
+	public static class TransactionCoordinatorStrategyProvider implements SettingProvider.Provider<String> {
+		@Override
+		public String getSetting() {
+			return JtaTransactionCoordinatorBuilderImpl.class.getName();
+		}
+	}
+
+	public static class ConnectionHandlingProvider implements SettingProvider.Provider<String> {
+		@Override
+		public String getSetting() {
+			return PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT.toString();
+		}
 	}
 
 }

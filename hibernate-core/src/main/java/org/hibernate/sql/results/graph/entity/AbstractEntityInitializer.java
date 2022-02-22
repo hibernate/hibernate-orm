@@ -879,7 +879,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			);
 		}
 		if ( statistics.isStatisticsEnabled() ) {
-			statistics.loadEntity( concreteDescriptor.getEntityName() );
+			if ( !rowProcessingState.isQueryCacheHit() ) {
+				statistics.loadEntity( concreteDescriptor.getEntityName() );
+			}
 		}
 	}
 

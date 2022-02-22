@@ -12,7 +12,6 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.Test;
 

@@ -27,6 +27,15 @@ public abstract class AbstractSingleColumnStandardBasicType<T>
 		super( jdbcType, javaType );
 	}
 
+	public AbstractSingleColumnStandardBasicType(
+			JdbcType jdbcType,
+			JavaType<T> javaType,
+			String sqlType,
+			Integer lengthOrPrecision,
+			Integer scale) {
+		super( jdbcType, javaType, sqlType, lengthOrPrecision, scale );
+	}
+
 	@Override
 	public final void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {

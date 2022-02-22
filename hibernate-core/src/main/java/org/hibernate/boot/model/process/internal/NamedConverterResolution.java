@@ -7,12 +7,10 @@
 package org.hibernate.boot.model.process.internal;
 
 import java.util.function.Function;
-import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
-import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
@@ -40,6 +38,9 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 			Function<TypeConfiguration, JdbcType> explicitStdAccess,
 			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
 			JdbcTypeIndicators sqlTypeIndicators,
+			String columnDefinition,
+			Integer lengthOrPrecision,
+			Integer scale,
 			JpaAttributeConverterCreationContext converterCreationContext,
 			MetadataBuildingContext context) {
 		return fromInternal(
@@ -48,6 +49,9 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 				explicitMutabilityPlanAccess,
 				converter( converterCreationContext, converterDescriptor ),
 				sqlTypeIndicators,
+				columnDefinition,
+				lengthOrPrecision,
+				scale,
 				context
 		);
 	}
@@ -58,6 +62,9 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 			Function<TypeConfiguration, JdbcType> explicitStdAccess,
 			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
 			JdbcTypeIndicators sqlTypeIndicators,
+			String columnDefinition,
+			Integer lengthOrPrecision,
+			Integer scale,
 			JpaAttributeConverterCreationContext converterCreationContext,
 			MetadataBuildingContext context) {
 		assert name.startsWith( ConverterDescriptor.TYPE_NAME_PREFIX );
@@ -76,6 +83,9 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 				explicitMutabilityPlanAccess,
 				converter( converterCreationContext, converterDescriptor ),
 				sqlTypeIndicators,
+				columnDefinition,
+				lengthOrPrecision,
+				scale,
 				context
 		);
 	}
@@ -93,6 +103,9 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
 			JpaAttributeConverter<T,?> converter,
 			JdbcTypeIndicators sqlTypeIndicators,
+			String columnDefinition,
+			Integer lengthOrPrecision,
+			Integer scale,
 			MetadataBuildingContext context) {
 		final TypeConfiguration typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
 
@@ -136,6 +149,9 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 				jdbcType,
 				converter,
 				mutabilityPlan,
+				columnDefinition,
+				lengthOrPrecision,
+				scale,
 				context.getBootstrapContext().getTypeConfiguration()
 		);
 	}
@@ -156,8 +172,11 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 			JavaType<J> domainJtd,
 			JavaType<?> relationalJtd,
 			JdbcType jdbcType,
-			JpaAttributeConverter<J,?> valueConverter,
+			JpaAttributeConverter<J, ?> valueConverter,
 			MutabilityPlan<J> mutabilityPlan,
+			String columnDefinition,
+			Integer lengthOrPrecision,
+			Integer scale,
 			TypeConfiguration typeConfiguration) {
 		assert domainJtd != null;
 		this.domainJtd = domainJtd;
@@ -177,40 +196,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 		this.jdbcMapping = typeConfiguration.getBasicTypeRegistry().resolve(
 				relationalJtd,
 				jdbcType
-		);
-//		this.jdbcMapping = new JdbcMapping() {
-//			private final ValueExtractor extractor = relationalStd.getExtractor( relationalJtd );
-//			private final ValueBinder binder = relationalStd.getBinder( relationalJtd );
-//
-//			@Override
-//			public JavaType getJavaType() {
-//				return relationalJtd;
-//			}
-//
-//			@Override
-//			public JdbcType getJdbcType() {
-//				return relationalStd;
-//			}
-//
-//			@Override
-//			public ValueExtractor getJdbcValueExtractor() {
-//				return extractor;
-//			}
-//
-//			@Override
-//			public ValueBinder getJdbcValueBinder() {
-//				return binder;
-//			}
-//		};
-
-//		this.jdbcMapping = new ConverterJdbcMappingImpl(
-//				domainJtd,
-//				relationalJtd,
-//				relationalStd,
-//				valueConverter,
-//				mutabilityPlan,
-//				typeConfiguration
-//		);
+		).withSqlType( columnDefinition, lengthOrPrecision, scale );
 
 		this.legacyResolvedType = new AttributeConverterTypeAdapter<>(
 				ConverterDescriptor.TYPE_NAME_PREFIX

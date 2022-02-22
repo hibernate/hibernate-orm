@@ -1713,11 +1713,7 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	public void aggregates(
-			Dialect dialect,
-			SqlAstNodeRenderingMode inferenceArgumentRenderingMode,
-			String concatOperator,
-			String concatArgumentCastType) {
+	public void aggregates(Dialect dialect, SqlAstNodeRenderingMode inferenceArgumentRenderingMode) {
 		functionRegistry.namedAggregateDescriptorBuilder( "max" )
 				.setArgumentRenderingMode( inferenceArgumentRenderingMode )
 				.setExactArgumentCount( 1 )
@@ -1751,8 +1747,7 @@ public class CommonFunctionFactory {
 						dialect,
 						typeConfiguration,
 						inferenceArgumentRenderingMode,
-						concatOperator,
-						concatArgumentCastType
+						"||"
 				)
 		);
 	}

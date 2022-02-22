@@ -33,6 +33,26 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	 */
 	String[] getRegistrationKeys();
 
+	default BasicType<T> withSqlType(String sqlType, Integer lengthOrPrecision, Integer scale) {
+		return this;
+	}
+
+	default String getSqlType() {
+		return null;
+	}
+
+	default Integer getLength() {
+		return null;
+	}
+
+	default Integer getPrecision() {
+		return null;
+	}
+
+	default Integer getScale() {
+		return null;
+	}
+
 	@Override
 	default MappingType getMappedType() {
 		return this;

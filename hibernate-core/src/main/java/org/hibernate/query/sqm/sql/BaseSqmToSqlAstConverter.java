@@ -440,6 +440,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	);
 	private final Stack<List<QueryTransformer>> queryTransformers = new StandardStack<>();
 	private boolean inTypeInference;
+	private boolean inImpliedResultTypeInference;
 	private Supplier<MappingModelExpressible<?>> functionImpliedResultTypeAccess;
 
 	private SqmByUnit appliedByUnit;
@@ -4084,12 +4085,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public MappingModelExpressible<?> resolveFunctionImpliedReturnType() {
-		if ( inTypeInference || functionImpliedResultTypeAccess == null ) {
+		if ( inImpliedResultTypeInference || functionImpliedResultTypeAccess == null ) {
 			return null;
 		}
-		inTypeInference = true;
+		inImpliedResultTypeInference = true;
 		final MappingModelExpressible<?> inferredType = functionImpliedResultTypeAccess.get();
-		inTypeInference = false;
+		inImpliedResultTypeInference = false;
 		return inferredType;
 	}
 
@@ -4591,7 +4592,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return basicType( Object.class );
 		}
 		else if ( paramType instanceof MappingModelExpressible<?> ) {
-			return (MappingModelExpressible<?>) paramType;
+			final MappingModelExpressible<?> paramModelType = (MappingModelExpressible<?>) paramType;
+			final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
+			// Prefer the model part type instead of the bind type if possible as the model part type contains size information
+			if ( inferredValueMapping instanceof ModelPart ) {
+				final JdbcMapping paramJdbcMapping = paramModelType.getJdbcMappings().get( 0 );
+				final JdbcMapping inferredJdbcMapping = inferredValueMapping.getJdbcMappings().get( 0 );
+				// If the bind type has a different JDBC type, we prefer that
+				if ( paramJdbcMapping.getJdbcType() == inferredJdbcMapping.getJdbcType() ) {
+					return inferredValueMapping;
+				}
+			}
+			return paramModelType;
 		}
 		else if ( sqmParameter.getAnticipatedType() == null ) {
 			// this should indicate the condition that the user query did not define an

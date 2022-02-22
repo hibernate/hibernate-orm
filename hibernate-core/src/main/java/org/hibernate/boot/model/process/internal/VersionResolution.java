@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model.process.internal;
 
+import java.lang.reflect.Type;
 import java.util.function.Function;
 import jakarta.persistence.TemporalType;
 
@@ -35,11 +36,14 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	public static <E> VersionResolution<E> from(
-			Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess,
+			Function<TypeConfiguration, Type> implicitJavaTypeAccess,
 			Function<TypeConfiguration, BasicJavaType> explicitJtdAccess,
 			Function<TypeConfiguration, JdbcType> explicitStdAccess,
 			TimeZoneStorageType timeZoneStorageType,
 			TypeConfiguration typeConfiguration,
+			String columnDefinition,
+			Integer lengthOrPrecision,
+			Integer scale,
 			@SuppressWarnings("unused") MetadataBuildingContext context) {
 
 		// todo (6.0) : add support for Dialect-specific interpretation?
@@ -76,7 +80,8 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 				}
 		);
 
-		final BasicType<?> basicType = typeConfiguration.getBasicTypeRegistry().resolve( jtd, recommendedJdbcType );
+		final BasicType<?> basicType = typeConfiguration.getBasicTypeRegistry().resolve( jtd, recommendedJdbcType )
+				.withSqlType( columnDefinition, lengthOrPrecision, scale );
 		final BasicType legacyType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( jtd.getJavaType() );
 
 		assert legacyType.getJdbcType().equals( recommendedJdbcType );

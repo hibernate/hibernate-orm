@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 import jakarta.persistence.criteria.Expression;
 
 import org.hibernate.annotations.Remove;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaExpression;
@@ -21,6 +22,7 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
+import org.hibernate.type.BasicType;
 
 import static java.util.Arrays.asList;
 
@@ -107,8 +109,17 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	SqmExpression<T> copy(SqmCopyContext context);
 
 	default <X> SqmExpression<X> castAs(DomainType<X> type) {
-		if ( getNodeType() == type ) {
+		final SqmExpressible<T> nodeType = getNodeType();
+		if ( nodeType == type ) {
 			return (SqmExpression<X>) this;
+		}
+		if ( nodeType instanceof BasicType<?> && type instanceof BasicType<?> ) {
+			final JdbcMapping nodeJdbcMapping = ( (BasicType<T>) nodeType ).getJdbcMapping();
+			final JdbcMapping typeJdbcMapping = ( (BasicType<X>) type ).getJdbcMapping();
+			// Don't actually cast if the jdbc types are the same
+			if ( nodeJdbcMapping.getJdbcType() == typeJdbcMapping.getJdbcType() ) {
+				return (SqmExpression<X>) this;
+			}
 		}
 		final QueryEngine queryEngine = nodeBuilder().getQueryEngine();
 		final SqmCastTarget<T> target = new SqmCastTarget<>( (ReturnableType<T>) type, nodeBuilder() );

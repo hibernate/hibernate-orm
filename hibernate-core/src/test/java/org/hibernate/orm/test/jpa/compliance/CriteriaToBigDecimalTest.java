@@ -73,6 +73,34 @@ public class CriteriaToBigDecimalTest {
 		);
 	}
 
+	@Test
+	public void testToBigDecimal2(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+
+					final CriteriaQuery<BigDecimal> query = criteriaBuilder.createQuery( BigDecimal.class );
+
+					final Root<Person> person = query.from( Person.class );
+
+					final Path<BigDecimal> ageAttribute = person.get( "age" );
+
+					final Expression<BigDecimal> prod = criteriaBuilder.prod(
+							ageAttribute,
+							new BigDecimal( "5.501" )
+					);
+
+					query.select( criteriaBuilder.toBigDecimal( prod ) );
+
+					query.where( criteriaBuilder.equal( ageAttribute, 20 ) );
+
+					BigDecimal result = entityManager.createQuery( query ).getSingleResult();
+
+					assertEquals( new BigDecimal( "110.02" ).stripTrailingZeros(), result.stripTrailingZeros() );
+				}
+		);
+	}
+
 	@Entity(name = "Person")
 	public static class Person {
 		@Id

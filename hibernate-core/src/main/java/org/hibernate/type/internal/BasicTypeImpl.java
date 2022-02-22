@@ -11,6 +11,7 @@ import java.util.Locale;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.AdjustableBasicType;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
@@ -25,15 +26,35 @@ public class BasicTypeImpl<J> extends AbstractSingleColumnStandardBasicType<J> i
 
 	private final String name;
 
-	public BasicTypeImpl(JavaType<J> jtd, JdbcType std) {
-		super( std, jtd );
+	public BasicTypeImpl(JavaType<J> javaType, JdbcType jdbcType) {
+		this( javaType, jdbcType, null, null, null );
+	}
+
+	public BasicTypeImpl(
+			JavaType<J> javaType,
+			JdbcType jdbcType,
+			String sqlType,
+			Integer lengthOrPrecision,
+			Integer scale) {
+		super( jdbcType, javaType, sqlType, lengthOrPrecision, scale );
 		name = String.format(
 				Locale.ROOT,
 				"%s@%s(%s,%s)",
 				EXTERNALIZED_PREFIX,
 				++count,
-				jtd.getJavaTypeClass().getName(),
-				std.getDefaultSqlTypeCode()
+				javaType.getJavaTypeClass().getName(),
+				jdbcType.getDefaultSqlTypeCode()
+		);
+	}
+
+	@Override
+	public BasicType<J> withSqlType(String sqlType, Integer lengthOrPrecision, Integer scale) {
+		return lengthOrPrecision == null && scale == null ? this : new BasicTypeImpl<>(
+				getJavaTypeDescriptor(),
+				getJdbcType(),
+				sqlType,
+				lengthOrPrecision,
+				scale
 		);
 	}
 

@@ -61,6 +61,7 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLe
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -69,13 +70,22 @@ import jakarta.persistence.TemporalType;
 
 import static org.hibernate.query.sqm.TemporalUnit.SECOND;
 import static org.hibernate.type.SqlTypes.ARRAY;
+import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.DECIMAL;
 import static org.hibernate.type.SqlTypes.DOUBLE;
 import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
+import static org.hibernate.type.SqlTypes.LONGNVARCHAR;
+import static org.hibernate.type.SqlTypes.LONGVARBINARY;
+import static org.hibernate.type.SqlTypes.LONGVARCHAR;
+import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NUMERIC;
+import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.VARBINARY;
+import static org.hibernate.type.SqlTypes.VARCHAR;
 
 /**
  * A {@linkplain Dialect SQL dialect} for H2.
@@ -188,6 +198,28 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public String getUnboundedTypeName(JdbcType jdbcType, JavaType<?> javaType) {
+		switch ( jdbcType.getDefaultSqlTypeCode() ) {
+			case CHAR:
+			case NCHAR:
+				return "char";
+			case VARCHAR:
+			case NVARCHAR:
+			case LONGVARCHAR:
+			case LONGNVARCHAR:
+			case LONG32VARCHAR:
+			case LONG32NVARCHAR:
+				return "varchar";
+			case BINARY:
+			case VARBINARY:
+			case LONGVARBINARY:
+			case LONG32VARBINARY:
+				return "varbinary";
+		}
+		return super.getUnboundedTypeName( jdbcType, javaType );
+	}
+
+	@Override
 	protected List<Integer> getSupportedJdbcTypeCodes() {
 		List<Integer> typeCodes = new ArrayList<>( super.getSupportedJdbcTypeCodes() );
 		typeCodes.add(ARRAY);
@@ -226,7 +258,7 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 
 		// H2 needs an actual argument type for aggregates like SUM, AVG, MIN, MAX to determine the result type
-		functionFactory.aggregates( this, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER, "||", null );
+		functionFactory.aggregates( this, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
 		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 

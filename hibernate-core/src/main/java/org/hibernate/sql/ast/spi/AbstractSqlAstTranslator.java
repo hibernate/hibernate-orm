@@ -3574,10 +3574,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 			final LiteralAsParameter<Object> jdbcParameter = new LiteralAsParameter<>( literal );
 			if ( castParameter ) {
-				final List<SqlAstNode> arguments = new ArrayList<>( 2 );
-				arguments.add( jdbcParameter );
-				arguments.add( new CastTarget( jdbcMapping ) );
-				castFunction().render( this, arguments, this );
+				renderCasted( jdbcParameter );
 			}
 			else {
 				appendSql( PARAM_MARKER );
@@ -4235,14 +4232,19 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitCastTarget(CastTarget castTarget) {
-		appendSql(
-				getDialect().getCastTypeName(
-						(SqlExpressible) castTarget.getExpressionType(),
-						castTarget.getLength(),
-						castTarget.getPrecision(),
-						castTarget.getScale()
-				)
-		);
+		if ( castTarget.getSqlType() != null ) {
+			appendSql( castTarget.getSqlType() );
+		}
+		else {
+			appendSql(
+					getDialect().getCastTypeName(
+							(SqlExpressible) castTarget.getExpressionType(),
+							castTarget.getLength(),
+							castTarget.getPrecision(),
+							castTarget.getScale()
+					)
+			);
+		}
 	}
 
 	@Override
@@ -4274,10 +4276,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitParameter(JdbcParameter jdbcParameter) {
 		switch ( parameterRenderingMode ) {
 			case NO_PLAIN_PARAMETER:
-				final List<SqlAstNode> arguments = new ArrayList<>( 2 );
-				arguments.add( jdbcParameter );
-				arguments.add( new CastTarget( jdbcParameter.getExpressionType().getJdbcMappings().get( 0 ) ) );
-				castFunction().render( this, arguments, this );
+				renderCasted( jdbcParameter );
 				break;
 			case INLINE_PARAMETERS:
 			case INLINE_ALL_PARAMETERS:

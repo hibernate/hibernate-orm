@@ -10,25 +10,46 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.type.BasicType;
 
 /**
  * @author Gavin King
  */
 public class CastTarget implements Expression, SqlAstNode {
 	private final JdbcMapping type;
+	private final String sqlType;
 	private final Long length;
 	private final Integer precision;
 	private final Integer scale;
 
 	public CastTarget(JdbcMapping type) {
-		this( type, null, null, null );
+		this(
+				type,
+				type instanceof BasicType<?> ? ( (BasicType<?>) type ).getSqlType() : null,
+				type instanceof BasicType<?> ? asLong( ( (BasicType<?>) type ).getLength() ) : null,
+				type instanceof BasicType<?> ? ( (BasicType<?>) type ).getPrecision() : null,
+				type instanceof BasicType<?> ? ( (BasicType<?>) type ).getScale() : null
+		);
 	}
 
 	public CastTarget(JdbcMapping type, Long length, Integer precision, Integer scale) {
+		this( type, null, length, precision, scale );
+	}
+
+	public CastTarget(JdbcMapping type, String sqlType, Long length, Integer precision, Integer scale) {
 		this.type = type;
+		this.sqlType = sqlType;
 		this.length = length;
 		this.precision = precision;
 		this.scale = scale;
+	}
+
+	private static Long asLong(Integer length) {
+		return length == null ? null : Long.valueOf( length );
+	}
+
+	public String getSqlType() {
+		return sqlType;
 	}
 
 	public Long getLength() {

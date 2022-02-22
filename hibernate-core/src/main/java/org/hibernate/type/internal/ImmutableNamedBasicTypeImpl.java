@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.internal;
 
+import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -21,6 +22,28 @@ public class ImmutableNamedBasicTypeImpl<J> extends NamedBasicTypeImpl<J> {
 			JdbcType std,
 			String name) {
 		super( jtd, std, name );
+	}
+
+	public ImmutableNamedBasicTypeImpl(
+			JavaType<J> javaType,
+			JdbcType jdbcType,
+			String sqlType,
+			Integer lengthOrPrecision,
+			Integer scale,
+			String name) {
+		super( javaType, jdbcType, sqlType, lengthOrPrecision, scale, name );
+	}
+
+	@Override
+	public BasicType<J> withSqlType(String sqlType, Integer lengthOrPrecision, Integer scale) {
+		return lengthOrPrecision == null && scale == null ? this : new ImmutableNamedBasicTypeImpl<>(
+				getJavaTypeDescriptor(),
+				getJdbcType(),
+				sqlType,
+				lengthOrPrecision,
+				scale,
+				getName()
+		);
 	}
 
 	@Override

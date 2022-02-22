@@ -98,6 +98,21 @@ public class MimerSQLDialect extends Dialect {
 //	}
 
 	@Override
+	public int getMaxVarbinaryLength() {
+		return 15000;
+	}
+
+	@Override
+	public int getMaxVarcharLength() {
+		return 15000;
+	}
+
+	@Override
+	public int getMaxNVarcharLength() {
+		return 5000;
+	}
+
+	@Override
 	public DatabaseVersion getVersion() {
 		return ZERO_VERSION;
 	}

@@ -44,14 +44,49 @@ public abstract class AbstractStandardBasicType<T>
 	private final int[] sqlTypes;
 	private final ValueBinder<T> jdbcValueBinder;
 	private final ValueExtractor<T> jdbcValueExtractor;
+	private final String sqlType;
+	private final Integer lengthOrPrecision;
+	private final Integer scale;
 
 	public AbstractStandardBasicType(JdbcType jdbcType, JavaType<T> javaType) {
+		this( jdbcType, javaType, null, null, null );
+	}
+
+	public AbstractStandardBasicType(
+			JdbcType jdbcType,
+			JavaType<T> javaType,
+			String sqlType,
+			Integer lengthOrPrecision,
+			Integer scale) {
 		this.jdbcType = jdbcType;
 		this.sqlTypes = new int[] { jdbcType.getDefaultSqlTypeCode() };
 		this.javaType = javaType;
 
 		this.jdbcValueBinder = jdbcType.getBinder( javaType );
 		this.jdbcValueExtractor = jdbcType.getExtractor( javaType );
+		this.sqlType = sqlType;
+		this.lengthOrPrecision = lengthOrPrecision;
+		this.scale = scale;
+	}
+
+	@Override
+	public String getSqlType() {
+		return sqlType;
+	}
+
+	@Override
+	public Integer getLength() {
+		return scale == null ? lengthOrPrecision : null;
+	}
+
+	@Override
+	public Integer getPrecision() {
+		return scale == null ? null: lengthOrPrecision;
+	}
+
+	@Override
+	public Integer getScale() {
+		return scale;
 	}
 
 	@Override

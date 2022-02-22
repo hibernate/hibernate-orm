@@ -38,8 +38,8 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 	private final QueryParameterImplementor<?> queryParameter;
 	private final MappingModelExpressible<?> valueMapping;
 	private final Function<QueryParameterImplementor<?>, QueryParameterBinding<?>> queryParameterBindingResolver;
-
-	private final Expression resolvedExpression;
+	private final List<JdbcParameter> jdbcParameters;
+	private Expression resolvedExpression;
 
 	public SqmParameterInterpretation(
 			SqmParameter<?> sqmParameter,
@@ -61,7 +61,7 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 		assert jdbcParameters != null;
 		assert jdbcParameters.size() > 0;
 
-		this.resolvedExpression = determineResolvedExpression( jdbcParameters, this.valueMapping );
+		this.jdbcParameters = jdbcParameters;
 	}
 
 	private Expression determineResolvedExpression(List<JdbcParameter> jdbcParameters, MappingModelExpressible<?> valueMapping) {
@@ -75,12 +75,16 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 	}
 
 	public Expression getResolvedExpression() {
+		// We need to defer the resolution because the JdbcParameter might be replaced in BaseSqmToSqlAstConverter#replaceJdbcParametersType
+		if ( resolvedExpression == null ) {
+			return this.resolvedExpression = determineResolvedExpression( jdbcParameters, this.valueMapping );
+		}
 		return resolvedExpression;
 	}
 
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
-		resolvedExpression.accept( sqlTreeWalker );
+		getResolvedExpression().accept( sqlTreeWalker );
 	}
 
 	@Override
@@ -92,6 +96,7 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 	public DomainResult<?> createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		final Expression resolvedExpression = getResolvedExpression();
 		if ( resolvedExpression instanceof SqlTuple ) {
 			throw new SemanticException( "Composite query parameter cannot be used in select" );
 		}
@@ -122,6 +127,7 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 
 	@Override
 	public SqlTuple getSqlTuple() {
+		final Expression resolvedExpression = getResolvedExpression();
 		return resolvedExpression instanceof SqlTuple
 				? (SqlTuple) resolvedExpression
 				: null;
@@ -133,6 +139,7 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 	}
 
 	public SqlSelection resolveSqlSelection(DomainResultCreationState creationState) {
+		final Expression resolvedExpression = getResolvedExpression();
 		if ( resolvedExpression instanceof SqlTuple ) {
 			throw new SemanticException( "Composite query parameter cannot be used in select" );
 		}

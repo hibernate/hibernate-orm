@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -122,6 +124,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tool.schema.spi.DelayedDropAction;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -1078,7 +1081,24 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		@SuppressWarnings("unchecked")
 		Class<? extends T> c = (Class<? extends T>) clazz;
-		return resolveParameterBindType( c );
+		final BindableType<? extends T> bindableType = resolveParameterBindType( c );
+		if ( bindableType instanceof BasicType<?> ) {
+			// We have to determine the size of the value to be able to cast to a proper type if casts are needed
+			Integer lengthOrPrecision = null;
+			Integer scale = null;
+			if ( bindValue instanceof BigInteger ) {
+				lengthOrPrecision = bindValue.toString().length() - ( ( (BigInteger) bindValue ).signum() < 0 ? 1 : 0 );
+				scale = 0;
+			}
+			else if ( bindValue instanceof BigDecimal ) {
+				final BigDecimal bigDecimal = (BigDecimal) bindValue;
+				lengthOrPrecision = bigDecimal.precision();
+				scale = bigDecimal.scale();
+			}
+			//noinspection unchecked
+			return ( (BasicType<? extends T>) bindableType ).withSqlType( null, lengthOrPrecision, scale );
+		}
+		return bindableType;
 	}
 
 	@Override

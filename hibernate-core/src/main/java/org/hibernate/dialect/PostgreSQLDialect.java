@@ -67,6 +67,7 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
@@ -173,6 +174,27 @@ public class PostgreSQLDialect extends Dialect {
 			default:
 				return super.columnType(jdbcTypeCode);
 		}
+	}
+
+	@Override
+	public String getUnboundedTypeName(JdbcType jdbcType, JavaType<?> javaType) {
+		switch ( jdbcType.getDefaultSqlTypeCode() ) {
+			case CHAR:
+			case NCHAR:
+			case VARCHAR:
+			case NVARCHAR:
+			case LONGVARCHAR:
+			case LONGNVARCHAR:
+			case LONG32VARCHAR:
+			case LONG32NVARCHAR:
+				return "text";
+			case BINARY:
+			case VARBINARY:
+			case LONGVARBINARY:
+			case LONG32VARBINARY:
+				return "bytea";
+		}
+		return super.getUnboundedTypeName( jdbcType, javaType );
 	}
 
 	@Override

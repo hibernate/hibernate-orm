@@ -7,6 +7,7 @@
 package org.hibernate.type.internal;
 
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -23,6 +24,29 @@ public class ImmutableConvertedBasicTypeImpl<J> extends ConvertedBasicTypeImpl<J
 			String name,
 			BasicValueConverter<J, ?> converter) {
 		super( jtd, std, name, converter );
+	}
+
+	public ImmutableConvertedBasicTypeImpl(
+			JavaType<J> javaType,
+			JdbcType jdbcType,
+			String sqlType,
+			Integer lengthOrPrecision,
+			Integer scale, String name,
+			BasicValueConverter<J, ?> converter) {
+		super( javaType, jdbcType, sqlType, lengthOrPrecision, scale, name, converter);
+	}
+
+	@Override
+	public BasicType<J> withSqlType(String sqlType, Integer lengthOrPrecision, Integer scale) {
+		return lengthOrPrecision == null && scale == null ? this : new ImmutableConvertedBasicTypeImpl<>(
+				getJavaTypeDescriptor(),
+				getJdbcType(),
+				sqlType,
+				lengthOrPrecision,
+				scale,
+				getName(),
+				getValueConverter()
+		);
 	}
 
 	@Override

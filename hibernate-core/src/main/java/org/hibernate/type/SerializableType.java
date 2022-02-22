@@ -37,9 +37,24 @@ public class SerializableType<T extends Serializable> extends AbstractSingleColu
 		this.serializableClass = serializableClass;
 	}
 
-	public SerializableType(JavaType<T> jtd) {
-		super( VarbinaryJdbcType.INSTANCE, jtd  );
-		this.serializableClass = jtd.getJavaTypeClass();
+	public SerializableType(JavaType<T> javaType) {
+		super( VarbinaryJdbcType.INSTANCE, javaType  );
+		this.serializableClass = javaType.getJavaTypeClass();
+	}
+
+	public SerializableType(JavaType<T> javaType, String sqlType, Integer lengthOrPrecision, Integer scale) {
+		super( VarbinaryJdbcType.INSTANCE, javaType, sqlType, lengthOrPrecision, scale  );
+		this.serializableClass = javaType.getJavaTypeClass();
+	}
+
+	@Override
+	public BasicType<T> withSqlType(String sqlType, Integer lengthOrPrecision, Integer scale) {
+		return lengthOrPrecision == null && scale == null ? this : new SerializableType<>(
+				getJavaTypeDescriptor(),
+				sqlType,
+				lengthOrPrecision,
+				scale
+		);
 	}
 
 	public String getName() {

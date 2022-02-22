@@ -13,6 +13,7 @@ import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.SQLServerFormatEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
@@ -51,7 +52,9 @@ import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
 
 import java.sql.DatabaseMetaData;
@@ -163,6 +166,26 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public String getUnboundedTypeName(JdbcType jdbcType, JavaType<?> javaType) {
+		switch ( jdbcType.getDefaultSqlTypeCode() ) {
+			case VARCHAR:
+			case LONGVARCHAR:
+			case LONG32VARCHAR:
+				return "varchar(max)";
+			case NVARCHAR:
+			case LONGNVARCHAR:
+			case LONG32NVARCHAR:
+				return "nvarchar(max)";
+			case BINARY:
+			case VARBINARY:
+			case LONGVARBINARY:
+			case LONG32VARBINARY:
+				return "varbinary(max)";
+		}
+		return super.getUnboundedTypeName( jdbcType, javaType );
+	}
+
+	@Override
 	public int getMaxVarcharLength() {
 		return 8000;
 	}
@@ -212,7 +235,17 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 
 		// For SQL-Server we need to cast certain arguments to varchar(max) to be able to concat them
-		functionFactory.aggregates( this, SqlAstNodeRenderingMode.DEFAULT, "+", "varchar(max)" );
+		queryEngine.getSqmFunctionRegistry().register(
+				"count",
+				new CountFunction(
+						this,
+						queryEngine.getTypeConfiguration(),
+						SqlAstNodeRenderingMode.DEFAULT,
+						"+",
+						"varchar(max)",
+						false
+				)
+		);
 
 		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
 		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.DEFAULT );

@@ -34,11 +34,13 @@ public class CastingConcatFunction extends AbstractSqmSelfRenderingFunctionDescr
 	private final Dialect dialect;
 	private final String concatOperator;
 	private final String concatArgumentCastType;
+	private final boolean needsCastWrapper;
 	private final SqlAstNodeRenderingMode argumentRenderingMode;
 
 	public CastingConcatFunction(
 			Dialect dialect,
 			String concatOperator,
+			boolean needsCastWrapper,
 			SqlAstNodeRenderingMode argumentRenderingMode,
 			TypeConfiguration typeConfiguration) {
 		super(
@@ -51,26 +53,39 @@ public class CastingConcatFunction extends AbstractSqmSelfRenderingFunctionDescr
 		);
 		this.dialect = dialect;
 		this.concatOperator = concatOperator;
+		this.needsCastWrapper = needsCastWrapper;
 		this.argumentRenderingMode = argumentRenderingMode;
-		this.concatArgumentCastType = dialect.getTypeName(
-				SqlTypes.VARCHAR,
-				dialect.getSizeStrategy().resolveSize(
-						typeConfiguration.getJdbcTypeRegistry().getDescriptor( SqlTypes.VARCHAR ),
-						typeConfiguration.getJavaTypeRegistry().getDescriptor( String.class ),
-						null,
-						null,
-						null
-				)
+		this.concatArgumentCastType = dialect.getCastTypeName(
+				typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING ),
+				null,
+				null,
+				null
 		);
 	}
 
 	@Override
 	public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
-		sqlAppender.appendSql( '(' );
+		// Apache Derby and DB2 add up the sizes of operands for concat operations and has a limit of 4000/32k until
+		// it changes the data type to long varchar, at which point problems start arising, because a long varchar
+		// can't be compared with a regular varchar for some reason.
+		// For example, a comparison like `alias.varchar_column = cast(? as varchar(4000)) || 'a'` will fail,
+		// because the result of `cast(? as varchar(4000)) || 'a'` is a long varchar.
+		// For casts to unbounded types we usually use the maximum allowed size, which would be ~32k,
+		// but concat operations lead to producing a long varchar, so we have to wrap the whole thing in a cast again
+		if ( needsCastWrapper ) {
+			sqlAppender.appendSql( "cast(" );
+		}
+		else {
+			sqlAppender.appendSql( '(' );
+		}
 		renderAsString( sqlAppender, walker, (Expression) sqlAstArguments.get( 0 ) );
 		for ( int i = 1; i < sqlAstArguments.size(); i++ ) {
 			sqlAppender.appendSql( concatOperator );
 			renderAsString( sqlAppender, walker, (Expression) sqlAstArguments.get( i ) );
+		}
+		if ( needsCastWrapper ) {
+			sqlAppender.appendSql( " as " );
+			sqlAppender.appendSql( concatArgumentCastType );
 		}
 		sqlAppender.appendSql( ')' );
 	}

@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.IntegralTimestampaddFunction;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
@@ -209,7 +210,17 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 
 		// For SQL-Server we need to cast certain arguments to varchar(16384) to be able to concat them
-		functionFactory.aggregates( this, SqlAstNodeRenderingMode.DEFAULT, "+", "varchar(16384)" );
+		queryEngine.getSqmFunctionRegistry().register(
+				"count",
+				new CountFunction(
+						this,
+						queryEngine.getTypeConfiguration(),
+						SqlAstNodeRenderingMode.DEFAULT,
+						"+",
+						"varchar(16384)",
+						false
+				)
+		);
 
 		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
 		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.DEFAULT );

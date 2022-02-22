@@ -348,6 +348,27 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				&& typeParameters.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
 			createParameterImpl();
 		}
+
+		String columnDefinition = null;
+		Integer lengthOrPrecision = null;
+		Integer scale = null;
+		final Selectable selectable = getColumn();
+		if ( selectable instanceof Column ) {
+			final Column column = (Column) selectable;
+			columnDefinition = column.getSqlType();
+			if ( column.getPrecision() != null && column.getPrecision() > 0 ) {
+				lengthOrPrecision = column.getPrecision();
+				scale = column.getScale();
+			}
+			else if ( column.getLength() != null ) {
+				if ( column.getLength() > (long) Integer.MAX_VALUE ) {
+					lengthOrPrecision = Integer.MAX_VALUE;
+				}
+				else {
+					lengthOrPrecision = column.getLength().intValue();
+				}
+			}
+		}
 		if ( explicitTypeName != null ) {
 			return interpretExplicitlyNamedType(
 					explicitTypeName,
@@ -360,6 +381,9 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 					typeParameters,
 					this::setTypeParameters,
 					this,
+					columnDefinition,
+					lengthOrPrecision,
+					scale,
 					typeConfiguration,
 					getBuildingContext()
 			);
@@ -373,6 +397,9 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 					explicitJdbcTypeAccess,
 					timeZoneStorageType,
 					typeConfiguration,
+					columnDefinition,
+					lengthOrPrecision,
+					scale,
 					getBuildingContext()
 			);
 		}
@@ -402,6 +429,9 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 					explicitJdbcTypeAccess,
 					explicitMutabilityPlanAccess,
 					this,
+					columnDefinition,
+					lengthOrPrecision,
+					scale,
 					converterCreationContext,
 					getBuildingContext()
 			);
@@ -478,7 +508,10 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				getColumn(),
 				ownerName,
 				propertyName,
-				typeConfiguration
+				typeConfiguration,
+				columnDefinition,
+				lengthOrPrecision,
+				scale
 		);
 
 	}
@@ -524,9 +557,11 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			Function<TypeConfiguration, JdbcType> explicitStdAccess,
 			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
 			ConverterDescriptor converterDescriptor,
-			Map<Object,Object> localTypeParams,
+			Map<Object, Object> localTypeParams,
 			Consumer<Properties> combinedParameterConsumer,
 			JdbcTypeIndicators stdIndicators,
+			String columnDefinition, Integer lengthOrPrecision,
+			Integer scale,
 			TypeConfiguration typeConfiguration,
 			MetadataBuildingContext context) {
 
@@ -560,6 +595,9 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 					explicitStdAccess,
 					explicitMutabilityPlanAccess,
 					stdIndicators,
+					columnDefinition,
+					lengthOrPrecision,
+					scale,
 					converterCreationContext,
 					context
 			);

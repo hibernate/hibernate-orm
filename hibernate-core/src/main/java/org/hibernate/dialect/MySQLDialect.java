@@ -849,30 +849,41 @@ public class MySQLDialect extends Dialect {
 			case Types.VARBINARY:
 			case Types.LONGVARBINARY:
 				//MySQL doesn't let you cast to BLOB/TINYBLOB/LONGBLOB
-				//we could just return 'binary' here but that would be
-				//inconsistent with other Dialects which need a length
-				return String.format(
-						"binary(%d)",
-						length != null ? length : javaType.getDefaultSqlLength(
-								this,
-								jdbcType
-						)
-				);
+				if ( length == null ) {
+					return "binary";
+				}
+				return String.format( "binary(%d)", length );
 			case Types.VARCHAR:
 			case Types.LONGVARCHAR:
 				//MySQL doesn't let you cast to TEXT/LONGTEXT
-				//we could just return 'char' here but that would be
-				//inconsistent with other Dialects which need a length
-				return String.format(
-						"char(%d)",
-						length != null ? length : javaType.getDefaultSqlLength(
-								this,
-								jdbcType
-						)
-				);
+				if ( length == null ) {
+					return "char";
+				}
+				return String.format( "char(%d)", length );
 			default:
 				return super.getCastTypeName( type, length, precision, scale );
 		}
+	}
+
+	@Override
+	public String getUnboundedTypeName(JdbcType jdbcType, JavaType<?> javaType) {
+		switch ( jdbcType.getDefaultSqlTypeCode() ) {
+			case CHAR:
+			case NCHAR:
+			case VARCHAR:
+			case NVARCHAR:
+			case LONGVARCHAR:
+			case LONGNVARCHAR:
+			case LONG32VARCHAR:
+			case LONG32NVARCHAR:
+				return "char";
+			case BINARY:
+			case VARBINARY:
+			case LONGVARBINARY:
+			case LONG32VARBINARY:
+				return "binary";
+		}
+		return super.getUnboundedTypeName( jdbcType, javaType );
 	}
 
 	@Override

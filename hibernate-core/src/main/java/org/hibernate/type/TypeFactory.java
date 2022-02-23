@@ -356,6 +356,31 @@ public final class TypeFactory implements Serializable, TypeBootstrapContext {
 				referenceToPrimaryKey,
 				uniqueKeyPropertyName,
 				propertyName,
+				notFoundAction != null,
+				lazy,
+				unwrapProxy,
+				notFoundAction,
+				isLogicalOneToOne
+		);
+	}
+
+	public EntityType manyToOne(
+			String persistentClass,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			String propertyName,
+			boolean nullable,
+			boolean lazy,
+			boolean unwrapProxy,
+			NotFoundAction notFoundAction,
+			boolean isLogicalOneToOne) {
+		return new ManyToOneType(
+				typeScope,
+				persistentClass,
+				referenceToPrimaryKey,
+				uniqueKeyPropertyName,
+				propertyName,
+				nullable,
 				lazy,
 				unwrapProxy,
 				notFoundAction,

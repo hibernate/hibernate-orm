@@ -19,7 +19,12 @@ import org.hibernate.ObjectNotFoundException;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.jdbc.Size;
-import org.hibernate.engine.spi.*;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.EntityUniqueKey;
+import org.hibernate.engine.spi.Mapping;
+import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 
@@ -30,6 +35,7 @@ import org.hibernate.persister.entity.Loadable;
  */
 public class ManyToOneType extends EntityType {
 	private final String propertyName;
+	private final boolean nullable;
 	private final NotFoundAction notFoundAction;
 	private boolean isLogicalOneToOne;
 
@@ -57,7 +63,7 @@ public class ManyToOneType extends EntityType {
 
 
 	/**
-	 * @deprecated Use {@link #ManyToOneType(TypeFactory.TypeScope, String, boolean, String, String, boolean, boolean, NotFoundAction, boolean ) } instead.
+	 * @deprecated Use {@link #ManyToOneType(TypeFactory.TypeScope, String, boolean, String, String, boolean, boolean, boolean, NotFoundAction, boolean ) } instead.
 	 */
 	@Deprecated
 	public ManyToOneType(
@@ -73,7 +79,7 @@ public class ManyToOneType extends EntityType {
 	}
 
 	/**
-	 * @deprecated Use {@link #ManyToOneType(TypeFactory.TypeScope, String, boolean, String, String, boolean, boolean, NotFoundAction, boolean ) } instead.
+	 * @deprecated Use {@link #ManyToOneType(TypeFactory.TypeScope, String, boolean, String, String, boolean, boolean, boolean, NotFoundAction, boolean ) } instead.
 	 */
 	@Deprecated
 	public ManyToOneType(
@@ -85,7 +91,18 @@ public class ManyToOneType extends EntityType {
 			boolean unwrapProxy,
 			NotFoundAction notFoundAction,
 			boolean isLogicalOneToOne) {
-		this( scope, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, null, lazy, unwrapProxy, notFoundAction, isLogicalOneToOne );
+		this(
+				scope,
+				referencedEntityName,
+				referenceToPrimaryKey,
+				uniqueKeyPropertyName,
+				null,
+				notFoundAction != null,
+				lazy,
+				unwrapProxy,
+				notFoundAction,
+				isLogicalOneToOne
+		);
 	}
 
 	public ManyToOneType(
@@ -94,6 +111,7 @@ public class ManyToOneType extends EntityType {
 			boolean referenceToPrimaryKey,
 			String uniqueKeyPropertyName,
 			String propertyName,
+			boolean nullable,
 			boolean lazy,
 			boolean unwrapProxy,
 			NotFoundAction notFoundAction,
@@ -101,6 +119,7 @@ public class ManyToOneType extends EntityType {
 		super( scope, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, !lazy, unwrapProxy );
 		this.propertyName = propertyName;
 		this.notFoundAction = notFoundAction;
+		this.nullable = nullable;
 		this.isLogicalOneToOne = isLogicalOneToOne;
 	}
 
@@ -109,12 +128,12 @@ public class ManyToOneType extends EntityType {
 		this.propertyName = original.propertyName;
 		this.notFoundAction = original.notFoundAction;
 		this.isLogicalOneToOne = original.isLogicalOneToOne;
+		this.nullable = original.nullable;
 	}
 
 	@Override
 	public boolean isNullable() {
-		// this matches the original check, but this seems wrong.
-		return notFoundAction == NotFoundAction.IGNORE;
+		return notFoundAction != null;
 	}
 
 	@Override

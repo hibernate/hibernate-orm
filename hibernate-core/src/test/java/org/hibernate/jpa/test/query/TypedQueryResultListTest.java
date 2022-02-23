@@ -84,15 +84,15 @@ public class TypedQueryResultListTest extends BaseEntityManagerFunctionalTestCas
 		@GeneratedValue
 		private int id;
 
-		@Column(name = "NUMBER", nullable = false, precision = 9)
+		@Column(name = "num", nullable = false, precision = 9)
 		private Integer number;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@JoinColumn(name = "SOURCE_ID", referencedColumnName = "ID")
+		@JoinColumn(name = "source_fk", referencedColumnName = "id")
 		@NotFound(action = NotFoundAction.IGNORE)
 		private Parent sourceParent;
 
-		@Column(name = "TEXT", nullable = false, length = 20)
+		@Column(name = "txt", nullable = false, length = 20)
 		private String text;
 
 		Parent() {

@@ -6,7 +6,6 @@
  */
 package org.hibernate.bytecode.spi;
 
-import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 
 /**
@@ -36,5 +35,5 @@ public interface ClassTransformer extends jakarta.persistence.spi.ClassTransform
 			String className,
 			Class<?> classBeingRedefined,
 			ProtectionDomain protectionDomain,
-			byte[] classfileBuffer) throws IllegalClassFormatException;
+			byte[] classfileBuffer);
 }

@@ -50,6 +50,9 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 			else if ( MappingXsdSupport.jpa30.getNamespaceUri().matches( namespace ) ) {
 				return openUrlStream( LocalSchemaLocator.resolveLocalSchemaUrl( MappingXsdSupport.jpa30.getLocalResourceName() ) );
 			}
+			else if ( MappingXsdSupport.jpa31.getNamespaceUri().matches( namespace ) ) {
+				return openUrlStream( LocalSchemaLocator.resolveLocalSchemaUrl( MappingXsdSupport.jpa31.getLocalResourceName() ) );
+			}
 			else if ( ConfigXsdSupport.getJPA10().getNamespaceUri().matches( namespace ) ) {
 				// JPA 1.0 and 2.0 share the same namespace URI
 				return openUrlStream( LocalSchemaLocator.resolveLocalSchemaUrl( ConfigXsdSupport.getJPA10().getLocalResourceName() ) );
@@ -60,6 +63,9 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 			}
 			else if ( ConfigXsdSupport.getJPA30().getNamespaceUri().matches( namespace ) ) {
 				return openUrlStream( LocalSchemaLocator.resolveLocalSchemaUrl( ConfigXsdSupport.getJPA30().getLocalResourceName() ) );
+			}
+			else if ( ConfigXsdSupport.getJPA31().getNamespaceUri().matches( namespace ) ) {
+				return openUrlStream( LocalSchemaLocator.resolveLocalSchemaUrl( ConfigXsdSupport.getJPA31().getLocalResourceName() ) );
 			}
 			else if ( MappingXsdSupport.hibernateMappingXml.getNamespaceUri().matches( namespace ) ) {
 				return openUrlStream( LocalSchemaLocator.resolveLocalSchemaUrl( MappingXsdSupport.hibernateMappingXml.getLocalResourceName() ) );

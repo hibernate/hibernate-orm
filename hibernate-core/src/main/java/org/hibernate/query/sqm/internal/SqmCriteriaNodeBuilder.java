@@ -14,6 +14,9 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -688,6 +691,86 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
+	public JpaExpression<Integer> sign(Expression<? extends Number> x) {
+		return getFunctionDescriptor( "sign" ).generateSqmExpression(
+				(SqmExpression<?>) x,
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public <N extends Number> JpaExpression<N> ceiling(Expression<N> x) {
+		return getFunctionDescriptor( "ceiling" ).generateSqmExpression(
+				(SqmExpression<?>) x,
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public <N extends Number> JpaExpression<N> floor(Expression<N> x) {
+		return getFunctionDescriptor( "floor" ).generateSqmExpression(
+				(SqmExpression<?>) x,
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public JpaExpression<Double> exp(Expression<? extends Number> x) {
+		return getFunctionDescriptor( "exp" ).generateSqmExpression(
+				(SqmExpression<?>) x,
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public JpaExpression<Double> ln(Expression<? extends Number> x) {
+		return getFunctionDescriptor( "ln" ).generateSqmExpression(
+				(SqmExpression<?>) x,
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public JpaExpression<Double> power(Expression<? extends Number> x, Expression<? extends Number> y) {
+		return getFunctionDescriptor( "power" ).generateSqmExpression(
+				Arrays.asList( (SqmExpression<?>) x, (SqmExpression<?>) y),
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public JpaExpression<Double> power(Expression<? extends Number> x, Number y) {
+		return getFunctionDescriptor( "power" ).generateSqmExpression(
+				Arrays.asList( (SqmExpression<?>) x, (SqmExpression<?>) y),
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public <T extends Number> JpaExpression<T> round(Expression<T> x, Integer n) {
+		return getFunctionDescriptor( "round" ).generateSqmExpression(
+				Arrays.asList( (SqmExpression<?>) x, value( n ) ),
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
 	public <N extends Number> SqmExpression<N> neg(Expression<N> x) {
 		final SqmExpression<N> sqmExpression = (SqmExpression<N>) x;
 		return new SqmUnaryOperation<>(
@@ -1340,6 +1423,36 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 						getJpaMetamodel().getTypeConfiguration()
 								.getBasicTypeRegistry()
 								.resolve( StandardBasicTypes.INSTANT ),
+						queryEngine,
+						getJpaMetamodel().getTypeConfiguration()
+				);
+	}
+
+	@Override
+	public JpaExpression<LocalDate> localDate() {
+		return getFunctionDescriptor("local_date")
+				.generateSqmExpression(
+						null,
+						queryEngine,
+						getJpaMetamodel().getTypeConfiguration()
+				);
+	}
+
+	@Override
+	public JpaExpression<LocalDateTime> localDateTime() {
+		return getFunctionDescriptor("local_datetime")
+				.generateSqmExpression(
+						null,
+						queryEngine,
+						getJpaMetamodel().getTypeConfiguration()
+				);
+	}
+
+	@Override
+	public JpaExpression<LocalTime> localTime() {
+		return getFunctionDescriptor("local_time")
+				.generateSqmExpression(
+						null,
 						queryEngine,
 						getJpaMetamodel().getTypeConfiguration()
 				);

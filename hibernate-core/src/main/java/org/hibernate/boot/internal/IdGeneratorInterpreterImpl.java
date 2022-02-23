@@ -98,9 +98,7 @@ public class IdGeneratorInterpreterImpl implements IdGeneratorStrategyInterprete
 				case TABLE: {
 					return org.hibernate.id.enhanced.TableGenerator.class.getName();
 				}
-				default: {
-					// AUTO
-
+				case AUTO: {
 					if ( "increment".equalsIgnoreCase( context.getGeneratedValueGeneratorName() ) ) {
 						return IncrementGenerator.class.getName();
 					}
@@ -111,6 +109,13 @@ public class IdGeneratorInterpreterImpl implements IdGeneratorStrategyInterprete
 					}
 
 					return SequenceStyleGenerator.class.getName();
+				}
+				default: {
+					// UNKNOWN
+					if ( "UUID".equals( generationType.name() ) ) {
+						return UUIDGenerator.class.getName();
+					}
+					throw new UnsupportedOperationException( "Unsupported generation type:" + generationType );
 				}
 			}
 		}

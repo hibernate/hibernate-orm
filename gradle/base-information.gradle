@@ -32,8 +32,9 @@ ext {
 		ormVersion = HibernateVersion.fromFile(ormVersionFile, project)
 	}
 
+	def version = System.getProperty( 'jakartaJpaVersion', '3.0.0' )
 	jpaVersion = new JpaVersion('2.2')
-	jakartaJpaVersion = new JpaVersion('3.0.0')
+	jakartaJpaVersion = new JpaVersion(version)
 }
 
 group = 'org.hibernate.orm'

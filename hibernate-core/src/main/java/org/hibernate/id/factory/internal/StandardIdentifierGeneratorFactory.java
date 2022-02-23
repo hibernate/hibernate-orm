@@ -98,6 +98,12 @@ public class StandardIdentifierGeneratorFactory
 		generatorTypeStrategyMap.put( GenerationType.SEQUENCE, SequenceGenerationTypeStrategy.INSTANCE );
 		generatorTypeStrategyMap.put( GenerationType.TABLE, TableGenerationTypeStrategy.INSTANCE );
 		generatorTypeStrategyMap.put( GenerationType.IDENTITY, IdentityGenerationTypeStrategy.INSTANCE );
+		try {
+			generatorTypeStrategyMap.put( GenerationType.valueOf( "UUID" ), UUIDGenerationTypeStrategy.INSTANCE );
+		}
+		catch (IllegalArgumentException ex) {
+			// Ignore
+		}
 
 		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		final Collection<GenerationTypeStrategyRegistration> generationTypeStrategyRegistrations = classLoaderService.loadJavaServices( GenerationTypeStrategyRegistration.class );

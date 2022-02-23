@@ -22,6 +22,12 @@ public interface JpaSimpleCase<C,R> extends JpaExpression<R>, CriteriaBuilder.Si
 	@Override
 	JpaSimpleCase<C, R> when(C condition, Expression<? extends R> result);
 
+//	@Override
+	JpaSimpleCase<C, R> when(Expression<? extends C> condition, R result);
+
+//	@Override
+	JpaSimpleCase<C, R> when(Expression<? extends C> condition, Expression<? extends R> result);
+
 	@Override
 	JpaSimpleCase<C,R> otherwise(R result);
 

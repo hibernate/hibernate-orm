@@ -31,11 +31,12 @@ public class ConfigXsdSupport {
 	 * 3: JPA 2.1
 	 * 4: JPA 2.2 (default)
 	 * 5: Jakarta Persistence 3.0
+	 * 6: Jakarta Persistence 3.1
 	 */
-	private static final XsdDescriptor[] xsdCache = new XsdDescriptor[6];
+	private static final XsdDescriptor[] xsdCache = new XsdDescriptor[7];
 
 	public XsdDescriptor latestJpaDescriptor() {
-		return getJPA22();
+		return getJPA30();
 	}
 
 	public static boolean shouldBeMappedToLatestJpaDescriptor(String uri) {
@@ -59,6 +60,9 @@ public class ConfigXsdSupport {
 			}
 			case "3.0": {
 				return getJPA30();
+			}
+			case "3.1": {
+				return getJPA31();
 			}
 			default: {
 				throw new IllegalArgumentException( "Unrecognized JPA persistence.xml XSD version : `" + version + "`" );
@@ -159,6 +163,22 @@ public class ConfigXsdSupport {
 				xsdCache[index] = jpa30;
 			}
 			return jpa30;
+		}
+	}
+
+	public static XsdDescriptor getJPA31() {
+		final int index = 6;
+		synchronized ( xsdCache ) {
+			XsdDescriptor jpa31 = xsdCache[index];
+			if ( jpa31 == null ) {
+				jpa31 = LocalXsdResolver.buildXsdDescriptor(
+						"org/hibernate/jpa/persistence_3_1.xsd",
+						"3.1",
+						"https://jakarta.ee/xml/ns/persistence"
+				);
+				xsdCache[index] = jpa31;
+			}
+			return jpa31;
 		}
 	}
 	

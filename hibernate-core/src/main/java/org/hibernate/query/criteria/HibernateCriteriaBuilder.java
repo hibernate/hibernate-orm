@@ -9,6 +9,7 @@ package org.hibernate.query.criteria;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Collection;
@@ -103,6 +104,100 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	<T> JpaCriteriaQuery<T> except(boolean all, CriteriaQuery<? extends T> query1, CriteriaQuery<?>... queries);
 
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// JPA 3.1
+
+	/**
+	 * Create an expression that returns the sign of its
+	 * argument, that is, {@code 1} if its argument is
+	 * positive, {@code -1} if its argument is negative,
+	 * or {@code 0} if its argument is exactly zero.
+	 * @param x expression
+	 * @return sign
+	 */
+	JpaExpression<Integer> sign(Expression<? extends Number> x);
+
+	/**
+	 * Create an expression that returns the ceiling of its
+	 * argument, that is, the smallest integer greater than
+	 * or equal to its argument.
+	 * @param x expression
+	 * @return ceiling
+	 */
+	<N extends Number> JpaExpression<N> ceiling(Expression<N> x);
+
+	/**
+	 * Create an expression that returns the floor of its
+	 * argument, that is, the largest integer smaller than
+	 * or equal to its argument.
+	 * @param x expression
+	 * @return floor
+	 */
+	<N extends Number> JpaExpression<N> floor(Expression<N> x);
+
+	/**
+	 * Create an expression that returns the exponential
+	 * of its argument, that is, Euler's number <i>e</i>
+	 * raised to the power of its argument.
+	 * @param x expression
+	 * @return exponential
+	 */
+	JpaExpression<Double> exp(Expression<? extends Number> x);
+
+	/**
+	 * Create an expression that returns the natural logarithm
+	 * of its argument.
+	 * @param x expression
+	 * @return natural logarithm
+	 */
+	JpaExpression<Double> ln(Expression<? extends Number> x);
+
+	/**
+	 * Create an expression that returns the first argument
+	 * raised to the power of its second argument.
+	 * @param x base
+	 * @param y exponent
+	 * @return the base raised to the power of the exponent
+	 */
+	JpaExpression<Double> power(Expression<? extends Number> x, Expression<? extends Number> y);
+
+	/**
+	 * Create an expression that returns the first argument
+	 * raised to the power of its second argument.
+	 * @param x base
+	 * @param y exponent
+	 * @return the base raised to the power of the exponent
+	 */
+	JpaExpression<Double> power(Expression<? extends Number> x, Number y);
+
+	/**
+	 * Create an expression that returns the first argument
+	 * rounded to the number of decimal places given by the
+	 * second argument.
+	 * @param x base
+	 * @param n number of decimal places
+	 * @return the rounded value
+	 */
+	<T extends Number> JpaExpression<T> round(Expression<T> x, Integer n);
+
+	/**
+	 *  Create expression to return current local date.
+	 *  @return expression for current date
+	 */
+	JpaExpression<java.time.LocalDate> localDate();
+
+	/**
+	 *  Create expression to return current local datetime.
+	 *  @return expression for current timestamp
+	 */
+	JpaExpression<java.time.LocalDateTime> localDateTime();
+
+	/**
+	 *  Create expression to return current local time.
+	 *  @return expression for current time
+	 */
+	JpaExpression<java.time.LocalTime> localTime();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Paths
@@ -347,6 +442,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	@Override
 	JpaFunction<Date> currentDate();
+
+	@Override
+	JpaFunction<Time> currentTime();
 
 	@Override
 	JpaFunction<Timestamp> currentTimestamp();

@@ -27,9 +27,10 @@ configurations {
 dependencies {
     api libraries.jakarta_jpa
     api libraries.jakarta_jta
-    api libraries.jandex
-    api libraries.classmate
-    api libraries.commons_annotations
+
+    implementation libraries.jandex
+    implementation libraries.classmate
+    implementation libraries.commons_annotations
 
     implementation libraries.byteBuddy
     implementation libraries.jakarta_activation

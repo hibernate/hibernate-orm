@@ -12,6 +12,9 @@ apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 dependencies {
     api project( ':hibernate-core' )
 
+    implementation libraries.commons_annotations
+    implementation libraries.jandex
+
     api libraries.junit
     api libraries.junit5_api
     api libraries.junit5_params
@@ -45,7 +48,3 @@ dependencies {
 tasks.checkstyleMain {
     exclude '**/org/hibernate/orm/test/legacy/**'
 }
-
-
-
-

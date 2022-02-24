@@ -15,6 +15,8 @@ dependencies {
 
     implementation libraries.jakarta_jaxb_api
     implementation libraries.jakarta_jaxb_runtime
+    implementation libraries.commons_annotations
+    implementation libraries.jandex
 
     compileOnly libraries.ant
 

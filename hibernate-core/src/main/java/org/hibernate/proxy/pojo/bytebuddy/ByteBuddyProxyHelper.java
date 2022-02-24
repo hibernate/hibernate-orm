@@ -6,6 +6,8 @@
  */
 package org.hibernate.proxy.pojo.bytebuddy;
 
+import static org.hibernate.internal.CoreLogging.messageLogger;
+
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Collections;
@@ -28,8 +30,6 @@ import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
 import net.bytebuddy.implementation.SuperMethodCall;
-
-import static org.hibernate.internal.CoreLogging.messageLogger;
 
 public class ByteBuddyProxyHelper implements Serializable {
 
@@ -63,18 +63,19 @@ public class ByteBuddyProxyHelper implements Serializable {
 	}
 
 	private Function<ByteBuddy, DynamicType.Builder<?>> proxyBuilder(Class<?> persistentClass, Class<?>[] interfaces) {
+		ByteBuddyState.ProxyDefinitionHelpers helpers = byteBuddyState.getProxyDefinitionHelpers();
 		return byteBuddy -> byteBuddy
-				.ignore( byteBuddyState.getProxyDefinitionHelpers().getGroovyGetMetaClassFilter() )
+				.ignore( helpers.getGroovyGetMetaClassFilter() )
 				.with( new NamingStrategy.SuffixingRandom( PROXY_NAMING_SUFFIX, new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( persistentClass.getName() ) ) )
 				.subclass( interfaces.length == 1 ? persistentClass : Object.class, ConstructorStrategy.Default.IMITATE_SUPER_CLASS_OPENING )
 				.implement( interfaces )
-				.method( byteBuddyState.getProxyDefinitionHelpers().getVirtualNotFinalizerFilter() )
-						.intercept( byteBuddyState.getProxyDefinitionHelpers().getDelegateToInterceptorDispatcherMethodDelegation() )
-				.method( byteBuddyState.getProxyDefinitionHelpers().getHibernateGeneratedMethodFilter() )
+				.method( helpers.getVirtualNotFinalizerFilter() )
+						.intercept( helpers.getDelegateToInterceptorDispatcherMethodDelegation() )
+				.method( helpers.getProxyNonInterceptedMethodFilter() )
 						.intercept( SuperMethodCall.INSTANCE )
 				.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )
 				.implement( ProxyConfiguration.class )
-						.intercept( byteBuddyState.getProxyDefinitionHelpers().getInterceptorFieldAccessor() );
+						.intercept( helpers.getInterceptorFieldAccessor() );
 	}
 
 	public HibernateProxy deserializeProxy(SerializableProxy serializableProxy) {

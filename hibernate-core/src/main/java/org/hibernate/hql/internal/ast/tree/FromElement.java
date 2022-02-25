@@ -74,6 +74,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	private String withClauseFragment;
 	private boolean dereferencedBySuperclassProperty;
 	private boolean dereferencedBySubclassProperty;
+	private boolean inProjectionList = true;
 
 	public FromElement() {
 	}
@@ -612,11 +613,11 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	}
 
 	public void setInProjectionList(boolean inProjectionList) {
-		// Do nothing, explicit from elements are *always* in the projection list.
+		this.inProjectionList = inProjectionList;
 	}
 
 	public boolean inProjectionList() {
-		return !isImplied() && isFromOrJoinFragment();
+		return inProjectionList && !isImplied() && isFromOrJoinFragment();
 	}
 
 	public boolean isFromOrJoinFragment() {

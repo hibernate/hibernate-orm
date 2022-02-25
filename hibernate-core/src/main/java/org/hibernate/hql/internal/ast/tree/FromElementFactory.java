@@ -45,6 +45,7 @@ public class FromElementFactory implements SqlTokenTypes {
 	private String classAlias;
 	private String[] columns;
 	private boolean implied;
+	private final boolean useThetaJoin;
 	private boolean inElementsFunction;
 	private boolean collection;
 	private QueryableCollection queryableCollection;
@@ -58,6 +59,25 @@ public class FromElementFactory implements SqlTokenTypes {
 		this.origin = origin;
 		this.path = path;
 		collection = false;
+		useThetaJoin = true;
+	}
+
+	public FromElementFactory(
+			FromClause fromClause,
+			FromElement origin,
+			String path,
+			String classAlias,
+			String[] columns,
+			boolean implied,
+			boolean useThetaJoin) {
+		this.fromClause = fromClause;
+		this.origin = origin;
+		this.path = path;
+		this.classAlias = classAlias;
+		this.columns = columns;
+		this.implied = implied;
+		this.useThetaJoin = useThetaJoin;
+		collection = true;
 	}
 
 	/**
@@ -70,11 +90,7 @@ public class FromElementFactory implements SqlTokenTypes {
 			String classAlias,
 			String[] columns,
 			boolean implied) {
-		this( fromClause, origin, path );
-		this.classAlias = classAlias;
-		this.columns = columns;
-		this.implied = implied;
-		collection = true;
+		this( fromClause, origin, path, classAlias, columns, implied, true );
 	}
 
 	FromElement addFromElement() throws SemanticException {
@@ -251,14 +267,15 @@ public class FromElementFactory implements SqlTokenTypes {
 		if ( joinPath != null ) {
 			elem.applyTreatAsDeclarations( fromClause.getWalker().getTreatAsDeclarationsByPath( joinPath ) );
 		}
-
 		EntityPersister entityPersister = elem.getEntityPersister();
 		int numberOfTables = entityPersister.getQuerySpaces().length;
 		if ( numberOfTables > 1 && implied && !elem.useFromFragment() ) {
 			LOG.debug( "createEntityJoin() : Implied multi-table entity join" );
 			elem.setUseFromFragment( true );
 		}
-
+		if ( implied && !useThetaJoin ) {
+			elem.setInProjectionList( false );
+		}
 		// If this is an implied join in a FROM clause, then use ANSI-style joining, and set the
 		// flag on the FromElement that indicates that it was implied in the FROM clause itself.
 		if ( implied && inFrom ) {
@@ -517,9 +534,16 @@ public class FromElementFactory implements SqlTokenTypes {
 	}
 
 	private AST createFromElement(String text) {
+		int type;
+		if ( implied && useThetaJoin ) {
+			type = IMPLIED_FROM;
+		}
+		else {
+			type = FROM_FRAGMENT;
+		}
 		AST ast = ASTUtil.create(
 				fromClause.getASTFactory(),
-				implied ? IMPLIED_FROM : FROM_FRAGMENT, // This causes the factory to instantiate the desired class.
+				type, // This causes the factory to instantiate the desired class.
 				text
 		);
 		// Reset the node type, because the rest of the system is expecting FROM_FRAGMENT, all we wanted was

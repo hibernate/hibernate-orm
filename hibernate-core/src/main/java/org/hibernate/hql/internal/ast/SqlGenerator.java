@@ -378,7 +378,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 				writeCrossJoinSeparator();
 			}
 			else {
-				out( " " );
+				out( " left join " );
 			}
 		}
 		else {

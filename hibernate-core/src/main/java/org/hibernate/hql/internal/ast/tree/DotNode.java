@@ -392,7 +392,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		DotNode parentAsDotNode = null;
 		String property = propertyName;
 		final boolean joinIsNeeded;
-
+		final boolean useThetaStyleJoins;
 
 		if ( isDotNode( parent ) ) {
 			// our parent is another dot node, meaning we are being further dereferenced.
@@ -404,32 +404,40 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 					entityType.isNullable() ||
 							!isPropertyEmbeddedInJoinProperties( parentAsDotNode.propertyName )
 			);
-			if ( generateJoin
+			if ( joinIsNeeded &&
+					generateJoin
 					&& implicitJoin
 					&& entityType.isNullable()
 					&& isReferenceToPrimaryKey( parentAsDotNode.propertyName, entityType ) ) {
-				joinType = JoinType.LEFT_OUTER_JOIN;
+				useThetaStyleJoins = false;
+			}
+			else {
+				useThetaStyleJoins = implicitJoin;
 			}
 		}
 		else if ( !getWalker().isSelectStatement() ) {
 			// in non-select queries, the only time we should need to join is if we are in a subquery from clause
 			joinIsNeeded = getWalker().getCurrentStatementType() == SqlTokenTypes.SELECT && getWalker().isInFrom();
+			useThetaStyleJoins = true;
 		}
 		else if ( regressionStyleJoinSuppression ) {
 			// this is the regression style determination which matches the logic of the classic translator
 			joinIsNeeded = generateJoin && ( !getWalker().isInSelect() || !getWalker().isShallowQuery() );
+			useThetaStyleJoins = implicitJoin;
 		}
 		else if ( parentPredicate != null ) {
 			// Never generate a join when we compare entities directly
 			joinIsNeeded = generateJoin;
+			useThetaStyleJoins = implicitJoin;
 		}
 		else {
 			joinIsNeeded = generateJoin
 					|| ( getWalker().isInSelect() || getWalker().isInFrom() || ( implicitJoin && getWalker().isInSize() ) );
+			useThetaStyleJoins = implicitJoin;
 		}
 
 		if ( joinIsNeeded ) {
-			dereferenceEntityJoin( classAlias, entityType, implicitJoin, parent );
+			dereferenceEntityJoin( classAlias, entityType, useThetaStyleJoins, implicitJoin, parent );
 		}
 		else {
 			dereferenceEntityIdentifier( property, parentAsDotNode );
@@ -477,7 +485,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		return n != null && n.getType() == SqlTokenTypes.DOT;
 	}
 
-	private void dereferenceEntityJoin(String classAlias, EntityType propertyType, boolean impliedJoin, AST parent)
+	private void dereferenceEntityJoin(String classAlias, EntityType propertyType, boolean useThetaStyleJoins, boolean impliedJoin, AST parent)
 			throws SemanticException {
 		dereferenceType = DereferenceType.ENTITY;
 		if ( LOG.isDebugEnabled() ) {
@@ -560,13 +568,13 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 
 				// Special join sequence that uses the poly join columns
 				joinSequence = getSessionFactoryHelper()
-						.createJoinSequence( impliedJoin, propertyType, tableAlias, joinType, polyJoinColumns );
+						.createJoinSequence( useThetaStyleJoins, propertyType, tableAlias, joinType, polyJoinColumns );
 			}
 			else {
 				// If this is an implied join in a from element, then use the implied join type which is part of the
 				// tree parser's state (set by the grammar actions).
 				joinSequence = getSessionFactoryHelper()
-						.createJoinSequence( impliedJoin, propertyType, tableAlias, joinType, joinColumns );
+						.createJoinSequence( useThetaStyleJoins, propertyType, tableAlias, joinType, joinColumns );
 			}
 
 			FromElementFactory factory = new FromElementFactory(

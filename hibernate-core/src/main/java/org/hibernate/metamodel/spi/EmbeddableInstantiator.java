@@ -26,6 +26,6 @@ public interface EmbeddableInstantiator extends Instantiator {
 	/**
 	 * Create an instance of the embeddable
 	 */
-	Object instantiate(Supplier<Object[]> valuesAccess, SessionFactoryImplementor sessionFactory);
+	Object instantiate(ValueAccess valueAccess, SessionFactoryImplementor sessionFactory);
 
 }

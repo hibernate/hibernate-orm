@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.spi.ValueAccess;
 
 /**
  * Support for instantiating embeddables as dynamic-map representation
@@ -31,12 +32,13 @@ public class EmbeddableInstantiatorDynamicMap
 	}
 
 	@Override
-	public Object instantiate(Supplier<Object[]> valuesAccess, SessionFactoryImplementor sessionFactory) {
+	public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
 		final Map<?,?> dataMap = generateDataMap();
 
-		if ( valuesAccess != null ) {
+		Object[] values = valuesAccess == null ? null : valuesAccess.getValues();
+		if ( values != null ) {
 			final EmbeddableMappingType mappingType = runtimeDescriptorAccess.get();
-			mappingType.setValues( dataMap, valuesAccess.get() );
+			mappingType.setValues( dataMap, values );
 		}
 
 		return dataMap;

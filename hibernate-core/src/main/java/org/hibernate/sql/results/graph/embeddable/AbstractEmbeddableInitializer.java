@@ -22,6 +22,7 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
+import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.spi.NavigablePath;
@@ -43,7 +44,8 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentAccess implements EmbeddableInitializer {
+public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentAccess implements EmbeddableInitializer,
+		ValueAccess {
 	private static final Object NULL_MARKER = new Object() {
 		@Override
 		public String toString() {
@@ -205,12 +207,9 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 					// NOTE: `valuesAccess` is set to null to indicate that all values are null,
 					//		as opposed to returning the all-null value array.  the instantiator
 					//		interprets that as the values are not known or were all null.
-					final Supplier<Object[]> valuesAccess = stateAllNull
-							? null
-							: () -> rowState;
 					final Object target = representationStrategy
 							.getInstantiator()
-							.instantiate( valuesAccess, sessionFactory);
+							.instantiate( this, sessionFactory);
 					stateInjected = true;
 					( (HibernateProxy) compositeInstance ).getHibernateLazyInitializer().setImplementation( target );
 				}
@@ -321,12 +320,27 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		final Supplier<Object[]> valuesAccess = stateAllNull == TRUE
 				? null
 				: () -> rowState;
-		final Object instance = representationStrategy.getInstantiator().instantiate( valuesAccess, sessionFactory );
+		final Object instance = representationStrategy.getInstantiator().instantiate( this, sessionFactory );
 		stateInjected = true;
 
 		EmbeddableLoadingLogger.INSTANCE.debugf( "Created composite instance [%s] : %s", navigablePath, instance );
 
 		return instance;
+	}
+
+	@Override
+	public Object[] getValues() {
+		return stateAllNull ? null : rowState;
+	}
+
+	@Override
+	public <T> T getValue(int i, Class<T> clazz) {
+		return stateAllNull ? null : clazz.cast( rowState[i] );
+	}
+
+	@Override
+	public Object getOwner() {
+		return fetchParentAccess.getInitializedInstance();
 	}
 
 	private void handleParentInjection(RowProcessingState processingState) {

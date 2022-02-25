@@ -6,10 +6,9 @@
  */
 package org.hibernate.metamodel.internal;
 
-import java.util.function.Supplier;
-
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.usertype.CompositeUserType;
 
 /**
@@ -24,7 +23,7 @@ public class EmbeddableCompositeUserTypeInstantiator implements EmbeddableInstan
 	}
 
 	@Override
-	public Object instantiate(Supplier<Object[]> valuesAccess, SessionFactoryImplementor sessionFactory) {
+	public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
 		return userType.instantiate( valuesAccess, sessionFactory );
 	}
 

@@ -6,10 +6,9 @@
  */
 package org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.intf2;
 
-import java.util.function.Supplier;
-
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.metamodel.spi.ValueAccess;
 
 /**
  * @author Steve Ebersole
@@ -18,10 +17,12 @@ public class NameInstantiator implements EmbeddableInstantiator {
 	public static int callCount = 0;
 
 	@Override
-	public Object instantiate(Supplier<Object[]> valuesAccess, SessionFactoryImplementor sessionFactory) {
+	public Object instantiate(ValueAccess valueAccess, SessionFactoryImplementor sessionFactory) {
 		callCount++;
-		final Object[] values = valuesAccess.get();
-		return Name.make( (String) values[0], (String) values[1] );
+		// alphabetical
+		final String first = valueAccess.getValue( 0, String.class );
+		final String last = valueAccess.getValue( 1, String.class );
+		return Name.make( first, last );
 	}
 
 	@Override

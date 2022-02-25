@@ -12,16 +12,16 @@ import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.metamodel.spi.ValueAccess;
 
 /**
  * @author Steve Ebersole
  */
 public class MonetaryAmountInstantiator implements EmbeddableInstantiator {
 	@Override
-	public Object instantiate(Supplier<Object[]> valuesAccess, SessionFactoryImplementor sessionFactory) {
-		final Object[] values = valuesAccess.get();
-		final BigDecimal amount = (BigDecimal) values[0];
-		final Currency currency = (Currency) values[1];
+	public Object instantiate(ValueAccess valueAccess, SessionFactoryImplementor sessionFactory) {
+		final BigDecimal amount = valueAccess.getValue(0, BigDecimal.class);
+		final Currency currency = valueAccess.getValue(1, Currency.class);
 
 		if ( amount == null && currency == null ) {
 			return null;

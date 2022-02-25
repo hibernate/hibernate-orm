@@ -7,10 +7,10 @@
 package org.hibernate.envers.test.integration.customtype;
 
 import java.io.Serializable;
-import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.Lob;
@@ -36,8 +36,8 @@ public class ObjectUserType implements CompositeUserType<Object> {
 	}
 
 	@Override
-	public Object instantiate(Supplier<Object[]> values, SessionFactoryImplementor sessionFactory) {
-		return values.get()[0];
+	public Object instantiate(ValueAccess valueAccess, SessionFactoryImplementor sessionFactory) {
+		return valueAccess.getValue( 0, Object.class );
 	}
 
 	@Override

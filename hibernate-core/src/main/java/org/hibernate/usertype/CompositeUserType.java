@@ -7,12 +7,12 @@
 package org.hibernate.usertype;
 
 import java.io.Serializable;
-import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.metamodel.spi.ValueAccess;
 
 /**
  * A <tt>UserType</tt> that may be dereferenced in a query.
@@ -51,7 +51,7 @@ public interface CompositeUserType<J> extends EmbeddableInstantiator {
 	Object getPropertyValue(J component, int property) throws HibernateException;
 
 	@Override
-	J instantiate(Supplier<Object[]> values, SessionFactoryImplementor sessionFactory);
+	J instantiate(ValueAccess values, SessionFactoryImplementor sessionFactory);
 
 	/**
 	 * The class that represents the embeddable mapping of the type.

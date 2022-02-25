@@ -9,10 +9,10 @@ package org.hibernate.userguide.mapping.basic;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Currency;
-import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.usertype.CompositeUserType;
 
 /**
@@ -32,9 +32,15 @@ public class MonetaryAmountUserType implements CompositeUserType<MonetaryAmount>
 	}
 
 	@Override
-	public MonetaryAmount instantiate(Supplier<Object[]> valueSupplier, SessionFactoryImplementor sessionFactory) {
-		final Object[] values = valueSupplier.get();
-		return new MonetaryAmount( (BigDecimal) values[0], (Currency) values[1] );
+	public MonetaryAmount instantiate(ValueAccess valueAccess, SessionFactoryImplementor sessionFactory) {
+		final BigDecimal amount = valueAccess.getValue(0, BigDecimal.class);
+		final Currency currency = valueAccess.getValue(1, Currency.class);
+
+		if ( amount == null && currency == null ) {
+			return null;
+		}
+
+		return new MonetaryAmount( amount, currency );
 	}
 
 	@Override

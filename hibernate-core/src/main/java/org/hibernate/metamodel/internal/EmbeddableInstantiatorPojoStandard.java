@@ -16,6 +16,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -47,7 +48,7 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 	}
 
 	@Override
-	public Object instantiate(Supplier<Object[]> valuesAccess, SessionFactoryImplementor sessionFactory) {
+	public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
 		if ( isAbstract() ) {
 			throw new InstantiationException(
 					"Cannot instantiate abstract class or interface: ", getMappedPojoClass()
@@ -60,11 +61,12 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 
 		try {
 			if ( constructorInjection ) {
-				return constructor.newInstance( valuesAccess.get() );
+				return constructor.newInstance( valuesAccess.getValues() );
 			}
 
+			Object[] values = valuesAccess == null ? null : valuesAccess.getValues();
 			final Object instance = constructor.newInstance();
-			if ( valuesAccess != null ) {
+			if ( values != null ) {
 				// At this point, createEmptyCompositesEnabled is always true.
 				// We can only set the property values on the compositeInstance though if there is at least one non null value.
 				// If the values are all null, we would normally not create a composite instance at all because no values exist.
@@ -73,7 +75,7 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 				// A possible alternative could be to initialize the resolved values for primitive fields to their default value,
 				// but that might cause unexpected outcomes for Hibernate 5 users that use createEmptyCompositesEnabled when updating.
 				// You can see the need for this by running EmptyCompositeEquivalentToNullTest
-				embeddableMappingAccess.get().setValues( instance, valuesAccess.get() );
+				embeddableMappingAccess.get().setValues( instance, values );
 			}
 
 			return instance;

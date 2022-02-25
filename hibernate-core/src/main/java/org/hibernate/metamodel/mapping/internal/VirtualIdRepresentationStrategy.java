@@ -6,8 +6,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.function.Supplier;
-
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -22,6 +20,7 @@ import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -89,10 +88,10 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 		}
 
 		@Override
-		public Object instantiate(Supplier<Object[]> valuesAccess, SessionFactoryImplementor sessionFactory) {
+		public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
 			final Object instantiated = entityInstantiator.instantiate( sessionFactory );
 			if ( valuesAccess != null ) {
-				final Object[] values = valuesAccess.get();
+				final Object[] values = valuesAccess.getValues();
 				if ( values != null ) {
 					virtualIdEmbeddable.setValues( instantiated, values );
 				}

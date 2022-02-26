@@ -22,7 +22,6 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public class ManyToOne extends ToOne {
-	private boolean ignoreNotFound;
 	private NotFoundAction notFoundAction;
 	private boolean isLogicalOneToOne;
 

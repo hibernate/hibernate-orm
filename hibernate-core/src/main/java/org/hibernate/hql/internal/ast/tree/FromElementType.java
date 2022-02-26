@@ -660,6 +660,27 @@ class FromElementType {
 		};
 	}
 
+	/**
+	 * Does the incoming identifier represent a non-qualified attribute reference.
+	 *
+	 * E.g. `... from Order where total > :discountThreshold`.  We are checking
+	 * the identifier `total` and see it is an attribute of `Order`, so it is in fact
+	 * an unqualified reference to that attribute
+	 */
+	public boolean isNonQualifiedPropertyRef(String identifier) {
+		if ( queryableCollection == null ) {
+			assert persister != null;
+			try {
+				return persister.getPropertyType( identifier ) != null;
+			}
+			catch (QueryException qe) {
+				return false;
+			}
+		}
+
+		return false;
+	}
+
 	private class SpecialManyToManyCollectionPropertyMapping implements PropertyMapping {
 		@Override
 		public Type getType() {

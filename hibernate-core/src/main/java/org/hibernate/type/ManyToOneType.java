@@ -35,7 +35,7 @@ import org.hibernate.persister.entity.Loadable;
  */
 public class ManyToOneType extends EntityType {
 	private final String propertyName;
-	private final boolean nullable;
+//	private final boolean nullable;
 	private final NotFoundAction notFoundAction;
 	private boolean isLogicalOneToOne;
 
@@ -63,7 +63,7 @@ public class ManyToOneType extends EntityType {
 
 
 	/**
-	 * @deprecated Use {@link #ManyToOneType(TypeFactory.TypeScope, String, boolean, String, String, boolean, boolean, boolean, NotFoundAction, boolean ) } instead.
+	 * @deprecated Use {@link #ManyToOneType(TypeFactory.TypeScope, String, boolean, String, String, boolean, boolean, NotFoundAction, boolean ) } instead.
 	 */
 	@Deprecated
 	public ManyToOneType(
@@ -79,7 +79,7 @@ public class ManyToOneType extends EntityType {
 	}
 
 	/**
-	 * @deprecated Use {@link #ManyToOneType(TypeFactory.TypeScope, String, boolean, String, String, boolean, boolean, boolean, NotFoundAction, boolean ) } instead.
+	 * @deprecated Use {@link #ManyToOneType(TypeFactory.TypeScope, String, boolean, String, String, boolean, boolean, NotFoundAction, boolean ) } instead.
 	 */
 	@Deprecated
 	public ManyToOneType(
@@ -97,7 +97,6 @@ public class ManyToOneType extends EntityType {
 				referenceToPrimaryKey,
 				uniqueKeyPropertyName,
 				null,
-				notFoundAction != null,
 				lazy,
 				unwrapProxy,
 				notFoundAction,
@@ -111,7 +110,6 @@ public class ManyToOneType extends EntityType {
 			boolean referenceToPrimaryKey,
 			String uniqueKeyPropertyName,
 			String propertyName,
-			boolean nullable,
 			boolean lazy,
 			boolean unwrapProxy,
 			NotFoundAction notFoundAction,
@@ -119,7 +117,6 @@ public class ManyToOneType extends EntityType {
 		super( scope, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, !lazy, unwrapProxy );
 		this.propertyName = propertyName;
 		this.notFoundAction = notFoundAction;
-		this.nullable = nullable;
 		this.isLogicalOneToOne = isLogicalOneToOne;
 	}
 
@@ -128,7 +125,6 @@ public class ManyToOneType extends EntityType {
 		this.propertyName = original.propertyName;
 		this.notFoundAction = original.notFoundAction;
 		this.isLogicalOneToOne = original.isLogicalOneToOne;
-		this.nullable = original.nullable;
 	}
 
 	@Override

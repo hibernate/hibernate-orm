@@ -79,6 +79,10 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 				return openUrlStream( MAPPING_DTD.localSchemaUrl );
 			}
 
+			if ( ALTERNATE_MAPPING_DTD.matches( publicID, systemID ) ) {
+				return openUrlStream( ALTERNATE_MAPPING_DTD.localSchemaUrl );
+			}
+
 			if ( LEGACY_MAPPING_DTD.matches( publicID, systemID ) ) {
 				DEPRECATION_LOGGER.recognizedObsoleteHibernateNamespace( LEGACY_MAPPING_DTD.getIdentifierBase(), MAPPING_DTD.getIdentifierBase() );
 				return openUrlStream( MAPPING_DTD.localSchemaUrl );
@@ -86,6 +90,10 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 
 			if ( CFG_DTD.matches( publicID, systemID ) ) {
 				return openUrlStream( CFG_DTD.localSchemaUrl );
+			}
+
+			if ( ALTERNATE_CFG_DTD.matches( publicID, systemID ) ) {
+				return openUrlStream( ALTERNATE_CFG_DTD.localSchemaUrl );
 			}
 
 			if ( LEGACY_CFG_DTD.matches( publicID, systemID ) ) {
@@ -137,6 +145,11 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 			"org/hibernate/hibernate-mapping-3.0.dtd"
 	);
 
+	public static final DtdDescriptor ALTERNATE_MAPPING_DTD = new DtdDescriptor(
+			"hibernate.org/dtd/hibernate-mapping",
+			"org/hibernate/hibernate-mapping-3.0.dtd"
+	);
+
 	public static final DtdDescriptor LEGACY_MAPPING_DTD = new DtdDescriptor(
 			"hibernate.sourceforge.net/hibernate-mapping",
 			"org/hibernate/hibernate-mapping-3.0.dtd"
@@ -144,6 +157,11 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 
 	public static final DtdDescriptor CFG_DTD = new DtdDescriptor(
 			"www.hibernate.org/dtd/hibernate-configuration",
+			"org/hibernate/hibernate-configuration-3.0.dtd"
+	);
+
+	public static final DtdDescriptor ALTERNATE_CFG_DTD = new DtdDescriptor(
+			"hibernate.org/dtd/hibernate-configuration",
 			"org/hibernate/hibernate-configuration-3.0.dtd"
 	);
 

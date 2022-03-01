@@ -18,7 +18,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.plan.spi.EntityQuerySpace;
-import org.hibernate.loader.plan.spi.QuerySpace;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -362,7 +361,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	}
 
 	private void dereferenceEntity(
-			EntityType entityType,
+			EntityType toOneType,
 			boolean implicitJoin,
 			String classAlias,
 			boolean generateJoin,
@@ -393,22 +392,23 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		String property = propertyName;
 		final boolean joinIsNeeded;
 
-
 		if ( isDotNode( parent ) ) {
 			// our parent is another dot node, meaning we are being further dereferenced.
 			// thus we need to generate a join unless the association is non-nullable and
 			// parent refers to the associated entity's PK (because 'our' table would know the FK).
 			parentAsDotNode = (DotNode) parent;
 			property = parentAsDotNode.propertyName;
-			joinIsNeeded = generateJoin && (
-					entityType.isNullable() ||
-							!isPropertyEmbeddedInJoinProperties( parentAsDotNode.propertyName )
-			);
-			if ( generateJoin
-					&& implicitJoin
-					&& entityType.isNullable()
-					&& isReferenceToPrimaryKey( parentAsDotNode.propertyName, entityType ) ) {
-				joinType = JoinType.LEFT_OUTER_JOIN;
+			if ( generateJoin ) {
+				if ( implicitJoin && ( toOneType.hasNotFoundAction() || toOneType.isNullable() ) ) {
+					fetch = !getWalker().isSubQuery();
+					joinIsNeeded = true;
+				}
+				else {
+					joinIsNeeded = !isPropertyEmbeddedInJoinProperties( parentAsDotNode.propertyName );
+				}
+			}
+			else {
+				joinIsNeeded = false;
 			}
 		}
 		else if ( !getWalker().isSelectStatement() ) {
@@ -429,7 +429,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		}
 
 		if ( joinIsNeeded ) {
-			dereferenceEntityJoin( classAlias, entityType, implicitJoin, parent );
+			dereferenceEntityJoin( classAlias, toOneType, implicitJoin, parent );
 		}
 		else {
 			dereferenceEntityIdentifier( property, parentAsDotNode );
@@ -477,8 +477,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		return n != null && n.getType() == SqlTokenTypes.DOT;
 	}
 
-	private void dereferenceEntityJoin(String classAlias, EntityType propertyType, boolean impliedJoin, AST parent)
-			throws SemanticException {
+	private void dereferenceEntityJoin(String classAlias, EntityType toOneType, boolean impliedJoin, AST parent) throws SemanticException {
 		dereferenceType = DereferenceType.ENTITY;
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf(
@@ -490,17 +489,17 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			);
 		}
 		// Create a new FROM node for the referenced class.
-		String associatedEntityName = propertyType.getAssociatedEntityName();
-		String tableAlias = getAliasGenerator().createName( associatedEntityName );
+		final String associatedEntityName = toOneType.getAssociatedEntityName();
+		final String tableAlias = getAliasGenerator().createName( associatedEntityName );
 
-		String[] joinColumns = getColumns();
-		String joinPath = getPath();
+		final String[] joinColumns = getColumns();
+		final String joinPath = getPath();
 
 		if ( impliedJoin && getWalker().isInFrom() ) {
 			joinType = getWalker().getImpliedJoinType();
 		}
 
-		FromClause currentFromClause = getWalker().getCurrentFromClause();
+		final FromClause currentFromClause = getWalker().getCurrentFromClause();
 		FromElement elem = currentFromClause.findJoinByPath( joinPath );
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -530,9 +529,9 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-		boolean found = elem != null;
+		final boolean found = elem != null;
 		// even though we might find a pre-existing element by join path, we may not be able to reuse it...
-		boolean useFoundFromElement = found && canReuse( classAlias, elem );
+		final boolean useFoundFromElement = found && canReuse( classAlias, elem );
 
 		if ( !useFoundFromElement ) {
 			// If the lhs of the join is a "component join", we need to go back to the
@@ -546,30 +545,30 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 				throw new QueryException( "Unable to locate appropriate lhs" );
 			}
 
-			String role = lhsFromElement.getClassName() + "." + propertyName;
+			final String role = lhsFromElement.getClassName() + "." + propertyName;
 
-			JoinSequence joinSequence;
+			final JoinSequence joinSequence;
 
 			if ( joinColumns.length == 0 && lhsFromElement instanceof EntityQuerySpace ) {
 				// When no columns are available, this is a special join that involves multiple subtypes
-				String lhsTableAlias = getLhs().getFromElement().getTableAlias();
+				final String lhsTableAlias = getLhs().getFromElement().getTableAlias();
 
-				AbstractEntityPersister persister = (AbstractEntityPersister) lhsFromElement.getEntityPersister();
+				final AbstractEntityPersister persister = (AbstractEntityPersister) lhsFromElement.getEntityPersister();
 
-				String[][] polyJoinColumns = persister.getPolymorphicJoinColumns(lhsTableAlias, propertyPath);
+				final String[][] polyJoinColumns = persister.getPolymorphicJoinColumns(lhsTableAlias, propertyPath);
 
 				// Special join sequence that uses the poly join columns
 				joinSequence = getSessionFactoryHelper()
-						.createJoinSequence( impliedJoin, propertyType, tableAlias, joinType, polyJoinColumns );
+						.createJoinSequence( impliedJoin, toOneType, tableAlias, joinType, polyJoinColumns );
 			}
 			else {
 				// If this is an implied join in a from element, then use the implied join type which is part of the
 				// tree parser's state (set by the grammar actions).
 				joinSequence = getSessionFactoryHelper()
-						.createJoinSequence( impliedJoin, propertyType, tableAlias, joinType, joinColumns );
+						.createJoinSequence( impliedJoin, toOneType, tableAlias, joinType, joinColumns );
 			}
 
-			FromElementFactory factory = new FromElementFactory(
+			final FromElementFactory factory = new FromElementFactory(
 					currentFromClause,
 					lhsFromElement,
 					joinPath,
@@ -583,10 +582,14 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 					joinSequence,
 					fetch,
 					getWalker().isInFrom(),
-					propertyType,
+					toOneType,
 					role,
 					joinPath
 			);
+
+			if ( impliedJoin && toOneType.hasNotFoundAction() && ! getWalker().isSubQuery() ) {
+				elem.setInProjectionList( true );
+			}
 		}
 		else {
 			// NOTE : addDuplicateAlias() already performs nullness checks on the alias.

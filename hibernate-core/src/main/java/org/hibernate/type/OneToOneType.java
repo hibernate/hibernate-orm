@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.EntityKey;
@@ -188,6 +189,11 @@ public class OneToOneType extends EntityType {
 	@Override
 	public boolean isNullable() {
 		return !constrained;
+	}
+
+	@Override
+	public NotFoundAction getNotFoundAction() {
+		return null;
 	}
 
 	@Override

@@ -35,7 +35,6 @@ import org.hibernate.persister.entity.Loadable;
  */
 public class ManyToOneType extends EntityType {
 	private final String propertyName;
-//	private final boolean nullable;
 	private final NotFoundAction notFoundAction;
 	private boolean isLogicalOneToOne;
 
@@ -130,6 +129,11 @@ public class ManyToOneType extends EntityType {
 	@Override
 	public boolean isNullable() {
 		return notFoundAction != null;
+	}
+
+	@Override
+	public NotFoundAction getNotFoundAction() {
+		return notFoundAction;
 	}
 
 	@Override
@@ -261,6 +265,12 @@ public class ManyToOneType extends EntityType {
 			resolvedValue = super.resolve( value, session, owner, overridingEager );
 		}
 		catch (ObjectNotFoundException e) {
+			throw new FetchNotFoundException( getAssociatedEntityName(), value );
+		}
+
+		if ( value != null
+				&& resolvedValue == null
+				&& getNotFoundAction() == NotFoundAction.EXCEPTION ) {
 			throw new FetchNotFoundException( getAssociatedEntityName(), value );
 		}
 

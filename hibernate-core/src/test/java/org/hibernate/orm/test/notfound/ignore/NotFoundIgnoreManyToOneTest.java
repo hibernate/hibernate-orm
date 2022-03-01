@@ -9,10 +9,12 @@ package org.hibernate.orm.test.notfound.ignore;
 import java.io.Serializable;
 import java.util.List;
 
+import org.hibernate.FetchNotFoundException;
 import org.hibernate.Hibernate;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.orm.test.notfound.exception.NotFoundExceptionLogicalOneToOneTest;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -27,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Tuple;
 import org.assertj.core.api.Assertions;
@@ -50,8 +53,15 @@ public class NotFoundIgnoreManyToOneTest {
 	@Test
 	@JiraKey( "HHH-15060" )
 	public void testProxy(SessionFactoryScope scope) {
+		// test handling of a proxy for the Coin pointing to the missing Currency
 		scope.inTransaction( (session) -> {
-			// the non-existent Child
+			final Coin proxy = session.byId( Coin.class ).getReference( 1 );
+			Hibernate.initialize( proxy );
+			assertThat( proxy.getCurrency() ).isNull();
+		} );
+
+		scope.inTransaction( (session) -> {
+			// the non-existent Currency
 			// 	- this is the one valid deviation from treating the broken fk as null
 			final Currency proxy = session.byId( Currency.class ).getReference( 1 );
 			try {
@@ -100,11 +110,12 @@ public class NotFoundIgnoreManyToOneTest {
 		scope.inTransaction( (session) -> {
 			final String hql = "select c from Coin c where c.currency.id = 1";
 			final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
+			// there is no Currency with id=1 (Euro)
 			assertThat( coins ).isEmpty();
 
-			// technically we could use a subsequent-select rather than a join...
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " cross " );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
 		} );
 	}
@@ -135,9 +146,50 @@ public class NotFoundIgnoreManyToOneTest {
 	@Test
 	@JiraKey( "HHH-15060" )
 	@FailureExpected(
-			reason = "Has zero results because of inner-join; & the select w/ inner-join is executed twice for some odd reason"
+			reason = "Has zero results because of inner-join due to being defined in the select-clause. " +
+					"Not sure the best outcome here - no results or null elements within the results?"
 	)
 	public void testQueryAssociationSelection(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		// I guess this one is somewhat debatable, but for consistency I think this makes the most sense
+		scope.inTransaction( (session) -> {
+			final String hql = "select c.currency from Coin c";
+			session.createQuery( hql, Currency.class ).getResultList();
+			final List<Currency> currencies = session.createQuery( hql, Currency.class ).getResultList();
+			assertThat( currencies ).hasSize( 1 );
+			assertThat( currencies.get( 0 ) ).isNull();
+
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-15060" )
+	public void testSubqueryUse(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		scope.inTransaction( (session) -> {
+			final String hql = "select c " +
+					"from Coin c " +
+					"where exists (" +
+					"	select 1" +
+					"	from Coin other" +
+					")";
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-15060" )
+	@FailureExpected(
+			reason = "Has zero results because of inner-join due to being defined in the select-clause. " +
+					"Not sure the best outcome here - no results or null elements within the results?"
+	)
+	public void testQueryAssociationSelection2(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
@@ -148,21 +200,6 @@ public class NotFoundIgnoreManyToOneTest {
 			final Tuple tuple = tuples.get( 0 );
 			assertThat( tuple.get( 0 ) ).isEqualTo( 1 );
 			assertThat( tuple.get( 1 ) ).isNull();
-
-			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
-		} );
-
-		statementInspector.clear();
-
-		// I guess this one is somewhat debatable, but for consistency I think this makes the most sense
-		scope.inTransaction( (session) -> {
-			final String hql = "select c.currency from Coin c";
-			session.createQuery( hql, Currency.class ).getResultList();
-			final List<Currency> currencies = session.createQuery( hql, Currency.class ).getResultList();
-			assertThat( currencies ).hasSize( 1 );
-			assertThat( currencies.get( 0 ) ).isNull();
 
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
@@ -226,6 +263,7 @@ public class NotFoundIgnoreManyToOneTest {
 
 		@ManyToOne(fetch = FetchType.EAGER)
 		@NotFound(action = NotFoundAction.IGNORE)
+		@JoinColumn( name = "currency_fk" )
 		public Currency getCurrency() {
 			return currency;
 		}

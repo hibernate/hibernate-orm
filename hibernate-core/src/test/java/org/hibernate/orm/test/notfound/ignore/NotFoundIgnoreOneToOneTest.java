@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Tuple;
 import org.assertj.core.api.Assertions;
@@ -51,6 +52,13 @@ public class NotFoundIgnoreOneToOneTest {
 	@Test
 	@JiraKey( "HHH-15060" )
 	public void testProxy(SessionFactoryScope scope) {
+		// test handling of a proxy for the Coin pointing to the missing Currency
+		scope.inTransaction( (session) -> {
+			final Coin proxy = session.byId( Coin.class ).getReference( 1 );
+			Hibernate.initialize( proxy );
+			assertThat( proxy.getCurrency() ).isNull();
+		} );
+
 		scope.inTransaction( (session) -> {
 			// the non-existent Child
 			// 	- this is the one valid deviation from treating the broken fk as null
@@ -87,7 +95,6 @@ public class NotFoundIgnoreOneToOneTest {
 
 	@Test
 	@JiraKey( "HHH-15060" )
-	@FailureExpected( reason = "No results due to bad join" )
 	public void testQueryImplicitPathDereferencePredicate(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -95,8 +102,8 @@ public class NotFoundIgnoreOneToOneTest {
 		scope.inTransaction( (session) -> {
 			final String hql = "select c from Coin c where c.currency.id = 1";
 			final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
-			assertThat( coins ).hasSize( 1 );
-			assertThat( coins.get( 0 ).getCurrency() ).isNull();
+			// there is no Currency with id=1 (Euro)
+			assertThat( coins ).isEmpty();
 
 			// technically we could use a subsequent-select rather than a join...
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
@@ -128,8 +135,26 @@ public class NotFoundIgnoreOneToOneTest {
 
 	@Test
 	@JiraKey( "HHH-15060" )
-	@FailureExpected( reason = "No results because of join" )
+	@FailureExpected(
+			reason = "Has zero results because of inner-join due to being defined in the select-clause. " +
+					"Not sure the best outcome here - no results or null elements within the results?"
+	)
 	public void testQueryAssociationSelection(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			final String hql = "select c.currency from Coin c";
+			final List<Currency> currencies = session.createQuery( hql, Currency.class ).getResultList();
+			assertThat( currencies ).hasSize( 1 );
+			assertThat( currencies.get( 0 ) ).isNull();
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-15060" )
+	@FailureExpected(
+			reason = "Has zero results because of inner-join due to being defined in the select-clause. " +
+					"Not sure the best outcome here - no results or null elements within the results?"
+	)
+	public void testQueryAssociationSelection2(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final String hql = "select c.id, c.currency from Coin c";
 			final List<Tuple> tuples = session.createQuery( hql, Tuple.class ).getResultList();
@@ -137,13 +162,6 @@ public class NotFoundIgnoreOneToOneTest {
 			final Tuple tuple = tuples.get( 0 );
 			assertThat( tuple.get( 0 ) ).isEqualTo( 1 );
 			assertThat( tuple.get( 1 ) ).isNull();
-		} );
-
-		scope.inTransaction( (session) -> {
-			final String hql = "select c.currency from Coin c";
-			final List<Currency> currencies = session.createQuery( hql, Currency.class ).getResultList();
-			assertThat( currencies ).hasSize( 1 );
-			assertThat( currencies.get( 0 ) ).isNull();
 		} );
 	}
 
@@ -203,6 +221,7 @@ public class NotFoundIgnoreOneToOneTest {
 
 		@OneToOne(fetch = FetchType.EAGER)
 		@NotFound(action = NotFoundAction.IGNORE)
+		@JoinColumn( name = "currency_fk" )
 		public Currency getCurrency() {
 			return currency;
 		}

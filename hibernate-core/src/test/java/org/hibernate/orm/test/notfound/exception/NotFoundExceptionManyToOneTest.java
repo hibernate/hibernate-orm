@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import org.assertj.core.api.Assertions;
 
@@ -51,8 +52,21 @@ public class NotFoundExceptionManyToOneTest {
 	@Test
 	@JiraKey( "HHH-15060" )
 	public void testProxy(SessionFactoryScope scope) {
+		// test handling of a proxy for the Coin pointing to the missing Currency
 		scope.inTransaction( (session) -> {
-			// the non-existent Child
+			final Coin proxy = session.byId( Coin.class ).getReference( 1 );
+			try {
+				Hibernate.initialize( proxy );
+				Assertions.fail( "Expecting ObjectNotFoundException" );
+			}
+			catch (ObjectNotFoundException expected) {
+				assertThat( expected.getEntityName() ).endsWith( "Currency" );
+				assertThat( expected.getIdentifier() ).isEqualTo( 1 );
+			}
+		} );
+
+		scope.inTransaction( (session) -> {
+			// the non-existent Currency
 			final Currency proxy = session.byId( Currency.class ).getReference( 1 );
 			try {
 				Hibernate.initialize( proxy );
@@ -75,7 +89,7 @@ public class NotFoundExceptionManyToOneTest {
 			try {
 				// should fail here loading the Coin due to missing currency (see NOTE#1)
 				final Coin coin = session.get( Coin.class, 1 );
-				fail( "Expecting FetchNotFoundException for broken fk" );
+				fail( "Expecting ObjectNotFoundException for broken fk" );
 			}
 			catch (FetchNotFoundException expected) {
 				assertThat( expected.getEntityName() ).isEqualTo( Currency.class.getName() );
@@ -105,25 +119,17 @@ public class NotFoundExceptionManyToOneTest {
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
-			try {
-				final String hql = "select c from Coin c where c.currency.id = 1";
-				session.createQuery( hql, Coin.class ).getResultList();
+			final String hql = "select c from Coin c where c.currency.id = 1";
+			final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
+			// there is no Currency with id=1 (Euro)
+			assertThat( coins ).isEmpty();
 
-				fail( "Expecting FetchNotFoundException for broken fk" );
-			}
-			catch (FetchNotFoundException expected) {
-				assertThat( expected.getEntityName() ).isEqualTo( Currency.class.getName() );
-				assertThat( expected.getIdentifier() ).isEqualTo( 1 );
-
-				// join may be better here.  but for now, 5.x generates 2 selects here
-				// which is not wrong
-//				assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-//				assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
-//				assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
-				assertThat( statementInspector.getSqlQueries() ).hasSize( 2 );
-				assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " Currency " );
-				assertThat( statementInspector.getSqlQueries().get( 1 ) ).doesNotContain( " Coin " );
-			}
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+			// unfortunately, versions of Hibernate prior to 6 used restricted cross joins
+			// (i.e. `x cross join y where x.y_fk = y.id`) to handle implicit query joins
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " cross " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
 		} );
 	}
 
@@ -144,10 +150,7 @@ public class NotFoundExceptionManyToOneTest {
 				assertThat( expected.getIdentifier() ).isEqualTo( 1 );
 
 				// join may be better here.  but for now, 5.x generates 2 selects here
-				// which is not wrong
-//				assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-//				assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
-//				assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
+				// which is not wrong.
 				assertThat( statementInspector.getSqlQueries() ).hasSize( 2 );
 				assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " Currency " );
 				assertThat( statementInspector.getSqlQueries().get( 1 ) ).doesNotContain( " Coin " );
@@ -226,6 +229,7 @@ public class NotFoundExceptionManyToOneTest {
 
 		@ManyToOne(fetch = FetchType.EAGER)
 		@NotFound(action = NotFoundAction.EXCEPTION)
+		@JoinColumn( name = "currency_fk" )
 		public Currency getCurrency() {
 			return currency;
 		}

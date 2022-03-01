@@ -42,6 +42,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
+import org.hibernate.FetchNotFoundException;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -1042,7 +1043,16 @@ public class SessionImpl
 		LoadEvent event = loadEvent;
 		loadEvent = null;
 		event = recycleEventInstance( event, id, entityName );
-		fireLoadNoChecks( event, LoadEventListener.IMMEDIATE_LOAD );
+
+		try {
+			fireLoadNoChecks( event, LoadEventListener.IMMEDIATE_LOAD );
+		}
+		catch (FetchNotFoundException e) {
+			// when this happens at the "top-level" of a load, for 5.x we want to
+			// keep this the same user-facing exception as it was before
+			getSessionFactory().getEntityNotFoundDelegate().handleEntityNotFound( e.getEntityName(), (Serializable) e.getIdentifier() );
+		}
+
 		Object result = event.getResult();
 		if ( loadEvent == null ) {
 			event.setEntityClassName( null );

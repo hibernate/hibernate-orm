@@ -16,6 +16,7 @@ import java.util.Set;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.Mapping;
@@ -679,6 +680,12 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @return The nullability of the property.
 	 */
 	public abstract boolean isNullable();
+
+	public abstract NotFoundAction getNotFoundAction();
+
+	public boolean hasNotFoundAction() {
+		return getNotFoundAction() != null;
+	}
 
 	/**
 	 * Resolve an identifier via a load.

@@ -1371,6 +1371,11 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpected(
+			jiraKey = "HHH-15060",
+			message = "HHH-15060 changes how associations mapped with `@NotFound` are handled " +
+					"which results in a (now expected) exception"
+	)
 	public void testNestedComponentIsNull() {
 		// From MapTest...
 		assertTranslation( "from Commento c where c.marelo.commento.mcompr is null" );

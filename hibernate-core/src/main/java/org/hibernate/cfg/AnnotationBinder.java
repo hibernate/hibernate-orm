@@ -170,6 +170,7 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UnionSubclass;
 
+import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
@@ -691,7 +692,7 @@ public final class AnnotationBinder {
 				SimpleValue key = new DependantValue( context, jsc.getTable(), jsc.getIdentifier() );
 				jsc.setKey( key );
 				ForeignKey fk = clazzToProcess.getAnnotation( ForeignKey.class );
-				if ( fk != null && !BinderHelper.isEmptyAnnotationValue( fk.name() ) ) {
+				if ( fk != null && !isEmptyAnnotationValue( fk.name() ) ) {
 					key.setForeignKeyName( fk.name() );
 				}
 				else {
@@ -1371,7 +1372,7 @@ public final class AnnotationBinder {
 			params.setProperty( param.name(), param.value() );
 		}
 
-		if ( BinderHelper.isEmptyAnnotationValue( defAnn.name() ) && defAnn.defaultForType().equals( void.class ) ) {
+		if ( isEmptyAnnotationValue( defAnn.name() ) && defAnn.defaultForType().equals( void.class ) ) {
 			throw new AnnotationException(
 					"Either name or defaultForType (or both) attribute should be set in TypeDef having typeClass " +
 							defAnn.typeClass().getName()
@@ -1379,7 +1380,7 @@ public final class AnnotationBinder {
 		}
 
 		final String typeBindMessageF = "Binding type definition: %s";
-		if ( !BinderHelper.isEmptyAnnotationValue( defAnn.name() ) ) {
+		if ( !isEmptyAnnotationValue( defAnn.name() ) ) {
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf( typeBindMessageF, defAnn.name() );
 			}
@@ -1794,11 +1795,12 @@ public final class AnnotationBinder {
 					);
 				}
 
+				final NotFound notFound = property.getAnnotation( NotFound.class );
+				final NotFoundAction notFoundAction = notFound == null ? null : notFound.action();
+				final boolean hasNotFound = notFoundAction != null;
+				checkFetchModeAgainstNotFound( propertyHolder.getEntityName(), property.getName(), hasNotFound, ann.fetch() );
+
 				Cascade hibernateCascade = property.getAnnotation( Cascade.class );
-				NotFound notFound = property.getAnnotation( NotFound.class );
-				NotFoundAction notFoundAction = notFound == null ? null : notFound.action();
-				boolean ignoreNotFound = notFoundAction == NotFoundAction.IGNORE;
-				matchIgnoreNotFoundWithFetchType(propertyHolder.getEntityName(), property.getName(), ignoreNotFound, ann.fetch());
 				OnDelete onDeleteAnn = property.getAnnotation( OnDelete.class );
 				boolean onDeleteCascade = onDeleteAnn != null && OnDeleteAction.CASCADE.equals( onDeleteAnn.action() );
 				JoinTable assocTable = propertyHolder.getJoinTable( property );
@@ -1814,10 +1816,9 @@ public final class AnnotationBinder {
 				// is mandatory (even if the association has optional=true).
 				// If a @MapsId association has optional=true and is mapped with @NotFound(IGNORE) then
 				// the association is optional.
-				final boolean mandatory =
-						!ann.optional() ||
-								property.isAnnotationPresent( Id.class ) ||
-								( property.isAnnotationPresent( MapsId.class ) && !ignoreNotFound );
+				final boolean mandatory = !ann.optional()
+						|| property.isAnnotationPresent( Id.class )
+						|| ( property.isAnnotationPresent( MapsId.class ) && !hasNotFound );
 				bindManyToOne(
 						getCascadeStrategy( ann.cascade(), hibernateCascade, false, forcePersist ),
 						joinColumns,
@@ -1850,10 +1851,12 @@ public final class AnnotationBinder {
 				final boolean hasPkjc = property.isAnnotationPresent( PrimaryKeyJoinColumn.class )
 						|| property.isAnnotationPresent( PrimaryKeyJoinColumns.class );
 				boolean trueOneToOne = hasPkjc;
-				Cascade hibernateCascade = property.getAnnotation( Cascade.class );
-				NotFound notFound = property.getAnnotation( NotFound.class );
-				NotFoundAction notFoundAction = notFound == null ? null : notFound.action();
-				boolean ignoreNotFound = notFoundAction == NotFoundAction.IGNORE;
+				final Cascade hibernateCascade = property.getAnnotation( Cascade.class );
+				final NotFound notFound = property.getAnnotation( NotFound.class );
+				final NotFoundAction notFoundAction = notFound == null ? null : notFound.action();
+				final boolean hasNotFound = notFoundAction != null;
+				checkFetchModeAgainstNotFound( propertyHolder.getEntityName(), property.getName(), hasNotFound, ann.fetch() );
+
 				// MapsId means the columns belong to the pk;
 				// A @MapsId association (obviously) must be non-null when the entity is first persisted.
 				// If a @MapsId association is not mapped with @NotFound(IGNORE), then the association
@@ -1861,14 +1864,14 @@ public final class AnnotationBinder {
 				// If a @MapsId association has optional=true and is mapped with @NotFound(IGNORE) then
 				// the association is optional.
 				// @OneToOne(optional = true) with @PKJC makes the association optional.
-				final boolean mandatory =
-						!ann.optional() ||
-								property.isAnnotationPresent( Id.class ) ||
-								( property.isAnnotationPresent( MapsId.class ) && !ignoreNotFound );
-				matchIgnoreNotFoundWithFetchType(propertyHolder.getEntityName(), property.getName(), ignoreNotFound, ann.fetch());
-				OnDelete onDeleteAnn = property.getAnnotation( OnDelete.class );
-				boolean onDeleteCascade = onDeleteAnn != null && OnDeleteAction.CASCADE.equals( onDeleteAnn.action() );
-				JoinTable assocTable = propertyHolder.getJoinTable( property );
+				final boolean mandatory = !ann.optional()
+						|| property.isAnnotationPresent( Id.class )
+						|| ( property.isAnnotationPresent( MapsId.class ) && !hasNotFound );
+				checkFetchModeAgainstNotFound( propertyHolder.getEntityName(), property.getName(), hasNotFound, ann.fetch() );
+
+				final OnDelete onDeleteAnn = property.getAnnotation( OnDelete.class );
+				final boolean onDeleteCascade = onDeleteAnn != null && OnDeleteAction.CASCADE.equals( onDeleteAnn.action() );
+				final JoinTable assocTable = propertyHolder.getJoinTable( property );
 				if ( assocTable != null ) {
 					Join join = propertyHolder.addJoin( assocTable, false );
 					for ( Ejb3JoinColumn joinColumn : joinColumns ) {
@@ -2575,13 +2578,13 @@ public final class AnnotationBinder {
 			if ( jpaIndexes != null && jpaIndexes.length > 0 ) {
 				associationTableBinder.setJpaIndex( jpaIndexes );
 			}
-			if ( !BinderHelper.isEmptyAnnotationValue( schema ) ) {
+			if ( !isEmptyAnnotationValue( schema ) ) {
 				associationTableBinder.setSchema( schema );
 			}
-			if ( !BinderHelper.isEmptyAnnotationValue( catalog ) ) {
+			if ( !isEmptyAnnotationValue( catalog ) ) {
 				associationTableBinder.setCatalog( catalog );
 			}
-			if ( !BinderHelper.isEmptyAnnotationValue( tableName ) ) {
+			if ( !isEmptyAnnotationValue( tableName ) ) {
 				associationTableBinder.setName( tableName );
 			}
 			associationTableBinder.setUniqueConstraints( uniqueConstraints );
@@ -3093,7 +3096,7 @@ public final class AnnotationBinder {
 				}
 
 				if ( property.isAnnotationPresent( ManyToOne.class ) && joinColumn != null
-						&& ! BinderHelper.isEmptyAnnotationValue( joinColumn.name() )
+						&& ! isEmptyAnnotationValue( joinColumn.name() )
 						&& joinColumn.name().equals( columnName )
 						&& !property.isAnnotationPresent( MapsId.class ) ) {
 					hasSpecjManyToOne = true;
@@ -3268,7 +3271,7 @@ public final class AnnotationBinder {
 				}
 			}
 		}
-		if ( trueOneToOne || mapToPK || !BinderHelper.isEmptyAnnotationValue( mappedBy ) ) {
+		if ( trueOneToOne || mapToPK || !isEmptyAnnotationValue( mappedBy ) ) {
 			//is a true one-to-one
 			//FIXME referencedColumnName ignored => ordering may fail.
 			OneToOneSecondPass secondPass = new OneToOneSecondPass(
@@ -3289,19 +3292,25 @@ public final class AnnotationBinder {
 				secondPass.doSecondPass( context.getMetadataCollector().getEntityBindingMap() );
 			}
 			else {
-				context.getMetadataCollector().addSecondPass(
-						secondPass,
-						BinderHelper.isEmptyAnnotationValue( mappedBy )
-				);
+				context.getMetadataCollector().addSecondPass( secondPass, isEmptyAnnotationValue( mappedBy ) );
 			}
 		}
 		else {
 			//has a FK on the table
 			bindManyToOne(
-					cascadeStrategy, joinColumns, optional, notFoundAction, cascadeOnDelete,
+					cascadeStrategy,
+					joinColumns,
+					optional,
+					notFoundAction,
+					cascadeOnDelete,
 					targetEntity,
-					propertyHolder, inferredData, true, isIdentifierMapper, inSecondPass,
-					propertyBinder, context
+					propertyHolder,
+					inferredData,
+					true,
+					isIdentifierMapper,
+					inSecondPass,
+					propertyBinder,
+					context
 			);
 		}
 	}
@@ -3645,12 +3654,12 @@ public final class AnnotationBinder {
 		return false;
 	}
 
-	private static void matchIgnoreNotFoundWithFetchType(
+	private static void checkFetchModeAgainstNotFound(
 			String entity,
 			String association,
-			boolean ignoreNotFound,
+			boolean hasNotFound,
 			FetchType fetchType) {
-		if ( ignoreNotFound && fetchType == FetchType.LAZY ) {
+		if ( hasNotFound && fetchType == FetchType.LAZY ) {
 			LOG.ignoreNotFoundWithFetchTypeLazy( entity, association );
 		}
 	}

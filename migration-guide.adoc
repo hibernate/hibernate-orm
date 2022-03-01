@@ -289,6 +289,10 @@ The `Query#iterate()` method has been removed. The alternative is to use one of
 * `Query#getResultStream()`
 * Get the `Iterator` from `List` returned by `Query#list()` / `Query#getResultList()`
 
+[[query-result-cache]]
+== Query result cache
+
+Another change in 6.0 is related to the content of the query result cache, it now holds the entity data values and not just the entity identifier information.
 
 [[query-sqm]]
 == SQM (HQL/Criteria)

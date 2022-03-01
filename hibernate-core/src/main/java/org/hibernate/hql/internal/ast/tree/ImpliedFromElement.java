@@ -23,12 +23,23 @@ public class ImpliedFromElement extends FromElement {
 	 */
 	private boolean inProjectionList;
 
+	private boolean forcedNotFoundFetch;
+
 	/**
 	 * Here to add debug breakpoints
 	 */
 	@SuppressWarnings("unused")
 	public ImpliedFromElement() {
 		super();
+	}
+
+	public void forceNotFoundFetch() {
+		getWalker().registerForcibleNotFoundImplicitJoin( this );
+		forcedNotFoundFetch = true;
+	}
+
+	public boolean isForcedNotFoundFetch() {
+		return forcedNotFoundFetch;
 	}
 
 	public boolean isImplied() {

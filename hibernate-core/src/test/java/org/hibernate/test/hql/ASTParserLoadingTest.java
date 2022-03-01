@@ -1379,11 +1379,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(
-			jiraKey = "HHH-15060",
-			message = "HHH-15060 changes how associations mapped with `@NotFound` are handled " +
-					"which results in a (now expected) exception"
-	)
 	public void testNestedComponentIsNull() {
 		// (1) From MapTest originally...
 		// (2) Was then moved into HQLTest...

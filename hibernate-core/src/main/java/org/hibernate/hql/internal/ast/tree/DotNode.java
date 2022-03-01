@@ -400,7 +400,6 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			property = parentAsDotNode.propertyName;
 			if ( generateJoin ) {
 				if ( implicitJoin && ( toOneType.hasNotFoundAction() || toOneType.isNullable() ) ) {
-					fetch = !getWalker().isSubQuery();
 					joinIsNeeded = true;
 				}
 				else {
@@ -437,47 +436,16 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 
 	}
 
-	/**
-	 * Is the given property name a reference to the primary key of the associated
-	 * entity construed by the given entity type?
-	 * <p/>
-	 * For example, consider a fragment like order.customer.id
-	 * (where order is a from-element alias).  Here, we'd have:
-	 * propertyName = "id" AND
-	 * owningType = ManyToOneType(Customer)
-	 * and are being asked to determine whether "customer.id" is a reference
-	 * to customer's PK...
-	 *
-	 * @param propertyName The name of the property to check.
-	 * @param owningType The type represeting the entity "owning" the property
-	 *
-	 * @return True if propertyName references the entity's (owningType->associatedEntity)
-	 *         primary key; false otherwise.
-	 */
-	private boolean isReferenceToPrimaryKey(String propertyName, EntityType owningType) {
-		EntityPersister persister = getSessionFactoryHelper()
-				.getFactory().getMetamodel().entityPersister( owningType.getAssociatedEntityName() );
-		if ( persister.getEntityMetamodel().hasNonIdentifierPropertyNamedId() ) {
-			// only the identifier property field name can be a reference to the associated entity's PK...
-			return propertyName.equals( persister.getIdentifierPropertyName() ) && owningType.isReferenceToPrimaryKey();
-		}
-		// here, we have two possibilities:
-		// 1) the property-name matches the explicitly identifier property name
-		// 2) the property-name matches the implicit 'id' property name
-		// the referenced node text is the special 'id'
-		if ( EntityPersister.ENTITY_ID.equals( propertyName ) ) {
-			return owningType.isReferenceToPrimaryKey();
-		}
-		String keyPropertyName = getSessionFactoryHelper().getIdentifierOrUniqueKeyPropertyName( owningType );
-		return keyPropertyName != null && keyPropertyName.equals( propertyName ) && owningType.isReferenceToPrimaryKey();
-	}
-
 
 	private static boolean isDotNode(AST n) {
 		return n != null && n.getType() == SqlTokenTypes.DOT;
 	}
 
-	private void dereferenceEntityJoin(String classAlias, EntityType toOneType, boolean impliedJoin, AST parent) throws SemanticException {
+	private void dereferenceEntityJoin(
+			String classAlias,
+			EntityType toOneType,
+			boolean isImpliedJoin,
+			AST parent) throws SemanticException {
 		dereferenceType = DereferenceType.ENTITY;
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf(
@@ -495,7 +463,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		final String[] joinColumns = getColumns();
 		final String joinPath = getPath();
 
-		if ( impliedJoin && getWalker().isInFrom() ) {
+		if ( isImpliedJoin && getWalker().isInFrom() ) {
 			joinType = getWalker().getImpliedJoinType();
 		}
 
@@ -559,13 +527,13 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 
 				// Special join sequence that uses the poly join columns
 				joinSequence = getSessionFactoryHelper()
-						.createJoinSequence( impliedJoin, toOneType, tableAlias, joinType, polyJoinColumns );
+						.createJoinSequence( isImpliedJoin, toOneType, tableAlias, joinType, polyJoinColumns );
 			}
 			else {
 				// If this is an implied join in a from element, then use the implied join type which is part of the
 				// tree parser's state (set by the grammar actions).
 				joinSequence = getSessionFactoryHelper()
-						.createJoinSequence( impliedJoin, toOneType, tableAlias, joinType, joinColumns );
+						.createJoinSequence( isImpliedJoin, toOneType, tableAlias, joinType, joinColumns );
 			}
 
 			final FromElementFactory factory = new FromElementFactory(
@@ -574,7 +542,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 					joinPath,
 					classAlias,
 					joinColumns,
-					impliedJoin
+					isImpliedJoin
 			);
 			elem = factory.createEntityJoin(
 					associatedEntityName,
@@ -587,14 +555,27 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 					joinPath
 			);
 
-			if ( impliedJoin && toOneType.hasNotFoundAction() && ! getWalker().isSubQuery() ) {
-				elem.setInProjectionList( true );
+			if ( isImpliedJoin
+					&& toOneType.hasNotFoundAction()
+					&& !getWalker().isSubQuery() ) {
+				assert elem instanceof ImpliedFromElement;
+				// we want to fetch this association if
+				// 		1. its left-hand side is part of the result-graph, and
+				// 		2. it is not already fetched
+				//
+				// unfortunately we will not know this information until later when we handle the
+				// select-clause - see `SelectClause#initializeExplicitSelectClause` and
+				// `SelectClause#initializeDerivedSelectClause`.  For now, simply mark them
+				// and we will use that well initializing the SelectClause
+				final ImpliedFromElement impliedJoin = (ImpliedFromElement) elem;
+				impliedJoin.forceNotFoundFetch();
 			}
 		}
 		else {
 			// NOTE : addDuplicateAlias() already performs nullness checks on the alias.
 			currentFromClause.addDuplicateAlias( classAlias, elem );
 		}
+
 		setImpliedJoin( elem );
 		getWalker().addQuerySpaces( elem.getEntityPersister().getQuerySpaces() );
 		setFromElement( elem );    // This 'dot' expression now refers to the resulting from element.

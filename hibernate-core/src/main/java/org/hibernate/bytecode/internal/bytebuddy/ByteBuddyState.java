@@ -189,6 +189,10 @@ public final class ByteBuddyState {
 		return make( makeProxyFunction.apply( byteBuddy ) );
 	}
 
+	public Unloaded<?> make(TypePool typePool, Function<ByteBuddy, DynamicType.Builder<?>> makeProxyFunction) {
+		return make( typePool, makeProxyFunction.apply( byteBuddy ) );
+	}
+
 	private Unloaded<?> make(DynamicType.Builder<?> builder) {
 		return make( null, builder );
 	}

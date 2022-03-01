@@ -17,7 +17,6 @@ import org.hibernate.stat.Statistics;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.Test;
@@ -27,7 +26,6 @@ import jakarta.persistence.TypedQuery;
 
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-
 
 /**
  * @author Gail Badner
@@ -57,8 +55,6 @@ public class CachedQueryTest {
 
 
 	@Test
-	// todo (6.0): implement shallow query cache structure
-	@NotImplementedYet(strict = false, reason = "Different query cache structure")
 	public void testCacheableQuery(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				em -> {
@@ -92,19 +88,16 @@ public class CachedQueryTest {
 					assertEquals( 0, stats.getQueryCacheHitCount() );
 					assertEquals( 1, stats.getQueryCacheMissCount() );
 					assertEquals( 1, stats.getQueryCachePutCount() );
-					// the first time the query executes, stats.getSecondLevelCacheHitCount() is 0 because the
-					// entities are read from the query ResultSet (not from the entity cache).
+
 					assertEquals( 0, stats.getSecondLevelCacheHitCount() );
 					assertEquals( 0, stats.getSecondLevelCacheMissCount() );
 					assertEquals( 0, stats.getSecondLevelCachePutCount() );
 				}
 		);
 
-
 		stats.clear();
 
-		// Second time the query is executed, list of entities are read from query cache and
-		// the entities themselves are read from the entity cache.
+		// Second time the query is executed, list of entities are read from query cache
 
 		scope.inTransaction(
 				em -> {
@@ -115,9 +108,8 @@ public class CachedQueryTest {
 					assertEquals( 1, stats.getQueryCacheHitCount() );
 					assertEquals( 0, stats.getQueryCacheMissCount() );
 					assertEquals( 0, stats.getQueryCachePutCount() );
-					// the first time the query executes, stats.getSecondLevelCacheHitCount() is 0 because the
-					// entities are read from the query ResultSet (not from the entity cache).
-					assertEquals( 10, stats.getSecondLevelCacheHitCount() );
+
+					assertEquals( 0, stats.getSecondLevelCacheHitCount() );
 					assertEquals( 0, stats.getSecondLevelCacheMissCount() );
 					assertEquals( 0, stats.getSecondLevelCachePutCount() );
 				}
@@ -140,12 +132,10 @@ public class CachedQueryTest {
 					assertEquals( 1, stats.getQueryCacheHitCount() );
 					assertEquals( 0, stats.getQueryCacheMissCount() );
 					assertEquals( 0, stats.getQueryCachePutCount() );
-					// since entity regions were evicted, the 10 entities are not found, and are re-put after loading
-					// as each entity ID is read from the query cache, Hibernate will look the entity up in the
-					// cache and will not find it; that's why the "miss" and "put" counts are both 10.
+
 					assertEquals( 0, stats.getSecondLevelCacheHitCount() );
-					assertEquals( 10, stats.getSecondLevelCacheMissCount() );
-					assertEquals( 10, stats.getSecondLevelCachePutCount() );
+					assertEquals( 0, stats.getSecondLevelCacheMissCount() );
+					assertEquals( 0, stats.getSecondLevelCachePutCount() );
 				}
 		);
 
@@ -171,8 +161,7 @@ public class CachedQueryTest {
 						assertEquals( 0, stats.getQueryCacheHitCount() );
 						assertEquals( 1, stats.getQueryCacheMissCount() );
 						assertEquals( 1, stats.getQueryCachePutCount() );
-						// stats.getSecondLevelCacheHitCount() is 0 because the
-						// entities are read from the query ResultSet (not from the entity cache).
+
 						assertEquals( 0, stats.getSecondLevelCacheHitCount() );
 						assertEquals( 0, stats.getSecondLevelCacheMissCount() );
 						assertEquals( 10, stats.getSecondLevelCachePutCount() );

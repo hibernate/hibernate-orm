@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm.sql;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.AbstractMap;
@@ -76,10 +78,14 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.SqlExpressible;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.ValueMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
+import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
@@ -338,8 +344,10 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.exec.internal.AbstractJdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
+import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.internal.VersionTypeSeedParameterSpecification;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -441,6 +449,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	);
 	private final Stack<List<QueryTransformer>> queryTransformers = new StandardStack<>();
 	private boolean inTypeInference;
+	private boolean inImpliedResultTypeInference;
 	private Supplier<MappingModelExpressible<?>> functionImpliedResultTypeAccess;
 
 	private SqmByUnit appliedByUnit;
@@ -1341,7 +1350,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 	}
 
-	private static class IdGeneratorParameter extends JdbcParameterImpl {
+	private static class IdGeneratorParameter extends AbstractJdbcParameter {
 
 		private final IdentifierGenerator generator;
 
@@ -4183,12 +4192,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public MappingModelExpressible<?> resolveFunctionImpliedReturnType() {
-		if ( inTypeInference || functionImpliedResultTypeAccess == null ) {
+		if ( inImpliedResultTypeInference || functionImpliedResultTypeAccess == null ) {
 			return null;
 		}
-		inTypeInference = true;
+		inImpliedResultTypeInference = true;
 		final MappingModelExpressible<?> inferredType = functionImpliedResultTypeAccess.get();
-		inTypeInference = false;
+		inImpliedResultTypeInference = false;
 		return inferredType;
 	}
 
@@ -4677,7 +4686,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return basicType( Object.class );
 		}
 		else if ( paramType instanceof MappingModelExpressible<?> ) {
-			return (MappingModelExpressible<?>) paramType;
+			final MappingModelExpressible<?> paramModelType = (MappingModelExpressible<?>) paramType;
+			final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
+			// Prefer the model part type instead of the bind type if possible as the model part type contains size information
+			if ( inferredValueMapping instanceof ModelPart ) {
+				final JdbcMapping paramJdbcMapping = paramModelType.getJdbcMappings().get( 0 );
+				final JdbcMapping inferredJdbcMapping = inferredValueMapping.getJdbcMappings().get( 0 );
+				// If the bind type has a different JDBC type, we prefer that
+				if ( paramJdbcMapping.getJdbcType() == inferredJdbcMapping.getJdbcType() ) {
+					return inferredValueMapping;
+				}
+			}
+			return paramModelType;
 		}
 		else if ( sqmParameter.getAnticipatedType() == null ) {
 			// this should indicate the condition that the user query did not define an
@@ -4757,9 +4777,61 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else {
 			bindable = valueMapping;
 		}
-		bindable.forEachJdbcType(
-				(index, jdbcMapping) -> jdbcParameterConsumer.accept( index, new JdbcParameterImpl( jdbcMapping ) )
-		);
+		if ( bindable instanceof SelectableMappings ) {
+			( (SelectableMappings) bindable ).forEachSelectable(
+					(index, selectableMapping) -> jdbcParameterConsumer.accept( index, new SqlTypedMappingJdbcParameter( selectableMapping ) )
+			);
+		}
+		else if ( bindable instanceof SelectableMapping ) {
+			jdbcParameterConsumer.accept( 0, new SqlTypedMappingJdbcParameter( (SelectableMapping) bindable ) );
+		}
+		else {
+			SqlTypedMapping sqlTypedMapping = null;
+			if ( bindable instanceof BasicType<?> ) {
+				final int sqlTypeCode = ( (BasicType<?>) bindable ).getJdbcType().getDefaultSqlTypeCode();
+				if ( sqlTypeCode == SqlTypes.NUMERIC || sqlTypeCode == SqlTypes.DECIMAL ) {
+					// For numeric and decimal parameter types we must determine the precision/scale of the value.
+					// When we need to cast the parameter later, it is necessary to know the size to avoid truncation.
+					final QueryParameterBinding<?> binding = domainParameterBindings.getBinding(
+							domainParameterXref.getQueryParameter( expression )
+					);
+					final Object bindValue = binding.getBindValue();
+					if ( bindValue != null ) {
+						if ( bindValue instanceof BigInteger ) {
+							int precision = bindValue.toString().length() - ( ( (BigInteger) bindValue ).signum() < 0 ? 1 : 0 );
+							sqlTypedMapping = new SqlTypedMappingImpl(
+									null,
+									null,
+									precision,
+									0,
+									( (BasicType<?>) bindable ).getJdbcMapping()
+							);
+						}
+						else if ( bindValue instanceof BigDecimal ) {
+							final BigDecimal bigDecimal = (BigDecimal) bindValue;
+							sqlTypedMapping = new SqlTypedMappingImpl(
+									null,
+									null,
+									bigDecimal.precision(),
+									bigDecimal.scale(),
+									( (BasicType<?>) bindable ).getJdbcMapping()
+							);
+						}
+					}
+				}
+			}
+			if ( sqlTypedMapping == null ) {
+				bindable.forEachJdbcType(
+						(index, jdbcMapping) -> jdbcParameterConsumer.accept(
+								index,
+								new JdbcParameterImpl( jdbcMapping )
+						)
+				);
+			}
+			else {
+				jdbcParameterConsumer.accept( 0, new SqlTypedMappingJdbcParameter( sqlTypedMapping ) );
+			}
+		}
 	}
 
 	@Override

@@ -8,7 +8,9 @@ package org.hibernate.dialect;
 
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.function.CastingConcatFunction;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.DB2FormatEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -250,6 +252,37 @@ public class DB2Dialect extends Dialect {
 		functionFactory.yearsMonthsDaysHoursMinutesSecondsBetween();
 		functionFactory.dateTrunc();
 		functionFactory.bitLength_pattern( "length(?1)*8" );
+
+		// DB2 wants parameter operands to be casted to allow lengths bigger than 255
+		queryEngine.getSqmFunctionRegistry().register(
+				"concat",
+				new CastingConcatFunction(
+						this,
+						"||",
+						true,
+						SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER,
+						queryEngine.getTypeConfiguration()
+				)
+		);
+		// For the count distinct emulation distinct
+		queryEngine.getSqmFunctionRegistry().register(
+				"count",
+				new CountFunction(
+						this,
+						queryEngine.getTypeConfiguration(),
+						SqlAstNodeRenderingMode.DEFAULT,
+						"||",
+						getCastTypeName(
+								queryEngine.getTypeConfiguration()
+										.getBasicTypeRegistry()
+										.resolve( StandardBasicTypes.STRING ),
+								null,
+								null,
+								null
+						),
+						true
+				)
+		);
 
 		queryEngine.getSqmFunctionRegistry().register( "format",
 				new DB2FormatEmulation( queryEngine.getTypeConfiguration() ) );

@@ -7,14 +7,14 @@
 package org.hibernate.metamodel.mapping;
 
 /**
- * Mapping of a selectable (column/formula)
+ * Models the type of a thing that can be used as an expression in a SQL query
  *
  * @author Christian Beikov
  */
-public interface SelectableMapping extends SqlTypedMapping {
-	String getContainingTableExpression();
-	String getSelectionExpression();
-	String getCustomReadExpression();
-	String getCustomWriteExpression();
-	boolean isFormula();
+public interface SqlTypedMapping {
+	String getColumnDefinition();
+	Long getLength();
+	Integer getPrecision();
+	Integer getScale();
+	JdbcMapping getJdbcMapping();
 }

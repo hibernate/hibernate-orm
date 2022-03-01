@@ -56,6 +56,10 @@ public class BasicAttributeMapping
 	private final boolean isFormula;
 	private final String customReadExpression;
 	private final String customWriteExpression;
+	private final String columnDefinition;
+	private final Long length;
+	private final Integer precision;
+	private final Integer scale;
 
 	private final JdbcMapping jdbcMapping;
 	private final BasicValueConverter<Object, ?> valueConverter;
@@ -74,16 +78,33 @@ public class BasicAttributeMapping
 			boolean isFormula,
 			String customReadExpression,
 			String customWriteExpression,
+			String columnDefinition,
+			Long length,
+			Integer precision,
+			Integer scale,
 			BasicValueConverter valueConverter,
 			JdbcMapping jdbcMapping,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess,
 			ValueGeneration valueGeneration) {
-		super( attributeName, stateArrayPosition, attributeMetadataAccess, mappedFetchTiming, mappedFetchStyle, declaringType, propertyAccess, valueGeneration );
+		super(
+				attributeName,
+				stateArrayPosition,
+				attributeMetadataAccess,
+				mappedFetchTiming,
+				mappedFetchStyle,
+				declaringType,
+				propertyAccess,
+				valueGeneration
+		);
 		this.navigableRole = navigableRole;
 		this.tableExpression = tableExpression;
 		this.mappedColumnExpression = mappedColumnExpression;
 		this.isFormula = isFormula;
+		this.columnDefinition = columnDefinition;
+		this.length = length;
+		this.precision = precision;
+		this.scale = scale;
 		this.valueConverter = valueConverter;
 		this.jdbcMapping = jdbcMapping;
 
@@ -140,6 +161,10 @@ public class BasicAttributeMapping
 				selectableMapping.isFormula(),
 				selectableMapping.getCustomReadExpression(),
 				selectableMapping.getCustomWriteExpression(),
+				selectableMapping.getColumnDefinition(),
+				selectableMapping.getLength(),
+				selectableMapping.getPrecision(),
+				selectableMapping.getScale(),
 				valueConverter,
 				original.getJdbcMapping(),
 				declaringType,
@@ -181,6 +206,26 @@ public class BasicAttributeMapping
 	@Override
 	public String getCustomWriteExpression() {
 		return customWriteExpression;
+	}
+
+	@Override
+	public String getColumnDefinition() {
+		return columnDefinition;
+	}
+
+	@Override
+	public Long getLength() {
+		return length;
+	}
+
+	@Override
+	public Integer getPrecision() {
+		return precision;
+	}
+
+	@Override
+	public Integer getScale() {
+		return scale;
 	}
 
 	@Override

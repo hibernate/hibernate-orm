@@ -16,6 +16,7 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.query.BindableType;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.ExecutionException;
@@ -47,6 +48,11 @@ public abstract class AbstractJdbcParameter
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return jdbcMapping;
+	}
+
+	@Override
+	public void accept(SqlAstWalker sqlTreeWalker) {
+		sqlTreeWalker.visitParameter( this );
 	}
 
 	@Override

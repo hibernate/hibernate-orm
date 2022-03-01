@@ -191,6 +191,26 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 	}
 
 	@Override
+	public String getColumnDefinition() {
+		return null;
+	}
+
+	@Override
+	public Long getLength() {
+		return null;
+	}
+
+	@Override
+	public Integer getPrecision() {
+		return null;
+	}
+
+	@Override
+	public Integer getScale() {
+		return null;
+	}
+
+	@Override
 	public String getContainingTableExpression() {
 		throw new UnsupportedOperationException();
 //		// this *should* only be used to create the sql-expression key, so just

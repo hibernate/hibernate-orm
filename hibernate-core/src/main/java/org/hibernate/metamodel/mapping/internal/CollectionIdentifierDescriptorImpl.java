@@ -91,6 +91,26 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	}
 
 	@Override
+	public String getColumnDefinition() {
+		return null;
+	}
+
+	@Override
+	public Long getLength() {
+		return null;
+	}
+
+	@Override
+	public Integer getPrecision() {
+		return null;
+	}
+
+	@Override
+	public Integer getScale() {
+		return null;
+	}
+
+	@Override
 	public MappingType getPartMappingType() {
 		return type;
 	}

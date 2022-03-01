@@ -51,6 +51,10 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	private final String table;
 	private final String column;
 	private final DiscriminatedAssociationModelPart anyPart;
+	private final String columnDefinition;
+	private final Long length;
+	private final Integer precision;
+	private final Integer scale;
 	private final boolean nullable;
 	private final JdbcMapping jdbcMapping;
 
@@ -58,12 +62,16 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			NavigableRole navigableRole,
 			DiscriminatedAssociationModelPart anyPart, String table,
 			String column,
-			boolean nullable,
+			String columnDefinition, Long length, Integer precision, Integer scale, boolean nullable,
 			JdbcMapping jdbcMapping) {
 		this.navigableRole = navigableRole;
 		this.table = table;
 		this.column = column;
 		this.anyPart = anyPart;
+		this.columnDefinition = columnDefinition;
+		this.length = length;
+		this.precision = precision;
+		this.scale = scale;
 		this.nullable = nullable;
 		this.jdbcMapping = jdbcMapping;
 	}
@@ -91,6 +99,26 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	@Override
 	public String getCustomWriteExpression() {
 		return null;
+	}
+
+	@Override
+	public String getColumnDefinition() {
+		return columnDefinition;
+	}
+
+	@Override
+	public Long getLength() {
+		return length;
+	}
+
+	@Override
+	public Integer getPrecision() {
+		return precision;
+	}
+
+	@Override
+	public Integer getScale() {
+		return scale;
 	}
 
 	@Override

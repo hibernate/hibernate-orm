@@ -50,6 +50,10 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 
 	private final String columnTableExpression;
 	private final String columnExpression;
+	private final String columnDefinition;
+	private final Long length;
+	private final Integer precision;
+	private final Integer scale;
 
 	private final BasicType versionBasicType;
 
@@ -63,10 +67,18 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 			String attributeName,
 			String columnTableExpression,
 			String columnExpression,
+			String columnDefinition,
+			Long length,
+			Integer precision,
+			Integer scale,
 			BasicType<?> versionBasicType,
 			EntityMappingType declaringType,
 			MappingModelCreationProcess creationProcess) {
 		this.attributeName = attributeName;
+		this.columnDefinition = columnDefinition;
+		this.length = length;
+		this.precision = precision;
+		this.scale = scale;
 		this.declaringType = declaringType;
 
 		this.columnTableExpression = columnTableExpression;
@@ -118,6 +130,26 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	@Override
 	public String getCustomWriteExpression() {
 		return null;
+	}
+
+	@Override
+	public String getColumnDefinition() {
+		return columnDefinition;
+	}
+
+	@Override
+	public Long getLength() {
+		return length;
+	}
+
+	@Override
+	public Integer getPrecision() {
+		return precision;
+	}
+
+	@Override
+	public Integer getScale() {
+		return scale;
 	}
 
 	@Override

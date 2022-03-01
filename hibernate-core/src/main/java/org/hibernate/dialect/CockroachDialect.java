@@ -48,6 +48,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -139,6 +140,27 @@ public class CockroachDialect extends Dialect {
 			default:
 				return super.columnType(jdbcTypeCode);
 		}
+	}
+
+	@Override
+	public String getUnboundedTypeName(JdbcType jdbcType, JavaType<?> javaType) {
+		switch ( jdbcType.getDefaultSqlTypeCode() ) {
+			case CHAR:
+			case NCHAR:
+			case VARCHAR:
+			case NVARCHAR:
+			case LONGVARCHAR:
+			case LONGNVARCHAR:
+			case LONG32VARCHAR:
+			case LONG32NVARCHAR:
+				return "string";
+			case BINARY:
+			case VARBINARY:
+			case LONGVARBINARY:
+			case LONG32VARBINARY:
+				return "bytes";
+		}
+		return super.getUnboundedTypeName( jdbcType, javaType );
 	}
 
 	@Override

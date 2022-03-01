@@ -27,6 +27,7 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.expression.Star;
@@ -46,13 +47,23 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 	private final SqlAstNodeRenderingMode defaultArgumentRenderingMode;
 	private final String concatOperator;
 	private final String concatArgumentCastType;
+	private final boolean castDistinctStringConcat;
+
+	public CountFunction(
+			Dialect dialect,
+			TypeConfiguration typeConfiguration,
+			SqlAstNodeRenderingMode defaultArgumentRenderingMode,
+			String concatOperator) {
+		this( dialect, typeConfiguration, defaultArgumentRenderingMode, concatOperator, null, false );
+	}
 
 	public CountFunction(
 			Dialect dialect,
 			TypeConfiguration typeConfiguration,
 			SqlAstNodeRenderingMode defaultArgumentRenderingMode,
 			String concatOperator,
-			String concatArgumentCastType) {
+			String concatArgumentCastType,
+			boolean castDistinctStringConcat) {
 		super(
 				"count",
 				FunctionKind.AGGREGATE,
@@ -66,6 +77,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		this.defaultArgumentRenderingMode = defaultArgumentRenderingMode;
 		this.concatOperator = concatOperator;
 		this.concatArgumentCastType = concatArgumentCastType;
+		this.castDistinctStringConcat = castDistinctStringConcat;
 	}
 
 	@Override
@@ -90,7 +102,13 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 				final List<? extends Expression> expressions = tuple.getExpressions();
 				// Single element tuple
 				if ( expressions.size() == 1 ) {
-					renderSimpleArgument( sqlAppender, filter, translator, caseWrapper, expressions.get( 0 ) );
+					renderSimpleArgument(
+							sqlAppender,
+							filter,
+							translator,
+							caseWrapper,
+							expressions.get( 0 )
+					);
 				}
 				// Emulate tuple distinct count
 				else if ( !dialect.supportsTupleDistinctCounts() ) {
@@ -110,13 +128,18 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 						sqlAppender.appendSql( " then " );
 						translator.getCurrentClauseStack().pop();
 					}
+					if ( castDistinctStringConcat ) {
+						sqlAppender.appendSql( "cast(" );
+					}
 					sqlAppender.appendSql( "coalesce(nullif(coalesce(" );
-					renderCastedArgument( sqlAppender, translator, expressions.get( 0 ) );
+					boolean needsConcat = renderCastedArgument( sqlAppender, translator, expressions.get( 0 ) );
 					int argumentNumber = 1;
 					for ( int i = 1; i < expressions.size(); i++, argumentNumber++ ) {
-						// Concat with empty string to get implicit conversion
-						sqlAppender.appendSql( concatOperator );
-						sqlAppender.appendSql( "''" );
+						if ( needsConcat ) {
+							// Concat with empty string to get implicit conversion
+							sqlAppender.appendSql( concatOperator );
+							sqlAppender.appendSql( "''" );
+						}
 						sqlAppender.appendSql( ",'\\0'),''),'\\0" );
 						sqlAppender.appendSql( argumentNumber );
 						sqlAppender.appendSql( "')" );
@@ -124,14 +147,21 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 						sqlAppender.appendSql( "'\\0'" );
 						sqlAppender.appendSql( concatOperator );
 						sqlAppender.appendSql( "coalesce(nullif(coalesce(" );
-						renderCastedArgument( sqlAppender, translator, expressions.get( i ) );
+						needsConcat = renderCastedArgument( sqlAppender, translator, expressions.get( i ) );
 					}
-					// Concat with empty string to get implicit conversion
-					sqlAppender.appendSql( concatOperator );
-					sqlAppender.appendSql( "''" );
+					if ( needsConcat ) {
+						// Concat with empty string to get implicit conversion
+						sqlAppender.appendSql( concatOperator );
+						sqlAppender.appendSql( "''" );
+					}
 					sqlAppender.appendSql( ",'\\0'),''),'\\0" );
 					sqlAppender.appendSql( argumentNumber );
 					sqlAppender.appendSql( "')" );
+					if ( castDistinctStringConcat ) {
+						sqlAppender.appendSql( " as " );
+						sqlAppender.appendSql( concatArgumentCastType );
+						sqlAppender.appendSql( ')' );
+					}
 					if ( caseWrapper ) {
 						sqlAppender.appendSql( " else null end" );
 					}
@@ -149,7 +179,13 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 				}
 			}
 			else {
-				renderSimpleArgument( sqlAppender, filter, translator, caseWrapper, distinctArg );
+				renderSimpleArgument(
+						sqlAppender,
+						filter,
+						translator,
+						caseWrapper,
+						distinctArg
+				);
 			}
 		}
 		else {
@@ -276,20 +312,23 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		}
 	}
 
-	private void renderCastedArgument(SqlAppender sqlAppender, SqlAstTranslator<?> translator, Expression realArg) {
+	private boolean renderCastedArgument(SqlAppender sqlAppender, SqlAstTranslator<?> translator, Expression realArg) {
 		if ( concatArgumentCastType == null ) {
 			translator.render( realArg, defaultArgumentRenderingMode );
+			return true;
 		}
 		else {
 			final JdbcMapping sourceMapping = realArg.getExpressionType().getJdbcMappings().get( 0 );
 			// No need to cast if we already have a string
 			if ( sourceMapping.getCastType() == CastType.STRING ) {
 				translator.render( realArg, defaultArgumentRenderingMode );
+				return false;
 			}
 			else {
 				final String cast = dialect.castPattern( sourceMapping.getCastType(), CastType.STRING );
 				new PatternRenderer( cast.replace( "?2", concatArgumentCastType ) )
 						.render( sqlAppender, Collections.singletonList( realArg ), translator );
+				return false;
 			}
 		}
 	}

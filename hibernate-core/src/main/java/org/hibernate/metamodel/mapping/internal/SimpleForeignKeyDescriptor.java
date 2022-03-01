@@ -480,6 +480,26 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
+	public String getColumnDefinition() {
+		return keySide.getModelPart().getColumnDefinition();
+	}
+
+	@Override
+	public Long getLength() {
+		return keySide.getModelPart().getLength();
+	}
+
+	@Override
+	public Integer getPrecision() {
+		return keySide.getModelPart().getPrecision();
+	}
+
+	@Override
+	public Integer getScale() {
+		return keySide.getModelPart().getScale();
+	}
+
+	@Override
 	public String getFetchableName() {
 		return PART_NAME;
 	}

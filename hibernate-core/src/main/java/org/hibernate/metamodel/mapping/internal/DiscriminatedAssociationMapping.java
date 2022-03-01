@@ -21,6 +21,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Any;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -75,18 +76,24 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		final Iterator<Selectable> columnIterator = bootValueMapping.getColumnIterator();
 
 		assert columnIterator.hasNext();
-		final Selectable metaColumn = columnIterator.next();
+		final Selectable metaSelectable = columnIterator.next();
 		assert columnIterator.hasNext();
-		final Selectable keyColumn = columnIterator.next();
+		final Selectable keySelectable = columnIterator.next();
 		assert !columnIterator.hasNext();
-		assert !metaColumn.isFormula();
-		assert !keyColumn.isFormula();
+		assert !metaSelectable.isFormula();
+		assert !keySelectable.isFormula();
+		final Column metaColumn = (Column) metaSelectable;
+		final Column keyColumn = (Column) keySelectable;
 
 		final AnyDiscriminatorPart discriminatorPart = new AnyDiscriminatorPart(
 				containerRole.append( AnyDiscriminatorPart.ROLE_NAME),
 				declaringModelPart,
 				tableName,
 				metaColumn.getText( dialect ),
+				metaColumn.getSqlType(),
+				metaColumn.getLength(),
+				metaColumn.getPrecision(),
+				metaColumn.getScale(),
 				bootValueMapping.isNullable(),
 				(MetaType) anyType.getDiscriminatorType()
 		);
@@ -98,6 +105,10 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				declaringModelPart,
 				tableName,
 				keyColumn.getText( dialect ),
+				keyColumn.getSqlType(),
+				keyColumn.getLength(),
+				keyColumn.getPrecision(),
+				keyColumn.getScale(),
 				bootValueMapping.isNullable(),
 				keyType
 		);

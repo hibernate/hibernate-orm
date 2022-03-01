@@ -157,6 +157,7 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 				new CastingConcatFunction(
 						this,
 						"+",
+						false,
 						SqlAstNodeRenderingMode.DEFAULT,
 						queryEngine.getTypeConfiguration()
 				)

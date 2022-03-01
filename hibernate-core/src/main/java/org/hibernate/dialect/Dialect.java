@@ -785,7 +785,7 @@ public abstract class Dialect implements ConversionContext {
 
 		//aggregate functions, supported on every database
 
-		functionFactory.aggregates( this, SqlAstNodeRenderingMode.DEFAULT, "||", null );
+		functionFactory.aggregates( this, SqlAstNodeRenderingMode.DEFAULT );
 
 		//the ANSI SQL-defined aggregate functions any() and every() are only
 		//supported on one database, but can be emulated using sum() and case,
@@ -1356,17 +1356,17 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Get the name of the database type associated with the given
-	 * {@link Types} typecode, with no length, precision,
+	 * {@link SqlTypes} typecode, with no length, precision,
 	 * or scale.
 	 *
-	 * @param code The {@link Types} typecode
+	 * @param code The {@link SqlTypes} typecode
 	 * @return the database type name
 	 * @throws HibernateException If no mapping was specified for that type.
 	 */
 	public String getRawTypeName(int code) throws HibernateException {
 		final String result = typeNames.get( code );
 		if ( result == null ) {
-			throw new HibernateException( "No default type mapping for (java.sql.Types) " + code );
+			throw new HibernateException( "No default type mapping for (org.hibernate.type.SqlTypes) " + code );
 		}
 		//trim off the length/precision/scale
 		final int paren = result.indexOf('(');
@@ -1402,9 +1402,9 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Get the name of the database type associated with the given
-	 * {@code java.sql.Types} typecode.
+	 * {@code org.hibernate.type.SqlTypes} typecode.
 	 *
-	 * @param code {@code java.sql.Types} typecode
+	 * @param code {@code org.hibernate.type.SqlTypes} typecode
 	 * @param size the length, precision, scale of the column
 	 *
 	 * @return the database type name
@@ -1463,14 +1463,7 @@ public abstract class Dialect implements ConversionContext {
 		final JavaType<?> javaType = jdbcMapping.getJavaTypeDescriptor();
 		Size size;
 		if ( length == null && precision == null ) {
-			//use defaults
-			size = getSizeStrategy().resolveSize(
-					jdbcType,
-					javaType,
-					precision,
-					scale,
-					length
-			);
+			return getUnboundedTypeName( jdbcType, javaType );
 		}
 		else {
 			//use the given length/precision/scale
@@ -1485,6 +1478,33 @@ public abstract class Dialect implements ConversionContext {
 		}
 
 		return getTypeName( jdbcType, size );
+	}
+
+	public String getUnboundedTypeName(JdbcType jdbcType, JavaType<?> javaType) {
+		Long length = null;
+		Integer precision = null;
+		Integer scale = null;
+		switch ( jdbcType.getDefaultSqlTypeCode() ) {
+			case VARCHAR:
+				length = (long) getMaxVarcharLength();
+				break;
+			case NVARCHAR:
+				length = (long) getMaxNVarcharLength();
+				break;
+			case VARBINARY:
+				length = (long) getMaxVarbinaryLength();
+				break;
+		}
+		return getTypeName(
+				jdbcType,
+				getSizeStrategy().resolveSize(
+						jdbcType,
+						javaType,
+						precision,
+						scale,
+						length
+				)
+		);
 	}
 
 	/**

@@ -183,6 +183,23 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 					containingTableExpression = rootTableExpression;
 					columnExpression = rootTableKeyColumnNames[ columnPosition ];
 				}
+				final String columnDefinition;
+				final Long length;
+				final Integer precision;
+				final Integer scale;
+				if ( selectable instanceof Column ) {
+					Column column = (Column) selectable;
+					columnDefinition = column.getSqlType();
+					length = column.getLength();
+					precision = column.getPrecision();
+					scale = column.getScale();
+				}
+				else {
+					columnDefinition = null;
+					length = null;
+					precision = null;
+					scale = null;
+				}
 
 				attributeMapping = MappingModelCreationHelper.buildBasicAttributeMapping(
 						bootPropertyDescriptor.getName(),
@@ -196,6 +213,10 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						selectable.isFormula(),
 						selectable.getCustomReadExpression(),
 						selectable.getCustomWriteExpression(),
+						columnDefinition,
+						length,
+						precision,
+						scale,
 						propertyAccess,
 						compositeType.getCascadeStyle( attributeIndex ),
 						creationProcess

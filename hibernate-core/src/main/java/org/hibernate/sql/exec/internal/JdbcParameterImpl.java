@@ -17,9 +17,4 @@ public class JdbcParameterImpl extends AbstractJdbcParameter {
 	public JdbcParameterImpl(JdbcMapping jdbcMapping) {
 		super( jdbcMapping );
 	}
-
-	@Override
-	public void accept(SqlAstWalker sqlTreeWalker) {
-		sqlTreeWalker.visitParameter( this );
-	}
 }

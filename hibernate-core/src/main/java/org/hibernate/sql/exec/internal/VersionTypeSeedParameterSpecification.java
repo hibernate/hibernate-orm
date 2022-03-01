@@ -19,7 +19,7 @@ import org.hibernate.type.descriptor.java.VersionJavaType;
  *
  * @author Steve Ebersole
  */
-public class VersionTypeSeedParameterSpecification extends JdbcParameterImpl {
+public class VersionTypeSeedParameterSpecification extends AbstractJdbcParameter {
 	private final VersionJavaType<?> type;
 
 	/**

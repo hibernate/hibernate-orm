@@ -273,6 +273,21 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
+	public int getMaxVarcharLength() {
+		return 5000;
+	}
+
+	@Override
+	public int getMaxNVarcharLength() {
+		return 5000;
+	}
+
+	@Override
+	public int getMaxVarbinaryLength() {
+		return 5000;
+	}
+
+	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 		final TypeConfiguration typeConfiguration = queryEngine.getTypeConfiguration();

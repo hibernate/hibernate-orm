@@ -27,6 +27,10 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 	private final String columnName;
 	private final String columnFormula;
 	private final boolean isPhysical;
+	private final String columnDefinition;
+	private final Long length;
+	private final Integer precision;
+	private final Integer scale;
 
 	public ExplicitColumnDiscriminatorMappingImpl(
 			EntityPersister entityDescriptor,
@@ -35,10 +39,18 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 			String columnExpression,
 			boolean isFormula,
 			boolean isPhysical,
+			String columnDefinition,
+			Long length,
+			Integer precision,
+			Integer scale,
 			MappingModelCreationProcess creationProcess) {
 		super( discriminatorType.getJdbcMapping(), entityDescriptor, discriminatorType, creationProcess );
 		this.tableExpression = tableExpression;
 		this.isPhysical = isPhysical;
+		this.columnDefinition = columnDefinition;
+		this.length = length;
+		this.precision = precision;
+		this.scale = scale;
 		if ( isFormula ) {
 			columnName = null;
 			columnFormula = columnExpression;
@@ -91,6 +103,26 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 	@Override
 	public String getCustomWriteExpression() {
 		return null;
+	}
+
+	@Override
+	public String getColumnDefinition() {
+		return columnDefinition;
+	}
+
+	@Override
+	public Long getLength() {
+		return length;
+	}
+
+	@Override
+	public Integer getPrecision() {
+		return precision;
+	}
+
+	@Override
+	public Integer getScale() {
+		return scale;
 	}
 
 	@Override

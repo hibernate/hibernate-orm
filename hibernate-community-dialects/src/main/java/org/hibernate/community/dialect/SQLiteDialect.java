@@ -54,8 +54,10 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import jakarta.persistence.TemporalType;
@@ -70,6 +72,14 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INT
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL;
+import static org.hibernate.type.SqlTypes.CHAR;
+import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
+import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
+import static org.hibernate.type.SqlTypes.LONGNVARCHAR;
+import static org.hibernate.type.SqlTypes.LONGVARCHAR;
+import static org.hibernate.type.SqlTypes.NCHAR;
+import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.VARCHAR;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
@@ -114,6 +124,22 @@ public class SQLiteDialect extends Dialect {
 		registerColumnType( Types.BINARY, "blob" );
 		registerColumnType( Types.VARBINARY, "blob" );
 		uniqueDelegate = new SQLiteUniqueDelegate( this );
+	}
+
+	@Override
+	public String getUnboundedTypeName(JdbcType jdbcType, JavaType<?> javaType) {
+		switch ( jdbcType.getDefaultSqlTypeCode() ) {
+			case CHAR:
+			case NCHAR:
+			case VARCHAR:
+			case NVARCHAR:
+			case LONGVARCHAR:
+			case LONGNVARCHAR:
+			case LONG32VARCHAR:
+			case LONG32NVARCHAR:
+				return "text";
+		}
+		return super.getUnboundedTypeName( jdbcType, javaType );
 	}
 
 	@Override

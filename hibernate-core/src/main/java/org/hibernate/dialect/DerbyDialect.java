@@ -9,8 +9,9 @@ package org.hibernate.dialect;
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CastingConcatFunction;
+import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.DerbyLpadEmulation;
 import org.hibernate.dialect.function.DerbyRpadEmulation;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
@@ -149,7 +150,7 @@ public class DerbyDialect extends Dialect {
 	protected void registerDefaultColumnTypes() {
 		super.registerDefaultColumnTypes();
 
-		//long vachar is the right type to use for lengths between 32_672 and 32_700
+		//long varchar is the right type to use for lengths between 32_672 and 32_700
 		int maxLongVarcharLength = 32_700;
 
 		registerColumnType( VARBINARY, maxLongVarcharLength,"long varchar for bit data" );
@@ -219,11 +220,17 @@ public class DerbyDialect extends Dialect {
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 
 		// Derby needs an actual argument type for aggregates like SUM, AVG, MIN, MAX to determine the result type
-		functionFactory.aggregates(
-				this,
-				SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER,
-				"||",
-				getCastTypeName( stringType, null, null, null )
+		functionFactory.aggregates( this, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+		queryEngine.getSqmFunctionRegistry().register(
+				"count",
+				new CountFunction(
+						this,
+						queryEngine.getTypeConfiguration(),
+						SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER,
+						"||",
+						getCastTypeName( stringType, null, null, null ),
+						true
+				)
 		);
 		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
 		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.DEFAULT );
@@ -256,6 +263,7 @@ public class DerbyDialect extends Dialect {
 				new CastingConcatFunction(
 						this,
 						"||",
+						true,
 						SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER,
 						queryEngine.getTypeConfiguration()
 				)

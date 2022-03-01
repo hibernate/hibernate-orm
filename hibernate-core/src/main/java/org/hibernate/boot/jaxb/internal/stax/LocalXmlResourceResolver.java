@@ -181,22 +181,22 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 	);
 
 	public static final DtdMapping HBM_DTD_MAPPING = new DtdMapping(
-			"http://www.hibernate.org/dtd/hibernate-mapping",
+			"www.hibernate.org/dtd/hibernate-mapping",
 			"org/hibernate/hibernate-mapping-3.0.dtd"
 	);
 
 	public static final DtdMapping LEGACY_HBM_DTD_MAPPING = new DtdMapping(
-			"http://hibernate.sourceforge.net/hibernate-mapping",
+			"hibernate.sourceforge.net/hibernate-mapping",
 			"org/hibernate/hibernate-mapping-3.0.dtd"
 	);
 
 	public static final DtdMapping CFG_DTD_MAPPING = new DtdMapping(
-			"http://www.hibernate.org/dtd/hibernate-configuration",
+			"www.hibernate.org/dtd/hibernate-configuration",
 			"org/hibernate/hibernate-configuration-3.0.dtd"
 	);
 
 	public static final DtdMapping LEGACY_CFG_DTD_MAPPING = new DtdMapping(
-			"http://hibernate.sourceforge.net/hibernate-configuration",
+			"hibernate.sourceforge.net/hibernate-configuration",
 			"org/hibernate/hibernate-configuration-3.0.dtd"
 	);
 
@@ -220,27 +220,31 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 	}
 
 	public static class DtdMapping {
-		private final String identifierBase;
+		private final String httpBase;
+		private final String httpsBase;
 		private final URL localSchemaUrl;
 
 		public DtdMapping(String identifierBase, String resourceName) {
-			this.identifierBase = identifierBase;
+			this.httpBase = "http://" + identifierBase;
+			this.httpsBase = "https://" + identifierBase;
 			this.localSchemaUrl = LocalSchemaLocator.resolveLocalSchemaUrl( resourceName );
 		}
 
 		public String getIdentifierBase() {
-			return identifierBase;
+			return httpBase;
 		}
 
 		public boolean matches(String publicId, String systemId) {
 			if ( publicId != null ) {
-				if ( publicId.startsWith( identifierBase ) ) {
+				if ( publicId.startsWith( httpBase )
+						|| publicId.matches( httpsBase ) ) {
 					return true;
 				}
 			}
 
 			if ( systemId != null ) {
-				if ( systemId.startsWith( identifierBase ) ) {
+				if ( systemId.startsWith( httpBase )
+						|| systemId.matches( httpsBase ) ) {
 					return true;
 				}
 			}

@@ -57,9 +57,16 @@ public class LocalXmlResourceResolverTest {
 	@ParameterizedTest
 	@CsvSource({
 			"http://www.hibernate.org/dtd/hibernate-mapping,org/hibernate/hibernate-mapping-3.0.dtd",
+			"https://www.hibernate.org/dtd/hibernate-mapping,org/hibernate/hibernate-mapping-3.0.dtd",
+
 			"http://hibernate.sourceforge.net/hibernate-mapping,org/hibernate/hibernate-mapping-3.0.dtd",
+			"https://hibernate.sourceforge.net/hibernate-mapping,org/hibernate/hibernate-mapping-3.0.dtd",
+
 			"http://www.hibernate.org/dtd/hibernate-configuration,org/hibernate/hibernate-configuration-3.0.dtd",
-			"http://hibernate.sourceforge.net/hibernate-configuration,org/hibernate/hibernate-configuration-3.0.dtd"
+			"https://www.hibernate.org/dtd/hibernate-configuration,org/hibernate/hibernate-configuration-3.0.dtd",
+
+			"http://hibernate.sourceforge.net/hibernate-configuration,org/hibernate/hibernate-configuration-3.0.dtd",
+			"https://hibernate.sourceforge.net/hibernate-configuration,org/hibernate/hibernate-configuration-3.0.dtd"
 	})
 	void resolve_dtd_localResource(String id, String expectedLocalResource) throws XMLStreamException {
 		// publicId

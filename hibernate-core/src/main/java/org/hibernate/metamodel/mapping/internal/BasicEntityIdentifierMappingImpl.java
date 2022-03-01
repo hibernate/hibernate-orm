@@ -63,6 +63,10 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	private final String rootTable;
 	private final String pkColumnName;
+	private final String columnDefinition;
+	private final Long length;
+	private final Integer precision;
+	private final Integer scale;
 
 	private final BasicType<?> idType;
 
@@ -74,8 +78,16 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			String attributeName,
 			String rootTable,
 			String pkColumnName,
+			String columnDefinition,
+			Long length,
+			Integer precision,
+			Integer scale,
 			BasicType<?> idType,
 			MappingModelCreationProcess creationProcess) {
+		this.columnDefinition = columnDefinition;
+		this.length = length;
+		this.precision = precision;
+		this.scale = scale;
 		assert attributeName != null;
 		this.attributeName = attributeName;
 		this.rootTable = rootTable;
@@ -300,6 +312,26 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	@Override
 	public String getCustomWriteExpression() {
 		return null;
+	}
+
+	@Override
+	public String getColumnDefinition() {
+		return columnDefinition;
+	}
+
+	@Override
+	public Long getLength() {
+		return length;
+	}
+
+	@Override
+	public Integer getPrecision() {
+		return precision;
+	}
+
+	@Override
+	public Integer getScale() {
+		return scale;
 	}
 
 	@Override

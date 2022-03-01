@@ -6,7 +6,10 @@
  */
 package org.hibernate.orm.test.mapping.converted.converter;
 
+import java.util.List;
+
 import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -42,6 +45,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @TestForIssue(jiraKey = "HHH-12662")
 public class ConverterTest {
 
+	private String tooBigParameter;
+
 	@BeforeEach
 	public void setUp(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
@@ -51,6 +56,18 @@ public class ConverterTest {
 			photo.setCaption( new Caption( "Nicolae Grigorescu" ) );
 
 			entityManager.persist( photo );
+
+			StringBuilder sb = new StringBuilder( 256 );
+			for ( int i = 0; i < 256; i++ ) {
+				sb.append( 'a' );
+			}
+			tooBigParameter = sb.toString();
+			Photo photo2 = new Photo();
+			photo2.setId( 2 );
+			photo2.setName( tooBigParameter );
+			photo2.setCaption( new Caption( "ABC" ) );
+
+			entityManager.persist( photo2 );
 		} );
 	}
 
@@ -129,6 +146,31 @@ public class ConverterTest {
 					assertEquals( "113", emp.getAge(), "The converter was not properly applied" );
 				}
 		);
+	}
+
+	@Test
+	public void testSelectTooBigParameter(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			List<String> photos = entityManager.createQuery(
+							"select :name ", String.class )
+					.setParameter( "name", tooBigParameter )
+					.getResultList();
+			assertEquals( 1, photos.size() );
+			assertEquals( tooBigParameter, photos.get( 0 ) );
+		} );
+	}
+
+	@Test
+	public void testBindTooBigParameter(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			List<Photo> photos = entityManager.createQuery(
+							"select p " +
+									"from Photo p " +
+									"where name = :name || '' ", Photo.class )
+					.setParameter( "name", tooBigParameter )
+					.getResultList();
+			assertEquals( 1, photos.size() );
+		} );
 	}
 
 	@Test
@@ -238,8 +280,10 @@ public class ConverterTest {
 		@Id
 		private Integer id;
 
+		@Column(length = 256)
 		private String name;
 
+		@Column(length = 256)
 		@Convert(converter = CaptionConverter.class)
 		private Caption caption;
 

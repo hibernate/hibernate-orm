@@ -47,6 +47,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SqlExpressible;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
@@ -155,9 +156,10 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.ExecutionException;
+import org.hibernate.sql.exec.internal.AbstractJdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
-import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
+import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcDelete;
 import org.hibernate.sql.exec.spi.JdbcInsert;
@@ -776,7 +778,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	private static class OffsetJdbcParameter extends JdbcParameterImpl {
+	private static class OffsetJdbcParameter extends AbstractJdbcParameter {
 
 		public OffsetJdbcParameter(BasicType<Integer> type) {
 			super( type );
@@ -797,7 +799,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	private static class LimitJdbcParameter extends JdbcParameterImpl {
+	private static class LimitJdbcParameter extends AbstractJdbcParameter {
 
 		public LimitJdbcParameter(BasicType<Integer> type) {
 			super( type );
@@ -3555,7 +3557,22 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected void renderCasted(Expression expression) {
 		final List<SqlAstNode> arguments = new ArrayList<>( 2 );
 		arguments.add( expression );
-		arguments.add( new CastTarget( expression.getExpressionType().getJdbcMappings().get( 0 ) ) );
+		if ( expression instanceof SqlTypedMappingJdbcParameter ) {
+			final SqlTypedMappingJdbcParameter parameter = (SqlTypedMappingJdbcParameter) expression;
+			final SqlTypedMapping sqlTypedMapping = parameter.getSqlTypedMapping();
+			arguments.add(
+					new CastTarget(
+							parameter.getJdbcMapping(),
+							sqlTypedMapping.getColumnDefinition(),
+							sqlTypedMapping.getLength(),
+							sqlTypedMapping.getPrecision(),
+							sqlTypedMapping.getScale()
+					)
+			);
+		}
+		else {
+			arguments.add( new CastTarget( expression.getExpressionType().getJdbcMappings().get( 0 ) ) );
+		}
 		castFunction().render( this, arguments, this );
 	}
 
@@ -3574,10 +3591,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 			final LiteralAsParameter<Object> jdbcParameter = new LiteralAsParameter<>( literal );
 			if ( castParameter ) {
-				final List<SqlAstNode> arguments = new ArrayList<>( 2 );
-				arguments.add( jdbcParameter );
-				arguments.add( new CastTarget( jdbcMapping ) );
-				castFunction().render( this, arguments, this );
+				renderCasted( jdbcParameter );
 			}
 			else {
 				appendSql( PARAM_MARKER );
@@ -4238,14 +4252,19 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitCastTarget(CastTarget castTarget) {
-		appendSql(
-				getDialect().getCastTypeName(
-						(SqlExpressible) castTarget.getExpressionType(),
-						castTarget.getLength(),
-						castTarget.getPrecision(),
-						castTarget.getScale()
-				)
-		);
+		if ( castTarget.getSqlType() != null ) {
+			appendSql( castTarget.getSqlType() );
+		}
+		else {
+			appendSql(
+					getDialect().getCastTypeName(
+							(SqlExpressible) castTarget.getExpressionType(),
+							castTarget.getLength(),
+							castTarget.getPrecision(),
+							castTarget.getScale()
+					)
+			);
+		}
 	}
 
 	@Override
@@ -4277,10 +4296,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitParameter(JdbcParameter jdbcParameter) {
 		switch ( parameterRenderingMode ) {
 			case NO_PLAIN_PARAMETER:
-				final List<SqlAstNode> arguments = new ArrayList<>( 2 );
-				arguments.add( jdbcParameter );
-				arguments.add( new CastTarget( jdbcParameter.getExpressionType().getJdbcMappings().get( 0 ) ) );
-				castFunction().render( this, arguments, this );
+				renderCasted( jdbcParameter );
 				break;
 			case INLINE_PARAMETERS:
 			case INLINE_ALL_PARAMETERS:

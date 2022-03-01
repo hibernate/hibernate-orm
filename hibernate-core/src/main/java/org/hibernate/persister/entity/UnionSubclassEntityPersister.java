@@ -398,8 +398,10 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected EntityDiscriminatorMapping generateDiscriminatorMapping(MappingModelCreationProcess modelCreationProcess) {
-		return hasSubclasses() ? super.generateDiscriminatorMapping(modelCreationProcess) : null;
+	protected EntityDiscriminatorMapping generateDiscriminatorMapping(
+			PersistentClass bootEntityDescriptor,
+			MappingModelCreationProcess modelCreationProcess) {
+		return hasSubclasses() ? super.generateDiscriminatorMapping( bootEntityDescriptor, modelCreationProcess ) : null;
 	}
 
 	@Override

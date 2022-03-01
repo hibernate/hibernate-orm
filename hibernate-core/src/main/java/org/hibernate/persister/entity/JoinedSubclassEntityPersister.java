@@ -40,26 +40,14 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
-import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.SelectableMapping;
-import org.hibernate.metamodel.mapping.SingularAttributeMapping;
-import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
-import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl;
-import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
-import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -1113,12 +1101,33 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			return generateNonEncapsulatedCompositeIdentifierMapping( creationProcess, bootEntityDescriptor );
 		}
 
+		final String columnDefinition;
+		final Long length;
+		final Integer precision;
+		final Integer scale;
+		if ( bootEntityDescriptor.getIdentifier() == null ) {
+			columnDefinition = null;
+			length = null;
+			precision = null;
+			scale = null;
+		}
+		else {
+			Column column = bootEntityDescriptor.getIdentifier().getColumns().get( 0 );
+			columnDefinition = column.getSqlType();
+			length = column.getLength();
+			precision = column.getPrecision();
+			scale = column.getScale();
+		}
 		return new BasicEntityIdentifierMappingImpl(
 				this,
 				templateInstanceCreator,
 				bootEntityDescriptor.getIdentifierProperty().getName(),
 				getTableName(),
 				tableKeyColumns[0][0],
+				columnDefinition,
+				length,
+				precision,
+				scale,
 				(BasicType<?>) idType,
 				creationProcess
 		);
@@ -1130,7 +1139,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected EntityDiscriminatorMapping generateDiscriminatorMapping(MappingModelCreationProcess modelCreationProcess) {
+	protected EntityDiscriminatorMapping generateDiscriminatorMapping(
+			PersistentClass bootEntityDescriptor,
+			MappingModelCreationProcess modelCreationProcess) {
 		EntityMappingType superMappingType = getSuperMappingType();
 		if ( superMappingType != null ) {
 			return superMappingType.getDiscriminatorMapping();
@@ -1142,7 +1153,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				// even though this is a joined-hierarchy the user has defined an
 				// explicit discriminator column - so we can use the normal
 				// discriminator mapping
-				return super.generateDiscriminatorMapping( modelCreationProcess );
+				return super.generateDiscriminatorMapping( bootEntityDescriptor, modelCreationProcess );
 			}
 
 			org.hibernate.persister.entity.DiscriminatorType<?> discriminatorMetadataType = (org.hibernate.persister.entity.DiscriminatorType<?>) getTypeDiscriminatorMetadata().getResolutionType();

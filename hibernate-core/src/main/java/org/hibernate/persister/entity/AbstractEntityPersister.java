@@ -5720,7 +5720,7 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
-		discriminatorMapping = generateDiscriminatorMapping( creationProcess );
+		discriminatorMapping = generateDiscriminatorMapping( bootEntityDescriptor, creationProcess );
 	}
 
 	private void postProcessAttributeMappings(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
@@ -5849,17 +5849,42 @@ public abstract class AbstractEntityPersister
 		return getDiscriminatorFormulaTemplate() == null;
 	}
 
-	protected EntityDiscriminatorMapping generateDiscriminatorMapping(MappingModelCreationProcess modelCreationProcess) {
+	protected EntityDiscriminatorMapping generateDiscriminatorMapping(
+			PersistentClass bootEntityDescriptor,
+			MappingModelCreationProcess modelCreationProcess) {
 		if ( getDiscriminatorType() == null) {
 			return null;
 		}
 		else {
 			final String discriminatorColumnExpression;
+			final String columnDefinition;
+			final Long length;
+			final Integer precision;
+			final Integer scale;
 			if ( getDiscriminatorFormulaTemplate() == null ) {
+				Column column = bootEntityDescriptor.getDiscriminator() == null
+						? null
+						: bootEntityDescriptor.getDiscriminator().getColumns().get( 0 );
 				discriminatorColumnExpression = getDiscriminatorColumnReaders();
+				if ( column == null ) {
+					columnDefinition = null;
+					length = null;
+					precision = null;
+					scale = null;
+				}
+				else {
+					columnDefinition = column.getSqlType();
+					length = column.getLength();
+					precision = column.getPrecision();
+					scale = column.getScale();
+				}
 			}
 			else {
 				discriminatorColumnExpression = getDiscriminatorFormulaTemplate();
+				columnDefinition = null;
+				length = null;
+				precision = null;
+				scale = null;
 			}
 			return new ExplicitColumnDiscriminatorMappingImpl (
 					this,
@@ -5868,7 +5893,7 @@ public abstract class AbstractEntityPersister
 					discriminatorColumnExpression,
 					getDiscriminatorFormulaTemplate() != null,
 					isPhysicalDiscriminator(),
-					modelCreationProcess
+					columnDefinition, length, precision, scale, modelCreationProcess
 			);
 		}
 	}
@@ -6011,6 +6036,23 @@ public abstract class AbstractEntityPersister
 			// otherwise we have a non-encapsulated composite-identifier
 			return generateNonEncapsulatedCompositeIdentifierMapping( creationProcess, bootEntityDescriptor );
 		}
+		final String columnDefinition;
+		final Long length;
+		final Integer precision;
+		final Integer scale;
+		if ( bootEntityDescriptor.getIdentifier() == null ) {
+			columnDefinition = null;
+			length = null;
+			precision = null;
+			scale = null;
+		}
+		else {
+			Column column = bootEntityDescriptor.getIdentifier().getColumns().get( 0 );
+			columnDefinition = column.getSqlType();
+			length = column.getLength();
+			precision = column.getPrecision();
+			scale = column.getScale();
+		}
 
 		return new BasicEntityIdentifierMappingImpl(
 				this,
@@ -6018,6 +6060,10 @@ public abstract class AbstractEntityPersister
 				bootEntityDescriptor.getIdentifierProperty().getName(),
 				getTableName(),
 				rootTableKeyColumnNames[0],
+				columnDefinition,
+				length,
+				precision,
+				scale,
 				(BasicType<?>) idType,
 				creationProcess
 		);
@@ -6051,7 +6097,7 @@ public abstract class AbstractEntityPersister
 		final BasicValue bootModelVersionValue = (BasicValue) versionProperty.getValue();
 		final BasicValue.Resolution<?> basicTypeResolution = bootModelVersionValue.resolve();
 
-		final Selectable column = bootModelVersionValue.getColumn();
+		final Column column = (Column) bootModelVersionValue.getColumn();
 		final Dialect dialect = creationProcess.getCreationContext().getSessionFactory().getJdbcServices().getDialect();
 
 		return new EntityVersionMappingImpl(
@@ -6060,6 +6106,10 @@ public abstract class AbstractEntityPersister
 				bootModelRootEntityDescriptor.getVersion().getName(),
 				entityPersister.getTableName(),
 				column.getText( dialect ),
+				column.getSqlType(),
+				column.getLength(),
+				column.getPrecision(),
+				column.getScale(),
 				basicTypeResolution.getLegacyResolvedBasicType(),
 				entityPersister,
 				creationProcess
@@ -6087,6 +6137,7 @@ public abstract class AbstractEntityPersister
 		final PropertyAccess propertyAccess = getRepresentationStrategy().resolvePropertyAccess( bootProperty );
 
 		if ( propertyIndex == getVersionProperty() ) {
+			Column column = bootProperty.getValue().getColumns().get( 0 );
 			return MappingModelCreationHelper.buildBasicAttributeMapping(
 					attrName,
 					getNavigableRole().append( bootProperty.getName() ),
@@ -6099,6 +6150,10 @@ public abstract class AbstractEntityPersister
 					false,
 					null,
 					null,
+					column.getSqlType(),
+					column.getLength(),
+					column.getPrecision(),
+					column.getScale(),
 					propertyAccess,
 					tupleAttrDefinition.getCascadeStyle(),
 					creationProcess
@@ -6112,12 +6167,21 @@ public abstract class AbstractEntityPersister
 			final boolean isAttrColumnExpressionFormula;
 			final String customReadExpr;
 			final String customWriteExpr;
+			final String columnDefinition;
+			final Long length;
+			final Integer precision;
+			final Integer scale;
 
 			if ( bootValue instanceof DependantValue ) {
 				attrColumnExpression = attrColumnNames[0];
 				isAttrColumnExpressionFormula = false;
 				customReadExpr = null;
 				customWriteExpr = null;
+				Column column = bootValue.getColumns().get( 0 );
+				columnDefinition = column.getSqlType();
+				length = column.getLength();
+				precision = column.getPrecision();
+				scale = column.getScale();
 			}
 			else {
 				final BasicValue basicBootValue = (BasicValue) bootValue;
@@ -6134,6 +6198,11 @@ public abstract class AbstractEntityPersister
 
 					customReadExpr = selectable.getTemplate( dialect, sessionFactory.getQueryEngine().getSqmFunctionRegistry() );
 					customWriteExpr = selectable.getCustomWriteExpression();
+					Column column = bootValue.getColumns().get( 0 );
+					columnDefinition = column.getSqlType();
+					length = column.getLength();
+					precision = column.getPrecision();
+					scale = column.getScale();
 				}
 				else {
 					final String[] attrColumnFormulaTemplate = propertyColumnFormulaTemplates[ propertyIndex ];
@@ -6141,6 +6210,10 @@ public abstract class AbstractEntityPersister
 					isAttrColumnExpressionFormula = true;
 					customReadExpr = null;
 					customWriteExpr = null;
+					columnDefinition = null;
+					length = null;
+					precision = null;
+					scale = null;
 				}
 			}
 
@@ -6156,6 +6229,10 @@ public abstract class AbstractEntityPersister
 					isAttrColumnExpressionFormula,
 					customReadExpr,
 					customWriteExpr,
+					columnDefinition,
+					length,
+					precision,
+					scale,
 					propertyAccess,
 					tupleAttrDefinition.getCascadeStyle(),
 					creationProcess

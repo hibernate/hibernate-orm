@@ -331,7 +331,23 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					containingTableExpression = rootTableExpression;
 					columnExpression = rootTableKeyColumnNames[columnPosition];
 				}
-
+				final String columnDefinition;
+				final Long length;
+				final Integer precision;
+				final Integer scale;
+				if ( selectable instanceof Column ) {
+					Column column = (Column) selectable;
+					columnDefinition = column.getSqlType();
+					length = column.getLength();
+					precision = column.getPrecision();
+					scale = column.getScale();
+				}
+				else {
+					columnDefinition = null;
+					length = null;
+					precision = null;
+					scale = null;
+				}
 				attributeMapping = MappingModelCreationHelper.buildBasicAttributeMapping(
 						bootPropertyDescriptor.getName(),
 						valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
@@ -344,6 +360,10 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						selectable.isFormula(),
 						selectable.getCustomReadExpression(),
 						selectable.getCustomWriteExpression(),
+						columnDefinition,
+						length,
+						precision,
+						scale,
 						representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
 						compositeType.getCascadeStyle( attributeIndex ),
 						creationProcess

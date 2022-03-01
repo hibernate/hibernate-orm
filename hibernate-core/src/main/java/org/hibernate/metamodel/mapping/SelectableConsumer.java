@@ -55,6 +55,26 @@ public interface SelectableConsumer {
 			}
 
 			@Override
+			public String getColumnDefinition() {
+				return null;
+			}
+
+			@Override
+			public Long getLength() {
+				return null;
+			}
+
+			@Override
+			public Integer getPrecision() {
+				return null;
+			}
+
+			@Override
+			public Integer getScale() {
+				return null;
+			}
+
+			@Override
 			public boolean isFormula() {
 				return false;
 			}

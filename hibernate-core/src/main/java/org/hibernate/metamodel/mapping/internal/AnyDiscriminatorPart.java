@@ -58,6 +58,10 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 
 	private final String table;
 	private final String column;
+	private final String columnDefinition;
+	private final Long length;
+	private final Integer precision;
+	private final Integer scale;
 	private final boolean nullable;
 
 	private final MetaType metaType;
@@ -67,12 +71,20 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 			DiscriminatedAssociationModelPart declaringType,
 			String table,
 			String column,
+			String columnDefinition,
+			Long length,
+			Integer precision,
+			Integer scale,
 			boolean nullable,
 			MetaType metaType) {
 		this.navigableRole = partRole;
 		this.declaringType = declaringType;
 		this.table = table;
 		this.column = column;
+		this.columnDefinition = columnDefinition;
+		this.length = length;
+		this.precision = precision;
+		this.scale = scale;
 		this.nullable = nullable;
 		this.metaType = metaType;
 	}
@@ -108,6 +120,26 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 	@Override
 	public String getCustomWriteExpression() {
 		return null;
+	}
+
+	@Override
+	public String getColumnDefinition() {
+		return columnDefinition;
+	}
+
+	@Override
+	public Long getLength() {
+		return length;
+	}
+
+	@Override
+	public Integer getPrecision() {
+		return precision;
+	}
+
+	@Override
+	public Integer getScale() {
+		return scale;
 	}
 
 	@Override

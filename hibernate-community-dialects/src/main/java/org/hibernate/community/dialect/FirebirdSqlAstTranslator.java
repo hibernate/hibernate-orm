@@ -247,11 +247,7 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 				// Firebird cannot determine the datatype of a parameter as passed to a function,
 				// resulting in a "Datatype unknown" error when the statement is compiled.
 				// This adds an explicit cast so Firebird can infer the type
-				final JdbcMapping jdbcMapping = jdbcParameter.getExpressionType().getJdbcMappings().get( 0 );
-				final List<SqlAstNode> arguments = new ArrayList<>( 2 );
-				arguments.add( jdbcParameter );
-				arguments.add( new CastTarget( jdbcMapping ) );
-				castFunction().render( this, arguments, this );
+				renderCasted( jdbcParameter );
 			}
 			finally {
 				inFunction = true;

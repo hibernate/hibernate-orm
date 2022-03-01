@@ -48,6 +48,8 @@ import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import jakarta.persistence.TemporalType;
 
@@ -125,6 +127,27 @@ public class SpannerDialect extends Dialect {
 			default:
 				return super.columnType(jdbcTypeCode);
 		}
+	}
+
+	@Override
+	public String getUnboundedTypeName(JdbcType jdbcType, JavaType<?> javaType) {
+		switch ( jdbcType.getDefaultSqlTypeCode() ) {
+			case CHAR:
+			case NCHAR:
+			case VARCHAR:
+			case NVARCHAR:
+			case LONGVARCHAR:
+			case LONGNVARCHAR:
+			case LONG32VARCHAR:
+			case LONG32NVARCHAR:
+				return "string";
+			case BINARY:
+			case VARBINARY:
+			case LONGVARBINARY:
+			case LONG32VARBINARY:
+				return "bytes";
+		}
+		return super.getUnboundedTypeName( jdbcType, javaType );
 	}
 
 	@Override
@@ -805,6 +828,13 @@ public class SpannerDialect extends Dialect {
 
 	@Override
 	public String getCastTypeName(SqlExpressible type, Long length, Integer precision, Integer scale) {
+		switch ( type.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() ) {
+			case VARCHAR:
+			case NVARCHAR:
+				return "string";
+			case VARBINARY:
+				return "bytes";
+		}
 		//Spanner doesn't let you specify a length in cast() types
 		return super.getRawTypeName( type.getJdbcMapping().getJdbcType() );
 	}

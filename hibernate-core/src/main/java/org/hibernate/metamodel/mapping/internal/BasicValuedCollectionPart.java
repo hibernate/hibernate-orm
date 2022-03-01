@@ -106,6 +106,26 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
+	public String getColumnDefinition() {
+		return selectableMapping.getColumnDefinition();
+	}
+
+	@Override
+	public Long getLength() {
+		return selectableMapping.getLength();
+	}
+
+	@Override
+	public Integer getPrecision() {
+		return selectableMapping.getPrecision();
+	}
+
+	@Override
+	public Integer getScale() {
+		return selectableMapping.getScale();
+	}
+
+	@Override
 	public BasicValueConverter getValueConverter() {
 		return valueConverter;
 	}

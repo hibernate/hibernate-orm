@@ -16,6 +16,7 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  */
 public class CastTarget implements Expression, SqlAstNode {
 	private final JdbcMapping type;
+	private final String sqlType;
 	private final Long length;
 	private final Integer precision;
 	private final Integer scale;
@@ -25,10 +26,19 @@ public class CastTarget implements Expression, SqlAstNode {
 	}
 
 	public CastTarget(JdbcMapping type, Long length, Integer precision, Integer scale) {
+		this( type, null, length, precision, scale );
+	}
+
+	public CastTarget(JdbcMapping type, String sqlType, Long length, Integer precision, Integer scale) {
 		this.type = type;
+		this.sqlType = sqlType;
 		this.length = length;
 		this.precision = precision;
 		this.scale = scale;
+	}
+
+	public String getSqlType() {
+		return sqlType;
 	}
 
 	public Long getLength() {
@@ -50,6 +60,6 @@ public class CastTarget implements Expression, SqlAstNode {
 
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
-		sqlTreeWalker.visitCastTarget(this);
+		sqlTreeWalker.visitCastTarget( this );
 	}
 }

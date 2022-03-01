@@ -67,6 +67,12 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 				);
 				return openUrlStream( HBM_DTD_MAPPING.getMappedLocalUrl() );
 			}
+			else if ( ALTERNATE_MAPPING_DTD.matches( publicID, systemID ) ) {
+				log.debug(
+						"Recognized alternate hibernate-mapping identifier; attempting to resolve on classpath under org/hibernate/"
+				);
+				return openUrlStream( ALTERNATE_MAPPING_DTD.getMappedLocalUrl() );
+			}
 			else if ( LEGACY_HBM_DTD_MAPPING.matches( publicID, systemID ) ) {
 				DeprecationLogger.DEPRECATION_LOGGER.recognizedObsoleteHibernateNamespace(
 						LEGACY_HBM_DTD_MAPPING.getIdentifierBase(),
@@ -82,6 +88,12 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 						"Recognized hibernate-configuration identifier; attempting to resolve on classpath under org/hibernate/"
 				);
 				return openUrlStream( CFG_DTD_MAPPING.getMappedLocalUrl() );
+			}
+			else if ( ALTERNATE_CFG_DTD.matches( publicID, systemID ) ) {
+				log.debug(
+						"Recognized alternate hibernate-configuration identifier; attempting to resolve on classpath under org/hibernate/"
+				);
+				return openUrlStream( ALTERNATE_CFG_DTD.getMappedLocalUrl() );
 			}
 			else if ( LEGACY_CFG_DTD_MAPPING.matches( publicID, systemID ) ) {
 				DeprecationLogger.DEPRECATION_LOGGER.recognizedObsoleteHibernateNamespace(
@@ -185,6 +197,11 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 			"org/hibernate/hibernate-mapping-3.0.dtd"
 	);
 
+	public static final DtdMapping ALTERNATE_MAPPING_DTD = new DtdMapping(
+			"hibernate.org/dtd/hibernate-mapping",
+			"org/hibernate/hibernate-mapping-3.0.dtd"
+	);
+
 	public static final DtdMapping LEGACY_HBM_DTD_MAPPING = new DtdMapping(
 			"hibernate.sourceforge.net/hibernate-mapping",
 			"org/hibernate/hibernate-mapping-3.0.dtd"
@@ -192,6 +209,11 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 
 	public static final DtdMapping CFG_DTD_MAPPING = new DtdMapping(
 			"www.hibernate.org/dtd/hibernate-configuration",
+			"org/hibernate/hibernate-configuration-3.0.dtd"
+	);
+
+	public static final DtdMapping ALTERNATE_CFG_DTD = new DtdMapping(
+			"hibernate.org/dtd/hibernate-configuration",
 			"org/hibernate/hibernate-configuration-3.0.dtd"
 	);
 

@@ -370,11 +370,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public ClassmateContext getClassmateContext() {
-		return bootstrapContext.getClassmateContext();
-	}
-
-	@Override
 	public void registerValueMappingResolver(Function<MetadataBuildingContext, Boolean> resolver) {
 		if ( valueResolvers == null ) {
 			valueResolvers = new ArrayList<>();

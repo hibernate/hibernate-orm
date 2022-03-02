@@ -276,7 +276,7 @@ public abstract class SimpleValue implements KeyValue {
 				this.attributeConverterDescriptor = new ClassBasedConverterDescriptor(
 						converterClass,
 						false,
-						( (InFlightMetadataCollector) getMetadata() ).getClassmateContext()
+						( (InFlightMetadataCollector) getMetadata() ).getBootstrapContext().getClassmateContext()
 				);
 				return;
 			}

@@ -49,7 +49,7 @@ public class SessionWithSharedConnectionTest {
 		session.getTransaction().begin();
 
 		Session secondSession = session.sessionWithOptions()
-				.transactionContext()
+				.connection()
 				.openSession();
 		CriteriaBuilder criteriaBuilder = secondSession.getCriteriaBuilder();
 		CriteriaQuery<IrrelevantEntity> criteria = criteriaBuilder.createQuery( IrrelevantEntity.class );
@@ -92,7 +92,7 @@ public class SessionWithSharedConnectionTest {
 		// COMMIT ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		Session secondSession = session.sessionWithOptions()
-				.transactionContext()
+				.connection()
 				.autoClose( true )
 				.openSession();
 
@@ -116,7 +116,7 @@ public class SessionWithSharedConnectionTest {
 		session.getTransaction().begin();
 
 		secondSession = session.sessionWithOptions()
-				.transactionContext()
+				.connection()
 				.autoClose( true )
 				.openSession();
 
@@ -160,7 +160,7 @@ public class SessionWithSharedConnectionTest {
 		session.getTransaction().begin();
 
 		Session secondSession = session.sessionWithOptions()
-				.transactionContext()
+				.connection()
 //				.flushBeforeCompletion( true )
 				.autoClose( true )
 				.openSession();

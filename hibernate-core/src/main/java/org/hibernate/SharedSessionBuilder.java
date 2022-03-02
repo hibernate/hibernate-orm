@@ -16,18 +16,6 @@ import java.sql.Connection;
 public interface SharedSessionBuilder<T extends SharedSessionBuilder> extends SessionBuilder<T> {
 
 	/**
-	 * Signifies that the transaction context from the original session should be used to create the new session.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated Use {@link #connection()} instead
-	 */
-	@Deprecated
-	default T transactionContext() {
-		return connection();
-	}
-
-	/**
 	 * Signifies that the connection from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining

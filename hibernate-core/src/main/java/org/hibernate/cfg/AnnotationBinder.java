@@ -3961,10 +3961,20 @@ public final class AnnotationBinder {
 			JoinColumns joinColumns,
 			MetadataBuildingContext context) {
 		final boolean noConstraintByDefault = context.getBuildingOptions().isNoConstraintByDefault();
-		if ( ( joinColumn != null && ( joinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
-				|| joinColumn.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) )
-				|| ( joinColumns != null && ( joinColumns.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
-				|| joinColumns.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) ) ) {
+		final NotFound notFoundAnn= property.getAnnotation( NotFound.class );
+
+		if ( notFoundAnn != null ) {
+			// supersedes all others
+			value.disableForeignKey();
+		}
+		else if ( joinColumn != null && (
+				joinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
+						|| ( joinColumn.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) ) ) {
+			value.disableForeignKey();
+		}
+		else if ( joinColumns != null && (
+				joinColumns.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
+						|| ( joinColumns.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) ) ) {
 			value.disableForeignKey();
 		}
 		else {

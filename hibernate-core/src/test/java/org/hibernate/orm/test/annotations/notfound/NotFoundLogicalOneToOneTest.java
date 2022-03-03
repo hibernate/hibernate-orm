@@ -7,6 +7,11 @@
 package org.hibernate.orm.test.annotations.notfound;
 
 import java.io.Serializable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
 
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
@@ -15,15 +20,6 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
-
-import jakarta.persistence.ConstraintMode;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ForeignKey;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -92,7 +88,6 @@ public class NotFoundLogicalOneToOneTest {
 		}
 
 		@OneToOne(fetch = FetchType.LAZY)
-		@JoinColumn(foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT))
 		@NotFound(action = NotFoundAction.IGNORE)
 		public Currency getCurrency() {
 			return currency;

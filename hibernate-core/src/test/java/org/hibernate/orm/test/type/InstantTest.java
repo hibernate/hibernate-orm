@@ -16,7 +16,10 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
+
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,6 +30,7 @@ import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.dialect.TimeZoneSupport;
 
 import org.junit.runners.Parameterized;
 
@@ -149,25 +153,33 @@ public class InstantTest extends AbstractJavaTimeTypeTest<Instant, InstantTest.E
 
 	@Override
 	protected void setJdbcValueForNonHibernateWrite(PreparedStatement statement, int parameterIndex) throws SQLException {
-		statement.setTimestamp( parameterIndex, getExpectedJdbcValueAfterHibernateWrite() );
+		if ( sessionFactory().getJdbcServices().getDialect().getTimeZoneSupport() == TimeZoneSupport.NATIVE ) {
+			// Oracle and H2 require reading/writing through OffsetDateTime to avoid TZ related miscalculations
+			statement.setObject( parameterIndex, getExpectedJdbcValueAfterHibernateWrite().toInstant().atOffset( ZoneOffset.UTC ) );
+		}
+		else {
+			statement.setTimestamp(
+					parameterIndex,
+					getExpectedJdbcValueAfterHibernateWrite(),
+					Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) )
+			);
+		}
 	}
 
 	@Override
 	protected Timestamp getExpectedJdbcValueAfterHibernateWrite() {
-		LocalDateTime dateTimeInDefaultTimeZone = getExpectedPropertyValueAfterHibernateRead().atZone( ZoneId.systemDefault() )
-				.toLocalDateTime();
-		return new Timestamp(
-				dateTimeInDefaultTimeZone.getYear() - 1900, dateTimeInDefaultTimeZone.getMonthValue() - 1,
-				dateTimeInDefaultTimeZone.getDayOfMonth(),
-				dateTimeInDefaultTimeZone.getHour(), dateTimeInDefaultTimeZone.getMinute(),
-				dateTimeInDefaultTimeZone.getSecond(),
-				dateTimeInDefaultTimeZone.getNano()
-		);
+		return Timestamp.from( getExpectedPropertyValueAfterHibernateRead() );
 	}
 
 	@Override
 	protected Object getActualJdbcValue(ResultSet resultSet, int columnIndex) throws SQLException {
-		return resultSet.getTimestamp( columnIndex );
+		if ( sessionFactory().getJdbcServices().getDialect().getTimeZoneSupport() == TimeZoneSupport.NATIVE ) {
+			// Oracle and H2 require reading/writing through OffsetDateTime to avoid TZ related miscalculations
+			return Timestamp.from( resultSet.getObject( columnIndex, OffsetDateTime.class ).toInstant() );
+		}
+		else {
+			return resultSet.getTimestamp( columnIndex, Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) );
+		}
 	}
 
 	@Entity(name = ENTITY_NAME)

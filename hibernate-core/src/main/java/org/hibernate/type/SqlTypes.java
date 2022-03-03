@@ -425,6 +425,13 @@ public class SqlTypes {
 	 */
 	public static final int INET = 3002;
 
+	/**
+	 * The constant in the Java programming language, sometimes referred to
+	 * as a type code, that identifies the generic SQL type
+	 * {@code TIMESTAMP_UTC}.
+	 */
+	public static final int TIMESTAMP_UTC = 3003;
+
 	// Interval types
 
 	/**

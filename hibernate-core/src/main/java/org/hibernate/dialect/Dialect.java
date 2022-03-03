@@ -149,6 +149,8 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
+import org.hibernate.type.descriptor.jdbc.InstantAsTimestampJdbcType;
+import org.hibernate.type.descriptor.jdbc.InstantAsTimestampWithTimeZoneJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.LongNVarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NCharJdbcType;
@@ -306,6 +308,7 @@ public abstract class Dialect implements ConversionContext {
 		ddlTypeRegistry.addDescriptor( simpleSqlType( TIME_WITH_TIMEZONE ) );
 		ddlTypeRegistry.addDescriptor( simpleSqlType( TIMESTAMP ) );
 		ddlTypeRegistry.addDescriptor( simpleSqlType( TIMESTAMP_WITH_TIMEZONE ) );
+		ddlTypeRegistry.addDescriptor( simpleSqlType( TIMESTAMP_UTC ) );
 
 		ddlTypeRegistry.addDescriptor( simpleSqlType( CHAR ) );
 		ddlTypeRegistry.addDescriptor(
@@ -410,6 +413,10 @@ public abstract class Dialect implements ConversionContext {
 				return "timestamp($p)";
 			case TIMESTAMP_WITH_TIMEZONE:
 				return "timestamp($p) with time zone";
+			case TIMESTAMP_UTC:
+				return getTimeZoneSupport() == TimeZoneSupport.NATIVE
+						? columnType( TIMESTAMP_WITH_TIMEZONE )
+						: columnType( TIMESTAMP );
 
 			case CHAR:
 				return "char($l)";
@@ -893,7 +900,7 @@ public abstract class Dialect implements ConversionContext {
 				"instant",
 				new CurrentFunction(
 						"instant",
-						currentTimestamp(),
+						currentTimestampWithTimeZone(),
 						instantType
 				)
 		);
@@ -1240,6 +1247,13 @@ public abstract class Dialect implements ConversionContext {
 					Types.CLOB,
 					ClobJdbcType.STREAM_BINDING
 			);
+		}
+
+		if ( getTimeZoneSupport() == TimeZoneSupport.NATIVE ) {
+			typeContributions.contributeJdbcType( InstantAsTimestampWithTimeZoneJdbcType.INSTANCE );
+		}
+		else {
+			typeContributions.contributeJdbcType( InstantAsTimestampJdbcType.INSTANCE );
 		}
 	}
 
@@ -3609,25 +3623,25 @@ public abstract class Dialect implements ConversionContext {
 			}
 
 			switch ( jdbcTypeCode ) {
-				case Types.BIT:
-				case Types.CHAR:
-				case Types.NCHAR:
-				case Types.VARCHAR:
-				case Types.NVARCHAR:
-				case Types.BINARY:
-				case Types.VARBINARY:
-				case Types.CLOB:
-				case Types.BLOB:
+				case SqlTypes.BIT:
+				case SqlTypes.CHAR:
+				case SqlTypes.NCHAR:
+				case SqlTypes.VARCHAR:
+				case SqlTypes.NVARCHAR:
+				case SqlTypes.BINARY:
+				case SqlTypes.VARBINARY:
+				case SqlTypes.CLOB:
+				case SqlTypes.BLOB:
 					size.setLength( javaType.getDefaultSqlLength( Dialect.this, jdbcType ) );
 					break;
-				case Types.LONGVARCHAR:
-				case Types.LONGNVARCHAR:
-				case Types.LONGVARBINARY:
+				case SqlTypes.LONGVARCHAR:
+				case SqlTypes.LONGNVARCHAR:
+				case SqlTypes.LONGVARBINARY:
 					size.setLength( javaType.getLongSqlLength() );
 					break;
-				case Types.FLOAT:
-				case Types.DOUBLE:
-				case Types.REAL:
+				case SqlTypes.FLOAT:
+				case SqlTypes.DOUBLE:
+				case SqlTypes.REAL:
 					// this is almost always the thing we use:
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
 					if ( scale != null && scale != 0 ) {
@@ -3640,15 +3654,16 @@ public abstract class Dialect implements ConversionContext {
 						precision = (int) ceil( precision * LOG_BASE2OF10 );
 					}
 					break;
-				case Types.TIMESTAMP:
-				case Types.TIMESTAMP_WITH_TIMEZONE:
+				case SqlTypes.TIMESTAMP:
+				case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
+				case SqlTypes.TIMESTAMP_UTC:
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
 					if ( scale != null && scale != 0 ) {
 						throw new IllegalArgumentException("scale has no meaning for timestamps");
 					}
 					break;
-				case Types.NUMERIC:
-				case Types.DECIMAL:
+				case SqlTypes.NUMERIC:
+				case SqlTypes.DECIMAL:
 				case SqlTypes.INTERVAL_SECOND:
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
 					break;

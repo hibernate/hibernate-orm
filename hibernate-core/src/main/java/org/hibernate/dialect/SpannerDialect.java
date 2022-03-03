@@ -437,7 +437,7 @@ public class SpannerDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().register(
 				"format",
-				new FormatFunction( "format_timestamp", true, queryEngine.getTypeConfiguration() )
+				new FormatFunction( "format_timestamp", true, true, queryEngine.getTypeConfiguration() )
 		);
 		functionFactory.listagg_stringAgg( "string" );
 		functionFactory.inverseDistributionOrderedSetAggregates();

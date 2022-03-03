@@ -354,7 +354,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 			@Override
 			public int getPreferredSqlTypeCodeForBoolean() {
-				return Types.BOOLEAN;
+				return SqlTypes.BOOLEAN;
 			}
 		};
 
@@ -635,13 +635,14 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	protected static TemporalType getSqlTemporalType(int jdbcTypeCode) {
 		switch ( jdbcTypeCode ) {
-			case Types.TIMESTAMP:
-			case Types.TIMESTAMP_WITH_TIMEZONE:
+			case SqlTypes.TIMESTAMP:
+			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
+			case SqlTypes.TIMESTAMP_UTC:
 				return TemporalType.TIMESTAMP;
-			case Types.TIME:
-			case Types.TIME_WITH_TIMEZONE:
+			case SqlTypes.TIME:
+			case SqlTypes.TIME_WITH_TIMEZONE:
 				return TemporalType.TIME;
-			case Types.DATE:
+			case SqlTypes.DATE:
 				return TemporalType.DATE;
 		}
 		return null;

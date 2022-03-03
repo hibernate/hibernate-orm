@@ -18,7 +18,7 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  * @author Gavin King
  */
 public class Format implements SqlExpressible, SqlAstNode {
-	private String format;
+	private final String format;
 
 	public Format(String format) {
 		this.format = format;

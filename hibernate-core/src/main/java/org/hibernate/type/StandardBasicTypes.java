@@ -458,7 +458,7 @@ public final class StandardBasicTypes {
 	public static final BasicTypeReference<Instant> INSTANT = new BasicTypeReference<>(
 			"instant",
 			Instant.class,
-			SqlTypes.TIMESTAMP
+			SqlTypes.TIMESTAMP_UTC
 	);
 
 	/**

@@ -21,6 +21,7 @@ import java.sql.Struct;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -127,6 +128,7 @@ public class JdbcTypeJavaClassMappings {
 		workMap.put( LocalDateTime.class, SqlTypes.TIMESTAMP );
 		workMap.put( OffsetDateTime.class, SqlTypes.TIMESTAMP_WITH_TIMEZONE );
 		workMap.put( ZonedDateTime.class, SqlTypes.TIMESTAMP_WITH_TIMEZONE );
+		workMap.put( Instant.class, SqlTypes.TIMESTAMP_UTC );
 		workMap.put( Blob.class, SqlTypes.BLOB );
 		workMap.put( Clob.class, SqlTypes.CLOB );
 		workMap.put( Array.class, SqlTypes.ARRAY );
@@ -190,6 +192,7 @@ public class JdbcTypeJavaClassMappings {
 		workMap.put( SqlTypes.SQLXML, SQLXML.class );
 		workMap.put( SqlTypes.UUID, UUID.class );
 		workMap.put( SqlTypes.INET, InetAddress.class );
+		workMap.put( SqlTypes.TIMESTAMP_UTC, Instant.class );
 		workMap.put( SqlTypes.INTERVAL_SECOND, Duration.class );
 
 		return workMap;

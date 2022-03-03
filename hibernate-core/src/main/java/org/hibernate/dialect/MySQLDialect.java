@@ -1015,12 +1015,6 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public TimeZoneSupport getTimeZoneSupport() {
-		// In MySQL and MariaDB, the TIMESTAMP type normalize to UTC just like PostgreSQL
-		return TimeZoneSupport.NORMALIZE;
-	}
-
-	@Override
 	public void appendLiteral(SqlAppender appender, String literal) {
 		appender.appendSql( '\'' );
 		for ( int i = 0; i < literal.length(); i++ ) {

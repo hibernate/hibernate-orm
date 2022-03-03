@@ -67,6 +67,7 @@ import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
+import org.hibernate.type.descriptor.jdbc.InstantAsTimestampWithTimeZoneJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
@@ -154,6 +155,9 @@ public class PostgreSQLDialect extends Dialect {
 			case VARBINARY:
 			case LONG32VARBINARY:
 				return "bytea";
+
+			case TIMESTAMP_UTC:
+				return columnType( TIMESTAMP_WITH_TIMEZONE );
 		}
 		return super.columnType( sqlTypeCode );
 	}
@@ -1065,6 +1069,7 @@ public class PostgreSQLDialect extends Dialect {
 		// dialect uses oid for Blobs, byte arrays cannot be used.
 		jdbcTypeRegistry.addDescriptor( Types.BLOB, BlobJdbcType.BLOB_BINDING );
 		jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcType.CLOB_BINDING );
+		jdbcTypeRegistry.addDescriptor( TIMESTAMP_UTC, InstantAsTimestampWithTimeZoneJdbcType.INSTANCE );
 
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );

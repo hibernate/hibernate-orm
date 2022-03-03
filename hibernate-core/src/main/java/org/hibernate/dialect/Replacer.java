@@ -71,7 +71,7 @@ public class Replacer {
 				for ( Replacement replacement : replacements ) {
 					int result = replacement.apply( chunk, position );
 					if ( result >= 0 ) {
-						position += result;
+						position += result - 1;
 						break;
 					}
 				}

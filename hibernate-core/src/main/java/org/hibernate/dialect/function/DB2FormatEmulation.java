@@ -9,6 +9,14 @@ package org.hibernate.dialect.function;
 import java.util.List;
 
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.query.ReturnableType;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.function.FunctionRenderingSupport;
+import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
+import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -26,12 +34,13 @@ import jakarta.persistence.TemporalType;
  *
  * @author Gavin King
  */
-public class DB2FormatEmulation
-		extends FormatFunction {
+public class DB2FormatEmulation extends FormatFunction {
 
 	public DB2FormatEmulation(TypeConfiguration typeConfiguration) {
 		super(
-				"format",
+				"varchar_format",
+				false,
+				false,
 				typeConfiguration
 		);
 	}
@@ -41,47 +50,19 @@ public class DB2FormatEmulation
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> arguments,
 			SqlAstTranslator<?> walker) {
-		final Expression datetime = (Expression) arguments.get(0);
-		final boolean isTime = TypeConfiguration.getSqlTemporalType( datetime.getExpressionType() ) == TemporalType.TIME;
-		final Format format = (Format) arguments.get(1);
-
-		sqlAppender.appendSql("(");
-		String[] bits = OracleDialect.datetimeFormat( format.getFormat(), false, false ).result().split("\"");
-		boolean first = true;
-		for ( int i=0; i<bits.length; i++ ) {
-			String bit = bits[i];
-			if ( !bit.isEmpty() ) {
-				if ( first ) {
-					first = false;
-				}
-				else {
-					sqlAppender.appendSql("||");
-				}
-				if ( i % 2 == 0 ) {
-					sqlAppender.appendSql("varchar_format(");
-					// Times need to be wrapped into a timestamp to be able to use formatting
-					if ( isTime ) {
-						sqlAppender.appendSql( "timestamp(current_date," );
-						datetime.accept( walker );
-						sqlAppender.appendSql( ")" );
-					}
-					else {
-						datetime.accept( walker );
-					}
-					sqlAppender.appendSql(",'");
-					sqlAppender.appendSql( bit );
-					sqlAppender.appendSql("')");
-				}
-				else {
-					sqlAppender.appendSql("'");
-					sqlAppender.appendSql( bit );
-					sqlAppender.appendSql("'");
-				}
-			}
+		final Expression datetime = (Expression) arguments.get( 0 );
+		sqlAppender.appendSql( "varchar_format(" );
+		// Times need to be wrapped into a timestamp to be able to use formatting
+		if ( TypeConfiguration.getSqlTemporalType( datetime.getExpressionType() ) == TemporalType.TIME ) {
+			sqlAppender.appendSql( "timestamp(current_date," );
+			datetime.accept( walker );
+			sqlAppender.appendSql( ")" );
 		}
-		if ( first ) {
-			sqlAppender.appendSql("''");
+		else {
+			datetime.accept( walker );
 		}
-		sqlAppender.appendSql(")");
+		sqlAppender.appendSql( "," );
+		arguments.get( 1 ).accept( walker );
+		sqlAppender.appendSql( ")" );
 	}
 }

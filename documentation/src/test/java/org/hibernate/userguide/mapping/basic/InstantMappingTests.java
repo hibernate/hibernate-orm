@@ -15,6 +15,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -41,7 +42,13 @@ public class InstantMappingTests {
 		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("instant");
 		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
 		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Instant.class));
-		assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), equalTo( Types.TIMESTAMP));
+		assertThat(
+				jdbcMapping.getJdbcType(),
+				equalTo(
+						mappingMetamodel.getTypeConfiguration().getJdbcTypeRegistry()
+								.getDescriptor( SqlTypes.TIMESTAMP_UTC )
+				)
+		);
 
 		scope.inTransaction(
 				(session) -> {

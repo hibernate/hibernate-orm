@@ -14,6 +14,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -78,12 +79,12 @@ public class DdlTypeRegistry implements Serializable {
 				// they're just used to indicate that JavaType.getLongSqlLength()
 				// should be used by default (and that's already handled by the
 				// time we get to here)
-				case Types.LONGVARCHAR:
-					return ddlTypes.get( Types.VARCHAR );
-				case Types.LONGNVARCHAR:
-					return ddlTypes.get( Types.NVARCHAR );
-				case Types.LONGVARBINARY:
-					return ddlTypes.get( Types.VARBINARY );
+				case SqlTypes.LONGVARCHAR:
+					return ddlTypes.get( SqlTypes.VARCHAR );
+				case SqlTypes.LONGNVARCHAR:
+					return ddlTypes.get( SqlTypes.NVARCHAR );
+				case SqlTypes.LONGVARBINARY:
+					return ddlTypes.get( SqlTypes.VARBINARY );
 			}
 		}
 		return ddlType;
@@ -92,16 +93,17 @@ public class DdlTypeRegistry implements Serializable {
 	public String getTypeName(int typeCode, Dialect dialect) {
 		// explicitly enforce dialect's default precisions
 		switch ( typeCode ) {
-			case Types.DECIMAL:
-			case Types.NUMERIC:
+			case SqlTypes.DECIMAL:
+			case SqlTypes.NUMERIC:
 				return getTypeName( typeCode, Size.precision( dialect.getDefaultDecimalPrecision() ) );
-			case Types.FLOAT:
-			case Types.REAL:
+			case SqlTypes.FLOAT:
+			case SqlTypes.REAL:
 				return getTypeName( typeCode, Size.precision( dialect.getFloatPrecision() ) );
-			case Types.DOUBLE:
+			case SqlTypes.DOUBLE:
 				return getTypeName( typeCode, Size.precision( dialect.getDoublePrecision() ) );
-			case Types.TIMESTAMP:
-			case Types.TIMESTAMP_WITH_TIMEZONE:
+			case SqlTypes.TIMESTAMP:
+			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
+			case SqlTypes.TIMESTAMP_UTC:
 				return getTypeName( typeCode, Size.precision( dialect.getDefaultTimestampPrecision() ) );
 			default:
 				return getTypeName( typeCode, Size.nil() );

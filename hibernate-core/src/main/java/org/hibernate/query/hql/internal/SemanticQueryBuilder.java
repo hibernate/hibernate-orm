@@ -151,7 +151,6 @@ import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
 import org.hibernate.query.sqm.tree.insert.SqmValues;
-import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBooleanExpressionPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
@@ -160,12 +159,12 @@ import org.hibernate.query.sqm.tree.predicate.SqmExistsPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmGroupedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmJunctionPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmLikePredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNegatablePredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNegatedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmOrPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.AbstractSqmSelectQuery;
@@ -191,6 +190,7 @@ import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 
 import org.jboss.logging.Logger;
 
+import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -1784,18 +1784,41 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmPredicate visitAndPredicate(HqlParser.AndPredicateContext ctx) {
-		return new SqmAndPredicate(
+		return junction(
+				Predicate.BooleanOperator.AND,
 				(SqmPredicate) ctx.getChild( 0 ).accept( this ),
-				(SqmPredicate) ctx.getChild( 2 ).accept( this ),
-				creationContext.getNodeBuilder()
+				(SqmPredicate) ctx.getChild( 2 ).accept( this )
 		);
 	}
 
 	@Override
 	public SqmPredicate visitOrPredicate(HqlParser.OrPredicateContext ctx) {
-		return new SqmOrPredicate(
+		return junction(
+				Predicate.BooleanOperator.OR,
 				(SqmPredicate) ctx.getChild( 0 ).accept( this ),
-				(SqmPredicate) ctx.getChild( 2 ).accept( this ),
+				(SqmPredicate) ctx.getChild( 2 ).accept( this )
+		);
+	}
+
+	private SqmPredicate junction(Predicate.BooleanOperator operator, SqmPredicate lhs, SqmPredicate rhs) {
+		if ( lhs instanceof SqmJunctionPredicate ) {
+			final SqmJunctionPredicate junction = (SqmJunctionPredicate) lhs;
+			if ( junction.getOperator() == operator ) {
+				junction.getPredicates().add( rhs );
+				return junction;
+			}
+		}
+		if ( rhs instanceof SqmJunctionPredicate ) {
+			final SqmJunctionPredicate junction = (SqmJunctionPredicate) rhs;
+			if ( junction.getOperator() == operator ) {
+				junction.getPredicates().add( 0, lhs );
+				return junction;
+			}
+		}
+		return new SqmJunctionPredicate(
+				operator,
+				lhs,
+				rhs,
 				creationContext.getNodeBuilder()
 		);
 	}

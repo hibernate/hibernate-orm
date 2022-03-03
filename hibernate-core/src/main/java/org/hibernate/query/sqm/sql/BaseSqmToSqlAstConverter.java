@@ -218,7 +218,6 @@ import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
 import org.hibernate.query.sqm.tree.insert.SqmValues;
-import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBooleanExpressionPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
@@ -227,11 +226,11 @@ import org.hibernate.query.sqm.tree.predicate.SqmExistsPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmGroupedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmJunctionPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmLikePredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNegatedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmOrPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmAliasedNode;
@@ -5747,77 +5746,86 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public Junction visitAndPredicate(SqmAndPredicate predicate) {
-		final Junction conjunction = new Junction( Junction.Nature.CONJUNCTION, getBooleanType() );
-		conjunction.add( (Predicate) predicate.getLeftHandPredicate().accept( this ) );
-		conjunction.add( (Predicate) predicate.getRightHandPredicate().accept( this ) );
-		return conjunction;
-	}
+	public Junction visitJunctionPredicate(SqmJunctionPredicate predicate) {
+		if ( predicate.getOperator() == jakarta.persistence.criteria.Predicate.BooleanOperator.AND ) {
+			final List<Predicate> predicates = new ArrayList<>( predicate.getPredicates().size() );
+			for ( SqmPredicate subPredicate : predicate.getPredicates() ) {
+				predicates.add( (Predicate) subPredicate.accept( this ) );
+			}
+			return new Junction( Junction.Nature.CONJUNCTION, predicates, getBooleanType() );
+		}
+		final Junction disjunction = new Junction(
+				Junction.Nature.DISJUNCTION,
+				new ArrayList<>( predicate.getPredicates().size() ),
+				getBooleanType()
+		);
+		final List<Map<SqmPath<?>, Set<String>>> conjunctTreatUsagesList = new ArrayList<>( predicate.getPredicates().size() );
+		final Map<SqmPath<?>, Set<String>> conjunctTreatUsagesUnion = new IdentityHashMap<>();
+		boolean hasAnyTreatUsage = false;
+		for ( SqmPredicate subPredicate : predicate.getPredicates() ) {
+			disjunction.add( (Predicate) subPredicate.accept( this ) );
+			if ( conjunctTreatUsages.isEmpty() ) {
+				conjunctTreatUsagesList.add( null );
+			}
+			else {
+				hasAnyTreatUsage = true;
+				for ( Map.Entry<SqmPath<?>, Set<String>> entry : conjunctTreatUsages.entrySet() ) {
+					conjunctTreatUsagesUnion.computeIfAbsent( entry.getKey(), k -> new HashSet<>() )
+							.addAll( entry.getValue() );
+				}
+				conjunctTreatUsagesList.add( new IdentityHashMap<>( conjunctTreatUsages ) );
+				conjunctTreatUsages.clear();
+			}
+		}
+		if ( !hasAnyTreatUsage ) {
+			return disjunction;
+		}
 
-	@Override
-	public Junction visitOrPredicate(SqmOrPredicate predicate) {
-		final Junction disjunction = new Junction( Junction.Nature.DISJUNCTION, getBooleanType() );
-		final Predicate predicate1 = (Predicate) predicate.getLeftHandPredicate().accept( this );
-		final Map<SqmPath<?>, Set<String>> conjunctTreatUsages1;
-		if ( conjunctTreatUsages.isEmpty() ) {
-			conjunctTreatUsages1 = null;
-		}
-		else {
-			conjunctTreatUsages1 = new IdentityHashMap<>( conjunctTreatUsages );
-			conjunctTreatUsages.clear();
-		}
-		final Predicate predicate2 = (Predicate) predicate.getRightHandPredicate().accept( this );
-		if ( conjunctTreatUsages.isEmpty() || conjunctTreatUsages1 == null ) {
-			disjunction.add(
-					SqlAstTreeHelper.combinePredicates(
-							consumeConjunctTreatTypeRestrictions( conjunctTreatUsages1 ),
-							predicate1
-					)
-			);
-			disjunction.add( predicate2 );
-		}
-		else {
-			// If both disjunctions have treat type restrictions build the intersection of the two,
-			// so that we can push that up and infer during pruning, which entity subclasses can be omitted
-			final Map<SqmPath<?>, Set<String>> conjunctTreatUsages2 = new IdentityHashMap<>( conjunctTreatUsages );
-			final Iterator<Map.Entry<SqmPath<?>, Set<String>>> iterator = conjunctTreatUsages.entrySet().iterator();
-			while ( iterator.hasNext() ) {
-				final Map.Entry<SqmPath<?>, Set<String>> entry = iterator.next();
-				final Set<String> entityNames1 = conjunctTreatUsages1.get( entry.getKey() );
-				if ( entityNames1 == null ) {
-					iterator.remove();
+		// Build the intersection of the conjunct treat usages,
+		// so that we can push that up and infer during pruning, which entity subclasses can be omitted
+		conjunctTreatUsages.putAll( conjunctTreatUsagesUnion );
+
+		final Iterator<Map.Entry<SqmPath<?>, Set<String>>> iterator = conjunctTreatUsages.entrySet().iterator();
+		while ( iterator.hasNext() ) {
+			final Map.Entry<SqmPath<?>, Set<String>> entry = iterator.next();
+			final Set<String> intersected = new HashSet<>( entry.getValue() );
+			entry.setValue( intersected );
+			boolean remove = false;
+			for ( Map<SqmPath<?>, Set<String>> conjunctTreatUsages : conjunctTreatUsagesList ) {
+				final Set<String> entityNames = conjunctTreatUsages.get( entry.getKey() );
+				if ( entityNames == null ) {
+					remove = true;
 					continue;
 				}
 				// Intersect the two sets and transfer the common elements to the intersection
-				final Set<String> entityNames2 = entry.getValue();
-				final Set<String> intersected = new HashSet<>( entityNames1 );
-				intersected.retainAll( entityNames2 );
+				intersected.retainAll( entityNames );
 				if ( intersected.isEmpty() ) {
-					iterator.remove();
+					remove = true;
 					continue;
 				}
-				entry.setValue( intersected );
-				entityNames1.removeAll( intersected );
-				entityNames2.removeAll( intersected );
-				if ( entityNames1.isEmpty() ) {
-					conjunctTreatUsages1.remove( entry.getKey() );
-				}
-				if ( entityNames2.isEmpty() ) {
-					conjunctTreatUsages2.remove( entry.getKey() );
+				entityNames.removeAll( intersected );
+				if ( entityNames.isEmpty() ) {
+					conjunctTreatUsages.remove( entry.getKey() );
 				}
 			}
-			disjunction.add(
-					SqlAstTreeHelper.combinePredicates(
-							consumeConjunctTreatTypeRestrictions( conjunctTreatUsages1 ),
-							predicate1
-					)
-			);
-			disjunction.add(
-					SqlAstTreeHelper.combinePredicates(
-							consumeConjunctTreatTypeRestrictions( conjunctTreatUsages2 ),
-							predicate2
-					)
-			);
+
+			if ( remove ) {
+				iterator.remove();
+			}
+		}
+
+		// Prepend the treat type usages to the respective conjuncts
+		for ( int i = 0; i < conjunctTreatUsagesList.size(); i++ ) {
+			final Map<SqmPath<?>, Set<String>> conjunctTreatUsages = conjunctTreatUsagesList.get( i );
+			if ( conjunctTreatUsages != null ) {
+				disjunction.getPredicates().set(
+						i,
+						SqlAstTreeHelper.combinePredicates(
+								consumeConjunctTreatTypeRestrictions( conjunctTreatUsages ),
+								disjunction.getPredicates().get( i )
+						)
+				);
+			}
 		}
 		return disjunction;
 	}

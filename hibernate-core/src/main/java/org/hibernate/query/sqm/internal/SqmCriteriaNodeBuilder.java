@@ -51,7 +51,6 @@ import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
-import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.spi.QueryEngine;
@@ -90,7 +89,6 @@ import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
-import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBooleanExpressionPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
@@ -99,10 +97,10 @@ import org.hibernate.query.sqm.tree.predicate.SqmExistsPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmJunctionPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmLikePredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmOrPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
@@ -337,13 +335,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return wrap( expressions[0] );
 		}
 
-		final SqmPredicate lhs = wrap( expressions[0] );
-		final SqmPredicate rhs = wrap( expressions[1] );
-		SqmPredicate predicate = new SqmAndPredicate( lhs, rhs, this );
-		for ( int i = 2; i < expressions.length; i++ ) {
-			predicate = new SqmAndPredicate( predicate, wrap( expressions[i] ), this );
+		final List<SqmPredicate> predicates = new ArrayList<>( expressions.length );
+		for ( Expression<Boolean> expression : expressions ) {
+			predicates.add( wrap( expression ) );
 		}
-		return predicate;
+		return new SqmJunctionPredicate( Predicate.BooleanOperator.AND, predicates, this );
 	}
 
 	@Override
@@ -1567,7 +1563,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate and(Expression<Boolean> x, Expression<Boolean> y) {
-		return new SqmAndPredicate(
+		return new SqmJunctionPredicate(
+				Predicate.BooleanOperator.AND,
 				wrap( x ),
 				wrap( y ),
 				this
@@ -1580,17 +1577,17 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return conjunction();
 		}
 
-		SqmPredicate junction = (SqmPredicate) restrictions[0];
-		for ( int i = 1; i < restrictions.length; i++ ) {
-			junction = new SqmAndPredicate( junction, (SqmPredicate) restrictions[i], this );
+		final List<SqmPredicate> predicates = new ArrayList<>( restrictions.length );
+		for ( Predicate expression : restrictions ) {
+			predicates.add( (SqmPredicate) expression );
 		}
-
-		return junction;
+		return new SqmJunctionPredicate( Predicate.BooleanOperator.AND, predicates, this );
 	}
 
 	@Override
 	public SqmPredicate or(Expression<Boolean> x, Expression<Boolean> y) {
-		return new SqmOrPredicate(
+		return new SqmJunctionPredicate(
+				Predicate.BooleanOperator.OR,
 				wrap( x ),
 				wrap( y ),
 				this
@@ -1603,12 +1600,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return disjunction();
 		}
 
-		SqmPredicate junction = (SqmPredicate) restrictions[0];
-		for ( int i = 1; i < restrictions.length; i++ ) {
-			junction = new SqmOrPredicate( junction, (SqmPredicate) restrictions[i], this );
+		final List<SqmPredicate> predicates = new ArrayList<>( restrictions.length );
+		for ( Predicate expression : restrictions ) {
+			predicates.add( (SqmPredicate) expression );
 		}
-
-		return junction;
+		return new SqmJunctionPredicate( Predicate.BooleanOperator.OR, predicates, this );
 	}
 
 	@Override

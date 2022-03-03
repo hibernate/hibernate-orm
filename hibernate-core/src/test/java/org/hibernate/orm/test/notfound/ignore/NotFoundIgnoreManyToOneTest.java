@@ -12,6 +12,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Tuple;
 
 import org.hibernate.Hibernate;
 import org.hibernate.ObjectNotFoundException;
@@ -83,7 +84,6 @@ public class NotFoundIgnoreManyToOneTest {
 
 	@Test
 	@JiraKey( "HHH-15060" )
-	@FailureExpected( reason = "Bad results due to cross-join" )
 	public void testQueryImplicitPathDereferencePredicate(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -91,8 +91,7 @@ public class NotFoundIgnoreManyToOneTest {
 		scope.inTransaction( (session) -> {
 			final String hql = "select c from Coin c where c.currency.id = 1";
 			final List<Coin> coins = session.createSelectionQuery( hql, Coin.class ).getResultList();
-			assertThat( coins ).hasSize( 1 );
-			assertThat( coins.get( 0 ).getCurrency() ).isNull();
+			assertThat( coins ).isEmpty();
 
 			// technically we could use a subsequent-select rather than a join...
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
@@ -134,6 +133,22 @@ public class NotFoundIgnoreManyToOneTest {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
+		scope.inTransaction( (session) -> {
+			final String hql = "select c.id, c.currency from Coin c";
+			final List<Tuple> tuples = session.createSelectionQuery( hql, Tuple.class ).getResultList();
+			assertThat( tuples ).hasSize( 1 );
+			final Tuple tuple = tuples.get( 0 );
+			assertThat( tuple.get( 0 ) ).isEqualTo( 1 );
+			assertThat( tuple.get( 1 ) ).isNull();
+
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
+		} );
+
+		statementInspector.clear();
+
+		// I guess this one is somewhat debatable, but for consistency I think this makes the most sense
 		scope.inTransaction( (session) -> {
 			final String hql = "select c.currency from Coin c";
 			session.createQuery( hql, Currency.class ).getResultList();

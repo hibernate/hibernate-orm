@@ -19,10 +19,8 @@ import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.proxy.HibernateProxy;
 
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -133,7 +131,6 @@ public class EagerProxyNotFoundTest {
 	}
 
 	@Test
-	@NotImplementedYet( strict = false )
 	public void testExistingProxyWithNonExistingAssociation(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -166,7 +163,6 @@ public class EagerProxyNotFoundTest {
 	}
 
 	@Test
-	@NotImplementedYet( strict = false )
 	public void testEnityWithNotExistingAssociation(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -136,7 +136,7 @@ public class ToOneAttributeMapping
 	 hence this flag is also controlling the default join type.
 	 */
 	private final boolean isKeyTableNullable;
-	private final boolean isConstrained;
+	private final boolean isInternalLoadNullable;
 	private final NotFoundAction notFoundAction;
 	private final boolean unwrapProxy;
 	private final boolean isOptional;
@@ -294,6 +294,7 @@ public class ToOneAttributeMapping
 				}
 			}
 			isOptional = ( (ManyToOne) bootValue ).isIgnoreNotFound();
+			isInternalLoadNullable = ( isNullable && bootValue.isForeignKeyEnabled() ) || notFoundAction == NotFoundAction.IGNORE;
 		}
 		else {
 			assert bootValue instanceof OneToOne;
@@ -361,8 +362,8 @@ public class ToOneAttributeMapping
 			notFoundAction = null;
 			isKeyTableNullable = isNullable();
 			isOptional = ! bootValue.isConstrained();
+			isInternalLoadNullable = isNullable();
 		}
-		isConstrained = bootValue.isConstrained();
 
 		this.navigableRole = navigableRole;
 		this.declaringTableGroupProducer = resolveDeclaringTableGroupProducer( declaringEntityPersister );
@@ -529,7 +530,7 @@ public class ToOneAttributeMapping
 		this.cardinality = original.cardinality;
 		this.bidirectionalAttributeName = original.bidirectionalAttributeName;
 		this.declaringTableGroupProducer = declaringTableGroupProducer;
-		this.isConstrained = original.isConstrained;
+		this.isInternalLoadNullable = original.isInternalLoadNullable;
 	}
 
 	private static boolean equal(Value lhsValue, Value rhsValue) {
@@ -1049,8 +1050,8 @@ public class ToOneAttributeMapping
 				&& parentNavigablePath.equals( fetchParent.getNavigablePath().getRealParent() );
 
 
-		if ( hasNotFoundAction()
-				|| ( fetchTiming == FetchTiming.IMMEDIATE && selected ) ) {
+		if ( (hasNotFoundAction()
+				|| ( fetchTiming == FetchTiming.IMMEDIATE && selected )) ) {
 			final TableGroup tableGroup = determineTableGroup(
 					fetchablePath,
 					fetchParent,
@@ -1655,8 +1656,8 @@ public class ToOneAttributeMapping
 		return isOptional;
 	}
 
-	public boolean isConstrained(){
-		return isConstrained;
+	public boolean isInternalLoadNullable() {
+		return isInternalLoadNullable;
 	}
 
 	public NotFoundAction getNotFoundAction() {

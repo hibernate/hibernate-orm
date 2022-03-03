@@ -48,7 +48,6 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 	protected final DomainResultAssembler<?> keyAssembler;
 	private final ToOneAttributeMapping toOneMapping;
 
-	private Object entityIdentifier;
 	protected boolean isInitialized;
 
 	protected Object entityInstance;
@@ -199,7 +198,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 				entityName,
 				entityIdentifier,
 				true,
-				toOneMapping.isNullable() || toOneMapping.isIgnoreNotFound()
+				toOneMapping.isInternalLoadNullable()
 		);
 
 		if ( entityInstance == null ) {
@@ -241,7 +240,6 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
-		entityIdentifier = null;
 		entityInstance = null;
 		isInitialized = false;
 		clearResolutionListeners();

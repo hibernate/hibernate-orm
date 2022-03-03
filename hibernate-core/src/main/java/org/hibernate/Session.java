@@ -117,7 +117,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/**
 	 * Force this session to flush. Must be called at the end of a unit of work,
 	 * before the transaction is committed. Depending on the current
-	 * {@link #setFlushMode(FlushMode) flush mode}, the session might automatically
+	 * {@link #setHibernateFlushMode(FlushMode)} flush mode}, the session might automatically
 	 * flush when {@link Transaction#commit()} is called, and it is not necessary
 	 * to call this method directly.
 	 * <p>
@@ -127,25 +127,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @throws HibernateException if changes could not be synchronized with the database
 	 */
 	void flush();
-
-	/**
-	 * Set the current {@link FlushMode flush mode} for this session.
-	 * <p>
-	 * <em>Flushing</em> is the process of synchronizing the underlying persistent
-	 * store with persistable state held in memory. The current flush mode determines
-	 * when the session is automatically flushed.
-	 * <p>
-	 * The {@link FlushMode#AUTO default flush mode} is sometimes unnecessarily
-	 * aggressive. For a logically "read only" session, it's reasonable to set the
-	 * session's flush mode to {@link FlushMode#MANUAL} at the start of the session
-	 * in order to avoid some unnecessary work.
-	 *
-	 * @param flushMode the new {@link FlushMode}
-	 *
-	 * @deprecated use {@link #setHibernateFlushMode(FlushMode)}
-	 */
-	@Deprecated(since="5.2")
-	void setFlushMode(FlushMode flushMode);
 
 	/**
 	 * Set the current {@link FlushModeType JPA flush mode} for this session.

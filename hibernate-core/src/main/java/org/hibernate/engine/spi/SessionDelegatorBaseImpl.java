@@ -265,11 +265,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void setFlushMode(FlushMode fm) {
-		delegate.setHibernateFlushMode( fm );
-	}
-
-	@Override
 	public void lock(Object entity, LockModeType lockMode) {
 		delegate.lock( entity, lockMode );
 	}

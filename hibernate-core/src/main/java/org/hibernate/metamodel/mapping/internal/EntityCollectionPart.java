@@ -467,7 +467,6 @@ public class EntityCollectionPart
 				fetchParent,
 				this,
 				partTableGroup,
-				selected,
 				fetchablePath,
 				creationState
 		);

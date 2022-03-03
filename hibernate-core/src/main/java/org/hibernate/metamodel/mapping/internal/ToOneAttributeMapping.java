@@ -968,7 +968,6 @@ public class ToOneAttributeMapping
 						fetchParent,
 						this,
 						tableGroup,
-						false,
 						fetchablePath,
 						creationState
 				);
@@ -1077,7 +1076,6 @@ public class ToOneAttributeMapping
 					fetchParent,
 					this,
 					tableGroup,
-					true,
 					fetchablePath,
 					creationState
 			);

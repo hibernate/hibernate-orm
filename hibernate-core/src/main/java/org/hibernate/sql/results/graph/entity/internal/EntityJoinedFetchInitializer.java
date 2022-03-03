@@ -16,6 +16,7 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.entity.AbstractEntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
+import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 
 /**
  * @author Andrea Boriero
@@ -27,7 +28,7 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 
 	public EntityJoinedFetchInitializer(
 			EntityResultGraphNode resultDescriptor,
-			ModelPart referencedModelPart,
+			EntityValuedFetchable referencedFetchable,
 			NavigablePath navigablePath,
 			LockMode lockMode,
 			Fetch identifierFetch,

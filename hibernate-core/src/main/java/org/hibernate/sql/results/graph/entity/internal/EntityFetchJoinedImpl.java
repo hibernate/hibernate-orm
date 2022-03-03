@@ -30,10 +30,9 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 			FetchParent fetchParent,
 			EntityValuedFetchable fetchedAttribute,
 			TableGroup tableGroup,
-			boolean nullable,
 			NavigablePath navigablePath,
 			DomainResultCreationState creationState) {
-		super( fetchParent, fetchedAttribute, navigablePath, nullable );
+		super( fetchParent, fetchedAttribute, navigablePath );
 		this.sourceAlias = tableGroup.getSourceAlias();
 		this.entityResult = new EntityResultImpl(
 				navigablePath,
@@ -51,7 +50,7 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 			AssemblerCreationState creationState) {
 		return (EntityInitializer) creationState.resolveInitializer(
 				getNavigablePath(),
-				getEntityValuedModelPart(),
+				getReferencedModePart(),
 				() -> new EntityJoinedFetchInitializer(
 						entityResult,
 						getReferencedModePart(),

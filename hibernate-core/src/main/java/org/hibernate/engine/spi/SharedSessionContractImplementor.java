@@ -337,24 +337,6 @@ public interface SharedSessionContractImplementor
 	boolean isCriteriaCopyTreeEnabled();
 
 	/**
-	 * Set the flush mode for this session.
-	 * <p/>
-	 * The flush mode determines the points at which the session is flushed.
-	 * <i>Flushing</i> is the process of synchronizing the underlying persistent
-	 * store with persistable state held in memory.
-	 * <p/>
-	 * For a logically "read only" session, it is reasonable to set the session's
-	 * flush mode to {@link FlushMode#MANUAL} at the start of the session (in
-	 * order to achieve some extra performance).
-	 *
-	 * @param flushMode the new flush mode
-	 *
-	 * @deprecated  use {@link #setHibernateFlushMode(FlushMode)} instead
-	 */
-	@Deprecated(since = "5.2")
-	void setFlushMode(FlushMode flushMode);
-
-	/**
 	 * Get the flush mode for this session.
 	 * <p/>
 	 * For users of the Hibernate native APIs, we've had to rename this method

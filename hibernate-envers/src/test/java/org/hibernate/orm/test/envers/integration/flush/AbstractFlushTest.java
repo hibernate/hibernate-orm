@@ -46,6 +46,6 @@ public abstract class AbstractFlushTest extends BaseEnversJPAFunctionalTestCase 
 	@Before
 	public void initFlush() throws IOException {
 		Session session = getSession( getEntityManager() );
-		session.setFlushMode( getFlushMode() );
+		session.setHibernateFlushMode( getFlushMode() );
 	}
 }

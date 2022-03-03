@@ -616,11 +616,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public void setFlushMode(FlushMode flushMode) {
-		setHibernateFlushMode( flushMode );
-	}
-
-	@Override
 	public FlushModeType getFlushMode() {
 		checkOpen();
 		return FlushModeTypeHelper.getFlushModeType( this.flushMode );

@@ -221,7 +221,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		EntityManager em = getOrCreateEntityManager();
 		em.setFlushMode( FlushModeType.COMMIT );
 		assertEquals( FlushModeType.COMMIT, em.getFlushMode() );
-		( (Session) em ).setFlushMode( FlushMode.ALWAYS );
+		( (Session) em ).setHibernateFlushMode( FlushMode.ALWAYS );
 		assertEquals( em.getFlushMode(), FlushModeType.AUTO );
 		em.close();
 	}

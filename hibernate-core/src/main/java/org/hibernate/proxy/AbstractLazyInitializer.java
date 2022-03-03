@@ -196,7 +196,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 				SessionFactoryImplementor sf = SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid );
 				SharedSessionContractImplementor session = (SharedSessionContractImplementor) sf.openSession();
 				session.getPersistenceContext().setDefaultReadOnly( true );
-				session.setFlushMode( FlushMode.MANUAL );
+				session.setHibernateFlushMode( FlushMode.MANUAL );
 
 				boolean isJTA = session.getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta();
 

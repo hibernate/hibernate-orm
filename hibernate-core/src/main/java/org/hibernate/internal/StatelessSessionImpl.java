@@ -504,11 +504,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public void setFlushMode(FlushMode fm) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public void setHibernateFlushMode(FlushMode flushMode) {
 		throw new UnsupportedOperationException();
 	}

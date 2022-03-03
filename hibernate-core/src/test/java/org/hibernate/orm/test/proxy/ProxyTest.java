@@ -470,7 +470,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		s = openSession();
-		s.setFlushMode( FlushMode.MANUAL );
+		s.setHibernateFlushMode( FlushMode.MANUAL );
 		t = s.beginTransaction();
 		// load the last container as a proxy
 		Container proxy = s.load( Container.class, lastContainerId );

@@ -49,17 +49,16 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
-import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmEmptinessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmGroupedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmJunctionPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmLikePredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNegatedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmOrPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
@@ -598,19 +597,14 @@ public class QuerySplitter {
 		}
 
 		@Override
-		public SqmAndPredicate visitAndPredicate(SqmAndPredicate predicate) {
-			return new SqmAndPredicate(
-					(SqmPredicate) predicate.getLeftHandPredicate().accept( this ),
-					(SqmPredicate) predicate.getRightHandPredicate().accept( this ),
-					getCreationContext().getNodeBuilder()
-			);
-		}
-
-		@Override
-		public SqmOrPredicate visitOrPredicate(SqmOrPredicate predicate) {
-			return new SqmOrPredicate(
-					(SqmPredicate) predicate.getLeftHandPredicate().accept( this ),
-					(SqmPredicate) predicate.getRightHandPredicate().accept( this ),
+		public SqmJunctionPredicate visitJunctionPredicate(SqmJunctionPredicate predicate) {
+			final List<SqmPredicate> predicates = new ArrayList<>( predicate.getPredicates().size() );
+			for ( SqmPredicate subPredicate : predicate.getPredicates() ) {
+				predicates.add( (SqmPredicate) subPredicate.accept( this ) );
+			}
+			return new SqmJunctionPredicate(
+					predicate.getOperator(),
+					predicates,
 					getCreationContext().getNodeBuilder()
 			);
 		}

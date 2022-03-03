@@ -785,6 +785,7 @@ propertyName
 	| CLASS
 	| ELEMENTS
 	| INDICES
+	| FK_REF
 	;
 
 propertyRef!

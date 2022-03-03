@@ -824,6 +824,7 @@ identPrimary
 				        #identPrimary = #( [ENTRY], path );
 				    }
 				}
+				| (DOT^ FK_REF)
 			)?
 	// Also allow special 'aggregate functions' such as count(), avg(), etc.
 	| aggregate
@@ -966,6 +967,8 @@ DIV: '/';
 MOD: '%';
 COLON: ':';
 PARAM: '?';
+
+FK_REF: "{fk}";
 
 IDENT options { testLiterals=true; }
 	: ID_START_LETTER ( ID_LETTER )*

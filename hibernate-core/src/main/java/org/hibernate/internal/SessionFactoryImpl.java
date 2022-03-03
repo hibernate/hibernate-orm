@@ -390,7 +390,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			//As last operation, delete all caches from ReflectionManager
 			//(not modelled as a listener as we want this to be last)
-			bootMetamodel.getMetadataBuildingOptions().getReflectionManager().reset();
+			bootstrapContext.getReflectionManager().reset();
 
 			this.entityNameResolver = new CoordinatingEntityNameResolver( this, getInterceptor() );
 		}

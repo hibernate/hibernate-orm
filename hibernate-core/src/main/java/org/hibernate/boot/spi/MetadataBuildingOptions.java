@@ -11,7 +11,6 @@ import java.util.List;
 import jakarta.persistence.SharedCacheMode;
 
 import org.hibernate.TimeZoneStorageStrategy;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
@@ -73,20 +72,6 @@ public interface MetadataBuildingOptions {
 	 * @return The BasicType registrations
 	 */
 	List<BasicTypeRegistration> getBasicTypeRegistrations();
-
-	/**
-	 * Retrieve the Hibernate Commons Annotations ReflectionManager to use.
-	 *
-	 * @return The Hibernate Commons Annotations ReflectionManager to use.
-	 *
-	 * @deprecated Use {@link BootstrapContext#getReflectionManager()} instead,
-	 * The plan is to remove first {@link MetadataBuildingOptions#getReflectionManager()}
-	 * keeping {@link BootstrapContext#getReflectionManager()} till the migration from
-	 * Hibernate Commons Annotations to Jandex.
-	 *
-	 */
-	@Deprecated
-	ReflectionManager getReflectionManager();
 
 	ImplicitNamingStrategy getImplicitNamingStrategy();
 

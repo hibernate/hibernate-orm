@@ -12,6 +12,7 @@ import java.util.Properties;
 import java.util.concurrent.Callable;
 
 import org.hibernate.annotations.common.reflection.ReflectionManager;
+import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -180,7 +181,7 @@ public class Configuration {
 
 		// todo: there are places that need bits built from the revinfo entity configuration
 		//          this exists here as a way to pass it down in an immutable way to any consumer of this class
-		final ReflectionManager reflectionManager = metadata.getMetadataBuildingOptions().getReflectionManager();
+		final ReflectionManager reflectionManager = metadata.getMetadataBuildingOptions().getTypeConfiguration().getMetadataBuildingContext().getBootstrapContext().getReflectionManager();
 		this.revisionInfo = new RevisionInfoConfiguration( this, metadata, reflectionManager );
 	}
 

@@ -10,7 +10,6 @@ import java.util.List;
 import jakarta.persistence.SharedCacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.TimeZoneStorageStrategy;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
@@ -77,11 +76,6 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	@Override
 	public PhysicalNamingStrategy getPhysicalNamingStrategy() {
 		return delegate.getPhysicalNamingStrategy();
-	}
-
-	@Override
-	public ReflectionManager getReflectionManager() {
-		return delegate.getReflectionManager();
 	}
 
 	@Override

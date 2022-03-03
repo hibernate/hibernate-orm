@@ -17,7 +17,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.TimeZoneStorageType;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
@@ -760,11 +759,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public TypeConfiguration getTypeConfiguration() {
 			return bootstrapContext.getTypeConfiguration();
-		}
-
-		@Override
-		public ReflectionManager getReflectionManager() {
-			return bootstrapContext.getReflectionManager();
 		}
 
 		@Override

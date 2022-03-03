@@ -51,6 +51,7 @@ import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
@@ -772,6 +773,11 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 
 		if ( sqmExpressible instanceof BasicType<?> ) {
 			return (BasicType<?>) sqmExpressible;
+		}
+
+		if ( sqmExpressible instanceof BasicDomainType ) {
+			final BasicDomainType<?> domainType = (BasicDomainType<?>) sqmExpressible;
+			return getTypeConfiguration().getBasicTypeForJavaType( domainType.getExpressibleJavaType().getJavaTypeClass() );
 		}
 
 		if ( sqmExpressible instanceof BasicSqmPathSource<?> ) {

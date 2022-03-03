@@ -53,6 +53,7 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
 import org.hibernate.query.PathException;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
@@ -102,6 +103,8 @@ import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
+import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmFkExpression;
 import org.hibernate.query.sqm.tree.domain.SqmIndexAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
@@ -191,6 +194,7 @@ import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.jboss.logging.Logger;
 
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.metamodel.Bindable;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -2273,6 +2277,34 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 
 		throw new SemanticException( "Path does not resolve to an entity type '" + sqmPath.getNavigablePath().getFullPath() + "'" );
+	}
+
+	@Override
+	public Object visitToOneFkExpression(HqlParser.ToOneFkExpressionContext ctx) {
+		return visitToOneFkReference( (HqlParser.ToOneFkReferenceContext) ctx.getChild( 0 ) );
+	}
+
+	@Override
+	public SqmFkExpression<?> visitToOneFkReference(HqlParser.ToOneFkReferenceContext ctx) {
+		final SqmPath<Object> sqmPath = consumeDomainPath( (HqlParser.PathContext) ctx.getChild( 2 ) );
+		final SqmPathSource<?> toOneReference = sqmPath.getReferencedPathSource();
+
+		final boolean validToOneRef = toOneReference.getBindableType() == Bindable.BindableType.SINGULAR_ATTRIBUTE
+				&& toOneReference instanceof EntitySqmPathSource;
+
+		if ( !validToOneRef ) {
+			throw new SemanticException(
+					String.format(
+							Locale.ROOT,
+							"`%s` used in `fk()` only supported for to-one mappings, but found `%s`",
+							sqmPath.getNavigablePath().getFullPath(),
+							toOneReference
+					)
+			);
+
+		}
+
+		return new SqmFkExpression( (SqmEntityValuedSimplePath<?>) sqmPath, creationContext.getNodeBuilder() );
 	}
 
 	@Override

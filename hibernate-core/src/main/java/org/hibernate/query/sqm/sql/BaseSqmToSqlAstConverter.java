@@ -162,6 +162,7 @@ import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmFkExpression;
 import org.hibernate.query.sqm.tree.domain.SqmIndexAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
@@ -384,6 +385,7 @@ import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
 import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
 import static org.hibernate.query.sqm.TemporalUnit.SECOND;
 import static org.hibernate.query.sqm.UnaryArithmeticOperator.UNARY_MINUS;
+import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 import static org.hibernate.type.spi.TypeConfiguration.isDuration;
 
 /**
@@ -3261,7 +3263,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 
 			final Expression expression = getSqlExpressionResolver().resolveSqlExpression(
-					SqlExpressionResolver.createColumnReferenceKey(
+					createColumnReferenceKey(
 							tableReference,
 							mapping.getSelectionExpression()
 					),
@@ -3447,6 +3449,51 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				prepareReusablePath( sqmPath, () -> PluralValuedSimplePathInterpretation.from( sqmPath, this ) ),
 				sqmPath
 		);
+	}
+
+	@Override
+	public Object visitFkExpression(SqmFkExpression<?> fkExpression) {
+		final EntityValuedPathInterpretation<?> toOneInterpretation = (EntityValuedPathInterpretation<?>) visitEntityValuedPath( fkExpression.getToOnePath() );
+		assert toOneInterpretation.getExpressionType() instanceof ToOneAttributeMapping;
+
+		final ToOneAttributeMapping toOneMapping = (ToOneAttributeMapping) toOneInterpretation.getExpressionType();
+		final ForeignKeyDescriptor fkDescriptor = toOneMapping.getForeignKeyDescriptor();
+		final TableGroup tableGroup = toOneInterpretation.getTableGroup();
+		final TableReference tableReference = tableGroup.resolveTableReference( fkDescriptor.getKeyTable() );
+
+		final ModelPart fkKeyPart = fkDescriptor.getKeyPart();
+		if ( fkKeyPart instanceof BasicValuedModelPart ) {
+			final BasicValuedModelPart basicFkPart = (BasicValuedModelPart) fkKeyPart;
+
+			return getSqlExpressionResolver().resolveSqlExpression(
+					createColumnReferenceKey( tableReference, basicFkPart.getSelectionExpression() ),
+					(sqlAstProcessingState) -> new ColumnReference(
+							tableReference,
+							basicFkPart,
+							creationContext.getSessionFactory()
+					)
+			);
+		}
+		else {
+			assert fkKeyPart instanceof EmbeddableValuedModelPart;
+			final EmbeddableValuedModelPart compositeFkPart = (EmbeddableValuedModelPart) fkKeyPart;
+			final List<JdbcMapping> jdbcMappings = compositeFkPart.getJdbcMappings();
+			final List<Expression> tupleElements = new ArrayList<>( jdbcMappings.size() );
+			compositeFkPart.forEachSelectable( (position, selectable) -> {
+				tupleElements.add(
+						getSqlExpressionResolver().resolveSqlExpression(
+								createColumnReferenceKey( tableReference, selectable.getSelectionExpression() ),
+								(sqlAstProcessingState) -> new ColumnReference(
+										tableReference,
+										selectable,
+										creationContext.getSessionFactory()
+								)
+						)
+				);
+			} );
+
+			return new SqlTuple( tupleElements, compositeFkPart );
+		}
 	}
 
 	@Override

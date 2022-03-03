@@ -18,6 +18,7 @@ import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmFkExpression;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
 import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
@@ -146,6 +147,8 @@ public interface SemanticQueryWalker<T> {
 	T visitEntityValuedPath(SqmEntityValuedSimplePath<?> path);
 
 	T visitPluralValuedPath(SqmPluralValuedSimplePath<?> path);
+
+	T visitFkExpression(SqmFkExpression<?> fkExpression);
 
 	T visitSelfInterpretingSqmPath(SelfInterpretingSqmPath<?> sqmPath);
 	

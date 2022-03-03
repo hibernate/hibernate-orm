@@ -671,6 +671,7 @@ primaryExpression
 	| entityIdReference									# EntityIdExpression
 	| entityVersionReference							# EntityVersionExpression
 	| entityNaturalIdReference							# EntityNaturalIdExpression
+	| toOneFkReference									# ToOneFkExpression
 	| syntacticDomainPath pathContinuation?				# SyntacticPathExpression
 	| function											# FunctionExpression
 	| generalPathFragment								# GeneralPathExpression
@@ -735,6 +736,13 @@ entityVersionReference
  */
 entityNaturalIdReference
 	: NATURALID LEFT_PAREN path RIGHT_PAREN pathContinuation?
+	;
+
+/**
+ * The special function 'fk()'
+ */
+toOneFkReference
+	: FK LEFT_PAREN path RIGHT_PAREN
 	;
 
 /**

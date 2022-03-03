@@ -12,6 +12,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Tuple;
 
 import org.hibernate.Hibernate;
 import org.hibernate.ObjectNotFoundException;
@@ -83,7 +84,7 @@ public class NotFoundIgnoreOneToOneTest {
 
 	@Test
 	@JiraKey( "HHH-15060" )
-	@FailureExpected( reason = "Bad results due to cross-join" )
+	@FailureExpected( reason = "Bad results due to join" )
 	public void testQueryImplicitPathDereferencePredicate(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -127,11 +128,19 @@ public class NotFoundIgnoreOneToOneTest {
 
 	@Test
 	@JiraKey( "HHH-15060" )
-	@FailureExpected( reason = "Has zero results because of inner-join; & the select w/ inner-join is executed twice for some odd reason" )
+	@FailureExpected( reason = "Has zero results because of join; & the select w/ join is executed twice for some yet-unknown reason" )
 	public void testQueryAssociationSelection(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
+			final String hql = "select c.id, c.currency from Coin c";
+			final List<Tuple> tuples = session.createQuery( hql, Tuple.class ).getResultList();
+			assertThat( tuples ).hasSize( 1 );
+			final Tuple tuple = tuples.get( 0 );
+			assertThat( tuple.get( 0 ) ).isEqualTo( 1 );
+			assertThat( tuple.get( 1 ) ).isNull();
+		} );
+
+		scope.inTransaction( (session) -> {
 			final String hql = "select c.currency from Coin c";
-			session.createQuery( hql, Currency.class ).getResultList();
 			final List<Currency> currencies = session.createQuery( hql, Currency.class ).getResultList();
 			assertThat( currencies ).hasSize( 1 );
 			assertThat( currencies.get( 0 ) ).isNull();

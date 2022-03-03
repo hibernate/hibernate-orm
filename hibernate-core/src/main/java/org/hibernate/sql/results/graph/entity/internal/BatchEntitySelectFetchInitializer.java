@@ -221,7 +221,7 @@ public class BatchEntitySelectFetchInitializer extends AbstractFetchParentAccess
 							entityKey.getEntityName(),
 							entityKey.getIdentifier(),
 							true,
-							referencedModelPart.isNullable()
+							referencedModelPart.isInternalLoadNullable()
 					);
 					if ( instance != null ) {
 						( (AbstractEntityPersister) referencedModelPart.getDeclaringType() ).setPropertyValue(

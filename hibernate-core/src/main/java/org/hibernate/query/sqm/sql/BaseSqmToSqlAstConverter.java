@@ -98,6 +98,7 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPath;
+import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -189,6 +190,7 @@ import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmEvery;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmExpressionHelper;
 import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
@@ -305,6 +307,7 @@ import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
@@ -316,6 +319,7 @@ import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.QueryPartTableGroup;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
+import org.hibernate.sql.ast.tree.from.SyntheticVirtualTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
@@ -369,10 +373,12 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.TemporalJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserVersionType;
+import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
 
 import org.jboss.logging.Logger;
 
@@ -382,7 +388,6 @@ import static org.hibernate.query.sqm.BinaryArithmeticOperator.MULTIPLY;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.SUBTRACT;
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
-import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
 import static org.hibernate.query.sqm.TemporalUnit.SECOND;
 import static org.hibernate.query.sqm.UnaryArithmeticOperator.UNARY_MINUS;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
@@ -4687,6 +4692,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// We can't determine the type of the expression
 			return null;
 		}
+		if ( nodeType instanceof EmbeddedSqmPathSource<?> ) {
+			if ( sqmExpression instanceof SqmBinaryArithmetic<?> ) {
+				final SqmBinaryArithmetic<?> binaryArithmetic = (SqmBinaryArithmetic<?>) sqmExpression;
+				if ( binaryArithmetic.getLeftHandOperand().getNodeType() == nodeType ) {
+					return determineValueMapping( binaryArithmetic.getLeftHandOperand(), fromClauseIndex );
+				}
+				else if ( binaryArithmetic.getRightHandOperand().getNodeType() == nodeType ) {
+					return determineValueMapping( binaryArithmetic.getRightHandOperand(), fromClauseIndex );
+				}
+			}
+		}
 		final MappingMetamodel domainModel = creationContext.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
@@ -5190,7 +5206,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private Object transformDurationArithmetic(SqmBinaryArithmetic<?> expression) {
-		BinaryArithmeticOperator operator = expression.getOperator();
+		final BinaryArithmeticOperator operator = expression.getOperator();
+		final SqmExpression<?> lhs = SqmExpressionHelper.getActualExpression( expression.getLeftHandOperand() );
+		final SqmExpression<?> rhs = SqmExpressionHelper.getActualExpression( expression.getRightHandOperand() );
 
 		// we have a date or timestamp somewhere to
 		// the right of us, so we need to restructure
@@ -5223,7 +5241,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 				Expression timestamp = adjustedTimestamp;
 				SqmExpressible<?> timestampType = adjustedTimestampType;
-				adjustedTimestamp = toSqlExpression( expression.getLeftHandOperand().accept( this ) );
+				adjustedTimestamp = toSqlExpression( lhs.accept( this ) );
 				JdbcMappingContainer type = adjustedTimestamp.getExpressionType();
 				if ( type instanceof SqmExpressible) {
 					adjustedTimestampType = (SqmExpressible<?>) type;
@@ -5233,13 +5251,71 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				}
 				else {
 					// else we know it has not been transformed
-					adjustedTimestampType = expression.getLeftHandOperand().getNodeType();
+					adjustedTimestampType = lhs.getNodeType();
 				}
 				if ( operator == SUBTRACT ) {
 					negativeAdjustment = !negativeAdjustment;
 				}
 				try {
-					return expression.getRightHandOperand().accept( this );
+					final Object result = rhs.accept( this );
+					if ( result instanceof SqlTupleContainer ) {
+						return result;
+					}
+					final Object offset;
+					if ( lhs != expression.getLeftHandOperand() ) {
+						offset = ( (SqmPath<?>) expression.getLeftHandOperand() ).get(
+								AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME
+						).accept( this );
+					}
+					else if ( rhs != expression.getRightHandOperand() ) {
+						offset = ( (SqmPath<?>) expression.getRightHandOperand() ).get(
+								AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME
+						).accept( this );
+					}
+					else {
+						offset = null;
+					}
+					if ( offset == null ) {
+						return result;
+					}
+					else {
+						final EmbeddableValuedModelPart valueMapping = (EmbeddableValuedModelPart) determineValueMapping( expression );
+						final SqmPath<?> path = SqmExpressionHelper.findPath( expression, expression.getNodeType() );
+						final FromClauseIndex fromClauseIndex = fromClauseIndexStack.getCurrent();
+						final TableGroup parentTableGroup = fromClauseIndex.findTableGroup(
+								path.getLhs().getNavigablePath()
+						);
+						final NavigablePath navigablePath = parentTableGroup.getNavigablePath().append(
+								path.getNavigablePath().getUnaliasedLocalName(),
+								Long.toString( System.nanoTime() )
+						);
+						final TableGroup tableGroup = new SyntheticVirtualTableGroup(
+								navigablePath,
+								valueMapping,
+								parentTableGroup
+						);
+						fromClauseIndex.registerTableGroup( navigablePath, tableGroup );
+						// Register the expressions under the column reference key
+						final SqlExpressionResolver resolver = getSqlAstCreationState().getSqlExpressionResolver();
+						final TableReference tableReference = tableGroup.getPrimaryTableReference();
+						valueMapping.forEachSelectable(
+								(selectionIndex, selection) -> {
+									resolver.resolveSqlExpression(
+											SqlExpressionResolver.createColumnReferenceKey(
+													tableReference,
+													selection.getSelectionExpression()
+											),
+											processingState -> (Expression) (selectionIndex == 0 ? result : offset)
+									);
+								}
+						);
+						return new EmbeddableValuedPathInterpretation<>(
+								new SqlTuple( List.of( (Expression) result, (Expression) offset ), valueMapping ),
+								navigablePath,
+								valueMapping,
+								tableGroup
+						);
+					}
 				}
 				finally {
 					if ( operator == SUBTRACT ) {
@@ -5260,13 +5336,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// x * (d1 - d2) => x * d1 - x * d2
 				// -x * (d1 + d2) => - x * d1 - x * d2
 				// -x * (d1 - d2) => - x * d1 + x * d2
-				Expression duration = toSqlExpression( expression.getLeftHandOperand().accept( this ) );
+				Expression duration = toSqlExpression( lhs.accept( this ) );
 				Expression scale = adjustmentScale;
 				boolean negate = negativeAdjustment;
 				adjustmentScale = applyScale( duration );
 				negativeAdjustment = false; //was sucked into the scale
 				try {
-					return expression.getRightHandOperand().accept( this );
+					return rhs.accept( this );
 				}
 				finally {
 					adjustmentScale = scale;
@@ -5294,8 +5370,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		// must apply the scale, and the 'by unit'
 		// ts1 - ts2
 
-		Expression left = cleanly( () -> toSqlExpression( expression.getLeftHandOperand().accept( this ) ) );
-		Expression right = cleanly( () -> toSqlExpression( expression.getRightHandOperand().accept( this ) ) );
+		final SqmExpression<?> lhs = SqmExpressionHelper.getActualExpression( expression.getLeftHandOperand() );
+		final SqmExpression<?> rhs = SqmExpressionHelper.getActualExpression( expression.getRightHandOperand() );
+
+		Expression left = getActualExpression( cleanly( () -> toSqlExpression( lhs.accept( this ) ) ) );
+		Expression right = getActualExpression( cleanly( () -> toSqlExpression( rhs.accept( this ) ) ) );
 
 		TypeConfiguration typeConfiguration = getCreationContext().getMappingMetamodel().getTypeConfiguration();
 		TemporalType leftTimestamp = typeConfiguration.getSqlTemporalType( expression.getLeftHandOperand().getNodeType() );
@@ -5303,10 +5382,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		// when we're dealing with Dates, we use
 		// DAY as the smallest unit, otherwise we
-		// use a platform-specific granularity
+		// use SECOND granularity with fractions as that is what the DurationJavaType expects
 
 		TemporalUnit baseUnit = ( rightTimestamp == TemporalType.TIMESTAMP || leftTimestamp == TemporalType.TIMESTAMP ) ?
-				NATIVE :
+				SECOND :
 				DAY;
 
 		if ( adjustedTimestamp != null ) {
@@ -5344,6 +5423,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			) );
 			return new Duration( scaledMagnitude, baseUnit, durationType );
 		}
+	}
+
+	private static Expression getActualExpression(Expression expression) {
+		if ( expression.getExpressionType() instanceof EmbeddableValuedModelPart ) {
+			final EmbeddableValuedModelPart embeddableValuedModelPart = (EmbeddableValuedModelPart) expression.getExpressionType();
+			if ( embeddableValuedModelPart.getJavaType() instanceof TemporalJavaType<?> ) {
+				return ( (SqlTupleContainer) expression ).getSqlTuple().getExpressions().get( 0 );
+			}
+		}
+		return expression;
 	}
 
 	private <J> BasicType<J> basicType(Class<J> javaType) {

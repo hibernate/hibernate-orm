@@ -6,7 +6,6 @@
  */
 package org.hibernate.userguide.mapping.basic;
 
-import java.sql.Types;
 import java.time.Instant;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

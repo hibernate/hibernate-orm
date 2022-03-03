@@ -2212,12 +2212,7 @@ public class CommonFunctionFactory {
 	 * H2-style (uses Java's SimpleDateFormat directly so no need to translate format)
 	 */
 	public void format_formatdatetime() {
-		functionRegistry.namedDescriptorBuilder( "format", "formatdatetime" )
-				.setInvariantType(stringType)
-				.setParameterTypes( TEMPORAL, STRING )
-				.setArgumentsValidator( formatValidator() )
-				.setArgumentListSignature( "(TEMPORAL datetime as STRING pattern)" )
-				.register();
+		functionRegistry.register( "format", new FormatFunction( "formatdatetime", typeConfiguration ) );
 	}
 
 	/**
@@ -2226,12 +2221,7 @@ public class CommonFunctionFactory {
 	 * @see org.hibernate.dialect.OracleDialect#datetimeFormat
 	 */
 	public void format_toChar() {
-		functionRegistry.namedDescriptorBuilder( "format", "to_char" )
-				.setInvariantType(stringType)
-				.setParameterTypes( TEMPORAL, STRING )
-				.setArgumentsValidator( formatValidator() )
-				.setArgumentListSignature( "(TEMPORAL datetime as STRING pattern)" )
-				.register();
+		functionRegistry.register( "format", new FormatFunction( "to_char", typeConfiguration ) );
 	}
 
 	/**
@@ -2240,12 +2230,7 @@ public class CommonFunctionFactory {
 	 * @see org.hibernate.dialect.MySQLDialect#datetimeFormat
 	 */
 	public void format_dateFormat() {
-		functionRegistry.namedDescriptorBuilder( "format", "date_format" )
-				.setInvariantType(stringType)
-				.setParameterTypes( TEMPORAL, STRING )
-				.setArgumentsValidator( formatValidator() )
-				.setArgumentListSignature( "(TEMPORAL datetime as STRING pattern)" )
-				.register();
+		functionRegistry.register( "format", new FormatFunction( "date_format", typeConfiguration ) );
 	}
 
 	/**
@@ -2254,16 +2239,7 @@ public class CommonFunctionFactory {
 	 *  @see org.hibernate.dialect.OracleDialect#datetimeFormat
 	 */
 	public void format_toVarchar() {
-		functionRegistry.namedDescriptorBuilder( "format", "to_varchar" )
-				.setInvariantType(stringType)
-				.setParameterTypes( TEMPORAL, STRING )
-				.setArgumentsValidator( formatValidator() )
-				.setArgumentListSignature( "(TEMPORAL datetime as STRING pattern)" )
-				.register();
-	}
-
-	public static ArgumentsValidator formatValidator() {
-		return new ArgumentTypesValidator( StandardArgumentsValidators.exactly( 2 ), TEMPORAL, STRING );
+		functionRegistry.register( "format", new FormatFunction( "to_varchar", typeConfiguration ) );
 	}
 
 	/**

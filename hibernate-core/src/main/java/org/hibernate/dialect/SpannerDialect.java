@@ -17,6 +17,7 @@ import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.FormatFunction;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.LockingStrategyException;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -434,11 +435,10 @@ public class SpannerDialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder("format", "format_timestamp(?2,?1)")
-				.setInvariantType( stringType )
-				.setArgumentsValidator( CommonFunctionFactory.formatValidator() )
-				.setArgumentListSignature("(TIMESTAMP datetime as STRING pattern)")
-				.register();
+		queryEngine.getSqmFunctionRegistry().register(
+				"format",
+				new FormatFunction( "format_timestamp", true, queryEngine.getTypeConfiguration() )
+		);
 		functionFactory.listagg_stringAgg( "string" );
 		functionFactory.inverseDistributionOrderedSetAggregates();
 		functionFactory.hypotheticalOrderedSetAggregates();

@@ -6,6 +6,7 @@
  */
 package org.hibernate.internal.util;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
@@ -334,6 +335,18 @@ public final class StringHelper {
 			result[i++] = tokens.nextToken().trim();
 		}
 		return result;
+	}
+
+	public static String[] splitFull(String separators, String list) {
+		final List<String> parts = new ArrayList<>();
+		int prevIndex = 0;
+		int index;
+		while ( ( index = list.indexOf( separators, prevIndex ) ) != -1 ) {
+			parts.add( list.substring( prevIndex, index ) );
+			prevIndex = index + separators.length();
+		}
+		parts.add( list.substring( prevIndex ) );
+		return parts.toArray(new String[0]);
 	}
 
 	public static String unqualify(String qualifiedName) {

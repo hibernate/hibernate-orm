@@ -35,10 +35,10 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 	/**
 	 * Static factory
 	 */
-	public static <T> EmbeddableValuedPathInterpretation<T> from(
+	public static <T> Expression from(
 			SqmEmbeddedValuedSimplePath<T> sqmPath,
 			SqmToSqlAstConverter converter,
-			SemanticQueryWalker sqmWalker,
+			SemanticQueryWalker<?> sqmWalker,
 			boolean jpaQueryComplianceEnabled) {
 		TableGroup tableGroup = converter.getFromClauseAccess().findTableGroup( sqmPath.getLhs().getNavigablePath() );
 

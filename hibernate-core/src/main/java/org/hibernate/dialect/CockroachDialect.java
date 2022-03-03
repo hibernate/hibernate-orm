@@ -19,6 +19,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.FormatFunction;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
@@ -230,11 +231,10 @@ public class CockroachDialect extends Dialect {
 		functionFactory.pi();
 		functionFactory.trunc(); //TODO: emulate second arg
 
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("format", "experimental_strftime")
-				.setInvariantType( stringType )
-				.setArgumentsValidator( CommonFunctionFactory.formatValidator() )
-				.setArgumentListSignature("(TEMPORAL datetime as STRING pattern)")
-				.register();
+		queryEngine.getSqmFunctionRegistry().register(
+				"format",
+				new FormatFunction( "experimental_strftime", queryEngine.getTypeConfiguration() )
+		);
 		functionFactory.windowFunctions();
 		functionFactory.listagg_stringAgg( "string" );
 		functionFactory.inverseDistributionOrderedSetAggregates();

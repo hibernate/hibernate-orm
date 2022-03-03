@@ -9,6 +9,8 @@ package org.hibernate.dialect;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.internal.util.StringHelper;
+
 /**
  * @author Gavin King
  */
@@ -47,7 +49,7 @@ public class Replacer {
 
 	public Replacer(String format, String quote, String delimiter) {
 		this.delimiter = delimiter;
-		this.chunks = format.split( quote );
+		this.chunks = StringHelper.splitFull( quote, format );
 		this.quote = quote;
 	}
 

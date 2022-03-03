@@ -63,13 +63,14 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 
 	@Override
 	protected void visitAnsiCaseSearchedExpression(
-			CaseSearchedExpression caseSearchedExpression,
+			CaseSearchedExpression expression,
 			Consumer<Expression> resultRenderer) {
-		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSearchedExpression ) ) {
-			final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
+		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( expression )
+				|| areAllResultsPlainParametersOrLiterals( expression ) ) {
+			final List<CaseSearchedExpression.WhenFragment> whenFragments = expression.getWhenFragments();
 			final Expression firstResult = whenFragments.get( 0 ).getResult();
 			super.visitAnsiCaseSearchedExpression(
-					caseSearchedExpression,
+					expression,
 					e -> {
 						if ( e == firstResult ) {
 							renderCasted( e );
@@ -81,19 +82,20 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 			);
 		}
 		else {
-			super.visitAnsiCaseSearchedExpression( caseSearchedExpression, resultRenderer );
+			super.visitAnsiCaseSearchedExpression( expression, resultRenderer );
 		}
 	}
 
 	@Override
 	protected void visitAnsiCaseSimpleExpression(
-			CaseSimpleExpression caseSimpleExpression,
+			CaseSimpleExpression expression,
 			Consumer<Expression> resultRenderer) {
-		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSimpleExpression ) ) {
-			final List<CaseSimpleExpression.WhenFragment> whenFragments = caseSimpleExpression.getWhenFragments();
+		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( expression )
+				|| areAllResultsPlainParametersOrLiterals( expression ) ) {
+			final List<CaseSimpleExpression.WhenFragment> whenFragments = expression.getWhenFragments();
 			final Expression firstResult = whenFragments.get( 0 ).getResult();
 			super.visitAnsiCaseSimpleExpression(
-					caseSimpleExpression,
+					expression,
 					e -> {
 						if ( e == firstResult ) {
 							renderCasted( e );
@@ -105,8 +107,50 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 			);
 		}
 		else {
-			super.visitAnsiCaseSimpleExpression( caseSimpleExpression, resultRenderer );
+			super.visitAnsiCaseSimpleExpression( expression, resultRenderer );
 		}
+	}
+
+	protected boolean areAllResultsPlainParametersOrLiterals(CaseSearchedExpression caseSearchedExpression) {
+		final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
+		final Expression firstResult = whenFragments.get( 0 ).getResult();
+		if ( isParameter( firstResult ) && getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT
+				|| isLiteral( firstResult ) ) {
+			for ( int i = 1; i < whenFragments.size(); i++ ) {
+				final Expression result = whenFragments.get( i ).getResult();
+				if ( isParameter( result ) ) {
+					if ( getParameterRenderingMode() != SqlAstNodeRenderingMode.DEFAULT ) {
+						return false;
+					}
+				}
+				else if ( !isLiteral( result ) ) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+
+	protected boolean areAllResultsPlainParametersOrLiterals(CaseSimpleExpression caseSimpleExpression) {
+		final List<CaseSimpleExpression.WhenFragment> whenFragments = caseSimpleExpression.getWhenFragments();
+		final Expression firstResult = whenFragments.get( 0 ).getResult();
+		if ( isParameter( firstResult ) && getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT
+				|| isLiteral( firstResult ) ) {
+			for ( int i = 1; i < whenFragments.size(); i++ ) {
+				final Expression result = whenFragments.get( i ).getResult();
+				if ( isParameter( result ) ) {
+					if ( getParameterRenderingMode() != SqlAstNodeRenderingMode.DEFAULT ) {
+						return false;
+					}
+				}
+				else if ( !isLiteral( result ) ) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
 	}
 
 	@Override

@@ -9,20 +9,27 @@ package org.hibernate.query.sqm.tree.expression;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.type.descriptor.java.JdbcDateJavaType;
 import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
+import org.hibernate.type.descriptor.java.TemporalJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
 
 /**
  * @author Steve Ebersole
@@ -99,5 +106,64 @@ public class SqmExpressionHelper {
 				creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( Time.class ),
 				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
 		);
+	}
+
+	public static boolean isCompositeTemporal(SqmExpression<?> expression) {
+		// When TimeZoneStorageStrategy.COLUMN is used, that implies using a composite user type
+		return expression instanceof SqmPath<?> && expression.getNodeType() instanceof EmbeddedSqmPathSource<?>
+				&& expression.getJavaTypeDescriptor() instanceof TemporalJavaType<?>;
+	}
+
+	public static SqmExpression<?> getActualExpression(SqmExpression<?> expression) {
+		if ( isCompositeTemporal( expression ) ) {
+			return ( (SqmPath<?>) expression ).get( AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME );
+		}
+		else {
+			return expression;
+		}
+	}
+
+	public static SqmExpression<?> getOffsetAdjustedExpression(SqmExpression<?> expression) {
+		if ( isCompositeTemporal( expression ) ) {
+			final SqmPath<?> compositePath = (SqmPath<?>) expression;
+			final SqmPath<Object> instantPath = compositePath.get( AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME );
+			final NodeBuilder nodeBuilder = instantPath.nodeBuilder();
+			return new SqmBinaryArithmetic<>(
+					BinaryArithmeticOperator.ADD,
+					instantPath,
+					new SqmToDuration<>(
+							compositePath.get( AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME ),
+							new SqmDurationUnit<>( TemporalUnit.SECOND, nodeBuilder.getIntegerType(), nodeBuilder ),
+							nodeBuilder.getTypeConfiguration().getBasicTypeForJavaType( Duration.class ),
+							nodeBuilder
+					),
+					instantPath.getNodeType(),
+					nodeBuilder
+			);
+		}
+		else {
+			return expression;
+		}
+	}
+
+	public static SqmPath<?> findPath(SqmExpression<?> expression, SqmExpressible<?> nodeType) {
+		if ( nodeType != expression.getNodeType() ) {
+			return null;
+		}
+		if ( expression instanceof SqmPath<?> ) {
+			return (SqmPath<?>) expression;
+		}
+		else if ( expression instanceof SqmBinaryArithmetic<?> ) {
+			final SqmBinaryArithmetic<?> binaryArithmetic = (SqmBinaryArithmetic<?>) expression;
+			final SqmPath<?> lhs = findPath( binaryArithmetic.getLeftHandOperand(), nodeType );
+			if ( lhs != null ) {
+				return lhs;
+			}
+			final SqmPath<?> rhs = findPath( binaryArithmetic.getRightHandOperand(), nodeType );
+			if ( rhs != null ) {
+				return rhs;
+			}
+		}
+		return null;
 	}
 }

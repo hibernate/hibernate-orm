@@ -103,4 +103,8 @@ public class MultipatternSqmFunctionDescriptor extends AbstractSqmFunctionDescri
 	public void setArgumentListSignature(String argumentListSignature) {
 		this.argumentListSignature = argumentListSignature;
 	}
+
+	public SqmFunctionDescriptor getFunction(int argumentCount) {
+		return functions[argumentCount];
+	}
 }

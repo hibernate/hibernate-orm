@@ -6,23 +6,17 @@
  */
 package org.hibernate.dialect.function;
 
+import java.util.List;
+
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
-import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
-import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Format;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import java.util.List;
 import jakarta.persistence.TemporalType;
-
-import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
-import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL;
 
 /**
  * DB2's varchar_format() can't handle quoted literal strings in
@@ -33,16 +27,12 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEM
  * @author Gavin King
  */
 public class DB2FormatEmulation
-		extends AbstractSqmSelfRenderingFunctionDescriptor {
+		extends FormatFunction {
 
 	public DB2FormatEmulation(TypeConfiguration typeConfiguration) {
 		super(
 				"format",
-				CommonFunctionFactory.formatValidator(),
-				StandardFunctionReturnTypeResolvers.invariant(
-						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				),
-				StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, TEMPORAL, STRING )
+				typeConfiguration
 		);
 	}
 
@@ -93,10 +83,5 @@ public class DB2FormatEmulation
 			sqlAppender.appendSql("''");
 		}
 		sqlAppender.appendSql(")");
-	}
-
-	@Override
-	public String getArgumentListSignature() {
-		return "(TEMPORAL datetime as STRING pattern)";
 	}
 }

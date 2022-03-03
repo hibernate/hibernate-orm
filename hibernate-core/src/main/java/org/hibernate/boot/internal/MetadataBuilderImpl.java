@@ -875,7 +875,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			ConfigurationService configService) {
 		final TimeZoneStorageType configuredTimeZoneStorageType = configService.getSetting(
 				AvailableSettings.TIMEZONE_DEFAULT_STORAGE,
-				TimeZoneStorageType.class,
+				value -> TimeZoneStorageType.valueOf( value.toString() ),
 				null
 		);
 		final TimeZoneStorageStrategy resolvedTimezoneStorage;
@@ -894,8 +894,24 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					}
 					resolvedTimezoneStorage = TimeZoneStorageStrategy.NATIVE;
 					break;
+				case COLUMN:
+					resolvedTimezoneStorage = TimeZoneStorageStrategy.COLUMN;
+					break;
 				case NORMALIZE:
 					resolvedTimezoneStorage = TimeZoneStorageStrategy.NORMALIZE;
+					break;
+				case AUTO:
+					switch ( timeZoneSupport ) {
+						case NATIVE:
+							resolvedTimezoneStorage = TimeZoneStorageStrategy.NATIVE;
+							break;
+						case NORMALIZE:
+						case NONE:
+							resolvedTimezoneStorage = TimeZoneStorageStrategy.COLUMN;
+							break;
+						default:
+							throw new HibernateException( "Unsupported time zone support: " + timeZoneSupport );
+					}
 					break;
 				default:
 					throw new HibernateException( "Unsupported time zone storage type: " + configuredTimeZoneStorageType );

@@ -12,6 +12,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,6 +31,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.Cascade;
@@ -89,6 +91,7 @@ import org.hibernate.annotations.Proxy;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Source;
+import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.Where;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
@@ -156,6 +159,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
+import org.hibernate.usertype.internal.OffsetDateTimeCompositeUserType;
+import org.hibernate.usertype.internal.ZonedDateTimeCompositeUserType;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.AttributeOverride;
@@ -2896,6 +2901,14 @@ public final class AnnotationBinder {
 			if ( compositeType != null ) {
 				return compositeType.value();
 			}
+			Class<? extends CompositeUserType<?>> compositeUserType = resolveTimeZoneStorageCompositeUserType(
+					property,
+					returnedClass,
+					context
+			);
+			if ( compositeUserType != null ) {
+				return compositeUserType;
+			}
 		}
 
 		if ( returnedClass != null ) {
@@ -2907,6 +2920,31 @@ public final class AnnotationBinder {
 			}
 		}
 
+		return null;
+	}
+
+	protected static Class<? extends CompositeUserType<?>> resolveTimeZoneStorageCompositeUserType(
+			XProperty property,
+			XClass returnedClass,
+			MetadataBuildingContext context) {
+		if ( property != null ) {
+			final TimeZoneStorage timeZoneStorage = property.getAnnotation( TimeZoneStorage.class );
+			if ( timeZoneStorage != null ) {
+				switch ( timeZoneStorage.value() ) {
+					case AUTO:
+						if ( context.getBuildingOptions().getDefaultTimeZoneStorage() != TimeZoneStorageStrategy.COLUMN ) {
+							return null;
+						}
+					case COLUMN:
+						switch ( returnedClass.getName() ) {
+							case "java.time.OffsetDateTime":
+								return OffsetDateTimeCompositeUserType.class;
+							case "java.time.ZonedDateTime":
+								return ZonedDateTimeCompositeUserType.class;
+						}
+				}
+			}
+		}
 		return null;
 	}
 

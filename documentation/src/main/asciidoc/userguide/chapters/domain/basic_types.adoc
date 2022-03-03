@@ -1509,7 +1509,7 @@ The `JavaType` resolved earlier is then inspected for a number of special cases.
     still uses any explicit `JdbcType` indicators
 . For temporal values, we check for `@Temporal` and create an enumeration mapping.  Note that this resolution
     still uses any explicit `JdbcType` indicators; this includes `@JdbcType` and `@JdbcTypeCode`, as well as
-    `@TimeZoneStorage` if appropriate.
+    `@TimeZoneStorage` and `@TimeZoneColumn` if appropriate.
 
 The fallback at this point is to use the `JavaType` and `JdbcType` determined in earlier steps to create a
 JDBC-mapping (which encapsulates the `JavaType` and `JdbcType`) and combines it with the resolved `MutabilityPlan`
@@ -1668,12 +1668,14 @@ boil down to the 3 main Date/Time types defined by the SQL specification:
 DATE:: Represents a calendar date by storing years, months and days.
 TIME:: Represents the time of a day by storing hours, minutes and seconds.
 TIMESTAMP:: Represents both a DATE and a TIME plus nanoseconds.
+TIMESTAMP WITH TIME ZONE:: Represents both a DATE and a TIME plus nanoseconds and zone id or offset.
 
 The mapping of `java.time` temporal types to the specific SQL Date/Time types is implied as follows:
 
 DATE:: `java.time.LocalDate`
 TIME:: `java.time.LocalTime`, `java.time.OffsetTime`
 TIMESTAMP:: `java.time.Instant`, `java.time.LocalDateTime`, `java.time.OffsetDateTime` and `java.time.ZonedDateTime`
+TIMESTAMP WITH TIME ZONE:: `java.time.OffsetDateTime`, `java.time.ZonedDateTime`
 
 Although Hibernate recommends the use of the `java.time` package for representing temporal values,
 it does support using `java.sql.Date`, `java.sql.Time`, `java.sql.Timestamp`, `java.util.Date` and
@@ -1759,6 +1761,50 @@ Session session = sessionFactory()
 With this configuration property in place, Hibernate is going to call the https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTimestamp-int-java.sql.Timestamp-java.util.Calendar-[`PreparedStatement.setTimestamp(int parameterIndex, java.sql.Timestamp, Calendar cal)`] or
 https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTime-int-java.sql.Time-java.util.Calendar-[`PreparedStatement.setTime(int parameterIndex, java.sql.Time x, Calendar cal)`], where the `java.util.Calendar` references the time zone provided via the `hibernate.jdbc.time_zone` property.
 
+[[basic-timestamp-with-time-zone]]
+===== Handling time zoned temporal data
+
+By default, Hibernate will convert and normalize `OffsetDateTime` and `ZonedDateTime` to `java.sql.Timestamp` in UTC.
+This behavior can be altered by configuring the `hibernate.timezone.default_storage` property
+
+[source,java]
+----
+settings.put(
+    AvailableSettings.TIMEZONE_DEFAULT_STORAGE,
+    TimeZoneStorageType.AUTO
+);
+----
+
+Other possible storage types are `AUTO`, `COLUMN`, `NATIVE` and `NORMALIZE` (the default).
+With `COLUMN`, Hibernate will save the time zone information into a dedicated column,
+whereas `NATIVE` will require the support of database for a `TIMESTAMP WITH TIME ZONE` data type
+that retains the time zone information.
+`NORMALIZE` doesn't store time zone information and will simply convert the timestamp to UTC.
+Hibernate understands what a database/dialect supports through `Dialect#getTimeZoneSupport`
+and will abort with a boot error if the `NATIVE` is used in conjunction with a database that doesn't support this.
+For `AUTO`, Hibernate tries to use `NATIVE` if possible and falls back to `COLUMN` otherwise.
+
+==== `@TimeZoneStorage`
+
+Hibernate supports defining the storage to use for time zone information for individual properties
+via the `@TimeZoneStorage` and `@TimeZoneColumn` annotations.
+The storage type can be specified via the `@TimeZoneStorage` by specifying a `org.hibernate.annotations.TimeZoneStorageType`.
+The default storage type is `AUTO` which will ensure that the time zone information is retained.
+The `@TimeZoneColumn` annotation can be used in conjunction with `AUTO` or `COLUMN` and allows to define
+the column details for the time zone information storage.
+
+[NOTE]
+====
+Storing the zone offset might be problematic for future timestamps as zone rules can change.
+Due to this, storing the offset is only safe for past timestamps, and we advise sticking to the `NORMALIZE` strategy by default.
+
+.`@TimeZoneColumn` usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/TimeZoneStorageMappingTests.java[tags=time-zone-column-examples-mapping-example]
+----
+====
 
 
 

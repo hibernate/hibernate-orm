@@ -9,6 +9,7 @@ package org.hibernate.type.descriptor.java;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -91,6 +92,10 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 			return (X) instant;
 		}
 
+		if ( OffsetDateTime.class.isAssignableFrom( type ) ) {
+			return (X) instant.atOffset( ZoneOffset.UTC );
+		}
+
 		if ( Calendar.class.isAssignableFrom( type ) ) {
 			return (X) GregorianCalendar.from( instant.atZone( ZoneOffset.UTC ) );
 		}
@@ -142,6 +147,10 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 
 		if ( value instanceof Instant ) {
 			return (Instant) value;
+		}
+
+		if ( value instanceof OffsetDateTime ) {
+			return ( (OffsetDateTime) value ).toInstant();
 		}
 
 		if ( value instanceof Timestamp ) {

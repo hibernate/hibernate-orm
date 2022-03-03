@@ -250,7 +250,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		}
 
 		if ( getVersion().isSameOrAfter( 11 ) ) {
-			queryEngine.getSqmFunctionRegistry().register( "format", new SQLServerFormatEmulation( this, queryEngine.getTypeConfiguration() ) );
+			queryEngine.getSqmFunctionRegistry().register(
+					"format",
+					new SQLServerFormatEmulation( this, queryEngine.getTypeConfiguration() )
+			);
 
 			//actually translate() was added in 2017 but
 			//it's not worth adding a new dialect for that!

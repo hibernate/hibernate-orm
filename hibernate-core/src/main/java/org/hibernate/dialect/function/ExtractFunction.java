@@ -13,17 +13,26 @@ import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.FunctionRenderingSupport;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.*;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
 
 import java.time.ZoneOffset;
+import java.util.Collections;
 import java.util.List;
 
 import static java.util.Arrays.asList;
@@ -31,7 +40,6 @@ import static org.hibernate.query.sqm.BinaryArithmeticOperator.*;
 import static org.hibernate.query.sqm.TemporalUnit.*;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL_UNIT;
-import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 
 /**
  * ANSI SQL-inspired {@code extract()} function, where the date/time fields
@@ -41,7 +49,7 @@ import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTyp
  * @author Gavin King
  */
 public class ExtractFunction
-		extends AbstractSqmFunctionDescriptor {
+		extends AbstractSqmFunctionDescriptor implements FunctionRenderingSupport {
 
 	private final Dialect dialect;
 
@@ -59,13 +67,26 @@ public class ExtractFunction
 	}
 
 	@Override
+	public void render(
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> sqlAstArguments,
+			SqlAstTranslator<?> walker) {
+		final ExtractUnit field = (ExtractUnit) sqlAstArguments.get( 0 );
+		final TemporalUnit unit = field.getUnit();
+		final String pattern = dialect.extractPattern( unit );
+		new PatternRenderer( pattern ).render( sqlAppender, sqlAstArguments, walker );
+	}
+
+	@Override
 	protected <T> SelfRenderingSqmFunction generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		SqmExtractUnit<?> field = (SqmExtractUnit<?>) arguments.get(0);
-		SqmExpression<?> expression = (SqmExpression<?>) arguments.get(1);
+		final SqmExtractUnit<?> field = (SqmExtractUnit<?>) arguments.get( 0 );
+		final SqmExpression<?> originalExpression = (SqmExpression<?>) arguments.get( 1 );
+		final boolean compositeTemporal = SqmExpressionHelper.isCompositeTemporal( originalExpression );
+		final SqmExpression<?> expression = SqmExpressionHelper.getOffsetAdjustedExpression( originalExpression );
 
 		TemporalUnit unit = field.getUnit();
 		switch ( unit ) {
@@ -74,8 +95,27 @@ public class ExtractFunction
 			case NATIVE:
 				throw new SemanticException("can't extract() the field TemporalUnit.NATIVE");
 			case OFFSET:
-				// use format(arg, 'xxx') to get the offset
-				return extractOffsetUsingFormat( expression, queryEngine, typeConfiguration );
+				if ( compositeTemporal ) {
+					final SqmPath<Object> offsetPath = ( (SqmPath<?>) originalExpression ).get(
+							AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME
+					);
+					return new SelfRenderingSqmFunction<>(
+							this,
+							(sqlAppender, sqlAstArguments, walker) -> {
+								sqlAstArguments.get( 0 ).accept( walker );
+							},
+							Collections.singletonList( offsetPath ),
+							null,
+							null,
+							StandardFunctionReturnTypeResolvers.useArgType( 1 ),
+							expression.nodeBuilder(),
+							"extract"
+					);
+				}
+				else {
+					// use format(arg, 'xxx') to get the offset
+					return extractOffsetUsingFormat( expression, queryEngine, typeConfiguration );
+				}
 			case DATE:
 			case TIME:
 				// use cast(arg as Type) to get the date or time part
@@ -93,18 +133,16 @@ public class ExtractFunction
 				// otherwise it's something we expect the SQL dialect
 				// itself to understand, either natively, or via the
 				// method Dialect.extract()
-				String pattern = dialect.extractPattern( unit );
-				return queryEngine.getSqmFunctionRegistry()
-						.patternDescriptorBuilder( "extract", pattern )
-						.setExactArgumentCount( 2 )
-						.setReturnTypeResolver( useArgType( 1 ) )
-						.descriptor()
-						.generateSqmExpression(
-								arguments,
-								impliedResultType,
-								queryEngine,
-								typeConfiguration
-						);
+				return new SelfRenderingSqmFunction(
+						this,
+						this,
+						expression == originalExpression ? arguments : List.of( arguments.get( 0 ), expression ),
+						impliedResultType,
+						getArgumentsValidator(),
+						getReturnTypeResolver(),
+						expression.nodeBuilder(),
+						"extract"
+				);
 		}
 	}
 

@@ -287,8 +287,10 @@ public class DB2Dialect extends Dialect {
 				)
 		);
 
-		queryEngine.getSqmFunctionRegistry().register( "format",
-				new DB2FormatEmulation( queryEngine.getTypeConfiguration() ) );
+		queryEngine.getSqmFunctionRegistry().register(
+				"format",
+				new DB2FormatEmulation( queryEngine.getTypeConfiguration() )
+		);
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "posstr" )
 				.setInvariantType(

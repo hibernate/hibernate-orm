@@ -20,6 +20,10 @@ public enum TimeZoneStorageStrategy {
 	 */
 	NATIVE,
 	/**
+	 * Stores the time zone in a separate column.
+	 */
+	COLUMN,
+	/**
 	 * Doesn't store the time zone, but instead normalizes to UTC.
 	 */
 	NORMALIZE

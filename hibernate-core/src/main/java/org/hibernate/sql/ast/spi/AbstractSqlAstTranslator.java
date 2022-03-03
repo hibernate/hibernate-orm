@@ -177,7 +177,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
-import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.sqm.TemporalUnit.SECOND;
 import static org.hibernate.sql.ast.SqlTreePrinter.logSqlAst;
 import static org.hibernate.sql.results.graph.DomainResultGraphPrinter.logDomainResultGraph;
 
@@ -3396,6 +3396,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return expression instanceof JdbcParameter || expression instanceof SqmParameterInterpretation;
 	}
 
+	protected final boolean isLiteral(Expression expression) {
+		return expression instanceof Literal;
+	}
+
 	protected List<SortSpecification> getSortSpecificationsRowNumbering(
 			SelectClause selectClause,
 			QueryPart queryPart) {
@@ -4432,7 +4436,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitDuration(Duration duration) {
 		duration.getMagnitude().accept( this );
 		appendSql(
-				duration.getUnit().conversionFactor( NANOSECOND, getDialect() )
+				duration.getUnit().conversionFactor( SECOND, getDialect() )
 		);
 	}
 

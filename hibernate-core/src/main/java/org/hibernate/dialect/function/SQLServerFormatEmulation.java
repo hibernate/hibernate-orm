@@ -29,19 +29,12 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEM
  *
  * @author Christian Beikov
  */
-public class SQLServerFormatEmulation extends AbstractSqmSelfRenderingFunctionDescriptor {
+public class SQLServerFormatEmulation extends FormatFunction {
 
 	private final SQLServerDialect dialect;
 
 	public SQLServerFormatEmulation(SQLServerDialect dialect, TypeConfiguration typeConfiguration) {
-		super(
-				"format",
-				CommonFunctionFactory.formatValidator(),
-				StandardFunctionReturnTypeResolvers.invariant(
-						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				),
-				StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, TEMPORAL, STRING )
-		);
+		super( "format", typeConfiguration );
 		this.dialect = dialect;
 	}
 
@@ -52,7 +45,6 @@ public class SQLServerFormatEmulation extends AbstractSqmSelfRenderingFunctionDe
 			SqlAstTranslator<?> walker) {
 		final Expression datetime = (Expression) arguments.get(0);
 		final boolean isTime = TypeConfiguration.getSqlTemporalType( datetime.getExpressionType() ) == TemporalType.TIME;
-		final Format format = (Format) arguments.get(1);
 
 		sqlAppender.appendSql("format(");
 		if ( isTime ) {
@@ -63,13 +55,8 @@ public class SQLServerFormatEmulation extends AbstractSqmSelfRenderingFunctionDe
 		else {
 			datetime.accept( walker );
 		}
-		sqlAppender.appendSql(",'");
-		dialect.appendDatetimeFormat( sqlAppender, format.getFormat() );
-		sqlAppender.appendSql("')");
-	}
-
-	@Override
-	public String getArgumentListSignature() {
-		return "(TEMPORAL datetime as STRING pattern)";
+		sqlAppender.appendSql(',');
+		arguments.get( 1 ).accept( walker );
+		sqlAppender.appendSql(')');
 	}
 }

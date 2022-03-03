@@ -44,6 +44,7 @@ import org.hibernate.annotations.Mutability;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Target;
+import org.hibernate.annotations.TimeZoneColumn;
 import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -178,6 +179,8 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 		if ( timeZoneStorageType != null ) {
 			switch ( timeZoneStorageType ) {
+				case COLUMN:
+					return TimeZoneStorageStrategy.COLUMN;
 				case NATIVE:
 					return TimeZoneStorageStrategy.NATIVE;
 				case NORMALIZE:
@@ -656,7 +659,22 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		}
 
 		final TimeZoneStorage timeZoneStorageAnn = attributeXProperty.getAnnotation( TimeZoneStorage.class );
-		timeZoneStorageType = timeZoneStorageAnn != null ? timeZoneStorageAnn.value() : null;
+		if ( timeZoneStorageAnn != null ) {
+			timeZoneStorageType = timeZoneStorageAnn.value();
+			final TimeZoneColumn timeZoneColumnAnn = attributeXProperty.getAnnotation( TimeZoneColumn.class );
+			if ( timeZoneColumnAnn != null ) {
+				if ( timeZoneStorageType != TimeZoneStorageType.AUTO && timeZoneStorageType != TimeZoneStorageType.COLUMN ) {
+					throw new IllegalStateException(
+							"@TimeZoneColumn can not be used in conjunction with @TimeZoneStorage( " + timeZoneStorageType +
+									" ) with attribute " + attributeXProperty.getDeclaringClass().getName() +
+									'.' + attributeXProperty.getName()
+					);
+				}
+			}
+		}
+		else {
+			timeZoneStorageType = null;
+		}
 
 		normalSupplementalDetails( attributeXProperty);
 

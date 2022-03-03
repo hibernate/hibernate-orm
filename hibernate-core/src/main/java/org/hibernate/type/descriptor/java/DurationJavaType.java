@@ -7,7 +7,10 @@
 package org.hibernate.type.descriptor.java;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.time.Duration;
+import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
@@ -37,6 +40,13 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 	 * Singleton access
 	 */
 	public static final DurationJavaType INSTANCE = new DurationJavaType();
+	private static final DecimalFormatSymbols DECIMAL_FORMAT_SYMBOLS = DecimalFormatSymbols.getInstance( Locale.ENGLISH );
+	private static final ThreadLocal<DecimalFormat> DECIMAL_FORMAT = new ThreadLocal<>() {
+		@Override
+		protected DecimalFormat initialValue() {
+			return new DecimalFormat( "0.000000000", DECIMAL_FORMAT_SYMBOLS );
+		}
+	};
 
 	public DurationJavaType() {
 		super( Duration.class, ImmutableMutabilityPlan.instance() );
@@ -110,16 +120,11 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 		}
 
 		if (value instanceof BigDecimal) {
-			BigDecimal[] secondsAndNanos =
-					((BigDecimal) value).divideAndRemainder( BigDecimal.ONE );
-			return Duration.ofSeconds(
-					secondsAndNanos[0].longValueExact(),
-					// use intValue() not intValueExact() here, because
-					// the database will sometimes produce garbage digits
-					// in a floating point multiplication, and we would
-					// get an unwanted ArithmeticException
-					secondsAndNanos[1].intValue()
-			);
+			return fromDecimal( value );
+		}
+
+		if (value instanceof Double) {
+			return fromDecimal( value );
 		}
 
 		if (value instanceof Long) {
@@ -131,6 +136,18 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 		}
 
 		throw unknownWrap( value.getClass() );
+	}
+
+	private Duration fromDecimal(Object number) {
+		final String formatted = DECIMAL_FORMAT.get().format( number );
+		final int dotIndex = formatted.indexOf( '.' );
+		if (dotIndex == -1) {
+			return Duration.ofSeconds( Long.parseLong( formatted ) );
+		}
+		return Duration.ofSeconds(
+				Long.parseLong( formatted.substring( 0, dotIndex ) ),
+				Long.parseLong( formatted.substring( dotIndex + 1 ) )
+		);
 	}
 
 	@Override

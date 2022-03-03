@@ -65,6 +65,8 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	public static enum DereferenceType {
 		UNKNOWN,
 		ENTITY,
+		FK_REF,
+		FK_REF_LHS,
 		COMPONENT,
 		COLLECTION,
 		PRIMITIVE,
@@ -263,8 +265,43 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	}
 
 	private Type prepareLhs() throws SemanticException {
-		FromReferenceNode lhs = getLhs();
+		final FromReferenceNode lhs = getLhs();
 		lhs.prepareForDot( propertyName );
+
+		if ( "{fk}".equals( propertyName ) ) {
+			// we are processing the {fk} node and "preparing" its
+			// lhs, which is the to-one mapping.  it is significantly
+			// easiest to simply handle this case here.  The other
+			// option would be to muck around with the PropertyMapping
+			// for the entity containing the to-one to add mapping for
+			// the {fk} path; but unfortunately that still means
+			// additional changes here
+			final Type toOneType = lhs.getDataType();
+			assert toOneType instanceof EntityType;
+
+			dereferenceType = DereferenceType.FK_REF;
+
+			final String toOnePropertyPath;
+			if ( lhs instanceof DotNode ) {
+				final DotNode lhsAsDotNode = (DotNode) lhs;
+				toOnePropertyPath = lhsAsDotNode.propertyPath;
+			}
+			else {
+				assert lhs instanceof IdentNode;
+				final IdentNode lhsAsIdentNode = (IdentNode) lhs;
+				toOnePropertyPath = lhsAsIdentNode.getOriginalText();
+			}
+			propertyPath = toOnePropertyPath + ".{fk}";
+
+			// resolve the fk key columns
+			final String tableAlias = getLhs().getFromElement().getTableAlias();
+			this.columns = getFromElement().getElementType().toColumns( tableAlias, toOnePropertyPath, false );
+
+			// and the key type
+			final Type keyType = getFromElement().getElementType().getPropertyType( toOnePropertyPath, toOnePropertyPath );
+			setDataType( keyType );
+		}
+
 		return getDataType();
 	}
 
@@ -368,7 +405,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			AST parent,
 			AST parentPredicate) throws SemanticException {
 		checkForCorrelatedSubquery( "dereferenceEntity" );
-		// three general cases we check here as to whether to render a physical SQL join:
+		// three general cases we check whether to render a physical SQL join:
 		// 1) is our parent a DotNode as well?  If so, our property reference is
 		// 		being further de-referenced...
 		// 2) is this a DML statement
@@ -393,11 +430,31 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		final boolean joinIsNeeded;
 
 		if ( isDotNode( parent ) ) {
-			// our parent is another dot node, meaning we are being further dereferenced.
-			// thus we need to generate a join unless the association is non-nullable and
-			// parent refers to the associated entity's PK (because 'our' table would know the FK).
 			parentAsDotNode = (DotNode) parent;
+
+			// our parent is another dot node, meaning we are being further de-referenced.
+			// depending on the exact de-reference we may need to generate a physical join.
+			// generally we will need the join unless:
+			//		* this is a to-one reference && either:
+			//			* the de-reference path is the associated entity's identifier
+			//				&& the to-one is not marked with @NotFound
+			//			* the de-reference is the special {fk} token
+
 			property = parentAsDotNode.propertyName;
+
+			if ( "{fk}".equals( property ) ) {
+				if ( parentAsDotNode.getNextSibling() != null ) {
+					throw new QueryException(
+							"{fk} reference cannot be further de-referenced - " + propertyPath + " -> " + parentAsDotNode.getNextSibling().getText()
+					);
+				}
+
+				dereferenceType = DereferenceType.FK_REF_LHS;
+
+//				dereferenceForeignKeyReference( toOneType, ( (DotNode) parentAsDotNode.getLhs() ).getPropertyPath() );
+				return;
+			}
+
 			if ( generateJoin ) {
 				if ( implicitJoin && ( toOneType.hasNotFoundAction() || toOneType.isNullable() ) ) {
 					joinIsNeeded = true;
@@ -436,10 +493,28 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 
 	}
 
-
 	private static boolean isDotNode(AST n) {
 		return n != null && n.getType() == SqlTokenTypes.DOT;
 	}
+
+	private void dereferenceForeignKeyReference(EntityType toOneType, String toOnePropertyName) throws SemanticException {
+		dereferenceType = DereferenceType.FK_REF;
+
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "dereferenceForeignKeyReference() : %s", getPath() );
+		}
+
+		final String fkRefPath = propertyPath + ".{fk}";
+		propertyPath = fkRefPath;
+
+		// resolve the fk key columns
+		final String tableAlias = getLhs().getFromElement().getTableAlias();
+		this.columns = getFromElement().getElementType().toColumns( tableAlias, fkRefPath, false );
+
+		// and the key type
+		setDataType( getFromElement().getElementType().getPropertyType( toOnePropertyName, fkRefPath ) );
+	}
+
 
 	private void dereferenceEntityJoin(
 			String classAlias,

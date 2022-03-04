@@ -166,7 +166,11 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				final String columnExpression;
 				if ( rootTableKeyColumnNames == null ) {
 					if ( selectable.isFormula() ) {
-						columnExpression = selectable.getTemplate( dialect, creationProcess.getSqmFunctionRegistry() );
+						columnExpression = selectable.getTemplate(
+								dialect,
+								creationProcess.getCreationContext().getTypeConfiguration(),
+								creationProcess.getSqmFunctionRegistry()
+						);
 					}
 					else {
 						columnExpression = selectable.getText( dialect );

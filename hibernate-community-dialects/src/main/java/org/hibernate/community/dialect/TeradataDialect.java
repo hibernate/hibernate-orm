@@ -50,6 +50,7 @@ import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -61,6 +62,11 @@ import java.util.Map;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.type.SqlTypes.BIGINT;
+import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BOOLEAN;
+import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.VARBINARY;
 
 /**
  * A dialect for the Teradata database created by MCR as part of the
@@ -69,8 +75,6 @@ import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtract
  * @author Jay Nance
  */
 public class TeradataDialect extends Dialect {
-
-	private final DatabaseVersion version;
 
 	private static final int PARAM_LIST_SIZE_LIMIT = 1024;
 
@@ -84,24 +88,12 @@ public class TeradataDialect extends Dialect {
 	}
 
 	public TeradataDialect(DatabaseVersion version) {
-		super();
-		this.version = version;
+		super( version );
+	}
 
-		registerColumnType( Types.BOOLEAN, "byteint" );
-
-		registerColumnType( Types.TINYINT, "byteint" );
-
-		registerColumnType( Types.BINARY, "byte($l)" );
-		registerColumnType( Types.VARBINARY, getMaxVarbinaryLength(), "varbyte($l)" );
-
-		if ( getVersion().isBefore( 13 ) ) {
-			registerColumnType( Types.BIGINT, "numeric(19,0)" );
-		}
-		else {
-			//'bigint' has been there since at least version 13
-			registerColumnType( Types.BIGINT, "bigint" );
-		}
-
+	@Override
+	protected void registerDefaultKeywords() {
+		super.registerDefaultKeywords();
 		registerKeyword( "password" );
 		registerKeyword( "type" );
 		registerKeyword( "title" );
@@ -114,6 +106,23 @@ public class TeradataDialect extends Dialect {
 		registerKeyword( "role" );
 		registerKeyword( "account" );
 		registerKeyword( "class" );
+	}
+
+	@Override
+	protected String columnType(int sqlTypeCode) {
+		switch ( sqlTypeCode ) {
+			case BOOLEAN:
+			case TINYINT:
+				return "byteint";
+			//'bigint' has been there since at least version 13
+			case BIGINT:
+				return getVersion().isBefore( 13 ) ? "numeric(19,0)" : "bigint";
+			case BINARY:
+				return "byte($l)";
+			case VARBINARY:
+				return "varbyte($l)";
+		}
+		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
@@ -171,11 +180,6 @@ public class TeradataDialect extends Dialect {
 				return new TeradataSqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
-	}
-
-	@Override
-	public DatabaseVersion getVersion() {
-		return version;
 	}
 
 	@Override
@@ -389,7 +393,7 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
-	public String getSelectClauseNullString(int sqlType) {
+	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		String v = "null";
 
 		switch ( sqlType ) {

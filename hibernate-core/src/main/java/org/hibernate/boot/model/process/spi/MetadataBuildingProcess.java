@@ -44,15 +44,12 @@ import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
-import org.hibernate.type.CustomType;
 import org.hibernate.type.SqlTypes;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.internal.NamedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.usertype.UserType;
 
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
@@ -363,57 +360,7 @@ public class MetadataBuildingProcess {
 		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
 
 		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
-		final TypeContributions typeContributions = new TypeContributions() {
-			@Override
-			public void contributeType(BasicType type) {
-				getBasicTypeRegistry().register( type );
-				conditionallyRegisterJtd( type.getJavaTypeDescriptor() );
-			}
-
-			private void conditionallyRegisterJtd(JavaType jtd) {
-				final JavaTypeRegistry jtdRegistry = getTypeConfiguration().getJavaTypeRegistry();
-				jtdRegistry.resolveDescriptor( jtd.getJavaTypeClass(), () -> jtd );
-			}
-
-			@Override
-			public void contributeType(BasicType type, String... keys) {
-				getBasicTypeRegistry().register( type, keys );
-				conditionallyRegisterJtd( type.getJavaTypeDescriptor() );
-			}
-
-			@Override
-			public void contributeType(UserType type, String[] keys) {
-				contributeType( new CustomType<Object>( type, keys, getTypeConfiguration() ) );
-			}
-
-			@Override
-			public void contributeJavaType(JavaType<?> descriptor) {
-				typeConfiguration.getJavaTypeRegistry().addDescriptor( descriptor );
-			}
-
-			@Override
-			public void contributeJdbcType(JdbcType descriptor) {
-				typeConfiguration.getJdbcTypeRegistry().addDescriptor( descriptor );
-			}
-
-			@Override
-			public <T> void contributeType(UserType<T> descriptor) {
-				typeConfiguration.getBasicTypeRegistry().register(
-						descriptor,
-						descriptor.returnedClass().getName()
-				);
-			}
-
-			@Override
-			public TypeConfiguration getTypeConfiguration() {
-				return typeConfiguration;
-			}
-
-			final BasicTypeRegistry getBasicTypeRegistry() {
-				return getTypeConfiguration().getBasicTypeRegistry();
-			}
-
-		};
+		final TypeContributions typeContributions = () -> typeConfiguration;
 
 		// add Dialect contributed types
 		final Dialect dialect = options.getServiceRegistry().getService( JdbcServices.class ).getDialect();

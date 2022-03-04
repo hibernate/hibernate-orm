@@ -11,8 +11,6 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -93,6 +91,8 @@ import static org.hibernate.query.sqm.TemporalUnit.SECOND;
 import static org.hibernate.query.sqm.TemporalUnit.YEAR;
 
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
+import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.type.SqlTypes.*;
@@ -549,68 +549,53 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	protected String columnType(int jdbcTypeCode) {
-		//note: the 'long' type is deprecated
-		switch (jdbcTypeCode) {
+	protected String columnType(int sqlTypeCode) {
+		switch ( sqlTypeCode ) {
 			case BOOLEAN:
 				// still, after all these years...
 				return "number(1,0)";
-
-			case VARCHAR:
-				return getVersion().isBefore( 9 )
-						? "varchar2($l)": "varchar2($l char)";
-			case NVARCHAR:
-				return "nvarchar2($l)";
-
-			case BIGINT:
-				return "number(19,0)";
-			case SMALLINT:
-				return "number(5,0)";
 			case TINYINT:
 				return "number(3,0)";
+			case SMALLINT:
+				return "number(5,0)";
 			case INTEGER:
 				return "number(10,0)";
-
+			case BIGINT:
+				return "number(19,0)";
 			case REAL:
 				// Oracle's 'real' type is actually double precision
 				return "float(24)";
-
 			case NUMERIC:
 			case DECIMAL:
 				// Note that 38 is the maximum precision Oracle supports
 				return "number($p,$s)";
-
 			case DATE:
 			case TIME:
 				return "date";
 			case TIMESTAMP:
 				// the only difference between date and timestamp
 				// on Oracle is that date has no fractional seconds
-				return getVersion().isBefore( 9 )
-						? "date" : "timestamp($p)";
-			case TIME_WITH_TIMEZONE:
-				return getVersion().isBefore( 9 )
-						? "date" : "timestamp($p) with time zone";
-
+			case TIMESTAMP_WITH_TIMEZONE:
+				return getVersion().isBefore( 9 ) ? "date" : super.columnType( sqlTypeCode );
+			case VARCHAR:
+				return getVersion().isBefore( 9 ) ? "varchar2($l)" : "varchar2($l char)";
+			case NVARCHAR:
+				return "nvarchar2($l)";
 			case BINARY:
 			case VARBINARY:
 				return "raw($l)";
-
-			case GEOMETRY:
-				return "MDSYS.SDO_GEOMETRY";
-
-			default:
-				return super.columnType(jdbcTypeCode);
 		}
+		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
-	protected List<Integer> getSupportedJdbcTypeCodes() {
-		List<Integer> list = new ArrayList<>( super.getSupportedJdbcTypeCodes() );
+	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.registerColumnTypes( typeContributions, serviceRegistry );
+		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+
 		if ( getVersion().isSameOrAfter( 10 ) ) {
-			list.add(GEOMETRY);
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "MDSYS.SDO_GEOMETRY", this ) );
 		}
-		return list;
 	}
 
 	@Override
@@ -754,9 +739,9 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public String getSelectClauseNullString(int sqlType) {
+	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		if ( getVersion().isSameOrAfter( 9 ) ) {
-			return super.getSelectClauseNullString(sqlType);
+			return super.getSelectClauseNullString( sqlType, typeConfiguration );
 		}
 		else {
 			switch(sqlType) {

@@ -593,6 +593,7 @@ public class MappingModelCreationHelper {
 						tableExpression,
 						index.getSelectables().get(0),
 						creationContext.getTypeConfiguration().getBasicTypeForJavaType( Integer.class ),
+						creationProcess.getCreationContext().getTypeConfiguration(),
 						dialect,
 						creationProcess.getSqmFunctionRegistry()
 				);
@@ -644,6 +645,7 @@ public class MappingModelCreationHelper {
 						tableExpression,
 						index.getSelectables().get(0),
 						creationContext.getTypeConfiguration().getBasicTypeForJavaType( Integer.class ),
+						creationProcess.getCreationContext().getTypeConfiguration(),
 						dialect,
 						creationProcess.getSqmFunctionRegistry()
 				);
@@ -873,6 +875,7 @@ public class MappingModelCreationHelper {
 					tableExpression,
 					bootValueMappingKey.getSelectables().get(0),
 					(JdbcMapping) keyType,
+					creationProcess.getCreationContext().getTypeConfiguration(),
 					dialect,
 					creationProcess.getSqmFunctionRegistry()
 			);
@@ -1044,6 +1047,7 @@ public class MappingModelCreationHelper {
 						tableExpression,
 						columnIterator.next(),
 						simpleFkTarget.getJdbcMapping(),
+						creationProcess.getCreationContext().getTypeConfiguration(),
 						dialect,
 						creationProcess.getSqmFunctionRegistry()
 				);
@@ -1054,6 +1058,7 @@ public class MappingModelCreationHelper {
 						tableExpression,
 						table.getColumn( 0 ),
 						simpleFkTarget.getJdbcMapping(),
+						creationProcess.getCreationContext().getTypeConfiguration(),
 						dialect,
 						creationProcess.getSqmFunctionRegistry()
 				);
@@ -1168,6 +1173,7 @@ public class MappingModelCreationHelper {
 					collectionBootValueMapping.getKey(),
 					getPropertyOrder( bootValueMapping, creationProcess ),
 					creationProcess.getCreationContext().getSessionFactory(),
+					creationProcess.getCreationContext().getTypeConfiguration(),
 					dialect,
 					creationProcess.getSqmFunctionRegistry()
 			);
@@ -1189,6 +1195,7 @@ public class MappingModelCreationHelper {
 					bootValueMapping,
 					getPropertyOrder( bootValueMapping, creationProcess ),
 					creationProcess.getCreationContext().getSessionFactory(),
+					creationProcess.getCreationContext().getTypeConfiguration(),
 					dialect,
 					creationProcess.getSqmFunctionRegistry()
 			);
@@ -1335,6 +1342,7 @@ public class MappingModelCreationHelper {
 					tableExpression,
 					basicValue.getSelectables().get(0),
 					basicValue.resolve().getJdbcMapping(),
+					creationProcess.getCreationContext().getTypeConfiguration(),
 					dialect,
 					creationProcess.getSqmFunctionRegistry()
 			);
@@ -1419,6 +1427,7 @@ public class MappingModelCreationHelper {
 					tableExpression,
 					basicElement.getSelectables().get(0),
 					basicElement.resolve().getJdbcMapping(),
+					creationProcess.getCreationContext().getTypeConfiguration(),
 					dialect,
 					creationProcess.getSqmFunctionRegistry()
 			);

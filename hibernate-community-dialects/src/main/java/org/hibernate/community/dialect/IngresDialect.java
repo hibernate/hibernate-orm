@@ -12,6 +12,7 @@ import org.hibernate.community.dialect.identity.Ingres10IdentityColumnSupport;
 import org.hibernate.community.dialect.identity.Ingres9IdentityColumnSupport;
 import org.hibernate.community.dialect.pagination.FirstLimitHandler;
 import org.hibernate.community.dialect.pagination.IngresLimitHandler;
+import org.hibernate.community.dialect.sequence.IngresLegacySequenceSupport;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -63,6 +64,21 @@ import jakarta.persistence.TemporalType;
 
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
+import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BLOB;
+import static org.hibernate.type.SqlTypes.BOOLEAN;
+import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.DATE;
+import static org.hibernate.type.SqlTypes.DECIMAL;
+import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
+import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
+import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
+import static org.hibernate.type.SqlTypes.LONGNVARCHAR;
+import static org.hibernate.type.SqlTypes.LONGVARBINARY;
+import static org.hibernate.type.SqlTypes.LONGVARCHAR;
+import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.NUMERIC;
+import static org.hibernate.type.SqlTypes.VARBINARY;
 
 /**
  * An SQL dialect for Ingres 9.2.
@@ -91,82 +107,73 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STR
 public class IngresDialect extends Dialect {
 
 	private final LimitHandler limitHandler;
-
-	private final DatabaseVersion version;
-
 	private final SequenceSupport sequenceSupport;
+
+	public IngresDialect() {
+		this( DatabaseVersion.make( 9, 2 ) );
+	}
 
 	public IngresDialect(DialectResolutionInfo info) {
 		this( info.makeCopy() );
 		registerKeywords( info );
 	}
 
-	public IngresDialect() {
-		this( DatabaseVersion.make( 9, 2 ) );
-	}
-
 	/**
 	 * Constructs a IngresDialect
 	 */
 	public IngresDialect(DatabaseVersion version) {
-		super();
-		this.version = version;
-
-		if ( version.isBefore( 10 ) ) {
-			registerColumnType( Types.BOOLEAN, "tinyint" );
+		super( version );
+		if ( getVersion().isSameOrAfter( 9, 3 ) ) {
+			limitHandler = IngresLimitHandler.INSTANCE;
+			sequenceSupport = ANSISequenceSupport.INSTANCE;
 		}
 		else {
-			registerColumnType( Types.BOOLEAN, "boolean" );
+			limitHandler = FirstLimitHandler.INSTANCE;
+			sequenceSupport = IngresLegacySequenceSupport.INSTANCE;
 		}
+	}
 
-		registerColumnType( Types.NUMERIC, "decimal($p, $s)" ); //Ingres has no 'numeric' type
-
-		registerColumnType( Types.BINARY, "byte($l)" );
-		registerColumnType( Types.VARBINARY, getMaxVarbinaryLength(), "varbyte($l)" );
-		//note: 'long byte' is a  synonym for 'blob'
-		registerColumnType( Types.VARBINARY, "long byte($l)" );
-
+	@Override
+	protected String columnType(int sqlTypeCode) {
 		//TODO: should we be using nchar/nvarchar/long nvarchar
 		//      here? I think Ingres char/varchar types don't
 		//      support Unicode. Copy what AbstractHANADialect
 		//      does with a Hibernate property to config this.
-		registerColumnType( Types.CHAR, "char($l)" );
-		registerColumnType( Types.VARCHAR, getMaxVarcharLength(), "varchar($l)" );
-		//note: 'long varchar' is a synonym for 'clob'
-		registerColumnType( Types.VARCHAR, "long varchar($l)" );
 
-		registerColumnType( Types.NCHAR, "nchar($l)" );
-		registerColumnType( Types.NVARCHAR, getMaxNVarcharLength(), "nvarchar($l)" );
-		//note: 'long nvarchar' is a synonym for 'nclob'
-		registerColumnType( Types.NVARCHAR, "long nvarchar($l)" );
-
-		if ( getVersion().isSameOrAfter( 9, 3 ) ) {
+		switch ( sqlTypeCode ) {
+			case BOOLEAN:
+				return getVersion().isBefore( 10 ) ? "tinyint" : super.columnType( sqlTypeCode );
 			// Not completely necessary, given that Ingres
 			// can be configured to set DATE = ANSIDATE
-			registerColumnType( Types.DATE, "ansidate" );
+			case DATE:
+				return getVersion().isBefore( 10 ) && getVersion().isSameOrAfter( 9, 3 )
+						? "ansidate"
+						: super.columnType( sqlTypeCode );
+			//Ingres has no 'numeric' type
+			case NUMERIC:
+				return castType( DECIMAL );
+			case BINARY:
+				return "byte($l)";
+			case VARBINARY:
+				return "varbyte($l)";
+			//note: 'long byte' is a  synonym for 'blob'
+			case LONGVARBINARY:
+			case LONG32VARBINARY:
+			case BLOB:
+				return "long byte($l)";
+			//note: 'long varchar' is a synonym for 'clob'
+			case LONGVARCHAR:
+			case LONG32VARCHAR:
+			case CLOB:
+				return "long varchar($l)";
+			//note: 'long varchar' is a synonym for 'nclob'
+			case LONGNVARCHAR:
+			case LONG32NVARCHAR:
+			case NCLOB:
+				return "long nvarchar($l)";
 		}
-
-		limitHandler = getVersion().isBefore( 9, 3 ) ? FirstLimitHandler.INSTANCE : IngresLimitHandler.INSTANCE;
-
-		sequenceSupport = new ANSISequenceSupport() {
-			@Override
-			public boolean supportsPooledSequences() {
-				return getVersion().isSameOrAfter( 9, 3 );
-			}
-		};
+		return super.columnType( sqlTypeCode );
 	}
-
-//	@Override
-//	protected void initDefaultProperties() {
-//		super.initDefaultProperties();
-//
-//		if ( getVersion().isBefore( 10 ) ) {
-//			// There is no support for a native boolean type that accepts values
-//			// of true, false or unknown. Using the tinyint type requires
-//			// substitutions of true and false.
-//			getDefaultProperties().setProperty( Environment.QUERY_SUBSTITUTIONS, "true=1,false=0" );
-//		}
-//	}
 
 	@Override
 	public boolean getDefaultUseGetGeneratedKeys() {
@@ -181,11 +188,6 @@ public class IngresDialect extends Dialect {
 		// rows, a single row with one column, or a single row with two columns.
 		// Ingres JDBC Driver returns table and object keys as BINARY values.
 		return false;
-	}
-
-	@Override
-	public DatabaseVersion getVersion() {
-		return version;
 	}
 
 	@Override

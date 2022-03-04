@@ -8,9 +8,9 @@ package org.hibernate.community.dialect;
 
 import org.hibernate.LockMode;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.community.dialect.identity.CacheIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -51,6 +51,11 @@ import jakarta.persistence.TemporalType;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
+import static org.hibernate.type.SqlTypes.BLOB;
+import static org.hibernate.type.SqlTypes.BOOLEAN;
+import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 
 /**
  * Dialect for Intersystems Cach&eacute; SQL 2007.1 and above.
@@ -58,26 +63,32 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STR
  * @author Jonathan Levinson
  */
 public class CacheDialect extends Dialect {
-	private final DatabaseVersion version = DatabaseVersion.make( 0, 0 );
 
 	public CacheDialect() {
-		super();
-		// Note: For object <-> SQL datatype mappings see:
-		// Configuration Manager > Advanced > SQL > System DDL Datatype Mappings
-
-		registerColumnType( Types.BOOLEAN, "bit" );
-
-		//no explicit precision
-		registerColumnType( Types.TIMESTAMP, "timestamp" );
-		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
-
-		registerColumnType( Types.BLOB, "image" );
-		registerColumnType( Types.CLOB, "text" );
+		super( SimpleDatabaseVersion.ZERO_VERSION );
 	}
 
 	public CacheDialect(DialectResolutionInfo info) {
-		this();
-		registerKeywords( info );
+		super( info );
+	}
+
+	@Override
+	protected String columnType(int sqlTypeCode) {
+		// Note: For object <-> SQL datatype mappings see:
+		// Configuration Manager > Advanced > SQL > System DDL Datatype Mappings
+		switch ( sqlTypeCode ) {
+			case BOOLEAN:
+				return "bit";
+			//no explicit precision
+			case TIMESTAMP:
+			case TIMESTAMP_WITH_TIMEZONE:
+				return "timestamp";
+			case BLOB:
+				return "image";
+			case CLOB:
+				return "text";
+		}
+		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
@@ -97,11 +108,6 @@ public class CacheDialect extends Dialect {
 				name,
 				queryEngine.getSqmFunctionRegistry().findFunctionDescriptor(name)
 		);
-	}
-
-	@Override
-	public DatabaseVersion getVersion() {
-		return version;
 	}
 
 	@Override

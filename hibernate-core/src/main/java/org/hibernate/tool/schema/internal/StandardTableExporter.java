@@ -85,14 +85,20 @@ public class StandardTableExporter implements Exporter<Table> {
 				if ( isPrimaryKeyIdentity && colName.equals( pkColName ) ) {
 					// to support dialects that have their own identity data type
 					if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
-						buf.append( ' ' ).append( col.getSqlType( dialect, metadata ) );
+						buf.append( ' ' ).append(
+								col.getSqlType( metadata.getDatabase().getTypeConfiguration(), dialect, metadata )
+						);
 					}
 					String identityColumnString = dialect.getIdentityColumnSupport()
 							.getIdentityColumnString( col.getSqlTypeCode(metadata) );
 					buf.append( ' ' ).append( identityColumnString );
 				}
 				else {
-					final String columnType = col.getSqlType( dialect, metadata );
+					final String columnType = col.getSqlType(
+							metadata.getDatabase().getTypeConfiguration(),
+							dialect,
+							metadata
+					);
 					if ( col.getGeneratedAs()==null || dialect.hasDataTypeBeforeGeneratedAs() ) {
 						buf.append( ' ' ).append( columnType );
 					}

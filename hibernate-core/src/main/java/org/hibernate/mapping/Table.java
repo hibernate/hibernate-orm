@@ -441,7 +441,11 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 						.append( ' ' )
 						.append( column.getQuotedName( dialect ) );
 
-				String columnType = column.getSqlType(dialect, metadata);
+				String columnType = column.getSqlType(
+						metadata.getDatabase().getTypeConfiguration(),
+						dialect,
+						metadata
+				);
 				if ( column.getGeneratedAs()==null || dialect.hasDataTypeBeforeGeneratedAs() ) {
 					alter.append( ' ' ).append(columnType);
 				}

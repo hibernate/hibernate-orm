@@ -8,26 +8,26 @@ package org.hibernate.community.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.HibernateException;
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.identity.CUBRIDIdentityColumnSupport;
 import org.hibernate.community.dialect.sequence.CUBRIDSequenceSupport;
 import org.hibernate.community.dialect.sequence.SequenceInformationExtractorCUBRIDDatabaseImpl;
-import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -37,6 +37,10 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.BinaryFloatDdlType;
+import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
+import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import jakarta.persistence.TemporalType;
 
@@ -45,6 +49,13 @@ import static org.hibernate.query.sqm.TemporalUnit.MINUTE;
 import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
 import static org.hibernate.query.sqm.TemporalUnit.SECOND;
+import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BLOB;
+import static org.hibernate.type.SqlTypes.BOOLEAN;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.VARBINARY;
 
 /**
  * An SQL dialect for CUBRID (8.3.x and later).
@@ -52,33 +63,55 @@ import static org.hibernate.query.sqm.TemporalUnit.SECOND;
  * @author Seok Jeong Il
  */
 public class CUBRIDDialect extends Dialect {
-	private static final DatabaseVersion VERSION = DatabaseVersion.make( 0, 0 );
 
 	/**
 	 * Constructs a CUBRIDDialect
 	 */
 	public CUBRIDDialect() {
-		super();
+		super( SimpleDatabaseVersion.ZERO_VERSION );
+	}
 
-		registerColumnType( Types.BOOLEAN, "bit" );
-		registerColumnType( Types.TINYINT, "smallint" ); //no 'tinyint'
+	@Override
+	protected String columnType(int sqlTypeCode) {
+		switch ( sqlTypeCode ) {
+			case BOOLEAN:
+				return "bit";
+			case TINYINT:
+				return "smallint";
+			//'timestamp' has a very limited range
+			//'datetime' does not support explicit precision
+			//(always 3, millisecond precision)
+			case TIMESTAMP:
+				return "datetime";
+			case TIMESTAMP_WITH_TIMEZONE:
+				return "datetimetz";
+		}
+		return super.columnType( sqlTypeCode );
+	}
 
-		//'timestamp' has a very limited range
-		//'datetime' does not support explicit precision
-		//(always 3, millisecond precision)
-		registerColumnType(Types.TIMESTAMP, "datetime" );
-		registerColumnType(Types.TIMESTAMP, "datetimetz" );
+	@Override
+	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.registerColumnTypes( typeContributions, serviceRegistry );
+		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+
+		//precision of a Mimer 'float(p)' represents
+		//decimal digits instead of binary digits
+		ddlTypeRegistry.addDescriptor( new BinaryFloatDdlType( this ) );
 
 		//CUBRID has no 'binary' nor 'varbinary', but 'bit' is
 		//intended to be used for binary data (unfortunately the
 		//length parameter is measured in bits, not bytes)
-		registerColumnType( Types.BINARY, "bit($l)" );
-		registerColumnType( Types.VARBINARY, getMaxVarbinaryLength(), "bit varying($l)" );
-
-		registerCubridKeywords();
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( BINARY, "bit($l)", this ) );
+		ddlTypeRegistry.addDescriptor(
+				CapacityDependentDdlType.builder( VARBINARY, columnType( BLOB ), this )
+						.withTypeCapacity( getMaxVarbinaryLength(), "bit varying($l)" )
+						.build()
+		);
 	}
 
-	private void registerCubridKeywords() {
+	@Override
+	protected void registerDefaultKeywords() {
+		super.registerDefaultKeywords();
 		registerKeyword( "TYPE" );
 		registerKeyword( "YEAR" );
 		registerKeyword( "MONTH" );
@@ -133,11 +166,6 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
-	public DatabaseVersion getVersion() {
-		return VERSION;
-	}
-
-	@Override
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -166,13 +194,6 @@ public class CUBRIDDialect extends Dialect {
 	@Override
 	public int getDefaultTimestampPrecision() {
 		return 3;
-	}
-
-	@Override
-	public String getTypeName(int code, Size size) throws HibernateException {
-		//precision of a CUBRID 'float(p)' represents
-		//decimal digits instead of binary digits
-		return super.getTypeName( code, binaryToDecimalPrecision( code, size ) );
 	}
 
 	@Override
@@ -482,4 +503,5 @@ public class CUBRIDDialect extends Dialect {
 		sqlAppender.append(",timediff(?3,?2))");
 		sqlAppender.append( diffUnit.conversionFactor( toUnit, this ) );
 	}
+
 }

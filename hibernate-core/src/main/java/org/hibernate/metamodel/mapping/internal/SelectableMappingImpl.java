@@ -12,6 +12,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Christian Beikov
@@ -48,6 +49,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			final String containingTableExpression,
 			final Selectable selectable,
 			final JdbcMapping jdbcMapping,
+			final TypeConfiguration typeConfiguration,
 			final Dialect dialect,
 			final SqmFunctionRegistry sqmFunctionRegistry) {
 		final String columnExpression;
@@ -56,7 +58,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 		final Integer precision;
 		final Integer scale;
 		if ( selectable.isFormula() ) {
-			columnExpression = selectable.getTemplate( dialect, sqmFunctionRegistry );
+			columnExpression = selectable.getTemplate( dialect, typeConfiguration, sqmFunctionRegistry );
 			columnDefinition = null;
 			length = null;
 			precision = null;

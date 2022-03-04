@@ -25,7 +25,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Column;
@@ -304,7 +303,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			if ( discriminator.hasFormula() ) {
 				Formula formula = (Formula) selectable;
 //				discriminatorFormula = formula.getFormula();
-				discriminatorFormulaTemplate = formula.getTemplate( dialect, functionRegistry );
+				discriminatorFormulaTemplate = formula.getTemplate(
+						dialect,
+						factory.getTypeConfiguration(),
+						functionRegistry
+				);
 				discriminatorColumnName = null;
 				discriminatorColumnReaders = null;
 				discriminatorColumnReaderTemplate = null;
@@ -314,7 +317,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				Column column = (Column) selectable;
 				discriminatorColumnName = column.getQuotedName( dialect );
 				discriminatorColumnReaders = column.getReadExpr( dialect );
-				discriminatorColumnReaderTemplate = column.getTemplate( dialect, functionRegistry );
+				discriminatorColumnReaderTemplate = column.getTemplate(
+						dialect,
+						factory.getTypeConfiguration(),
+						functionRegistry
+				);
 				discriminatorAlias = column.getAlias( dialect, persistentClass.getRootTable() );
 //				discriminatorFormula = null;
 				discriminatorFormulaTemplate = null;

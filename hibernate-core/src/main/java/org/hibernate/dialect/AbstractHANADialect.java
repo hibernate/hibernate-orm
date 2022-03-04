@@ -55,7 +55,6 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHA
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -65,6 +64,9 @@ import org.hibernate.type.descriptor.java.DoubleJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.*;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
+import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
 
 import java.io.*;
@@ -80,6 +82,27 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BOOLEAN;
+import static org.hibernate.type.SqlTypes.CHAR;
+import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.DECIMAL;
+import static org.hibernate.type.SqlTypes.DOUBLE;
+import static org.hibernate.type.SqlTypes.GEOMETRY;
+import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
+import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
+import static org.hibernate.type.SqlTypes.LONGNVARCHAR;
+import static org.hibernate.type.SqlTypes.LONGVARCHAR;
+import static org.hibernate.type.SqlTypes.NCHAR;
+import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.NUMERIC;
+import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.POINT;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.VARCHAR;
 
 /**
  * An abstract base class for SAP HANA dialects.
@@ -165,57 +188,77 @@ public abstract class AbstractHANADialect extends Dialect {
 	};
 
 	public AbstractHANADialect(DatabaseVersion version) {
-		super(version);
+		super( version );
 
 		this.useUnicodeStringTypes = useUnicodeStringTypesDefault();
 		this.clobTypeDescriptor = new HANAClobJdbcType(
 				MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE,
 				useUnicodeStringTypesDefault()
 		);
+	}
 
-		// Note that 38 is the maximum precision HANA supports
-		registerColumnType( Types.DECIMAL, "decimal($p, $s)" );
-		//there is no 'numeric' type in HANA
-		registerColumnType( Types.NUMERIC, "decimal($p, $s)" );
+	@Override
+	protected String columnType(int sqlTypeCode) {
+		switch ( sqlTypeCode ) {
+			case BOOLEAN:
+				return useLegacyBooleanType ? "tinyint" : super.columnType( sqlTypeCode );
+			case NUMERIC:
+				//there is no 'numeric' type in HANA
+				return columnType( DECIMAL );
+			//'double precision' syntax not supported
+			case DOUBLE:
+				return "double";
+			//no explicit precision
+			case TIMESTAMP:
+			case TIMESTAMP_WITH_TIMEZONE:
+				return "timestamp";
+			//there is no 'char' or 'nchar' type in HANA
+			case CHAR:
+			case VARCHAR:
+				return isUseUnicodeStringTypes() ? columnType( NVARCHAR ) : super.columnType( VARCHAR );
+			case NCHAR:
+				return columnType( NVARCHAR );
+			case LONG32VARCHAR:
+				return isUseUnicodeStringTypes() ? columnType( LONG32NVARCHAR ) : super.columnType( LONG32VARCHAR );
+			case LONGVARCHAR:
+				return isUseUnicodeStringTypes() ? columnType( LONGNVARCHAR ) : super.columnType( LONGVARCHAR );
+			case CLOB:
+				return isUseUnicodeStringTypes() ? columnType( NCLOB ) : super.columnType( CLOB );
+			// map tinyint to smallint since tinyint is unsigned on HANA
+			case TINYINT:
+				return "smallint";
+		}
+		return super.columnType( sqlTypeCode );
+	}
 
-		//'double precision' syntax not supported
-		registerColumnType( Types.DOUBLE, "double" );
+	@Override
+	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+		if ( supportsAsciiStringTypes() ) {
+			this.useUnicodeStringTypes = configurationService.getSetting(
+					USE_UNICODE_STRING_TYPES_PARAMETER_NAME,
+					StandardConverters.BOOLEAN,
+					useUnicodeStringTypesDefault()
+			);
+		}
+		this.useLegacyBooleanType = configurationService.getSetting(
+				USE_LEGACY_BOOLEAN_TYPE_PARAMETER_NAME,
+				StandardConverters.BOOLEAN,
+				USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE
+		);
 
-		//no explicit precision
-		registerColumnType(Types.TIMESTAMP, "timestamp");
-		registerColumnType(Types.TIMESTAMP_WITH_TIMEZONE, "timestamp");
+		super.registerColumnTypes( typeContributions, serviceRegistry );
+		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		// varbinary max length 5000
-		registerColumnType( Types.BINARY, 5000, "varbinary($l)" );
-		registerColumnType( Types.VARBINARY, 5000, "varbinary($l)" );
+		ddlTypeRegistry.addDescriptor(
+				CapacityDependentDdlType.builder( BINARY, "blob", this )
+						.withTypeCapacity( getMaxVarbinaryLength(), "varbinary($l)" )
+						.build()
+		);
 
-		// for longer values, map to blob
-		registerColumnType( Types.BINARY, "blob" );
-		registerColumnType( Types.VARBINARY, "blob" );
-
-		//there is no 'char' or 'nchar' type in HANA
-		registerColumnType( Types.CHAR, "varchar($l)" );
-		registerColumnType( Types.NCHAR, "nvarchar($l)" );
-
-		registerColumnType( Types.VARCHAR, 5000, "varchar($l)" );
-		registerColumnType( Types.NVARCHAR, 5000, "nvarchar($l)" );
-
-		// for longer values map to clob/nclob
-		registerColumnType( Types.VARCHAR, "clob" );
-		registerColumnType( Types.NVARCHAR, "nclob" );
-
-		// map tinyint to smallint since tinyint is unsigned on HANA
-		registerColumnType( Types.TINYINT, "smallint" );
-
-		registerHibernateType( Types.NCLOB, StandardBasicTypes.MATERIALIZED_NCLOB.getName() );
-		registerHibernateType( Types.CLOB, StandardBasicTypes.MATERIALIZED_CLOB.getName() );
-		registerHibernateType( Types.BLOB, StandardBasicTypes.MATERIALIZED_BLOB.getName() );
-		registerHibernateType( Types.NVARCHAR, StandardBasicTypes.NSTRING.getName() );
-
-		registerColumnType( SqlTypes.GEOMETRY, "st_geometry" );
-		registerColumnType( SqlTypes.POINT, "st_point" );
-
-		registerHanaKeywords();
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "st_geometry", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( POINT, "st_point", this ) );
 	}
 
 	@Override
@@ -516,7 +559,9 @@ public abstract class AbstractHANADialect extends Dialect {
 		return false;
 	}
 
-	protected void registerHanaKeywords() {
+	@Override
+	protected void registerDefaultKeywords() {
+		super.registerDefaultKeywords();
 		registerKeyword( "all" );
 		registerKeyword( "alter" );
 		registerKeyword( "as" );
@@ -888,32 +933,10 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		if ( supportsAsciiStringTypes() ) {
-			this.useUnicodeStringTypes = configurationService.getSetting(
-					USE_UNICODE_STRING_TYPES_PARAMETER_NAME,
-					StandardConverters.BOOLEAN,
-					useUnicodeStringTypesDefault()
-			);
-
-			if ( this.isUseUnicodeStringTypes() ) {
-				registerColumnType( Types.CHAR, "nvarchar($l)" );
-				registerColumnType( Types.VARCHAR, 5000, "nvarchar($l)" );
-
-				// for longer values map to clob/nclob
-				registerColumnType( Types.VARCHAR, "nclob" );
-				registerColumnType( Types.CLOB, "nclob" );
-			}
-
 			if ( this.clobTypeDescriptor.getMaxLobPrefetchSize() != maxLobPrefetchSize
 					|| this.clobTypeDescriptor.isUseUnicodeStringTypes() != this.useUnicodeStringTypes ) {
 				this.clobTypeDescriptor = new HANAClobJdbcType( maxLobPrefetchSize, this.useUnicodeStringTypes );
 			}
-		}
-
-		this.useLegacyBooleanType = configurationService.getSetting(USE_LEGACY_BOOLEAN_TYPE_PARAMETER_NAME, StandardConverters.BOOLEAN,
-				USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE);
-
-		if ( this.useLegacyBooleanType ) {
-			registerColumnType( Types.BOOLEAN, "tinyint" );
 		}
 
 		boolean treatDoubleTypedFieldsAsDecimal = configurationService.getSetting(TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_PARAMETER_NAME, StandardConverters.BOOLEAN,
@@ -922,9 +945,6 @@ public abstract class AbstractHANADialect extends Dialect {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		if (treatDoubleTypedFieldsAsDecimal) {
-			registerHibernateType( Types.FLOAT, StandardBasicTypes.BIG_DECIMAL.getName() );
-			registerHibernateType( Types.REAL, StandardBasicTypes.BIG_DECIMAL.getName() );
-			registerHibernateType( Types.DOUBLE, StandardBasicTypes.BIG_DECIMAL.getName() );
 			typeContributions.getTypeConfiguration().getBasicTypeRegistry()
 					.register(
 							new BasicTypeImpl<>(

@@ -9,12 +9,14 @@ package org.hibernate.type.descriptor.jdbc;
 import java.io.Serializable;
 import java.sql.Types;
 
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -56,7 +58,7 @@ public interface JdbcType extends Serializable {
 	 * A {@linkplain SqlTypes JDBC type code} that identifies the SQL column type to
 	 * be used for schema generation.
 	 * <p>
-	 * This value is passed to {@link org.hibernate.dialect.Dialect#getTypeName(int)}
+	 * This value is passed to {@link DdlTypeRegistry#getTypeName(int, Size)}
 	 * to obtain the SQL column type.
 	 *
 	 * @return a JDBC type code
@@ -108,7 +110,11 @@ public interface JdbcType extends Serializable {
 	<X> ValueExtractor<X> getExtractor(JavaType<X> javaType);
 
 	default boolean isInteger() {
-		switch ( getJdbcTypeCode() ) {
+		return isInteger( getJdbcTypeCode() );
+	}
+
+	static boolean isInteger(int typeCode) {
+		switch ( typeCode ) {
 			case Types.BIT:
 			case Types.TINYINT:
 			case Types.SMALLINT:
@@ -120,7 +126,11 @@ public interface JdbcType extends Serializable {
 	}
 
 	default boolean isFloat() {
-		switch ( getJdbcTypeCode() ) {
+		return isFloat( getJdbcTypeCode() );
+	}
+
+	static boolean isFloat(int typeCode) {
+		switch ( typeCode ) {
 			case Types.FLOAT:
 			case Types.REAL:
 			case Types.DOUBLE:
@@ -130,7 +140,11 @@ public interface JdbcType extends Serializable {
 	}
 
 	default boolean isDecimal() {
-		switch ( getJdbcTypeCode() ) {
+		return isDecimal( getJdbcTypeCode() );
+	}
+
+	static boolean isDecimal(int typeCode) {
+		switch ( typeCode ) {
 			case Types.DECIMAL:
 			case Types.NUMERIC:
 				return true;
@@ -139,7 +153,11 @@ public interface JdbcType extends Serializable {
 	}
 
 	default boolean isNumber() {
-		switch ( getJdbcTypeCode() ) {
+		return isNumber( getJdbcTypeCode() );
+	}
+
+	static boolean isNumber(int typeCode) {
+		switch ( typeCode ) {
 			case Types.BIT:
 			case Types.TINYINT:
 			case Types.SMALLINT:
@@ -156,7 +174,11 @@ public interface JdbcType extends Serializable {
 	}
 
 	default boolean isBinary() {
-		switch ( getJdbcTypeCode() ) {
+		return isBinary( getJdbcTypeCode() );
+	}
+
+	static boolean isBinary(int typeCode) {
+		switch ( typeCode ) {
 			case Types.BINARY:
 			case Types.VARBINARY:
 			case Types.LONGVARBINARY:
@@ -167,7 +189,11 @@ public interface JdbcType extends Serializable {
 	}
 
 	default boolean isString() {
-		switch ( getJdbcTypeCode() ) {
+		return isString( getJdbcTypeCode() );
+	}
+
+	static boolean isString(int typeCode) {
+		switch ( typeCode ) {
 			case Types.CHAR:
 			case Types.NCHAR:
 			case Types.VARCHAR:
@@ -182,7 +208,11 @@ public interface JdbcType extends Serializable {
 	}
 
 	default boolean isTemporal() {
-		switch ( getJdbcTypeCode() ) {
+		return isTemporal( getDefaultSqlTypeCode() );
+	}
+
+	static boolean isTemporal(int typeCode) {
+		switch ( typeCode ) {
 			case Types.DATE:
 			case Types.TIME:
 			case Types.TIMESTAMP:
@@ -193,7 +223,11 @@ public interface JdbcType extends Serializable {
 	}
 
 	default boolean isInterval() {
-		switch ( getDefaultSqlTypeCode() ) {
+		return isInterval( getDefaultSqlTypeCode() );
+	}
+
+	static boolean isInterval(int typeCode) {
+		switch ( typeCode ) {
 			case SqlTypes.INTERVAL_SECOND:
 				return true;
 		}
@@ -201,7 +235,11 @@ public interface JdbcType extends Serializable {
 	}
 
 	default CastType getCastType() {
-		switch ( getJdbcTypeCode() ) {
+		return getCastType( getJdbcTypeCode() );
+	}
+
+	static CastType getCastType(int typeCode) {
+		switch ( typeCode ) {
 			case Types.INTEGER:
 			case Types.TINYINT:
 			case Types.SMALLINT:

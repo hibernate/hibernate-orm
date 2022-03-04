@@ -36,12 +36,10 @@ public class TiDBDialect extends MySQLDialect {
 
 	public TiDBDialect(DatabaseVersion version) {
 		super(version);
-		registerKeywords();
 	}
 
 	public TiDBDialect(DialectResolutionInfo info) {
 		super(info);
-		registerKeywords();
 	}
 
 	@Override
@@ -50,7 +48,9 @@ public class TiDBDialect extends MySQLDialect {
 		return VERSION57;
 	}
 
-	private void registerKeywords() {
+	@Override
+	protected void registerDefaultKeywords() {
+		super.registerDefaultKeywords();
 		// TiDB implemented 'Window Functions' of MySQL 8, so the following keywords are reserved.
 		registerKeyword("CUME_DIST");
 		registerKeyword("DENSE_RANK");

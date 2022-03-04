@@ -19,7 +19,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.NamedNativeQueries;
 import jakarta.persistence.NamedNativeQuery;
 
-import org.hibernate.Session;
 import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
@@ -28,8 +27,10 @@ import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
@@ -65,13 +66,14 @@ public class CollectionLoaderTest extends BaseEntityManagerFunctionalTestCase {
 	@Before
 	public void init() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
-			Session session = entityManager.unwrap(Session.class);
+			SessionImplementor session = entityManager.unwrap( SessionImplementor.class);
+			DdlTypeRegistry ddlTypeRegistry = session.getTypeConfiguration().getDdlTypeRegistry();
 			session.doWork(connection -> {
 				try(Statement statement = connection.createStatement();) {
-					statement.executeUpdate(String.format("ALTER TABLE person %s valid %s",
-						getDialect().getAddColumnString(), getDialect().getTypeName(Types.BOOLEAN)));
-					statement.executeUpdate(String.format("ALTER TABLE Person_phones %s valid %s",
-						getDialect().getAddColumnString(), getDialect().getTypeName(Types.BOOLEAN)));
+					statement.executeUpdate(String.format( "ALTER TABLE person %s valid %s",
+														   getDialect().getAddColumnString(), ddlTypeRegistry.getTypeName( Types.BOOLEAN, getDialect())));
+					statement.executeUpdate(String.format( "ALTER TABLE Person_phones %s valid %s",
+														   getDialect().getAddColumnString(), ddlTypeRegistry.getTypeName( Types.BOOLEAN, getDialect())));
 				}
 			});
 		});

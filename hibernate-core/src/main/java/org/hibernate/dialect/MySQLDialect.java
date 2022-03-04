@@ -11,8 +11,6 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
@@ -42,8 +40,6 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
@@ -73,6 +69,9 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
+import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import jakarta.persistence.TemporalType;
 
@@ -107,20 +106,25 @@ public class MySQLDialect extends Dialect {
 		}
 	};
 
-	private int maxVarcharLength;
-	private int maxVarbinaryLength;
+	private final int maxVarcharLength;
+	private final int maxVarbinaryLength;
 
 	public MySQLDialect() {
 		this( DatabaseVersion.make( 5, 0 ) );
 	}
 
 	public MySQLDialect(DatabaseVersion version) {
-		super(version);
+		super( version );
 		registerKeyword( "key" );
+		maxVarcharLength = maxVarcharLength( getMySQLVersion(), 4 ); //conservative assumption
+		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
 	}
 
 	public MySQLDialect(DialectResolutionInfo info) {
-		super(info);
+		super( info );
+		int bytesPerCharacter = getCharacterSetBytesPerCharacter( info.getDatabaseMetadata() );
+		maxVarcharLength = maxVarcharLength( getMySQLVersion(), bytesPerCharacter );
+		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
 	}
 
 	@Override
@@ -149,40 +153,18 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	protected List<Integer> getSupportedJdbcTypeCodes() {
-		List<Integer> typeCodes = new ArrayList<>( super.getSupportedJdbcTypeCodes() );
-		typeCodes.add(GEOMETRY);
-		if ( getMySQLVersion().isBefore( 5, 7 ) ) {
-			// MySQL 5.7 brings JSON native support with a dedicated datatype
-			// https://dev.mysql.com/doc/refman/5.7/en/json.html
-			typeCodes.add(JSON);
-		}
-		return typeCodes;
-	}
-
-	@Override
-	protected String columnType(int jdbcTypeCode) {
-		switch (jdbcTypeCode) {
+	protected String columnType(int sqlTypeCode) {
+		switch ( sqlTypeCode ) {
 			case BOOLEAN:
 				// HHH-6935: Don't use "boolean" i.e. tinyint(1) due to JDBC ResultSetMetaData
 				return "bit";
-
 			case TIMESTAMP:
-				return getMySQLVersion().isBefore( 5, 7 )
-						? "datetime" : "datetime($p)";
+				return getMySQLVersion().isBefore( 5, 7 ) ? "datetime" : "datetime($p)";
 			case TIMESTAMP_WITH_TIMEZONE:
-				return getMySQLVersion().isBefore( 5, 7 )
-						? "timestamp" : "timestamp($p)";
-
+				return getMySQLVersion().isBefore( 5, 7 ) ? "timestamp" : "timestamp($p)";
 			case NUMERIC:
 				// it's just a synonym
-				return super.columnType(DECIMAL);
-
-			case JSON:
-				return "json";
-			case GEOMETRY:
-				return "geometry";
-
+				return columnType( DECIMAL );
 			// the maximum long LOB length is 4_294_967_295, bigger than any Java string
 			case BLOB:
 				return "longblob";
@@ -190,28 +172,61 @@ public class MySQLDialect extends Dialect {
 			case CLOB:
 				return "longtext";
 		}
-		return super.columnType(jdbcTypeCode);
+		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
-	protected void beforeRegisteringColumnTypes(DialectResolutionInfo info) {
-		// we need to remember the character set before calling getMaxVarcharLength()
-		// we could not do this earlier because we get called from the constructor
-		// of the superclass, before our own constructor has run
-		int bytesPerCharacter = getCharacterSetBytesPerCharacter( info.getDatabaseMetadata() );
-		maxVarcharLength = maxVarcharLength( getMySQLVersion(), bytesPerCharacter );
-		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
+	protected String castType(int sqlTypeCode) {
+		switch ( sqlTypeCode ) {
+			case BOOLEAN:
+			case BIT:
+				//special case for casting to Boolean
+				return "unsigned";
+			case TINYINT:
+			case SMALLINT:
+			case INTEGER:
+			case BIGINT:
+				//MySQL doesn't let you cast to INTEGER/BIGINT/TINYINT
+				return "signed";
+			case FLOAT:
+			case REAL:
+			case DOUBLE:
+				//MySQL doesn't let you cast to DOUBLE/FLOAT
+				//but don't just return 'decimal' because
+				//the default scale is 0 (no decimal places)
+				return "decimal($p,$s)";
+			case CHAR:
+			case NCHAR:
+			case VARCHAR:
+			case NVARCHAR:
+			case LONGVARCHAR:
+			case LONGNVARCHAR:
+			case LONG32VARCHAR:
+			case LONG32NVARCHAR:
+				//MySQL doesn't let you cast to TEXT/LONGTEXT
+				return "char";
+			case BINARY:
+			case VARBINARY:
+			case LONGVARBINARY:
+			case LONG32VARBINARY:
+				//MySQL doesn't let you cast to BLOB/TINYBLOB/LONGBLOB
+				return "binary";
+		}
+		return super.castType( sqlTypeCode );
 	}
 
 	@Override
-	protected void beforeRegisteringColumnTypes(DatabaseVersion version) {
-		maxVarcharLength = maxVarcharLength( getMySQLVersion(), 4 ); //conservative assumption
-		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
-	}
+	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.registerColumnTypes( typeContributions, serviceRegistry );
+		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
-	@Override
-	protected void registerDefaultColumnTypes() {
-		super.registerDefaultColumnTypes();
+		if ( getMySQLVersion().isSameOrAfter( 5, 7 ) ) {
+			// MySQL 5.7 brings JSON native support with a dedicated datatype
+			// https://dev.mysql.com/doc/refman/5.7/en/json.html
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+		}
+
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
 
 		// MySQL has approximately one million text and blob types. We have
 		// already registered longtext + longblob via the regular method,
@@ -221,32 +236,98 @@ public class MySQLDialect extends Dialect {
 		final int maxLobLen = 65_535;
 		final int maxMediumLobLen = 16_777_215;
 
-		registerColumnType( VARCHAR, maxMediumLobLen, "mediumtext" );
+		final CapacityDependentDdlType.Builder varcharBuilder = CapacityDependentDdlType.builder(
+						VARCHAR,
+						columnType( CLOB ),
+						"char",
+						this
+				)
+				.withTypeCapacity( getMaxVarcharLength(), "varchar($l)" )
+				.withTypeCapacity( maxMediumLobLen, "mediumtext" );
 		if ( getMaxVarcharLength() < maxLobLen ) {
-			registerColumnType( VARCHAR, maxLobLen, "text" );
+			varcharBuilder.withTypeCapacity( maxLobLen, "text" );
 		}
+		ddlTypeRegistry.addDescriptor( varcharBuilder.build() );
 
-		registerColumnType( NVARCHAR, maxMediumLobLen, "mediumtext" );
-		if ( getMaxNVarcharLength() < maxLobLen ) {
-			registerColumnType( NVARCHAR, maxLobLen, "text" );
+		final CapacityDependentDdlType.Builder nvarcharBuilder = CapacityDependentDdlType.builder(
+						NVARCHAR,
+						columnType( NCLOB ),
+						"char",
+						this
+				)
+				.withTypeCapacity( getMaxVarcharLength(), "varchar($l)" )
+				.withTypeCapacity( maxMediumLobLen, "mediumtext" );
+		if ( getMaxVarcharLength() < maxLobLen ) {
+			nvarcharBuilder.withTypeCapacity( maxLobLen, "text" );
 		}
+		ddlTypeRegistry.addDescriptor( nvarcharBuilder.build() );
 
-		registerColumnType( VARBINARY, maxMediumLobLen, "mediumblob" );
-		if ( getMaxVarbinaryLength() < maxLobLen ) {
-			registerColumnType( VARBINARY, maxLobLen, "blob" );
+		final CapacityDependentDdlType.Builder varbinaryBuilder = CapacityDependentDdlType.builder(
+						VARBINARY,
+						columnType( BLOB ),
+						"binary",
+						this
+				)
+				.withTypeCapacity( getMaxVarbinaryLength(), "varbinary($l)" )
+				.withTypeCapacity( maxMediumLobLen, "mediumblob" );
+		if ( getMaxVarcharLength() < maxLobLen ) {
+			varbinaryBuilder.withTypeCapacity( maxLobLen, "blob" );
 		}
+		ddlTypeRegistry.addDescriptor( varbinaryBuilder.build() );
 
-		registerColumnType( BLOB, maxMediumLobLen, "mediumblob" );
-		registerColumnType( BLOB, maxLobLen, "blob" );
-		registerColumnType( BLOB, maxTinyLobLen, "tinyblob" );
+		ddlTypeRegistry.addDescriptor(
+				CapacityDependentDdlType.builder( LONGVARBINARY, columnType( BLOB ), "binary", this )
+						.withTypeCapacity( maxTinyLobLen, "tinyblob" )
+						.withTypeCapacity( maxMediumLobLen, "mediumblob" )
+						.withTypeCapacity( maxLobLen, "blob" )
+						.build()
+		);
 
-		registerColumnType( CLOB, maxMediumLobLen, "mediumtext" );
-		registerColumnType( CLOB, maxLobLen, "text" );
-		registerColumnType( CLOB, maxTinyLobLen, "tinytext" );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32VARBINARY, columnType( BLOB ), "binary", this ) );
 
-		registerColumnType( NCLOB, maxMediumLobLen, "mediumtext" );
-		registerColumnType( NCLOB, maxLobLen, "text" );
-		registerColumnType( NCLOB, maxTinyLobLen, "tinytext" );
+		ddlTypeRegistry.addDescriptor(
+				CapacityDependentDdlType.builder( LONGVARCHAR, columnType( CLOB ), "char", this )
+						.withTypeCapacity( maxTinyLobLen, "tinytext" )
+						.withTypeCapacity( maxMediumLobLen, "mediumtext" )
+						.withTypeCapacity( maxLobLen, "text" )
+						.build()
+		);
+
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32VARCHAR, columnType( CLOB ), "char", this ) );
+
+		ddlTypeRegistry.addDescriptor(
+				CapacityDependentDdlType.builder( LONGNVARCHAR, columnType( NCLOB ), "char", this )
+						.withTypeCapacity( maxTinyLobLen, "tinytext" )
+						.withTypeCapacity( maxMediumLobLen, "mediumtext" )
+						.withTypeCapacity( maxLobLen, "text" )
+						.build()
+		);
+
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32NVARCHAR, columnType( CLOB ), "char", this ) );
+
+		ddlTypeRegistry.addDescriptor(
+				CapacityDependentDdlType.builder( BLOB, columnType( BLOB ), "binary", this )
+						.withTypeCapacity( maxTinyLobLen, "tinyblob" )
+						.withTypeCapacity( maxMediumLobLen, "mediumblob" )
+						.withTypeCapacity( maxLobLen, "blob" )
+						.build()
+		);
+
+		ddlTypeRegistry.addDescriptor(
+				CapacityDependentDdlType.builder( CLOB, columnType( CLOB ), "char", this )
+						.withTypeCapacity( maxTinyLobLen, "tinytext" )
+						.withTypeCapacity( maxMediumLobLen, "mediumtext" )
+						.withTypeCapacity( maxLobLen, "text" )
+						.build()
+		);
+
+		ddlTypeRegistry.addDescriptor(
+				CapacityDependentDdlType.builder( NCLOB, columnType( NCLOB ), "char", this )
+						.withTypeCapacity( maxTinyLobLen, "tinytext" )
+						.withTypeCapacity( maxMediumLobLen, "mediumtext" )
+						.withTypeCapacity( maxLobLen, "text" )
+						.build()
+		);
 	}
 
 	protected static int getCharacterSetBytesPerCharacter(DatabaseMetaData databaseMetaData) {
@@ -818,72 +899,6 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public int getMaxIdentifierLength() {
 		return 64;
-	}
-
-	@Override
-	public String getCastTypeName(SqlExpressible type, Long length, Integer precision, Integer scale) {
-		final JdbcMapping jdbcMapping = type.getJdbcMapping();
-		final JdbcType jdbcType = jdbcMapping.getJdbcType();
-		final JavaType<?> javaType = jdbcMapping.getJavaTypeDescriptor();
-		switch ( jdbcType.getDefaultSqlTypeCode() ) {
-			case Types.INTEGER:
-			case Types.BIGINT:
-			case Types.SMALLINT:
-			case Types.TINYINT:
-				//MySQL doesn't let you cast to INTEGER/BIGINT/TINYINT
-				return "signed";
-			case Types.BIT:
-				//special case for casting to Boolean
-				return "unsigned";
-			case Types.FLOAT:
-			case Types.DOUBLE:
-			case Types.REAL:
-				//MySQL doesn't let you cast to DOUBLE/FLOAT
-				//but don't just return 'decimal' because
-				//the default scale is 0 (no decimal places)
-				return String.format(
-						"decimal(%d, %d)",
-						precision == null ? javaType.getDefaultSqlPrecision( this, jdbcType ) : precision,
-						scale == null ? javaType.getDefaultSqlScale( this, jdbcType ) : scale
-				);
-			case Types.VARBINARY:
-			case Types.LONGVARBINARY:
-				//MySQL doesn't let you cast to BLOB/TINYBLOB/LONGBLOB
-				if ( length == null ) {
-					return "binary";
-				}
-				return String.format( "binary(%d)", length );
-			case Types.VARCHAR:
-			case Types.LONGVARCHAR:
-				//MySQL doesn't let you cast to TEXT/LONGTEXT
-				if ( length == null ) {
-					return "char";
-				}
-				return String.format( "char(%d)", length );
-			default:
-				return super.getCastTypeName( type, length, precision, scale );
-		}
-	}
-
-	@Override
-	public String getUnboundedTypeName(JdbcType jdbcType, JavaType<?> javaType) {
-		switch ( jdbcType.getDefaultSqlTypeCode() ) {
-			case CHAR:
-			case NCHAR:
-			case VARCHAR:
-			case NVARCHAR:
-			case LONGVARCHAR:
-			case LONGNVARCHAR:
-			case LONG32VARCHAR:
-			case LONG32NVARCHAR:
-				return "char";
-			case BINARY:
-			case VARBINARY:
-			case LONGVARBINARY:
-			case LONG32VARBINARY:
-				return "binary";
-		}
-		return super.getUnboundedTypeName( jdbcType, javaType );
 	}
 
 	@Override

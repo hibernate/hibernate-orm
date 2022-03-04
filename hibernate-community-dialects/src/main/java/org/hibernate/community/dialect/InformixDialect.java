@@ -6,6 +6,7 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.Replacer;
@@ -45,6 +46,7 @@ import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -55,10 +57,26 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.community.dialect.sequence.SequenceInformationExtractorInformixDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-
-import java.sql.Types;
+import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.type.SqlTypes.BIGINT;
+import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.FLOAT;
+import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
+import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
+import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
+import static org.hibernate.type.SqlTypes.LONGNVARCHAR;
+import static org.hibernate.type.SqlTypes.LONGVARBINARY;
+import static org.hibernate.type.SqlTypes.LONGVARCHAR;
+import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.TIME;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.VARBINARY;
+import static org.hibernate.type.SqlTypes.VARCHAR;
 
 /**
  * Dialect for Informix 7.31.UD3 with Informix
@@ -68,7 +86,6 @@ import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtract
  */
 public class InformixDialect extends Dialect {
 
-	private final DatabaseVersion version;
 	private final UniqueDelegate uniqueDelegate;
 	private final LimitHandler limitHandler;
 
@@ -86,28 +103,7 @@ public class InformixDialect extends Dialect {
 	 * Informix type mappings.
 	 */
 	public InformixDialect(DatabaseVersion version) {
-		super();
-		this.version = version;
-
-		registerColumnType( Types.TINYINT, "smallint" );
-		registerColumnType( Types.BIGINT, "int8" );
-
-		//Ingres ignores the precision argument in
-		//float(n) and just always defaults to
-		//double precision.
-		//TODO: return 'smallfloat' when n <= 24
-
-		registerColumnType( Types.TIME, "datetime hour to second" );
-		registerColumnType( Types.TIMESTAMP, "datetime year to fraction($p)" );
-		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "datetime year to fraction($p)" );
-
-		//these types have no defined length
-		registerColumnType( Types.BINARY, "byte" );
-		registerColumnType( Types.VARBINARY, "byte" );
-
-		registerColumnType( Types.VARCHAR, 255, "varchar($l)" );
-		registerColumnType( Types.VARCHAR, getMaxVarcharLength(), "lvarchar($l)" );
-		registerColumnType( Types.VARCHAR, "text" );
+		super(version);
 
 		uniqueDelegate = new InformixUniqueDelegate( this );
 
@@ -120,6 +116,64 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	protected String columnType(int sqlTypeCode) {
+		switch ( sqlTypeCode ) {
+			case TINYINT:
+				return "smallint";
+			case BIGINT:
+				return "int8";
+			case TIME:
+				return "datetime hour to second";
+			case TIMESTAMP:
+			case TIMESTAMP_WITH_TIMEZONE:
+				return "datetime year to fraction($p)";
+			//these types have no defined length
+			case BINARY:
+			case VARBINARY:
+			case LONGVARBINARY:
+			case LONG32VARBINARY:
+				return "byte";
+			case LONGVARCHAR:
+			case LONGNVARCHAR:
+			case LONG32VARCHAR:
+			case LONG32NVARCHAR:
+				return "text";
+			case VARCHAR:
+			case NVARCHAR:
+				return "lvarchar($l)";
+		}
+		return super.columnType( sqlTypeCode );
+	}
+
+	@Override
+	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.registerColumnTypes( typeContributions, serviceRegistry );
+		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+
+		//Ingres ignores the precision argument in
+		//float(n) and just always defaults to
+		//double precision.
+		ddlTypeRegistry.addDescriptor(
+				CapacityDependentDdlType.builder( FLOAT, "float($p)", this )
+						.withTypeCapacity( 24, "smallfloat" )
+						.build()
+		);
+
+		ddlTypeRegistry.addDescriptor(
+				CapacityDependentDdlType.builder( VARCHAR, columnType( LONGVARCHAR ), this )
+						.withTypeCapacity( 255, "varchar($l)" )
+						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
+						.build()
+		);
+		ddlTypeRegistry.addDescriptor(
+				CapacityDependentDdlType.builder( NVARCHAR, columnType( LONGNVARCHAR ), this )
+						.withTypeCapacity( 255, "varchar($l)" )
+						.withTypeCapacity( getMaxVarcharLength(), columnType( NVARCHAR ) )
+						.build()
+		);
+	}
+
+	@Override
 	public int getMaxVarbinaryLength() {
 		//there's no varbinary type, only byte
 		return -1;
@@ -129,11 +183,6 @@ public class InformixDialect extends Dialect {
 	public int getMaxVarcharLength() {
 		//the maximum length of an lvarchar
 		return 32_739;
-	}
-
-	@Override
-	public DatabaseVersion getVersion() {
-		return version;
 	}
 
 	@Override

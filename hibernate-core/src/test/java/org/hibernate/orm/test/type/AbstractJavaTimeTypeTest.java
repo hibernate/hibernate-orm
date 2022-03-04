@@ -57,12 +57,7 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 			return DialectContext.getDialect();
 		}
 		catch (Exception e) {
-			return new Dialect() {
-				@Override
-				public DatabaseVersion getVersion(){
-					return ZERO_VERSION;
-				}
-			};
+			return new Dialect( ZERO_VERSION ) {};
 		}
 	}
 

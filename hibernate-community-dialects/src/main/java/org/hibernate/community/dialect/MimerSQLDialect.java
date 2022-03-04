@@ -6,10 +6,8 @@
  */
 package org.hibernate.community.dialect;
 
-import java.sql.Types;
-
-import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.identity.MimerSQLIdentityColumnSupport;
 import org.hibernate.community.dialect.sequence.MimerSequenceSupport;
 import org.hibernate.community.dialect.sequence.SequenceInformationExtractorMimerSQLDatabaseImpl;
@@ -20,13 +18,13 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -34,10 +32,26 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.descriptor.sql.internal.BinaryFloatDdlType;
+import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
+import static org.hibernate.type.SqlTypes.CHAR;
+import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
+import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
+import static org.hibernate.type.SqlTypes.LONGNVARCHAR;
+import static org.hibernate.type.SqlTypes.LONGVARCHAR;
+import static org.hibernate.type.SqlTypes.NCHAR;
+import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.VARCHAR;
 
 /**
  * A dialect for Mimer SQL 11.
@@ -57,38 +71,56 @@ public class MimerSQLDialect extends Dialect {
 	//   in a cast or function call
 
 	public MimerSQLDialect() {
-		super();
-		//no 'tinyint', so use integer with 3 decimal digits
-		registerColumnType( Types.TINYINT, "integer(3)" );
-
-		//Mimer CHARs are ASCII!!
-		registerColumnType( Types.CHAR, "nchar($l)" );
-		registerColumnType( Types.VARCHAR, 5_000, "nvarchar($l)" );
-		registerColumnType( Types.VARCHAR, "nclob($l)" );
-		registerColumnType( Types.NVARCHAR, 5_000, "nvarchar($l)" );
-		registerColumnType( Types.NVARCHAR, "nclob($l)" );
-
-		registerColumnType( Types.VARBINARY, 15_000, "varbinary($l)" );
-		registerColumnType( Types.VARBINARY, "blob($l)" );
-
-		//default length is 1M, which is quite low
-		registerColumnType( Types.BLOB, "blob($l)" );
-		registerColumnType( Types.CLOB, "nclob($l)" );
-		registerColumnType( Types.NCLOB, "nclob($l)" );
-
-		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)" );
+		super( DatabaseVersion.make( 11 ) );
 	}
 
 	public MimerSQLDialect(DialectResolutionInfo info) {
-		this();
-		registerKeywords( info );
+		super( info );
 	}
 
 	@Override
-	public String getTypeName(int code, Size size) throws HibernateException {
+	protected String columnType(int sqlTypeCode) {
+		switch ( sqlTypeCode ) {
+			//no 'tinyint', so use integer with 3 decimal digits
+			case TINYINT:
+				return "integer(3)";
+			case TIMESTAMP_WITH_TIMEZONE:
+				return columnType( TIMESTAMP );
+			//Mimer CHARs are ASCII!!
+			case CHAR:
+				return columnType( NCHAR );
+			case VARCHAR:
+				return columnType( NVARCHAR );
+			case LONGVARCHAR:
+				return columnType( LONGNVARCHAR );
+			case LONG32VARCHAR:
+				return columnType( LONG32NVARCHAR );
+			case CLOB:
+				return columnType( NCLOB );
+		}
+		return super.columnType( sqlTypeCode );
+	}
+
+	@Override
+	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.registerColumnTypes( typeContributions, serviceRegistry );
+		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+
 		//precision of a Mimer 'float(p)' represents
 		//decimal digits instead of binary digits
-		return super.getTypeName( code, binaryToDecimalPrecision( code, size ) );
+		ddlTypeRegistry.addDescriptor( new BinaryFloatDdlType( this ) );
+
+		//Mimer CHARs are ASCII!!
+		ddlTypeRegistry.addDescriptor(
+				CapacityDependentDdlType.builder( VARCHAR, columnType( LONGVARCHAR ), "nvarchar(" + getMaxNVarcharLength() + ")", this )
+						.withTypeCapacity( getMaxNVarcharLength(), columnType( VARCHAR ) )
+						.build()
+		);
+		ddlTypeRegistry.addDescriptor(
+				CapacityDependentDdlType.builder( LONGVARCHAR, columnType( LONGVARCHAR ), "nvarchar(" + getMaxNVarcharLength() + ")", this )
+						.withTypeCapacity( getMaxNVarcharLength(), columnType( VARCHAR ) )
+						.build()
+		);
 	}
 
 //	@Override

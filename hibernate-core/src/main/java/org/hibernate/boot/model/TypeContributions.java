@@ -7,6 +7,7 @@
 package org.hibernate.boot.model;
 
 import org.hibernate.type.BasicType;
+import org.hibernate.type.CustomType;
 import org.hibernate.type.StandardBasicTypeTemplate;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
@@ -27,25 +28,35 @@ public interface TypeContributions {
 	 * Add the JavaType to the {@link TypeConfiguration}'s
 	 * {@link JavaTypeRegistry}
 	 */
-	void contributeJavaType(JavaType<?> descriptor);
+	default void contributeJavaType(JavaType<?> descriptor) {
+		getTypeConfiguration().getJavaTypeRegistry().addDescriptor( descriptor );
+	}
 
 	/**
 	 * Add the JdbcType to the {@link TypeConfiguration}'s
 	 * {@link JdbcTypeRegistry}
 	 */
-	void contributeJdbcType(JdbcType descriptor);
+	default void contributeJdbcType(JdbcType descriptor) {
+		getTypeConfiguration().getJdbcTypeRegistry().addDescriptor( descriptor );
+	}
 
 	/**
 	 * Registers a UserType as the implicit (auto-applied) type
 	 * for values of type {@link UserType#returnedClass()}
 	 */
-	<T> void contributeType(UserType<T> type);
+	default <T> void contributeType(UserType<T> type) {
+		contributeType( type, type.returnedClass().getName() );
+	}
 
 	/**
 	 * @deprecated See user-guide section `2.2.46. TypeContributor` for details - `basic_types.adoc`
 	 */
 	@Deprecated(since = "6.0")
-	void contributeType(BasicType<?> type);
+	default void contributeType(BasicType<?> type) {
+		getTypeConfiguration().getBasicTypeRegistry().register( type );
+		final JavaType<?> javaType = type.getJavaTypeDescriptor();
+		getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( javaType.getJavaType(), () -> javaType );
+	}
 
 	/**
 	 * @deprecated Use {@link #contributeType(BasicType)} instead.  Basic
@@ -58,7 +69,11 @@ public interface TypeContributions {
 	 * registration keys and call {@link #contributeType(BasicType)} instead
 	 */
 	@Deprecated(since = "5.3")
-	void contributeType(BasicType<?> type, String... keys);
+	default void contributeType(BasicType<?> type, String... keys) {
+		getTypeConfiguration().getBasicTypeRegistry().register( type, keys );
+		final JavaType<?> javaType = type.getJavaTypeDescriptor();
+		getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( javaType.getJavaType(), () -> javaType );
+	}
 
 	/**
 	 * @deprecated Use {@link #contributeType(BasicType)} instead.
@@ -71,5 +86,9 @@ public interface TypeContributions {
 	 * and call {@link #contributeType(BasicType)} instead
 	 */
 	@Deprecated(since = "5.3")
-	void contributeType(UserType<?> type, String... keys);
+	default void contributeType(UserType<?> type, String... keys) {
+		final CustomType<?> customType = getTypeConfiguration().getBasicTypeRegistry().register( type, keys );
+		final JavaType<?> javaType = customType.getJavaTypeDescriptor();
+		getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( javaType.getJavaType(), () -> javaType );
+	}
 }

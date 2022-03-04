@@ -42,6 +42,14 @@ public class DB2iDialect extends DB2Dialect {
 		registerKeywords( info );
 	}
 
+	public DB2iDialect() {
+		this( DatabaseVersion.make(7) );
+	}
+
+	public DB2iDialect(DatabaseVersion version) {
+		super(version);
+	}
+
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
@@ -51,14 +59,6 @@ public class DB2iDialect extends DB2Dialect {
 			functionFactory.inverseDistributionOrderedSetAggregates();
 			functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 		}
-	}
-
-	public DB2iDialect() {
-		this( DatabaseVersion.make(7) );
-	}
-
-	public DB2iDialect(DatabaseVersion version) {
-		super(version);
 	}
 
 	@Override

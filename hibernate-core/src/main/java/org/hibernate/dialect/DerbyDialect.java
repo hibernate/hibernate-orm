@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CastingConcatFunction;
@@ -23,7 +22,6 @@ import org.hibernate.dialect.pagination.DerbyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DerbySequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
@@ -66,6 +64,9 @@ import org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcType;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -105,76 +106,105 @@ public class DerbyDialect extends Dialect {
 
 	public DerbyDialect(DatabaseVersion version) {
 		super(version);
-		registerDerbyKeywords();
 	}
 
 	public DerbyDialect(DialectResolutionInfo info) {
 		super(info);
-		registerDerbyKeywords();
 	}
 
 	@Override
-	protected String columnType(int jdbcTypeCode) {
-		if ( jdbcTypeCode == BOOLEAN && getVersion().isBefore( 10, 7 ) ) {
-			return "smallint";
-		}
-
-		switch (jdbcTypeCode) {
+	protected String columnType(int sqlTypeCode) {
+		switch ( sqlTypeCode ) {
+			case BOOLEAN:
+				return getVersion().isBefore( 10, 7 ) ? "smallint" : super.columnType( sqlTypeCode );
 			case TINYINT:
 				//no tinyint
 				return "smallint";
-
 			case NUMERIC:
 				// HHH-12827: map them both to the same type to avoid problems with schema update
 				// Note that 31 is the maximum precision Derby supports
-				return super.columnType(DECIMAL);
-
+				return columnType( DECIMAL );
 			case VARBINARY:
 				return "varchar($l) for bit data";
-
+			case LONGVARBINARY:
+			case LONG32VARBINARY:
+				return "long varchar for bit data";
+			case NCHAR:
+				return columnType( CHAR );
+			case NVARCHAR:
+				return columnType( VARCHAR );
+			case LONGNVARCHAR:
+				return columnType( LONGVARCHAR );
+			case LONGVARCHAR:
+			case LONG32VARCHAR:
+				return "long varchar";
 			case BLOB:
 				return "blob($l)";
 			case CLOB:
+			case NCLOB:
 				return "clob($l)";
-
 			case TIMESTAMP:
 			case TIMESTAMP_WITH_TIMEZONE:
 				return "timestamp";
-
-			default:
-				return super.columnType(jdbcTypeCode);
 		}
+		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
-	protected void registerDefaultColumnTypes() {
-		super.registerDefaultColumnTypes();
+	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.registerColumnTypes( typeContributions, serviceRegistry );
+		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		//long varchar is the right type to use for lengths between 32_672 and 32_700
 		int maxLongVarcharLength = 32_700;
 
-		registerColumnType( VARBINARY, maxLongVarcharLength,"long varchar for bit data" );
-		registerColumnType( VARCHAR, maxLongVarcharLength, "long varchar" );
+		ddlTypeRegistry.addDescriptor(
+				CapacityDependentDdlType.builder( VARBINARY, columnType( BLOB ), columnType( VARBINARY ), this )
+						.withTypeCapacity( getMaxVarbinaryLength(), columnType( VARBINARY ) )
+						.withTypeCapacity( maxLongVarcharLength, columnType( LONGVARBINARY ) )
+						.build()
+		);
+		ddlTypeRegistry.addDescriptor(
+				CapacityDependentDdlType.builder( VARCHAR, columnType( CLOB ), columnType( VARCHAR ), this )
+						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
+						.withTypeCapacity( maxLongVarcharLength, columnType( LONGVARCHAR ) )
+						.build()
+		);
+		ddlTypeRegistry.addDescriptor(
+				CapacityDependentDdlType.builder( NVARCHAR, columnType( CLOB ), columnType( NVARCHAR ), this )
+						.withTypeCapacity( getMaxVarcharLength(), columnType( NVARCHAR ) )
+						.withTypeCapacity( maxLongVarcharLength, columnType( LONGVARCHAR ) )
+						.build()
+		);
 
-		registerColumnType( BINARY, 254, "char($l) for bit data" );
-		registerColumnType( BINARY, getMaxVarcharLength(), "varchar($l) for bit data" );
-		registerColumnType( BINARY, maxLongVarcharLength, "long varchar for bit data" );
+		ddlTypeRegistry.addDescriptor(
+				CapacityDependentDdlType.builder( BINARY, columnType( BLOB ), columnType( VARBINARY ), this )
+						.withTypeCapacity( 254, "char($l) for bit data" )
+						.withTypeCapacity( getMaxVarbinaryLength(), columnType( VARBINARY ) )
+						.withTypeCapacity( maxLongVarcharLength, columnType( LONGVARBINARY ) )
+						.build()
+		);
+
+		// This is the maximum size for the CHAR datatype on Derby
+		ddlTypeRegistry.addDescriptor(
+				CapacityDependentDdlType.builder( CHAR, columnType( CLOB ), columnType( CHAR ), this )
+						.withTypeCapacity( 254, columnType( CHAR ) )
+						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
+						.withTypeCapacity( maxLongVarcharLength, columnType( LONGVARCHAR ) )
+						.build()
+		);
+		ddlTypeRegistry.addDescriptor(
+				CapacityDependentDdlType.builder( NCHAR, columnType( CLOB ), columnType( NCHAR ), this )
+						.withTypeCapacity( 254, columnType( NCHAR ) )
+						.withTypeCapacity( getMaxVarcharLength(), columnType( NVARCHAR ) )
+						.withTypeCapacity( maxLongVarcharLength, columnType( LONGNVARCHAR ) )
+						.build()
+		);
 	}
 
 	@Override
 	public int getMaxVarcharLength() {
 		return 32_672;
-	}
-
-	@Override
-	public String getTypeName(int code, Size size) throws HibernateException {
-		if ( code == Types.CHAR ) {
-			// This is the maximum size for the CHAR datatype on Derby
-			if ( size.getLength() > 254 ) {
-				return "char(254)";
-			}
-		}
-		return super.getTypeName( code, size );
 	}
 
 	@Override
@@ -228,7 +258,8 @@ public class DerbyDialect extends Dialect {
 						queryEngine.getTypeConfiguration(),
 						SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER,
 						"||",
-						getCastTypeName( stringType, null, null, null ),
+						queryEngine.getTypeConfiguration().getDdlTypeRegistry().getDescriptor( VARCHAR )
+								.getCastTypeName( stringType, null, null, null ),
 						true
 				)
 		);
@@ -370,6 +401,15 @@ public class DerbyDialect extends Dialect {
 					case LONG:
 					case FIXED:
 						return "cast(trim(cast(?1 as char(254))) as ?2)";
+					case DATE:
+						// The maximum length of a date
+						return "cast(?1 as varchar(10))";
+					case TIME:
+						// The maximum length of a time
+						return "cast(?1 as varchar(8))";
+					case TIMESTAMP:
+						// The maximum length of a timestamp
+						return "cast(?1 as varchar(30))";
 				}
 				break;
 		}
@@ -435,7 +475,7 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
-	public String getSelectClauseNullString(int sqlType) {
+	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		return DB2Dialect.selectNullString( sqlType );
 	}
 
@@ -597,7 +637,9 @@ public class DerbyDialect extends Dialect {
 		throw new NotYetImplementedFor6Exception("format() function not supported on Derby");
 	}
 
-	private void registerDerbyKeywords() {
+	@Override
+	protected void registerDefaultKeywords() {
+		super.registerDefaultKeywords();
 		registerKeyword( "ADD" );
 		registerKeyword( "ALL" );
 		registerKeyword( "ALLOCATE" );

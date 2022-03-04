@@ -36,10 +36,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.UUID;
 import java.util.regex.Pattern;
 
-import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -108,8 +106,6 @@ import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
@@ -150,7 +146,6 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
@@ -160,6 +155,9 @@ import org.hibernate.type.descriptor.jdbc.NCharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.NVarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
+import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
@@ -189,8 +187,8 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * <p>
  * Almost every subclass must, as a bare minimum, override at least:
  * <ul>
- *     <li>{@link #columnType(int)} to define a mapping from JDBC
- *     {@linkplain Types type codes} to database column types, and
+ *     <li>{@link #registerColumnTypes(TypeContributions, ServiceRegistry)} to define a mapping from SQL
+ *     {@linkplain SqlTypes type codes} to database column types, and
  *     <li>{@link #initializeFunctionRegistry(QueryEngine)} to register
  *     mappings for standard HQL functions with the
  *     {@link org.hibernate.query.sqm.function.SqmFunctionRegistry}.
@@ -233,10 +231,7 @@ public abstract class Dialect implements ConversionContext {
 	private static final Pattern ESCAPE_OPENING_COMMENT_PATTERN = Pattern.compile( "/\\*" );
 
 	//needed for converting precision from decimal to binary digits
-	private static final double LOG_BASE2OF10 = log(10)/log(2);
-
-	private final TypeNames typeNames = new TypeNames();
-	private final TypeNames hibernateTypeNames = new TypeNames();
+	protected static final double LOG_BASE2OF10 = log(10)/log(2);
 
 	private final Properties properties = new Properties();
 	private final Set<String> sqlKeywords = new HashSet<>();
@@ -259,18 +254,12 @@ public abstract class Dialect implements ConversionContext {
 
 	protected Dialect(DatabaseVersion version) {
 		this.version = version;
-		beforeRegisteringColumnTypes(version);
-		registerDefaultColumnTypes();
-		registerHibernateTypes();
 		registerDefaultKeywords();
 		initDefaultProperties();
 	}
 
 	protected Dialect(DialectResolutionInfo info) {
 		this.version = info.makeCopy();
-		beforeRegisteringColumnTypes(info);
-		registerDefaultColumnTypes();
-		registerHibernateTypes();
 		registerDefaultKeywords();
 		registerKeywords(info);
 		initDefaultProperties();
@@ -289,125 +278,91 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Called right before {@link #registerDefaultColumnTypes()}, allowing
-	 * the subclass to do something with the {@link DialectResolutionInfo}.
-	 * <p>
-	 * Take care when overriding this method: it's only called when the
-	 * {@code Dialect} is constructed using {@code Dialect(DialectResolutionInfo)}.
-	 */
-	protected void beforeRegisteringColumnTypes(DialectResolutionInfo info) {}
-
-	/**
-	 * Called right before {@link #registerDefaultColumnTypes()}.
-	 * <p>
-	 * Take care when overriding this method: it's only called when the
-	 * {@code Dialect} is constructed using {@code Dialect(DatabaseVersion)}.
-	 */
-	protected void beforeRegisteringColumnTypes(DatabaseVersion version) {}
-
-	/**
 	 * Register ANSI-standard column types using the length limits defined
 	 * by {@link #getMaxVarcharLength()}, {@link #getMaxNVarcharLength()},
 	 * and {@link #getMaxVarbinaryLength()}.
 	 * <p>
 	 * This method is always called when a {@code Dialect} is instantiated.
 	 */
-	protected void registerDefaultColumnTypes() {
-		registerDefaultColumnTypes( getMaxVarcharLength(), getMaxNVarcharLength(), getMaxVarbinaryLength() );
+	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+
+		ddlTypeRegistry.addDescriptor( simpleSqlType( BOOLEAN ) );
+
+		ddlTypeRegistry.addDescriptor( simpleSqlType( TINYINT ) );
+		ddlTypeRegistry.addDescriptor( simpleSqlType( SMALLINT ) );
+		ddlTypeRegistry.addDescriptor( simpleSqlType( INTEGER ) );
+		ddlTypeRegistry.addDescriptor( simpleSqlType( BIGINT ) );
+
+		ddlTypeRegistry.addDescriptor( simpleSqlType( FLOAT ) );
+		ddlTypeRegistry.addDescriptor( simpleSqlType( REAL ) );
+		ddlTypeRegistry.addDescriptor( simpleSqlType( DOUBLE ) );
+
+		ddlTypeRegistry.addDescriptor( simpleSqlType( NUMERIC ) );
+		ddlTypeRegistry.addDescriptor( simpleSqlType( DECIMAL ) );
+
+		ddlTypeRegistry.addDescriptor( simpleSqlType( DATE ) );
+		ddlTypeRegistry.addDescriptor( simpleSqlType( TIME ) );
+		ddlTypeRegistry.addDescriptor( simpleSqlType( TIME_WITH_TIMEZONE ) );
+		ddlTypeRegistry.addDescriptor( simpleSqlType( TIMESTAMP ) );
+		ddlTypeRegistry.addDescriptor( simpleSqlType( TIMESTAMP_WITH_TIMEZONE ) );
+
+		ddlTypeRegistry.addDescriptor( simpleSqlType( CHAR ) );
+		ddlTypeRegistry.addDescriptor(
+				sqlTypeBuilder( VARCHAR, LONGVARCHAR, VARCHAR )
+						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
+						.build()
+		);
+		ddlTypeRegistry.addDescriptor(
+				sqlTypeBuilder( LONGVARCHAR, LONGVARCHAR, VARCHAR )
+						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
+						.build()
+		);
+		ddlTypeRegistry.addDescriptor( simpleSqlType( CLOB ) );
+
+		ddlTypeRegistry.addDescriptor( simpleSqlType( NCHAR ) );
+		ddlTypeRegistry.addDescriptor(
+				sqlTypeBuilder( NVARCHAR, LONGNVARCHAR, NVARCHAR )
+						.withTypeCapacity( getMaxNVarcharLength(), columnType( NVARCHAR ) )
+						.build()
+		);
+		ddlTypeRegistry.addDescriptor(
+				sqlTypeBuilder( LONGNVARCHAR, LONGNVARCHAR, NVARCHAR )
+						.withTypeCapacity( getMaxNVarcharLength(), columnType( NVARCHAR ) )
+						.build()
+		);
+		ddlTypeRegistry.addDescriptor( simpleSqlType( NCLOB ) );
+
+		ddlTypeRegistry.addDescriptor( simpleSqlType( BINARY ) );
+		ddlTypeRegistry.addDescriptor(
+				sqlTypeBuilder( VARBINARY, LONGVARBINARY, VARBINARY )
+						.withTypeCapacity( getMaxVarbinaryLength(), columnType( VARBINARY ) )
+						.build()
+		);
+		ddlTypeRegistry.addDescriptor(
+				sqlTypeBuilder( LONGVARBINARY, LONGVARBINARY, VARBINARY )
+						.withTypeCapacity( getMaxVarbinaryLength(), columnType( VARBINARY ) )
+						.build()
+		);
+		ddlTypeRegistry.addDescriptor( simpleSqlType( BLOB ) );
+
+		// by default use the LOB mappings for the "long" types
+		ddlTypeRegistry.addDescriptor( simpleSqlType( LONG32VARCHAR ) );
+		ddlTypeRegistry.addDescriptor( simpleSqlType( LONG32NVARCHAR ) );
+		ddlTypeRegistry.addDescriptor( simpleSqlType( LONG32VARBINARY ) );
 	}
 
-	/**
-	 * Register an ANSI-standard column type for each JDBC type defined
-	 * by {@link Types}. These mappings may be overridden by a concrete
-	 * {@code Dialect} by calling {@link #registerColumnType(int,String)}
-	 * from the constructor.
-	 * <p>
-	 * The "long" types {@link Types#LONGVARCHAR}, {@link Types#LONGNVARCHAR}
-	 * and {@link Types#LONGVARBINARY} are considered synonyms for their
-	 * non-{@code LONG} counterparts, with the only difference being that
-	 * a different default length is used: {@link org.hibernate.Length#LONG}
-	 * instead of {@link org.hibernate.Length#DEFAULT}.
-	 * <p>
-	 * This method is aware of the notion of a maximum length for each of
-	 * the types {@link Types#VARCHAR}, {@link Types#NVARCHAR}, and
-	 * {@link Types#VARBINARY}, usually the limits defined by
-	 * {@link #getMaxVarcharLength()}, {@link #getMaxNVarcharLength()},
-	 * and {@link #getMaxVarbinaryLength()}, and registers "long32" types,
-	 * that is, {@link org.hibernate.Length#LONG32} types, for lengths
-	 * exceeding the limits.
-	 * <p>
-	 * Any registrations made by this method may be overridden by calling
-	 * {@link #registerColumnType(int, String)} explicitly. Alternatively,
-	 * the registrations may be customized by overriding
-	 * {@link #getSupportedJdbcTypeCodes()} and {@link #columnType(int)}.
-	 *
-	 * @param maxVarcharLength the maximum length of the {@link Types#VARCHAR} type
-	 * @param maxNVarcharLength the maximum length of the {@link Types#NVARCHAR} type
-	 * @param maxVarBinaryLength the maximum length of the {@link Types#VARBINARY} type
-	 */
-	protected void registerDefaultColumnTypes(int maxVarcharLength, int maxNVarcharLength, int maxVarBinaryLength) {
-		for ( int typeCode : getSupportedJdbcTypeCodes() ) {
-			switch (typeCode) {
-				case VARCHAR:
-					registerColumnType( typeCode, maxVarcharLength, columnType(typeCode) );
-					// we look up the "long" type under the code LONG32VARCHAR
-					// which by default returns the CLOB type
-					registerColumnType( typeCode, columnType(LONG32VARCHAR) );
-					break;
-				case NVARCHAR:
-					registerColumnType( typeCode, maxNVarcharLength, columnType(typeCode) );
-					// we look up the "long" type under the code LONG32NVARCHAR
-					// which by default returns the NCLOB type
-					registerColumnType( typeCode, columnType(LONG32NVARCHAR) );
-					break;
-				case VARBINARY:
-					registerColumnType( typeCode, maxVarBinaryLength, columnType(typeCode) );
-					// we look up the "long" type under the code LONG32VARBINARY
-					// which by default returns the BLOB type
-					registerColumnType( typeCode, columnType(LONG32VARBINARY) );
-					break;
-				default:
-					registerColumnType( typeCode, columnType(typeCode) );
-			}
-		}
+	private DdlTypeImpl simpleSqlType(int sqlTypeCode) {
+		return new DdlTypeImpl( sqlTypeCode, columnType( sqlTypeCode ), castType( sqlTypeCode ), this );
 	}
 
-	/**
-	 * A list of JDBC types that we expect to be supported on all databases.
-	 */
-	private static final List<Integer> ANSI_SQL_TYPES = List.of(
-			BOOLEAN,
-			TINYINT, SMALLINT, INTEGER, BIGINT,
-			REAL, FLOAT, DOUBLE,
-			NUMERIC, DECIMAL,
-			DATE,
-			TIME, TIME_WITH_TIMEZONE,
-			TIMESTAMP, TIMESTAMP_WITH_TIMEZONE,
-			CHAR, VARCHAR, CLOB,
-			NCHAR, NVARCHAR, NCLOB,
-			BINARY, VARBINARY, BLOB
-	);
-
-	/**
-	 * The JDBC type codes of types supported by this SQL dialect, from the lists
-	 * defined by {@link Types} and {@link SqlTypes}.
-	 * <p>
-	 * This method may be overridden by concrete {@code Dialect}s as an alternative
-	 * to calling {@link #registerColumnType(int, String)}. In this case,
-	 * {@link #columnType(int)} should also be overridden.
-	 * <p>
-	 * Note that {@link Types#LONGVARCHAR}, {@link Types#LONGNVARCHAR} and
-	 * {@link Types#LONGVARBINARY} are considered synonyms for their
-	 * non-{@code LONG} counterparts, and should not be included in the returned
-	 * array.
-	 *
-	 * @return an array of types from {@link SqlTypes}
-	 *
-	 * @see SqlTypes
-	 * @see #columnType(int)
-	 */
-	protected List<Integer> getSupportedJdbcTypeCodes() {
-		return ANSI_SQL_TYPES;
+	private CapacityDependentDdlType.Builder sqlTypeBuilder(int sqlTypeCode, int biggestSqlTypeCode, int castTypeCode) {
+		return CapacityDependentDdlType.builder(
+				sqlTypeCode,
+				columnType( biggestSqlTypeCode ),
+				castType( castTypeCode ),
+				this
+		);
 	}
 
 	/**
@@ -416,16 +371,15 @@ public abstract class Dialect implements ConversionContext {
 	 * name.
 	 * <p>
 	 * This method may be overridden by concrete {@code Dialect}s as an alternative
-	 * to calling {@link #registerColumnType(int,String)}.
+	 * to {@link #registerColumnTypes(TypeContributions, ServiceRegistry)} for simple registrations.
 	 *
-	 * @param jdbcTypeCode a JDBC type code
+	 * @param sqlTypeCode a SQL type code
 	 * @return a column type name, with $l, $p, $s placeholders for length, precision, scale
 	 *
 	 * @see SqlTypes
-	 * @see #getSupportedJdbcTypeCodes()
 	 */
-	protected String columnType(int jdbcTypeCode) {
-		switch (jdbcTypeCode) {
+	protected String columnType(int sqlTypeCode) {
+		switch ( sqlTypeCode ) {
 			case BOOLEAN:
 				return "boolean";
 
@@ -494,57 +448,23 @@ public abstract class Dialect implements ConversionContext {
 				return "blob";
 
 			// by default use the LOB mappings for the "long" types
+			case LONGVARCHAR:
 			case LONG32VARCHAR:
-				return columnType(CLOB);
+				return columnType( CLOB );
+			case LONGNVARCHAR:
 			case LONG32NVARCHAR:
-				return columnType(NCLOB);
+				return columnType( NCLOB );
+			case LONGVARBINARY:
 			case LONG32VARBINARY:
-				return columnType(BLOB);
+				return columnType( BLOB );
 
 			default:
-				throw new IllegalArgumentException("unknown type: " + jdbcTypeCode);
+				throw new IllegalArgumentException( "unknown type: " + sqlTypeCode );
 		}
 	}
 
-	protected void registerHibernateTypes() {
-		// register hibernate types for default use in scalar sqlquery type auto detection
-		registerHibernateType( Types.BOOLEAN, StandardBasicTypes.BOOLEAN.getName() );
-
-		registerHibernateType( Types.BIT, 64, StandardBasicTypes.LONG.getName() );
-		registerHibernateType( Types.BIT, 32, StandardBasicTypes.INTEGER.getName() );
-		registerHibernateType( Types.BIT, 16, StandardBasicTypes.SHORT.getName() );
-		registerHibernateType( Types.BIT, 8, StandardBasicTypes.BYTE.getName() );
-		registerHibernateType( Types.BIT, 1, StandardBasicTypes.BOOLEAN.getName() );
-
-		registerHibernateType( Types.REAL, StandardBasicTypes.FLOAT.getName() );
-		registerHibernateType( Types.DOUBLE, StandardBasicTypes.DOUBLE.getName() );
-		registerHibernateType( Types.FLOAT, StandardBasicTypes.DOUBLE.getName() );
-		registerHibernateType( Types.NUMERIC, StandardBasicTypes.BIG_DECIMAL.getName() );
-		registerHibernateType( Types.DECIMAL, StandardBasicTypes.BIG_DECIMAL.getName() );
-
-		registerHibernateType( Types.BIGINT, StandardBasicTypes.LONG.getName() );
-		registerHibernateType( Types.INTEGER, StandardBasicTypes.INTEGER.getName() );
-		registerHibernateType( Types.SMALLINT, StandardBasicTypes.SHORT.getName() );
-		registerHibernateType( Types.TINYINT, StandardBasicTypes.BYTE.getName() );
-
-		registerHibernateType( Types.CHAR, 1, StandardBasicTypes.CHARACTER.getName() );
-		registerHibernateType( Types.CHAR, StandardBasicTypes.STRING.getName() );
-		registerHibernateType( Types.VARCHAR, 1, StandardBasicTypes.CHARACTER.getName() );
-		registerHibernateType( Types.VARCHAR, StandardBasicTypes.STRING.getName() );
-		registerHibernateType( Types.NVARCHAR, StandardBasicTypes.NSTRING.getName() );
-		registerHibernateType( Types.LONGVARCHAR, StandardBasicTypes.TEXT.getName() );
-		registerHibernateType( Types.LONGNVARCHAR, StandardBasicTypes.NTEXT.getName() );
-
-		registerHibernateType( Types.BINARY, StandardBasicTypes.BINARY.getName() );
-		registerHibernateType( Types.VARBINARY, StandardBasicTypes.BINARY.getName() );
-		registerHibernateType( Types.LONGVARBINARY, StandardBasicTypes.IMAGE.getName() );
-
-		registerHibernateType( Types.BLOB, StandardBasicTypes.BLOB.getName() );
-		registerHibernateType( Types.CLOB, StandardBasicTypes.CLOB.getName() );
-
-		registerHibernateType( Types.DATE, StandardBasicTypes.DATE.getName() );
-		registerHibernateType( Types.TIME, StandardBasicTypes.TIME.getName() );
-		registerHibernateType( Types.TIMESTAMP, StandardBasicTypes.TIMESTAMP.getName() );
+	protected String castType(int sqlTypeCode) {
+		return columnType( sqlTypeCode );
 	}
 
 	protected void registerDefaultKeywords() {
@@ -586,19 +506,6 @@ public abstract class Dialect implements ConversionContext {
 		else {
 			return precision;
 		}
-	}
-
-	/**
-	 * Useful conversion for databases which represent the
-	 * precision of a float(p) using p expressed in decimal
-	 * digits instead of the usual (standard) binary digits.
-	 */
-	protected static Size binaryToDecimalPrecision(int code, Size size) {
-		return code == Types.FLOAT
-				&& size != null
-				&& size.getPrecision() != null
-				? Size.precision( (int) Math.ceil( size.getPrecision() / LOG_BASE2OF10 ) )
-				: size;
 	}
 
 	/**
@@ -1337,7 +1244,7 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		// by default, not much to do...
-
+		registerColumnTypes( typeContributions, serviceRegistry );
 		final NationalizationSupport nationalizationSupport = getNationalizationSupport();
 		if ( nationalizationSupport == NationalizationSupport.EXPLICIT ) {
 			typeContributions.contributeJdbcType( NCharJdbcType.INSTANCE );
@@ -1352,183 +1259,6 @@ public abstract class Dialect implements ConversionContext {
 					ClobJdbcType.STREAM_BINDING
 			);
 		}
-	}
-
-	/**
-	 * Get the name of the database type associated with the given
-	 * {@link SqlTypes} typecode, with no length, precision,
-	 * or scale.
-	 *
-	 * @param code The {@link SqlTypes} typecode
-	 * @return the database type name
-	 * @throws HibernateException If no mapping was specified for that type.
-	 */
-	public String getRawTypeName(int code) throws HibernateException {
-		final String result = typeNames.get( code );
-		if ( result == null ) {
-			throw new HibernateException( "No default type mapping for (org.hibernate.type.SqlTypes) " + code );
-		}
-		//trim off the length/precision/scale
-		final int paren = result.indexOf('(');
-		return paren>0 ? result.substring(0, paren) : result;
-	}
-
-	public String getRawTypeName(JdbcType jdbcType) throws HibernateException {
-		return getRawTypeName( jdbcType.getDefaultSqlTypeCode() );
-	}
-
-	public String getTypeName(JdbcType jdbcType) throws HibernateException {
-		return getTypeName( jdbcType.getDefaultSqlTypeCode() );
-	}
-
-	public String getTypeName(int code) throws HibernateException {
-		// explicitly enforce dialect's default precisions
-		switch ( code ) {
-			case Types.DECIMAL:
-			case Types.NUMERIC:
-				return getTypeName( code, Size.precision( getDefaultDecimalPrecision() ) );
-			case Types.FLOAT:
-			case Types.REAL:
-				return getTypeName( code, Size.precision( getFloatPrecision() ) );
-			case Types.DOUBLE:
-				return getTypeName( code, Size.precision( getDoublePrecision() ) );
-			case Types.TIMESTAMP:
-			case Types.TIMESTAMP_WITH_TIMEZONE:
-				return getTypeName( code, Size.precision( getDefaultTimestampPrecision() ) );
-			default:
-				return getTypeName( code, Size.nil() );
-		}
-	}
-
-	/**
-	 * Get the name of the database type associated with the given
-	 * {@code org.hibernate.type.SqlTypes} typecode.
-	 *
-	 * @param code {@code org.hibernate.type.SqlTypes} typecode
-	 * @param size the length, precision, scale of the column
-	 *
-	 * @return the database type name
-	 *
-	 */
-	public String getTypeName(int code, Size size) throws HibernateException {
-		String result = typeNames.get( code, size.getLength(), size.getPrecision(), size.getScale() );
-		if ( result == null ) {
-			switch ( code ) {
-				// these are no longer considered separate column types as such
-				// they're just used to indicate that JavaType.getLongSqlLength()
-				// should be used by default (and that's already handled by the
-				// time we get to here)
-				case Types.LONGVARCHAR:
-					return getTypeName( Types.VARCHAR, size );
-				case Types.LONGNVARCHAR:
-					return getTypeName( Types.NVARCHAR, size );
-				case Types.LONGVARBINARY:
-					return getTypeName( Types.VARBINARY, size );
-			}
-			throw new HibernateException(
-					String.format(
-							"No type mapping for java.sql.Types code: %s, length: %s",
-							code,
-							size.getLength()
-					)
-			);
-		}
-		return result;
-	}
-
-	/**
-	 * Get the name of the database type associated with the given
-	 * {@code SqlTypeDescriptor}.
-	 *
-	 * @param jdbcType the SQL type
-	 * @param size the length, precision, scale of the column
-	 *
-	 * @return the database type name
-	 *
-	 */
-	public String getTypeName(JdbcType jdbcType, Size size) {
-		return getTypeName( jdbcType.getDefaultSqlTypeCode(), size );
-	}
-
-	/**
-	 * Get the name of the database type appropriate for casting operations
-	 * (via the CAST() SQL function) for the given {@link SqlExpressible}
-	 * SQL type.
-	 *
-	 * @return The database type name
-	 */
-	public String getCastTypeName(SqlExpressible type, Long length, Integer precision, Integer scale) {
-		final JdbcMapping jdbcMapping = type.getJdbcMapping();
-		final JdbcType jdbcType = jdbcMapping.getJdbcType();
-		final JavaType<?> javaType = jdbcMapping.getJavaTypeDescriptor();
-		Size size;
-		if ( length == null && precision == null ) {
-			return getUnboundedTypeName( jdbcType, javaType );
-		}
-		else {
-			//use the given length/precision/scale
-			if ( precision != null && scale == null ) {
-				//needed for cast(x as BigInteger(p))
-				scale = javaType.getDefaultSqlScale( Dialect.this, jdbcType );
-			}
-			size = new Size()
-					.setLength( length )
-					.setPrecision( precision )
-					.setScale( scale );
-		}
-
-		return getTypeName( jdbcType, size );
-	}
-
-	public String getUnboundedTypeName(JdbcType jdbcType, JavaType<?> javaType) {
-		Long length = null;
-		Integer precision = null;
-		Integer scale = null;
-		switch ( jdbcType.getDefaultSqlTypeCode() ) {
-			case VARCHAR:
-				length = (long) getMaxVarcharLength();
-				break;
-			case NVARCHAR:
-				length = (long) getMaxNVarcharLength();
-				break;
-			case VARBINARY:
-				length = (long) getMaxVarbinaryLength();
-				break;
-		}
-		return getTypeName(
-				jdbcType,
-				getSizeStrategy().resolveSize(
-						jdbcType,
-						javaType,
-						precision,
-						scale,
-						length
-				)
-		);
-	}
-
-	/**
-	 * Subclasses register a type name for the given type code and maximum
-	 * column length. {@code $l} in the type name with be replaced by the
-	 * column length (if appropriate).
-	 *
-	 * @param code The {@link Types} typecode
-	 * @param capacity The maximum length of database type
-	 * @param name The database type name
-	 */
-	protected void registerColumnType(int code, long capacity, String name) {
-		typeNames.put( code, capacity, name );
-	}
-
-	/**
-	 * Subclasses register a type name for the given type code. {@code $l} in
-	 * the type name with be replaced by the column length (if appropriate).
-	 *
-	 * @param code The {@link Types} typecode
-	 * @param name The database type name
-	 */
-	protected void registerColumnType(int code, String name) {
-		typeNames.put( code, name );
 	}
 
 	/**
@@ -1676,87 +1406,6 @@ public abstract class Dialect implements ConversionContext {
 
 	public LobMergeStrategy getLobMergeStrategy() {
 		return NEW_LOCATOR_LOB_MERGE_STRATEGY;
-	}
-
-
-	// hibernate type mapping support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	/**
-	 * Get the name of the Hibernate {@link Type} associated with the given
-	 * {@link Types} type code.
-	 *
-	 * @param code The {@link Types} type code
-	 * @return The Hibernate {@link Type} name.
-	 * @throws HibernateException If no mapping was specified for that type.
-	 */
-	@SuppressWarnings("UnusedDeclaration")
-	public String getHibernateTypeName(int code) throws HibernateException {
-		final String result = hibernateTypeNames.get( code );
-		if ( result == null ) {
-			throw new HibernateException( "No Hibernate type mapping for java.sql.Types code: " + code );
-		}
-		return result;
-	}
-
-	/**
-	 * Whether or not the given type name has been registered for this dialect (including both hibernate type names and
-	 * custom-registered type names).
-	 *
-	 * @param typeName the type name.
-	 *
-	 * @return true if the given string has been registered either as a hibernate type or as a custom-registered one
-	 */
-	public boolean isTypeNameRegistered(final String typeName) {
-		return this.typeNames.containsTypeName( typeName );
-	}
-
-	/**
-	 * Get the name of the Hibernate {@link Type} associated
-	 * with the given {@link Types} typecode with the given storage
-	 * specification parameters.
-	 *
-	 * @param code The {@link Types} typecode
-	 * @param length The datatype length
-	 * @param precision The datatype precision
-	 * @param scale The datatype scale
-	 * @return The Hibernate {@link Type} name.
-	 * @throws HibernateException If no mapping was specified for that type.
-	 */
-	public String getHibernateTypeName(int code, Integer length, Integer precision, Integer scale) throws HibernateException {
-		final String result = hibernateTypeNames.get( code, length.longValue(), precision, scale );
-		if ( result == null ) {
-			throw new HibernateException(
-					String.format(
-							"No Hibernate type mapping for type [code=%s, length=%s]",
-							code,
-							length
-					)
-			);
-		}
-		return result;
-	}
-
-	/**
-	 * Registers a Hibernate {@link Type} name for the given
-	 * {@link Types} type code and maximum column length.
-	 *
-	 * @param code The {@link Types} typecode
-	 * @param capacity The maximum length of database type
-	 * @param name The Hibernate {@link Type} name
-	 */
-	protected void registerHibernateType(int code, long capacity, String name) {
-		hibernateTypeNames.put( code, capacity, name );
-	}
-
-	/**
-	 * Registers a Hibernate {@link Type} name for the given
-	 * {@link Types} type code.
-	 *
-	 * @param code The {@link Types} typecode
-	 * @param name The Hibernate {@link Type} name
-	 */
-	protected void registerHibernateType(int code, String name) {
-		hibernateTypeNames.put( code, name );
 	}
 
 
@@ -2383,9 +2032,10 @@ public abstract class Dialect implements ConversionContext {
 	 * will be part of a UNION/UNION ALL.
 	 *
 	 * @param sqlType The {@link Types} type code.
+	 * @param typeConfiguration The type configuration
 	 * @return The appropriate select clause value fragment.
 	 */
-	public String getSelectClauseNullString(int sqlType) {
+	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		return "null";
 	}
 
@@ -3998,7 +3648,7 @@ public abstract class Dialect implements ConversionContext {
 				case Types.REAL:
 					// this is almost always the thing we use:
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
-					if (scale != null && scale!=0) {
+					if ( scale != null && scale != 0 ) {
 						throw new IllegalArgumentException("scale has no meaning for floating point numbers");
 					}
 					// but if the user explicitly specifies a precision, we need to convert it:
@@ -4011,7 +3661,7 @@ public abstract class Dialect implements ConversionContext {
 				case Types.TIMESTAMP:
 				case Types.TIMESTAMP_WITH_TIMEZONE:
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
-					if (scale != null && scale!=0) {
+					if ( scale != null && scale != 0 ) {
 						throw new IllegalArgumentException("scale has no meaning for timestamps");
 					}
 					break;
@@ -4019,9 +3669,10 @@ public abstract class Dialect implements ConversionContext {
 				case Types.DECIMAL:
 				case SqlTypes.INTERVAL_SECOND:
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
-					size.setScale( javaType.getDefaultSqlScale( Dialect.this, jdbcType ) );
 					break;
 			}
+
+			size.setScale( javaType.getDefaultSqlScale( Dialect.this, jdbcType ) );
 
 			if ( precision != null ) {
 				size.setPrecision( precision );

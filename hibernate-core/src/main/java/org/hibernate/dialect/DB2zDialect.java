@@ -65,12 +65,12 @@ public class DB2zDialect extends DB2Dialect {
 	}
 
 	@Override
-	protected String columnType(int jdbcTypeCode) {
-		// See https://www.ibm.com/support/knowledgecenter/SSEPEK_10.0.0/wnew/src/tpc/db2z_10_timestamptimezone.html
-		if ( jdbcTypeCode==TIMESTAMP_WITH_TIMEZONE && getVersion().isAfter(10) ) {
+	protected String columnType(int sqlTypeCode) {
+		if ( sqlTypeCode == TIMESTAMP_WITH_TIMEZONE && getVersion().isAfter( 10 ) ) {
+			// See https://www.ibm.com/support/knowledgecenter/SSEPEK_10.0.0/wnew/src/tpc/db2z_10_timestamptimezone.html
 			return "timestamp with time zone";
 		}
-		return super.columnType(jdbcTypeCode);
+		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

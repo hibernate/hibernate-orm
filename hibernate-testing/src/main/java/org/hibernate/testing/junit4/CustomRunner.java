@@ -233,12 +233,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 			return DialectContext.getDialect();
 		}
 		catch (Exception e) {
-			return new Dialect() {
-				@Override
-				public DatabaseVersion getVersion() {
-					return ZERO_VERSION;
-				}
-			};
+			return new Dialect( ZERO_VERSION ) {};
 		}
 	}
 

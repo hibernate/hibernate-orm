@@ -138,7 +138,10 @@ public class SelfRenderingFunctionSqlAstExpression
 	}
 
 	@Override
-	public String getTemplate(Dialect dialect, SqmFunctionRegistry functionRegistry) {
+	public String getTemplate(
+			Dialect dialect,
+			TypeConfiguration typeConfiguration,
+			SqmFunctionRegistry functionRegistry) {
 		return null;
 	}
 

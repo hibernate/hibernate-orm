@@ -14,6 +14,7 @@ import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
@@ -48,6 +49,26 @@ import org.jboss.logging.Logger;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
+import static org.hibernate.type.SqlTypes.BIGINT;
+import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BLOB;
+import static org.hibernate.type.SqlTypes.BOOLEAN;
+import static org.hibernate.type.SqlTypes.CHAR;
+import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
+import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
+import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
+import static org.hibernate.type.SqlTypes.LONGNVARCHAR;
+import static org.hibernate.type.SqlTypes.LONGVARBINARY;
+import static org.hibernate.type.SqlTypes.LONGVARCHAR;
+import static org.hibernate.type.SqlTypes.NCHAR;
+import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.VARBINARY;
+import static org.hibernate.type.SqlTypes.VARCHAR;
 
 /**
  * This is the Hibernate dialect for the Unisys 2200 Relational Database (RDMS).
@@ -71,10 +92,17 @@ public class RDMSOS2200Dialect extends Dialect {
 	 * Constructs a RDMSOS2200Dialect
 	 */
 	public RDMSOS2200Dialect() {
-		super();
+		super( SimpleDatabaseVersion.ZERO_VERSION );
 		// Display the dialect version.
 		LOG.rdmsOs2200Dialect();
+	}
 
+	public RDMSOS2200Dialect(DialectResolutionInfo info) {
+		super( info );
+	}
+
+	@Override
+	protected String columnType(int sqlTypeCode) {
 		/*
 		 * For a list of column types to register, see section A-1
 		 * in 7862 7395, the Unisys JDBC manual.
@@ -100,28 +128,39 @@ public class RDMSOS2200Dialect extends Dialect {
 		 * Note that $l (dollar-L) will use the length value if provided.
 		 * Also new for Hibernate3 is the $p percision and $s (scale) parameters
 		 */
-		registerColumnType( Types.BOOLEAN, "smallint" );
-		registerColumnType( Types.TINYINT, "smallint" );
-		registerColumnType( Types.BIGINT, "numeric(19,0)" );
-		registerColumnType( Types.BLOB, "blob($l)" );
-
-		//no 'binary' nor 'varbinary' so use 'blob'
-		registerColumnType( Types.BINARY, "blob($l)" );
-		registerColumnType( Types.VARBINARY, "blob($l)" );
-
-		//'varchar' is not supported in RDMS for OS 2200
-		//(but it is for other flavors of RDMS)
-		//'character' means ASCII by default, 'unicode(n)'
-		//means 'character(n) character set "UCS-2"'
-		registerColumnType( Types.CHAR, "unicode($l)" );
-		registerColumnType( Types.VARCHAR, getMaxVarcharLength(), "unicode($l)" );
-
-		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)" );
-	}
-
-	public RDMSOS2200Dialect(DialectResolutionInfo info) {
-		this();
-		registerKeywords( info );
+		switch ( sqlTypeCode ) {
+			case BOOLEAN:
+			case TINYINT:
+				return "smallint";
+			case BIGINT:
+				return "numeric(19,0)";
+			//'varchar' is not supported in RDMS for OS 2200
+			//(but it is for other flavors of RDMS)
+			//'character' means ASCII by default, 'unicode(n)'
+			//means 'character(n) character set "UCS-2"'
+			case CHAR:
+			case NCHAR:
+			case VARCHAR:
+			case NVARCHAR:
+			case LONGVARCHAR:
+			case LONG32VARCHAR:
+			case LONGNVARCHAR:
+			case LONG32NVARCHAR:
+				return "unicode($l)";
+			case CLOB:
+			case NCLOB:
+				return "clob($l)";
+			//no 'binary' nor 'varbinary' so use 'blob'
+			case BINARY:
+			case VARBINARY:
+			case LONGVARBINARY:
+			case LONG32VARBINARY:
+			case BLOB:
+				return "blob($l)";
+			case TIMESTAMP_WITH_TIMEZONE:
+				return columnType( TIMESTAMP );
+		}
+		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

@@ -67,6 +67,7 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHSQLDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
@@ -92,8 +93,7 @@ public class HSQLDialect extends Dialect {
 	);
 
 	public HSQLDialect(DialectResolutionInfo info) {
-		this( info.makeCopy() );
-		registerKeywords( info );
+		super( info );
 	}
 
 	public HSQLDialect() {
@@ -102,14 +102,18 @@ public class HSQLDialect extends Dialect {
 
 	public HSQLDialect(DatabaseVersion version) {
 		super( version.isSame( 1, 8 ) ? reflectedVersion( version ) : version );
+	}
 
+	@Override
+	protected void registerDefaultKeywords() {
+		super.registerDefaultKeywords();
 		if ( getVersion().isSameOrAfter( 2, 5 ) ) {
 			registerKeyword( "period" );
 		}
 	}
 
 	@Override
-	protected String columnType(int jdbcTypeCode) {
+	protected String columnType(int sqlTypeCode) {
 		// Note that all floating point types are synonyms for 'double'
 
 		// Note that the HSQL type 'longvarchar' and 'longvarbinary' are
@@ -117,28 +121,25 @@ public class HSQLDialect extends Dialect {
 		// But using these types results in schema validation issue as
 		// described in HHH-9693.
 
-		//HSQL has no 'nclob' type, but 'clob' is Unicode (See HHH-10364)
-		if ( jdbcTypeCode==NCLOB ) {
-			jdbcTypeCode = CLOB;
+		switch ( sqlTypeCode ) {
+			//HSQL has no 'nclob' type, but 'clob' is Unicode (See HHH-10364)
+			case NCLOB:
+				return "clob";
 		}
-
 		if ( getVersion().isBefore( 2 ) ) {
-			switch (jdbcTypeCode) {
+			switch ( sqlTypeCode ) {
 				case NUMERIC:
 					// Older versions of HSQL did not accept
 					// precision for the 'numeric' type
 					return "numeric";
-
 				// Older versions of HSQL had no lob support
 				case BLOB:
 					return "longvarbinary";
 				case CLOB:
 					return "longvarchar";
-
 			}
 		}
-
-		return super.columnType(jdbcTypeCode);
+		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
@@ -468,7 +469,7 @@ public class HSQLDialect extends Dialect {
 			} );
 
 	@Override
-	public String getSelectClauseNullString(int sqlType) {
+	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		String literal;
 		switch ( sqlType ) {
 			case Types.LONGVARCHAR:

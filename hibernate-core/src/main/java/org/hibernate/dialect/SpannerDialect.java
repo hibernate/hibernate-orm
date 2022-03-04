@@ -32,7 +32,6 @@ import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
-import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.SemanticException;
@@ -48,8 +47,6 @@ import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import jakarta.persistence.TemporalType;
 
@@ -75,7 +72,7 @@ public class SpannerDialect extends Dialect {
 	private static final UniqueDelegate NOOP_UNIQUE_DELEGATE = new DoNothingUniqueDelegate();
 
 	public SpannerDialect() {
-		super();
+		super( ZERO_VERSION );
 	}
 
 	public SpannerDialect(DialectResolutionInfo info) {
@@ -83,55 +80,53 @@ public class SpannerDialect extends Dialect {
 	}
 
 	@Override
-	protected String columnType(int jdbcTypeCode) {
-		switch (jdbcTypeCode) {
+	protected String columnType(int sqlTypeCode) {
+		switch ( sqlTypeCode ) {
 			case BOOLEAN:
 				return "bool";
-
 			case TINYINT:
 			case SMALLINT:
 			case INTEGER:
 			case BIGINT:
 				return "int64";
-
 			case REAL:
 			case FLOAT:
 			case DOUBLE:
 			case DECIMAL:
 			case NUMERIC:
 				return "float64";
-
 			//there is no time type of any kind
 			case TIME:
 			//timestamp does not accept precision
 			case TIMESTAMP:
 			case TIMESTAMP_WITH_TIMEZONE:
 				return "timestamp";
-
 			case CHAR:
 			case NCHAR:
 			case VARCHAR:
 			case NVARCHAR:
+			case LONGVARCHAR:
+			case LONGNVARCHAR:
 				return "string($l)";
-
-			case BINARY:
-			case VARBINARY:
-				return "bytes($l)";
-
 			case CLOB:
 			case NCLOB:
+			case LONG32VARCHAR:
+			case LONG32NVARCHAR:
 				return "string(max)";
+			case BINARY:
+			case VARBINARY:
+			case LONGVARBINARY:
+				return "bytes($l)";
 			case BLOB:
+			case LONG32VARBINARY:
 				return "bytes(max)";
-
-			default:
-				return super.columnType(jdbcTypeCode);
 		}
+		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
-	public String getUnboundedTypeName(JdbcType jdbcType, JavaType<?> javaType) {
-		switch ( jdbcType.getDefaultSqlTypeCode() ) {
+	protected String castType(int sqlTypeCode) {
+		switch ( sqlTypeCode ) {
 			case CHAR:
 			case NCHAR:
 			case VARCHAR:
@@ -147,7 +142,7 @@ public class SpannerDialect extends Dialect {
 			case LONG32VARBINARY:
 				return "bytes";
 		}
-		return super.getUnboundedTypeName( jdbcType, javaType );
+		return super.castType( sqlTypeCode );
 	}
 
 	@Override
@@ -160,11 +155,6 @@ public class SpannerDialect extends Dialect {
 	public int getMaxVarbinaryLength() {
 		//max is equivalent to 10_485_760
 		return 10_485_760;
-	}
-
-	@Override
-	public DatabaseVersion getVersion() {
-		return ZERO_VERSION;
 	}
 
 	@Override
@@ -825,19 +815,6 @@ public class SpannerDialect extends Dialect {
 	}
 
 	/* Type conversion and casting */
-
-	@Override
-	public String getCastTypeName(SqlExpressible type, Long length, Integer precision, Integer scale) {
-		switch ( type.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() ) {
-			case VARCHAR:
-			case NVARCHAR:
-				return "string";
-			case VARBINARY:
-				return "bytes";
-		}
-		//Spanner doesn't let you specify a length in cast() types
-		return super.getRawTypeName( type.getJdbcMapping().getJdbcType() );
-	}
 
 	/**
 	 * A no-op {@link Exporter} which is responsible for returning empty Create and Drop SQL strings.

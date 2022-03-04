@@ -5,9 +5,6 @@ import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
-import java.util.List;
-
-import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.junit.Assert.assertNotNull;
 
 /**
@@ -18,11 +15,7 @@ import static org.junit.Assert.assertNotNull;
 public class DB2zDialectInitTestCase {
 
     static class DB2zDialectWithExplicitTimezoneSupport extends DB2zDialect {
-        @Override
-        protected List<Integer> getSupportedJdbcTypeCodes() {
-            return List.of(TIMESTAMP_WITH_TIMEZONE);
-        }
-    }
+	}
 
     @Test
     public void testInitWithTimezoneSupport() {

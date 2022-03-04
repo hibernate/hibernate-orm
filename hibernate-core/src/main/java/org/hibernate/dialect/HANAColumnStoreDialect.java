@@ -6,8 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.Types;
-
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -51,25 +49,11 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 
 	public HANAColumnStoreDialect(DatabaseVersion version) {
 		super( version );
-		if ( version.isSameOrAfter( 4 ) ) {
-			registerColumnType( Types.CHAR, "nvarchar($l)" );
-			registerColumnType( Types.VARCHAR, getMaxVarcharLength(), "nvarchar($l)" );
+	}
 
-			// for longer values map to clob/nclob
-			registerColumnType( Types.VARCHAR, "nclob" );
-			registerColumnType( Types.CLOB, "nclob" );
-
-			registerHibernateType( Types.CLOB, StandardBasicTypes.MATERIALIZED_NCLOB.getName() );
-			registerHibernateType( Types.NCHAR, StandardBasicTypes.NSTRING.getName() );
-			registerHibernateType( Types.CHAR, StandardBasicTypes.CHARACTER.getName() );
-			registerHibernateType( Types.CHAR, 1, StandardBasicTypes.CHARACTER.getName() );
-			registerHibernateType( Types.CHAR, 5000, StandardBasicTypes.NSTRING.getName() );
-			registerHibernateType( Types.VARCHAR, StandardBasicTypes.NSTRING.getName() );
-			registerHibernateType( Types.LONGVARCHAR, StandardBasicTypes.NTEXT.getName() );
-
-			// register additional keywords
-			registerHanaCloudKeywords();
-		}
+	@Override
+	public boolean isUseUnicodeStringTypes() {
+		return getVersion().isSameOrAfter( 4 ) || super.isUseUnicodeStringTypes();
 	}
 
 	@Override
@@ -77,7 +61,9 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 		return 5000;
 	}
 
-	private void registerHanaCloudKeywords() {
+	@Override
+	protected void registerDefaultKeywords() {
+		super.registerDefaultKeywords();
 		registerKeyword( "array" );
 		registerKeyword( "at" );
 		registerKeyword( "authorization" );

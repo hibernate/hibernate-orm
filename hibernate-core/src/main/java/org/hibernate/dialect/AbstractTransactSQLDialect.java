@@ -59,13 +59,12 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
-	protected String columnType(int jdbcTypeCode) {
+	protected String columnType(int sqlTypeCode) {
 		// note that 'real' is double precision on SQL Server, single precision on Sybase
 		// but 'float' is single precision on Sybase, double precision on SQL Server
-		switch(jdbcTypeCode) {
+		switch ( sqlTypeCode ) {
 			case BOOLEAN:
 				return "bit";
-
 			case TINYINT:
 				//'tinyint' is an unsigned type in Sybase and
 				//SQL Server, holding values in the range 0-255
@@ -74,21 +73,19 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 			case INTEGER:
 				//it's called 'int' not 'integer'
 				return "int";
-
 			case DATE:
 			case TIME:
-			case TIMESTAMP:
 			case TIME_WITH_TIMEZONE:
+			case TIMESTAMP:
+			case TIMESTAMP_WITH_TIMEZONE:
 				return "datetime";
-
 			case BLOB:
 				return "image";
 			case CLOB:
+			case NCLOB:
 				return "text";
-
-			default:
-				return super.columnType(jdbcTypeCode);
 		}
+		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

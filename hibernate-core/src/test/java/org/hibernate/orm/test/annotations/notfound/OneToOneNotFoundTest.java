@@ -98,9 +98,11 @@ public class OneToOneNotFoundTest {
 	@Test
 	public void testOneToOne(SessionFactoryScope scope) throws Exception {
 		scope.inTransaction( session -> {
-			final Show show2 = session.find( Show.class, 1 );
-			assertNotNull( show2 );
-			assertNull( show2.getDescription() );
+			final Show show1 = session.find( Show.class, 1 );
+			// we should find the show, it does exist
+			assertThat( show1 ).isNotNull();
+			// however, IGNORE should trigger for its description
+			assertThat( show1.getDescription() ).isNull();
 		} );
 	}
 

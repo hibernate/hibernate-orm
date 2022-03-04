@@ -171,8 +171,8 @@ ext {
             informix:        'com.ibm.informix:jdbc:4.10.12',
             firebird:        'org.firebirdsql.jdbc:jaybird:4.0.3.java8',
             xapool:          "com.experlog:xapool:1.5.0",
-            mockito:         'org.mockito:mockito-core:2.19.1',
-            mockito_inline:  'org.mockito:mockito-inline:2.19.1',
+            mockito:         'org.mockito:mockito-core:4.3.1',
+            mockito_inline:  'org.mockito:mockito-inline:4.3.1',
 
             c3p0:            "com.mchange:c3p0:0.9.5.5",
             ehcache:         "net.sf.ehcache:ehcache:2.10.6",

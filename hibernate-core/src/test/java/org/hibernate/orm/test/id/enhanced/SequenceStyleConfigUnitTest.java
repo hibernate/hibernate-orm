@@ -19,6 +19,7 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.sequence.ANSISequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.DatabaseStructure;
@@ -64,6 +65,10 @@ public class SequenceStyleConfigUnitTest {
 				.applySetting( AvailableSettings.DIALECT, PooledSequenceDialect.class.getName() )
 				.build()) {
 			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			serviceRegistry.getService( JdbcServices.class ).getDialect().contributeTypes(
+					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
+					serviceRegistry
+			);
 			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
 			generator.configure(
@@ -110,6 +115,10 @@ public class SequenceStyleConfigUnitTest {
 				.applySetting( AvailableSettings.DIALECT, TableDialect.class.getName() )
 				.build()) {
 			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			serviceRegistry.getService( JdbcServices.class ).getDialect().contributeTypes(
+					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
+					serviceRegistry
+			);
 			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
 			generator.configure(
@@ -146,6 +155,10 @@ public class SequenceStyleConfigUnitTest {
 				.applySetting( AvailableSettings.DIALECT, SequenceDialect.class.getName() )
 				.build()) {
 			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			serviceRegistry.getService( JdbcServices.class ).getDialect().contributeTypes(
+					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
+					serviceRegistry
+			);
 			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "10" );
 
@@ -172,6 +185,10 @@ public class SequenceStyleConfigUnitTest {
 				.applySetting( AvailableSettings.DIALECT, PooledSequenceDialect.class.getName() )
 				.build()) {
 			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			serviceRegistry.getService( JdbcServices.class ).getDialect().contributeTypes(
+					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
+					serviceRegistry
+			);
 			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "10" );
 
@@ -204,6 +221,10 @@ public class SequenceStyleConfigUnitTest {
 				.applySetting( AvailableSettings.DIALECT, TableDialect.class.getName() )
 				.build()) {
 			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			serviceRegistry.getService( JdbcServices.class ).getDialect().contributeTypes(
+					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
+					serviceRegistry
+			);
 			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "10" );
 
@@ -234,6 +255,10 @@ public class SequenceStyleConfigUnitTest {
 				.applySetting( AvailableSettings.DIALECT, SequenceDialect.class.getName() )
 				.build()) {
 			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			serviceRegistry.getService( JdbcServices.class ).getDialect().contributeTypes(
+					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
+					serviceRegistry
+			);
 			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			props.setProperty( SequenceStyleGenerator.FORCE_TBL_PARAM, "true" );
 
@@ -269,6 +294,10 @@ public class SequenceStyleConfigUnitTest {
 				.applySetting( AvailableSettings.DIALECT, SequenceDialect.class.getName() )
 				.build()) {
 			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			serviceRegistry.getService( JdbcServices.class ).getDialect().contributeTypes(
+					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
+					serviceRegistry
+			);
 			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			props.setProperty( SequenceStyleGenerator.OPT_PARAM, StandardOptimizerDescriptor.NONE.getExternalName() );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
@@ -334,6 +363,10 @@ public class SequenceStyleConfigUnitTest {
 				.applySetting( AvailableSettings.DIALECT, PooledSequenceDialect.class.getName() )
 				.build()) {
 			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			serviceRegistry.getService( JdbcServices.class ).getDialect().contributeTypes(
+					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
+					serviceRegistry
+			);
 			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();

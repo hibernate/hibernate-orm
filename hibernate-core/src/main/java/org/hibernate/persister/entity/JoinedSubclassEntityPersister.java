@@ -250,7 +250,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				Column column = columns.get(k);
 				keyCols[k] = column.getQuotedName( dialect );
 				keyColReaders[k] = column.getReadExpr( dialect );
-				keyColReaderTemplates[k] = column.getTemplate( dialect, sqmFunctionRegistry );
+				keyColReaderTemplates[k] = column.getTemplate(
+						dialect,
+						factory.getTypeConfiguration(),
+						sqmFunctionRegistry
+				);
 			}
 			keyColumns.add( keyCols );
 			keyColumnReaders.add( keyColReaders );
@@ -285,7 +289,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				Column column = columns.get(k);
 				keyCols[k] = column.getQuotedName( dialect );
 				keyColReaders[k] = column.getReadExpr( dialect );
-				keyColReaderTemplates[k] = column.getTemplate( dialect, sqmFunctionRegistry );
+				keyColReaderTemplates[k] = column.getTemplate(
+						dialect,
+						factory.getTypeConfiguration(),
+						sqmFunctionRegistry
+				);
 			}
 			keyColumns.add( keyCols );
 			keyColumnReaders.add( keyColReaders );

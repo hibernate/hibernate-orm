@@ -305,6 +305,7 @@ public class EntityCollectionPart
 					fkKeyTableName,
 					fkBootDescriptorSource.getSelectables().get(0),
 					basicFkTargetPart.getJdbcMapping(),
+					creationProcess.getCreationContext().getTypeConfiguration(),
 					dialect,
 					creationProcess.getSqmFunctionRegistry()
 			);

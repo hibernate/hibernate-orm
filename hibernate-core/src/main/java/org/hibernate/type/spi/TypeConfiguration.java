@@ -63,6 +63,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
 
 import jakarta.persistence.TemporalType;
@@ -99,6 +100,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	// things available during both boot and runtime lifecycle phases
 	private final transient JavaTypeRegistry javaTypeRegistry;
 	private final transient JdbcTypeRegistry jdbcTypeRegistry;
+	private final transient DdlTypeRegistry ddlTypeRegistry;
 	private final transient BasicTypeRegistry basicTypeRegistry;
 
 	private final transient Map<Integer, Set<String>> jdbcToHibernateTypeContributionMap = new HashMap<>();
@@ -108,7 +110,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 		this.javaTypeRegistry = new JavaTypeRegistry( this );
 		this.jdbcTypeRegistry = new JdbcTypeRegistry( this );
-
+		this.ddlTypeRegistry = new DdlTypeRegistry( this );
 		this.basicTypeRegistry = new BasicTypeRegistry( this );
 		StandardBasicTypes.prime( this );
 	}
@@ -121,13 +123,16 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return basicTypeRegistry;
 	}
 
-
 	public JavaTypeRegistry getJavaTypeRegistry() {
 		return javaTypeRegistry;
 	}
 
 	public JdbcTypeRegistry getJdbcTypeRegistry() {
 		return jdbcTypeRegistry;
+	}
+
+	public DdlTypeRegistry getDdlTypeRegistry() {
+		return ddlTypeRegistry;
 	}
 
 	public JdbcTypeIndicators getCurrentBaseSqlTypeIndicators() {

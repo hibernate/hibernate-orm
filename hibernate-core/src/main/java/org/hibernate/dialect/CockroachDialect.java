@@ -9,15 +9,12 @@ package org.hibernate.dialect;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.time.temporal.TemporalAccessor;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
-import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.TypeContributions;
@@ -26,7 +23,6 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -46,12 +42,13 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
+import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import jakarta.persistence.TemporalType;
 
@@ -95,56 +92,36 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	protected List<Integer> getSupportedJdbcTypeCodes() {
-		List<Integer> typeCodes = new ArrayList<>( super.getSupportedJdbcTypeCodes() );
-		typeCodes.addAll( List.of(UUID, INTERVAL_SECOND, GEOMETRY, JSON) );
-		if ( getVersion().isSameOrAfter( 20 ) ) {
-			typeCodes.add(INET);
-		}
-		return typeCodes;
-	}
-
-	@Override
-	protected String columnType(int jdbcTypeCode) {
-		switch (jdbcTypeCode) {
+	protected String columnType(int sqlTypeCode) {
+		switch ( sqlTypeCode ) {
 			case TINYINT:
 				return "smallint"; //no tinyint
-
 			case CHAR:
 			case NCHAR:
 			case VARCHAR:
 			case NVARCHAR:
+			case LONGVARCHAR:
+			case LONGNVARCHAR:
 				return "string($l)";
-
-			case NCLOB:
 			case CLOB:
+			case NCLOB:
+			case LONG32VARCHAR:
+			case LONG32NVARCHAR:
 				return "string";
-
 			case BINARY:
 			case VARBINARY:
+			case LONGVARBINARY:
+				return "bytes($l)";
 			case BLOB:
+			case LONG32VARBINARY:
 				return "bytes";
-
-			case INET:
-				return "inet";
-			case UUID:
-				return "uuid";
-			case GEOMETRY:
-				return "geometry";
-			case INTERVAL_SECOND:
-				return "interval second($s)";
-
-			case JSON:
-				// Prefer jsonb if possible
-				return getVersion().isSameOrAfter( 20 ) ? "jsonb" : "json";
-			default:
-				return super.columnType(jdbcTypeCode);
 		}
+		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
-	public String getUnboundedTypeName(JdbcType jdbcType, JavaType<?> javaType) {
-		switch ( jdbcType.getDefaultSqlTypeCode() ) {
+	protected String castType(int sqlTypeCode) {
+		switch ( sqlTypeCode ) {
 			case CHAR:
 			case NCHAR:
 			case VARCHAR:
@@ -160,19 +137,26 @@ public class CockroachDialect extends Dialect {
 			case LONG32VARBINARY:
 				return "bytes";
 		}
-		return super.getUnboundedTypeName( jdbcType, javaType );
+		return super.castType( sqlTypeCode );
 	}
 
 	@Override
-	public String getTypeName(int code, Size size) throws HibernateException {
-		// The maximum scale for `interval second` is 6 unfortunately so we have to use numeric by default
-		if ( code == SqlTypes.INTERVAL_SECOND ) {
-			final Integer scale = size.getScale();
-			if ( scale == null || scale > 6 ) {
-				return getTypeName( SqlTypes.NUMERIC, size );
-			}
+	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.registerColumnTypes( typeContributions, serviceRegistry );
+		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
+		ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
+
+		// Prefer jsonb if possible
+		if ( getVersion().isSameOrAfter( 20 ) ) {
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
 		}
-		return super.getTypeName( code, size );
+		else {
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+		}
 	}
 
 	@Override

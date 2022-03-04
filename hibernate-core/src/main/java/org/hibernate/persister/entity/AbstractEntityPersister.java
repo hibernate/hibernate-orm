@@ -777,7 +777,11 @@ public abstract class AbstractEntityPersister
 			Column column = columns.get(i);
 			rootTableKeyColumnNames[i] = column.getQuotedName( dialect );
 			rootTableKeyColumnReaders[i] = column.getReadExpr( dialect );
-			rootTableKeyColumnReaderTemplates[i] = column.getTemplate( dialect, functionRegistry );
+			rootTableKeyColumnReaderTemplates[i] = column.getTemplate(
+					dialect,
+					factory.getTypeConfiguration(),
+					functionRegistry
+			);
 			identifierAliases[i] = column.getAlias( dialect, bootDescriptor.getRootTable() );
 		}
 
@@ -806,6 +810,7 @@ public abstract class AbstractEntityPersister
 			sqlWhereStringTemplate = Template.renderWhereStringTemplate(
 					"(" + bootDescriptor.getWhere() + ")",
 					dialect,
+					factory.getTypeConfiguration(),
 					functionRegistry
 			);
 		}
@@ -853,7 +858,11 @@ public abstract class AbstractEntityPersister
 					foundFormula = true;
 					Formula formula = (Formula) selectable;
 					formula.setFormula( substituteBrackets( formula.getFormula() ) );
-					formulaTemplates[k] = selectable.getTemplate( dialect, functionRegistry );
+					formulaTemplates[k] = selectable.getTemplate(
+							dialect,
+							factory.getTypeConfiguration(),
+							functionRegistry
+					);
 				}
 				else {
 					Column column = (Column) selectable;
@@ -961,7 +970,11 @@ public abstract class AbstractEntityPersister
 			for ( int i = 0; i < selectables.size(); i++ ) {
 				Selectable selectable = selectables.get(i);
 				if ( selectable.isFormula() ) {
-					String template = selectable.getTemplate( dialect, functionRegistry );
+					String template = selectable.getTemplate(
+							dialect,
+							factory.getTypeConfiguration(),
+							functionRegistry
+					);
 //					formnos[l] = formulaTemplates.size();
 //					colnos[l] = -1;
 //					formulaTemplates.add( template );
@@ -982,7 +995,11 @@ public abstract class AbstractEntityPersister
 					columnSelectables.add( prop.isSelectable() );
 
 					readers[i] = column.getReadExpr( dialect );
-					readerTemplates[i] = column.getTemplate( dialect, functionRegistry );
+					readerTemplates[i] = column.getTemplate(
+							dialect,
+							factory.getTypeConfiguration(),
+							functionRegistry
+					);
 //					columnReaderTemplates.add( readerTemplate );
 				}
 			}
@@ -6196,7 +6213,11 @@ public abstract class AbstractEntityPersister
 
 					assert attrColumnExpression.equals( selectable.getText(sessionFactory.getJdbcServices().getDialect()) );
 
-					customReadExpr = selectable.getTemplate( dialect, sessionFactory.getQueryEngine().getSqmFunctionRegistry() );
+					customReadExpr = selectable.getTemplate(
+							dialect,
+							sessionFactory.getTypeConfiguration(),
+							sessionFactory.getQueryEngine().getSqmFunctionRegistry()
+					);
 					customWriteExpr = selectable.getCustomWriteExpression();
 					Column column = bootValue.getColumns().get( 0 );
 					columnDefinition = column.getSqlType();

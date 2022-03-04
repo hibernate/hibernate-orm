@@ -8,6 +8,7 @@ package org.hibernate.mapping;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Models the commonality between a column and a formula (computed value).
@@ -60,9 +61,8 @@ public interface Selectable {
 	@Deprecated(since = "6.0")
 	String getAlias(Dialect dialect, Table table);
 
-	/**
-	 * @deprecated use {@link #getCustomWriteExpression()} instead
-	 */
-	@Deprecated(since = "6.0")
-	String getTemplate(Dialect dialect, SqmFunctionRegistry functionRegistry);
+	String getTemplate(
+			Dialect dialect,
+			TypeConfiguration typeConfiguration,
+			SqmFunctionRegistry functionRegistry);
 }

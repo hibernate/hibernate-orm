@@ -4256,13 +4256,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( castTarget.getSqlType() );
 		}
 		else {
+			final SqlExpressible expressionType = (SqlExpressible) castTarget.getExpressionType();
 			appendSql(
-					getDialect().getCastTypeName(
-							(SqlExpressible) castTarget.getExpressionType(),
-							castTarget.getLength(),
-							castTarget.getPrecision(),
-							castTarget.getScale()
-					)
+					sessionFactory.getTypeConfiguration().getDdlTypeRegistry()
+							.getDescriptor( expressionType.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() )
+							.getCastTypeName(
+									expressionType,
+									castTarget.getLength(),
+									castTarget.getPrecision(),
+									castTarget.getScale()
+							)
 			);
 		}
 	}

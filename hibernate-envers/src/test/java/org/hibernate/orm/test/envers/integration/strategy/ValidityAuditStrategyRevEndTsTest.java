@@ -21,6 +21,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseASEDialect;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
@@ -30,6 +31,7 @@ import org.hibernate.orm.test.envers.entities.manytomany.sametable.Child1Entity;
 import org.hibernate.orm.test.envers.entities.manytomany.sametable.Child2Entity;
 import org.hibernate.orm.test.envers.entities.manytomany.sametable.ParentEntity;
 import org.hibernate.orm.test.envers.tools.TestTools;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -68,6 +70,8 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 	@Priority(10)
 	public void initData() {
 		EntityManager em = getEntityManager();
+		DdlTypeRegistry ddlTypeRegistry = em.unwrap( SessionImplementor.class ).getTypeConfiguration()
+				.getDdlTypeRegistry();
 
 		// We need first to modify the columns in the middle (join table) to
 		// allow null values. Hbm2ddl doesn't seem
@@ -82,19 +86,19 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 		em.getTransaction().begin();
 		session = (Session) em.getDelegate();
 		session.createNativeQuery(
-						"CREATE TABLE children ( parent_id " + getDialect().getTypeName( Types.INTEGER ) +
-								", child1_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() +
-								", child2_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() + " )"
+						"CREATE TABLE children ( parent_id " + ddlTypeRegistry.getTypeName( Types.INTEGER, getDialect() ) +
+								", child1_id " + ddlTypeRegistry.getTypeName( Types.INTEGER, getDialect() ) + getDialect().getNullColumnString() +
+								", child2_id " + ddlTypeRegistry.getTypeName( Types.INTEGER, getDialect() ) + getDialect().getNullColumnString() + " )"
 				)
 				.executeUpdate();
 		session.createNativeQuery(
-						"CREATE TABLE children_AUD ( REV " + getDialect().getTypeName( Types.INTEGER ) + " NOT NULL" +
-								", REVEND " + getDialect().getTypeName( Types.INTEGER ) +
-								", " + revendTimestampColumName + " " + getDialect().getTypeName( Types.TIMESTAMP ) +
-								", REVTYPE " + getDialect().getTypeName( Types.TINYINT ) +
-								", parent_id " + getDialect().getTypeName( Types.INTEGER ) +
-								", child1_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() +
-								", child2_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() + " )"
+						"CREATE TABLE children_AUD ( REV " + ddlTypeRegistry.getTypeName( Types.INTEGER, getDialect() ) + " NOT NULL" +
+								", REVEND " + ddlTypeRegistry.getTypeName( Types.INTEGER, getDialect() ) +
+								", " + revendTimestampColumName + " " + ddlTypeRegistry.getTypeName( Types.TIMESTAMP, getDialect() ) +
+								", REVTYPE " + ddlTypeRegistry.getTypeName( Types.TINYINT, getDialect() ) +
+								", parent_id " + ddlTypeRegistry.getTypeName( Types.INTEGER, getDialect() ) +
+								", child1_id " + ddlTypeRegistry.getTypeName( Types.INTEGER, getDialect() ) + getDialect().getNullColumnString() +
+								", child2_id " + ddlTypeRegistry.getTypeName( Types.INTEGER, getDialect() ) + getDialect().getNullColumnString() + " )"
 				)
 				.executeUpdate();
 		em.getTransaction().commit();

@@ -53,11 +53,10 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import jakarta.persistence.TemporalType;
@@ -72,14 +71,15 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INT
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL;
+import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.CHAR;
-import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
-import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
-import static org.hibernate.type.SqlTypes.LONGNVARCHAR;
-import static org.hibernate.type.SqlTypes.LONGVARCHAR;
+import static org.hibernate.type.SqlTypes.DECIMAL;
+import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.NCHAR;
-import static org.hibernate.type.SqlTypes.NVARCHAR;
-import static org.hibernate.type.SqlTypes.VARCHAR;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
@@ -95,7 +95,6 @@ public class SQLiteDialect extends Dialect {
 	private static final SQLiteIdentityColumnSupport IDENTITY_COLUMN_SUPPORT = new SQLiteIdentityColumnSupport();
 
 	private final UniqueDelegate uniqueDelegate;
-	private final DatabaseVersion version;
 
 	public SQLiteDialect(DialectResolutionInfo info) {
 		this( info.makeCopy() );
@@ -107,39 +106,32 @@ public class SQLiteDialect extends Dialect {
 	}
 
 	public SQLiteDialect(DatabaseVersion version) {
-		super();
-		this.version = version;
-
-		if ( version.isBefore( 3 ) ) {
-			registerColumnType( Types.DECIMAL, "numeric($p,$s)" );
-			registerColumnType( Types.CHAR, "char" );
-			registerColumnType( Types.NCHAR, "nchar" );
-		}
-		// No precision support
-		registerColumnType( Types.FLOAT, "float" );
-		registerColumnType( Types.TIMESTAMP, "timestamp" );
-		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
-		registerColumnType( Types.TIME_WITH_TIMEZONE, "time" );
-
-		registerColumnType( Types.BINARY, "blob" );
-		registerColumnType( Types.VARBINARY, "blob" );
+		super( version );
 		uniqueDelegate = new SQLiteUniqueDelegate( this );
 	}
 
 	@Override
-	public String getUnboundedTypeName(JdbcType jdbcType, JavaType<?> javaType) {
-		switch ( jdbcType.getDefaultSqlTypeCode() ) {
+	protected String columnType(int sqlTypeCode) {
+		switch ( sqlTypeCode ) {
+			case DECIMAL:
+				return getVersion().isBefore( 3 ) ? columnType( SqlTypes.NUMERIC ) : super.columnType( sqlTypeCode );
 			case CHAR:
+				return getVersion().isBefore( 3 ) ? "char" : super.columnType( sqlTypeCode );
 			case NCHAR:
-			case VARCHAR:
-			case NVARCHAR:
-			case LONGVARCHAR:
-			case LONGNVARCHAR:
-			case LONG32VARCHAR:
-			case LONG32NVARCHAR:
-				return "text";
+				return getVersion().isBefore( 3 ) ? "nchar" : super.columnType( sqlTypeCode );
+			// No precision support
+			case FLOAT:
+				return "float";
+			case TIMESTAMP:
+			case TIMESTAMP_WITH_TIMEZONE:
+				return "timestamp";
+			case TIME_WITH_TIMEZONE:
+				return "time";
+			case BINARY:
+			case VARBINARY:
+				return "blob";
 		}
-		return super.getUnboundedTypeName( jdbcType, javaType );
+		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
@@ -161,11 +153,6 @@ public class SQLiteDialect extends Dialect {
 	@Override
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
-	}
-
-	@Override
-	public DatabaseVersion getVersion() {
-		return version;
 	}
 
 	/**

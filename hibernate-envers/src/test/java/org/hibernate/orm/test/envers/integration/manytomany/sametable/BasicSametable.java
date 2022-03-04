@@ -11,12 +11,14 @@ import java.util.Arrays;
 import jakarta.persistence.EntityManager;
 
 import org.hibernate.Session;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.manytomany.sametable.Child1Entity;
 import org.hibernate.orm.test.envers.entities.manytomany.sametable.Child2Entity;
 import org.hibernate.orm.test.envers.entities.manytomany.sametable.ParentEntity;
 import org.hibernate.orm.test.envers.tools.TestTools;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -43,6 +45,8 @@ public class BasicSametable extends BaseEnversJPAFunctionalTestCase {
 	@Priority(10)
 	public void initData() {
 		EntityManager em = getEntityManager();
+		DdlTypeRegistry ddlTypeRegistry = em.unwrap( SessionImplementor.class ).getTypeConfiguration()
+				.getDdlTypeRegistry();
 
 		em.getTransaction().begin();
 		Session session = (Session) em.getDelegate();
@@ -56,17 +60,17 @@ public class BasicSametable extends BaseEnversJPAFunctionalTestCase {
 		em.getTransaction().begin();
 		session = (Session) em.getDelegate();
 		session.createNativeQuery(
-				"CREATE TABLE children ( parent_id " + getDialect().getTypeName( Types.INTEGER ) +
-						", child1_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() +
-						", child2_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() + " )"
+				"CREATE TABLE children ( parent_id " + ddlTypeRegistry.getTypeName( Types.INTEGER, getDialect() ) +
+						", child1_id " + ddlTypeRegistry.getTypeName( Types.INTEGER, getDialect() ) + getDialect().getNullColumnString() +
+						", child2_id " + ddlTypeRegistry.getTypeName( Types.INTEGER, getDialect() ) + getDialect().getNullColumnString() + " )"
 		).executeUpdate();
 		session.createNativeQuery(
-				"CREATE TABLE children_AUD ( REV " + getDialect().getTypeName( Types.INTEGER ) + " NOT NULL" +
-						", REVEND " + getDialect().getTypeName( Types.INTEGER ) +
-						", REVTYPE " + getDialect().getTypeName( Types.TINYINT ) +
-						", parent_id " + getDialect().getTypeName( Types.INTEGER ) +
-						", child1_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() +
-						", child2_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() + " )"
+				"CREATE TABLE children_AUD ( REV " + ddlTypeRegistry.getTypeName( Types.INTEGER, getDialect() ) + " NOT NULL" +
+						", REVEND " + ddlTypeRegistry.getTypeName( Types.INTEGER, getDialect() ) +
+						", REVTYPE " + ddlTypeRegistry.getTypeName( Types.TINYINT, getDialect() ) +
+						", parent_id " + ddlTypeRegistry.getTypeName( Types.INTEGER, getDialect() ) +
+						", child1_id " + ddlTypeRegistry.getTypeName( Types.INTEGER, getDialect() ) + getDialect().getNullColumnString() +
+						", child2_id " + ddlTypeRegistry.getTypeName( Types.INTEGER, getDialect() ) + getDialect().getNullColumnString() + " )"
 		).executeUpdate();
 		em.getTransaction().commit();
 		em.clear();

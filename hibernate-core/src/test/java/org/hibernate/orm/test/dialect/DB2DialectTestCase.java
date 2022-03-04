@@ -11,7 +11,9 @@ import java.sql.Types;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.query.spi.Limit;
+import org.hibernate.type.spi.TypeConfiguration;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
@@ -28,11 +30,18 @@ import static org.junit.Assert.assertTrue;
 
 public class DB2DialectTestCase extends BaseUnitTestCase {
 	private final DB2Dialect dialect = new DB2Dialect();
+	private TypeConfiguration typeConfiguration;
+
+	@Before
+	public void setup() {
+		typeConfiguration = new TypeConfiguration();
+		dialect.contributeTypes( () -> typeConfiguration, null );
+	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-6866")
 	public void testGetDefaultBinaryTypeName() {
-		String actual = dialect.getTypeName( Types.BINARY );
+		String actual = typeConfiguration.getDdlTypeRegistry().getTypeName( Types.BINARY, dialect );
 		assertEquals(
 				"The default column length is 255, but char length on DB2 is limited to 254",
 				"varchar($l) for bit data",
@@ -44,7 +53,7 @@ public class DB2DialectTestCase extends BaseUnitTestCase {
 	@TestForIssue(jiraKey = "HHH-6866")
 	public void testGetExplicitBinaryTypeName() {
 		// lower bound
-		String actual = dialect.getTypeName( Types.BINARY, Size.length(1) );
+		String actual = typeConfiguration.getDdlTypeRegistry().getTypeName( Types.BINARY, Size.length( 1) );
 		assertEquals(
 				"Wrong binary type",
 				"char(1) for bit data",
@@ -52,7 +61,7 @@ public class DB2DialectTestCase extends BaseUnitTestCase {
 		);
 
 		// upper bound
-		actual = dialect.getTypeName( Types.BINARY, Size.length(254) );
+		actual = typeConfiguration.getDdlTypeRegistry().getTypeName( Types.BINARY, Size.length( 254) );
 		assertEquals(
 				"Wrong binary type. 254 is the max length in DB2",
 				"char(254) for bit data",
@@ -60,7 +69,7 @@ public class DB2DialectTestCase extends BaseUnitTestCase {
 		);
 
 		// exceeding upper bound
-		actual = dialect.getTypeName( Types.BINARY, Size.length(255) );
+		actual = typeConfiguration.getDdlTypeRegistry().getTypeName( Types.BINARY, Size.length( 255) );
 		assertEquals(
 				"Wrong binary type. Should be varchar for length > 254",
 				"varchar(255) for bit data",

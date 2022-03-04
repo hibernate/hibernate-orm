@@ -36,12 +36,7 @@ public class DefaultSchemaNameResolverTest {
 				ConnectionProxy.generateProxy( new ConnectionProxy( SCHEMA_NAME ) );
 		String schemaName = DefaultSchemaNameResolver.INSTANCE.resolveSchemaName(
 				connectionSupportsGetSchemaName,
-				new Dialect() {
-					@Override
-					public DatabaseVersion getVersion() {
-						return ZERO_VERSION;
-					}
-				}
+				new Dialect( ZERO_VERSION ) {}
 		);
 		assertEquals( SCHEMA_NAME, schemaName );
 
@@ -49,12 +44,7 @@ public class DefaultSchemaNameResolverTest {
 				ConnectionProxy.generateProxy( new ConnectionProxy( null ) );
 		schemaName = DefaultSchemaNameResolver.INSTANCE.resolveSchemaName(
 				connectionNotSupportGetSchemaName,
-				new Dialect() {
-
-					@Override
-					public DatabaseVersion getVersion() {
-						return ZERO_VERSION;
-					}
+				new Dialect( ZERO_VERSION ) {
 
 					@Override
 					public String getCurrentSchemaCommand() {

@@ -99,10 +99,11 @@ public abstract class AbstractCriteriaLiteralHandlingModeTest extends BaseEntity
 		return getDialect().castPattern( CastType.OTHER, castType )
 				.replace(
 						"?2",
-						getDialect().getUnboundedTypeName(
-								typeConfiguration.getJdbcTypeRegistry().getDescriptor( SqlTypes.VARCHAR ),
-								typeConfiguration.getJavaTypeRegistry().getDescriptor( String.class )
-						)
+						typeConfiguration.getDdlTypeRegistry().getDescriptor( SqlTypes.VARCHAR )
+								.getCastTypeName(
+										typeConfiguration.getJdbcTypeRegistry().getDescriptor( SqlTypes.VARCHAR ),
+										typeConfiguration.getJavaTypeRegistry().getDescriptor( String.class )
+								)
 				)
 				.replace( "?1", expression );
 	}

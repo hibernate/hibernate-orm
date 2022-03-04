@@ -18,6 +18,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Parses SQL fragments specified in mapping documents
@@ -94,8 +95,12 @@ public final class Template {
 		return fragment;
 	}
 
-	public static String renderWhereStringTemplate(String sqlWhereString, Dialect dialect, SqmFunctionRegistry functionRegistry) {
-		return renderWhereStringTemplate(sqlWhereString, TEMPLATE, dialect, functionRegistry);
+	public static String renderWhereStringTemplate(
+			String sqlWhereString,
+			Dialect dialect,
+			TypeConfiguration typeConfiguration,
+			SqmFunctionRegistry functionRegistry) {
+		return renderWhereStringTemplate(sqlWhereString, TEMPLATE, dialect, typeConfiguration, functionRegistry);
 	}
 
 	/**
@@ -109,7 +114,12 @@ public final class Template {
 	 * @param functionRegistry The registry of all sql functions
 	 * @return The rendered sql fragment
 	 */
-	public static String renderWhereStringTemplate(String sqlWhereString, String placeholder, Dialect dialect, SqmFunctionRegistry functionRegistry ) {
+	public static String renderWhereStringTemplate(
+			String sqlWhereString,
+			String placeholder,
+			Dialect dialect,
+			TypeConfiguration typeConfiguration,
+			SqmFunctionRegistry functionRegistry) {
 
 		// IMPL NOTE : The basic process here is to tokenize the incoming string and to iterate over each token
 		//		in turn.  As we process each token, we set a series of flags used to indicate the type of context in
@@ -182,6 +192,7 @@ public final class Template {
 						extractUntil( tokens, ")" ),
 						placeholder,
 						dialect,
+						typeConfiguration,
 						functionRegistry
 				);
 				result.append( "extract(" ).append( field ).append( " from " ).append( source ).append( ')' );
@@ -273,7 +284,7 @@ public final class Template {
 					}
 					else {
 						result.append(
-								renderWhereStringTemplate( trimOperands.trimSpec, placeholder, dialect, functionRegistry )
+								renderWhereStringTemplate( trimOperands.trimSpec, placeholder, dialect, typeConfiguration, functionRegistry )
 						);
 					}
 					result.append( ' ' );
@@ -286,7 +297,7 @@ public final class Template {
 					result.append( "from " );
 				}
 
-				result.append( renderWhereStringTemplate( trimOperands.trimSource, placeholder, dialect, functionRegistry ) )
+				result.append( renderWhereStringTemplate( trimOperands.trimSource, placeholder, dialect, typeConfiguration, functionRegistry ) )
 						.append( ')' );
 
 				hasMore = tokens.hasMoreTokens();
@@ -316,7 +327,7 @@ public final class Template {
 				result.append(token);
 			}
 			else if ( isIdentifier(token)
-					&& !isFunctionOrKeyword(lcToken, nextToken, dialect , functionRegistry) ) {
+					&& !isFunctionOrKeyword(lcToken, nextToken, dialect, typeConfiguration, functionRegistry) ) {
 				result.append(placeholder)
 						.append('.')
 						.append( dialect.quote(token) );
@@ -650,17 +661,18 @@ public final class Template {
 			String lcToken,
 			String nextToken,
 			Dialect dialect,
+			TypeConfiguration typeConfiguration,
 			SqmFunctionRegistry functionRegistry) {
 		return "(".equals( nextToken ) ||
 				KEYWORDS.contains( lcToken ) ||
-				isType( lcToken, dialect ) ||
+				isType( lcToken, typeConfiguration ) ||
 				isFunction( lcToken, nextToken, functionRegistry ) ||
 				dialect.getKeywords().contains( lcToken ) ||
 				FUNCTION_KEYWORDS.contains( lcToken );
 	}
 
-	private static boolean isType(String lcToken, Dialect dialect) {
-		return dialect.isTypeNameRegistered( lcToken );
+	private static boolean isType(String lcToken, TypeConfiguration typeConfiguration) {
+		return typeConfiguration.getDdlTypeRegistry().isTypeNameRegistered( lcToken );
 	}
 
 	private static boolean isFunction(String lcToken, String nextToken, SqmFunctionRegistry functionRegistry) {

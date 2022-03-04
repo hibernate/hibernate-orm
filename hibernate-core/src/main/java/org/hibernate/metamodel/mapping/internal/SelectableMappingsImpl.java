@@ -23,6 +23,7 @@ import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Christian Beikov
@@ -59,6 +60,7 @@ public class SelectableMappingsImpl implements SelectableMappings {
 			Value value,
 			int[] propertyOrder,
 			Mapping mapping,
+			TypeConfiguration typeConfiguration,
 			Dialect dialect,
 			SqmFunctionRegistry sqmFunctionRegistry) {
 		final List<JdbcMapping> jdbcMappings = new ArrayList<>();
@@ -72,6 +74,7 @@ public class SelectableMappingsImpl implements SelectableMappings {
 					containingTableExpression,
 					selectables.get( i ),
 					jdbcMappings.get( propertyOrder[i] ),
+					typeConfiguration,
 					dialect,
 					sqmFunctionRegistry
 			);

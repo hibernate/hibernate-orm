@@ -8,7 +8,6 @@ package org.hibernate.community.dialect;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -38,9 +37,11 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.community.dialect.sequence.SequenceInformationExtractorTimesTenDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.Types;
 import jakarta.persistence.TemporalType;
@@ -67,45 +68,44 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STR
 public class TimesTenDialect extends Dialect {
 
 	public TimesTenDialect() {
-		super();
-
-		//Note: these are the correct type mappings
-		//      for the default Oracle type mode
-		//      TypeMode=0
-		registerColumnType( Types.BOOLEAN, "tt_tinyint" );
-
-		registerColumnType( Types.TINYINT, "tt_tinyint" );
-		registerColumnType( Types.SMALLINT, "tt_smallint" );
-		registerColumnType( Types.INTEGER, "tt_integer" );
-		registerColumnType( Types.BIGINT, "tt_bigint" );
-
-		//note that 'binary_float'/'binary_double' might
-		//be better mappings for Java Float/Double
-
-		//'numeric'/'decimal' are synonyms for 'number'
-		registerColumnType( Types.NUMERIC, "number($p,$s)" );
-		registerColumnType( Types.DECIMAL, "number($p,$s)" );
-
-		registerColumnType( Types.VARCHAR, getMaxVarcharLength(), "varchar2($l)" );
-		registerColumnType( Types.NVARCHAR, getMaxNVarcharLength(), "nvarchar2($l)" );
-
-		//do not use 'date' because it's a datetime
-		registerColumnType( Types.DATE, "tt_date" );
-		//'time' and 'tt_time' are synonyms
-		registerColumnType( Types.TIME, "tt_time" );
-		//`timestamp` has more precision than `tt_timestamp`
-//		registerColumnType(Types.TIMESTAMP, "tt_timestamp");
-		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)" );
+		super( ZERO_VERSION );
 	}
 
 	public TimesTenDialect(DialectResolutionInfo info) {
-		this();
-		registerKeywords( info );
+		super( info );
 	}
 
 	@Override
-	public DatabaseVersion getVersion() {
-		return ZERO_VERSION;
+	protected String columnType(int sqlTypeCode) {
+		switch ( sqlTypeCode ) {
+			//Note: these are the correct type mappings
+			//      for the default Oracle type mode
+			//      TypeMode=0
+			case SqlTypes.BOOLEAN:
+			case SqlTypes.TINYINT:
+				return "tt_tinyint";
+			case SqlTypes.SMALLINT:
+				return "tt_smallint";
+			case SqlTypes.INTEGER:
+				return "tt_integer";
+			case SqlTypes.BIGINT:
+				return "tt_bigint";
+			//note that 'binary_float'/'binary_double' might
+			//be better mappings for Java Float/Double
+
+			//'numeric'/'decimal' are synonyms for 'number'
+			case SqlTypes.NUMERIC:
+			case SqlTypes.DECIMAL:
+				return "number($p,$s)";
+			case SqlTypes.DATE:
+				return "tt_date";
+			case SqlTypes.TIME:
+				return "tt_time";
+			//`timestamp` has more precision than `tt_timestamp`
+			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
+				return "timestamp($p)";
+		}
+		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
@@ -399,7 +399,7 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	public String getSelectClauseNullString(int sqlType) {
+	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		switch (sqlType) {
 			case Types.VARCHAR:
 			case Types.CHAR:

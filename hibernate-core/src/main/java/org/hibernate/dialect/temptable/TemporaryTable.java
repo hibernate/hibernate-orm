@@ -37,6 +37,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -83,15 +84,16 @@ public class TemporaryTable implements Exportable, Contributable {
 		}
 		this.dialect = dialect;
 		if ( dialect.getSupportedTemporaryTableKind() == TemporaryTableKind.PERSISTENT ) {
-			final BasicType<UUID> uuidType = entityDescriptor.getEntityPersister()
+			final TypeConfiguration typeConfiguration = entityDescriptor.getEntityPersister()
 					.getFactory()
-					.getTypeConfiguration()
+					.getTypeConfiguration();
+			final BasicType<UUID> uuidType = typeConfiguration
 					.getBasicTypeForJavaType( UUID.class );
 			this.sessionUidColumn = new TemporaryTableSessionUidColumn(
 					this,
 					uuidType,
-					dialect.getTypeName(
-							uuidType.getJdbcType(),
+					typeConfiguration.getDdlTypeRegistry().getTypeName(
+							uuidType.getJdbcType().getDefaultSqlTypeCode(),
 							dialect.getSizeStrategy().resolveSize(
 									uuidType.getJdbcType(),
 									uuidType.getJavaTypeDescriptor(),
@@ -136,7 +138,11 @@ public class TemporaryTable implements Exportable, Contributable {
 										temporaryTable,
 										column.getText( dialect ),
 										jdbcMapping,
-										column.getSqlType( dialect, runtimeModelCreationContext.getMetadata() ),
+										column.getSqlType(
+												runtimeModelCreationContext.getTypeConfiguration(),
+												dialect,
+												runtimeModelCreationContext.getMetadata()
+										),
 										column.isNullable(),
 										true
 								)
@@ -176,6 +182,7 @@ public class TemporaryTable implements Exportable, Contributable {
 																			selectable.getText( dialect ),
 																			selection.getJdbcMapping(),
 																			column.getSqlType(
+																					runtimeModelCreationContext.getTypeConfiguration(),
 																					dialect,
 																					runtimeModelCreationContext.getMetadata()
 																			),
@@ -225,7 +232,11 @@ public class TemporaryTable implements Exportable, Contributable {
 											temporaryTable,
 											ENTITY_TABLE_IDENTITY_COLUMN,
 											jdbcMapping,
-											column.getSqlType( dialect, runtimeModelCreationContext.getMetadata() ) + " " +
+											column.getSqlType(
+													runtimeModelCreationContext.getTypeConfiguration(),
+													dialect,
+													runtimeModelCreationContext.getMetadata()
+											) + " " +
 											dialect.getIdentityColumnSupport().getIdentityColumnString( column.getSqlTypeCode( runtimeModelCreationContext.getMetadata() ) ),
 											// Always report as nullable as the identity column string usually includes the not null constraint
 											true, //column.isNullable()
@@ -253,7 +264,11 @@ public class TemporaryTable implements Exportable, Contributable {
 										temporaryTable,
 										column.getText( dialect ),
 										jdbcMapping,
-										column.getSqlType( dialect, runtimeModelCreationContext.getMetadata() ),
+										column.getSqlType(
+												runtimeModelCreationContext.getTypeConfiguration(),
+												dialect,
+												runtimeModelCreationContext.getMetadata()
+										),
 										// We have to set the identity column after the root table insert
 										column.isNullable() || identityColumn || hasOptimizer,
 										!identityColumn && !hasOptimizer
@@ -269,7 +284,11 @@ public class TemporaryTable implements Exportable, Contributable {
 										temporaryTable,
 										discriminator.getText( dialect ),
 										discriminatorMapping.getJdbcMapping(),
-										discriminator.getSqlType( dialect, runtimeModelCreationContext.getMetadata() ),
+										discriminator.getSqlType(
+												runtimeModelCreationContext.getTypeConfiguration(),
+												dialect,
+												runtimeModelCreationContext.getMetadata()
+										),
 										// We have to set the identity column after the root table insert
 										discriminator.isNullable()
 								)
@@ -294,6 +313,7 @@ public class TemporaryTable implements Exportable, Contributable {
 																	selectable.getText( dialect ),
 																	selection.getJdbcMapping(),
 																	column.getSqlType(
+																			runtimeModelCreationContext.getTypeConfiguration(),
 																			dialect,
 																			runtimeModelCreationContext.getMetadata()
 																	),
@@ -308,14 +328,12 @@ public class TemporaryTable implements Exportable, Contributable {
 							}
 					);
 					if ( hasOptimizer ) {
+						final TypeConfiguration typeConfiguration = runtimeModelCreationContext.getTypeConfiguration();
 						// We add a special row number column that we can use to identify and join rows
-						final BasicType<Integer> integerBasicType = entityDescriptor.getEntityPersister()
-								.getFactory()
-								.getTypeConfiguration()
-								.getBasicTypeForJavaType( Integer.class );
+						final BasicType<Integer> integerBasicType = typeConfiguration.getBasicTypeForJavaType( Integer.class );
 						final String rowNumberType;
 						if ( dialect.supportsWindowFunctions() ) {
-							rowNumberType = dialect.getTypeName(
+							rowNumberType = typeConfiguration.getDdlTypeRegistry().getTypeName(
 									integerBasicType.getJdbcType().getJdbcTypeCode(),
 									dialect.getSizeStrategy().resolveSize(
 											integerBasicType.getJdbcType(),
@@ -327,7 +345,7 @@ public class TemporaryTable implements Exportable, Contributable {
 							);
 						}
 						else if ( dialect.getIdentityColumnSupport().supportsIdentityColumns() ) {
-							rowNumberType = dialect.getTypeName(
+							rowNumberType = typeConfiguration.getDdlTypeRegistry().getTypeName(
 									integerBasicType.getJdbcType().getJdbcTypeCode(),
 									dialect.getSizeStrategy().resolveSize(
 											integerBasicType.getJdbcType(),
@@ -341,7 +359,7 @@ public class TemporaryTable implements Exportable, Contributable {
 						}
 						else {
 							LOG.multiTableInsertNotAvailable( entityBinding.getEntityName() );
-							rowNumberType = dialect.getTypeName(
+							rowNumberType = typeConfiguration.getDdlTypeRegistry().getTypeName(
 									integerBasicType.getJdbcType().getJdbcTypeCode(),
 									dialect.getSizeStrategy().resolveSize(
 											integerBasicType.getJdbcType(),

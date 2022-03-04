@@ -8,8 +8,6 @@ package org.hibernate.dialect;
 
 import java.sql.CallableStatement;
 import java.sql.SQLException;
-import java.sql.Types;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.PessimisticLockException;
@@ -60,11 +58,11 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.type.SqlTypes;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import jakarta.persistence.TemporalType;
 
@@ -75,6 +73,8 @@ import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.DECIMAL;
 import static org.hibernate.type.SqlTypes.DOUBLE;
 import static org.hibernate.type.SqlTypes.FLOAT;
+import static org.hibernate.type.SqlTypes.GEOMETRY;
+import static org.hibernate.type.SqlTypes.INTERVAL_SECOND;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
@@ -84,6 +84,7 @@ import static org.hibernate.type.SqlTypes.LONGVARCHAR;
 import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
 
@@ -141,14 +142,6 @@ public class H2Dialect extends Dialect {
 					? SequenceInformationExtractorLegacyImpl.INSTANCE
 					: SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
 			this.querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
-			registerColumnType( Types.DECIMAL,  "numeric($p,$s)" );
-			if ( version.isSameOrAfter( 1, 4, 197 ) ) {
-				registerColumnType( SqlTypes.UUID, "uuid" );
-				registerColumnType( SqlTypes.GEOMETRY, "geometry" );
-				if ( version.isSameOrAfter( 1, 4, 198 ) ) {
-					registerColumnType( SqlTypes.INTERVAL_SECOND, "interval second($p,$s)" );
-				}
-			}
 		}
 		else {
 			this.sequenceInformationExtractor = SequenceInformationExtractorNoOpImpl.INSTANCE;
@@ -177,29 +170,30 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	protected String columnType(int jdbcTypeCode) {
-		if ( jdbcTypeCode == NUMERIC && getVersion().isBefore(2) ) {
+	protected String columnType(int sqlTypeCode) {
+		switch ( sqlTypeCode ) {
 			// prior to version 2.0, H2 reported NUMERIC columns as DECIMAL,
 			// which caused problems for schema update tool
-			return super.columnType(DECIMAL);
-		}
-
-		switch (jdbcTypeCode) {
-			case LONG32VARCHAR:
+			case NUMERIC:
+				return getVersion().isBefore( 2 ) ? columnType( DECIMAL ) : super.columnType( sqlTypeCode );
+			case NCHAR:
+				return columnType( CHAR );
+			case NVARCHAR:
+			case LONGNVARCHAR:
 			case LONG32NVARCHAR:
-				return "varchar";
+			case LONGVARCHAR:
+			case LONG32VARCHAR:
+				return columnType( VARCHAR );
+			case LONGVARBINARY:
 			case LONG32VARBINARY:
-				return "varbinary";
-			case ARRAY:
-				return "array";
-			default:
-				return super.columnType(jdbcTypeCode);
+				return columnType( VARBINARY );
 		}
+		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
-	public String getUnboundedTypeName(JdbcType jdbcType, JavaType<?> javaType) {
-		switch ( jdbcType.getDefaultSqlTypeCode() ) {
+	protected String castType(int sqlTypeCode) {
+		switch ( sqlTypeCode ) {
 			case CHAR:
 			case NCHAR:
 				return "char";
@@ -216,14 +210,24 @@ public class H2Dialect extends Dialect {
 			case LONG32VARBINARY:
 				return "varbinary";
 		}
-		return super.getUnboundedTypeName( jdbcType, javaType );
+		return super.castType( sqlTypeCode );
 	}
 
 	@Override
-	protected List<Integer> getSupportedJdbcTypeCodes() {
-		List<Integer> typeCodes = new ArrayList<>( super.getSupportedJdbcTypeCodes() );
-		typeCodes.add(ARRAY);
-		return typeCodes;
+	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.registerColumnTypes( typeContributions, serviceRegistry );
+		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+
+		if ( getVersion().isBefore( 2 ) ) {
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( ARRAY, "array", this ) );
+		}
+		if ( getVersion().isSameOrAfter( 1, 4, 197 ) ) {
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
+			if ( getVersion().isSameOrAfter( 1, 4, 198 ) ) {
+				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INTERVAL_SECOND, "interval second($p,$s)", this ) );
+			}
+		}
 	}
 
 	@Override

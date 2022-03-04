@@ -52,20 +52,18 @@ import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
+import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.TimeZone;
 
 import jakarta.persistence.TemporalType;
@@ -94,95 +92,95 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public SQLServerDialect(DatabaseVersion version) {
 		super(version);
 		exporter = createSequenceExporter(version);
-		registerSqlServerKeywords();
 	}
 
 	public SQLServerDialect(DialectResolutionInfo info) {
 		super(info);
 		exporter = createSequenceExporter(info);
-		registerSqlServerKeywords();
 	}
 
 	private StandardSequenceExporter createSequenceExporter(DatabaseVersion version) {
 		return version.isSameOrAfter(11) ? new SqlServerSequenceExporter(this) : null;
 	}
 
-	private void registerSqlServerKeywords() {
+	@Override
+	protected void registerDefaultKeywords() {
+		super.registerDefaultKeywords();
 		registerKeyword( "top" );
 		registerKeyword( "key" );
 	}
 
 	@Override
-	protected List<Integer> getSupportedJdbcTypeCodes() {
-		List<Integer> list = new ArrayList<>( super.getSupportedJdbcTypeCodes() );
-		if ( getVersion().isSameOrAfter( 10 ) ) {
-			list.add(GEOMETRY);
+	protected String columnType(int sqlTypeCode) {
+		// there is no 'double' type in SQL server
+		// but 'float' is double precision by default
+		if ( sqlTypeCode == DOUBLE ) {
+			return "float";
 		}
-		return list;
-	}
-
-	@Override
-	protected String columnType(int jdbcTypeCode) {
-		if ( getVersion().isSameOrAfter( 10 ) ) {
-			switch (jdbcTypeCode) {
-				case DATE:
-					return "date";
-				case TIME:
-					return "time";
-				case TIMESTAMP:
-					return"datetime2($p)";
-				case TIMESTAMP_WITH_TIMEZONE:
-					return "datetimeoffset($p)";
-			}
-		}
-
-		if ( getVersion().isSameOrAfter(9) ) {
-			// Prefer 'varchar(max)' and 'varbinary(max)' to
-			// the deprecated TEXT and IMAGE types. Note that
-			// the length of a VARCHAR or VARBINARY column must
-			// be either between 1 and 8000 or exactly MAX, and
-			// the length of an NVARCHAR column must be either
-			// between 1 and 4000 or exactly MAX. (HHH-3965)
-			switch (jdbcTypeCode) {
-				case BLOB:
-					return "varbinary(max)";
+		if ( getVersion().isSameOrAfter( 9 ) ) {
+			switch ( sqlTypeCode ) {
+				// Prefer 'varchar(max)' and 'varbinary(max)' to
+				// the deprecated TEXT and IMAGE types. Note that
+				// the length of a VARCHAR or VARBINARY column must
+				// be either between 1 and 8000 or exactly MAX, and
+				// the length of an NVARCHAR column must be either
+				// between 1 and 4000 or exactly MAX. (HHH-3965)
+				case LONGVARCHAR:
+				case LONG32VARCHAR:
 				case CLOB:
 					return "varchar(max)";
+				case LONGNVARCHAR:
+				case LONG32NVARCHAR:
 				case NCLOB:
 					return "nvarchar(max)";
+				case LONGVARBINARY:
+				case LONG32VARBINARY:
+				case BLOB:
+					return "varbinary(max)";
+				case DATE:
+					return getVersion().isSameOrAfter( 10 ) ? "date" : super.columnType( sqlTypeCode );
+				case TIME:
+					return getVersion().isSameOrAfter( 10 ) ? "time" : super.columnType( sqlTypeCode );
+				case TIMESTAMP:
+					return getVersion().isSameOrAfter( 10 ) ? "datetime2($p)" : super.columnType( sqlTypeCode );
+				case TIMESTAMP_WITH_TIMEZONE:
+					return getVersion().isSameOrAfter( 10 ) ? "datetimeoffset($p)" : super.columnType( sqlTypeCode );
 			}
 		}
-
-		switch (jdbcTypeCode) {
-			case DOUBLE:
-				// there is no 'double' type in SQL server
-				// but 'float' is double precision by default
-				return "float";
-			case GEOMETRY:
-				return "geometry";
-			default:
-				return super.columnType(jdbcTypeCode);
-		}
+		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
-	public String getUnboundedTypeName(JdbcType jdbcType, JavaType<?> javaType) {
-		switch ( jdbcType.getDefaultSqlTypeCode() ) {
-			case VARCHAR:
-			case LONGVARCHAR:
-			case LONG32VARCHAR:
-				return "varchar(max)";
-			case NVARCHAR:
-			case LONGNVARCHAR:
-			case LONG32NVARCHAR:
-				return "nvarchar(max)";
-			case BINARY:
-			case VARBINARY:
-			case LONGVARBINARY:
-			case LONG32VARBINARY:
-				return "varbinary(max)";
+	protected String castType(int sqlTypeCode) {
+		if ( getVersion().isSameOrAfter( 9 ) ) {
+			switch ( sqlTypeCode ) {
+				case VARCHAR:
+				case LONGVARCHAR:
+				case LONG32VARCHAR:
+				case CLOB:
+					return "varchar(max)";
+				case NVARCHAR:
+				case LONGNVARCHAR:
+				case LONG32NVARCHAR:
+				case NCLOB:
+					return "nvarchar(max)";
+				case VARBINARY:
+				case LONGVARBINARY:
+				case LONG32VARBINARY:
+				case BLOB:
+					return "varbinary(max)";
+			}
 		}
-		return super.getUnboundedTypeName( jdbcType, javaType );
+		return super.castType( sqlTypeCode );
+	}
+
+	@Override
+	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.registerColumnTypes( typeContributions, serviceRegistry );
+		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+		if ( getVersion().isSameOrAfter( 10 ) ) {
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
+		}
 	}
 
 	@Override

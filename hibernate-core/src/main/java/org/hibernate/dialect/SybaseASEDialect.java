@@ -39,6 +39,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import jakarta.persistence.TemporalType;
 
@@ -78,62 +80,61 @@ public class SybaseASEDialect extends SybaseDialect {
 	public SybaseASEDialect(DatabaseVersion version) {
 		super(version);
 		ansiNull = false;
-		registerSybaseKeywords();
 	}
 
 	public SybaseASEDialect(DialectResolutionInfo info) {
 		super(info);
 		ansiNull = isAnsiNull( info.getDatabaseMetadata() );
-		registerSybaseKeywords();
 	}
 
 	@Override
-	protected String columnType(int jdbcTypeCode) {
-
-		if ( jdbcTypeCode == BIGINT && getVersion().isBefore( 15 ) ) {
-			// Sybase ASE didn't introduce 'bigint' until version 15.0
-			return "numeric(19,0)";
-		}
-
-		if ( getVersion().isSameOrAfter( 12 ) ) {
-			// 'date' and 'time' were introduced in version 12
-			// note: 'timestamp' is something weird on ASE,
-			//       not what we're looking for here!
-			switch (jdbcTypeCode) {
-				case DATE:
-					return "date";
-				case TIME:
-					return "time";
-			}
-		}
-
-		switch (jdbcTypeCode) {
+	protected String columnType(int sqlTypeCode) {
+		switch ( sqlTypeCode ) {
 			case BOOLEAN:
 				// On Sybase ASE, the 'bit' type cannot be null,
 				// and cannot have indexes (while we don't use
 				// tinyint to store signed bytes, we can use it
 				// to store boolean values)
 				return "tinyint";
-			default:
-				return super.columnType(jdbcTypeCode);
+			case BIGINT:
+				// Sybase ASE didn't introduce 'bigint' until version 15.0
+				return getVersion().isBefore( 15 ) ? "numeric(19,0)" : super.columnType( sqlTypeCode );
+			case DATE:
+				return getVersion().isSameOrAfter( 12 ) ? "date" : super.columnType( sqlTypeCode );
+			case TIME:
+				return getVersion().isSameOrAfter( 12 ) ? "time" : super.columnType( sqlTypeCode );
 		}
+		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
-	protected void registerDefaultColumnTypes() {
-		super.registerDefaultColumnTypes();
+	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.registerColumnTypes( typeContributions, serviceRegistry );
+		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		// According to Wikipedia bigdatetime and bigtime were added in 15.5
 		// But with jTDS we can't use them as the driver can't handle the types
 		if ( getVersion().isSameOrAfter( 15, 5 ) && !jtdsDriver ) {
-			registerColumnType( DATE, "bigdatetime" );
-			registerColumnType( DATE, 3, "datetime" );
-			registerColumnType( TIME, "bigtime" );
-			registerColumnType( TIME, 3, "datetime" );
-			registerColumnType( TIMESTAMP, "bigdatetime" );
-			registerColumnType( TIMESTAMP, 3, "datetime" );
-			registerColumnType( TIMESTAMP_WITH_TIMEZONE, "bigdatetime" );
-			registerColumnType( TIMESTAMP_WITH_TIMEZONE, 3, "datetime" );
+			ddlTypeRegistry.addDescriptor(
+					CapacityDependentDdlType.builder( DATE, "bigdatetime", "bigdatetime", this )
+							.withTypeCapacity( 3, "datetime" )
+							.build()
+			);
+			ddlTypeRegistry.addDescriptor(
+					CapacityDependentDdlType.builder( TIME, "bigdatetime", "bigdatetime", this )
+							.withTypeCapacity( 3, "datetime" )
+							.build()
+			);
+			ddlTypeRegistry.addDescriptor(
+					CapacityDependentDdlType.builder( TIMESTAMP, "bigdatetime", "bigdatetime", this )
+							.withTypeCapacity( 3, "datetime" )
+							.build()
+			);
+			ddlTypeRegistry.addDescriptor(
+					CapacityDependentDdlType.builder( TIMESTAMP_WITH_TIMEZONE, "bigdatetime", "bigdatetime", this )
+							.withTypeCapacity( 3, "datetime" )
+							.build()
+			);
 		}
 	}
 
@@ -282,7 +283,9 @@ public class SybaseASEDialect extends SybaseDialect {
 		}
 	}
 
-	private void registerSybaseKeywords() {
+	@Override
+	protected void registerDefaultKeywords() {
+		super.registerDefaultKeywords();
 		registerKeyword( "add" );
 		registerKeyword( "all" );
 		registerKeyword( "alter" );

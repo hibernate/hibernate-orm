@@ -55,6 +55,9 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.*;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.CallableStatement;
 import java.sql.DatabaseMetaData;
@@ -92,16 +95,16 @@ public class DB2Dialect extends Dialect {
 	}
 
 	public DB2Dialect(DialectResolutionInfo info) {
-		super(info);
-		registerDB2Keywords();
+		super( info );
 	}
 
 	public DB2Dialect(DatabaseVersion version) {
-		super(version);
-		registerDB2Keywords();
+		super( version );
 	}
 
-	private void registerDB2Keywords() {
+	@Override
+	protected void registerDefaultKeywords() {
+		super.registerDefaultKeywords();
 		//not keywords, at least not in DB2 11,
 		//but perhaps they were in older versions?
 		registerKeyword( "current" );
@@ -127,27 +130,19 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	protected String columnType(int jdbcTypeCode) {
-		if ( getDB2Version().isBefore( 11 ) ) {
-			switch (jdbcTypeCode) {
-				case BOOLEAN:
-					// prior to DB2 11, the 'boolean' type existed,
-					// but was not allowed as a column type
-					return "smallint";
-				case BINARY: // should use 'binary' since version 11
-				case VARBINARY: // should use 'varbinary' since version 11
-					return "varchar($l) for bit data";
-			}
-		}
-
-		switch (jdbcTypeCode) {
+	protected String columnType(int sqlTypeCode) {
+		switch ( sqlTypeCode ) {
+			case BOOLEAN:
+				// prior to DB2 11, the 'boolean' type existed,
+				// but was not allowed as a column type
+				return getDB2Version().isBefore( 11 ) ? "smallint" : super.columnType( sqlTypeCode );
 			case TINYINT:
 				// no tinyint
 				return "smallint";
 			case NUMERIC:
 				// HHH-12827: map them both to the same type to avoid problems with schema update
 				// Note that 31 is the maximum precision DB2 supports
-				return super.columnType(DECIMAL);
+				return columnType( DECIMAL );
 			case BLOB:
 				return "blob($l)";
 			case CLOB:
@@ -156,18 +151,25 @@ public class DB2Dialect extends Dialect {
 				return "timestamp($p)";
 			case TIME_WITH_TIMEZONE:
 				return "time";
-			default:
-				return super.columnType(jdbcTypeCode);
+			case VARBINARY:
+				// should use 'varbinary' since version 11
+				return getDB2Version().isBefore( 11 ) ? "varchar($l) for bit data" : super.columnType( sqlTypeCode );
 		}
+		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
-	protected void registerDefaultColumnTypes() {
-		// Note: the 'long varchar' data type was deprecated in DB2 and shouldn't be used anymore
-		super.registerDefaultColumnTypes();
+	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.registerColumnTypes( typeContributions, serviceRegistry );
+		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+
 		if ( getDB2Version().isBefore( 11 ) ) {
 			// should use 'binary' since version 11
-			registerColumnType( BINARY, 254, "char($l) for bit data" );
+			ddlTypeRegistry.addDescriptor(
+					CapacityDependentDdlType.builder( BINARY, "varchar($l) for bit data", this )
+							.withTypeCapacity( 254, "char($l) for bit data" )
+							.build()
+			);
 		}
 	}
 
@@ -272,14 +274,15 @@ public class DB2Dialect extends Dialect {
 						queryEngine.getTypeConfiguration(),
 						SqlAstNodeRenderingMode.DEFAULT,
 						"||",
-						getCastTypeName(
-								queryEngine.getTypeConfiguration()
-										.getBasicTypeRegistry()
-										.resolve( StandardBasicTypes.STRING ),
-								null,
-								null,
-								null
-						),
+						queryEngine.getTypeConfiguration().getDdlTypeRegistry().getDescriptor( VARCHAR )
+								.getCastTypeName(
+										queryEngine.getTypeConfiguration()
+												.getBasicTypeRegistry()
+												.resolve( StandardBasicTypes.STRING ),
+										null,
+										null,
+										null
+								),
 						true
 				)
 		);
@@ -499,7 +502,7 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public String getSelectClauseNullString(int sqlType) {
+	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		return selectNullString(sqlType);
 	}
 

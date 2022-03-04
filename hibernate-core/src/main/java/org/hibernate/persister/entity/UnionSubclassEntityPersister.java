@@ -450,7 +450,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				for ( Column col : columns ) {
 					if ( !table.containsColumn(col) ) {
 						int sqlType = col.getSqlTypeCode( mapping );
-						buf.append( dialect.getSelectClauseNullString(sqlType) )
+						buf.append( dialect.getSelectClauseNullString( sqlType, getFactory().getTypeConfiguration() ) )
 								.append(" as ");
 					}
 					buf.append(col.getQuotedName(dialect));
@@ -528,7 +528,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 						selectableMapping = selectableMappings.values().iterator().next();
 						final int sqlType = selectableMapping.getJdbcMapping().getJdbcType()
 								.getDefaultSqlTypeCode();
-						buf.append( dialect.getSelectClauseNullString( sqlType ) )
+						buf.append( dialect.getSelectClauseNullString( sqlType, getFactory().getTypeConfiguration() ) )
 								.append( " as " );
 					}
 					buf.append(

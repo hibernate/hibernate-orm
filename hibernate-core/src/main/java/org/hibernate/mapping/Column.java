@@ -22,6 +22,7 @@ import org.hibernate.sql.Template;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.internal.util.StringHelper.safeInterning;
 
@@ -240,10 +241,10 @@ public class Column implements Selectable, Serializable, Cloneable {
 		sqlTypeCode = typeCode;
 	}
 
-	public String getSqlType(Dialect dialect, Mapping mapping) throws HibernateException {
+	public String getSqlType(TypeConfiguration typeConfiguration, Dialect dialect, Mapping mapping) throws HibernateException {
 		if ( sqlType == null ) {
 			try {
-				sqlType = dialect.getTypeName( getSqlTypeCode( mapping ), getColumnSize( dialect, mapping ) );
+				sqlType = typeConfiguration.getDdlTypeRegistry().getTypeName( getSqlTypeCode( mapping ), getColumnSize( dialect, mapping ) );
 			}
 			catch (HibernateException cause) {
 				throw new HibernateException(
@@ -365,7 +366,10 @@ public class Column implements Selectable, Serializable, Cloneable {
 	}
 
 	@Override
-	public String getTemplate(Dialect dialect, SqmFunctionRegistry functionRegistry) {
+	public String getTemplate(
+			Dialect dialect,
+			TypeConfiguration typeConfiguration,
+			SqmFunctionRegistry functionRegistry) {
 		return safeInterning(
 				hasCustomRead()
 				// see note in renderTransformerReadFragment wrt access to SessionFactory

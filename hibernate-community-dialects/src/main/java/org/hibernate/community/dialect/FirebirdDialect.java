@@ -17,8 +17,8 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.identity.FirebirdIdentityColumnSupport;
 import org.hibernate.community.dialect.pagination.SkipFirstLimitHandler;
 import org.hibernate.community.dialect.sequence.FirebirdSequenceSupport;
@@ -33,7 +33,6 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
@@ -58,6 +57,7 @@ import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -71,11 +71,23 @@ import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.BinaryFloatDdlType;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
+import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BLOB;
+import static org.hibernate.type.SqlTypes.BOOLEAN;
+import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME;
@@ -92,8 +104,6 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * @author Mark Rotteveel
  */
 public class FirebirdDialect extends Dialect {
-
-	private final DatabaseVersion version;
 
 	@SuppressWarnings("unused")
 	public FirebirdDialect() {
@@ -114,15 +124,47 @@ public class FirebirdDialect extends Dialect {
 	//   cast (not even when wrapped in a function call)
 
 	public FirebirdDialect(DatabaseVersion version) {
-		super();
-		this.version = version;
+		super( version );
+	}
 
-		if ( version.isBefore( 3, 0 ) ) {
+	@Override
+	protected String columnType(int sqlTypeCode) {
+		switch ( sqlTypeCode ) {
 			//'boolean' type introduced in 3.0
-			registerColumnType( Types.BOOLEAN, "smallint" );
+			case BOOLEAN:
+				return getVersion().isBefore( 3, 0 ) ? "smallint" : super.columnType( sqlTypeCode );
+			case TINYINT:
+				return "smallint";
+			//no precision for 'timestamp' type
+			case TIMESTAMP:
+				return "timestamp";
+			case TIME_WITH_TIMEZONE:
+				return getVersion().isBefore( 4, 0 ) ? "time" : super.columnType( sqlTypeCode );
+			case TIMESTAMP_WITH_TIMEZONE:
+				return getVersion().isBefore( 4, 0 ) ? "timestamp" : "timestamp with time zone";
+			case BINARY:
+				return getVersion().isBefore( 4, 0 ) ? "char($l) character set octets" : super.columnType( sqlTypeCode );
+			case VARBINARY:
+				return getVersion().isBefore( 4, 0 ) ? "varchar($l) character set octets" : super.columnType( sqlTypeCode );
+			case BLOB:
+				return "blob sub_type binary";
+			case CLOB:
+			case NCLOB:
+				return "blob sub_type text";
 		}
+		return super.columnType( sqlTypeCode );
+	}
 
-		registerColumnType( Types.TINYINT, "smallint" );
+	@Override
+	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.registerColumnTypes( typeContributions, serviceRegistry );
+		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+
+		if ( getVersion().isBefore( 4, 0 ) ) {
+			//precision of a Firebird 3 and earlier 'float(p)' represents
+			//decimal digits instead of binary digits
+			ddlTypeRegistry.addDescriptor( new BinaryFloatDdlType( this ) );
+		}
 
 		// Note: according to the documentation, Firebird has
 		// just two floating point types:
@@ -131,29 +173,6 @@ public class FirebirdDialect extends Dialect {
 		// However, it turns out that Firebird actually supports
 		// the ANSI types 'real', 'float(p)', 'double precision'.
 		// So we don't override anything here.
-
-		//no precision for 'timestamp' type
-		registerColumnType( Types.TIMESTAMP, "timestamp" );
-		if ( getVersion().isBefore( 4, 0 ) ) {
-			// No time zone support, map to without time zone types
-			registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
-			registerColumnType( Types.TIME_WITH_TIMEZONE, "time" );
-		}
-		else {
-			registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp with time zone" );
-		}
-
-		registerColumnType( Types.VARCHAR, "blob sub_type text" );
-
-		if ( getVersion().isBefore( 4, 0 ) ) {
-			registerColumnType( Types.BINARY, "char($l) character set octets" );
-			registerColumnType( Types.VARBINARY, getMaxVarbinaryLength(), "varchar($l) character set octets" );
-		}
-		registerColumnType( Types.VARBINARY, "blob sub_type binary" );
-
-		registerColumnType( Types.BLOB, "blob sub_type binary" );
-		registerColumnType( Types.CLOB, "blob sub_type text" );
-		registerColumnType( Types.NCLOB, "blob sub_type text" ); // Firebird doesn't have NCLOB, but Jaybird emulates NCLOB support
 	}
 
 	@Override
@@ -166,11 +185,6 @@ public class FirebirdDialect extends Dialect {
 	@Override
 	public int getMaxVarbinaryLength() {
 		return 32_756;
-	}
-
-	@Override
-	public DatabaseVersion getVersion() {
-		return version;
 	}
 
 	@Override
@@ -207,19 +221,6 @@ public class FirebirdDialect extends Dialect {
 		return getVersion().isBefore( 3, 0 )
 				? Types.BIT
 				: super.getPreferredSqlTypeCodeForBoolean();
-	}
-
-	@Override
-	public String getTypeName(int code, Size size) throws HibernateException {
-		if ( getVersion().isBefore( 4, 0 ) ) {
-			//precision of a Firebird 3 and earlier 'float(p)' represents
-			//decimal digits instead of binary digits
-			return super.getTypeName( code, binaryToDecimalPrecision( code, size ) );
-		}
-		else {
-			// Firebird 4 and higher supports standard 'float(p)' (with precision in binary digits)
-			return super.getTypeName( code, size );
-		}
 	}
 
 	@Override
@@ -514,7 +515,7 @@ public class FirebirdDialect extends Dialect {
 		// Additional reserved words
 		// The Hibernate list of SQL:2003 reserved words doesn't contain all SQL:2003 reserved words,
 		// and Firebird is finicky when it comes to reserved words
-		if ( version.isSameOrAfter( 3, 0 ) ) {
+		if ( getVersion().isSameOrAfter( 3, 0 ) ) {
 			builder.applyReservedWords(
 					"AVG", "BOOLEAN", "CHARACTER_LENGTH", "CHAR_LENGTH", "CORR", "COUNT",
 					"COVAR_POP", "COVAR_SAMP", "EXTRACT", "LOWER", "MAX", "MIN", "OCTET_LENGTH", "POSITION",

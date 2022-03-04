@@ -13,7 +13,6 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.community.dialect.sequence.MaxDBSequenceSupport;
 import org.hibernate.community.dialect.sequence.SequenceInformationExtractorSAPDBDatabaseImpl;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
-import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -40,6 +39,15 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
+import static org.hibernate.type.SqlTypes.BIGINT;
+import static org.hibernate.type.SqlTypes.BLOB;
+import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.DECIMAL;
+import static org.hibernate.type.SqlTypes.NUMERIC;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.VARBINARY;
 
 /**
  * A SQL dialect compatible with SAP MaxDB.
@@ -49,22 +57,34 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STR
 public class MaxDBDialect extends Dialect {
 
 	public MaxDBDialect() {
-		super();
-		registerColumnType( Types.TINYINT, "smallint" );
+		super( ZERO_VERSION );
+	}
 
-		registerColumnType( Types.BIGINT, "fixed(19,0)" );
+	public MaxDBDialect(DialectResolutionInfo info) {
+		super( info );
+	}
 
-		registerColumnType( Types.NUMERIC, "fixed($p,$s)" );
-		registerColumnType( Types.DECIMAL, "fixed($p,$s)" );
-
-		//no explicit precision
-		registerColumnType(Types.TIMESTAMP, "timestamp");
-		registerColumnType(Types.TIMESTAMP_WITH_TIMEZONE, "timestamp");
-
-		registerColumnType( Types.VARBINARY, "long byte" );
-
-		registerColumnType( Types.CLOB, "long varchar" );
-		registerColumnType( Types.BLOB, "long byte" );
+	@Override
+	protected String columnType(int sqlTypeCode) {
+		switch ( sqlTypeCode ) {
+			case TINYINT:
+				return "smallint";
+			case BIGINT:
+				return "fixed(19,0)";
+			case NUMERIC:
+			case DECIMAL:
+				return "fixed($p,$s)";
+			//no explicit precision
+			case TIMESTAMP:
+			case TIMESTAMP_WITH_TIMEZONE:
+				return "timestamp";
+			case VARBINARY:
+			case BLOB:
+				return "long byte";
+			case CLOB:
+				return "long varchar";
+		}
+		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
@@ -94,16 +114,6 @@ public class MaxDBDialect extends Dialect {
 				scale,
 				jdbcTypeRegistry
 		);
-	}
-
-	public MaxDBDialect(DialectResolutionInfo info) {
-		this();
-		registerKeywords( info );
-	}
-
-	@Override
-	public DatabaseVersion getVersion() {
-		return ZERO_VERSION;
 	}
 
 	@Override

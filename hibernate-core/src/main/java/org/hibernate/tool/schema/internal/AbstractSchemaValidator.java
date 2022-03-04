@@ -159,7 +159,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			ExecutionOptions options,
 			Dialect dialect) {
 		boolean typesMatch = dialect.equivalentTypes( column.getSqlTypeCode( metadata ), columnInformation.getTypeCode() )
-				|| column.getSqlType( dialect, metadata ).toLowerCase(Locale.ROOT)
+				|| column.getSqlType( metadata.getDatabase().getTypeConfiguration(), dialect, metadata ).toLowerCase(Locale.ROOT)
 						.startsWith( columnInformation.getTypeName().toLowerCase(Locale.ROOT) );
 		if ( !typesMatch ) {
 			throw new SchemaManagementException(

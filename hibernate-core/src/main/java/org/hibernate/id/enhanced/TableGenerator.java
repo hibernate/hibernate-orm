@@ -688,7 +688,9 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 					table,
 					segmentColumnName,
 					basicTypeRegistry.resolve( StandardBasicTypes.STRING ),
-					dialect.getTypeName( Types.VARCHAR, Size.length(segmentValueLength) )
+					database.getTypeConfiguration()
+							.getDdlTypeRegistry()
+							.getTypeName( Types.VARCHAR, Size.length( segmentValueLength ) )
 			);
 			segmentColumn.setNullable( false );
 			table.addColumn( segmentColumn );

@@ -100,6 +100,8 @@ import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
+import static java.util.Objects.requireNonNullElse;
+
 /**
  * @author Steve Ebersole
  */
@@ -1373,16 +1375,7 @@ public class ToOneAttributeMapping
 			}
 		}
 
-		final SqlAstJoinType joinType;
-		if ( requestedJoinType != null )  {
-			joinType = requestedJoinType;
-		}
-		else {
-			joinType = SqlAstJoinType.INNER;
-//			joinType = hasNotFoundAction()
-//					? SqlAstJoinType.LEFT
-//					: SqlAstJoinType.INNER;
-		}
+		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
 
 		// If a parent is a collection part, there is no custom predicate and the join is INNER or LEFT
 		// we check if this attribute is the map key property to reuse the existing index table group
@@ -1431,7 +1424,7 @@ public class ToOneAttributeMapping
 										sb.insert( 0, path.getUnaliasedLocalName() );
 										path = path.getParent();
 									}
-									return path != null && navigablePath.equals( path )
+									return navigablePath.equals( path )
 											&& targetKeyPropertyNames.contains( sb.toString() )
 											&& identifyingColumnsTableExpression.equals( tableExpression );
 								}
@@ -1552,7 +1545,7 @@ public class ToOneAttributeMapping
 						sb.insert( 0, path.getUnaliasedLocalName() );
 						path = path.getParent();
 					}
-					return path != null && navigablePath.equals( path )
+					return navigablePath.equals( path )
 							&& targetKeyPropertyNames.contains( sb.toString() )
 							&& identifyingColumnsTableExpression.equals( tableExpression );
 				},

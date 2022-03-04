@@ -2851,7 +2851,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( parentTableGroup == null ) {
 				final TableGroup parent = fromClauseIndex.findTableGroupOnParents( parentPath.getNavigablePath() );
 				if ( parent != null ) {
-					throw new SqlTreeCreationException( "Found un-correlated path usage in sub query - " + parentPath );
+					fromClauseIndex.register( (SqmPath<?>) parentPath, parent );
+					return parent;
 				}
 				throw new SqlTreeCreationException( "Could not locate TableGroup - " + parentPath.getNavigablePath() );
 			}

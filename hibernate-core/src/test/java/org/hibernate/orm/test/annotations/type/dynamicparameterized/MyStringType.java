@@ -106,8 +106,8 @@ public class MyStringType implements UserType<String>, DynamicParameterizedType 
 	}
 
 	@Override
-	public int[] sqlTypes() {
-		return new int[] { Types.VARCHAR };
+	public int getSqlType() {
+		return Types.VARCHAR;
 	}
 
 	@Override
@@ -116,17 +116,17 @@ public class MyStringType implements UserType<String>, DynamicParameterizedType 
 	}
 
 	@Override
-	public boolean equals(Object x, Object y) {
+	public boolean equals(String x, String y) {
 		return ( x == null && y == null ) || ( x != null && y != null && x.equals( y ) );
 	}
 
 	@Override
-	public int hashCode(Object x) {
+	public int hashCode(String x) {
 		return x.hashCode();
 	}
 
 	@Override
-	public Object deepCopy(Object value) {
+	public String deepCopy(String value) {
 		return value;
 	}
 
@@ -136,17 +136,17 @@ public class MyStringType implements UserType<String>, DynamicParameterizedType 
 	}
 
 	@Override
-	public Serializable disassemble(Object value) {
-		return (Integer) value;
+	public Serializable disassemble(String value) {
+		return value;
 	}
 
 	@Override
-	public Object assemble(Serializable cached, Object owner) {
-		return cached;
+	public String assemble(Serializable cached, Object owner) {
+		return (String) cached;
 	}
 
 	@Override
-	public Object replace(Object original, Object target, Object owner) {
+	public String replace(String original, String target, Object owner) {
 		return original;
 	}
 }

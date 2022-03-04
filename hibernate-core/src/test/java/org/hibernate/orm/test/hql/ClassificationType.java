@@ -15,7 +15,6 @@ import java.sql.Types;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.EnhancedUserType;
@@ -32,17 +31,17 @@ import org.hibernate.usertype.EnhancedUserType;
 public class ClassificationType implements EnhancedUserType<Classification>, ValueExtractor<Classification> {
 
 	@Override
-	public int[] sqlTypes() {
-		return new int[] { Types.TINYINT };
+	public int getSqlType() {
+		return Types.TINYINT;
 	}
 
 	@Override
-	public Class returnedClass() {
+	public Class<Classification> returnedClass() {
 		return Classification.class;
 	}
 
 	@Override
-	public boolean equals(Object x, Object y) throws HibernateException {
+	public boolean equals(Classification x, Classification y) throws HibernateException {
 		if ( x == null && y == null ) {
 			return false;
 		}
@@ -55,7 +54,7 @@ public class ClassificationType implements EnhancedUserType<Classification>, Val
 	}
 
 	@Override
-	public int hashCode(Object x) throws HibernateException {
+	public int hashCode(Classification x) throws HibernateException {
 		return x.hashCode();
 	}
 
@@ -79,7 +78,7 @@ public class ClassificationType implements EnhancedUserType<Classification>, Val
 	}
 
 	@Override
-	public Object deepCopy(Object value) throws HibernateException {
+	public Classification deepCopy(Classification value) throws HibernateException {
 		return value;
 	}
 
@@ -89,17 +88,17 @@ public class ClassificationType implements EnhancedUserType<Classification>, Val
 	}
 
 	@Override
-	public Serializable disassemble(Object value) throws HibernateException {
+	public Serializable disassemble(Classification value) throws HibernateException {
 		return ( Classification ) value;
 	}
 
 	@Override
-	public Object assemble(Serializable cached, Object owner) throws HibernateException {
-		return cached;
+	public Classification assemble(Serializable cached, Object owner) throws HibernateException {
+		return (Classification) cached;
 	}
 
 	@Override
-	public Object replace(Object original, Object target, Object owner) throws HibernateException {
+	public Classification replace(Classification original, Classification target, Object owner) throws HibernateException {
 		return original;
 	}
 

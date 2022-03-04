@@ -53,13 +53,13 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 public interface UserType<J> {
 
 	/**
-	 * Return the SQL type codes for the columns mapped by this type. The
-	 * codes are generally defined on {@code java.sql.Types}, but could
+	 * Return the SQL type code for the column mapped by this type. The
+	 * codes are generally defined on {@code org.hibernate.type.SqlTypes}, but could
 	 * be database-specific codes
 	 *
-	 * @see java.sql.Types
+	 * @see org.hibernate.type.SqlTypes
 	 */
-	int[] sqlTypes();
+	int getSqlType();
 
 	/**
 	 * The class returned by {@code nullSafeGet()}.
@@ -72,12 +72,12 @@ public interface UserType<J> {
 	 * Compare two instances of the class mapped by this type for persistence "equality".
 	 * Equality of the persistent state.
 	 */
-	boolean equals(Object x, Object y);
+	boolean equals(J x, J y);
 
 	/**
 	 * Get a hashcode for the instance, consistent with persistence "equality"
 	 */
-	int hashCode(Object x);
+	int hashCode(J x);
 
 	/**
 	 * Retrieve an instance of the mapped class from a JDBC resultset. Implementors
@@ -100,7 +100,7 @@ public interface UserType<J> {
 	 * @param value the object to be cloned, which may be null
 	 * @return Object a copy
 	 */
-	Object deepCopy(Object value);
+	J deepCopy(J value);
 
 	/**
 	 * Are objects of this type mutable?
@@ -118,7 +118,7 @@ public interface UserType<J> {
 	 * @param value the object to be cached
 	 * @return a cacheable representation of the object
 	 */
-	Serializable disassemble(Object value);
+	Serializable disassemble(J value);
 
 	/**
 	 * Reconstruct an object from the cacheable representation. At the very least this
@@ -128,7 +128,7 @@ public interface UserType<J> {
 	 * @param owner the owner of the cached object
 	 * @return a reconstructed object from the cacheable representation
 	 */
-	Object assemble(Serializable cached, Object owner);
+	J assemble(Serializable cached, Object owner);
 
 	/**
 	 * During merge, replace the existing (target) value in the entity we are merging to
@@ -142,7 +142,7 @@ public interface UserType<J> {
 	 *
 	 * @return the value to be merged
 	 */
-	Object replace(Object detached, Object managed, Object owner);
+	J replace(J detached, J managed, Object owner);
 
 	default long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
 		return Size.DEFAULT_LENGTH;

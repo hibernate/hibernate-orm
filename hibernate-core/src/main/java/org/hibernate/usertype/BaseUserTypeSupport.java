@@ -28,8 +28,6 @@ public abstract class BaseUserTypeSupport<T> implements UserType<T> {
 
 	private boolean resolved;
 
-	// cached array wrapping our single type-code
-	private int[] sqlTypes;
 	// cached JDBC extractor and binder
 	private ValueExtractor<T> jdbcValueExtractor;
 	private ValueBinder<T> jdbcValueBinder;
@@ -44,8 +42,6 @@ public abstract class BaseUserTypeSupport<T> implements UserType<T> {
 		resolve( (javaType,jdbcType) -> {
 			this.javaType = javaType;
 			this.jdbcType = jdbcType;
-
-			sqlTypes = new int[] { jdbcType.getJdbcTypeCode() };
 
 			jdbcValueExtractor = jdbcType.getExtractor( javaType );
 			jdbcValueBinder = jdbcType.getBinder( javaType );
@@ -65,9 +61,9 @@ public abstract class BaseUserTypeSupport<T> implements UserType<T> {
 	}
 
 	@Override
-	public int[] sqlTypes() {
+	public int getSqlType() {
 		ensureResolved();
-		return sqlTypes;
+		return jdbcType.getDefaultSqlTypeCode();
 	}
 
 	@Override
@@ -76,15 +72,13 @@ public abstract class BaseUserTypeSupport<T> implements UserType<T> {
 	}
 
 	@Override
-	public boolean equals(Object x, Object y) throws HibernateException {
-		//noinspection unchecked
-		return javaType().areEqual( (T) x, (T) y );
+	public boolean equals(T x, T y) throws HibernateException {
+		return javaType().areEqual( x, y );
 	}
 
 	@Override
-	public int hashCode(Object x) throws HibernateException {
-		//noinspection unchecked
-		return javaType().extractHashCode( (T) x );
+	public int hashCode(T x) throws HibernateException {
+		return javaType().extractHashCode( x );
 	}
 
 	@Override
@@ -100,9 +94,8 @@ public abstract class BaseUserTypeSupport<T> implements UserType<T> {
 	}
 
 	@Override
-	public Object deepCopy(Object value) throws HibernateException {
-		//noinspection unchecked
-		return javaType().getMutabilityPlan().deepCopy( (T) value );
+	public T deepCopy(T value) throws HibernateException {
+		return javaType().getMutabilityPlan().deepCopy( value );
 	}
 
 	@Override
@@ -111,18 +104,17 @@ public abstract class BaseUserTypeSupport<T> implements UserType<T> {
 	}
 
 	@Override
-	public Serializable disassemble(Object value) throws HibernateException {
-		//noinspection unchecked
-		return javaType().getMutabilityPlan().disassemble( (T) value, null );
+	public Serializable disassemble(T value) throws HibernateException {
+		return javaType().getMutabilityPlan().disassemble( value, null );
 	}
 
 	@Override
-	public Object assemble(Serializable cached, Object owner) throws HibernateException {
+	public T assemble(Serializable cached, Object owner) throws HibernateException {
 		return javaType().getMutabilityPlan().assemble( cached, null );
 	}
 
 	@Override
-	public Object replace(Object original, Object target, Object owner) throws HibernateException {
+	public T replace(T original, T target, Object owner) throws HibernateException {
 		return deepCopy( original );
 	}
 }

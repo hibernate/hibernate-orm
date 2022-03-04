@@ -24,36 +24,36 @@ import org.jboss.logging.Logger;
  * @author Vlad Mihalcea
  */
 //tag::basic-custom-type-BitSetUserType-example[]
-public class BitSetUserType implements UserType<Object> {
+public class BitSetUserType implements UserType<BitSet> {
 
     public static final BitSetUserType INSTANCE = new BitSetUserType();
 
     private static final Logger log = Logger.getLogger(BitSetUserType.class);
 
     @Override
-    public int[] sqlTypes() {
-        return new int[] { Types.VARCHAR };
+    public int getSqlType() {
+        return Types.VARCHAR;
     }
 
     @Override
-    public Class returnedClass() {
+    public Class<BitSet> returnedClass() {
         return BitSet.class;
     }
 
     @Override
-    public boolean equals(Object x, Object y)
+    public boolean equals(BitSet x, BitSet y)
 			throws HibernateException {
         return Objects.equals(x, y);
     }
 
     @Override
-    public int hashCode(Object x)
+    public int hashCode(BitSet x)
 			throws HibernateException {
         return Objects.hashCode(x);
     }
 
     @Override
-    public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+    public BitSet nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
         String columnValue = (String) rs.getObject(position);
         if (rs.wasNull()) {
             columnValue = null;
@@ -65,7 +65,7 @@ public class BitSetUserType implements UserType<Object> {
 
     @Override
     public void nullSafeSet(
-            PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
+            PreparedStatement st, BitSet value, int index, SharedSessionContractImplementor session)
             throws HibernateException, SQLException {
         if (value == null) {
             log.debugv("Binding null to parameter {0} ",index);
@@ -79,7 +79,7 @@ public class BitSetUserType implements UserType<Object> {
     }
 
     @Override
-    public Object deepCopy(Object value)
+    public BitSet deepCopy(BitSet value)
 			throws HibernateException {
         return value == null ? null :
             BitSet.valueOf(BitSet.class.cast(value).toLongArray());
@@ -91,19 +91,19 @@ public class BitSetUserType implements UserType<Object> {
     }
 
     @Override
-    public Serializable disassemble(Object value)
+    public Serializable disassemble(BitSet value)
 			throws HibernateException {
-        return (BitSet) deepCopy(value);
+        return deepCopy(value);
     }
 
     @Override
-    public Object assemble(Serializable cached, Object owner)
+    public BitSet assemble(Serializable cached, Object owner)
 			throws HibernateException {
-        return deepCopy(cached);
+        return deepCopy( (BitSet) cached );
     }
 
     @Override
-    public Object replace(Object original, Object target, Object owner)
+    public BitSet replace(BitSet original, BitSet target, Object owner)
 			throws HibernateException {
         return deepCopy(original);
     }

@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -20,6 +21,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.TypedParameterValue;
 import org.hibernate.type.CustomType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -139,12 +141,10 @@ public class TypedValueParametersTest {
 	public static class TagUserType implements UserType<List<String>> {
 		public static final TagUserType INSTANCE = new TagUserType();
 
-		private final int SQLTYPE = java.sql.Types.VARCHAR;
-
 		@Override
 		public void nullSafeSet(PreparedStatement statement, List<String> list, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
 			if ( list == null ) {
-				statement.setNull(index, SQLTYPE);
+				statement.setNull( index, SqlTypes.VARCHAR );
 			}
 			else {
 				StringBuilder sb = new StringBuilder();
@@ -183,8 +183,10 @@ public class TypedValueParametersTest {
 			return list;
 		}
 
-		public int[] sqlTypes() {
-			return new int[]{SQLTYPE};
+
+		@Override
+		public int getSqlType() {
+			return Types.VARCHAR;
 		}
 
 		@Override
@@ -194,28 +196,28 @@ public class TypedValueParametersTest {
 		}
 
 		@Override
-		public Object assemble(final Serializable cached, final Object owner) throws HibernateException {
-			return cached;
+		public List<String> assemble(final Serializable cached, final Object owner) throws HibernateException {
+			return (List<String>) cached;
 		}
 
 		@Override
 		@SuppressWarnings("unchecked")
-		public Object deepCopy(final Object o) throws HibernateException {
-			return o == null ? null : new ArrayList<>((List<String>) o);
+		public List<String> deepCopy(final List<String> o) throws HibernateException {
+			return o == null ? null : new ArrayList<>( o );
 		}
 
 		@Override
-		public Serializable disassemble(final Object o) throws HibernateException {
+		public Serializable disassemble(final List<String> o) throws HibernateException {
 			return (Serializable) o;
 		}
 
 		@Override
-		public boolean equals(final Object x, final Object y) throws HibernateException {
+		public boolean equals(final List<String> x, final List<String> y) throws HibernateException {
 			return x == null ? y == null : x.equals(y);
 		}
 
 		@Override
-		public int hashCode(final Object o) throws HibernateException {
+		public int hashCode(final List<String> o) throws HibernateException {
 			return o == null ? 0 : o.hashCode();
 		}
 
@@ -225,7 +227,7 @@ public class TypedValueParametersTest {
 		}
 
 		@Override
-		public Object replace(final Object original, final Object target, final Object owner) throws HibernateException {
+		public List<String> replace(final List<String> original, final List<String> target, final Object owner) throws HibernateException {
 			return original;
 		}
 

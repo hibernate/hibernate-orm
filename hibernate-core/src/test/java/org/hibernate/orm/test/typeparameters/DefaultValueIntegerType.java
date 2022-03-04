@@ -24,20 +24,21 @@ import org.jboss.logging.Logger;
 /**
  * @author Michi
  */
-public class DefaultValueIntegerType implements UserType, ParameterizedType, Serializable {
+public class DefaultValueIntegerType implements UserType<Integer>, ParameterizedType, Serializable {
 	private static final Logger log = Logger.getLogger( DefaultValueIntegerType.class );
 
 	private Integer defaultValue;
 
-	public int[] sqlTypes() {
-		return new int[] {Types.INTEGER};
+	@Override
+	public int getSqlType() {
+		return Types.INTEGER;
 	}
 
 	public Class returnedClass() {
 		return int.class;
 	}
 
-	public boolean equals(Object x, Object y) throws HibernateException {
+	public boolean equals(Integer x, Integer y) throws HibernateException {
 		if ( x == y ) {
 			return true;
 		}
@@ -48,13 +49,13 @@ public class DefaultValueIntegerType implements UserType, ParameterizedType, Ser
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public Integer nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
 		Number result = (Number) rs.getObject( position );
 		return result == null ? defaultValue : Integer.valueOf( result.intValue() );
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
+	public void nullSafeSet(PreparedStatement st, Integer value, int index, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		if ( value == null || defaultValue.equals( value ) ) {
 			log.trace( "binding null to parameter: " + index );
@@ -62,32 +63,32 @@ public class DefaultValueIntegerType implements UserType, ParameterizedType, Ser
 		}
 		else {
 			log.trace( "binding " + value + " to parameter: " + index );
-			st.setInt( index, ( (Integer) value ).intValue() );
+			st.setInt( index, value );
 		}
 	}
 
-	public Object deepCopy(Object value) throws HibernateException {
-		return new Integer( ( (Integer) value ).intValue() );
+	public Integer deepCopy(Integer value) throws HibernateException {
+		return value;
 	}
 
 	public boolean isMutable() {
 		return false;
 	}
 
-	public int hashCode(Object x) throws HibernateException {
+	public int hashCode(Integer x) throws HibernateException {
 		return x.hashCode();
 	}
 
-	public Object assemble(Serializable cached, Object owner)
+	public Integer assemble(Serializable cached, Object owner)
 			throws HibernateException {
-		return cached;
+		return (Integer) cached;
 	}
 
-	public Serializable disassemble(Object value) throws HibernateException {
-		return (Serializable) value;
+	public Serializable disassemble(Integer value) throws HibernateException {
+		return value;
 	}
 
-	public Object replace(Object original, Object target, Object owner)
+	public Integer replace(Integer original, Integer target, Object owner)
 			throws HibernateException {
 		return original;
 	}

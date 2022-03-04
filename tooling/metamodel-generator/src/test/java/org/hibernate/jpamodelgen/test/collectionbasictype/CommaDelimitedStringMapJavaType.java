@@ -16,39 +16,40 @@ import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
 /**
  * @author Vlad Mihalcea
  */
-public class CommaDelimitedStringMapJavaType extends AbstractClassJavaType<Map> {
+public class CommaDelimitedStringMapJavaType extends AbstractClassJavaType<Map<String, String>> {
 
-    public static final String DELIMITER = ",";
+	public static final String DELIMITER = ",";
 
-    public CommaDelimitedStringMapJavaType() {
-        super(
-            Map.class,
-            new MutableMutabilityPlan<Map>() {
-                @Override
-                protected Map deepCopyNotNull(Map value) {
-                    return new HashMap( value );
-                }
-            }
-        );
-    }
+	public CommaDelimitedStringMapJavaType() {
+		//noinspection unchecked
+		super(
+				(Class<? extends Map<String, String>>) (Class<?>) Map.class,
+				new MutableMutabilityPlan<>() {
+					@Override
+					protected Map<String, String> deepCopyNotNull(Map<String, String> value) {
+						return new HashMap<>( value );
+					}
+				}
+		);
+	}
 
-    @Override
-    public String toString(Map value) {
-        return null;
-    }
+	@Override
+	public String toString(Map<String, String> value) {
+		return null;
+	}
 
-    @Override
-    public Map fromString(CharSequence string) {
-        return null;
-    }
+	@Override
+	public Map<String, String> fromString(CharSequence string) {
+		return null;
+	}
 
-    @Override
-    public <X> X unwrap(Map value, Class<X> type, WrapperOptions options) {
-        return (X) toString( value );
-    }
+	@Override
+	public <X> X unwrap(Map<String, String> value, Class<X> type, WrapperOptions options) {
+		return (X) toString( value );
+	}
 
-    @Override
-    public <X> Map wrap(X value, WrapperOptions options) {
-        return fromString( (String) value );
-    }
+	@Override
+	public <X> Map<String, String> wrap(X value, WrapperOptions options) {
+		return fromString( (String) value );
+	}
 }

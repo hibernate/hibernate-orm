@@ -20,17 +20,17 @@ import org.hibernate.usertype.UserType;
  * @author Slawek Garwol (slawekgarwol at gmail dot com)
  */
 public class CustomEnumUserType implements UserType<CustomEnum> {
-	private static final int[] SQL_TYPES = {Types.VARCHAR};
 
-	public int[] sqlTypes() {
-		return SQL_TYPES;
+	@Override
+	public int getSqlType() {
+		return Types.VARCHAR;
 	}
 
-	public Class returnedClass() {
+	public Class<CustomEnum> returnedClass() {
 		return CustomEnum.class;
 	}
 
-	public boolean equals(Object x, Object y) throws HibernateException {
+	public boolean equals(CustomEnum x, CustomEnum y) throws HibernateException {
 		if ( x == y ) {
 			return true;
 		}
@@ -40,7 +40,7 @@ public class CustomEnumUserType implements UserType<CustomEnum> {
 		return x.equals( y );
 	}
 
-	public int hashCode(Object x) throws HibernateException {
+	public int hashCode(CustomEnum x) throws HibernateException {
 		return (x == null) ? 0 : x.hashCode();
 	}
 
@@ -63,7 +63,7 @@ public class CustomEnumUserType implements UserType<CustomEnum> {
 		}
 	}
 
-	public Object deepCopy(Object value) throws HibernateException {
+	public CustomEnum deepCopy(CustomEnum value) throws HibernateException {
 		return value;
 	}
 
@@ -71,15 +71,15 @@ public class CustomEnumUserType implements UserType<CustomEnum> {
 		return false;
 	}
 
-	public Serializable disassemble(Object value) throws HibernateException {
-		return (Serializable) value;
+	public Serializable disassemble(CustomEnum value) throws HibernateException {
+		return value;
 	}
 
-	public Object assemble(Serializable cached, Object owner) throws HibernateException {
-		return cached;
+	public CustomEnum assemble(Serializable cached, Object owner) throws HibernateException {
+		return (CustomEnum) cached;
 	}
 
-	public Object replace(Object original, Object target, Object owner) throws HibernateException {
+	public CustomEnum replace(CustomEnum original, CustomEnum target, Object owner) throws HibernateException {
 		return original;
 	}
 }

@@ -37,8 +37,8 @@ public class ArrayType implements UserType<Array>, BindableType<Array> {
     }
 
     @Override
-    public int[] sqlTypes() {
-        return new int[] { jdbcType.getJdbcTypeCode() };
+    public int getSqlType() {
+        return jdbcType.getJdbcTypeCode();
     }
 
     @Override
@@ -47,13 +47,13 @@ public class ArrayType implements UserType<Array>, BindableType<Array> {
     }
 
     @Override
-    public boolean equals(Object x, Object y) throws HibernateException {
-        return javaType.areEqual( (Array) x, (Array) y );
+    public boolean equals(Array x, Array y) throws HibernateException {
+        return javaType.areEqual( x, y );
     }
 
     @Override
-    public int hashCode(Object x) throws HibernateException {
-        return javaType.extractHashCode( (Array) x );
+    public int hashCode(Array x) throws HibernateException {
+        return javaType.extractHashCode( x );
     }
 
     @Override
@@ -68,8 +68,8 @@ public class ArrayType implements UserType<Array>, BindableType<Array> {
     }
 
     @Override
-    public Object deepCopy(Object value) throws HibernateException {
-        return ArrayMutabilityPlan.INSTANCE.deepCopy( (Array) value );
+    public Array deepCopy(Array value) throws HibernateException {
+        return ArrayMutabilityPlan.INSTANCE.deepCopy( value );
     }
 
     @Override
@@ -78,17 +78,17 @@ public class ArrayType implements UserType<Array>, BindableType<Array> {
     }
 
     @Override
-    public Serializable disassemble(Object value) throws HibernateException {
-        return ArrayMutabilityPlan.INSTANCE.disassemble( (Array) value, null );
+    public Serializable disassemble(Array value) throws HibernateException {
+        return ArrayMutabilityPlan.INSTANCE.disassemble( value, null );
     }
 
     @Override
-    public Object assemble(Serializable cached, Object owner) throws HibernateException {
+    public Array assemble(Serializable cached, Object owner) throws HibernateException {
         return ArrayMutabilityPlan.INSTANCE.assemble( cached, null );
     }
 
     @Override
-    public Object replace(Object original, Object target, Object owner) throws HibernateException {
+    public Array replace(Array original, Array target, Object owner) throws HibernateException {
         return null;
     }
 }

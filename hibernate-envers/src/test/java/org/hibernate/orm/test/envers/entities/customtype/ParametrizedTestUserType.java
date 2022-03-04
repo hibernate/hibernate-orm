@@ -24,7 +24,6 @@ import org.hibernate.usertype.UserType;
  * @author Adam Warski (adam at warski dot org)
  */
 public class ParametrizedTestUserType implements UserType<String>, ParameterizedType {
-	private static final int[] TYPES = new int[] {Types.VARCHAR};
 
 	private String param1;
 	private String param2;
@@ -58,23 +57,24 @@ public class ParametrizedTestUserType implements UserType<String>, Parameterized
 				.bind( st, value, index, session );
 	}
 
-	public int[] sqlTypes() {
-		return TYPES;
+	@Override
+	public int getSqlType() {
+		return Types.VARCHAR;
 	}
 
-	public Object assemble(Serializable cached, Object owner) throws HibernateException {
-		return cached;
+	public String assemble(Serializable cached, Object owner) throws HibernateException {
+		return (String) cached;
 	}
 
-	public Object deepCopy(Object value) throws HibernateException {
+	public String deepCopy(String value) throws HibernateException {
 		return value;
 	}
 
-	public Serializable disassemble(Object value) throws HibernateException {
-		return (Serializable) value;
+	public Serializable disassemble(String value) throws HibernateException {
+		return value;
 	}
 
-	public boolean equals(Object x, Object y) throws HibernateException {
+	public boolean equals(String x, String y) throws HibernateException {
 		//noinspection ObjectEquality
 		if ( x == y ) {
 			return true;
@@ -87,7 +87,7 @@ public class ParametrizedTestUserType implements UserType<String>, Parameterized
 		return x.equals( y );
 	}
 
-	public int hashCode(Object x) throws HibernateException {
+	public int hashCode(String x) throws HibernateException {
 		return x.hashCode();
 	}
 
@@ -95,7 +95,7 @@ public class ParametrizedTestUserType implements UserType<String>, Parameterized
 		return false;
 	}
 
-	public Object replace(Object original, Object target, Object owner) throws HibernateException {
+	public String replace(String original, String target, Object owner) throws HibernateException {
 		return original;
 	}
 }

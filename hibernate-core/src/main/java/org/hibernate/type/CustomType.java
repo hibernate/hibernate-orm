@@ -134,12 +134,12 @@ public class CustomType<J>
 
 	@Override
 	public boolean isEqual(Object x, Object y) throws HibernateException {
-		return getUserType().equals( x, y );
+		return getUserType().equals( (J) x, (J) y );
 	}
 
 	@Override
 	public int getHashCode(Object x) {
-		return getUserType().hashCode( x);
+		return getUserType().hashCode( (J) x );
 	}
 
 	@Override
@@ -149,7 +149,7 @@ public class CustomType<J>
 
 	@Override
 	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) {
-		return getUserType().disassemble( value);
+		return getUserType().disassemble( (J) value );
 	}
 
 	@Override
@@ -159,7 +159,7 @@ public class CustomType<J>
 			SharedSessionContractImplementor session,
 			Object owner,
 			Map<Object, Object> copyCache) throws HibernateException {
-		return getUserType().replace( original, target, owner );
+		return getUserType().replace( (J) original, (J) target, owner );
 	}
 
 	@Override
@@ -192,7 +192,7 @@ public class CustomType<J>
 
 	@Override
 	public Object deepCopy(Object value, SessionFactoryImplementor factory) throws HibernateException {
-		return getUserType().deepCopy( value);
+		return getUserType().deepCopy( (J) value );
 	}
 
 	@Override

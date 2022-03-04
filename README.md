@@ -1,5 +1,5 @@
 <img src="https://static.jboss.org/hibernate/images/hibernate_logo_whitebkg_200px.png" />
-<img align="right" height="50" src="https://www.nuodb.com/sites/all/themes/nuodb/logo.svg" />
+<img align="right" height="50" src="https://nuodb.com/themes/custom/nuodb/logo.svg" />
 
 # Hibernate and NuoDB
 
@@ -15,8 +15,8 @@ To run the matrix tests for NuoDB:
 
    * clone https://github.com/nuodb/HibernateDialect5
    * Run `mvn install` - see [project README](https://github.com/nuodb/HibernateDialect5/blob/master/README.md)
-   * Check the version in the POM - it will be of the form `20.x.x-hib5`
-      * You will need to set `DIALECT_VERSION` to `20.x.x``to match - see below
+   * Check the version in the POM - it will be of the form `21.x.x-hib5`
+      * You will need to set `DIALECT_VERSION` to `21.x.x``to match - see below
 
 1. This project's gradle build file assumes you have your maven repository in
    the default location (`.m2` in your home directory). If so, skip this step.
@@ -24,20 +24,20 @@ To run the matrix tests for NuoDB:
    Otherwise you must tell gradle where this dependency can be found. For example
    suppose you use `m2` instead of `.m2`:
    ```
-   export ADDITIONAL_REPO=~/m2/repository/com/nuodb/hibernate/nuodb-hibernate/20.x.x-hib5               (Linux/MacOS)
+   export ADDITIONAL_REPO=~/m2/repository/com/nuodb/hibernate/nuodb-hibernate/21.x.x-hib5               (Linux/MacOS)
 
-   set ADDITIONAL_REPO=c:\Users\yourname\m2\repository\com\nuodb\hibernate\nuodb-hibernate/20.x.x-hib5  (Windows)
+   set ADDITIONAL_REPO=c:\Users\yourname\m2\repository\com\nuodb\hibernate\nuodb-hibernate\21.x.x-hib5  (Windows)
    ```
 
 1. Set the Hibernate dialect - this must match the Hibernate 5 dialect you installed earlier.
 
    * **Note:** the value you set _does not_ have `-hib5` in the end:
      ```bash
-     export DIALECT_VERSION=20.x.x      (Linux/MacOS)
-     set DIALECT_VERSION=20.x.x         (Windows)
+     export DIALECT_VERSION=21.x.x      (Linux/MacOS)
+     set DIALECT_VERSION=21.x.x         (Windows)
      ```
 
-   Alternatively, non-Windows user may prepend it to any command: `DIALECT_VERSION=20.x.x ./gradlew ...`
+   Alternatively, non-Windows user may prepend it to any command: `DIALECT_VERSION=21.x.x ./gradlew ...`
 
 1. Compile the code: `./gradlew clean compile`
 
@@ -88,7 +88,7 @@ Please note that even if a NuoDB database is not available, 4588 tests complete,
 
 If the Hibernate dialect has a new version number:
 
-1. Update the environment variable: `SET DIALECT_VERSION=20.x.x`
+1. Update the environment variable: `SET DIALECT_VERSION=21.x.x`
 
 This variable is used in three places and should get picked up by all of them:
 
@@ -100,8 +100,8 @@ This variable is used in three places and should get picked up by all of them:
 
 This must be changed manually in two places:
 
-1. `databases/nuodb/matrix.gradle`: `jdbcDependency "com.nuodb.jdbc:nuodb-jdbc:22.0.0"`
-2. `hibernate-core/hibernate-core.gradle`:  `testRuntime( "com.nuodb.jdbc:nuodb-jdbc:22.0.0" )`
+1. `databases/nuodb/matrix.gradle`: `jdbcDependency "com.nuodb.jdbc:nuodb-jdbc:23.0.0"`
+2. `hibernate-core/hibernate-core.gradle`:  `testRuntime( "com.nuodb.jdbc:nuodb-jdbc:23.0.0" )`
 
 ## Changes Made to Project
 

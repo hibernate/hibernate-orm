@@ -12,7 +12,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.nuodb.jdbc:nuodb-jdbc:22.0.0'
+        classpath 'com.nuodb.jdbc:nuodb-jdbc:23.0.0'
     }
 }
 // END: For NUODB
@@ -114,7 +114,6 @@ dependencies {
     testRuntime( "org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Final" )
     testRuntime( libraries.expression_language )
     testRuntime( 'jaxen:jaxen:1.1' )
-    testRuntime( libraries.javassist )
     testRuntime( libraries.byteBuddy )
     testRuntime( libraries.weld )
     testRuntime( libraries.atomikos )
@@ -134,7 +133,6 @@ dependencies {
 
     // Additional tests requiring Javassist
     // folder in src/javassist/java
-    testJavassistCompile libraries.javassist
     testCompile "com.nuodb.hibernate:nuodb-hibernate:${nuodbHibernateJarVersion}-hib5"
 }
 
@@ -359,39 +357,6 @@ test {
         }
     }
 }
-
-//Create the task that runs the integration tests found from the
-//configured source directory and uses the correct classpath.
-task testJavassist(type: Test) {
-    testClassesDirs = sourceSets.testJavassist.output.classesDirs
-    classpath = sourceSets.testJavassist.runtimeClasspath
-    //If you want to ensure that integration tests are run every time when you invoke
-    //this task, uncomment the following line.
-    //outputs.upToDateWhen { false }
-
-    if ( gradle.ext.javaToolchainEnabled ) {
-        // Configure version of Java tools
-        javaLauncher = javaToolchains.launcherFor {
-            languageVersion = gradle.ext.javaVersions.test.launcher
-        }
-
-        //  Configure JVM Options
-        jvmArgs( getProperty( 'toolchain.launcher.jvmargs' ).toString().split( ' ' ) )
-
-        // Display version of Java tools
-        doFirst {
-            logger.lifecycle "Testing javassist with '${javaLauncher.get().metadata.installationPath}'"
-        }
-    }
-
-    if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
-        // Javassist needs this to generate proxies
-        jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
-    }
-}
-
-check.dependsOn testJavassist
-testJavassist.mustRunAfter test
 
 // BEGIN: For NUODB
 /**

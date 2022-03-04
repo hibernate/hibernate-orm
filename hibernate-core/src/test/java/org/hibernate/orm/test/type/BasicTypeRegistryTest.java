@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.UUID;
 
 import org.hibernate.HibernateException;
@@ -117,15 +118,15 @@ public class BasicTypeRegistryTest extends BaseUnitTestCase {
 		}
 	}
 
-	public static class TotallyIrrelevantUserType implements UserType {
+	public static class TotallyIrrelevantUserType implements UserType<Object> {
 
 		@Override
-		public int[] sqlTypes() {
-			return new int[0];
+		public int getSqlType() {
+			return Types.VARCHAR;
 		}
 
 		@Override
-		public Class returnedClass() {
+		public Class<Object> returnedClass() {
 			return null;
 		}
 

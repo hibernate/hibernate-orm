@@ -22,21 +22,21 @@ import org.hibernate.usertype.UserType;
  * @author Emmanuel Bernard
  */
 public class StateType implements UserType<State> {
-	public int[] sqlTypes() {
-		return new int[] {
-			Types.INTEGER
-		};
+
+	@Override
+	public int getSqlType() {
+		return Types.INTEGER;
 	}
 
-	public Class returnedClass() {
+	public Class<State> returnedClass() {
 		return State.class;
 	}
 
-	public boolean equals(Object x, Object y) throws HibernateException {
+	public boolean equals(State x, State y) throws HibernateException {
 		return x == y;
 	}
 
-	public int hashCode(Object x) throws HibernateException {
+	public int hashCode(State x) throws HibernateException {
 		return x.hashCode();
 	}
 
@@ -57,7 +57,7 @@ public class StateType implements UserType<State> {
 		}
 	}
 
-	public Object deepCopy(Object value) throws HibernateException {
+	public State deepCopy(State value) throws HibernateException {
 		return value;
 	}
 
@@ -65,15 +65,15 @@ public class StateType implements UserType<State> {
 		return false;
 	}
 
-	public Serializable disassemble(Object value) throws HibernateException {
-		return (Serializable) value;
+	public Serializable disassemble(State value) throws HibernateException {
+		return value;
 	}
 
-	public Object assemble(Serializable cached, Object owner) throws HibernateException {
-		return cached;
+	public State assemble(Serializable cached, Object owner) throws HibernateException {
+		return (State) cached;
 	}
 
-	public Object replace(Object original, Object target, Object owner) throws HibernateException {
+	public State replace(State original, State target, Object owner) throws HibernateException {
 		return original;
 	}
 }

@@ -344,9 +344,9 @@ public class EnumType<T extends Enum<T>>
 	}
 
 	@Override
-	public int[] sqlTypes() {
+	public int getSqlType() {
 		verifyConfigured();
-		return new int[] { enumValueConverter.getJdbcTypeCode() };
+		return enumValueConverter.getJdbcTypeCode();
 	}
 
 	@Override
@@ -355,12 +355,12 @@ public class EnumType<T extends Enum<T>>
 	}
 
 	@Override
-	public boolean equals(Object x, Object y) throws HibernateException {
+	public boolean equals(T x, T y) throws HibernateException {
 		return x == y;
 	}
 
 	@Override
-	public int hashCode(Object x) throws HibernateException {
+	public int hashCode(T x) throws HibernateException {
 		return x == null ? 0 : x.hashCode();
 	}
 
@@ -384,7 +384,7 @@ public class EnumType<T extends Enum<T>>
 	}
 
 	@Override
-	public Object deepCopy(Object value) throws HibernateException {
+	public T deepCopy(T value) throws HibernateException {
 		return value;
 	}
 
@@ -394,17 +394,17 @@ public class EnumType<T extends Enum<T>>
 	}
 
 	@Override
-	public Serializable disassemble(Object value) throws HibernateException {
-		return ( Serializable ) value;
+	public Serializable disassemble(T value) throws HibernateException {
+		return value;
 	}
 
 	@Override
-	public Object assemble(Serializable cached, Object owner) throws HibernateException {
-		return cached;
+	public T assemble(Serializable cached, Object owner) throws HibernateException {
+		return (T) cached;
 	}
 
 	@Override
-	public Object replace(Object original, Object target, Object owner) throws HibernateException {
+	public T replace(T original, T target, Object owner) throws HibernateException {
 		return original;
 	}
 

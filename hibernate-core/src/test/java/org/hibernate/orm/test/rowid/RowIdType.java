@@ -21,13 +21,14 @@ import org.hibernate.usertype.UserType;
 /**
  * @author Gavin King
  */
-public class RowIdType implements UserType {
+public class RowIdType implements UserType<Object>{
 
-	public int[] sqlTypes() {
-		return new int[] { Types.JAVA_OBJECT };
+	@Override
+	public int getSqlType() {
+		return Types.JAVA_OBJECT;
 	}
 
-	public Class returnedClass() {
+	public Class<Object> returnedClass() {
 		return Object.class;
 	}
 

@@ -21,8 +21,8 @@ import org.hibernate.orm.test.annotations.enumerated.enums.LastNumber;
 public class LastNumberType extends org.hibernate.type.EnumType<LastNumber> {
 
 	@Override
-	public int[] sqlTypes() {
-		return new int[] { Types.VARCHAR };
+	public int getSqlType() {
+		return Types.VARCHAR;
 	}
 
 	@Override
@@ -38,7 +38,7 @@ public class LastNumberType extends org.hibernate.type.EnumType<LastNumber> {
 	public void nullSafeSet(PreparedStatement st, LastNumber value, int index, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		if ( value == null ) {
-			st.setNull( index, sqlTypes()[0] );
+			st.setNull( index, getSqlType() );
 		}
 		else {
 			String enumString = value.name();

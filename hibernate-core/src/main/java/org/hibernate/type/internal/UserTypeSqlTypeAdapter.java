@@ -53,7 +53,7 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 
 	@Override
 	public int getJdbcTypeCode() {
-		return userType.sqlTypes()[0];
+		return userType.getSqlType();
 	}
 
 	@Override
@@ -142,10 +142,10 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 			}
 
 			if ( extracted == null ) {
-				JdbcExtractingLogging.logNullExtracted( paramIndex, userType.sqlTypes()[0] );
+				JdbcExtractingLogging.logNullExtracted( paramIndex, userType.getSqlType() );
 			}
 			else {
-				JdbcExtractingLogging.logExtracted( paramIndex, userType.sqlTypes()[0], extracted );
+				JdbcExtractingLogging.logExtracted( paramIndex, userType.getSqlType(), extracted );
 			}
 		}
 
@@ -155,10 +155,10 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 			}
 
 			if ( extracted == null ) {
-				JdbcExtractingLogging.logNullExtracted( paramName, userType.sqlTypes()[0] );
+				JdbcExtractingLogging.logNullExtracted( paramName, userType.getSqlType() );
 			}
 			else {
-				JdbcExtractingLogging.logExtracted( paramName, userType.sqlTypes()[0], extracted );
+				JdbcExtractingLogging.logExtracted( paramName, userType.getSqlType(), extracted );
 			}
 		}
 	}
@@ -174,10 +174,10 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 		public void bind(PreparedStatement st, J value, int index, WrapperOptions options) throws SQLException {
 			if ( JdbcBindingLogging.TRACE_ENABLED ) {
 				if ( value == null ) {
-					JdbcBindingLogging.logNullBinding( index, userType.sqlTypes()[ 0 ] );
+					JdbcBindingLogging.logNullBinding( index, userType.getSqlType() );
 				}
 				else {
-					JdbcBindingLogging.logBinding( index, userType.sqlTypes()[ 0 ], value );
+					JdbcBindingLogging.logBinding( index, userType.getSqlType(), value );
 				}
 			}
 			userType.nullSafeSet( st, value, index, options.getSession() );

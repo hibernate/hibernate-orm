@@ -12,7 +12,6 @@ import java.util.Comparator;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
@@ -70,7 +69,7 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 		if ( userType.equals( first, second ) ) {
 			return 0;
 		}
-		return Comparator.comparing( userType::hashCode ).compare( first, second );
+		return Comparator.<J, Integer>comparing( userType::hashCode ).compare( first, second );
 	}
 
 	@Override
@@ -80,7 +79,7 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( userType.sqlTypes()[0] );
+		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( userType.getSqlType() );
 	}
 
 	@Override
@@ -153,8 +152,7 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 
 		@Override
 		public J deepCopy(J value) {
-			//noinspection unchecked
-			return (J) userType.deepCopy( value );
+			return userType.deepCopy( value );
 		}
 
 		@Override
@@ -164,8 +162,7 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 
 		@Override
 		public J assemble(Serializable cached, SharedSessionContract session) {
-			//noinspection unchecked
-			return (J) userType.disassemble( cached );
+			return userType.assemble( cached , session);
 		}
 	}
 }

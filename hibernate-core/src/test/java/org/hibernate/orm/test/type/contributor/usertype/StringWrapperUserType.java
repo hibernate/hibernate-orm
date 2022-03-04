@@ -29,8 +29,8 @@ public class StringWrapperUserType implements UserType<StringWrapper> {
     private static final Logger log = Logger.getLogger( StringWrapperUserType.class );
 
     @Override
-    public int[] sqlTypes() {
-        return new int[] { Types.VARCHAR };
+    public int getSqlType() {
+        return Types.VARCHAR;
     }
 
     @Override
@@ -39,13 +39,13 @@ public class StringWrapperUserType implements UserType<StringWrapper> {
     }
 
     @Override
-    public boolean equals(Object x, Object y)
+    public boolean equals(StringWrapper x, StringWrapper y)
 			throws HibernateException {
         return Objects.equals( x, y );
     }
 
     @Override
-    public int hashCode(Object x)
+    public int hashCode(StringWrapper x)
 			throws HibernateException {
         return Objects.hashCode( x );
     }
@@ -66,7 +66,7 @@ public class StringWrapperUserType implements UserType<StringWrapper> {
             st.setNull( index, Types.VARCHAR );
         }
         else {
-            String stringValue = toString( (StringWrapper) value );
+            String stringValue = toString( value );
             log.debugv("Binding {0} to parameter {1} ", stringValue, index);
             st.setString( index, stringValue );
         }
@@ -83,7 +83,7 @@ public class StringWrapperUserType implements UserType<StringWrapper> {
     }
 
     @Override
-    public Object deepCopy(Object value)
+    public StringWrapper deepCopy(StringWrapper value)
 			throws HibernateException {
         return value;
     }
@@ -94,19 +94,19 @@ public class StringWrapperUserType implements UserType<StringWrapper> {
     }
 
     @Override
-    public Serializable disassemble(Object value)
+    public Serializable disassemble(StringWrapper value)
 			throws HibernateException {
-        return (StringWrapper) deepCopy( value );
+        return deepCopy( value );
     }
 
     @Override
-    public Object assemble(Serializable cached, Object owner)
+    public StringWrapper assemble(Serializable cached, Object owner)
 			throws HibernateException {
-        return deepCopy( cached );
+        return deepCopy( (StringWrapper) cached );
     }
 
     @Override
-    public Object replace(Object original, Object target, Object owner)
+    public StringWrapper replace(StringWrapper original, StringWrapper target, Object owner)
 			throws HibernateException {
         return deepCopy( original );
     }

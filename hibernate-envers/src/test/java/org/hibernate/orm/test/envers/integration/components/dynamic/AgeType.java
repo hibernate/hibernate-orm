@@ -16,13 +16,11 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
 
-public class AgeType implements UserType {
+public class AgeType implements UserType<Age> {
 
 	@Override
-	public int[] sqlTypes() {
-		return new int[] {
-				Types.INTEGER
-		};
+	public int getSqlType() {
+		return Types.INTEGER;
 	}
 
 	@Override
@@ -31,29 +29,29 @@ public class AgeType implements UserType {
 	}
 
 	@Override
-	public boolean equals(Object x, Object y) throws HibernateException {
+	public boolean equals(Age x, Age y) throws HibernateException {
 		return x != null ? x.equals( y ) : y == null;
 	}
 
 	@Override
-	public int hashCode(Object x) throws HibernateException {
+	public int hashCode(Age x) throws HibernateException {
 		return x != null ? x.hashCode() : 1;
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public Age nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
 		return new Age( rs.getInt( position ) );
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
+	public void nullSafeSet(PreparedStatement st, Age value, int index, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
-		st.setInt( index, ( (Age) value ).getAgeInYears() );
+		st.setInt( index, value.getAgeInYears() );
 	}
 
 	@Override
-	public Object deepCopy(Object value) throws HibernateException {
-		return new Age( ( (Age) value ).getAgeInYears() );
+	public Age deepCopy(Age value) throws HibernateException {
+		return new Age( value.getAgeInYears() );
 	}
 
 	@Override
@@ -62,17 +60,17 @@ public class AgeType implements UserType {
 	}
 
 	@Override
-	public Serializable disassemble(Object value) throws HibernateException {
+	public Serializable disassemble(Age value) throws HibernateException {
 		return null;
 	}
 
 	@Override
-	public Object assemble(Serializable cached, Object owner) throws HibernateException {
+	public Age assemble(Serializable cached, Object owner) throws HibernateException {
 		return null;
 	}
 
 	@Override
-	public Object replace(Object original, Object target, Object owner) throws HibernateException {
+	public Age replace(Age original, Age target, Object owner) throws HibernateException {
 		return null;
 	}
 }

@@ -19,11 +19,11 @@ import org.hibernate.usertype.UserType;
 /**
  * @author Chris Pheby
  */
-public class MyDateUserType implements UserType {
+public class MyDateUserType implements UserType<MyDate> {
 
 	@Override
-	public int[] sqlTypes() {
-		return new int[] {Types.DATE};
+	public int getSqlType() {
+		return Types.DATE;
 	}
 
 	@Override
@@ -32,37 +32,31 @@ public class MyDateUserType implements UserType {
 	}
 
 	@Override
-	public boolean equals(Object x, Object y) throws HibernateException {
-		if (!(x instanceof MyDate) || !(y instanceof MyDate)) {
-			throw new HibernateException("Expected MyDate");
-		}
-		return ((MyDate)x).getDate().equals(((MyDate)y).getDate());
+	public boolean equals(MyDate x, MyDate y) throws HibernateException {
+		return x.getDate().equals(y.getDate());
 	}
 
 	@Override
-	public int hashCode(Object x) throws HibernateException {
-		if (!(x instanceof MyDate)) {
-			throw new HibernateException("Expected MyDate");
-		}
-		return ((MyDate)x).getDate().hashCode();
+	public int hashCode(MyDate x) throws HibernateException {
+		return x.getDate().hashCode();
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public MyDate nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
 		return new MyDate( rs.getDate( position ) );
 	}
 
 	@Override
 	public void nullSafeSet(
 			PreparedStatement st,
-			Object value,
+			MyDate value,
 			int index,
 			SharedSessionContractImplementor session) throws HibernateException, SQLException {
-		st.setDate(index, new java.sql.Date(((MyDate)value).getDate().getTime()));
+		st.setDate(index, new java.sql.Date(value.getDate().getTime()));
 	}
 
 	@Override
-	public Object deepCopy(Object value) throws HibernateException {
+	public MyDate deepCopy(MyDate value) throws HibernateException {
 		MyDate result = new MyDate();
 
 		return result;
@@ -74,18 +68,18 @@ public class MyDateUserType implements UserType {
 	}
 
 	@Override
-	public Serializable disassemble(Object value) throws HibernateException {
+	public Serializable disassemble(MyDate value) throws HibernateException {
 		return null;
 	}
 
 	@Override
-	public Object assemble(Serializable cached, Object owner)
+	public MyDate assemble(Serializable cached, Object owner)
 			throws HibernateException {
 		return null;
 	}
 
 	@Override
-	public Object replace(Object original, Object target, Object owner)
+	public MyDate replace(MyDate original, MyDate target, Object owner)
 			throws HibernateException {
 		return null;
 	}

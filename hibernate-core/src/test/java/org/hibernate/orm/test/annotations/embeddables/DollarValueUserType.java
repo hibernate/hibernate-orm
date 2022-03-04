@@ -19,11 +19,11 @@ import org.hibernate.usertype.UserType;
 /**
  * @author Chris Pheby
  */
-public class DollarValueUserType implements UserType {
+public class DollarValueUserType implements UserType<DollarValue> {
 
 	@Override
-	public int[] sqlTypes() {
-		return new int[] {Types.BIGINT};
+	public int getSqlType() {
+		return Types.BIGINT;
 	}
 
 	@Override
@@ -32,37 +32,31 @@ public class DollarValueUserType implements UserType {
 	}
 
 	@Override
-	public boolean equals(Object x, Object y) throws HibernateException {
-		if (!(x instanceof DollarValue) || !(y instanceof DollarValue)) {
-			throw new HibernateException("Expected DollarValue");
-		}
-		return ((DollarValue)x).getAmount().equals(((DollarValue)y).getAmount());
+	public boolean equals(DollarValue x, DollarValue y) throws HibernateException {
+		return x.getAmount().equals(y.getAmount());
 	}
 
 	@Override
-	public int hashCode(Object x) throws HibernateException {
-		if (!(x instanceof DollarValue)) {
-			throw new HibernateException("Expected DollarValue");
-		}
-		return ((DollarValue)x).getAmount().hashCode();
+	public int hashCode(DollarValue x) throws HibernateException {
+		return x.getAmount().hashCode();
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public DollarValue nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
 		return new DollarValue( rs.getBigDecimal( position ) );
 	}
 
 	@Override
 	public void nullSafeSet(
 			PreparedStatement st,
-			Object value,
+			DollarValue value,
 			int index,
 			SharedSessionContractImplementor session) throws HibernateException, SQLException {
-		st.setBigDecimal(index, ((DollarValue)value).getAmount());
+		st.setBigDecimal(index, value.getAmount());
 	}
 
 	@Override
-	public Object deepCopy(Object value) throws HibernateException {
+	public DollarValue deepCopy(DollarValue value) throws HibernateException {
 		return new DollarValue();
 	}
 
@@ -72,18 +66,18 @@ public class DollarValueUserType implements UserType {
 	}
 
 	@Override
-	public Serializable disassemble(Object value) throws HibernateException {
+	public Serializable disassemble(DollarValue value) throws HibernateException {
 		return null;
 	}
 
 	@Override
-	public Object assemble(Serializable cached, Object owner)
+	public DollarValue assemble(Serializable cached, Object owner)
 			throws HibernateException {
 		return null;
 	}
 
 	@Override
-	public Object replace(Object original, Object target, Object owner)
+	public DollarValue replace(DollarValue original, DollarValue target, Object owner)
 			throws HibernateException {
 		return null;
 	}

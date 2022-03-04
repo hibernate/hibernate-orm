@@ -112,8 +112,8 @@ public class UserTypeNonComparableIdTest {
 	public static class CustomIdType implements UserType<CustomId> {
 
 		@Override
-		public int[] sqlTypes() {
-			return new int[] { Types.BIGINT };
+		public int getSqlType() {
+			return Types.BIGINT;
 		}
 
 		@Override
@@ -139,22 +139,22 @@ public class UserTypeNonComparableIdTest {
 		}
 
 		@Override
-		public Class returnedClass() {
+		public Class<CustomId> returnedClass() {
 			return CustomId.class;
 		}
 
 		@Override
-		public boolean equals(Object x, Object y) throws HibernateException {
+		public boolean equals(CustomId x, CustomId y) throws HibernateException {
 			return x.equals( y );
 		}
 
 		@Override
-		public int hashCode(Object x) throws HibernateException {
+		public int hashCode(CustomId x) throws HibernateException {
 			return x.hashCode();
 		}
 
 		@Override
-		public Object deepCopy(Object value) throws HibernateException {
+		public CustomId deepCopy(CustomId value) throws HibernateException {
 			return value;
 		}
 
@@ -164,17 +164,17 @@ public class UserTypeNonComparableIdTest {
 		}
 
 		@Override
-		public Serializable disassemble(Object value) throws HibernateException {
-			return (Serializable) value;
+		public Serializable disassemble(CustomId value) throws HibernateException {
+			return value;
 		}
 
 		@Override
-		public Object assemble(Serializable cached, Object owner) throws HibernateException {
-			return cached;
+		public CustomId assemble(Serializable cached, Object owner) throws HibernateException {
+			return (CustomId) cached;
 		}
 
 		@Override
-		public Object replace(Object original, Object target, Object owner) throws HibernateException {
+		public CustomId replace(CustomId original, CustomId target, Object owner) throws HibernateException {
 			return original;
 		}
 	}

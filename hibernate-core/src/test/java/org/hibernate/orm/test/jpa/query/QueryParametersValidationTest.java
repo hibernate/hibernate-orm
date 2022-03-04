@@ -113,8 +113,8 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 	public static class BooleanUserType implements UserType<Boolean> {
 
 		@Override
-		public int[] sqlTypes() {
-			return new int[] { Types.CHAR };
+		public int getSqlType() {
+			return Types.CHAR;
 		}
 
 		@Override
@@ -123,12 +123,12 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 		}
 
 		@Override
-		public boolean equals(Object x, Object y) throws HibernateException {
+		public boolean equals(Boolean x, Boolean y) throws HibernateException {
 			return Objects.equals( x, y);
 		}
 
 		@Override
-		public int hashCode(Object x) throws HibernateException {
+		public int hashCode(Boolean x) throws HibernateException {
 			return Objects.hashCode(x);
 		}
 
@@ -147,7 +147,7 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 		}
 
 		@Override
-		public Object deepCopy(Object value) throws HibernateException {
+		public Boolean deepCopy(Boolean value) throws HibernateException {
 			return value;
 		}
 
@@ -157,17 +157,17 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 		}
 
 		@Override
-		public Serializable disassemble(Object value) throws HibernateException {
+		public Serializable disassemble(Boolean value) throws HibernateException {
 			return null;
 		}
 
 		@Override
-		public Object assemble(Serializable cached, Object owner) throws HibernateException {
+		public Boolean assemble(Serializable cached, Object owner) throws HibernateException {
 			return null;
 		}
 
 		@Override
-		public Object replace(Object original, Object target, Object owner) throws HibernateException {
+		public Boolean replace(Boolean original, Boolean target, Object owner) throws HibernateException {
 			return null;
 		}
 	}

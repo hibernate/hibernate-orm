@@ -19,15 +19,15 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 
-public class EnumUserType implements UserType, ParameterizedType {
+public class EnumUserType<T extends Enum<T>> implements UserType<T>, ParameterizedType {
 
-	private Class clazz = null;
+	private Class<T> clazz = null;
 
-	public static EnumUserType createInstance(Class clazz) {
+	public static <T extends Enum<T>> EnumUserType<T> createInstance(Class<T> clazz) {
 		if ( !clazz.isEnum() ) {
 			throw new IllegalArgumentException( "Parameter has to be an enum-class" );
 		}
-		EnumUserType that = new EnumUserType();
+		EnumUserType<T> that = new EnumUserType<>();
 		Properties p = new Properties();
 		p.setProperty( "enumClassName", clazz.getName() );
 		that.setParameterValues( p );
@@ -41,7 +41,8 @@ public class EnumUserType implements UserType, ParameterizedType {
 		}
 
 		try {
-			this.clazz = Class.forName( enumClassName );
+			//noinspection unchecked
+			this.clazz = (Class<T>) Class.forName( enumClassName );
 		}
 		catch (ClassNotFoundException e) {
 			throw new MappingException( "enumClass " + enumClassName + " not found", e );
@@ -51,18 +52,17 @@ public class EnumUserType implements UserType, ParameterizedType {
 		}
 	}
 
-	private static final int[] SQL_TYPES = {Types.CHAR};
-
-	public int[] sqlTypes() {
-		return SQL_TYPES;
+	@Override
+	public int getSqlType() {
+		return Types.CHAR;
 	}
 
-	public Class returnedClass() {
+	public Class<T> returnedClass() {
 		return clazz;
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public T nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
 		final String name = rs.getString( position );
 		if ( rs.wasNull() ) {
 			return null;
@@ -72,24 +72,23 @@ public class EnumUserType implements UserType, ParameterizedType {
 
 	public void nullSafeSet(PreparedStatement preparedStatement, Object value, int index)
 			throws HibernateException, SQLException {
-		if ( null == value ) {
-			preparedStatement.setNull( index, Types.VARCHAR );
-		}
-		else {
-			preparedStatement.setString( index, ( (Enum) value ).name() );
-		}
 	}
 
 	@Override
 	public void nullSafeSet(
 			PreparedStatement preparedStatement,
-			Object value,
+			T value,
 			int index,
 			SharedSessionContractImplementor session) throws HibernateException, SQLException {
-		nullSafeSet( preparedStatement, value, index );
+		if ( null == value ) {
+			preparedStatement.setNull( index, Types.VARCHAR );
+		}
+		else {
+			preparedStatement.setString( index, value.name() );
+		}
 	}
 
-	public Object deepCopy(Object value) throws HibernateException {
+	public T deepCopy(T value) throws HibernateException {
 		return value;
 	}
 
@@ -97,23 +96,24 @@ public class EnumUserType implements UserType, ParameterizedType {
 		return false;
 	}
 
-	public Object assemble(Serializable cached, Object owner) throws HibernateException {
-		return cached;
+	public T assemble(Serializable cached, Object owner) throws HibernateException {
+		//noinspection unchecked
+		return (T) cached;
 	}
 
-	public Serializable disassemble(Object value) throws HibernateException {
-		return (Serializable) value;
+	public Serializable disassemble(T value) throws HibernateException {
+		return value;
 	}
 
-	public Object replace(Object original, Object target, Object owner) throws HibernateException {
+	public T replace(T original, T target, Object owner) throws HibernateException {
 		return original;
 	}
 
-	public int hashCode(Object x) throws HibernateException {
+	public int hashCode(T x) throws HibernateException {
 		return x.hashCode();
 	}
 
-	public boolean equals(Object x, Object y) throws HibernateException {
+	public boolean equals(T x, T y) throws HibernateException {
 		if ( x == y ) {
 			return true;
 		}

@@ -76,14 +76,13 @@ public class EnumeratedSmokeTest extends BaseUnitTestCase {
 		assertThat( customType.getUserType(), instanceOf( org.hibernate.type.EnumType.class ) );
 		final org.hibernate.type.EnumType hibernateMappingEnumType = (org.hibernate.type.EnumType) customType.getUserType();
 		assertThat( hibernateMappingEnumType.isOrdinal(), is(expectedJpaEnumType==EnumType.ORDINAL) );
-		assertThat( hibernateMappingEnumType.sqlTypes().length, is(1) );
 		final int expectedJdbcTypeCode = jdbcRegistry.getDescriptor(
 				expectedJpaEnumType == EnumType.ORDINAL ?
 						Types.TINYINT :
 						Types.VARCHAR
 		).getJdbcTypeCode();
 		assertThat(
-				hibernateMappingEnumType.sqlTypes()[0],
+				hibernateMappingEnumType.getSqlType(),
 				is( expectedJdbcTypeCode )
 		);
 	}

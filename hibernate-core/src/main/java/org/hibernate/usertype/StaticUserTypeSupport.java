@@ -17,6 +17,7 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.BasicJavaType;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
@@ -24,46 +25,49 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * @author Steve Ebersole
  */
 public class StaticUserTypeSupport<T> implements UserType<T> {
-	private final BasicJavaType javaType;
+	private final BasicJavaType<T> javaType;
 	private final JdbcType jdbcType;
-	private final MutabilityPlan mutabilityPlan;
-	private final BasicValueConverter valueConverter;
+	private final MutabilityPlan<T> mutabilityPlan;
+	private final BasicValueConverter<T, Object> valueConverter;
 
-	private final int[] sqlTypes;
-	private ValueExtractor jdbcValueExtractor;
-	private ValueBinder jdbcValueBinder;
+	private final ValueExtractor<Object> jdbcValueExtractor;
+	private final ValueBinder<Object> jdbcValueBinder;
 
-	public StaticUserTypeSupport(BasicJavaType javaType, JdbcType jdbcType) {
+	public StaticUserTypeSupport(BasicJavaType<T> javaType, JdbcType jdbcType) {
 		this( javaType, jdbcType, javaType.getMutabilityPlan() );
 	}
 
 	public StaticUserTypeSupport(
-			BasicJavaType javaType,
+			BasicJavaType<T> javaType,
 			JdbcType jdbcType,
-			MutabilityPlan mutabilityPlan) {
+			MutabilityPlan<T> mutabilityPlan) {
 		this( javaType, jdbcType, mutabilityPlan, null );
 	}
 
 	public StaticUserTypeSupport(
-			BasicJavaType javaType,
+			BasicJavaType<T> javaType,
 			JdbcType jdbcType,
-			BasicValueConverter valueConverter) {
+			BasicValueConverter<T, Object> valueConverter) {
 		this( javaType, jdbcType, javaType.getMutabilityPlan(), valueConverter );
 	}
 
-	public StaticUserTypeSupport(BasicJavaType javaType, JdbcType jdbcType, MutabilityPlan mutabilityPlan, BasicValueConverter valueConverter) {
+	public StaticUserTypeSupport(
+			BasicJavaType<T> javaType,
+			JdbcType jdbcType,
+			MutabilityPlan<T> mutabilityPlan,
+			BasicValueConverter<T, Object> valueConverter) {
 		this.javaType = javaType;
 		this.jdbcType = jdbcType;
 		this.mutabilityPlan = mutabilityPlan;
 		this.valueConverter = valueConverter;
 
-		this.sqlTypes = new int[] { jdbcType.getJdbcTypeCode() };
-
-		this.jdbcValueExtractor = jdbcType.getExtractor( javaType );
-		this.jdbcValueBinder = jdbcType.getBinder( javaType );
+		//noinspection unchecked
+		this.jdbcValueExtractor = jdbcType.getExtractor( (JavaType<Object>) javaType );
+		//noinspection unchecked
+		this.jdbcValueBinder = jdbcType.getBinder( (JavaType<Object>) javaType );
 	}
 
-	public BasicJavaType getJavaType() {
+	public BasicJavaType<T> getJavaType() {
 		return javaType;
 	}
 
@@ -71,25 +75,25 @@ public class StaticUserTypeSupport<T> implements UserType<T> {
 		return jdbcType;
 	}
 
-	public MutabilityPlan getMutabilityPlan() {
+	public MutabilityPlan<T> getMutabilityPlan() {
 		return mutabilityPlan;
 	}
 
-	public BasicValueConverter getValueConverter() {
+	public BasicValueConverter<T, Object> getValueConverter() {
 		return valueConverter;
 	}
 
-	public ValueExtractor getJdbcValueExtractor() {
+	public ValueExtractor<Object> getJdbcValueExtractor() {
 		return jdbcValueExtractor;
 	}
 
-	public ValueBinder getJdbcValueBinder() {
+	public ValueBinder<Object> getJdbcValueBinder() {
 		return jdbcValueBinder;
 	}
 
 	@Override
-	public int[] sqlTypes() {
-		return sqlTypes;
+	public int getSqlType() {
+		return jdbcType.getDefaultSqlTypeCode();
 	}
 
 	@Override
@@ -98,34 +102,32 @@ public class StaticUserTypeSupport<T> implements UserType<T> {
 	}
 
 	@Override
-	public boolean equals(Object x, Object y) throws HibernateException {
-		//noinspection unchecked
-		return javaType.areEqual( (T) x, (T) y );
+	public boolean equals(T x, T y) throws HibernateException {
+		return javaType.areEqual( x, y );
 	}
 
 	@Override
-	public int hashCode(Object x) throws HibernateException {
-		//noinspection unchecked
-		return javaType.extractHashCode( (T) x );
+	public int hashCode(T x) throws HibernateException {
+		return javaType.extractHashCode( x );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public T nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
 		final Object extracted = jdbcValueExtractor.extract( rs, position, session );
 
 		if ( valueConverter != null ) {
-			return (T) valueConverter.toDomainValue( extracted );
+			return valueConverter.toDomainValue( extracted );
 		}
 
+		//noinspection unchecked
 		return (T) extracted;
 	}
 
 	@Override
 	public void nullSafeSet(PreparedStatement st, T value, int index, SharedSessionContractImplementor session) throws SQLException {
-		final T valueToBind;
+		final Object valueToBind;
 		if ( valueConverter != null ) {
-			valueToBind = (T) valueConverter.toRelationalValue( value );
+			valueToBind = valueConverter.toRelationalValue( value );
 		}
 		else {
 			valueToBind = value;
@@ -135,9 +137,8 @@ public class StaticUserTypeSupport<T> implements UserType<T> {
 	}
 
 	@Override
-	public Object deepCopy(Object value) throws HibernateException {
-		//noinspection unchecked
-		return javaType.getMutabilityPlan().deepCopy( (T) value );
+	public T deepCopy(T value) throws HibernateException {
+		return javaType.getMutabilityPlan().deepCopy( value );
 	}
 
 	@Override
@@ -146,18 +147,17 @@ public class StaticUserTypeSupport<T> implements UserType<T> {
 	}
 
 	@Override
-	public Serializable disassemble(Object value) throws HibernateException {
-		//noinspection unchecked
-		return javaType.getMutabilityPlan().disassemble( (T) value, null );
+	public Serializable disassemble(T value) throws HibernateException {
+		return javaType.getMutabilityPlan().disassemble( value, null );
 	}
 
 	@Override
-	public Object assemble(Serializable cached, Object owner) throws HibernateException {
+	public T assemble(Serializable cached, Object owner) throws HibernateException {
 		return javaType.getMutabilityPlan().assemble( cached, null );
 	}
 
 	@Override
-	public Object replace(Object original, Object target, Object owner) throws HibernateException {
+	public T replace(T original, T target, Object owner) throws HibernateException {
 		return deepCopy( original );
 	}
 

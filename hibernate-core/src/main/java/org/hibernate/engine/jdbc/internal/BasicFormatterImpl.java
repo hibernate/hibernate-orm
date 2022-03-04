@@ -97,6 +97,19 @@ public class BasicFormatterImpl implements Formatter {
 						lcToken = token;
 						misc();
 						break;
+					case "-":
+						if (lcToken.equals("-"))
+						{
+							String ttt;
+							do {
+								ttt = tokens.nextToken();
+								token += ttt;
+							}
+							while (tokens.hasMoreTokens());
+							lcToken = token;
+							misc();
+						}
+						break;
 
 					case ",":
 						if ( afterByOrSetOrFromOrSelect && inFunction==0 ) {

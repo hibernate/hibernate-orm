@@ -89,6 +89,32 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 		);
 	}
 
+	public VirtualIdEmbeddable(
+			EmbeddedAttributeMapping valueMapping,
+			TableGroupProducer declaringTableGroupProducer,
+			SelectableMappings selectableMappings,
+			VirtualIdEmbeddable inverseMappingType,
+			MappingModelCreationProcess creationProcess) {
+		super( creationProcess );
+
+		this.navigableRole = inverseMappingType.getNavigableRole();
+		this.idMapping = (NonAggregatedIdentifierMapping) valueMapping;
+		this.representationStrategy = inverseMappingType.representationStrategy;
+		this.attributeMappings = arrayList( inverseMappingType.attributeMappings.size() );
+		this.selectableMappings = selectableMappings;
+		creationProcess.registerInitializationCallback(
+				"VirtualIdEmbeddable(" + inverseMappingType.getNavigableRole().getFullPath() + ".{inverse})#finishInitialization",
+				() -> inverseInitializeCallback(
+						declaringTableGroupProducer,
+						selectableMappings,
+						inverseMappingType,
+						creationProcess,
+						valueMapping.getDeclaringType(),
+						this.attributeMappings
+				)
+		);
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// IdentifierValueMapper
 
@@ -319,7 +345,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 			TableGroupProducer declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
 			MappingModelCreationProcess creationProcess) {
-		return new EmbeddableMappingTypeImpl(
+		return new VirtualIdEmbeddable(
 				valueMapping,
 				declaringTableGroupProducer,
 				selectableMappings,

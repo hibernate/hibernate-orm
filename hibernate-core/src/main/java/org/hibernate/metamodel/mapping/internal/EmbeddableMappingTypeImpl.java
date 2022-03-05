@@ -33,16 +33,13 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
-import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
@@ -170,73 +167,16 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		this.valueMapping = valueMapping;
 		this.createEmptyCompositesEnabled = inverseMappingType.isCreateEmptyCompositesEnabled();
 		this.selectableMappings = selectableMappings;
-		final ManagedMappingType declaringType = valueMapping.getDeclaringType();
 		creationProcess.registerInitializationCallback(
 				"EmbeddableMappingType(" + inverseMappingType.getNavigableRole().getFullPath() + ".{inverse})#finishInitialization",
-				() -> {
-					if ( inverseMappingType.getAttributeMappings().isEmpty() ) {
-						return false;
-					}
-					// Reset the attribute mappings that were added in previous attempts
-					this.attributeMappings.clear();
-					int currentIndex = 0;
-					// We copy the attributes from the inverse mappings and replace the selection mappings
-					for ( AttributeMapping attributeMapping : inverseMappingType.getAttributeMappings() ) {
-						if ( attributeMapping instanceof BasicAttributeMapping ) {
-							final BasicAttributeMapping original = (BasicAttributeMapping) attributeMapping;
-							final SelectableMapping selectableMapping = selectableMappings.getSelectable( currentIndex );
-							attributeMapping = BasicAttributeMapping.withSelectableMapping(
-									declaringType,
-									original,
-									original.getPropertyAccess(),
-									original.getValueGeneration(),
-									selectableMapping
-							);
-							currentIndex++;
-						}
-						else if ( attributeMapping instanceof ToOneAttributeMapping ) {
-							final ToOneAttributeMapping original = (ToOneAttributeMapping) attributeMapping;
-							ForeignKeyDescriptor foreignKeyDescriptor = original.getForeignKeyDescriptor();
-							if ( foreignKeyDescriptor==null ) {
-								// This is expected to happen when processing a
-								// PostInitCallbackEntry because the callbacks
-								// are not ordered. The exception is caught in
-								// MappingModelCreationProcess.executePostInitCallbacks()
-								// and the callback is re-queued.
-								throw new IllegalStateException( "Not yet ready: " + original );
-							}
-							final ToOneAttributeMapping toOne = original.copy(
-									declaringType,
-									declaringTableGroupProducer
-							);
-							final int offset = currentIndex;
-							toOne.setIdentifyingColumnsTableExpression(
-									selectableMappings.getSelectable( offset ).getContainingTableExpression()
-							);
-							toOne.setForeignKeyDescriptor(
-									foreignKeyDescriptor.withKeySelectionMapping(
-											declaringType,
-											declaringTableGroupProducer,
-											index -> selectableMappings.getSelectable( offset + index ),
-											creationProcess
-									)
-							);
-
-							attributeMapping = toOne;
-							currentIndex += attributeMapping.getJdbcTypeCount();
-						}
-						else if ( attributeMapping instanceof EmbeddedAttributeMapping ) {
-							attributeMapping = ( (EmbeddedAttributeMapping) attributeMapping ).copy( declaringType );
-							currentIndex = attributeMapping.getJdbcTypeCount();
-						}
-						else {
-							throw new UnsupportedMappingException(
-									"Only basic and to-one attributes are supported in composite fks" );
-						}
-						this.attributeMappings.add( attributeMapping );
-					}
-					return true;
-				}
+				() -> inverseInitializeCallback(
+						declaringTableGroupProducer,
+						selectableMappings,
+						inverseMappingType,
+						creationProcess,
+						valueMapping.getDeclaringType(),
+						this.attributeMappings
+				)
 		);
 	}
 

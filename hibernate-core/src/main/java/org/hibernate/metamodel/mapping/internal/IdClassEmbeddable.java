@@ -134,6 +134,36 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 
 	}
 
+	public IdClassEmbeddable(
+			EmbeddedAttributeMapping valueMapping,
+			TableGroupProducer declaringTableGroupProducer,
+			SelectableMappings selectableMappings,
+			IdClassEmbeddable inverseMappingType,
+			MappingModelCreationProcess creationProcess) {
+		super( creationProcess );
+
+
+		this.navigableRole = inverseMappingType.getNavigableRole();
+		this.idMapping = (NonAggregatedIdentifierMapping) valueMapping;;
+		this.virtualIdEmbeddable = (VirtualIdEmbeddable) valueMapping.getEmbeddableTypeDescriptor();
+		this.javaType = inverseMappingType.javaType;
+		this.representationStrategy = new IdClassRepresentationStrategy( this );
+		this.attributeMappings = arrayList( inverseMappingType.attributeMappings.size() );
+		this.embedded = valueMapping;
+		this.selectableMappings = selectableMappings;
+		creationProcess.registerInitializationCallback(
+				"IdClassEmbeddable(" + inverseMappingType.getNavigableRole().getFullPath() + ".{inverse})#finishInitialization",
+				() -> inverseInitializeCallback(
+						declaringTableGroupProducer,
+						selectableMappings,
+						inverseMappingType,
+						creationProcess,
+						valueMapping.getDeclaringType(),
+						this.attributeMappings
+				)
+		);
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// IdentifierValueMapper
 
@@ -427,7 +457,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 			TableGroupProducer declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
 			MappingModelCreationProcess creationProcess) {
-		return new EmbeddableMappingTypeImpl(
+		return new IdClassEmbeddable(
 				valueMapping,
 				declaringTableGroupProducer,
 				selectableMappings,

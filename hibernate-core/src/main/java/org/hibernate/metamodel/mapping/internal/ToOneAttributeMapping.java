@@ -371,7 +371,13 @@ public class ToOneAttributeMapping
 			targetKeyPropertyNames.add( EntityIdentifierMapping.ROLE_LOCAL_NAME );
 			final PersistentClass entityBinding = bootValue.getBuildingContext().getMetadataCollector()
 					.getEntityBinding( entityMappingType.getEntityName() );
-			final Type propertyType = entityBinding.getIdentifier().getType();
+			final Type propertyType;
+			if ( entityBinding.getIdentifierMapper() == null ) {
+				propertyType = entityBinding.getIdentifier().getType();
+			}
+			else {
+				propertyType = entityBinding.getIdentifierMapper().getType();
+			}
 			if ( entityBinding.getIdentifierProperty() == null ) {
 				final CompositeType compositeType;
 				if ( propertyType.isComponentType() && ( compositeType = (CompositeType) propertyType ).isEmbedded()

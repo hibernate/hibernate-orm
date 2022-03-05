@@ -66,6 +66,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -1532,14 +1533,18 @@ public class MappingModelCreationHelper {
 			TableGroupProducer declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
 			MappingModelCreationProcess creationProcess) {
-		final EmbeddableMappingType embeddableTypeDescriptor;
-		if ( modelPart instanceof CompositeIdentifierMapping ) {
-			embeddableTypeDescriptor = ( (CompositeIdentifierMapping) modelPart ).getMappedIdEmbeddableTypeDescriptor();
+		final EmbeddableMappingType embeddableTypeDescriptor = modelPart.getEmbeddableTypeDescriptor();
+		if ( modelPart instanceof NonAggregatedIdentifierMapping ) {
+			return new InverseNonAggregatedIdentifierMapping(
+					keyDeclaringType,
+					declaringTableGroupProducer,
+					selectableMappings,
+					(NonAggregatedIdentifierMapping) modelPart,
+					embeddableTypeDescriptor,
+					creationProcess
+			);
 		}
-		else {
-			embeddableTypeDescriptor = modelPart.getEmbeddableTypeDescriptor();
-		}
-		if ( modelPart instanceof VirtualModelPart ) {
+		else if ( modelPart instanceof VirtualModelPart ) {
 			return new VirtualEmbeddedAttributeMapping(
 					keyDeclaringType,
 					declaringTableGroupProducer,

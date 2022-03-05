@@ -1,72 +1,75 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.annotations.notfound;
+package org.hibernate.orm.test.notfound;
 
 import java.io.Serializable;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
 
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+
 import static org.junit.jupiter.api.Assertions.assertNull;
+
 
 /**
  * @author Emmanuel Bernard
- * @author Gail Badner
  */
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 @DomainModel(
-		annotatedClasses = { NotFoundLogicalOneToOneTest.Coin.class, NotFoundLogicalOneToOneTest.Currency.class }
+		annotatedClasses = { NotFoundTest.Coin.class, NotFoundTest.Currency.class }
 )
 @SessionFactory
-public class NotFoundLogicalOneToOneTest {
+public class NotFoundTest {
 
 	@Test
-	public void testLogicalOneToOne(SessionFactoryScope scope) {
-		Currency euro = new Currency();
+	public void testManyToOne(SessionFactoryScope scope) {
+		final Currency euro = new Currency();
 		euro.setName( "Euro" );
-		Coin fiveC = new Coin();
-		fiveC.setName( "Five cents" );
-		fiveC.setCurrency( euro );
 
-		scope.inTransaction(
-				session -> {
-					session.persist( euro );
-					session.persist( fiveC );
-				}
-		);
+		final Coin fiveCents = new Coin();
+		fiveCents.setName( "Five cents" );
+		fiveCents.setCurrency( euro );
 
-		scope.inTransaction(
-				session ->
-						session.delete( euro )
-		);
+		scope.inTransaction( session -> {
+			session.persist( euro );
+			session.persist( fiveCents );
+		} );
 
-		scope.inTransaction(
-				session -> {
-					Coin coin = session.get( Coin.class, fiveC.getId() );
-					assertNull( coin.getCurrency() );
+		scope.inTransaction( session -> {
+			Currency _euro = session.get( Currency.class, euro.getId() );
+			session.delete( _euro );
+		} );
 
-					session.delete( coin );
-				}
-		);
+		scope.inTransaction( session -> {
+			Coin _fiveCents = session.get( Coin.class, fiveCents.getId() );
+			assertNull( _fiveCents.getCurrency() );
+			session.delete( _fiveCents );
+		} );
 	}
 
 	@Entity(name = "Coin")
 	public static class Coin {
+
 		private Integer id;
+
 		private String name;
+
 		private Currency currency;
 
 		@Id
@@ -87,7 +90,8 @@ public class NotFoundLogicalOneToOneTest {
 			this.name = name;
 		}
 
-		@OneToOne(fetch = FetchType.LAZY)
+		@ManyToOne
+		@JoinColumn(name = "currency", referencedColumnName = "name")
 		@NotFound(action = NotFoundAction.IGNORE)
 		public Currency getCurrency() {
 			return currency;
@@ -100,7 +104,9 @@ public class NotFoundLogicalOneToOneTest {
 
 	@Entity(name = "Currency")
 	public static class Currency implements Serializable {
+
 		private Integer id;
+
 		private String name;
 
 		@Id

@@ -16,6 +16,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -59,8 +60,6 @@ import org.hibernate.type.descriptor.jdbc.LobTypeMappings;
 import org.hibernate.type.descriptor.jdbc.NationalizedTypeMappings;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
-
-import jakarta.persistence.AttributeConverter;
 
 /**
  * Any value that maps to columns.
@@ -321,11 +320,14 @@ public abstract class SimpleValue implements KeyValue {
 	public void createForeignKey() throws MappingException {}
 
 	@Override
-	public void createForeignKeyOfEntity(String entityName) {
+	public ForeignKey createForeignKeyOfEntity(String entityName) {
 		if ( isConstrained() ) {
-			table.createForeignKey( getForeignKeyName(), getConstraintColumns(), entityName, getForeignKeyDefinition() )
-					.setCascadeDeleteEnabled(cascadeDeleteEnabled);
+			final ForeignKey fk = table.createForeignKey( getForeignKeyName(), getConstraintColumns(), entityName, getForeignKeyDefinition() );
+			fk.setCascadeDeleteEnabled( cascadeDeleteEnabled );
+			return fk;
 		}
+
+		return null;
 	}
 
 	@Override

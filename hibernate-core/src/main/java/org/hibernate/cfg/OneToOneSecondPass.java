@@ -275,6 +275,11 @@ public class OneToOneSecondPass implements SecondPass {
 		join.setTable( originalJoin.getTable() );
 		join.setInverse( true );
 		DependantValue key = new DependantValue( buildingContext, join.getTable(), persistentClass.getIdentifier() );
+
+		if ( notFoundAction != null ) {
+			join.disableForeignKeyCreation();
+		}
+
 		//TODO support @ForeignKey
 		join.setKey( key );
 		join.setSequentialSelect( false );

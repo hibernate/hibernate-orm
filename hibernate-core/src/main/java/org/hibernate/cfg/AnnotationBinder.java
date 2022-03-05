@@ -2653,6 +2653,7 @@ public final class AnnotationBinder {
 		Cascade hibernateCascade = property.getAnnotation( Cascade.class );
 		NotFound notFound = property.getAnnotation( NotFound.class );
 		NotFoundAction notFoundAction = notFound == null ? null : notFound.action();
+		final boolean hasNotFoundAction = notFoundAction != null;
 
 		// MapsId means the columns belong to the pk;
 		// A @MapsId association (obviously) must be non-null when the entity is first persisted.
@@ -2663,12 +2664,15 @@ public final class AnnotationBinder {
 		// @OneToOne(optional = true) with @PKJC makes the association optional.
 		final boolean mandatory = !ann.optional()
 				|| property.isAnnotationPresent( Id.class )
-				|| property.isAnnotationPresent( MapsId.class ) && notFoundAction != NotFoundAction.IGNORE;
+				|| property.isAnnotationPresent( MapsId.class ) && !hasNotFoundAction;
 		matchIgnoreNotFoundWithFetchType( propertyHolder.getEntityName(), property.getName(), notFoundAction, ann.fetch() );
 		OnDelete onDeleteAnn = property.getAnnotation( OnDelete.class );
 		JoinTable assocTable = propertyHolder.getJoinTable(property);
 		if ( assocTable != null ) {
 			Join join = propertyHolder.addJoin( assocTable, false );
+			if ( hasNotFoundAction ) {
+				join.disableForeignKeyCreation();
+			}
 			for ( AnnotatedJoinColumn joinColumn : joinColumns) {
 				joinColumn.setExplicitTableName( join.getTable().getName() );
 			}

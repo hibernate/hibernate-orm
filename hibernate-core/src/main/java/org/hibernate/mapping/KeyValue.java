@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.mapping;
+
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.IdentifierGenerator;
@@ -37,7 +38,7 @@ public interface KeyValue extends Value {
 
 	boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect);
 	
-	void createForeignKeyOfEntity(String entityName);
+	ForeignKey createForeignKeyOfEntity(String entityName);
 	
 	boolean isCascadeDeleteEnabled();
 	

@@ -29,6 +29,5 @@ public class SecondaryTableSecondPass implements SecondPass {
 
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
 		entityBinder.finalSecondaryTableBinding( propertyHolder );
-		
 	}
 }

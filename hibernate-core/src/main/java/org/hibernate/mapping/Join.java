@@ -29,6 +29,7 @@ public class Join implements AttributeContainer, Serializable {
 	private boolean sequentialSelect;
 	private boolean inverse;
 	private boolean optional;
+	private boolean disableForeignKeyCreation;
 
 	// Custom SQL
 	private String customSQLInsert;
@@ -97,8 +98,15 @@ public class Join implements AttributeContainer, Serializable {
 		this.persistentClass = persistentClass;
 	}
 
+	public void disableForeignKeyCreation() {
+		disableForeignKeyCreation = true;
+	}
+
 	public void createForeignKey() {
-		getKey().createForeignKeyOfEntity( persistentClass.getEntityName() );
+		final ForeignKey foreignKey = getKey().createForeignKeyOfEntity( persistentClass.getEntityName() );
+		if ( disableForeignKeyCreation ) {
+			foreignKey.disableCreation();
+		}
 	}
 
 	public void createPrimaryKey() {

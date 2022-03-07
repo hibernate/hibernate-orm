@@ -26,6 +26,8 @@ import org.hibernate.TransactionException;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import org.hibernate.resource.jdbc.internal.EmptyStatementInspector;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.type.Type;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
@@ -316,9 +318,9 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		expectedSQLs.add( "select" );
 		expectedSQLs.add( "delete" );
 
-		final Interceptor interceptor = new EmptyInterceptor() {
+		final StatementInspector statementInspector = new EmptyStatementInspector() {
 			@Override
-			public String onPrepareStatement(String sql) {
+			public String inspect(String sql) {
 				assertNotNull( sql );
 				String expectedSql = expectedSQLs.poll().toLowerCase( Locale.ROOT );
 				assertTrue(
@@ -329,14 +331,14 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 			}
 		};
 
-		Session s = openSession( interceptor );
+		Session s = sessionFactory().withOptions().statementInspector( statementInspector ).openSession();
 		Transaction t = s.beginTransaction();
 		User u = new User( "Lukasz", "Antoniak" );
 		s.persist( u );
 		t.commit();
 		s.close();
 
-		s = openSession( interceptor );
+		s = sessionFactory().withOptions().statementInspector( statementInspector ).openSession();
 		t = s.beginTransaction();
 		s.get( User.class, "Lukasz" );
 		s.createQuery( "from User u" ).list();
@@ -344,13 +346,13 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		u.setPassword( "Kinga" );
-		s = openSession( interceptor );
+		s = sessionFactory().withOptions().statementInspector( statementInspector ).openSession();
 		t = s.beginTransaction();
 		s.merge( u );
 		t.commit();
 		s.close();
 
-		s = openSession( interceptor );
+		s = sessionFactory().withOptions().statementInspector( statementInspector ).openSession();
 		t = s.beginTransaction();
 		s.delete( u );
 		t.commit();
@@ -360,14 +362,14 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	}
 
 	public void testPrepareStatementFaultIntercept() {
-		final Interceptor interceptor = new EmptyInterceptor() {
+		final StatementInspector statementInspector = new EmptyStatementInspector() {
 			@Override
-			public String onPrepareStatement(String sql) {
+			public String inspect(String sql) {
 				return null;
 			}
 		};
 
-		Session s = openSession( interceptor );
+		Session s = sessionFactory().withOptions().statementInspector( statementInspector ).openSession();
 		try {
 
 			Transaction t = s.beginTransaction();

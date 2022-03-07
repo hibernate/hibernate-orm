@@ -91,10 +91,6 @@ public class DocumentInterceptor implements Interceptor {
 	public void afterTransactionCompletion(Transaction tx) {}
 	public void beforeTransactionCompletion(Transaction tx) {}
 
-	public String onPrepareStatement(String sql) {
-		return sql;
-	}
-
 	public void onCollectionRecreate(Object collection, Serializable key) throws CallbackException {}
 	public void onCollectionRemove(Object collection, Serializable key) throws CallbackException {}
 	public void onCollectionUpdate(Object collection, Serializable key) throws CallbackException {}

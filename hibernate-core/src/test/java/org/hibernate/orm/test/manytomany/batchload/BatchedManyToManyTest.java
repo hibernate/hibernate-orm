@@ -9,12 +9,12 @@ package org.hibernate.orm.test.manytomany.batchload;
 import java.util.List;
 import java.util.Locale;
 
-import org.hibernate.EmptyInterceptor;
 import org.hibernate.Hibernate;
-import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.resource.jdbc.internal.EmptyStatementInspector;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.stat.CollectionStatistics;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -98,9 +98,9 @@ public class BatchedManyToManyTest {
 		CollectionStatistics groupUserStats = sessionFactory.getStatistics()
 				.getCollectionStatistics( Group.class.getName() + ".users" );
 
-		Interceptor testingInterceptor = new EmptyInterceptor() {
+		final StatementInspector statementInspector = new EmptyStatementInspector() {
 			@Override
-			public String onPrepareStatement(String sql) {
+			public String inspect(String sql) {
 				// ugh, this is the best way I could come up with to assert this.
 				// unfortunately, this is highly dependent on the dialect and its
 				// outer join fragment.  But at least this wil fail on the majority
@@ -109,13 +109,13 @@ public class BatchedManyToManyTest {
 						sql.toLowerCase( Locale.ROOT ).contains( "left join" ),
 						"batch load of many-to-many should use inner join"
 				);
-				return super.onPrepareStatement( sql );
+				return super.inspect( sql );
 			}
 		};
 
 		try (final Session session = scope.getSessionFactory()
 				.withOptions()
-				.interceptor( testingInterceptor )
+				.statementInspector( statementInspector )
 				.openSession()) {
 			session.getTransaction().begin();
 			try {
@@ -143,5 +143,4 @@ public class BatchedManyToManyTest {
 			}
 		}
 	}
-
 }

@@ -511,17 +511,4 @@ public interface Interceptor {
 	 * @param tx The Hibernate transaction facade object
 	 */
 	default void afterTransactionCompletion(Transaction tx) {}
-
-	/**
-	 * Called when sql string is being prepared. 
-	 * @param sql sql to be prepared
-	 * @return original or modified sql
-	 *
-	 * @deprecated Supply a {@link org.hibernate.resource.jdbc.spi.StatementInspector} instead, if you wish
-	 * to inspect and alter SQL statements.
-	 */
-	@Deprecated
-	default String onPrepareStatement(String sql) {
-		return sql;
-	}
 }

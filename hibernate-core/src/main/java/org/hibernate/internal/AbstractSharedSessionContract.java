@@ -90,6 +90,7 @@ import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.resource.jdbc.internal.EmptyStatementInspector;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -269,11 +270,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	private StatementInspector interpret(StatementInspector statementInspector) {
-		return statementInspector == null
-				// If there is no StatementInspector specified, map to the call
-				// to the (deprecated) Interceptor#onPrepareStatement method
-				? interceptor::onPrepareStatement
-				: statementInspector;
+		return statementInspector == null ? EmptyStatementInspector.INSTANCE : statementInspector;
 	}
 
 	@Override

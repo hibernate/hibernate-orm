@@ -23,13 +23,6 @@ public final class NationalizedTypeMappings {
 
 	private static final Logger log = Logger.getLogger( NationalizedTypeMappings.class );
 
-	/**
-	 * Singleton access
-	 * @deprecated use the static methods instead
-	 */
-	@Deprecated
-	public static final NationalizedTypeMappings INSTANCE = new NationalizedTypeMappings();
-
 	private NationalizedTypeMappings() {
 	}
 
@@ -46,15 +39,4 @@ public final class NationalizedTypeMappings {
 				return jdbcCode;
 		}
 	}
-
-	/**
-	 * @deprecated use {@link #toNationalizedTypeCode(int)}
-	 *
-	 * @return corresponding nationalized code
-	 */
-	@Deprecated
-	public int getCorrespondingNationalizedCode(int jdbcCode) {
-		return toNationalizedTypeCode( jdbcCode );
-	}
-
 }

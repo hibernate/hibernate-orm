@@ -17,32 +17,7 @@ import org.hibernate.type.descriptor.JdbcTypeNameMapper;
  */
 public final class LobTypeMappings {
 
-	/**
-	 * Singleton access
-	 * @deprecated use the static method helpers instead.
-	 */
-	@Deprecated
-	public static final LobTypeMappings INSTANCE = new LobTypeMappings();
-
 	private LobTypeMappings() {
-	}
-
-	/**
-	 * @return true if corresponding Lob code exists; false otherwise.
-	 * @deprecated use {@link #isMappedToKnownLobCode(int)}
-	 */
-	@Deprecated
-	public boolean hasCorrespondingLobCode(final int jdbcTypeCode) {
-		return isMappedToKnownLobCode( jdbcTypeCode );
-	}
-
-	/**
-	 * @return corresponding Lob code
-	 * @deprecated use {@link #getLobCodeTypeMapping(int)}
-	 */
-	@Deprecated
-	public int getCorrespondingLobCode(final int jdbcTypeCode) {
-		return getLobCodeTypeMapping( jdbcTypeCode );
 	}
 
 	public static boolean isMappedToKnownLobCode(final int jdbcTypeCode) {
@@ -98,5 +73,4 @@ public final class LobTypeMappings {
 						) );
 		}
 	}
-
 }

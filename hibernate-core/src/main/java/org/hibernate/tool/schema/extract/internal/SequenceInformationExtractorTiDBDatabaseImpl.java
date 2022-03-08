@@ -110,7 +110,7 @@ public class SequenceInformationExtractorTiDBDatabaseImpl extends SequenceInform
 		return resultSet.getString( sequenceNameColumn() );
 	}
 
-	protected Long resultSetIncrementValue(ResultSet resultSet) throws SQLException {
+	protected Number resultSetIncrementValue(ResultSet resultSet) throws SQLException {
 		String column = sequenceIncrementColumn();
 		return column != null ? resultSet.getLong( column ) : null;
 	}

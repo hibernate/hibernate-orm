@@ -202,9 +202,9 @@ public class SequenceStyleGenerator
 
 		if ( sequenceMismatchStrategy != SequenceMismatchStrategy.NONE && isPooledOptimizer && isPhysicalSequence( jdbcEnvironment, forceTableUse ) ) {
 			String databaseSequenceName = sequenceName.getObjectName().getText();
-			Long databaseIncrementValue = getSequenceIncrementValue( jdbcEnvironment, databaseSequenceName );
+			Number databaseIncrementValue = getSequenceIncrementValue( jdbcEnvironment, databaseSequenceName );
 
-			if ( databaseIncrementValue != null && !databaseIncrementValue.equals( (long) incrementSize ) ) {
+			if ( databaseIncrementValue != null && databaseIncrementValue.intValue() != incrementSize ) {
 				int dbIncrementValue = databaseIncrementValue.intValue();
 
 				switch ( sequenceMismatchStrategy ) {
@@ -553,7 +553,7 @@ public class SequenceStyleGenerator
 	 *
 	 * @return sequence increment value
 	 */
-	private Long getSequenceIncrementValue(JdbcEnvironment jdbcEnvironment, String sequenceName) {
+	private Number getSequenceIncrementValue(JdbcEnvironment jdbcEnvironment, String sequenceName) {
 		return jdbcEnvironment.getExtractedDatabaseMetaData().getSequenceInformationList()
 				.stream()
 				.filter(

@@ -26,14 +26,14 @@ public class OracleSequenceInfoTest extends
 	@Override
 	protected void assertProductSequence(SequenceInformation productSequenceInfo) {
 		assertNull( productSequenceInfo.getStartValue() );
-		assertEquals( Long.valueOf( 1 ), productSequenceInfo.getMinValue() );
-		assertEquals( Long.valueOf( 10 ), productSequenceInfo.getIncrementValue() );
+		assertEquals( Long.valueOf( 1 ), productSequenceInfo.getMinValue().longValue() );
+		assertEquals( Long.valueOf( 10 ), productSequenceInfo.getIncrementValue().longValue() );
 	}
 
 	@Override
 	protected void assertVehicleSequenceInfo(SequenceInformation vehicleSequenceInfo) {
 		assertNull( vehicleSequenceInfo.getStartValue() );
-		assertEquals( Long.valueOf( 1 ), vehicleSequenceInfo.getMinValue() );
-		assertEquals( Long.valueOf( 1 ), vehicleSequenceInfo.getIncrementValue() );
+		assertEquals( Long.valueOf( 1 ), vehicleSequenceInfo.getMinValue().longValue() );
+		assertEquals( Long.valueOf( 1 ), vehicleSequenceInfo.getIncrementValue().longValue() );
 	}
 }

@@ -88,11 +88,11 @@ public class SequenceInformationTest extends
 	}
 
 	protected void assertProductSequence(SequenceInformation productSequenceInfo) {
-		assertEquals( Long.valueOf( 10 ), productSequenceInfo.getIncrementValue() );
+		assertEquals( Long.valueOf( 10 ), productSequenceInfo.getIncrementValue().longValue() );
 	}
 
 	protected void assertVehicleSequenceInfo(SequenceInformation vehicleSequenceInfo) {
-		assertEquals( Long.valueOf( 1 ), vehicleSequenceInfo.getIncrementValue() );
+		assertEquals( Long.valueOf( 1 ), vehicleSequenceInfo.getIncrementValue().longValue() );
 	}
 
 	private SequenceInformation sequenceInformation(String sequenceName) {

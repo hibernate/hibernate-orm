@@ -78,9 +78,6 @@ import static org.hibernate.type.SqlTypes.INTERVAL_SECOND;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
-import static org.hibernate.type.SqlTypes.LONGNVARCHAR;
-import static org.hibernate.type.SqlTypes.LONGVARBINARY;
-import static org.hibernate.type.SqlTypes.LONGVARCHAR;
 import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
@@ -179,12 +176,9 @@ public class H2Dialect extends Dialect {
 			case NCHAR:
 				return columnType( CHAR );
 			case NVARCHAR:
-			case LONGNVARCHAR:
 			case LONG32NVARCHAR:
-			case LONGVARCHAR:
 			case LONG32VARCHAR:
 				return columnType( VARCHAR );
-			case LONGVARBINARY:
 			case LONG32VARBINARY:
 				return columnType( VARBINARY );
 		}
@@ -199,14 +193,11 @@ public class H2Dialect extends Dialect {
 				return "char";
 			case VARCHAR:
 			case NVARCHAR:
-			case LONGVARCHAR:
-			case LONGNVARCHAR:
 			case LONG32VARCHAR:
 			case LONG32NVARCHAR:
 				return "varchar";
 			case BINARY:
 			case VARBINARY:
-			case LONGVARBINARY:
 			case LONG32VARBINARY:
 				return "varbinary";
 		}

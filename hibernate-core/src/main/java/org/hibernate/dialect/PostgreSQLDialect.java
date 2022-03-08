@@ -131,22 +131,27 @@ public class PostgreSQLDialect extends Dialect {
 			case TINYINT:
 				// no tinyint, not even in Postgres 11
 				return "smallint";
+			// there are no nchar/nvarchar types in Postgres
 			case NCHAR:
 				return columnType( CHAR );
 			case NVARCHAR:
 				return columnType( VARCHAR );
-			case LONGVARCHAR:
+			// since there's no real difference between TEXT and VARCHAR,
+			// except for the length limit, we can just use 'text' for the
+			// "long" string types
 			case LONG32VARCHAR:
-			case LONGNVARCHAR:
 			case LONG32NVARCHAR:
 				return "text";
 			case BLOB:
 			case CLOB:
 			case NCLOB:
+				// use oid as the blob type on Postgres because
+				// the JDBC driver is rubbish
 				return "oid";
+			// use bytea as the "long" binary type (that there is no
+			// real VARBINARY type in Postgres, so we always use this)
 			case BINARY:
 			case VARBINARY:
-			case LONGVARBINARY:
 			case LONG32VARBINARY:
 				return "bytea";
 		}
@@ -160,14 +165,11 @@ public class PostgreSQLDialect extends Dialect {
 			case NCHAR:
 			case VARCHAR:
 			case NVARCHAR:
-			case LONGVARCHAR:
 			case LONG32VARCHAR:
-			case LONGNVARCHAR:
 			case LONG32NVARCHAR:
 				return "text";
 			case BINARY:
 			case VARBINARY:
-			case LONGVARBINARY:
 			case LONG32VARBINARY:
 				return "bytea";
 		}

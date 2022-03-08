@@ -84,41 +84,41 @@ public class SpannerDialect extends Dialect {
 		switch ( sqlTypeCode ) {
 			case BOOLEAN:
 				return "bool";
+
 			case TINYINT:
 			case SMALLINT:
 			case INTEGER:
 			case BIGINT:
 				return "int64";
+
 			case REAL:
 			case FLOAT:
 			case DOUBLE:
 			case DECIMAL:
 			case NUMERIC:
 				return "float64";
+
 			//there is no time type of any kind
 			case TIME:
 			//timestamp does not accept precision
 			case TIMESTAMP:
 			case TIMESTAMP_WITH_TIMEZONE:
 				return "timestamp";
+
 			case CHAR:
 			case NCHAR:
 			case VARCHAR:
 			case NVARCHAR:
-			case LONGVARCHAR:
-			case LONGNVARCHAR:
 				return "string($l)";
-			case CLOB:
-			case NCLOB:
-			case LONG32VARCHAR:
-			case LONG32NVARCHAR:
-				return "string(max)";
+
 			case BINARY:
 			case VARBINARY:
-			case LONGVARBINARY:
 				return "bytes($l)";
+
+			case CLOB:
+			case NCLOB:
+				return "string(max)";
 			case BLOB:
-			case LONG32VARBINARY:
 				return "bytes(max)";
 		}
 		return super.columnType( sqlTypeCode );
@@ -131,14 +131,11 @@ public class SpannerDialect extends Dialect {
 			case NCHAR:
 			case VARCHAR:
 			case NVARCHAR:
-			case LONGVARCHAR:
-			case LONGNVARCHAR:
 			case LONG32VARCHAR:
 			case LONG32NVARCHAR:
 				return "string";
 			case BINARY:
 			case VARBINARY:
-			case LONGVARBINARY:
 			case LONG32VARBINARY:
 				return "bytes";
 		}

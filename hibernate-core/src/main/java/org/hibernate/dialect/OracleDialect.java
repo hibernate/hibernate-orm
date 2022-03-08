@@ -554,6 +554,7 @@ public class OracleDialect extends Dialect {
 			case BOOLEAN:
 				// still, after all these years...
 				return "number(1,0)";
+
 			case TINYINT:
 				return "number(3,0)";
 			case SMALLINT:
@@ -565,10 +566,12 @@ public class OracleDialect extends Dialect {
 			case REAL:
 				// Oracle's 'real' type is actually double precision
 				return "float(24)";
+
 			case NUMERIC:
 			case DECIMAL:
 				// Note that 38 is the maximum precision Oracle supports
 				return "number($p,$s)";
+
 			case DATE:
 			case TIME:
 				return "date";
@@ -577,6 +580,8 @@ public class OracleDialect extends Dialect {
 				// on Oracle is that date has no fractional seconds
 			case TIMESTAMP_WITH_TIMEZONE:
 				return getVersion().isBefore( 9 ) ? "date" : super.columnType( sqlTypeCode );
+			case TIME_WITH_TIMEZONE:
+				return getVersion().isBefore( 9 ) ? "date" : "timestamp($p) with time zone";
 			case VARCHAR:
 				return getVersion().isBefore( 9 ) ? "varchar2($l)" : "varchar2($l char)";
 			case NVARCHAR:

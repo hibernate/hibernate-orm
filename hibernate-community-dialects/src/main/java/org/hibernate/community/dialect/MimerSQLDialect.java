@@ -39,12 +39,11 @@ import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
+import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
-import static org.hibernate.type.SqlTypes.LONGNVARCHAR;
-import static org.hibernate.type.SqlTypes.LONGVARCHAR;
 import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
@@ -91,12 +90,14 @@ public class MimerSQLDialect extends Dialect {
 				return columnType( NCHAR );
 			case VARCHAR:
 				return columnType( NVARCHAR );
-			case LONGVARCHAR:
-				return columnType( LONGNVARCHAR );
 			case LONG32VARCHAR:
 				return columnType( LONG32NVARCHAR );
+			//default length is 1M, which is quite low
+			case BLOB:
+				return "blob($l)";
 			case CLOB:
-				return columnType( NCLOB );
+			case NCLOB:
+				return "nclob($l)";
 		}
 		return super.columnType( sqlTypeCode );
 	}
@@ -112,12 +113,7 @@ public class MimerSQLDialect extends Dialect {
 
 		//Mimer CHARs are ASCII!!
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( VARCHAR, columnType( LONGVARCHAR ), "nvarchar(" + getMaxNVarcharLength() + ")", this )
-						.withTypeCapacity( getMaxNVarcharLength(), columnType( VARCHAR ) )
-						.build()
-		);
-		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( LONGVARCHAR, columnType( LONGVARCHAR ), "nvarchar(" + getMaxNVarcharLength() + ")", this )
+				CapacityDependentDdlType.builder( VARCHAR, columnType( LONG32VARCHAR ), "nvarchar(" + getMaxNVarcharLength() + ")", this )
 						.withTypeCapacity( getMaxNVarcharLength(), columnType( VARCHAR ) )
 						.build()
 		);

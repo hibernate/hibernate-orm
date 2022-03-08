@@ -52,16 +52,23 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	@Override
 	protected String columnType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
+			case DATE:
+				return "date";
+			case TIME:
+				return "time";
 			case TIMESTAMP:
 				return "timestamp";
 			case TIMESTAMP_WITH_TIMEZONE:
 				return "timestamp with time zone";
+
+			//these types hold up to 2 GB
 			case LONG32VARCHAR:
 				return "long varchar";
 			case LONG32NVARCHAR:
 				return "long nvarchar";
 			case LONG32VARBINARY:
 				return "long binary";
+
 			case NCLOB:
 				return "ntext";
 		}

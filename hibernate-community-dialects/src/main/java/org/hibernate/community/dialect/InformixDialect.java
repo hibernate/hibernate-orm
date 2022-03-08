@@ -67,9 +67,6 @@ import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
-import static org.hibernate.type.SqlTypes.LONGNVARCHAR;
-import static org.hibernate.type.SqlTypes.LONGVARBINARY;
-import static org.hibernate.type.SqlTypes.LONGVARCHAR;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
@@ -130,11 +127,8 @@ public class InformixDialect extends Dialect {
 			//these types have no defined length
 			case BINARY:
 			case VARBINARY:
-			case LONGVARBINARY:
 			case LONG32VARBINARY:
 				return "byte";
-			case LONGVARCHAR:
-			case LONGNVARCHAR:
 			case LONG32VARCHAR:
 			case LONG32NVARCHAR:
 				return "text";
@@ -160,13 +154,13 @@ public class InformixDialect extends Dialect {
 		);
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( VARCHAR, columnType( LONGVARCHAR ), this )
+				CapacityDependentDdlType.builder( VARCHAR, columnType( LONG32VARCHAR ), this )
 						.withTypeCapacity( 255, "varchar($l)" )
 						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( NVARCHAR, columnType( LONGNVARCHAR ), this )
+				CapacityDependentDdlType.builder( NVARCHAR, columnType( LONG32NVARCHAR ), this )
 						.withTypeCapacity( 255, "varchar($l)" )
 						.withTypeCapacity( getMaxVarcharLength(), columnType( NVARCHAR ) )
 						.build()

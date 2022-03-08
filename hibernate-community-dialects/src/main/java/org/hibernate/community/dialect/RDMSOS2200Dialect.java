@@ -58,9 +58,6 @@ import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
-import static org.hibernate.type.SqlTypes.LONGNVARCHAR;
-import static org.hibernate.type.SqlTypes.LONGVARBINARY;
-import static org.hibernate.type.SqlTypes.LONGVARCHAR;
 import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
@@ -142,9 +139,7 @@ public class RDMSOS2200Dialect extends Dialect {
 			case NCHAR:
 			case VARCHAR:
 			case NVARCHAR:
-			case LONGVARCHAR:
 			case LONG32VARCHAR:
-			case LONGNVARCHAR:
 			case LONG32NVARCHAR:
 				return "unicode($l)";
 			case CLOB:
@@ -153,7 +148,6 @@ public class RDMSOS2200Dialect extends Dialect {
 			//no 'binary' nor 'varbinary' so use 'blob'
 			case BINARY:
 			case VARBINARY:
-			case LONGVARBINARY:
 			case LONG32VARBINARY:
 			case BLOB:
 				return "blob($l)";

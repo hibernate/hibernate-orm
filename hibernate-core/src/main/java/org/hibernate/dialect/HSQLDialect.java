@@ -132,13 +132,16 @@ public class HSQLDialect extends Dialect {
 					// Older versions of HSQL did not accept
 					// precision for the 'numeric' type
 					return "numeric";
+
 				// Older versions of HSQL had no lob support
 				case BLOB:
 					return "longvarbinary";
 				case CLOB:
 					return "longvarchar";
+
 			}
 		}
+
 		return super.columnType( sqlTypeCode );
 	}
 

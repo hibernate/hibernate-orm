@@ -92,8 +92,6 @@ import static org.hibernate.type.SqlTypes.DOUBLE;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
-import static org.hibernate.type.SqlTypes.LONGNVARCHAR;
-import static org.hibernate.type.SqlTypes.LONGVARCHAR;
 import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NUMERIC;
@@ -220,8 +218,6 @@ public abstract class AbstractHANADialect extends Dialect {
 				return columnType( NVARCHAR );
 			case LONG32VARCHAR:
 				return isUseUnicodeStringTypes() ? columnType( LONG32NVARCHAR ) : super.columnType( LONG32VARCHAR );
-			case LONGVARCHAR:
-				return isUseUnicodeStringTypes() ? columnType( LONGNVARCHAR ) : super.columnType( LONGVARCHAR );
 			case CLOB:
 				return isUseUnicodeStringTypes() ? columnType( NCLOB ) : super.columnType( CLOB );
 			// map tinyint to smallint since tinyint is unsigned on HANA

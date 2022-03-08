@@ -96,24 +96,21 @@ public class CockroachDialect extends Dialect {
 		switch ( sqlTypeCode ) {
 			case TINYINT:
 				return "smallint"; //no tinyint
+
 			case CHAR:
 			case NCHAR:
 			case VARCHAR:
 			case NVARCHAR:
-			case LONGVARCHAR:
-			case LONGNVARCHAR:
 				return "string($l)";
-			case CLOB:
+
 			case NCLOB:
-			case LONG32VARCHAR:
-			case LONG32NVARCHAR:
+			case CLOB:
 				return "string";
+
 			case BINARY:
 			case VARBINARY:
-			case LONGVARBINARY:
 				return "bytes($l)";
 			case BLOB:
-			case LONG32VARBINARY:
 				return "bytes";
 		}
 		return super.columnType( sqlTypeCode );
@@ -126,14 +123,11 @@ public class CockroachDialect extends Dialect {
 			case NCHAR:
 			case VARCHAR:
 			case NVARCHAR:
-			case LONGVARCHAR:
-			case LONGNVARCHAR:
 			case LONG32VARCHAR:
 			case LONG32NVARCHAR:
 				return "string";
 			case BINARY:
 			case VARBINARY:
-			case LONGVARBINARY:
 			case LONG32VARBINARY:
 				return "bytes";
 		}

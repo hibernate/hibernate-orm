@@ -4758,14 +4758,6 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getIdentifierProperty().getIdentifierGenerator();
 	}
 
-	/**
-	 * @deprecated Exposed for tests only
-	 */
-	@Deprecated
-	public InsertGeneratedIdentifierDelegate getIdentityDelegate() {
-		return identityDelegate;
-	}
-
 	@Override
 	public String getRootEntityName() {
 		return entityMetamodel.getRootName();

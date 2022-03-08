@@ -151,13 +151,4 @@ public class LazyAttributesMetadata implements Serializable {
 		}
 		return list;
 	}
-
-	/**
-	 * @deprecated This method is not being used and as such will be removed
-	 */
-	@Deprecated
-	public Set<String> getAttributesInSameFetchGroup(String attributeName) {
-		final String fetchGroupName = getFetchGroupName( attributeName );
-		return getAttributesInFetchGroup( fetchGroupName );
-	}
 }

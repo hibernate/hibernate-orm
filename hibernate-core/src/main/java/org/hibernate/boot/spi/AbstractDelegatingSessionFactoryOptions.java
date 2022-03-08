@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.function.Supplier;
 
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
@@ -346,11 +345,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public boolean isPreferUserTransaction() {
 		return delegate.isPreferUserTransaction();
-	}
-
-	@Override
-	public Class<? extends Interceptor> getStatelessInterceptorImplementor() {
-		return delegate.getStatelessInterceptorImplementor();
 	}
 
 	@Override

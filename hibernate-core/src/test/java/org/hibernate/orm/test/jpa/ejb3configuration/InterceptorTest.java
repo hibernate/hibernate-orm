@@ -18,7 +18,6 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.orm.test.jpa.Distributor;
@@ -169,7 +168,7 @@ public class InterceptorTest {
 
 			SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
 
-			sessionFactoryBuilder.applyStatelessInterceptor( LocalExceptionInterceptor.class );
+			sessionFactoryBuilder.applyStatelessInterceptor( () -> new LocalExceptionInterceptor() );
 			sessionFactory = sessionFactoryBuilder.build();
 
 			final SessionFactory sessionFactoryInstance = sessionFactory;

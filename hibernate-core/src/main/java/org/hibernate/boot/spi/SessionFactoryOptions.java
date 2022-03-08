@@ -11,7 +11,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
-import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.TimeZoneStorageStrategy;
@@ -115,26 +114,8 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * Get the interceptor to use by default for all sessions opened from this factory.
 	 *
 	 * @return The interceptor to use factory wide.  May be {@code null}
-	 * @deprecated use {@link #getStatelessInterceptorImplementorSupplier()} instead.
 	 */
-	@Deprecated
-	Class<? extends Interceptor> getStatelessInterceptorImplementor();
-
-	/**
-	 * Get the interceptor to use by default for all sessions opened from this factory.
-	 *
-	 * @return The interceptor to use factory wide.  May be {@code null}
-	 */
-	default Supplier<? extends Interceptor> getStatelessInterceptorImplementorSupplier() {
-		return () -> {
-			try {
-				return getStatelessInterceptorImplementor().newInstance();
-			}
-			catch (InstantiationException | IllegalAccessException e) {
-				throw new HibernateException( "Could not supply session-scoped SessionFactory Interceptor", e );
-			}
-		};
-	}
+	Supplier<? extends Interceptor> getStatelessInterceptorImplementorSupplier();
 
 	StatementInspector getStatementInspector();
 

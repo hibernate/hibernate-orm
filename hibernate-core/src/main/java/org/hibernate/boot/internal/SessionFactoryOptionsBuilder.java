@@ -884,11 +884,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public Class<? extends Interceptor> getStatelessInterceptorImplementor() {
-		return statelessInterceptorClass;
-	}
-
-	@Override
 	public Supplier<? extends Interceptor> getStatelessInterceptorImplementorSupplier() {
 		return statelessInterceptorSupplier;
 	}
@@ -1251,6 +1246,16 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void applyStatelessInterceptor(Class<? extends Interceptor> statelessInterceptorClass) {
 		this.statelessInterceptorClass = statelessInterceptorClass;
+		this.applyStatelessInterceptorSupplier(
+				() -> {
+					try {
+						return statelessInterceptorClass.newInstance();
+					}
+					catch (InstantiationException | IllegalAccessException e) {
+						throw new HibernateException( String.format( "Could not supply stateless Interceptor of class %s", statelessInterceptorClass.getName()), e );
+					}
+				}
+		);
 	}
 
 	public void applyStatelessInterceptorSupplier(Supplier<? extends Interceptor> statelessInterceptorSupplier) {

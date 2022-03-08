@@ -1117,26 +1117,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		// then check the Session-scoped interceptor prototype
-		final Class<? extends Interceptor> statelessInterceptorImplementor = options.getStatelessInterceptorImplementor();
 		final Supplier<? extends Interceptor> statelessInterceptorImplementorSupplier = options.getStatelessInterceptorImplementorSupplier();
-		if ( statelessInterceptorImplementor != null && statelessInterceptorImplementorSupplier != null ) {
-			throw new HibernateException(
-					"A session scoped interceptor class or supplier are allowed, but not both!" );
-		}
-		else if ( statelessInterceptorImplementor != null ) {
-			try {
-				/*
-				 * We could remove the getStatelessInterceptorImplementor method and use just the getStatelessInterceptorImplementorSupplier
-				 * since it can cover both cases when the user has given a Supplier<? extends Interceptor> or just the
-				 * Class<? extends Interceptor>, in which case, we simply instantiate the Interceptor when calling the Supplier.
-				 */
-				return statelessInterceptorImplementor.newInstance();
-			}
-			catch (InstantiationException | IllegalAccessException e) {
-				throw new HibernateException( "Could not supply session-scoped SessionFactory Interceptor", e );
-			}
-		}
-		else if ( statelessInterceptorImplementorSupplier != null ) {
+		if ( statelessInterceptorImplementorSupplier != null ) {
 			return statelessInterceptorImplementorSupplier.get();
 		}
 

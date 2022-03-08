@@ -192,6 +192,34 @@ task renderIntegrationGuide(type: AsciidoctorTask, group: 'Documentation') {task
 	}
 }
 
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Migration Guide
+
+task renderMigrationGuide(type: AsciidoctorTask, group: 'Documentation') {task->
+	description = 'Renders the Migration Guide in HTML format using Asciidoctor.'
+	tasks.buildDocsForPublishing.dependsOn task
+
+	sourceDir = rootProject.layout.projectDirectory
+	sources {
+		include 'migration-guide.adoc'
+	}
+
+	outputDir = project.layout.buildDirectory.dir( 'asciidoc/migration-guide' )
+
+	attributes linkcss: true,
+			stylesheet: "css/hibernate.css"
+
+	resources {
+		from('src/main/style/asciidoctor') {
+			include 'images/**'
+		}
+		from('src/main/style/asciidoctor') {
+			include 'css/**'
+		}
+	}
+}
+
 tasks.withType(AsciidoctorTask).all {
 	baseDirFollowsSourceDir()
 	outputOptions {

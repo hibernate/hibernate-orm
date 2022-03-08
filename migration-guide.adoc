@@ -7,11 +7,12 @@
 :fn-converter: footnote:converter[Think `AttributeConverter`]
 
 
-
-
 This guide discusses migration from Hibernate ORM version 6.0.  For migration from
 earlier versions, see any other pertinent migration guides as well.
 
+== Java 11
+
+With 6.0, Hibernate ORM has moved to expect Java 11 as its baseline version.
 
 
 == Jakarta Persistence
@@ -33,11 +34,6 @@ Jakarta Persistence.  This can update package names in source, settings, xsd ref
 NOTE: As far as the XSD and setting changes, Hibernate does support both sets as a temporary aid
 in migration.  It logs a deprecation warning when the Java EE variants are used.  See the `rules/`
 directory in the project root for the configuration used to migrate Hibernate itself.
-
-
-== Java 11
-
-With 6.0, Hibernate ORM has moved to expect Java 11 as its baseline version
 
 
 [[read-jdbc]]

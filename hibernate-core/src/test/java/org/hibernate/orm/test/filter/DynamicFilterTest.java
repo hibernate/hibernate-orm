@@ -113,8 +113,6 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		CollectionCacheEntry cachedData = fromSession(
 				session -> {
-					long ts = session.getTimestamp();
-
 					// Force a collection into the second level cache, with its non-filtered elements
 					Salesperson sp = session.load( Salesperson.class, testData.steveId );
 					Hibernate.initialize( sp.getOrders() );
@@ -136,7 +134,6 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		inSession(
 				session -> {
-					long ts = session.getTimestamp();
 					session.enableFilter( "fulfilledOrders" ).setParameter( "asOfDate", testData.lastMonth.getTime() );
 					Salesperson sp = (Salesperson) session.createQuery( "from Salesperson as s where s.id = :id" )
 							.setParameter( "id", testData.steveId )

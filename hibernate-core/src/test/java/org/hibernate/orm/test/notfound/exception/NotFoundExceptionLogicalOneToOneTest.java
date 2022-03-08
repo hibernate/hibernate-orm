@@ -68,12 +68,12 @@ public class NotFoundExceptionLogicalOneToOneTest {
 	@Test
 	@JiraKey( "HHH-15060" )
 	public void testProxyCoin(SessionFactoryScope scope) {
-		// test handling of a proxy for the missing Coin
+		// test handling of a proxy for the Coin with the missing Currency
 		scope.inTransaction( (session) -> {
 			final Coin proxy = session.byId( Coin.class ).getReference( 1 );
 			try {
 				Hibernate.initialize( proxy );
-				Assertions.fail( "Expecting ObjectNotFoundException" );
+				Assertions.fail( "Expecting FetchNotFoundException" );
 			}
 			catch (FetchNotFoundException expected) {
 				assertThat( expected.getEntityName() ).endsWith( "Currency" );
@@ -132,7 +132,7 @@ public class NotFoundExceptionLogicalOneToOneTest {
 		assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Coin " );
 		assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Currency " );
 		assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
-		assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " left " );
 		assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " cross " );
 	}
 
@@ -148,15 +148,15 @@ public class NotFoundExceptionLogicalOneToOneTest {
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
-			final String hql = "select c from Coin c where c.currency.id = 2";
-			final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
-			assertThat( coins ).hasSize( 1 );
+			final String hql = "select c.id from Coin c where c.currency.id = 2";
+			final List<Integer> coinIds = session.createQuery( hql, Integer.class ).getResultList();
+			assertThat( coinIds ).hasSize( 1 );
 
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Coin " );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Currency " );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " left " );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " cross " );
 		} );
 	}
@@ -172,29 +172,29 @@ public class NotFoundExceptionLogicalOneToOneTest {
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
-			// NOTE : this query is conceptually the same as the one from
-			// `#testQueryImplicitPathDereferencePredicateBaseline` in that we want
-			// a join and we want to use the fk target column (here, `Currency.id`)
-			// rather than the normal perf-opt strategy of using the fk key column
-			// (here, `Coin.currency_fk`).
 			final String hql = "select c from Coin c join fetch c.currency c2 where c2.name = 'USD'";
 			final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
 			assertThat( coins ).hasSize( 1 );
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Coin " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Currency " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " left " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " cross " );
 		} );
 
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
-			// NOTE : this query is conceptually the same as the one from
-			// `#testQueryImplicitPathDereferencePredicateBaseline` in that we want
-			// a join and we want to use the fk target column (here, `Currency.id`)
-			// rather than the normal perf-opt strategy of using the fk key column
-			// (here, `Coin.currency_fk`).
-			final String hql = "select c from Coin c join fetch c.currency c2 where c2.name = 'Euro'";
+			final String hql = "select c from Coin c join fetch c.currency c2 where c2.id = 1";
 			final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
 			assertThat( coins ).hasSize( 0 );
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Coin " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Currency " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " left " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " cross " );
 		} );
 	}
 
@@ -213,7 +213,7 @@ public class NotFoundExceptionLogicalOneToOneTest {
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Coin " );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Currency " );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " left " );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " cross " );
 		} );
 
@@ -228,7 +228,8 @@ public class NotFoundExceptionLogicalOneToOneTest {
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Coin " );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Currency " );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " left " );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " cross " );
 		} );
 	}
 

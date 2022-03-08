@@ -22,6 +22,7 @@ import org.hibernate.query.sqm.ParsingException;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -42,6 +43,12 @@ public class FkRefTests {
 
 	@Test
 	@JiraKey( "HHH-15099" )
+	@JiraKey( "HHH-15106" )
+	@FailureExpected(
+			reason = "Coin is selected and so its currency needs to be fetched.  At the " +
+					"moment, that fetch always happens via a join-fetch.  Ideally we'd support " +
+					"loading these via subsequent-select also"
+	)
 	public void testSimplePredicateUse(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -83,12 +90,13 @@ public class FkRefTests {
 	}
 
 	/**
-	 * Baseline test for {@link  #testNullnessPredicateUse}.  Here we use the
+	 * Baseline test for {@link  #testNullnessPredicateUse2}.  Here we use the
 	 * normal "target" reference, which for a not-found mapping should trigger
 	 * a join to the association table and use the fk-target column
 	 */
 	@Test
 	@JiraKey( "HHH-15099" )
+	@JiraKey( "HHH-15106" )
 	public void testNullnessPredicateUseBaseline(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -103,17 +111,61 @@ public class FkRefTests {
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " left " );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " cross " );
 		} );
 	}
 
+	@Test
+	@JiraKey( "HHH-15099" )
+	@JiraKey( "HHH-15106" )
+	public void testNullnessPredicateUse1(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		// there is one Coin (id=3) which has a null currency_fk
+		scope.inTransaction( (session) -> {
+			final String hql = "select c.id from Coin c where fk(c.currency) is null";
+			final List<Integer> coinIds = session.createQuery( hql, Integer.class ).getResultList();
+			assertThat( coinIds ).hasSize( 1 );
+			assertThat( coinIds.get( 0 ) ).isNotNull();
+			assertThat( coinIds.get( 0 ) ).isEqualTo( 3 );
+
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " join " );
+		} );
+
+		statementInspector.clear();
+
+		// check using `currency` as a naked "property-ref"
+		scope.inTransaction( (session) -> {
+			final String hql = "select c.id from Coin c where fk(currency) is null";
+			final List<Integer> coinIds = session.createQuery( hql, Integer.class ).getResultList();
+			assertThat( coinIds ).hasSize( 1 );
+			assertThat( coinIds.get( 0 ) ).isNotNull();
+
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " join " );
+		} );
+	}
+
 	/**
-	 * It is not ideal that we render the join for these.  Need to come back and address that
+	 * It is not ideal that we render the join for these.
+	 *
+	 * Ideally we'd perform a subsequent-select, not sure if that is feasible as it requires
+	 * understanding the overall query structure.
+	 *
+	 * Compare with {@link #testNullnessPredicateUse1}.  There, because we perform a scalar select,
+	 * the currency does not need to be fetched.  So it works there
 	 */
 	@Test
 	@JiraKey( "HHH-15099" )
-	public void testNullnessPredicateUse(SessionFactoryScope scope) {
+	@JiraKey( "HHH-15106" )
+	@FailureExpected(
+			reason = "Coin is selected and so its currency needs to be fetched.  At the " +
+					"moment, that fetch always happens via a join-fetch.  Ideally we'd support " +
+					"loading these via subsequent-select also"
+	)
+	public void testNullnessPredicateUse2(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
@@ -124,7 +176,6 @@ public class FkRefTests {
 			assertThat( coins ).hasSize( 1 );
 			assertThat( coins.get( 0 ) ).isNotNull();
 			assertThat( coins.get( 0 ).getId() ).isEqualTo( 3 );
-			assertThat( coins.get( 0 ).getCurrency() ).isNull();
 
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " join " );
@@ -139,7 +190,6 @@ public class FkRefTests {
 			assertThat( coins ).hasSize( 1 );
 			assertThat( coins.get( 0 ) ).isNotNull();
 			assertThat( coins.get( 0 ).getId() ).isEqualTo( 3 );
-			assertThat( coins.get( 0 ).getCurrency() ).isNull();
 
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " join " );
@@ -148,6 +198,7 @@ public class FkRefTests {
 
 	@Test
 	@JiraKey( "HHH-15099" )
+	@JiraKey( "HHH-15106" )
 	public void testFkRefDereferenceNotAllowed(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -190,9 +241,9 @@ public class FkRefTests {
 			session.persist( noCurrency );
 		} );
 
-//		scope.inTransaction( (session) -> {
-//			session.createQuery( "delete Currency where id = 1" ).executeUpdate();
-//		} );
+		scope.inTransaction( (session) -> {
+			session.createQuery( "delete Currency where id = 1" ).executeUpdate();
+		} );
 	}
 
 	@AfterEach

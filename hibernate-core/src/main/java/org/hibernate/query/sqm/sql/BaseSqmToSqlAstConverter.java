@@ -28,6 +28,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
@@ -373,8 +374,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserVersionType;
 
 import org.jboss.logging.Logger;
-
-import jakarta.persistence.TemporalType;
 
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
@@ -2880,6 +2879,27 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else if ( parentPath instanceof SqmFrom<?, ?> ) {
 			registerTreatUsage( (SqmFrom<?, ?>) parentPath, tableGroup );
 		}
+
+		if ( getCurrentClauseStack().getCurrent() != Clause.SELECT
+				&& parentPath.getParentPath() != null
+				&& tableGroup.getModelPart() instanceof ToOneAttributeMapping ) {
+			// we need to handle the case of an implicit path involving a to-one
+			// association with not-found mapping where that path has been previously
+			// joined using left.  typically, this indicates that the to-one is being
+			// fetched - the fetch would use a left-join.  however, since the path is
+			// used outside the select-clause also, we need to force the join to be inner
+			final ToOneAttributeMapping toOneMapping = (ToOneAttributeMapping) tableGroup.getModelPart();
+			if ( toOneMapping.hasNotFoundAction() ) {
+				final NavigablePath parentParentPath = parentPath.getParentPath().getNavigablePath();
+				final TableGroup parentParentTableGroup = fromClauseIndex.findTableGroup( parentParentPath );
+				parentParentTableGroup.visitTableGroupJoins( (join) -> {
+					if ( join.getNavigablePath().equals( parentPath.getNavigablePath() ) ) {
+						join.setJoinType( SqlAstJoinType.INNER );
+					}
+				} );
+			}
+		}
+
 		return tableGroup;
 	}
 

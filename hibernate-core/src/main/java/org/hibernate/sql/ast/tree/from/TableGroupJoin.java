@@ -10,6 +10,7 @@ import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.SqlTreeCreationLogger;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -21,36 +22,46 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
  */
 public class TableGroupJoin implements TableJoin, DomainResultProducer {
 	private final NavigablePath navigablePath;
-	private final SqlAstJoinType sqlAstJoinType;
 	private final TableGroup joinedGroup;
 
+	private SqlAstJoinType joinType;
 	private Predicate predicate;
 
 	public TableGroupJoin(
 			NavigablePath navigablePath,
-			SqlAstJoinType sqlAstJoinType,
+			SqlAstJoinType joinType,
 			TableGroup joinedGroup) {
-		this( navigablePath, sqlAstJoinType, joinedGroup, null );
+		this( navigablePath, joinType, joinedGroup, null );
 	}
 
 	public TableGroupJoin(
 			NavigablePath navigablePath,
-			SqlAstJoinType sqlAstJoinType,
+			SqlAstJoinType joinType,
 			TableGroup joinedGroup,
 			Predicate predicate) {
-		assert !joinedGroup.isLateral() || ( sqlAstJoinType == SqlAstJoinType.INNER
-				|| sqlAstJoinType == SqlAstJoinType.LEFT
-				|| sqlAstJoinType == SqlAstJoinType.CROSS )
+		assert !joinedGroup.isLateral() || ( joinType == SqlAstJoinType.INNER
+				|| joinType == SqlAstJoinType.LEFT
+				|| joinType == SqlAstJoinType.CROSS )
 				: "Lateral is only allowed with inner, left or cross joins";
 		this.navigablePath = navigablePath;
-		this.sqlAstJoinType = sqlAstJoinType;
+		this.joinType = joinType;
 		this.joinedGroup = joinedGroup;
 		this.predicate = predicate;
 	}
 
 	@Override
 	public SqlAstJoinType getJoinType() {
-		return sqlAstJoinType;
+		return joinType;
+	}
+
+	public void setJoinType(SqlAstJoinType joinType) {
+		SqlTreeCreationLogger.LOGGER.debugf(
+				"Adjusting join-type for TableGroupJoin(%s) : %s -> %s",
+				navigablePath,
+				this.joinType,
+				joinType
+		);
+		this.joinType = joinType;
 	}
 
 	public TableGroup getJoinedGroup() {

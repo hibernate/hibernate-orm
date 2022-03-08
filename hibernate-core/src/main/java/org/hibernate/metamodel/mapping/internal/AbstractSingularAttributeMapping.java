@@ -8,9 +8,9 @@ package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
-import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.tuple.ValueGeneration;
@@ -28,7 +28,7 @@ public abstract class AbstractSingularAttributeMapping
 	public AbstractSingularAttributeMapping(
 			String name,
 			int stateArrayPosition,
-			StateArrayContributorMetadataAccess attributeMetadataAccess,
+			AttributeMetadataAccess attributeMetadataAccess,
 			FetchOptions mappedFetchOptions,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess,
@@ -43,7 +43,7 @@ public abstract class AbstractSingularAttributeMapping
 	public AbstractSingularAttributeMapping(
 			String name,
 			int stateArrayPosition,
-			StateArrayContributorMetadataAccess attributeMetadataAccess,
+			AttributeMetadataAccess attributeMetadataAccess,
 			FetchTiming fetchTiming,
 			FetchStyle fetchStyle,
 			ManagedMappingType declaringType,

@@ -22,6 +22,7 @@ import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.List;
 import org.hibernate.mapping.Map;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -32,7 +33,6 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.Queryable;
-import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
@@ -88,7 +88,7 @@ public class PluralAttributeMappingImpl
 	private final CollectionMappingType collectionMappingType;
 	private final int stateArrayPosition;
 	private final PropertyAccess propertyAccess;
-	private final StateArrayContributorMetadataAccess stateArrayContributorMetadataAccess;
+	private final AttributeMetadataAccess attributeMetadataAccess;
 	private final String referencedPropertyName;
 	private final String mapKeyPropertyName;
 
@@ -116,7 +116,7 @@ public class PluralAttributeMappingImpl
 			String attributeName,
 			Collection bootDescriptor,
 			PropertyAccess propertyAccess,
-			StateArrayContributorMetadataAccess stateArrayContributorMetadataAccess,
+			AttributeMetadataAccess attributeMetadataAccess,
 			CollectionMappingType<?> collectionMappingType,
 			int stateArrayPosition,
 			CollectionPart elementDescriptor,
@@ -129,7 +129,7 @@ public class PluralAttributeMappingImpl
 			CollectionPersister collectionDescriptor) {
 		super( attributeName, declaringType );
 		this.propertyAccess = propertyAccess;
-		this.stateArrayContributorMetadataAccess = stateArrayContributorMetadataAccess;
+		this.attributeMetadataAccess = attributeMetadataAccess;
 		this.collectionMappingType = collectionMappingType;
 		this.stateArrayPosition = stateArrayPosition;
 		this.elementDescriptor = elementDescriptor;
@@ -315,8 +315,8 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
-	public StateArrayContributorMetadataAccess getAttributeMetadataAccess() {
-		return stateArrayContributorMetadataAccess;
+	public AttributeMetadataAccess getAttributeMetadataAccess() {
+		return attributeMetadataAccess;
 	}
 
 	@Override

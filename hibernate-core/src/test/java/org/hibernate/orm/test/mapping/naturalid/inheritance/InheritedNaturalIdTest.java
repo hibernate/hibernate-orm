@@ -7,9 +7,9 @@
 package org.hibernate.orm.test.mapping.naturalid.inheritance;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
-import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -46,7 +46,7 @@ public class InheritedNaturalIdTest {
 
 		final SingularAttributeMapping uidMapping = ((SimpleNaturalIdMapping) userMapping.getNaturalIdMapping()).getAttribute();
 		assertThat( uidMapping.getAttributeName(), is ("uid" ) );
-		final StateArrayContributorMetadata uidMetadata = uidMapping.getAttributeMetadataAccess().resolveAttributeMetadata( null );
+		final AttributeMetadata uidMetadata = uidMapping.getAttributeMetadataAccess().resolveAttributeMetadata( null );
 		assertThat( uidMetadata.isNullable(), is( true ) );
 
 		final EntityPersister rootEntityPersister = userMapping.getEntityPersister();

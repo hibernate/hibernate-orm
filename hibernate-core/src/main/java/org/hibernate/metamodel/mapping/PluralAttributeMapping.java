@@ -32,7 +32,7 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
  * @author Steve Ebersole
  */
 public interface PluralAttributeMapping
-		extends AttributeMapping, StateArrayContributorMapping, TableGroupJoinProducer, FetchableContainer, Loadable, Restrictable {
+		extends AttributeMapping, TableGroupJoinProducer, FetchableContainer, Loadable, Restrictable {
 
 	CollectionPersister getCollectionDescriptor();
 

@@ -12,6 +12,7 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -21,7 +22,6 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
-import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -70,7 +70,7 @@ public class BasicAttributeMapping
 			String attributeName,
 			NavigableRole navigableRole,
 			int stateArrayPosition,
-			StateArrayContributorMetadataAccess attributeMetadataAccess,
+			AttributeMetadataAccess attributeMetadataAccess,
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,
 			String tableExpression,
@@ -133,7 +133,7 @@ public class BasicAttributeMapping
 			SelectableMapping selectableMapping) {
 		String attributeName = null;
 		int stateArrayPosition = 0;
-		StateArrayContributorMetadataAccess attributeMetadataAccess = null;
+		AttributeMetadataAccess attributeMetadataAccess = null;
 		BasicValueConverter<?, ?> valueConverter = null;
 		if ( original instanceof SingleAttributeIdentifierMapping ) {
 			final SingleAttributeIdentifierMapping mapping = (SingleAttributeIdentifierMapping) original;

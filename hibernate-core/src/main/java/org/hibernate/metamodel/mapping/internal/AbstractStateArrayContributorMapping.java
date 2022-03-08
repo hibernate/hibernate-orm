@@ -8,9 +8,8 @@ package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
-import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
-import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.sql.results.graph.FetchOptions;
 
 /**
@@ -18,9 +17,9 @@ import org.hibernate.sql.results.graph.FetchOptions;
  */
 public abstract class AbstractStateArrayContributorMapping
 		extends AbstractAttributeMapping
-		implements StateArrayContributorMapping, FetchOptions {
+		implements FetchOptions {
 
-	private final StateArrayContributorMetadataAccess attributeMetadataAccess;
+	private final AttributeMetadataAccess attributeMetadataAccess;
 	private final FetchTiming fetchTiming;
 	private final FetchStyle fetchStyle;
 	private final int stateArrayPosition;
@@ -28,7 +27,7 @@ public abstract class AbstractStateArrayContributorMapping
 
 	public AbstractStateArrayContributorMapping(
 			String name,
-			StateArrayContributorMetadataAccess attributeMetadataAccess,
+			AttributeMetadataAccess attributeMetadataAccess,
 			FetchTiming fetchTiming,
 			FetchStyle fetchStyle,
 			int stateArrayPosition,
@@ -42,7 +41,7 @@ public abstract class AbstractStateArrayContributorMapping
 
 	public AbstractStateArrayContributorMapping(
 			String name,
-			StateArrayContributorMetadataAccess attributeMetadataAccess,
+			AttributeMetadataAccess attributeMetadataAccess,
 			FetchOptions mappedFetchOptions,
 			int stateArrayPosition,
 			ManagedMappingType declaringType) {
@@ -62,7 +61,7 @@ public abstract class AbstractStateArrayContributorMapping
 	}
 
 	@Override
-	public StateArrayContributorMetadataAccess getAttributeMetadataAccess() {
+	public AttributeMetadataAccess getAttributeMetadataAccess() {
 		return attributeMetadataAccess;
 	}
 

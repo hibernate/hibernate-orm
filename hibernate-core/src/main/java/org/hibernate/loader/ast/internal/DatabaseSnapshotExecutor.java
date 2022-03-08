@@ -143,17 +143,19 @@ class DatabaseSnapshotExecutor {
 		);
 
 
-		entityDescriptor.visitStateArrayContributors( (contributorMapping) -> {
-			final NavigablePath navigablePath = rootPath.append( contributorMapping.getAttributeName() );
-			domainResults.add(
-					contributorMapping.createSnapshotDomainResult(
-							navigablePath,
-							rootTableGroup,
-							null,
-							state
-					)
-			);
-		} );
+		entityDescriptor.visitAttributeMappings(
+				attributeMapping -> {
+					final NavigablePath navigablePath = rootPath.append( attributeMapping.getAttributeName() );
+					domainResults.add(
+							attributeMapping.createSnapshotDomainResult(
+									navigablePath,
+									rootTableGroup,
+									null,
+									state
+							)
+					);
+				}
+		);
 
 		final SelectStatement selectStatement = new SelectStatement( rootQuerySpec, domainResults );
 

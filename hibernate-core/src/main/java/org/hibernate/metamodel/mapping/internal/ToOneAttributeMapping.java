@@ -34,6 +34,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.AssociationKey;
+import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
@@ -46,7 +47,6 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
-import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -161,7 +161,7 @@ public class ToOneAttributeMapping
 			NavigableRole navigableRole,
 			int stateArrayPosition,
 			ToOne bootValue,
-			StateArrayContributorMetadataAccess attributeMetadataAccess,
+			AttributeMetadataAccess attributeMetadataAccess,
 			FetchOptions mappedFetchOptions,
 			EntityMappingType entityMappingType,
 			ManagedMappingType declaringType,
@@ -187,7 +187,7 @@ public class ToOneAttributeMapping
 			NavigableRole navigableRole,
 			int stateArrayPosition,
 			ToOne bootValue,
-			StateArrayContributorMetadataAccess attributeMetadataAccess,
+			AttributeMetadataAccess attributeMetadataAccess,
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,
 			EntityMappingType entityMappingType,

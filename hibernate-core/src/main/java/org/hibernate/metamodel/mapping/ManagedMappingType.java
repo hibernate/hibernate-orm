@@ -75,18 +75,4 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 	default void setValue(Object instance, int position, Object value) {
 		getAttributeMapping( position ).setValue( instance, value );
 	}
-
-	/**
-	 * @todo (6.0) : consider dropping this in favor of a form passing the ManagedMappingType
-	 * 		which indicates the type to limit the attribute search to (the type and its super-type)
-	 */
-	default void visitStateArrayContributors(Consumer<StateArrayContributorMapping> mappingConsumer) {
-		visitAttributeMappings(
-				modelPart -> {
-					if ( modelPart instanceof StateArrayContributorMapping ) {
-						mappingConsumer.accept( ( (StateArrayContributorMapping) modelPart ) );
-					}
-				}
-		);
-	}
 }

@@ -6,9 +6,9 @@
  */
 package org.hibernate.orm.test.mapping.naturalid.cid;
 
+import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
-import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -31,7 +31,7 @@ public abstract class AbstractCompositeIdAndNaturalIdTest {
 	public void testNaturalIdNullability(SessionFactoryScope scope) {
 		final EntityMappingType accountMapping = scope.getSessionFactory().getRuntimeMetamodels().getEntityMappingType( Account.class );
 		final SingularAttributeMapping shortCodeMapping = ((SimpleNaturalIdMapping) accountMapping.getNaturalIdMapping()).getAttribute();
-		final StateArrayContributorMetadata shortCodeMetadata = shortCodeMapping.getAttributeMetadataAccess().resolveAttributeMetadata( null );
+		final AttributeMetadata shortCodeMetadata = shortCodeMapping.getAttributeMetadataAccess().resolveAttributeMetadata( null );
 		assertThat( shortCodeMetadata.isNullable(), is( false ) );
 
 		final EntityPersister rootEntityPersister = accountMapping.getRootEntityDescriptor().getEntityPersister();

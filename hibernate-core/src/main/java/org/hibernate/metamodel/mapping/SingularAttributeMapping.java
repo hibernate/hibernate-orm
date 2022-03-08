@@ -11,5 +11,5 @@ package org.hibernate.metamodel.mapping;
  *
  * @author Steve Ebersole
  */
-public interface SingularAttributeMapping extends AttributeMapping, StateArrayContributorMapping {
+public interface SingularAttributeMapping extends AttributeMapping {
 }

@@ -10,10 +10,10 @@ import jakarta.persistence.PersistenceException;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.metamodel.RuntimeMetamodels;
+import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
-import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
@@ -100,12 +100,12 @@ public class ImmutableManyToOneNaturalIdHbmTest {
 
 		final SingularAttributeMapping first = naturalIdMapping.getNaturalIdAttributes().get( 0 );
 		assertThat( first.getAttributeName(), is( "name" ) );
-		final StateArrayContributorMetadata firstMetadata = first.getAttributeMetadataAccess().resolveAttributeMetadata( null );
+		final AttributeMetadata firstMetadata = first.getAttributeMetadataAccess().resolveAttributeMetadata( null );
 		assertFalse( firstMetadata.getMutabilityPlan().isMutable() );
 
 		final SingularAttributeMapping second = naturalIdMapping.getNaturalIdAttributes().get( 1 );
 		assertThat( second.getAttributeName(), is( "parent" ) );
-		final StateArrayContributorMetadata secondMetadata = second.getAttributeMetadataAccess().resolveAttributeMetadata( null );
+		final AttributeMetadata secondMetadata = second.getAttributeMetadataAccess().resolveAttributeMetadata( null );
 		assertFalse( secondMetadata.getMutabilityPlan().isMutable() );
 	}
 

@@ -15,6 +15,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -23,7 +24,6 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMappings;
-import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -73,7 +73,7 @@ public class EmbeddedAttributeMapping
 			NavigableRole navigableRole,
 			int stateArrayPosition,
 			String tableExpression,
-			StateArrayContributorMetadataAccess attributeMetadataAccess,
+			AttributeMetadataAccess attributeMetadataAccess,
 			String parentInjectionAttributeName,
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,
@@ -102,7 +102,7 @@ public class EmbeddedAttributeMapping
 			NavigableRole navigableRole,
 			int stateArrayPosition,
 			String tableExpression,
-			StateArrayContributorMetadataAccess attributeMetadataAccess,
+			AttributeMetadataAccess attributeMetadataAccess,
 			PropertyAccess parentInjectionAttributePropertyAccess,
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,

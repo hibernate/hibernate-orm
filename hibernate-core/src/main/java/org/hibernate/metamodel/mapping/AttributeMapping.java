@@ -31,6 +31,11 @@ public interface AttributeMapping
 	}
 
 	/**
+	 * The attribute's position within the container's state array
+	 */
+	int getStateArrayPosition();
+
+	/**
 	 * Access to AttributeMetadata
 	 */
 	AttributeMetadataAccess getAttributeMetadataAccess();

@@ -173,8 +173,6 @@ import org.hibernate.metamodel.mapping.Queryable;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
-import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
-import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.CompoundNaturalIdMapping;
@@ -1866,8 +1864,8 @@ public abstract class AbstractEntityPersister
 								}
 								FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
 								final boolean selectable;
-								if ( fetchable instanceof StateArrayContributorMapping ) {
-									final int propertyNumber = ( (StateArrayContributorMapping) fetchable ).getStateArrayPosition();
+								if ( fetchable instanceof AttributeMapping ) {
+									final int propertyNumber = ( (AttributeMapping) fetchable ).getStateArrayPosition();
 									final int tableNumber = getSubclassPropertyTableNumber( propertyNumber );
 									selectable = !isSubclassTableSequentialSelect( tableNumber )
 											&& propertySelectable[propertyNumber];
@@ -2497,7 +2495,7 @@ public abstract class AbstractEntityPersister
 			final String currentAttributeName = attributeNames[index];
 			if ( currentAttributeName.startsWith( attributeName ) && (
 					( currentAttributeName.length() == nameLength || currentAttributeName.charAt( nameLength ) == '.' ) ) ) {
-				fields.add( ( (StateArrayContributorMapping) attributeMapping ).getStateArrayPosition() );
+				fields.add( attributeMapping.getStateArrayPosition() );
 				index++;
 				if ( index < attributeNames.length ) {
 					// Skip duplicates
@@ -2563,7 +2561,7 @@ public abstract class AbstractEntityPersister
 				final String attributeName = attributeMapping.getAttributeName();
 				final int nameLength = attributeName.length();
 				final String currentAttributeName = attributeNames[index];
-				int position = ( (StateArrayContributorMapping) attributeMapping ).getStateArrayPosition();
+				final int position = attributeMapping.getStateArrayPosition();
 				if ( currentAttributeName.startsWith( attributeName ) && (
 						( currentAttributeName.length() == nameLength || currentAttributeName.charAt( nameLength ) == '.' ) ) ) {
 					if ( propertyUpdateability[position] && !fields.contains( position ) ) {
@@ -4984,7 +4982,7 @@ public abstract class AbstractEntityPersister
 			if ( hasSubclasses() ) {
 				visitAttributeMappings(
 						attribute -> {
-							final int stateArrayPosition = ( (StateArrayContributorMapping) attribute ).getStateArrayPosition();
+							final int stateArrayPosition = attribute.getStateArrayPosition();
 							final Object value = values[stateArrayPosition];
 							if ( value != UNFETCHED_PROPERTY ) {
 								final Setter setter = attribute.getPropertyAccess().getSetter();
@@ -4997,7 +4995,7 @@ public abstract class AbstractEntityPersister
 				visitFetchables(
 						fetchable -> {
 							final AttributeMapping attribute = (AttributeMapping) fetchable;
-							final int stateArrayPosition = ( (StateArrayContributorMapping) attribute ).getStateArrayPosition();
+							final int stateArrayPosition = attribute.getStateArrayPosition();
 							final Object value = values[stateArrayPosition];
 							if ( value != UNFETCHED_PROPERTY ) {
 								final Setter setter = attribute.getPropertyAccess().getSetter();
@@ -6272,7 +6270,7 @@ public abstract class AbstractEntityPersister
 					baseAssociationJtd,
 					this,
 					stateArrayPosition,
-					entityMappingType -> new StateArrayContributorMetadata() {
+					entityMappingType -> new AttributeMetadata() {
 
 						private final MutabilityPlan<?> mutabilityPlan = new DiscriminatedAssociationAttributeMapping.MutabilityPlanImpl( anyType );
 

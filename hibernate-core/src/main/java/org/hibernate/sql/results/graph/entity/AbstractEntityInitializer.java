@@ -196,17 +196,17 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			Object[] source,
 			Object[] target,
 			EntityPersister concreteDescriptor) {
-		containerDescriptor.visitStateArrayContributors(
-				contributor -> {
-					if ( contributor.getAttributeMetadataAccess().resolveAttributeMetadata( concreteDescriptor ).isUpdatable() ) {
-						final int position = contributor.getStateArrayPosition();
+		containerDescriptor.visitAttributeMappings(
+				attributeMapping -> {
+					if ( attributeMapping.getAttributeMetadataAccess().resolveAttributeMetadata( concreteDescriptor ).isUpdatable() ) {
+						final int position = attributeMapping.getStateArrayPosition();
 						Object result;
 						if ( source[position] == LazyPropertyInitializer.UNFETCHED_PROPERTY
 								|| source[position] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 							result = source[position];
 						}
 						else {
-							result = contributor.getAttributeMetadataAccess()
+							result = attributeMapping.getAttributeMetadataAccess()
 									.resolveAttributeMetadata(null)
 									.getMutabilityPlan()
 									.deepCopy( source[position] );

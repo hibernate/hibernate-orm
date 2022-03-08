@@ -50,6 +50,8 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.mapping.AttributeMetadata;
+import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
@@ -68,8 +70,6 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
-import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
-import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -190,7 +190,7 @@ public class MappingModelCreationHelper {
 
 		final BasicValueConverter<?,?> valueConverter = resolution.getValueConverter();
 
-		final StateArrayContributorMetadataAccess attributeMetadataAccess = entityMappingType -> new StateArrayContributorMetadata() {
+		final AttributeMetadataAccess attributeMetadataAccess = entityMappingType -> new AttributeMetadata() {
 			private final MutabilityPlan mutabilityPlan = resolution.getMutabilityPlan();
 			private final boolean nullable = value.isNullable();
 			private final boolean insertable = bootProperty.isInsertable();
@@ -337,7 +337,7 @@ public class MappingModelCreationHelper {
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
 			MappingModelCreationProcess creationProcess) {
-		final StateArrayContributorMetadataAccess attributeMetadataAccess = getStateArrayContributorMetadataAccess(
+		final AttributeMetadataAccess attributeMetadataAccess = getAttributeMetadataAccess(
 				bootProperty,
 				attrType,
 				propertyAccess,
@@ -392,13 +392,13 @@ public class MappingModelCreationHelper {
 	}
 
 	@SuppressWarnings("rawtypes")
-	protected static StateArrayContributorMetadataAccess getStateArrayContributorMetadataAccess(
+	protected static AttributeMetadataAccess getAttributeMetadataAccess(
 			Property bootProperty,
 			Type attrType,
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
 			MappingModelCreationProcess creationProcess) {
-		return entityMappingType -> new StateArrayContributorMetadata() {
+		return entityMappingType -> new AttributeMetadata() {
 			private final boolean nullable = bootProperty.getValue().isNullable();
 			private final boolean insertable = bootProperty.isInsertable();
 			private final boolean updateable = bootProperty.isUpdateable();
@@ -483,9 +483,9 @@ public class MappingModelCreationHelper {
 	}
 
 	@SuppressWarnings("rawtypes")
-	public static StateArrayContributorMetadataAccess getStateArrayContributorMetadataAccess(PropertyAccess propertyAccess) {
-		return new StateArrayContributorMetadataAccess() {
-			final StateArrayContributorMetadata contributorMetadata = new StateArrayContributorMetadata() {
+	public static AttributeMetadataAccess getAttributeMetadataAccess(PropertyAccess propertyAccess) {
+		return new AttributeMetadataAccess() {
+			final AttributeMetadata attributeMetadata = new AttributeMetadata() {
 				private final MutabilityPlan mutabilityPlan = ImmutableMutabilityPlan.INSTANCE;
 
 				@Override
@@ -533,8 +533,8 @@ public class MappingModelCreationHelper {
 			};
 
 			@Override
-			public StateArrayContributorMetadata resolveAttributeMetadata(EntityMappingType entityMappingType) {
-				return contributorMetadata;
+			public AttributeMetadata resolveAttributeMetadata(EntityMappingType entityMappingType) {
+				return attributeMetadata;
 			}
 		};
 	}
@@ -717,7 +717,7 @@ public class MappingModelCreationHelper {
 			}
 		}
 
-		final StateArrayContributorMetadata contributorMetadata = new StateArrayContributorMetadata() {
+		final AttributeMetadata attributeMetadata = new AttributeMetadata() {
 			@Override
 			public PropertyAccess getPropertyAccess() {
 				return propertyAccess;
@@ -777,7 +777,7 @@ public class MappingModelCreationHelper {
 				attrName,
 				bootValueMapping,
 				propertyAccess,
-				entityMappingType -> contributorMetadata,
+				entityMappingType -> attributeMetadata,
 				collectionMappingType,
 				stateArrayPosition,
 				elementDescriptor,
@@ -1597,7 +1597,7 @@ public class MappingModelCreationHelper {
 		if ( bootProperty.getValue() instanceof ToOne ) {
 			final ToOne value = (ToOne) bootProperty.getValue();
 			final EntityPersister entityPersister = creationProcess.getEntityPersister( value.getReferencedEntityName() );
-			final StateArrayContributorMetadataAccess stateArrayContributorMetadataAccess = getStateArrayContributorMetadataAccess(
+			final AttributeMetadataAccess attributeMetadataAccess = getAttributeMetadataAccess(
 					bootProperty,
 					attrType,
 					propertyAccess,
@@ -1642,7 +1642,7 @@ public class MappingModelCreationHelper {
 					navigableRole,
 					stateArrayPosition,
 					(ToOne) bootProperty.getValue(),
-					stateArrayContributorMetadataAccess,
+					attributeMetadataAccess,
 					fetchTiming,
 					fetchStyle,
 					entityPersister,

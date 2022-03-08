@@ -18,10 +18,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
 import org.hibernate.metamodel.UnsupportedMappingException;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.GeneratedValueResolver;
 import org.hibernate.metamodel.mapping.InDatabaseGeneratedValueResolver;
-import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.Clause;
@@ -59,18 +59,13 @@ public class GeneratedValuesProcessor {
 		// NOTE: we only care about db-generated values here. in-memory generation
 		// is applied before the insert/update happens.
 
-		final List<StateArrayContributorMapping> generatedValuesToSelect = new ArrayList<>();
+		final List<AttributeMapping> generatedValuesToSelect = new ArrayList<>();
 		// todo (6.0): for now, we rely on the entity metamodel as composite attributes report GenerationTiming.NEVER
 		//  even if they have attributes that would need generation
 		final InDatabaseValueGenerationStrategy[] inDatabaseValueGenerationStrategies = entityDescriptor.getEntityPersister()
 				.getEntityMetamodel()
 				.getInDatabaseValueGenerationStrategies();
-		entityDescriptor.visitAttributeMappings( (attr) -> {
-			//noinspection RedundantClassCall
-			if ( ! StateArrayContributorMapping.class.isInstance( attr ) ) {
-				return;
-			}
-			final StateArrayContributorMapping mapping = (StateArrayContributorMapping) attr;
+		entityDescriptor.visitAttributeMappings( mapping -> {
 			final InDatabaseValueGenerationStrategy inDatabaseValueGenerationStrategy = inDatabaseValueGenerationStrategies[mapping.getStateArrayPosition()];
 			if ( inDatabaseValueGenerationStrategy.getGenerationTiming() == GenerationTiming.NEVER ) {
 				return;
@@ -191,9 +186,9 @@ public class GeneratedValuesProcessor {
 
 	private static class GeneratedValueDescriptor {
 		public final GeneratedValueResolver resolver;
-		public final StateArrayContributorMapping attribute;
+		public final AttributeMapping attribute;
 
-		public GeneratedValueDescriptor(GeneratedValueResolver resolver, StateArrayContributorMapping attribute) {
+		public GeneratedValueDescriptor(GeneratedValueResolver resolver, AttributeMapping attribute) {
 			this.resolver = resolver;
 			this.attribute = attribute;
 		}

@@ -319,7 +319,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 		// todo (6.0) : getNumberOfAttributeMappings() needs to be fixed for this to work - bad walking of hierarchy
 		final Object[] values = new Object[ getNumberOfAttributeMappings() ];
 
-		visitStateArrayContributors(
+		visitAttributeMappings(
 				attribute -> {
 					final DomainResultAssembler assembler = assemblerMapping.get( attribute );
 					final Object value;
@@ -336,14 +336,6 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 
 		return values;
 	}
-
-	@Override
-	default void visitStateArrayContributors(Consumer<StateArrayContributorMapping> mappingConsumer) {
-		visitAttributeMappings(
-				attributeMapping -> mappingConsumer.accept( (StateArrayContributorMapping) attributeMapping )
-		);
-	}
-
 
 
 

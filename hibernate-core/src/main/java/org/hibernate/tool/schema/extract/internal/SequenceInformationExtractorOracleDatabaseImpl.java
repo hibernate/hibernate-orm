@@ -39,8 +39,24 @@ public class SequenceInformationExtractorOracleDatabaseImpl extends SequenceInfo
 	}
 
 	@Override
-	protected Long resultSetMaxValue(ResultSet resultSet) throws SQLException {
-		return resultSet.getBigDecimal( "max_value" ).longValue();
+	protected String sequenceMaxValueColumn() {
+		return "max_value";
+	}
+
+
+	@Override
+	protected Number resultSetIncrementValue(ResultSet resultSet) throws SQLException {
+		return resultSet.getBigDecimal( sequenceIncrementColumn() );
+	}
+
+	@Override
+	protected Number resultSetMinValue(ResultSet resultSet) throws SQLException {
+		return resultSet.getBigDecimal( sequenceMinValueColumn() );
+	}
+
+	@Override
+	protected Number resultSetMaxValue(ResultSet resultSet) throws SQLException {
+		return resultSet.getBigDecimal( sequenceMaxValueColumn() );
 	}
 
 	@Override

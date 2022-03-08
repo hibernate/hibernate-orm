@@ -105,22 +105,22 @@ public class SequenceInformationExtractorLegacyImpl implements SequenceInformati
 		return column != null ? resultSet.getString( column ) : null;
 	}
 
-	protected Long resultSetStartValueSize(ResultSet resultSet) throws SQLException {
+	protected Number resultSetStartValueSize(ResultSet resultSet) throws SQLException {
 		String column = sequenceStartValueColumn();
 		return column != null ? resultSet.getLong( column ) : null;
 	}
 
-	protected Long resultSetMinValue(ResultSet resultSet) throws SQLException {
+	protected Number resultSetMinValue(ResultSet resultSet) throws SQLException {
 		String column = sequenceMinValueColumn();
 		return column != null ? resultSet.getLong( column ) : null;
 	}
 
-	protected Long resultSetMaxValue(ResultSet resultSet) throws SQLException {
+	protected Number resultSetMaxValue(ResultSet resultSet) throws SQLException {
 		String column = sequenceMaxValueColumn();
 		return column != null ? resultSet.getLong( column ) : null;
 	}
 
-	protected Long resultSetIncrementValue(ResultSet resultSet) throws SQLException {
+	protected Number resultSetIncrementValue(ResultSet resultSet) throws SQLException {
 		String column = sequenceIncrementColumn();
 		return column != null ? resultSet.getLong( column ) : null;
 	}

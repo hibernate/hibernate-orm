@@ -27,26 +27,26 @@ public interface SequenceInformation {
 	 *
 	 * @return The extracted start value or null id the value could not be extracted.
 	 */
-	Long getStartValue();
+	Number getStartValue();
 
 	/**
 	 * Retrieve the extracted minimum value defined for the sequence.
 	 *
 	 * @return The extracted minimum value or null id the value could not be extracted.
 	 */
-	Long getMinValue();
+	Number getMinValue();
 
 	/**
 	 * Retrieve the extracted maximum value defined for the sequence.
 	 *
 	 * @return The extracted maximum value or null id the value could not be extracted.
 	 */
-	Long getMaxValue();
+	Number getMaxValue();
 
 	/**
 	 * Retrieve the extracted increment value defined for the sequence.
 	 *
 	 * @return The extracted increment value; use a negative number to indicate the increment could not be extracted.
 	 */
-	Long getIncrementValue();
+	Number getIncrementValue();
 }

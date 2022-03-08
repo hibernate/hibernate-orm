@@ -9,11 +9,14 @@ package org.hibernate.orm.test.query.hql;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.Set;
+
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Parameter;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
@@ -147,6 +150,29 @@ public class ParameterTests extends BaseSqmUnitTest {
 					session.createQuery( "from Person p where p.name.firstName = :p" ).setParameter( "p", null ).list();
 					session.createQuery( "from Person p where p.name = :p" ).setParameter( "p", null ).list();
 					session.createQuery( "from Person p where p.pk = :p" ).setParameter( "p", null ).list();
+				}
+		);
+	}
+
+	@Test
+	public void testParamTypes() {
+		inTransaction(
+				session -> {
+					final Set<Parameter<?>> parameters = session.createQuery(
+							"from Person p where p.pk = :pk and p.name.firstName like :firstName",
+							Person.class
+					).getParameters();
+					assertThat( parameters.size(), equalTo( 2 ) );
+					for ( Parameter<?> parameter : parameters ) {
+						switch ( parameter.getName() ) {
+							case "pk":
+								assertThat( parameter.getParameterType(), equalTo( Integer.class ) );
+								break;
+							case "firstName":
+								assertThat( parameter.getParameterType(), equalTo( String.class ) );
+								break;
+						}
+					}
 				}
 		);
 	}

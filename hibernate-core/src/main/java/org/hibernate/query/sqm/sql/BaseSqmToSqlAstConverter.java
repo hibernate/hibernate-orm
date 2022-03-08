@@ -92,6 +92,7 @@ import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
@@ -4805,7 +4806,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return (BasicValuedMapping) paramSqmType;
 		}
 
-		if ( paramSqmType instanceof CompositeSqmPathSource ) {
+		if ( paramSqmType instanceof CompositeSqmPathSource || paramSqmType instanceof EmbeddableDomainType<?> ) {
 			// Try to infer the value mapping since the other side apparently is a path source
 			final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
 			if ( inferredValueMapping != null ) {

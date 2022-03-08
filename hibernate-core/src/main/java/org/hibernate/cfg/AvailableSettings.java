@@ -1390,8 +1390,6 @@ public interface AvailableSettings {
 	 * The maximum number of {@link org.hibernate.query.ParameterMetadata} instances
 	 * maintained by the {@link org.hibernate.query.spi.QueryInterpretationCache}.
 	 * <p>
-	 * The default maximum is
-	 * {@value org.hibernate.query.spi.QueryEngine#DEFAULT_PARAMETER_METADATA_MAX_COUNT}.
 	 *
 	 * @deprecated this setting is not currently used
 	 */

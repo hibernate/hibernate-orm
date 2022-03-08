@@ -94,6 +94,8 @@ processResources.enabled false
 compileTestJava.enabled false
 processTestResources.enabled false
 jar.enabled false
+javadocJar.enabled false
+sourcesJar.enabled false
 
 ext {
 	transformedJarName = project(':hibernate-core').tasks.jar.archiveFileName.get().replaceAll( 'hibernate-core', 'hibernate-core-jakarta' )
@@ -123,6 +125,26 @@ task transformJar(type: JakartaJarTransformation) {
 	targetJar tasks.jar.archiveFile.get().asFile
 }
 
+task transformSourcesJar(type: JakartaJarTransformation) {
+	description 'Transforms the hibernate-core sources jar using the JakartaTransformer tool'
+
+	dependsOn project(':hibernate-core').tasks.sourcesJar
+	mustRunAfter project(':hibernate-core').tasks.sourcesJar
+
+	sourceJar project(':hibernate-core').tasks.sourcesJar.archiveFile
+	targetJar tasks.sourcesJar.archiveFile.get().asFile
+}
+
+task transformJavadocJar(type: JakartaJarTransformation) {
+	description 'Transforms the hibernate-core javadoc jar using the JakartaTransformer tool'
+
+	dependsOn project(':hibernate-core').tasks.javadocJar
+	mustRunAfter project(':hibernate-core').tasks.javadocJar
+
+	sourceJar project(':hibernate-core').tasks.javadocJar.archiveFile
+	targetJar tasks.javadocJar.archiveFile.get().asFile
+}
+
 configurations {
 	[apiElements, runtimeElements].each {
 		it.outgoing.artifacts.removeIf {
@@ -130,6 +152,12 @@ configurations {
 		}
 		it.outgoing.artifact(tasks.transformJar.targetJar) {
 			builtBy tasks.transformJar
+		}
+		it.outgoing.artifact(tasks.transformSourcesJar.targetJar) {
+			builtBy tasks.transformSourcesJar
+		}
+		it.outgoing.artifact(tasks.transformJavadocJar.targetJar) {
+			builtBy tasks.transformJavadocJar
 		}
 	}
 }

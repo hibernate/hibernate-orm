@@ -193,14 +193,6 @@ public interface SharedSessionContractImplementor
 	long getTransactionStartTimestamp();
 
 	/**
-	 * @deprecated Use {@link #getTransactionStartTimestamp()} instead.
-	 */
-	@Deprecated(since = "5.3")
-	default long getTimestamp() {
-		return getTransactionStartTimestamp();
-	}
-
-	/**
 	 * The current CacheTransactionContext associated with the Session.  This may
 	 * return {@code null} when the Session is not currently part of a transaction.
 	 */

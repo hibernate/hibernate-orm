@@ -155,11 +155,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public long getTimestamp() {
-		return delegate.getTimestamp();
-	}
-
-	@Override
 	public SessionFactoryImplementor getFactory() {
 		return delegate.getFactory();
 	}

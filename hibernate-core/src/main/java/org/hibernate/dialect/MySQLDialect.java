@@ -158,10 +158,13 @@ public class MySQLDialect extends Dialect {
 			case BOOLEAN:
 				// HHH-6935: Don't use "boolean" i.e. tinyint(1) due to JDBC ResultSetMetaData
 				return "bit";
+
 			case TIMESTAMP:
-				return getMySQLVersion().isBefore( 5, 7 ) ? "datetime" : "datetime($p)";
+				return getMySQLVersion().isBefore( 5, 7 )
+								? "datetime" : "datetime($p)";
 			case TIMESTAMP_WITH_TIMEZONE:
-				return getMySQLVersion().isBefore( 5, 7 ) ? "timestamp" : "timestamp($p)";
+				return getMySQLVersion().isBefore( 5, 7 )
+								? "timestamp" : "timestamp($p)";
 			case NUMERIC:
 				// it's just a synonym
 				return columnType( DECIMAL );
@@ -199,15 +202,12 @@ public class MySQLDialect extends Dialect {
 			case NCHAR:
 			case VARCHAR:
 			case NVARCHAR:
-			case LONGVARCHAR:
-			case LONGNVARCHAR:
 			case LONG32VARCHAR:
 			case LONG32NVARCHAR:
 				//MySQL doesn't let you cast to TEXT/LONGTEXT
 				return "char";
 			case BINARY:
 			case VARBINARY:
-			case LONGVARBINARY:
 			case LONG32VARBINARY:
 				//MySQL doesn't let you cast to BLOB/TINYBLOB/LONGBLOB
 				return "binary";
@@ -275,34 +275,8 @@ public class MySQLDialect extends Dialect {
 		}
 		ddlTypeRegistry.addDescriptor( varbinaryBuilder.build() );
 
-		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( LONGVARBINARY, columnType( BLOB ), "binary", this )
-						.withTypeCapacity( maxTinyLobLen, "tinyblob" )
-						.withTypeCapacity( maxMediumLobLen, "mediumblob" )
-						.withTypeCapacity( maxLobLen, "blob" )
-						.build()
-		);
-
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32VARBINARY, columnType( BLOB ), "binary", this ) );
-
-		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( LONGVARCHAR, columnType( CLOB ), "char", this )
-						.withTypeCapacity( maxTinyLobLen, "tinytext" )
-						.withTypeCapacity( maxMediumLobLen, "mediumtext" )
-						.withTypeCapacity( maxLobLen, "text" )
-						.build()
-		);
-
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32VARCHAR, columnType( CLOB ), "char", this ) );
-
-		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( LONGNVARCHAR, columnType( NCLOB ), "char", this )
-						.withTypeCapacity( maxTinyLobLen, "tinytext" )
-						.withTypeCapacity( maxMediumLobLen, "mediumtext" )
-						.withTypeCapacity( maxLobLen, "text" )
-						.build()
-		);
-
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32NVARCHAR, columnType( CLOB ), "char", this ) );
 
 		ddlTypeRegistry.addDescriptor(

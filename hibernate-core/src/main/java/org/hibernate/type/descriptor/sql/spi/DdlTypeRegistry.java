@@ -60,8 +60,33 @@ public class DdlTypeRegistry implements Serializable {
 		ddlTypes.putIfAbsent( sqlTypeCode, jdbcType );
 	}
 
+	/**
+	 * Returns the registered {@link DdlType} for the given SQL type code.
+	 * <p>
+	 * Not that the "long" types {@link Types#LONGVARCHAR}, {@link Types#LONGNVARCHAR}
+	 * and {@link Types#LONGVARBINARY} are considered synonyms for their
+	 * non-{@code LONG} counterparts, with the only difference being that
+	 * a different default length is used: {@link org.hibernate.Length#LONG}
+	 * instead of {@link org.hibernate.Length#DEFAULT}.
+	 *
+	 */
 	public DdlType getDescriptor(int sqlTypeCode) {
-		return ddlTypes.get( sqlTypeCode );
+		final DdlType ddlType = ddlTypes.get( sqlTypeCode );
+		if ( ddlType == null ) {
+			switch ( sqlTypeCode ) {
+				// these are no longer considered separate column types as such
+				// they're just used to indicate that JavaType.getLongSqlLength()
+				// should be used by default (and that's already handled by the
+				// time we get to here)
+				case Types.LONGVARCHAR:
+					return ddlTypes.get( Types.VARCHAR );
+				case Types.LONGNVARCHAR:
+					return ddlTypes.get( Types.NVARCHAR );
+				case Types.LONGVARBINARY:
+					return ddlTypes.get( Types.VARBINARY );
+			}
+		}
+		return ddlType;
 	}
 
 	public String getTypeName(int typeCode, Dialect dialect) {

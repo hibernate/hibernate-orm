@@ -125,16 +125,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				// be either between 1 and 8000 or exactly MAX, and
 				// the length of an NVARCHAR column must be either
 				// between 1 and 4000 or exactly MAX. (HHH-3965)
-				case LONGVARCHAR:
-				case LONG32VARCHAR:
 				case CLOB:
 					return "varchar(max)";
-				case LONGNVARCHAR:
-				case LONG32NVARCHAR:
 				case NCLOB:
 					return "nvarchar(max)";
-				case LONGVARBINARY:
-				case LONG32VARBINARY:
 				case BLOB:
 					return "varbinary(max)";
 				case DATE:
@@ -155,17 +149,14 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		if ( getVersion().isSameOrAfter( 9 ) ) {
 			switch ( sqlTypeCode ) {
 				case VARCHAR:
-				case LONGVARCHAR:
 				case LONG32VARCHAR:
 				case CLOB:
 					return "varchar(max)";
 				case NVARCHAR:
-				case LONGNVARCHAR:
 				case LONG32NVARCHAR:
 				case NCLOB:
 					return "nvarchar(max)";
 				case VARBINARY:
-				case LONGVARBINARY:
 				case LONG32VARBINARY:
 				case BLOB:
 					return "varbinary(max)";

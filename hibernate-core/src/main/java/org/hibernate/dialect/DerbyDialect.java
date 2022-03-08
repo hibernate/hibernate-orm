@@ -120,22 +120,20 @@ public class DerbyDialect extends Dialect {
 			case TINYINT:
 				//no tinyint
 				return "smallint";
+
 			case NUMERIC:
 				// HHH-12827: map them both to the same type to avoid problems with schema update
 				// Note that 31 is the maximum precision Derby supports
 				return columnType( DECIMAL );
+
 			case VARBINARY:
 				return "varchar($l) for bit data";
-			case LONGVARBINARY:
 			case LONG32VARBINARY:
 				return "long varchar for bit data";
 			case NCHAR:
 				return columnType( CHAR );
 			case NVARCHAR:
 				return columnType( VARCHAR );
-			case LONGNVARCHAR:
-				return columnType( LONGVARCHAR );
-			case LONGVARCHAR:
 			case LONG32VARCHAR:
 				return "long varchar";
 			case BLOB:
@@ -161,19 +159,19 @@ public class DerbyDialect extends Dialect {
 		ddlTypeRegistry.addDescriptor(
 				CapacityDependentDdlType.builder( VARBINARY, columnType( BLOB ), columnType( VARBINARY ), this )
 						.withTypeCapacity( getMaxVarbinaryLength(), columnType( VARBINARY ) )
-						.withTypeCapacity( maxLongVarcharLength, columnType( LONGVARBINARY ) )
+						.withTypeCapacity( maxLongVarcharLength, columnType( LONG32VARBINARY ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor(
 				CapacityDependentDdlType.builder( VARCHAR, columnType( CLOB ), columnType( VARCHAR ), this )
 						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
-						.withTypeCapacity( maxLongVarcharLength, columnType( LONGVARCHAR ) )
+						.withTypeCapacity( maxLongVarcharLength, columnType( LONG32VARCHAR ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor(
 				CapacityDependentDdlType.builder( NVARCHAR, columnType( CLOB ), columnType( NVARCHAR ), this )
 						.withTypeCapacity( getMaxVarcharLength(), columnType( NVARCHAR ) )
-						.withTypeCapacity( maxLongVarcharLength, columnType( LONGVARCHAR ) )
+						.withTypeCapacity( maxLongVarcharLength, columnType( LONG32VARCHAR ) )
 						.build()
 		);
 
@@ -181,7 +179,7 @@ public class DerbyDialect extends Dialect {
 				CapacityDependentDdlType.builder( BINARY, columnType( BLOB ), columnType( VARBINARY ), this )
 						.withTypeCapacity( 254, "char($l) for bit data" )
 						.withTypeCapacity( getMaxVarbinaryLength(), columnType( VARBINARY ) )
-						.withTypeCapacity( maxLongVarcharLength, columnType( LONGVARBINARY ) )
+						.withTypeCapacity( maxLongVarcharLength, columnType( LONG32VARBINARY ) )
 						.build()
 		);
 
@@ -190,14 +188,14 @@ public class DerbyDialect extends Dialect {
 				CapacityDependentDdlType.builder( CHAR, columnType( CLOB ), columnType( CHAR ), this )
 						.withTypeCapacity( 254, columnType( CHAR ) )
 						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
-						.withTypeCapacity( maxLongVarcharLength, columnType( LONGVARCHAR ) )
+						.withTypeCapacity( maxLongVarcharLength, columnType( LONG32VARCHAR ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor(
 				CapacityDependentDdlType.builder( NCHAR, columnType( CLOB ), columnType( NCHAR ), this )
 						.withTypeCapacity( 254, columnType( NCHAR ) )
 						.withTypeCapacity( getMaxVarcharLength(), columnType( NVARCHAR ) )
-						.withTypeCapacity( maxLongVarcharLength, columnType( LONGNVARCHAR ) )
+						.withTypeCapacity( maxLongVarcharLength, columnType( LONG32NVARCHAR ) )
 						.build()
 		);
 	}

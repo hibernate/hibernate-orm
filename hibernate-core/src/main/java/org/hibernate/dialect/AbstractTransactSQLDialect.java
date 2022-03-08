@@ -65,6 +65,7 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 		switch ( sqlTypeCode ) {
 			case BOOLEAN:
 				return "bit";
+
 			case TINYINT:
 				//'tinyint' is an unsigned type in Sybase and
 				//SQL Server, holding values in the range 0-255
@@ -73,17 +74,20 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 			case INTEGER:
 				//it's called 'int' not 'integer'
 				return "int";
+
 			case DATE:
 			case TIME:
-			case TIME_WITH_TIMEZONE:
 			case TIMESTAMP:
+			case TIME_WITH_TIMEZONE:
 			case TIMESTAMP_WITH_TIMEZONE:
 				return "datetime";
+
 			case BLOB:
 				return "image";
 			case CLOB:
-			case NCLOB:
 				return "text";
+			case NCLOB:
+				return "ntext";
 		}
 		return super.columnType( sqlTypeCode );
 	}

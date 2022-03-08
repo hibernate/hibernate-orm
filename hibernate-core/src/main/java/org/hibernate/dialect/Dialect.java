@@ -309,12 +309,7 @@ public abstract class Dialect implements ConversionContext {
 
 		ddlTypeRegistry.addDescriptor( simpleSqlType( CHAR ) );
 		ddlTypeRegistry.addDescriptor(
-				sqlTypeBuilder( VARCHAR, LONGVARCHAR, VARCHAR )
-						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
-						.build()
-		);
-		ddlTypeRegistry.addDescriptor(
-				sqlTypeBuilder( LONGVARCHAR, LONGVARCHAR, VARCHAR )
+				sqlTypeBuilder( VARCHAR, LONG32VARCHAR, VARCHAR )
 						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
 						.build()
 		);
@@ -322,12 +317,7 @@ public abstract class Dialect implements ConversionContext {
 
 		ddlTypeRegistry.addDescriptor( simpleSqlType( NCHAR ) );
 		ddlTypeRegistry.addDescriptor(
-				sqlTypeBuilder( NVARCHAR, LONGNVARCHAR, NVARCHAR )
-						.withTypeCapacity( getMaxNVarcharLength(), columnType( NVARCHAR ) )
-						.build()
-		);
-		ddlTypeRegistry.addDescriptor(
-				sqlTypeBuilder( LONGNVARCHAR, LONGNVARCHAR, NVARCHAR )
+				sqlTypeBuilder( NVARCHAR, LONG32NVARCHAR, NVARCHAR )
 						.withTypeCapacity( getMaxNVarcharLength(), columnType( NVARCHAR ) )
 						.build()
 		);
@@ -335,12 +325,7 @@ public abstract class Dialect implements ConversionContext {
 
 		ddlTypeRegistry.addDescriptor( simpleSqlType( BINARY ) );
 		ddlTypeRegistry.addDescriptor(
-				sqlTypeBuilder( VARBINARY, LONGVARBINARY, VARBINARY )
-						.withTypeCapacity( getMaxVarbinaryLength(), columnType( VARBINARY ) )
-						.build()
-		);
-		ddlTypeRegistry.addDescriptor(
-				sqlTypeBuilder( LONGVARBINARY, LONGVARBINARY, VARBINARY )
+				sqlTypeBuilder( VARBINARY, LONG32VARBINARY, VARBINARY )
 						.withTypeCapacity( getMaxVarbinaryLength(), columnType( VARBINARY ) )
 						.build()
 		);
@@ -448,13 +433,10 @@ public abstract class Dialect implements ConversionContext {
 				return "blob";
 
 			// by default use the LOB mappings for the "long" types
-			case LONGVARCHAR:
 			case LONG32VARCHAR:
 				return columnType( CLOB );
-			case LONGNVARCHAR:
 			case LONG32NVARCHAR:
 				return columnType( NCLOB );
-			case LONGVARBINARY:
 			case LONG32VARBINARY:
 				return columnType( BLOB );
 

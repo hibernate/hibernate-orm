@@ -73,9 +73,6 @@ import static org.hibernate.type.SqlTypes.DECIMAL;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
-import static org.hibernate.type.SqlTypes.LONGNVARCHAR;
-import static org.hibernate.type.SqlTypes.LONGVARBINARY;
-import static org.hibernate.type.SqlTypes.LONGVARCHAR;
 import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.VARBINARY;
@@ -157,18 +154,12 @@ public class IngresDialect extends Dialect {
 			case VARBINARY:
 				return "varbyte($l)";
 			//note: 'long byte' is a  synonym for 'blob'
-			case LONGVARBINARY:
-			case LONG32VARBINARY:
 			case BLOB:
 				return "long byte($l)";
 			//note: 'long varchar' is a synonym for 'clob'
-			case LONGVARCHAR:
-			case LONG32VARCHAR:
 			case CLOB:
 				return "long varchar($l)";
 			//note: 'long varchar' is a synonym for 'nclob'
-			case LONGNVARCHAR:
-			case LONG32NVARCHAR:
 			case NCLOB:
 				return "long nvarchar($l)";
 		}

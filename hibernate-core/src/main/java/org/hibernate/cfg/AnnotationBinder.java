@@ -706,6 +706,8 @@ public final class AnnotationBinder {
 
 		//Process secondary tables and complementary definitions (ie o.h.a.Table)
 		context.getMetadataCollector()
+				.addSecondPass( new SecondaryTableFromAnnotationSecondPass( entityBinder, propertyHolder, clazzToProcess ) );
+		context.getMetadataCollector()
 				.addSecondPass( new SecondaryTableSecondPass( entityBinder, propertyHolder, clazzToProcess ) );
 
 		processComplementaryTableDefinitions( clazzToProcess, entityBinder, table );

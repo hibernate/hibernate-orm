@@ -394,11 +394,22 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			// thus we need to generate a join unless the association is non-nullable and
 			// parent refers to the associated entity's PK (because 'our' table would know the FK).
 			parentAsDotNode = (DotNode) parent;
+			// our parent is another dot node, meaning we are being further de-referenced.
+			// depending on the exact de-reference we may need to generate a physical join.
+
 			property = parentAsDotNode.propertyName;
-			joinIsNeeded = generateJoin && (
-					entityType.isNullable() ||
-							!isReferenceToPrimaryKey( parentAsDotNode.propertyName, entityType )
-			);
+
+			if ( generateJoin ) {
+				if ( implicitJoin && ( toOneType.hasNotFoundAction() || toOneType.isNullable() ) ) {
+					joinIsNeeded = true;
+				}
+				else {
+					joinIsNeeded = !isPropertyEmbeddedInJoinProperties( parentAsDotNode.propertyName );
+				}
+			}
+			else {
+				joinIsNeeded = false;
+			}
 		}
 		else if ( !getWalker().isSelectStatement() ) {
 			// in non-select queries, the only time we should need to join is if we are in a subquery from clause
@@ -429,8 +440,11 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		return n != null && n.getType() == SqlTokenTypes.DOT;
 	}
 
-	private void dereferenceEntityJoin(String classAlias, EntityType propertyType, boolean impliedJoin, AST parent)
-			throws SemanticException {
+	private void dereferenceEntityJoin(
+			String classAlias,
+			EntityType toOneType,
+			boolean isImpliedJoin,
+			AST parent) throws SemanticException {
 		dereferenceType = DereferenceType.ENTITY;
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf(

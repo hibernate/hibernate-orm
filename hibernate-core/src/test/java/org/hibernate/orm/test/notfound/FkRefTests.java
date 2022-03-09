@@ -14,9 +14,9 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 
+import org.hibernate.QueryException;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.hql.internal.ast.QuerySyntaxException;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -28,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 /**
  * Tests for the new `{fk}` HQL token
@@ -39,14 +40,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class FkRefTests {
 
 	@Test
-	@JiraKey( "HHH-15060" )
+	@JiraKey( "HHH-15106" )
 	public void testSimplePredicateUse(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		// there is a Coin which has a currency_fk = 1
 		scope.inTransaction( (session) -> {
-			final String hql = "select c from Coin c where c.currency.{fk} = 1";
+			final String hql = "select c from Coin c where fk(c.currency) = 1";
 			final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
 			assertThat( coins ).hasSize( 1 );
 			assertThat( coins.get( 0 ) ).isNotNull();
@@ -69,7 +70,7 @@ public class FkRefTests {
 
 		// check using `currency` as a naked "property-ref"
 		scope.inTransaction( (session) -> {
-			final String hql = "select c from Coin c where currency.{fk} = 1";
+			final String hql = "select c from Coin c where fk(currency) = 1";
 			final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
 			assertThat( coins ).hasSize( 1 );
 			assertThat( coins.get( 0 ) ).isNotNull();
@@ -81,14 +82,14 @@ public class FkRefTests {
 	}
 
 	@Test
-	@JiraKey( "HHH-15060" )
+	@JiraKey( "HHH-15106" )
 	public void testNullnessPredicateUse(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		// there is one Coin (id=3) which has a null currency_fk
 		scope.inTransaction( (session) -> {
-			final String hql = "select c from Coin c where c.currency.{fk} is null";
+			final String hql = "select c from Coin c where fk(c.currency) is null";
 			final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
 			assertThat( coins ).hasSize( 1 );
 			assertThat( coins.get( 0 ) ).isNotNull();
@@ -103,7 +104,7 @@ public class FkRefTests {
 
 		// check using `currency` as a naked "property-ref"
 		scope.inTransaction( (session) -> {
-			final String hql = "select c from Coin c where currency.{fk} is null";
+			final String hql = "select c from Coin c where fk(currency) is null";
 			final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
 			assertThat( coins ).hasSize( 1 );
 			assertThat( coins.get( 0 ) ).isNotNull();
@@ -116,18 +117,22 @@ public class FkRefTests {
 	}
 
 	@Test
-	@JiraKey( "HHH-15060" )
+	@JiraKey( "HHH-15106" )
 	public void testFkRefDereferenceNotAllowed(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
 			try {
-				final String hql = "select c from Coin c where c.currency.{fk}.something";
+				final String hql = "select c from Coin c where fk(c.currency).something";
 				final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
+				fail( "Expecting failure" );
 			}
 			catch (IllegalArgumentException expected) {
-				assertThat( expected.getCause() ).isInstanceOf( QuerySyntaxException.class );
+				assertThat( expected.getCause() ).isInstanceOf( QueryException.class );
+			}
+			catch (Exception e) {
+				fail( "Unexpected failure type : " + e );
 			}
 		} );
 
@@ -137,7 +142,7 @@ public class FkRefTests {
 				final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
 			}
 			catch (IllegalArgumentException expected) {
-				assertThat( expected.getCause() ).isInstanceOf( QuerySyntaxException.class );
+				assertThat( expected.getCause() ).isInstanceOf( QueryException.class );
 			}
 		} );
 	}

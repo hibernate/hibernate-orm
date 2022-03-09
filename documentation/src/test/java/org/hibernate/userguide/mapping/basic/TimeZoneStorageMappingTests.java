@@ -172,7 +172,7 @@ public class TimeZoneStorageMappingTests {
 		@Id
 		private Integer id;
 
-		//end::time-zone-column-examples-mapping-example[]
+		//tag::time-zone-column-examples-mapping-example[]
 		@TimeZoneStorage(TimeZoneStorageType.COLUMN)
 		@TimeZoneColumn(name = "birthday_offset_offset")
 		@Column(name = "birthday_offset")

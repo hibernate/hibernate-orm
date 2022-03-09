@@ -1797,6 +1797,7 @@ the column details for the time zone information storage.
 ====
 Storing the zone offset might be problematic for future timestamps as zone rules can change.
 Due to this, storing the offset is only safe for past timestamps, and we advise sticking to the `NORMALIZE` strategy by default.
+====
 
 .`@TimeZoneColumn` usage
 ====

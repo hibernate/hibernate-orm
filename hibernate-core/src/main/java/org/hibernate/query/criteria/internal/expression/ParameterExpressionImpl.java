@@ -23,7 +23,7 @@ import org.hibernate.query.criteria.internal.compile.RenderingContext;
 public class ParameterExpressionImpl<T>
 		extends ExpressionImpl<T>
 		implements ParameterExpression<T>, Serializable {
-	private final String name;
+	private String name;
 	private final Integer position;
 
 	public ParameterExpressionImpl(
@@ -75,6 +75,9 @@ public class ParameterExpressionImpl<T>
 	@Override
 	public String render(RenderingContext renderingContext) {
 		final ExplicitParameterInfo parameterInfo = renderingContext.registerExplicitParameter( this );
+		if ( name == null && position == null ) {
+			name = parameterInfo.getName();
+		}
 		return parameterInfo.render();
 	}
 }

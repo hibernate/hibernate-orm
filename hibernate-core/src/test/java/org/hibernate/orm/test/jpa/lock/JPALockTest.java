@@ -183,13 +183,10 @@ public class JPALockTest extends AbstractJPATest {
 		final String initialName = "lock test";
 		// set up some test data
 		Item it = new Item();
-		MyEntity entity = new MyEntity();
 		inTransaction(
 				session -> {
 					it.setName( initialName );
 					session.save( it );
-					entity.setName( "Test" );
-					session.save( entity );
 				}
 		);
 
@@ -197,7 +194,6 @@ public class JPALockTest extends AbstractJPATest {
 		long initialVersion = it.getVersion();
 		Session s1 = null;
 		Session s2 = null;
-		MyEntity myEntity;
 		Item item;
 		try {
 			s1 = sessionFactory().openSession();
@@ -205,10 +201,6 @@ public class JPALockTest extends AbstractJPATest {
 			item = s1.get( Item.class, itemId );
 			s1.lock( item, LockMode.PESSIMISTIC_FORCE_INCREMENT );
 			assertEquals( initialVersion + 1, item.getVersion(), "no forced version increment" );
-
-			myEntity = s1.get( MyEntity.class, entity.getId() );
-			s1.lock( myEntity, LockMode.PESSIMISTIC_FORCE_INCREMENT );
-			assertTrue(  true, "LockMode.PESSIMISTIC_FORCE_INCREMENT on a un-versioned entity should degrade nicely to UPGRADE" );
 
 			s1.lock( item, LockMode.PESSIMISTIC_FORCE_INCREMENT );
 			assertEquals( initialVersion + 1, item.getVersion(), "subsequent LockMode.FORCE did not no-op" );
@@ -275,7 +267,6 @@ public class JPALockTest extends AbstractJPATest {
 		inTransaction(
 				session -> {
 					session.delete( item );
-					session.delete( myEntity );
 				}
 		);
 	}

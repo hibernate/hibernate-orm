@@ -149,10 +149,8 @@ public enum LockMode {
 			}
 		}
 
-		for ( LockMode lockMode : LockMode.values() ) {
-			if ( lockMode.externalForm.equalsIgnoreCase( externalForm ) ) {
-				return lockMode;
-			}
+		if ( externalForm.equalsIgnoreCase( "upgrade" ) ) {
+			return PESSIMISTIC_WRITE;
 		}
 
 		throw new IllegalArgumentException( "Unable to interpret LockMode reference from incoming external form : " + externalForm );

@@ -280,6 +280,7 @@ task assembleDocumentation {
     dependsOn tasks.stageTopicalGuide
     dependsOn tasks.stageQuickstart
     dependsOn tasks.stageUserGuide
+    dependsOn tasks.stageMigrationGuide
 }
 
 //task assembleProjectTemplates(type:Copy, dependsOn: project( ":project-template" ).tasks.assembleDist) {

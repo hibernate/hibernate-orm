@@ -179,7 +179,7 @@ public class DisabledCaching implements CacheImplementor {
 
 	@Override
 	public Set<String> getCacheRegionNames() {
-		return null;
+		return Collections.emptySet();
 	}
 
 	@Override @Deprecated

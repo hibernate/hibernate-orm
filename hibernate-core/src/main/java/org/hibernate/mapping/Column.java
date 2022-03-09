@@ -286,22 +286,24 @@ public class Column implements Selectable, Serializable, Cloneable {
 
 	private Type getTypeForComponentValue(Mapping mapping, Type type, int typeIndex) {
 		final Type[] subtypes = ( (ComponentType) type ).getSubtypes();
-		int currentSubtypesColumnSpans = 0;
+		int typeStartIndex = 0;
 		for ( int i = 0; i <= subtypes.length; i++ ) {
 			Type subtype = subtypes[i];
-			int subtypeColumnSpan = subtype.getColumnSpan( mapping );
-			currentSubtypesColumnSpans += subtypeColumnSpan;
-			if ( currentSubtypesColumnSpans - 1 >= typeIndex ) {
+			int columnSpan = subtype.getColumnSpan( mapping );
+			if ( typeStartIndex + columnSpan > typeIndex ) {
+				int subtypeIndex = typeIndex - typeStartIndex;
 				if ( subtype instanceof EntityType ) {
-					return getTypeForEntityValue( mapping, subtype, subtypeColumnSpan - i );
+					return getTypeForEntityValue( mapping, subtype, subtypeIndex );
 				}
 				if ( subtype instanceof ComponentType ) {
-					return getTypeForComponentValue( mapping, subtype, subtypeColumnSpan - i );
+					return getTypeForComponentValue( mapping, subtype, subtypeIndex );
 				}
-				if ( i == typeIndex ) {
+				if ( subtypeIndex == 0 ) {
 					return subtype;
 				}
+				break;
 			}
+			typeStartIndex += columnSpan;
 		}
 
 		throw new HibernateException(
@@ -320,6 +322,9 @@ public class Column implements Selectable, Serializable, Cloneable {
 			type = ( (EntityType) type ).getIdentifierOrUniqueKeyType( mapping );
 			if ( type instanceof ComponentType ) {
 				type = ( (ComponentType) type ).getSubtypes()[typeIndex];
+				while (type instanceof ComponentType) {
+					type = ( (ComponentType) type ).getSubtypes()[0];
+				}
 			}
 		}
 		return type;

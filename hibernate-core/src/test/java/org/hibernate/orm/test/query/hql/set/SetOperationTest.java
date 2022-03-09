@@ -8,8 +8,6 @@ package org.hibernate.orm.test.query.hql.set;
 
 import java.util.List;
 
-import jakarta.persistence.Tuple;
-
 import org.hibernate.query.SemanticException;
 
 import org.hibernate.testing.TestForIssue;
@@ -26,6 +24,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Tuple;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -231,6 +231,46 @@ public class SetOperationTest {
                                     "(select e.id, e from EntityOfLists e where e.id = 2 order by 1 fetch first 1 row only)) " +
                                     "order by 1 fetch first 1 row only",
                             Tuple.class
+                    ).list();
+                    assertThat( list.size(), is( 1 ) );
+                }
+        );
+    }
+
+    @Test
+    @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
+    @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInSubquery.class)
+    public void testAlternatingSetOperator(SessionFactoryScope scope) {
+        scope.inSession(
+                session -> {
+                    List<Integer> list = session.createQuery(
+                            "(SELECT e.id FROM EntityOfLists e WHERE e.id = 1\n"
+                                    + "UNION\n"
+                                    + "SELECT e.id FROM EntityOfLists e WHERE e.id = 2\n"
+                                    + "UNION ALL\n"
+                                    + "SELECT e.id FROM EntityOfLists e WHERE e.id = 3)\n"
+                                    + "ORDER BY 1 DESC"
+                                    + " LIMIT 1",
+                            Integer.class
+                    ).list();
+                    assertThat( list.size(), is( 1 ) );
+                }
+        );
+    }
+
+    @Test
+    @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
+    @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInSubquery.class)
+    public void testUnionAllOrderByAttribute(SessionFactoryScope scope) {
+        scope.inSession(
+                session -> {
+                    List<EntityOfLists> list = session.createQuery(
+                            "(SELECT e FROM EntityOfLists e WHERE e.id = 1\n"
+                                    + "UNION ALL\n"
+                                    + "SELECT e FROM EntityOfLists e WHERE e.id = 2)\n"
+                                    + "ORDER BY name DESC"
+                                    + " LIMIT 1",
+                            EntityOfLists.class
                     ).list();
                     assertThat( list.size(), is( 1 ) );
                 }

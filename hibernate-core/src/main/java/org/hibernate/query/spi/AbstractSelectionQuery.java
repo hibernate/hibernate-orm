@@ -229,7 +229,7 @@ public abstract class AbstractSelectionQuery<R>
 			SqmQuerySpec<T> querySpec,
 			Class<T> resultClass,
 			SessionFactoryImplementor sessionFactory) {
-		if ( resultClass == null ) {
+		if ( resultClass == null || resultClass == Object.class ) {
 			// nothing to check
 			return;
 		}

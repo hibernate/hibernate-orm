@@ -46,6 +46,7 @@ tokens
 	EXISTS="exists";
 	FALSE="false";
 	FETCH="fetch";
+	FK_REF;
 	FROM="from";
 	FULL="full";
 	GROUP="group";
@@ -721,12 +722,19 @@ atom
 
 // level 0 - the basic element of an expression
 primaryExpression
-    : { validateSoftKeyword("function") && LA(2) == OPEN && LA(3) == QUOTED_STRING }? jpaFunctionSyntax
+    : { validateSoftKeyword("fk") && LA(2) == OPEN }? fkRefPath
+    | { validateSoftKeyword("function") && LA(2) == OPEN && LA(3) == QUOTED_STRING }? jpaFunctionSyntax
     | { validateSoftKeyword("cast") && LA(2) == OPEN }? castFunction
 	| identPrimary ( options {greedy=true;} : DOT^ "class" )?
 	| constant
 	| parameter
 	| OPEN! (expressionOrVector | subQuery) CLOSE!
+	;
+
+fkRefPath!
+	: "fk" OPEN p:identPrimary CLOSE {
+		#fkRefPath = #( [FK_REF], #p );
+	}
 	;
 
 jpaFunctionSyntax!

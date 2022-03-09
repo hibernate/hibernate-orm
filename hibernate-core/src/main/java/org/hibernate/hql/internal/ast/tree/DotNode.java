@@ -9,6 +9,7 @@ package org.hibernate.hql.internal.ast.tree;
 import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.hql.internal.CollectionProperties;
+import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
@@ -260,7 +261,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	}
 
 	private Type prepareLhs() throws SemanticException {
-		FromReferenceNode lhs = getLhs();
+		final FromReferenceNode lhs = getLhs();
 		lhs.prepareForDot( propertyName );
 		return getDataType();
 	}
@@ -390,10 +391,11 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		final boolean joinIsNeeded;
 
 		if ( isDotNode( parent ) ) {
-			// our parent is another dot node, meaning we are being further dereferenced.
-			// thus we need to generate a join unless the association is non-nullable and
-			// parent refers to the associated entity's PK (because 'our' table would know the FK).
 			parentAsDotNode = (DotNode) parent;
+
+			// our parent is another dot node, meaning we are being further de-referenced.
+			// depending on the exact de-reference we may need to generate a physical join.
+
 			property = parentAsDotNode.propertyName;
 			joinIsNeeded = generateJoin && (
 					entityType.isNullable() ||

@@ -8,6 +8,7 @@ package org.hibernate.query.criteria.internal;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.Parameter;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Path;
@@ -69,9 +70,15 @@ public class CriteriaUpdateImpl<T> extends AbstractManipulationCriteriaQuery<T> 
 	@SuppressWarnings("unchecked")
 	public CriteriaUpdate<T> set(String attributeName, Object value) {
 		final Path attributePath = getRoot().get( attributeName );
-		final Expression valueExpression = value == null
-				? criteriaBuilder().nullLiteral( attributePath.getJavaType() )
-				: criteriaBuilder().literal( value );
+		final Expression valueExpression;
+		if ( value instanceof Expression ) {
+			valueExpression = (Expression) value;
+		}
+		else {
+			valueExpression = value == null
+					? criteriaBuilder().nullLiteral( attributePath.getJavaType() )
+					: criteriaBuilder().literal( value );
+		}
 		addAssignment( attributePath, valueExpression );
 		return this;
 	}

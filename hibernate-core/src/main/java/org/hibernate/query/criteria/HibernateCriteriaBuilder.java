@@ -103,8 +103,11 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	<T> JpaCriteriaQuery<T> except(boolean all, CriteriaQuery<? extends T> query1, CriteriaQuery<?>... queries);
 
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Paths
+
+	<P, F> JpaExpression<F> fk(Path<P> path);
 
 	@Override
 	<X, T extends X> JpaPath<T> treat(Path<X> path, Class<T> type);

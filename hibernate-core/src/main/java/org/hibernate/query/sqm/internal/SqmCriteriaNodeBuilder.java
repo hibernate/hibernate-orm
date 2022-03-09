@@ -39,6 +39,7 @@ import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.NullPrecedence;
@@ -64,6 +65,8 @@ import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
+import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmFkExpression;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
 import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -132,6 +135,7 @@ import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.metamodel.Bindable;
 
 import static java.util.Arrays.asList;
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
@@ -340,6 +344,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			predicates.add( wrap( expression ) );
 		}
 		return new SqmJunctionPredicate( Predicate.BooleanOperator.AND, predicates, this );
+	}
+
+	@Override
+	public <P, F> SqmExpression<F> fk(Path<P> path) {
+		if ( path.getModel().getBindableType() != Bindable.BindableType.SINGULAR_ATTRIBUTE ) {
+			throw new SemanticException( "Path should refer to a to-one attribute : " + path );
+		}
+
+		if ( ! ( path instanceof SqmEntityValuedSimplePath ) ) {
+			throw new SemanticException( "Path should refer to a to-one attribute : " + path );
+		}
+
+		return new SqmFkExpression<>( (SqmEntityValuedSimplePath) path, this );
 	}
 
 	@Override

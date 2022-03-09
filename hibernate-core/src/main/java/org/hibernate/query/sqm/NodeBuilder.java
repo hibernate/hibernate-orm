@@ -23,6 +23,7 @@ import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaParameterExpression;
+import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.criteria.JpaSearchedCase;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSimpleCase;
@@ -145,6 +146,9 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 
 	@Override
 	SqmPredicate wrap(Expression<Boolean>... expressions);
+
+	@Override
+	<P, F> SqmExpression<F> fk(Path<P> path);
 
 	@Override
 	<X, T extends X> SqmPath<T> treat(Path<X> path, Class<T> type);

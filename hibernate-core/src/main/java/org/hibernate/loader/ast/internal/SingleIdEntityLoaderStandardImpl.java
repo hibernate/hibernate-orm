@@ -105,7 +105,7 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 
 		final CascadingFetchProfile enabledCascadingFetchProfile = loadQueryInfluencers.getEnabledCascadingFetchProfile();
 		if ( enabledCascadingFetchProfile != null ) {
-			if ( LockMode.UPGRADE.greaterThan( lockOptions.getLockMode() ) ) {
+			if ( LockMode.WRITE.greaterThan( lockOptions.getLockMode() ) ) {
 				if ( selectByInternalCascadeProfile == null ) {
 					selectByInternalCascadeProfile = new EnumMap<>( CascadingFetchProfile.class );
 				}

@@ -9,7 +9,6 @@ package org.hibernate.boot.model.relational;
 import java.util.Set;
 
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 
 /**
@@ -76,7 +75,7 @@ public class SimpleAuxiliaryDatabaseObject extends AbstractAuxiliaryDatabaseObje
 	}
 
 	@Override
-	public String[] sqlCreateStrings(Dialect dialect) {
+	public String[] sqlCreateStrings(SqlStringGenerationContext context) {
 		final String[] copy = new String[createStrings.length];
 		for ( int i = 0, max =createStrings.length; i<max; i++ ) {
 			copy[i] = injectCatalogAndSchema( createStrings[i] );
@@ -85,7 +84,7 @@ public class SimpleAuxiliaryDatabaseObject extends AbstractAuxiliaryDatabaseObje
 	}
 
 	@Override
-	public String[] sqlDropStrings(Dialect dialect) {
+	public String[] sqlDropStrings(SqlStringGenerationContext context) {
 		final String[] copy = new String[dropStrings.length];
 		for ( int i = 0, max = dropStrings.length; i<max; i++ ) {
 			copy[i] = injectCatalogAndSchema( dropStrings[i] );

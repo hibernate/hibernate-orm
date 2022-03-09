@@ -15,6 +15,7 @@ import org.hibernate.Transaction;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 
 import org.hibernate.testing.SkipForDialect;
@@ -114,7 +115,10 @@ public class Ejb3XmlTest extends BaseCoreFunctionalTestCase {
 
 		// For the element-collection, check that the orm.xml entries are honored.
 		// This includes: map-key-column/column/collection-table/join-column
-		BasicCollectionPersister confRoomMeta = (BasicCollectionPersister) sf.getCollectionMetadata( Company.class.getName() + ".conferenceRoomExtensions" );
+		BasicCollectionPersister confRoomMeta = (BasicCollectionPersister) sf
+				.unwrap( SessionFactoryImplementor.class )
+				.getMappingMetamodel()
+				.getCollectionDescriptor( Company.class.getName() + ".conferenceRoomExtensions" );
 		assertEquals( "company_id", confRoomMeta.getKeyColumnNames()[0] );
 		assertEquals( "phone_extension", confRoomMeta.getElementColumnNames()[0] );
 		assertEquals( "room_number", confRoomMeta.getIndexColumnNames()[0] );

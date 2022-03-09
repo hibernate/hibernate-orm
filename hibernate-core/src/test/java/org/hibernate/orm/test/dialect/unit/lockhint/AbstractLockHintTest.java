@@ -47,8 +47,8 @@ public abstract class AbstractLockHintTest extends BaseUnitTestCase {
 	}
 
 	protected LockOptions lockOptions(String aliasToLock) {
-		LockOptions lockOptions = new LockOptions(LockMode.UPGRADE);
-		lockOptions.setAliasSpecificLockMode( aliasToLock, LockMode.UPGRADE );
+		LockOptions lockOptions = new LockOptions(LockMode.PESSIMISTIC_WRITE);
+		lockOptions.setAliasSpecificLockMode( aliasToLock, LockMode.PESSIMISTIC_WRITE );
 		return lockOptions;
 	}
 

@@ -145,7 +145,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 
 						// attempt to acquire an UPGRADE lock; this should fail
 
-						s1.lock( item, LockMode.UPGRADE );
+						s1.lock( item, LockMode.PESSIMISTIC_WRITE );
 						fail( "expected UPGRADE lock failure" );
 					}
 					catch (StaleObjectStateException expected) {
@@ -262,7 +262,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 
 					// then acquire an UPGRADE lock; this should fail
 					try {
-						s1.lock( part, LockMode.UPGRADE );
+						s1.lock( part, LockMode.PESSIMISTIC_WRITE );
 					}
 					catch (Throwable t) {
 						// SQLServer, for example, immediately throws an exception here...

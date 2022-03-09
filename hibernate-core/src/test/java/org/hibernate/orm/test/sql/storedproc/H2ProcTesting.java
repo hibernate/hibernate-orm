@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.sql.storedproc;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityResult;
 import jakarta.persistence.FieldResult;
@@ -19,7 +18,7 @@ import jakarta.persistence.StoredProcedureParameter;
 
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 
@@ -37,7 +36,7 @@ public class H2ProcTesting {
 
 					@Override
 					public boolean appliesToDialect(Dialect dialect) {
-						return H2Dialect.class.isInstance( dialect );
+						return dialect instanceof H2Dialect;
 					}
 
 					@Override
@@ -46,7 +45,7 @@ public class H2ProcTesting {
 					}
 
 					@Override
-					public String[] sqlCreateStrings(Dialect dialect) {
+					public String[] sqlCreateStrings(SqlStringGenerationContext context) {
 						return new String[] {
 								"CREATE ALIAS findOneUser AS $$\n" +
 										"import org.h2.tools.SimpleResultSet;\n" +
@@ -64,7 +63,7 @@ public class H2ProcTesting {
 					}
 
 					@Override
-					public String[] sqlDropStrings(Dialect dialect) {
+					public String[] sqlDropStrings(SqlStringGenerationContext context) {
 						return new String[] {
 								"DROP ALIAS findUser IF EXISTS"
 						};
@@ -81,7 +80,7 @@ public class H2ProcTesting {
 
 					@Override
 					public boolean appliesToDialect(Dialect dialect) {
-						return H2Dialect.class.isInstance( dialect );
+						return dialect instanceof H2Dialect;
 					}
 
 					@Override
@@ -90,7 +89,7 @@ public class H2ProcTesting {
 					}
 
 					@Override
-					public String[] sqlCreateStrings(Dialect dialect) {
+					public String[] sqlCreateStrings(SqlStringGenerationContext context) {
 						return new String[] {
 								"CREATE ALIAS findUsers AS $$\n" +
 										"import org.h2.tools.SimpleResultSet;\n" +
@@ -110,7 +109,7 @@ public class H2ProcTesting {
 					}
 
 					@Override
-					public String[] sqlDropStrings(Dialect dialect) {
+					public String[] sqlDropStrings(SqlStringGenerationContext context) {
 						return new String[] {"DROP ALIAS findUser IF EXISTS"};
 					}
 				}
@@ -125,7 +124,7 @@ public class H2ProcTesting {
 
 					@Override
 					public boolean appliesToDialect(Dialect dialect) {
-						return H2Dialect.class.isInstance( dialect );
+						return dialect instanceof H2Dialect;
 					}
 
 					@Override
@@ -134,7 +133,7 @@ public class H2ProcTesting {
 					}
 
 					@Override
-					public String[] sqlCreateStrings(Dialect dialect) {
+					public String[] sqlCreateStrings(SqlStringGenerationContext context) {
 						return new String[] {
 								"CREATE ALIAS findUserRange AS $$\n" +
 										"import org.h2.tools.SimpleResultSet;\n" +
@@ -154,7 +153,7 @@ public class H2ProcTesting {
 					}
 
 					@Override
-					public String[] sqlDropStrings(Dialect dialect) {
+					public String[] sqlDropStrings(SqlStringGenerationContext context) {
 						return new String[] {"DROP ALIAS findUserRange IF EXISTS"};
 					}
 				}

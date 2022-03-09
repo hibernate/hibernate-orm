@@ -432,8 +432,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			final String skipLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? ",readpast" : "";
 
 			switch ( lockMode ) {
-				//noinspection deprecation
-				case UPGRADE:
 				case PESSIMISTIC_WRITE:
 				case WRITE:
 					return tableName + " with (" + writeLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
@@ -449,8 +447,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		}
 		else {
 			switch ( lockOptions.getLockMode() ) {
-				//noinspection deprecation
-				case UPGRADE:
 				case UPGRADE_NOWAIT:
 				case PESSIMISTIC_WRITE:
 				case WRITE:

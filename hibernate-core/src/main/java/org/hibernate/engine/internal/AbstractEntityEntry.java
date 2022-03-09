@@ -380,9 +380,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	public void forceLocked(Object entity, Object nextVersion) {
 		version = nextVersion;
 		loadedState[ persister.getVersionProperty() ] = version;
-		// TODO:  use LockMode.PESSIMISTIC_FORCE_INCREMENT
-		//noinspection deprecation
-		setLockMode( LockMode.FORCE );
+		setLockMode( LockMode.PESSIMISTIC_FORCE_INCREMENT );
 		persister.setValue( entity, getPersister().getVersionProperty(), nextVersion );
 	}
 

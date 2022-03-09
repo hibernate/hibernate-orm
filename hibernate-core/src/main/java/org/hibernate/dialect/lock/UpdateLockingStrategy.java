@@ -54,7 +54,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 	public UpdateLockingStrategy(Lockable lockable, LockMode lockMode) {
 		this.lockable = lockable;
 		this.lockMode = lockMode;
-		if ( lockMode.lessThan( LockMode.UPGRADE ) ) {
+		if ( lockMode.lessThan( LockMode.WRITE ) ) {
 			throw new HibernateException( "[" + lockMode + "] not valid for update statement" );
 		}
 		if ( !lockable.isVersioned() ) {

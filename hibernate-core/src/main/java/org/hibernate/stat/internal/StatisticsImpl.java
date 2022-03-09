@@ -535,7 +535,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public String[] getSecondLevelCacheRegionNames() {
-		return cache.getSecondLevelCacheRegionNames();
+		return cache.getCacheRegionNames().toArray( new String[0] );
 	}
 
 	@Override

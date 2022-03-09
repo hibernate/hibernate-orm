@@ -57,7 +57,7 @@ public class LoaderHelper {
 					lock = cache.lockItem( session, ck, entry.getVersion() );
 				}
 
-				if ( persister.isVersioned() && requestedLockMode == LockMode.FORCE  ) {
+				if ( persister.isVersioned() && requestedLockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT  ) {
 					// todo : should we check the current isolation mode explicitly?
 					Object nextVersion = persister.forceVersionIncrement(
 							entry.getId(), entry.getVersion(), session

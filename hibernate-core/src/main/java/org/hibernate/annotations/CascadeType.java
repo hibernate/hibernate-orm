@@ -6,6 +6,11 @@
  */
 package org.hibernate.annotations;
 
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+
+import org.hibernate.Internal;
+
 /**
  * Cascade types (can override default JPA cascades).
  */
@@ -53,9 +58,10 @@ public enum CascadeType {
 	/**
 	 * Hibernate originally handled orphan removal as a specialized cascade.
 	 *
-	 * @deprecated use @OneToOne(orphanRemoval=true) or @OneToMany(orphanRemoval=true)
+	 * @apiNote This is valid only for internal usage.  Use {@link OneToOne#orphanRemoval()}
+	 * or {@link OneToMany#orphanRemoval()} instead
 	 */
-	@Deprecated
+	@Internal
 	DELETE_ORPHAN,
 
 	/**

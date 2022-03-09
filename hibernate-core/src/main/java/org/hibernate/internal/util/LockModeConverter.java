@@ -42,13 +42,11 @@ public final class LockModeConverter {
 			return LockModeType.PESSIMISTIC_READ;
 		}
 		else if ( lockMode == LockMode.PESSIMISTIC_WRITE
-				|| lockMode == LockMode.UPGRADE
 				|| lockMode == LockMode.UPGRADE_NOWAIT
 				|| lockMode == LockMode.UPGRADE_SKIPLOCKED) {
 			return LockModeType.PESSIMISTIC_WRITE;
 		}
-		else if ( lockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT
-				|| lockMode == LockMode.FORCE ) {
+		else if ( lockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT ) {
 			return LockModeType.PESSIMISTIC_FORCE_INCREMENT;
 		}
 		throw new AssertionFailure( "unhandled lock mode " + lockMode );

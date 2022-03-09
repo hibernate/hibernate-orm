@@ -133,10 +133,8 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 		if ( getDialect().getVersion().isSameOrAfter( 9 ) ) {
 			final int effectiveLockTimeout = getEffectiveLockTimeout( lockMode );
 			switch ( lockMode ) {
-				//noinspection deprecation
-				case UPGRADE:
 				case PESSIMISTIC_WRITE:
-				case WRITE:
+				case WRITE: {
 					switch ( effectiveLockTimeout ) {
 						case LockOptions.SKIP_LOCKED:
 							appendSql( " with (updlock,rowlock,readpast)" );
@@ -149,20 +147,22 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 							break;
 					}
 					break;
-				case PESSIMISTIC_READ:
+				}
+				case PESSIMISTIC_READ: {
 					switch ( effectiveLockTimeout ) {
 						case LockOptions.SKIP_LOCKED:
 							appendSql( " with (updlock,rowlock,readpast)" );
 							break;
 						case LockOptions.NO_WAIT:
-							appendSql( " with (holdlock,rowlock,nowait)");
+							appendSql( " with (holdlock,rowlock,nowait)" );
 							break;
 						default:
-							appendSql( " with (holdlock,rowlock)");
+							appendSql( " with (holdlock,rowlock)" );
 							break;
 					}
 					break;
-				case UPGRADE_SKIPLOCKED:
+				}
+				case UPGRADE_SKIPLOCKED: {
 					if ( effectiveLockTimeout == LockOptions.NO_WAIT ) {
 						appendSql( " with (updlock,rowlock,readpast,nowait)" );
 					}
@@ -170,26 +170,29 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 						appendSql( " with (updlock,rowlock,readpast)" );
 					}
 					break;
-				case UPGRADE_NOWAIT:
+				}
+				case UPGRADE_NOWAIT: {
 					appendSql( " with (updlock,holdlock,rowlock,nowait)" );
 					break;
+				}
 			}
 		}
 		else {
 			switch ( lockMode ) {
-				//noinspection deprecation
-				case UPGRADE:
 				case UPGRADE_NOWAIT:
 				case PESSIMISTIC_WRITE:
-				case WRITE:
+				case WRITE: {
 					appendSql( " with (updlock,rowlock)" );
 					break;
-				case PESSIMISTIC_READ:
-					appendSql(" with (holdlock,rowlock)" );
+				}
+				case PESSIMISTIC_READ: {
+					appendSql( " with (holdlock,rowlock)" );
 					break;
-				case UPGRADE_SKIPLOCKED:
+				}
+				case UPGRADE_SKIPLOCKED: {
 					appendSql( " with (updlock,rowlock,readpast)" );
 					break;
+				}
 			}
 		}
 	}

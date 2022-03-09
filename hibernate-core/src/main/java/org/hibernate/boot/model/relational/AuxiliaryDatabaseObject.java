@@ -46,22 +46,7 @@ public interface AuxiliaryDatabaseObject extends Exportable, Serializable {
 	 *
 	 * @return the SQL strings for creating the database object.
 	 */
-	default String[] sqlCreateStrings(SqlStringGenerationContext context) {
-		return sqlCreateStrings( context.getDialect() );
-	}
-
-	/**
-	 * Gets the SQL strings for creating the database object.
-	 *
-	 * @param dialect The dialect for which to generate the SQL creation strings
-	 *
-	 * @return the SQL strings for creating the database object.
-	 * @deprecated Implement {@link #sqlCreateStrings(SqlStringGenerationContext)} instead.
-	 */
-	@Deprecated
-	default String[] sqlCreateStrings(Dialect dialect) {
-		throw new IllegalStateException( this + " does not implement sqlCreateStrings(...)" );
-	}
+	String[] sqlCreateStrings(SqlStringGenerationContext context);
 
 	/**
 	 * Gets the SQL strings for dropping the database object.
@@ -70,22 +55,7 @@ public interface AuxiliaryDatabaseObject extends Exportable, Serializable {
 	 *
 	 * @return the SQL strings for dropping the database object.
 	 */
-	default String[] sqlDropStrings(SqlStringGenerationContext context) {
-		return sqlDropStrings( context.getDialect() );
-	}
-
-	/**
-	 * Gets the SQL strings for dropping the database object.
-	 *
-	 * @param dialect The dialect for which to generate the SQL drop strings
-	 *
-	 * @return the SQL strings for dropping the database object.
-	 * @deprecated Implement {@link #sqlDropStrings(SqlStringGenerationContext)} instead.
-	 */
-	@Deprecated
-	default String[] sqlDropStrings(Dialect dialect) {
-		throw new IllegalStateException( this + " does not implement sqlDropStrings(...)" );
-	}
+	String[] sqlDropStrings(SqlStringGenerationContext context);
 
 	/**
 	 * Additional, optional interface for AuxiliaryDatabaseObject that want to allow

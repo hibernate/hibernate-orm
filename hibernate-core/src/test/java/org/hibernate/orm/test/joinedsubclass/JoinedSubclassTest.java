@@ -148,8 +148,8 @@ public class JoinedSubclassTest {
 
 		scope.inTransaction(
 				session -> {
-					session.lock( p, LockMode.UPGRADE );
-					session.lock( q, LockMode.UPGRADE );
+					session.lock( p, LockMode.PESSIMISTIC_WRITE );
+					session.lock( q, LockMode.PESSIMISTIC_WRITE );
 					session.delete( p );
 					session.delete( q );
 				}

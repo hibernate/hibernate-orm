@@ -48,16 +48,16 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 		if ( lockOptions != null ) {
 			final LockMode lockMode = lockOptions.getLockMode();
 			switch ( lockMode ) {
-				case UPGRADE:
 				case PESSIMISTIC_READ:
 				case PESSIMISTIC_WRITE:
 				case UPGRADE_NOWAIT:
-				case FORCE:
 				case PESSIMISTIC_FORCE_INCREMENT:
-				case UPGRADE_SKIPLOCKED:
+				case UPGRADE_SKIPLOCKED: {
 					return processSql( sql, getForUpdateIndex( sql ), hasFirstRow );
-				default:
+				}
+				default: {
 					return processSqlOffsetFetch( sql, hasFirstRow );
+				}
 			}
 		}
 		return processSqlOffsetFetch( sql, hasFirstRow );

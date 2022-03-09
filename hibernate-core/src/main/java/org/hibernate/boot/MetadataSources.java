@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.jaxb.internal.XmlSources;
@@ -164,9 +165,8 @@ public class MetadataSources implements Serializable {
 	 * Get a builder for metadata where non-default options can be specified.
 	 *
 	 * @return The built metadata.
-	 * @deprecated Use {@link #getMetadataBuilder()} instead
 	 */
-	@Deprecated
+	@Internal
 	public MetadataBuilder getMetadataBuilder(StandardServiceRegistry serviceRegistry) {
 		return getCustomBuilderOrDefault( new MetadataBuilderImpl(this, serviceRegistry ) );
 	}
@@ -324,29 +324,6 @@ public class MetadataSources implements Serializable {
 	public MetadataSources addPackage(Package packageRef) {
 		addPackageInternal( packageRef.getName() );
 		return this;
-	}
-
-	/**
-	 * Read a mapping as an application resource using the convention
-	 * that a class named {@code foo.bar.Foo} is mapped by a file named
-	 * {@code foo/bar/Foo.hbm.xml} which can be resolved as a classpath
-	 * resource.
-	 *
-	 * @param entityClass The mapped class
-	 *
-	 * @return this (for method chaining purposes)
-	 *
-	 * @deprecated hbm.xml is a legacy mapping format now considered deprecated.
-	 */
-	@Deprecated
-	public MetadataSources addClass(Class<?> entityClass) {
-		if ( entityClass == null ) {
-			throw new IllegalArgumentException( "The specified class cannot be null" );
-		}
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "adding resource mappings from class convention : %s", entityClass.getName() );
-		}
-		return addResource( entityClass.getName().replace( '.', '/' ) + ".hbm.xml" );
 	}
 
 	/**
@@ -554,23 +531,6 @@ public class MetadataSources implements Serializable {
 	 */
 	public MetadataSources addURL(URL url) {
 		final XmlSource xmlSource = XmlSources.fromUrl( url );
-		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
-		getXmlBindingsForWrite().add( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
-		return this;
-	}
-
-	/**
-	 * Read mappings from a DOM {@link Document}
-	 *
-	 * @param document The DOM document
-	 *
-	 * @return this (for method chaining purposes)
-	 *
-	 * @deprecated since 5.0.  Use one of the other methods for passing mapping source(s).
-	 */
-	@Deprecated
-	public MetadataSources addDocument(Document document) {
-		final XmlSource xmlSource = XmlSources.fromDocument( document );
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
 		getXmlBindingsForWrite().add( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
 		return this;

@@ -518,20 +518,22 @@ public abstract class AbstractHANADialect extends Dialect {
 	@SuppressWarnings({ "deprecation" })
 	private String getForUpdateString(String aliases, LockMode lockMode, int timeout) {
 		switch ( lockMode ) {
-			case UPGRADE:
-				return getForUpdateString( aliases );
-			case PESSIMISTIC_READ:
+			case PESSIMISTIC_READ: {
 				return getReadLockString( aliases, timeout );
-			case PESSIMISTIC_WRITE:
+			}
+			case PESSIMISTIC_WRITE: {
 				return getWriteLockString( aliases, timeout );
+			}
 			case UPGRADE_NOWAIT:
-			case FORCE:
-			case PESSIMISTIC_FORCE_INCREMENT:
+			case PESSIMISTIC_FORCE_INCREMENT: {
 				return getForUpdateNowaitString( aliases );
-			case UPGRADE_SKIPLOCKED:
+			}
+			case UPGRADE_SKIPLOCKED: {
 				return getForUpdateSkipLockedString( aliases );
-			default:
+			}
+			default: {
 				return "";
+			}
 		}
 	}
 
@@ -1712,7 +1714,7 @@ public abstract class AbstractHANADialect extends Dialect {
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options) throws SQLException {
 					JdbcType descriptor = BlobJdbcType.BLOB_BINDING;
-					if ( byte[].class.isInstance( value ) ) {
+					if ( value instanceof byte[] ) {
 						// performance shortcut for binding BLOB data in byte[] format
 						descriptor = BlobJdbcType.PRIMITIVE_ARRAY_BINDING;
 					}

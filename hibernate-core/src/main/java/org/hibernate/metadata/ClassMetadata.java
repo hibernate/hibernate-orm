@@ -16,7 +16,6 @@ import org.hibernate.type.Type;
 /**
  * Exposes entity class metadata to the application
  *
- * @see org.hibernate.SessionFactory#getClassMetadata(Class)
  * @author Gavin King
  *
  * @deprecated Use Hibernate's mapping model {@link org.hibernate.metamodel.MappingMetamodel}

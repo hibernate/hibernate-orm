@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TimeZone;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -30,10 +31,10 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.NullOrdering;
 import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -41,22 +42,36 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.BasicTypeRegistry;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.InstantAsTimestampWithTimeZoneJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
-
-import jakarta.persistence.TemporalType;
 
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
-import static org.hibernate.type.SqlTypes.*;
+import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BLOB;
+import static org.hibernate.type.SqlTypes.CHAR;
+import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.GEOMETRY;
+import static org.hibernate.type.SqlTypes.INET;
+import static org.hibernate.type.SqlTypes.JSON;
+import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
+import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
+import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
+import static org.hibernate.type.SqlTypes.NCHAR;
+import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.OTHER;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.UUID;
+import static org.hibernate.type.SqlTypes.VARBINARY;
+import static org.hibernate.type.SqlTypes.VARCHAR;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
@@ -211,10 +226,7 @@ public class CockroachDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry(queryEngine);
 
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
-		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
-
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		final CommonFunctionFactory functionFactory = new CommonFunctionFactory( queryEngine );
 		functionFactory.ascii();
 		functionFactory.char_chr();
 		functionFactory.overlay();
@@ -589,33 +601,36 @@ public class CockroachDialect extends Dialect {
 			lockMode = lockOptions.getLockMode();
 		}
 		switch ( lockMode ) {
-			//noinspection deprecation
-			case UPGRADE:
-				return getForUpdateString(aliases);
-			case PESSIMISTIC_READ:
+			case PESSIMISTIC_READ: {
 				return getReadLockString( aliases, lockOptions.getTimeOut() );
-			case PESSIMISTIC_WRITE:
+			}
+			case PESSIMISTIC_WRITE: {
 				return getWriteLockString( aliases, lockOptions.getTimeOut() );
+			}
 			case UPGRADE_NOWAIT:
-				//noinspection deprecation
-			case FORCE:
-			case PESSIMISTIC_FORCE_INCREMENT:
+			case PESSIMISTIC_FORCE_INCREMENT: {
 				return getForUpdateNowaitString(aliases);
-			case UPGRADE_SKIPLOCKED:
+			}
+			case UPGRADE_SKIPLOCKED: {
 				return getForUpdateSkipLockedString(aliases);
-			default:
+			}
+			default: {
 				return "";
+			}
 		}
 	}
 
 	private String withTimeout(String lockString, int timeout) {
 		switch (timeout) {
-			case LockOptions.NO_WAIT:
+			case LockOptions.NO_WAIT: {
 				return supportsNoWait() ? lockString + " nowait" : lockString;
-			case LockOptions.SKIP_LOCKED:
+			}
+			case LockOptions.SKIP_LOCKED: {
 				return supportsSkipLocked() ? lockString + " skip locked" : lockString;
-			default:
+			}
+			default: {
 				return lockString;
+			}
 		}
 	}
 

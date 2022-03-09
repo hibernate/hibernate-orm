@@ -105,7 +105,7 @@ public class JPALockTest extends AbstractJPATest {
 			s1 = sessionFactory().openSession();
 			s1.beginTransaction();
 			item = s1.get( Item.class, itemId );
-			s1.lock( item, LockMode.UPGRADE );
+			s1.lock( item, LockMode.PESSIMISTIC_WRITE );
 			item.setName( "updated" );
 			s1.flush();
 
@@ -174,9 +174,6 @@ public class JPALockTest extends AbstractJPATest {
 	 * must always prevent the phenomena P1 and P2. For non-versioned objects, whether or
 	 * not LockModeType.WRITE has any additional behaviour is vendor-specific. Applications that call
 	 * lock(entity, LockModeType.WRITE) on non-versioned objects will not be portable.
-	 * <p/>
-	 * Due to the requirement that LockModeType.WRITE needs to force a version increment,
-	 * a new Hibernate LockMode was added to support this behavior: {@link LockMode#FORCE}.
 	 */
 	@Test
 	public void testLockModeTypeWrite() {
@@ -206,14 +203,14 @@ public class JPALockTest extends AbstractJPATest {
 			s1 = sessionFactory().openSession();
 			s1.beginTransaction();
 			item = s1.get( Item.class, itemId );
-			s1.lock( item, LockMode.FORCE );
+			s1.lock( item, LockMode.PESSIMISTIC_FORCE_INCREMENT );
 			assertEquals( initialVersion + 1, item.getVersion(), "no forced version increment" );
 
 			myEntity = s1.get( MyEntity.class, entity.getId() );
-			s1.lock( myEntity, LockMode.FORCE );
-			assertTrue(  true, "LockMode.FORCE on a un-versioned entity should degrade nicely to UPGRADE" );
+			s1.lock( myEntity, LockMode.PESSIMISTIC_FORCE_INCREMENT );
+			assertTrue(  true, "LockMode.PESSIMISTIC_FORCE_INCREMENT on a un-versioned entity should degrade nicely to UPGRADE" );
 
-			s1.lock( item, LockMode.FORCE );
+			s1.lock( item, LockMode.PESSIMISTIC_FORCE_INCREMENT );
 			assertEquals( initialVersion + 1, item.getVersion(), "subsequent LockMode.FORCE did not no-op" );
 
 			s2 = sessionFactory().openSession();

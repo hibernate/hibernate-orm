@@ -21,7 +21,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Target({FIELD, METHOD, TYPE})
 @Retention(RUNTIME)
-@Deprecated
+@Deprecated( forRemoval = true )
+@Remove( )
 public @interface ForeignKey {
 	/**
 	 * Name of the foreign key of a {@code OneToMany}, {@code ManyToOne}, or

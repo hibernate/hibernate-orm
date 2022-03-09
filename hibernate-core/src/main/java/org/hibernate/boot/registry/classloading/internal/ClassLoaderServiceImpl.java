@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.hibernate.Internal;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.AvailableSettings;
@@ -100,6 +101,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Internal
 	public static ClassLoaderServiceImpl fromConfigSettings(Map configValues) {
 		final List<ClassLoader> providedClassLoaders = new ArrayList<>();
 

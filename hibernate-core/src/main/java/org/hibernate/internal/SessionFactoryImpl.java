@@ -726,16 +726,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( className ).getIdentifierPropertyName();
 	}
 
-	public ClassMetadata getClassMetadata(@SuppressWarnings("rawtypes") Class persistentClass) throws HibernateException {
-		return getClassMetadata( persistentClass.getName() );
-	}
-
 	public CollectionMetadata getCollectionMetadata(String roleName) throws HibernateException {
 		return (CollectionMetadata) runtimeMetamodels.getMappingMetamodel().getCollectionDescriptor( roleName );
-	}
-
-	public ClassMetadata getClassMetadata(String entityName) throws HibernateException {
-		return (ClassMetadata) runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( entityName );
 	}
 
 	public Type getReferencedPropertyType(String className, String propertyName) throws MappingException {

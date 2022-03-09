@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
@@ -116,11 +117,11 @@ public interface BootstrapContext {
 	 *
 	 * @return The Hibernate Commons Annotations ReflectionManager to use.
 	 *
-	 * @deprecated Deprecated (with no replacement) to indicate that this will go away as
-	 * we migrate away from Hibernate Commons Annotations to Jandex for annotation handling
-	 * and XMl->annotation merging.
+	 * @apiNote Supported for internal use only.  This method will go away as
+	 * we migrate away from Hibernate Commons Annotations to Jandex for annotation
+	 * handling and XMl->annotation merging.
 	 */
-	@Deprecated
+	@Internal
 	ReflectionManager getReflectionManager();
 
 	/**

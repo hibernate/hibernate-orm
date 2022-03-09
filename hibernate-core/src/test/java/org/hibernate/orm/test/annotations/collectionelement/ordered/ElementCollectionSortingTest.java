@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.Session;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragmentImpl;
@@ -135,8 +136,11 @@ public class ElementCollectionSortingTest {
 	private void checkSQLOrderBy(Session session, String entityName, String propertyName, SortOrder order) {
 		String roleName = entityName + "." + propertyName;
 		String alias = "alias1";
-		BasicCollectionPersister collectionPersister = (BasicCollectionPersister) session.getSessionFactory()
-				.getCollectionMetadata( roleName );
+		BasicCollectionPersister collectionPersister = (BasicCollectionPersister) session
+				.unwrap( SessionImplementor.class )
+				.getFactory()
+				.getMappingMetamodel()
+				.getCollectionDescriptor( roleName );
 		assertTrue( collectionPersister.hasOrdering() );
 		PluralAttributeMapping attributeMapping = collectionPersister.getAttributeMapping();
 		assertThat( attributeMapping.getFetchableName(), is( propertyName ) );

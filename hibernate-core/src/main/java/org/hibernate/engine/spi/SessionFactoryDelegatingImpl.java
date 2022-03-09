@@ -104,21 +104,6 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.openStatelessSession( connection );
 	}
 
-	@Override @Deprecated
-	public ClassMetadata getClassMetadata(@SuppressWarnings("rawtypes") Class entityClass) {
-		return delegate.getClassMetadata( entityClass );
-	}
-
-	@Override @Deprecated
-	public ClassMetadata getClassMetadata(String entityName) {
-		return delegate.getClassMetadata( entityName );
-	}
-
-	@Override @Deprecated
-	public CollectionMetadata getCollectionMetadata(String roleName) {
-		return delegate.getCollectionMetadata( roleName );
-	}
-
 	@Override
 	public StatisticsImplementor getStatistics() {
 		return delegate.getStatistics();

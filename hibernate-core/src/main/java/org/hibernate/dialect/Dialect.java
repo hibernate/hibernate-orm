@@ -1556,23 +1556,24 @@ public abstract class Dialect implements ConversionContext {
 		return getForUpdateString( lockOptions.getLockMode(), lockOptions.getTimeOut() );
 	}
 
-	@SuppressWarnings("deprecation")
 	private String getForUpdateString(LockMode lockMode, int timeout){
 		switch ( lockMode ) {
-			case UPGRADE:
-				return getForUpdateString();
-			case PESSIMISTIC_READ:
+			case PESSIMISTIC_READ: {
 				return getReadLockString( timeout );
-			case PESSIMISTIC_WRITE:
+			}
+			case PESSIMISTIC_WRITE: {
 				return getWriteLockString( timeout );
+			}
 			case UPGRADE_NOWAIT:
-			case FORCE:
-			case PESSIMISTIC_FORCE_INCREMENT:
+			case PESSIMISTIC_FORCE_INCREMENT: {
 				return getForUpdateNowaitString();
-			case UPGRADE_SKIPLOCKED:
+			}
+			case UPGRADE_SKIPLOCKED: {
 				return getForUpdateSkipLockedString();
-			default:
+			}
+			default: {
 				return "";
+			}
 		}
 	}
 
@@ -3563,15 +3564,15 @@ public abstract class Dialect implements ConversionContext {
 			case PESSIMISTIC_READ:
 				return getReadRowLockStrategy();
 			case WRITE:
-			case FORCE:
 			case PESSIMISTIC_FORCE_INCREMENT:
 			case PESSIMISTIC_WRITE:
-			case UPGRADE:
 			case UPGRADE_SKIPLOCKED:
-			case UPGRADE_NOWAIT:
+			case UPGRADE_NOWAIT: {
 				return getWriteRowLockStrategy();
-			default:
+			}
+			default: {
 				return RowLockStrategy.NONE;
+			}
 		}
 	}
 

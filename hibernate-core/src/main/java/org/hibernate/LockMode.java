@@ -38,50 +38,6 @@ public enum LockMode {
 	 * pulled from a cache.
 	 */
 	READ( 5, "read" ),
-	/**
-	 * An upgrade lock. Objects loaded in this lock mode are
-	 * materialized using an SQL {@code select ... for update}.
-	 *
-	 * @deprecated instead use PESSIMISTIC_WRITE
-	 */
-	@Deprecated
-	UPGRADE( 10, "upgrade" ),
-	/**
-	 * Attempt to obtain an upgrade lock, using an Oracle-style
-	 * {@code select for update nowait}. The semantics of
-	 * this lock mode, once obtained, are the same as
-	 * {@link #UPGRADE}.
-	 */
-	UPGRADE_NOWAIT( 10, "upgrade-nowait" ),
-
-	/**
-	 * Attempt to obtain an upgrade lock, using an Oracle-style
-	 * {@code select for update skip locked}. The semantics of
-	 * this lock mode, once obtained, are the same as
-	 * {@link #UPGRADE}.
-	 */
-	UPGRADE_SKIPLOCKED( 10, "upgrade-skiplocked" ),
-
-	/**
-	 * A {@code WRITE} lock is obtained when an object is updated
-	 * or inserted.   This lock mode is for internal use only and is
-	 * not a valid mode for {@code load()} or {@code lock()} (both
-	 * of which throw exceptions if {@code WRITE} is specified).
-	 */
-	WRITE( 10, "write" ),
-
-	/**
-	 * Similar to {@link #UPGRADE} except that, for versioned entities,
-	 * it results in a forced version increment.
-	 *
-	 * @deprecated instead use PESSIMISTIC_FORCE_INCREMENT
-	 */
-	@Deprecated
-	FORCE( 15, "force" ),
-
-	/*
-	 *  start of jakarta.persistence.LockModeType equivalent modes
-	 */
 
 	/**
 	 * Optimistically assume that transaction will not experience contention for
@@ -96,14 +52,38 @@ public enum LockMode {
 	OPTIMISTIC_FORCE_INCREMENT( 7, "optimistic_force_increment" ),
 
 	/**
+	 * A {@code WRITE} lock is obtained when an object is updated or inserted.
+	 *
+	 * This lock mode is for internal use only and is not a valid mode for
+	 * {@code load()} or {@code lock()}, both of which throw exceptions if
+	 * {@code WRITE} is specified.
+	 */
+	@Internal
+	WRITE( 10, "write" ),
+
+	/**
+	 * Attempt to obtain an upgrade lock, using an Oracle-style
+	 * {@code select for update nowait}. The semantics of
+	 * this lock mode, once obtained, are the same as
+	 * {@link #PESSIMISTIC_WRITE}.
+	 */
+	UPGRADE_NOWAIT( 10, "upgrade-nowait" ),
+
+	/**
+	 * Attempt to obtain an upgrade lock, using an Oracle-style
+	 * {@code select for update skip locked}. The semantics of
+	 * this lock mode, once obtained, are the same as
+	 * {@link #PESSIMISTIC_WRITE}.
+	 */
+	UPGRADE_SKIPLOCKED( 10, "upgrade-skiplocked" ),
+
+	/**
 	 * Implemented as PESSIMISTIC_WRITE.
-	 * TODO:  introduce separate support for PESSIMISTIC_READ
 	 */
 	PESSIMISTIC_READ( 12, "pessimistic_read" ),
 
 	/**
 	 * Transaction will obtain a database lock immediately.
-	 * TODO:  add PESSIMISTIC_WRITE_NOWAIT
 	 */
 	PESSIMISTIC_WRITE( 13, "pessimistic_write" ),
 

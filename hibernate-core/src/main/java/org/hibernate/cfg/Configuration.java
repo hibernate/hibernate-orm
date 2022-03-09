@@ -527,14 +527,21 @@ public class Configuration {
 	 * which can be resolved as a {@linkplain ClassLoader#getResource(String)
 	 * classpath resource}.
 	 *
-	 * @param persistentClass The mapped class
+	 * @param entityClass The mapped class
 	 * @return this (for method chaining purposes)
 	 * @throws MappingException Indicates problems locating the resource or
 	 * processing the contained mapping document.
 	 */
-	public Configuration addClass(Class persistentClass) throws MappingException {
-		metadataSources.addClass( persistentClass );
-		return this;
+	public Configuration addClass(Class entityClass) throws MappingException {
+		if ( entityClass == null ) {
+			throw new IllegalArgumentException( "The specified class cannot be null" );
+		}
+
+		if ( log.isDebugEnabled() ) {
+			log.debugf( "adding resource mappings from class convention : %s", entityClass.getName() );
+		}
+
+		return addResource( entityClass.getName().replace( '.', '/' ) + ".hbm.xml" );
 	}
 
 	/**

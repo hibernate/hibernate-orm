@@ -18,6 +18,7 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.procedure.ProcedureCall;
@@ -88,7 +89,7 @@ public class StoredProcedureResultSetMappingTest extends BaseSessionFactoryFunct
 		}
 
 		@Override
-		public String[] sqlCreateStrings(Dialect dialect) {
+		public String[] sqlCreateStrings(SqlStringGenerationContext context) {
 			return new String[] {
 					"CREATE ALIAS allEmployeeNames AS $$\n" +
 							"import org.h2.tools.SimpleResultSet;\n" +
@@ -109,7 +110,7 @@ public class StoredProcedureResultSetMappingTest extends BaseSessionFactoryFunct
 		}
 
 		@Override
-		public String[] sqlDropStrings(Dialect dialect) {
+		public String[] sqlDropStrings(SqlStringGenerationContext context) {
 			return new String[] {"DROP ALIAS allEmployeeNames IF EXISTS"};
 		}
 

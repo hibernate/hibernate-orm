@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.hibernate.Internal;
 import org.hibernate.boot.cfgxml.internal.ConfigLoader;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -121,28 +122,6 @@ public class StandardServiceRegistryBuilder {
 		this.settings = settings;
 		this.aggregatedCfgXml = loadedConfig;
 		this.initiators = standardInitiatorList();
-	}
-
-	/**
-	 * Intended for use exclusively from Quarkus bootstrapping, or extensions of
-	 * this class which need to override the standard ServiceInitiator list.
-	 *
-	 * Consider this an SPI.
-	 *
-	 * @deprecated Quarkus will switch to use
-	 * {@link #StandardServiceRegistryBuilder(BootstrapServiceRegistry, Map, ConfigLoader, LoadedConfig, List)}
-	 */
-	@Deprecated
-	protected StandardServiceRegistryBuilder(
-			BootstrapServiceRegistry bootstrapServiceRegistry,
-			Map <String,Object> settings,
-			LoadedConfig loadedConfig,
-			List<StandardServiceInitiator<?>> initiators) {
-		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
-		this.configLoader = new ConfigLoader( bootstrapServiceRegistry );
-		this.settings = settings;
-		this.aggregatedCfgXml = loadedConfig;
-		this.initiators = initiators;
 	}
 
 	/**
@@ -407,13 +386,8 @@ public class StandardServiceRegistryBuilder {
 
 	/**
 	 * Obtain the current aggregated settings.
-	 *
-	 * @deprecated Temporarily exposed since
-	 * {@link org.hibernate.cfg.Configuration} is still around and much code
-	 * still uses it. This allows code to configure the builder and access
-	 * that to configure the {@code Configuration} object.
 	 */
-	@Deprecated
+	@Internal
 	public Map<String,Object> getSettings() {
 		return settings;
 	}

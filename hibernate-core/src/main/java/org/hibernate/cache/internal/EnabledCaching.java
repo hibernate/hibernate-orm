@@ -29,8 +29,8 @@ import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.TimestampsCache;
+import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
@@ -38,7 +38,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -636,16 +635,5 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	@Override @Deprecated
 	public CollectionDataAccess getCollectionRegionAccess(NavigableRole collectionRole) {
 		return collectionAccessMap.get( collectionRole );
-	}
-
-	@Override @Deprecated
-	public String[] getSecondLevelCacheRegionNames() {
-		return ArrayHelper.toStringArray( legacySecondLevelCacheNames );
-	}
-
-
-	@Override
-	public Set<NaturalIdDataAccess> getNaturalIdAccessesInRegion(String regionName) {
-		return legacyNaturalIdAccessesForRegion.get( regionName );
 	}
 }

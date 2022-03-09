@@ -7,11 +7,12 @@
 package org.hibernate.cache.spi;
 
 import java.io.Serializable;
-import java.util.Locale;
 import java.util.Set;
 
 import org.hibernate.Cache;
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
+import org.hibernate.annotations.Remove;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -124,32 +125,19 @@ public interface CacheImplementor extends Service, Cache, Serializable {
 	 */
 	void close();
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Deprecations (5.3)
-
-	/**
-	 * Get the *qualified* names of all regions caching entity and collection data.
-	 *
-	 * @return All cache region names
-	 *
-	 * @deprecated Use {@link CacheImplementor#getCacheRegionNames()} instead
-	 */
-	@Deprecated(since = "5.3")
-	String[] getSecondLevelCacheRegionNames();
-
 	/**
 	 * Find the cache data access strategy for an entity.  Will
 	 * return {@code null} when the entity is not configured for caching.
 	 *
 	 * @param rootEntityName The NavigableRole representation of the root entity
 	 *
-	 * @apiNote It is only valid to call this method after {@link #prime} has
+	 * @implSpec It is only valid to call this method after {@link #prime} has
 	 * been performed
 	 *
-	 * @deprecated Use {@link EntityPersister#getCacheAccessStrategy()} instead
+	 * @apiNote Use {@link EntityPersister#getCacheAccessStrategy()} instead
 	 */
-	@Deprecated
+	@Internal
+	@Remove
 	EntityDataAccess getEntityRegionAccess(NavigableRole rootEntityName);
 
 	/**
@@ -159,67 +147,25 @@ public interface CacheImplementor extends Service, Cache, Serializable {
 	 *
 	 * @param rootEntityName The NavigableRole representation of the root entity
 	 *
-	 * @apiNote It is only valid to call this method after {@link #prime} has
+	 * @implSpec It is only valid to call this method after {@link #prime} has
 	 * been performed
 	 *
-	 * @deprecated Use {@link EntityPersister#getNaturalIdCacheAccessStrategy()} instead
+	 * @apiNote  Use {@link EntityPersister#getNaturalIdCacheAccessStrategy()} instead
 	 */
-	@Deprecated
+	@Internal
+	@Remove
 	NaturalIdDataAccess getNaturalIdCacheRegionAccessStrategy(NavigableRole rootEntityName);
 
 	/**
 	 * Find the cache data access strategy for the given collection.  Will
 	 * return {@code null} when the collection is not configured for caching.
 	 *
-	 * @apiNote It is only valid to call this method after {@link #prime} has
+	 * @implSpec It is only valid to call this method after {@link #prime} has
 	 * been performed
 	 *
-	 * @deprecated Use {@link EntityPersister#getNaturalIdCacheAccessStrategy()} instead
+	 * @apiNote  Use {@link EntityPersister#getNaturalIdCacheAccessStrategy()} instead
 	 */
-	@Deprecated
+	@Internal
+	@Remove
 	CollectionDataAccess getCollectionRegionAccess(NavigableRole collectionRole);
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Some new (default) support methods for the above deprecations
-	//		- themselves deprecated
-
-	/**
-	 * @deprecated No replacement - added just to continue some backwards compatibility
-	 * in supporting the newly deprecated methods expecting a qualified (prefix +) region name
-	 */
-	@Deprecated(since = "5.3")
-	default String unqualifyRegionName(String name) {
-		if ( getSessionFactory().getSessionFactoryOptions().getCacheRegionPrefix() == null ) {
-			return name;
-		}
-
-		if ( !name.startsWith( getSessionFactory().getSessionFactoryOptions().getCacheRegionPrefix() ) ) {
-			throw new IllegalArgumentException(
-					String.format(
-							Locale.ROOT,
-							"Legacy methods for accessing cache information expect a qualified (prefix) region name - " +
-									"but passed name [%s] was not qualified by the configured prefix [%s]",
-							name,
-							getSessionFactory().getSessionFactoryOptions().getCacheRegionPrefix()
-					)
-			);
-		}
-
-		return name.substring( getSessionFactory().getSessionFactoryOptions().getCacheRegionPrefix().length() + 1 );
-	}
-
-	/**
-	 * @deprecated No replacement - added just for support of the newly deprecated methods expecting a qualified region name
-	 */
-	@Deprecated
-	default Region getRegionByLegacyName(String legacyName) {
-		return getRegion( unqualifyRegionName( legacyName ) );
-	}
-
-	/**
-	 * @deprecated No replacement - added just for support of the newly deprecated methods expecting a qualified region name
-	 */
-	@Deprecated
-	Set<NaturalIdDataAccess> getNaturalIdAccessesInRegion(String legacyQualifiedRegionName);
 }

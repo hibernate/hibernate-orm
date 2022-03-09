@@ -18,6 +18,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -47,11 +48,11 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.PostgresCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.SemanticException;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -72,12 +73,10 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
-
-import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
@@ -85,8 +84,26 @@ import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
 import static org.hibernate.query.sqm.TemporalUnit.MONTH;
 import static org.hibernate.query.sqm.TemporalUnit.QUARTER;
 import static org.hibernate.query.sqm.TemporalUnit.YEAR;
-
-import static org.hibernate.type.SqlTypes.*;
+import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BLOB;
+import static org.hibernate.type.SqlTypes.CHAR;
+import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.GEOMETRY;
+import static org.hibernate.type.SqlTypes.INET;
+import static org.hibernate.type.SqlTypes.JSON;
+import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
+import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
+import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
+import static org.hibernate.type.SqlTypes.NCHAR;
+import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.OTHER;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.UUID;
+import static org.hibernate.type.SqlTypes.VARBINARY;
+import static org.hibernate.type.SqlTypes.VARCHAR;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
@@ -558,22 +575,22 @@ public class PostgreSQLDialect extends Dialect {
 			lockMode = lockOptions.getLockMode();
 		}
 		switch ( lockMode ) {
-			//noinspection deprecation
-			case UPGRADE:
-				return getForUpdateString(aliases);
-			case PESSIMISTIC_READ:
+			case PESSIMISTIC_READ: {
 				return getReadLockString( aliases, lockOptions.getTimeOut() );
-			case PESSIMISTIC_WRITE:
+			}
+			case PESSIMISTIC_WRITE: {
 				return getWriteLockString( aliases, lockOptions.getTimeOut() );
+			}
 			case UPGRADE_NOWAIT:
-				//noinspection deprecation
-			case FORCE:
-			case PESSIMISTIC_FORCE_INCREMENT:
+			case PESSIMISTIC_FORCE_INCREMENT: {
 				return getForUpdateNowaitString(aliases);
-			case UPGRADE_SKIPLOCKED:
+			}
+			case UPGRADE_SKIPLOCKED: {
 				return getForUpdateSkipLockedString(aliases);
-			default:
+			}
+			default: {
 				return "";
+			}
 		}
 	}
 

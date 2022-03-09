@@ -13,6 +13,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.query.Query;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -477,11 +478,9 @@ public interface PersistenceContext {
 //	HashSet getNullifiableEntityKeys();
 
 	/**
-	 * Get the mapping from key value to entity instance
-	 * @deprecated this will be removed: it provides too wide access, making it hard to optimise the internals
-	 * for specific access needs. Consider using #iterateEntities instead.
+	 * Doubly internal
 	 */
-	@Deprecated
+	@Internal
 	Map<EntityKey,Object> getEntitiesByKey();
 
 	/**
@@ -503,10 +502,9 @@ public interface PersistenceContext {
 	int getNumberOfManagedEntities();
 
 	/**
-	 * Get the mapping from collection instance to collection entry
-	 * @deprecated use {@link #removeCollectionEntry(PersistentCollection)} or {@link #getCollectionEntriesSize()}, {@link #forEachCollectionEntry(BiConsumer,boolean)}.
+	 * Doubly internal
 	 */
-	@Deprecated
+	@Internal
 	Map<PersistentCollection<?>,CollectionEntry> getCollectionEntries();
 
 	/**

@@ -144,10 +144,6 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 * @return {@code this}, for method chaining
 	 *
 	 * @see jakarta.persistence.PersistenceContextType
-	 *
-	 * @deprecated Only integrations can specify autoClosing behavior of
-	 * individual sessions.
 	 */
-	@Deprecated
 	T autoClose(boolean autoClose);
 }

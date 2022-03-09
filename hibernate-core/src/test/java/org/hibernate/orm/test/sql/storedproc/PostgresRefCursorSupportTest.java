@@ -17,6 +17,7 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
@@ -67,7 +68,7 @@ public class PostgresRefCursorSupportTest extends BaseSessionFactoryFunctionalTe
 		}
 
 		@Override
-		public String[] sqlCreateStrings(Dialect dialect) {
+		public String[] sqlCreateStrings(SqlStringGenerationContext context) {
 			return new String[] {
 					"create function all_items() return refcursor as \n" +
 							"	'declare someCursor refcursor;\n" +
@@ -79,7 +80,7 @@ public class PostgresRefCursorSupportTest extends BaseSessionFactoryFunctionalTe
 		}
 
 		@Override
-		public String[] sqlDropStrings(Dialect dialect) {
+		public String[] sqlDropStrings(SqlStringGenerationContext context) {
 			return new String[] {
 					"drop function all_items()"
 			};

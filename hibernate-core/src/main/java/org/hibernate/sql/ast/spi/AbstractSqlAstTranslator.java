@@ -1108,9 +1108,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		int timeoutMillis = forUpdateClause.getTimeoutMillis();
 		LockKind lockKind = LockKind.NONE;
 		switch ( forUpdateClause.getLockMode() ) {
-			//noinspection deprecation
-			case UPGRADE:
-				timeoutMillis = LockOptions.WAIT_FOREVER;
 			case PESSIMISTIC_WRITE:
 				lockKind = LockKind.UPDATE;
 				break;
@@ -1118,8 +1115,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				lockKind = LockKind.SHARE;
 				break;
 			case UPGRADE_NOWAIT:
-				//noinspection deprecation
-			case FORCE:
 			case PESSIMISTIC_FORCE_INCREMENT:
 				timeoutMillis = LockOptions.NO_WAIT;
 				lockKind = LockKind.UPDATE;
@@ -1215,21 +1210,18 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		int timeoutMillis = getLockOptions().getTimeOut();
 		switch ( lockMode ) {
-			//noinspection deprecation
-			case UPGRADE:
-				timeoutMillis = LockOptions.WAIT_FOREVER;
-				break;
 			case UPGRADE_NOWAIT:
-				//noinspection deprecation
-			case FORCE:
-			case PESSIMISTIC_FORCE_INCREMENT:
+			case PESSIMISTIC_FORCE_INCREMENT: {
 				timeoutMillis = LockOptions.NO_WAIT;
 				break;
-			case UPGRADE_SKIPLOCKED:
+			}
+			case UPGRADE_SKIPLOCKED: {
 				timeoutMillis = LockOptions.SKIP_LOCKED;
 				break;
-			default:
+			}
+			default: {
 				break;
+			}
 		}
 		return timeoutMillis;
 	}

@@ -177,11 +177,6 @@ public class DisabledCaching implements CacheImplementor {
 	public void close() {
 	}
 
-	@Override @Deprecated
-	public String[] getSecondLevelCacheRegionNames() {
-		return ArrayHelper.EMPTY_STRING_ARRAY;
-	}
-
 	@Override
 	public Set<String> getCacheRegionNames() {
 		return null;
@@ -221,10 +216,5 @@ public class DisabledCaching implements CacheImplementor {
 	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> cls) {
 		return (T) this;
-	}
-
-	@Override
-	public Set<NaturalIdDataAccess> getNaturalIdAccessesInRegion(String regionName) {
-		return Collections.emptySet();
 	}
 }

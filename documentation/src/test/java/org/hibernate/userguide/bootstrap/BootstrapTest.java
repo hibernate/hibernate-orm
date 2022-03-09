@@ -155,10 +155,6 @@ public class BootstrapTest {
             // Read all mappings from a jar file.
             // Assumes that any file named *.hbm.xml is a mapping document.
             sources.addJar(new File("./entities.jar"));
-
-            // Read a mapping as an application resource using the convention that a class named foo.bar.MyEntity is
-            // mapped by a file named foo/bar/MyEntity.hbm.xml which can be resolved as a classpath resource.
-            sources.addClass(MyEntity.class);
             //end::bootstrap-bootstrap-native-registry-MetadataSources-example[]
         }
         catch (Exception ignore) {

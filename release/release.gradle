@@ -255,6 +255,16 @@ task stageUserGuide(type: Copy) {
     into "${buildDir}/documentation/userguide"
 }
 
+
+task stageMigrationGuide(type: Copy) {
+    group 'Release'
+
+    dependsOn ':documentation:buildDocsForPublishing'
+
+    from "${project( ':documentation' ).buildDir}/asciidoc/migration-guide"
+    into "${buildDir}/documentation/migration-guide"
+}
+
 /**
  * Assembles all documentation into the {buildDir}/documentation directory.
  *

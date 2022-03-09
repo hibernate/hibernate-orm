@@ -74,6 +74,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
@@ -1420,6 +1421,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	 */
 	@Override
 	public <T> SqmExpression<T> value(T value, SqmExpression<? extends T> typeInferenceSource) {
+		if ( value instanceof SqmExpression ) {
+			return (SqmExpression<T>) value;
+		}
 		if ( criteriaValueHandlingMode == ValueHandlingMode.INLINE ) {
 			return literal( value, typeInferenceSource );
 		}
@@ -1457,6 +1461,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<T> value(T value) {
+		if ( value instanceof SqmExpression ) {
+			return (SqmExpression<T>) value;
+		}
 		if ( criteriaValueHandlingMode == ValueHandlingMode.INLINE ) {
 			return literal( value );
 		}

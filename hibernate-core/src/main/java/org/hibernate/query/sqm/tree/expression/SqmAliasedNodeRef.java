@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
@@ -17,16 +18,31 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
  * though the reference is normalized here to a positional ref
  */
 public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
+
 	private final int position;
+	// The navigable path is optionally set in case this is a reference to an attribute of a selection
+	private final NavigablePath navigablePath;
 
 	public SqmAliasedNodeRef(int position, SqmExpressible<Integer> intType, NodeBuilder criteriaBuilder) {
 		super( intType, criteriaBuilder );
 		this.position = position;
+		this.navigablePath = null;
+	}
+
+	public SqmAliasedNodeRef(
+			int position,
+			NavigablePath navigablePath,
+			SqmExpressible<? extends Integer> type,
+			NodeBuilder criteriaBuilder) {
+		super( type, criteriaBuilder );
+		this.position = position;
+		this.navigablePath = navigablePath;
 	}
 
 	private SqmAliasedNodeRef(SqmAliasedNodeRef original) {
 		super( original.getNodeType(), original.nodeBuilder() );
 		this.position = original.position;
+		this.navigablePath = original.navigablePath;
 	}
 
 	@Override
@@ -44,14 +60,24 @@ public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
 		return position;
 	}
 
+	public NavigablePath getNavigablePath() {
+		return navigablePath;
+	}
+
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		// we expect this to be handled specially in
 		// `BaseSqmToSqlAstConverter#resolveGroupOrOrderByExpression`
 		throw new UnsupportedOperationException();
 	}
+
 	@Override
 	public void appendHqlString(StringBuilder sb) {
-		sb.append( position );
+		if ( navigablePath == null ) {
+			sb.append( position );
+		}
+		else {
+			sb.append( navigablePath.getUnaliasedLocalName() );
+		}
 	}
 }

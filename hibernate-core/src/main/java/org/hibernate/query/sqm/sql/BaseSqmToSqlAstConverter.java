@@ -28,7 +28,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import jakarta.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
@@ -382,6 +381,8 @@ import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
 
 import org.jboss.logging.Logger;
 
+import jakarta.persistence.TemporalType;
+
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.MULTIPLY;
@@ -426,6 +427,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private SqmQueryPart<?> currentSqmQueryPart;
 	private boolean containsCollectionFetches;
 	private boolean trackSelectionsForGroup;
+	/*
+	 * Captures the list of SqlSelection for a navigable path.
+	 * The map will only contain entries for order by elements of a QueryGroup, that refer to an attribute name
+	 * i.e. `(select e from Entity e union all ...) order by name` where `name` is an attribute of the type `Entity`
+	 */
+	private Map<NavigablePath, Map.Entry<Integer, List<SqlSelection>>> trackedFetchSelectionsForGroup = Collections.emptyMap();
 
 	private final Map<String, PredicateCollector> collectionFilterPredicates = new HashMap<>();
 	private List<Map.Entry<OrderByFragment, TableGroup>> orderByFragments;
@@ -1610,8 +1617,27 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				newQueryParts
 		);
 
+		final Map<NavigablePath, Map.Entry<Integer, List<SqlSelection>>> originalTrackedFetchSelectionsForGroup = this.trackedFetchSelectionsForGroup;
 		if ( queryGroup.getOrderByClause() != null && queryGroup.getOrderByClause().hasPositionalSortItem() ) {
 			trackSelectionsForGroup = true;
+			// Find the order by elements which refer to attributes of the selections
+			// and register the navigable paths so that a list of SqlSelection is tracked for the fetch
+			Map<NavigablePath, Map.Entry<Integer, List<SqlSelection>>> trackedFetchSelectionsForGroup = null;
+			for ( SqmSortSpecification sortSpecification : queryGroup.getOrderByClause().getSortSpecifications() ) {
+				if ( sortSpecification.getExpression() instanceof SqmAliasedNodeRef ) {
+					final SqmAliasedNodeRef nodeRef = (SqmAliasedNodeRef) sortSpecification.getExpression();
+					if ( nodeRef.getNavigablePath() != null ) {
+						if ( trackedFetchSelectionsForGroup == null ) {
+							trackedFetchSelectionsForGroup = new HashMap<>();
+						}
+						trackedFetchSelectionsForGroup.put( nodeRef.getNavigablePath(), new AbstractMap.SimpleEntry<>( nodeRef.getPosition() - 1, new ArrayList<>() ) );
+					}
+				}
+			}
+
+			this.trackedFetchSelectionsForGroup = trackedFetchSelectionsForGroup == null
+					? Collections.emptyMap()
+					: trackedFetchSelectionsForGroup;
 		}
 
 		final SqlAstQueryPartProcessingStateImpl processingState = new SqlAstQueryPartProcessingStateImpl(
@@ -1638,6 +1664,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			visitOrderByOffsetAndFetch( queryGroup, group );
 
 			trackSelectionsForGroup = false;
+			trackedFetchSelectionsForGroup = originalTrackedFetchSelectionsForGroup;
 			for ( int i = 1; i < size; i++ ) {
 				newQueryParts.add( visitQueryPart( queryParts.get( i ) ) );
 			}
@@ -1960,9 +1987,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	protected Expression resolveGroupOrOrderByExpression(SqmExpression<?> groupByClauseExpression) {
 		final int sqmPosition;
+		final NavigablePath path;
 		if ( groupByClauseExpression instanceof SqmAliasedNodeRef ) {
-			final int aliasedNodeOrdinal = ( (SqmAliasedNodeRef) groupByClauseExpression ).getPosition();
+			final SqmAliasedNodeRef aliasedNodeRef = (SqmAliasedNodeRef) groupByClauseExpression;
+			final int aliasedNodeOrdinal = aliasedNodeRef.getPosition();
 			sqmPosition = aliasedNodeOrdinal - 1;
+			path = aliasedNodeRef.getNavigablePath();
 		}
 		else if ( statement.getQuerySource() == SqmQuerySource.CRITERIA ) {
 			// In JPA Criteria we could be using the same expression object for the group/order by and select item
@@ -1976,12 +2006,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// or force rendering the parameter as literal instead so that the database can see the grouping is fine
 			final SqmQuerySpec<?> querySpec = currentSqmQueryPart.getFirstQuerySpec();
 			sqmPosition = indexOfExpression( querySpec.getSelectClause().getSelections(), groupByClauseExpression );
+			path = null;
 		}
 		else {
 			sqmPosition = -1;
+			path = null;
 		}
 		if ( sqmPosition != -1 ) {
-			final List<SqlSelection> selections = currentSqlSelectionCollector().getSelections( sqmPosition );
+			final List<SqlSelection> selections;
+			if ( path == null ) {
+				selections = currentSqlSelectionCollector().getSelections( sqmPosition );
+			}
+			else {
+				selections = trackedFetchSelectionsForGroup.get( path ).getValue();
+			}
 			assert selections != null : String.format( Locale.ROOT, "No SqlSelections for SQM position `%s`", sqmPosition );
 			final List<Expression> expressions = new ArrayList<>( selections.size() );
 			OUTER: for ( int i = 0; i < selections.size(); i++ ) {
@@ -6255,14 +6293,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public LikePredicate visitLikePredicate(SqmLikePredicate predicate) {
-		final Expression escapeExpression = predicate.getEscapeCharacter() == null
-				? null
-				: (Expression) predicate.getEscapeCharacter().accept( this );
-
 		return new LikePredicate(
-				(Expression) predicate.getMatchExpression().accept( this ),
-				(Expression) predicate.getPattern().accept( this ),
-				escapeExpression,
+				visitWithInferredType( predicate.getMatchExpression(), predicate.getPattern() ),
+				visitWithInferredType( predicate.getPattern(), predicate.getMatchExpression() ),
+				predicate.getEscapeCharacter() == null
+						? null
+						: visitWithInferredType( predicate.getEscapeCharacter(), predicate.getMatchExpression() ),
 				predicate.isNegated(),
 				predicate.isCaseSensitive(),
 				getBooleanType()
@@ -6483,6 +6519,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	public void addFetch(List<Fetch> fetches, FetchParent fetchParent, Fetchable fetchable, Boolean isKeyFetchable) {
 		final NavigablePath resolvedNavigablePath = fetchParent.resolveNavigablePath( fetchable );
+		final Map.Entry<Integer, List<SqlSelection>> sqlSelectionsToTrack = trackedFetchSelectionsForGroup.get( resolvedNavigablePath );
+		final int sqlSelectionStartIndexForFetch;
+		if ( sqlSelectionsToTrack != null ) {
+			final List<SqlSelection> selections = currentSqlSelectionCollector().getSelections( sqlSelectionsToTrack.getKey() );
+			sqlSelectionStartIndexForFetch = selections.size();
+		}
+		else {
+			sqlSelectionStartIndexForFetch = -1;
+		}
 
 		final String alias;
 		FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
@@ -6626,6 +6671,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					joined,
 					alias
 			);
+
+			if ( sqlSelectionsToTrack != null ) {
+				final List<SqlSelection> selections = currentSqlSelectionCollector().getSelections( sqlSelectionsToTrack.getKey() );
+				sqlSelectionsToTrack.getValue().addAll( selections.subList( sqlSelectionStartIndexForFetch, selections.size() ) );
+			}
 
 			if ( fetch != null ) {
 				if ( fetch.getTiming() == FetchTiming.IMMEDIATE && fetchable instanceof PluralAttributeMapping ) {

@@ -630,6 +630,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		//noinspection unchecked
 		final SqmQueryPart<Object> queryPart = (SqmQueryPart<Object>) children.get( 1 ).accept( this );
 		if ( children.size() > 3 ) {
+			final SqmCreationProcessingState firstProcessingState = processingStateStack.pop();
+			processingStateStack.push(
+					new SqmQuerySpecCreationProcessingStateStandardImpl(
+							processingStateStack.getCurrent(),
+							(SqmSelectQuery<?>) firstProcessingState.getProcessingQuery(),
+							this
+					)
+			);
 			visitQueryOrder( queryPart, (HqlParser.QueryOrderContext) children.get( 3 ) );
 		}
 		return queryPart;
@@ -660,6 +668,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			final HqlParser.OrderedQueryContext simpleQueryCtx =
 					(HqlParser.OrderedQueryContext) children.get( i + 1 );
 			final List<SqmQueryPart<Object>> queryParts;
+			processingStateStack.push(
+					new SqmQuerySpecCreationProcessingStateStandardImpl(
+							processingStateStack.getCurrent(),
+							(SqmSelectQuery<?>) firstProcessingState.getProcessingQuery(),
+							this
+					)
+			);
 			if ( queryGroup.getSetOperator() == null || queryGroup.getSetOperator() == operator ) {
 				queryGroup.setSetOperator( operator );
 				queryParts = queryGroup.queryParts();
@@ -677,13 +692,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 			final SqmQueryPart<Object> queryPart;
 			try {
-				processingStateStack.push(
-						new SqmQuerySpecCreationProcessingStateStandardImpl(
-								processingStateStack.getCurrent(),
-								(SqmSelectQuery<?>) firstProcessingState.getProcessingQuery(),
-								this
-						)
-				);
 				final List<ParseTree> subChildren = simpleQueryCtx.children;
 				if ( subChildren.get( 0 ) instanceof HqlParser.QueryContext ) {
 					final SqmQuerySpec<Object> querySpec = new SqmQuerySpec<>( creationContext.getNodeBuilder() );
@@ -1076,6 +1084,18 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private SqmExpression<?> resolveOrderByOrGroupByExpression(ParseTree child, boolean definedCollate) {
+		final SqmCreationProcessingState processingState = getCurrentProcessingState();
+		final SqmQuery<?> processingQuery = processingState.getProcessingQuery();
+		final SqmQueryPart<?> queryPart;
+		if ( processingQuery instanceof SqmInsertSelectStatement<?> ) {
+			queryPart = ( (SqmInsertSelectStatement<?>) processingQuery ).getSelectQueryPart();
+		}
+		else if ( processingQuery instanceof SqmSelectQuery<?> ) {
+			queryPart = ( (SqmSelectQuery<?>) processingQuery ).getQueryPart();
+		}
+		else {
+			queryPart = null;
+		}
 		if ( child instanceof TerminalNode ) {
 			if ( definedCollate ) {
 				// This is syntactically disallowed
@@ -1085,9 +1105,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			final int position = Integer.parseInt( child.getText() );
 
 			// make sure this selection exists
-			final SqmAliasedNode<?> nodeByPosition = getCurrentProcessingState()
-					.getPathRegistry()
-					.findAliasedNodeByPosition( position );
+			final SqmAliasedNode<?> nodeByPosition;
+			if ( queryPart instanceof SqmQueryGroup<?> ) {
+				final List<SqmSelection<?>> selections = queryPart.getFirstQuerySpec().getSelectClause().getSelections();
+				nodeByPosition = position <= selections.size() ? selections.get( position - 1 ) : null;
+			}
+			else {
+				nodeByPosition = processingState.getPathRegistry().findAliasedNodeByPosition( position );
+			}
 			if ( nodeByPosition == null ) {
 				throw new ParsingException( "Numeric literal '" + position + "' used in group-by does not match a registered select-item" );
 			}
@@ -1096,34 +1121,93 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		else if ( child instanceof HqlParser.IdentifierContext ) {
 			final String identifierText = visitIdentifier( (HqlParser.IdentifierContext) child );
-
-			final Integer correspondingPosition = getCurrentProcessingState()
-					.getPathRegistry()
-					.findAliasedNodePosition( identifierText );
-			if ( correspondingPosition != null ) {
-				if ( definedCollate ) {
-					// This is syntactically disallowed
-					throw new ParsingException( "COLLATE is not allowed for alias based order-by or group-by items" );
+			if ( queryPart instanceof SqmQueryGroup<?> ) {
+				// If the current query part is a query group, check if the text matches
+				// an attribute name of one of the selected SqmFrom elements or the path source name of a SqmPath
+				SqmFrom<?, ?> found = null;
+				int sqmPosition = 0;
+				final List<SqmSelection<?>> selections = queryPart.getFirstQuerySpec().getSelectClause().getSelections();
+				for ( int i = 0; i < selections.size(); i++ ) {
+					final SqmSelection<?> sqmSelection = selections.get( i );
+					if ( identifierText.equals( sqmSelection.getAlias() ) ) {
+						return new SqmAliasedNodeRef(
+								i + 1,
+								creationContext.getNodeBuilder().getIntegerType(),
+								creationContext.getNodeBuilder()
+						);
+					}
+					final SqmSelectableNode<?> selectableNode = sqmSelection.getSelectableNode();
+					if ( selectableNode instanceof SqmFrom<?, ?> ) {
+						final SqmFrom<?, ?> fromElement = (SqmFrom<?, ?>) selectableNode;
+						final SqmPathSource<?> pathSource = fromElement.getReferencedPathSource();
+						if ( pathSource.findSubPathSource( identifierText ) != null ) {
+							if ( sqmPosition != 0 ) {
+								throw new IllegalStateException(
+										"Multiple from-elements expose unqualified attribute : " + identifierText );
+							}
+							found = fromElement;
+							sqmPosition = i + 1;
+						}
+					}
+					else if ( selectableNode instanceof SqmPath<?> ) {
+						final SqmPath<?> path = (SqmPath<?>) selectableNode;
+						if ( identifierText.equals( path.getReferencedPathSource().getPathName() ) ) {
+							if ( sqmPosition != 0 ) {
+								throw new IllegalStateException(
+										"Multiple from-elements expose unqualified attribute : " + identifierText );
+							}
+							sqmPosition = i + 1;
+						}
+					}
 				}
-				return new SqmAliasedNodeRef( correspondingPosition, integerDomainType, creationContext.getNodeBuilder() );
-			}
-
-			final SqmFrom<?, ?> sqmFrom = getCurrentProcessingState().getPathRegistry().findFromByAlias(
-					identifierText,
-					true
-			);
-			if ( sqmFrom != null ) {
-				if ( definedCollate ) {
-					// This is syntactically disallowed
-					throw new ParsingException( "COLLATE is not allowed for alias based order-by or group-by items" );
+				if ( found != null ) {
+					return new SqmAliasedNodeRef(
+							sqmPosition,
+							found.get( identifierText ).getNavigablePath(),
+							creationContext.getNodeBuilder().getIntegerType(),
+							creationContext.getNodeBuilder()
+					);
 				}
-				// this will group-by all of the sub-parts in the from-element's model part
-				return sqmFrom;
+				else if ( sqmPosition != 0 ) {
+					return new SqmAliasedNodeRef(
+							sqmPosition,
+							creationContext.getNodeBuilder().getIntegerType(),
+							creationContext.getNodeBuilder()
+					);
+				}
 			}
+			else {
+				final Integer correspondingPosition = processingState.getPathRegistry()
+						.findAliasedNodePosition( identifierText );
+				if ( correspondingPosition != null ) {
+					if ( definedCollate ) {
+						// This is syntactically disallowed
+						throw new ParsingException( "COLLATE is not allowed for alias based order-by or group-by items" );
+					}
+					return new SqmAliasedNodeRef(
+							correspondingPosition,
+							integerDomainType,
+							creationContext.getNodeBuilder()
+					);
+				}
 
-			final DotIdentifierConsumer dotIdentifierConsumer = dotIdentifierConsumerStack.getCurrent();
-			dotIdentifierConsumer.consumeIdentifier( identifierText, true, true );
-			return (SqmExpression<?>) dotIdentifierConsumer.getConsumedPart();
+				final SqmFrom<?, ?> sqmFrom = processingState.getPathRegistry().findFromByAlias(
+						identifierText,
+						true
+				);
+				if ( sqmFrom != null ) {
+					if ( definedCollate ) {
+						// This is syntactically disallowed
+						throw new ParsingException( "COLLATE is not allowed for alias based order-by or group-by items" );
+					}
+					// this will group-by all of the sub-parts in the from-element's model part
+					return sqmFrom;
+				}
+
+				final DotIdentifierConsumer dotIdentifierConsumer = dotIdentifierConsumerStack.getCurrent();
+				dotIdentifierConsumer.consumeIdentifier( identifierText, true, true );
+				return (SqmExpression<?>) dotIdentifierConsumer.getConsumedPart();
+			}
 		}
 
 		return (SqmExpression<?>) child.accept( this );

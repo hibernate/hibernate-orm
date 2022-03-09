@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+
 import jakarta.persistence.Access;
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.ConstraintMode;
@@ -125,6 +127,9 @@ public class EntityBinder {
 	//		atm we use both from here; HBM binding solely uses InFlightMetadataCollector.EntityTableXref
 	private final java.util.Map<String, Join> secondaryTables = new HashMap<>();
 	private final java.util.Map<String, Object> secondaryTableJoins = new HashMap<>();
+	private final java.util.Map<String, Join> secondaryTablesFromAnnotation = new HashMap<>();
+	private final java.util.Map<String, Object> secondaryTableFromAnnotationJoins = new HashMap<>();
+
 	private final List<Filter> filters = new ArrayList<>();
 	private boolean ignoreIdAnnotations;
 	private AccessType propertyAccessType = AccessType.DEFAULT;
@@ -813,13 +818,28 @@ public class EntityBinder {
 		 * Those operations has to be done after the id definition of the persistence class.
 		 * ie after the properties parsing
 		 */
-		Iterator<Join> joins = secondaryTables.values().iterator();
 		Iterator<Object> joinColumns = secondaryTableJoins.values().iterator();
 
-		while ( joins.hasNext() ) {
-			Object uncastedColumn = joinColumns.next();
-			Join join = joins.next();
-			createPrimaryColumnsToSecondaryTable( uncastedColumn, propertyHolder, join );
+		for ( Map.Entry<String, Join> entrySet : secondaryTables.entrySet() ) {
+			if ( !secondaryTablesFromAnnotation.containsKey( entrySet.getKey() ) ) {
+				Object uncastedColumn = joinColumns.next();
+				createPrimaryColumnsToSecondaryTable( uncastedColumn, propertyHolder, entrySet.getValue() );
+			}
+		}
+	}
+
+	public void finalSecondaryTableFromAnnotationBinding(PropertyHolder propertyHolder) {
+		/*
+		 * Those operations have to be done before the end of the FK second pass processing in order
+		 * to find the join columns belonging to secondary tables
+		 */
+		Iterator<Object> joinColumns = secondaryTableFromAnnotationJoins.values().iterator();
+
+		for ( Map.Entry<String, Join> entrySet : secondaryTables.entrySet() ) {
+			if ( secondaryTablesFromAnnotation.containsKey( entrySet.getKey() ) ) {
+				Object uncastedColumn = joinColumns.next();
+				createPrimaryColumnsToSecondaryTable( uncastedColumn, propertyHolder, entrySet.getValue() );
+			}
 		}
 	}
 
@@ -1106,8 +1126,15 @@ public class EntityBinder {
 			createPrimaryColumnsToSecondaryTable( joinColumns, propertyHolder, join );
 		}
 		else {
-			secondaryTables.put( table.getQuotedName(), join );
-			secondaryTableJoins.put( table.getQuotedName(), joinColumns );
+			final String quotedName = table.getQuotedName();
+			if ( secondaryTable != null ) {
+				secondaryTablesFromAnnotation.put( quotedName, join );
+				secondaryTableFromAnnotationJoins.put( quotedName, joinColumns );
+			}
+			else {
+				secondaryTableJoins.put( quotedName, joinColumns );
+			}
+			secondaryTables.put( quotedName, join );
 		}
 
 		return join;

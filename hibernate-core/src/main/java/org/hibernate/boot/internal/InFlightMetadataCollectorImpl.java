@@ -69,6 +69,7 @@ import org.hibernate.cfg.PropertyData;
 import org.hibernate.cfg.QuerySecondPass;
 import org.hibernate.cfg.RecoverableException;
 import org.hibernate.cfg.SecondPass;
+import org.hibernate.cfg.SecondaryTableFromAnnotationSecondPass;
 import org.hibernate.cfg.SecondaryTableSecondPass;
 import org.hibernate.cfg.SetBasicValueTypeSecondPass;
 import org.hibernate.cfg.UniqueConstraintHolder;
@@ -1591,6 +1592,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private ArrayList<FkSecondPass> fkSecondPassList;
 	private ArrayList<CreateKeySecondPass> createKeySecondPasList;
 	private ArrayList<SecondaryTableSecondPass> secondaryTableSecondPassList;
+	private ArrayList<SecondaryTableFromAnnotationSecondPass> secondaryTableFromAnnotationSecondPassesList;
 	private ArrayList<QuerySecondPass> querySecondPassList;
 	private ArrayList<ImplicitColumnNamingSecondPass> implicitColumnNamingSecondPassList;
 
@@ -1617,6 +1619,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 		else if ( secondPass instanceof SecondaryTableSecondPass ) {
 			addSecondaryTableSecondPass( (SecondaryTableSecondPass) secondPass, onTopOfTheQueue );
+		}
+		else if ( secondPass instanceof SecondaryTableFromAnnotationSecondPass ) {
+			addSecondaryTableFromAnnotationSecondPass(
+					(SecondaryTableFromAnnotationSecondPass) secondPass,
+					onTopOfTheQueue
+			);
 		}
 		else if ( secondPass instanceof QuerySecondPass ) {
 			addQuerySecondPass( (QuerySecondPass) secondPass, onTopOfTheQueue );
@@ -1675,6 +1683,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			secondaryTableSecondPassList = new ArrayList<>();
 		}
 		addSecondPass( secondPass, secondaryTableSecondPassList, onTopOfTheQueue );
+	}
+
+	private void addSecondaryTableFromAnnotationSecondPass(SecondaryTableFromAnnotationSecondPass secondPass, boolean onTopOfTheQueue){
+		if ( secondaryTableFromAnnotationSecondPassesList == null ) {
+			secondaryTableFromAnnotationSecondPassesList = new ArrayList<>();
+		}
+		addSecondPass( secondPass, secondaryTableFromAnnotationSecondPassesList, onTopOfTheQueue );
 	}
 
 	private void addQuerySecondPass(QuerySecondPass secondPass, boolean onTopOfTheQueue) {
@@ -1765,6 +1780,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	private void processFkSecondPassesInOrder() {
 		if ( fkSecondPassList == null || fkSecondPassList.isEmpty() ) {
+			processSecondPasses( secondaryTableFromAnnotationSecondPassesList );
 			return;
 		}
 
@@ -1797,6 +1813,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		for ( FkSecondPass sp : orderedFkSecondPasses ) {
 			sp.doSecondPass( getEntityBindingMap() );
 		}
+
+		processSecondPasses( secondaryTableFromAnnotationSecondPassesList );
 
 		processEndOfQueue( endOfQueueFkSecondPasses );
 

@@ -3,6 +3,33 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.0.0.CR2 (March 09, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32033
+
+** Bug
+    * [HHH-15084] - JpaCompliantLifecycleStrategy uses deprecated BeanManager method that's gone in CDI 4.0
+    * [HHH-15082] - JDBC Statement leaks after exceptions other than SQLException during insert/update/...
+    * [HHH-15073] - Criteria query built from JPA metamodel throws PersistenceException: Specified result type [long] did not match Query selection type [java.lang.Long]
+    * [HHH-15071] - "this.anticipatedType" is null
+    * [HHH-15068] - "CDI BeanManager not (yet) ready to use" when refferring to a user type by name and using an ExtendedBeanManager
+    * [HHH-15057] - JdbcSQLException: NULL not allowed for column "BOOKS_ORDER" when inserting into many-to-many list
+    * [HHH-15054] - NPE on cascade-delete for @OneToMany(mappedBy = ...) association
+    * [HHH-14932] - Spatial support for PostgreSQL 10+ uses invalid WKB dialect
+    * [HHH-13694] - Numeric Overflow Exception when retrieving the Meta-data for sequences from Oracle Database
+    * [HHH-10463] - Coalesce does not handle NULL values properly for PostgreSQL 
+
+** Improvement
+    * [HHH-15106] -  fk() SQM function
+    * [HHH-15099] - Improve handling of associations marked with @NotFound
+    * [HHH-15094] - Handle http://hibernate.org and https://* for all DTDs in LocalXmlResourceResolver
+
+** Task
+    * [HHH-15114] - Clean up deprecations
+    * [HHH-14604] - Sign published artifacts
+
+
 Changes in 6.0.0.CR1 (January 27, 2022)
 ------------------------------------------------------------------------------------------------------------------------
 

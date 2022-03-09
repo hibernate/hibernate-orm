@@ -8,7 +8,6 @@
 apply plugin: 'signing'
 apply from: rootProject.file( 'gradle/java-module.gradle' )
 apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
-apply plugin: 'org.hibernate.orm.build.post-collector'
 
 configurations {
 	javadocSources {

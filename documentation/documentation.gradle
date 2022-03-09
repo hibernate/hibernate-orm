@@ -14,13 +14,28 @@ plugins {
 
 apply from: rootProject.file( 'gradle/java-module.gradle' )
 apply plugin: 'org.hibernate.matrix-test'
+apply plugin: 'org.hibernate.orm.build.reports'
 
 tasks.build.dependsOn 'buildDocs'
 defaultTasks 'buildDocs'
 
-
 dependencies {
 	ext.pressgangVersion = '3.0.0'
+
+	reportAggregation project( ':hibernate-agroal' )
+	reportAggregation project( ':hibernate-c3p0' )
+	reportAggregation project( ':hibernate-core' )
+	reportAggregation project(':hibernate-envers')
+	reportAggregation project(':hibernate-graalvm')
+	reportAggregation project(':hibernate-hikaricp')
+	reportAggregation project(':hibernate-jcache')
+	reportAggregation project(':hibernate-micrometer')
+	reportAggregation project(':hibernate-proxool')
+	reportAggregation project(':hibernate-spatial')
+	reportAggregation project(':hibernate-vibur')
+	reportAggregation project(':hibernate-ant')
+	reportAggregation project(':hibernate-enhance-maven-plugin')
+	reportAggregation project(':hibernate-jpamodelgen')
 
 	implementation project( ':hibernate-core' )
 

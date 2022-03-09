@@ -9,13 +9,16 @@ package org.hibernate.orm.post;
 import javax.inject.Inject;
 
 import org.gradle.api.DefaultTask;
-import org.gradle.api.file.Directory;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.InputDirectory;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
+
+import static org.hibernate.orm.post.ReportGenerationPlugin.CONFIG_NAME;
+import static org.hibernate.orm.post.ReportGenerationPlugin.TASK_GROUP_NAME;
 
 /**
  * Task for creating Jandex Index within Gradle UP-TO-DATE handling
@@ -28,17 +31,24 @@ public abstract class IndexerTask extends DefaultTask {
 	@Inject
 	public IndexerTask(IndexManager indexManager) {
 		this.indexManager = indexManager;
+		setGroup( TASK_GROUP_NAME );
+		setDescription( "Builds a Jandex Index from the artifacts attached to the `" + CONFIG_NAME + "` Configuration" );
 	}
 
-	@InputDirectory
+	@InputFiles
 	@SkipWhenEmpty
-	public Provider<Directory> getClassesDirectory() {
-		return indexManager.getClassesDirectoryReferenceAccess();
+	public Configuration getArtifactsToProcess() {
+		return indexManager.getArtifactsToProcess();
 	}
 
 	@OutputFile
 	public Provider<RegularFile> getIndexFileReference() {
 		return indexManager.getIndexFileReferenceAccess();
+	}
+
+	@OutputFile
+	public Provider<RegularFile> getPackageFileReferenceAccess() {
+		return indexManager.getPackageFileReferenceAccess();
 	}
 
 	@TaskAction

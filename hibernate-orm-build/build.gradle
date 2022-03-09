@@ -43,9 +43,9 @@ gradlePlugin {
 			id = 'org.hibernate.orm.jakarta-publish'
 			implementationClass = 'org.hibernate.orm.jakarta.JakartaPublishingPlugin'
 		}
-		collectorPlugin {
-			id = 'org.hibernate.orm.build.post-collector'
-			implementationClass = 'org.hibernate.orm.post.CollectorPlugin'
+		reportsPlugin {
+			id = 'org.hibernate.orm.build.reports'
+			implementationClass = 'org.hibernate.orm.post.ReportGenerationPlugin'
 		}
 	}
 }

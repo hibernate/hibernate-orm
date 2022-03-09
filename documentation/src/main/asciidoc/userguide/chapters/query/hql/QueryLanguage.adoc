@@ -1009,14 +1009,17 @@ Next, functions for working with numeric values:
 | `greatest()` | Return the largest of the given arguments | `greatest(x, y, z)` | Very common in SQL dialects
 |===
 
-Finally, functions that evaluate the id, version, or natural id of an entity:
+Finally, functions that evaluate the id, version, or natural id of an entity and the key-column of
+a to-one foreign-key:
 
+[[hql-model-functions]]
 |===
 | HQL Function | Purpose
 
 | `id()` | The value of the entity `@Id` attribute.
 | `version()` | The value of the entity `@Version` attribute.
 | `naturalid()` | The value of the entity `@NaturalId` attribute.
+| `fk()` | The value of the key-column of a `@ManyToOne` (or logical `@ManyToOne`) attribute.  Mainly useful with <<associations-not-found,`@NotFound` mappings>>
 |===
 
 [[hql-user-defined-functions]]

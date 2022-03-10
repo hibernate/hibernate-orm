@@ -232,10 +232,17 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
+		final NavigablePath resultNavigablePath;
+		if ( selectableMapping == keySide.getModelPart() ) {
+			resultNavigablePath = navigablePath.append( ForeignKeyDescriptor.PART_NAME );
+		}
+		else {
+			resultNavigablePath = navigablePath.append( ForeignKeyDescriptor.TARGET_PART_NAME );
+		}
 		final TableReference tableReference;
 		try {
 			tableReference = tableGroup.resolveTableReference(
-					navigablePath.append( getTargetPart().getFetchableName() ),
+					resultNavigablePath,
 					selectableMapping.getContainingTableExpression()
 			);
 		}

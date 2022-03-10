@@ -44,6 +44,7 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValueMapping {
 	}
 
 	String PART_NAME = "{fk}";
+	String TARGET_PART_NAME = "{fk-target}";
 
 	String getKeyTable();
 

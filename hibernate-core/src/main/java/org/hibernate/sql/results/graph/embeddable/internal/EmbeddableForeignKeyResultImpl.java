@@ -66,7 +66,8 @@ public class EmbeddableForeignKeyResultImpl<T>
 			final ToOneAttributeMapping toOne = (ToOneAttributeMapping) fetchable;
 			shouldSelect = selected && !creationState.isAssociationKeyVisited(
 					toOne.getForeignKeyDescriptor().getAssociationKey()
-			) && !ForeignKeyDescriptor.PART_NAME.equals( getNavigablePath().getLocalName() );
+			) && !ForeignKeyDescriptor.PART_NAME.equals( getNavigablePath().getLocalName() )
+					&& !ForeignKeyDescriptor.TARGET_PART_NAME.equals( getNavigablePath().getLocalName() );
 		}
 		else {
 			shouldSelect = selected;

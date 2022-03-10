@@ -108,8 +108,9 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		);
 
 		// We never want to create empty composites for the FK target or PK, otherwise collections would break
-		createEmptyCompositesEnabled = !ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
-				&& !EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( navigablePath.getLocalName() )
+		createEmptyCompositesEnabled = !ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getUnaliasedLocalName() )
+				&& !ForeignKeyDescriptor.TARGET_PART_NAME.equals( navigablePath.getUnaliasedLocalName() )
+				&& !EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( navigablePath.getUnaliasedLocalName() )
 				&& embeddableTypeDescriptor.isCreateEmptyCompositesEnabled();
 
 		sessionFactory = creationState.getSqlAstCreationContext().getSessionFactory();
@@ -231,7 +232,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		// so we can't use the fetch parent access in that case.
 		if ( fetchParentAccess != null && embedded instanceof VirtualModelPart
 				&& !EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( embedded.getFetchableName() )
-				&& !ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getUnaliasedLocalName() ) ) {
+				&& !ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getUnaliasedLocalName() )
+				&& !ForeignKeyDescriptor.TARGET_PART_NAME.equals( navigablePath.getUnaliasedLocalName() ) ) {
 			fetchParentAccess.resolveInstance( processingState );
 			compositeInstance = fetchParentAccess.getInitializedInstance();
 		}
@@ -253,7 +255,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 	private void extractRowState(RowProcessingState processingState) {
 		stateAllNull = true;
-		final boolean isKey = ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
+		final boolean isKey = ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getUnaliasedLocalName() )
+				|| ForeignKeyDescriptor.TARGET_PART_NAME.equals( navigablePath.getUnaliasedLocalName() )
 				|| EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( embedded.getFetchableName() );
 		for ( int i = 0; i < assemblers.size(); i++ ) {
 			final DomainResultAssembler<?> assembler = assemblers.get( i );

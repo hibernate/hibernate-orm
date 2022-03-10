@@ -15,7 +15,6 @@ import java.util.Map;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -69,7 +68,6 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public abstract class AbstractCteMutationHandler extends AbstractMutationHandler {
 
-	public static final String DML_RESULT_TABLE_NAME_PREFIX = "dml_cte_";
 	public static final String CTE_TABLE_IDENTIFIER = "id";
 
 	private final SqmCteTable cteTable;
@@ -126,7 +124,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 				executionContext.getQueryParameterBindings(),
 				factory
 		);
-		final Map<SqmParameter, List<JdbcParameter>> parameterResolutions;
+		final Map<SqmParameter<?>, List<JdbcParameter>> parameterResolutions;
 		if ( domainParameterXref.getSqmParameterCount() == 0 ) {
 			parameterResolutions = Collections.emptyMap();
 		}
@@ -148,7 +146,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 				MatchingIdSelectionHelper.generateMatchingIdSelectStatement(
 						entityDescriptor,
 						sqmMutationStatement,
-						false,
+						true,
 						restriction,
 						sqmConverter,
 						executionContext,
@@ -242,15 +240,41 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 			CteStatement idSelectCte,
 			ModelPart fkModelPart,
 			SessionFactoryImplementor factory) {
+		final Junction predicate = new Junction( Junction.Nature.CONJUNCTION );
+		final QuerySpec subQuery = createIdSubQuery(
+				idSelectCte,
+				fkModelPart,
+				factory
+		);
+		final Expression lhs;
+		if ( lhsExpressions.size() == 1 ) {
+			lhs = lhsExpressions.get( 0 );
+		}
+		else {
+			lhs = new SqlTuple( lhsExpressions, null );
+		}
+		predicate.add(
+				new InSubQueryPredicate(
+						lhs,
+						subQuery,
+						false
+				)
+		);
+		return predicate;
+	}
+
+	protected QuerySpec createIdSubQuery(
+			CteStatement idSelectCte,
+			ModelPart fkModelPart,
+			SessionFactoryImplementor factory) {
 		final NamedTableReference idSelectTableReference = new NamedTableReference(
 				idSelectCte.getCteTable().getTableExpression(),
 				CTE_TABLE_IDENTIFIER,
 				false,
 				factory
 		);
-		final Junction predicate = new Junction( Junction.Nature.CONJUNCTION );
 		final List<CteColumn> cteColumns = idSelectCte.getCteTable().getCteColumns();
-		final int size = lhsExpressions.size();
+		final int size = cteColumns.size();
 		final QuerySpec subQuery = new QuerySpec( false, 1 );
 		subQuery.getFromClause().addRoot( new CteTableGroup( idSelectTableReference ) );
 		final SelectClause subQuerySelectClause = subQuery.getSelectClause();
@@ -289,28 +313,14 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 					}
 			);
 		}
-		final Expression lhs;
-		if ( lhsExpressions.size() == 1 ) {
-			lhs = lhsExpressions.get( 0 );
-		}
-		else {
-			lhs = new SqlTuple( lhsExpressions, null );
-		}
-		predicate.add(
-				new InSubQueryPredicate(
-						lhs,
-						subQuery,
-						false
-				)
-		);
-		return predicate;
+		return subQuery;
 	}
 
 	protected abstract void addDmlCtes(
 			CteContainer statement,
 			CteStatement idSelectCte,
 			MultiTableSqmMutationConverter sqmConverter,
-			Map<SqmParameter, List<JdbcParameter>> parameterResolutions,
+			Map<SqmParameter<?>, List<JdbcParameter>> parameterResolutions,
 			SessionFactoryImplementor factory);
 
 
@@ -330,15 +340,5 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 		}
 	}
 
-	protected String getCteTableName(String tableExpression) {
-		if ( Identifier.isQuoted( tableExpression ) ) {
-			tableExpression = unquote( tableExpression );
-			return DML_RESULT_TABLE_NAME_PREFIX + tableExpression;
-		}
-		return DML_RESULT_TABLE_NAME_PREFIX + tableExpression;
-	}
-
-	private String unquote(String tableExpression) {
-		return tableExpression.substring( 1, tableExpression.length() - 1 );
-	}
+	protected abstract String getCteTableName(String tableExpression);
 }

@@ -7,18 +7,20 @@
 package org.hibernate.query.sqm.mutation.internal.cte;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.results.TableGroupImpl;
+import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.internal.UpdateHandler;
@@ -26,18 +28,28 @@ import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.cte.CteTable;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
 /**
  *
@@ -45,9 +57,12 @@ import org.hibernate.sql.ast.tree.update.UpdateStatement;
  */
 public class CteUpdateHandler extends AbstractCteMutationHandler implements UpdateHandler {
 
+	private static final String UPDATE_RESULT_TABLE_NAME_PREFIX = "update_cte_";
+	private static final String INSERT_RESULT_TABLE_NAME_PREFIX = "insert_cte_";
+
 	public CteUpdateHandler(
 			SqmCteTable cteTable,
-			SqmUpdateStatement sqmStatement,
+			SqmUpdateStatement<?> sqmStatement,
 			DomainParameterXref domainParameterXref,
 			CteMutationStrategy strategy,
 			SessionFactoryImplementor sessionFactory) {
@@ -59,13 +74,13 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 			CteContainer statement,
 			CteStatement idSelectCte,
 			MultiTableSqmMutationConverter sqmConverter,
-			Map<SqmParameter, List<JdbcParameter>> parameterResolutions,
+			Map<SqmParameter<?>, List<JdbcParameter>> parameterResolutions,
 			SessionFactoryImplementor factory) {
 		final TableGroup updatingTableGroup = sqmConverter.getMutatingTableGroup();
 		final SqmUpdateStatement<?> updateStatement = (SqmUpdateStatement<?>) getSqmDeleteOrUpdateStatement();
 		final EntityMappingType entityDescriptor = getEntityDescriptor();
 
-		final EntityPersister entityPersister = entityDescriptor.getEntityPersister();
+		final AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityDescriptor.getEntityPersister();
 		final String rootEntityName = entityPersister.getRootEntityName();
 		final EntityPersister rootEntityDescriptor = factory.getRuntimeMetamodels()
 				.getMappingMetamodel()
@@ -83,14 +98,12 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 		// information about the assignments
 		final SqmSetClause setClause = updateStatement.getSetClause();
 		final List<Assignment> assignments = new ArrayList<>( setClause.getAssignments().size() );
-		final Map<SqmParameter, MappingModelExpressible> paramTypeResolutions = new LinkedHashMap<>();
 
 		sqmConverter.visitSetClause(
 				setClause,
 				assignments::add,
 				(sqmParam, mappingType, jdbcParameters) -> {
 					parameterResolutions.put( sqmParam, jdbcParameters );
-					paramTypeResolutions.put( sqmParam, mappingType );
 				}
 		);
 		sqmConverter.addVersionedAssignment( assignments::add, updateStatement );
@@ -137,6 +150,111 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 				assignmentsByTable.put( assignmentTableReference, assignmentsForTable );
 			}
 			assignmentsForTable.add( assignment );
+		}
+
+		// For nullable tables we have to also generate an insert CTE
+		for (int i = 0; i < entityPersister.getTableSpan(); i++) {
+			if ( entityPersister.isNullableTable( i ) ) {
+				final String tableExpression = entityPersister.getTableName( i );
+				final TableReference updatingTableReference = updatingTableGroup.getTableReference(
+						updatingTableGroup.getNavigablePath(),
+						tableExpression,
+						true,
+						true
+				);
+				final List<Assignment> assignmentList = assignmentsByTable.get( updatingTableReference );
+				if ( assignmentList == null ) {
+					continue;
+				}
+				final CteTable dmlResultCte = new CteTable(
+						getInsertCteTableName( tableExpression ),
+						idSelectCte.getCteTable().getCteColumns(),
+						factory
+				);
+				final NamedTableReference dmlTableReference = resolveUnionTableReference(
+						updatingTableReference,
+						tableExpression
+				);
+				final NamedTableReference existsTableReference = new NamedTableReference(
+						tableExpression,
+						"dml_",
+						false,
+						factory
+				);
+				final List<ColumnReference> existsKeyColumns = new ArrayList<>( idSelectCte.getCteTable().getCteColumns().size() );
+				final String[] keyColumns = entityPersister.getKeyColumns( i );
+				entityPersister.getIdentifierMapping().forEachSelectable(
+						(selectionIndex, selectableMapping) -> {
+							existsKeyColumns.add(
+									new ColumnReference(
+											existsTableReference,
+											keyColumns[selectionIndex],
+											selectableMapping.getJdbcMapping(),
+											factory
+									)
+							);
+						}
+				);
+
+				// Copy the subquery contents into a root query
+				final QuerySpec querySpec = createIdSubQuery( idSelectCte, null, factory ).asRootQuery();
+
+				// Prepare a not exists sub-query to avoid violating constraints
+				final QuerySpec existsQuerySpec = new QuerySpec( false );
+				existsQuerySpec.getSelectClause().addSqlSelection(
+						new SqlSelectionImpl(
+								-1,
+								0,
+								new QueryLiteral<>(
+										1,
+										factory.getTypeConfiguration().getBasicTypeForJavaType( Integer.class )
+								)
+						)
+				);
+				existsQuerySpec.getFromClause().addRoot(
+						new TableGroupImpl(
+								null,
+								null,
+								existsTableReference,
+								entityPersister
+						)
+				);
+
+				existsQuerySpec.applyPredicate(
+						new ComparisonPredicate(
+								asExpression( existsKeyColumns ),
+								ComparisonOperator.EQUAL,
+								asExpression( querySpec.getSelectClause() )
+						)
+				);
+
+				querySpec.applyPredicate(
+						new ExistsPredicate(
+								existsQuerySpec,
+								true,
+								factory.getTypeConfiguration().getBasicTypeForJavaType( Boolean.class )
+						)
+				);
+
+				// Collect the target column references from the key expressions
+				final List<ColumnReference> targetColumnReferences = new ArrayList<>( existsKeyColumns );
+				// And transform assignments to target column references and selections
+				for ( Assignment assignment : assignments ) {
+					targetColumnReferences.addAll( assignment.getAssignable().getColumnReferences() );
+					querySpec.getSelectClause().addSqlSelection(
+							new SqlSelectionImpl(
+									0,
+									-1,
+									assignment.getAssignedValue()
+							)
+					);
+				}
+
+				final InsertStatement dmlStatement = new InsertStatement( dmlTableReference, existsKeyColumns );
+				dmlStatement.addTargetColumnReferences( targetColumnReferences.toArray( new ColumnReference[0] ) );
+				dmlStatement.setSourceSelectStatement( querySpec );
+				statement.addCteStatement( new CteStatement( dmlResultCte, dmlStatement ) );
+			}
 		}
 
 		getEntityDescriptor().visitConstraintOrderedTables(
@@ -202,5 +320,41 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 		}
 
 		throw new SemanticException( "Assignment referred to column of a joined association: " + columnReference );
+	}
+
+	@Override
+	protected String getCteTableName(String tableExpression) {
+		if ( Identifier.isQuoted( tableExpression ) ) {
+			tableExpression = tableExpression.substring( 1, tableExpression.length() - 1 );
+			return UPDATE_RESULT_TABLE_NAME_PREFIX + tableExpression;
+		}
+		return UPDATE_RESULT_TABLE_NAME_PREFIX + tableExpression;
+	}
+
+	protected String getInsertCteTableName(String tableExpression) {
+		if ( Identifier.isQuoted( tableExpression ) ) {
+			tableExpression = tableExpression.substring( 1, tableExpression.length() - 1 );
+			return INSERT_RESULT_TABLE_NAME_PREFIX + tableExpression;
+		}
+		return INSERT_RESULT_TABLE_NAME_PREFIX + tableExpression;
+	}
+
+	private Expression asExpression(SelectClause selectClause) {
+		final List<SqlSelection> sqlSelections = selectClause.getSqlSelections();
+		if ( sqlSelections.size() == 1 ) {
+			return sqlSelections.get( 0 ).getExpression();
+		}
+		final List<Expression> expressions = new ArrayList<>( sqlSelections.size() );
+		for ( SqlSelection sqlSelection : sqlSelections ) {
+			expressions.add( sqlSelection.getExpression() );
+		}
+		return new SqlTuple( expressions, null );
+	}
+
+	private Expression asExpression(List<ColumnReference> columnReferences) {
+		if ( columnReferences.size() == 1 ) {
+			return columnReferences.get( 0 );
+		}
+		return new SqlTuple( columnReferences, null );
 	}
 }

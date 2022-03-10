@@ -54,8 +54,8 @@ public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContain
 		this.selectClause = new SelectClause();
 	}
 
-	private QuerySpec(QuerySpec original) {
-		super( false, original );
+	private QuerySpec(QuerySpec original, boolean root) {
+		super( root, original );
 		this.fromClause = original.fromClause;
 		this.selectClause = original.selectClause;
 		this.whereClauseRestrictions = original.whereClauseRestrictions;
@@ -64,7 +64,11 @@ public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContain
 	}
 
 	public QuerySpec asSubQuery() {
-		return isRoot() ? new QuerySpec( this ) : this;
+		return isRoot() ? new QuerySpec( this, false ) : this;
+	}
+
+	public QuerySpec asRootQuery() {
+		return isRoot() ? this : new QuerySpec( this, true );
 	}
 
 	@Override

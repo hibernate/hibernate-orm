@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -40,6 +41,8 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
  */
 public class CteDeleteHandler extends AbstractCteMutationHandler implements DeleteHandler {
 
+	private static final String DELETE_RESULT_TABLE_NAME_PREFIX = "delete_cte_";
+
 	protected CteDeleteHandler(
 			SqmCteTable cteTable,
 			SqmDeleteStatement<?> sqmDeleteStatement,
@@ -54,7 +57,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 			CteContainer statement,
 			CteStatement idSelectCte,
 			MultiTableSqmMutationConverter sqmConverter,
-			Map<SqmParameter, List<JdbcParameter>> parameterResolutions,
+			Map<SqmParameter<?>, List<JdbcParameter>> parameterResolutions,
 			SessionFactoryImplementor factory) {
 		final TableGroup updatingTableGroup = sqmConverter.getMutatingTableGroup();
 		final SelectStatement idSelectStatement = (SelectStatement) idSelectCte.getCteDefinition();
@@ -177,10 +180,19 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 		);
 	}
 
+	@Override
+	protected String getCteTableName(String tableExpression) {
+		if ( Identifier.isQuoted( tableExpression ) ) {
+			tableExpression = tableExpression.substring( 1, tableExpression.length() - 1 );
+			return DELETE_RESULT_TABLE_NAME_PREFIX + tableExpression;
+		}
+		return DELETE_RESULT_TABLE_NAME_PREFIX + tableExpression;
+	}
+
 	protected String getCteTableName(PluralAttributeMapping pluralAttribute) {
 		final String hibernateEntityName = pluralAttribute.findContainingEntityMapping().getEntityName();
 		final String jpaEntityName = getSessionFactory().getJpaMetamodel().entity( hibernateEntityName ).getName();
-		return DML_RESULT_TABLE_NAME_PREFIX + jpaEntityName + "_" + pluralAttribute.getRootPathName().substring(
+		return DELETE_RESULT_TABLE_NAME_PREFIX + jpaEntityName + "_" + pluralAttribute.getRootPathName().substring(
 				hibernateEntityName.length() + 1
 		);
 	}

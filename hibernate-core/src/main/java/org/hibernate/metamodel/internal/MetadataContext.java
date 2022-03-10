@@ -375,10 +375,13 @@ public class MetadataContext {
 				}
 
 				( ( AttributeContainer<?>) embeddable ).getInFlightAccess().finishUp();
-				embeddables.put( embeddable.getJavaType(), embeddable );
+				// Do not process embeddables for entity types i.e. id-classes
+				if ( !( embeddable.getExpressibleJavaType() instanceof EntityJavaType<?> ) ) {
+					embeddables.put( embeddable.getJavaType(), embeddable );
 
-				if ( staticMetamodelScanEnabled ) {
-					populateStaticMetamodel( embeddable );
+					if ( staticMetamodelScanEnabled ) {
+						populateStaticMetamodel( embeddable );
+					}
 				}
 			}
 		}

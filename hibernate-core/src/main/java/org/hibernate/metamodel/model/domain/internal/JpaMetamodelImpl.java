@@ -509,6 +509,10 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		}
 
 		for ( EmbeddableDomainType<?> embeddable : context.getEmbeddableTypeSet() ) {
+			// Do not register the embeddable types for id classes
+			if ( embeddable.getExpressibleJavaType() instanceof EntityJavaType<?> ) {
+				continue;
+			}
 			switch ( jpaMetaModelPopulationSetting ) {
 				case IGNORE_UNSUPPORTED:
 					if ( embeddable.getJavaType() != null && embeddable.getJavaType() != Map.class ) {

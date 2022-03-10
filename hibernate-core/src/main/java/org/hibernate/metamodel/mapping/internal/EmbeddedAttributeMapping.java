@@ -354,23 +354,6 @@ public class EmbeddedAttributeMapping
 		return "EmbeddedAttributeMapping(" + navigableRole + ")@" + System.identityHashCode( this );
 	}
 
-	public AttributeMapping copy(ManagedMappingType declaringType) {
-		return new EmbeddedAttributeMapping(
-				getAttributeName(),
-				getNavigableRole(),
-				getStateArrayPosition(),
-				tableExpression,
-				getAttributeMetadataAccess(),
-				getParentInjectionAttributePropertyAccess(),
-				getTiming(),
-				getStyle(),
-				getEmbeddableTypeDescriptor(),
-				declaringType,
-				getPropertyAccess(),
-				getValueGeneration()
-		);
-	}
-
 	private static PropertyAccess getPropertyAccess(
 			String parentInjectionAttributeName,
 			EmbeddableMappingType embeddableMappingType) {

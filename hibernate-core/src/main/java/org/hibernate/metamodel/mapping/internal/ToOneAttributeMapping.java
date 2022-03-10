@@ -748,7 +748,8 @@ public class ToOneAttributeMapping
 					private Key key;
 				}
 			 */
-			if ( parentNavigablePath.getLocalName().equals( ForeignKeyDescriptor.PART_NAME ) ) {
+			if ( parentNavigablePath.getUnaliasedLocalName().equals( ForeignKeyDescriptor.PART_NAME )
+					|| parentNavigablePath.getUnaliasedLocalName().equals( ForeignKeyDescriptor.TARGET_PART_NAME ) ) {
 				// todo (6.0): maybe it's better to have a flag in creation state that marks if we are building a circular fetch domain result already to skip this?
 				return null;
 			}
@@ -1363,80 +1364,80 @@ public class ToOneAttributeMapping
 		// This is vital for the map key property check that comes next
 		assert !( lhs instanceof PluralTableGroup );
 
-		TableGroup parentTableGroup = lhs;
-		ModelPartContainer parentContainer = lhs.getModelPart();
-		StringBuilder embeddablePathSb = null;
-		// Traverse up embeddable table groups until we find a table group for a collection part
-		while ( !( parentContainer instanceof CollectionPart ) ) {
-			if ( parentContainer instanceof EmbeddableValuedModelPart ) {
-				if ( embeddablePathSb == null ) {
-					embeddablePathSb = new StringBuilder();
-				}
-				embeddablePathSb.insert( 0, parentContainer.getPartName() + "." );
-				parentTableGroup = fromClauseAccess.findTableGroup( parentTableGroup.getNavigablePath().getParent() );
-				parentContainer = parentTableGroup.getModelPart();
-			}
-			else {
-				break;
-			}
-		}
-
 		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
 
 		// If a parent is a collection part, there is no custom predicate and the join is INNER or LEFT
 		// we check if this attribute is the map key property to reuse the existing index table group
-		if ( CollectionPart.Nature.ELEMENT.getName().equals( parentTableGroup.getNavigablePath().getUnaliasedLocalName() )
-				&& !addsPredicate && ( joinType == SqlAstJoinType.INNER || joinType == SqlAstJoinType.LEFT ) ) {
-			final PluralTableGroup pluralTableGroup = (PluralTableGroup) fromClauseAccess.findTableGroup(
-					parentTableGroup.getNavigablePath().getParent()
-			);
-			final String indexPropertyName = pluralTableGroup.getModelPart()
-					.getIndexMetadata()
-					.getIndexPropertyName();
-			final String pathName;
-			if ( embeddablePathSb != null ) {
-				pathName = embeddablePathSb.append( getAttributeName() ).toString();
+		if ( !addsPredicate && ( joinType == SqlAstJoinType.INNER || joinType == SqlAstJoinType.LEFT ) ) {
+			TableGroup parentTableGroup = lhs;
+			ModelPartContainer parentContainer = lhs.getModelPart();
+			StringBuilder embeddablePathSb = null;
+			// Traverse up embeddable table groups until we find a table group for a collection part
+			while ( !( parentContainer instanceof CollectionPart ) ) {
+				if ( parentContainer instanceof EmbeddableValuedModelPart ) {
+					if ( embeddablePathSb == null ) {
+						embeddablePathSb = new StringBuilder();
+					}
+					embeddablePathSb.insert( 0, parentContainer.getPartName() + "." );
+					parentTableGroup = fromClauseAccess.findTableGroup( parentTableGroup.getNavigablePath().getParent() );
+					parentContainer = parentTableGroup.getModelPart();
+				}
+				else {
+					break;
+				}
 			}
-			else {
-				pathName = getAttributeName();
-			}
-			if ( pathName.equals( indexPropertyName ) ) {
-				final TableGroup indexTableGroup = pluralTableGroup.getIndexTableGroup();
-				// If this is the map key property, we can reuse the index table group
-				initializeIfNeeded( lhs, requestedJoinType, indexTableGroup );
-				return new TableGroupJoin(
-						navigablePath,
-						joinType,
-						new MappedByTableGroup(
-								navigablePath,
-								this,
-								indexTableGroup,
-								fetched,
-								pluralTableGroup,
-								(np, tableExpression) -> {
-									if ( !canUseParentTableGroup ) {
-										return false;
-									}
-									NavigablePath path = np.getParent();
-									// Fast path
-									if ( navigablePath.equals( path ) ) {
-										return targetKeyPropertyNames.contains( np.getUnaliasedLocalName() )
+			if ( CollectionPart.Nature.ELEMENT.getName().equals( parentTableGroup.getNavigablePath().getUnaliasedLocalName() ) ) {
+				final PluralTableGroup pluralTableGroup = (PluralTableGroup) fromClauseAccess.findTableGroup(
+						parentTableGroup.getNavigablePath().getParent()
+				);
+				final String indexPropertyName = pluralTableGroup.getModelPart()
+						.getIndexMetadata()
+						.getIndexPropertyName();
+				final String pathName;
+				if ( embeddablePathSb != null ) {
+					pathName = embeddablePathSb.append( getAttributeName() ).toString();
+				}
+				else {
+					pathName = getAttributeName();
+				}
+				if ( pathName.equals( indexPropertyName ) ) {
+					final TableGroup indexTableGroup = pluralTableGroup.getIndexTableGroup();
+					// If this is the map key property, we can reuse the index table group
+					initializeIfNeeded( lhs, requestedJoinType, indexTableGroup );
+					return new TableGroupJoin(
+							navigablePath,
+							joinType,
+							new MappedByTableGroup(
+									navigablePath,
+									this,
+									indexTableGroup,
+									fetched,
+									pluralTableGroup,
+									(np, tableExpression) -> {
+										if ( !canUseParentTableGroup ) {
+											return false;
+										}
+										NavigablePath path = np.getParent();
+										// Fast path
+										if ( navigablePath.equals( path ) ) {
+											return targetKeyPropertyNames.contains( np.getUnaliasedLocalName() )
+													&& identifyingColumnsTableExpression.equals( tableExpression );
+										}
+										final StringBuilder sb = new StringBuilder( np.getFullPath().length() );
+										sb.append( np.getUnaliasedLocalName() );
+										while ( path != null && !navigablePath.equals( path ) ) {
+											sb.insert( 0, '.' );
+											sb.insert( 0, path.getUnaliasedLocalName() );
+											path = path.getParent();
+										}
+										return navigablePath.equals( path )
+												&& targetKeyPropertyNames.contains( sb.toString() )
 												&& identifyingColumnsTableExpression.equals( tableExpression );
 									}
-									final StringBuilder sb = new StringBuilder( np.getFullPath().length() );
-									sb.append( np.getUnaliasedLocalName() );
-									while ( path != null && !navigablePath.equals( path ) ) {
-										sb.insert( 0, '.' );
-										sb.insert( 0, path.getUnaliasedLocalName() );
-										path = path.getParent();
-									}
-									return navigablePath.equals( path )
-											&& targetKeyPropertyNames.contains( sb.toString() )
-											&& identifyingColumnsTableExpression.equals( tableExpression );
-								}
-						),
-						null
-				);
+							),
+							null
+					);
+				}
 			}
 		}
 

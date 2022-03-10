@@ -306,26 +306,12 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			String columnContainingTable,
 			EmbeddableValuedModelPart modelPart,
 			DomainResultCreationState creationState) {
-		final NavigablePath fkNavigablePath = navigablePath.append( getPartName() );
 		final NavigablePath resultNavigablePath;
-		if ( associationKey.getTable().equals( columnContainingTable ) ) {
-			final ModelPartContainer parentModelPart = tableGroup.getModelPart();
-			if ( parentModelPart instanceof PluralAttributeMapping ) {
-				if ( ( (PluralAttributeMapping) parentModelPart ).getIndexDescriptor() == null ) {
-					resultNavigablePath = navigablePath.append( CollectionPart.Nature.ELEMENT.getName() )
-							.append( getPartName() );
-				}
-				else {
-					resultNavigablePath = navigablePath.append( CollectionPart.Nature.INDEX.getName() )
-							.append( getPartName() );
-				}
-			}
-			else {
-				resultNavigablePath = navigablePath.append( getPartName() );
-			}
+		if ( modelPart == keySide.getModelPart() ) {
+			resultNavigablePath = navigablePath.append( ForeignKeyDescriptor.PART_NAME );
 		}
 		else {
-			resultNavigablePath = navigablePath.append( getPartName() );
+			resultNavigablePath = navigablePath.append( ForeignKeyDescriptor.TARGET_PART_NAME );
 		}
 		final TableGroup fkTableGroup = creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
 				resultNavigablePath,
@@ -343,12 +329,6 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 					return tableGroupJoin.getJoinedGroup();
 				}
 		);
-		if ( fkNavigablePath != resultNavigablePath ) {
-			creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
-					fkNavigablePath,
-					np -> fkTableGroup
-			);
-		}
 
 		final Nature currentForeignKeyResolvingKey = creationState.getCurrentlyResolvingForeignKeyPart();
 		try {

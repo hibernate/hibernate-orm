@@ -87,7 +87,9 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 		// We only need to select in this phase if this is part of an identifier or foreign key
 		NavigablePath np = navigablePath.getParent();
 		while ( np != null ) {
-			if ( np instanceof EntityIdentifierNavigablePath || ForeignKeyDescriptor.PART_NAME.equals( np.getUnaliasedLocalName() ) ) {
+			if ( np instanceof EntityIdentifierNavigablePath
+					|| ForeignKeyDescriptor.PART_NAME.equals( np.getUnaliasedLocalName() )
+					|| ForeignKeyDescriptor.TARGET_PART_NAME.equals( np.getUnaliasedLocalName() )) {
 				initializeInstance( rowProcessingState );
 				return;
 			}

@@ -7,17 +7,19 @@
 package org.hibernate.orm.test.mapping;
 
 import java.util.Date;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.SecondaryTable;
-import jakarta.persistence.Table;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.SecondaryTable;
+import jakarta.persistence.Table;
 
 /**
  * @author Steve Ebersole
@@ -32,6 +34,20 @@ public class SecondaryTableTests {
 		scope.inTransaction(
 				session -> {
 					session.createQuery( "select e from SimpleEntityWithSecondaryTables e" ).list();
+				}
+		);
+	}
+
+	@Test
+	public void updateOnSecondaryTableColumn(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.persist( new SimpleEntityWithSecondaryTables( 1, "test", null, null ) );
+					session.flush();
+					session.clear();
+					session.createQuery( "update SimpleEntityWithSecondaryTables e set e.data = 'test'" ).executeUpdate();
+					SimpleEntityWithSecondaryTables entity = session.get( SimpleEntityWithSecondaryTables.class, 1 );
+					Assertions.assertEquals( "test", entity.data );
 				}
 		);
 	}

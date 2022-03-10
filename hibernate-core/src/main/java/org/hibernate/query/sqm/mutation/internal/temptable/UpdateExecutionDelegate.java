@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -22,28 +23,41 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.results.TableGroupImpl;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
+import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
+import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcInsert;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcUpdate;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
 /**
  * @author Steve Ebersole
@@ -179,6 +193,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 					(tableExpression, tableKeyColumnVisitationSupplier) -> updateTable(
 							tableExpression,
 							tableKeyColumnVisitationSupplier,
+							rows,
 							idTableSubQuery,
 							executionContext
 					)
@@ -224,6 +239,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 	private void updateTable(
 			String tableExpression,
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier,
+			int expectedUpdateCount,
 			QuerySpec idTableSubQuery,
 			ExecutionContext executionContext) {
 		final TableReference updatingTableReference = updatingTableGroup.getTableReference(
@@ -259,8 +275,9 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 				}
 		);
 
+		final Expression keyExpression = keyColumnCollector.buildKeyExpression();
 		final InSubQueryPredicate idTableSubQueryPredicate = new InSubQueryPredicate(
-				keyColumnCollector.buildKeyExpression(),
+				keyExpression,
 				idTableSubQuery,
 				false
 		);
@@ -268,8 +285,9 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Create the SQL AST and convert it into a JdbcOperation
+		final NamedTableReference dmlTableReference = resolveUnionTableReference( updatingTableReference, tableExpression );
 		final UpdateStatement sqlAst = new UpdateStatement(
-				resolveUnionTableReference( updatingTableReference, tableExpression ),
+				dmlTableReference,
 				assignments,
 				idTableSubQueryPredicate
 		);
@@ -280,15 +298,154 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 				.buildUpdateTranslator( sessionFactory, sqlAst )
 				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 
-		jdbcServices.getJdbcMutationExecutor().execute(
+		final int updateCount = jdbcServices.getJdbcMutationExecutor().execute(
 				jdbcUpdate,
 				jdbcParameterBindings,
 				sql -> executionContext.getSession()
 						.getJdbcCoordinator()
 						.getStatementPreparer()
 						.prepareStatement( sql ),
-				(integer, preparedStatement) -> {},
+				(integer, preparedStatement) -> {
+				},
 				executionContext
 		);
+
+		if ( updateCount == expectedUpdateCount ) {
+			// We are done when the update count matches
+			return;
+		}
+		// Otherwise we have to check if the table is nullable, and if so, insert into that table
+		final AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityDescriptor.getEntityPersister();
+		boolean isNullable = false;
+		for (int i = 0; i < entityPersister.getTableSpan(); i++) {
+			if ( tableExpression.equals( entityPersister.getTableName( i ) ) && entityPersister.isNullableTable( i ) ) {
+				isNullable = true;
+				break;
+			}
+		}
+		if ( isNullable ) {
+			// Copy the subquery contents into a root query
+			final QuerySpec querySpec = new QuerySpec( true );
+			for ( TableGroup root : idTableSubQuery.getFromClause().getRoots() ) {
+				querySpec.getFromClause().addRoot( root );
+			}
+			for ( SqlSelection sqlSelection : idTableSubQuery.getSelectClause().getSqlSelections() ) {
+				querySpec.getSelectClause().addSqlSelection( sqlSelection );
+			}
+			querySpec.applyPredicate( idTableSubQuery.getWhereClauseRestrictions() );
+
+			// Prepare a not exists sub-query to avoid violating constraints
+			final QuerySpec existsQuerySpec = new QuerySpec( false );
+			existsQuerySpec.getSelectClause().addSqlSelection(
+					new SqlSelectionImpl(
+							-1,
+							0,
+							new QueryLiteral<>(
+									1,
+									sessionFactory.getTypeConfiguration().getBasicTypeForJavaType( Integer.class )
+							)
+					)
+			);
+			final NamedTableReference existsTableReference = new NamedTableReference(
+					tableExpression,
+					"dml_",
+					false,
+					sessionFactory
+			);
+			existsQuerySpec.getFromClause().addRoot(
+					new TableGroupImpl(
+							null,
+							null,
+							existsTableReference,
+							entityPersister
+					)
+			);
+
+			final TableKeyExpressionCollector existsKeyColumnCollector = new TableKeyExpressionCollector( entityDescriptor );
+			tableKeyColumnVisitationSupplier.get().accept(
+					(columnIndex, selection) -> {
+						assert selection.getContainingTableExpression().equals( tableExpression );
+						existsKeyColumnCollector.apply(
+								new ColumnReference(
+										existsTableReference,
+										selection,
+										sessionFactory
+								)
+						);
+					}
+			);
+			existsQuerySpec.applyPredicate(
+					new ComparisonPredicate(
+							existsKeyColumnCollector.buildKeyExpression(),
+							ComparisonOperator.EQUAL,
+							asExpression(idTableSubQuery.getSelectClause())
+					)
+			);
+
+			querySpec.applyPredicate(
+					new ExistsPredicate(
+							existsQuerySpec,
+							true,
+							sessionFactory.getTypeConfiguration().getBasicTypeForJavaType( Boolean.class )
+					)
+			);
+
+			// Collect the target column references from the key expressions
+			final List<ColumnReference> targetColumnReferences = new ArrayList<>();
+			if ( keyExpression instanceof SqlTuple ) {
+				//noinspection unchecked
+				targetColumnReferences.addAll( (Collection<? extends ColumnReference>) ( (SqlTuple) keyExpression ).getExpressions() );
+			}
+			else {
+				targetColumnReferences.add( (ColumnReference) keyExpression );
+			}
+			// And transform assignments to target column references and selections
+			for ( Assignment assignment : assignments ) {
+				targetColumnReferences.addAll( assignment.getAssignable().getColumnReferences() );
+				querySpec.getSelectClause().addSqlSelection(
+						new SqlSelectionImpl(
+								0,
+								-1,
+								assignment.getAssignedValue()
+						)
+				);
+			}
+
+			final InsertStatement insertSqlAst = new InsertStatement(
+					dmlTableReference
+			);
+			insertSqlAst.addTargetColumnReferences( targetColumnReferences.toArray( new ColumnReference[0] ) );
+			insertSqlAst.setSourceSelectStatement( querySpec );
+
+			final JdbcInsert jdbcInsert = jdbcServices.getJdbcEnvironment()
+					.getSqlAstTranslatorFactory()
+					.buildInsertTranslator( sessionFactory, insertSqlAst )
+					.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
+
+			final int insertCount = jdbcServices.getJdbcMutationExecutor().execute(
+					jdbcInsert,
+					jdbcParameterBindings,
+					sql -> executionContext.getSession()
+							.getJdbcCoordinator()
+							.getStatementPreparer()
+							.prepareStatement( sql ),
+					(integer, preparedStatement) -> {
+					},
+					executionContext
+			);
+			assert insertCount + updateCount == expectedUpdateCount;
+		}
+	}
+
+	private Expression asExpression(SelectClause selectClause) {
+		final List<SqlSelection> sqlSelections = selectClause.getSqlSelections();
+		if ( sqlSelections.size() == 1 ) {
+			return sqlSelections.get( 0 ).getExpression();
+		}
+		final List<Expression> expressions = new ArrayList<>( sqlSelections.size() );
+		for ( SqlSelection sqlSelection : sqlSelections ) {
+			expressions.add( sqlSelection.getExpression() );
+		}
+		return new SqlTuple( expressions, null );
 	}
 }

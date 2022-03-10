@@ -32,6 +32,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -194,9 +195,18 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				attributeMapping = toOne;
 				currentIndex += attributeMapping.getJdbcTypeCount();
 			}
-			else if ( attributeMapping instanceof EmbeddedAttributeMapping ) {
-				attributeMapping = ( (EmbeddedAttributeMapping) attributeMapping ).copy( declaringType );
-				currentIndex = attributeMapping.getJdbcTypeCount();
+			else if ( attributeMapping instanceof EmbeddableValuedModelPart ) {
+				final SelectableMapping[] subMappings = new SelectableMapping[attributeMapping.getJdbcTypeCount()];
+				for (int i = 0; i < subMappings.length; i++) {
+					subMappings[i] = selectableMappings.getSelectable( currentIndex++ );
+				}
+				attributeMapping = MappingModelCreationHelper.createInverseModelPart(
+						(EmbeddableValuedModelPart) attributeMapping,
+						declaringType,
+						declaringTableGroupProducer,
+						new SelectableMappingsImpl( subMappings ),
+						creationProcess
+				);
 			}
 			else {
 				throw new UnsupportedMappingException(

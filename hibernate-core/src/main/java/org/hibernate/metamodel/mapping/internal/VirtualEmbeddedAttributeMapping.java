@@ -8,7 +8,6 @@ package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -99,21 +98,4 @@ public class VirtualEmbeddedAttributeMapping extends EmbeddedAttributeMapping im
 		);
 	}
 
-	@Override
-	public AttributeMapping copy(ManagedMappingType declaringType) {
-		return new VirtualEmbeddedAttributeMapping(
-				getAttributeName(),
-				getNavigableRole(),
-				getStateArrayPosition(),
-				getContainingTableExpression(),
-				getAttributeMetadataAccess(),
-				getParentInjectionAttributePropertyAccess(),
-				getTiming(),
-				getStyle(),
-				getEmbeddableTypeDescriptor(),
-				declaringType,
-				getPropertyAccess(),
-				getValueGeneration()
-		);
-	}
 }

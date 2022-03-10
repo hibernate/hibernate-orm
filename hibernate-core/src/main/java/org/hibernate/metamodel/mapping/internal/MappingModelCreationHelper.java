@@ -1527,7 +1527,7 @@ public class MappingModelCreationHelper {
 		);
 	}
 
-	public static EmbeddableValuedModelPart createInverseModelPart(
+	public static EmbeddedAttributeMapping createInverseModelPart(
 			EmbeddableValuedModelPart modelPart,
 			ManagedMappingType keyDeclaringType,
 			TableGroupProducer declaringTableGroupProducer,

@@ -119,7 +119,7 @@ public class LocalTemporaryTableBulkIdStrategy
 			context.dropStatements.add( dropStatement );
 		}
 		return new IdTableInfoImpl(
-				sqlStringGenerationContext.format( idTable.getQualifiedTableName() ),
+				sqlStringGenerationContext.formatWithoutDefaults( idTable.getQualifiedTableName() ),
 				buildIdTableCreateStatement( idTable, metadata, sqlStringGenerationContext ),
 				dropStatement
 		);

@@ -112,7 +112,7 @@ public class GlobalTemporaryTableBulkIdStrategy
 			context.dropStatements.add( buildIdTableDropStatement( idTable, sqlStringGenerationContext ) );
 		}
 
-		final String renderedName = sqlStringGenerationContext.format( idTable.getQualifiedTableName() );
+		final String renderedName = sqlStringGenerationContext.formatWithoutDefaults( idTable.getQualifiedTableName() );
 
 		return new IdTableInfoImpl( renderedName );
 	}

@@ -127,7 +127,7 @@ public class PersistentTableBulkIdStrategy
 			MetadataImplementor metadata,
 			PreparationContextImpl context,
 			SqlStringGenerationContext sqlStringGenerationContext) {
-		final String renderedName = sqlStringGenerationContext.format( idTable.getQualifiedTableName() );
+		final String renderedName = sqlStringGenerationContext.formatWithoutDefaults( idTable.getQualifiedTableName() );
 
 		context.creationStatements.add( buildIdTableCreateStatement( idTable, metadata,
 				sqlStringGenerationContext

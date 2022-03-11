@@ -72,7 +72,7 @@ public abstract class AbstractCteValuesListBulkIdHandler extends
 				"HT_" + StringHelper.unquote( persister.getTableName(), jdbcEnvironment.getDialect() )
 		).render();
 
-		return persister.getFactory().getSqlStringGenerationContext().format(
+		return persister.getFactory().getSqlStringGenerationContext().formatWithoutDefaults(
 				new QualifiedTableName(
 						Identifier.toIdentifier( catalog ),
 						Identifier.toIdentifier( schema ),

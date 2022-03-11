@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -324,19 +325,19 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 
 	@Override
 	protected String getCteTableName(String tableExpression) {
+		final Dialect dialect = getSessionFactory().getJdbcServices().getDialect();
 		if ( Identifier.isQuoted( tableExpression ) ) {
 			tableExpression = tableExpression.substring( 1, tableExpression.length() - 1 );
-			return UPDATE_RESULT_TABLE_NAME_PREFIX + tableExpression;
 		}
-		return UPDATE_RESULT_TABLE_NAME_PREFIX + tableExpression;
+		return Identifier.toIdentifier( UPDATE_RESULT_TABLE_NAME_PREFIX + tableExpression ).render( dialect );
 	}
 
 	protected String getInsertCteTableName(String tableExpression) {
+		final Dialect dialect = getSessionFactory().getJdbcServices().getDialect();
 		if ( Identifier.isQuoted( tableExpression ) ) {
 			tableExpression = tableExpression.substring( 1, tableExpression.length() - 1 );
-			return INSERT_RESULT_TABLE_NAME_PREFIX + tableExpression;
 		}
-		return INSERT_RESULT_TABLE_NAME_PREFIX + tableExpression;
+		return Identifier.toIdentifier( INSERT_RESULT_TABLE_NAME_PREFIX + tableExpression ).render( dialect );
 	}
 
 	private Expression asExpression(SelectClause selectClause) {

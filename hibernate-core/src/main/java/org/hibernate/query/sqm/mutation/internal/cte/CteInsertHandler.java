@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -1151,14 +1152,11 @@ public class CteInsertHandler implements InsertHandler {
 	}
 
 	protected String getCteTableName(String tableExpression, String subPrefix) {
+		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
 		if ( Identifier.isQuoted( tableExpression ) ) {
-			tableExpression = unquote( tableExpression );
-			return DML_RESULT_TABLE_NAME_PREFIX + subPrefix + tableExpression;
+			tableExpression = tableExpression.substring( 1, tableExpression.length() - 1 );
 		}
-		return DML_RESULT_TABLE_NAME_PREFIX + subPrefix + tableExpression;
+		return Identifier.toIdentifier( DML_RESULT_TABLE_NAME_PREFIX + subPrefix + tableExpression ).render( dialect );
 	}
 
-	private String unquote(String tableExpression) {
-		return tableExpression.substring( 1, tableExpression.length() - 1 );
-	}
 }

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -182,18 +183,20 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 
 	@Override
 	protected String getCteTableName(String tableExpression) {
+		final Dialect dialect = getSessionFactory().getJdbcServices().getDialect();
 		if ( Identifier.isQuoted( tableExpression ) ) {
 			tableExpression = tableExpression.substring( 1, tableExpression.length() - 1 );
-			return DELETE_RESULT_TABLE_NAME_PREFIX + tableExpression;
 		}
-		return DELETE_RESULT_TABLE_NAME_PREFIX + tableExpression;
+		return Identifier.toIdentifier( DELETE_RESULT_TABLE_NAME_PREFIX + tableExpression ).render( dialect );
 	}
 
 	protected String getCteTableName(PluralAttributeMapping pluralAttribute) {
+		final Dialect dialect = getSessionFactory().getJdbcServices().getDialect();
 		final String hibernateEntityName = pluralAttribute.findContainingEntityMapping().getEntityName();
 		final String jpaEntityName = getSessionFactory().getJpaMetamodel().entity( hibernateEntityName ).getName();
-		return DELETE_RESULT_TABLE_NAME_PREFIX + jpaEntityName + "_" + pluralAttribute.getRootPathName().substring(
-				hibernateEntityName.length() + 1
-		);
+		return Identifier.toIdentifier(
+				DELETE_RESULT_TABLE_NAME_PREFIX + jpaEntityName + "_" +
+						pluralAttribute.getRootPathName().substring( hibernateEntityName.length() + 1 )
+		).render( dialect );
 	}
 }

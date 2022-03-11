@@ -21,6 +21,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
+
 /**
  * @author Steve Ebersole
  */
@@ -181,7 +183,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 	}
 
 	protected void handleLockExpiry(SharedSessionContractImplementor session, Object key, Lockable lock) {
-		SecondLevelCacheLogger.INSTANCE.softLockedCacheExpired( getRegion().getName(), key );
+		L2CACHE_LOGGER.softLockedCacheExpired( getRegion().getName(), key );
 		log.info( "Cached entry expired : " + key );
 
 		// create new lock that times out immediately

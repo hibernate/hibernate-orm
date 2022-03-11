@@ -71,7 +71,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 
 	@Override
 	protected boolean processNext(RowProcessingState rowProcessingState) {
-		ResultsLogger.LOGGER.tracef( "JdbcValuesCacheHit#processNext : position = %i; numberOfRows = %i", position, numberOfRows );
+		ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef( "JdbcValuesCacheHit#processNext : position = %i; numberOfRows = %i", position, numberOfRows );
 
 		// NOTE : explicitly skipping limit handling because the cached state ought
 		// 		already be the limited size since the cache key includes limits
@@ -88,7 +88,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 
 	@Override
 	protected boolean processPrevious(RowProcessingState rowProcessingState) {
-		ResultsLogger.LOGGER.tracef( "JdbcValuesCacheHit#processPrevious : position = %i; numberOfRows = %i", position, numberOfRows );
+		ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef( "JdbcValuesCacheHit#processPrevious : position = %i; numberOfRows = %i", position, numberOfRows );
 
 		// NOTE : explicitly skipping limit handling because the cached state ought
 		// 		already be the limited size since the cache key includes limits
@@ -105,7 +105,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 
 	@Override
 	protected boolean processScroll(int numberOfRows, RowProcessingState rowProcessingState) {
-		ResultsLogger.LOGGER.tracef( "JdbcValuesCacheHit#processScroll(%i) : position = %i; numberOfRows = %i", numberOfRows, position, this.numberOfRows );
+		ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef( "JdbcValuesCacheHit#processScroll(%i) : position = %i; numberOfRows = %i", numberOfRows, position, this.numberOfRows );
 
 		// NOTE : explicitly skipping limit handling because the cached state should
 		// 		already be the limited size since the cache key includes limits
@@ -127,7 +127,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 
 	@Override
 	protected boolean processPosition(int position, RowProcessingState rowProcessingState) {
-		ResultsLogger.LOGGER.tracef( "JdbcValuesCacheHit#processPosition(%i) : position = %i; numberOfRows = %i", position, this.position, this.numberOfRows );
+		ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef( "JdbcValuesCacheHit#processPosition(%i) : position = %i; numberOfRows = %i", position, this.position, this.numberOfRows );
 
 		// NOTE : explicitly skipping limit handling because the cached state should
 		// 		already be the limited size since the cache key includes limits
@@ -135,7 +135,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 		if ( position < 0 ) {
 			// we need to subtract it from `numberOfRows`
 			final int newPosition = numberOfRows + position;
-			ResultsLogger.LOGGER.debugf(
+			ResultsLogger.RESULTS_MESSAGE_LOGGER.debugf(
 					"Translated negative absolute position `%i` into `%` based on `%i` number of rows",
 					position,
 					newPosition,
@@ -145,7 +145,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 		}
 
 		if ( position > numberOfRows ) {
-			ResultsLogger.LOGGER.debugf(
+			ResultsLogger.RESULTS_MESSAGE_LOGGER.debugf(
 					"Absolute position `%i` exceeded number of rows `%i`",
 					position,
 					numberOfRows

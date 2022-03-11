@@ -6,19 +6,22 @@
  */
 package org.hibernate.bytecode;
 
+import org.hibernate.boot.jaxb.JaxbLogger;
+import org.hibernate.internal.log.SubSystemLogging;
+
 import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
  */
+@SubSystemLogging(
+		name = BytecodeLogging.LOGGER_NAME,
+		description = "Logging related to bytecode handling"
+)
 public interface BytecodeLogging {
-	String NAME = "org.hibernate.orm.bytecode";
+	String LOGGER_NAME = SubSystemLogging.BASE + "bytecode";
 
-	Logger LOGGER = Logger.getLogger( NAME );
-
-	static String subLoggerName(String subName) {
-		return NAME + "." + subName;
-	}
+	Logger LOGGER = Logger.getLogger( LOGGER_NAME );
 
 	boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
 	boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();

@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results;
 
+import org.hibernate.internal.log.SubSystemLogging;
+
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.MessageLogger;
@@ -18,22 +20,26 @@ import org.jboss.logging.annotations.ValidIdRange;
  *
  * 		* creation of the DomainResult / Fetch nodes
  * 		* creation of Initializer / DomainResultAssembler delegates
- * 		* processing of JDBC values via Initializer / DomainResultAssembler
+ * 		* processing of values from JDBC and cache via Initializer / DomainResultAssembler
  *
  * @author Steve Ebersole
  */
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 90005001, max = 90005100 )
+@SubSystemLogging(
+		name = ResultsLogger.LOGGER_NAME,
+		description = "Logging related to `DomainResult` graphs which build individual parts of the domain model from JDBC or from cache"
+)
 public interface ResultsLogger extends BasicLogger {
-	String LOGGER_NAME = "org.hibernate.orm.sql.results";
+	String LOGGER_NAME = SubSystemLogging.BASE + ".results";
 
-	/**
-	 * Static access to the logging instance
-	 */
-	ResultsLogger LOGGER = Logger.getMessageLogger(
-			ResultsLogger.class,
-			LOGGER_NAME
-	);
+	Logger RESULTS_LOGGER = Logger.getLogger( LOGGER_NAME );
+	ResultsLogger RESULTS_MESSAGE_LOGGER = Logger.getMessageLogger( ResultsLogger.class, LOGGER_NAME );
+
+	// todo (6.0) : make sure sql result processing classes use this logger
+
+	boolean TRACE_ENABLED = RESULTS_LOGGER.isTraceEnabled();
+	boolean DEBUG_ENABLED = RESULTS_LOGGER.isDebugEnabled();
 
 	static String subLoggerName(String subName) {
 		return LOGGER_NAME + "." + subName;
@@ -43,9 +49,4 @@ public interface ResultsLogger extends BasicLogger {
 		return Logger.getLogger( subLoggerName( subName ) );
 	}
 
-	// todo (6.0) : make sure sql result processing classes use this logger
-
-	boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
-	boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
-	boolean INFO_ENABLED = LOGGER.isInfoEnabled();
 }

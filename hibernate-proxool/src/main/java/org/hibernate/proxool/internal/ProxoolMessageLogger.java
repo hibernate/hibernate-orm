@@ -7,7 +7,9 @@
 package org.hibernate.proxool.internal;
 
 import org.hibernate.internal.log.ConnectionPoolingLogger;
+import org.hibernate.internal.log.SubSystemLogging;
 
+import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.LogMessage;
 import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
@@ -23,7 +25,14 @@ import static org.jboss.logging.Logger.Level.INFO;
  */
 @MessageLogger(projectCode = "HHH")
 @ValidIdRange( min = 30001, max = 35000 )
+@SubSystemLogging(
+		name = ProxoolMessageLogger.LOGGER_NAME,
+		description = "Logs details related to Proxool connection pooling"
+)
 public interface ProxoolMessageLogger extends ConnectionPoolingLogger {
+	String LOGGER_NAME = ConnectionPoolingLogger.LOGGER_NAME + ".proxool";
+	Logger PROXOOL_LOGGER = Logger.getLogger( LOGGER_NAME );
+	ProxoolMessageLogger PROXOOL_MESSAGE_LOGGER = Logger.getMessageLogger( ProxoolMessageLogger.class, LOGGER_NAME );
 
 	/**
 	 * Logs the name of a named pool to be used for configuration information

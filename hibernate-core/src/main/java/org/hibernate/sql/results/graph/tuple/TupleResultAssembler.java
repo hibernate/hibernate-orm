@@ -44,9 +44,9 @@ public class TupleResultAssembler<J> implements DomainResultAssembler<J> {
 			JdbcValuesSourceProcessingOptions options) {
 		final Object[] jdbcValues = extractRawValue( rowProcessingState );
 
-		if ( ResultsLogger.LOGGER.isDebugEnabled() ) {
+		if ( ResultsLogger.RESULTS_MESSAGE_LOGGER.isDebugEnabled() ) {
 			for ( int i = 0; i < valuesArrayPositions.length; i++ ) {
-				ResultsLogger.LOGGER.debugf(
+				ResultsLogger.RESULTS_MESSAGE_LOGGER.debugf(
 						"Extracted JDBC value [%d] - [%s]",
 						valuesArrayPositions[i],
 						jdbcValues[i]

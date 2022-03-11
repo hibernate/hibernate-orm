@@ -6,6 +6,8 @@
  */
 package org.hibernate.envers.boot;
 
+import org.hibernate.internal.log.SubSystemLogging;
+
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.LogMessage;
@@ -20,6 +22,11 @@ import static org.jboss.logging.Logger.Level.INFO;
  */
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 90005601, max = 90005700 )
+@SubSystemLogging(
+		name = EnversBootLogger.LOGGER_NAME,
+		description = "Logging related to bootstrapping an Envers (currently just its in-flight generation " +
+				"of `hbm.xml` mappings for Hibernate ORM to process)"
+)
 public interface EnversBootLogger extends BasicLogger {
 	String LOGGER_NAME = "org.hibernate.envers.boot";
 

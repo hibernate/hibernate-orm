@@ -150,7 +150,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 	@Override
 	public void initializeInstance(RowProcessingState processingState) {
-		EmbeddableLoadingLogger.INSTANCE.debugf( "Initializing composite instance [%s]", navigablePath );
+		EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER.debugf( "Initializing composite instance [%s]", navigablePath );
 
 		if ( compositeInstance == NULL_MARKER ) {
 			// we already know it is null
@@ -245,7 +245,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			);
 		}
 
-		EmbeddableLoadingLogger.INSTANCE.debugf(
+		EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER.debugf(
 				"Created composite instance [%s]",
 				navigablePath
 		);
@@ -323,7 +323,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		final Object instance = representationStrategy.getInstantiator().instantiate( this, sessionFactory );
 		stateInjected = true;
 
-		EmbeddableLoadingLogger.INSTANCE.debugf( "Created composite instance [%s] : %s", navigablePath, instance );
+		EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER.debugf( "Created composite instance [%s] : %s", navigablePath, instance );
 
 		return instance;
 	}
@@ -348,7 +348,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 		// we want to avoid injection for `NULL_MARKER`
 		if ( compositeInstance == null || compositeInstance == NULL_MARKER ) {
-			EmbeddableLoadingLogger.INSTANCE.debugf(
+			EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER.debugf(
 					"Skipping parent injection for null embeddable [%s]",
 					navigablePath
 			);
@@ -363,14 +363,14 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 		final Object parent = determineParentInstance( processingState );
 		if ( parent == null ) {
-			EmbeddableLoadingLogger.INSTANCE.debugf(
+			EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER.debugf(
 					"Unable to determine parent for injection into embeddable [%s]",
 					navigablePath
 			);
 			return;
 		}
 
-		EmbeddableLoadingLogger.INSTANCE.debugf(
+		EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER.debugf(
 				"Injecting parent into embeddable [%s] : `%s` -> `%s`",
 				navigablePath,
 				parent,

@@ -24,13 +24,13 @@ public class PostgisDialectContributor implements ContributorImplementor {
 
 	@Override
 	public void contributeJdbcTypes(TypeContributions typeContributions) {
-		HSMessageLogger.LOGGER.typeContributions( this.getClass().getCanonicalName() );
+		HSMessageLogger.SPATIAL_MSG_LOGGER.typeContributions( this.getClass().getCanonicalName() );
 		typeContributions.contributeJdbcType( PGGeometryJdbcType.INSTANCE_WKB_2 );
 	}
 
 	@Override
 	public void contributeFunctions(FunctionContributions functionContributions) {
-		HSMessageLogger.LOGGER.functionContributions( this.getClass().getCanonicalName() );
+		HSMessageLogger.SPATIAL_MSG_LOGGER.functionContributions( this.getClass().getCanonicalName() );
 		final PostgisSqmFunctionDescriptors postgisFunctions = new PostgisSqmFunctionDescriptors( functionContributions );
 		final SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
 		postgisFunctions.asMap().forEach( (key, desc) -> {

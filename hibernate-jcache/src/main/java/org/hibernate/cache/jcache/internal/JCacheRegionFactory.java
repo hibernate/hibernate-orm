@@ -35,6 +35,8 @@ import org.hibernate.cache.spi.support.RegionNameQualifier;
 import org.hibernate.cache.spi.support.StorageAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
+import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
+
 /**
  * @author Alex Snaps
  */
@@ -103,7 +105,7 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 	protected Cache<Object, Object> createCache(String regionName) {
 		switch ( missingCacheStrategy ) {
 			case CREATE_WARN:
-				SecondLevelCacheLogger.INSTANCE.missingCacheCreated(
+				L2CACHE_LOGGER.missingCacheCreated(
 						regionName,
 						ConfigSettings.MISSING_CACHE_STRATEGY, MissingCacheStrategy.CREATE.getExternalRepresentation()
 				);
@@ -163,7 +165,7 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 
 			for ( String legacyDefaultRegionName : legacyDefaultRegionNames ) {
 				if ( cacheExists( legacyDefaultRegionName, sessionFactory ) ) {
-					SecondLevelCacheLogger.INSTANCE.usingLegacyCacheName( defaultRegionName, legacyDefaultRegionName );
+					L2CACHE_LOGGER.usingLegacyCacheName( defaultRegionName, legacyDefaultRegionName );
 					return legacyDefaultRegionName;
 				}
 			}

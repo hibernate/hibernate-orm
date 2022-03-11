@@ -12,7 +12,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -27,6 +29,7 @@ import org.gradle.api.provider.Provider;
 
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.Index;
+import org.jboss.jandex.IndexReader;
 import org.jboss.jandex.IndexWriter;
 import org.jboss.jandex.Indexer;
 
@@ -48,10 +51,10 @@ public class IndexManager {
 		this.artifactsToProcess = artifactsToProcess;
 		this.indexFileReferenceAccess = project.getLayout()
 				.getBuildDirectory()
-				.file( "reports/orm/indexing/jandex.idx" );
+				.file( "orm/reports/indexing/jandex.idx" );
 		this.packageFileReferenceAccess = project.getLayout()
 				.getBuildDirectory()
-				.file( "reports/orm/indexing/internal-packages.txt" );
+				.file( "orm/reports/indexing/internal-packages.txt" );
 		this.project = project;
 	}
 
@@ -73,9 +76,51 @@ public class IndexManager {
 
 	public Index getIndex() {
 		if ( index == null ) {
-			throw new IllegalStateException( "Index has not been created yet" );
+			index = loadIndex( indexFileReferenceAccess );
+			internalPackageNames = loadInternalPackageNames( packageFileReferenceAccess );
 		}
 		return index;
+	}
+
+	private static Index loadIndex(Provider<RegularFile> indexFileReferenceAccess) {
+		final File indexFile = indexFileReferenceAccess.get().getAsFile();
+		if ( !indexFile.exists() ) {
+			throw new IllegalStateException( "Cannot load index; the stored file does not exist - " + indexFile.getAbsolutePath() );
+		}
+
+		try ( final FileInputStream stream = new FileInputStream( indexFile ) ) {
+			final IndexReader indexReader = new IndexReader( stream );
+			return indexReader.read();
+		}
+		catch (FileNotFoundException e) {
+			throw new IllegalStateException( "Cannot load index; the stored file does not exist - " + indexFile.getAbsolutePath(), e );
+		}
+		catch (IOException e) {
+			throw new IllegalStateException( "Cannot load index; unable to read stored file - " + indexFile.getAbsolutePath(), e );
+		}
+	}
+
+	private static TreeSet<Inclusion> loadInternalPackageNames(Provider<RegularFile> packageFileReferenceAccess) {
+		final File packageNameFile = packageFileReferenceAccess.get().getAsFile();
+		if ( !packageNameFile.exists() ) {
+			throw new IllegalStateException( "Cannot load internal packages; the stored file does not exist - " + packageNameFile.getAbsolutePath() );
+		}
+
+		final TreeSet<Inclusion> inclusions = new TreeSet<>( Comparator.comparing( Inclusion::getPath ) );
+		try {
+			final List<String> lines = Files.readAllLines( packageNameFile.toPath() );
+			lines.forEach( (line) -> {
+				if ( line == null || line.isEmpty() ) {
+					return;
+				}
+
+				inclusions.add( new Inclusion( line, true ) );
+			} );
+			return inclusions;
+		}
+		catch (IOException e) {
+			throw new RuntimeException( "Unable to read package-name file - " + packageNameFile.getAbsolutePath(), e );
+		}
 	}
 
 
@@ -84,8 +129,7 @@ public class IndexManager {
 	 */
 	void index() {
 		if ( index != null ) {
-			assert internalPackageNames != null;
-			return;
+			throw new IllegalStateException( "Index was already created or loaded" );
 		}
 
 		final Indexer indexer = new Indexer();

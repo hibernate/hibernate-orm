@@ -7,15 +7,21 @@
 package org.hibernate.boot.query;
 
 import org.hibernate.boot.BootLogging;
+import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
  */
-public class BootQueryLogging {
-	public static final Logger LOGGER = BootLogging.subLogger( "query" );
+@SubSystemLogging(
+		name = BootQueryLogging.NAME,
+		description = "Logging related to processing of named-queries"
+)
+public interface BootQueryLogging {
+	String NAME = BootLogging.NAME + ".query";
+	Logger BOOT_QUERY_LOGGER = Logger.getLogger( NAME );
 
-	public static final boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
-	public static final boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
+	boolean DEBUG_ENABLED = BOOT_QUERY_LOGGER.isDebugEnabled();
+	boolean TRACE_ENABLED = BOOT_QUERY_LOGGER.isTraceEnabled();
 }

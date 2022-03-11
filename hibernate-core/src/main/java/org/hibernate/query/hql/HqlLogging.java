@@ -7,6 +7,7 @@
 package org.hibernate.query.hql;
 
 import org.hibernate.HibernateException;
+import org.hibernate.internal.log.SubSystemLogging;
 import org.hibernate.query.QueryLogging;
 
 import org.jboss.logging.BasicLogger;
@@ -24,8 +25,12 @@ import static org.jboss.logging.Logger.Level.ERROR;
  */
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 90003501, max = 90004000 )
+@SubSystemLogging(
+		name = HqlLogging.LOGGER_NAME,
+		description = "Logging related to HQL parsing"
+)
 public interface HqlLogging extends BasicLogger {
-	String LOGGER_NAME = QueryLogging.subLoggerName( "hql" );
+	String LOGGER_NAME = QueryLogging.LOGGER_NAME + ".hql";
 
 	HqlLogging QUERY_LOGGER = Logger.getMessageLogger( HqlLogging.class, LOGGER_NAME );
 

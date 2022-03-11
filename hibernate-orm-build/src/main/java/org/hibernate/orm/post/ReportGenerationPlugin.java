@@ -8,6 +8,7 @@ package org.hibernate.orm.post;
 
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 
 /**
@@ -23,32 +24,39 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 				.maybeCreate( CONFIG_NAME )
 				.setDescription( "Used to collect the jars with classes files to be used in the aggregation reports for `@Internal`, `@Incubating`, etc" );
 
+		final Task groupingTask = project.getTasks().maybeCreate( "generateHibernateReports" );
+		groupingTask.setGroup( TASK_GROUP_NAME );
+
 		final IndexManager indexManager = new IndexManager( artifactsToProcess, project );
 		final IndexerTask indexerTask = project.getTasks().create(
 				"buildAggregatedIndex",
 				IndexerTask.class,
 				indexManager
 		);
+		groupingTask.dependsOn( indexerTask );
 
 		final IncubationReportTask incubatingTask = project.getTasks().create(
-				"createIncubationReport",
+				"generateIncubationReport",
 				IncubationReportTask.class,
 				indexManager
 		);
 		incubatingTask.dependsOn( indexerTask );
+		groupingTask.dependsOn( incubatingTask );
 
 		final InternalsReportTask internalsTask = project.getTasks().create(
-				"createInternalsReport",
+				"generateInternalsReport",
 				InternalsReportTask.class,
 				indexManager
 		);
 		internalsTask.dependsOn( indexerTask );
+		groupingTask.dependsOn( internalsTask );
 
 		final LoggingReportTask loggingTask = project.getTasks().create(
-				"createLoggingReport",
+				"generateLoggingReport",
 				LoggingReportTask.class,
 				indexManager
 		);
 		loggingTask.dependsOn( indexerTask );
+		groupingTask.dependsOn( loggingTask );
 	}
 }

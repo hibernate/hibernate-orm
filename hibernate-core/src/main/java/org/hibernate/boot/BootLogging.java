@@ -6,26 +6,22 @@
  */
 package org.hibernate.boot;
 
+import org.hibernate.internal.log.SubSystemLogging;
+
 import org.jboss.logging.Logger;
 
-import static org.hibernate.internal.CoreLogging.subsystemLoggerName;
 
 /**
  * Logging related to Hibernate bootstrapping
  */
-public class BootLogging {
-	public static String NAME = subsystemLoggerName( "boot" );
+@SubSystemLogging(
+		name = BootLogging.NAME,
+		description = "Logging related to bootstrapping of a SessionFactory / EntityManagerFactory"
+)
+public interface BootLogging {
+	String NAME = SubSystemLogging.BASE + ".boot";
+	Logger BOOT_LOGGER = Logger.getLogger( NAME );
 
-	public static final Logger LOGGER = Logger.getLogger( NAME );
-
-	public static String subLoggerName(String subPath) {
-		return NAME + "." + subPath;
-	}
-
-	public static Logger subLogger(String subPath) {
-		return Logger.getLogger( subLoggerName( subPath ) );
-	}
-
-	public static final boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
-	public static final boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
+	boolean DEBUG_ENABLED = BOOT_LOGGER.isDebugEnabled();
+	boolean TRACE_ENABLED = BOOT_LOGGER.isTraceEnabled();
 }

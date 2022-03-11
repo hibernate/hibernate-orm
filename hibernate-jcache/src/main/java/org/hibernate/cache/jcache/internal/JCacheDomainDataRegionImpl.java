@@ -21,6 +21,8 @@ import org.hibernate.cache.spi.support.DomainDataRegionImpl;
 import org.hibernate.cache.spi.support.DomainDataStorageAccess;
 import org.hibernate.cache.spi.support.RegionFactoryTemplate;
 
+import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
+
 /**
  * @author Vlad Mihalcea
  */
@@ -37,7 +39,7 @@ public class JCacheDomainDataRegionImpl extends DomainDataRegionImpl {
 
 	@Override
 	protected EntityDataAccess generateTransactionalEntityDataAccess(EntityDataCachingConfig entityAccessConfig) {
-		SecondLevelCacheLogger.INSTANCE.nonStandardSupportForAccessType(
+		L2CACHE_LOGGER.nonStandardSupportForAccessType(
 				getName(),
 				AccessType.TRANSACTIONAL.getExternalName(),
 				getRegionFactory().getClass().getSimpleName()
@@ -47,7 +49,7 @@ public class JCacheDomainDataRegionImpl extends DomainDataRegionImpl {
 
 	@Override
 	protected NaturalIdDataAccess generateTransactionalNaturalIdDataAccess(NaturalIdDataCachingConfig accessConfig) {
-		SecondLevelCacheLogger.INSTANCE.nonStandardSupportForAccessType(
+		L2CACHE_LOGGER.nonStandardSupportForAccessType(
 				getName(),
 				AccessType.TRANSACTIONAL.getExternalName(),
 				getRegionFactory().getClass().getSimpleName()
@@ -57,7 +59,7 @@ public class JCacheDomainDataRegionImpl extends DomainDataRegionImpl {
 
 	@Override
 	protected CollectionDataAccess generateTransactionalCollectionDataAccess(CollectionDataCachingConfig accessConfig) {
-		SecondLevelCacheLogger.INSTANCE.nonStandardSupportForAccessType(
+		L2CACHE_LOGGER.nonStandardSupportForAccessType(
 				getName(),
 				AccessType.TRANSACTIONAL.getExternalName(),
 				getRegionFactory().getClass().getSimpleName()

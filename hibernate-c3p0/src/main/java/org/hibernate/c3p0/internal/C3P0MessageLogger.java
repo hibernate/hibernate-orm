@@ -9,11 +9,14 @@ package org.hibernate.c3p0.internal;
 import java.sql.SQLException;
 
 import org.hibernate.internal.log.ConnectionPoolingLogger;
+import org.hibernate.internal.log.SubSystemLogging;
 
+import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.Cause;
 import org.jboss.logging.annotations.LogMessage;
 import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
+import org.jboss.logging.annotations.ValidIdRange;
 
 import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.WARN;
@@ -25,7 +28,16 @@ import static org.jboss.logging.Logger.Level.WARN;
  * New messages must be added after the last message defined to ensure message codes are unique.
  */
 @MessageLogger(projectCode = "HHH")
+@ValidIdRange( min = 10001, max = 15000 )
+@SubSystemLogging(
+		name = C3P0MessageLogger.NAME,
+		description = "Logging related to the C3P0 connection pool"
+)
 public interface C3P0MessageLogger extends ConnectionPoolingLogger {
+	String NAME = ConnectionPoolingLogger.LOGGER_NAME + ".c3p0";
+
+	Logger C3P0_LOGGER = Logger.getLogger( NAME );
+	C3P0MessageLogger C3P0_MSG_LOGGER = Logger.getMessageLogger( C3P0MessageLogger.class, NAME );
 
 	/**
 	 * Log a message (WARN) about conflicting {@code hibernate.c3p0.XYZ} and {@code c3p0.XYZ} settings

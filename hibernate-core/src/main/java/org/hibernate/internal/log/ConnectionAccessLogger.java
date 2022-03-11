@@ -22,8 +22,12 @@ import static org.jboss.logging.Logger.Level.INFO;
  */
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 10001501, max = 10002000 )
+@SubSystemLogging(
+		name = ConnectionAccessLogger.LOGGER_NAME,
+		description = "Used to log details around use of `JdbcConnectionAccess`"
+)
 public interface ConnectionAccessLogger extends BasicLogger {
-	String LOGGER_NAME = "org.hibernate.orm.connections.access";
+	String LOGGER_NAME = SubSystemLogging.BASE + ".connections.access";
 
 	/**
 	 * Static access to the logging instance

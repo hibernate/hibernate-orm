@@ -8,30 +8,39 @@ package org.hibernate.sql.results.graph;
 
 import java.util.List;
 
+import org.hibernate.internal.log.SubSystemLogging;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.sql.results.ResultsLogger;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.sql.results.graph.DomainResultGraphPrinter.Logging.AST_LOGGER;
+import static org.hibernate.sql.results.graph.DomainResultGraphPrinter.Logging.TRACE_ENABLED;
+
 /**
  * Printer for DomainResult graphs
- *
- * todo (6.0) : implement / use this
  *
  * @author Steve Ebersole
  */
 public class DomainResultGraphPrinter {
-	private static final Logger log = ResultsLogger.subLogger( "graph.AST" );
-	private static final boolean DEBUG_ENABLED = log.isDebugEnabled();
-	private static final boolean TRACE_ENABLED = log.isTraceEnabled();
+	@SubSystemLogging(
+			name = Logging.LOGGER_NAME,
+			description = "Logging of `DomainResult` graphs"
+	)
+	interface Logging {
+		String LOGGER_NAME = ResultsLogger.LOGGER_NAME + ".graph.AST";
+		Logger AST_LOGGER = Logger.getLogger( LOGGER_NAME );
+		boolean DEBUG_ENABLED = AST_LOGGER.isDebugEnabled();
+		boolean TRACE_ENABLED = AST_LOGGER.isTraceEnabled();
+	}
 
 	public static void logDomainResultGraph(List<DomainResult<?>> domainResults) {
 		logDomainResultGraph( "DomainResult Graph", domainResults );
 	}
 
 	public static void logDomainResultGraph(String header, List<DomainResult<?>> domainResults) {
-		if ( ! DEBUG_ENABLED ) {
+		if ( ! Logging.DEBUG_ENABLED ) {
 			return;
 		}
 
@@ -57,10 +66,10 @@ public class DomainResultGraphPrinter {
 			visitGraphNode( domainResult, lastInBranch );
 		}
 
-		log.debug( buffer.toString() );
+		AST_LOGGER.debug( buffer.toString() );
 
 		if ( TRACE_ENABLED ) {
-			log.tracef( new Exception(), "Stack trace calling DomainResultGraphPrinter" );
+			AST_LOGGER.tracef( new Exception(), "Stack trace calling DomainResultGraphPrinter" );
 		}
 	}
 

@@ -78,7 +78,7 @@ public class ResultsHelper {
 						if ( existing != null ) {
 							if ( fetchedModelPart.getNavigableRole().equals(
 									existing.getInitializedPart().getNavigableRole() ) ) {
-								ResultsLogger.LOGGER.tracef(
+								ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef(
 										"Returning previously-registered initializer : %s",
 										existing
 								);
@@ -87,7 +87,7 @@ public class ResultsHelper {
 						}
 
 						final Initializer initializer = producer.get();
-						ResultsLogger.LOGGER.tracef(
+						ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef(
 								"Registering initializer : %s",
 								initializer
 						);
@@ -115,9 +115,9 @@ public class ResultsHelper {
 			return;
 		}
 
-		ResultsLogger.LOGGER.debug( "Initializer list" );
+		ResultsLogger.RESULTS_MESSAGE_LOGGER.debug( "Initializer list" );
 		initializerMap.forEach( (navigablePath, initializer) -> {
-			ResultsLogger.LOGGER.debugf(
+			ResultsLogger.RESULTS_MESSAGE_LOGGER.debugf(
 					"    %s -> %s@%s (%s)",
 					navigablePath.getFullPath(),
 					initializer,

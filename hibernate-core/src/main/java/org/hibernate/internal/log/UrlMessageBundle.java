@@ -27,8 +27,12 @@ import static org.jboss.logging.Logger.Level.WARN;
  */
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 10000001, max = 10001000 )
+@SubSystemLogging(
+		name = UrlMessageBundle.LOGGER_NAME,
+		description = "Logging related to URL handling"
+)
 public interface UrlMessageBundle {
-	String LOGGER_NAME = "org.hibernate.orm.url";
+	String LOGGER_NAME = SubSystemLogging.BASE + ".url";
 
 	Logger URL_LOGGER = Logger.getLogger( LOGGER_NAME );
 	UrlMessageBundle URL_MESSAGE_LOGGER = Logger.getMessageLogger( UrlMessageBundle.class, LOGGER_NAME );

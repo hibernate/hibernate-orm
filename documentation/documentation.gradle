@@ -235,6 +235,8 @@ task renderMigrationGuide(type: AsciidoctorTask, group: 'Documentation') {task->
 	}
 }
 
+tasks.buildDocsForPublishing.dependsOn generateHibernateReports
+
 tasks.withType(AsciidoctorTask).all {
 	baseDirFollowsSourceDir()
 	outputOptions {

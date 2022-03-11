@@ -14,9 +14,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class CoreLogging {
-	public static String subsystemLoggerName(String subsystem) {
-		return "org.hibernate.orm." + subsystem;
-	}
 
 	/**
 	 * Disallow instantiation

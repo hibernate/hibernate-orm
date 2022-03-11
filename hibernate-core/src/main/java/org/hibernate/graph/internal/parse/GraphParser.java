@@ -23,11 +23,12 @@ import org.jboss.logging.Logger;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 
+import static org.hibernate.graph.internal.GraphParserLogging.PARSING_LOGGER;
+
 /**
  * @author Steve Ebersole
  */
 public class GraphParser extends GraphLanguageParserBaseVisitor {
-	public static final Logger PARSING_LOGGER = Logger.getLogger( "org.hibernate.orm.graph.parsing" );
 
 	/**
 	 * Parse the passed graph textual representation into the passed Graph.

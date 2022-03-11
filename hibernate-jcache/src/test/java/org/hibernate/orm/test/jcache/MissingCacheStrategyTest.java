@@ -15,7 +15,6 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.jcache.ConfigSettings;
 import org.hibernate.cache.spi.SecondLevelCacheLogger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.orm.test.jcache.TestHelper;
 import org.hibernate.service.spi.ServiceException;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -42,7 +41,7 @@ import static org.junit.Assert.fail;
 public class MissingCacheStrategyTest extends BaseUnitTestCase {
 
 	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule( SecondLevelCacheLogger.INSTANCE );
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule( SecondLevelCacheLogger.L2CACHE_LOGGER );
 
 	@Test
 	public void testMissingCacheStrategyDefault() {

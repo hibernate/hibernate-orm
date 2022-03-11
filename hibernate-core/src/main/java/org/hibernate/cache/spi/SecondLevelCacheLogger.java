@@ -6,6 +6,7 @@
  */
 package org.hibernate.cache.spi;
 
+import org.hibernate.internal.log.SubSystemLogging;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 
 import org.jboss.logging.BasicLogger;
@@ -23,13 +24,17 @@ import static org.jboss.logging.Logger.Level.WARN;
  */
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 90001001, max = 90002000 )
+@SubSystemLogging(
+		name = SecondLevelCacheLogger.LOGGER_NAME,
+		description = "Logging related to Hibernate second-level caching"
+)
 public interface SecondLevelCacheLogger extends BasicLogger {
-	String LOGGER_NAME = "org.hibernate.orm.cache";
+	String LOGGER_NAME = SubSystemLogging.BASE + ".cache";
 
-	SecondLevelCacheLogger INSTANCE = Logger.getMessageLogger( SecondLevelCacheLogger.class, LOGGER_NAME );
+	SecondLevelCacheLogger L2CACHE_LOGGER = Logger.getMessageLogger( SecondLevelCacheLogger.class, LOGGER_NAME );
 
-	boolean DEBUG_ENABLED = INSTANCE.isDebugEnabled();
-	boolean TRACE_ENABLED = INSTANCE.isTraceEnabled();
+	boolean DEBUG_ENABLED = L2CACHE_LOGGER.isDebugEnabled();
+	boolean TRACE_ENABLED = L2CACHE_LOGGER.isTraceEnabled();
 
 	int NAMESPACE = 90001000;
 

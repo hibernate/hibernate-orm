@@ -6,6 +6,9 @@
  */
 package org.hibernate.boot.jaxb;
 
+import org.hibernate.boot.BootLogging;
+import org.hibernate.internal.log.SubSystemLogging;
+
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.MessageLogger;
@@ -16,13 +19,14 @@ import org.jboss.logging.annotations.ValidIdRange;
  */
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 90005501, max = 90005600 )
+@SubSystemLogging(
+		name = JaxbLogger.LOGGER_NAME,
+		description = "Logging related to JAXB processing"
+)
 public interface JaxbLogger extends BasicLogger {
-	String LOGGER_NAME = "org.hibernate.orm.boot.jaxb";
+	String LOGGER_NAME = BootLogging.NAME + "jaxb";
 
-	JaxbLogger JAXB_LOGGER = Logger.getMessageLogger(
-			JaxbLogger.class,
-			LOGGER_NAME
-	);
+	JaxbLogger JAXB_LOGGER = Logger.getMessageLogger( JaxbLogger.class, LOGGER_NAME );
 
 	boolean TRACE_ENABLED = JAXB_LOGGER.isTraceEnabled();
 	boolean DEBUG_ENABLED = JAXB_LOGGER.isDebugEnabled();

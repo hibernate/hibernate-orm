@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.internal.log.SubSystemLogging;
+
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.MessageLogger;
@@ -18,8 +20,12 @@ import org.jboss.logging.annotations.ValidIdRange;
  */
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 90005701, max = 90005800 )
+@SubSystemLogging(
+		name = MappingModelCreationLogger.LOGGER_NAME,
+		description = "Logging related to building of Hibernate's runtime metamodel descriptors of the domain model"
+)
 public interface MappingModelCreationLogger extends BasicLogger {
-	String LOGGER_NAME = "org.hibernate.orm.model.mapping.creation";
+	String LOGGER_NAME = SubSystemLogging.BASE + ".model.mapping.creation";
 
 	MappingModelCreationLogger LOGGER = Logger.getMessageLogger( MappingModelCreationLogger.class, LOGGER_NAME );
 

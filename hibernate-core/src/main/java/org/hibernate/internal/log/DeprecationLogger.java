@@ -13,7 +13,6 @@ import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
-import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.WARN;
 
 /**
@@ -23,13 +22,14 @@ import static org.jboss.logging.Logger.Level.WARN;
  */
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 90000001, max = 90001000 )
+@SubSystemLogging(
+		name = DeprecationLogger.CATEGORY,
+		description = "Logging related to uses of deprecated features"
+)
 public interface DeprecationLogger extends BasicLogger {
-	String CATEGORY = "org.hibernate.orm.deprecation";
+	String CATEGORY = SubSystemLogging.BASE + ".deprecation";
 
-	DeprecationLogger DEPRECATION_LOGGER = Logger.getMessageLogger(
-			DeprecationLogger.class,
-			CATEGORY
-	);
+	DeprecationLogger DEPRECATION_LOGGER = Logger.getMessageLogger( DeprecationLogger.class, CATEGORY );
 
 	@LogMessage(level = WARN)
 	@Message(

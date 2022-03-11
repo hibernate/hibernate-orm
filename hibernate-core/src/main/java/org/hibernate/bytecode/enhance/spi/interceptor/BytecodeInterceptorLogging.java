@@ -7,6 +7,7 @@
 package org.hibernate.bytecode.enhance.spi.interceptor;
 
 import org.hibernate.bytecode.BytecodeLogging;
+import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
@@ -22,12 +23,16 @@ import static org.jboss.logging.Logger.Level.WARN;
  */
 @MessageLogger(projectCode = "HHH")
 @ValidIdRange(min = 90005901, max = 90006000)
+@SubSystemLogging(
+		name = BytecodeInterceptorLogging.LOGGER_NAME,
+		description = "Logging related to bytecode-based interception"
+)
 public interface BytecodeInterceptorLogging extends BasicLogger {
 	String SUB_NAME = "interceptor";
-	String NAME = BytecodeLogging.subLoggerName(SUB_NAME);
+	String LOGGER_NAME = BytecodeLogging.LOGGER_NAME + "." + SUB_NAME;
 
-	Logger LOGGER = Logger.getLogger(NAME);
-	BytecodeInterceptorLogging MESSAGE_LOGGER = Logger.getMessageLogger(BytecodeInterceptorLogging.class, NAME);
+	Logger LOGGER = Logger.getLogger( LOGGER_NAME );
+	BytecodeInterceptorLogging MESSAGE_LOGGER = Logger.getMessageLogger(BytecodeInterceptorLogging.class, LOGGER_NAME );
 
 	boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
 	boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();

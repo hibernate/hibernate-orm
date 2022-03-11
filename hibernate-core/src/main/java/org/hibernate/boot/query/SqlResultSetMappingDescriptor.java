@@ -151,7 +151,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 		@Override
 		public ResultMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
-			BootQueryLogging.LOGGER.debugf(
+			BootQueryLogging.BOOT_QUERY_LOGGER.debugf(
 					"Generating ScalarResultMappingMemento for JPA ColumnResult(%s) for ResultSet mapping `%s`",
 					columnResult.name(),
 					mappingName
@@ -207,7 +207,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 		@Override
 		public ResultMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
-			BootQueryLogging.LOGGER.debugf(
+			BootQueryLogging.BOOT_QUERY_LOGGER.debugf(
 					"Generating InstantiationResultMappingMemento for JPA ConstructorResult(%s) for ResultSet mapping `%s`",
 					targetJavaType.getName(),
 					mappingName

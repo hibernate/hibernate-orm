@@ -14,7 +14,7 @@ import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.loader.ast.LoaderLogging;
+import org.hibernate.loader.LoaderLogging;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**

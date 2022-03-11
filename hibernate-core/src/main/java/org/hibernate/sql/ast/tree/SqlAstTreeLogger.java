@@ -6,6 +6,9 @@
  */
 package org.hibernate.sql.ast.tree;
 
+import org.hibernate.internal.log.SubSystemLogging;
+import org.hibernate.sql.ast.SqlTreeCreationLogger;
+
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.MessageLogger;
@@ -18,8 +21,12 @@ import org.jboss.logging.annotations.ValidIdRange;
  */
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 90005401, max = 90005500 )
+@SubSystemLogging(
+		name = SqlAstTreeLogger.LOGGER_NAME,
+		description = "Logging related to the processing of SQL AST trees"
+)
 public interface SqlAstTreeLogger extends BasicLogger {
-	String LOGGER_NAME = "org.hibernate.orm.sql.ast.tree";
+	String LOGGER_NAME = SubSystemLogging.BASE + ".sql.ast.tree";
 
 	/**
 	 * Static access to the logging instance

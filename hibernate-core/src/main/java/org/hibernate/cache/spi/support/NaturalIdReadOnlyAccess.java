@@ -14,6 +14,8 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
+import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
+
 /**
  * Standard support for {@link org.hibernate.cache.spi.access.NaturalIdDataAccess}
  * using the {@link AccessType#READ_ONLY} access type.
@@ -28,7 +30,7 @@ public class NaturalIdReadOnlyAccess extends AbstractNaturalIdDataAccess {
 			NaturalIdDataCachingConfig config) {
 		super( region, keysFactory, storageAccess, config );
 		if ( config.isMutable() ) {
-			SecondLevelCacheLogger.INSTANCE.readOnlyCachingMutableNaturalId( config.getNavigableRole() );
+			L2CACHE_LOGGER.readOnlyCachingMutableNaturalId( config.getNavigableRole() );
 		}
 	}
 

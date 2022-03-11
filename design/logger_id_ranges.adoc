@@ -63,144 +63,44 @@ public interface MappingModelCreationLogger extends BasicLogger {
 }
 ----
 
+== Sub-system logging registry
 
-== `@ValidIdRange` registry
+[width="50%",cols=">s,>s,^2m",options="header"]
+|===
+|Channel (category)
+|Id Range (?)
+|Purpose
+
+
+|[[connections-pooling]]org.hibernate.orm.connections.pooling
+|<<ConnectionPoolingLogger>>
+|Logging related to connection pooling
+
+|org.hibernate.orm.boot
+|n/a
+|Logging related to bootstrapping of a SessionFactory / EntityManagerFactory
+
+|===
+
+
+== MessageLogger id registry
 
 [width="50%",cols=">s,>s,^2m,^2m",options="header"]
 |===
 |`ValidIdRange#min`
 |`ValidIdRange#max`
-|Channel
 |Logger
+|Sub-system (?)
+
+
+|[[ConnectionPoolingLogger]]10001001
+|10001500
+|org.hibernate.internal.log.ConnectionPoolingLogger
+| <<connections-pooling>>
 
 |1
-|10000
+|2
+|org.hibernate.TheLogger
 |n/a
-|org.hibernate.internal.CoreMessageLogger
-
-|10001
-|15000
-|n/a
-|org.hibernate.c3p0.internal.C3P0MessageLogger (extends ConnectionPoolingLogger)
-
-|15000
-|20000
-|n/a
-|org.hibernate.internal.EntityManagerMessageLogger
-
-|20001
-|25000
-|n/a
-|org.hibernate.cache.ehcache.EhCacheMessageLogger (extends CoreMessageLogger)
-
-|25001
-|30000
-|n/a
-|org.hibernate.envers.internal.EnversMessageLogger
-
-|25001
-|30000
-|n/a
-|org.hibernate.cache.infinispan.util.InfinispanMessageLogger
-
-|30001
-|35000
-|n/a
-|org.hibernate.proxool.internal.ProxoolMessageLogger (extends ConnectionPoolingLogger)
-
-|10000001
-|10001000
-|org.hibernate.orm.url
-|org.hibernate.internal.log.UrlMessageBundle
-
-|10001001
-|10001500
-|org.hibernate.orm.connections.pooling
-|org.hibernate.internal.log.ConnectionPoolingLogger
-
-|10005001
-|10010000
-|org.hibernate.orm.beans
-|org.hibernate.resource.beans.internal.BeansMessageLogger
-
-|80000001
-|80001000
-|n/a
-|org.hibernate.spatial.HSMessageLogger
-
-|90000001
-|90001000
-|org.hibernate.orm.deprecation
-|org.hibernate.internal.log.DeprecationLogger
-
-|90001001
-|90002000
-|org.hibernate.orm.cache
-|org.hibernate.cache.spi.SecondLevelCacheLogger
-
-|90002001
-|90003000
-|n/a
-|org.hibernate.internal.log.UnsupportedLogger
-
-|90003001
-|90003500
-|org.hibernate.orm.query
-|org.hibernate.query.spi.QueryLogger
-
-|90003501
-|90004000
-|org.hibernate.orm.query.hql
-|org.hibernate.query.hql.HqlLogging
-
-|90004001
-|90005000
-|org.hibernate.orm.sql.exec
-|org.hibernate.sql.exec.SqlExecLogger
-
-|90005001
-|90005100
-|org.hibernate.orm.sql.results
-|org.hibernate.sql.results.ResultsLogger
-
-|90005101
-|90005200
-|org.hibernate.orm.sql.results.loading.collection
-|org.hibernate.sql.results.graph.collection.CollectionLoadingLogger
-
-|90005201
-|90005300
-|org.hibernate.orm.sql.results.loading.entity
-|org.hibernate.sql.results.graph.entity.EntityLoadingLogger
-
-|90005301
-|90005400
-|org.hibernate.orm.sql.results.loading.composite
-|org.hibernate.sql.results.graph.embeddable.EmbeddableLoadingLogger
-
-|90005401
-|90005500
-|org.hibernate.orm.sql.ast.tree
-|org.hibernate.sql.ast.tree.SqlAstTreeLogger
-
-|90005501
-|90005600
-|org.hibernate.orm.boot.jaxb
-|org.hibernate.boot.jaxb.JaxbLogger
-
-|90005601
-|90005700
-|org.hibernate.envers.boot
-|org.hibernate.envers.boot.EnversBootLogger
-
-|90005701
-|90005800
-|org.hibernate.orm.model.mapping.creation
-|org.hibernate.metamodel.mapping.MappingModelCreationLogger
-
-|90005801
-|90005900
-|org.hibernate.orm.sql.results.loading
-|org.hibernate.sql.results.LoadingLogger
 
 |===

@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import jakarta.persistence.GenerationType;
 
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -20,7 +21,6 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.Assigned;
 import org.hibernate.id.ForeignGenerator;
@@ -33,7 +33,6 @@ import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.UUIDHexGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
-import org.hibernate.id.factory.IdGenFactoryLogging;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.GenerationTypeStrategy;
 import org.hibernate.id.factory.spi.GenerationTypeStrategyRegistration;
@@ -43,15 +42,12 @@ import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
-import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
-
-import jakarta.persistence.GenerationType;
 
 import static org.hibernate.id.factory.IdGenFactoryLogging.ID_GEN_FAC_LOGGER;
 
@@ -112,7 +108,7 @@ public class StandardIdentifierGeneratorFactory
 							generationTypeStrategy
 					);
 					if ( previous != null ) {
-						IdGenFactoryLogging.ID_GEN_FAC_LOGGER.debugf(
+						ID_GEN_FAC_LOGGER.debugf(
 								"GenerationTypeStrategyRegistration [%s] overrode previous registration for GenerationType#%s : %s",
 								registration,
 								generationType.name(),

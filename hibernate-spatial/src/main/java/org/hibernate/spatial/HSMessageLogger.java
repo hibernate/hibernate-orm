@@ -7,6 +7,8 @@
 
 package org.hibernate.spatial;
 
+import org.hibernate.internal.log.SubSystemLogging;
+
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.LogMessage;
@@ -23,11 +25,16 @@ import static org.jboss.logging.Logger.Level.INFO;
  */
 @MessageLogger(projectCode = "HHH")
 @ValidIdRange(min = 80000001, max = 80001000)
+@SubSystemLogging(
+		name = HSMessageLogger.LOGGER_NAME,
+		description = "Base logging for Hibernate Spatial",
+		mixed = true
+)
 public interface HSMessageLogger extends BasicLogger {
 
 	String LOGGER_NAME = "org.hibernate.spatial";
 
-	HSMessageLogger LOGGER = Logger.getMessageLogger( HSMessageLogger.class, LOGGER_NAME );
+	HSMessageLogger SPATIAL_MSG_LOGGER = Logger.getMessageLogger( HSMessageLogger.class, LOGGER_NAME );
 
 	@LogMessage(level = INFO)
 	@Message(value = "hibernate-spatial integration enabled : %s", id = 80000001)

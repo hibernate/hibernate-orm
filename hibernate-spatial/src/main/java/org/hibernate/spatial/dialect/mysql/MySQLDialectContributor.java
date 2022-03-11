@@ -25,13 +25,13 @@ public class MySQLDialectContributor implements ContributorImplementor {
 
 	@Override
 	public void contributeJdbcTypes(TypeContributions typeContributions) {
-		HSMessageLogger.LOGGER.typeContributions( this.getClass().getCanonicalName() );
+		HSMessageLogger.SPATIAL_MSG_LOGGER.typeContributions( this.getClass().getCanonicalName() );
 		typeContributions.contributeJdbcType( MySQLGeometryJdbcType.INSTANCE);
 	}
 
 	@Override
 	public void contributeFunctions(FunctionContributions functionContributions) {
-		HSMessageLogger.LOGGER.functionContributions( this.getClass().getCanonicalName() );
+		HSMessageLogger.SPATIAL_MSG_LOGGER.functionContributions( this.getClass().getCanonicalName() );
 		final KeyedSqmFunctionDescriptors mysqlFunctions = new MySqlSqmFunctionDescriptors( functionContributions );
 		final SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
 		mysqlFunctions.asMap().forEach( (key, desc) -> {

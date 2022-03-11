@@ -19,6 +19,9 @@ import org.hibernate.cache.spi.SecondLevelCacheLogger;
 import org.hibernate.cache.spi.TimestampsCache;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
+import static org.hibernate.cache.spi.SecondLevelCacheLogger.DEBUG_ENABLED;
+import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
+
 /**
  * The standard implementation of the Hibernate QueryCache interface.  Works
  * hind-in-hand with {@link TimestampsCache} to help in recognizing
@@ -49,8 +52,8 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 			final QueryKey key,
 			final List<?> results,
 			final SharedSessionContractImplementor session) throws HibernateException {
-		if ( SecondLevelCacheLogger.DEBUG_ENABLED ) {
-			SecondLevelCacheLogger.INSTANCE.debugf( "Caching query results in region: %s; timestamp=%s", cacheRegion.getName(), session.getTransactionStartTimestamp() );
+		if ( DEBUG_ENABLED ) {
+			L2CACHE_LOGGER.debugf( "Caching query results in region: %s; timestamp=%s", cacheRegion.getName(), session.getTransactionStartTimestamp() );
 		}
 
 		final CacheItem cacheItem = new CacheItem(
@@ -78,27 +81,27 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 			final QueryKey key,
 			final Set<String> spaces,
 			final SharedSessionContractImplementor session) throws HibernateException {
-		if ( SecondLevelCacheLogger.DEBUG_ENABLED ) {
-			SecondLevelCacheLogger.INSTANCE.debugf( "Checking cached query results in region: %s", cacheRegion.getName() );
+		if ( DEBUG_ENABLED ) {
+			L2CACHE_LOGGER.debugf( "Checking cached query results in region: %s", cacheRegion.getName() );
 		}
 
 		final CacheItem cacheItem = getCachedData( key, session );
 		if ( cacheItem == null ) {
-			if ( SecondLevelCacheLogger.DEBUG_ENABLED ) {
-				SecondLevelCacheLogger.INSTANCE.debug( "Query results were not found in cache" );
+			if ( DEBUG_ENABLED ) {
+				L2CACHE_LOGGER.debug( "Query results were not found in cache" );
 			}
 			return null;
 		}
 
 		if ( !timestampsCache.isUpToDate( spaces, cacheItem.timestamp, session ) ) {
-			if ( SecondLevelCacheLogger.DEBUG_ENABLED ) {
-				SecondLevelCacheLogger.INSTANCE.debug( "Cached query results were not up-to-date" );
+			if ( DEBUG_ENABLED ) {
+				L2CACHE_LOGGER.debug( "Cached query results were not up-to-date" );
 			}
 			return null;
 		}
 
-		if ( SecondLevelCacheLogger.DEBUG_ENABLED ) {
-			SecondLevelCacheLogger.INSTANCE.debug( "Returning cached query results" );
+		if ( DEBUG_ENABLED ) {
+			L2CACHE_LOGGER.debug( "Returning cached query results" );
 		}
 
 		return deepCopy( cacheItem.results );
@@ -109,27 +112,27 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 			final QueryKey key,
 			final String[] spaces,
 			final SharedSessionContractImplementor session) throws HibernateException {
-		if ( SecondLevelCacheLogger.DEBUG_ENABLED ) {
-			SecondLevelCacheLogger.INSTANCE.debugf( "Checking cached query results in region: %s", cacheRegion.getName() );
+		if ( DEBUG_ENABLED ) {
+			L2CACHE_LOGGER.debugf( "Checking cached query results in region: %s", cacheRegion.getName() );
 		}
 
 		final CacheItem cacheItem = getCachedData( key, session );
 		if ( cacheItem == null ) {
-			if ( SecondLevelCacheLogger.DEBUG_ENABLED ) {
-				SecondLevelCacheLogger.INSTANCE.debug( "Query results were not found in cache" );
+			if ( DEBUG_ENABLED ) {
+				L2CACHE_LOGGER.debug( "Query results were not found in cache" );
 			}
 			return null;
 		}
 
 		if ( !timestampsCache.isUpToDate( spaces, cacheItem.timestamp, session ) ) {
-			if ( SecondLevelCacheLogger.DEBUG_ENABLED ) {
-				SecondLevelCacheLogger.INSTANCE.debug( "Cached query results were not up-to-date" );
+			if ( DEBUG_ENABLED ) {
+				L2CACHE_LOGGER.debug( "Cached query results were not up-to-date" );
 			}
 			return null;
 		}
 
-		if ( SecondLevelCacheLogger.DEBUG_ENABLED ) {
-			SecondLevelCacheLogger.INSTANCE.debug( "Returning cached query results" );
+		if ( DEBUG_ENABLED ) {
+			L2CACHE_LOGGER.debug( "Returning cached query results" );
 		}
 
 		return deepCopy( cacheItem.results );

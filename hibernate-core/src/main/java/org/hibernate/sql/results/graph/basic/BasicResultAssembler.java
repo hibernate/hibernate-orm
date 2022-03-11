@@ -58,7 +58,7 @@ public class BasicResultAssembler<J> implements DomainResultAssembler<J> {
 			JdbcValuesSourceProcessingOptions options) {
 		final Object jdbcValue = extractRawValue( rowProcessingState );
 
-		ResultsLogger.LOGGER.debugf( "Extracted JDBC value [%d] - [%s]", valuesArrayPosition, jdbcValue );
+		ResultsLogger.RESULTS_MESSAGE_LOGGER.debugf( "Extracted JDBC value [%d] - [%s]", valuesArrayPosition, jdbcValue );
 
 		if ( valueConverter != null ) {
 			if ( jdbcValue != null ) {

@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.Logger;
 
@@ -15,10 +15,14 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
+@SubSystemLogging(
+		name = NaturalIdLogging.LOGGER_NAME,
+		description = "Logging related to handling of natural-id mappings"
+)
 public interface NaturalIdLogging {
-	String LOGGER_NAME = CoreLogging.subsystemLoggerName( "mapping.natural_id" );
-	Logger LOGGER = Logger.getLogger( LOGGER_NAME );
+	String LOGGER_NAME = SubSystemLogging.BASE + ".mapping.natural_id";
+	Logger NATURAL_ID_LOGGER = Logger.getLogger( LOGGER_NAME );
 
-	boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
-	boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
+	boolean DEBUG_ENABLED = NATURAL_ID_LOGGER.isDebugEnabled();
+	boolean TRACE_ENABLED = NATURAL_ID_LOGGER.isTraceEnabled();
 }

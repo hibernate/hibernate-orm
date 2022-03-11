@@ -46,7 +46,7 @@ public class ImplicitHbmResultSetMappingDescriptorBuilder {
 	public ImplicitHbmResultSetMappingDescriptorBuilder(String queryRegistrationName, MetadataBuildingContext metadataBuildingContext) {
 		this.registrationName = queryRegistrationName;
 
-		BootQueryLogging.LOGGER.debugf(
+		BootQueryLogging.BOOT_QUERY_LOGGER.debugf(
 				"Creating implicit HbmResultSetMappingDescriptor for named-native-query : %s",
 				registrationName
 		);

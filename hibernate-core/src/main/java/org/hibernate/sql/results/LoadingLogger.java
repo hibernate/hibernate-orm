@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results;
 
+import org.hibernate.internal.log.SubSystemLogging;
+
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.MessageLogger;
@@ -16,8 +18,12 @@ import org.jboss.logging.annotations.ValidIdRange;
  */
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 90005801, max = 90005900 )
+@SubSystemLogging(
+		name = LoadingLogger.LOGGER_NAME,
+		description = "Logging related to building parts of the domain model from JDBC or from cache"
+)
 public interface LoadingLogger extends BasicLogger {
-	String LOGGER_NAME = ResultsLogger.subLoggerName( "loading" );
+	String LOGGER_NAME = ResultsLogger.LOGGER_NAME + ".loading";
 
 	Logger LOGGER = Logger.getLogger( LOGGER_NAME );
 	LoadingLogger MESSAGE_LOGGER = Logger.getMessageLogger( LoadingLogger.class, LOGGER_NAME );

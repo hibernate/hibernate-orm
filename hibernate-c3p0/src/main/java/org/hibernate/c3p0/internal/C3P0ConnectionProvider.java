@@ -29,7 +29,8 @@ import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.c3p0.internal.C3P0MessageLogger.C3P0_LOGGER;
+import static org.hibernate.c3p0.internal.C3P0MessageLogger.C3P0_MSG_LOGGER;
 
 /**
  * A connection provider that uses a C3P0 connection pool. Hibernate will use this by
@@ -40,11 +41,6 @@ import org.jboss.logging.Logger;
  */
 public class C3P0ConnectionProvider
 		implements ConnectionProvider, Configurable, Stoppable, ServiceRegistryAwareService {
-
-	private static final C3P0MessageLogger LOG = Logger.getMessageLogger(
-			C3P0MessageLogger.class,
-			C3P0ConnectionProvider.class.getName()
-	);
 
 	//swaldman 2006-08-28: define c3p0-style configuration parameters for properties with
 	//                     hibernate-specific overrides to detect and warn about conflicting
@@ -112,21 +108,21 @@ public class C3P0ConnectionProvider
 		final String jdbcUrl = (String) props.get( Environment.URL );
 		final Properties connectionProps = ConnectionProviderInitiator.getConnectionProperties( props );
 
-		LOG.c3p0UsingDriver( jdbcDriverClass, jdbcUrl );
-		LOG.connectionProperties( ConfigurationHelper.maskOut( connectionProps, "password" ) );
+		C3P0_MSG_LOGGER.c3p0UsingDriver( jdbcDriverClass, jdbcUrl );
+		C3P0_MSG_LOGGER.connectionProperties( ConfigurationHelper.maskOut( connectionProps, "password" ) );
 
 		autocommit = ConfigurationHelper.getBoolean( Environment.AUTOCOMMIT, props );
-		LOG.autoCommitMode( autocommit );
+		C3P0_MSG_LOGGER.autoCommitMode( autocommit );
 
 		if ( jdbcDriverClass == null ) {
-			LOG.jdbcDriverNotSpecified( Environment.DRIVER );
+			C3P0_MSG_LOGGER.jdbcDriverNotSpecified( Environment.DRIVER );
 		}
 		else {
 			try {
 				serviceRegistry.getService( ClassLoaderService.class ).classForName( jdbcDriverClass );
 			}
 			catch (ClassLoadingException e) {
-				throw new ClassLoadingException( LOG.jdbcDriverNotFound( jdbcDriverClass ), e );
+				throw new ClassLoadingException( C3P0_MSG_LOGGER.jdbcDriverNotFound( jdbcDriverClass ), e );
 			}
 		}
 
@@ -187,12 +183,12 @@ public class C3P0ConnectionProvider
 			ds = DataSources.pooledDataSource( unpooled, allProps );
 		}
 		catch (Exception e) {
-			LOG.error( LOG.unableToInstantiateC3p0ConnectionPool(), e );
-			throw new HibernateException( LOG.unableToInstantiateC3p0ConnectionPool(), e );
+			C3P0_LOGGER.error( C3P0_MSG_LOGGER.unableToInstantiateC3p0ConnectionPool(), e );
+			throw new HibernateException( C3P0_MSG_LOGGER.unableToInstantiateC3p0ConnectionPool(), e );
 		}
 
 		isolation = ConnectionProviderInitiator.extractIsolation( props );
-		LOG.jdbcIsolationLevel( ConnectionProviderInitiator.toIsolationNiceName( isolation ) );
+		C3P0_MSG_LOGGER.jdbcIsolationLevel( ConnectionProviderInitiator.toIsolationNiceName( isolation ) );
 	}
 
 	@Override
@@ -220,7 +216,7 @@ public class C3P0ConnectionProvider
 	}
 
 	private void warnPropertyConflict(String hibernateStyle, String c3p0Style) {
-		LOG.bothHibernateAndC3p0StylesSet( hibernateStyle, c3p0Style );
+		C3P0_MSG_LOGGER.bothHibernateAndC3p0StylesSet( hibernateStyle, c3p0Style );
 	}
 
 	@Override
@@ -229,7 +225,7 @@ public class C3P0ConnectionProvider
 			DataSources.destroy( ds );
 		}
 		catch (SQLException sqle) {
-			LOG.unableToDestroyC3p0ConnectionPool( sqle );
+			C3P0_MSG_LOGGER.unableToDestroyC3p0ConnectionPool( sqle );
 		}
 	}
 

@@ -24,13 +24,13 @@ public class H2GisDialectContributor implements ContributorImplementor {
 	}
 
 	public void contributeJdbcTypes(TypeContributions typeContributions) {
-		HSMessageLogger.LOGGER.typeContributions( this.getClass().getCanonicalName() );
+		HSMessageLogger.SPATIAL_MSG_LOGGER.typeContributions( this.getClass().getCanonicalName() );
 		typeContributions.contributeJdbcType( H2GISGeometryType.INSTANCE );
 	}
 
 	@Override
 	public void contributeFunctions(FunctionContributions functionContributions) {
-		HSMessageLogger.LOGGER.functionContributions( this.getClass().getCanonicalName() );
+		HSMessageLogger.SPATIAL_MSG_LOGGER.functionContributions( this.getClass().getCanonicalName() );
 		final KeyedSqmFunctionDescriptors functions = new H2SqmFunctionDescriptors( functionContributions );
 		final SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
 		functions.asMap().forEach( (key, desc) -> {

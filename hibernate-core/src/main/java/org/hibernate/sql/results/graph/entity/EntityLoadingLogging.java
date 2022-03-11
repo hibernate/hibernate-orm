@@ -6,17 +6,22 @@
  */
 package org.hibernate.sql.results.graph.entity;
 
+import org.hibernate.internal.log.SubSystemLogging;
 import org.hibernate.sql.results.LoadingLogger;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableLoadingLogger;
 
 import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
  */
+@SubSystemLogging(
+		name = EmbeddableLoadingLogger.LOGGER_NAME,
+		description = "Logging related to entity loading"
+)
 public interface EntityLoadingLogging {
-	String LOCAL_NAME = "entity";
-	String LOGGER_NAME = LoadingLogger.subLoggerName( LOCAL_NAME );
-	Logger ENTITY_LOADING_LOGGER = LoadingLogger.subLogger( LOCAL_NAME );
+	String LOGGER_NAME = LoadingLogger.LOGGER_NAME + ".entity";
+	Logger ENTITY_LOADING_LOGGER = Logger.getLogger( LOGGER_NAME );
 
 	boolean TRACE_ENABLED = ENTITY_LOADING_LOGGER.isTraceEnabled();
 	boolean DEBUG_ENABLED = ENTITY_LOADING_LOGGER.isDebugEnabled();

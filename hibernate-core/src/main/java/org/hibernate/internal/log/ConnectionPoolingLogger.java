@@ -26,8 +26,12 @@ import static org.jboss.logging.Logger.Level.WARN;
  */
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 10001001, max = 10001500 )
+@SubSystemLogging(
+		name = ConnectionPoolingLogger.LOGGER_NAME,
+		description = "Logging related to connection pooling"
+)
 public interface ConnectionPoolingLogger extends BasicLogger {
-	String LOGGER_NAME = "org.hibernate.orm.connections.pooling";
+	String LOGGER_NAME = SubSystemLogging.BASE + ".connections.pooling";
 
 	/**
 	 * Static access to the logging instance

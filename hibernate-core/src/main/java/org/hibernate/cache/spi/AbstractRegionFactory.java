@@ -17,6 +17,8 @@ import org.hibernate.cache.spi.support.RegionNameQualifier;
 import org.hibernate.cache.spi.support.SimpleTimestamper;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
+import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
+
 /**
  * @author Steve Ebersole
  */
@@ -95,7 +97,7 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 			}
 		}
 		else {
-			SecondLevelCacheLogger.INSTANCE.attemptToStartAlreadyStartedCacheProvider();
+			L2CACHE_LOGGER.attemptToStartAlreadyStartedCacheProvider();
 		}
 	}
 
@@ -115,7 +117,7 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 			}
 		}
 		else {
-			SecondLevelCacheLogger.INSTANCE.attemptToStopAlreadyStoppedCacheProvider();
+			L2CACHE_LOGGER.attemptToStopAlreadyStoppedCacheProvider();
 		}
 	}
 

@@ -6,10 +6,16 @@
  */
 package org.hibernate.type.descriptor;
 
+import org.hibernate.internal.log.SubSystemLogging;
+
 import org.jboss.logging.Logger;
 
+@SubSystemLogging(
+		name = JdbcBindingLogging.NAME,
+		description = "Logging of JDBC parameter value binding"
+)
 public interface JdbcBindingLogging {
-	String NAME = "org.hibernate.orm.jdbc.bind";
+	String NAME = SubSystemLogging.BASE + ".jdbc.bind";
 
 	Logger LOGGER = Logger.getLogger( NAME );
 

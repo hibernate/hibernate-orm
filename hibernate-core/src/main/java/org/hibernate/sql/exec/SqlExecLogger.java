@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.exec;
 
+import org.hibernate.internal.log.SubSystemLogging;
+
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.MessageLogger;
@@ -16,16 +18,12 @@ import org.jboss.logging.annotations.ValidIdRange;
  */
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 90004001, max = 90005000 )
+@SubSystemLogging(
+		name = SqlExecLogger.LOGGER_NAME,
+		description = "Logging related to the execution of SQL statements"
+)
 public interface SqlExecLogger extends BasicLogger {
-	String LOGGER_NAME = "org.hibernate.orm.sql.exec";
+	String LOGGER_NAME = SubSystemLogging.BASE + ".sql.exec";
 
-	/**
-	 * Static access to the logging instance
-	 */
-	SqlExecLogger INSTANCE = Logger.getMessageLogger(
-			SqlExecLogger.class,
-			LOGGER_NAME
-	);
-
-	// todo (6.0) : make sure sql execution classes use this logger
+	SqlExecLogger SQL_EXEC_LOGGER = Logger.getMessageLogger( SqlExecLogger.class, LOGGER_NAME );
 }

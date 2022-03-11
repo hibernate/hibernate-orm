@@ -155,7 +155,7 @@ public enum CollectionClassification {
 				return BAG;
 			}
 
-			BootLogging.LOGGER.debugf(
+			BootLogging.BOOT_LOGGER.debugf(
 					"Unexpected Class specified for CollectionClassification resolution (`%s`) - " +
 							"should be one of `%s`, `%s`, `%s`, `%s`, `%s` or `%s`  (or subclass of)",
 					configuredClass.getName(),

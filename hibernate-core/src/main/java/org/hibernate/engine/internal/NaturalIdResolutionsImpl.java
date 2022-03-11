@@ -67,7 +67,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 
 	@Override
 	public void cacheResolutionFromLoad(Object id, Object naturalId, EntityMappingType entityDescriptor) {
-		NaturalIdLogging.LOGGER.debugf(
+		NaturalIdLogging.NATURAL_ID_LOGGER.debugf(
 				"Caching resolution natural-id resolution from load (%s) : `%s` -> `%s`",
 				entityDescriptor.getEntityName(),
 				naturalId,
@@ -101,7 +101,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		assert entityDescriptor.getNaturalIdMapping() != null;
 		assert isValidValue( naturalId, entityDescriptor );
 
-		NaturalIdLogging.LOGGER.debugf(
+		NaturalIdLogging.NATURAL_ID_LOGGER.debugf(
 				"Locally caching natural-id resolution (%s) : `%s` -> `%s`",
 				entityDescriptor.getEntityName(),
 				naturalId,
@@ -172,7 +172,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 
 	@Override
 	public Object removeLocalResolution(Object id, Object naturalId, EntityMappingType entityDescriptor) {
-		NaturalIdLogging.LOGGER.debugf(
+		NaturalIdLogging.NATURAL_ID_LOGGER.debugf(
 				"Removing locally cached natural-id resolution (%s) : `%s` -> `%s`",
 				entityDescriptor.getEntityName(),
 				naturalId,

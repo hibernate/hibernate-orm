@@ -6,6 +6,7 @@
  */
 package org.hibernate.resource.beans.internal;
 
+import org.hibernate.internal.log.SubSystemLogging;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 
@@ -23,14 +24,15 @@ import static org.jboss.logging.Logger.Level.WARN;
  */
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 10005001, max = 10010000 )
+@SubSystemLogging(
+		name = BeansMessageLogger.LOGGER_NAME,
+		description = "Logging related to Hibernate's support for managed beans (CDI, etc)"
+)
 public interface BeansMessageLogger {
-	String LOGGER_NAME = "org.hibernate.orm.beans";
+	String LOGGER_NAME = SubSystemLogging.BASE + ".beans";
 
-	/**
-	 * The BeansMessageLogger instance
-	 */
 	Logger BEANS_LOGGER = Logger.getLogger( LOGGER_NAME );
-	BeansMessageLogger BEANS_MESSAGE_LOGGER = Logger.getMessageLogger( BeansMessageLogger.class, LOGGER_NAME );
+	BeansMessageLogger BEANS_MSG_LOGGER = Logger.getMessageLogger( BeansMessageLogger.class, LOGGER_NAME );
 
 	@LogMessage( level = WARN )
 	@Message(

@@ -365,7 +365,7 @@ public abstract class CollectionBinder {
 			}
 			else {
 				// log a "warning"
-				BootLogging.LOGGER.debugf(
+				BootLogging.BOOT_LOGGER.debugf(
 						"Custom collection-type (`%s`) assigned to attribute (`%s`) does not implement `%s`, but its `@CollectionType` defined parameters",
 						implementation.getName(),
 						role,
@@ -427,7 +427,7 @@ public abstract class CollectionBinder {
 			}
 			else {
 				// log a "warning"
-				BootLogging.LOGGER.debugf(
+				BootLogging.BOOT_LOGGER.debugf(
 						"Custom collection-type (`%s`) assigned to attribute (`%s`) does not implement `%s`, but its `@CollectionType` defined parameters",
 						typeImpl.getName(),
 						attributeKey,

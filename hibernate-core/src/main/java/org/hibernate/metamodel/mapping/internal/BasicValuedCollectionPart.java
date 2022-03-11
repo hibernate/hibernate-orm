@@ -249,7 +249,7 @@ public class BasicValuedCollectionPart
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		ResultsLogger.LOGGER.debugf(
+		ResultsLogger.RESULTS_LOGGER.debugf(
 				"Generating Fetch for collection-part : `%s` -> `%s`",
 				collectionDescriptor.getRole(),
 				nature.getName()

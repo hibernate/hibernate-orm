@@ -39,7 +39,7 @@ public class OracleDialectContributor implements ContributorImplementor {
 
 	@Override
 	public void contributeJdbcTypes(TypeContributions typeContributions) {
-		HSMessageLogger.LOGGER.typeContributions( this.getClass().getCanonicalName() );
+		HSMessageLogger.SPATIAL_MSG_LOGGER.typeContributions( this.getClass().getCanonicalName() );
 		final ConfigurationService cfgService = getServiceRegistry().getService( ConfigurationService.class );
 		final StrategySelector strategySelector = getServiceRegistry().getService( StrategySelector.class );
 
@@ -53,7 +53,7 @@ public class OracleDialectContributor implements ContributorImplementor {
 				)
 		);
 
-		HSMessageLogger.LOGGER.connectionFinder( connectionFinder.getClass().getCanonicalName() );
+		HSMessageLogger.SPATIAL_MSG_LOGGER.connectionFinder( connectionFinder.getClass().getCanonicalName() );
 
 		SDOGeometryType sdoGeometryType = new SDOGeometryType(
 				new OracleJDBCTypeFactory( connectionFinder ), useSTGeometry
@@ -64,7 +64,7 @@ public class OracleDialectContributor implements ContributorImplementor {
 
 	@Override
 	public void contributeFunctions(FunctionContributions functionContributions) {
-		HSMessageLogger.LOGGER.functionContributions( this.getClass().getCanonicalName() );
+		HSMessageLogger.SPATIAL_MSG_LOGGER.functionContributions( this.getClass().getCanonicalName() );
 
 		KeyedSqmFunctionDescriptors functionDescriptors;
 		if ( useSTGeometry ) {

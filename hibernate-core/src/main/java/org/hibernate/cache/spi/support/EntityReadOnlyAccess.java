@@ -16,6 +16,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
+
 /**
  * Standard support for {@link org.hibernate.cache.spi.access.EntityDataAccess}
  * using the {@link AccessType#READ_ONLY} access type.
@@ -32,7 +34,7 @@ public class EntityReadOnlyAccess extends AbstractEntityDataAccess {
 			EntityDataCachingConfig config) {
 		super( region, cacheKeysFactory, storageAccess );
 		if ( config.isMutable() ) {
-			SecondLevelCacheLogger.INSTANCE.readOnlyCachingMutableEntity( config.getNavigableRole() );
+			L2CACHE_LOGGER.readOnlyCachingMutableEntity( config.getNavigableRole() );
 		}
 	}
 

@@ -85,7 +85,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			MetadataBuildingContext context) {
 		this.registrationName = hbmResultSetMapping.getName();
 
-		BootLogging.LOGGER.debugf(
+		BootLogging.BOOT_LOGGER.debugf(
 				"Creating explicit HbmResultSetMappingDescriptor : %s",
 				registrationName
 		);
@@ -260,7 +260,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 	@Override
 	public NamedResultSetMappingMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
-		BootQueryLogging.LOGGER.debugf(
+		BootQueryLogging.BOOT_QUERY_LOGGER.debugf(
 				"Resolving HbmResultSetMappingDescriptor into memento for [%s]",
 				registrationName
 		);
@@ -349,7 +349,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				);
 			}
 
-			BootQueryLogging.LOGGER.debugf(
+			BootQueryLogging.BOOT_QUERY_LOGGER.debugf(
 					"Creating EntityResultDescriptor (%s : %s) for ResultSet mapping - %s",
 					tableAlias,
 					entityName,
@@ -373,7 +373,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 		@Override
 		public ResultMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
-			BootQueryLogging.LOGGER.debugf(
+			BootQueryLogging.BOOT_QUERY_LOGGER.debugf(
 					"Resolving HBM EntityResultDescriptor into memento - %s : %s (%s)",
 					tableAlias,
 					entityName,
@@ -527,7 +527,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				}
 			}
 
-			BootQueryLogging.LOGGER.debugf(
+			BootQueryLogging.BOOT_QUERY_LOGGER.debugf(
 					"Creating PropertyFetchDescriptor (%s : %s) for ResultSet mapping - %s",
 					parent,
 					propertyPath,
@@ -645,7 +645,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 		@Override
 		public FetchMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
-			BootQueryLogging.LOGGER.debugf(
+			BootQueryLogging.BOOT_QUERY_LOGGER.debugf(
 					"Resolving HBM PropertyFetchDescriptor into memento - %s : %s",
 					parent,
 					propertyPath
@@ -758,7 +758,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 		@Override
 		public FetchMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
-			BootQueryLogging.LOGGER.debugf(
+			BootQueryLogging.BOOT_QUERY_LOGGER.debugf(
 					"Resolving HBM JoinDescriptor into memento - %s : %s . %s",
 					tableAlias,
 					ownerTableAlias,
@@ -873,7 +873,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				);
 			}
 
-			BootQueryLogging.LOGGER.debugf(
+			BootQueryLogging.BOOT_QUERY_LOGGER.debugf(
 					"Creating CollectionResultDescriptor (%s : %s)",
 					tableAlias,
 					collectionPath
@@ -895,7 +895,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 		@Override
 		public ResultMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
-			BootQueryLogging.LOGGER.debugf(
+			BootQueryLogging.BOOT_QUERY_LOGGER.debugf(
 					"Resolving HBM CollectionResultDescriptor into memento - %s : %s",
 					tableAlias,
 					collectionPath
@@ -942,7 +942,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			this.columnName = columnName;
 			this.hibernateTypeName = hibernateTypeName;
 
-			BootQueryLogging.LOGGER.debugf(
+			BootQueryLogging.BOOT_QUERY_LOGGER.debugf(
 					"Creating ScalarDescriptor (%s)",
 					columnName
 			);
@@ -954,7 +954,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 		@Override
 		public ResultMementoBasicStandard resolve(ResultSetMappingResolutionContext resolutionContext) {
-			BootQueryLogging.LOGGER.debugf(
+			BootQueryLogging.BOOT_QUERY_LOGGER.debugf(
 					"Resolving HBM ScalarDescriptor into memento - %s",
 					columnName
 			);

@@ -7,6 +7,7 @@
 package org.hibernate.query;
 
 import org.hibernate.HibernateException;
+import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
@@ -25,8 +26,12 @@ import static org.jboss.logging.Logger.Level.WARN;
  */
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 90003001, max = 90003500 )
+@SubSystemLogging(
+		name = QueryLogging.LOGGER_NAME,
+		description = "Logging related to Query processing"
+)
 public interface QueryLogging extends BasicLogger {
-	String LOGGER_NAME = "org.hibernate.orm.query";
+	String LOGGER_NAME = SubSystemLogging.BASE + ".query";
 
 	Logger QUERY_LOGGER = Logger.getLogger( LOGGER_NAME );
 	QueryLogging QUERY_MESSAGE_LOGGER = Logger.getMessageLogger( QueryLogging.class, LOGGER_NAME );

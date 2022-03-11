@@ -118,7 +118,7 @@ public class DomainResultCreationStateImpl
 	}
 
 	public void disallowPositionalSelections() {
-		ResultsLogger.LOGGER.debugf( "Disallowing positional selections : %s", stateIdentifier );
+		ResultsLogger.RESULTS_LOGGER.debugf( "Disallowing positional selections : %s", stateIdentifier );
 		this.allowPositionalSelections = false;
 	}
 

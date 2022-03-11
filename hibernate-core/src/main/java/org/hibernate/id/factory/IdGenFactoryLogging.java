@@ -6,14 +6,21 @@
  */
 package org.hibernate.id.factory;
 
+import org.hibernate.internal.log.SubSystemLogging;
+
 import org.jboss.logging.Logger;
 
 /**
  * Logging related to IdentifierGeneratorFactory
  */
-public class IdGenFactoryLogging {
-	public static final Logger ID_GEN_FAC_LOGGER = Logger.getLogger( "org.hibernate.orm.idgen.factory" );
+@SubSystemLogging(
+		name = IdGenFactoryLogging.LOGGER_NAME,
+		description = "Logging related to creation of IdentifierGenerator instances"
+)
+public interface IdGenFactoryLogging {
+	String LOGGER_NAME = SubSystemLogging.BASE + ".idgen.factory";
+	Logger ID_GEN_FAC_LOGGER = Logger.getLogger( LOGGER_NAME );
 
-	public static final boolean IS_TRACE_ENABLE = ID_GEN_FAC_LOGGER.isTraceEnabled();
-	public static final boolean IS_DEBUG_ENABLE = ID_GEN_FAC_LOGGER.isDebugEnabled();
+	boolean IS_TRACE_ENABLE = ID_GEN_FAC_LOGGER.isTraceEnabled();
+	boolean IS_DEBUG_ENABLE = ID_GEN_FAC_LOGGER.isDebugEnabled();
 }

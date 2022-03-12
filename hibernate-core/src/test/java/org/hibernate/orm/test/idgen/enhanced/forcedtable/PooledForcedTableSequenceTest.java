@@ -44,27 +44,42 @@ public class PooledForcedTableSequenceTest {
 
 		scope.inTransaction(
 				(s) -> {
-					for ( int i = 0; i <= increment; i++ ) {
-						final Entity entity = new Entity( "" + ( i + 1 ) );
+					// The value that we get from the callback is the high value (PooledOptimizer by default)
+					// When first increment is initialValue, we can only generate one id from it -> id 1
+					Entity entity = new Entity( "1" );
+					s.save( entity );
+
+					long expectedId = 1;
+					assertEquals( expectedId, entity.getId().longValue() );
+					assertEquals( 1, generator.getDatabaseStructure().getTimesAccessed() );
+					assertEquals( 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
+					assertEquals( 1, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
+					assertEquals( 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
+
+					// now start a full range of values, callback give us hiValue 11
+					// id : 2,3,4...,11
+					for ( int i = 0; i < increment; i++ ) {
+						entity = new Entity( "" + ( i + 2 ) );
 						s.save( entity );
 
-						long expectedId = i + 1;
+						expectedId = i + 2;
 						assertEquals( expectedId, entity.getId().longValue() );
-						// NOTE : initialization calls table twice
 						assertEquals( 2, generator.getDatabaseStructure().getTimesAccessed() );
 						assertEquals( increment + 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
-						assertEquals( i + 1, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
+						assertEquals( i + 2, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
 						assertEquals( increment + 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
 					}
-					// now force a "clock over"
-					final Entity entity = new Entity( "" + increment );
+
+					// now force a "clock over" -> id 12. (increment * 2 + initialValue) - 9 is the current formula of PooledOptimizer
+					entity = new Entity( "" + ( ( increment * 2 + 1 )  - 9 )  );
 					s.save( entity );
-					long expectedId = optimizer.getIncrementSize() + 2;
+
+					expectedId = optimizer.getIncrementSize() + 2;
 					assertEquals( expectedId, entity.getId().longValue() );
-					// initialization (2) + clock over
 					assertEquals( 3, generator.getDatabaseStructure().getTimesAccessed() );
-					assertEquals( ( increment * 2 ) + 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
-					assertEquals( increment + 2, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
+					assertEquals( increment * 2 + 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
+					assertEquals( (increment * 2 + 1 )  - 9, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
+					assertEquals( increment * 2 + 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
 				}
 		);
 	}

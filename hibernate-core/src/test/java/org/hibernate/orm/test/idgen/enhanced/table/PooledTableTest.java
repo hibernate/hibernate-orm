@@ -18,12 +18,15 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DomainModel( xmlMappings = "org/hibernate/orm/test/idgen/enhanced/table/Pooled.hbm.xml" )
 @SessionFactory
 public class PooledTableTest {
+
+	private static final long INITIAL_VALUE = 1;
+
 	@Test
 	public void testNormalBoundary(SessionFactoryScope scope) {
         final EntityPersister persister = scope.getSessionFactory()
@@ -39,24 +42,41 @@ public class PooledTableTest {
 
 		scope.inTransaction(
 				(s) -> {
-					for ( int i = 0; i <= increment; i++ ) {
-						final Entity entity = new Entity( "" + ( i + 1 ) );
+					// The value that we get from the callback is the high value (PooledOptimizer by default)
+					// When first increment is initialValue, we can only generate one id from it -> id 1
+					Entity entity = new Entity( "" + INITIAL_VALUE );
+					s.save( entity );
+
+					long expectedId = INITIAL_VALUE;
+					assertEquals( expectedId, entity.getId().longValue() );
+					assertEquals( 1, generator.getTableAccessCount() );
+					assertEquals( INITIAL_VALUE, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
+					assertEquals( INITIAL_VALUE, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
+					assertEquals( INITIAL_VALUE, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
+
+					// now start a full range of values, callback give us hiValue 11
+					// id : 2,3,4...,11
+					for ( int i = 1; i <= increment; i++ ) {
+						entity = new Entity( "" + ( i + INITIAL_VALUE  ) );
 						s.save( entity );
-						// initialization calls seq twice
+
+						expectedId = i + INITIAL_VALUE;
+						assertEquals( expectedId, entity.getId().longValue() );
 						assertEquals( 2, generator.getTableAccessCount() );
 						assertEquals( increment + 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
-						assertEquals( i + 1, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
+						assertEquals( expectedId, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
 						assertEquals( increment + 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
 					}
 
 					// now force a "clock over"
-					final Entity entity = new Entity( "" + increment );
+					expectedId++;
+					entity = new Entity( "" + expectedId );
 					s.save( entity );
 
-					// initialization (2) + clock over
+					assertEquals( expectedId, entity.getId().longValue() );
 					assertEquals( 3, generator.getTableAccessCount() );
-					assertEquals( ( increment * 2 ) + 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
-					assertEquals( increment + 2, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
+					assertEquals( increment * 2L + 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
+					assertEquals( expectedId, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
 				}
 		);
 	}

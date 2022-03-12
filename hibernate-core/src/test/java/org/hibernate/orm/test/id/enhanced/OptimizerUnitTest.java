@@ -235,6 +235,11 @@ public class OptimizerUnitTest {
 
 		Long next = ( Long ) optimizer.generate( sequence );
 		assertEquals( 1, next.intValue() );
+		assertEquals( 1, sequence.getTimesCalled() );
+		assertEquals( 1, sequence.getCurrentValue() );
+
+		next = ( Long ) optimizer.generate( sequence );
+		assertEquals( 2, next.intValue() );
 		assertEquals( 2, sequence.getTimesCalled() );
 		assertEquals( 4, sequence.getCurrentValue() );
 

@@ -28,7 +28,11 @@ public final class ArrayHelper {
 	}
 
 	public static int indexOf(Object[] array, Object object) {
-		for ( int i = 0; i < array.length; i++ ) {
+		return indexOf( array, array.length, object );
+	}
+
+	public static int indexOf(Object[] array, int end, Object object) {
+		for ( int i = 0; i < end; i++ ) {
 			if ( object.equals( array[i] ) ) {
 				return i;
 			}

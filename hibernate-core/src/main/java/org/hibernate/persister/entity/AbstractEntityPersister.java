@@ -458,6 +458,8 @@ public abstract class AbstractEntityPersister
 
 	public abstract boolean isTableCascadeDeleteEnabled(int j);
 
+	public abstract boolean hasDuplicateTables();
+
 	public abstract String getTableName(int j);
 
 	public abstract String[] getKeyColumns(int j);
@@ -3891,14 +3893,84 @@ public abstract class AbstractEntityPersister
 		if ( entityMetamodel.isDynamicInsert() ) {
 			// For the case of dynamic-insert="true", we need to generate the INSERT SQL
 			boolean[] notNull = getPropertiesToInsert( fields );
-			for ( int j = 0; j < span; j++ ) {
-				insert( id, fields, notNull, j, generateInsertString( notNull, j ), object, session );
+			if ( hasDuplicateTables() ) {
+				final String[] insertedTables = new String[span];
+				for ( int j = 0; j < span; j++ ) {
+					if ( isInverseTable( j ) ) {
+						continue;
+					}
+
+					//note: it is conceptually possible that a UserType could map null to
+					//	  a non-null value, so the following is arguable:
+					if ( isNullableTable( j ) && isAllNull( fields, j ) ) {
+						continue;
+					}
+					final String tableName = getTableName( j );
+					insertedTables[j] = tableName;
+					if ( ArrayHelper.indexOf( insertedTables, j, tableName ) != -1 ) {
+						update(
+								id,
+								fields,
+								null,
+								null,
+								notNull,
+								j,
+								null,
+								object,
+								generateUpdateString( notNull, j, false ),
+								session
+						);
+					}
+					else {
+						insert( id, fields, notNull, j, generateInsertString( notNull, j ), object, session );
+					}
+				}
+			}
+			else {
+				for ( int j = 0; j < span; j++ ) {
+					insert( id, fields, notNull, j, generateInsertString( notNull, j ), object, session );
+				}
 			}
 		}
 		else {
 			// For the case of dynamic-insert="false", use the static SQL
-			for ( int j = 0; j < span; j++ ) {
-				insert( id, fields, getPropertyInsertability(), j, getSQLInsertStrings()[j], object, session );
+			if ( hasDuplicateTables() ) {
+				final String[] insertedTables = new String[span];
+				for ( int j = 0; j < span; j++ ) {
+					if ( isInverseTable( j ) ) {
+						continue;
+					}
+
+					//note: it is conceptually possible that a UserType could map null to
+					//	  a non-null value, so the following is arguable:
+					if ( isNullableTable( j ) && isAllNull( fields, j ) ) {
+						continue;
+					}
+					final String tableName = getTableName( j );
+					insertedTables[j] = tableName;
+					if ( ArrayHelper.indexOf( insertedTables, j, tableName ) != -1 ) {
+						update(
+								id,
+								fields,
+								null,
+								null,
+								getPropertyInsertability(),
+								j,
+								null,
+								object,
+								getSQLUpdateStrings()[j],
+								session
+						);
+					}
+					else {
+						insert( id, fields, getPropertyInsertability(), j, getSQLInsertStrings()[j], object, session );
+					}
+				}
+			}
+			else {
+				for ( int j = 0; j < span; j++ ) {
+					insert( id, fields, getPropertyInsertability(), j, getSQLInsertStrings()[j], object, session );
+				}
 			}
 		}
 	}

@@ -146,8 +146,13 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 
 		getEntityDescriptor().visitConstraintOrderedTables(
 				(tableExpression, tableColumnsVisitationSupplier) -> {
+					final String cteTableName = getCteTableName( tableExpression );
+					if ( statement.getCteStatement( cteTableName ) != null ) {
+						// Since secondary tables could appear multiple times, we have to skip duplicates
+						return;
+					}
 					final CteTable dmlResultCte = new CteTable(
-							getCteTableName( tableExpression ),
+							cteTableName,
 							idSelectCte.getCteTable().getCteColumns(),
 							factory
 					);

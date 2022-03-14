@@ -325,6 +325,11 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
+	public boolean hasDuplicateTables() {
+		return false;
+	}
+
+	@Override
 	public String getTableName(int j) {
 		return tableName;
 	}

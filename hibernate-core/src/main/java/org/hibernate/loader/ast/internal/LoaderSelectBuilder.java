@@ -798,12 +798,8 @@ public class LoaderSelectBuilder {
 				joined = false;
 			}
 
-			boolean changeFetchDepth = !( fetchable instanceof BasicValuedModelPart )
-					&& !( fetchable instanceof EmbeddedAttributeMapping )
-					&& !( fetchable instanceof CollectionPart );
-
 			try {
-				if ( changeFetchDepth ) {
+				if ( fetchable.incrementFetchDepth() ) {
 					fetchDepth++;
 				}
 
@@ -877,7 +873,7 @@ public class LoaderSelectBuilder {
 				fetches.add( fetch );
 			}
 			finally {
-				if ( changeFetchDepth ) {
+				if ( fetchable.incrementFetchDepth() ) {
 					fetchDepth--;
 				}
 				// Only set the currentBagRole to the previous value for non-join fetches,

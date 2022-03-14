@@ -19,6 +19,7 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.SecondaryTable;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @DomainModel(
@@ -49,6 +50,40 @@ public class ParentChildWithSameSecondaryTableTest {
 					entityC.setAttrB( "attrB-value" );
 					entityC.setAttrC( "attrC-value" );
 					session.persist( entityC );
+				}
+		);
+	}
+
+	@Test
+	public void testPersist2(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					EntityC entityC = new EntityC();
+					entityC.setId( 1L );
+					entityC.setAttrC( "attrC-value" );
+					session.persist( entityC );
+					session.flush();
+					session.clear();
+
+					EntityC entityC1 = session.find( EntityC.class, 1L );
+					assertThat( entityC1.getAttrC(), is( notNullValue() ) );
+				}
+		);
+	}
+
+	@Test
+	public void testPersist3(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					EntityC entityC = new EntityC();
+					entityC.setId( 1L );
+					entityC.setAttrB( "attrB-value" );
+					session.persist( entityC );
+					session.flush();
+					session.clear();
+
+					EntityC entityC1 = session.find( EntityC.class, 1L );
+					assertThat( entityC1.getAttrB(), is( notNullValue() ) );
 				}
 		);
 	}
@@ -116,6 +151,51 @@ public class ParentChildWithSameSecondaryTableTest {
 					final EntityC entityC = session.get( EntityC.class, 1L );
 					assertThat( entityC.getAttrB(), is( "new value for b" ) );
 					assertThat( entityC.getAttrC(), is( "new value for c" ) );
+
+				}
+		);
+	}
+
+	@Test
+	public void testUpdate2(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					EntityC entityC = new EntityC();
+					entityC.setId( 1L );
+					entityC.setAttrB( "attrB-value" );
+					entityC.setAttrC( "attrC-value" );
+					session.persist( entityC );
+				}
+		);
+		scope.inTransaction(
+				session -> {
+					session.createMutationQuery( "update EntityC c set c.attrB = 'B', c.attrC = 'C'" )
+							.executeUpdate();
+				}
+		);
+		scope.inTransaction(
+				session -> {
+					final EntityC entityC = session.get( EntityC.class, 1L );
+					assertThat( entityC.getAttrB(), is( "B" ) );
+					assertThat( entityC.getAttrC(), is( "C" ) );
+
+				}
+		);
+	}
+
+	@Test
+	public void testInsert(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createMutationQuery( "insert into EntityC(id, attrB,attrC) values (1L, 'B', 'C')" )
+							.executeUpdate();
+				}
+		);
+		scope.inTransaction(
+				session -> {
+					final EntityC entityC = session.get( EntityC.class, 1L );
+					assertThat( entityC.getAttrB(), is( "B" ) );
+					assertThat( entityC.getAttrC(), is( "C" ) );
 
 				}
 		);

@@ -167,8 +167,13 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 				if ( assignmentList == null ) {
 					continue;
 				}
+				final String insertCteTableName = getInsertCteTableName( tableExpression );
+				if ( statement.getCteStatement( insertCteTableName ) != null ) {
+					// Since secondary tables could appear multiple times, we have to skip duplicates
+					continue;
+				}
 				final CteTable dmlResultCte = new CteTable(
-						getInsertCteTableName( tableExpression ),
+						insertCteTableName,
 						idSelectCte.getCteTable().getCteColumns(),
 						factory
 				);
@@ -260,8 +265,13 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 
 		getEntityDescriptor().visitConstraintOrderedTables(
 				(tableExpression, tableColumnsVisitationSupplier) -> {
+					final String cteTableName = getCteTableName( tableExpression );
+					if ( statement.getCteStatement( cteTableName ) != null ) {
+						// Since secondary tables could appear multiple times, we have to skip duplicates
+						return;
+					}
 					final CteTable dmlResultCte = new CteTable(
-							getCteTableName( tableExpression ),
+							cteTableName,
 							idSelectCte.getCteTable().getCteColumns(),
 							factory
 					);

@@ -28,6 +28,7 @@ import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.id.insert.Binder;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -198,13 +199,36 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				final int tableSpan = persister.getTableSpan();
 				insertRootTable( persister.getTableName( 0 ), rows, persister.getKeyColumns( 0 ), executionContext );
 
-				for ( int i = 1; i < tableSpan; i++ ) {
-					insertTable(
-							persister.getTableName( i ),
-							persister.getKeyColumns( i ),
-							persister.isNullableTable( i ),
-							executionContext
-					);
+				if ( persister.hasDuplicateTables() ) {
+					final String[] insertedTables = new String[tableSpan];
+					insertedTables[0] = persister.getTableName( 0 );
+					for ( int i = 1; i < tableSpan; i++ ) {
+						if ( persister.isInverseTable( i ) ) {
+							continue;
+						}
+						final String tableName = persister.getTableName( i );
+						insertedTables[i] = tableName;
+						if ( ArrayHelper.indexOf( insertedTables, i, tableName ) != -1 ) {
+							// Since secondary tables could appear multiple times, we have to skip duplicates
+							continue;
+						}
+						insertTable(
+								tableName,
+								persister.getKeyColumns( i ),
+								persister.isNullableTable( i ),
+								executionContext
+						);
+					}
+				}
+				else {
+					for ( int i = 1; i < tableSpan; i++ ) {
+						insertTable(
+								persister.getTableName( i ),
+								persister.getKeyColumns( i ),
+								persister.isNullableTable( i ),
+								executionContext
+						);
+					}
 				}
 			}
 
@@ -653,7 +677,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			needsKeyInsert = optimizer != null && optimizer.getIncrementSize() > 1;
 		}
 		else {
-			needsKeyInsert = false;
+			needsKeyInsert = true;
 		}
 		if ( needsKeyInsert && insertStatement.getTargetColumnReferences()
 				.stream()

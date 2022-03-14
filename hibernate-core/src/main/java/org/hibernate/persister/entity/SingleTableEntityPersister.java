@@ -78,6 +78,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	// the class hierarchy structure
 	private final int joinSpan;
+	private final boolean hasDuplicateTables;
 	private final String[] qualifiedTableNames;
 	private final boolean[] isInverseTable;
 	private final boolean[] isNullableTable;
@@ -198,9 +199,12 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		// JOINS
 
 		List<Join> joinClosure = persistentClass.getJoinClosure();
+		boolean hasDuplicateTableName = false;
 		for ( int j = 1; j-1 < joinClosure.size(); j++ ) {
 			Join join = joinClosure.get(j-1);
 			qualifiedTableNames[j] = determineTableName( join.getTable() );
+			hasDuplicateTableName = hasDuplicateTableName
+					|| ArrayHelper.indexOf( qualifiedTableNames, j, qualifiedTableNames[j] ) != -1;
 			isInverseTable[j] = join.isInverse();
 			isNullableTable[j] = join.isOptional();
 			cascadeDeleteEnabled[j] = join.getKey().isCascadeDeleteEnabled() && dialect.supportsCascadeDelete();
@@ -229,6 +233,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			}
 		}
 
+		hasDuplicateTables = hasDuplicateTableName;
 		constraintOrderedTableNames = new String[qualifiedTableNames.length];
 		constraintOrderedKeyColumnNames = new String[qualifiedTableNames.length][];
 		for ( int i = qualifiedTableNames.length - 1, position = 0; i >= 0; i--, position++ ) {
@@ -536,6 +541,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	private boolean isDiscriminatorFormula() {
 		return discriminatorColumnName == null;
+	}
+
+	@Override
+	public boolean hasDuplicateTables() {
+		return hasDuplicateTables;
 	}
 
 	@Override

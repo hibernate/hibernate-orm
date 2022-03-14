@@ -90,6 +90,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	// the class hierarchy structure
 	private final int tableSpan;
+	private final boolean hasDuplicateTables;
 	private final String[] tableNames;
 	private final String[] naturalOrderTableNames;
 	private final String[][] tableKeyColumns;
@@ -301,6 +302,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			cascadeDeletes.add( key.isCascadeDeleteEnabled() && dialect.supportsCascadeDelete() );
 		}
 
+		hasDuplicateTables = new HashSet<>( tableNames ).size() == tableNames.size();
 		naturalOrderTableNames = ArrayHelper.toStringArray( tableNames );
 		naturalOrderTableKeyColumns = ArrayHelper.to2DStringArray( keyColumns );
 		String[][] naturalOrderTableKeyColumnReaders = ArrayHelper.to2DStringArray(keyColumnReaders);
@@ -816,6 +818,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return spaces; // don't need subclass tables, because they can't appear in conditions
 	}
 
+	@Override
+	public boolean hasDuplicateTables() {
+		return hasDuplicateTables;
+	}
 
 	@Override
 	public String getTableName(int j) {

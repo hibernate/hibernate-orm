@@ -303,11 +303,26 @@ public class CteInsertHandler implements InsertHandler {
 			final QuerySpec querySpec = new QuerySpec( true );
 			final NavigablePath navigablePath = new NavigablePath( entityDescriptor.getRootPathName() );
 			final List<String> columnNames = new ArrayList<>( targetPathColumns.size() );
+			final String valuesAlias = insertingTableGroup.getPrimaryTableReference().getIdentificationVariable();
 			for ( Map.Entry<SqmCteTableColumn, Assignment> entry : targetPathColumns ) {
 				for ( ColumnReference columnReference : entry.getValue().getAssignable().getColumnReferences() ) {
 					columnNames.add( columnReference.getColumnExpression() );
 					querySpec.getSelectClause().addSqlSelection(
-							new SqlSelectionImpl( 1, 0, columnReference )
+							new SqlSelectionImpl(
+									1,
+									0,
+									columnReference.getQualifier().equals( valuesAlias )
+											? columnReference
+											: new ColumnReference(
+													valuesAlias,
+													columnReference.getColumnExpression(),
+													false,
+													null,
+													null,
+													columnReference.getJdbcMapping(),
+													null
+											)
+							)
 					);
 				}
 			}
@@ -810,6 +825,11 @@ public class CteInsertHandler implements InsertHandler {
 			final CteTable dmlResultCte;
 			if ( i == 0 && !assignsId && identifierGenerator instanceof PostInsertIdentifierGenerator ) {
 				// Special handling for identity generation
+				final String cteTableName = getCteTableName( tableExpression, "base_" );
+				if ( statement.getCteStatement( cteTableName ) != null ) {
+					// Since secondary tables could appear multiple times, we have to skip duplicates
+					continue;
+				}
 				final String baseTableName = "base_" + queryCte.getCteTable().getTableExpression();
 				insertSelectSpec.getFromClause().addRoot(
 						new CteTableGroup(
@@ -843,7 +863,7 @@ public class CteInsertHandler implements InsertHandler {
 				final List<CteColumn> returningColumns = new ArrayList<>( keyCteColumns.size() + 1 );
 				returningColumns.addAll( keyCteColumns );
 				dmlResultCte = new CteTable(
-						getCteTableName( tableExpression, "base_" ),
+						cteTableName,
 						returningColumns,
 						factory
 				);
@@ -1010,6 +1030,11 @@ public class CteInsertHandler implements InsertHandler {
 				finalCteStatement = new CteStatement( finalResultCte, finalResultStatement );
 			}
 			else {
+				final String cteTableName = getCteTableName( tableExpression );
+				if ( statement.getCteStatement( cteTableName ) != null ) {
+					// Since secondary tables could appear multiple times, we have to skip duplicates
+					continue;
+				}
 				insertSelectSpec.getFromClause().addRoot(
 						new CteTableGroup(
 								new NamedTableReference(
@@ -1021,7 +1046,7 @@ public class CteInsertHandler implements InsertHandler {
 						)
 				);
 				dmlResultCte = new CteTable(
-						getCteTableName( tableExpression ),
+						cteTableName,
 						keyCteColumns,
 						factory
 				);

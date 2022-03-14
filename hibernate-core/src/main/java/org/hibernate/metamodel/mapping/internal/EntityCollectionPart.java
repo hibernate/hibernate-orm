@@ -409,6 +409,12 @@ public class EntityCollectionPart
 	}
 
 	@Override
+	public boolean incrementFetchDepth() {
+		// the collection itself already increments the depth
+		return false;
+	}
+
+	@Override
 	public ModelPart findSubPart(String name) {
 		return findSubPart( name, null );
 	}

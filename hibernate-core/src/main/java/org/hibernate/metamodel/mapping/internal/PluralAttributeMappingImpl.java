@@ -430,6 +430,27 @@ public class PluralAttributeMappingImpl
 		}
 	}
 
+	@Override
+	public Fetch resolveCircularFetch(
+			NavigablePath fetchablePath,
+			FetchParent fetchParent,
+			FetchTiming fetchTiming,
+			DomainResultCreationState creationState) {
+		if ( fetchTiming == FetchTiming.IMMEDIATE ) {
+			final boolean alreadyVisited = creationState.isAssociationKeyVisited( fkDescriptor.getAssociationKey() );
+			if ( alreadyVisited ) {
+				return createSelectEagerCollectionFetch(
+						fetchParent,
+						fetchablePath,
+						creationState,
+						creationState.getSqlAstCreationState()
+				);
+			}
+		}
+
+		return null;
+	}
+
 	private Fetch createSelectEagerCollectionFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,

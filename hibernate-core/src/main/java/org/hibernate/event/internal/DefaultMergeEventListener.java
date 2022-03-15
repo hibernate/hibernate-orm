@@ -14,10 +14,12 @@ import org.hibernate.ObjectDeletedException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
+import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -35,10 +37,13 @@ import org.hibernate.event.spi.MergeEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.TypeHelper;
 
@@ -246,6 +251,10 @@ public class DefaultMergeEventListener
 		super.cascadeAfterSave( session, persister, entity, copyCache );
 		copyValues( persister, entity, copy, session, copyCache, ForeignKeyDirection.TO_PARENT );
 
+		// saveTransientEntity has been called using a copy that contains empty collections (copyValues uses `ForeignKeyDirection.FROM_PARENT`)
+		// then the PC may contain a wrong collection snapshot, the CollectionVisitor realigns the collection snapshot values with the final copy
+		new CollectionVisitor( copy, id, session ).processEntityPropertyValues( persister.getPropertyValuesToInsert( copy, getMergeMap( copyCache ), session ), persister.getPropertyTypes() );
+
 		event.setResult( copy );
 
 		if ( copy instanceof PersistentAttributeInterceptable ) {
@@ -254,6 +263,35 @@ public class DefaultMergeEventListener
 			if ( interceptor == null ) {
 				persister.getBytecodeEnhancementMetadata().injectInterceptor( copy, id, session );
 			}
+		}
+	}
+
+	private class CollectionVisitor extends WrapVisitor {
+		CollectionVisitor(Object entity, Object id, EventSource session) {
+			super( entity, id, session );
+		}
+
+		@Override
+		Object processCollection(Object collection, CollectionType collectionType) throws HibernateException {
+			if ( collection instanceof PersistentCollection ) {
+				final PersistentCollection<?> coll = (PersistentCollection<?>) collection;
+				final CollectionPersister persister = getSession().getFactory()
+						.getRuntimeMetamodels()
+						.getMappingMetamodel()
+						.getCollectionDescriptor( collectionType.getRole() );
+				final CollectionEntry collectionEntry = getSession().getPersistenceContextInternal()
+						.getCollectionEntries()
+						.get( coll );
+				if ( !coll.equalsSnapshot( persister ) ) {
+					collectionEntry.resetStoredSnapshot( coll, coll.getSnapshot( persister ) );
+				}
+			}
+			return null;
+		}
+
+		@Override
+		Object processEntity(Object value, EntityType entityType) throws HibernateException {
+			return null;
 		}
 	}
 

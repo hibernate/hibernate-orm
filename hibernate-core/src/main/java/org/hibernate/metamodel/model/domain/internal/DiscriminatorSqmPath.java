@@ -79,7 +79,7 @@ public class DiscriminatorSqmPath extends AbstractSqmPath implements SelfInterpr
 			boolean jpaQueryComplianceEnabled) {
 		assert entityDescriptor.hasSubclasses();
 
-		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( getLhs().getNavigablePath() );
+		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( getNavigablePath().getParent() );
 		final ModelPartContainer modelPart = tableGroup.getModelPart();
 		final EntityMappingType entityMapping;
 		if ( modelPart instanceof EntityValuedModelPart ) {

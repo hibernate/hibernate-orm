@@ -251,29 +251,6 @@ task buildBundles(type: Task, dependsOn: [distZip,distTar]) {
     description = "Builds all release bundles"
 }
 
-task uploadBundlesSourceForge(type: Exec, dependsOn: buildBundles) {
-    description = "Uploads release bundles to SourceForge"
-
-    final String url = "frs.sourceforge.net:/home/frs/project/hibernate/hibernate-orm/${version}";
-
-    executable 'rsync'
-    args '-vr', '-e ssh', "${project.buildDir}/distributions/", url
-
-    doFirst {
-        if ( rootProject.ormVersion.isSnapshot ) {
-            logger.error( "Cannot perform upload of SNAPSHOT bundles to SourceForge" );
-            throw new RuntimeException( "Cannot perform upload of SNAPSHOT bundles to SourceForge" )
-        }
-        else {
-            logger.lifecycle( "Uploading release bundles to SourceForge..." )
-        }
-    }
-
-    doLast {
-        logger.lifecycle( 'Done uploading release bundles to SourceForge' )
-    }
-}
-
 configurations {
     bundles {
         description = 'Configuration used to group the archives output from the distribution plugin.'
@@ -285,7 +262,7 @@ artifacts {
     bundles distZip
 }
 
-task release( dependsOn: [releaseChecks, uploadDocumentation, uploadBundlesSourceForge] )
+task release( dependsOn: [releaseChecks, uploadDocumentation] )
 
 task changeLogFile( dependsOn: [releaseChecks] ) {
     group = "Release"

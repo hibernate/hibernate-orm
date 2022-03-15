@@ -33,27 +33,7 @@ plugins {
 	id 'eclipse'
 }
 
-allprojects {
-	repositories {
-		mavenCentral()
-		//Allow loading additional dependencies from a local path;
-		//useful to load JDBC drivers which can not be distributed in public.
-		if (System.env['ADDITIONAL_REPO'] != null) {
-			flatDir {
-				dirs "${System.env.ADDITIONAL_REPO}"
-			}
-		}
-	}
-
-	apply from: rootProject.file( 'gradle/base-information.gradle' )
-	apply plugin: 'org.hibernate.orm.database-service'
-
-	apply plugin: 'idea'
-	apply plugin: 'eclipse'
-
-	// minimize changes, at least for now (gradle uses 'build' by default)..
-	buildDir = "target"
-}
+apply from: file( 'gradle/module.gradle' )
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -77,7 +57,7 @@ task release {
 task publish {
 	description = "The task performed when we want to just publish maven artifacts.  Relies on " +
 			"the fact that subprojects will appropriately define a release task " +
-			"themselves if they have any release-related activities to perform"
+			"themselves if they have any publish-related activities to perform"
 }
 
 ext {
@@ -161,18 +141,6 @@ wrapper {
 
 
 idea {
-//    project {
-//		jdkName = gradle.ext.baselineJavaVersion
-//		languageLevel = gradle.ext.baselineJavaVersion
-//
-//		vcs = 'Git'
-//
-//		settings {
-//			taskTriggers {
-//				afterSync tasks.getByName("projects"), tasks.getByName("tasks")
-//			}
-//		}
-//    }
 	module {
 		name = "hibernate-orm"
 	}

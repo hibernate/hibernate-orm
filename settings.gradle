@@ -20,9 +20,21 @@ plugins {
     id 'com.gradle.common-custom-user-data-gradle-plugin' version '1.4.2'
 }
 
-rootProject.name = 'hibernate-orm'
+dependencyResolutionManagement {
+    repositories {
+        mavenCentral()
 
-includeBuild('hibernate-orm-build')
+        //Allow loading additional dependencies from a local path;
+        //useful to load JDBC drivers which can not be distributed in public.
+        if (System.env['ADDITIONAL_REPO'] != null) {
+            flatDir {
+                dirs "${System.env.ADDITIONAL_REPO}"
+            }
+        }
+    }
+}
+
+rootProject.name = 'hibernate-orm'
 
 apply from: file( 'gradle/gradle-enterprise.gradle' )
 
@@ -114,6 +126,8 @@ else {
 
 logger.lifecycle "Java versions for main code: " + gradle.ext.javaVersions.main
 logger.lifecycle "Java versions for tests: " + gradle.ext.javaVersions.test
+
+includeBuild('hibernate-orm-build')
 
 include 'hibernate-core'
 include 'hibernate-testing'

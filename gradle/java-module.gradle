@@ -21,8 +21,11 @@ buildscript {
 import de.thetaphi.forbiddenapis.gradle.CheckForbiddenApis
 import org.apache.tools.ant.filters.ReplaceTokens
 
+apply from: rootProject.file( 'gradle/module.gradle' )
 apply from: rootProject.file( 'gradle/libraries.gradle' )
 apply from: rootProject.file( 'gradle/databases.gradle' )
+
+apply plugin: 'org.hibernate.orm.database-service'
 
 apply plugin: 'java-library'
 apply plugin: 'org.hibernate.orm.database-service'

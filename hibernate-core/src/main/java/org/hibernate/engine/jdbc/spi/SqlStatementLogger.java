@@ -112,11 +112,16 @@ public class SqlStatementLogger {
 	@AllowSysOut
 	public void logStatement(String statement, Formatter formatter) {
 		if ( logToStdout || LOG.isDebugEnabled() ) {
-			if ( format ) {
-				statement = formatter.format( statement );
+			try {
+				if ( format ) {
+					statement = formatter.format( statement );
+				}
+				if ( highlight ) {
+					statement = FormatStyle.HIGHLIGHT.getFormatter().format( statement );
+				}
 			}
-			if ( highlight ) {
-				statement = FormatStyle.HIGHLIGHT.getFormatter().format( statement );
+			catch (RuntimeException ex) {
+				LOG.warn( "Couldn't format statement", ex );
 			}
 		}
 		LOG.debug( statement );

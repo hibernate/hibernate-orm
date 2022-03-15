@@ -3,6 +3,33 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.6.6.Final (March 15, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32031
+
+** Bug
+    * [HHH-15115] - Deleting an entity with Joined inheritance and default schema set is throwing and error
+    * [HHH-15113] - Exception setting ParameterExpressions on Update Queries
+    * [HHH-15105] - Getting the CacheRegionStatistics before executing a query leads to a NPE later on
+    * [HHH-15097] - Hibernate fails to detect SQL type for AttributeConverter to UUID
+    * [HHH-15084] - JpaCompliantLifecycleStrategy uses deprecated BeanManager method that's gone in CDI 4.0
+    * [HHH-15082] - JDBC Statement leaks after exceptions other than SQLException during insert/update/...
+    * [HHH-15069] - Backwards-incompatible changes in SequenceStyleGenerator (and others) following default_schema changes
+    * [HHH-15060] - Fix handling of associations with @NotFound
+    * [HHH-15051] - Association with id class misses property mapping for target FK attributes
+    * [HHH-14932] - Spatial support for PostgreSQL 10+ uses invalid WKB dialect
+    * [HHH-14817] - hibernate-core-jakarta source jar does not contain source
+
+** Improvement
+    * [HHH-15106] -  fk() SQM function
+    * [HHH-15094] - Handle http://hibernate.org and https://* for all DTDs in LocalXmlResourceResolver
+
+** Task
+    * [HHH-15119] - Upgrade to ByteBuddy 1.12.8
+    * [HHH-14996] - Upgrade to JBoss Logging Processor (and matching Annotations) 2.2.1.Final
+
+
 Changes in 5.6.5.Final (January 25, 2022)
 ------------------------------------------------------------------------------------------------------------------------
 

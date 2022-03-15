@@ -119,4 +119,7 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 		return Collections.emptyList();
 	}
 
+	public Consumer<Predicate> getJoinPredicateConsumer() {
+		return joinPredicateConsumer;
+	}
 }

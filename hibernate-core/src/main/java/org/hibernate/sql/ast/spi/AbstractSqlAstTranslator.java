@@ -3618,18 +3618,30 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				clauseStack.push( Clause.FROM );
 				String separator = NO_SEPARATOR;
 				for ( TableGroup root : fromClause.getRoots() ) {
-					// Skip virtual table group roots which we use for simple correlations
-					if ( !( root instanceof VirtualTableGroup ) ) {
-						appendSql( separator );
-						renderRootTableGroup( root, null );
-						separator = COMA_SEPARATOR;
-					}
+					separator = renderFromClauseRoot( root, separator );
 				}
 			}
 			finally {
 				clauseStack.pop();
 			}
 		}
+	}
+
+	private String renderFromClauseRoot(TableGroup root, String separator) {
+		if ( root instanceof VirtualTableGroup ) {
+			for ( TableGroupJoin tableGroupJoin : root.getTableGroupJoins() ) {
+				separator = renderFromClauseRoot( tableGroupJoin.getJoinedGroup(), separator );
+			}
+			for ( TableGroupJoin tableGroupJoin : root.getNestedTableGroupJoins() ) {
+				separator = renderFromClauseRoot( tableGroupJoin.getJoinedGroup(), separator );
+			}
+		}
+		else {
+			appendSql( separator );
+			renderRootTableGroup( root, null );
+			separator = COMA_SEPARATOR;
+		}
+		return separator;
 	}
 
 	protected void renderRootTableGroup(TableGroup tableGroup, List<TableGroupJoin> tableGroupJoinCollector) {

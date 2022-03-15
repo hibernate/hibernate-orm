@@ -15,6 +15,7 @@ plugins {
 }
 
 apply from: rootProject.file( 'gradle/java-module.gradle' )
+apply from: rootProject.file( 'gradle/releasable.gradle' )
 
 description = "Gradle plugin for integrating Hibernate aspects into your build"
 
@@ -91,7 +92,7 @@ tasks.test {
 	jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
 }
 
-task release {
+tasks.release {
 	dependsOn tasks.publishPlugins
 }
 

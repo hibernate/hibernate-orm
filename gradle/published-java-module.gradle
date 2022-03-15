@@ -5,9 +5,13 @@
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 
-apply plugin: 'signing'
+apply from: rootProject.file( 'gradle/releasable.gradle' )
 apply from: rootProject.file( 'gradle/java-module.gradle' )
 apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
+
+apply plugin: 'signing'
+
+tasks.getByPath( ':release:publishReleaseArtifacts' ).dependsOn tasks.release
 
 configurations {
 	javadocSources {
@@ -107,10 +111,12 @@ signing {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Release / publishing tasks
 
-task ciBuild( dependsOn: [test, publish] )
+task ciBuild {
+	dependsOn test, publish
+}
 
-task release(dependsOn: [test, publishToSonatype])
-publishToSonatype.mustRunAfter test
+tasks.release.dependsOn tasks.test, tasks.publishToSonatype
+tasks.publishToSonatype.mustRunAfter test
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

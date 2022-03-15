@@ -13,6 +13,8 @@ plugins {
 
 
 apply from: rootProject.file( 'gradle/java-module.gradle' )
+apply from: rootProject.file( 'gradle/releasable.gradle' )
+
 apply plugin: 'org.hibernate.matrix-test'
 apply plugin: 'org.hibernate.orm.build.reports'
 
@@ -65,6 +67,7 @@ dependencies {
 if ( project.ormVersion.isSnapshot ) {
 	// only run the ci build tasks for SNAPSHOT versions
 	task ciBuild( dependsOn: [clean, test] )
+	tasks.release.enabled false
 }
 else {
 	task release( dependsOn: [clean, test] )

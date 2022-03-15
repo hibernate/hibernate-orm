@@ -14,7 +14,7 @@ buildscript {
 		mavenCentral()
 	}
 	dependencies {
-		classpath 'de.thetaphi:forbiddenapis:3.1'
+		classpath 'de.thetaphi:forbiddenapis:3.2'
 	}
 }
 
@@ -58,25 +58,6 @@ if ( !project.description ) {
 
 
 configurations.all {
-	resolutionStrategy {
-		dependencySubstitution {
-			// will handle dependencies pulled in transitively
-			substitute module( 'javax.persistence:javax.persistence-api' ) with module( libraries.jakarta_jpa )
-			substitute module( 'javax.transaction:jta' ) with module( libraries.jakarta_jta )
-			substitute module( 'org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec' ) with module( libraries.jakarta_jta )
-			substitute module( 'javax.validation:validation-api' ) with module( libraries.jakarta_validation )
-			substitute module( 'javax.interceptor:javax.interceptor-api' ) with module( libraries.jakarta_interceptor )
-			substitute module( 'javax.activation:javax.activation-api' ) with module( libraries.jakarta_activation )
-			substitute module( 'javax.enterprise:cdi-api' ) with module( libraries.jakarta_cdi )
-			substitute module( 'org.jboss.weld.se:weld-se-shaded' ) with module( libraries.jakarta_weld )
-			substitute module( 'javax.xml.bind:jaxb-api' ) with module( libraries.jakarta_jaxb_api )
-			substitute module( 'org.glassfish.jaxb:jaxb-runtime' ) with module( libraries.jakarta_jaxb_runtime )
-			substitute module( 'org.jboss.narayana.jta:narayana-jta' ) with module( libraries.jboss_jta_jakarta )
-			substitute module( 'org.jboss:jboss-transaction-spi' ) with module( libraries.jboss_tx_spi_jakarta )
-			substitute module( 'org.hibernate.validator:hibernate-validator' ) with module( libraries.jakarta_validator )
-			substitute module( 'org.glassfish:javax.el' ) with module( libraries.jakarta_el )
-		}
-	}
 	exclude group: 'xml-apis', module: 'xml-apis'
 }
 
@@ -147,6 +128,11 @@ dependencies {
 
 tasks.withType( JavaCompile ) {
 	options.encoding = 'UTF-8'
+	options.warnings false
+//	javaCompileTask.options.compilerArgs += [
+//			"-nowarn",
+//			"-encoding", "UTF-8"
+//	]
 }
 
 if ( !gradle.ext.javaToolchainEnabled ) {
@@ -186,20 +172,15 @@ else {
 	}
 
 	// Configure JVM Options
-	tasks.withType( JavaCompile ).configureEach {
-		options.forkOptions.jvmArgs.addAll( getProperty( 'toolchain.compiler.jvmargs' ).toString().split( ' ' ) )
-	}
-	tasks.withType( Javadoc ).configureEach {
-		options.setJFlags( getProperty( 'toolchain.javadoc.jvmargs' ).toString().split( ' ' ).toList().findAll( { !it.isEmpty() } ) )
-	}
-
 	// Display version of Java tools
 	tasks.withType( JavaCompile ).configureEach {
+		options.forkOptions.jvmArgs.addAll( getProperty( 'toolchain.compiler.jvmargs' ).toString().split( ' ' ) )
 		doFirst {
 			logger.lifecycle "Compiling with '${javaCompiler.get().metadata.installationPath}'"
 		}
 	}
 	tasks.withType( Javadoc ).configureEach {
+		options.setJFlags( getProperty( 'toolchain.javadoc.jvmargs' ).toString().split( ' ' ).toList().findAll( { !it.isEmpty() } ) )
 		doFirst {
 			logger.lifecycle "Generating javadoc with '${javadocTool.get().metadata.installationPath}'"
 		}
@@ -209,18 +190,6 @@ else {
 task compile(dependsOn: [compileJava, processResources, compileTestJava, processTestResources] )
 
 
-convention.findPlugin( JavaPluginConvention.class ).sourceSets.each { sourceSet ->
-	JavaCompile javaCompileTask = project.tasks.findByName( sourceSet.compileJavaTaskName ) as JavaCompile
-
-	// NOTE : this aptDir stuff is needed until we can have IntelliJ run annotation processors for us
-	//		which cannot happen until we can fold hibernate-testing back into hibernate-core/src/test
-	//		which cannot happen until... ugh
-
-	javaCompileTask.options.compilerArgs += [
-			"-nowarn",
-			"-encoding", "UTF-8"
-	]
-}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Attach tools JAR to the classpath for byteman tests

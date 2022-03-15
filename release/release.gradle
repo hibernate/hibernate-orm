@@ -554,16 +554,6 @@ task release {
     finalizedBy gitTasksAfterRelease
 }
 
-rootProject.subprojects.each { Project subProject ->
-    if ( project.name != subProject.name ) {
-        if ( subProject.tasks.findByName( 'release' ) ) {
-            project.tasks.publishReleaseArtifacts.dependsOn( subProject.tasks.release )
-            subProject.tasks.release.dependsOn( releaseChecks )
-            subProject.tasks.release.mustRunAfter( releaseChecks )
-        }
-    }
-}
-
 task ciReleaseChecks {
     dependsOn releaseChecks
 }
@@ -716,7 +706,8 @@ class ReleaseNote {
 
 gradle.getTaskGraph().whenReady {tg->
 
-    if ( tg.hasTask( project.tasks.releaseChecks ) ) {
+    if ( tg.hasTask( project.tasks.releaseChecks )
+            && ! project.getGradle().getStartParameter().isDryRun() ) {
         String releaseVersionLocal
         String developmentVersionLocal
 

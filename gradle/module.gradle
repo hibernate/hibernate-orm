@@ -1,4 +1,4 @@
-// Applied to all projects
+// Applied to all modules (sub-projects)
 
 apply from: rootProject.file( 'gradle/base-information.gradle' )
 

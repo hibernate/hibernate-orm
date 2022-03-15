@@ -8,6 +8,7 @@ package org.hibernate.orm.test.query.hql.set;
 
 import java.util.List;
 
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.SemanticException;
 
 import org.hibernate.testing.TestForIssue;
@@ -20,6 +21,7 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -240,6 +242,7 @@ public class SetOperationTest {
     @Test
     @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
     @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInSubquery.class)
+    @SkipForDialect(dialectClass = OracleDialect.class, reason = "Bug in BasicFormatterImpl causes exception during formatting of the SQL string")
     public void testAlternatingSetOperator(SessionFactoryScope scope) {
         scope.inSession(
                 session -> {

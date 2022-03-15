@@ -30,24 +30,32 @@ public class DynamicMapTest {
 	@Test
 	public void bootstrappingTest(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			Map item1 = new HashMap();
+			final Map<String,Object> item1 = new HashMap<>();
 			item1.put( "name", "cup" );
 			item1.put( "description", "abc" );
-			Map entity1 = new HashMap();
+
+			final Map<String,Object> entity1 = new HashMap<>();
 			entity1.put( "name", "first_entity" );
 			item1.put( "entity", entity1 );
-			session.save( "Entity1", entity1 );
-			session.save( "Item1", item1 );
+
+			session.persist( "Entity1", entity1 );
+			session.persist( "Item1", item1 );
 		} );
 
 		scope.inTransaction( session -> {
-			List result = session.createQuery( "from Item1" ).list();
+			//noinspection rawtypes
+			final List<Map> result = session.createSelectionQuery( "from Item1", Map.class ).list();
 			assertThat( result.size(), is( 1 ) );
-			Map item1 = (Map) result.get( 0 );
+
+			//noinspection unchecked
+			final Map<String,Object> item1 = (Map<String, Object>) result.get( 0 );
 			assertThat( item1.get( "name" ), is( "cup" ) );
-			Object entity1 = item1.get( "entity" );
+
+			final Object entity1 = item1.get( "entity" );
 			assertThat( entity1, notNullValue() );
-			assertThat( ( (Map) entity1 ).get( "name" ), is( "first_entity" ) );
+
+			//noinspection unchecked
+			assertThat( ( (Map<String,Object>) entity1 ).get( "name" ), is( "first_entity" ) );
 		} );
 	}
 }

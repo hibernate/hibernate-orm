@@ -512,15 +512,24 @@ task forbiddenApisNonPortable(type: CheckForbiddenApis, dependsOn: compileJava) 
 
 task forbiddenApis
 project.tasks.withType( CheckForbiddenApis ).each { task ->
-	task.outputs.dirs project.sourceSets.main.output.classesDirs
+	def outputFile = project.file( "${buildDir}/forbidden-apis/${task.name}-output.txt" )
+
 	task.classesDirs = project.sourceSets.main.output.classesDirs
 	task.classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
 	task.targetCompatibility = project.forbiddenAPITargetJDKCompatibility
+
+	task.outputs.file outputFile
+
 	// This slows down the checks a little, but is necessary to avoid the gradle deamon holding on
 	// to class definitions loaded previously - even possibly in a previous build.
 	task.disableClassloadingCache = true
 
 	tasks.forbiddenApis.finalizedBy task
+
+	task.doLast {
+		outputFile.parentFile.mkdirs()
+		outputFile.createNewFile()
+	}
 }
 
 project.tasks.check.finalizedBy tasks.forbiddenApis

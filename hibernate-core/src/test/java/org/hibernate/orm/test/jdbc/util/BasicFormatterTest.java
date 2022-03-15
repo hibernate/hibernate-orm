@@ -11,6 +11,8 @@ import java.util.StringTokenizer;
 import org.junit.Test;
 
 import org.hibernate.engine.jdbc.internal.FormatStyle;
+
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -48,6 +50,12 @@ public class BasicFormatterTest extends BaseUnitTestCase {
 				"(select p.pid from Address where city = 'Boston') union (select p.pid from Address where city = 'Taipei')"
 		);
 		assertNoLoss( "select group0.[order] as order0 from [Group] group0 where group0.[order]=?1" );
+	}
+
+	@Test
+	@FailureExpected( jiraKey = "HHH-15125")
+	public void testProblematic() {
+		assertNoLoss( "select * from ((select e.id from Entity e union all select e.id from Entity e) union select e.id from Entity e) grp" );
 	}
 
 	private void assertNoLoss(String query) {

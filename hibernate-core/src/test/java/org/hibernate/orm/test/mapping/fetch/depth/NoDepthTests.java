@@ -16,6 +16,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.tool.schema.Action;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,10 @@ import org.jboss.shrinkwrap.api.classloader.ShrinkWrapClassLoader;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 
 import static jakarta.persistence.Persistence.createEntityManagerFactory;
+import static org.hibernate.cfg.AvailableSettings.CLASSLOADERS;
+import static org.hibernate.cfg.AvailableSettings.FORMAT_SQL;
+import static org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO;
+import static org.hibernate.cfg.AvailableSettings.MAX_FETCH_DEPTH;
 import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
 
 /**
@@ -54,18 +59,10 @@ public class NoDepthTests {
 
 	private static SessionFactoryImplementor buildSessionFactory(boolean configureMax) {
 		final StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder();
-		registryBuilder.applySetting( AvailableSettings.URL, "jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;" );
-		registryBuilder.applySetting( AvailableSettings.USER, "sa" );
-		registryBuilder.applySetting( AvailableSettings.POOL_SIZE, "5" );
-		registryBuilder.applySetting( AvailableSettings.FORMAT_SQL, "true" );
-		registryBuilder.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
+		registryBuilder.applySetting( FORMAT_SQL, "true" );
+		registryBuilder.applySetting( HBM2DDL_AUTO, Action.CREATE_DROP );
 
-		if ( configureMax ) {
-			registryBuilder.applySetting( AvailableSettings.MAX_FETCH_DEPTH, "10" );
-		}
-		else {
-			registryBuilder.applySetting( AvailableSettings.MAX_FETCH_DEPTH, "" );
-		}
+		registryBuilder.applySetting( MAX_FETCH_DEPTH, configureMax ? "10" : "" );
 
 		return new MetadataSources( registryBuilder.build() )
 				.addAnnotatedClasses( SysModule.class, SysModule2.class )
@@ -76,26 +73,28 @@ public class NoDepthTests {
 
 	@Test
 	public void testWithMaxJpa() {
-		testItJpa( "with-max" );
+		testItJpa( true );
 	}
 
 	@Test
 	public void testNoMaxJpa() {
-		testItJpa( "no-max" );
+		testItJpa( false );
 	}
 
-	private void testItJpa(String unitName) {
-		final JavaArchive par = ShrinkWrap.create( JavaArchive.class, unitName + ".par" );
+	private void testItJpa(boolean configureMax) {
+		final JavaArchive par = ShrinkWrap.create( JavaArchive.class, "fetch-depth.par" );
 		par.addClasses( SysModule.class );
 		par.addAsResource( "units/many2many/fetch-depth.xml", "META-INF/persistence.xml" );
 
 		try ( final ShrinkWrapClassLoader classLoader = new ShrinkWrapClassLoader( par ) ) {
 			final Map<String, ?> settings = CollectionHelper.toMap(
-					AvailableSettings.CLASSLOADERS,
-					Arrays.asList( classLoader, getClass().getClassLoader() )
+					CLASSLOADERS, Arrays.asList( classLoader, getClass().getClassLoader() ),
+					MAX_FETCH_DEPTH, configureMax ? "10" : "",
+					HBM2DDL_AUTO, Action.CREATE_DROP,
+					FORMAT_SQL, "true"
 			);
 
-			final EntityManagerFactory emf = createEntityManagerFactory( unitName, settings );
+			final EntityManagerFactory emf = createEntityManagerFactory( "fetch-depth", settings );
 			try ( final SessionFactoryImplementor sf = emf.unwrap( SessionFactoryImplementor.class ) ) {
 				// play around with the SF and make sure it is operable
 				inTransaction( sf, (s) -> {

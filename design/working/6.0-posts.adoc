@@ -1,0 +1,137 @@
+= Hibernate 6.0 is Coming
+Steve Ebersole
+:awestruct-tags: ["Hibernate ORM"]
+:awestruct-layout: blog-post
+:docs-url: https://docs.jboss.org/hibernate/orm/6.0
+:migration-guide-url: {docs-url}/migration-guide/migration-guide.html
+:user-guide-url: {docs-url}/userguide/html_single/Hibernate_User_Guide.html
+:jakarta-transformer-url: https://github.com/eclipse/transformer
+
+As Hibernate ORM 6.0 approaches Final, I wanted to take a moment to look back at its origins and
+driving forces; and to give insight into why certain choices were made.
+
+This post will be followed by a series of more focused posts targeting specific improvements or
+cool new features.
+
+
+[[api-spi]]
+== APIs and SPIs
+
+While many things have changed in 6.0, we strove to minimize changes to APIs to help
+mitigate migration costs.
+
+[NOTE]
+====
+See https://hibernate.org/community/compatibility-policy/ for a discussion of what we consider
+an API versus an SPI.
+====
+
+Applications which use only the Jakarta Persistence APIs will be "source compatible" within the
+discussion in <<jpa>>.
+
+Applications using Hibernate APIs will generally be bytecode and source compatible, aside
+from the removal of deprecated stuff.  There are a few one-off changes that break bytecode and/or
+source compatibility; these are covered in the <<{migration-guide-url},migration guide>>.
+
+Quite a few SPI changes have changed to support many of the topics discussed here as well as in
+the <<{migration-guide-url},migration guide>>.  Many will also be the subject of the mentioned
+follow-up posts.
+
+
+[[jpa]]
+== Jakarta Persistence
+
+Java Persistence has become Jakarta Persistence as part of the overall move of Java EE
+to Jakarta.  Various legal requirements forced the changing of the `javax` namespace -
+for persistence, that means changing from `javax.persistence` to `jakarta.persistence`
+for package names as well as property and hint names.
+
+This is clearly an unfortunate and invasive change, but beyond our control.  Luckily Jakarta
+have developed a <<{jakarta-transformer-url},transformer>> to help with these migrations.  We actually
+used this tool to migrate Hibernate's own source code.  It works well-ish.
+
+For those using Maven, you are in luck (well, within the bounds of actually using Maven) in that
+Jakarta themselves provide a Maven plugin to integrate this transformer.
+
+For those using Gradle, you can use the tasks we developed to transform Hibernate's source code.
+
+There is also a command-line form.  See the <<{jakarta-transformer-url},transformer>> docs for details.
+
+
+[[read-by-position]]
+== Read-by-position
+
+A few years ago, around the 5.4 timeframe, we worked with the amazing performance team at Red Hat
+to squeeze even more great performance out of Hibernate ORM.
+
+This work was part of a larger effort to improve the performance of WildFly.  Ultimately, the limiting
+factor to additional improvements within Hibernate was our approach of reading values from a JDBC
+`ResultSet` by name rather than by position.  For every JDBC driver out there, reading by name is slower.
+
+It quickly became obvious that minimal changes would not be enough, and so this work led to many changes.
+A great analogy is to consider migrating a Map-based solution to List-based.  There is the obvious impact
+of changing calls to accept an `int` rather than a `String` as well as internally keeping track of the
+positions of each selected value within the `ResultSet`.  There is also the perhaps not-so-obvious
+impact of changing the callers and consumers of those contracts to keep track of positions.
+
+These changes have led to improvements on a number of fronts:
+
+1. As mentioned, reading by position is significantly faster than reading by name which leads to
+performance improvements.
+2. Historically Hibernate generated SQL select queries with a defined pattern of named column aliases
+which were later used to access the specific result.  We've all seen these "ugly" aliases.  With these
+changes, those select-clause aliases are no longer needed resulting in much more readable generated
+SQL.
+3. Although we implemented some improved support for limiting needed joins within an entity mapping
+(joined inheritance, secondary tables) in 5.x, 6.0 allows even better opportunity for this.
+4. (2) and (3) combined results in much smaller SQL needing to be sent to the server which can
+have an impact on network communication.  Every bit helps.
+
+This was by far the biggest force behind 6.0 initially.
+
+
+
+[[mapping-model]]
+== Mapping Model
+
+- Object-oriented
+- More user-friendly
+- Attribute order
+
+
+[[width-first]]
+== Width-first fetching
+
+- examples mainly
+
+
+[[annotations]]
+== Annotations
+
+- type-safety
+
+
+[[hql]]
+== HQL
+
+- poor and unmaintainable grammars
+
+
+[[criteria]]
+== Criteria
+
+- removal of legacy Criteria
+- no longer Criteria -> HQL -> Query
+
+
+[[sql-ast]]
+== SQL as AST
+
+mention Dialect involvement
+
+
+[[dialect-init]]
+== Dialect initialization
+
+- `Dialect` constructor
+- `Dialect#initializeFunctionRegistry`

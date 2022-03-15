@@ -4,6 +4,7 @@
 package org.hibernate.tool.internal.export.common;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -148,7 +149,8 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 					if(key.endsWith(".toolclass")) {
 						try {
 							Class<?> toolClass = ReflectHelper.classForName(value.toString(), this.getClass());
-							Object object = toolClass.newInstance();
+							Constructor<?> toolClassConstructor = toolClass.getConstructor(new Class[] {});
+							Object object = toolClassConstructor.newInstance();
 							getTemplateHelper().putInContext(key.substring(ExporterSettings.PREFIX_KEY.length(),key.length()-".toolclass".length()), object);
 						}
 						catch (Exception e) {

@@ -13,6 +13,8 @@ import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlTreeCreationLogger;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 
+import org.jboss.logging.Logger;
+
 /**
  * Simple implementation of FromClauseAccess
  *
@@ -47,15 +49,19 @@ public class SimpleFromClauseAccessImpl implements FromClauseAccess {
 
 	@Override
 	public void registerTableGroup(NavigablePath navigablePath, TableGroup tableGroup) {
-		SqlTreeCreationLogger.LOGGER.debugf(
-				"Registration of TableGroup [%s] with identifierForTableGroup [%s] for NavigablePath [%s] ",
-				tableGroup,
-				tableGroup.getNavigablePath().getIdentifierForTableGroup(),
-				navigablePath.getIdentifierForTableGroup()
-		);
+		final Logger logger = SqlTreeCreationLogger.LOGGER;
+		final boolean debugEnabled = logger.isDebugEnabled();
+		if ( debugEnabled ) {
+			logger.debugf(
+					"Registration of TableGroup [%s] with identifierForTableGroup [%s] for NavigablePath [%s] ",
+					tableGroup,
+					tableGroup.getNavigablePath().getIdentifierForTableGroup(),
+					navigablePath.getIdentifierForTableGroup()
+			);
+		}
 		final TableGroup previous = tableGroupMap.put( navigablePath, tableGroup );
-		if ( previous != null ) {
-			SqlTreeCreationLogger.LOGGER.debugf(
+		if ( debugEnabled && previous != null ) {
+			logger.debugf(
 					"Registration of TableGroup [%s] for NavigablePath [%s] overrode previous registration : %s",
 					tableGroup,
 					navigablePath,

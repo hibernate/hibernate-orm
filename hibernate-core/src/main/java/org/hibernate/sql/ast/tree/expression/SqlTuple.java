@@ -32,11 +32,14 @@ public class SqlTuple implements Expression, SqlTupleContainer, DomainResultProd
 		this.expressions = expressions;
 		this.valueMapping = valueMapping;
 
-		if ( expressions.size() < 2 ) {
-			SqlTreeCreationLogger.LOGGER.debugf(
-					"SqlTuple created with `%s` expression(s)",
-					expressions.size()
-			);
+		if ( SqlTreeCreationLogger.LOGGER.isDebugEnabled() ) {
+			final int size = expressions.size();
+			if ( size < 2 ) {
+				SqlTreeCreationLogger.LOGGER.debugf(
+						"SqlTuple created with `%s` expression(s)",
+						size
+				);
+			}
 		}
 	}
 

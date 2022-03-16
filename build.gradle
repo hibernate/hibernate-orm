@@ -136,7 +136,10 @@ task ciBuild {
 wrapper {
 	// To upgrade the version of gradle used in the wrapper, run:
 	//     ./gradlew wrapper --gradle-version NEW_VERSION
-	distributionType = Wrapper.DistributionType.ALL
+
+	// uncomment locally if you need to debug build scripts.
+	// in such cases, having the sources helps
+	//distributionType = Wrapper.DistributionType.ALL
 }
 
 

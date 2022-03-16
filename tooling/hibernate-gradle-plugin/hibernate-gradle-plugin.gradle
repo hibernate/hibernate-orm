@@ -9,12 +9,15 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
 	id 'java-gradle-plugin'
-	id 'com.gradle.plugin-publish' version '0.16.0'
+	id 'com.gradle.plugin-publish' version '0.20.0'
 
 	id 'com.github.sebersole.testkit-junit5' version '1.2.0'
+	id 'checkstyle'
 }
 
-apply from: rootProject.file( 'gradle/java-module.gradle' )
+apply from: rootProject.file( 'gradle/module.gradle' )
+apply from: rootProject.file( 'gradle/javadoc.gradle' )
+apply from: rootProject.file( 'gradle/libraries.gradle' )
 apply from: rootProject.file( 'gradle/releasable.gradle' )
 
 description = "Gradle plugin for integrating Hibernate aspects into your build"
@@ -63,6 +66,9 @@ pluginBundle {
 	}
 }
 
+tasks.release {
+	dependsOn tasks.publishPlugins
+}
 task publish {
 	dependsOn tasks.publishPlugins
 }
@@ -87,14 +93,12 @@ else {
 						 " Using the JDK that runs Gradle for Groovy compilation." )
 }
 
-tasks.test {
-	// Needs add-opens because Gradle uses illegal accesses to inject... mocks? Something like that.
-	jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
+checkstyle {
+	sourceSets = [ project.sourceSets.main ]
+	configFile = rootProject.file( 'shared/config/checkstyle/checkstyle.xml' )
+	showViolations = false
 }
 
-tasks.release {
-	dependsOn tasks.publishPlugins
-}
 
 afterEvaluate {
 	if ( project.ormVersion.isSnapshot ) {

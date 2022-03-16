@@ -102,7 +102,7 @@ public class ObjectFactory {
 			Consumer<Component> componentConsumer) {
 		if ( propertyValueMapping instanceof BasicValue ) {
 			final BasicValue basicValue = (BasicValue) propertyValueMapping;
-			return basicValue.resolve().getDomainJavaDescriptor().getJavaTypeClass();
+			return basicValue.resolve().getDomainJavaType().getJavaTypeClass();
 		}
 
 		if ( propertyValueMapping instanceof Component ) {
@@ -191,7 +191,7 @@ public class ObjectFactory {
 
 		if ( partJavaType instanceof BasicValue ) {
 			final BasicValue basicValue = (BasicValue) partJavaType;
-			return basicValue.resolve().getDomainJavaDescriptor().getJavaTypeClass();
+			return basicValue.resolve().getDomainJavaType().getJavaTypeClass();
 		}
 
 		if ( partJavaType instanceof Component ) {

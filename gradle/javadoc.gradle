@@ -10,20 +10,6 @@ apply plugin : 'java'
 
 apply from: rootProject.file( 'gradle/base-information.gradle' )
 
-configurations {
-    javadocSources {
-        canBeConsumed = true
-        canBeResolved = false
-        description = 'Configuration for accessing the sources that should be included in the javadoc for the project'
-    }
-}
-
-artifacts {
-    sourceSets.main.allJava.srcDirs.each { srcDir ->
-        javadocSources srcDir
-    }
-}
-
 javadoc {
     exclude( "**/internal/*" )
     exclude( "**/generated-src/**" )

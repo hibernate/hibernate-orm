@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.tooling.gradle;
 
-import jakarta.inject.Inject;
+import javax.inject.Inject;
 
 import org.gradle.api.Action;
 import org.gradle.api.Project;

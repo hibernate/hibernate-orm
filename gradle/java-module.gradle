@@ -56,11 +56,6 @@ if ( !project.description ) {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Configurations and Dependencies
 
-
-configurations.all {
-	exclude group: 'xml-apis', module: 'xml-apis'
-}
-
 dependencies {
 	implementation libraries.logging
 
@@ -122,6 +117,20 @@ dependencies {
 	}
 }
 
+configurations {
+	javadocSources {
+		canBeConsumed = true
+		canBeResolved = false
+		visible = false
+		description = 'Configuration for accessing the sources that should be included in the javadoc for the project'
+	}
+}
+
+artifacts {
+	sourceSets.main.allJava.srcDirs.each { srcDir ->
+		javadocSources srcDir
+	}
+}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Compilation
@@ -462,21 +471,25 @@ task copyResourcesToIntelliJOutFolder(type: Task, dependsOn: project.tasks.proce
  Afterward, you can run any test from the IDE against that particular DB.
  */
 task setDataBase dependsOn( processTestResources, copyResourcesToIntelliJOutFolder ) {
-	println( 'Setting current database to ' + db )
+	println( "Setting current database to ${db}" )
 }
 
-copyResourcesToIntelliJOutFolder.mustRunAfter processTestResources
+tasks.copyResourcesToIntelliJOutFolder.mustRunAfter processTestResources
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Report configs
 
 checkstyle {
-	sourceSets = [ project.sourceSets.main ]
+	it.sourceSets = [ project.sourceSets.main ]
 	configFile = rootProject.file( 'shared/config/checkstyle/checkstyle.xml' )
 	showViolations = false
 }
+
 // exclude generated java sources - by explicitly setting the base source dir
-checkstyleMain.source = 'src/main/java'
+tasks.checkstyleMain.source = 'src/main/java'
+// because cfg package is a mess mainly from annotation stuff
+tasks.checkstyleMain.exclude '**/org/hibernate/cfg/**'
+tasks.checkstyleMain.exclude '**/org/hibernate/cfg/*'
 
 // define a second checkstyle task for checking non-fatal violations
 task nonFatalCheckstyle(type:Checkstyle) {
@@ -485,10 +498,6 @@ task nonFatalCheckstyle(type:Checkstyle) {
 	showViolations = false
 	configFile = rootProject.file( 'shared/config/checkstyle/checkstyle-non-fatal.xml' )
 }
-
-// because cfg package is a mess mainly from annotation stuff
-checkstyleMain.exclude '**/org/hibernate/cfg/**'
-checkstyleMain.exclude '**/org/hibernate/cfg/*'
 
 
 task forbiddenApisSystemOut(type: CheckForbiddenApis, dependsOn: compileJava) {
@@ -510,26 +519,22 @@ task forbiddenApisNonPortable(type: CheckForbiddenApis, dependsOn: compileJava) 
 	bundledSignatures += 'jdk-non-portable'
 }
 
-task forbiddenApis
-project.tasks.withType( CheckForbiddenApis ).each { task ->
-	def outputFile = project.file( "${buildDir}/forbidden-apis/${task.name}-output.txt" )
+task forbiddenApis {
+	description 'Grouping task for all defined forbidden-apis tasks'
+}
 
-	task.classesDirs = project.sourceSets.main.output.classesDirs
-	task.classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
-	task.targetCompatibility = project.forbiddenAPITargetJDKCompatibility
+project.tasks.withType( CheckForbiddenApis ) {
+	outputs.upToDateWhen { true }
 
-	task.outputs.file outputFile
+	classesDirs = project.sourceSets.main.output
+	classpath = configurations.runtimeClasspath + configurations.compileClasspath
+	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
 
-	// This slows down the checks a little, but is necessary to avoid the gradle deamon holding on
+	// This slows down the checks a little, but is necessary to avoid the gradle daemon holding on
 	// to class definitions loaded previously - even possibly in a previous build.
-	task.disableClassloadingCache = true
+	disableClassloadingCache = true
 
-	tasks.forbiddenApis.finalizedBy task
-
-	task.doLast {
-		outputFile.parentFile.mkdirs()
-		outputFile.createNewFile()
-	}
+	tasks.forbiddenApis.finalizedBy it
 }
 
 project.tasks.check.finalizedBy tasks.forbiddenApis

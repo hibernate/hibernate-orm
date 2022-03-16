@@ -19,6 +19,10 @@ repositories {
     }
 }
 
+dependencies {
+    implementation 'jakarta.persistence:jakarta.persistence-api:3.0.0'
+}
+
 hibernate {
     enhancement {
         lazyInitialization( true )

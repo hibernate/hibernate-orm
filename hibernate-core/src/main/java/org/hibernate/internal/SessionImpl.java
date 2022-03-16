@@ -274,12 +274,7 @@ public class SessionImpl
 						() -> getSessionProperty( AvailableSettings.FLUSH_MODE ),
 						() -> {
 							final Object oldSetting = getSessionProperty( org.hibernate.jpa.AvailableSettings.FLUSH_MODE );
-							if ( oldSetting != null ) {
-								DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
-										org.hibernate.jpa.AvailableSettings.FLUSH_MODE,
-										AvailableSettings.FLUSH_MODE
-								);
-							}
+							//Not invoking the DeprecationLogger in this case as the user can't avoid using this property (the string value is the same)
 							return oldSetting;
 						}
 				);

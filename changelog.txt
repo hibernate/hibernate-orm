@@ -3,6 +3,16 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.6.7.Final (March 16, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32053
+
+** Improvement
+    * [HHH-15124] - Relax usage of DeprecationLogger: avoid some confusing reports
+    * [HHH-15067] - Make NonNullableTransientDependencies.(String propertyName, Object transientEntity) method public
+
+
 Changes in 5.6.6.Final (March 15, 2022)
 ------------------------------------------------------------------------------------------------------------------------
 

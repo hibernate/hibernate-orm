@@ -3703,11 +3703,24 @@ public final class AnnotationBinder {
 		propertyBinder.setXToMany( true );
 
 		final Property boundProperty = propertyBinder.makePropertyAndBind();
+		boundProperty.setOptional( optional && isNullable( joinColumns, joinColumn ) );
+	}
+
+	private static boolean isNullable(JoinColumns joinColumns, JoinColumn joinColumn) {
 		if ( joinColumn != null ) {
-			boundProperty.setOptional( joinColumn.nullable() && optional );
+			return joinColumn.nullable();
+		}
+		else if ( joinColumns != null ) {
+			final JoinColumn[] col = joinColumns.value();
+			for ( int i = 0; i < col.length; i++ ) {
+				if ( joinColumns.value()[i].nullable() ) {
+					return true;
+				}
+			}
+			return false;
 		}
 		else {
-			boundProperty.setOptional( optional );
+			return true;
 		}
 	}
 

@@ -292,7 +292,9 @@ The `Query#iterate()` method has been removed. The alternative is to use one of
 [[query-result-cache]]
 == Query result cache
 
-Another change in 6.0 is related to the content of the query result cache, it now holds the entity data values and not just the entity identifier information.
+Another change in 6.0 is related to the query result cache.
+
+When the query result cache is enabled and a query is executed only the query result cache will be populated, not the corresponding entity and collection caches, and the content of the query result cache will contain the entity data values and not just the entity identifier information.
 
 [[query-sqm]]
 == SQM (HQL/Criteria)

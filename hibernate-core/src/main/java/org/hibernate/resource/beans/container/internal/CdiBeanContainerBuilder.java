@@ -62,12 +62,7 @@ public class CdiBeanContainerBuilder {
 					() -> cfgService.getSetting( AvailableSettings.DELAY_CDI_ACCESS, StandardConverters.BOOLEAN ),
 					() -> {
 						final Boolean oldSetting = cfgService.getSetting( org.hibernate.jpa.AvailableSettings.DELAY_CDI_ACCESS, StandardConverters.BOOLEAN );
-						if ( oldSetting != null ) {
-							DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
-									org.hibernate.jpa.AvailableSettings.DELAY_CDI_ACCESS,
-									AvailableSettings.DELAY_CDI_ACCESS
-							);
-						}
+						//Not invoking the DeprecationLogger in this case as the user can't avoid using this property (the string value is the same)
 						return oldSetting;
 					},
 					() -> false

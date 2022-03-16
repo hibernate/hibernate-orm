@@ -564,9 +564,8 @@ public class SchemaManagementToolCoordinator {
 					() -> configurationValues.get( JAKARTA_HBM2DDL_DATABASE_ACTION ),
 					() -> {
 						final Object setting = configurationValues.get( HBM2DDL_DATABASE_ACTION );
-						if ( setting != null ) {
-							DEPRECATION_LOGGER.deprecatedSetting( HBM2DDL_DATABASE_ACTION, JAKARTA_HBM2DDL_DATABASE_ACTION );
-						}
+						//Not using the DEPRECATION_LOGGER as while this branch understands Jakarta configuration,
+						//it's not meant to be the primary one yet.
 						return setting;
 					}
 			);
@@ -579,9 +578,8 @@ public class SchemaManagementToolCoordinator {
 					() -> configurationValues.get( JAKARTA_HBM2DDL_SCRIPTS_ACTION ),
 					() -> {
 						final Object setting = configurationValues.get( HBM2DDL_SCRIPTS_ACTION );
-						if ( setting != null ) {
-							DEPRECATION_LOGGER.deprecatedSetting( HBM2DDL_SCRIPTS_ACTION, JAKARTA_HBM2DDL_SCRIPTS_ACTION );
-						}
+						//Not using the DEPRECATION_LOGGER as while this branch understands Jakarta configuration,
+						//it's not meant to be the primary one yet.
 						return setting;
 					}
 			);

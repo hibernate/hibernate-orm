@@ -70,7 +70,7 @@ if ( project.ormVersion.isSnapshot ) {
 	tasks.release.enabled false
 }
 else {
-	task release( dependsOn: [clean, test] )
+	tasks.release.dependsOn clean, test
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

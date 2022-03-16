@@ -294,7 +294,13 @@ The `Query#iterate()` method has been removed. The alternative is to use one of
 
 Another change in 6.0 is related to the query result cache.
 
-When the query result cache is enabled and a query is executed only the query result cache will be populated, not the corresponding entity and collection caches, and the content of the query result cache will contain the entity data values and not just the entity identifier information.
+In previous versions, when the query-cache is enabled and a query returning entities is executed, only the entity identifiers were stored in the query-cache.  If second-level caching is enabled for a returned entity, the entity data was stored in its second-level cache region.
+
+Storing just the identifiers in the query-cache has a major drawback when fetching is defined for the query (dynamic fetch, entity-graph, etc) as it can, and often does, lead to N+1 selects.
+
+Starting in 6.0, we now store the complete set of data for the entity into the query-cache.  This also can have a drawback related to the size of caches.  We plan to address this further in later 6.x releases to allow storing just the identifiers along the lines of the previous behavior.
+
+A related change in 6.0 is the fact that queries no longer populate the second-level cache region for any returned entities or collections.  This is again something we plan to address in later 6.x releases.
 
 [[query-sqm]]
 == SQM (HQL/Criteria)

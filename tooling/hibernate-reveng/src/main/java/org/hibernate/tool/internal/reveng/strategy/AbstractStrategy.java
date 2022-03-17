@@ -290,9 +290,7 @@ public abstract class AbstractStrategy implements RevengStrategy {
 			
 			// tests that all columns are implied in the fks
 			Set<Column> columns = new HashSet<Column>();
-			Iterator<?> columnIterator = table.getColumnIterator();
-			while ( columnIterator.hasNext() ) {
-				Column column = (Column) columnIterator.next();
+			for (Column column : table.getColumns()) {
 				columns.add(column);
 			}
 			

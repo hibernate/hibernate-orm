@@ -1,5 +1,7 @@
 package org.hibernate.tool.internal.xml;
 
+import java.lang.reflect.Constructor;
+
 import org.hibernate.tool.api.xml.XMLPrettyPrinterStrategy;
 
 public final class XMLPrettyPrinterStrategyFactory {
@@ -22,7 +24,8 @@ public final class XMLPrettyPrinterStrategyFactory {
         if (strategyClass != null) {
             try {
                 Class<XMLPrettyPrinterStrategy> clazz = (Class<XMLPrettyPrinterStrategy>) Class.forName(strategyClass);
-                return clazz.newInstance();
+                Constructor<XMLPrettyPrinterStrategy> constructor = clazz.getConstructor(new Class[] {});
+                return constructor.newInstance();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

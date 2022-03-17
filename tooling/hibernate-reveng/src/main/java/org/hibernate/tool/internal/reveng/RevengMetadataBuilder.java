@@ -15,11 +15,14 @@ import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.api.reveng.RevengDialectFactory;
 import org.hibernate.tool.api.reveng.RevengDialect;
+import org.hibernate.tool.api.reveng.RevengDialectFactory;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.internal.reveng.binder.BinderContext;
 import org.hibernate.tool.internal.reveng.binder.RootClassBinder;
@@ -68,6 +71,7 @@ public class RevengMetadataBuilder {
 				new InFlightMetadataCollectorImpl(
 						bootstrapContext,
 						metadataBuildingOptions);
+		handleTypes(bootstrapContext, metadataBuildingOptions);
 		this.metadataBuildingContext = new MetadataBuildingContextRootImpl("tools", bootstrapContext, metadataBuildingOptions, metadataCollector);
 		this.binderContext = BinderContext
 				.create(
@@ -124,4 +128,9 @@ public class RevengMetadataBuilder {
 	}
 	
 	
- }
+	private static void handleTypes(BootstrapContext bootstrapContext, MetadataBuildingOptions options) {
+		Dialect dialect = options.getServiceRegistry().getService( JdbcServices.class ).getDialect();
+		dialect.contributeTypes( () -> bootstrapContext.getTypeConfiguration(), options.getServiceRegistry() );
+	}
+
+}

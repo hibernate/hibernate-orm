@@ -21,7 +21,6 @@ import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.hibernate.MappingException;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.xml.ErrorLogger;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.Table;
@@ -34,6 +33,9 @@ import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
 import org.hibernate.tool.internal.util.TableNameQualifier;
 import org.jboss.logging.Logger;
 import org.w3c.dom.Document;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 public class OverrideRepository  {
 
@@ -145,12 +147,26 @@ public class OverrideRepository  {
 
 	public OverrideRepository addInputStream(InputStream xmlInputStream) throws MappingException {
 		try {
-			ErrorLogger errorLogger = new ErrorLogger( "XML InputStream" );
+			final List<SAXParseException> errors = new ArrayList<SAXParseException>();
+			ErrorHandler errorHandler = new ErrorHandler() {
+				@Override
+				public void warning(SAXParseException exception) throws SAXException {
+					log.warn("warning while parsing xml", exception);			
+				}
+				@Override
+				public void error(SAXParseException exception) throws SAXException {
+					errors.add(exception);				
+				}
+				@Override
+				public void fatalError(SAXParseException exception) throws SAXException {
+					error(exception);					
+				}				
+			};
 			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 			DocumentBuilder db = dbf.newDocumentBuilder();
-			db.setErrorHandler(errorLogger);
+			db.setErrorHandler(errorHandler);
 			Document document = db.parse(xmlInputStream);
-			if ( errorLogger.hasErrors() ) throw new MappingException( "invalid override definition", ( Throwable ) errorLogger.getErrors().get( 0 ) );
+			if ( !errors.isEmpty()) throw new MappingException( "invalid override definition", ( Throwable ) errors.get( 0 ) );
 			add( document );
 			return this;
 		}

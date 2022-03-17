@@ -11,6 +11,7 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
@@ -28,6 +29,7 @@ import org.hibernate.tool.internal.export.java.ComponentPOJOClass;
 import org.hibernate.tool.internal.export.java.POJOClass;
 import org.hibernate.tool.internal.reveng.binder.TypeUtils;
 import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * This helper class is used expose hibernate mapping information to the
@@ -398,7 +400,8 @@ public final class DocHelper {
 	public String getSQLTypeName(Column column) {
 
 		try {
-			return column.getSqlType(dialect, metadata);
+			TypeConfiguration tc = ((MetadataImpl)metadata).getTypeConfiguration();
+			return column.getSqlType(tc, dialect, metadata);
 		} catch (HibernateException ex) {
 
 			// TODO: Fix this when we find a way to get the type or

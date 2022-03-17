@@ -165,7 +165,8 @@ public class RevisionInfoConfiguration {
 				true,
 				false,
 				true,
-				revisionInfoEntityName );
+				revisionInfoEntityName
+		);
 
 		attribute.setOnDelete( configuration.isCascadeDeleteRevision() ? "cascade" : null );
 
@@ -187,6 +188,7 @@ public class RevisionInfoConfiguration {
 	private RootPersistentEntity generateDefaultRevisionInfoMapping(String revisionInfoIdName) {
 		RootPersistentEntity mapping = new RootPersistentEntity(
 				new AuditTableData( null, null, configuration.getDefaultSchemaName(), configuration.getDefaultCatalogName() ),
+				revisionInfoClass,
 				revisionInfoEntityName,
 				DEFAULT_REVISION_ENTITY_TABLE_NAME
 		);

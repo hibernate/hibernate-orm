@@ -31,6 +31,7 @@ public class RootPersistentEntity extends PersistentEntity implements JoinAwareP
 
 	private Identifier identifier;
 	private String className;
+	private String entityName;
 	private String tableName;
 	private String whereClause;
 	private DiscriminatorType discriminator;
@@ -42,11 +43,12 @@ public class RootPersistentEntity extends PersistentEntity implements JoinAwareP
 		this.joins = new ArrayList<>();
 	}
 
-	public RootPersistentEntity(AuditTableData auditTableData, String className, String tableName) {
+	public RootPersistentEntity(AuditTableData auditTableData, Class<?> clazz, String entityName, String tableName) {
 		super( auditTableData, null );
 		this.attributes = new ArrayList<>();
 		this.joins = new ArrayList<>();
-		this.className = className;
+		this.className = clazz.getName();
+		this.entityName = entityName;
 		this.tableName = tableName;
 	}
 
@@ -116,6 +118,9 @@ public class RootPersistentEntity extends PersistentEntity implements JoinAwareP
 		}
 		else if ( !StringTools.isEmpty( className ) ) {
 			entity.setName( className );
+			if ( !StringTools.isEmpty( entityName ) ) {
+				entity.setEntityName( entityName );
+			}
 		}
 
 		if ( !StringTools.isEmpty( getAuditTableData().getAuditTableName() ) ) {

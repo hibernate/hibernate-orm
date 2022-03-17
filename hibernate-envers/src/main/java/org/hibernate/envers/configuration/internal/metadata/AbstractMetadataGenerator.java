@@ -111,7 +111,7 @@ public abstract class AbstractMetadataGenerator {
 						entity,
 						metadataBuildingContext.getConfiguration(),
 						metadataBuildingContext.getConfiguration().getRevisionTypePropertyType(),
-						metadataBuildingContext.getConfiguration().getRevisionInfo().getRevisionInfoClass().getName(),
+						metadataBuildingContext.getConfiguration().getRevisionInfo().getRevisionInfoEntityName(),
 						false
 				)
 		);
@@ -125,7 +125,7 @@ public abstract class AbstractMetadataGenerator {
 							entity,
 							metadataBuildingContext.getConfiguration(),
 							metadataBuildingContext.getConfiguration().getRevisionTypePropertyType(),
-							metadataBuildingContext.getConfiguration().getRevisionInfo().getRevisionInfoClass().getName(),
+							metadataBuildingContext.getConfiguration().getRevisionInfo().getRevisionInfoEntityName(),
 							true
 					)
 			);

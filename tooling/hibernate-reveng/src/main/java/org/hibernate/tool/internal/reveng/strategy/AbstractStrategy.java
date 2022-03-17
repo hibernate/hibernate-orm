@@ -272,13 +272,11 @@ public abstract class AbstractStrategy implements RevengStrategy {
 			if ( pk==null || pk.getColumns().size() != table.getColumnSpan() )
 				return false;
 			
-			Iterator<?> foreignKeyIterator = table.getForeignKeyIterator();
 			List<ForeignKey> foreignKeys = new ArrayList<ForeignKey>();
 			
 			// if we have more than 2 fk, means we have more than 2 table implied
 			// in this table --> cannot be a simple many-to-many
-			while ( foreignKeyIterator.hasNext() ) {
-				ForeignKey fkey = (ForeignKey) foreignKeyIterator.next();
+			for (ForeignKey fkey : table.getForeignKeys().values()) {
 				foreignKeys.add( fkey );
 				if(foreignKeys.size()>2) {
 					return false; // early exit if we have more than two fk.
@@ -294,20 +292,13 @@ public abstract class AbstractStrategy implements RevengStrategy {
 				columns.add(column);
 			}
 			
-						
-			foreignKeyIterator = table.getForeignKeyIterator();
-			while ( !columns.isEmpty() && foreignKeyIterator.hasNext() ) {
-				ForeignKey element = (ForeignKey) foreignKeyIterator.next();				
-				columns.removeAll( element.getColumns() );				
+			for (ForeignKey fkey : table.getForeignKeys().values()) {
+				if (columns.isEmpty()) break;
+				columns.removeAll(fkey.getColumns());
 			}
-			// what if one of the columns is not the primary key?
 			
 			return columns.isEmpty();
-			
 
-			
-			
-			
 		} else {
 			return false;
 		}

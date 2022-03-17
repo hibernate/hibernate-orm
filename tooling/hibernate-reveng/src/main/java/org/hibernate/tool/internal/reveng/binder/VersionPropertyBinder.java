@@ -1,6 +1,5 @@
 package org.hibernate.tool.internal.reveng.binder;
 
-import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,9 +45,7 @@ class VersionPropertyBinder extends AbstractBinder {
 			Set<Column> processed) {
 		TableIdentifier identifier = TableIdentifier.create(table);
 		LOGGER.log(Level.INFO, "Scanning " + identifier + " for <version>/<timestamp> columns.");
-		Iterator<?> columnIterator = table.getColumnIterator();
-		while(columnIterator.hasNext()) {
-			Column column = (Column) columnIterator.next();
+		for (Column column : table.getColumns()) {
 			boolean useIt = getRevengStrategy().useColumnForOptimisticLock(identifier, column.getName());
 			if(useIt && !processed.contains(column)) {
 				bindVersionProperty(table, column, rc, processed);

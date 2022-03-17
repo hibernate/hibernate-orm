@@ -1,6 +1,8 @@
 package org.hibernate.tool.api.reveng;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
 import org.hibernate.tool.internal.reveng.strategy.OverrideRepository;
@@ -20,8 +22,9 @@ public class RevengStrategyFactory {
 							reverseEngineeringClassName == null ? 
 									DEFAULT_REVERSE_ENGINEERING_STRATEGY_CLASS_NAME : 
 									reverseEngineeringClassName);
-			result = (RevengStrategy)reverseEngineeringClass.newInstance();
-		} catch (ClassNotFoundException | IllegalAccessException | InstantiationException exception) {
+			Constructor<?> reverseEngineeringConstructor = reverseEngineeringClass.getConstructor(new Class[] {});
+			result = (RevengStrategy)reverseEngineeringConstructor.newInstance();
+		} catch (ClassNotFoundException | IllegalAccessException | InstantiationException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException exception) {
 			throw new RuntimeException("An exporter of class '" + reverseEngineeringClassName + "' could not be created", exception);
 		}
 		return result;

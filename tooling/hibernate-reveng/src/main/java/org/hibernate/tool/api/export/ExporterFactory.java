@@ -1,5 +1,8 @@
 package org.hibernate.tool.api.export;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+
 import org.hibernate.tool.util.ReflectionUtil;
 
 public class ExporterFactory {
@@ -8,8 +11,9 @@ public class ExporterFactory {
 		Exporter result = null;
 		try {
 			Class<?> exporterClass = ReflectionUtil.classForName(exporterClassName);
-			result = (Exporter)exporterClass.newInstance();
-		} catch (ClassNotFoundException | IllegalAccessException | InstantiationException exception) {
+			Constructor<?> exporterConstructor = exporterClass.getConstructor(new Class[] {}); 
+			result = (Exporter)exporterConstructor.newInstance();
+		} catch (ClassNotFoundException | IllegalAccessException | InstantiationException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException exception) {
 			throw new RuntimeException("An exporter of class '" + exporterClassName + "' could not be created", exception);
 		}
 		return result;

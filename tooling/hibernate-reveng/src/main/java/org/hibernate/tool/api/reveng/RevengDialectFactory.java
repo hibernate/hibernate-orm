@@ -1,5 +1,6 @@
 package org.hibernate.tool.api.reveng;
 
+import java.lang.reflect.Constructor;
 import java.util.Properties;
 
 import org.hibernate.dialect.Dialect;
@@ -38,8 +39,12 @@ public class RevengDialectFactory {
 	public static RevengDialect fromClassName(String property) {
 		if ( property != null ) {
 			try {
-				return (RevengDialect) ReflectHelper.classForName( property,
-						RevengDialectFactory.class ).newInstance();
+				Class<?> revengDialectClass = ReflectHelper.classForName( 
+						property,
+						RevengDialectFactory.class );
+				Constructor<?> revengDialectConstructor = revengDialectClass.getConstructor(
+						new Class[] {});
+				return (RevengDialect)revengDialectConstructor.newInstance();
 			}
 			catch (Throwable e) {
 				throw new RuntimeException(

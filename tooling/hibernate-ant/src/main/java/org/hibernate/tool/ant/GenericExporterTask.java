@@ -19,12 +19,10 @@
  */
 package org.hibernate.tool.ant;
 
-import org.apache.tools.ant.BuildException;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.export.ExporterFactory;
 import org.hibernate.tool.api.export.ExporterType;
-import org.hibernate.tool.util.ReflectionUtil;
 
 /**
  * @author max
@@ -65,15 +63,7 @@ public class GenericExporterTask extends ExporterTask {
 		if (exporterClass == null) {
 			return ExporterFactory.createExporter(ExporterType.GENERIC);
 		} else {
-			try {
-				return (Exporter) ReflectionUtil.classForName(exporterClass).newInstance();
-			} catch (ClassNotFoundException e) {
-				throw new BuildException("Could not find custom exporter class: " + exporterClass, e);
-			} catch (InstantiationException e) {
-				throw new BuildException("Could not create custom exporter class: " + exporterClass, e);
-			} catch (IllegalAccessException e) {
-				throw new BuildException("Could not access custom exporter class: " + exporterClass, e);
-			}
+			return ExporterFactory.createExporter(exporterClass);
 		}		
 	}
 	

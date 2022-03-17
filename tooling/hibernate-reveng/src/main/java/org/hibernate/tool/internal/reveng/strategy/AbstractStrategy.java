@@ -251,7 +251,7 @@ public abstract class AbstractStrategy implements RevengStrategy {
 				fkColumns != null && pkForeignTableColumns != null
 				&& fkColumns.size() == pkForeignTableColumns.size();
 
-			Iterator<Column> columns = foreignKey.getColumnIterator();
+			Iterator<Column> columns = foreignKey.getColumns().iterator();
 			while (equals && columns.hasNext()) {
 				Column fkColumn = (Column) columns.next();
 				equals = equals && pkForeignTableColumns.contains(fkColumn);

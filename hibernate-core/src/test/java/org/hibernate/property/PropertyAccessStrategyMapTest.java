@@ -8,8 +8,8 @@ package org.hibernate.property;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 
-import org.hibernate.mapping.Map;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 
@@ -42,7 +42,7 @@ public class PropertyAccessStrategyMapTest extends BaseUnitTestCase {
 		}
 		catch (IllegalArgumentException e) {
 			assertEquals(
-				"Expecting class: [org.hibernate.mapping.Map], but containerJavaType is of type: [java.util.Date] for propertyName: [time]",
+				"Expecting class: [java.util.Map], but containerJavaType is of type: [java.util.Date] for propertyName: [time]",
 				e.getMessage()
 			);
 		}

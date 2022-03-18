@@ -149,10 +149,10 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		//		iterators.add( pc.getPropertyIterator() );
 		// Need to skip <properties> element which are defined via "embedded" components
 		// Best if we could return an intelligent iterator, but for now we just iterate explicitly.
-		Iterator<Property> pit = pc.getPropertyIterator();
+		Iterator<Property> pit = pc.getProperties().iterator();
 		while(pit.hasNext())
 		{
-			Property element = (Property) pit.next();
+			Property element = pit.next();
 			if ( element.getValue() instanceof Component
 					&& element.getPropertyAccessorName().equals( "embedded" )) {
 				Component component = (Component) element.getValue();

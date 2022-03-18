@@ -462,9 +462,9 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		if ( joinSelectables.size() == 0 )
 			return false;
 
-		Iterator<?> idColumnsIt = getIdentifierProperty().getColumnIterator();
-		while ( idColumnsIt.hasNext() ) {
-			if (!joinSelectables.contains(idColumnsIt.next()) )
+		Iterator<Selectable> idSelectablesIt = getIdentifierProperty().getSelectables().iterator();
+		while ( idSelectablesIt.hasNext() ) {
+			if (!joinSelectables.contains(idSelectablesIt.next()) )
 				return false;
 		}
 
@@ -716,10 +716,10 @@ public class EntityPOJOClass extends BasicPOJOClass {
 
 	private String getOneToOneMappedBy(Metadata md, OneToOne oneToOne) {
 		String mappedBy;
-		Iterator<Selectable> joinColumnsIt = oneToOne.getColumnIterator();
-		Set<Selectable> joinColumns = new HashSet<Selectable>();
-		while ( joinColumnsIt.hasNext() ) {
-			joinColumns.add( joinColumnsIt.next() );
+		Iterator<Selectable> joinSelectablesIt = oneToOne.getSelectables().iterator();
+		Set<Selectable> joinSelectables = new HashSet<Selectable>();
+		while ( joinSelectablesIt.hasNext() ) {
+			joinSelectables.add( joinSelectablesIt.next() );
 		}
 		PersistentClass pc = md.getEntityBinding(oneToOne.getReferencedEntityName());
 		String referencedPropertyName = oneToOne.getReferencedPropertyName();
@@ -736,12 +736,12 @@ public class EntityPOJOClass extends BasicPOJOClass {
 			Property oneProperty = (Property) properties.next();
 			Value manyValue = oneProperty.getValue();
 			if ( manyValue != null && ( manyValue instanceof OneToOne || manyValue instanceof ManyToOne ) ) {
-				if ( joinColumns.size() == manyValue.getColumnSpan() ) {
+				if ( joinSelectables.size() == manyValue.getColumnSpan() ) {
 					isOtherSide = true;
 					Iterator<?> it = manyValue.getColumnIterator();
 					while ( it.hasNext() ) {
 						Object column = it.next();
-						if (! joinColumns.contains( column ) ) {
+						if (! joinSelectables.contains( column ) ) {
 							isOtherSide = false;
 							break;
 						}

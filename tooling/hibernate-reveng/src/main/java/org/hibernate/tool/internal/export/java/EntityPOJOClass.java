@@ -647,12 +647,12 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		}
 		ManyToOne manyToOne = (ManyToOne) collection.getElement();
 		PersistentClass pc = md.getEntityBinding(manyToOne.getReferencedEntityName());
-		Iterator<?> properties = pc.getPropertyClosureIterator();
+		Iterator<Property> properties = pc.getProperties().iterator();
 		//TODO we should check the table too
 		boolean isOtherSide = false;
 		mappedBy = "unresolved";
 		while ( ! isOtherSide && properties.hasNext() ) {
-			Property collectionProperty = (Property) properties.next();
+			Property collectionProperty = properties.next();
 			Value collectionValue = collectionProperty.getValue();
 			if ( collectionValue != null && collectionValue instanceof Collection ) {
 				Collection realCollectionValue = (Collection) collectionValue;
@@ -686,12 +686,12 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		}
 		OneToMany oneToMany = (OneToMany) collection.getElement();
 		PersistentClass pc = md.getEntityBinding(oneToMany.getReferencedEntityName());
-		Iterator<?> properties = pc.getPropertyClosureIterator();
+		Iterator<Property> properties = pc.getProperties().iterator();
 		//TODO we should check the table too
 		boolean isOtherSide = false;
 		mappedBy = "unresolved";
 		while ( ! isOtherSide && properties.hasNext() ) {
-			Property manyProperty = (Property) properties.next();
+			Property manyProperty = properties.next();
 			Value manyValue = manyProperty.getValue();
 			if ( manyValue != null && manyValue instanceof ManyToOne ) {
 				if ( joinColumns.size() == manyValue.getColumnSpan() ) {
@@ -726,14 +726,14 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		if ( referencedPropertyName != null )
 			return referencedPropertyName;
 
-		Iterator<?> properties = pc.getPropertyClosureIterator();
+		Iterator<Property> properties = pc.getProperties().iterator();
 		//TODO we should check the table too
 		boolean isOtherSide = false;
 		mappedBy = "unresolved";
 
 
 		while ( ! isOtherSide && properties.hasNext() ) {
-			Property oneProperty = (Property) properties.next();
+			Property oneProperty = properties.next();
 			Value manyValue = oneProperty.getValue();
 			if ( manyValue != null && ( manyValue instanceof OneToOne || manyValue instanceof ManyToOne ) ) {
 				if ( joinSelectables.size() == manyValue.getColumnSpan() ) {

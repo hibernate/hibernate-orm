@@ -340,35 +340,35 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		boolean updatable = property.isUpdateable();
 		Value value = property.getValue();
 		int span;
-		Iterator<Selectable> columnIterator;
-		Iterator<Selectable> referencedColumnsIterator = null;
+		Iterator<Selectable> selectablesIterator;
+		Iterator<Selectable> referencedSelectablesIterator = null;
 		if (value != null && value instanceof Collection) {
 			Collection collection = (Collection) value;
 			span = collection.getKey().getColumnSpan();
-			columnIterator = collection.getKey().getColumnIterator();
+			selectablesIterator = collection.getKey().getColumnIterator();
 		}
 		else {
 			span = property.getColumnSpan();
-			columnIterator = property.getColumnIterator();
+			selectablesIterator = property.getSelectables().iterator();
 		}
 
 		if(property.getValue() instanceof ToOne) {
 			String referencedEntityName = ((ToOne)property.getValue()).getReferencedEntityName();
 			PersistentClass target = md.getEntityBinding(referencedEntityName);
 			if(target!=null) {
-				referencedColumnsIterator = target.getKey().getColumnIterator();
+				referencedSelectablesIterator = target.getKey().getColumnIterator();
 			}
 		}
 
 		StringBuffer annotations = new StringBuffer( "    " );
 		if ( span == 1 ) {
-				Selectable selectable = columnIterator.next();
+				Selectable selectable = selectablesIterator.next();
 				buildJoinColumnAnnotation( selectable, null, annotations, insertable, updatable );
 		}
 		else {
-			Iterator<Selectable> columns = columnIterator;
+			Iterator<Selectable> selectables = selectablesIterator;
 			annotations.append("@").append( importType("jakarta.persistence.JoinColumns") ).append("( { " );
-			buildArrayOfJoinColumnAnnotation( columns, referencedColumnsIterator, annotations, insertable, updatable );
+			buildArrayOfJoinColumnAnnotation( selectables, referencedSelectablesIterator, annotations, insertable, updatable );
 			annotations.append( " } )" );
 		}
 		return annotations.toString();
@@ -453,18 +453,18 @@ public class EntityPOJOClass extends BasicPOJOClass {
 	}
 
 	public boolean isSharedPkBasedOneToOne(OneToOne oneToOne){
-		Iterator<Selectable> joinColumnsIt = oneToOne.getColumnIterator();
-		Set<Selectable> joinColumns = new HashSet<Selectable>();
-		while ( joinColumnsIt.hasNext() ) {
-			joinColumns.add( joinColumnsIt.next() );
+		Iterator<Selectable> joinSelectablesIt = oneToOne.getSelectables().iterator();
+		Set<Selectable> joinSelectables = new HashSet<Selectable>();
+		while ( joinSelectablesIt.hasNext() ) {
+			joinSelectables.add( joinSelectablesIt.next() );
 		}
 
-		if ( joinColumns.size() == 0 )
+		if ( joinSelectables.size() == 0 )
 			return false;
 
 		Iterator<?> idColumnsIt = getIdentifierProperty().getColumnIterator();
 		while ( idColumnsIt.hasNext() ) {
-			if (!joinColumns.contains(idColumnsIt.next()) )
+			if (!joinSelectables.contains(idColumnsIt.next()) )
 				return false;
 		}
 

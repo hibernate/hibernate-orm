@@ -300,7 +300,45 @@ Storing just the identifiers in the query-cache has a major drawback when fetchi
 
 Starting in 6.0, we now store the complete set of data for the entity into the query-cache.  This also can have a drawback related to the size of caches.  We plan to address this further in later 6.x releases to allow storing just the identifiers along the lines of the previous behavior.
 
-A related change in 6.0 is the fact that queries no longer populate the second-level cache region for any returned entities or collections.  This is again something we plan to address in later 6.x releases.
+E.g.
+
+```
+Statistics stats = sessionFacroty.getStatistics();
+
+// First time the query is executed, query and results are cached and both the query and entity chache will be populated.
+
+TypedQuery<Employee> query = session.createQuery( "select e from Employee e", Employee.class )
+							.setHint( HINT_CACHEABLE, true );
+
+List<Employee> employees = query.getResultList();
+assertEquals( 1, employees.size() );
+
+assertEquals( 0, stats.getQueryCacheHitCount() );
+assertEquals( 1, stats.getQueryCacheMissCount() );
+assertEquals( 1, stats.getQueryCachePutCount() ); // query cache is populated.
+
+assertEquals( 0, stats.getSecondLevelCacheHitCount() );
+assertEquals( 0, stats.getSecondLevelCacheMissCount() );
+assertEquals( 1, stats.getSecondLevelCachePutCount() ); // entity cache is populated as well.
+
+stats.clear();
+
+// Second time the same query is executed only the query cache will be hit.
+
+TypedQuery<Employee> query = session.createQuery( "select e from Employee e", Employee.class )
+							.setHint( HINT_CACHEABLE, true );
+List<Employee> employees = query.getResultList();
+assertEquals( 1, employees.size() );
+
+assertEquals( 1, stats.getQueryCacheHitCount() ); // the query cache is hit.
+assertEquals( 0, stats.getQueryCacheMissCount() );
+assertEquals( 0, stats.getQueryCachePutCount() );
+
+assertEquals( 0, stats.getSecondLevelCacheHitCount() );
+assertEquals( 0, stats.getSecondLevelCacheMissCount() );
+assertEquals( 0, stats.getSecondLevelCachePutCount() ); // No need to hit the entity cache because the query cache contains all the entity data.
+
+```
 
 [[query-sqm]]
 == SQM (HQL/Criteria)

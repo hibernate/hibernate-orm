@@ -103,7 +103,7 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 		}
 
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) Long.valueOf( duration.toNanos() );
+			return (X) Long.valueOf( duration.toSeconds() );
 		}
 
 		throw unknownUnwrap( type );
@@ -128,7 +128,7 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 		}
 
 		if (value instanceof Long) {
-			return Duration.ofNanos( (Long) value );
+			return Duration.ofSeconds( (Long) value );
 		}
 
 		if (value instanceof String) {
@@ -141,7 +141,7 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 	private Duration fromDecimal(Object number) {
 		final String formatted = DECIMAL_FORMAT.get().format( number );
 		final int dotIndex = formatted.indexOf( '.' );
-		if (dotIndex == -1) {
+		if ( dotIndex == -1 ) {
 			return Duration.ofSeconds( Long.parseLong( formatted ) );
 		}
 		return Duration.ofSeconds(

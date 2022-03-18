@@ -13,7 +13,10 @@ ext {
     junitVintageVersion = '5.8.2'
     junit5Version = '5.8.2'
 
-    h2Version = '1.4.197'
+    h2Version = '2.1.210'
+    h2GisVersion = '2.0.0'
+//    h2Version = '1.4.197'
+//    h2GisVersion = '1.5.0'
     bytemanVersion = '4.0.16' //Compatible with JDK16
     jnpVersion = '5.0.6.CR1'
 
@@ -151,8 +154,8 @@ ext {
             byteman_install: "org.jboss.byteman:byteman-install:${bytemanVersion}",
             byteman_bmunit:  "org.jboss.byteman:byteman-bmunit:${bytemanVersion}",
             h2:              "com.h2database:h2:${h2Version}",
-            h2gis:           "org.orbisgis:h2gis:1.5.0",
-            hsqldb:          "org.hsqldb:hsqldb:2.3.6",
+            h2gis:           "org.orbisgis:h2gis:${h2GisVersion}",
+            hsqldb:          "org.hsqldb:hsqldb:2.6.1",
             derby:           "org.apache.derby:derby:10.14.2.0",
             postgresql:      'org.postgresql:postgresql:42.2.16',
             mysql:           'mysql:mysql-connector-java:8.0.27',

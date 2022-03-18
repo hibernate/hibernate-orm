@@ -356,15 +356,12 @@ abstract public class BasicPOJOClass implements POJOClass, MetaAttributeConstant
 		}
 		else {
 			if ( property.getColumnSpan() == 1 ) {
-				Selectable selectable = (Selectable) property.getColumnIterator().next();
+				Selectable selectable = property.getColumns().get(0);
 				buildColumnAnnotation( selectable, annotations, insertable, updatable );				
 			}
 			else {
-				Iterator<?> columns = property.getColumnIterator();
 				annotations.append("@").append( importType("org.hibernate.annotations.Columns") ).append("( { " );
-				while ( columns.hasNext() ) {
-					Selectable selectable = (Selectable) columns.next();
-	
+				for (Selectable selectable : property.getColumns()) {
 					if ( selectable.isFormula() ) {
 						//TODO formula in multicolumns not supported by annotations
 						//annotations.append("/* TODO formula in multicolumns not supported by annotations */");
@@ -397,8 +394,7 @@ abstract public class BasicPOJOClass implements POJOClass, MetaAttributeConstant
 				buildRecursiveAttributeOverride( component.getPropertyIterator(), path, subProperty, annotations );
 			}
 			else {
-				Iterator<?> columns = subProperty.getColumnIterator();
-				Selectable selectable = (Selectable) columns.next();
+				Selectable selectable = subProperty.getColumns().get(0);
 				if ( selectable.isFormula() ) {
 					//TODO formula in multicolumns not supported by annotations
 				}

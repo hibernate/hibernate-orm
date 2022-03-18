@@ -309,10 +309,8 @@ public class Cfg2JavaTool {
 	 *         TODO: handle this in a template ?
 	 */
 	public String asNaturalIdParameterList(PersistentClass clazz) {
-		Iterator<?> fields = clazz.getRootClass().getPropertyIterator();
 		StringBuffer buf = new StringBuffer();
-		while ( fields.hasNext() ) {
-			Property field = (Property) fields.next();
+		for (Property field : clazz.getRootClass().getProperties()) {
 			if ( field.isNaturalIdentifier() ) {
 				buf.append( getJavaTypeName( field, false ) ) 
 						.append( " " )

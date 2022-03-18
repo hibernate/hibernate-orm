@@ -345,7 +345,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		if (value != null && value instanceof Collection) {
 			Collection collection = (Collection) value;
 			span = collection.getKey().getColumnSpan();
-			selectablesIterator = collection.getKey().getColumnIterator();
+			selectablesIterator = collection.getKey().getSelectables().iterator();
 		}
 		else {
 			span = property.getColumnSpan();
@@ -356,7 +356,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 			String referencedEntityName = ((ToOne)property.getValue()).getReferencedEntityName();
 			PersistentClass target = md.getEntityBinding(referencedEntityName);
 			if(target!=null) {
-				referencedSelectablesIterator = target.getKey().getColumnIterator();
+				referencedSelectablesIterator = target.getKey().getSelectables().iterator();
 			}
 		}
 
@@ -612,7 +612,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 					}
 					annotation.append( ", joinColumns = { ");
 					buildArrayOfJoinColumnAnnotation(
-							collection.getKey().getColumnIterator(),
+							collection.getKey().getSelectables().iterator(),
 							null,
 							annotation,
 							property.isInsertable(),
@@ -621,7 +621,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 					annotation.append( " }");
 					annotation.append( ", inverseJoinColumns = { ");
 					buildArrayOfJoinColumnAnnotation(
-							collection.getElement().getColumnIterator(),
+							collection.getElement().getSelectables().iterator(),
 							null,
 							annotation,
 							property.isInsertable(),
@@ -640,7 +640,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 
 	private String getManyToManyMappedBy(Metadata md, Collection collection) {
 		String mappedBy;
-		Iterator<Selectable> joinColumnsIt = collection.getKey().getColumnIterator();
+		Iterator<Selectable> joinColumnsIt = collection.getKey().getSelectables().iterator();
 		Set<Selectable> joinColumns = new HashSet<Selectable>();
 		while ( joinColumnsIt.hasNext() ) {
 			joinColumns.add( joinColumnsIt.next() );
@@ -659,10 +659,10 @@ public class EntityPOJOClass extends BasicPOJOClass {
 				if ( ! realCollectionValue.isOneToMany() ) {
 					if ( joinColumns.size() == realCollectionValue.getElement().getColumnSpan() ) {
 						isOtherSide = true;
-						Iterator<?> it = realCollectionValue.getElement().getColumnIterator();
+						Iterator<Selectable> it = realCollectionValue.getElement().getSelectables().iterator();
 						while ( it.hasNext() ) {
-							Object column = it.next();
-							if (! joinColumns.contains( column ) ) {
+							Selectable selectable = it.next();
+							if (! joinColumns.contains( selectable ) ) {
 								isOtherSide = false;
 								break;
 							}
@@ -679,7 +679,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 
 	private String getOneToManyMappedBy(Metadata md, Collection collection) {
 		String mappedBy;
-		Iterator<Selectable> joinColumnsIt = collection.getKey().getColumnIterator();
+		Iterator<Selectable> joinColumnsIt = collection.getKey().getSelectables().iterator();
 		Set<Selectable> joinColumns = new HashSet<Selectable>();
 		while ( joinColumnsIt.hasNext() ) {
 			joinColumns.add( joinColumnsIt.next() );
@@ -696,10 +696,10 @@ public class EntityPOJOClass extends BasicPOJOClass {
 			if ( manyValue != null && manyValue instanceof ManyToOne ) {
 				if ( joinColumns.size() == manyValue.getColumnSpan() ) {
 					isOtherSide = true;
-					Iterator<?> it = manyValue.getColumnIterator();
+					Iterator<Selectable> it = manyValue.getSelectables().iterator();
 					while ( it.hasNext() ) {
-						Object column = it.next();
-						if (! joinColumns.contains( column ) ) {
+						Selectable selectable = it.next();
+						if (! joinColumns.contains( selectable ) ) {
 							isOtherSide = false;
 							break;
 						}
@@ -738,10 +738,10 @@ public class EntityPOJOClass extends BasicPOJOClass {
 			if ( manyValue != null && ( manyValue instanceof OneToOne || manyValue instanceof ManyToOne ) ) {
 				if ( joinSelectables.size() == manyValue.getColumnSpan() ) {
 					isOtherSide = true;
-					Iterator<?> it = manyValue.getColumnIterator();
+					Iterator<Selectable> it = manyValue.getSelectables().iterator();
 					while ( it.hasNext() ) {
-						Object column = it.next();
-						if (! joinSelectables.contains( column ) ) {
+						Selectable selectable = it.next();
+						if (! joinSelectables.contains( selectable ) ) {
 							isOtherSide = false;
 							break;
 						}
@@ -801,9 +801,9 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		boolean foundFormula = false;
 
 		if(value!=null && value.getColumnSpan()>0) {
-			Iterator<Selectable> columnIterator = value.getColumnIterator();
-			while ( columnIterator.hasNext() ) {
-				Selectable element = columnIterator.next();
+			Iterator<Selectable> selectablesIterator = value.getSelectables().iterator();
+			while ( selectablesIterator.hasNext() ) {
+				Selectable element = selectablesIterator.next();
 				if(!(element instanceof Formula)) {
 					return false;
 				} else {

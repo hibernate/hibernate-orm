@@ -42,6 +42,7 @@ import org.hibernate.type.TimestampType;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.sql.hand.Dimension;
 import org.hibernate.test.sql.hand.Employment;
@@ -881,6 +882,28 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		SQLQuery query = s.createSQLQuery( "SELECT @row \\:= 1" );
 		List list = query.list();
 		assertTrue( list.get( 0 ).toString().equals( "1" ) );
+		t.commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-14487")
+	public void testAliasToBeanMap() {
+		Person gavin = new Person( "Gavin" );
+
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		s.persist( gavin );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		HashMap result = (HashMap) session.createNativeQuery( "select * from PERSON" )
+				.setResultTransformer( Transformers.aliasToBean( HashMap.class ) )
+				.uniqueResult();
+		assertEquals( "Gavin", result.get( "NAME" ) == null ? result.get( "name" ) : result.get( "NAME" ) );
+		session.delete( gavin );
 		t.commit();
 		s.close();
 	}

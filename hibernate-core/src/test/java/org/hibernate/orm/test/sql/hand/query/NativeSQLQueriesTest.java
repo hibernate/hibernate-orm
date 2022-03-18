@@ -45,6 +45,7 @@ import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.StandardBasicTypes;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -907,6 +908,26 @@ public class NativeSQLQueriesTest {
 					NativeQuery query = session.createNativeQuery( "SELECT @row \\:= 1" );
 					List list = query.list();
 					assertTrue( list.get( 0 ).toString().equals( "1" ) );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-14487")
+	public void testAliasToBeanMap(SessionFactoryScope scope) {
+		Person gavin = new Person( "Gavin" );
+
+		scope.inTransaction(
+				session -> session.persist( gavin )
+		);
+
+		scope.inTransaction(
+				session -> {
+					HashMap result = (HashMap) session.createNativeQuery( "select * from PERSON" )
+							.setResultTransformer( Transformers.aliasToBean( HashMap.class ) )
+							.uniqueResult();
+					assertEquals( "Gavin", result.get( "NAME" ) == null ? result.get( "name" ) : result.get( "NAME" ) );
+					session.delete( gavin );
 				}
 		);
 	}

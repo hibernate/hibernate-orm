@@ -10,9 +10,7 @@ import org.hibernate.mapping.ForeignKey;
 public class ForeignKeyUtils {
 
     public static boolean isUniqueReference(ForeignKey foreignKey) {
-    	Iterator<?> foreignKeyIterator = foreignKey.getTable().getForeignKeyIterator();
-    	while ( foreignKeyIterator.hasNext() ) {
-			ForeignKey element = (ForeignKey) foreignKeyIterator.next();
+		for (ForeignKey element : foreignKey.getTable().getForeignKeys().values()) {
 			if(element!=foreignKey && element.getReferencedTable().equals(foreignKey.getReferencedTable())) {
 				return false;
 			}

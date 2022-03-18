@@ -196,9 +196,7 @@ public final class DocHelper {
 
 			this.processClass(pojoClazz);
 
-			Iterator<Property> propertyIterator = clazz.getPropertyIterator();
-			while (propertyIterator.hasNext()) {
-				Property property = propertyIterator.next();
+			for (Property property : clazz.getProperties()) {
 				Value value = property.getValue();
 				List<Property> props = propsByValue.get(value);
 				if (props == null) {

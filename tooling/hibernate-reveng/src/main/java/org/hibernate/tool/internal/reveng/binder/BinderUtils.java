@@ -40,7 +40,6 @@ public class BinderUtils {
         return propertyName;
     }
 
-    @SuppressWarnings("unchecked")
     public static String makeUnique(PersistentClass clazz, String propertyName) {
         List<Property> list = new ArrayList<Property>();
         if( clazz.hasIdentifierProperty() ) {

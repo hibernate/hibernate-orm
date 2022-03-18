@@ -31,6 +31,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.PersistentClassVisitor;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Subclass;
@@ -327,11 +328,9 @@ public class Cfg2HbmTool {
 
 
 	public Formula getFormulaForProperty(Property prop) {
-		Iterator<?> iter = prop.getValue().getColumnIterator();
-		while ( iter.hasNext() ) {
-			Object o = iter.next();
-			if (o instanceof Formula)
-				return (Formula) o;
+		for (Selectable selectable : prop.getValue().getSelectables()) {
+			if (selectable instanceof Formula)
+				return (Formula) selectable;
 		}
 		return null;
 	}

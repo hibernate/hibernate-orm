@@ -132,8 +132,9 @@ public class JDBCConfigurationTask extends ConfigurationTask {
         catch (NoSuchMethodException e) {
 			try {
 				getProject().log("Could not find public " + className + "(ReverseEngineeringStrategy delegate) constructor on ReverseEngineeringStrategy. Trying no-arg version.",Project.MSG_VERBOSE);			
-				Class<?> clazz = ReflectionUtil.classForName(className);						
-				RevengStrategy rev = (RevengStrategy) clazz.newInstance();
+				Class<?> clazz = ReflectionUtil.classForName(className);	
+				Constructor<?> constructor = clazz.getConstructor(new Class[] {});
+				RevengStrategy rev = (RevengStrategy) constructor.newInstance();
 				getProject().log("Using non-delegating strategy, thus packagename and revengfile will be ignored.", Project.MSG_INFO);
 				return rev;
 			} 

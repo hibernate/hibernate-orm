@@ -202,7 +202,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 				continue;
 			}
 			AnnotationBuilder constraint = AnnotationBuilder.createAnnotation( importType("jakarta.persistence.UniqueConstraint") );
-			constraint.addQuotedAttributes( "columnNames", new IteratorTransformer<Column>(key.getColumnIterator()) {
+			constraint.addQuotedAttributes( "columnNames", new IteratorTransformer<Column>(key.getColumns().iterator()) {
 				public String transform(Column column) {
 					return column.getName();
 				}

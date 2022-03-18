@@ -26,9 +26,9 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 /**
  * @author Christian Beikov
  */
-public class DurationIntervalSecondJdbcType implements JdbcType {
+public class H2DurationIntervalSecondJdbcType implements JdbcType {
 
-	public static final DurationIntervalSecondJdbcType INSTANCE = new DurationIntervalSecondJdbcType();
+	public static final H2DurationIntervalSecondJdbcType INSTANCE = new H2DurationIntervalSecondJdbcType();
 
 	@Override
 	public int getJdbcTypeCode() {
@@ -74,17 +74,32 @@ public class DurationIntervalSecondJdbcType implements JdbcType {
 		return new BasicExtractor<>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+				// Handle the fact that a duration could also come decimal of seconds
+				final Object nativeValue = rs.getObject( paramIndex );
+				if ( nativeValue instanceof Number ) {
+					return javaType.wrap( nativeValue, options );
+				}
 				return javaType.wrap( rs.getObject( paramIndex, Duration.class ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+				// Handle the fact that a duration could also come decimal of seconds
+				final Object nativeValue = statement.getObject( index );
+				if ( nativeValue instanceof Number ) {
+					return javaType.wrap( nativeValue, options );
+				}
 				return javaType.wrap( statement.getObject( index, Duration.class ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
+				// Handle the fact that a duration could also come decimal of seconds
+				final Object nativeValue = statement.getObject( name );
+				if ( nativeValue instanceof Number ) {
+					return javaType.wrap( nativeValue, options );
+				}
 				return javaType.wrap( statement.getObject( name, Duration.class ), options );
 			}
 		};

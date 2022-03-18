@@ -178,11 +178,7 @@ public class H2Dialect extends Dialect {
 			case NCHAR:
 				return columnType( CHAR );
 			case NVARCHAR:
-			case LONG32NVARCHAR:
-			case LONG32VARCHAR:
 				return columnType( VARCHAR );
-			case LONG32VARBINARY:
-				return columnType( VARBINARY );
 		}
 		return super.columnType( sqlTypeCode );
 	}
@@ -235,7 +231,7 @@ public class H2Dialect extends Dialect {
 			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 		}
 		if ( getVersion().isSameOrAfter( 1, 4, 198 ) ) {
-			jdbcTypeRegistry.addDescriptorIfAbsent( DurationIntervalSecondJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( H2DurationIntervalSecondJdbcType.INSTANCE );
 		}
 	}
 

@@ -63,9 +63,7 @@ class OneToManyBinder extends AbstractBinder {
 		SimpleValue keyValue = new DependantValue(getMetadataBuildingContext(), collectionTable, referencedKeyValue);
 		//keyValue.setForeignKeyName("none"); // Avoid creating the foreignkey
 		//key.setCascadeDeleteEnabled( "cascade".equals( subnode.attributeValue("on-delete") ) );
-		Iterator<Column> columnIterator = foreignKey.getColumnIterator();
-		while ( columnIterator.hasNext() ) {
-			Column fkcolumn = columnIterator.next();
+		for (Column fkcolumn : foreignKey.getColumns()) {
 			if(fkcolumn.getSqlTypeCode()!=null) { // TODO: user defined foreign ref columns does not have a type set.
 				TypeUtils.determinePreferredType(
 						getMetadataCollector(), 

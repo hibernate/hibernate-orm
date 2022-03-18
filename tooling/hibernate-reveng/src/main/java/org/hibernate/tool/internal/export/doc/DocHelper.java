@@ -174,9 +174,7 @@ public final class DocHelper {
 			}
 			tableList.add(table);
 
-			Iterator<Column> columns = table.getColumnIterator();
-			while (columns.hasNext()) {
-				Column column = columns.next();
+			for(Column column : table.getColumns()) {
 				String columnFQN = getQualifiedColumnName(table, column);
 				List<Value> values = valuesByColumn.get(columnFQN);
 				if (values == null) {

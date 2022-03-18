@@ -22,11 +22,8 @@ public abstract class EntityModelDetector extends Detector {
 		if(clazz.hasIdentifierProperty()) {
 			this.visitProperty(clazz, clazz.getIdentifierProperty(), collector);								
 		}
-		Iterator<?> propertyIterator = clazz.getPropertyIterator();
-		while ( propertyIterator.hasNext() ) {
-			Property property = (Property) propertyIterator.next();
-			this.visitProperty(clazz, property, collector);					
-			
+		for (Property property : clazz.getProperties()) {
+			this.visitProperty(clazz, property, collector);							
 		}
 	}
 

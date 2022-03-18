@@ -49,7 +49,7 @@ public class BinderUtils {
         if( clazz.isVersioned() ) {
             list.add( clazz.getVersion() );
         }
-		Iterator<Property> propertyClosureIterator = clazz.getPropertyClosureIterator();
+		Iterator<Property> propertyClosureIterator = clazz.getProperties().iterator();
         JoinedIterator<Property> iterator = 
         		new JoinedIterator<Property>( 
         				list.iterator(), 

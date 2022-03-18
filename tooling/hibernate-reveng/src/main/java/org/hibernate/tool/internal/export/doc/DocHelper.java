@@ -431,7 +431,7 @@ public final class DocHelper {
 	}
 	
 	public Iterator<Column> getPrimaryKeyColumnIterator(Table table) {
-		return table.getPrimaryKey().getColumnIterator();
+		return table.getPrimaryKey().getColumns().iterator();
 	}
 
 	/**

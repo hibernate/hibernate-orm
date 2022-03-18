@@ -194,10 +194,8 @@ public class EntityPOJOClass extends BasicPOJOClass {
 	}
 
 	protected String generateAnnTableUniqueConstraint(Table table) {
-		Iterator<UniqueKey> uniqueKeys = table.getUniqueKeyIterator();
 		List<String> cons = new ArrayList<String>();
-		while ( uniqueKeys.hasNext() ) {
-			UniqueKey key = (UniqueKey) uniqueKeys.next();
+		for (UniqueKey key : table.getUniqueKeys().values()) {
 			if (table.hasPrimaryKey() && table.getPrimaryKey().getColumns().equals(key.getColumns())) {
 				continue;
 			}

@@ -24,12 +24,18 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 
 	SqlAstJoinType getDefaultSqlAstJoinType(TableGroup parentTableGroup);
 
+	/**
+	 * Returns whether the given predicate is a simple join predicate for this attribute.
+	 * This is useful to understand if a predicate has additional conjunctions other than the FK related predicate.
+	 */
 	boolean isSimpleJoinPredicate(Predicate predicate);
 
 	/**
 	 * Create a TableGroupJoin as defined for this producer
 	 *
 	 * The sqlAstJoinType may be null to signal that the join is for an implicit path.
+	 * When addsPredicate is <code>true</code>, the SQM join for the attribute contains an explicit <code>ON</code> clause,
+	 * and is <code>false</code> otherwise.
 	 */
 	default TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
@@ -57,6 +63,8 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 	 * Create a TableGroupJoin as defined for this producer
 	 *
 	 * The sqlAstJoinType may be null to signal that the join is for an implicit path.
+	 * When addsPredicate is <code>true</code>, the SQM join for the attribute contains an explicit <code>ON</code> clause,
+	 * and is <code>false</code> otherwise.
 	 */
 	TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
@@ -71,7 +79,9 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 			SqlAstCreationContext creationContext);
 
 	/**
-	 * Create a TableGroup as defined for this producer
+	 * Create a TableGroupJoin as defined for this producer, but as root TableGroup.
+	 * The main purpose of this is for correlating an association in a subquery
+	 * i.e. `...  alias where exists (select 1 from SomeEntity e where alias.association.attr = 1)`.
 	 *
 	 * The sqlAstJoinType may be null to signal that the join is for an implicit path.
 	 */
@@ -98,7 +108,9 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 	}
 
 	/**
-	 * Create a TableGroupJoin as defined for this producer
+	 * Create a TableGroupJoin as defined for this producer, but as root TableGroup.
+	 * The main purpose of this is for correlating an association in a subquery
+	 * i.e. `...  alias where exists (select 1 from SomeEntity e where alias.association.attr = 1)`.
 	 *
 	 * The sqlAstJoinType may be null to signal that the join is for an implicit path.
 	 */

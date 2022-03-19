@@ -33,7 +33,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
-import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
+import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 /**
@@ -197,7 +197,7 @@ public class MultiNaturalIdLoadingBatcher {
 						}
 					}
 				},
-				RowTransformerPassThruImpl.instance(),
+				RowTransformerStandardImpl.instance(),
 				ListResultsConsumer.UniqueSemantic.FILTER
 		);
 	}

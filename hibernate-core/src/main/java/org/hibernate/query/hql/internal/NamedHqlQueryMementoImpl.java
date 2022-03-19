@@ -127,7 +127,7 @@ public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implemen
 
 	@Override
 	public void validate(QueryEngine queryEngine) {
-		queryEngine.getHqlTranslator().translate( hqlString );
+		queryEngine.getHqlTranslator().translate( hqlString, null );
 	}
 
 	@Override

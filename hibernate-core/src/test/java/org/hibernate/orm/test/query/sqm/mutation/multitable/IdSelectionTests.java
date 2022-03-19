@@ -54,7 +54,7 @@ public class IdSelectionTests {
 		final SqmDeleteStatement<?> sqm = (SqmDeleteStatement<?>) scope.getSessionFactory()
 				.getQueryEngine()
 				.getHqlTranslator()
-				.translate( "delete SimpleEntityWithSecondaryTables where name = :n" );
+				.translate( "delete SimpleEntityWithSecondaryTables where name = :n", null );
 
 		final DomainParameterXref domainParameterXref = DomainParameterXref.from( sqm );
 		final ParameterMetadataImpl parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
@@ -79,7 +79,7 @@ public class IdSelectionTests {
 		final SqmDeleteStatement<?> sqm = (SqmDeleteStatement<?>) scope.getSessionFactory()
 				.getQueryEngine()
 				.getHqlTranslator()
-				.translate( "delete SimpleEntityWithSecondaryTables where data = :d" );
+				.translate( "delete SimpleEntityWithSecondaryTables where data = :d", null );
 
 		final DomainParameterXref domainParameterXref = DomainParameterXref.from( sqm );
 		final ParameterMetadataImpl parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
@@ -104,7 +104,7 @@ public class IdSelectionTests {
 		final SqmDeleteStatement<?> sqm = (SqmDeleteStatement<?>) scope.getSessionFactory()
 				.getQueryEngine()
 				.getHqlTranslator()
-				.translate( "delete Customer where name = :n" );
+				.translate( "delete Customer where name = :n", null );
 
 		final DomainParameterXref domainParameterXref = DomainParameterXref.from( sqm );
 		final ParameterMetadataImpl parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
@@ -129,7 +129,7 @@ public class IdSelectionTests {
 		final SqmDeleteStatement<?> sqm = (SqmDeleteStatement<?>) scope.getSessionFactory()
 				.getQueryEngine()
 				.getHqlTranslator()
-				.translate( "delete ForeignCustomer where name = :n" );
+				.translate( "delete ForeignCustomer where name = :n", null );
 
 		final DomainParameterXref domainParameterXref = DomainParameterXref.from( sqm );
 		final ParameterMetadataImpl parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
@@ -154,7 +154,7 @@ public class IdSelectionTests {
 		final SqmDeleteStatement<?> sqm = (SqmDeleteStatement<?>) scope.getSessionFactory()
 				.getQueryEngine()
 				.getHqlTranslator()
-				.translate( "delete ForeignCustomer where vat = :v" );
+				.translate( "delete ForeignCustomer where vat = :v", null );
 
 		final DomainParameterXref domainParameterXref = DomainParameterXref.from( sqm );
 		final ParameterMetadataImpl parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );

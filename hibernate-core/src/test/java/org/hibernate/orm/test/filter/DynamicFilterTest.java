@@ -807,16 +807,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 					criteria.where( criteriaBuilder.equal( root.get( "id" ), testData.prod1Id ) );
 
 					Product prod = session.createQuery( criteria )
-							.setResultTransformer(new ResultTransformer<Product>() {
-								@Override
-								public Product transformTuple(Object[] tuple, String[] aliases) {
-									return (Product) tuple[0];
-								}
-								@Override
-								public List<Product> transformList(List<Product> resultList) {
-									return ResultTransformer.super.transformList(resultList);
-								}
-							})
+							.setTupleTransformer( (tuple, aliases) -> (Product) tuple[0] )
 							.uniqueResult();
 
 					assertNotNull( prod );

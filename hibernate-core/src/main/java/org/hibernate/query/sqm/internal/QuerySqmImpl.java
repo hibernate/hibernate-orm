@@ -142,19 +142,20 @@ public class QuerySqmImpl<R>
 	 */
 	public QuerySqmImpl(
 			NamedHqlQueryMementoImpl memento,
-			Class<R> resultType,
+			Class<R> expectedResultType,
 			SharedSessionContractImplementor session) {
 		super( session );
 
 		this.hql = memento.getHqlString();
-		this.resultType = resultType;
+		this.resultType = expectedResultType;
 
 		final SessionFactoryImplementor factory = session.getFactory();
 		final QueryEngine queryEngine = factory.getQueryEngine();
 		final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
 		final HqlInterpretation hqlInterpretation = interpretationCache.resolveHqlInterpretation(
 				hql,
-				(s) -> queryEngine.getHqlTranslator().translate( hql )
+				expectedResultType,
+				(s) -> queryEngine.getHqlTranslator().translate( hql, expectedResultType )
 		);
 
 		this.sqm = hqlInterpretation.getSqmStatement();

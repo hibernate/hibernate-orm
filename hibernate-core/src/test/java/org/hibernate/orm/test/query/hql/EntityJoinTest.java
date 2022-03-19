@@ -184,7 +184,7 @@ public class EntityJoinTest {
                     final HqlTranslator hqlTranslator = queryEngine.getHqlTranslator();
                     final SqmTranslatorFactory sqmTranslatorFactory = queryEngine.getSqmTranslatorFactory();
 
-                    final SqmStatement<Object> sqm = hqlTranslator.translate( qry );
+                    final SqmStatement<Object> sqm = hqlTranslator.translate( qry, null );
 
                     final SqmTranslator<SelectStatement> selectTranslator = sqmTranslatorFactory.createSelectTranslator(
                             (SqmSelectStatement<?>) sqm,

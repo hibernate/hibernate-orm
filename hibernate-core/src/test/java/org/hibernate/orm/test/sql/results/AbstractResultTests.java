@@ -28,7 +28,7 @@ public class AbstractResultTests {
 	protected SelectStatement interpret(String hql, QueryParameterBindings parameterBindings, SessionFactoryImplementor sessionFactory) {
 		final QueryEngine queryEngine = sessionFactory.getQueryEngine();
 
-		final SqmSelectStatement<?> sqm = (SqmSelectStatement<?>) queryEngine.getHqlTranslator().translate( hql );
+		final SqmSelectStatement<?> sqm = (SqmSelectStatement<?>) queryEngine.getHqlTranslator().translate( hql, null );
 
 		final SqmTranslatorFactory sqmTranslatorFactory = queryEngine.getSqmTranslatorFactory();
 		final SqmTranslator<SelectStatement> sqmConverter = sqmTranslatorFactory.createSelectTranslator(

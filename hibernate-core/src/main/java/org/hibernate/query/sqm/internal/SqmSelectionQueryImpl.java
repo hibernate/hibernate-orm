@@ -93,22 +93,37 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 	public SqmSelectionQueryImpl(
 			String hql,
 			HqlInterpretation hqlInterpretation,
+			Class<R> expectedResultType,
 			SharedSessionContractImplementor session) {
 		super( session );
 		this.hql = hql;
+
 		//noinspection unchecked
 		this.sqm = (SqmSelectStatement<R>) hqlInterpretation.getSqmStatement();
 
 		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
 		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
-
 		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
 
-		visitQueryReturnType( sqm.getQueryPart(), null, getSessionFactory() );
-		this.resultType = null;
+		visitQueryReturnType( sqm.getQueryPart(), expectedResultType, getSessionFactory() );
+		this.resultType = determineResultType( sqm, expectedResultType );
 
 		setComment( hql );
 		this.tupleMetadata = null;
+	}
+
+	private static <T> Class<T> determineResultType(SqmSelectStatement<?> sqm, Class<?> expectedResultType) {
+		if ( expectedResultType == null || ! expectedResultType.isArray() ) {
+			final List<SqmSelection<?>> selections = sqm.getQuerySpec().getSelectClause().getSelections();
+			if ( selections.size() == 1 ) {
+				final SqmSelection<?> sqmSelection = selections.get( 0 );
+				//noinspection unchecked
+				return (Class<T>) sqmSelection.getNodeJavaType().getJavaTypeClass();
+			}
+		}
+
+		//noinspection unchecked
+		return (Class<T>) Object[].class;
 	}
 
 	public SqmSelectionQueryImpl(
@@ -124,7 +139,8 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 		final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
 		final HqlInterpretation hqlInterpretation = interpretationCache.resolveHqlInterpretation(
 				hql,
-				(s) -> queryEngine.getHqlTranslator().translate( hql )
+				resultType,
+				(s) -> queryEngine.getHqlTranslator().translate( hql, resultType )
 		);
 
 		SqmUtil.verifyIsSelectStatement( hqlInterpretation.getSqmStatement(), hql );
@@ -147,12 +163,14 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 			NamedCriteriaQueryMementoImpl memento,
 			Class<R> resultType,
 			SharedSessionContractImplementor session) {
-		this( (SqmSelectStatement<R>) memento.getSqmStatement(), session);
+		//noinspection unchecked
+		this( (SqmSelectStatement<R>) memento.getSqmStatement(), resultType, session);
 		applyOptions( memento );
 	}
 
 	public SqmSelectionQueryImpl(
 			SqmSelectStatement<R> criteria,
+			Class<R> expectedResultType,
 			SharedSessionContractImplementor session) {
 		super( session );
 		this.hql = CRITERIA_HQL_STRING;
@@ -181,29 +199,19 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 				// We don't set a null value, unless the type is also null which is the case when using HibernateCriteriaBuilder.value
 				if ( value != null || jpaCriteriaParameter.getNodeType() == null ) {
 					// Use the anticipated type for binding the value if possible
-					getQueryParameterBindings().getBinding( jpaCriteriaParameter )
+					getQueryParameterBindings()
+							.getBinding( jpaCriteriaParameter )
 							.setBindValue( value, jpaCriteriaParameter.getAnticipatedType() );
 				}
 			}
 		}
 
-		this.resultType = determineResultType( sqm );
+		this.resultType = determineResultType( sqm, expectedResultType );
+		visitQueryReturnType( sqm.getQueryPart(), expectedResultType, getSessionFactory() );
 
-		visitQueryReturnType( sqm.getQueryPart(), resultType, getSessionFactory() );
 		setComment( hql );
-		this.tupleMetadata = buildTupleMetadata( sqm, resultType );
-	}
 
-	private static <T> Class<T> determineResultType(SqmSelectStatement<?> sqm) {
-		final List<SqmSelection<?>> selections = sqm.getQuerySpec().getSelectClause().getSelections();
-		if ( selections.size() == 1 ) {
-			final SqmSelection<?> sqmSelection = selections.get( 0 );
-			//noinspection unchecked
-			return (Class<T>) sqmSelection.getNodeJavaType().getJavaTypeClass();
-		}
-
-		//noinspection unchecked
-		return (Class<T>) Object[].class;
+		this.tupleMetadata = buildTupleMetadata( sqm, expectedResultType );
 	}
 
 	@SuppressWarnings("rawtypes")

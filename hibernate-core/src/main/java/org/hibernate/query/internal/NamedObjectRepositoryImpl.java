@@ -18,7 +18,6 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
-import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
@@ -212,9 +211,7 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	public Map<String, HibernateException> checkNamedQueries(QueryEngine queryEngine) {
 		Map<String,HibernateException> errors = new HashMap<>();
 
-		final HqlTranslator sqmProducer = queryEngine.getHqlTranslator();
 		final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
-		final boolean cachingEnabled = interpretationCache.isEnabled();
 
 		// Check named HQL queries
 		log.debugf( "Checking %s named HQL queries", sqmMementoMap.size() );
@@ -224,7 +221,8 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 				String queryString = hqlMemento.getHqlString();
 				interpretationCache.resolveHqlInterpretation(
 						queryString,
-						s -> queryEngine.getHqlTranslator().translate( queryString )
+						null,
+						s -> queryEngine.getHqlTranslator().translate( queryString, null )
 				);
 			}
 			catch ( HibernateException e ) {

@@ -46,7 +46,7 @@ import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.internal.ResultsHelper;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
-import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
+import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
 import org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesCacheHit;
@@ -346,10 +346,9 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 		if ( rowTransformer == null ) {
 			@SuppressWarnings("unchecked")
-			final TupleTransformer<R> tupleTransformer = (TupleTransformer<R>)
-					executionContext.getQueryOptions().getTupleTransformer();
+			final TupleTransformer<R> tupleTransformer = (TupleTransformer<R>) executionContext.getQueryOptions().getTupleTransformer();
 			if ( tupleTransformer == null ) {
-				rowTransformer = RowTransformerPassThruImpl.instance();
+				rowTransformer = RowTransformerStandardImpl.instance();
 			}
 			else {
 				final List<DomainResult<?>> domainResults = jdbcValues.getValuesMapping().getDomainResults();

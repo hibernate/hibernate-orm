@@ -101,14 +101,23 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	@Override
 	public HqlInterpretation resolveHqlInterpretation(
 			String queryString,
+			Class<?> expectedResultType,
 			Function<String, SqmStatement<?>> creator) {
 		log.tracef( "QueryPlan#resolveHqlInterpretation( `%s` )", queryString );
 		final StatisticsImplementor statistics = statisticsSupplier.get();
 		final boolean stats = statistics.isStatisticsEnabled();
 		final long startTime = ( stats ) ? System.nanoTime() : 0L;
 
+		final String cacheKey;
+		if ( expectedResultType != null && expectedResultType.isArray() ) {
+			cacheKey = queryString + "_array";
+		}
+		else {
+			cacheKey = queryString;
+		}
+
 		final DomainParameterXref domainParameterXref;
-		HqlInterpretation hqlInterpretation = hqlInterpretationCache.get( queryString );
+		HqlInterpretation hqlInterpretation = hqlInterpretationCache.get( cacheKey );
 		if ( hqlInterpretation == null ) {
 			log.debugf( "Creating and caching HqlInterpretation - %s", queryString );
 			final SqmStatement<?> sqmStatement = creator.apply( queryString );
@@ -124,7 +133,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			}
 
 			hqlInterpretation = new SimpleHqlInterpretationImpl( sqmStatement, parameterMetadata, domainParameterXref );
-			hqlInterpretationCache.put( queryString, hqlInterpretation );
+			hqlInterpretationCache.put( cacheKey, hqlInterpretation );
 
 			if ( stats ) {
 				final long endTime = System.nanoTime();

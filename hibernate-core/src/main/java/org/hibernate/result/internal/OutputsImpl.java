@@ -38,7 +38,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.NoMoreOutputsException;
 import org.hibernate.sql.results.internal.ResultsHelper;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
-import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
+import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.jdbc.internal.DirectResultSetAccess;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
@@ -229,7 +229,7 @@ public class OutputsImpl implements Outputs {
 		final RowReader<Object[]> rowReader = (RowReader<Object[]>) ResultsHelper.createRowReader(
 				executionContext,
 				null,
-				RowTransformerPassThruImpl.INSTANCE,
+				RowTransformerStandardImpl.INSTANCE,
 				jdbcValues
 		);
 

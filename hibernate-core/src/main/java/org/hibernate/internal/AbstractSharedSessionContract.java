@@ -658,6 +658,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public SelectionQuery<?> createSelectionQuery(String hqlString) {
+		return internalCreateSelectionQuery( hqlString, null );
+	}
+
+	private <R> SelectionQuery<R> internalCreateSelectionQuery(String hqlString, Class<R> expectedResultType) {
 		checkOpen();
 		pulseTransactionCoordinator();
 		delayedAfterCompletion();
@@ -667,19 +671,40 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
 			final HqlInterpretation hqlInterpretation = interpretationCache.resolveHqlInterpretation(
 					hqlString,
-					s -> queryEngine.getHqlTranslator().translate( hqlString )
+					expectedResultType,
+					(s) -> queryEngine.getHqlTranslator().translate( hqlString, expectedResultType )
 			);
 
 			if ( !( hqlInterpretation.getSqmStatement() instanceof SqmSelectStatement ) ) {
 				throw new IllegalSelectQueryException( "Expecting a selection query, but found `" + hqlString + "`", hqlString );
 			}
 
-			final SqmSelectionQuery<?> query = new SqmSelectionQueryImpl<>( hqlString, hqlInterpretation, this );
-			query.setComment( hqlString );
+			final SqmSelectionQueryImpl<?> query = new SqmSelectionQueryImpl<>(
+					hqlString,
+					hqlInterpretation,
+					expectedResultType,
+					this
+			);
 
+			if ( expectedResultType != null ) {
+				final Class<?> resultType = query.getResultType();
+				if ( ! expectedResultType.isAssignableFrom( resultType ) ) {
+					throw new QueryTypeMismatchException(
+							String.format(
+									Locale.ROOT,
+									"Query result-type error - expecting `%s`, but found `%s`",
+									expectedResultType.getName(),
+									resultType.getName()
+							)
+					);
+				}
+			}
+
+			query.setComment( hqlString );
 			applyQuerySettingsAndHints( query );
 
-			return query;
+			//noinspection unchecked
+			return (SelectionQuery<R>) query;
 		}
 		catch (RuntimeException e) {
 			markForRollbackOnly();
@@ -689,32 +714,17 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, Class<R> expectedResultType) {
-		final SelectionQuery<?> selectQuery = createSelectionQuery( hqlString );
-		//noinspection unchecked
-		final Class<?> resultType = ( (SqmSelectionQueryImpl<R>) selectQuery ).getResultType();
-		if ( resultType == null || expectedResultType.isAssignableFrom( resultType ) ) {
-			//noinspection unchecked
-			return (SelectionQuery<R>) selectQuery;
-		}
-
-		throw new QueryTypeMismatchException(
-				String.format(
-						Locale.ROOT,
-						"Query result-type error - expecting `%s`, but found `%s`",
-						expectedResultType.getName(),
-						resultType.getName()
-				)
-		);
+		return internalCreateSelectionQuery( hqlString, expectedResultType );
 	}
 
 	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(CriteriaQuery<R> criteria) {
 		SqmUtil.verifyIsSelectStatement( (SqmStatement<?>) criteria, null );
-		return new SqmSelectionQueryImpl<>( (SqmSelectStatement<R>) criteria, this );
+		return new SqmSelectionQueryImpl<>( (SqmSelectStatement<R>) criteria, criteria.getResultType(), this );
 	}
 
 	@Override
-	public <T> QueryImplementor<T> createQuery(String queryString, Class<T> resultClass) {
+	public <T> QueryImplementor<T> createQuery(String queryString, Class<T> expectedResultType) {
 		checkOpen();
 		pulseTransactionCoordinator();
 		delayedAfterCompletion();
@@ -727,9 +737,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 					queryString,
 					interpretationCache.resolveHqlInterpretation(
 							queryString,
-							s -> queryEngine.getHqlTranslator().translate( queryString )
+							expectedResultType,
+							s -> queryEngine.getHqlTranslator().translate( queryString, expectedResultType )
 					),
-					resultClass,
+					expectedResultType,
 					this
 			);
 

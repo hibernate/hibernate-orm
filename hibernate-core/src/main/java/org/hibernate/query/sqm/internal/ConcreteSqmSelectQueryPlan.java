@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.query.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -23,6 +22,7 @@ import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.Query;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.QueryEngine;
@@ -47,9 +47,10 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
+import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
 import org.hibernate.sql.results.internal.RowTransformerJpaTupleImpl;
-import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
 import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
+import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
 import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
@@ -66,7 +67,6 @@ import static org.hibernate.query.sqm.internal.QuerySqmImpl.CRITERIA_HQL_STRING;
  */
 public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private final SqmSelectStatement<?> sqm;
-	private final String hql;
 	private final DomainParameterXref domainParameterXref;
 	private final RowTransformer<R> rowTransformer;
 	private final SqmInterpreter<List<R>, Void> listInterpreter;
@@ -82,7 +82,6 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			TupleMetadata tupleMetadata,
 			QueryOptions queryOptions) {
 		this.sqm = sqm;
-		this.hql = hql;
 		this.domainParameterXref = domainParameterXref;
 
 		this.rowTransformer = determineRowTransformer( sqm, resultType, tupleMetadata, queryOptions );
@@ -175,16 +174,21 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			Class<R> resultType,
 			TupleMetadata tupleMetadata,
 			QueryOptions queryOptions) {
-		if ( resultType == null || resultType.isArray() ) {
-			if ( queryOptions.getTupleTransformer() != null ) {
-				return makeRowTransformerTupleTransformerAdapter( sqm, queryOptions );
-			}
-			else {
-				return RowTransformerPassThruImpl.instance();
-			}
+		if ( queryOptions.getTupleTransformer() != null ) {
+			return makeRowTransformerTupleTransformerAdapter( sqm, queryOptions );
 		}
 
-		// NOTE : if we get here, a result-type of some kind (other than Object[].class) was specified
+		if ( resultType == null ) {
+			return RowTransformerStandardImpl.instance();
+		}
+
+		if ( resultType.isArray() ) {
+			return (RowTransformer<R>) RowTransformerArrayImpl.instance();
+		}
+
+		// NOTE : if we get here :
+		// 		1) there is no TupleTransformer specified
+		// 		2) an explicit result-type, other than an array, was specified
 
 		final List<SqmSelection<?>> selections = sqm.getQueryPart().getFirstQuerySpec().getSelectClause().getSelections();
 		if ( tupleMetadata != null ) {

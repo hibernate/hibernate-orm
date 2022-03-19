@@ -10,23 +10,27 @@ import org.hibernate.Incubating;
 import org.hibernate.sql.results.spi.RowTransformer;
 
 /**
- * Essentially a no-op transformer - simply passes the result through
+ * The standard RowTransformer - <ol>
+ *     <li>if the row array has just a single dimension, the value from that dimension (index zero) is returned</li>
+ *     <li>otherwise, the array itself is returned</li>
+ * </ol>
  *
  * @author Steve Ebersole
  */
 @Incubating
-public class RowTransformerPassThruImpl<T> implements RowTransformer<T> {
+public class RowTransformerStandardImpl<T> implements RowTransformer<T> {
 	/**
 	 * Singleton access
 	 */
-	public static final RowTransformerPassThruImpl INSTANCE = new RowTransformerPassThruImpl();
+	@SuppressWarnings("rawtypes")
+	public static final RowTransformerStandardImpl INSTANCE = new RowTransformerStandardImpl();
 
 	@SuppressWarnings("unchecked")
-	public static <T> RowTransformerPassThruImpl<T> instance() {
+	public static <T> RowTransformerStandardImpl<T> instance() {
 		return INSTANCE;
 	}
 
-	private RowTransformerPassThruImpl() {
+	private RowTransformerStandardImpl() {
 	}
 
 	@Override

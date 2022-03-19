@@ -13,12 +13,12 @@ import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.grammars.hql.HqlParser;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.HqlLogging;
-import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.hql.HqlTranslator;
+import org.hibernate.query.hql.spi.SqmCreationOptions;
+import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.internal.SqmTreePrinter;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
-import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
 import org.antlr.v4.runtime.ANTLRErrorListener;
@@ -71,7 +71,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 	}
 
 	@Override
-	public <R> SqmStatement<R> translate(String query) {
+	public <R> SqmStatement<R> translate(String query, Class<R> expectedResultType) {
 		HqlLogging.QUERY_LOGGER.debugf( "HQL : " + query );
 
 		final HqlParser.StatementContext hqlParseTree = parseHql( query );
@@ -80,6 +80,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 		try {
 			final SqmStatement<R> sqmStatement = SemanticQueryBuilder.buildSemanticModel(
 					hqlParseTree,
+					expectedResultType,
 					sqmCreationOptions,
 					sqmCreationContext
 			);

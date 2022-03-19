@@ -20,6 +20,9 @@ import jakarta.persistence.Converter;
 public class MonetaryAmountConverter implements AttributeConverter<MonetaryAmount,Double> {
 	@Override
 	public Double convertToDatabaseColumn(MonetaryAmount attribute) {
+		if ( attribute == null ) {
+			return null;
+		}
 		return attribute.getNumber().numberValueExact( Double.class );
 	}
 

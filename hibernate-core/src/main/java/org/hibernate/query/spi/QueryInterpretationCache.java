@@ -35,7 +35,7 @@ public interface QueryInterpretationCache {
 	int getNumberOfCachedHqlInterpretations();
 	int getNumberOfCachedQueryPlans();
 
-	HqlInterpretation resolveHqlInterpretation(String queryString, Function<String, SqmStatement<?>> creator);
+	HqlInterpretation resolveHqlInterpretation(String queryString, Class<?> expectedResultType, Function<String, SqmStatement<?>> creator);
 
 	<R> SelectQueryPlan<R> resolveSelectQueryPlan(Key key, Supplier<SelectQueryPlan<R>> creator);
 

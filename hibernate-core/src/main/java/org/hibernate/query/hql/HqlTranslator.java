@@ -25,10 +25,11 @@ public interface HqlTranslator {
 	 * Performs the interpretation of a HQL/JPQL query string to SQM.
 	 *
 	 * @param hql The HQL/JPQL query string to interpret
+	 * @param expectedResultType The type specified when creating the query
 	 *
 	 * @return The semantic representation of the incoming query.
 	 */
-	<R> SqmStatement<R> translate(String hql);
+	<R> SqmStatement<R> translate(String hql, Class<R> expectedResultType);
 
 	/**
 	 * Give the translator a chance to "shut down" if it needs to

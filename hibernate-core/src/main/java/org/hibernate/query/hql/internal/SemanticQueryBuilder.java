@@ -31,6 +31,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.metamodel.Bindable;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
@@ -193,9 +196,6 @@ import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 
 import org.jboss.logging.Logger;
 
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.metamodel.Bindable;
-import jakarta.persistence.metamodel.SingularAttribute;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -269,16 +269,18 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	/**
-	 * Main entry point into analysis of HQL/JPQL parse tree - producing a semantic model of the
-	 * query.
+	 * Main entry point into analysis of HQL/JPQL parse tree - producing
+	 * a semantic model of the query.
 	 */
 	public static <R> SqmStatement<R> buildSemanticModel(
 			HqlParser.StatementContext hqlParseTree,
+			Class<R> expectedResultType,
 			SqmCreationOptions creationOptions,
 			SqmCreationContext creationContext) {
-		return new SemanticQueryBuilder<R>( creationOptions, creationContext ).visitStatement( hqlParseTree );
+		return new SemanticQueryBuilder<R>( expectedResultType, creationOptions, creationContext ).visitStatement( hqlParseTree );
 	}
 
+	private final Class<R> expectedResultType;
 	private final SqmCreationOptions creationOptions;
 	private final SqmCreationContext creationContext;
 
@@ -294,7 +296,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private ParameterCollector parameterCollector;
 	private ParameterStyle parameterStyle;
 
-	public SemanticQueryBuilder(SqmCreationOptions creationOptions, SqmCreationContext creationContext) {
+	public SemanticQueryBuilder(
+			Class<R> expectedResultType,
+			SqmCreationOptions creationOptions,
+			SqmCreationContext creationContext) {
+		this.expectedResultType = expectedResultType;
 		this.creationOptions = creationOptions;
 		this.creationContext = creationContext;
 		this.dotIdentifierConsumerStack = new StandardStack<>( new BasicDotIdentifierConsumer( this ) );
@@ -867,18 +873,40 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		// for now, this is slightly different than the legacy behavior where
 		// the root and each non-fetched-join was selected.  For now, here, we simply
 		// select the root
-		final SqmSelectClause selectClause = new SqmSelectClause(
-				false,
-				fromClause.getNumberOfRoots(),
-				creationContext.getNodeBuilder()
-		);
+		final SqmSelectClause selectClause;
 
-		fromClause.visitRoots(
-				sqmRoot -> selectClause.addSelection(
-						new SqmSelection<>( sqmRoot, sqmRoot.getAlias(), creationContext.getNodeBuilder() )
-				)
-		);
+		final boolean expectingArray = expectedResultType != null && expectedResultType.isArray();
+		if ( expectingArray ) {
+			// triggers legacy interpretation of returning all roots
+			// and non-fetched joins
+			selectClause = new SqmSelectClause(
+					false,
+					creationContext.getNodeBuilder()
+			);
+		}
+		else {
+			selectClause = new SqmSelectClause(
+					false,
+					fromClause.getNumberOfRoots(),
+					creationContext.getNodeBuilder()
+			);
+		}
+
+		fromClause.visitRoots( (sqmRoot) -> {
+			selectClause.addSelection( new SqmSelection<>( sqmRoot, sqmRoot.getAlias(), creationContext.getNodeBuilder() ) );
+			if ( expectingArray ) {
+				applyJoinsToInferredSelectClause( sqmRoot, selectClause );
+			}
+		} );
+
 		return selectClause;
+	}
+
+	private void applyJoinsToInferredSelectClause(SqmFrom<?,?> sqm, SqmSelectClause selectClause) {
+		sqm.visitSqmJoins( (sqmJoin) -> {
+			selectClause.addSelection( new SqmSelection<>( sqmJoin, sqmJoin.getAlias(), creationContext.getNodeBuilder() ) );
+			applyJoinsToInferredSelectClause( sqmJoin, selectClause );
+		} );
 	}
 
 	@Override

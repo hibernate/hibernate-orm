@@ -253,18 +253,10 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 				checkSelectionIsJpaCompliant( selection );
 			}
 		}
+
 		final Selection<? extends T> resultSelection;
 		Class<T> resultType = getResultType();
-		if ( resultType == Object.class ) {
-			setResultType( resultType = (Class<T>) Object[].class );
-		}
-		if ( Tuple.class.isAssignableFrom( resultType ) ) {
-			resultSelection = ( Selection<? extends T> ) nodeBuilder().tuple( selections );
-		}
-		else if ( resultType.isArray() ) {
-			resultSelection = nodeBuilder().array( resultType, selections );
-		}
-		else if ( Object.class.equals( resultType ) ) {
+		if ( resultType == null || resultType == Object.class ) {
 			switch ( selections.length ) {
 				case 0: {
 					throw new IllegalArgumentException(
@@ -276,9 +268,16 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 					break;
 				}
 				default: {
+					setResultType( (Class<T>) Object[].class );
 					resultSelection = ( Selection<? extends T> ) nodeBuilder().array( selections );
 				}
 			}
+		}
+		else if ( Tuple.class.isAssignableFrom( resultType ) ) {
+			resultSelection = ( Selection<? extends T> ) nodeBuilder().tuple( selections );
+		}
+		else if ( resultType.isArray() ) {
+			resultSelection = nodeBuilder().array( resultType, selections );
 		}
 		else {
 			resultSelection = nodeBuilder().construct( resultType, selections );
@@ -295,38 +294,39 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 				checkSelectionIsJpaCompliant( selection );
 			}
 		}
+
 		final Selection<? extends T> resultSelection;
-		Class<T> resultType = getResultType();
-		if ( resultType == null ) {
-			setResultType( resultType = (Class<T>) Object[].class );
-		}
-		final List<? extends JpaSelection<?>> jpaSelectionList = (List<? extends JpaSelection<?>>) (List<?>) selectionList;
-		if ( Tuple.class.isAssignableFrom( resultType ) ) {
-			resultSelection = ( Selection<? extends T> ) nodeBuilder().tuple( jpaSelectionList );
-		}
-		else if ( resultType.isArray() ) {
-			resultSelection = nodeBuilder().array( resultType, jpaSelectionList );
-		}
-		else if ( Object.class.equals( resultType ) ) {
-			switch ( selectionList.size() ) {
+		final Class<T> resultType = getResultType();
+		final List<? extends JpaSelection<?>> selections = (List<? extends JpaSelection<?>>) (List<?>) selectionList;
+		if ( resultType == null || resultType == Object.class ) {
+			switch ( selections.size() ) {
 				case 0: {
 					throw new IllegalArgumentException(
 							"empty selections passed to criteria query typed as Object"
 					);
 				}
 				case 1: {
-					resultSelection = ( Selection<? extends T> ) selectionList.get( 0 );
+					resultSelection = ( Selection<? extends T> ) selections.get( 0 );
 					break;
 				}
 				default: {
-					resultSelection = ( Selection<? extends T> ) nodeBuilder().array( jpaSelectionList );
+					setResultType( (Class<T>) Object[].class );
+					resultSelection = ( Selection<? extends T> ) nodeBuilder().array( selections );
 				}
 			}
 		}
-		else {
-			resultSelection = nodeBuilder().construct( resultType, jpaSelectionList );
+		else if ( Tuple.class.isAssignableFrom( resultType ) ) {
+			resultSelection = ( Selection<? extends T> ) nodeBuilder().tuple( selections );
 		}
+		else if ( resultType.isArray() ) {
+			resultSelection = nodeBuilder().array( resultType, selections );
+		}
+		else {
+			resultSelection = nodeBuilder().construct( resultType, selections );
+		}
+
 		getQuerySpec().getSelectClause().setSelection( (SqmSelectableNode<?>) resultSelection );
+
 		return this;
 	}
 

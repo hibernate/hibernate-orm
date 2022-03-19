@@ -35,7 +35,7 @@ public class MutationTests {
 		final SqmDeleteStatement<?> sqmDelete = (SqmDeleteStatement<?>) scope.getSessionFactory()
 				.getQueryEngine()
 				.getHqlTranslator()
-				.translate( "delete BasicEntity" );
+				.translate( "delete BasicEntity", null );
 
 		assertThat( sqmDelete, notNullValue() );
 		assertThat( sqmDelete.getTarget().getEntityName(), is( BasicEntity.class.getName() ) );
@@ -47,7 +47,7 @@ public class MutationTests {
 		final SqmDeleteStatement<?> sqmDelete = (SqmDeleteStatement<?>) scope.getSessionFactory()
 				.getQueryEngine()
 				.getHqlTranslator()
-				.translate( "delete BasicEntity where data = 'abc'" );
+				.translate( "delete BasicEntity where data = 'abc'", null );
 
 		assertThat( sqmDelete, notNullValue() );
 		assertThat( sqmDelete.getTarget().getEntityName(), is( BasicEntity.class.getName() ) );

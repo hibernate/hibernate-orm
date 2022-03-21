@@ -133,7 +133,7 @@ public class RootClassBinder extends AbstractBinder {
 		for(Iterator<?> iterator = table.getForeignKeyIterator(); iterator.hasNext();) {
 			ForeignKey foreignKey = (ForeignKey) iterator.next();
 			boolean mutable = true;
-            if ( contains( foreignKey.getColumnIterator(), processedColumns ) ) {
+            if ( contains( foreignKey.getColumns().iterator(), processedColumns ) ) {
 				if ( !preferBasicCompositeIds() ) continue; //it's in the pk, so skip this one
 				mutable = false;
             }           

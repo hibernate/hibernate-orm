@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Supplier;
 
+import org.hibernate.Internal;
 import org.hibernate.QueryException;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -119,7 +120,8 @@ public class StandardFunctionReturnTypeResolvers {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Internal helpers
 
-	private static boolean isAssignableTo(
+	@Internal
+	public static boolean isAssignableTo(
 			ReturnableType<?> defined, ReturnableType<?> implied) {
 		if ( implied == null ) {
 			return false;
@@ -144,7 +146,8 @@ public class StandardFunctionReturnTypeResolvers {
 				|| isNumeric( impliedTypeCode ) && isNumeric( definedTypeCode );
 	}
 
-	private static BasicValuedMapping useImpliedTypeIfPossible(
+	@Internal
+	public static BasicValuedMapping useImpliedTypeIfPossible(
 			BasicValuedMapping defined,
 			BasicValuedMapping implied) {
 		if ( defined == null ) {

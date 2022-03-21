@@ -20,6 +20,7 @@ import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.type.SqlTypes;
 
 /**
  * Collection of helper methods for dealing with configuration settings.
@@ -526,6 +527,14 @@ public final class ConfigurationHelper {
 				.getJdbcEnvironment()
 				.getDialect()
 				.getPreferredSqlTypeCodeForBoolean();
+	}
+
+	public static synchronized int getPreferredSqlTypeCodeForDuration(StandardServiceRegistry serviceRegistry) {
+		return serviceRegistry.getService( ConfigurationService.class ).getSetting(
+				AvailableSettings.PREFERRED_DURATION_JDBC_TYPE_CODE,
+				StandardConverters.INTEGER,
+				SqlTypes.INTERVAL_SECOND
+		);
 	}
 
 }

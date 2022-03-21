@@ -383,6 +383,9 @@ This setting applies to Oracle Dialect only, and it specifies whether `byte[]` o
 `*hibernate.type.preferred_boolean_jdbc_type_code*` (e.g. `-7` for `java.sql.Types.BIT`)::
 Global setting identifying the preferred JDBC type code for storing boolean values. The fallback is to ask the Dialect.
 
+`*hibernate.type.preferred_duration_jdbc_type_code*` (e.g. `2` for `java.sql.Types.NUMERIC` or `3` for `java.sql.Types.DECIMAL`)::
+Global setting identifying the preferred JDBC type code for storing duration values. The fallback is `3100` for `org.hibernate.types.SqlTypes.INTERVAL_SECOND`.
+
 ==== Bean Validation options
 `*jakarta.persistence.validation.factory*` (e.g. `jakarta.validation.ValidationFactory` implementation)::
 Specify the  `javax.validation.ValidationFactory` implementation to use for Bean Validation.

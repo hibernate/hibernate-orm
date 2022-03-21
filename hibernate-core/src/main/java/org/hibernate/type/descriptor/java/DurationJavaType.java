@@ -54,7 +54,7 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( SqlTypes.INTERVAL_SECOND );
+		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( context.getPreferredSqlTypeCodeForDuration() );
 	}
 
 	@Override

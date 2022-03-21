@@ -167,9 +167,7 @@ class PrimaryKeyBinder extends AbstractBinder {
 		else {
 			LOGGER.log(Level.INFO, "No primary key found for " + table + ", using all properties as the identifier.");
 			result = new ArrayList<Column>();
-			Iterator<?> iter = table.getColumnIterator();
-			while (iter.hasNext() ) {
-				Column col = (Column) iter.next();
+			for (Column col : table.getColumns()) {
 				result.add(col);
 			}
 		}

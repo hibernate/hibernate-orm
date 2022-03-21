@@ -213,9 +213,7 @@ class PrimaryKeyBinder extends AbstractBinder {
     }
 
 	private Property getConstrainedOneToOne(RootClass rc) {
-		Iterator<?> propertyClosureIterator = rc.getPropertyClosureIterator();
-		while (propertyClosureIterator.hasNext()) {
-			Property property = (Property) propertyClosureIterator.next();
+		for (Property property : rc.getProperties()) {
 			if(property.getValue() instanceof OneToOne) {
 				OneToOne oto = (OneToOne) property.getValue();
 				if(oto.isConstrained()) {

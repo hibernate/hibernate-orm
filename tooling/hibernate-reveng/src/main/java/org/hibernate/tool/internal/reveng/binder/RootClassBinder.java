@@ -130,8 +130,7 @@ public class RootClassBinder extends AbstractBinder {
 
 	private void bindOutgoingForeignKeys(Table table, RootClass rc, Set<Column> processedColumns) {
 		// Iterate the outgoing foreign keys and create many-to-one's
-		for(Iterator<?> iterator = table.getForeignKeyIterator(); iterator.hasNext();) {
-			ForeignKey foreignKey = (ForeignKey) iterator.next();
+		for (ForeignKey foreignKey : table.getForeignKeys().values()) {
 			boolean mutable = true;
             if ( contains( foreignKey.getColumns().iterator(), processedColumns ) ) {
 				if ( !preferBasicCompositeIds() ) continue; //it's in the pk, so skip this one

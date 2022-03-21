@@ -66,7 +66,13 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	}
 
 	@Override
+	protected String getForUpdate() {
+		return getDialect().getVersion().isSameOrAfter( 9, 3 ) ? " for no key update" : " for update";
+	}
+
+	@Override
 	protected String getForShare(int timeoutMillis) {
+		// Note that `for key share` is inappropriate as that only means "prevent PK changes"
 		return " for share";
 	}
 

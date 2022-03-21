@@ -113,12 +113,10 @@ class OneToManyBinder extends AbstractBinder {
 	}
 	
 	private ForeignKey getToForeignKey(ForeignKey fromForeignKey) {
-    	Iterator<?> foreignKeyIterator = fromForeignKey.getTable().getForeignKeyIterator();
     	List<ForeignKey> keys = new ArrayList<ForeignKey>();
-    	while (foreignKeyIterator.hasNext()) {
-			ForeignKey next = (ForeignKey)foreignKeyIterator.next();
-			if(next!=fromForeignKey) {
-				keys.add(next);
+		for (ForeignKey foreignKey : fromForeignKey.getTable().getForeignKeys().values()) {
+			if(foreignKey!=fromForeignKey) {
+				keys.add(foreignKey);
 			}
 		}
     	if(keys.size()>1) {

@@ -574,9 +574,7 @@ public class OverrideRepository  {
 	}
 
 	public void addTable(Table table, String wantedClassName) {
-		Iterator<?> fkIter = table.getForeignKeyIterator();
-		while ( fkIter.hasNext() ) {
-			ForeignKey fk = (ForeignKey) fkIter.next();
+		for (ForeignKey fk : table.getForeignKeys().values()) {
 			TableIdentifier identifier = TableIdentifier.create(fk.getReferencedTable());
 			List<ForeignKey> existing = foreignKeys.get(identifier);
 			if(existing==null) {

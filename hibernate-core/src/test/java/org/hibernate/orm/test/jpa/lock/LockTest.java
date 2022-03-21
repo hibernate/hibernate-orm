@@ -19,9 +19,12 @@ import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.TransactionException;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -50,6 +53,7 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -1156,11 +1160,91 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
+	@Test(timeout = 5 * 1000) //5 seconds
+	@TestForIssue( jiraKey = "HHH-13135" )
+	@SkipForDialect(value = {
+			MySQLDialect.class,
+			MariaDBDialect.class
+	}, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
+	@SkipForDialect(value = HSQLDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
+	@SkipForDialect(value = AbstractHANADialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
+	public void testLockInsertFkTarget() {
+		Lock lock = new Lock();
+		lock.setName( "name" );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			entityManager.persist( lock );
+		} );
+
+		doInJPA( this::entityManagerFactory, _entityManager -> {
+
+			Lock lock2 = _entityManager.find( Lock.class, lock.getId(), LockModeType.PESSIMISTIC_WRITE );
+			assertEquals( "lock mode should be PESSIMISTIC_WRITE ", LockModeType.PESSIMISTIC_WRITE, _entityManager.getLockMode( lock2 ) );
+
+			doInJPA( this::entityManagerFactory, entityManager -> {
+				TransactionUtil.setJdbcTimeout( entityManager.unwrap( Session.class ) );
+				LockReference ref = new LockReference( 1, "name" );
+				ref.setLock( entityManager.getReference( Lock.class, lock.getId() ) );
+
+				// Check that we can insert a LockReference, referring to a Lock that is PESSIMISTIC_WRITE locked
+				entityManager.persist( ref );
+			} );
+		} );
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			LockReference lockReference = entityManager.find( LockReference.class, 1 );
+			assertNotNull( lockReference );
+		} );
+	}
+
+	@Test(timeout = 5 * 1000) //5 seconds
+	@TestForIssue( jiraKey = "HHH-13135" )
+	@SkipForDialect(value = {
+			MySQLDialect.class,
+			MariaDBDialect.class
+	}, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
+	@SkipForDialect(value = HSQLDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
+	@SkipForDialect(value = AbstractHANADialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
+	public void testLockUpdateFkTarget() {
+		Lock lock1 = new Lock();
+		lock1.setName( "l1" );
+		Lock lock2 = new Lock();
+		lock2.setName( "l2" );
+		LockReference ref = new LockReference( 1, "name" );
+		ref.setLock( lock1 );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			entityManager.persist( lock1 );
+			entityManager.persist( lock2 );
+			entityManager.persist( ref );
+		} );
+
+		doInJPA( this::entityManagerFactory, _entityManager -> {
+
+			Lock l1 = _entityManager.find( Lock.class, lock1.getId(), LockModeType.PESSIMISTIC_WRITE );
+			assertEquals( "lock mode should be PESSIMISTIC_WRITE ", LockModeType.PESSIMISTIC_WRITE, _entityManager.getLockMode( l1 ) );
+			Lock l2 = _entityManager.find( Lock.class, lock2.getId(), LockModeType.PESSIMISTIC_WRITE );
+			assertEquals( "lock mode should be PESSIMISTIC_WRITE ", LockModeType.PESSIMISTIC_WRITE, _entityManager.getLockMode( l2 ) );
+
+			doInJPA( this::entityManagerFactory, entityManager -> {
+				TransactionUtil.setJdbcTimeout( entityManager.unwrap( Session.class ) );
+				LockReference lockReference = entityManager.find( LockReference.class, ref.getId() );
+
+				// Check that we can update a LockReference, referring to a Lock that is PESSIMISTIC_WRITE locked
+				lockReference.setLock( entityManager.getReference( Lock.class, lock2.getId() ) );
+			} );
+		} );
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			LockReference lockReference = entityManager.find( LockReference.class, 1 );
+			assertEquals( lock2.getId(), lockReference.getLock().getId() );
+		} );
+	}
+
 	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Lock.class,
-				UnversionedLock.class
+				UnversionedLock.class,
+				LockReference.class
 		};
 	}
 

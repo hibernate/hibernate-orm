@@ -206,12 +206,17 @@ public class ZonedDateTimeJavaType extends AbstractTemporalJavaType<ZonedDateTim
 	}
 
 	@Override
-	public ZonedDateTime seed(SharedSessionContractImplementor session) {
-		return ZonedDateTime.now();
+	public ZonedDateTime seed(Long length, Integer precision, Integer scale, SharedSessionContractImplementor session) {
+		return ZonedDateTime.now( ClockHelper.forPrecision( precision, session ) );
 	}
 
 	@Override
-	public ZonedDateTime next(ZonedDateTime current, SharedSessionContractImplementor session) {
-		return ZonedDateTime.now();
+	public ZonedDateTime next(
+			ZonedDateTime current,
+			Long length,
+			Integer precision,
+			Integer scale,
+			SharedSessionContractImplementor session) {
+		return ZonedDateTime.now( ClockHelper.forPrecision( precision, session ) );
 	}
 }

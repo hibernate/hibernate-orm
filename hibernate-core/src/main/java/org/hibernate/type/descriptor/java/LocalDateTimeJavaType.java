@@ -163,12 +163,17 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 	}
 
 	@Override
-	public LocalDateTime seed(SharedSessionContractImplementor session) {
-		return LocalDateTime.now();
+	public LocalDateTime seed(Long length, Integer precision, Integer scale, SharedSessionContractImplementor session) {
+		return LocalDateTime.now( ClockHelper.forPrecision( precision, session ) );
 	}
 
 	@Override
-	public LocalDateTime next(LocalDateTime current, SharedSessionContractImplementor session) {
-		return LocalDateTime.now();
+	public LocalDateTime next(
+			LocalDateTime current,
+			Long length,
+			Integer precision,
+			Integer scale,
+			SharedSessionContractImplementor session) {
+		return LocalDateTime.now( ClockHelper.forPrecision( precision, session ) );
 	}
 }

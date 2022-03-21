@@ -184,12 +184,19 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 		);
 	}
 	@Override
-	public Short seed(SharedSessionContractImplementor session) {
+	public Short seed(
+			Long length,
+			Integer precision, Integer scale, SharedSessionContractImplementor session) {
 		return ZERO;
 	}
 
 	@Override
-	public Short next(Short current, SharedSessionContractImplementor session) {
+	public Short next(
+			Short current,
+			Long length,
+			Integer precision,
+			Integer scale,
+			SharedSessionContractImplementor session) {
 		return (short) ( current + 1 );
 	}
 }

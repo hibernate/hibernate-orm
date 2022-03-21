@@ -9,6 +9,7 @@ package org.hibernate.sql.exec.internal;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -20,16 +21,16 @@ import org.hibernate.type.descriptor.java.VersionJavaType;
  * @author Steve Ebersole
  */
 public class VersionTypeSeedParameterSpecification extends AbstractJdbcParameter {
-	private final VersionJavaType<?> type;
+	private final EntityVersionMapping versionMapping;
 
 	/**
 	 * Constructs a version seed parameter bind specification.
 	 *
-	 * @param type The version type.
+	 * @param versionMapping The version mapping.
 	 */
-	public VersionTypeSeedParameterSpecification(JdbcMapping jdbcMapping, VersionJavaType<?> type) {
-		super( jdbcMapping );
-		this.type = type;
+	public VersionTypeSeedParameterSpecification(EntityVersionMapping versionMapping) {
+		super( versionMapping.getJdbcMapping() );
+		this.versionMapping = versionMapping;
 	}
 
 	@Override
@@ -41,7 +42,12 @@ public class VersionTypeSeedParameterSpecification extends AbstractJdbcParameter
 		//noinspection unchecked
 		getJdbcMapping().getJdbcValueBinder().bind(
 				statement,
-				type.seed( executionContext.getSession() ),
+				versionMapping.getJavaType().seed(
+						versionMapping.getLength(),
+						versionMapping.getPrecision(),
+						versionMapping.getScale(),
+						executionContext.getSession()
+				),
 				startPosition,
 				executionContext.getSession()
 		);

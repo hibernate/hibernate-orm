@@ -125,7 +125,8 @@ public class RowVersionJavaType extends AbstractClassJavaType<byte[]>
 	}
 
 	@Override
-	public byte[] seed(SharedSessionContractImplementor session) {
+	public byte[] seed(
+			Long length, Integer precision, Integer scale, SharedSessionContractImplementor session) {
 		// Note : simply returns null for seed() and next() as the only known
 		// 		application of binary types for versioning is for use with the
 		// 		TIMESTAMP datatype supported by Sybase and SQL Server, which
@@ -134,7 +135,11 @@ public class RowVersionJavaType extends AbstractClassJavaType<byte[]>
 	}
 
 	@Override
-	public byte[] next(byte[] current, SharedSessionContractImplementor session) {
+	public byte[] next(
+			byte[] current,
+			Long length,
+			Integer precision,
+			Integer scale, SharedSessionContractImplementor session) {
 		return current;
 	}
 }

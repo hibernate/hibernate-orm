@@ -89,6 +89,9 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 		unsavedValueStrategy = UnsavedValueFactory.getUnsavedVersionValue(
 				(KeyValue) bootEntityDescriptor.getVersion().getValue(),
 				(VersionJavaType<?>) versionBasicType.getJavaTypeDescriptor(),
+				length,
+				precision,
+				scale,
 				declaringType
 						.getRepresentationStrategy()
 						.resolvePropertyAccess( bootEntityDescriptor.getVersion() )
@@ -168,8 +171,8 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	}
 
 	@Override
-	public JavaType<?> getJavaType() {
-		return versionBasicType.getJavaTypeDescriptor();
+	public VersionJavaType<?> getJavaType() {
+		return (VersionJavaType<?>) versionBasicType.getJavaTypeDescriptor();
 	}
 
 	@Override

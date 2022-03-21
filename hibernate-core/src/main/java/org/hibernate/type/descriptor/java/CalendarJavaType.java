@@ -6,7 +6,9 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
@@ -155,12 +157,17 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 	}
 
 	@Override
-	public Calendar next(Calendar current, SharedSessionContractImplementor session) {
-		return seed( session );
+	public Calendar next(
+			Calendar current,
+			Long length,
+			Integer precision,
+			Integer scale,
+			SharedSessionContractImplementor session) {
+		return seed( length, precision, scale, session );
 	}
 
 	@Override
-	public Calendar seed(SharedSessionContractImplementor session) {
-		return Calendar.getInstance();
+	public Calendar seed(Long length, Integer precision, Integer scale, SharedSessionContractImplementor session) {
+		return GregorianCalendar.from( ZonedDateTime.now( ClockHelper.forPrecision( precision, session ) ) );
 	}
 }

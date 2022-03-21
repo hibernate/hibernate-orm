@@ -197,12 +197,19 @@ public class LongJavaType extends AbstractClassJavaType<Long>
 	}
 
 	@Override
-	public Long next(Long current, SharedSessionContractImplementor session) {
+	public Long next(
+			Long current,
+			Long length,
+			Integer precision,
+			Integer scale,
+			SharedSessionContractImplementor session) {
 		return current + 1L;
 	}
 
 	@Override
-	public Long seed(SharedSessionContractImplementor session) {
+	public Long seed(
+			Long length,
+			Integer precision, Integer scale, SharedSessionContractImplementor session) {
 		return ZERO;
 	}
 }

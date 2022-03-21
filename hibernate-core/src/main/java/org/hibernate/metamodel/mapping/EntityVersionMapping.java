@@ -8,6 +8,8 @@ package org.hibernate.metamodel.mapping;
 
 import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.VersionJavaType;
 
 /**
  * Describes the mapping of an entity's version
@@ -25,4 +27,12 @@ public interface EntityVersionMapping extends BasicValuedModelPart {
 	 * state based on the version mapping
 	 */
 	VersionValue getUnsavedStrategy();
+
+	@Override
+	VersionJavaType<?> getJavaType();
+
+	@Override
+	default VersionJavaType<?> getExpressibleJavaType() {
+		return (VersionJavaType<?>) getMappedType().getMappedJavaType();
+	}
 }

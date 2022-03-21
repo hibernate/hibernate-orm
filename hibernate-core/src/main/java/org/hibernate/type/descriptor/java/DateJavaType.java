@@ -166,12 +166,19 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 	}
 
 	@Override
-	public Date next(Date current, SharedSessionContractImplementor session) {
-		return seed( session );
+	public Date next(
+			Date current,
+			Long length,
+			Integer precision,
+			Integer scale,
+			SharedSessionContractImplementor session) {
+		return seed( length, precision, scale, session );
 	}
 
 	@Override
-	public Date seed(SharedSessionContractImplementor session) {
-		return new Timestamp( System.currentTimeMillis() );
+	public Date seed(
+			Long length,
+			Integer precision, Integer scale, SharedSessionContractImplementor session) {
+		return Timestamp.from( ClockHelper.forPrecision( precision, session ).instant() );
 	}
 }

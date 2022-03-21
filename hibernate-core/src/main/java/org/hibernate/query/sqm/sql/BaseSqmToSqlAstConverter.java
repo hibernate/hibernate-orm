@@ -5434,17 +5434,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		Expression left = getActualExpression( cleanly( () -> toSqlExpression( lhs.accept( this ) ) ) );
 		Expression right = getActualExpression( cleanly( () -> toSqlExpression( rhs.accept( this ) ) ) );
 
-		TypeConfiguration typeConfiguration = getCreationContext().getMappingMetamodel().getTypeConfiguration();
-		TemporalType leftTimestamp = typeConfiguration.getSqlTemporalType( expression.getLeftHandOperand().getNodeType() );
-		TemporalType rightTimestamp = typeConfiguration.getSqlTemporalType( expression.getRightHandOperand().getNodeType() );
-
-		// when we're dealing with Dates, we use
-		// DAY as the smallest unit, otherwise we
-		// use SECOND granularity with fractions as that is what the DurationJavaType expects
-
-		TemporalUnit baseUnit = ( rightTimestamp == TemporalType.TIMESTAMP || leftTimestamp == TemporalType.TIMESTAMP ) ?
-				SECOND :
-				DAY;
+		// The result of timestamp subtraction is always a `Duration`, unless a unit is applied
+		// So use SECOND granularity with fractions as that is what the `DurationJavaType` expects
+		final TemporalUnit baseUnit = SECOND; // todo: alternatively repurpose NATIVE to mean "INTERVAL SECOND"
 
 		if ( adjustedTimestamp != null ) {
 			if ( appliedByUnit != null ) {

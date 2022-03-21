@@ -55,6 +55,10 @@ public interface MetadataBuildingContext {
 		return ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( getBootstrapContext().getServiceRegistry() );
 	}
 
+	default int getPreferredSqlTypeCodeForDuration() {
+		return ConfigurationHelper.getPreferredSqlTypeCodeForDuration( getBootstrapContext().getServiceRegistry() );
+	}
+
 	TypeDefinitionRegistry getTypeDefinitionRegistry();
 
 	/**

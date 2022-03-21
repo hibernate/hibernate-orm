@@ -351,11 +351,6 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			public TypeConfiguration getTypeConfiguration() {
 				return typeConfiguration;
 			}
-
-			@Override
-			public int getPreferredSqlTypeCodeForBoolean() {
-				return SqlTypes.BOOLEAN;
-			}
 		};
 
 		public Scope(TypeConfiguration typeConfiguration) {

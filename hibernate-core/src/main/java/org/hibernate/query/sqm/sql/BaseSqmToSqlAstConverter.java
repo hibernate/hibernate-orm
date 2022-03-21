@@ -584,7 +584,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return creationContext.getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForBoolean();
 	}
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	@Override
+	public int getPreferredSqlTypeCodeForDuration() {
+		return creationContext.getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForDuration();
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// FromClauseAccess
 
 	@Override

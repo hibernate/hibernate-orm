@@ -11,6 +11,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -70,6 +71,16 @@ public interface JdbcTypeIndicators {
 	 */
 	default int getPreferredSqlTypeCodeForBoolean() {
 		return Types.BOOLEAN;
+	}
+
+	/**
+	 * When mapping a duration type to the database what is the preferred SQL type code to use?
+	 * <p/>
+	 * Specifically names the key into the
+	 * {@link JdbcTypeRegistry}.
+	 */
+	default int getPreferredSqlTypeCodeForDuration() {
+		return SqlTypes.INTERVAL_SECOND;
 	}
 
 	/**

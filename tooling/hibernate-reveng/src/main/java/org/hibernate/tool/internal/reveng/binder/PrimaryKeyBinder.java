@@ -306,7 +306,7 @@ class PrimaryKeyBinder extends AbstractBinder {
             return new ArrayList<Object>(keyColumns);
         }
 		else {
-            return ForeignKeyUtils.findForeignKeys(table.getForeignKeyIterator(), keyColumns);
+            return ForeignKeyUtils.findForeignKeys(table.getForeignKeys().values(), keyColumns);
         }
 	}
 	

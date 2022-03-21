@@ -7,7 +7,7 @@
 package org.hibernate.sql.results.graph.entity.internal;
 
 import org.hibernate.LockMode;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.Fetch;

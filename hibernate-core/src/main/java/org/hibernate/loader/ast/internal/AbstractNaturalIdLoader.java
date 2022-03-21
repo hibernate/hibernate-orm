@@ -28,7 +28,7 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.internal.SimpleQueryOptions;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;

@@ -14,7 +14,7 @@ import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;

@@ -8,7 +8,7 @@ package org.hibernate.sql.results.graph.embeddable;
 
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultGraphNode;
 import org.hibernate.sql.results.graph.FetchParent;
 

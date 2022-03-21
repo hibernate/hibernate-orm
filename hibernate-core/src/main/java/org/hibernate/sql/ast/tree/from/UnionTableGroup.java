@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * @author Andrea Boriero

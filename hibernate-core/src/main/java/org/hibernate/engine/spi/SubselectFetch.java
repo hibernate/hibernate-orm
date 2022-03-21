@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QuerySpec;

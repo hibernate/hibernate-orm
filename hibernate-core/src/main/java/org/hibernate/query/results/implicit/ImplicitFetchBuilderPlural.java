@@ -10,7 +10,7 @@ import java.util.function.BiFunction;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;

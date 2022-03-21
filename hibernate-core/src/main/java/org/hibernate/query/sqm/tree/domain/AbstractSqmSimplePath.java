@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 

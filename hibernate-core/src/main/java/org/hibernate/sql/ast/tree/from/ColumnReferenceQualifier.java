@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * @author Steve Ebersole

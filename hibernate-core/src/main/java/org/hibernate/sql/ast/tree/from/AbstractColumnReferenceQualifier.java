@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * @author Steve Ebersole

@@ -8,7 +8,7 @@ package org.hibernate.sql.results.graph;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * Contract for fetches including entity, collection and composite.  Acts as the

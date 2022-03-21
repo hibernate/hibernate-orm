@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;

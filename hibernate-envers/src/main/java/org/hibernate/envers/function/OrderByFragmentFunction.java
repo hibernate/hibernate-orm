@@ -15,7 +15,7 @@ import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;

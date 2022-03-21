@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;

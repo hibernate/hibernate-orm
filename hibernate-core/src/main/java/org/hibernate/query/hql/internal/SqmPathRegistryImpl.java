@@ -17,7 +17,7 @@ import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.AliasCollisionException;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SqmPathSource;

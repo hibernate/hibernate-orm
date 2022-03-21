@@ -9,7 +9,7 @@ package org.hibernate.query.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.named.ModelPartResultMementoCollection;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.complete.CompleteResultBuilderCollectionStandard;

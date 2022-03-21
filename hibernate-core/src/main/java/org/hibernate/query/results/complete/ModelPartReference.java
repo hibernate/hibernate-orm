@@ -7,7 +7,7 @@
 package org.hibernate.query.results.complete;
 
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultBuilder;
 

@@ -9,7 +9,7 @@ package org.hibernate.sql.results.graph;
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * Parts of the domain model that can be fetched

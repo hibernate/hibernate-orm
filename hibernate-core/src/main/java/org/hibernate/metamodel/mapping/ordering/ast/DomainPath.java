@@ -8,7 +8,7 @@ package org.hibernate.metamodel.mapping.ordering.ast;
 
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * Represents a domain-path (model part path) used in an order-by fragment

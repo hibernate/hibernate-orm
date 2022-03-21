@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.results.jdbc.spi;
 
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.Initializer;

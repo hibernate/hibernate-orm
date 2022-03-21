@@ -9,7 +9,7 @@ package org.hibernate.metamodel.model.domain.internal;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.BindableType;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;

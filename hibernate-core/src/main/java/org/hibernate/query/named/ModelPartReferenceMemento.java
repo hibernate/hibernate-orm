@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.named;
 
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * A ResultMappingMementoNode that is a reference to some part of the user's

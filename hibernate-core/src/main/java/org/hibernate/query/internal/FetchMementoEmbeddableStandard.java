@@ -13,7 +13,7 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.query.named.FetchMemento;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.complete.CompleteFetchBuilderEmbeddableValuedModelPart;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * @author Christian Beikov

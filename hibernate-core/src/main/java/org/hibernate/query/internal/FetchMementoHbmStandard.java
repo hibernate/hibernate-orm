@@ -19,7 +19,7 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.results.complete.CompleteFetchBuilderEntityValuedModelPart;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilder;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.named.FetchMemento;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;

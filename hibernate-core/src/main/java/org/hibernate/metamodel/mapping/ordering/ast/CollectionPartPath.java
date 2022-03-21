@@ -12,7 +12,7 @@ import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.AbstractDomainPath;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * Represents a part of a `CollectionPart` (element or index descriptor) as a DomainPath

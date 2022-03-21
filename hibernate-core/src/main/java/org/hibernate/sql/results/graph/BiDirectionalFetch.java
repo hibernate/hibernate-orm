@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.results.graph;
 
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * @asciidoc

@@ -12,7 +12,7 @@ import jakarta.persistence.metamodel.Bindable;
 
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.tree.SqmExpressibleAccessor;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 

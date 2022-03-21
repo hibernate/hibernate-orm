@@ -108,7 +108,7 @@ import org.hibernate.query.QueryLogging;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaPath;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;

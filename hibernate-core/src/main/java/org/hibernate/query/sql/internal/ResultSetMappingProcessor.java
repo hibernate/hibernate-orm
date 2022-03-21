@@ -35,7 +35,7 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.SQLLoadable;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderContainer;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.results.ResultSetMappingImpl;

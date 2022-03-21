@@ -7,7 +7,7 @@
 package org.hibernate.sql.results.graph.entity;
 
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;

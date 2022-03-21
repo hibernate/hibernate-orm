@@ -12,7 +12,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 
 /**

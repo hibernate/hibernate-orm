@@ -4,20 +4,21 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.spi;
+package org.hibernate.spi;
 
 import java.io.Serializable;
 
+import org.hibernate.Incubating;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.spi.DotIdentifierSequence;
-import org.hibernate.query.sqm.spi.EntityIdentifierNavigablePath;
 
 /**
- * Compound-name where each path references to a domain or mapping model-part relative to a root path.  Generally
- * this root path is an entity name or a collection-role.
+ * Compound-name where each path references to a domain or mapping model-part relative to a root path.
+ *
+ * Generally, the root path is an entity-name or a collection-role.
  *
  * @author Steve Ebersole
  */
+@Incubating
 public class NavigablePath implements DotIdentifierSequence, Serializable {
 	public static final String IDENTIFIER_MAPPER_PROPERTY = "_identifierMapper";
 

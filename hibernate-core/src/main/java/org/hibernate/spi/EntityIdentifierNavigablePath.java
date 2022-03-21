@@ -4,10 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.sqm.spi;
+package org.hibernate.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.query.spi.NavigablePath;
 
 /**
  * Specialized NavigablePath implementation for handling special cases
@@ -15,6 +15,7 @@ import org.hibernate.query.spi.NavigablePath;
  *
  * @author Andrea Boriero
  */
+@Incubating
 public class EntityIdentifierNavigablePath extends NavigablePath {
 	private final String identifierAttributeName;
 

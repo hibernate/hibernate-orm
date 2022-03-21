@@ -15,7 +15,7 @@ import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * API extension to the JPA {@link Path} contract

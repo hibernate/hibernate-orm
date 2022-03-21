@@ -11,7 +11,7 @@ import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * Helper for logging collection, entity and embeddable information.  Uses path collapsing

@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.spi;
 
 import java.util.function.Function;
 
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 

@@ -10,9 +10,7 @@ import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
-import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -21,7 +19,6 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.entity.AbstractNonLazyEntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
-import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 
 /**
  * @author Andrea Boriero

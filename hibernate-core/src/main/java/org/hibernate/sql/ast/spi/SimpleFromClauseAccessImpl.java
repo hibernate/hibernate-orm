@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.spi;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlTreeCreationLogger;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 

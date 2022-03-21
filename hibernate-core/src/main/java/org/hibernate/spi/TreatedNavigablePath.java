@@ -4,11 +4,16 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.spi;
+package org.hibernate.spi;
+
+import org.hibernate.Incubating;
 
 /**
+ * NavigablePath implementation with special handling for treated paths
+ *
  * @author Christian Beikov
  */
+@Incubating
 public class TreatedNavigablePath extends NavigablePath {
 
 	public TreatedNavigablePath(NavigablePath parent, String entityTypeName) {

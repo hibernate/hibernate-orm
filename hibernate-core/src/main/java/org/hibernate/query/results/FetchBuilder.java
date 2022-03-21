@@ -10,7 +10,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;

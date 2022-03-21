@@ -16,7 +16,7 @@ import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.hql.spi.SemanticPathPart;
@@ -25,7 +25,6 @@ import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.query.sqm.tree.SqmNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.type.descriptor.java.JavaType;

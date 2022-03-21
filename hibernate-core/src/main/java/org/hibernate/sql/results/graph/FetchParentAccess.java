@@ -8,7 +8,7 @@ package org.hibernate.sql.results.graph;
 
 import java.util.function.Consumer;
 
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * Provides access to information about the owner/parent of a fetch

@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;

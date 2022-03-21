@@ -13,7 +13,7 @@ import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaMapJoin;
 import org.hibernate.query.criteria.JpaPredicate;

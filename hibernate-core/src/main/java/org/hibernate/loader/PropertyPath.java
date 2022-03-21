@@ -8,7 +8,7 @@ package org.hibernate.loader;
 
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.spi.DotIdentifierSequence;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * @author Steve Ebersole

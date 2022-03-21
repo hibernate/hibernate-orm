@@ -9,7 +9,7 @@ package org.hibernate.query.results;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
-import org.hibernate.query.sqm.spi.EntityIdentifierNavigablePath;
+import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;

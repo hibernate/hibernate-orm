@@ -12,7 +12,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.AssemblerCreationState;

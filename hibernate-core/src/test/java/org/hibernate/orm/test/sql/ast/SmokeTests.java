@@ -14,7 +14,7 @@ import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.orm.test.mapping.SmokeTests.Gender;
 import org.hibernate.orm.test.mapping.SmokeTests.SimpleEntity;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryOptions;

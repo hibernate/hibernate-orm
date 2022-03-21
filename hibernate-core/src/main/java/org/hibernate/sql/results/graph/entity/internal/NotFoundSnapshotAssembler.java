@@ -9,7 +9,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 import org.hibernate.FetchNotFoundException;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;

@@ -2484,6 +2484,14 @@ public interface AvailableSettings {
 	String PREFERRED_BOOLEAN_JDBC_TYPE_CODE = "hibernate.type.preferred_boolean_jdbc_type_code";
 
 	/**
+	 * Specifies the preferred JDBC type code for storing duration values. When no
+	 * type code is explicitly specified, {@link org.hibernate.type.SqlTypes#INTERVAL_SECOND} is used.
+	 *
+	 * @since 6.0
+	 */
+	String PREFERRED_DURATION_JDBC_TYPE_CODE = "hibernate.type.preferred_duration_jdbc_type_code";
+
+	/**
 	 * Specifies a {@link org.hibernate.type.FormatMapper} used for for JSON serialization
 	 * and deserialization, either:
 	 * <ul>

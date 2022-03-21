@@ -17,9 +17,7 @@ public abstract class RelationalModelDetector extends Detector {
 	abstract protected void visit(Table table, Column col, IssueCollector collector);
 
 	protected void visitColumns(Table table, IssueCollector collector) {
-		Iterator<?> columnIter = table.getColumnIterator();
-		while ( columnIter.hasNext() ) {
-			Column col = ( Column ) columnIter.next();
+		for (Column col : table.getColumns()) {
 			this.visit(table, col, collector );
 		}		
 	}

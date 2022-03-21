@@ -1,6 +1,5 @@
 package org.hibernate.tool.internal.reveng.binder;
 
-import java.util.Iterator;
 import java.util.Set;
 
 import org.hibernate.FetchMode;
@@ -54,9 +53,7 @@ class OneToOneBinder extends AbstractBinder {
     }
     
     private void addColumns(ForeignKey foreignKey, OneToOne oneToOne, Set<Column> processedColumns) {
-        Iterator<Column> columns = foreignKey.getColumnIterator();
-        while (columns.hasNext()) {
-            Column fkcolumn = (Column) columns.next();
+        for (Column fkcolumn : foreignKey.getColumns()) {
 			BinderUtils.checkColumnForMultipleBinding(fkcolumn);
             oneToOne.addColumn(fkcolumn);
             processedColumns.add(fkcolumn);

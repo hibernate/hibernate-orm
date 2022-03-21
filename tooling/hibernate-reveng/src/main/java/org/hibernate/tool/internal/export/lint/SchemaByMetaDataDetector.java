@@ -39,6 +39,7 @@ import org.hibernate.tool.internal.reveng.strategy.TableSelectorStrategy;
 import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
 import org.hibernate.tool.internal.util.TableNameQualifier;
 
+@SuppressWarnings("deprecation")
 public class SchemaByMetaDataDetector extends RelationalModelDetector {
 
 	public String getName() {

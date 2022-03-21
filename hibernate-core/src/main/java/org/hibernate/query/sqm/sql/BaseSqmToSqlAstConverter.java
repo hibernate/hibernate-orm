@@ -5438,7 +5438,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		// The result of timestamp subtraction is always a `Duration`, unless a unit is applied
 		// So use SECOND granularity with fractions as that is what the `DurationJavaType` expects
-		final TemporalUnit baseUnit = SECOND; // todo: alternatively repurpose NATIVE to mean "INTERVAL SECOND"
+		final TemporalUnit baseUnit = SECOND;
+		// For SECOND, the expected result type is Double
+		final BasicType<Double> diffResultType = basicType( Double.class );
 
 		if ( adjustedTimestamp != null ) {
 			if ( appliedByUnit != null ) {
@@ -5451,11 +5453,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// temporal type, so we must use it for both
 			// the diff, and then the subsequent add
 
-			DurationUnit unit = new DurationUnit( baseUnit, basicType( Integer.class ) );
-			Expression magnitude = applyScale( timestampdiff().expression( null, unit, right, left ) );
+			DurationUnit unit = new DurationUnit( baseUnit, diffResultType );
+			BasicValuedMapping durationType = (BasicValuedMapping) expression.getNodeType();
+			Expression scaledMagnitude = applyScale(
+					timestampdiff().expression(
+							(ReturnableType<?>) expression.getNodeType(),
+							durationType.getJdbcMapping().getJdbcType().isInterval() ? null : unit,
+							right,
+							left
+					)
+			);
 			return timestampadd().expression(
 					(ReturnableType<?>) adjustedTimestampType, //TODO should be adjustedTimestamp.getType()
-					unit, magnitude, adjustedTimestamp
+					unit,
+					scaledMagnitude,
+					adjustedTimestamp
 			);
 		}
 		else if ( appliedByUnit != null ) {
@@ -5467,12 +5479,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else {
 			// a plain "bare" Duration
-			DurationUnit unit = new DurationUnit( baseUnit, basicType( Integer.class ) );
+			DurationUnit unit = new DurationUnit( baseUnit, diffResultType );
 			BasicValuedMapping durationType = (BasicValuedMapping) expression.getNodeType();
-			Expression scaledMagnitude = applyScale( timestampdiff().expression(
-					(ReturnableType<?>) expression.getNodeType(),
-					unit, right, left
-			) );
+			Expression scaledMagnitude = applyScale(
+					timestampdiff().expression(
+							(ReturnableType<?>) expression.getNodeType(),
+							durationType.getJdbcMapping().getJdbcType().isInterval() ? null : unit,
+							right,
+							left
+					)
+			);
 			return new Duration( scaledMagnitude, baseUnit, durationType );
 		}
 	}

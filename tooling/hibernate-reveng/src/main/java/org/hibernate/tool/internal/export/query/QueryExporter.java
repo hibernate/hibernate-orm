@@ -19,7 +19,6 @@ import org.hibernate.tool.internal.export.common.AbstractExporter;
  **/
 public class QueryExporter extends AbstractExporter {
 
-	@SuppressWarnings({ "unchecked" })
 	public void doStart() {
 		Session session = null;
 		SessionFactory sessionFactory = null;
@@ -31,7 +30,7 @@ public class QueryExporter extends AbstractExporter {
 			for (Iterator<?> iter = getQueryList().iterator(); iter.hasNext();) {
 				String query = (String) iter.next();
 				
-				List<Object> list = session.createQuery(query).getResultList();
+				List<Object> list = session.createQuery(query, null).getResultList();
 				
 				if(getFileName()!=null) {
 					PrintWriter pw = null;

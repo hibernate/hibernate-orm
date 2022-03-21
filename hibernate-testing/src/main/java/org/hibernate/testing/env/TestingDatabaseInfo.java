@@ -16,7 +16,7 @@ import org.hibernate.dialect.H2Dialect;
  */
 public final class TestingDatabaseInfo {
 	public static volatile String DRIVER = "org.h2.Driver";
-	public static volatile String URL = "jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE";
+	public static volatile String URL = "jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1";
 	public static volatile String USER = "sa";
 	public static volatile String PASS = "";
 

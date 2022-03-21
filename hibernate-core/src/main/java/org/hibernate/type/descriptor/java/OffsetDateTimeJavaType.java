@@ -206,12 +206,21 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 	}
 
 	@Override
-	public OffsetDateTime seed(SharedSessionContractImplementor session) {
-		return OffsetDateTime.now();
+	public OffsetDateTime seed(
+			Long length,
+			Integer precision,
+			Integer scale,
+			SharedSessionContractImplementor session) {
+		return OffsetDateTime.now( ClockHelper.forPrecision( precision, session ) );
 	}
 
 	@Override
-	public OffsetDateTime next(OffsetDateTime current, SharedSessionContractImplementor session) {
-		return OffsetDateTime.now();
+	public OffsetDateTime next(
+			OffsetDateTime current,
+			Long length,
+			Integer precision,
+			Integer scale,
+			SharedSessionContractImplementor session) {
+		return OffsetDateTime.now( ClockHelper.forPrecision( precision, session ) );
 	}
 }

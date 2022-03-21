@@ -17,18 +17,24 @@ public interface VersionJavaType<T> extends JavaType<T> {
 	/**
 	 * Generate an initial version.
 	 *
+	 * @param length The length of the type
+	 * @param precision The precision of the type
+	 * @param scale The scale of the type
 	 * @param session The session from which this request originates.
 	 * @return an instance of the type
 	 */
-	T seed(SharedSessionContractImplementor session);
+	T seed(Long length, Integer precision, Integer scale, SharedSessionContractImplementor session);
 
 	/**
 	 * Increment the version.
 	 *
-	 * @param session The session from which this request originates.
 	 * @param current the current version
+	 * @param length The length of the type
+	 * @param precision The precision of the type
+	 * @param scale The scale of the type
+	 * @param session The session from which this request originates.
 	 * @return an instance of the type
 	 */
-	T next(T current, SharedSessionContractImplementor session);
+	T next(T current, Long length, Integer precision, Integer scale, SharedSessionContractImplementor session);
 
 }

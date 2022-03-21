@@ -806,7 +806,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final ColumnReference versionColumn = targetColumnReferences.get( 0 );
 		final Expression value;
 		if ( versionMapping.getJdbcMapping().getJdbcType().isTemporal() ) {
-			value = new VersionTypeSeedParameterSpecification( versionType, persister.getVersionJavaType() );
+			value = new VersionTypeSeedParameterSpecification( versionMapping );
 		}
 		else {
 			value = new BinaryArithmeticExpression(
@@ -1201,10 +1201,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			assert targetColumnReferences.size() == 1;
 
 			targetColumnReferenceConsumer.accept( versionPath, targetColumnReferences );
-			versionExpression = new VersionTypeSeedParameterSpecification(
-					entityDescriptor.getVersionMapping().getJdbcMapping(),
-					entityDescriptor.getVersionJavaType()
-			);
+			versionExpression = new VersionTypeSeedParameterSpecification( entityDescriptor.getVersionMapping() );
 		}
 		if ( discriminatorMapping != null && discriminatorMapping.isPhysical() ) {
 			final BasicValuedPathInterpretation<?> discriminatorPath = new BasicValuedPathInterpretation<>(

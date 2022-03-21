@@ -47,20 +47,29 @@ public class DbTimestampJavaType<T> implements VersionJavaType<T>, TemporalJavaT
 	}
 
 	@Override
-	public T next(T current, SharedSessionContractImplementor session) {
-		return seed( session );
+	public T next(
+			T current,
+			Long length,
+			Integer precision,
+			Integer scale,
+			SharedSessionContractImplementor session) {
+		return seed( length, precision, scale, session );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public T seed(SharedSessionContractImplementor session) {
+	public T seed(
+			Long length,
+			Integer precision,
+			Integer scale,
+			SharedSessionContractImplementor session) {
 		if ( session == null ) {
 			LOG.trace( "Incoming session was null; using current jvm time" );
-			return ((VersionJavaType<T>) delegate).seed( null );
+			return ((VersionJavaType<T>) delegate).seed( length, precision, scale, null );
 		}
 		else if ( !session.getJdbcServices().getJdbcEnvironment().getDialect().supportsCurrentTimestampSelection() ) {
 			LOG.debug( "Falling back to vm-based timestamp, as dialect does not support current timestamp selection" );
-			return ((VersionJavaType<T>) delegate).seed( session );
+			return ((VersionJavaType<T>) delegate).seed( length, precision, scale, session );
 		}
 		else {
 			return getCurrentTimestamp( session );

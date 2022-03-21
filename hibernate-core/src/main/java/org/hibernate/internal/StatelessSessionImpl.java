@@ -88,7 +88,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			boolean substitute = Versioning.seedVersion(
 					state,
 					persister.getVersionProperty(),
-					persister.getVersionJavaType(),
+					persister.getVersionMapping(),
 					this
 			);
 			if ( substitute ) {
@@ -141,7 +141,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		Object oldVersion;
 		if ( persister.isVersioned() ) {
 			oldVersion = persister.getVersion( entity );
-			Object newVersion = Versioning.increment( oldVersion, persister.getVersionJavaType(), this );
+			Object newVersion = Versioning.increment( oldVersion, persister.getVersionMapping(), this );
 			Versioning.setVersion( state, newVersion, persister );
 			persister.setValues( entity, state );
 		}

@@ -7,7 +7,6 @@
 package org.hibernate.type.descriptor.java;
 
 import java.sql.Timestamp;
-import java.sql.Types;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -196,13 +195,18 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 	}
 
 	@Override
-	public Instant seed(SharedSessionContractImplementor session) {
-		return Instant.now();
+	public Instant seed(Long length, Integer precision, Integer scale, SharedSessionContractImplementor session) {
+		return Instant.now( ClockHelper.forPrecision( precision, session ) );
 	}
 
 	@Override
-	public Instant next(Instant current, SharedSessionContractImplementor session) {
-		return Instant.now();
+	public Instant next(
+			Instant current,
+			Long length,
+			Integer precision,
+			Integer scale,
+			SharedSessionContractImplementor session) {
+		return Instant.now( ClockHelper.forPrecision( precision, session ) );
 	}
 
 }

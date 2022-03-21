@@ -176,12 +176,19 @@ public class ByteJavaType extends AbstractClassJavaType<Byte>
 		);
 	}
 	@Override
-	public Byte next(Byte current, SharedSessionContractImplementor session) {
+	public Byte next(
+			Byte current,
+			Long length,
+			Integer precision,
+			Integer scale,
+			SharedSessionContractImplementor session) {
 		return (byte) ( current + 1 );
 	}
 
 	@Override
-	public Byte seed(SharedSessionContractImplementor session) {
+	public Byte seed(
+			Long length,
+			Integer precision, Integer scale, SharedSessionContractImplementor session) {
 		return ZERO;
 	}
 }

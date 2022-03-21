@@ -21,12 +21,20 @@ public class UserTypeVersionJavaTypeWrapper<J> extends UserTypeJavaTypeWrapper<J
 	}
 
 	@Override
-	public J seed(SharedSessionContractImplementor session) {
+	public J seed(
+			Long length,
+			Integer precision,
+			Integer scale, SharedSessionContractImplementor session) {
 		return ( (UserVersionType<J>) userType ).seed( session );
 	}
 
 	@Override
-	public J next(J current, SharedSessionContractImplementor session) {
+	public J next(
+			J current,
+			Long length,
+			Integer precision,
+			Integer scale,
+			SharedSessionContractImplementor session) {
 		return ( (UserVersionType<J>) userType ).next( current, session );
 	}
 }

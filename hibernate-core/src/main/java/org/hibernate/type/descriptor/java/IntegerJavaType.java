@@ -195,12 +195,17 @@ public class IntegerJavaType extends AbstractClassJavaType<Integer>
 	}
 
 	@Override
-	public Integer seed(SharedSessionContractImplementor session) {
+	public Integer seed(
+			Long length, Integer precision, Integer scale, SharedSessionContractImplementor session) {
 		return ZERO;
 	}
 
 	@Override
-	public Integer next(Integer current, SharedSessionContractImplementor session) {
+	public Integer next(
+			Integer current,
+			Long length,
+			Integer precision,
+			Integer scale, SharedSessionContractImplementor session) {
 		return current + 1;
 	}
 

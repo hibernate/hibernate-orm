@@ -2093,9 +2093,16 @@ public abstract class AbstractEntityPersister
 			// the difficulty here is exactly what we update in order to
 			// force the version to be incremented in the db...
 			throw new HibernateException( "LockMode.FORCE is currently not supported for generated version properties" );
-		}
 
-		Object nextVersion = getVersionJavaType().next( currentVersion, session );
+		}
+		final EntityVersionMapping versionMapping = getVersionMapping();
+		final Object nextVersion = getVersionJavaType().next(
+				currentVersion,
+				versionMapping.getLength(),
+				versionMapping.getPrecision(),
+				versionMapping.getScale(),
+				session
+		);
 		if ( LOG.isTraceEnabled() ) {
 			LOG.trace(
 					"Forcing version increment [" + MessageHelper.infoString( this, id, getFactory() ) + "; "

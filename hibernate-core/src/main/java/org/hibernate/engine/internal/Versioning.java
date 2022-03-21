@@ -8,6 +8,7 @@ package org.hibernate.engine.internal;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.java.VersionJavaType;
 
@@ -31,15 +32,20 @@ public final class Versioning {
 	}
 
 	/**
-	 * Create an initial optimistic locking value according the {@link VersionJavaType}
+	 * Create an initial optimistic locking value according the {@link EntityVersionMapping}
 	 * contract for the version property.
 	 *
-	 * @param versionType The version type.
+	 * @param versionMapping The version mapping
 	 * @param session The originating session
 	 * @return The initial optimistic locking value
 	 */
-	private static Object seed(VersionJavaType<Object> versionType, SharedSessionContractImplementor session) {
-		final Object seed = versionType.seed( session );
+	private static Object seed(EntityVersionMapping versionMapping, SharedSessionContractImplementor session) {
+		final Object seed = versionMapping.getJavaType().seed(
+				versionMapping.getLength(),
+				versionMapping.getPrecision(),
+				versionMapping.getScale(),
+				session
+		);
 		LOG.tracef( "Seeding: %s", seed );
 		return seed;
 	}
@@ -51,7 +57,7 @@ public final class Versioning {
 	 *
 	 * @param fields The current snapshot state
 	 * @param versionProperty The index of the version property
-	 * @param versionType The version type
+	 * @param versionMapping The version mapping
 	 * @param session The originating session
 	 * @return True if we injected a new version value into the fields array; false
 	 * otherwise.
@@ -59,7 +65,7 @@ public final class Versioning {
 	public static boolean seedVersion(
 			Object[] fields,
 			int versionProperty,
-			VersionJavaType<Object> versionType,
+			EntityVersionMapping versionMapping,
 			SharedSessionContractImplementor session) {
 		final Object initialVersion = fields[versionProperty];
 		if (
@@ -70,7 +76,7 @@ public final class Versioning {
 			// TODO: shift it into unsaved-value strategy
 			( (initialVersion instanceof Number) && ( (Number) initialVersion ).longValue()<0 )
 		) {
-			fields[versionProperty] = seed( versionType, session );
+			fields[versionProperty] = seed( versionMapping, session );
 			return true;
 		}
 		LOG.tracev( "Using initial version: {0}", initialVersion );
@@ -83,12 +89,20 @@ public final class Versioning {
 	 * the {@link VersionJavaType} contract for the version property.
 	 *
 	 * @param version The current version
-	 * @param versionType The version type
+	 * @param versionMapping The version mapping
 	 * @param session The originating session
 	 * @return The incremented optimistic locking value.
 	 */
-	public static Object increment(Object version, VersionJavaType<Object> versionType, SharedSessionContractImplementor session) {
-		final Object next = versionType.next( version, session );
+	public static Object increment(Object version, EntityVersionMapping versionMapping, SharedSessionContractImplementor session) {
+		@SuppressWarnings("unchecked")
+		final VersionJavaType<Object> versionType = (VersionJavaType<Object>) versionMapping.getJavaType();
+		final Object next = versionType.next(
+				version,
+				versionMapping.getLength(),
+				versionMapping.getPrecision(),
+				versionMapping.getScale(),
+				session
+		);
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef(
 					"Incrementing: %s to %s",

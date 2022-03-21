@@ -1,6 +1,5 @@
 package org.hibernate.tool.internal.reveng.binder;
 
-import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.FetchMode;
@@ -8,7 +7,6 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Fetchable;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.tool.api.reveng.AssociationInfo;
@@ -57,9 +55,7 @@ class PropertyBinder extends AbstractBinder {
 	}
 
     private Property bindMetaAttributes(Property property, Table table) {
-    	Iterator<Selectable> columnIterator = property.getValue().getColumnIterator();
-		while(columnIterator.hasNext()) {
-			Column col = (Column) columnIterator.next();
+		for (Column col : property.getColumns()) {
 			Map<String,MetaAttribute> map = getColumnToMetaAttributesInRevengStrategy(table, col.getName());
 			if(map!=null) { 
 				property.setMetaAttributes(map);

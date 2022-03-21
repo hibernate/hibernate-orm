@@ -202,7 +202,7 @@ public class PluralAttributeMappingImpl
 			// then we say this is bidirectional, given that this is only invoked for model parts of the collection elements
 			return fkDescriptor.getTargetPart() == modelPart.getForeignKeyDescriptor().getTargetPart();
 		}
-		return fetchablePath.getUnaliasedLocalName().endsWith( bidirectionalAttributeName );
+		return fetchablePath.getLocalName().endsWith( bidirectionalAttributeName );
 	}
 
 	@SuppressWarnings("unused")

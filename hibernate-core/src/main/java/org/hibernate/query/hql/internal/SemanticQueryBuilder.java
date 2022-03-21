@@ -4013,7 +4013,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		SqmPath<?> lhs = pluralAttributePath.getLhs();
 		final List<String> implicitJoinPaths = new ArrayList<>();
 		while ( !( lhs instanceof AbstractSqmFrom<?, ?> ) ) {
-			implicitJoinPaths.add( lhs.getNavigablePath().getUnaliasedLocalName() );
+			implicitJoinPaths.add( lhs.getNavigablePath().getLocalName() );
 			lhs = lhs.getLhs();
 		}
 		final AbstractSqmFrom<?, ?> correlationBase = (AbstractSqmFrom<?, ?>) lhs;
@@ -4022,7 +4022,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		for ( int i = implicitJoinPaths.size() - 1; i >= 0; i-- ) {
 			joinBase = joinBase.join( implicitJoinPaths.get( i ) );
 		}
-		final SqmAttributeJoin<?, ?> collectionJoin = joinBase.join( pluralAttributePath.getNavigablePath().getUnaliasedLocalName() );
+		final SqmAttributeJoin<?, ?> collectionJoin = joinBase.join( pluralAttributePath.getNavigablePath().getLocalName() );
 		fromClause.addRoot( correlation.getCorrelatedRoot() );
 		if ( collectionReferenceCtx == null ) {
 			final SqmLiteral<Integer> literal = new SqmLiteral<>(

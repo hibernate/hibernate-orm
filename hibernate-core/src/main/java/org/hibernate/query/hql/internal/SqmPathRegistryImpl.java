@@ -240,7 +240,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 			return (X) existing;
 		}
 
-		final SqmFrom<?, ?> sqmFrom = resolveFrom( path.getLhs() ).join( path.getNavigablePath().getUnaliasedLocalName() );
+		final SqmFrom<?, ?> sqmFrom = resolveFrom( path.getLhs() ).join( path.getNavigablePath().getLocalName() );
 		register( sqmFrom );
 		//noinspection unchecked
 		return (X) sqmFrom;

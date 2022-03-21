@@ -151,7 +151,7 @@ public class ImplicitFetchBuilderEntity implements ImplicitFetchBuilder {
 
 	@Override
 	public void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {
-		fetchBuilders.forEach( (k, v) -> consumer.accept( k.getUnaliasedLocalName(), v ) );
+		fetchBuilders.forEach( (k, v) -> consumer.accept( k.getLocalName(), v ) );
 	}
 
 	@Override

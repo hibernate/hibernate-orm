@@ -108,7 +108,7 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 		final SqmPathRegistry pathRegistry = creationState.getCurrentProcessingState().getPathRegistry();
 		final String alias = selector.toHqlString();
 		final NavigablePath navigablePath = getNavigablePath().getParent().append(
-				getNavigablePath().getUnaliasedLocalName(),
+				getNavigablePath().getLocalName(),
 				alias
 		).append( CollectionPart.Nature.ELEMENT.getName() );
 		final SqmFrom<?, ?> indexedPath = pathRegistry.findFromByPath( navigablePath );

@@ -66,7 +66,7 @@ public class FunctionExpression implements OrderingExpression, FunctionRendering
 			final OrderingExpression orderingExpression = arguments.get( i );
 			final String subModelPartName;
 			if ( orderingExpression instanceof DomainPath ) {
-				final String partName = ( (DomainPath) orderingExpression ).getNavigablePath().getUnaliasedLocalName();
+				final String partName = ( (DomainPath) orderingExpression ).getNavigablePath().getLocalName();
 				if ( CollectionPart.Nature.ELEMENT.getName().equals( partName ) ) {
 					subModelPartName = AbstractDomainPath.ELEMENT_TOKEN;
 				}

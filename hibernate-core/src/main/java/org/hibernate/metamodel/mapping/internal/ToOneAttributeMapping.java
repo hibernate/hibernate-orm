@@ -748,8 +748,8 @@ public class ToOneAttributeMapping
 					private Key key;
 				}
 			 */
-			if ( parentNavigablePath.getUnaliasedLocalName().equals( ForeignKeyDescriptor.PART_NAME )
-					|| parentNavigablePath.getUnaliasedLocalName().equals( ForeignKeyDescriptor.TARGET_PART_NAME ) ) {
+			if ( parentNavigablePath.getLocalName().equals( ForeignKeyDescriptor.PART_NAME )
+					|| parentNavigablePath.getLocalName().equals( ForeignKeyDescriptor.TARGET_PART_NAME ) ) {
 				// todo (6.0): maybe it's better to have a flag in creation state that marks if we are building a circular fetch domain result already to skip this?
 				return null;
 			}
@@ -893,9 +893,9 @@ public class ToOneAttributeMapping
 				parent.getFullPath() = "Mother.biologicalChild"
 			 */
 			final NavigablePath grandparentNavigablePath = parentNavigablePath.getParent();
-			if ( parentNavigablePath.getUnaliasedLocalName().equals( CollectionPart.Nature.ELEMENT.getName() )
+			if ( parentNavigablePath.getLocalName().equals( CollectionPart.Nature.ELEMENT.getName() )
 					&& grandparentNavigablePath != null
-					&& grandparentNavigablePath.getUnaliasedLocalName().equals( bidirectionalAttributeName ) ) {
+					&& grandparentNavigablePath.getLocalName().equals( bidirectionalAttributeName ) ) {
 				final NavigablePath parentPath = grandparentNavigablePath.getParent();
 				// This can be null for a collection loader
 				if ( parentPath == null ) {
@@ -915,13 +915,13 @@ public class ToOneAttributeMapping
 					}
 					// If we have a parent, we ensure that the parent is the same as the attribute name
 					else {
-						return parentPath.getUnaliasedLocalName().equals( navigableRole.getLocalName() );
+						return parentPath.getLocalName().equals( navigableRole.getLocalName() );
 					}
 				}
 			}
 			return false;
 		}
-		return parentNavigablePath.getUnaliasedLocalName().equals( bidirectionalAttributeName );
+		return parentNavigablePath.getLocalName().equals( bidirectionalAttributeName );
 	}
 
 	public String getBidirectionalAttributeName(){
@@ -944,7 +944,7 @@ public class ToOneAttributeMapping
 			referencedNavigablePath = parentNavigablePath;
 			hasBidirectionalFetchParent = true;
 		}
-		else if ( CollectionPart.Nature.fromNameExact( parentNavigablePath.getUnaliasedLocalName() ) != null ) {
+		else if ( CollectionPart.Nature.fromNameExact( parentNavigablePath.getLocalName() ) != null ) {
 			referencedNavigablePath = parentNavigablePath.getParent().getParent();
 			hasBidirectionalFetchParent = fetchParent instanceof Fetch
 				&& ( (Fetch) fetchParent ).getFetchParent() instanceof Fetch;
@@ -1007,7 +1007,7 @@ public class ToOneAttributeMapping
 			// So we create a delayed fetch, as we are sure to find the entity in the PC
 			final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
 			final NavigablePath realParent;
-			if ( CollectionPart.Nature.fromNameExact( parentNavigablePath.getUnaliasedLocalName() ) != null ) {
+			if ( CollectionPart.Nature.fromNameExact( parentNavigablePath.getLocalName() ) != null ) {
 				realParent = parentNavigablePath.getParent();
 			}
 			else {
@@ -1386,7 +1386,7 @@ public class ToOneAttributeMapping
 					break;
 				}
 			}
-			if ( CollectionPart.Nature.ELEMENT.getName().equals( parentTableGroup.getNavigablePath().getUnaliasedLocalName() ) ) {
+			if ( CollectionPart.Nature.ELEMENT.getName().equals( parentTableGroup.getNavigablePath().getLocalName() ) ) {
 				final PluralTableGroup pluralTableGroup = (PluralTableGroup) fromClauseAccess.findTableGroup(
 						parentTableGroup.getNavigablePath().getParent()
 				);
@@ -1420,14 +1420,14 @@ public class ToOneAttributeMapping
 										NavigablePath path = np.getParent();
 										// Fast path
 										if ( navigablePath.equals( path ) ) {
-											return targetKeyPropertyNames.contains( np.getUnaliasedLocalName() )
+											return targetKeyPropertyNames.contains( np.getLocalName() )
 													&& identifyingColumnsTableExpression.equals( tableExpression );
 										}
 										final StringBuilder sb = new StringBuilder( np.getFullPath().length() );
-										sb.append( np.getUnaliasedLocalName() );
+										sb.append( np.getLocalName() );
 										while ( path != null && !navigablePath.equals( path ) ) {
 											sb.insert( 0, '.' );
-											sb.insert( 0, path.getUnaliasedLocalName() );
+											sb.insert( 0, path.getLocalName() );
 											path = path.getParent();
 										}
 										return navigablePath.equals( path )
@@ -1542,14 +1542,14 @@ public class ToOneAttributeMapping
 					NavigablePath path = np.getParent();
 					// Fast path
 					if ( navigablePath.equals( path ) ) {
-						return targetKeyPropertyNames.contains( np.getUnaliasedLocalName() )
+						return targetKeyPropertyNames.contains( np.getLocalName() )
 								&& identifyingColumnsTableExpression.equals( tableExpression );
 					}
 					final StringBuilder sb = new StringBuilder( np.getFullPath().length() );
-					sb.append( np.getUnaliasedLocalName() );
+					sb.append( np.getLocalName() );
 					while ( path != null && !navigablePath.equals( path ) ) {
 						sb.insert( 0, '.' );
-						sb.insert( 0, path.getUnaliasedLocalName() );
+						sb.insert( 0, path.getLocalName() );
 						path = path.getParent();
 					}
 					return navigablePath.equals( path )

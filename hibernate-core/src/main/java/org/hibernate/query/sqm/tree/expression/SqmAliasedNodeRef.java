@@ -77,7 +77,7 @@ public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
 			sb.append( position );
 		}
 		else {
-			sb.append( navigablePath.getUnaliasedLocalName() );
+			sb.append( navigablePath.getLocalName() );
 		}
 	}
 }

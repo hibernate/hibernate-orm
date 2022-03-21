@@ -112,7 +112,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 			for ( TableGroupJoin tableGroupJoin : tableGroup.getTableGroupJoins() ) {
 				final NavigablePath navigablePath = tableGroupJoin.getNavigablePath();
 				if ( tableGroupJoin.getJoinedGroup().isFetched()
-						&& fetchable.getFetchableName().equals( navigablePath.getUnaliasedLocalName() )
+						&& fetchable.getFetchableName().equals( navigablePath.getLocalName() )
 						&& tableGroupJoin.getJoinedGroup().getModelPart() == fetchable ) {
 					return navigablePath;
 				}

@@ -23,23 +23,28 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	public static final String IDENTIFIER_MAPPER_PROPERTY = "_identifierMapper";
 
 	private final NavigablePath parent;
-	private final String fullPath;
-	private final String unaliasedLocalName;
+	private final String localName;
+	private final String alias;
+
 	private final String identifierForTableGroup;
+
+	private final String fullPath;
 
 	public NavigablePath(NavigablePath parent, String navigableName) {
 		this.parent = parent;
+		this.alias = null;
 
 		// the _identifierMapper is a "hidden property" on entities with composite keys.
 		// concatenating it will prevent the path from correctly being used to look up
 		// various things such as criteria paths and fetch profile association paths
 		if ( IDENTIFIER_MAPPER_PROPERTY.equals( navigableName ) ) {
-			this.fullPath = parent != null ? parent.getFullPath() : "";
-			this.unaliasedLocalName = "";
+			this.localName = "";
 			this.identifierForTableGroup = parent != null ? parent.getIdentifierForTableGroup() : "";
+
+			this.fullPath = parent != null ? parent.getFullPath() : "";
 		}
 		else {
-			this.unaliasedLocalName = navigableName;
+			this.localName = navigableName;
 			if ( parent != null ) {
 				final String parentFullPath = parent.getFullPath();
 				this.fullPath = StringHelper.isEmpty( parentFullPath )
@@ -51,7 +56,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 			}
 			else {
 				this.fullPath = navigableName;
-				identifierForTableGroup = navigableName;
+				this.identifierForTableGroup = navigableName;
 			}
 		}
 	}
@@ -62,28 +67,32 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 
 	public NavigablePath(String rootName, String alias) {
 		this.parent = null;
+		this.alias = StringHelper.nullIfEmpty( alias );
+		this.localName = rootName;
+		this.identifierForTableGroup = rootName;
+
 		this.fullPath = alias == null ? rootName : rootName + "(" + alias + ")";
-		this.unaliasedLocalName = StringHelper.unqualify( rootName );
-		identifierForTableGroup = rootName;
 	}
 
 	public NavigablePath(NavigablePath parent, String property, String alias) {
-		String navigableName = alias == null
+		alias = StringHelper.nullIfEmpty( alias );
+		final String navigableName = alias == null
 				? property
 				: property + '(' + alias + ')';
 
 		this.parent = parent;
+		this.alias = alias;
 
 		// the _identifierMapper is a "hidden property" on entities with composite keys.
 		// concatenating it will prevent the path from correctly being used to look up
 		// various things such as criteria paths and fetch profile association paths
 		if ( IDENTIFIER_MAPPER_PROPERTY.equals( navigableName ) ) {
 			this.fullPath = parent != null ? parent.getFullPath() : "";
-			this.unaliasedLocalName = "";
+			this.localName = "";
 			identifierForTableGroup = parent != null ? parent.getFullPath() : "";
 		}
 		else {
-			this.unaliasedLocalName = property;
+			this.localName = property;
 			if ( parent != null ) {
 				final String parentFullPath = parent.getFullPath();
 				this.fullPath = StringHelper.isEmpty( parentFullPath )
@@ -107,11 +116,12 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	public NavigablePath(
 			NavigablePath parent,
 			String fullPath,
-			String unaliasedLocalName,
+			String localName,
 			String identifierForTableGroup) {
 		this.parent = parent;
+		this.alias = null;
 		this.fullPath = fullPath;
-		this.unaliasedLocalName = unaliasedLocalName;
+		this.localName = localName;
 		this.identifierForTableGroup = identifierForTableGroup;
 	}
 
@@ -140,22 +150,27 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	}
 
 	public String getLocalName() {
-		return parent == null ? fullPath : StringHelper.unqualify( fullPath );
+		return localName;
 	}
 
-	public String getUnaliasedLocalName() {
-		return unaliasedLocalName;
+	public String getAlias() {
+		return alias;
 	}
 
-	public String getFullPath() {
-		return fullPath;
+	public boolean isAliased() {
+		return alias != null;
 	}
 
 	public String getIdentifierForTableGroup() {
+		// todo (6.0) : is this `if` really needed?  seems this is already handled in constructors
 		if ( parent == null ) {
 			return fullPath;
 		}
 		return identifierForTableGroup;
+	}
+
+	public String getFullPath() {
+		return fullPath;
 	}
 
 	public boolean isParent(NavigablePath navigablePath) {

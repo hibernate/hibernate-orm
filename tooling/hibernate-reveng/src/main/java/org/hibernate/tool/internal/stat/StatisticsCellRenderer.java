@@ -29,7 +29,7 @@ public class StatisticsCellRenderer extends DefaultTreeCellRenderer {
 		String tooltip = null;
 		if(value instanceof Statistics) {
 			Statistics stats = (Statistics) value;
-			text = "Statistics " + formatter.format( new Date(stats.getStartTime()) );
+			text = "Statistics " + formatter.format( new Date(stats.getStart().toEpochMilli()) );
 			tooltip = stats.toString();
 		}
 		

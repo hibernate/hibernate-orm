@@ -56,12 +56,11 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode implements E
 
 	@Override
 	public NavigablePath resolveNavigablePath(Fetchable fetchable) {
-		if ( fetchable instanceof TableGroupProducer &&
-			!getNavigablePath().getUnaliasedLocalName().equals( getNavigablePath().getLocalName() ) ) {
+		if ( fetchable instanceof TableGroupProducer && getNavigablePath().isAliased() ) {
 			for ( TableGroupJoin tableGroupJoin : tableGroup.getTableGroupJoins() ) {
 				final NavigablePath navigablePath = tableGroupJoin.getNavigablePath();
 				if ( tableGroupJoin.getJoinedGroup().isFetched()
-						&& fetchable.getFetchableName().equals( navigablePath.getUnaliasedLocalName() )
+						&& fetchable.getFetchableName().equals( navigablePath.getLocalName() )
 						&& tableGroupJoin.getJoinedGroup().getModelPart() == fetchable ) {
 					return navigablePath;
 				}

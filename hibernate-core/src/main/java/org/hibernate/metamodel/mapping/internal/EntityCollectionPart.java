@@ -667,14 +667,14 @@ public class EntityCollectionPart
 					NavigablePath path = np.getParent();
 					// Fast path
 					if ( navigablePath.equals( path ) ) {
-						return targetKeyPropertyNames.contains( np.getUnaliasedLocalName() )
+						return targetKeyPropertyNames.contains( np.getLocalName() )
 								&& fkDescriptor.getKeyTable().equals( tableExpression );
 					}
 					final StringBuilder sb = new StringBuilder( np.getFullPath().length() );
-					sb.append( np.getUnaliasedLocalName() );
+					sb.append( np.getLocalName() );
 					while ( path != null && !navigablePath.equals( path ) ) {
 						sb.insert( 0, '.' );
-						sb.insert( 0, path.getUnaliasedLocalName() );
+						sb.insert( 0, path.getLocalName() );
 						path = path.getParent();
 					}
 					return navigablePath.equals( path )

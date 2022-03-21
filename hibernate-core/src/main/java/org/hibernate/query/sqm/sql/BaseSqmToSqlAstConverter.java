@@ -2983,7 +2983,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			prepareReusablePath( path, () -> null );
 
 			final NavigablePath navigablePath;
-			if ( CollectionPart.Nature.fromNameExact( path.getNavigablePath().getUnaliasedLocalName() ) != null ) {
+			if ( CollectionPart.Nature.fromNameExact( path.getNavigablePath().getLocalName() ) != null ) {
 				navigablePath = path.getLhs().getLhs().getNavigablePath();
 			}
 			else if ( path instanceof SqmTreatedRoot<?, ?> ) {
@@ -3648,7 +3648,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		assert parentTableGroup != null;
 
 		final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) parentTableGroup.getModelPart().findSubPart(
-				pluralPath.getNavigablePath().getUnaliasedLocalName(),
+				pluralPath.getNavigablePath().getLocalName(),
 				null
 		);
 		assert pluralAttributeMapping != null;
@@ -5344,7 +5344,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 								path.getLhs().getNavigablePath()
 						);
 						final NavigablePath navigablePath = parentTableGroup.getNavigablePath().append(
-								path.getNavigablePath().getUnaliasedLocalName(),
+								path.getNavigablePath().getLocalName(),
 								Long.toString( System.nanoTime() )
 						);
 						final TableGroup tableGroup = new SyntheticVirtualTableGroup(

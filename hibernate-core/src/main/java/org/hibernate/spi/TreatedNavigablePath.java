@@ -42,11 +42,6 @@ public class TreatedNavigablePath extends NavigablePath {
 	}
 
 	@Override
-	public String getLocalName() {
-		return getUnaliasedLocalName();
-	}
-
-	@Override
 	public int hashCode() {
 		return getFullPath().hashCode();
 	}

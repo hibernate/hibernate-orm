@@ -47,7 +47,10 @@ import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.internal.NamedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -372,14 +375,22 @@ public class MetadataBuildingProcess {
 		}
 
 		// add fallback type descriptors
-		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration
-				.getJdbcTypeRegistry();
+		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.UUID, SqlTypes.BINARY );
-		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.JSON, SqlTypes.VARBINARY );
+		jdbcTypeRegistry.addDescriptorIfAbsent( JsonJdbcType.INSTANCE );
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.INET, SqlTypes.VARBINARY );
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.INTERVAL_SECOND, SqlTypes.NUMERIC );
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.GEOMETRY, SqlTypes.VARBINARY );
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.POINT, SqlTypes.VARBINARY );
+
+		final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+		ddlTypeRegistry.addDescriptorIfAbsent(
+				new DdlTypeImpl(
+						SqlTypes.JSON,
+						ddlTypeRegistry.getTypeName( SqlTypes.VARCHAR, null, null, null ),
+						dialect
+				)
+		);
 
 		// add explicit application registered types
 		typeConfiguration

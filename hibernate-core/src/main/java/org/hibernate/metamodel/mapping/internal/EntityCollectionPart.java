@@ -18,6 +18,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.Map;
@@ -85,7 +86,6 @@ public class EntityCollectionPart
 	private final Nature nature;
 	private final EntityMappingType entityMappingType;
 	private final Set<String> targetKeyPropertyNames;
-	private final NotFoundAction notFoundAction;
 
 	private ModelPart fkTargetModelPart;
 	private ForeignKeyDescriptor fkDescriptor;
@@ -94,30 +94,28 @@ public class EntityCollectionPart
 			CollectionPersister collectionDescriptor,
 			Nature nature,
 			Value bootModelValue,
-			NotFoundAction notFoundAction,
+			@SuppressWarnings("unused") NotFoundAction notFoundAction,
 			EntityMappingType entityMappingType,
 			MappingModelCreationProcess creationProcess) {
-		this.notFoundAction = notFoundAction;
 		this.navigableRole = collectionDescriptor.getNavigableRole().appendContainer( nature.getName() );
 		this.collectionDescriptor = collectionDescriptor;
 		this.nature = nature;
 		this.entityMappingType = entityMappingType;
 
+		final PersistentClass entityBinding = creationProcess.getCreationContext()
+				.getMetadata()
+				.getEntityBinding( entityMappingType.getEntityName() );
 		final String referencedPropertyName;
-		final PersistentClass entityBinding;
+
 		if ( bootModelValue instanceof OneToMany ) {
 			final String mappedByProperty = collectionDescriptor.getMappedByProperty();
-			referencedPropertyName = mappedByProperty == null || mappedByProperty.isEmpty()
+			referencedPropertyName = StringHelper.isEmpty( mappedByProperty )
 					? null
 					: mappedByProperty;
-			entityBinding = ( (OneToMany) bootModelValue ).getBuildingContext().getMetadataCollector()
-					.getEntityBinding( entityMappingType.getEntityName() );
 		}
 		else {
 			final ToOne toOne = (ToOne) bootModelValue;
 			referencedPropertyName = toOne.getReferencedPropertyName();
-			entityBinding = toOne.getBuildingContext().getMetadataCollector()
-					.getEntityBinding( entityMappingType.getEntityName() );
 		}
 
 		if ( referencedPropertyName == null ) {
@@ -664,22 +662,20 @@ public class EntityCollectionPart
 						creationContext
 				),
 				(np, tableExpression) -> {
-					NavigablePath path = np.getParent();
-					// Fast path
-					if ( navigablePath.equals( path ) ) {
-						return targetKeyPropertyNames.contains( np.getLocalName() )
-								&& fkDescriptor.getKeyTable().equals( tableExpression );
+					if ( ! fkDescriptor.getKeyTable().equals( tableExpression ) ) {
+						return false;
 					}
-					final StringBuilder sb = new StringBuilder( np.getFullPath().length() );
-					sb.append( np.getLocalName() );
-					while ( path != null && !navigablePath.equals( path ) ) {
-						sb.insert( 0, '.' );
-						sb.insert( 0, path.getLocalName() );
-						path = path.getParent();
+
+					if ( navigablePath.equals( np.getParent() ) ) {
+						return targetKeyPropertyNames.contains( np.getLocalName() );
 					}
-					return navigablePath.equals( path )
-							&& targetKeyPropertyNames.contains( sb.toString() )
-							&& fkDescriptor.getKeyTable().equals( tableExpression );
+
+					final String relativePath = np.relativize( navigablePath );
+					if ( relativePath == null ) {
+						return false;
+					}
+
+					return targetKeyPropertyNames.contains( relativePath );
 				},
 				this,
 				explicitSourceAlias,

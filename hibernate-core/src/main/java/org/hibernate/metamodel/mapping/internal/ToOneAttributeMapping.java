@@ -1417,22 +1417,21 @@ public class ToOneAttributeMapping
 										if ( !canUseParentTableGroup ) {
 											return false;
 										}
-										NavigablePath path = np.getParent();
-										// Fast path
-										if ( navigablePath.equals( path ) ) {
-											return targetKeyPropertyNames.contains( np.getLocalName() )
-													&& identifyingColumnsTableExpression.equals( tableExpression );
+
+										if ( !identifyingColumnsTableExpression.equals( tableExpression ) ) {
+											return false;
 										}
-										final StringBuilder sb = new StringBuilder( np.getFullPath().length() );
-										sb.append( np.getLocalName() );
-										while ( path != null && !navigablePath.equals( path ) ) {
-											sb.insert( 0, '.' );
-											sb.insert( 0, path.getLocalName() );
-											path = path.getParent();
+
+										if ( navigablePath.equals( np.getParent() ) ) {
+											return targetKeyPropertyNames.contains( np.getLocalName() );
 										}
-										return navigablePath.equals( path )
-												&& targetKeyPropertyNames.contains( sb.toString() )
-												&& identifyingColumnsTableExpression.equals( tableExpression );
+
+										final String relativePath = np.relativize( navigablePath );
+										if ( relativePath == null ) {
+											return false;
+										}
+
+										return targetKeyPropertyNames.contains( relativePath );
 									}
 							),
 							null
@@ -1539,22 +1538,21 @@ public class ToOneAttributeMapping
 					if ( !canUseParentTableGroup || tableGroupProducer != ToOneAttributeMapping.this ) {
 						return false;
 					}
-					NavigablePath path = np.getParent();
-					// Fast path
-					if ( navigablePath.equals( path ) ) {
-						return targetKeyPropertyNames.contains( np.getLocalName() )
-								&& identifyingColumnsTableExpression.equals( tableExpression );
+
+					if ( !identifyingColumnsTableExpression.equals( tableExpression ) ) {
+						return false;
 					}
-					final StringBuilder sb = new StringBuilder( np.getFullPath().length() );
-					sb.append( np.getLocalName() );
-					while ( path != null && !navigablePath.equals( path ) ) {
-						sb.insert( 0, '.' );
-						sb.insert( 0, path.getLocalName() );
-						path = path.getParent();
+
+					if ( navigablePath.equals( np.getParent() ) ) {
+						return targetKeyPropertyNames.contains( np.getLocalName() );
 					}
-					return navigablePath.equals( path )
-							&& targetKeyPropertyNames.contains( sb.toString() )
-							&& identifyingColumnsTableExpression.equals( tableExpression );
+
+					final String relativePath = np.relativize( navigablePath );
+					if ( relativePath == null ) {
+						return false;
+					}
+
+					return targetKeyPropertyNames.contains( relativePath );
 				},
 				tableGroupProducer,
 				explicitSourceAlias,

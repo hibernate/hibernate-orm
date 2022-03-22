@@ -19,6 +19,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.FetchParent;
 
 /**
  * Descriptor for foreign-keys
@@ -81,7 +82,7 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValueMapping {
 	DomainResult<?> createKeyDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			DomainResultCreationState creationState);
+			FetchParent fetchParent, DomainResultCreationState creationState);
 
 	/**
 	 * Create a DomainResult for the target-side of the fk
@@ -89,18 +90,13 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValueMapping {
 	DomainResult<?> createTargetDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			DomainResultCreationState creationState);
-
-	DomainResult<?> createCollectionFetchDomainResult(
-			NavigablePath collectionPath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState);
+			FetchParent fetchParent, DomainResultCreationState creationState);
 
 	DomainResult<?> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			Nature side,
-			DomainResultCreationState creationState);
+			FetchParent fetchParent, DomainResultCreationState creationState);
 
 	Predicate generateJoinPredicate(
 			TableGroup targetSideTableGroup,

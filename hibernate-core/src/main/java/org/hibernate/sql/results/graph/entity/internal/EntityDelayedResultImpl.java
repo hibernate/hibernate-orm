@@ -40,6 +40,7 @@ public class EntityDelayedResultImpl implements DomainResult {
 		this.identifierResult = entityValuedModelPart.getForeignKeyDescriptor().createKeyDomainResult(
 				navigablePath.append( EntityIdentifierMapping.ROLE_LOCAL_NAME ),
 				rootTableGroup,
+				null,
 				creationState
 		);
 	}

@@ -22,6 +22,7 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
+import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -139,7 +140,7 @@ public class SqlAstProcessingStateImpl
 	public SqlSelection resolveSqlSelection(
 			Expression expression,
 			JavaType<?> javaType,
-			TypeConfiguration typeConfiguration) {
+			FetchParent fetchParent, TypeConfiguration typeConfiguration) {
 		throw new ConversionException( "Unexpected call to resolve SqlSelection outside of QuerySpec processing" );
 	}
 

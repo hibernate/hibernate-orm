@@ -130,7 +130,13 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, getUnderlyingJdbcMappingType(), tableGroup, creationState.getSqlAstCreationState() );
+		final SqlSelection sqlSelection = resolveSqlSelection(
+				navigablePath,
+				getUnderlyingJdbcMappingType(),
+				tableGroup,
+				null,
+				creationState.getSqlAstCreationState()
+		);
 
 		//noinspection unchecked
 		return new BasicResult(
@@ -146,11 +152,13 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 			NavigablePath navigablePath,
 			JdbcMapping jdbcMappingToUse,
 			TableGroup tableGroup,
+			FetchParent fetchParent,
 			SqlAstCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlExpressionResolver();
 		return expressionResolver.resolveSqlSelection(
 				resolveSqlExpression( navigablePath, jdbcMappingToUse, tableGroup, creationState ),
 				jdbcMappingToUse.getJavaTypeDescriptor(),
+				fetchParent,
 				creationState.getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
 	}
@@ -170,7 +178,13 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 
 		assert tableGroup != null;
 
-		final SqlSelection sqlSelection = resolveSqlSelection( fetchablePath, getUnderlyingJdbcMappingType(), tableGroup, creationState.getSqlAstCreationState() );
+		final SqlSelection sqlSelection = resolveSqlSelection(
+				fetchablePath,
+				getUnderlyingJdbcMappingType(),
+				tableGroup,
+				fetchParent,
+				creationState.getSqlAstCreationState()
+		);
 
 		return new BasicFetch<>(
 				sqlSelection.getValuesArrayPosition(),
@@ -188,7 +202,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		resolveSqlSelection( navigablePath, getUnderlyingJdbcMappingType(), tableGroup, creationState.getSqlAstCreationState() );
+		resolveSqlSelection( navigablePath, getUnderlyingJdbcMappingType(), tableGroup, null, creationState.getSqlAstCreationState() );
 	}
 
 	@Override
@@ -198,7 +212,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		selectionConsumer.accept(
-				resolveSqlSelection( navigablePath, getUnderlyingJdbcMappingType(), tableGroup, creationState.getSqlAstCreationState() ),
+				resolveSqlSelection( navigablePath, getUnderlyingJdbcMappingType(), tableGroup, null, creationState.getSqlAstCreationState() ),
 				getJdbcMapping()
 		);
 	}

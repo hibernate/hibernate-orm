@@ -88,6 +88,13 @@ public interface FetchParent extends DomainResultGraphNode {
 
 	Fetch findFetch(Fetchable fetchable);
 
+	default FetchParent getRoot() {
+		if ( this instanceof Fetch ) {
+			return ( (Fetch) this ).getFetchParent().getRoot();
+		}
+		return this;
+	}
+
 	default Fetch generateFetchableFetch(
 			Fetchable fetchable,
 			NavigablePath fetchablePath,

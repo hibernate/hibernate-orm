@@ -132,6 +132,7 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 						}
 				),
 				valueConverter.getDomainJavaType(),
+				null,
 				sessionFactory.getTypeConfiguration()
 		);
 

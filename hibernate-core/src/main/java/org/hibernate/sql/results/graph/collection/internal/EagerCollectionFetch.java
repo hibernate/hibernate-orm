@@ -90,8 +90,18 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 		final ForeignKeyDescriptor keyDescriptor = fetchedAttribute.getKeyDescriptor();
 		// The collection key must be fetched from the side of the declaring type of the attribute
 		// So that this is guaranteed to be not-null
-		collectionKeyResult = keyDescriptor.createTargetDomainResult( fetchedPath, parentTableGroup, creationState );
-		collectionValueKeyResult = keyDescriptor.createKeyDomainResult( fetchedPath, collectionTableGroup, creationState );
+		collectionKeyResult = keyDescriptor.createTargetDomainResult(
+				fetchedPath,
+				parentTableGroup,
+				fetchParent,
+				creationState
+		);
+		collectionValueKeyResult = keyDescriptor.createKeyDomainResult(
+				fetchedPath,
+				collectionTableGroup,
+				fetchParent,
+				creationState
+		);
 
 		fetches = creationState.visitFetches( this );
 		if ( fetchedAttribute.getIndexDescriptor() != null ) {

@@ -106,6 +106,7 @@ public class SelfRenderingFunctionSqlAstExpression
 						.resolveSqlSelection(
 								this,
 								type.getExpressibleJavaType(),
+								null,
 								creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
 						)
 						.getValuesArrayPosition(),
@@ -183,6 +184,7 @@ public class SelfRenderingFunctionSqlAstExpression
 		sqlExpressionResolver.resolveSqlSelection(
 				this,
 				type.getExpressibleJavaType(),
+				null,
 				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);
 	}

@@ -114,6 +114,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 									.createKeyDomainResult(
 											navigablePath.getParent(),
 											entityTableGroup,
+											this,
 											creationState
 									);
 						}

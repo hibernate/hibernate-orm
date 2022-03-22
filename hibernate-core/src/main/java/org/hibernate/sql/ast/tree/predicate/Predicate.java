@@ -40,6 +40,7 @@ public interface Predicate extends Expression, DomainResultProducer<Boolean> {
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				this,
 				javaType,
+				null,
 				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);
 
@@ -55,6 +56,7 @@ public interface Predicate extends Expression, DomainResultProducer<Boolean> {
 		sqlExpressionResolver.resolveSqlSelection(
 				this,
 				getExpressionType().getJdbcMappings().get( 0 ).getJavaTypeDescriptor(),
+				null,
 				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);
 	}

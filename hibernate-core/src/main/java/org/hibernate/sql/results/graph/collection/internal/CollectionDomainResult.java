@@ -56,6 +56,7 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 		fkResult = loadingAttribute.getKeyDescriptor().createKeyDomainResult(
 				loadingPath,
 				tableGroup,
+				this,
 				creationState
 		);
 

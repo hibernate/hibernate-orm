@@ -254,7 +254,7 @@ public class BasicAttributeMapping
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, true, creationState );
+		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, true, null, creationState );
 
 		//noinspection unchecked
 		return new BasicResult(
@@ -270,6 +270,7 @@ public class BasicAttributeMapping
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			boolean allowFkOptimization,
+			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
 		final TableReference tableReference = tableGroup.resolveTableReference(
@@ -291,6 +292,7 @@ public class BasicAttributeMapping
 						)
 				),
 				valueConverter == null ? getMappedType().getMappedJavaType() : valueConverter.getRelationalJavaType(),
+				fetchParent,
 				creationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
 	}
@@ -300,7 +302,7 @@ public class BasicAttributeMapping
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		resolveSqlSelection( navigablePath, tableGroup, true, creationState );
+		resolveSqlSelection( navigablePath, tableGroup, true, null, creationState );
 	}
 
 	@Override
@@ -309,7 +311,7 @@ public class BasicAttributeMapping
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		selectionConsumer.accept( resolveSqlSelection( navigablePath, tableGroup, true, creationState ), getJdbcMapping() );
+		selectionConsumer.accept( resolveSqlSelection( navigablePath, tableGroup, true, null, creationState ), getJdbcMapping() );
 	}
 
 	@Override
@@ -336,7 +338,7 @@ public class BasicAttributeMapping
 
 			assert tableGroup != null;
 
-			final SqlSelection sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, true, creationState );
+			final SqlSelection sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, true, fetchParent, creationState );
 			valuesArrayPosition = sqlSelection.getValuesArrayPosition();
 		}
 

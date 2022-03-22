@@ -247,6 +247,7 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 						}
 				),
 				jdbcMapping.getMappedJavaType(),
+				null,
 				domainResultCreationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
 	}

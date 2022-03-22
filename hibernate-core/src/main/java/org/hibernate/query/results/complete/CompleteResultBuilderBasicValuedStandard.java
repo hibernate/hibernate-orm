@@ -138,6 +138,7 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 						}
 				),
 				explicitJavaType,
+				null,
 				sessionFactory.getTypeConfiguration()
 		);
 

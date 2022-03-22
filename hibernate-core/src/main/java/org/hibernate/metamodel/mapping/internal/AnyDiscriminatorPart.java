@@ -274,6 +274,7 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				columnReference,
 				jdbcMapping().getMappedJavaType(),
+				fetchParent,
 				sessionFactory.getTypeConfiguration()
 		);
 

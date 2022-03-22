@@ -262,6 +262,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 				sqlExpression,
 				getExpressionType().getJavaType(),
+				null,
 				creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);
 	}

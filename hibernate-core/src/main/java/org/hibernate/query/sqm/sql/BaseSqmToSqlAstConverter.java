@@ -492,6 +492,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		this.deduplicateSelectionItems = deduplicateSelectionItems;
 
 		if ( statement instanceof SqmSelectStatement<?> ) {
+			final SqmQueryPart<?> queryPart = ( (SqmSelectStatement<?>) statement ).getQueryPart();
 			// NOTE: note the difference here between `JpaSelection#getSelectionItems`
 			//		and `SqmSelectClause#getSelections`.
 			//
@@ -502,13 +503,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			//		- `#getSelections` returns top-level selections.  These are ultimately the
 			//			domain-results of the query
 			this.domainResults = new ArrayList<>(
-					( (SqmSelectStatement<?>) statement ).getQueryPart()
-							.getFirstQuerySpec()
+					queryPart.getFirstQuerySpec()
 							.getSelectClause()
 							.getSelections()
 							.size()
 			);
 
+			// We can't deduplicate select items with query groups,
+			// otherwise a query might fail with inconsistent select items
+			//
+			// select e1.id, e1.id from Entity1 e1
+			// union all
+			// select e2.id, e2.parentId from Entity2 e2
+			if ( queryPart instanceof SqmQueryGroup<?> ) {
+				this.deduplicateSelectionItems = false;
+			}
 			final AppliedGraph appliedGraph = queryOptions.getAppliedGraph();
 			if ( appliedGraph != null && appliedGraph.getSemantic() != null && appliedGraph.getGraph() != null ) {
 				this.entityGraphTraversalState = new StandardEntityGraphTraversalStateImpl(
@@ -6914,8 +6923,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		public SqlSelection resolveSqlSelection(
 				Expression expression,
 				JavaType<?> javaType,
+				FetchParent fetchParent,
 				TypeConfiguration typeConfiguration) {
-			return delegate.resolveSqlSelection( expression, javaType, typeConfiguration );
+			return delegate.resolveSqlSelection( expression, javaType, fetchParent, typeConfiguration );
 		}
 
 		public void setSqmAliasedNodeCollector(SqmAliasedNodeCollector sqmAliasedNodeCollector) {
@@ -6967,8 +6977,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		public SqlSelection resolveSqlSelection(
 				Expression expression,
 				JavaType<?> javaType,
+				FetchParent fetchParent,
 				TypeConfiguration typeConfiguration) {
-			SqlSelection selection = delegate.resolveSqlSelection( expression, javaType, typeConfiguration );
+			SqlSelection selection = delegate.resolveSqlSelection( expression, javaType, fetchParent, typeConfiguration );
 			List<SqlSelection> sqlSelectionList = sqlSelectionsForSqmSelection[index];
 			if ( sqlSelectionList == null ) {
 				sqlSelectionsForSqmSelection[index] = sqlSelectionList = new ArrayList<>();

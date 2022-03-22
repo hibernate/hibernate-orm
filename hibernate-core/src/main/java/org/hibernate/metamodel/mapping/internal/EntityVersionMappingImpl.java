@@ -38,7 +38,6 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.VersionJavaType;
 
 /**
@@ -228,6 +227,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 						)
 				),
 				versionBasicType.getJdbcMapping().getJavaTypeDescriptor(),
+				fetchParent,
 				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
 
@@ -302,6 +302,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 						)
 				),
 				versionBasicType.getJdbcMapping().getJavaTypeDescriptor(),
+				null,
 				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
 	}

@@ -55,7 +55,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 	@Override
 	public void register(SqmPath<?> sqmPath) {
-		SqmTreeCreationLogger.LOGGER.tracef( "SqmProcessingIndex#register(SqmPath) : %s", sqmPath.getNavigablePath().getFullPath() );
+		SqmTreeCreationLogger.LOGGER.tracef( "SqmProcessingIndex#register(SqmPath) : %s", sqmPath.getNavigablePath() );
 
 		// Generally we:
 		//		1) add the path to the path-by-path map

@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -662,8 +663,11 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			for ( int i = 1; i < propertyPathParts.length; i++ ) {
 				if ( ! ( fetchable instanceof FetchableContainer ) ) {
 					throw new MappingException(
-							"Non-terminal property path [" + navigablePath.getFullPath()
-									+ " did not reference FetchableContainer"
+							String.format(
+									Locale.ROOT,
+									"Non-terminal property path did not reference FetchableContainer - %s ",
+									navigablePath
+							)
 					);
 				}
 				fetchable = (Fetchable) ( (FetchableContainer) fetchable ).findSubPart( propertyPathParts[i], null );
@@ -869,7 +873,11 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			this.tableAlias = hbmCollectionReturn.getAlias();
 			if ( tableAlias == null ) {
 				throw new MappingException(
-						"<return-collection/> did not specify alias [" + collectionPath.getFullPath() + "]"
+						String.format(
+								Locale.ROOT,
+								"<return-collection/> did not specify alias - %s",
+								collectionPath
+						)
 				);
 			}
 

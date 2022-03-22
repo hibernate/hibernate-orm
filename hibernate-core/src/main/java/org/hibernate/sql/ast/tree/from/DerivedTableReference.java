@@ -49,7 +49,7 @@ public abstract class DerivedTableReference extends AbstractTableReference {
 			boolean allowFkOptimization) {
 		throw new UnknownTableReferenceException(
 				tableExpression,
-				"TableReferences cannot be resolved relative to DerivedTableReferences - `" + tableExpression + "` : " + navigablePath.getFullPath()
+				"TableReferences cannot be resolved relative to DerivedTableReferences - `" + tableExpression + "` : " + navigablePath
 		);
 	}
 

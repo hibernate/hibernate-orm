@@ -290,7 +290,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			EntityLoadingLogging.ENTITY_LOADING_LOGGER.tracef(
 					"(%s) Beginning Initializer#resolveKey process for entity : %s",
 					StringHelper.collapse( this.getClass().getName() ),
-					getNavigablePath().getFullPath()
+					getNavigablePath()
 			);
 		}
 

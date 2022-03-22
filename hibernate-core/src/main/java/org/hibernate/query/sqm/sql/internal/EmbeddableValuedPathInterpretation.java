@@ -102,7 +102,7 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 
 	@Override
 	public String toString() {
-		return "EmbeddableValuedPathInterpretation(" + getNavigablePath().getFullPath() + ')';
+		return "EmbeddableValuedPathInterpretation(" + getNavigablePath() + ")";
 	}
 
 	@Override

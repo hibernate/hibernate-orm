@@ -43,7 +43,7 @@ public class UnionTableReference extends NamedTableReference {
 						Locale.ROOT,
 						"Unable to determine TableReference (`%s`) for `%s`",
 						tableExpression,
-						navigablePath.getFullPath()
+						navigablePath
 				)
 		);
 	}

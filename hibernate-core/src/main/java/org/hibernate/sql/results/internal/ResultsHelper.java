@@ -119,7 +119,7 @@ public class ResultsHelper {
 		initializerMap.forEach( (navigablePath, initializer) -> {
 			ResultsLogger.RESULTS_MESSAGE_LOGGER.debugf(
 					"    %s -> %s@%s (%s)",
-					navigablePath.getFullPath(),
+					navigablePath,
 					initializer,
 					initializer.hashCode(),
 					initializer.getInitializedPart()

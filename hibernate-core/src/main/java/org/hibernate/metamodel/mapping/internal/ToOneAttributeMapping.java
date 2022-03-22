@@ -899,8 +899,8 @@ public class ToOneAttributeMapping
 				final NavigablePath parentPath = grandparentNavigablePath.getParent();
 				// This can be null for a collection loader
 				if ( parentPath == null ) {
-					return grandparentNavigablePath.getFullPath().equals(
-							entityMappingType.findSubPart( bidirectionalAttributeName ).getNavigableRole().getFullPath()
+					return grandparentNavigablePath.equals(
+							entityMappingType.findSubPart( bidirectionalAttributeName ).getNavigableRole()
 					);
 				}
 				else {

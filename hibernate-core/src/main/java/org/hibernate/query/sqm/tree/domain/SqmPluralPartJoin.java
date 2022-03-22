@@ -128,7 +128,7 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> implements SqmQ
 		return String.format(
 				Locale.ROOT,
 				"SqmPluralPartJoin(%s : %s)",
-				getNavigablePath().getFullPath(),
+				getNavigablePath(),
 				getReferencedPathSource().getPathName()
 		);
 	}

@@ -252,7 +252,7 @@ public class LazyTableGroup extends DelegatingTableGroup {
 							Locale.ROOT,
 							"Unable to determine TableReference (`%s`) for `%s`",
 							tableExpression,
-							navigablePath.getFullPath()
+							navigablePath
 					)
 			);
 		}

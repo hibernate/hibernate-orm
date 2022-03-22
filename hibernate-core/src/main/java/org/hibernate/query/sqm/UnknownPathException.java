@@ -26,7 +26,7 @@ public class UnknownPathException extends SemanticException {
 						"Could not resolve path `%s` relative to %s (%s)",
 						name,
 						base.getReferencedPathSource().getSqmPathType().getTypeName(),
-						base.getNavigablePath().getFullPath()
+						base.getNavigablePath()
 				)
 		);
 	}

@@ -2291,7 +2291,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			throw new NotYetImplementedFor6Exception( "Path continuation from `id()` reference not yet implemented" );
 		}
 
-		throw new SemanticException( "Path does not resolve to an entity type '" + sqmPath.getNavigablePath().getFullPath() + "'" );
+		throw new SemanticException( "Path does not resolve to an entity type '" + sqmPath.getNavigablePath() + "'" );
 	}
 
 	@Override
@@ -2312,7 +2312,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				throw new SemanticException(
 						String.format(
 								"Path '%s' resolved to entity type '%s' which does not define a version",
-								sqmPath.getNavigablePath().getFullPath(), identifiableType.getTypeName()
+								sqmPath.getNavigablePath(),
+								identifiableType.getTypeName()
 						)
 				);
 			}
@@ -2320,7 +2321,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return sqmPath.get( versionAttribute );
 		}
 
-		throw new SemanticException( "Path does not resolve to an entity type '" + sqmPath.getNavigablePath().getFullPath() + "'" );
+		throw new SemanticException( "Path does not resolve to an entity type '" + sqmPath.getNavigablePath() + "'" );
 	}
 
 	@Override
@@ -2341,7 +2342,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				throw new SemanticException(
 						String.format(
 								"Path '%s' resolved to entity type '%s' which does not define a natural id",
-								sqmPath.getNavigablePath().getFullPath(), identifiableType.getTypeName()
+								sqmPath.getNavigablePath(),
+								identifiableType.getTypeName()
 						)
 				);
 			}
@@ -2349,7 +2351,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				throw new SemanticException(
 						String.format(
 								"Path '%s' resolved to entity type '%s' which defines multiple natural ids",
-								sqmPath.getNavigablePath().getFullPath(), identifiableType.getTypeName()
+								sqmPath.getNavigablePath(),
+								identifiableType.getTypeName()
 						)
 				);
 			}
@@ -2360,7 +2363,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return sqmPath.get( naturalIdAttribute );
 		}
 
-		throw new SemanticException( "Path does not resolve to an entity type '" + sqmPath.getNavigablePath().getFullPath() + "'" );
+		throw new SemanticException( "Path does not resolve to an entity type '" + sqmPath.getNavigablePath() + "'" );
 	}
 
 	@Override
@@ -2381,7 +2384,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					String.format(
 							Locale.ROOT,
 							"`%s` used in `fk()` only supported for to-one mappings, but found `%s`",
-							sqmPath.getNavigablePath().getFullPath(),
+							sqmPath.getNavigablePath(),
 							toOneReference
 					)
 			);

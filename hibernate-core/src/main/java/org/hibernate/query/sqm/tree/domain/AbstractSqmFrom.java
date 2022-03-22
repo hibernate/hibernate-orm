@@ -434,7 +434,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 						"Passed attribute name [%s] did not correspond to a collection (bag) reference [%s] relative to %s",
 						attributeName,
 						joinedPathSource,
-						getNavigablePath().getFullPath()
+						getNavigablePath()
 				)
 		);
 	}
@@ -465,7 +465,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 						"Passed attribute name [%s] did not correspond to a collection (set) reference [%s] relative to %s",
 						attributeName,
 						joinedPathSource,
-						getNavigablePath().getFullPath()
+						getNavigablePath()
 				)
 		);
 	}
@@ -496,7 +496,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 						"Passed attribute name [%s] did not correspond to a collection (list) reference [%s] relative to %s",
 						attributeName,
 						joinedPathSource,
-						getNavigablePath().getFullPath()
+						getNavigablePath()
 				)
 		);
 	}
@@ -527,7 +527,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 						"Passed attribute name [%s] did not correspond to a collection (map) reference [%s] relative to %s",
 						attributeName,
 						joinedPathSource,
-						getNavigablePath().getFullPath()
+						getNavigablePath()
 				)
 		);
 	}
@@ -659,7 +659,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 							"Passed attribute [%s] did not correspond to a joinable reference [%s] relative to %s",
 							joinedPathSource.getPathName(),
 							joinedPathSource,
-							getNavigablePath().getFullPath()
+							getNavigablePath()
 					)
 			);
 		}

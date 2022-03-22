@@ -387,8 +387,8 @@ import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.MULTIPLY;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.SUBTRACT;
-import static org.hibernate.query.sqm.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
+import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
 import static org.hibernate.query.sqm.TemporalUnit.SECOND;
 import static org.hibernate.query.sqm.UnaryArithmeticOperator.UNARY_MINUS;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
@@ -5438,9 +5438,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		// The result of timestamp subtraction is always a `Duration`, unless a unit is applied
 		// So use SECOND granularity with fractions as that is what the `DurationJavaType` expects
-		final TemporalUnit baseUnit = SECOND;
-		// For SECOND, the expected result type is Double
-		final BasicType<Double> diffResultType = basicType( Double.class );
+		final TemporalUnit baseUnit = NATIVE;
+		final BasicType<Long> diffResultType = basicType( Long.class );
 
 		if ( adjustedTimestamp != null ) {
 			if ( appliedByUnit != null ) {

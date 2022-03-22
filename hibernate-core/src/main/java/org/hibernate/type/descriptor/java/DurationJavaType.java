@@ -7,10 +7,7 @@
 package org.hibernate.type.descriptor.java;
 
 import java.math.BigDecimal;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.time.Duration;
-import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
@@ -23,13 +20,13 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
  * Descriptor for {@link Duration}, which is represented internally
  * as ({@code long seconds}, {@code int nanoseconds}), approximately
  * 28 decimal digits of precision. This quantity must be stored in
- * the database as a single integer with units of nanoseconds, since
- * the ANSI SQL {@code interval} type is not well-supported.
+ * the database as a single integer with units of nanoseconds, unless
+ * the ANSI SQL {@code interval} type is supported.
  *
  * In practice, the 19 decimal digits of a SQL {@code bigint} are
  * capable of representing six centuries in nanoseconds and are
  * sufficient for many applications. However, by default, we map
- * Java {@link Duration} to SQL {@code numeric(21,6)} here, which
+ * Java {@link Duration} to SQL {@code numeric(21)} here, which
  * can comfortably represent 60 millenia of nanos.
  *
  * @author Steve Ebersole
@@ -40,13 +37,7 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 	 * Singleton access
 	 */
 	public static final DurationJavaType INSTANCE = new DurationJavaType();
-	private static final DecimalFormatSymbols DECIMAL_FORMAT_SYMBOLS = DecimalFormatSymbols.getInstance( Locale.ENGLISH );
-	private static final ThreadLocal<DecimalFormat> DECIMAL_FORMAT = new ThreadLocal<>() {
-		@Override
-		protected DecimalFormat initialValue() {
-			return new DecimalFormat( "0.000000000", DECIMAL_FORMAT_SYMBOLS );
-		}
-	};
+	private static final BigDecimal BILLION = BigDecimal.valueOf( 1_000_000_000 );
 
 	public DurationJavaType() {
 		super( Duration.class, ImmutableMutabilityPlan.instance() );
@@ -54,7 +45,9 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( context.getPreferredSqlTypeCodeForDuration() );
+		return context.getTypeConfiguration()
+				.getJdbcTypeRegistry()
+				.getDescriptor( context.getPreferredSqlTypeCodeForDuration() );
 	}
 
 	@Override
@@ -94,8 +87,7 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 		if ( BigDecimal.class.isAssignableFrom( type ) ) {
 			return (X) new BigDecimal( duration.getSeconds() )
 					.movePointRight( 9 )
-					.add( new BigDecimal( duration.getNano() ) )
-					.movePointLeft( 9 );
+					.add( new BigDecimal( duration.getNano() ) );
 		}
 
 		if ( String.class.isAssignableFrom( type ) ) {
@@ -103,7 +95,7 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 		}
 
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) Long.valueOf( duration.toSeconds() );
+			return (X) Long.valueOf( duration.toNanos() );
 		}
 
 		throw unknownUnwrap( type );
@@ -120,15 +112,16 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 		}
 
 		if (value instanceof BigDecimal) {
-			return fromDecimal( value );
-		}
-
-		if (value instanceof Double) {
-			return fromDecimal( value );
+			final BigDecimal decimal = (BigDecimal) value;
+			final BigDecimal[] bigDecimals = decimal.divideAndRemainder( BILLION );
+			return Duration.ofSeconds(
+					bigDecimals[0].longValueExact(),
+					bigDecimals[1].longValueExact()
+			);
 		}
 
 		if (value instanceof Long) {
-			return Duration.ofSeconds( (Long) value );
+			return Duration.ofNanos( (Long) value );
 		}
 
 		if (value instanceof String) {
@@ -136,18 +129,6 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 		}
 
 		throw unknownWrap( value.getClass() );
-	}
-
-	private Duration fromDecimal(Object number) {
-		final String formatted = DECIMAL_FORMAT.get().format( number );
-		final int dotIndex = formatted.indexOf( '.' );
-		if ( dotIndex == -1 ) {
-			return Duration.ofSeconds( Long.parseLong( formatted ) );
-		}
-		return Duration.ofSeconds(
-				Long.parseLong( formatted.substring( 0, dotIndex ) ),
-				Long.parseLong( formatted.substring( dotIndex + 1 ) )
-		);
 	}
 
 	@Override
@@ -168,6 +149,13 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 
 	@Override
 	public int getDefaultSqlScale(Dialect dialect, JdbcType jdbcType) {
-		return 9;
+		if ( jdbcType.getDefaultSqlTypeCode() == SqlTypes.INTERVAL_SECOND ) {
+			// The default scale necessary is 9 i.e. nanosecond resolution
+			return 9;
+		}
+		else {
+			// For non-interval types, we use the type numeric(21)
+			return 0;
+		}
 	}
 }

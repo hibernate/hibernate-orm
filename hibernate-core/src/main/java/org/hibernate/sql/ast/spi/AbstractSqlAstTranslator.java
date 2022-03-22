@@ -177,7 +177,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
-import static org.hibernate.query.sqm.TemporalUnit.SECOND;
+import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
 import static org.hibernate.sql.ast.SqlTreePrinter.logSqlAst;
 import static org.hibernate.sql.results.graph.DomainResultGraphPrinter.logDomainResultGraph;
 
@@ -4439,9 +4439,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public void visitDuration(Duration duration) {
 		duration.getMagnitude().accept( this );
-		appendSql(
-				duration.getUnit().conversionFactor( SECOND, getDialect() )
-		);
+		if ( !duration.getExpressionType().getJdbcMapping().getJdbcType().isInterval() ) {
+			// Convert to NANOSECOND because DurationJavaType requires values in that unit
+			appendSql(
+					duration.getUnit().conversionFactor( NANOSECOND, getDialect() )
+			);
+		}
 	}
 
 	@Override

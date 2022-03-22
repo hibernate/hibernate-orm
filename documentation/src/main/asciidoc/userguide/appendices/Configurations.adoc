@@ -709,7 +709,7 @@ A configuration value key used to indicate that it is safe to cache.
 `*hibernate.jta.cacheUserTransaction*` (e.g. `true` or `false` (default value))::
 A configuration value key used to indicate that it is safe to cache.
 
-`*hibernate.transaction.flush_before_completion*` (e.g. `true` or `false` (default value))::
+`*hibernate.transaction.flush_before_completion*` (e.g. `true` (default value) or `false` )::
 Causes the session be flushed during the before completion phase of the transaction. If possible, use built-in and automatic session context management instead.
 
 `*hibernate.transaction.auto_close_session*` (e.g. `true` or `false` (default value))::

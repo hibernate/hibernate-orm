@@ -1100,6 +1100,11 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
+	public long getFractionalSecondPrecisionInNanos() {
+		return 100;
+	}
+
+	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		switch (unit) {
 			case NANOSECOND:

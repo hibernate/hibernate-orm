@@ -387,8 +387,8 @@ import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.MULTIPLY;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.SUBTRACT;
-import static org.hibernate.query.sqm.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
+import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
 import static org.hibernate.query.sqm.TemporalUnit.SECOND;
 import static org.hibernate.query.sqm.UnaryArithmeticOperator.UNARY_MINUS;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
@@ -5438,7 +5438,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		// The result of timestamp subtraction is always a `Duration`, unless a unit is applied
 		// So use SECOND granularity with fractions as that is what the `DurationJavaType` expects
-		final TemporalUnit baseUnit = SECOND; // todo: alternatively repurpose NATIVE to mean "INTERVAL SECOND"
+		final TemporalUnit baseUnit = NATIVE;
+		final BasicType<Long> diffResultType = basicType( Long.class );
 
 		if ( adjustedTimestamp != null ) {
 			if ( appliedByUnit != null ) {
@@ -5451,7 +5452,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// temporal type, so we must use it for both
 			// the diff, and then the subsequent add
 
-			DurationUnit unit = new DurationUnit( baseUnit, basicType( Integer.class ) );
+			DurationUnit unit = new DurationUnit( baseUnit, diffResultType );
 			Expression magnitude = applyScale( timestampdiff().expression( null, unit, right, left ) );
 			return timestampadd().expression(
 					(ReturnableType<?>) adjustedTimestampType, //TODO should be adjustedTimestamp.getType()
@@ -5467,7 +5468,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else {
 			// a plain "bare" Duration
-			DurationUnit unit = new DurationUnit( baseUnit, basicType( Integer.class ) );
+			DurationUnit unit = new DurationUnit( baseUnit, diffResultType );
 			BasicValuedMapping durationType = (BasicValuedMapping) expression.getNodeType();
 			Expression scaledMagnitude = applyScale( timestampdiff().expression(
 					(ReturnableType<?>) expression.getNodeType(),

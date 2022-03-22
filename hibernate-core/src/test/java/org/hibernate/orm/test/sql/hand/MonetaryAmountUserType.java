@@ -61,12 +61,12 @@ public class MonetaryAmountUserType implements CompositeUserType<MonetaryAmount>
 	}
 
 	@Override
-	public Object deepCopy(Object value) {
+	public MonetaryAmount deepCopy(MonetaryAmount value) {
 		return value; // MonetaryAmount is immutable
 	}
 
 	@Override
-	public boolean equals(Object x, Object y) {
+	public boolean equals(MonetaryAmount x, MonetaryAmount y) {
 		if ( x == y ) {
 			return true;
 		}
@@ -77,22 +77,22 @@ public class MonetaryAmountUserType implements CompositeUserType<MonetaryAmount>
 	}
 
 	@Override
-	public Serializable disassemble(Object value) throws HibernateException {
-		return (Serializable) value;
+	public Serializable disassemble(MonetaryAmount value) throws HibernateException {
+		return value;
 	}
 
 	@Override
-	public Object assemble(Serializable cached, Object owner) throws HibernateException {
-		return cached;
+	public MonetaryAmount assemble(Serializable cached, Object owner) throws HibernateException {
+		return (MonetaryAmount) cached;
 	}
 
 	@Override
-	public Object replace(Object original, Object target, Object owner) throws HibernateException {
+	public MonetaryAmount replace(MonetaryAmount original, MonetaryAmount target, Object owner) throws HibernateException {
 		return original;
 	}
 
 	@Override
-	public int hashCode(Object x) throws HibernateException {
+	public int hashCode(MonetaryAmount x) throws HibernateException {
 		return x.hashCode();
 	}
 

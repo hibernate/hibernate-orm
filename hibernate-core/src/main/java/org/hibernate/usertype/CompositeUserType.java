@@ -71,12 +71,12 @@ public interface CompositeUserType<J> extends EmbeddableInstantiator {
 	 * Compare two instances of the class mapped by this type for persistence "equality".
 	 * Equality of the persistent state.
 	 */
-	boolean equals(Object x, Object y);
+	boolean equals(J x, J y);
 
 	/**
 	 * Get a hashcode for the instance, consistent with persistence "equality"
 	 */
-	int hashCode(Object x);
+	int hashCode(J x);
 
 	/**
 	 * Return a deep copy of the persistent state, stopping at entities and at
@@ -86,7 +86,7 @@ public interface CompositeUserType<J> extends EmbeddableInstantiator {
 	 * @param value the object to be cloned, which may be null
 	 * @return Object a copy
 	 */
-	Object deepCopy(Object value);
+	J deepCopy(J value);
 
 	/**
 	 * Are objects of this type mutable?
@@ -104,7 +104,7 @@ public interface CompositeUserType<J> extends EmbeddableInstantiator {
 	 * @param value the object to be cached
 	 * @return a cacheable representation of the object
 	 */
-	Serializable disassemble(Object value);
+	Serializable disassemble(J value);
 
 	/**
 	 * Reconstruct an object from the cacheable representation. At the very least this
@@ -114,7 +114,7 @@ public interface CompositeUserType<J> extends EmbeddableInstantiator {
 	 * @param owner the owner of the cached object
 	 * @return a reconstructed object from the cacheable representation
 	 */
-	Object assemble(Serializable cached, Object owner);
+	J assemble(Serializable cached, Object owner);
 
 	/**
 	 * During merge, replace the existing (target) value in the entity we are merging to
@@ -128,7 +128,7 @@ public interface CompositeUserType<J> extends EmbeddableInstantiator {
 	 *
 	 * @return the value to be merged
 	 */
-	Object replace(Object detached, Object managed, Object owner);
+	J replace(J detached, J managed, Object owner);
 
 	@Override
 	default boolean isInstance(Object object, SessionFactoryImplementor sessionFactory) {

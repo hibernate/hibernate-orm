@@ -19,17 +19,17 @@ public abstract class AbstractTimeZoneStorageCompositeUserType<T> implements Com
 	public static final String ZONE_OFFSET_NAME = "zoneOffset";
 
 	@Override
-	public boolean equals(Object x, Object y) {
+	public boolean equals(T x, T y) {
 		return x.equals( y );
 	}
 
 	@Override
-	public int hashCode(Object x) {
+	public int hashCode(T x) {
 		return x.hashCode();
 	}
 
 	@Override
-	public Object deepCopy(Object value) {
+	public T deepCopy(T value) {
 		return value;
 	}
 
@@ -39,17 +39,18 @@ public abstract class AbstractTimeZoneStorageCompositeUserType<T> implements Com
 	}
 
 	@Override
-	public Serializable disassemble(Object value) {
+	public Serializable disassemble(T value) {
 		return (Serializable) value;
 	}
 
 	@Override
-	public Object assemble(Serializable cached, Object owner) {
-		return cached;
+	public T assemble(Serializable cached, Object owner) {
+		//noinspection unchecked
+		return (T) cached;
 	}
 
 	@Override
-	public Object replace(Object detached, Object managed, Object owner) {
+	public T replace(T detached, T managed, Object owner) {
 		return detached;
 	}
 

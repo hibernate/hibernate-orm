@@ -272,12 +272,31 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
+	public long getFractionalSecondPrecisionInNanos() {
+		// If the database does not support bigdatetime and bigtime types,
+		// we try to operate on milliseconds instead
+		if ( getVersion().isBefore( 15, 5 ) ) {
+			return 1_000_000;
+		}
+		else {
+			return 1_000;
+		}
+	}
+
+	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		//TODO!!
 		switch ( unit ) {
 			case NANOSECOND:
 			case NATIVE:
-				return "(datediff(mcs,?2,?3)*1000)";
+				// If the database does not support bigdatetime and bigtime types,
+				// we try to operate on milliseconds instead
+				if ( getVersion().isBefore( 15, 5 ) ) {
+					return "cast(datediff(ms,?2,?3) as numeric(21))";
+				}
+				else {
+					return "cast(datediff(mcs,cast(?2 as bigdatetime),cast(?3 as bigdatetime)) as numeric(21))";
+				}
 			default:
 				return "datediff(?1,?2,?3)";
 		}

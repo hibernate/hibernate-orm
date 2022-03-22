@@ -256,10 +256,17 @@ plural attribute classification
 See https://docs.jboss.org/hibernate/orm/6.0/userguide/html_single/Hibernate_User_Guide.html#collection-type-reg-ann
 for details of using `@CollectionTypeRegistration`
 
-=== Misc
+=== Duration mapping changes
 
-* The default type for `Duration` was changed to `NUMERIC` which could lead to schema validation errors
+Duration now maps to the type code `SqlType.INTERVAL_SECOND` by default, which maps to the SQL type `interval second`
+if possible, and falls back to `numeric(21)`.
+In either case, schema validation errors could occur as 5.x used the type code `Types.BIGINT`.
 
+Migration to `numeric(21)` should be easy. The migration to `interval second` might require a migration expression like
+`cast(cast(old as numeric(21,9) / 1000000000) as interval second(9))`.
+
+To retain backwards compatibility, configure the setting `hibernate.type.preferred_duration_jdbc_type_code` to `2`
+which stands for `Types.NUMERIC`.
 
 [[query]]
 == Query

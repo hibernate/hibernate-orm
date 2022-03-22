@@ -68,7 +68,7 @@ public class CompositeUserTypeJavaTypeWrapper<J> implements JavaType<J> {
 		if ( userType.equals( first, second ) ) {
 			return 0;
 		}
-		return Comparator.comparing( userType::hashCode ).compare( first, second );
+		return Integer.compare( userType.hashCode( first ), userType.hashCode( second ) );
 	}
 
 	@Override
@@ -136,8 +136,7 @@ public class CompositeUserTypeJavaTypeWrapper<J> implements JavaType<J> {
 
 		@Override
 		public J deepCopy(J value) {
-			//noinspection unchecked
-			return (J) userType.deepCopy( value );
+			return userType.deepCopy( value );
 		}
 
 		@Override
@@ -147,8 +146,7 @@ public class CompositeUserTypeJavaTypeWrapper<J> implements JavaType<J> {
 
 		@Override
 		public J assemble(Serializable cached, SharedSessionContract session) {
-			//noinspection unchecked
-			return (J) userType.disassemble( cached );
+			return userType.assemble( cached, session );
 		}
 	}
 }

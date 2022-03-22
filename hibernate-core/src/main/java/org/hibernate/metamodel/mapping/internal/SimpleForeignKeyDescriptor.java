@@ -157,31 +157,30 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	public DomainResult<?> createKeyDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
+			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		return createDomainResult(
 				navigablePath,
 				tableGroup,
 				keySide.getModelPart(),
+				fetchParent,
 				creationState
 		);
 	}
 
 	@Override
-	public DomainResult<?> createTargetDomainResult(NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
+	public DomainResult<?> createTargetDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			FetchParent fetchParent,
+			DomainResultCreationState creationState) {
 		return createDomainResult(
 				navigablePath,
 				tableGroup,
 				targetSide.getModelPart(),
+				fetchParent,
 				creationState
 		);
-	}
-
-	@Override
-	public DomainResult<?> createCollectionFetchDomainResult(
-			NavigablePath collectionPath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
-		return createDomainResult( collectionPath, tableGroup, targetSide.getModelPart(), creationState );
 	}
 
 	@Override
@@ -189,12 +188,12 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			Nature side,
-			DomainResultCreationState creationState) {
+			FetchParent fetchParent, DomainResultCreationState creationState) {
 		if ( side == Nature.KEY ) {
-			return createDomainResult( navigablePath, tableGroup, keySide.getModelPart(), creationState );
+			return createDomainResult( navigablePath, tableGroup, keySide.getModelPart(), fetchParent, creationState );
 		}
 		else {
-			return createDomainResult( navigablePath, tableGroup, targetSide.getModelPart(), creationState );
+			return createDomainResult( navigablePath, tableGroup, targetSide.getModelPart(), fetchParent, creationState );
 		}
 	}
 
@@ -204,7 +203,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		return createDomainResult( navigablePath, tableGroup, keySide.getModelPart(), creationState );
+		return createDomainResult( navigablePath, tableGroup, keySide.getModelPart(), null, creationState );
 	}
 
 	@Override
@@ -228,6 +227,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			SelectableMapping selectableMapping,
+			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
@@ -274,6 +274,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 								)
 				),
 				selectableMapping.getJdbcMapping().getJavaTypeDescriptor(),
+				fetchParent,
 				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
 

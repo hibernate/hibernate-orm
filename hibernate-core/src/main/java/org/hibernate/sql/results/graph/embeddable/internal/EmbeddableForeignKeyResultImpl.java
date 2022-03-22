@@ -18,6 +18,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
@@ -31,15 +32,23 @@ public class EmbeddableForeignKeyResultImpl<T>
 		implements EmbeddableResultGraphNode, DomainResult<T> {
 
 	private final String resultVariable;
+	private final FetchParent fetchParent;
 
 	public EmbeddableForeignKeyResultImpl(
 			NavigablePath navigablePath,
 			EmbeddableValuedModelPart embeddableValuedModelPart,
 			String resultVariable,
+			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		super( embeddableValuedModelPart.getEmbeddableTypeDescriptor(), navigablePath );
 		this.resultVariable = resultVariable;
+		this.fetchParent = fetchParent;
 		this.fetches = creationState.visitFetches( this );
+	}
+
+	@Override
+	public FetchParent getRoot() {
+		return fetchParent.getRoot();
 	}
 
 	@Override

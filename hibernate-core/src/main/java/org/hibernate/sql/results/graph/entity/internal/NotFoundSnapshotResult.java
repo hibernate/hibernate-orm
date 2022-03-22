@@ -44,8 +44,13 @@ public class NotFoundSnapshotResult implements DomainResult {
 		// however, that would mean a 1-1 with a join-table which
 		// is pretty odd mapping
 		final ForeignKeyDescriptor fkDescriptor = toOneMapping.getForeignKeyDescriptor();
-		this.keyResult = fkDescriptor.createKeyDomainResult( navigablePath, keyTableGroup, creationState );
-		this.targetResult = fkDescriptor.createTargetDomainResult( navigablePath, targetTableGroup, creationState );
+		this.keyResult = fkDescriptor.createKeyDomainResult( navigablePath, keyTableGroup, null, creationState );
+		this.targetResult = fkDescriptor.createTargetDomainResult(
+				navigablePath,
+				targetTableGroup,
+				null,
+				creationState
+		);
 	}
 
 	@Override

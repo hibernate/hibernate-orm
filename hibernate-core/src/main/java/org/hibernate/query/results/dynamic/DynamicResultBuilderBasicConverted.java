@@ -127,6 +127,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 						}
 				),
 				basicValueConverter.getDomainJavaType(),
+				null,
 				typeConfiguration
 		);
 

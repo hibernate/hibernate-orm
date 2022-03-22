@@ -120,6 +120,7 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 		final SqlSelection sqlSelection = creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 				resolvedExpression,
 				sqmExpressible.getExpressibleJavaType(),
+				null,
 				sessionFactory.getTypeConfiguration()
 		);
 
@@ -164,6 +165,7 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 		return creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 				resolvedExpression,
 				sqmExpressible.getExpressibleJavaType(),
+				null,
 				sessionFactory.getTypeConfiguration()
 		);
 	}

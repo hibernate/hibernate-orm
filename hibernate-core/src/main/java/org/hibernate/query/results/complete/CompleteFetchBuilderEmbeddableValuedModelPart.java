@@ -92,6 +92,7 @@ public class CompleteFetchBuilderEmbeddableValuedModelPart
 									}
 							),
 							modelPart.getJavaType(),
+							null,
 							creationStateImpl.getSessionFactory().getTypeConfiguration()
 					);
 				}

@@ -466,6 +466,7 @@ public class PluralAttributeMappingImpl
 			final DomainResult<?> collectionKeyDomainResult = getKeyDescriptor().createTargetDomainResult(
 					fetchablePath,
 					sqlAstCreationState.getFromClauseAccess().getTableGroup( fetchParent.getNavigablePath() ),
+					fetchParent,
 					creationState
 			);
 
@@ -517,6 +518,7 @@ public class PluralAttributeMappingImpl
 			collectionKeyDomainResult = getKeyDescriptor().createTargetDomainResult(
 					fetchablePath,
 					sqlAstCreationState.getFromClauseAccess().getTableGroup( fetchParent.getNavigablePath() ),
+					fetchParent,
 					creationState
 			);
 		}

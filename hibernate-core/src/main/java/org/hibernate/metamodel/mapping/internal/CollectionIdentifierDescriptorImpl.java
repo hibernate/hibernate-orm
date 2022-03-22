@@ -231,6 +231,7 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 						)
 				),
 				type.getJavaTypeDescriptor(),
+				fetchParent,
 				sessionFactory.getTypeConfiguration()
 		);
 
@@ -271,6 +272,7 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 						)
 				),
 				type.getJavaTypeDescriptor(),
+				null,
 				sessionFactory.getTypeConfiguration()
 		);
 

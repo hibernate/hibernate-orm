@@ -45,6 +45,7 @@ import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableForeignKeyResultImpl;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -187,6 +188,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	public DomainResult<?> createKeyDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
+			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		return createDomainResult(
 				navigablePath,
@@ -194,6 +196,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 				null,
 				keyTable,
 				keySide.getModelPart(),
+				fetchParent,
 				creationState
 		);
 	}
@@ -202,6 +205,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	public DomainResult<?> createTargetDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
+			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		assert tableGroup.getTableReference( navigablePath, targetTable ) != null;
 
@@ -211,35 +215,9 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 				null,
 				targetTable,
 				targetSide.getModelPart(),
+				fetchParent,
 				creationState
 		);
-	}
-
-	@Override
-	public DomainResult<?> createCollectionFetchDomainResult(
-			NavigablePath collectionPath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
-		if ( targetTable.equals( keyTable ) ) {
-			return createDomainResult(
-					collectionPath,
-					tableGroup,
-					null,
-					targetTable,
-					targetSide.getModelPart(),
-					creationState
-			);
-		}
-		else {
-			return createDomainResult(
-					collectionPath,
-					tableGroup,
-					null,
-					keyTable,
-					keySide.getModelPart(),
-					creationState
-			);
-		}
 	}
 
 	@Override
@@ -247,6 +225,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			Nature side,
+			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		if ( side == Nature.KEY ) {
 			return createDomainResult(
@@ -255,6 +234,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 					null,
 					keyTable,
 					keySide.getModelPart(),
+					fetchParent,
 					creationState
 			);
 		}
@@ -265,6 +245,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 					null,
 					targetTable,
 					targetSide.getModelPart(),
+					fetchParent,
 					creationState
 			);
 		}
@@ -276,7 +257,15 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		return createDomainResult( navigablePath, tableGroup, resultVariable, keyTable, keySide.getModelPart(), creationState );
+		return createDomainResult(
+				navigablePath,
+				tableGroup,
+				resultVariable,
+				keyTable,
+				keySide.getModelPart(),
+				null,
+				creationState
+		);
 	}
 
 	@Override
@@ -302,6 +291,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			String resultVariable,
 			String columnContainingTable,
 			EmbeddableValuedModelPart modelPart,
+			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		final NavigablePath resultNavigablePath;
 		if ( modelPart == keySide.getModelPart() ) {
@@ -334,6 +324,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 					resultNavigablePath,
 					modelPart,
 					resultVariable,
+					fetchParent,
 					creationState
 			);
 		}

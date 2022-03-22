@@ -97,6 +97,7 @@ public class DynamicFetchBuilderStandard
 							}
 					),
 					selectableMapping.getJdbcMapping().getMappedJavaType(),
+					null,
 					domainResultCreationState.getSqlAstCreationState()
 							.getCreationContext()
 							.getSessionFactory()

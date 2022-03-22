@@ -76,6 +76,7 @@ public class ConvertedQueryLiteral<D,R> implements Literal, DomainResultProducer
 		expressionResolver.resolveSqlSelection(
 				this,
 				relationalMapping.getExpressibleJavaType(),
+				null,
 				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);
 	}

@@ -86,6 +86,7 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, BasicVal
 		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
 				expression,
 				fetchable.getJavaType(),
+				parent,
 				domainResultCreationState.getSqlAstCreationState()
 						.getCreationContext()
 						.getSessionFactory()

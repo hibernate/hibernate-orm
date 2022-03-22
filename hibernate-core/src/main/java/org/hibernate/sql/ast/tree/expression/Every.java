@@ -53,6 +53,7 @@ public class Every implements Expression, DomainResultProducer {
 				creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 						this,
 						javaType,
+						null,
 						creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
 				).getValuesArrayPosition(),
 				resultVariable,
@@ -68,6 +69,7 @@ public class Every implements Expression, DomainResultProducer {
 		sqlExpressionResolver.resolveSqlSelection(
 				this,
 				type.getJdbcMappings().get( 0 ).getJavaTypeDescriptor(),
+				null,
 				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);
 	}

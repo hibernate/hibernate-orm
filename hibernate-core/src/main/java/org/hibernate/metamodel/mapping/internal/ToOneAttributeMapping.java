@@ -803,6 +803,7 @@ public class ToOneAttributeMapping
 						fetchablePath,
 						parentTableGroup,
 						sideNature,
+						fetchParent,
 						creationState
 				);
 			}
@@ -966,6 +967,7 @@ public class ToOneAttributeMapping
 						creationState.getSqlAstCreationState()
 								.getFromClauseAccess()
 								.findTableGroup( realFetchParent.getNavigablePath() ),
+						fetchParent,
 						creationState
 				);
 			}
@@ -1023,6 +1025,7 @@ public class ToOneAttributeMapping
 							fetchablePath,
 							tableGroup,
 							sideNature,
+							fetchParent,
 							creationState
 					),
 					isSelectByUniqueKey( sideNature )
@@ -1069,6 +1072,7 @@ public class ToOneAttributeMapping
 								keyResult = foreignKeyDescriptor.createKeyDomainResult(
 										fetchablePath,
 										parentTableGroup,
+										fetchParent,
 										creationState
 								);
 							}
@@ -1076,6 +1080,7 @@ public class ToOneAttributeMapping
 								keyResult = foreignKeyDescriptor.createTargetDomainResult(
 										fetchablePath,
 										parentTableGroup,
+										fetchParent,
 										creationState
 								);
 							}
@@ -1134,6 +1139,7 @@ public class ToOneAttributeMapping
 				fetchablePath,
 				parentTableGroup,
 				side,
+				fetchParent,
 				creationState
 		);
 		final boolean selectByUniqueKey = isSelectByUniqueKey( side );

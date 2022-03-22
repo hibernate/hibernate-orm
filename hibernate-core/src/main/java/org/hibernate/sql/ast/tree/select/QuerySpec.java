@@ -13,7 +13,6 @@ import java.util.function.Function;
 
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
-import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -154,6 +153,7 @@ public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContain
 						creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 								this,
 								jdbcMapping.getJavaTypeDescriptor(),
+								null,
 								typeConfiguration
 						);
 					}
@@ -175,6 +175,7 @@ public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContain
 			final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 					this,
 					descriptor,
+					null,
 					typeConfiguration
 			);
 

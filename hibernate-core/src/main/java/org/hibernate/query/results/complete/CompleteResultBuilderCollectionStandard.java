@@ -168,6 +168,7 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 							}
 					),
 					selectableMapping.getJdbcMapping().getMappedJavaType(),
+					null,
 					creationStateImpl.getSessionFactory().getTypeConfiguration()
 			);
 		};

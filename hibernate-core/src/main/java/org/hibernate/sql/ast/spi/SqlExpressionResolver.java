@@ -12,6 +12,7 @@ import java.util.function.Function;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -77,5 +78,5 @@ public interface SqlExpressionResolver {
 	SqlSelection resolveSqlSelection(
 			Expression expression,
 			JavaType<?> javaType,
-			TypeConfiguration typeConfiguration);
+			FetchParent fetchParent, TypeConfiguration typeConfiguration);
 }

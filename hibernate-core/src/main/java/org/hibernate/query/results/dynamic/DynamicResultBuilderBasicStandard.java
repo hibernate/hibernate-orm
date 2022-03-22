@@ -164,6 +164,7 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				expression,
 				javaType,
+				null,
 				sessionFactory.getTypeConfiguration()
 		);
 

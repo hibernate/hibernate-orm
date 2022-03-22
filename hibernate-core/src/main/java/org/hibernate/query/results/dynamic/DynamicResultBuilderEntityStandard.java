@@ -290,6 +290,7 @@ public class DynamicResultBuilderEntityStandard
 						}
 				),
 				jdbcMapping.getMappedJavaType(),
+				null,
 				domainResultCreationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
 	}

@@ -87,6 +87,7 @@ public class CompleteResultBuilderBasicModelPart
 						}
 				),
 				modelPart.getJavaType(),
+				null,
 				creationStateImpl.getSessionFactory().getTypeConfiguration()
 		);
 

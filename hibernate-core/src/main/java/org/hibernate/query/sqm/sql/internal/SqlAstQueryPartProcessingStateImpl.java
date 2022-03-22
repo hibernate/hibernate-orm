@@ -21,6 +21,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
+import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -65,6 +66,7 @@ public class SqlAstQueryPartProcessingStateImpl
 	// SqlExpressionResolver
 
 	private Map<Expression, SqlSelection> sqlSelectionMap;
+	private Map<FetchParent, Map<Expression, SqlSelection>> fetchParentSqlSelectionMap;
 
 	@Override
 	protected Map<Expression, SqlSelection> sqlSelectionMap() {
@@ -75,6 +77,7 @@ public class SqlAstQueryPartProcessingStateImpl
 	public SqlSelection resolveSqlSelection(
 			Expression expression,
 			JavaType<?> javaType,
+			FetchParent fetchParent,
 			TypeConfiguration typeConfiguration) {
 		final SqlSelection existing;
 		if ( sqlSelectionMap == null ) {
@@ -88,6 +91,31 @@ public class SqlAstQueryPartProcessingStateImpl
 		if ( existing != null && deduplicateSelectionItems ) {
 			return existing;
 		}
+		final Map<Expression, SqlSelection> fetchParentSelections;
+		if ( !deduplicateSelectionItems && fetchParent != null ) {
+			// De-duplicate selection items within the root of a fetch parent
+			final FetchParent root = fetchParent.getRoot();
+			if ( fetchParentSqlSelectionMap == null ) {
+				fetchParentSqlSelectionMap = new HashMap<>();
+				fetchParentSqlSelectionMap.put( root, fetchParentSelections = new HashMap<>() );
+			}
+			else {
+				final Map<Expression, SqlSelection> map = fetchParentSqlSelectionMap.get( root );
+				if ( map == null ) {
+					fetchParentSqlSelectionMap.put( root, fetchParentSelections = new HashMap<>() );
+				}
+				else {
+					fetchParentSelections = map;
+				}
+			}
+			final SqlSelection sqlSelection = fetchParentSelections.get( expression );
+			if ( sqlSelection != null ) {
+				return sqlSelection;
+			}
+		}
+		else {
+			fetchParentSelections = null;
+		}
 
 		final SelectClause selectClause = ( (QuerySpec) queryPart ).getSelectClause();
 		final int valuesArrayPosition = selectClause.getSqlSelections().size();
@@ -98,9 +126,13 @@ public class SqlAstQueryPartProcessingStateImpl
 				typeConfiguration
 		);
 
+		selectClause.addSqlSelection( sqlSelection );
+
 		sqlSelectionMap.put( expression, sqlSelection );
 
-		selectClause.addSqlSelection( sqlSelection );
+		if ( fetchParentSelections != null ) {
+			fetchParentSelections.put( expression, sqlSelection );
+		}
 
 		return sqlSelection;
 	}

@@ -215,7 +215,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, true, creationState );
+		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, true, null, creationState );
 
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
@@ -230,7 +230,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		resolveSqlSelection( navigablePath, tableGroup, true, creationState );
+		resolveSqlSelection( navigablePath, tableGroup, true, null, creationState );
 	}
 
 	@Override
@@ -240,7 +240,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		selectionConsumer.accept(
-				resolveSqlSelection( navigablePath, tableGroup, true, creationState ),
+				resolveSqlSelection( navigablePath, tableGroup, true, null, creationState ),
 				getJdbcMapping()
 		);
 	}
@@ -249,6 +249,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			boolean allowFkOptimization,
+			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState()
 				.getSqlExpressionResolver();
@@ -285,6 +286,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		return expressionResolver.resolveSqlSelection(
 				expression,
 				idType.getExpressibleJavaType(),
+				fetchParent,
 				sessionFactory.getTypeConfiguration()
 		);
 	}
@@ -383,7 +385,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 		assert tableGroup != null;
 
-		final SqlSelection sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, false, creationState );
+		final SqlSelection sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, false, fetchParent, creationState );
 		return new BasicFetch<>(
 				sqlSelection.getValuesArrayPosition(),
 				fetchParent,

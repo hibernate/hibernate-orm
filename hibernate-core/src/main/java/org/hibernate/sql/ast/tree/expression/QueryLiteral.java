@@ -105,6 +105,7 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				this,
 				type.getMappedType().getMappedJavaType(),
+				null,
 				creationState.getSqlAstCreationState()
 						.getCreationContext()
 						.getSessionFactory()
@@ -147,6 +148,7 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 		creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 				this,
 				type.getJdbcMapping().getJavaTypeDescriptor(),
+				null,
 				creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);
 	}

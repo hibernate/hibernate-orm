@@ -191,6 +191,66 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		return false;
 	}
 
+	/**
+	 * Ignores aliases in the resulting String
+	 */
+	public String relativize(NavigablePath base) {
+		// e.g.
+		//	- base = Root.sub
+		//	- this = Root.sub.stuff
+		//	- result = stuff
+		// e.g. 2
+		//	- base = Root.sub
+		//	- this = Root.sub.leaf.terminal
+		//	- result = leaf.terminal
+
+		final RelativePathCollector pathCollector = new RelativePathCollector();
+		relativize( base, pathCollector );
+		return pathCollector.resolve();
+	}
+
+	protected static class RelativePathCollector {
+		private boolean matchedBase;
+		private StringBuilder buffer;
+
+		public void collectPath(String path) {
+			if ( !matchedBase ) {
+				return;
+			}
+
+			if ( buffer == null ) {
+				buffer = new StringBuilder();
+			}
+			else {
+				buffer.append( '.' );
+			}
+
+			buffer.append( path );
+		}
+
+		public String resolve() {
+			if ( buffer == null ) {
+				return null;
+			}
+			return buffer.toString();
+		}
+	}
+
+	protected void relativize(NavigablePath base, RelativePathCollector collector) {
+		if ( this == base ) {
+			collector.matchedBase = true;
+			return;
+		}
+
+		if ( ! collector.matchedBase ) {
+			if ( parent != null ) {
+				parent.relativize( base, collector );
+			}
+		}
+
+		collector.collectPath( getLocalName() );
+	}
+
 	@Override
 	public String getFullPath() {
 		return fullPathCalculator.calculateFullPath( parent, localName, alias );

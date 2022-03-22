@@ -19,6 +19,7 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
@@ -108,6 +109,12 @@ public class SequenceStyleGenerator
 	 */
 	public static final String SEQUENCE_PARAM = "sequence_name";
 	public static final String ALT_SEQUENCE_PARAM = "sequence";
+
+	/**
+	 * The default value for {@link #SEQUENCE_PARAM}
+	 */
+	public static final String DEF_SEQUENCE_NAME = "hibernate_sequence";
+
 
 	/**
 	 * Specifies the suffix to use for an implicit sequence name - appended to the entity-name / collection-role
@@ -308,12 +315,41 @@ public class SequenceStyleGenerator
 			}
 		}
 
-		// otherwise, determine an implicit name to use
-		final String implicitName = determineImplicitName( params, jdbcEnv, serviceRegistry );
+		String fallbackSequenceName = DEF_SEQUENCE_NAME;
+		ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+		final Boolean preferGeneratorNameAsDefaultName = configurationService
+				.getSetting(
+						AvailableSettings.PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME,
+						StandardConverters.BOOLEAN,
+						true
+				);
+		if ( preferGeneratorNameAsDefaultName ) {
+			final String generatorName = params.getProperty( IdentifierGenerator.GENERATOR_NAME );
+			if ( StringHelper.isNotEmpty( generatorName ) ) {
+				fallbackSequenceName = generatorName;
+			}
+		}
+
+		final Boolean preferSequencePerEntity = configurationService.getSetting(
+				AvailableSettings.PREFER_SEQUENCE_PER_ENTITY,
+				StandardConverters.BOOLEAN,
+				true
+		);
+
+		if ( preferSequencePerEntity ) {
+			// otherwise, determine an implicit name to use
+			final String implicitName = determineImplicitName( params, jdbcEnv, serviceRegistry );
+			return new QualifiedNameParser.NameParts(
+					catalog,
+					schema,
+					jdbcEnv.getIdentifierHelper().toIdentifier( implicitName )
+			);
+		}
+
 		return new QualifiedNameParser.NameParts(
 				catalog,
 				schema,
-				jdbcEnv.getIdentifierHelper().toIdentifier( implicitName )
+				jdbcEnv.getIdentifierHelper().toIdentifier( fallbackSequenceName )
 		);
 	}
 

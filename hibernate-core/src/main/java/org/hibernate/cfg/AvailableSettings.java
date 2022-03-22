@@ -2474,6 +2474,34 @@ public interface AvailableSettings {
 	String SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY = "hibernate.id.sequence.increment_size_mismatch_strategy";
 
 	/**
+	 * True/false setting indicating if one sequence per entity should be created. Default value is `true`
+	 *
+	 * Users migrating from earlier versions using the legacy `hibernate_sequence` should set this value to `false`
+	 * @since 6.0
+	 */
+	String PREFER_SEQUENCE_PER_ENTITY = "hibernate.id.prefer_sequence_per_entity";
+
+	/**
+	 * True/false setting indicating whether the value specified for {@link jakarta.persistence.GeneratedValue#generator()}
+	 * should be used as the sequence/table name when no matching {@link jakarta.persistence.SequenceGenerator}
+	 * or {@link jakarta.persistence.TableGenerator} is found.
+	 *
+	 * The default value is `true` meaning that {@link jakarta.persistence.GeneratedValue#generator()} will be used as the
+	 * sequence/table name by default.  Users migrating from earlier versions using the legacy
+	 * `hibernate_sequence` name should disable this setting.
+	 */
+	String PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME = "hibernate.model.generator_name_as_sequence_name";
+
+
+	/**
+	 * This setting permits to provide a fallback name to be used as the sequence name.
+	 *
+	 * Users migrating from earlier versions using the legacy `hibernate_sequence` should set this value to 1
+	 * @since 6.0
+	 */
+	String HIBERNATE_ID_GENERATOR_DEFAULT_INCREMENT_SIZE = "hibernate.id.default_increment_size";
+
+	/**
 	 * Specifies the preferred JDBC type code for storing boolean values. When no
 	 * type code is explicitly specified, a sensible
 	 * {@link org.hibernate.dialect.Dialect#getPreferredSqlTypeCodeForBoolean()

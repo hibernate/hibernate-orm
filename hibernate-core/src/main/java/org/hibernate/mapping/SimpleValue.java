@@ -35,6 +35,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
@@ -45,6 +46,7 @@ import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -434,7 +436,26 @@ public abstract class SimpleValue implements KeyValue {
 
 		// default initial value and allocation size per-JPA defaults
 		params.setProperty( OptimizableGenerator.INITIAL_PARAM, String.valueOf( OptimizableGenerator.DEFAULT_INITIAL_VALUE ) );
-		params.setProperty( OptimizableGenerator.INCREMENT_PARAM, String.valueOf( OptimizableGenerator.DEFAULT_INCREMENT_SIZE ) );
+
+		final ConfigurationService cs = metadata.getMetadataBuildingOptions().getServiceRegistry()
+				.getService( ConfigurationService.class );
+		final String increment = cs.getSetting(
+				AvailableSettings.HIBERNATE_ID_GENERATOR_DEFAULT_INCREMENT_SIZE,
+				StandardConverters.STRING,
+				null
+		);
+
+		// if AvailableSettings.HIBERNATE_ID_GENERATOR_DEFAULT_INCREMENT_SIZE has been set use it has increment value param
+		if ( StringHelper.isNotEmpty( increment ) && StringHelper.isEmpty( params.getProperty( OptimizableGenerator.INCREMENT_PARAM ) ) ) {
+			params.setProperty( OptimizableGenerator.INCREMENT_PARAM, increment );
+		}
+		else {
+			params.setProperty(
+					OptimizableGenerator.INCREMENT_PARAM,
+					String.valueOf( OptimizableGenerator.DEFAULT_INCREMENT_SIZE )
+			);
+		}
+
 		//init the table here instead of earlier, so that we can get a quoted table name
 		//TODO: would it be better to simply pass the qualified table name, instead of
 		//      splitting it up into schema/catalog/table names
@@ -478,8 +499,7 @@ public abstract class SimpleValue implements KeyValue {
 		}
 
 		// TODO : we should pass along all settings once "config lifecycle" is hashed out...
-		final ConfigurationService cs = metadata.getMetadataBuildingOptions().getServiceRegistry()
-				.getService( ConfigurationService.class );
+
 
 		params.put(
 				IdentifierGenerator.CONTRIBUTOR_NAME,

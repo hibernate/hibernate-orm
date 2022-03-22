@@ -91,7 +91,15 @@ For a sequence id generation strategy Hibernate 6.0 does not create anymore a si
 
 When using `@GeneratedValue` without specifying a  `generator` value the default increment size also changed from 1 to 50.
 
-These changes require that code using a `@GeneratedValue` with a `GenerationType.SEQUENCE` or `GenerationType.AUTO` strategy with no `generator` value needs to be modified as follows:
+In order to maintain backward compatibility it is possible to add the following setting to the configuration:
+
+```
+hibernate.id.prefer_sequence_per_entity = hibernate_sequence
+
+hibernate.id.default_increment_size = 1
+```
+
+In alternative the code using a `@GeneratedValue` with a `GenerationType.SEQUENCE` or `GenerationType.AUTO` strategy with no `generator` value or with the `generator` value no matching any generator name (in this last case only if the configuration has the `PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME` set to `false`  ), needs to be modified as follows:
 ```
 @Id
 @GeneratedValue

@@ -332,7 +332,7 @@ public interface AvailableSettings {
 	/**
 	 * Specified the JDBC transaction isolation level.
 	 */
-	String ISOLATION = " hibernate.connection.isolation";
+	String ISOLATION = "hibernate.connection.isolation";
 
 	/**
 	 * Controls the autocommit mode of JDBC connections obtained from any
@@ -347,7 +347,7 @@ public interface AvailableSettings {
 	 * {@linkplain org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl
 	 * connection pool}.
 	 */
-	String POOL_SIZE = " hibernate.connection.pool_size";
+	String POOL_SIZE = "hibernate.connection.pool_size";
 
 	/**
 	 * Specifies a {@link javax.sql.DataSource}, either:
@@ -357,7 +357,7 @@ public interface AvailableSettings {
 	 * </ul>
 	 * For JNDI names, see also {@link #JNDI_CLASS}, {@link #JNDI_URL}, {@link #JNDI_PREFIX}, etc.
 	 */
-	String DATASOURCE = " hibernate.connection.datasource";
+	String DATASOURCE = "hibernate.connection.datasource";
 
 	/**
 	 * Allows a user to tell Hibernate that the connections we obtain from the configured

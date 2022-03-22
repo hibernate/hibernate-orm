@@ -7,6 +7,7 @@
 package org.hibernate.spi;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import org.hibernate.Incubating;
 import org.hibernate.internal.util.StringHelper;
@@ -25,41 +26,9 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	private final NavigablePath parent;
 	private final String localName;
 	private final String alias;
-
 	private final String identifierForTableGroup;
-
-	private final String fullPath;
-
-	public NavigablePath(NavigablePath parent, String navigableName) {
-		this.parent = parent;
-		this.alias = null;
-
-		// the _identifierMapper is a "hidden property" on entities with composite keys.
-		// concatenating it will prevent the path from correctly being used to look up
-		// various things such as criteria paths and fetch profile association paths
-		if ( IDENTIFIER_MAPPER_PROPERTY.equals( navigableName ) ) {
-			this.localName = "";
-			this.identifierForTableGroup = parent != null ? parent.getIdentifierForTableGroup() : "";
-
-			this.fullPath = parent != null ? parent.getFullPath() : "";
-		}
-		else {
-			this.localName = navigableName;
-			if ( parent != null ) {
-				final String parentFullPath = parent.getFullPath();
-				this.fullPath = StringHelper.isEmpty( parentFullPath )
-						? navigableName
-						: parentFullPath + "." + navigableName;
-				this.identifierForTableGroup = StringHelper.isEmpty( parent.getIdentifierForTableGroup() )
-						? navigableName
-						: parent.getIdentifierForTableGroup() + "." + navigableName;
-			}
-			else {
-				this.fullPath = navigableName;
-				this.identifierForTableGroup = navigableName;
-			}
-		}
-	}
+	private final FullPathCalculator fullPathCalculator;
+	private final int hashCode;
 
 	public NavigablePath(String localName) {
 		this( localName, null );
@@ -67,88 +36,69 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 
 	public NavigablePath(String rootName, String alias) {
 		this.parent = null;
-		this.alias = StringHelper.nullIfEmpty( alias );
+		this.alias = alias = StringHelper.nullIfEmpty( alias );
 		this.localName = rootName;
 		this.identifierForTableGroup = rootName;
 
-		this.fullPath = alias == null ? rootName : rootName + "(" + alias + ")";
+		this.fullPathCalculator = NavigablePath::calculateRootFullPath;
+
+		this.hashCode = localName.hashCode() + ( alias == null ? 0 : alias.hashCode() );
 	}
 
-	public NavigablePath(NavigablePath parent, String property, String alias) {
-		alias = StringHelper.nullIfEmpty( alias );
-		final String navigableName = alias == null
-				? property
-				: property + '(' + alias + ')';
+	public NavigablePath(NavigablePath parent, String navigableName) {
+		this( parent, navigableName, null );
+	}
+
+	public NavigablePath(NavigablePath parent, String localName, String alias) {
+		assert parent != null;
 
 		this.parent = parent;
-		this.alias = alias;
+		this.alias = alias = StringHelper.nullIfEmpty( alias );
+
+		final String aliasedLocalName = alias == null
+				? localName
+				: localName + '(' + alias + ')';
+
+		this.hashCode = parent.hashCode() + aliasedLocalName.hashCode();
 
 		// the _identifierMapper is a "hidden property" on entities with composite keys.
 		// concatenating it will prevent the path from correctly being used to look up
 		// various things such as criteria paths and fetch profile association paths
-		if ( IDENTIFIER_MAPPER_PROPERTY.equals( navigableName ) ) {
-			this.fullPath = parent != null ? parent.getFullPath() : "";
+		if ( IDENTIFIER_MAPPER_PROPERTY.equals( localName ) ) {
 			this.localName = "";
-			identifierForTableGroup = parent != null ? parent.getFullPath() : "";
+			this.identifierForTableGroup = parent.getFullPath();
+			this.fullPathCalculator = NavigablePath::calculateIdMapperFullPath;
 		}
 		else {
-			this.localName = property;
-			if ( parent != null ) {
-				final String parentFullPath = parent.getFullPath();
-				this.fullPath = StringHelper.isEmpty( parentFullPath )
-						? navigableName
-						: parentFullPath + "." + navigableName;
-				this.identifierForTableGroup = StringHelper.isEmpty( parent.getIdentifierForTableGroup() )
-						? navigableName
-						: parent.getIdentifierForTableGroup() + "." + property;
-			}
-			else {
-				this.fullPath = navigableName;
-				this.identifierForTableGroup = property;
-			}
+			this.localName = localName;
+			this.identifierForTableGroup = StringHelper.isEmpty( parent.getIdentifierForTableGroup() )
+					? aliasedLocalName
+					: parent.getIdentifierForTableGroup() + "." + localName;
+			this.fullPathCalculator = NavigablePath::calculateNormalFullPath;
 		}
-	}
-
-	public NavigablePath() {
-		this( "" );
 	}
 
 	public NavigablePath(
 			NavigablePath parent,
-			String fullPath,
 			String localName,
-			String identifierForTableGroup) {
+			String alias,
+			String identifierForTableGroup,
+			FullPathCalculator fullPathCalculator,
+			int hashCode) {
 		this.parent = parent;
-		this.alias = null;
-		this.fullPath = fullPath;
 		this.localName = localName;
+		this.hashCode = hashCode;
+		this.alias = StringHelper.nullIfEmpty( alias );
 		this.identifierForTableGroup = identifierForTableGroup;
+		this.fullPathCalculator = fullPathCalculator;
 	}
 
-	public NavigablePath treatAs(String entityName) {
-		return new TreatedNavigablePath( this, entityName );
-	}
-
-	public NavigablePath treatAs(String entityName, String alias) {
-		return new TreatedNavigablePath( this, entityName, alias );
-	}
-
-	public NavigablePath append(String property) {
-		return new NavigablePath( this, property );
-	}
-
-	public NavigablePath append(String property, String alias) {
-		return new NavigablePath( this, property, alias );
-	}
-
+	@Override
 	public NavigablePath getParent() {
 		return parent instanceof TreatedNavigablePath ? parent.getParent() : parent;
 	}
 
-	public NavigablePath getRealParent() {
-		return parent;
-	}
-
+	@Override
 	public String getLocalName() {
 		return localName;
 	}
@@ -162,17 +112,75 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	}
 
 	public String getIdentifierForTableGroup() {
-		// todo (6.0) : is this `if` really needed?  seems this is already handled in constructors
-		if ( parent == null ) {
-			return fullPath;
-		}
 		return identifierForTableGroup;
 	}
 
-	public String getFullPath() {
-		return fullPath;
+	@Override
+	public int hashCode() {
+		return hashCode;
 	}
 
+	@Override
+	public boolean equals(Object other) {
+		if ( this == other ) {
+			return true;
+		}
+
+		if ( other == null ) {
+			return false;
+		}
+
+		final DotIdentifierSequence otherPath = (DotIdentifierSequence) other;
+		if ( ! localNamesMatch( otherPath ) ) {
+			return false;
+		}
+
+		if ( otherPath instanceof NavigablePath ) {
+			final NavigablePath otherNavigablePath = (NavigablePath) otherPath;
+			if ( ! Objects.equals( getAlias(), otherNavigablePath.getAlias() ) ) {
+				return false;
+			}
+		}
+
+		return Objects.equals( getParent(), otherPath.getParent() );
+	}
+
+	protected boolean localNamesMatch(DotIdentifierSequence other) {
+		if ( other instanceof EntityIdentifierNavigablePath ) {
+			return localNamesMatch( (EntityIdentifierNavigablePath) other );
+		}
+
+		return Objects.equals( getLocalName(), other.getLocalName() );
+	}
+
+	protected boolean localNamesMatch(EntityIdentifierNavigablePath other) {
+		return Objects.equals( getLocalName(), other.getLocalName() )
+				|| Objects.equals( getLocalName(), other.getIdentifierAttributeName() );
+	}
+
+	public NavigablePath append(String property) {
+		return new NavigablePath( this, property );
+	}
+
+	public NavigablePath append(String property, String alias) {
+		return new NavigablePath( this, property, alias );
+	}
+
+	public NavigablePath treatAs(String entityName) {
+		return new TreatedNavigablePath( this, entityName );
+	}
+
+	public NavigablePath treatAs(String entityName, String alias) {
+		return new TreatedNavigablePath( this, entityName, alias );
+	}
+
+	public NavigablePath getRealParent() {
+		return parent;
+	}
+
+	/**
+	 * Determine whether this path is part of the given path's parent
+	 */
 	public boolean isParent(NavigablePath navigablePath) {
 		while ( navigablePath != null ) {
 			if ( this.equals( navigablePath.getParent() ) ) {
@@ -184,44 +192,48 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	}
 
 	@Override
+	public String getFullPath() {
+		return fullPathCalculator.calculateFullPath( parent, localName, alias );
+	}
+
+	@Override
 	public String toString() {
-		return fullPath;
+		return getFullPath();
 	}
 
-	@Override
-	public int hashCode() {
-		return fullPath.hashCode();
+	/**
+	 * Effectively a tri-function
+	 */
+	@FunctionalInterface
+	protected interface FullPathCalculator extends Serializable {
+		String calculateFullPath(NavigablePath parent, String localName, String alias);
 	}
 
-	@Override
-	public boolean equals(Object other) {
-		if ( this == other ) {
-			return true;
-		}
+	/**
+	 * The pattern used for root NavigablePaths
+	 */
+	protected static String calculateRootFullPath(NavigablePath parent, String rootName, String alias) {
+		assert parent == null;
+		return alias == null ? rootName : rootName + "(" + alias + ")";
+	}
 
-		if ( other instanceof EntityIdentifierNavigablePath ) {
-			final EntityIdentifierNavigablePath otherPath = (EntityIdentifierNavigablePath) other;
-			return otherPath.equals( this );
-		}
+	/**
+	 * The normal pattern used for the "full path"
+	 */
+	private static String calculateNormalFullPath(NavigablePath parent, String localName, String alias) {
+		assert parent != null;
 
-		if ( ! ( other instanceof NavigablePath ) ) {
-			return false;
-		}
+		final String parentFullPath = parent.getFullPath();
+		final String baseFullPath = StringHelper.isEmpty( parentFullPath )
+				? localName
+				: parentFullPath + "." + localName;
+		return alias == null ? baseFullPath : baseFullPath + "(" + alias + ")";
+	}
 
-		final NavigablePath otherPath = (NavigablePath) other;
-
-		// todo (6.0) : checking the full paths is definitely better performance
-		//		But I'm not sure it is correct in all cases.  Take cases referencing
-		//		an identifier at some level - the actual EntityIdentifierNavigablePath
-		//		subclass has special handling for one path using the "role name" (`"{id}"`)
-		//		while the other might instead use the attribute name
-//		return Objects.equals( getFullPath(), otherPath.getFullPath() );
-
-		if ( getParent() == null ) {
-			return otherPath.getParent() == null;
-		}
-
-		return getParent().equals( otherPath.getParent() )
-				&& getLocalName().equals( otherPath.getLocalName() );
+	/**
+	 * Pattern used for `_identifierMapper`
+	 */
+	protected static String calculateIdMapperFullPath(NavigablePath parent, String localName, String alias) {
+		return parent != null ? parent.getFullPath() : "";
 	}
 }

@@ -54,6 +54,6 @@ public class EntityResultInitializer extends AbstractEntityInitializer {
 
 	@Override
 	public String toString() {
-		return CONCRETE_NAME + "(" + getNavigablePath().getFullPath() + ")";
+		return CONCRETE_NAME + "(" + getNavigablePath() + ")";
 	}
 }

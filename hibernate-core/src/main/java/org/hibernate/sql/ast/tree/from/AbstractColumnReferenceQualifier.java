@@ -46,7 +46,7 @@ public abstract class AbstractColumnReferenceQualifier implements ColumnReferenc
 							Locale.ROOT,
 							"Unable to determine TableReference (`%s`) for `%s`",
 							tableExpression,
-							navigablePath.getFullPath()
+							navigablePath
 					)
 			);
 		}

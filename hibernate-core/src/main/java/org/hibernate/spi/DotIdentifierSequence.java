@@ -30,6 +30,9 @@ public interface DotIdentifierSequence {
 	/**
 	 * The full sequence text.  E.g., given the sequence `a.b.c`,
 	 * this returns `a.b.c`
+	 *
+	 * @implNote This method may dynamically build the returned
+	 * String and should be avoided for critical paths (comparisons, e.g.).
 	 */
 	String getFullPath();
 

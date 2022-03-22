@@ -407,8 +407,11 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			for ( int i = 1; i < propertyPathParts.length; i++ ) {
 				if ( ! ( subPart instanceof ModelPartContainer ) ) {
 					throw new MappingException(
-							"Non-terminal property path [" + navigablePath.getFullPath()
-									+ " did not reference FetchableContainer"
+							String.format(
+									Locale.ROOT,
+									"Non-terminal property path did not reference FetchableContainer - %s ",
+									navigablePath
+							)
 					);
 				}
 				navigablePath = navigablePath.append( propertyPathParts[ i ] );

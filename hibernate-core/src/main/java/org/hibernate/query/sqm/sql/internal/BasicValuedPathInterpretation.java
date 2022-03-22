@@ -85,7 +85,7 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 				}
 			}
 
-			throw new SemanticException( "`" + sqmPath.getNavigablePath().getFullPath() + "` did not reference a known model part" );
+			throw new SemanticException( "`" + sqmPath.getNavigablePath() + "` did not reference a known model part" );
 		}
 
 		final TableReference tableReference = tableGroup.resolveTableReference(
@@ -148,7 +148,7 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 
 	@Override
 	public String toString() {
-		return "BasicValuedPathInterpretation(" + getNavigablePath().getFullPath() + ')';
+		return "BasicValuedPathInterpretation(" + getNavigablePath() + ")";
 	}
 
 	@Override

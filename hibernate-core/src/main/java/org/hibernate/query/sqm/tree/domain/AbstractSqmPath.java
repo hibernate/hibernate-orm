@@ -195,6 +195,6 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + "(" + navigablePath.getFullPath() + ")";
+		return getClass().getSimpleName() + "(" + navigablePath + ")";
 	}
 }

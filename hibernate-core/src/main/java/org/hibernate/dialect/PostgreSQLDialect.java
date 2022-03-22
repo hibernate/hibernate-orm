@@ -330,6 +330,9 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
+		if ( unit == null ) {
+			return "(?3-?2)";
+		}
 		if ( toTemporalType != TemporalType.TIMESTAMP && fromTemporalType != TemporalType.TIMESTAMP && unit == DAY ) {
 			// special case: subtraction of two dates
 			// results in an integer number of days

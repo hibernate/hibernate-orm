@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
@@ -79,7 +80,7 @@ public class TimestampdiffFunction
 		final Expression from = (Expression) arguments.get( 1 );
 		final Expression to = (Expression) arguments.get( 2 );
 
-		patternRenderer( field.getUnit(), from, to ).render( sqlAppender, arguments, walker );
+		patternRenderer( field == null ? null : field.getUnit(), from, to ).render( sqlAppender, arguments, walker );
 	}
 
 	private PatternRenderer patternRenderer(TemporalUnit unit, Expression from, Expression to) {
@@ -99,7 +100,9 @@ public class TimestampdiffFunction
 				impliedResultType != null
 						? impliedResultType
 						: (ReturnableType<?>) field.getExpressionType().getJdbcMapping(),
-				field.getExpressionType()
+				field != null
+						? field.getExpressionType()
+						: (JdbcMappingContainer) impliedResultType
 		);
 	}
 

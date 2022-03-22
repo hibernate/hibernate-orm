@@ -516,6 +516,9 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
+		if ( unit == null ) {
+			return "(?3-?2)";
+		}
 		switch (unit) {
 			case YEAR:
 				return "(extract(year from ?3)-extract(year from ?2))";

@@ -398,6 +398,9 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
+		if ( unit == null ) {
+			return "(?3-?2)";
+		}
 		return "datediff(?1,?2,?3)";
 	}
 

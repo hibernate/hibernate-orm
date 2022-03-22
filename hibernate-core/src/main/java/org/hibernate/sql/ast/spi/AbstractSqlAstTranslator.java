@@ -4439,10 +4439,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public void visitDuration(Duration duration) {
 		duration.getMagnitude().accept( this );
-		// Convert to NANOSECOND because DurationJavaType requires values in that unit
-		appendSql(
-				duration.getUnit().conversionFactor( NANOSECOND, getDialect() )
-		);
+		if ( !duration.getExpressionType().getJdbcMapping().getJdbcType().isInterval() ) {
+			// Convert to NANOSECOND because DurationJavaType requires values in that unit
+			appendSql(
+					duration.getUnit().conversionFactor( NANOSECOND, getDialect() )
+			);
+		}
 	}
 
 	@Override

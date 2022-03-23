@@ -67,10 +67,6 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 			return false;
 		}
 
-		if ( keySource.hasMultiValuedParameterBindingsChecker().get() ) {
-			// cannot cache query plans if there are multi-valued param bindings
-			return false;
-		}
 		if ( keySource.hasMultiValuedParameterBindingsChecker().get() == TRUE ) {
 			// todo (6.0) : this one may be ok because of how I implemented multi-valued param handling
 			//		- the expansion is done per-execution based on the "static" SQM
@@ -155,11 +151,6 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 
 	@Override
 	public int hashCode() {
-		int result = query.hashCode();
-		result = 31 * result + ( resultType != null ? resultType.hashCode() : 0 );
-		result = 31 * result + ( lockOptions != null ? lockOptions.hashCode() : 0 );
-		result = 31 * result + ( tupleTransformer != null ? tupleTransformer.hashCode() : 0 );
-		result = 31 * result + ( resultListTransformer != null ? resultListTransformer.hashCode() : 0 );
-		return result;
+		return query.hashCode();
 	}
 }

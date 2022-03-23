@@ -285,24 +285,6 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		abstract <K, V> EvictionPolicy<K, V> make(Segment<K, V> s, int capacity, float lf);
 	}
 
-	public interface EvictionListener<K, V> {
-		void onEntryEviction(Map<K, V> evicted);
-
-		void onEntryChosenForEviction(V internalCacheEntry);
-	}
-
-	static final class NullEvictionListener<K, V> implements EvictionListener<K, V> {
-		@Override
-		public void onEntryEviction(Map<K, V> evicted) {
-			// Do nothing.
-		}
-
-		@Override
-		public void onEntryChosenForEviction(V internalCacheEntry) {
-			// Do nothing.
-		}
-	}
-
 	public interface EvictionPolicy<K, V> {
 
 		int MAX_BATCH_SIZE = 64;
@@ -314,20 +296,16 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		 * <p/>
 		 * <p/>
 		 * Set cannot be null but could possibly be an empty set.
-		 *
-		 * @return set of evicted entries.
 		 */
-		Set<HashEntry<K, V>> execute();
+		void execute();
 
 		/**
 		 * Invoked to notify EvictionPolicy implementation that there has been an attempt to access
 		 * an entry in Segment, however that entry was not present in Segment.
 		 *
 		 * @param e accessed entry in Segment
-		 *
-		 * @return non null set of evicted entries.
 		 */
-		Set<HashEntry<K, V>> onEntryMiss(HashEntry<K, V> e);
+		void onEntryMiss(HashEntry<K, V> e);
 
 		/**
 		 * Invoked to notify EvictionPolicy implementation that an entry in Segment has been
@@ -380,8 +358,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
-		public Set<HashEntry<K, V>> execute() {
-			return Collections.emptySet();
+		public void execute() {
 		}
 
 		@Override
@@ -390,8 +367,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
-		public Set<HashEntry<K, V>> onEntryMiss(HashEntry<K, V> e) {
-			return Collections.emptySet();
+		public void onEntryMiss(HashEntry<K, V> e) {
 		}
 
 		@Override
@@ -440,26 +416,19 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
-		public Set<HashEntry<K, V>> execute() {
-			Set<HashEntry<K, V>> evictedCopy = new HashSet<>( evicted );
+		public void execute() {
 			for ( HashEntry<K, V> e : accessQueue ) {
 				put( e, e.value );
 			}
 			accessQueue.clear();
 			evicted.clear();
-			return evictedCopy;
 		}
 
 		@Override
-		public Set<HashEntry<K, V>> onEntryMiss(HashEntry<K, V> e) {
+		public void onEntryMiss(HashEntry<K, V> e) {
 			put( e, e.value );
 			if ( !evicted.isEmpty() ) {
-				Set<HashEntry<K, V>> evictedCopy = new HashSet<>( evicted );
 				evicted.clear();
-				return evictedCopy;
-			}
-			else {
-				return Collections.emptySet();
 			}
 		}
 
@@ -508,7 +477,6 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			boolean aboveThreshold = isAboveThreshold();
 			if ( aboveThreshold ) {
 				HashEntry<K, V> evictedEntry = eldest.getKey();
-				segment.evictionListener.onEntryChosenForEviction( evictedEntry.value );
 				segment.remove( evictedEntry.key, evictedEntry.hash, null );
 				evicted.add( evictedEntry );
 			}
@@ -1007,7 +975,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
-		public Set<HashEntry<K, V>> execute() {
+		public void execute() {
 			Set<HashEntry<K, V>> evicted = new HashSet<>();
 			try {
 				for ( LIRSHashEntry<K, V> e : accessQueue ) {
@@ -1020,7 +988,6 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			finally {
 				accessQueue.clear();
 			}
-			return evicted;
 		}
 
 		/**
@@ -1051,17 +1018,15 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
-		public Set<HashEntry<K, V>> onEntryMiss(HashEntry<K, V> en) {
+		public void onEntryMiss(HashEntry<K, V> en) {
 			LIRSHashEntry<K, V> e = (LIRSHashEntry<K, V>) en;
 			Set<HashEntry<K, V>> evicted = e.miss();
 			removeFromSegment( evicted );
-			return evicted;
 		}
 
 		private void removeFromSegment(Set<HashEntry<K, V>> evicted) {
 			for ( HashEntry<K, V> e : evicted ) {
 				( (LIRSHashEntry<K, V>) e ).evict();
-				segment.evictionListener.onEntryChosenForEviction( e.value );
 				segment.remove( e.key, e.hash, null );
 			}
 		}
@@ -1218,23 +1183,16 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
 		transient final EvictionPolicy<K, V> eviction;
 
-		transient final EvictionListener<K, V> evictionListener;
-
-		Segment(int cap, int evictCap, float lf, Eviction es, EvictionListener<K, V> listener) {
+		Segment(int cap, int evictCap, float lf, Eviction es) {
 			loadFactor = lf;
 			this.evictCap = evictCap;
 			eviction = es.make( this, evictCap, lf );
-			evictionListener = listener;
 			setTable( HashEntry.newArray( cap ) );
 		}
 
 		@SuppressWarnings("unchecked")
 		static <K, V> Segment<K, V>[] newArray(int i) {
 			return new Segment[i];
-		}
-
-		EvictionListener<K, V> getEvictionListener() {
-			return evictionListener;
 		}
 
 		/**
@@ -1295,8 +1253,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 				// a hit
 				if ( result != null ) {
 					if ( eviction.onEntryHit( e ) ) {
-						Set<HashEntry<K, V>> evicted = attemptEviction( false );
-						notifyEvictionListener( evicted );
+						attemptEviction( false );
 					}
 				}
 				return result;
@@ -1338,7 +1295,6 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
 		boolean replace(K key, int hash, V oldValue, V newValue) {
 			lock();
-			Set<HashEntry<K, V>> evicted = null;
 			try {
 				HashEntry<K, V> e = getFirst( hash );
 				while ( e != null && ( e.hash != hash || !key.equals( e.key ) ) ) {
@@ -1350,20 +1306,18 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 					replaced = true;
 					e.value = newValue;
 					if ( eviction.onEntryHit( e ) ) {
-						evicted = attemptEviction( true );
+						attemptEviction( true );
 					}
 				}
 				return replaced;
 			}
 			finally {
 				unlock();
-				notifyEvictionListener( evicted );
 			}
 		}
 
 		V replace(K key, int hash, V newValue) {
 			lock();
-			Set<HashEntry<K, V>> evicted = null;
 			try {
 				HashEntry<K, V> e = getFirst( hash );
 				while ( e != null && ( e.hash != hash || !key.equals( e.key ) ) ) {
@@ -1375,20 +1329,18 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 					oldValue = e.value;
 					e.value = newValue;
 					if ( eviction.onEntryHit( e ) ) {
-						evicted = attemptEviction( true );
+						attemptEviction( true );
 					}
 				}
 				return oldValue;
 			}
 			finally {
 				unlock();
-				notifyEvictionListener( evicted );
 			}
 		}
 
 		V put(K key, int hash, V value, boolean onlyIfAbsent) {
 			lock();
-			Set<HashEntry<K, V>> evicted = null;
 			try {
 				int c = count;
 				if ( c++ > threshold && eviction.strategy() == Eviction.NONE ) {
@@ -1417,22 +1369,14 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 					if ( eviction.strategy() != Eviction.NONE ) {
 						if ( c > evictCap ) {
 							// remove entries;lower count
-							evicted = eviction.execute();
+							eviction.execute();
 							// re-read first
 							first = tab[index];
 						}
 						// add a new entry
 						tab[index] = eviction.createNewEntry( key, hash, first, value );
 						// notify a miss
-						Set<HashEntry<K, V>> newlyEvicted = eviction.onEntryMiss( tab[index] );
-						if ( !newlyEvicted.isEmpty() ) {
-							if ( evicted != null ) {
-								evicted.addAll( newlyEvicted );
-							}
-							else {
-								evicted = newlyEvicted;
-							}
-						}
+						eviction.onEntryMiss( tab[index] );
 					}
 					else {
 						tab[index] = eviction.createNewEntry( key, hash, first, value );
@@ -1442,7 +1386,6 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			}
 			finally {
 				unlock();
-				notifyEvictionListener( evicted );
 			}
 		}
 
@@ -1573,8 +1516,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			}
 		}
 
-		private Set<HashEntry<K, V>> attemptEviction(boolean lockedAlready) {
-			Set<HashEntry<K, V>> evicted = null;
+		private void attemptEviction(boolean lockedAlready) {
 			boolean obtainedLock = lockedAlready || tryLock();
 			if ( !obtainedLock && eviction.thresholdExpired() ) {
 				lock();
@@ -1583,7 +1525,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			if ( obtainedLock ) {
 				try {
 					if ( eviction.thresholdExpired() ) {
-						evicted = eviction.execute();
+						eviction.execute();
 					}
 				}
 				finally {
@@ -1592,27 +1534,8 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 					}
 				}
 			}
-			return evicted;
 		}
 
-		private void notifyEvictionListener(Set<HashEntry<K, V>> evicted) {
-			// piggyback listener invocation on callers thread outside lock
-			if ( evicted != null ) {
-				Map<K, V> evictedCopy;
-				if ( evicted.size() == 1 ) {
-					HashEntry<K, V> evictedEntry = evicted.iterator().next();
-					evictedCopy = singletonMap( evictedEntry.key, evictedEntry.value );
-				}
-				else {
-					evictedCopy = CollectionHelper.mapOfSize( evicted.size() );
-					for ( HashEntry<K, V> he : evicted ) {
-						evictedCopy.put( he.key, he.value );
-					}
-					evictedCopy = unmodifiableMap( evictedCopy );
-				}
-				evictionListener.onEntryEviction( evictedCopy );
-			}
-		}
 	}
 
 
@@ -1627,14 +1550,13 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 	 * @param concurrencyLevel the estimated number of concurrently updating threads. The implementation performs
 	 * internal sizing to try to accommodate this many threads.
 	 * @param evictionStrategy the algorithm used to evict elements from this map
-	 * @param evictionListener the evicton listener callback to be notified about evicted elements
 	 *
 	 * @throws IllegalArgumentException if the initial capacity is negative or the load factor or concurrencyLevel are
 	 * nonpositive.
 	 */
 	public BoundedConcurrentHashMap(
 			int capacity, int concurrencyLevel,
-			Eviction evictionStrategy, EvictionListener<K, V> evictionListener) {
+			Eviction evictionStrategy) {
 		if ( capacity < 0 || concurrencyLevel <= 0 ) {
 			throw new IllegalArgumentException();
 		}
@@ -1647,7 +1569,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			throw new IllegalArgumentException( "Maximum capacity has to be at least twice the concurrencyLevel" );
 		}
 
-		if ( evictionStrategy == null || evictionListener == null ) {
+		if ( evictionStrategy == null ) {
 			throw new IllegalArgumentException();
 		}
 
@@ -1676,7 +1598,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		}
 
 		for ( int i = 0; i < this.segments.length; ++i ) {
-			this.segments[i] = new Segment<>( cap, c, DEFAULT_LOAD_FACTOR, evictionStrategy, evictionListener );
+			this.segments[i] = new Segment<>( cap, c, DEFAULT_LOAD_FACTOR, evictionStrategy );
 		}
 	}
 
@@ -1693,22 +1615,6 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 	 */
 	public BoundedConcurrentHashMap(int capacity, int concurrencyLevel) {
 		this( capacity, concurrencyLevel, Eviction.LRU );
-	}
-
-	/**
-	 * Creates a new, empty map with the specified maximum capacity, load factor, concurrency
-	 * level and eviction strategy.
-	 *
-	 * @param capacity is the upper bound capacity for the number of elements in this map
-	 * @param concurrencyLevel the estimated number of concurrently updating threads. The implementation performs
-	 * internal sizing to try to accommodate this many threads.
-	 * @param evictionStrategy the algorithm used to evict elements from this map
-	 *
-	 * @throws IllegalArgumentException if the initial capacity is negative or the load factor or concurrencyLevel are
-	 * nonpositive.
-	 */
-	public BoundedConcurrentHashMap(int capacity, int concurrencyLevel, Eviction evictionStrategy) {
-		this( capacity, concurrencyLevel, evictionStrategy, new NullEvictionListener<>() );
 	}
 
 	/**

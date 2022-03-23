@@ -36,10 +36,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static java.util.Collections.singletonMap;
-import static java.util.Collections.unmodifiableMap;
-
-
 /**
  * A hash table supporting full concurrency of retrievals and
  * adjustable expected concurrency for updates. This class obeys the
@@ -102,12 +98,11 @@ import static java.util.Collections.unmodifiableMap;
  */
 public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		implements ConcurrentMap<K, V>, Serializable {
-	private static final long serialVersionUID = 7249069246763182397L;
 
 	/*
-		* The basic strategy is to subdivide the table among Segments,
-		* each of which itself is a concurrently readable hash table.
-		*/
+	 * The basic strategy is to subdivide the table among Segments,
+	 * each of which itself is a concurrently readable hash table.
+	 */
 
 	/* ---------------- Constants -------------- */
 
@@ -393,11 +388,6 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
 	static final class LRU<K, V> extends LinkedHashMap<HashEntry<K, V>, V> implements EvictionPolicy<K, V> {
 
-		/**
-		 * The serialVersionUID
-		 */
-		private static final long serialVersionUID = -7645068174197717838L;
-
 		private final ConcurrentLinkedQueue<HashEntry<K, V>> accessQueue;
 		private final Segment<K, V> segment;
 		private final int maxBatchQueueSize;
@@ -433,8 +423,8 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		}
 
 		/*
-			   * Invoked without holding a lock on Segment
-			   */
+		 * Invoked without holding a lock on Segment
+		 */
 		@Override
 		public boolean onEntryHit(HashEntry<K, V> e) {
 			accessQueue.add( e );
@@ -442,8 +432,8 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		}
 
 		/*
-			   * Invoked without holding a lock on Segment
-			   */
+		 * Invoked without holding a lock on Segment
+		 */
 		@Override
 		public boolean thresholdExpired() {
 			return accessQueue.size() >= maxBatchQueueSize;
@@ -1041,8 +1031,8 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		}
 
 		/*
-			   * Invoked without holding a lock on Segment
-			   */
+		 * Invoked without holding a lock on Segment
+		 */
 		@Override
 		public boolean thresholdExpired() {
 			return accessQueue.size() >= maxBatchQueueSize;

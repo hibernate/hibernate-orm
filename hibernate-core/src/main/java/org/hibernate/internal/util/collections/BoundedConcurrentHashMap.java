@@ -107,22 +107,10 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 	/* ---------------- Constants -------------- */
 
 	/**
-	 * The default initial capacity for this table,
-	 * used when not otherwise specified in a constructor.
-	 */
-	static final int DEFAULT_MAXIMUM_CAPACITY = 512;
-
-	/**
 	 * The default load factor for this table, used when not
 	 * otherwise specified in a constructor.
 	 */
 	static final float DEFAULT_LOAD_FACTOR = 0.75f;
-
-	/**
-	 * The default concurrency level for this table, used when not
-	 * otherwise specified in a constructor.
-	 */
-	static final int DEFAULT_CONCURRENCY_LEVEL = 16;
 
 	/**
 	 * The maximum capacity, used if a higher value is implicitly
@@ -258,12 +246,6 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 	}
 
 	public enum Eviction {
-		NONE {
-			@Override
-			public <K, V> EvictionPolicy<K, V> make(Segment<K, V> s, int capacity, float lf) {
-				return new NullEvictionPolicy<>();
-			}
-		},
 		LRU {
 			@Override
 			public <K, V> EvictionPolicy<K, V> make(Segment<K, V> s, int capacity, float lf) {
@@ -343,47 +325,6 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		 * @return true if batching threshold has expired, false otherwise.
 		 */
 		boolean thresholdExpired();
-	}
-
-	static class NullEvictionPolicy<K, V> implements EvictionPolicy<K, V> {
-
-		@Override
-		public void clear() {
-			// Do nothing.
-		}
-
-		@Override
-		public void execute() {
-		}
-
-		@Override
-		public boolean onEntryHit(HashEntry<K, V> e) {
-			return false;
-		}
-
-		@Override
-		public void onEntryMiss(HashEntry<K, V> e) {
-		}
-
-		@Override
-		public void onEntryRemove(HashEntry<K, V> e) {
-			// Do nothing.
-		}
-
-		@Override
-		public boolean thresholdExpired() {
-			return false;
-		}
-
-		@Override
-		public Eviction strategy() {
-			return Eviction.NONE;
-		}
-
-		@Override
-		public HashEntry<K, V> createNewEntry(K key, int hash, HashEntry<K, V> next, V value) {
-			return new HashEntry<>( key, hash, next, value );
-		}
 	}
 
 	static final class LRU<K, V> extends LinkedHashMap<HashEntry<K, V>, V> implements EvictionPolicy<K, V> {
@@ -1333,9 +1274,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			lock();
 			try {
 				int c = count;
-				if ( c++ > threshold && eviction.strategy() == Eviction.NONE ) {
-					rehash();
-				}
+				c++;
 				HashEntry<K, V>[] tab = table;
 				int index = hash & tab.length - 1;
 				HashEntry<K, V> first = tab[index];
@@ -1356,21 +1295,16 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 					oldValue = null;
 					++modCount;
 					count = c; // write-volatile
-					if ( eviction.strategy() != Eviction.NONE ) {
-						if ( c > evictCap ) {
-							// remove entries;lower count
-							eviction.execute();
-							// re-read first
-							first = tab[index];
-						}
-						// add a new entry
-						tab[index] = eviction.createNewEntry( key, hash, first, value );
-						// notify a miss
-						eviction.onEntryMiss( tab[index] );
+					if ( c > evictCap ) {
+						// remove entries;lower count
+						eviction.execute();
+						// re-read first
+						first = tab[index];
 					}
-					else {
-						tab[index] = eviction.createNewEntry( key, hash, first, value );
-					}
+					// add a new entry
+					tab[index] = eviction.createNewEntry( key, hash, first, value );
+					// notify a miss
+					eviction.onEntryMiss( tab[index] );
 				}
 				return oldValue;
 			}
@@ -1608,29 +1542,6 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 	}
 
 	/**
-	 * Creates a new, empty map with the specified maximum capacity, default concurrency
-	 * level and LRU eviction policy.
-	 *
-	 * @param capacity is the upper bound capacity for the number of elements in this map
-	 *
-	 * @throws IllegalArgumentException if the initial capacity of
-	 * elements is negative or the load factor is nonpositive
-	 * @since 1.6
-	 */
-	public BoundedConcurrentHashMap(int capacity) {
-		this( capacity, DEFAULT_CONCURRENCY_LEVEL );
-	}
-
-	/**
-	 * Creates a new, empty map with the default maximum capacity
-	 */
-	public BoundedConcurrentHashMap() {
-		this( DEFAULT_MAXIMUM_CAPACITY, DEFAULT_CONCURRENCY_LEVEL );
-	}
-
-	/**
-	 * Returns {@code true} if this map contains no key-value mappings.
-	 *
 	 * @return {@code true} if this map contains no key-value mappings
 	 */
 	@Override

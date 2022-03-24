@@ -10,11 +10,11 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
 import org.hibernate.query.hql.spi.SemanticPathPart;
+import org.hibernate.query.hql.spi.SqmCreationProcessingState;
+import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.hql.spi.SqmCreationProcessingState;
-import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
@@ -96,7 +96,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		}
 		else {
 			assert delegate != null;
-			delegate.consumeIdentifier( identifier, !nested && isTerminal );
+			delegate.consumeIdentifier( identifier, !nested && isTerminal, !( nested && isTerminal ) );
 		}
 	}
 
@@ -160,6 +160,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 				alias,
 				fetch,
 				isTerminal,
+				true,
 				creationState
 		);
 	}
@@ -171,10 +172,11 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			String alias,
 			boolean fetch,
 			boolean isTerminal,
+			boolean allowReuse,
 			SqmCreationState creationState) {
 		//noinspection unchecked
 		final SqmPathSource<Object> subPathSource = (SqmPathSource<Object>) lhs.getReferencedPathSource().getSubPathSource( name );
-		if ( !isTerminal ) {
+		if ( allowReuse && !isTerminal ) {
 			for ( SqmJoin<?, ?> sqmJoin : lhs.getSqmJoins() ) {
 				if ( sqmJoin.getAlias() == null && sqmJoin.getReferencedPathSource() == subPathSource ) {
 					//noinspection unchecked
@@ -186,7 +188,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		final SqmJoin<Object, Object> join = ( (SqmJoinable<Object, Object>) subPathSource ).createSqmJoin(
 				lhs,
 				joinType,
-				isTerminal ? alias : SqmCreationHelper.IMPLICIT_ALIAS,
+				isTerminal ? alias : allowReuse ? SqmCreationHelper.IMPLICIT_ALIAS : Long.toString( System.nanoTime() ),
 				fetch,
 				creationState
 		);
@@ -196,7 +198,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 	}
 
 	private interface ConsumerDelegate {
-		void consumeIdentifier(String identifier, boolean isTerminal);
+		void consumeIdentifier(String identifier, boolean isTerminal, boolean allowReuse);
 		void consumeTreat(String entityName, boolean isTerminal);
 		SemanticPathPart getConsumedPart();
 	}
@@ -226,7 +228,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		}
 
 		@Override
-		public void consumeIdentifier(String identifier, boolean isTerminal) {
+		public void consumeIdentifier(String identifier, boolean isTerminal, boolean allowReuse) {
 			currentPath = createJoin(
 					currentPath,
 					identifier,
@@ -234,6 +236,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 					alias,
 					fetch,
 					isTerminal,
+					allowReuse,
 					creationState
 			);
 		}
@@ -283,11 +286,11 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			this.fetch = fetch;
 			this.alias = alias;
 
-			consumeIdentifier( identifier, isTerminal );
+			consumeIdentifier( identifier, isTerminal, true );
 		}
 
 		@Override
-		public void consumeIdentifier(String identifier, boolean isTerminal) {
+		public void consumeIdentifier(String identifier, boolean isTerminal, boolean allowReuse) {
 			if ( path.length() != 0 ) {
 				path.append( '.' );
 			}

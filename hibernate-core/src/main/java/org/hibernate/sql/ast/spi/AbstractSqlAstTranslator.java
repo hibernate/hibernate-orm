@@ -1550,6 +1550,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						appendSql( "select" );
 						appendSql( queryGroupAlias );
 						appendSql( ".* from " );
+						// We need to assign aliases when we render a query spec as sub query to avoid clashing aliases
+						this.needsSelectAliases = this.needsSelectAliases || hasDuplicateSelectItems( querySpec );
+					}
+					else if ( !supportsDuplicateSelectItemsInQueryGroup() ) {
+						this.needsSelectAliases = this.needsSelectAliases || hasDuplicateSelectItems( querySpec );
 					}
 				}
 			}
@@ -1589,7 +1594,20 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
+	private boolean hasDuplicateSelectItems(QuerySpec querySpec) {
+		final List<SqlSelection> sqlSelections = querySpec.getSelectClause().getSqlSelections();
+		final Map<Expression, Void> map = new IdentityHashMap<>( sqlSelections.size() );
+		for ( int i = 0; i < sqlSelections.size(); i++ ) {
+			map.put( sqlSelections.get( i ).getExpression(), null );
+		}
+		return map.size() != sqlSelections.size();
+	}
+
 	protected boolean supportsSimpleQueryGrouping() {
+		return true;
+	}
+
+	protected boolean supportsDuplicateSelectItemsInQueryGroup() {
 		return true;
 	}
 

@@ -39,7 +39,7 @@ public abstract class AbstractTimeZoneStorageCompositeUserType<T> implements Com
 	}
 
 	@Override
-	public Serializable disassemble(T value) {
+	public Serializable disassemble(Object value) {
 		return (Serializable) value;
 	}
 

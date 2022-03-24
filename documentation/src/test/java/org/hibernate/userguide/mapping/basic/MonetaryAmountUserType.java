@@ -75,8 +75,8 @@ public class MonetaryAmountUserType implements CompositeUserType<MonetaryAmount>
 	}
 
 	@Override
-	public Serializable disassemble(MonetaryAmount value) throws HibernateException {
-		return deepCopy( value );
+	public Serializable disassemble(Object value) throws HibernateException {
+		return deepCopy( (MonetaryAmount) value );
 	}
 
 	@Override

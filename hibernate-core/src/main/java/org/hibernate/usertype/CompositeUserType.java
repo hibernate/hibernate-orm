@@ -104,7 +104,7 @@ public interface CompositeUserType<J> extends EmbeddableInstantiator {
 	 * @param value the object to be cached
 	 * @return a cacheable representation of the object
 	 */
-	Serializable disassemble(J value);
+	Serializable disassemble(Object value);
 
 	/**
 	 * Reconstruct an object from the cacheable representation. At the very least this

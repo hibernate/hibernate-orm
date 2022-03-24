@@ -68,7 +68,7 @@ public class CompositeUserTypeJavaTypeWrapper<J> implements JavaType<J> {
 		if ( userType.equals( first, second ) ) {
 			return 0;
 		}
-		return Comparator.comparing( userType::hashCode ).compare( first, second );
+		return Comparator.comparing( userType -> userType.hashCode() ).compare( first, second );
 	}
 
 	@Override

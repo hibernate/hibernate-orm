@@ -77,8 +77,8 @@ public class MonetaryAmountUserType implements CompositeUserType<MonetaryAmount>
 	}
 
 	@Override
-	public Serializable disassemble(MonetaryAmount value) throws HibernateException {
-		return value;
+	public Serializable disassemble(Object value) throws HibernateException {
+		return (Serializable) value;
 	}
 
 	@Override

@@ -185,6 +185,8 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 					return TimeZoneStorageStrategy.NATIVE;
 				case NORMALIZE:
 					return TimeZoneStorageStrategy.NORMALIZE;
+				case NORMALIZE_UTC:
+					return TimeZoneStorageStrategy.NORMALIZE_UTC;
 			}
 		}
 		return buildingContext.getBuildingOptions().getDefaultTimeZoneStorage();

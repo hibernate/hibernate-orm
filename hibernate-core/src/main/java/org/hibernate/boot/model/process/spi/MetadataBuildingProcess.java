@@ -393,23 +393,33 @@ public class MetadataBuildingProcess {
 		);
 
 		// add explicit application registered types
-		typeConfiguration
-				.addBasicTypeRegistrationContributions( options.getBasicTypeRegistrations() );
+		typeConfiguration.addBasicTypeRegistrationContributions( options.getBasicTypeRegistrations() );
 
-		// For NORMALIZE, we replace the standard types that use TIMESTAMP_WITH_TIMEZONE to use TIMESTAMP
-		if ( options.getDefaultTimeZoneStorage() == TimeZoneStorageStrategy.NORMALIZE ) {
-			final JavaTypeRegistry javaTypeRegistry = typeConfiguration
-					.getJavaTypeRegistry();
-			final JdbcType timestampDescriptor = jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP );
+		final JdbcType timestampWithTimeZoneOverride;
+		switch ( options.getDefaultTimeZoneStorage() ) {
+			case NORMALIZE:
+				// For NORMALIZE, we replace the standard types that use TIMESTAMP_WITH_TIMEZONE to use TIMESTAMP
+				timestampWithTimeZoneOverride = jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP );
+				break;
+			case NORMALIZE_UTC:
+				// For NORMALIZE_UTC, we replace the standard types that use TIMESTAMP_WITH_TIMEZONE to use TIMESTAMP_UTC
+				timestampWithTimeZoneOverride = jdbcTypeRegistry.getDescriptor( SqlTypes.TIMESTAMP_UTC );
+				break;
+			default:
+				timestampWithTimeZoneOverride = null;
+				break;
+		}
+		if ( timestampWithTimeZoneOverride != null ) {
+			final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 			final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 			final BasicType<?> offsetDateTimeType = new NamedBasicTypeImpl<>(
 					javaTypeRegistry.getDescriptor( OffsetDateTime.class ),
-					timestampDescriptor,
+					timestampWithTimeZoneOverride,
 					"OffsetDateTime"
 			);
 			final BasicType<?> zonedDateTimeType = new NamedBasicTypeImpl<>(
 					javaTypeRegistry.getDescriptor( ZonedDateTime.class ),
-					timestampDescriptor,
+					timestampWithTimeZoneOverride,
 					"ZonedDateTime"
 			);
 			basicTypeRegistry.register(

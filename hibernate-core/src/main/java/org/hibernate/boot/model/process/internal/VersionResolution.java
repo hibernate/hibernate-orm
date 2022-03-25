@@ -71,6 +71,8 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 									return TimeZoneStorageStrategy.NATIVE;
 								case NORMALIZE:
 									return TimeZoneStorageStrategy.NORMALIZE;
+								case NORMALIZE_UTC:
+									return TimeZoneStorageStrategy.NORMALIZE_UTC;
 							}
 						}
 						return context.getBuildingOptions().getDefaultTimeZoneStorage();

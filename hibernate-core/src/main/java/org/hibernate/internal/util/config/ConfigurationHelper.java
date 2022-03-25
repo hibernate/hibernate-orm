@@ -21,6 +21,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 
 /**
  * Collection of helper methods for dealing with configuration settings.
@@ -516,7 +517,7 @@ public final class ConfigurationHelper {
 	public static synchronized int getPreferredSqlTypeCodeForBoolean(StandardServiceRegistry serviceRegistry) {
 		final Integer typeCode = serviceRegistry.getService( ConfigurationService.class ).getSetting(
 				AvailableSettings.PREFERRED_BOOLEAN_JDBC_TYPE_CODE,
-				StandardConverters.INTEGER
+				TypeCodeConverter.INSTANCE
 		);
 		if ( typeCode != null ) {
 			return typeCode;
@@ -532,9 +533,31 @@ public final class ConfigurationHelper {
 	public static synchronized int getPreferredSqlTypeCodeForDuration(StandardServiceRegistry serviceRegistry) {
 		return serviceRegistry.getService( ConfigurationService.class ).getSetting(
 				AvailableSettings.PREFERRED_DURATION_JDBC_TYPE_CODE,
-				StandardConverters.INTEGER,
+				TypeCodeConverter.INSTANCE,
 				SqlTypes.INTERVAL_SECOND
 		);
 	}
 
+	private static class TypeCodeConverter implements ConfigurationService.Converter<Integer> {
+
+		public static final TypeCodeConverter INSTANCE = new TypeCodeConverter();
+
+		@Override
+		public Integer convert(Object value) {
+			if ( value == null ) {
+				throw new IllegalArgumentException( "Null value passed to convert" );
+			}
+
+			if ( value instanceof Number ) {
+				return ( (Number) value ).intValue();
+			}
+
+			final String string = value.toString();
+			final Integer typeCode = JdbcTypeNameMapper.getTypeCode( string );
+			if ( typeCode != null ) {
+				return typeCode;
+			}
+			return Integer.parseInt( string );
+		}
+	}
 }

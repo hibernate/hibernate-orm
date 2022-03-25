@@ -26,22 +26,34 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 public final class JdbcTypeNameMapper {
 	private static final CoreMessageLogger LOG = messageLogger( JdbcTypeNameMapper.class );
 
-	private static final Map<Integer,String> JDBC_TYPE_MAP = buildJdbcTypeMap( Types.class );
-	private static final Map<Integer,String> SQL_TYPE_MAP = buildJdbcTypeMap( SqlTypes.class );
+	private static final Map<Integer, String> JDBC_TYPE_MAP = buildJdbcTypeMap( Types.class );
+	private static final Map<Integer, String> SQL_TYPE_MAP = buildJdbcTypeMap( SqlTypes.class );
+	private static final Map<String, Integer> JDBC_TYPE_NAME_MAP = buildJdbcTypeNameMap( Types.class );
+	private static final Map<String, Integer> SQL_TYPE_NAME_MAP = buildJdbcTypeNameMap( SqlTypes.class );
 
 	private static Map<Integer, String> buildJdbcTypeMap(Class<?> typesClass) {
 		HashMap<Integer, String> map = new HashMap<>();
-		Field[] fields = typesClass.getFields();
-		if ( fields == null ) {
-			throw new HibernateException( "Unexpected problem extracting JDBC type mapping codes from java.sql.Types" );
-		}
-		for ( Field field : fields ) {
+		for ( Field field : typesClass.getFields() ) {
 			try {
 				final int code = field.getInt( null );
 				String old = map.put( code, field.getName() );
 				if ( old != null ) {
 					LOG.JavaSqlTypesMappedSameCodeMultipleTimes( code, old, field.getName() );
 				}
+			}
+			catch ( IllegalAccessException e ) {
+				throw new HibernateException( "Unable to access JDBC type mapping [" + field.getName() + "]", e );
+			}
+		}
+		return Collections.unmodifiableMap( map );
+	}
+
+	private static Map<String, Integer> buildJdbcTypeNameMap(Class<?> typesClass) {
+		HashMap<String, Integer> map = new HashMap<>();
+		for ( Field field : typesClass.getFields() ) {
+			try {
+				final int code = field.getInt( null );
+				map.put( field.getName(), code );
 			}
 			catch ( IllegalAccessException e ) {
 				throw new HibernateException( "Unable to access JDBC type mapping [" + field.getName() + "]", e );
@@ -89,6 +101,18 @@ public final class JdbcTypeNameMapper {
 			return "UNKNOWN(" + typeCode + ")";
 		}
 		return name;
+	}
+
+	/**
+	 * Get the type code as in the static field names defined on {@link java.sql.Types}.  If a type name is not
+	 * recognized, <code>null</code> is returned.
+	 *
+	 * @param typeName The type name to find the code for.
+	 *
+	 * @return The type code.
+	 */
+	public static Integer getTypeCode(String typeName) {
+		return SQL_TYPE_NAME_MAP.get( typeName );
 	}
 
 	private JdbcTypeNameMapper() {

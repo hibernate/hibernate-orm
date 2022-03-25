@@ -38,8 +38,7 @@ import static org.hamcrest.Matchers.is;
  */
 @DomainModel(annotatedClasses = DurationMappingLegacyTests.EntityWithDuration.class)
 @SessionFactory
-// 2 stands for the type code Types.NUMERIC
-@ServiceRegistry(settings = @Setting(name = AvailableSettings.PREFERRED_DURATION_JDBC_TYPE_CODE, value = "2"))
+@ServiceRegistry(settings = @Setting(name = AvailableSettings.PREFERRED_DURATION_JDBC_TYPE_CODE, value = "NUMERIC"))
 public class DurationMappingLegacyTests {
 
 	@Test

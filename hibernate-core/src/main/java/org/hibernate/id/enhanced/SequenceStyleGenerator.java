@@ -12,10 +12,12 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.spi.ImplicitIdentifierDatabaseObjectNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -33,6 +35,10 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.cfg.AvailableSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
+import static org.hibernate.internal.log.IncubationLogger.INCUBATION_LOGGER;
+import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 
 /**
  * Generates identifier values based on a sequence-style database structure.
@@ -309,41 +315,41 @@ public class SequenceStyleGenerator
 		}
 
 		// otherwise, determine an implicit name to use
-		final String implicitName = determineImplicitName( params, jdbcEnv, serviceRegistry );
-		return new QualifiedNameParser.NameParts(
-				catalog,
-				schema,
-				jdbcEnv.getIdentifierHelper().toIdentifier( implicitName )
-		);
+		return determineImplicitName( catalog, schema, params, serviceRegistry );
 	}
 
-	private String determineImplicitName(Properties params, JdbcEnvironment jdbcEnv, ServiceRegistry serviceRegistry) {
-		final String annotationGeneratorName = params.getProperty( IdentifierGenerator.GENERATOR_NAME );
-		final String base = ConfigurationHelper.getString( IMPLICIT_NAME_BASE, params );
-		final String suffix = ConfigurationHelper.getString( CONFIG_SEQUENCE_PER_ENTITY_SUFFIX, params, DEF_SEQUENCE_SUFFIX );
+	private QualifiedName determineImplicitName(
+			Identifier catalog,
+			Identifier schema,
+			Properties params,
+			ServiceRegistry serviceRegistry) {
+		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
+		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
 
-		if ( ! Objects.equals( suffix, DEF_SEQUENCE_SUFFIX ) ) {
-			// an "implicit name suffix" was specified
-			if ( StringHelper.isNotEmpty( base ) ) {
-				if ( Identifier.isQuoted( base ) ) {
-					return "`" + Identifier.unQuote( base ) + suffix + "`";
-				}
-				return base + suffix;
-			}
-		}
+		final String namingStrategySetting = coalesceSuppliedValues(
+				() -> {
+					final String localSetting = ConfigurationHelper.getString( ID_DB_STRUCTURE_NAMING_STRATEGY, params );
+					if ( localSetting != null ) {
+						INCUBATION_LOGGER.incubatingSetting( ID_DB_STRUCTURE_NAMING_STRATEGY );
+					}
+					return localSetting;
+				},
+				() -> {
+					final String globalSetting = ConfigurationHelper.getString( ID_DB_STRUCTURE_NAMING_STRATEGY, configurationService.getSettings() );
+					if ( globalSetting != null ) {
+						INCUBATION_LOGGER.incubatingSetting( ID_DB_STRUCTURE_NAMING_STRATEGY );
+					}
+					return globalSetting;
+				},
+				StandardImplicitIdentifierDatabaseObjectNamingStrategy.class::getName
+		);
 
-		if ( StringHelper.isNotEmpty( annotationGeneratorName ) ) {
-			return annotationGeneratorName;
-		}
+		final ImplicitIdentifierDatabaseObjectNamingStrategy namingStrategy = strategySelector.resolveStrategy(
+				ImplicitIdentifierDatabaseObjectNamingStrategy.class,
+				namingStrategySetting
+		);
 
-		if ( StringHelper.isNotEmpty( base ) ) {
-			if ( Identifier.isQuoted( base ) ) {
-				return "`" + Identifier.unQuote( base ) + suffix + "`";
-			}
-			return base + suffix;
-		}
-
-		throw new MappingException( "Unable to determine sequence name" );
+		return namingStrategy.determineSequenceName( catalog, schema, params, serviceRegistry );
 	}
 
 	/**

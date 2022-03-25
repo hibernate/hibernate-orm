@@ -73,12 +73,7 @@ public class SelectInterpretationsKey implements QueryInterpretationCache.Key {
 	}
 
 	private int generateHashCode() {
-		int result = sql.hashCode();
-		result = 31 * result + jdbcValuesMappingProducer.hashCode();
-		result = 31 * result + ( querySpaces != null ? querySpaces.hashCode() : 0 );
-		result = 31 * result + ( tupleTransformer != null ? tupleTransformer.hashCode() : 0 );
-		result = 31 * result + ( resultListTransformer != null ? resultListTransformer.hashCode() : 0 );
-		return result;
+		return sql.hashCode();
 	}
 
 	@Override

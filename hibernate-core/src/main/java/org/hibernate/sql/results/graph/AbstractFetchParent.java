@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -57,15 +58,20 @@ public abstract class AbstractFetchParent implements FetchParent {
 
 	@Override
 	public Fetch findFetch(Fetchable fetchable) {
-		if ( fetches != null ) {
-			for ( Fetch fetch : fetches ) {
-				final Fetchable fetchedMapping = fetch.getFetchedMapping();
-				if ( fetchedMapping != null
-						&& fetchedMapping.getNavigableRole().equals( fetchable.getNavigableRole() ) ) {
-					return fetch;
-				}
+		if ( fetches == null ) {
+			return null;
+		}
+
+		for ( int i = 0; i < fetches.size(); i++ ) {
+			final Fetch fetch = fetches.get( i );
+			final Fetchable fetchedMapping = fetch.getFetchedMapping();
+			if ( fetchedMapping == fetchable
+					// the fetched mapping for the version is a Basic attribute, so check the role
+					|| ( fetchable instanceof EntityVersionMapping && fetchable.getNavigableRole().equals( fetchedMapping.getNavigableRole() ) ) ) {
+				return fetch;
 			}
 		}
+
 		return null;
 	}
 }

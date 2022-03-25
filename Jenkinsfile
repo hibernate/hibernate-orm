@@ -62,6 +62,13 @@ stage('Configure') {
 	])
 }
 
+// Avoid running the pipeline on branch indexing
+if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
+  print "INFO: Build skipped due to trigger being Branch Indexing"
+  currentBuild.result = 'ABORTED'
+  return
+}
+
 stage('Build') {
 	Map<String, Closure> executions = [:]
 	environments.each { BuildEnvironment buildEnv ->

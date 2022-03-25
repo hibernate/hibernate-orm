@@ -28,9 +28,14 @@ public enum TimeZoneStorageType {
 	NATIVE,
 	/**
 	 * Does not store the time zone, and instead normalizes
-	 * timestamps to UTC.
+	 * timestamps to the JDBC timezone.
 	 */
 	NORMALIZE,
+	/**
+	 * Does not store the time zone, and instead normalizes
+	 * timestamps to UTC.
+	 */
+	NORMALIZE_UTC,
 	/**
 	 * Stores the time zone in a separate column; works in
 	 * conjunction with {@link TimeZoneColumn}.

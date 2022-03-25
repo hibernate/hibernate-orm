@@ -22,6 +22,7 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -55,9 +56,14 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 		final JdbcTypeRegistry jdbcTypeRegistry = stdIndicators.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		if ( temporalPrecision == null || temporalPrecision == TemporalType.TIMESTAMP ) {
-			return stdIndicators.getDefaultTimeZoneStorageStrategy() == TimeZoneStorageStrategy.NORMALIZE
-					? jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP )
-					: jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP_WITH_TIMEZONE );
+			switch ( stdIndicators.getDefaultTimeZoneStorageStrategy() ) {
+				case NORMALIZE:
+					return jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP );
+				case NORMALIZE_UTC:
+					return jdbcTypeRegistry.getDescriptor( SqlTypes.TIMESTAMP_UTC );
+				default:
+					return jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP_WITH_TIMEZONE );
+			}
 		}
 
 		switch ( temporalPrecision ) {

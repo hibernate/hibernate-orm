@@ -24,7 +24,11 @@ public enum TimeZoneStorageStrategy {
 	 */
 	COLUMN,
 	/**
+	 * Doesn't store the time zone, but instead normalizes to the JDBC timezone.
+	 */
+	NORMALIZE,
+	/**
 	 * Doesn't store the time zone, but instead normalizes to UTC.
 	 */
-	NORMALIZE
+	NORMALIZE_UTC
 }

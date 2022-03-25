@@ -694,6 +694,8 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 					return TimeZoneStorageStrategy.NATIVE;
 				case NORMALIZE:
 					return TimeZoneStorageStrategy.NORMALIZE;
+				case NORMALIZE_UTC:
+					return TimeZoneStorageStrategy.NORMALIZE_UTC;
 			}
 		}
 		return getBuildingContext().getBuildingOptions().getDefaultTimeZoneStorage();

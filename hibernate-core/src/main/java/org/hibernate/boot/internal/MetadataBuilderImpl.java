@@ -894,6 +894,9 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 				case NORMALIZE:
 					resolvedTimezoneStorage = TimeZoneStorageStrategy.NORMALIZE;
 					break;
+				case NORMALIZE_UTC:
+					resolvedTimezoneStorage = TimeZoneStorageStrategy.NORMALIZE_UTC;
+					break;
 				case AUTO:
 					switch ( timeZoneSupport ) {
 						case NATIVE:

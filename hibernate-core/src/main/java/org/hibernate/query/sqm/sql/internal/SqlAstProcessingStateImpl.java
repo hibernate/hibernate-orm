@@ -85,10 +85,6 @@ public class SqlAstProcessingStateImpl
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SqlExpressionResolver
 
-	protected Map<Expression, SqlSelection> sqlSelectionMap() {
-		return Collections.emptyMap();
-	}
-
 	@Override
 	public Expression resolveSqlExpression(
 			String key,
@@ -104,37 +100,8 @@ public class SqlAstProcessingStateImpl
 			expressionMap.put( key, expression );
 		}
 
-		return normalize( expression );
-	}
-
-	protected Expression normalize(Expression expression) {
-		final Clause currentClause = currentClauseAccess.get();
-		if ( sqlSelectionMap() != null && ( currentClause == Clause.ORDER || currentClause == Clause.GROUP ) ) {
-			// see if this (Sql)Expression is used as a selection, and if so
-			// wrap the (Sql)Expression in a special wrapper with access to both
-			// the (Sql)Expression and the SqlSelection.
-			//
-			// This is used for databases which prefer to use the position of a
-			// selected expression (within the select-clause) as the
-			// order-by, group-by or having expression
-			final SqlSelection selection = sqlSelectionMap().get( expression );
-			if ( selection != null ) {
-				return new SqlSelectionExpression( selection );
-			}
-		}
-
 		return expression;
 	}
-
-//	@Override
-//	public Expression resolveSqlExpression(NonQualifiableSqlExpressible sqlSelectable) {
-//		final Expression expression = normalize( sqlSelectable.createExpression() );
-//		final Consumer<Expression> expressionConsumer = resolvedExpressionConsumerAccess.get();
-//		if ( expressionConsumer != null ) {
-//			expressionConsumer.accept( expression );
-//		}
-//		return expression;
-//	}
 
 	@Override
 	public SqlSelection resolveSqlSelection(

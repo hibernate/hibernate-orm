@@ -62,16 +62,11 @@ public class SqlAstQueryPartProcessingStateImpl
 	public QueryPart getInflightQueryPart() {
 		return queryPart;
 	}
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SqlExpressionResolver
 
-	private Map<Expression, SqlSelection> sqlSelectionMap;
-	private Map<FetchParent, Map<Expression, SqlSelection>> fetchParentSqlSelectionMap;
-
-	@Override
-	protected Map<Expression, SqlSelection> sqlSelectionMap() {
-		return sqlSelectionMap;
-	}
+	private Map<?, ?> sqlSelectionMap;
 
 	@Override
 	public SqlSelection resolveSqlSelection(
@@ -79,42 +74,49 @@ public class SqlAstQueryPartProcessingStateImpl
 			JavaType<?> javaType,
 			FetchParent fetchParent,
 			TypeConfiguration typeConfiguration) {
-		final SqlSelection existing;
-		if ( sqlSelectionMap == null ) {
-			sqlSelectionMap = new HashMap<>();
-			existing = null;
-		}
-		else {
-			existing = sqlSelectionMap.get( expression );
-		}
-
-		if ( existing != null && deduplicateSelectionItems ) {
-			return existing;
-		}
-		final Map<Expression, SqlSelection> fetchParentSelections;
-		if ( !deduplicateSelectionItems && fetchParent != null ) {
-			// De-duplicate selection items within the root of a fetch parent
-			final FetchParent root = fetchParent.getRoot();
-			if ( fetchParentSqlSelectionMap == null ) {
-				fetchParentSqlSelectionMap = new HashMap<>();
-				fetchParentSqlSelectionMap.put( root, fetchParentSelections = new HashMap<>() );
+		final Map<Expression, SqlSelection> selectionMap;
+		if ( deduplicateSelectionItems ) {
+			final SqlSelection existing;
+			if ( sqlSelectionMap == null ) {
+				sqlSelectionMap = new HashMap<>();
+				existing = null;
 			}
 			else {
+				existing = (SqlSelection) sqlSelectionMap.get( expression );
+			}
+
+			if ( existing != null ) {
+				return existing;
+			}
+			//noinspection unchecked
+			selectionMap = (Map<Expression, SqlSelection>) sqlSelectionMap;
+		}
+		else if ( fetchParent != null ) {
+			// De-duplicate selection items within the root of a fetch parent
+			final Map<FetchParent, Map<Expression, SqlSelection>> fetchParentSqlSelectionMap;
+			final FetchParent root = fetchParent.getRoot();
+			if ( sqlSelectionMap == null ) {
+				sqlSelectionMap = fetchParentSqlSelectionMap = new HashMap<>();
+				fetchParentSqlSelectionMap.put( root, selectionMap = new HashMap<>() );
+			}
+			else {
+				//noinspection unchecked
+				fetchParentSqlSelectionMap = (Map<FetchParent, Map<Expression, SqlSelection>>) sqlSelectionMap;
 				final Map<Expression, SqlSelection> map = fetchParentSqlSelectionMap.get( root );
 				if ( map == null ) {
-					fetchParentSqlSelectionMap.put( root, fetchParentSelections = new HashMap<>() );
+					fetchParentSqlSelectionMap.put( root, selectionMap = new HashMap<>() );
 				}
 				else {
-					fetchParentSelections = map;
+					selectionMap = map;
 				}
 			}
-			final SqlSelection sqlSelection = fetchParentSelections.get( expression );
+			final SqlSelection sqlSelection = selectionMap.get( expression );
 			if ( sqlSelection != null ) {
 				return sqlSelection;
 			}
 		}
 		else {
-			fetchParentSelections = null;
+			selectionMap = null;
 		}
 
 		final SelectClause selectClause = ( (QuerySpec) queryPart ).getSelectClause();
@@ -128,10 +130,8 @@ public class SqlAstQueryPartProcessingStateImpl
 
 		selectClause.addSqlSelection( sqlSelection );
 
-		sqlSelectionMap.put( expression, sqlSelection );
-
-		if ( fetchParentSelections != null ) {
-			fetchParentSelections.put( expression, sqlSelection );
+		if ( selectionMap != null ) {
+			selectionMap.put( expression, sqlSelection );
 		}
 
 		return sqlSelection;

@@ -1596,11 +1596,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private boolean hasDuplicateSelectItems(QuerySpec querySpec) {
 		final List<SqlSelection> sqlSelections = querySpec.getSelectClause().getSqlSelections();
-		final Map<Expression, Void> map = new IdentityHashMap<>( sqlSelections.size() );
+		final Map<Expression, Boolean> map = new IdentityHashMap<>( sqlSelections.size() );
 		for ( int i = 0; i < sqlSelections.size(); i++ ) {
-			map.put( sqlSelections.get( i ).getExpression(), null );
+			if ( map.put( sqlSelections.get( i ).getExpression(), Boolean.TRUE ) != null ) {
+				return true;
+			}
 		}
-		return map.size() != sqlSelections.size();
+		return false;
 	}
 
 	protected boolean supportsSimpleQueryGrouping() {

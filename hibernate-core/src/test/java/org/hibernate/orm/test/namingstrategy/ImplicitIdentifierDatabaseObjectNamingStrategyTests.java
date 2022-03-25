@@ -1,0 +1,137 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+package org.hibernate.orm.test.namingstrategy;
+
+import java.util.Map;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.spi.ImplicitIdentifierDatabaseObjectNamingStrategy;
+import org.hibernate.boot.model.relational.QualifiedName;
+import org.hibernate.boot.model.relational.QualifiedSequenceName;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.id.PersistentIdentifierGenerator;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.ServiceRegistry;
+
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * @author Steve Ebersole
+ */
+@org.hibernate.testing.orm.junit.ServiceRegistry(
+		settings = @Setting(
+				name = AvailableSettings.ID_DB_STRUCTURE_NAMING_STRATEGY,
+				value = "org.hibernate.orm.test.namingstrategy.ImplicitIdentifierDatabaseObjectNamingStrategyTests$Strategy"
+		)
+)
+@DomainModel( annotatedClasses = ImplicitIdentifierDatabaseObjectNamingStrategyTests.TheEntity.class )
+public class ImplicitIdentifierDatabaseObjectNamingStrategyTests {
+
+	@Test
+	public void testIt(DomainModelScope domainModelScope, ServiceRegistryScope serviceRegistryScope) {
+		domainModelScope.withHierarchy( TheEntity.class, (entityDescriptor) -> {
+			final IdentifierGeneratorFactory identifierGeneratorFactory = domainModelScope.getDomainModel()
+					.getMetadataBuildingOptions()
+					.getIdentifierGeneratorFactory();
+
+			final JdbcServices jdbcServices = serviceRegistryScope.getRegistry().getService( JdbcServices.class );
+			final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
+
+			final SequenceStyleGenerator generator = (SequenceStyleGenerator) entityDescriptor.getIdentifier().createIdentifierGenerator(
+					identifierGeneratorFactory,
+					jdbcEnvironment.getDialect(),
+					entityDescriptor
+			);
+
+			final String sequenceName = generator.getDatabaseStructure().getPhysicalName().getObjectName().getText();
+			assertThat( sequenceName ).isEqualTo( "ents_ids_seq" );
+		} );
+	}
+
+	public static class Strategy implements ImplicitIdentifierDatabaseObjectNamingStrategy {
+		@Override
+		public QualifiedName determineSequenceName(
+				Identifier catalogName,
+				Identifier schemaName,
+				Map<?,?> configValues,
+				ServiceRegistry serviceRegistry) {
+			final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
+
+			final String rootTableName = ConfigurationHelper.getString( PersistentIdentifierGenerator.TABLE, configValues );
+			final String structureName = String.format( "%s_ids_seq", rootTableName );
+			return new QualifiedSequenceName(
+					catalogName,
+					schemaName,
+					jdbcEnvironment.getIdentifierHelper().toIdentifier( structureName )
+			);
+		}
+
+		@Override
+		public QualifiedName determineTableName(
+				Identifier catalogName,
+				Identifier schemaName,
+				Map<?,?> configValues,
+				ServiceRegistry serviceRegistry) {
+			final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
+
+			final String rootTableName = ConfigurationHelper.getString( PersistentIdentifierGenerator.TABLE, configValues );
+			final String structureName = String.format( "%s_ids_tbl", rootTableName );
+			return new QualifiedSequenceName(
+					catalogName,
+					schemaName,
+					jdbcEnvironment.getIdentifierHelper().toIdentifier( structureName )
+			);
+		}
+	}
+
+	@Entity( name = "TheEntity" )
+	@Table( name = "ents" )
+	public static class TheEntity {
+	    @Id
+		@GeneratedValue( strategy = GenerationType.SEQUENCE )
+	    private Integer id;
+	    @Basic
+		private String name;
+
+		private TheEntity() {
+			// for use by Hibernate
+		}
+
+		public TheEntity(Integer id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+
+		public Integer getId() {
+			return id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+	}
+}

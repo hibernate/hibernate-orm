@@ -7,10 +7,15 @@
 package org.hibernate.cfg;
 
 import java.util.function.Supplier;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
+import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.boot.model.naming.spi.ImplicitIdentifierDatabaseObjectNamingStrategy;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.jpa.LegacySpecHints;
@@ -18,10 +23,6 @@ import org.hibernate.query.spi.QueryPlan;
 import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-
-import jakarta.persistence.criteria.CriteriaDelete;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.CriteriaUpdate;
 
 /**
  * Enumerates the configuration properties supported by Hibernate, including
@@ -774,6 +775,17 @@ public interface AvailableSettings {
 	 * @since 5.0
 	 */
 	String PHYSICAL_NAMING_STRATEGY = "hibernate.physical_naming_strategy";
+
+	/**
+	 * An implicit naming-strategy for database structures (tables, sequences) related
+	 * to identifier-generators
+	 *
+	 * @see ImplicitIdentifierDatabaseObjectNamingStrategy
+	 *
+	 * @incubating `ImplicitIdentifierDatabaseObjectNamingStrategy`	is considered incubating
+	 */
+	@Incubating
+	String ID_DB_STRUCTURE_NAMING_STRATEGY = "hibernate.id.db_structure_naming_strategy";
 
 	/**
 	 * Specifies the order in which metadata sources should be processed, is a delimited list

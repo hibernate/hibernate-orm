@@ -2479,6 +2479,8 @@ public interface AvailableSettings {
 	 * {@link org.hibernate.dialect.Dialect#getPreferredSqlTypeCodeForBoolean()
 	 * dialect-specific default type code} is used.
 	 *
+	 * Can also specify the name of the constant in {@link org.hibernate.type.SqlTypes} instead.
+	 *
 	 * @since 6.0
 	 */
 	String PREFERRED_BOOLEAN_JDBC_TYPE_CODE = "hibernate.type.preferred_boolean_jdbc_type_code";
@@ -2486,6 +2488,8 @@ public interface AvailableSettings {
 	/**
 	 * Specifies the preferred JDBC type code for storing duration values. When no
 	 * type code is explicitly specified, {@link org.hibernate.type.SqlTypes#INTERVAL_SECOND} is used.
+	 *
+	 * Can also specify the name of the constant in {@link org.hibernate.type.SqlTypes} instead.
 	 *
 	 * @since 6.0
 	 */

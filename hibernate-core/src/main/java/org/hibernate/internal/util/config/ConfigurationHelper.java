@@ -16,7 +16,6 @@ import java.util.function.Supplier;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -516,7 +515,7 @@ public final class ConfigurationHelper {
 
 	public static synchronized int getPreferredSqlTypeCodeForBoolean(StandardServiceRegistry serviceRegistry) {
 		final Integer typeCode = serviceRegistry.getService( ConfigurationService.class ).getSetting(
-				AvailableSettings.PREFERRED_BOOLEAN_JDBC_TYPE_CODE,
+				AvailableSettings.PREFERRED_BOOLEAN_JDBC_TYPE,
 				TypeCodeConverter.INSTANCE
 		);
 		if ( typeCode != null ) {
@@ -532,9 +531,17 @@ public final class ConfigurationHelper {
 
 	public static synchronized int getPreferredSqlTypeCodeForDuration(StandardServiceRegistry serviceRegistry) {
 		return serviceRegistry.getService( ConfigurationService.class ).getSetting(
-				AvailableSettings.PREFERRED_DURATION_JDBC_TYPE_CODE,
+				AvailableSettings.PREFERRED_DURATION_JDBC_TYPE,
 				TypeCodeConverter.INSTANCE,
 				SqlTypes.INTERVAL_SECOND
+		);
+	}
+
+	public static synchronized int getPreferredSqlTypeCodeForUuid(StandardServiceRegistry serviceRegistry) {
+		return serviceRegistry.getService( ConfigurationService.class ).getSetting(
+				AvailableSettings.PREFERRED_UUID_JDBC_TYPE,
+				TypeCodeConverter.INSTANCE,
+				SqlTypes.UUID
 		);
 	}
 

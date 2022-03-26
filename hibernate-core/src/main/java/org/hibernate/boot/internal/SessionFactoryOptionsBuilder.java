@@ -213,6 +213,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean namedQueryStartupCheckingEnabled;
 	private final int preferredSqlTypeCodeForBoolean;
 	private final int preferredSqlTypeCodeForDuration;
+	private final int preferredSqlTypeCodeForUuid;
 	private final TimeZoneStorageStrategy defaultTimeZoneStorageStrategy;
 
 	// Caching
@@ -417,6 +418,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.namedQueryStartupCheckingEnabled = cfgService.getSetting( QUERY_STARTUP_CHECKING, BOOLEAN, true );
 		this.preferredSqlTypeCodeForBoolean = ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry );
 		this.preferredSqlTypeCodeForDuration = ConfigurationHelper.getPreferredSqlTypeCodeForDuration( serviceRegistry );
+		this.preferredSqlTypeCodeForUuid = ConfigurationHelper.getPreferredSqlTypeCodeForUuid( serviceRegistry );
 		this.defaultTimeZoneStorageStrategy = context.getMetadataBuildingOptions().getDefaultTimeZoneStorage();
 
 		final RegionFactory regionFactory = serviceRegistry.getService( RegionFactory.class );
@@ -1193,6 +1195,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public int getPreferredSqlTypeCodeForDuration() {
 		return preferredSqlTypeCodeForDuration;
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForUuid() {
+		return preferredSqlTypeCodeForUuid;
 	}
 
 	@Override

@@ -2474,26 +2474,45 @@ public interface AvailableSettings {
 	String SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY = "hibernate.id.sequence.increment_size_mismatch_strategy";
 
 	/**
-	 * Specifies the preferred JDBC type code for storing boolean values. When no
-	 * type code is explicitly specified, a sensible
+	 * Specifies the preferred JDBC type for storing boolean values. When no
+	 * type is explicitly specified, a sensible
 	 * {@link org.hibernate.dialect.Dialect#getPreferredSqlTypeCodeForBoolean()
 	 * dialect-specific default type code} is used.
 	 *
-	 * Can also specify the name of the constant in {@link org.hibernate.type.SqlTypes} instead.
+	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
+	 * {@link org.hibernate.annotations.JdbcTypeCode} and friends
+	 *
+	 * Can also specify the name of the constant in {@link org.hibernate.type.SqlTypes} instead.  E.g.
+	 * {@code hibernate.type.preferred_boolean_jdbc_type=BIT}
 	 *
 	 * @since 6.0
 	 */
-	String PREFERRED_BOOLEAN_JDBC_TYPE_CODE = "hibernate.type.preferred_boolean_jdbc_type_code";
+	String PREFERRED_BOOLEAN_JDBC_TYPE = "hibernate.type.preferred_boolean_jdbc_type";
 
 	/**
-	 * Specifies the preferred JDBC type code for storing duration values. When no
-	 * type code is explicitly specified, {@link org.hibernate.type.SqlTypes#INTERVAL_SECOND} is used.
+	 * The preferred JDBC type to use for storing {@link java.util.UUID} values.
 	 *
-	 * Can also specify the name of the constant in {@link org.hibernate.type.SqlTypes} instead.
+	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
+	 * {@link org.hibernate.annotations.JdbcTypeCode} and friends
+	 *
+	 * Can also specify the name of the constant in {@link org.hibernate.type.SqlTypes} instead.  E.g.
+	 * {@code hibernate.type.preferred_uuid_jdbc_type=CHAR}
+	 */
+	String PREFERRED_UUID_JDBC_TYPE = "hibernate.type.preferred_uuid_jdbc_type";
+
+	/**
+	 * Specifies the preferred JDBC type for storing duration values. When no
+	 * type is explicitly specified, {@link org.hibernate.type.SqlTypes#INTERVAL_SECOND} is used.
+	 *
+	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
+	 * {@link org.hibernate.annotations.JdbcTypeCode} and friends
+	 *
+	 * Can also specify the name of the constant in {@link org.hibernate.type.SqlTypes} instead.  E.g.
+	 * {@code hibernate.type.preferred_duration_jdbc_type=NUMERIC}
 	 *
 	 * @since 6.0
 	 */
-	String PREFERRED_DURATION_JDBC_TYPE_CODE = "hibernate.type.preferred_duration_jdbc_type_code";
+	String PREFERRED_DURATION_JDBC_TYPE = "hibernate.type.preferred_duration_jdbc_type";
 
 	/**
 	 * Specifies a {@link org.hibernate.type.FormatMapper} used for for JSON serialization

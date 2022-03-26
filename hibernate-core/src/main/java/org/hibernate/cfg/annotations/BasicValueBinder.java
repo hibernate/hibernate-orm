@@ -222,6 +222,11 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForUuid() {
+		return buildingContext.getPreferredSqlTypeCodeForUuid();
+	}
+
+	@Override
 	public boolean isNationalized() {
 		return isNationalized;
 	}

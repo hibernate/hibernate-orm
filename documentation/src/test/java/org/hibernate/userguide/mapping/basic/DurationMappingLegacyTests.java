@@ -38,7 +38,7 @@ import static org.hamcrest.Matchers.is;
  */
 @DomainModel(annotatedClasses = DurationMappingLegacyTests.EntityWithDuration.class)
 @SessionFactory
-@ServiceRegistry(settings = @Setting(name = AvailableSettings.PREFERRED_DURATION_JDBC_TYPE_CODE, value = "NUMERIC"))
+@ServiceRegistry(settings = @Setting(name = AvailableSettings.PREFERRED_DURATION_JDBC_TYPE, value = "NUMERIC"))
 public class DurationMappingLegacyTests {
 
 	@Test

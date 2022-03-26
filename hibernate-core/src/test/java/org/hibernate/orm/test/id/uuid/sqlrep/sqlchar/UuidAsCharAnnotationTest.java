@@ -35,10 +35,10 @@ import static org.hamcrest.Matchers.hasSize;
 /**
  * @author Steve Ebersole
  */
-@DomainModel(annotatedClasses = { UUIDCharTest.Node.class })
+@DomainModel(annotatedClasses = { UuidAsCharAnnotationTest.Node.class })
 @SessionFactory
 @SkipForDialect(dialectClass = PostgreSQLDialect.class, reason = "Postgres has its own UUID type")
-public class UUIDCharTest {
+public class UuidAsCharAnnotationTest {
 
 	private static class UUIDPair {
 		UUID rootId;

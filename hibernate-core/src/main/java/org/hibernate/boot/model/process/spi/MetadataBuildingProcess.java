@@ -377,7 +377,13 @@ public class MetadataBuildingProcess {
 
 		// add fallback type descriptors
 		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
-		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.UUID, SqlTypes.BINARY );
+		final int preferredSqlTypeCodeForUuid = ConfigurationHelper.getPreferredSqlTypeCodeForUuid( bootstrapContext.getServiceRegistry() );
+		if ( preferredSqlTypeCodeForUuid != SqlTypes.UUID ) {
+			jdbcTypeRegistry.addDescriptor( SqlTypes.UUID, jdbcTypeRegistry.getDescriptor( preferredSqlTypeCodeForUuid ) );
+		}
+		else {
+			addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.UUID, SqlTypes.BINARY );
+		}
 		jdbcTypeRegistry.addDescriptorIfAbsent( JsonJdbcType.INSTANCE );
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.INET, SqlTypes.VARBINARY );
 		final int preferredSqlTypeCodeForDuration = ConfigurationHelper.getPreferredSqlTypeCodeForDuration( bootstrapContext.getServiceRegistry() );

@@ -280,7 +280,7 @@ In either case, schema validation errors could occur as 5.x used the type code `
 Migration to `numeric(21)` should be easy. The migration to `interval second` might require a migration expression like
 `cast(cast(old as numeric(21,9) / 1000000000) as interval second(9))`.
 
-To retain backwards compatibility, configure the setting `hibernate.type.preferred_duration_jdbc_type_code` to `2`
+To retain backwards compatibility, configure the setting `hibernate.type.preferred_duration_jdbc_type` to `2`
 which stands for `Types.NUMERIC`.
 
 [[query]]

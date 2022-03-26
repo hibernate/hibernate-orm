@@ -84,6 +84,16 @@ public interface JdbcTypeIndicators {
 	}
 
 	/**
+	 * When mapping a uuid type to the database what is the preferred SQL type code to use?
+	 * <p/>
+	 * Specifically names the key into the
+	 * {@link JdbcTypeRegistry}.
+	 */
+	default int getPreferredSqlTypeCodeForUuid() {
+		return SqlTypes.UUID;
+	}
+
+	/**
 	 * Useful for resolutions based on column length.  E.g. choosing between a VARCHAR (String) and a CHAR(1) (Character/char)
 	 */
 	default long getColumnLength() {

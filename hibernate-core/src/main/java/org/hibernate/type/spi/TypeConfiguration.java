@@ -68,7 +68,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
 
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_UUID_JDBC_TYPE;
+import static org.hibernate.cfg.AvailableSettings.PREFERRED_UUID_JDBC_TYPE;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
@@ -467,7 +467,11 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		public int getDefaultUuidJdbcType() {
 			if ( uuidJdbcType == null ) {
 				final ConfigurationService cfgService = typeConfiguration.getServiceRegistry().getService( ConfigurationService.class );
-				this.uuidJdbcType = ConfigurationHelper.getInt( DEFAULT_UUID_JDBC_TYPE, cfgService.getSettings(), SqlTypes.UUID );
+				this.uuidJdbcType = cfgService.getSetting(
+						PREFERRED_UUID_JDBC_TYPE,
+						ConfigurationHelper.TypeCodeConverter.INSTANCE,
+						SqlTypes.UUID
+				);
 			}
 
 			return uuidJdbcType;

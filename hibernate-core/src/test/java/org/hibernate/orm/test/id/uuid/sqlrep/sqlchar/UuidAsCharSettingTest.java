@@ -14,15 +14,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.Type;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -30,7 +27,6 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -41,7 +37,7 @@ import static org.hamcrest.Matchers.hasSize;
 /**
  * @author Steve Ebersole
  */
-@ServiceRegistry( settings = @Setting( name = AvailableSettings.DEFAULT_UUID_JDBC_TYPE, value = "1" ) )
+@ServiceRegistry( settings = @Setting( name = AvailableSettings.PREFERRED_UUID_JDBC_TYPE, value = "CHAR" ) )
 @DomainModel(annotatedClasses = { UuidAsCharSettingTest.Node.class })
 @SessionFactory
 public class UuidAsCharSettingTest {

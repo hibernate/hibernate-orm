@@ -599,11 +599,6 @@ public interface AvailableSettings {
 	String DEFAULT_SCHEMA = "hibernate.default_schema";
 
 	/**
-	 * Default JDBC type-code to use when mapping {@link java.util.UUID} values.
-	 */
-	String DEFAULT_UUID_JDBC_TYPE = "hibernate.uuid-default-jdbc-type";
-
-	/**
 	 * Specifies the {@link org.hibernate.annotations.CacheConcurrencyStrategy} to use by
 	 * default when an entity is marked {@link jakarta.persistence.Cacheable @Cacheable},
 	 * but no concurrency strategy is explicitly specified via the
@@ -2489,6 +2484,17 @@ public interface AvailableSettings {
 	 * @since 6.0
 	 */
 	String PREFERRED_BOOLEAN_JDBC_TYPE_CODE = "hibernate.type.preferred_boolean_jdbc_type_code";
+
+	/**
+	 * The preferred JDBC type to use for storing {@link java.util.UUID} values.
+	 *
+	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
+	 * {@link org.hibernate.annotations.JdbcTypeCode} and friends
+	 *
+	 * Can also specify the name of the constant in {@link org.hibernate.type.SqlTypes} instead.  E.g.
+	 * {@code hibernate.preferred_uuid_jdbc_type=CHAR}
+	 */
+	String PREFERRED_UUID_JDBC_TYPE = "hibernate.preferred_uuid_jdbc_type";
 
 	/**
 	 * Specifies the preferred JDBC type code for storing duration values. When no

@@ -538,7 +538,7 @@ public final class ConfigurationHelper {
 		);
 	}
 
-	private static class TypeCodeConverter implements ConfigurationService.Converter<Integer> {
+	public static class TypeCodeConverter implements ConfigurationService.Converter<Integer> {
 
 		public static final TypeCodeConverter INSTANCE = new TypeCodeConverter();
 

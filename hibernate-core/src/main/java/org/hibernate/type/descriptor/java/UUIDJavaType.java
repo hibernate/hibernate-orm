@@ -11,7 +11,6 @@ import java.util.UUID;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.BytesHelper;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -30,7 +29,7 @@ public class UUIDJavaType extends AbstractClassJavaType<UUID> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( SqlTypes.UUID );
+		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( context.getDefaultUuidJdbcType() );
 	}
 
 	public String toString(UUID value) {

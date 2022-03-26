@@ -12,7 +12,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.sql.Types;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -29,6 +28,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
@@ -38,19 +38,21 @@ import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.model.domain.internal.ArrayTupleType;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
+import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.service.ServiceRegistry;
@@ -66,8 +68,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
 
-import jakarta.persistence.TemporalType;
-
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_UUID_JDBC_TYPE;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
@@ -338,7 +339,6 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 * Each stage or phase is consider a scope for the TypeConfiguration.
 	 */
 	private static class Scope implements Serializable {
-		private final TypeConfiguration typeConfiguration;
 
 		private transient MetadataBuildingContext metadataBuildingContext;
 		private transient SessionFactoryImplementor sessionFactory;
@@ -346,15 +346,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		private String sessionFactoryName;
 		private String sessionFactoryUuid;
 
-		private final transient JdbcTypeIndicators currentSqlTypeIndicators = new JdbcTypeIndicators() {
-			@Override
-			public TypeConfiguration getTypeConfiguration() {
-				return typeConfiguration;
-			}
-		};
+		private final transient JdbcTypeIndicators currentSqlTypeIndicators;
 
 		public Scope(TypeConfiguration typeConfiguration) {
-			this.typeConfiguration = typeConfiguration;
+			this.currentSqlTypeIndicators = new JdbcTypeIndicatorsImpl( typeConfiguration );
 		}
 
 		public JdbcTypeIndicators getCurrentBaseSqlTypeIndicators() {
@@ -451,6 +446,36 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			}
 
 			return this;
+		}
+	}
+
+	private static class JdbcTypeIndicatorsImpl implements JdbcTypeIndicators {
+		private final TypeConfiguration typeConfiguration;
+
+		private Integer uuidJdbcType;
+
+		public JdbcTypeIndicatorsImpl(TypeConfiguration typeConfiguration) {
+			this.typeConfiguration = typeConfiguration;
+		}
+
+		@Override
+		public int getPreferredSqlTypeCodeForBoolean() {
+			return SqlTypes.BOOLEAN;
+		}
+
+		@Override
+		public int getDefaultUuidJdbcType() {
+			if ( uuidJdbcType == null ) {
+				final ConfigurationService cfgService = typeConfiguration.getServiceRegistry().getService( ConfigurationService.class );
+				this.uuidJdbcType = ConfigurationHelper.getInt( DEFAULT_UUID_JDBC_TYPE, cfgService.getSettings(), SqlTypes.UUID );
+			}
+
+			return uuidJdbcType;
+		}
+
+		@Override
+		public TypeConfiguration getTypeConfiguration() {
+			return typeConfiguration;
 		}
 	}
 

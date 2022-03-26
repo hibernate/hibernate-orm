@@ -702,6 +702,16 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	}
 
 	@Override
+	public int getDefaultUuidJdbcType() {
+		final JdbcType jdbcType = explicitJdbcTypeAccess == null ? null : explicitJdbcTypeAccess.apply( typeConfiguration );
+		if ( jdbcType != null ) {
+			return jdbcType.getJdbcTypeCode();
+		}
+
+		return typeConfiguration.getCurrentBaseSqlTypeIndicators().getDefaultUuidJdbcType();
+	}
+
+	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
 	}

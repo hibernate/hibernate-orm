@@ -599,6 +599,11 @@ public interface AvailableSettings {
 	String DEFAULT_SCHEMA = "hibernate.default_schema";
 
 	/**
+	 * Default JDBC type-code to use when mapping {@link java.util.UUID} values.
+	 */
+	String DEFAULT_UUID_JDBC_TYPE = "hibernate.uuid-default-jdbc-type";
+
+	/**
 	 * Specifies the {@link org.hibernate.annotations.CacheConcurrencyStrategy} to use by
 	 * default when an entity is marked {@link jakarta.persistence.Cacheable @Cacheable},
 	 * but no concurrency strategy is explicitly specified via the

@@ -8,6 +8,7 @@ package org.hibernate.boot.model.process.internal;
 
 import java.io.Serializable;
 import java.lang.reflect.Type;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import jakarta.persistence.EnumType;
@@ -164,6 +165,13 @@ public class InferredBasicValueResolver {
 							stdIndicators,
 							typeConfiguration
 					);
+				}
+				else if ( reflectedJtd.getJavaTypeClass().equals( UUID.class ) ) {
+					jdbcMapping = typeConfiguration.getBasicTypeRegistry().resolve(
+							reflectedJtd,
+							reflectedJtd.getRecommendedJdbcType( stdIndicators )
+					);
+					legacyType = jdbcMapping;
 				}
 				else {
 					// see if there is a registered BasicType for this JavaType and, if so, use it.

@@ -108,6 +108,10 @@ public interface JdbcTypeIndicators {
 		return getTypeConfiguration().getSessionFactory().getFastSessionServices().getDefaultTimeZoneStorageStrategy();
 	}
 
+	default int getDefaultUuidJdbcType() {
+		return SqlTypes.UUID;
+	}
+
 	/**
 	 * Provides access to the TypeConfiguration for access to various type-system registries.
 	 */

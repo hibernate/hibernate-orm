@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.hql.internal;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -54,6 +53,6 @@ public class DomainPathPart implements SemanticPathPart {
 			SqmExpression<?> selector,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		return currentPath.resolveIndexedAccess( selector, isTerminal, creationState );
 	}
 }

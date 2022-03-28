@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
@@ -305,7 +304,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public void appendDatetimeFormat(SqlAppender appender, String format) {
-		throw new NotYetImplementedFor6Exception( "format() function not supported on Sybase");
+		throw new UnsupportedOperationException( "format() function not supported on Sybase");
 	}
 
 	@Override

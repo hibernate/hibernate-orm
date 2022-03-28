@@ -17,7 +17,6 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.identity.FirebirdIdentityColumnSupport;
 import org.hibernate.community.dialect.pagination.SkipFirstLimitHandler;
@@ -803,7 +802,7 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public void appendDatetimeFormat(SqlAppender appender, String format) {
-		throw new NotYetImplementedFor6Exception( "format() function not supported on Firebird" );
+		throw new UnsupportedOperationException( "format() function not supported on Firebird" );
 	}
 
 	@Override

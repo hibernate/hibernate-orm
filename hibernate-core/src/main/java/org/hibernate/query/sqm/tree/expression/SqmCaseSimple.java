@@ -9,17 +9,13 @@ package org.hibernate.query.sqm.tree.expression;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSimpleCase;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 import jakarta.persistence.criteria.Expression;
 
@@ -28,7 +24,7 @@ import jakarta.persistence.criteria.Expression;
  */
 public class SqmCaseSimple<T, R>
 		extends AbstractSqmExpression<R>
-		implements JpaSimpleCase<T, R>, DomainResultProducer<R> {
+		implements JpaSimpleCase<T, R> {
 	private final SqmExpression<T> fixture;
 	private final List<WhenFragment<T, R>> whenFragments;
 	private SqmExpression<R> otherwise;
@@ -139,18 +135,6 @@ public class SqmCaseSimple<T, R>
 	@Override
 	public String asLoggableText() {
 		return "<simple-case>";
-	}
-
-	@Override
-	public DomainResult<R> createDomainResult(
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	@Override
-	public void applySqlSelections(DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	public static class WhenFragment<T,R> {

@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.util.Objects;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.ParameterMetadata;
@@ -17,10 +16,7 @@ import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 /**
  * {@link JpaParameterExpression} created via JPA {@link jakarta.persistence.criteria.CriteriaBuilder}.
@@ -34,7 +30,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
  */
 public class JpaCriteriaParameter<T>
 		extends AbstractSqmExpression<T>
-		implements SqmParameter<T>, QueryParameterImplementor<T>, DomainResultProducer<T> {
+		implements SqmParameter<T>, QueryParameterImplementor<T> {
 	private final String name;
 	private boolean allowsMultiValuedBinding;
 
@@ -149,18 +145,6 @@ public class JpaCriteriaParameter<T>
 	public void appendHqlString(StringBuilder sb) {
 		sb.append( ':' );
 		sb.append( getName() );
-	}
-
-	@Override
-	public DomainResult<T> createDomainResult(
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	@Override
-	public void applySqlSelections(DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override

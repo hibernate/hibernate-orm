@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.sqm.sql.ConversionException;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
@@ -111,7 +110,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 
 	@Override
 	public void applySqlSelections(DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException( "dynamic instantiation in a sub-query is unsupported" );
 	}
 
 //

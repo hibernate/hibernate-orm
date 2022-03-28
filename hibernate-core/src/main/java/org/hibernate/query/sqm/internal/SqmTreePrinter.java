@@ -9,7 +9,6 @@ package org.hibernate.query.sqm.internal;
 import java.util.List;
 import java.util.Locale;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.sql.internal.SelfInterpretingSqmPath;
@@ -1037,12 +1036,12 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	@Override
 	public Object visitEnumLiteral(SqmEnumLiteral<?> sqmEnumLiteral) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		return null;
 	}
 
 	@Override
 	public Object visitFieldLiteral(SqmFieldLiteral<?> sqmFieldLiteral) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		return null;
 	}
 
 	@Override

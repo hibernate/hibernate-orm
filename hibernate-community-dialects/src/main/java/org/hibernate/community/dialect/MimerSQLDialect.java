@@ -6,7 +6,6 @@
  */
 package org.hibernate.community.dialect;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.identity.MimerSQLIdentityColumnSupport;
 import org.hibernate.community.dialect.sequence.MimerSequenceSupport;
@@ -318,7 +317,7 @@ public class MimerSQLDialect extends Dialect {
 
 	@Override
 	public void appendDatetimeFormat(SqlAppender appender, String format) {
-		throw new NotYetImplementedFor6Exception("format() function not supported on Mimer SQL");
+		throw new UnsupportedOperationException("format() function not supported on Mimer SQL");
 	}
 
 	@Override

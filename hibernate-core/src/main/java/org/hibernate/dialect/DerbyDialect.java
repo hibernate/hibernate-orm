@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CastingConcatFunction;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -362,7 +361,7 @@ public class DerbyDialect extends Dialect {
 			case WEEK:
 			case DAY_OF_YEAR:
 			case DAY_OF_WEEK:
-				throw new NotYetImplementedFor6Exception("field type not supported on Derby: " + unit);
+				throw new UnsupportedOperationException("field type not supported on Derby: " + unit);
 			case DAY_OF_MONTH:
 				return "day";
 			default:
@@ -632,7 +631,7 @@ public class DerbyDialect extends Dialect {
 
 	@Override
 	public void appendDatetimeFormat(SqlAppender appender, String format) {
-		throw new NotYetImplementedFor6Exception("format() function not supported on Derby");
+		throw new UnsupportedOperationException("format() function not supported on Derby");
 	}
 
 	@Override

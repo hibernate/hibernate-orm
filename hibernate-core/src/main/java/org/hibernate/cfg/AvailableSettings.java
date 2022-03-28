@@ -15,7 +15,7 @@ import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.boot.model.naming.spi.ImplicitIdentifierDatabaseObjectNamingStrategy;
+import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.jpa.LegacySpecHints;
@@ -780,9 +780,9 @@ public interface AvailableSettings {
 	 * An implicit naming-strategy for database structures (tables, sequences) related
 	 * to identifier-generators
 	 *
-	 * @see ImplicitIdentifierDatabaseObjectNamingStrategy
+	 * @see ImplicitDatabaseObjectNamingStrategy
 	 *
-	 * @incubating `ImplicitIdentifierDatabaseObjectNamingStrategy`	is considered incubating
+	 * @incubating `ImplicitDatabaseObjectNamingStrategy`	is considered incubating
 	 */
 	@Incubating
 	String ID_DB_STRUCTURE_NAMING_STRATEGY = "hibernate.id.db_structure_naming_strategy";

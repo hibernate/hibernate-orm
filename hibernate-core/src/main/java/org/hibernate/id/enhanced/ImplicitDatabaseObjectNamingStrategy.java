@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.boot.model.naming.spi;
+package org.hibernate.id.enhanced;
 
 import java.util.Map;
 
@@ -15,14 +15,12 @@ import org.hibernate.service.ServiceRegistry;
 
 /**
  * A naming strategy specifically for determining the implicit naming of
- * tables and sequences relating to identifier-generators.
- *
- * Used in conjunction with
+ * tables and sequences relating to enhanced identifier-generators.
  *
  * @author Steve Ebersole
  */
 @Incubating
-public interface ImplicitIdentifierDatabaseObjectNamingStrategy {
+public interface ImplicitDatabaseObjectNamingStrategy {
 	String DEF_SEQUENCE = "hibernate_sequence";
 
 	/**

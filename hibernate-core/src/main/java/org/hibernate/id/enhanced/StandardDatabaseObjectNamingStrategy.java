@@ -7,11 +7,9 @@
 package org.hibernate.id.enhanced;
 
 import java.util.Map;
-import java.util.Objects;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.spi.ImplicitIdentifierDatabaseObjectNamingStrategy;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
@@ -26,13 +24,12 @@ import static org.hibernate.id.OptimizableGenerator.IMPLICIT_NAME_BASE;
 import static org.hibernate.id.enhanced.SequenceStyleGenerator.CONFIG_SEQUENCE_PER_ENTITY_SUFFIX;
 import static org.hibernate.id.enhanced.SequenceStyleGenerator.DEF_SEQUENCE_SUFFIX;
 import static org.hibernate.id.enhanced.TableGenerator.DEF_TABLE;
-import static org.hibernate.id.enhanced.TableGenerator.TABLE_PARAM;
 
 /**
  * @author Steve Ebersole
  */
-public class StandardImplicitIdentifierDatabaseObjectNamingStrategy implements ImplicitIdentifierDatabaseObjectNamingStrategy {
-
+public class StandardDatabaseObjectNamingStrategy implements ImplicitDatabaseObjectNamingStrategy {
+	public static final String STRATEGY_NAME = "default";
 
 	@Override
 	public QualifiedName determineSequenceName(
@@ -45,6 +42,10 @@ public class StandardImplicitIdentifierDatabaseObjectNamingStrategy implements I
 		final String rootTableName = ConfigurationHelper.getString( PersistentIdentifierGenerator.TABLE, configValues );
 		final String implicitName = implicitName( rootTableName, configValues, serviceRegistry );
 
+		if ( implicitName.contains( "." ) ) {
+			return QualifiedNameParser.INSTANCE.parse( implicitName );
+		}
+
 		return new QualifiedSequenceName(
 				catalogName,
 				schemaName,
@@ -56,16 +57,16 @@ public class StandardImplicitIdentifierDatabaseObjectNamingStrategy implements I
 			String rootTableName,
 			Map<?, ?> configValues,
 			ServiceRegistry serviceRegistry) {
-		final String base = ConfigurationHelper.getString( IMPLICIT_NAME_BASE, configValues );
-		final String suffix = ConfigurationHelper.getString( CONFIG_SEQUENCE_PER_ENTITY_SUFFIX, configValues, DEF_SEQUENCE_SUFFIX );
+		final String explicitSuffix = ConfigurationHelper.getString( CONFIG_SEQUENCE_PER_ENTITY_SUFFIX, configValues );
+		final String base = ConfigurationHelper.getString( IMPLICIT_NAME_BASE, configValues, rootTableName );
 
-		if ( ! Objects.equals( suffix, DEF_SEQUENCE_SUFFIX ) ) {
+		if ( StringHelper.isNotEmpty( explicitSuffix ) ) {
 			// an "implicit name suffix" was specified
 			if ( StringHelper.isNotEmpty( base ) ) {
 				if ( Identifier.isQuoted( base ) ) {
-					return "`" + Identifier.unQuote( base ) + suffix + "`";
+					return "`" + Identifier.unQuote( base ) + explicitSuffix + "`";
 				}
-				return base + suffix;
+				return base + explicitSuffix;
 			}
 		}
 
@@ -76,9 +77,9 @@ public class StandardImplicitIdentifierDatabaseObjectNamingStrategy implements I
 
 		if ( StringHelper.isNotEmpty( base ) ) {
 			if ( Identifier.isQuoted( base ) ) {
-				return "`" + Identifier.unQuote( base ) + suffix + "`";
+				return "`" + Identifier.unQuote( base ) + DEF_SEQUENCE_SUFFIX + "`";
 			}
-			return base + suffix;
+			return base + DEF_SEQUENCE_SUFFIX;
 		}
 
 		throw new MappingException( "Unable to determine implicit sequence name; target table - " + rootTableName );
@@ -90,14 +91,7 @@ public class StandardImplicitIdentifierDatabaseObjectNamingStrategy implements I
 			Identifier schemaName,
 			Map<?, ?> configValues,
 			ServiceRegistry serviceRegistry) {
-		String fallbackTableName = DEF_TABLE;
-
-		final String generatorName = ConfigurationHelper.getString( IdentifierGenerator.GENERATOR_NAME, configValues );
-		if ( StringHelper.isNotEmpty( generatorName ) ) {
-			fallbackTableName = generatorName;
-		}
-
-		final String tableName = ConfigurationHelper.getString( TABLE_PARAM, configValues, fallbackTableName );
+		final String tableName = implicitTableName( configValues );
 
 		if ( tableName.contains( "." ) ) {
 			return QualifiedNameParser.INSTANCE.parse( tableName );
@@ -110,6 +104,15 @@ public class StandardImplicitIdentifierDatabaseObjectNamingStrategy implements I
 					jdbcEnvironment.getIdentifierHelper().toIdentifier( tableName )
 			);
 		}
+	}
+
+	private static String implicitTableName(Map<?, ?> configValues) {
+		final String generatorName = ConfigurationHelper.getString( IdentifierGenerator.GENERATOR_NAME, configValues );
+		if ( StringHelper.isNotEmpty( generatorName ) ) {
+			return generatorName;
+		}
+
+		return DEF_TABLE;
 	}
 
 }

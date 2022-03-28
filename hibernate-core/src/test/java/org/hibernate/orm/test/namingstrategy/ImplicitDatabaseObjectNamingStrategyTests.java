@@ -15,7 +15,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.spi.ImplicitIdentifierDatabaseObjectNamingStrategy;
+import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.cfg.AvailableSettings;
@@ -41,11 +41,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @org.hibernate.testing.orm.junit.ServiceRegistry(
 		settings = @Setting(
 				name = AvailableSettings.ID_DB_STRUCTURE_NAMING_STRATEGY,
-				value = "org.hibernate.orm.test.namingstrategy.ImplicitIdentifierDatabaseObjectNamingStrategyTests$Strategy"
+				value = "org.hibernate.orm.test.namingstrategy.ImplicitDatabaseObjectNamingStrategyTests$Strategy"
 		)
 )
-@DomainModel( annotatedClasses = ImplicitIdentifierDatabaseObjectNamingStrategyTests.TheEntity.class )
-public class ImplicitIdentifierDatabaseObjectNamingStrategyTests {
+@DomainModel( annotatedClasses = ImplicitDatabaseObjectNamingStrategyTests.TheEntity.class )
+public class ImplicitDatabaseObjectNamingStrategyTests {
 
 	@Test
 	public void testIt(DomainModelScope domainModelScope, ServiceRegistryScope serviceRegistryScope) {
@@ -68,7 +68,7 @@ public class ImplicitIdentifierDatabaseObjectNamingStrategyTests {
 		} );
 	}
 
-	public static class Strategy implements ImplicitIdentifierDatabaseObjectNamingStrategy {
+	public static class Strategy implements ImplicitDatabaseObjectNamingStrategy {
 		@Override
 		public QualifiedName determineSequenceName(
 				Identifier catalogName,

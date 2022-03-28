@@ -42,7 +42,6 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -296,7 +295,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 			subSelectFetchableKeysHandler = null;
 		}
 
-		return JdbcSelectExecutorStandardImpl.INSTANCE.list(
+		return session.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,
 				new ExecutionContext() {

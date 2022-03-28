@@ -3157,9 +3157,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Expression visitQualifiedAttributeJoin(SqmAttributeJoin<?, ?> sqmJoin) {
-		// todo (6.0) : have this resolve to TableGroup instead?
-		//		- trying to remove tracking of TableGroupJoin in the x-refs
-
 		final TableGroup existing = getFromClauseAccess().findTableGroup( sqmJoin.getNavigablePath() );
 		if ( existing != null ) {
 			log.tracef( "SqmAttributeJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
@@ -3171,9 +3168,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Expression visitCrossJoin(SqmCrossJoin<?> sqmJoin) {
-		// todo (6.0) : have this resolve to TableGroup instead?
-		//		- trying to remove tracking of TableGroupJoin in the x-refs
-
 		final TableGroup existing = getFromClauseAccess().findTableGroup( sqmJoin.getNavigablePath() );
 		if ( existing != null ) {
 			log.tracef( "SqmCrossJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
@@ -3185,9 +3179,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Object visitPluralPartJoin(SqmPluralPartJoin<?, ?> sqmJoin) {
-		// todo (6.0) : have this resolve to TableGroup instead?
-		//		- trying to remove tracking of TableGroupJoin in the x-refs
-
 		final TableGroup existing = getFromClauseAccess().findTableGroup( sqmJoin.getNavigablePath() );
 		if ( existing != null ) {
 			log.tracef( "SqmPluralPartJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
@@ -3199,9 +3190,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Expression visitQualifiedEntityJoin(SqmEntityJoin<?> sqmJoin) {
-		// todo (6.0) : have this resolve to TableGroup instead?
-		//		- trying to remove tracking of TableGroupJoin in the x-refs
-
 		final TableGroup existing = getFromClauseAccess().findTableGroup( sqmJoin.getNavigablePath() );
 		if ( existing != null ) {
 			log.tracef( "SqmEntityJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
@@ -6750,9 +6738,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public List<Fetch> visitFetches(FetchParent fetchParent) {
 		final List<Fetch> fetches = CollectionHelper.arrayList( fetchParent.getReferencedMappingType().getNumberOfFetchables() );
 
-// todo (6.0) : determine how to best handle TREAT
-//		fetchParent.getReferencedMappingContainer().visitKeyFetchables( fetchableBiConsumer, treatTargetType );
-//		fetchParent.getReferencedMappingContainer().visitFetchables( fetchableBiConsumer, treatTargetType );
 		fetchParent.getReferencedMappingContainer().visitKeyFetchables( fetchable -> addFetch( fetches, fetchParent, fetchable, true ), null );
 		fetchParent.getReferencedMappingContainer().visitFetchables( fetchable -> addFetch( fetches, fetchParent, fetchable, false ), null );
 		return fetches;

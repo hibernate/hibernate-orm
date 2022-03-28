@@ -56,7 +56,6 @@ public class LoadingCollectionEntryImpl implements LoadingCollectionEntry {
 	}
 
 	@Override public Object getKey() {
-		// todo (6.0) : change from Serializable to Object
 		return key;
 	}
 

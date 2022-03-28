@@ -58,6 +58,4 @@ public interface SqmTranslatorFactory {
 			LoadQueryInfluencers loadQueryInfluencers,
 			SqlAstCreationContext creationContext);
 
-
-	// todo (6.0) : update, delete, etc converters...
 }

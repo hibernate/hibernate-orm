@@ -89,7 +89,6 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 		identifier = identifierAssembler.assemble( rowProcessingState );
 
 		if ( identifier == null ) {
-			// todo (6.0) : check this is the correct behaviour
 			entityInstance = null;
 		}
 		else {

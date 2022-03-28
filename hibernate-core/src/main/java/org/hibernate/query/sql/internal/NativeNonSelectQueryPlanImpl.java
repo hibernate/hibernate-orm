@@ -19,9 +19,7 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sql.spi.ParameterOccurrence;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.internal.StandardJdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcMutation;
-import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.NativeJdbcMutation;
@@ -46,8 +44,9 @@ public class NativeNonSelectQueryPlanImpl implements NonSelectQueryPlan {
 
 	@Override
 	public int executeUpdate(DomainQueryExecutionContext executionContext) {
-		executionContext.getSession().autoFlushIfRequired( affectedTableNames );
-		BulkOperationCleanupAction.schedule( executionContext.getSession(), affectedTableNames );
+		final SharedSessionContractImplementor session = executionContext.getSession();
+		session.autoFlushIfRequired( affectedTableNames );
+		BulkOperationCleanupAction.schedule( session, affectedTableNames );
 		final List<JdbcParameterBinder> jdbcParameterBinders;
 		final JdbcParameterBindings jdbcParameterBindings;
 
@@ -64,7 +63,7 @@ public class NativeNonSelectQueryPlanImpl implements NonSelectQueryPlan {
 					queryParameterBindings,
 					parameterList,
 					jdbcParameterBinders,
-					executionContext.getSession().getFactory()
+					session.getFactory()
 			);
 		}
 
@@ -74,14 +73,7 @@ public class NativeNonSelectQueryPlanImpl implements NonSelectQueryPlan {
 				affectedTableNames
 		);
 
-		final JdbcMutationExecutor executor = StandardJdbcMutationExecutor.INSTANCE;
-
-		final SharedSessionContractImplementor session = executionContext.getSession();
-		// todo (6.0): use configurable executor instead?
-//		final SessionFactoryImplementor factory = session.getFactory();
-//		final JdbcServices jdbcServices = factory.getJdbcServices();
-//		return jdbcServices.getJdbcMutationExecutor().execute(
-		return executor.execute(
+		return session.getJdbcServices().getJdbcMutationExecutor().execute(
 				jdbcMutation,
 				jdbcParameterBindings,
 				sql -> session

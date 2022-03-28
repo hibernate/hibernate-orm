@@ -144,11 +144,6 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	@SuppressWarnings("unchecked")
 	public SqmPath<?> get(String attributeName) {
 
-		// todo (6.0) : this is similar to the idea of  creating an SqmExpression for a Navigable
-		//		should make these stylistically consistent, either -
-		//			1) add `Navigable#createCriteriaExpression` (ala, the exist `#createSqmExpression`)
-		//			2) remove `Navigable#createSqmExpression` and use the approach used here instead.
-
 		final SqmPathSource<?> subNavigable = getReferencedPathSource().getSubPathSource( attributeName );
 
 		return resolvePath( attributeName, subNavigable );

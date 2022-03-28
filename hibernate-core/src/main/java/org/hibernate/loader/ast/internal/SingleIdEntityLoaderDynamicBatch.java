@@ -27,7 +27,6 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -141,7 +140,7 @@ public class SingleIdEntityLoaderDynamicBatch<T> extends SingleIdEntityLoaderSup
 				jdbcParameterBindings
 		);
 
-		JdbcSelectExecutorStandardImpl.INSTANCE.list(
+		session.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,
 				getExecutionContext(

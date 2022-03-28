@@ -26,6 +26,10 @@ import org.hibernate.cache.internal.SimpleCacheKeysFactory;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
+import org.hibernate.id.enhanced.LegacyNamingStrategy;
+import org.hibernate.id.enhanced.LegacyPreferGeneratorNameNamingStrategy;
+import org.hibernate.id.enhanced.StandardDatabaseObjectNamingStrategy;
 import org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
@@ -214,6 +218,25 @@ public class StrategySelectorBuilder {
 				ImplicitNamingStrategy.class,
 				"component-path",
 				ImplicitNamingStrategyComponentPathImpl.class
+		);
+
+
+		strategySelector.registerStrategyImplementor(
+				ImplicitDatabaseObjectNamingStrategy.class,
+				StandardDatabaseObjectNamingStrategy.STRATEGY_NAME,
+				StandardDatabaseObjectNamingStrategy.class
+		);
+
+		strategySelector.registerStrategyImplementor(
+				ImplicitDatabaseObjectNamingStrategy.class,
+				LegacyNamingStrategy.STRATEGY_NAME,
+				LegacyNamingStrategy.class
+		);
+
+		strategySelector.registerStrategyImplementor(
+				ImplicitDatabaseObjectNamingStrategy.class,
+				LegacyPreferGeneratorNameNamingStrategy.STRATEGY_NAME,
+				LegacyPreferGeneratorNameNamingStrategy.class
 		);
 	}
 

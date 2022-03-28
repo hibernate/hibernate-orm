@@ -12,7 +12,6 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.spi.ImplicitIdentifierDatabaseObjectNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
@@ -302,7 +301,6 @@ public class SequenceStyleGenerator
 		if ( StringHelper.isNotEmpty( sequenceName ) ) {
 			// we have an explicit name, use it
 			if ( sequenceName.contains( "." ) ) {
-				//
 				return QualifiedNameParser.INSTANCE.parse( sequenceName );
 			}
 			else {
@@ -341,11 +339,11 @@ public class SequenceStyleGenerator
 					}
 					return globalSetting;
 				},
-				StandardImplicitIdentifierDatabaseObjectNamingStrategy.class::getName
+				StandardDatabaseObjectNamingStrategy.class::getName
 		);
 
-		final ImplicitIdentifierDatabaseObjectNamingStrategy namingStrategy = strategySelector.resolveStrategy(
-				ImplicitIdentifierDatabaseObjectNamingStrategy.class,
+		final ImplicitDatabaseObjectNamingStrategy namingStrategy = strategySelector.resolveStrategy(
+				ImplicitDatabaseObjectNamingStrategy.class,
 				namingStrategySetting
 		);
 

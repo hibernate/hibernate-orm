@@ -9,20 +9,21 @@ package org.hibernate.id.enhanced;
 import java.util.Map;
 
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.spi.ImplicitIdentifierDatabaseObjectNamingStrategy;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
 
 import static org.hibernate.id.enhanced.TableGenerator.DEF_TABLE;
-import static org.hibernate.id.enhanced.TableGenerator.TABLE_PARAM;
 
-public class LegacyNoPreferDefaultGeneratorNameDatabaseNamingStrategy implements
-		ImplicitIdentifierDatabaseObjectNamingStrategy {
+/**
+ * @author Andrea Boriero
+ */
+public class LegacyNamingStrategy implements ImplicitDatabaseObjectNamingStrategy {
+	public static final String STRATEGY_NAME = "legacy";
 
+	@Override
 	public QualifiedName determineSequenceName(
 			Identifier catalogName,
 			Identifier schemaName,
@@ -42,18 +43,11 @@ public class LegacyNoPreferDefaultGeneratorNameDatabaseNamingStrategy implements
 			Identifier schemaName,
 			Map<?, ?> configValues,
 			ServiceRegistry serviceRegistry) {
-		final String tableName = ConfigurationHelper.getString( TABLE_PARAM, configValues, DEF_TABLE );
-
-		if ( tableName.contains( "." ) ) {
-			return QualifiedNameParser.INSTANCE.parse( tableName );
-		}
-		else {
-			final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
-			return new QualifiedNameParser.NameParts(
-					catalogName,
-					schemaName,
-					jdbcEnvironment.getIdentifierHelper().toIdentifier( tableName )
-			);
-		}
+		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
+		return new QualifiedNameParser.NameParts(
+				catalogName,
+				schemaName,
+				jdbcEnvironment.getIdentifierHelper().toIdentifier( DEF_TABLE )
+		);
 	}
 }

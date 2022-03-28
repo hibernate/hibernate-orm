@@ -19,11 +19,11 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.spi.ImplicitIdentifierDatabaseObjectNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
+import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
@@ -373,6 +373,26 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	 * @return The table name to use.
 	 */
 	protected QualifiedName determineGeneratorTableName(Properties params, JdbcEnvironment jdbcEnvironment, ServiceRegistry serviceRegistry) {
+		final String explicitTableName = ConfigurationHelper.getString( TABLE_PARAM, params );
+		if ( StringHelper.isNotEmpty( explicitTableName ) ) {
+			if ( explicitTableName.contains( "." ) ) {
+				return QualifiedNameParser.INSTANCE.parse( explicitTableName );
+			}
+			else {
+				final Identifier catalog = jdbcEnvironment.getIdentifierHelper().toIdentifier(
+						ConfigurationHelper.getString( CATALOG, params )
+				);
+				final Identifier schema = jdbcEnvironment.getIdentifierHelper().toIdentifier(
+						ConfigurationHelper.getString( SCHEMA, params )
+				);
+				return new QualifiedNameParser.NameParts(
+						catalog,
+						schema,
+						jdbcEnvironment.getIdentifierHelper().toIdentifier( explicitTableName )
+				);
+			}
+		}
+
 		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 
 		final String namingStrategySetting = coalesceSuppliedValues(
@@ -391,18 +411,18 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 					}
 					return globalSetting;
 				},
-				StandardImplicitIdentifierDatabaseObjectNamingStrategy.class::getName
+				StandardDatabaseObjectNamingStrategy.class::getName
 		);
 
-		final ImplicitIdentifierDatabaseObjectNamingStrategy namingStrategy = strategySelector.resolveStrategy(
-				ImplicitIdentifierDatabaseObjectNamingStrategy.class,
+		final ImplicitDatabaseObjectNamingStrategy namingStrategy = strategySelector.resolveStrategy(
+				ImplicitDatabaseObjectNamingStrategy.class,
 				namingStrategySetting
 		);
 
 		final Identifier catalog = jdbcEnvironment.getIdentifierHelper().toIdentifier(
 				ConfigurationHelper.getString( CATALOG, params )
 		);
-		final Identifier schema =  jdbcEnvironment.getIdentifierHelper().toIdentifier(
+		final Identifier schema = jdbcEnvironment.getIdentifierHelper().toIdentifier(
 				ConfigurationHelper.getString( SCHEMA, params )
 		);
 

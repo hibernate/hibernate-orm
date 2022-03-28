@@ -109,11 +109,11 @@ In order to maintain backward compatibility a new setting `hibernate.id.db_struc
 
 In case the code has a generator name with no matching generator or with a generator not specifying a sequence or table name
 and the property `hibernate.model.generator_name_as_sequence_name` is not set to `false` then to maintain the backward compatibility is necessary to set
-hibernate.id.db_structure_naming_strategy=org.hibernate.id.enhanced.LegacyPreferDefaultGeneratorNameDatabaseNamingStrategy
+hibernate.id.db_structure_naming_strategy=org.hibernate.id.enhanced.LegacyPreferGeneratorNameNamingStrategy
 ```
 otherwise
 ```
-hibernate.id.db_structure_naming_strategy=org.hibernate.id.enhanced.LegacyNoPreferDefaultGeneratorNameDatabaseNamingStrategy
+hibernate.id.db_structure_naming_strategy=org.hibernate.id.enhanced.LegacyNamingStrategy
 ```
 
 [[type]]

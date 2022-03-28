@@ -152,9 +152,6 @@ configurations {
 		it.outgoing.artifact(tasks.transformJavadocJar.targetJar) {
 			builtBy tasks.transformJavadocJar
 		}
-		it.outgoing.artifact(tasks.transformTestSources.targetDir) {
-			builtBy tasks.transformTestSources
-		}
 	}
 }
 

@@ -6,16 +6,15 @@
  */
 package org.hibernate.jpa.test.transaction.batch;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.junit.jupiter.api.Assertions.fail;
-
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilderImpl;
@@ -24,48 +23,46 @@ import org.hibernate.engine.jdbc.batch.internal.BatchingBatch;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SettingProvider;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @TestForIssue(jiraKey = "HHH-15082")
-@Jpa(
-		annotatedClasses = {
-				FailingAddToBatchTest.MyEntity.class
-		},
-		integrationSettings = {
-				@Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "50")
-		},
-		settingProviders = {
-				@SettingProvider(
-						settingName = BatchBuilderInitiator.BUILDER,
-						provider = FailingAddToBatchTest.BatchBuilderSettingProvider.class
-				)
-		}
-)
-public class FailingAddToBatchTest {
+public class FailingAddToBatchTest extends BaseEntityManagerFunctionalTestCase {
 
 	private static TestBatch testBatch;
 
-	@BeforeEach
+	@Override
+	protected void addConfigOptions(Map options) {
+		options.put( AvailableSettings.STATEMENT_BATCH_SIZE, 50 );
+		options.put( BatchBuilderInitiator.BUILDER, TestBatchBuilder.class.getName() );
+	}
+
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] {
+				MyEntity.class
+		};
+	}
+
+	@Before
 	public void setup() {
 		TestBatch.nextAddToBatchFailure.set( null );
 	}
 
 	@Test
-	public void testInsert(EntityManagerFactoryScope scope) {
+	public void testInsert() {
 		RuntimeException simulatedAddToBatchFailure = new RuntimeException( "Simulated RuntimeException" );
 
-		scope.inTransaction( em -> {
+		doInJPA( this::entityManagerFactory, em -> {
 			assertThatThrownBy( () -> {
 				MyEntity entity = new MyEntity();
 				entity.setText( "initial" );
@@ -80,8 +77,8 @@ public class FailingAddToBatchTest {
 	}
 
 	@Test
-	public void testUpdate(EntityManagerFactoryScope scope) {
-		Long id = scope.fromTransaction( em -> {
+	public void testUpdate() {
+		Long id = doInJPA( this::entityManagerFactory, em -> {
 			MyEntity entity = new MyEntity();
 			entity.setText( "initial" );
 			em.persist( entity );
@@ -90,7 +87,7 @@ public class FailingAddToBatchTest {
 
 		RuntimeException simulatedAddToBatchFailure = new RuntimeException( "Simulated RuntimeException" );
 
-		scope.inTransaction( em -> {
+		doInJPA( this::entityManagerFactory, em -> {
 			assertThatThrownBy( () -> {
 				MyEntity entity = em.find( MyEntity.class, id );
 				TestBatch.nextAddToBatchFailure.set( simulatedAddToBatchFailure );
@@ -104,8 +101,8 @@ public class FailingAddToBatchTest {
 	}
 
 	@Test
-	public void testRemove(EntityManagerFactoryScope scope) {
-		Long id = scope.fromTransaction( em -> {
+	public void testRemove() {
+		Long id = doInJPA( this::entityManagerFactory, em -> {
 			MyEntity entity = new MyEntity();
 			entity.setText( "initial" );
 			em.persist( entity );
@@ -114,7 +111,7 @@ public class FailingAddToBatchTest {
 
 		RuntimeException simulatedAddToBatchFailure = new RuntimeException( "Simulated RuntimeException" );
 
-		scope.inTransaction( em -> {
+		doInJPA( this::entityManagerFactory, em -> {
 			assertThatThrownBy( () -> {
 				MyEntity entity = em.find( MyEntity.class, id );
 				TestBatch.nextAddToBatchFailure.set( simulatedAddToBatchFailure );
@@ -159,13 +156,6 @@ public class FailingAddToBatchTest {
 
 		public void setText(String text) {
 			this.text = text;
-		}
-	}
-
-	public static class BatchBuilderSettingProvider implements SettingProvider.Provider<String> {
-		@Override
-		public String getSetting() {
-			return TestBatchBuilder.class.getName();
 		}
 	}
 

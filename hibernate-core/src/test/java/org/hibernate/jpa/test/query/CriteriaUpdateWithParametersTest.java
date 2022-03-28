@@ -1,10 +1,5 @@
 package org.hibernate.jpa.test.query;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.Jpa;
-import org.junit.jupiter.api.Test;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Query;
@@ -14,15 +9,25 @@ import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.EntityType;
 
-@Jpa(
-		annotatedClasses = CriteriaUpdateWithParametersTest.Person.class
-)
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.transaction.TransactionUtil;
+import org.junit.Test;
+
 @TestForIssue( jiraKey = "HHH-15113")
-public class CriteriaUpdateWithParametersTest {
+public class CriteriaUpdateWithParametersTest extends BaseEntityManagerFunctionalTestCase {
+
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] {
+				Person.class
+		};
+	}
 
 	@Test
-	public void testCriteriaUpdate(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
+	public void testCriteriaUpdate() {
+		TransactionUtil.doInJPA( this::entityManagerFactory,
 				entityManager -> {
 					final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 					final CriteriaUpdate<Person> criteriaUpdate = criteriaBuilder.createCriteriaUpdate( Person.class );
@@ -50,8 +55,8 @@ public class CriteriaUpdateWithParametersTest {
 	}
 
 	@Test
-	public void testCriteriaUpdate2(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
+	public void testCriteriaUpdate2() {
+		TransactionUtil.doInJPA( this::entityManagerFactory,
 				entityManager -> {
 					final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 					final CriteriaUpdate<Person> criteriaUpdate = criteriaBuilder.createCriteriaUpdate( Person.class );

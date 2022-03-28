@@ -23,6 +23,8 @@ import org.hibernate.service.ServiceRegistry;
  */
 @Incubating
 public interface ImplicitIdentifierDatabaseObjectNamingStrategy {
+	String DEF_SEQUENCE = "hibernate_sequence";
+
 	/**
 	 * Determine the implicit name for an identifier-generator sequence
 	 *

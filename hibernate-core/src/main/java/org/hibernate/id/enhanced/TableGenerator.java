@@ -19,12 +19,13 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.spi.ImplicitIdentifierDatabaseObjectNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
-import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -37,7 +38,6 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.ExportableColumn;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.id.PersistentIdentifierGenerator;
@@ -54,6 +54,10 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.cfg.AvailableSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
+import static org.hibernate.internal.log.IncubationLogger.INCUBATION_LOGGER;
+import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 
 /**
  * An enhanced version of table-based id generation.
@@ -369,33 +373,40 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	 * @return The table name to use.
 	 */
 	protected QualifiedName determineGeneratorTableName(Properties params, JdbcEnvironment jdbcEnvironment, ServiceRegistry serviceRegistry) {
+		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 
-		String fallbackTableName = DEF_TABLE;
+		final String namingStrategySetting = coalesceSuppliedValues(
+				() -> {
+					final String localSetting = ConfigurationHelper.getString( ID_DB_STRUCTURE_NAMING_STRATEGY, params );
+					if ( localSetting != null ) {
+						INCUBATION_LOGGER.incubatingSetting( ID_DB_STRUCTURE_NAMING_STRATEGY );
+					}
+					return localSetting;
+				},
+				() -> {
+					final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+					final String globalSetting = ConfigurationHelper.getString( ID_DB_STRUCTURE_NAMING_STRATEGY, configurationService.getSettings() );
+					if ( globalSetting != null ) {
+						INCUBATION_LOGGER.incubatingSetting( ID_DB_STRUCTURE_NAMING_STRATEGY );
+					}
+					return globalSetting;
+				},
+				StandardImplicitIdentifierDatabaseObjectNamingStrategy.class::getName
+		);
 
-		final String generatorName = params.getProperty( IdentifierGenerator.GENERATOR_NAME );
-		if ( StringHelper.isNotEmpty( generatorName ) ) {
-			fallbackTableName = generatorName;
-		}
+		final ImplicitIdentifierDatabaseObjectNamingStrategy namingStrategy = strategySelector.resolveStrategy(
+				ImplicitIdentifierDatabaseObjectNamingStrategy.class,
+				namingStrategySetting
+		);
 
-		String tableName = ConfigurationHelper.getString( TABLE_PARAM, params, fallbackTableName );
+		final Identifier catalog = jdbcEnvironment.getIdentifierHelper().toIdentifier(
+				ConfigurationHelper.getString( CATALOG, params )
+		);
+		final Identifier schema =  jdbcEnvironment.getIdentifierHelper().toIdentifier(
+				ConfigurationHelper.getString( SCHEMA, params )
+		);
 
-		if ( tableName.contains( "." ) ) {
-			return QualifiedNameParser.INSTANCE.parse( tableName );
-		}
-		else {
-			// todo : need to incorporate implicit catalog and schema names
-			final Identifier catalog = jdbcEnvironment.getIdentifierHelper().toIdentifier(
-					ConfigurationHelper.getString( CATALOG, params )
-			);
-			final Identifier schema = jdbcEnvironment.getIdentifierHelper().toIdentifier(
-					ConfigurationHelper.getString( SCHEMA, params )
-			);
-			return new QualifiedNameParser.NameParts(
-					catalog,
-					schema,
-					jdbcEnvironment.getIdentifierHelper().toIdentifier( tableName )
-			);
-		}
+		return namingStrategy.determineTableName(  catalog, schema, params, serviceRegistry );
 	}
 
 	/**

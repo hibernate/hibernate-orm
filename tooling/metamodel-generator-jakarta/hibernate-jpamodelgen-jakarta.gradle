@@ -168,7 +168,7 @@ abstract class JakartaJarTransformation extends DefaultTask {
 						"-q",
 						"-tr", getProject().getRootProject().file( "rules/jakarta-renames.properties" ).getAbsolutePath(),
 						"-tv", getProject().getRootProject().file( "rules/jakarta-versions.properties" ).getAbsolutePath(),
-						"-td", getProject().getRootProject().file( "rules/jakarta-direct.properties" ).getAbsolutePath()
+						"-td", getProject().getRootProject().file( "rules/jakarta-direct-modelgen.properties" ).getAbsolutePath()
 				);
 			}
 		});

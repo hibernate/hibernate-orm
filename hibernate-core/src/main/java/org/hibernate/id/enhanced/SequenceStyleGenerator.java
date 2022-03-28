@@ -324,7 +324,6 @@ public class SequenceStyleGenerator
 			Properties params,
 			ServiceRegistry serviceRegistry) {
 		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
-		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
 
 		final String namingStrategySetting = coalesceSuppliedValues(
 				() -> {
@@ -335,6 +334,7 @@ public class SequenceStyleGenerator
 					return localSetting;
 				},
 				() -> {
+					final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
 					final String globalSetting = ConfigurationHelper.getString( ID_DB_STRUCTURE_NAMING_STRATEGY, configurationService.getSettings() );
 					if ( globalSetting != null ) {
 						INCUBATION_LOGGER.incubatingSetting( ID_DB_STRUCTURE_NAMING_STRATEGY );

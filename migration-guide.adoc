@@ -99,6 +99,22 @@ to define custom generators to use for identifier generation.
 
 // todo (6.0 - @Steve - need to add content about this to the User Guide
 
+[[id-sequence-generation]]
+== Id Sequence and Table generation
+
+For a sequence id generation strategy Hibernate 6.0 by default does not create anymore a single sequence named `hibernate_sequence` but it creates one sequence for each entity.
+
+In order to maintain backward compatibility a new setting `hibernate.id.db_structure_naming_strategy`
+ has been introduced.
+
+In case the code has a generator name with no matching generator or with a generator not specifying a sequence or table name
+and the property `hibernate.model.generator_name_as_sequence_name` is not set to `false` then to maintain the backward compatibility is necessary to set
+hibernate.id.db_structure_naming_strategy=org.hibernate.id.enhanced.LegacyPreferDefaultGeneratorNameDatabaseNamingStrategy
+```
+otherwise
+```
+hibernate.id.db_structure_naming_strategy=org.hibernate.id.enhanced.LegacyNoPreferDefaultGeneratorNameDatabaseNamingStrategy
+```
 
 [[type]]
 == Type system

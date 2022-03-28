@@ -25,7 +25,6 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -138,7 +137,7 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 		final QueryOptions queryOptions = new SimpleQueryOptions( lockOptions, readOnly );
 		final Callback callback = new CallbackImpl();
 
-		final List<T> list = JdbcSelectExecutorStandardImpl.INSTANCE.list(
+		final List<T> list = session.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,
 				new ExecutionContext() {

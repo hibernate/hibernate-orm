@@ -63,9 +63,24 @@ As discussed in <<type>> though, this change has a very big impact on Hibernate'
 
 == Bulk SQM against entities mapped to multiple tables
 
-// todo (6.0) - @Christian - can you add some info here?
+The implementations for bulk SQM DML statements like `insert`, `update` and `delete` were significantly improved in 6.0.
+An important bug fix is, that `delete` statements now properly clean up collection tables.
+`insert` statements now also support inserting into multi-table entities by making use of special purpose temporary tables
+into which the insert goes and is then split up into the respective tables.
 
+There are currently 2 implementation strategies:
 
+* Using temporary tables (the default)
+* Using DML in CTEs (used on DB2 and PostgreSQL)
+
+The temporary table approach is pretty simple and works in a similar way to how 5.x already implemented it.
+Data or primary key values are first inserted into a temporary table and then the DML changes are applied to the various
+tables that are affected by the SQM DML statement.
+
+The CTE approach is new and implements a more performant approach by executing a single statement,
+containing the various individual DML statements that would normally be executed separately.
+This allows to run SQM DML statements in a single JDBC operation that does not move any data between the database and the application,
+which should provide a significant boost for statements that involve many rows.
 
 [[identifier-object]]
 == Identifier as Object
@@ -697,11 +712,8 @@ class Node {
 }
 ```
 
-Hibernate previously walked the graph for the `Node#node1` sub-tree prior to walking the `Node#node2` sub-tree
-
-// todo (6.0) : clarify this some more?
-
-being all eager we are executing a query with 4 joins
+Hibernate previously generated joins by walking the entity association graph for the `Node#node1` sub-tree prior to walking the `Node#node2` sub-tree.
+Since the associations are all eager, Hibernate 6.0 now executes a query with 4 joins
 
 ```
 FROM Node
@@ -711,14 +723,15 @@ JOIN Node.node2
 JOIN Node.node2.node1
 ```
 
-whereas before we
+whereas before it executed
+
 ```
 FROM Node
 JOIN Node.node1
 JOIN Node.node1.node2
 ```
 
-and issue a select for `Node.node2` if the FK of `Node.node2` is not null
+and issued a select for `Node.node2` if the FK of `Node.node2` was not null
 
 ```
 FROM Node.node2
@@ -726,8 +739,8 @@ JOIN Node.node2.node1
 JOIN Node.node2.node1.node2
 ```
 
-In this simple example this is not such a big deal, but if we increase the number of eager fetched self-associations
-to e.g. 3 like here:
+In this simple example this is not such a big deal, but if the number of eager fetched self-associations
+is increased to e.g. 3 like here:
 
 ```
 @Entity

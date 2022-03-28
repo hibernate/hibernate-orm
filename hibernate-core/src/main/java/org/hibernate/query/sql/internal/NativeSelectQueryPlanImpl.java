@@ -13,7 +13,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.ScrollMode;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
@@ -23,11 +25,9 @@ import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
 import org.hibernate.query.sql.spi.ParameterOccurrence;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
@@ -97,14 +97,10 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 				Collections.emptySet()
 		);
 
-		final JdbcSelectExecutor executor = JdbcSelectExecutorStandardImpl.INSTANCE;
-
-		// todo (6.0): use configurable executor instead?
-//		final SharedSessionContractImplementor session = executionContext.getSession();
-//		final SessionFactoryImplementor factory = session.getFactory();
-//		final JdbcServices jdbcServices = factory.getJdbcServices();
-//		return jdbcServices.getJdbcSelectExecutor().execute(
-		return executor.list(
+		final SharedSessionContractImplementor session = executionContext.getSession();
+		final SessionFactoryImplementor factory = session.getFactory();
+		final JdbcServices jdbcServices = factory.getJdbcServices();
+		return jdbcServices.getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,
 				SqmJdbcExecutionContextAdapter.usingLockingAndPaging( executionContext ),
@@ -146,14 +142,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 				Collections.emptySet()
 		);
 
-		final JdbcSelectExecutor executor = JdbcSelectExecutorStandardImpl.INSTANCE;
-
-		// todo (6.0): use configurable executor instead?
-//		final SharedSessionContractImplementor session = executionContext.getSession();
-//		final SessionFactoryImplementor factory = session.getFactory();
-//		final JdbcServices jdbcServices = factory.getJdbcServices();
-//		return jdbcServices.getJdbcSelectExecutor().scroll(
-		return executor.scroll(
+		return executionContext.getSession().getJdbcServices().getJdbcSelectExecutor().scroll(
 				jdbcSelect,
 				scrollMode,
 				jdbcParameterBindings,

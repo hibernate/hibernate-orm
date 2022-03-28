@@ -28,7 +28,6 @@ public abstract class AbstractResultSetAccess implements ResultSetAccess {
 	}
 
 	protected ResultSetMetaData getMetaData() {
-		// todo (6.0) : we need to consider a way to abstract this from JDBC so we can re-use all of this code for cached results as well
 		if ( resultSetMetaData == null ) {
 			try {
 				resultSetMetaData = getResultSet().getMetaData();

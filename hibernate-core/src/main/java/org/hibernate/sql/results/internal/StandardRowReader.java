@@ -112,10 +112,6 @@ public class StandardRowReader<T> implements RowReader<T> {
 	@SuppressWarnings("ForLoopReplaceableByForEach")
 	private void coordinateInitializers(RowProcessingState rowProcessingState) {
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// todo (6.0) : we may want to split handling of initializers into specific sub-type handling
-		//		- meaning we'd have something like:
-
 		final int numberOfInitializers = initializers.size();
 
 		for ( int i = 0; i < numberOfInitializers; i++ ) {

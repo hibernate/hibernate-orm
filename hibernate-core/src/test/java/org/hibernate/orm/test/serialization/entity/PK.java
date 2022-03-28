@@ -6,6 +6,9 @@
  */
 package org.hibernate.orm.test.serialization.entity;
 
+import java.io.Serializable;
+import java.util.Objects;
+
 /**
  * This class should be in a package that is different from the test
  * so that the test and entity that uses this class for its primary
@@ -13,21 +16,38 @@ package org.hibernate.orm.test.serialization.entity;
  *
  * @author Gail Badner
  */
-public class PK {
-	private Long value;
+public class PK implements Serializable {
+	private Long id;
 
 	public PK() {
 	}
 
-	public PK(Long value) {
-		this.value = value;
+	public PK(Long id) {
+		this.id = id;
 	}
 
-	protected Long getValue() {
-		return value;
+	public Long getId() {
+		return id;
 	}
 
-	protected void setValue(Long value) {
-		this.value = value;
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		PK pk = (PK) o;
+		return Objects.equals( id, pk.id );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( id );
 	}
 }

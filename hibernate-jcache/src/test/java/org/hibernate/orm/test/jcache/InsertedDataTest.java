@@ -6,6 +6,11 @@
  */
 package org.hibernate.orm.test.jcache;
 
+import java.io.Serializable;
+import java.util.Objects;
+
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -52,6 +57,7 @@ public class InsertedDataTest {
 
 		final Metadata metadata = new MetadataSources( serviceRegistry )
 				.addAnnotatedClass( CacheableItem.class )
+				.addAnnotatedClass( CacheableEmbeddedIdItem.class )
 				.buildMetadata();
 		TestHelper.createRegions( metadata, true, false );
 
@@ -60,6 +66,13 @@ public class InsertedDataTest {
 
 	@AfterEach
 	public void releaseResources() {
+		inTransaction(
+				sessionFactory,
+				s -> {
+					s.createQuery( "delete CacheableItem" ).executeUpdate();
+					s.createQuery( "delete from CacheableEmbeddedIdItem" ).executeUpdate();
+				}
+		);
 		if ( sessionFactory != null ) {
 			sessionFactory.close();
 		}
@@ -84,10 +97,22 @@ public class InsertedDataTest {
 
 		assertTrue( sessionFactory().getCache().containsEntity( CacheableItem.class, 1L ) );
 
+	}
+
+	@Test
+	public void testInsert2() {
+		sessionFactory().getCache().evictEntityData();
+		sessionFactory().getStatistics().clear();
+
 		inTransaction(
 				sessionFactory,
-				s -> s.createQuery( "delete CacheableItem" ).executeUpdate()
+				s -> {
+					CacheableEmbeddedIdItem item = new CacheableEmbeddedIdItem( new PK( 2l ), "data" );
+					s.save( item );
+				}
 		);
+
+		assertTrue( sessionFactory().getCache().containsEntity( CacheableEmbeddedIdItem.class, new PK( 2l ) ) );
 	}
 
 	@Test
@@ -125,10 +150,6 @@ public class InsertedDataTest {
 
 		assertTrue( sessionFactory().getCache().containsEntity( CacheableItem.class, 1L ) );
 
-		inTransaction(
-				sessionFactory,
-				s -> s.createQuery( "delete CacheableItem" ).executeUpdate()
-		);
 	}
 
 	@Test
@@ -167,10 +188,6 @@ public class InsertedDataTest {
 
 		assertTrue( sessionFactory().getCache().containsEntity( CacheableItem.class, 1L ) );
 
-		inTransaction(
-				sessionFactory,
-				s -> s.createQuery( "delete CacheableItem" ).executeUpdate()
-		);
 	}
 
 	@Test
@@ -233,11 +250,24 @@ public class InsertedDataTest {
 		);
 
 		assertTrue( sessionFactory().getCache().containsEntity( CacheableItem.class, 1L ) );
+	}
+
+	@Test
+	public void testInsertWithClear2() {
+		sessionFactory().getCache().evictEntityData();
+		sessionFactory().getStatistics().clear();
 
 		inTransaction(
 				sessionFactory,
-				s -> s.createQuery( "delete CacheableItem" ).executeUpdate()
+				s -> {
+					CacheableEmbeddedIdItem item = new CacheableEmbeddedIdItem( new PK( 2l ), "data" );
+					s.save( item );
+					s.flush();
+					s.clear();
+				}
 		);
+
+		assertTrue( sessionFactory().getCache().containsEntity( CacheableEmbeddedIdItem.class, new PK( 2l ) ) );
 	}
 
 	@Test
@@ -263,6 +293,34 @@ public class InsertedDataTest {
 				sessionFactory,
 				s -> {
 					final CacheableItem item = s.get( CacheableItem.class, 1L );
+					assertNull( item, "it should be null" );
+				}
+		);
+	}
+
+	@Test
+	public void testInsertWithClearThenRollback2() {
+		sessionFactory().getCache().evictEntityData();
+		sessionFactory().getStatistics().clear();
+
+		inTransaction(
+				sessionFactory,
+				s -> {
+					CacheableEmbeddedIdItem item = new CacheableEmbeddedIdItem( new PK( 2l ), "data" );
+					s.save( item );
+					s.flush();
+					s.clear();
+					item = s.get( CacheableEmbeddedIdItem.class, item.getId() );
+					s.getTransaction().markRollbackOnly();
+				}
+		);
+
+		assertFalse( sessionFactory().getCache().containsEntity( CacheableEmbeddedIdItem.class, new PK( 2l ) ) );
+
+		inTransaction(
+				sessionFactory,
+				s -> {
+					final CacheableEmbeddedIdItem item = s.get( CacheableEmbeddedIdItem.class, new PK( 2l ) );
 					assertNull( item, "it should be null" );
 				}
 		);
@@ -297,6 +355,75 @@ public class InsertedDataTest {
 
 		public void setName(String name) {
 			this.name = name;
+		}
+	}
+
+	@Entity(name = "CacheableEmbeddedIdItem")
+	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "item")
+	public static class CacheableEmbeddedIdItem {
+		private PK id;
+		private String name;
+
+		public CacheableEmbeddedIdItem() {
+		}
+
+		public CacheableEmbeddedIdItem(PK id,String name) {
+			this.id = id;
+			this.name = name;
+		}
+
+		@EmbeddedId
+		public PK getId() {
+			return id;
+		}
+
+		public void setId(PK id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+	}
+
+	@Embeddable
+	public static class PK implements Serializable {
+		private Long id;
+
+		public PK() {
+		}
+
+		public PK(Long id) {
+			this.id = id;
+		}
+
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if ( this == o ) {
+				return true;
+			}
+			if ( o == null || getClass() != o.getClass() ) {
+				return false;
+			}
+			PK pk = (PK) o;
+			return Objects.equals( id, pk.id );
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash( id );
 		}
 	}
 }

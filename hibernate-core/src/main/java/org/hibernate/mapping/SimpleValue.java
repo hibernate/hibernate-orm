@@ -35,11 +35,14 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
+import org.hibernate.id.enhanced.LegacyNamingStrategy;
+import org.hibernate.id.enhanced.SingleNamingStrategy;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 import org.hibernate.internal.CoreLogging;
@@ -434,7 +437,27 @@ public abstract class SimpleValue implements KeyValue {
 
 		// default initial value and allocation size per-JPA defaults
 		params.setProperty( OptimizableGenerator.INITIAL_PARAM, String.valueOf( OptimizableGenerator.DEFAULT_INITIAL_VALUE ) );
-		params.setProperty( OptimizableGenerator.INCREMENT_PARAM, String.valueOf( OptimizableGenerator.DEFAULT_INCREMENT_SIZE ) );
+		final ConfigurationService cs = metadata.getMetadataBuildingOptions().getServiceRegistry()
+				.getService( ConfigurationService.class );
+
+		final String idNamingStrategy = cs.getSetting(
+				AvailableSettings.ID_DB_STRUCTURE_NAMING_STRATEGY,
+				StandardConverters.STRING,
+				null
+		);
+
+		if ( LegacyNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
+				|| LegacyNamingStrategy.class.getName().equals( idNamingStrategy )
+				|| SingleNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
+				|| SingleNamingStrategy.class.getName().equals( idNamingStrategy ) ) {
+			params.setProperty( OptimizableGenerator.INCREMENT_PARAM, "1" );
+		}
+		else {
+			params.setProperty(
+					OptimizableGenerator.INCREMENT_PARAM,
+					String.valueOf( OptimizableGenerator.DEFAULT_INCREMENT_SIZE )
+			);
+		}
 		//init the table here instead of earlier, so that we can get a quoted table name
 		//TODO: would it be better to simply pass the qualified table name, instead of
 		//      splitting it up into schema/catalog/table names
@@ -478,8 +501,6 @@ public abstract class SimpleValue implements KeyValue {
 		}
 
 		// TODO : we should pass along all settings once "config lifecycle" is hashed out...
-		final ConfigurationService cs = metadata.getMetadataBuildingOptions().getServiceRegistry()
-				.getService( ConfigurationService.class );
 
 		params.put(
 				IdentifierGenerator.CONTRIBUTOR_NAME,

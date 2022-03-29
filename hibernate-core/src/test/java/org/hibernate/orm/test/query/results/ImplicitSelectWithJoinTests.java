@@ -16,6 +16,7 @@ import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.retail.Product;
 import org.hibernate.testing.orm.domain.retail.Vendor;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -29,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @DomainModel( standardModels = StandardDomainModel.RETAIL )
 @SessionFactory
+@JiraKey( "HHH-15133" )
 public class ImplicitSelectWithJoinTests {
 	private static final String HQL = "from Product p join p.vendor v where v.name like '%Steve%'";
 	private static final String HQL2 = "select p " + HQL;

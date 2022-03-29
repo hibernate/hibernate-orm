@@ -68,16 +68,12 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
+ * Standard JdbcSelectExecutor implementation used by Hibernate,
+ * through {@link JdbcSelectExecutorStandardImpl#INSTANCE}
+ *
  * @author Steve Ebersole
  */
 public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
-	// todo (6.0) : Make resolving these executors swappable - JdbcServices?
-	//		Since JdbcServices is just a "composition service", this is actually
-	//		a very good option...
-
-	// todo (6.0) : where do affected-table-names get checked for up-to-date?
-	//		who is responsible for that?  Here?
-
 	/**
 	 * Singleton access
 	 */
@@ -89,6 +85,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
+			Class<R> domainResultType,
 			ListResultsConsumer.UniqueSemantic uniqueSemantic) {
 		// Only do auto flushing for top level queries
 		return executeQuery(
@@ -96,6 +93,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				jdbcParameterBindings,
 				executionContext,
 				rowTransformer,
+				domainResultType,
 				(sql) -> executionContext.getSession()
 						.getJdbcCoordinator()
 						.getStatementPreparer()
@@ -118,6 +116,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				jdbcParameterBindings,
 				executionContext,
 				rowTransformer,
+				null,
 				(sql) -> executionContext.getSession().getJdbcCoordinator().getStatementPreparer().prepareQueryStatement(
 						sql,
 						false,
@@ -152,6 +151,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
+			Class<R> domainResultType,
 			Function<String, PreparedStatement> statementCreator,
 			ResultsConsumer<T, R> resultsConsumer) {
 		final PersistenceContext persistenceContext = executionContext.getSession().getPersistenceContext();
@@ -168,6 +168,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 					jdbcParameterBindings,
 					executionContext,
 					rowTransformer,
+					domainResultType,
 					statementCreator,
 					resultsConsumer
 			);
@@ -184,6 +185,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
+			Class<R> domainResultType,
 			Function<String, PreparedStatement> statementCreator,
 			ResultsConsumer<T, R> resultsConsumer) {
 		return doExecuteQuery(
@@ -191,6 +193,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				jdbcParameterBindings,
 				getScrollContext( executionContext, executionContext.getSession().getPersistenceContext() ),
 				rowTransformer,
+				domainResultType,
 				statementCreator,
 				resultsConsumer
 		);
@@ -214,6 +217,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		final AppliedGraph appliedGraph = queryOptions.getAppliedGraph();
 		final TupleTransformer<?> tupleTransformer = queryOptions.getTupleTransformer();
 		final ResultListTransformer<?> resultListTransformer = queryOptions.getResultListTransformer();
+		final Boolean deDuplicationEnabled = queryOptions.isDeDuplicationEnabled();
 		final Boolean resultCachingEnabled = queryOptions.isResultCachingEnabled();
 		final CacheRetrieveMode cacheRetrieveMode = queryOptions.getCacheRetrieveMode();
 		final CacheStoreMode cacheStoreMode = queryOptions.getCacheStoreMode();
@@ -257,6 +261,11 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 					@Override
 					public ResultListTransformer<?> getResultListTransformer() {
 						return resultListTransformer;
+					}
+
+					@Override
+					public Boolean isDeDuplicationEnabled() {
+						return deDuplicationEnabled;
 					}
 
 					@Override
@@ -322,11 +331,13 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			}
 		};
 	}
+
 	private <T, R> T doExecuteQuery(
 			JdbcSelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
+			Class<R> domainResultType,
 			Function<String, PreparedStatement> statementCreator,
 			ResultsConsumer<T, R> resultsConsumer) {
 
@@ -346,7 +357,10 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 		if ( rowTransformer == null ) {
 			@SuppressWarnings("unchecked")
-			final TupleTransformer<R> tupleTransformer = (TupleTransformer<R>) executionContext.getQueryOptions().getTupleTransformer();
+			final TupleTransformer<R> tupleTransformer = (TupleTransformer<R>) executionContext
+					.getQueryOptions()
+					.getTupleTransformer();
+
 			if ( tupleTransformer == null ) {
 				rowTransformer = RowTransformerStandardImpl.instance();
 			}
@@ -415,6 +429,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 						? LockOptions.NONE
 						: executionContext.getQueryOptions().getLockOptions(),
 				rowTransformer,
+				domainResultType,
 				jdbcValues
 		);
 

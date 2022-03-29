@@ -14,6 +14,7 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyChainedImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyFieldImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.Setter;
+import org.hibernate.query.TypedTupleTransformer;
 
 /**
  * Result transformer that allows to transform a result to
@@ -22,7 +23,7 @@ import org.hibernate.property.access.spi.Setter;
  *
  * @author max
  */
-public class AliasToBeanResultTransformer<T> implements ResultTransformer<T> {
+public class AliasToBeanResultTransformer<T> implements ResultTransformer<T>, TypedTupleTransformer<T> {
 
 	// IMPL NOTE : due to the delayed population of setters (setters cached
 	// 		for performance), we really cannot properly define equality for
@@ -39,6 +40,11 @@ public class AliasToBeanResultTransformer<T> implements ResultTransformer<T> {
 		}
 		isInitialized = false;
 		this.resultClass = resultClass;
+	}
+
+	@Override
+	public Class<T> getTransformedType() {
+		return resultClass;
 	}
 
 	@Override

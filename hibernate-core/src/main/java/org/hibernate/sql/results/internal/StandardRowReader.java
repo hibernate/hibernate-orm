@@ -32,18 +32,21 @@ public class StandardRowReader<T> implements RowReader<T> {
 	private final List<DomainResultAssembler<?>> resultAssemblers;
 	private final List<Initializer> initializers;
 	private final RowTransformer<T> rowTransformer;
+	private final Class<T> domainResultJavaType;
 
 	private final int assemblerCount;
 
 	public StandardRowReader(
 			List<DomainResultAssembler<?>> resultAssemblers,
 			List<Initializer> initializers,
-			RowTransformer<T> rowTransformer) {
+			RowTransformer<T> rowTransformer,
+			Class<T> domainResultJavaType) {
 		this.resultAssemblers = resultAssemblers;
 		this.initializers = initializers;
 		this.rowTransformer = rowTransformer;
 
 		this.assemblerCount = resultAssemblers.size();
+		this.domainResultJavaType = domainResultJavaType;
 
 		logDebugInfo();
 	}
@@ -61,18 +64,22 @@ public class StandardRowReader<T> implements RowReader<T> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public Class<T> getResultJavaType() {
-		if ( resultAssemblers.size() == 1 ) {
-			return (Class<T>) resultAssemblers.get( 0 ).getAssembledJavaType().getJavaTypeClass();
-		}
-
-		return (Class<T>) Object[].class;
+	public Class<T> getDomainResultResultJavaType() {
+		return domainResultJavaType;
 	}
 
 	@Override
-	public List<JavaType> getResultJavaTypes() {
-		List<JavaType> javaTypes = new ArrayList<>( resultAssemblers.size() );
+	public Class<?> getResultJavaType() {
+		if ( resultAssemblers.size() == 1 ) {
+			return resultAssemblers.get( 0 ).getAssembledJavaType().getJavaTypeClass();
+		}
+
+		return Object[].class;
+	}
+
+	@Override
+	public List<JavaType<?>> getResultJavaTypes() {
+		List<JavaType<?>> javaTypes = new ArrayList<>( resultAssemblers.size() );
 		for ( DomainResultAssembler resultAssembler : resultAssemblers ) {
 			javaTypes.add( resultAssembler.getAssembledJavaType() );
 		}

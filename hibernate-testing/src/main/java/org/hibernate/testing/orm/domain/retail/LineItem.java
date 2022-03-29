@@ -25,6 +25,22 @@ public class LineItem {
 
 	private Order order;
 
+	public LineItem() {
+	}
+
+	public LineItem(
+			Integer id,
+			Product product,
+			int quantity,
+			MonetaryAmount subTotal,
+			Order order) {
+		this.id = id;
+		this.product = product;
+		this.quantity = quantity;
+		this.subTotal = subTotal;
+		this.order = order;
+	}
+
 	@Id
 	public Integer getId() {
 		return id;

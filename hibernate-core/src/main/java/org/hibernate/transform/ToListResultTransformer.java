@@ -9,16 +9,24 @@ package org.hibernate.transform;
 import java.util.Arrays;
 import java.util.List;
 
+import org.hibernate.query.TypedTupleTransformer;
+
 /**
  * Transforms each result row from a tuple into a {@link List} whose elements are each tuple value
  */
-public class ToListResultTransformer implements ResultTransformer<List<Object>> {
+public class ToListResultTransformer implements ResultTransformer<List<Object>>, TypedTupleTransformer<List<Object>> {
 	public static final ToListResultTransformer INSTANCE = new ToListResultTransformer();
 
 	/**
 	 * Disallow instantiation of ToListResultTransformer.
 	 */
 	private ToListResultTransformer() {
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Override
+	public Class<List<Object>> getTransformedType() {
+		return (Class) List.class;
 	}
 
 	@Override

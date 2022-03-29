@@ -59,6 +59,11 @@ public class DelegatingQueryOptions implements QueryOptions {
 	}
 
 	@Override
+	public Boolean isDeDuplicationEnabled() {
+		return queryOptions.isDeDuplicationEnabled();
+	}
+
+	@Override
 	public Boolean isResultCachingEnabled() {
 		return queryOptions.isResultCachingEnabled();
 	}

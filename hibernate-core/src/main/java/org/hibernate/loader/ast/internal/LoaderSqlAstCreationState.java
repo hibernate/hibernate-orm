@@ -212,6 +212,11 @@ public class LoaderSqlAstCreationState
 	}
 
 	@Override
+	public Boolean isDeDuplicationEnabled() {
+		return false;
+	}
+
+	@Override
 	public Boolean isResultCachingEnabled() {
 		return false;
 	}

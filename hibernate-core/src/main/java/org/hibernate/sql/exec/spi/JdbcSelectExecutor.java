@@ -22,11 +22,21 @@ import org.hibernate.sql.results.spi.RowTransformer;
  */
 @Incubating
 public interface JdbcSelectExecutor {
+	default <R> List<R> list(
+			JdbcSelect jdbcSelect,
+			JdbcParameterBindings jdbcParameterBindings,
+			ExecutionContext executionContext,
+			RowTransformer<R> rowTransformer,
+			ListResultsConsumer.UniqueSemantic uniqueSemantic) {
+		return list( jdbcSelect, jdbcParameterBindings, executionContext, rowTransformer, null, uniqueSemantic );
+	}
+
 	<R> List<R> list(
 			JdbcSelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
+			Class<R> requestedJavaType,
 			ListResultsConsumer.UniqueSemantic uniqueSemantic);
 
 	<R> ScrollableResultsImplementor<R> scroll(

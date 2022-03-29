@@ -62,6 +62,13 @@ public interface QueryOptions {
 	 */
 	ResultListTransformer<?> getResultListTransformer();
 
+	Boolean isDeDuplicationEnabled();
+
+	default boolean shouldApplyDeDuplication() {
+		final Boolean setting = isDeDuplicationEnabled();
+		return setting != null && setting;
+	}
+
 	/**
 	 * Should results from the query be cached?
 	 *

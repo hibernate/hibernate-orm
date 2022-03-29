@@ -105,7 +105,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 				jdbcParameterBindings,
 				SqmJdbcExecutionContextAdapter.usingLockingAndPaging( executionContext ),
 				null,
-				ListResultsConsumer.UniqueSemantic.NONE
+				ListResultsConsumer.UniqueSemantic.NEVER
 		);
 	}
 

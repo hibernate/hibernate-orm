@@ -122,7 +122,9 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 							}
 						},
 						rowTransformer,
-						ListResultsConsumer.UniqueSemantic.FILTER
+						queryOptions.shouldApplyDeDuplication()
+								? ListResultsConsumer.UniqueSemantic.FILTER
+								: ListResultsConsumer.UniqueSemantic.NONE
 				);
 			}
 			finally {
@@ -205,13 +207,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 		// NOTE : if we get here we have a resultType of some kind
 
-		if ( queryOptions.getTupleTransformer() != null ) {
-			// aside from checking the type parameters for the given TupleTransformer
-			// there is not a decent way to verify that the TupleTransformer returns
-			// the same type.  We rely on the API here and assume the best
-			return makeRowTransformerTupleTransformerAdapter( sqm, queryOptions );
-		}
-		else if ( selections.size() > 1 ) {
+		if ( selections.size() > 1 ) {
 			throw new IllegalQueryOperationException( "Query defined multiple selections, return cannot be typed (other that Object[] or Tuple)" );
 		}
 		else {

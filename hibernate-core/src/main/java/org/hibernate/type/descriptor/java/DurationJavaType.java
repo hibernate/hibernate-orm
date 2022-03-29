@@ -37,7 +37,7 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 	 * Singleton access
 	 */
 	public static final DurationJavaType INSTANCE = new DurationJavaType();
-	private static final BigDecimal BILLION = BigDecimal.valueOf( 1_000_000_000 );
+	private static final BigDecimal BILLION = BigDecimal.ONE.movePointRight(9);
 
 	public DurationJavaType() {
 		super( Duration.class, ImmutableMutabilityPlan.instance() );
@@ -113,10 +113,14 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 
 		if (value instanceof BigDecimal) {
 			final BigDecimal decimal = (BigDecimal) value;
-			final BigDecimal[] bigDecimals = decimal.divideAndRemainder( BILLION );
+			final BigDecimal[] secondsAndNanos = decimal.divideAndRemainder( BILLION );
 			return Duration.ofSeconds(
-					bigDecimals[0].longValueExact(),
-					bigDecimals[1].longValueExact()
+					secondsAndNanos[0].longValueExact(),
+					// use intValue() not intValueExact() here, because
+					// the database will sometimes produce garbage digits
+					// in a floating point multiplication, and we would
+					// get an unwanted ArithmeticException
+					secondsAndNanos[1].intValue()
 			);
 		}
 

@@ -13,33 +13,31 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 /**
  * @author Steve Ebersole
  */
-public class SqmAssignment {
-	private final SqmPath targetPath;
-	private final SqmExpression value;
+public class SqmAssignment<T> {
+	private final SqmPath<T> targetPath;
+	private final SqmExpression<? extends T> value;
 
-	public SqmAssignment(SqmPath targetPath, SqmExpression value) {
+	public SqmAssignment(SqmPath<T> targetPath, SqmExpression<? extends T> value) {
 		this.targetPath = targetPath;
 		this.value = value;
-
-		//noinspection unchecked
 		this.value.applyInferableType( targetPath.getNodeType() );
 	}
 
-	public SqmAssignment copy(SqmCopyContext context) {
-		return new SqmAssignment( targetPath.copy( context ), value.copy( context ) );
+	public SqmAssignment<T> copy(SqmCopyContext context) {
+		return new SqmAssignment<>( targetPath.copy( context ), value.copy( context ) );
 	}
 
 	/**
 	 * The attribute/path to be updated
 	 */
-	public SqmPath getTargetPath() {
+	public SqmPath<T> getTargetPath() {
 		return targetPath;
 	}
 
 	/**
 	 * The new value
 	 */
-	public SqmExpression getValue() {
+	public SqmExpression<? extends T> getValue() {
 		return value;
 	}
 }

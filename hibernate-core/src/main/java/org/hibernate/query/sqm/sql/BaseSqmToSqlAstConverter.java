@@ -837,7 +837,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public List<Assignment> visitSetClause(SqmSetClause setClause) {
 		final List<Assignment> assignments = new ArrayList<>( setClause.getAssignments().size() );
 
-		for ( SqmAssignment sqmAssignment : setClause.getAssignments() ) {
+		for ( SqmAssignment<?> sqmAssignment : setClause.getAssignments() ) {
 			final List<ColumnReference> targetColumnReferences = new ArrayList<>();
 
 			pushProcessingState(
@@ -4548,12 +4548,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	protected Expression consumeSqmParameter(
 			SqmParameter<?> sqmParameter,
-			BiConsumer<Integer, JdbcParameter> jdbcParameterConsumer) {
-		return consumeSqmParameter( sqmParameter, determineValueMapping( sqmParameter ), jdbcParameterConsumer );
-	}
-
-	protected Expression consumeSqmParameter(
-			SqmParameter<?> sqmParameter,
 			MappingModelExpressible<?> valueMapping,
 			BiConsumer<Integer, JdbcParameter> jdbcParameterConsumer) {
 		final List<JdbcParameter> jdbcParametersForSqm = new ArrayList<>();
@@ -4650,37 +4644,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	protected Expression consumeSingleSqmParameter(SqmParameter<?> sqmParameter) {
-		final MappingModelExpressible<?> valueMapping = determineValueMapping( sqmParameter );
-
-		final List<JdbcParameter> jdbcParametersForSqm = new ArrayList<>();
-
-		resolveSqmParameter(
-				sqmParameter,
-				valueMapping,
-				jdbcParametersForSqm::add
-		);
-
-		this.jdbcParameters.addParameters( jdbcParametersForSqm );
-		this.jdbcParamsBySqmParam
-				.computeIfAbsent( sqmParameter, k -> new ArrayList<>( 1 ) )
-				.add( jdbcParametersForSqm );
-
-		final QueryParameterImplementor<?> queryParameter = domainParameterXref.getQueryParameter( sqmParameter );
-		final QueryParameterBinding binding = domainParameterBindings.getBinding( queryParameter );
-		if ( binding.setType( valueMapping ) ) {
-			replaceJdbcParametersType(
-					sqmParameter,
-					domainParameterXref.getSqmParameters( queryParameter ),
-					valueMapping
-			);
-		}
-		return new SqmParameterInterpretation(
-				sqmParameter,
-				queryParameter,
-				jdbcParametersForSqm,
-				valueMapping,
-				qp -> binding
-		);
+		return consumeSqmParameter( sqmParameter, determineValueMapping( sqmParameter ), (integer, jdbcParameter) -> {} );
 	}
 
 	@Override

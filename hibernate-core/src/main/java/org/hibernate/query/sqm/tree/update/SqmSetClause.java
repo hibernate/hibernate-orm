@@ -18,33 +18,33 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
  * @author Steve Ebersole
  */
 public class SqmSetClause {
-	private final List<SqmAssignment> assignments;
+	private final List<SqmAssignment<?>> assignments;
 
 	public SqmSetClause() {
 		this.assignments = new ArrayList<>();
 	}
 
-	private SqmSetClause(List<SqmAssignment> assignments) {
+	private SqmSetClause(List<SqmAssignment<?>> assignments) {
 		this.assignments = assignments;
 	}
 
 	public SqmSetClause copy(SqmCopyContext context) {
-		final List<SqmAssignment> assignments = new ArrayList<>( this.assignments.size() );
-		for ( SqmAssignment assignment : this.assignments ) {
+		final List<SqmAssignment<?>> assignments = new ArrayList<>( this.assignments.size() );
+		for ( SqmAssignment<?> assignment : this.assignments ) {
 			assignments.add( assignment.copy( context ) );
 		}
 		return new SqmSetClause( assignments );
 	}
 
-	public List<SqmAssignment> getAssignments() {
+	public List<SqmAssignment<?>> getAssignments() {
 		return Collections.unmodifiableList( assignments );
 	}
 
-	public void addAssignment(SqmAssignment assignment) {
+	public void addAssignment(SqmAssignment<?> assignment) {
 		assignments.add( assignment );
 	}
 
-	public void addAssignment(SqmPath targetPath, SqmExpression value) {
-		addAssignment( new SqmAssignment( targetPath, value ) );
+	public <Y> void addAssignment(SqmPath<Y> targetPath, SqmExpression<? extends Y> value) {
+		addAssignment( new SqmAssignment<>( targetPath, value ) );
 	}
 }

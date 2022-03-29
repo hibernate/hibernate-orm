@@ -383,7 +383,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
-	public Object visitAssignment(SqmAssignment assignment) {
+	public Object visitAssignment(SqmAssignment<?> assignment) {
 		processStanza(
 				"assignment",
 				() -> {

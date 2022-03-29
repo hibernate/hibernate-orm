@@ -205,7 +205,7 @@ public class QuerySplitter {
 		}
 
 		@Override
-		public SqmAssignment visitAssignment(SqmAssignment assignment) {
+		public SqmAssignment<?> visitAssignment(SqmAssignment<?> assignment) {
 			throw new UnsupportedOperationException( "Not valid" );
 		}
 

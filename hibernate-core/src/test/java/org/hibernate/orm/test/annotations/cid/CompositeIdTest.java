@@ -103,6 +103,15 @@ public class CompositeIdTest {
 		);
 	}
 
+	@Test
+	public void testUpdateCompositeIdFkAssociation(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "update Child c set c.parent1 = null" ).executeUpdate();
+				}
+		);
+	}
+
 
 	/**
 	 * This feature is not supported by the EJB3

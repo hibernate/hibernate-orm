@@ -15,7 +15,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.MapKeyCustomCompositeType;
+import org.hibernate.annotations.MapKeyCompositeType;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
@@ -383,7 +383,7 @@ public class MapBinder extends CollectionBinder {
 			XProperty property,
 			XClass returnedClass,
 			MetadataBuildingContext context) {
-		final MapKeyCustomCompositeType compositeType = property.getAnnotation( MapKeyCustomCompositeType.class );
+		final MapKeyCompositeType compositeType = property.getAnnotation( MapKeyCompositeType.class );
 		if ( compositeType != null ) {
 			return compositeType.value();
 		}

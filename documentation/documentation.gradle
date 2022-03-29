@@ -61,6 +61,8 @@ dependencies {
 			requireCapability 'org.ehcache.modules:ehcache-xml-jakarta'
 		}
 	}
+	// Needed for JSON tests
+	testRuntimeOnly libraries.jackson
 }
 
 

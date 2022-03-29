@@ -408,6 +408,7 @@ In other words, the database schema will reflect the Bean Validation constraints
 To disable constraint propagation to DDL, set up `hibernate.validator.apply_to_ddl` to `false` in the configuration file.
 Such a need is very uncommon and not recommended.
 
+[[misc-options]]
 ==== Misc options
 
 `*hibernate.create_empty_composites.enabled*` (e.g. `true` or `false` (default value))::

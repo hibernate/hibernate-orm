@@ -144,9 +144,9 @@ public class DB2Dialect extends Dialect {
 				// Note that 31 is the maximum precision DB2 supports
 				return columnType( DECIMAL );
 			case BLOB:
-				return "blob($l)";
+				return "blob";
 			case CLOB:
-				return "clob($l)";
+				return "clob";
 			case TIMESTAMP_WITH_TIMEZONE:
 				return "timestamp($p)";
 			case TIME_WITH_TIMEZONE:

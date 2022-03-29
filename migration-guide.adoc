@@ -110,7 +110,7 @@ We decided this is the right time since 6.0 is a major release and most of the t
 contracts were already changing to implement the <<read-jdbc,read-by-position>> changes.
 
 One part of this work was the removal of various String-based approaches for specifying Types to use from annotations, including
-the removal of `@Type`, `@AnyMetaDef`, `@AnyMetaDefs`, `@MapKeyType`, @TypeDef` and `@TypeDefs`, as well as
+the removal of `@AnyMetaDef`, `@AnyMetaDefs`, `@TypeDef` and `@TypeDefs`, as well as
 removing annotation attributes accepting the type to use as a String (e.g. `org.hibernate.annotations.CollectionType#type`)
 
 The https://docs.jboss.org/hibernate/orm/6.0/userguide/html_single/Hibernate_User_Guide.html#domain-model[User Guide]
@@ -280,8 +280,17 @@ In either case, schema validation errors could occur as 5.x used the type code `
 Migration to `numeric(21)` should be easy. The migration to `interval second` might require a migration expression like
 `cast(cast(old as numeric(21,9) / 1000000000) as interval second(9))`.
 
-To retain backwards compatibility, configure the setting `hibernate.type.preferred_duration_jdbc_type` to `2`
-which stands for `Types.NUMERIC`.
+To retain backwards compatibility, configure the setting `hibernate.type.preferred_duration_jdbc_type` to `NUMERIC`.
+
+=== UUID mapping changes
+
+UUID now maps to the type code `SqlType.UUID` by default, which maps to the SQL type `uuid`
+if possible, and falls back to `binary(16)`.
+Due to the change to the native `uuid` type, schema validation errors could occur on database with native data type support.
+
+The migration to `uuid` might require a migration expression like `cast(old as uuid)`.
+
+To retain backwards compatibility, configure the setting `hibernate.type.preferred_uuid_jdbc_type` to `BINARY`.
 
 [[query]]
 == Query

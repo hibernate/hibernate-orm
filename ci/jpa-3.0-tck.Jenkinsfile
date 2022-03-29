@@ -42,6 +42,7 @@ pipeline {
 		stage('Run TCK') {
 			steps {
 				sh """ \
+					rm -Rf ./results
 					docker rm -f tck || true
                     docker volume rm -f tck-vol || true
                     docker volume create tck-vol

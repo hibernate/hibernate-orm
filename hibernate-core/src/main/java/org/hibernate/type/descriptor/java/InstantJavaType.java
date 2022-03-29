@@ -68,7 +68,7 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( SqlTypes.TIMESTAMP_UTC );
+		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( context.getPreferredSqlTypeCodeForInstant() );
 	}
 
 	@Override

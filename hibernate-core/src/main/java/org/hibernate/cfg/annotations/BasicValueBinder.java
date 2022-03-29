@@ -227,6 +227,11 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForInstant() {
+		return buildingContext.getPreferredSqlTypeCodeForInstant();
+	}
+
+	@Override
 	public boolean isNationalized() {
 		return isNationalized;
 	}

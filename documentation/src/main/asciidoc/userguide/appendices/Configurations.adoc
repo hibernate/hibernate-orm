@@ -392,6 +392,10 @@ Can also specify the name of the constant in `org.hibernate.type.SqlTypes` inste
 Global setting identifying the preferred JDBC type code for storing duration values.
 Can also specify the name of the constant in `org.hibernate.type.SqlTypes` instead.
 
+`*hibernate.type.preferred_instant_jdbc_type*` (e.g. `93` for `java.sql.Types.TIMESTAMP` or `3003` for `org.hibernate.types.SqlTypes.TIMESTAMP_UTC` (default value))::
+Global setting identifying the preferred JDBC type code for storing instant values.
+Can also specify the name of the constant in `org.hibernate.type.SqlTypes` instead.
+
 ==== Bean Validation options
 `*jakarta.persistence.validation.factory*` (e.g. `jakarta.validation.ValidationFactory` implementation)::
 Specify the  `javax.validation.ValidationFactory` implementation to use for Bean Validation.

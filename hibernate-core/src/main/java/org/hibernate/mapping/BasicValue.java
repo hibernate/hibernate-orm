@@ -690,6 +690,11 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForInstant() {
+		return getBuildingContext().getPreferredSqlTypeCodeForInstant();
+	}
+
+	@Override
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 		if ( timeZoneStorageType != null ) {
 			switch ( timeZoneStorageType ) {

@@ -63,6 +63,10 @@ public interface MetadataBuildingContext {
 		return ConfigurationHelper.getPreferredSqlTypeCodeForUuid( getBootstrapContext().getServiceRegistry() );
 	}
 
+	default int getPreferredSqlTypeCodeForInstant() {
+		return ConfigurationHelper.getPreferredSqlTypeCodeForInstant( getBootstrapContext().getServiceRegistry() );
+	}
+
 	TypeDefinitionRegistry getTypeDefinitionRegistry();
 
 	/**

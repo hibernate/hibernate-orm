@@ -454,7 +454,7 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@link Instant} to JDBC
-	 * {@link org.hibernate.type.SqlTypes#TIMESTAMP TIMESTAMP}.
+	 * {@link org.hibernate.type.SqlTypes#TIMESTAMP_UTC TIMESTAMP_UTC}.
 	 */
 	public static final BasicTypeReference<Instant> INSTANT = new BasicTypeReference<>(
 			"instant",

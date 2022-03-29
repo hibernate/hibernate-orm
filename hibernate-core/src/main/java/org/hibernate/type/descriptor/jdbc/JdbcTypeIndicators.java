@@ -84,13 +84,23 @@ public interface JdbcTypeIndicators {
 	}
 
 	/**
-	 * When mapping a uuid type to the database what is the preferred SQL type code to use?
+	 * When mapping an uuid type to the database what is the preferred SQL type code to use?
 	 * <p/>
 	 * Specifically names the key into the
 	 * {@link JdbcTypeRegistry}.
 	 */
 	default int getPreferredSqlTypeCodeForUuid() {
 		return SqlTypes.UUID;
+	}
+
+	/**
+	 * When mapping an instant type to the database what is the preferred SQL type code to use?
+	 * <p/>
+	 * Specifically names the key into the
+	 * {@link JdbcTypeRegistry}.
+	 */
+	default int getPreferredSqlTypeCodeForInstant() {
+		return SqlTypes.TIMESTAMP_UTC;
 	}
 
 	/**

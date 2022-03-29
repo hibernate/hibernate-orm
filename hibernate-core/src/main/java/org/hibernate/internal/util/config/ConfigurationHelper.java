@@ -545,6 +545,14 @@ public final class ConfigurationHelper {
 		);
 	}
 
+	public static synchronized int getPreferredSqlTypeCodeForInstant(StandardServiceRegistry serviceRegistry) {
+		return serviceRegistry.getService( ConfigurationService.class ).getSetting(
+				AvailableSettings.PREFERRED_INSTANT_JDBC_TYPE,
+				TypeCodeConverter.INSTANCE,
+				SqlTypes.TIMESTAMP_UTC
+		);
+	}
+
 	private static class TypeCodeConverter implements ConfigurationService.Converter<Integer> {
 
 		public static final TypeCodeConverter INSTANCE = new TypeCodeConverter();

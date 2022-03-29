@@ -953,6 +953,28 @@ The syntax is `format(datetime as pattern)`, and the pattern must be written in 
 
 For a full list of `format()` pattern elements, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#appendDatetimeFormat[`Dialect#appendDatetimeFormat`].
 
+[[hql-function-sql]]
+===== `sql()`
+
+Renders a SQL fragment by unquoting the pattern string literal arguments.
+Use cases that require the use of SQL features that are unsupported in HQL,
+e.g. functions with special syntax, would usually require a switch to native queries,
+but the `sql` function provides a way to make use of certain SQL fragments within an HQL query.
+
+The syntax is `sql(pattern[, argN]*)`, where pattern must be a string literal but other arguments may be of any type.
+
+The pattern literal is unquoted and will be used for rendering the SQL fragment.
+Occurrences of question marks `?` in the pattern are replaced with additional arguments passed to the function.
+
+Examples:
+
+```sql
+-- Cast to some native type
+select c from Computer c where c.ipAddress = sql('?::inet', '127.0.0.1')
+-- Use some native operator
+select h from Human h order by sql('(? <-> ?)', h.workLocation, h.homeLocation)
+```
+
 [[hql-list-functions]]
 ===== `element()` and `index()`
 

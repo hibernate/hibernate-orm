@@ -144,7 +144,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	@Override
 	public Object visitSetClause(SqmSetClause setClause) {
 		if ( setClause != null ) {
-			for ( SqmAssignment assignment : setClause.getAssignments() ) {
+			for ( SqmAssignment<?> assignment : setClause.getAssignments() ) {
 				visitAssignment( assignment );
 			}
 		}
@@ -152,7 +152,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
-	public Object visitAssignment(SqmAssignment assignment) {
+	public Object visitAssignment(SqmAssignment<?> assignment) {
 		assignment.getTargetPath().accept( this );
 		assignment.getValue().accept( this );
 		return assignment;

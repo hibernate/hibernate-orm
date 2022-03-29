@@ -23,7 +23,6 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
@@ -78,7 +77,7 @@ public class SqmUpdateStatement<T>
 		}
 		final SqmUpdateStatement<T> statement = context.registerCopy(
 				this,
-				new SqmUpdateStatement<T>(
+				new SqmUpdateStatement<>(
 						nodeBuilder(),
 						getQuerySource(),
 						copyParameters( context ),
@@ -111,25 +110,29 @@ public class SqmUpdateStatement<T>
 
 	@Override
 	public <Y> SqmUpdateStatement<T> set(SingularAttribute<? super T, Y> attribute, Expression<? extends Y> value) {
-		applyAssignment( getTarget().get( attribute ), (SqmExpression<?>) value );
+		//noinspection unchecked
+		applyAssignment( getTarget().get( attribute ), (SqmExpression<? extends Y>) value );
 		return this;
 	}
 
 	@Override
 	public <Y, X extends Y> SqmUpdateStatement<T> set(Path<Y> attribute, X value) {
-		applyAssignment( (SqmPath<?>) attribute, nodeBuilder().value( value ) );
+		applyAssignment( (SqmPath<Y>) attribute, nodeBuilder().value( value ) );
 		return this;
 	}
 
 	@Override
 	public <Y> SqmUpdateStatement<T> set(Path<Y> attribute, Expression<? extends Y> value) {
-		applyAssignment( (SqmPath<?>) attribute, (SqmExpression<?>) value );
+		//noinspection unchecked
+		applyAssignment( (SqmPath<Y>) attribute, (SqmExpression<? extends Y>) value );
 		return this;
 	}
 
 	@Override
 	public SqmUpdateStatement<T> set(String attributeName, Object value) {
-		applyAssignment( getTarget().get( attributeName ), nodeBuilder().value( value ) );
+		//noinspection unchecked
+		final SqmPath<Object> sqmPath = (SqmPath<Object>) getTarget().get( attributeName );
+		applyAssignment( sqmPath, nodeBuilder().value( value ) );
 		return this;
 	}
 
@@ -167,11 +170,11 @@ public class SqmUpdateStatement<T>
 		return walker.visitUpdateStatement( this );
 	}
 
-	public void applyAssignment(SqmPath targetPath, SqmExpression value) {
+	public <Y> void applyAssignment(SqmPath<Y> targetPath, SqmExpression<? extends Y> value) {
 		if ( setClause == null ) {
 			setClause = new SqmSetClause();
 		}
-		setClause.addAssignment( new SqmAssignment( targetPath, value ) );
+		setClause.addAssignment( new SqmAssignment<>( targetPath, value ) );
 	}
 
 	@Override
@@ -183,7 +186,7 @@ public class SqmUpdateStatement<T>
 		sb.append( getTarget().getEntityName() );
 		sb.append( ' ' ).append( getTarget().resolveAlias() );
 		sb.append( " set " );
-		final List<SqmAssignment> assignments = setClause.getAssignments();
+		final List<SqmAssignment<?>> assignments = setClause.getAssignments();
 		appendAssignment( assignments.get( 0 ), sb );
 		for ( int i = 1; i < assignments.size(); i++ ) {
 			sb.append( ", " );
@@ -193,7 +196,7 @@ public class SqmUpdateStatement<T>
 		super.appendHqlString( sb );
 	}
 
-	private static void appendAssignment(SqmAssignment sqmAssignment, StringBuilder sb) {
+	private static void appendAssignment(SqmAssignment<?> sqmAssignment, StringBuilder sb) {
 		sqmAssignment.getTargetPath().appendHqlString( sb );
 		sb.append( " = " );
 		sqmAssignment.getValue().appendHqlString( sb );

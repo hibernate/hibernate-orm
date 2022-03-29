@@ -546,8 +546,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			for ( ParseTree subCtx : setClauseCtx.children ) {
 				if ( subCtx instanceof HqlParser.AssignmentContext ) {
 					final HqlParser.AssignmentContext assignmentContext = (HqlParser.AssignmentContext) subCtx;
+					//noinspection unchecked
 					updateStatement.applyAssignment(
-							consumeDomainPath( (HqlParser.SimplePathContext) assignmentContext.getChild( 0 ) ),
+							(SqmPath<Object>) consumeDomainPath( (HqlParser.SimplePathContext) assignmentContext.getChild( 0 ) ),
 							(SqmExpression<?>) assignmentContext.getChild( 2 ).accept( this )
 					);
 				}

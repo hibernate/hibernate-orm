@@ -106,7 +106,7 @@ public interface SemanticQueryWalker<T> {
 
 	T visitSetClause(SqmSetClause setClause);
 
-	T visitAssignment(SqmAssignment assignment);
+	T visitAssignment(SqmAssignment<?> assignment);
 
 	T visitInsertSelectStatement(SqmInsertSelectStatement<?> statement);
 

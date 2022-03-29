@@ -155,8 +155,8 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 			SqmParameterResolutionConsumer parameterResolutionConsumer) {
 		this.parameterResolutionConsumer = parameterResolutionConsumer;
 
-		for ( SqmAssignment assignment : setClause.getAssignments() ) {
-			assignmentConsumer.accept( visitAssignment( assignment ) );
+		for ( Assignment assignment : super.visitSetClause( setClause ) ) {
+			assignmentConsumer.accept( assignment );
 		}
 	}
 
@@ -164,13 +164,6 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
-	public Assignment visitAssignment(SqmAssignment sqmAssignment) {
-		return new Assignment(
-				(Assignable) sqmAssignment.getTargetPath().accept( this ),
-				(Expression) sqmAssignment.getValue().accept( this )
-		);
-	}
 	/**
 	 * Specialized hook to visit the assignments defined by the update SQM allow
 	 * "listening" for each SQL assignment.
@@ -239,10 +232,13 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 	}
 
 	@Override
-	protected Expression consumeSingleSqmParameter(SqmParameter<?> sqmParameter) {
+	protected Expression consumeSqmParameter(
+			SqmParameter<?> sqmParameter,
+			MappingModelExpressible<?> valueMapping,
+			BiConsumer<Integer, JdbcParameter> jdbcParameterConsumer) {
 		assert parameterResolutionConsumer != null;
 
-		final Expression expression = super.consumeSingleSqmParameter( sqmParameter );
+		final Expression expression = super.consumeSqmParameter( sqmParameter, valueMapping, jdbcParameterConsumer );
 
 		final List<List<JdbcParameter>> jdbcParameters = getJdbcParamsBySqmParam().get( sqmParameter );
 		final MappingModelExpressible<?> mappingType = getSqmParameterMappingModelExpressibleResolutions().get( sqmParameter );

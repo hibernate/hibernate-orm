@@ -84,6 +84,7 @@ import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
@@ -93,6 +94,7 @@ import org.hibernate.query.sqm.tree.insert.SqmValues;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
+import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.results.internal.TupleMetadata;
 
@@ -302,8 +304,9 @@ public class QuerySqmImpl<R>
 				);
 			}
 			if ( sqmStatement instanceof SqmUpdateStatement<?> ) {
-				SqmUpdateStatement<R> updateStatement = (SqmUpdateStatement<R>) sqmStatement;
+				final SqmUpdateStatement<R> updateStatement = (SqmUpdateStatement<R>) sqmStatement;
 				verifyImmutableEntityUpdate( hql, updateStatement, getSessionFactory() );
+				verifyUpdateTypesMatch( hql, updateStatement );
 			}
 			else if ( sqmStatement instanceof SqmInsertStatement<?> ) {
 				verifyInsertTypesMatch( hql, (SqmInsertStatement<R>) sqmStatement );
@@ -339,6 +342,31 @@ public class QuerySqmImpl<R>
 				throw new UnsupportedOperationException(
 						"The " + immutableEntityUpdateQueryHandlingMode + " is not supported!"
 				);
+		}
+	}
+
+	private void verifyUpdateTypesMatch(String hqlString, SqmUpdateStatement<R> sqmStatement) {
+		final List<SqmAssignment<?>> assignments = sqmStatement.getSetClause().getAssignments();
+		for ( int i = 0; i < assignments.size(); i++ ) {
+			final SqmAssignment<?> assignment = assignments.get( i );
+			final SqmPath<?> targetPath = assignment.getTargetPath();
+			final SqmExpression<?> expression = assignment.getValue();
+			if ( targetPath.getNodeJavaType() == null || expression.getNodeJavaType() == null ) {
+				continue;
+			}
+			if ( targetPath.getNodeJavaType() != expression.getNodeJavaType()
+					&& !targetPath.getNodeJavaType().isWider( expression.getNodeJavaType() ) ) {
+				throw new SemanticException(
+						String.format(
+								"The assignment expression type [%s] did not match the assignment path type [%s] for the path [%s]",
+								expression.getNodeJavaType().getJavaType().getTypeName(),
+								targetPath.getNodeJavaType().getJavaType().getTypeName(),
+								targetPath.toHqlString()
+						),
+						hqlString,
+						null
+				);
+			}
 		}
 	}
 

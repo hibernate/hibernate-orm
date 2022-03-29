@@ -12,7 +12,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -73,7 +72,7 @@ import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.annotations.ManyToAny;
-import org.hibernate.annotations.MapKeyCustomType;
+import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.MapKeyJavaType;
 import org.hibernate.annotations.MapKeyJdbcType;
 import org.hibernate.annotations.MapKeyJdbcTypeCode;
@@ -2593,7 +2592,7 @@ public final class AnnotationBinder {
 			|| property.isAnnotationPresent(MapKeyJdbcTypeCode.class)
 			|| property.isAnnotationPresent(MapKeyMutability.class)
 			|| property.isAnnotationPresent(MapKey.class)
-			|| property.isAnnotationPresent(MapKeyCustomType.class);
+			|| property.isAnnotationPresent( MapKeyType.class);
 	}
 
 	private static void bindAny(

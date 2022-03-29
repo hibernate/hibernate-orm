@@ -136,10 +136,10 @@ public class DerbyDialect extends Dialect {
 			case LONG32VARCHAR:
 				return "long varchar";
 			case BLOB:
-				return "blob($l)";
+				return "blob";
 			case CLOB:
 			case NCLOB:
-				return "clob($l)";
+				return "clob";
 			case TIMESTAMP:
 			case TIMESTAMP_WITH_TIMEZONE:
 				return "timestamp";

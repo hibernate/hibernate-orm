@@ -13,7 +13,7 @@ import org.hibernate.usertype.CompositeUserType;
  *
  * @since 6.0
  */
-public @interface MapKeyCustomCompositeType {
+public @interface MapKeyCompositeType {
 	/**
 	 * The custom type implementor class
 	 *

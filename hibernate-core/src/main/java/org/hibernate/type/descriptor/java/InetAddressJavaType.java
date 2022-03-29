@@ -61,7 +61,7 @@ public class InetAddressJavaType extends AbstractClassJavaType<InetAddress> {
 			return (X) value.getAddress();
 		}
 		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) value.toString();
+			return (X) value.getHostAddress();
 		}
 		throw unknownUnwrap( type );
 	}

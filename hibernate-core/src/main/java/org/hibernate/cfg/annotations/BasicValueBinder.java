@@ -35,7 +35,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.ListIndexJavaType;
 import org.hibernate.annotations.ListIndexJdbcType;
 import org.hibernate.annotations.ListIndexJdbcTypeCode;
-import org.hibernate.annotations.MapKeyCustomType;
+import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.MapKeyJavaType;
 import org.hibernate.annotations.MapKeyJdbcType;
 import org.hibernate.annotations.MapKeyJdbcTypeCode;
@@ -1347,7 +1347,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 		@Override
 		public Class<? extends UserType<?>> customType(XProperty xProperty) {
-			final MapKeyCustomType customType = findAnnotation( xProperty, MapKeyCustomType.class );
+			final MapKeyType customType = findAnnotation( xProperty, MapKeyType.class );
 			if ( customType == null ) {
 				return null;
 			}
@@ -1357,7 +1357,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 		@Override
 		public Parameter[] customTypeParameters(XProperty xProperty) {
-			final MapKeyCustomType customType = findAnnotation( xProperty, MapKeyCustomType.class );
+			final MapKeyType customType = findAnnotation( xProperty, MapKeyType.class );
 			if ( customType == null ) {
 				return null;
 			}

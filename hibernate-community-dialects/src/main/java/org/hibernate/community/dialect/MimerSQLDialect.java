@@ -93,10 +93,10 @@ public class MimerSQLDialect extends Dialect {
 				return columnType( LONG32NVARCHAR );
 			//default length is 1M, which is quite low
 			case BLOB:
-				return "blob($l)";
+				return "blob(2G)";
 			case CLOB:
 			case NCLOB:
-				return "nclob($l)";
+				return "nclob(2G)";
 		}
 		return super.columnType( sqlTypeCode );
 	}

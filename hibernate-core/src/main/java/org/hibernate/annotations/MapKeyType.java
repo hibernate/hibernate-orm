@@ -13,7 +13,7 @@ import org.hibernate.usertype.UserType;
  *
  * @since 6.0
  */
-public @interface MapKeyCustomType {
+public @interface MapKeyType {
 	/**
 	 * The custom type implementor class
 	 *

@@ -13,7 +13,7 @@ import java.util.Map;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.CollectionType;
 import org.hibernate.annotations.ManyToAny;
-import org.hibernate.annotations.MapKeyCustomType;
+import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -347,7 +347,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 			else if ( collectionProperty.isAnnotationPresent( MapKeyClass.class ) ) {
 				canKeyBeConverted = false;
 			}
-			else if ( collectionProperty.isAnnotationPresent( MapKeyCustomType.class ) ) {
+			else if ( collectionProperty.isAnnotationPresent( MapKeyType.class ) ) {
 				canKeyBeConverted = false;
 			}
 		}

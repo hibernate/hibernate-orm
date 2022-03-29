@@ -230,6 +230,7 @@ public class OutputsImpl implements Outputs {
 				executionContext,
 				null,
 				RowTransformerStandardImpl.INSTANCE,
+				null,
 				jdbcValues
 		);
 

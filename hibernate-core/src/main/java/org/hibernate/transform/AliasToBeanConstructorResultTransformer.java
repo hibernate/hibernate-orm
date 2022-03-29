@@ -9,11 +9,12 @@ package org.hibernate.transform;
 import java.lang.reflect.Constructor;
 
 import org.hibernate.QueryException;
+import org.hibernate.query.TypedTupleTransformer;
 
 /**
  * Wraps the tuples in a constructor call.
  */
-public class AliasToBeanConstructorResultTransformer<T> implements ResultTransformer<T> {
+public class AliasToBeanConstructorResultTransformer<T> implements ResultTransformer<T>, TypedTupleTransformer<T> {
 
 	private final Constructor<T> constructor;
 
@@ -24,6 +25,11 @@ public class AliasToBeanConstructorResultTransformer<T> implements ResultTransfo
 	 */
 	public AliasToBeanConstructorResultTransformer(Constructor<T> constructor) {
 		this.constructor = constructor;
+	}
+
+	@Override
+	public Class<T> getTransformedType() {
+		return constructor.getDeclaringClass();
 	}
 
 	/**

@@ -8,6 +8,7 @@ package org.hibernate.transform;
 import java.util.Map;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.query.TypedTupleTransformer;
 
 /**
  * {@link ResultTransformer} implementation which builds a map for each "row",
@@ -16,7 +17,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class AliasToEntityMapResultTransformer implements ResultTransformer<Map<String,Object>> {
+public class AliasToEntityMapResultTransformer implements ResultTransformer<Map<String,Object>>, TypedTupleTransformer<Map<String,Object>> {
 
 	public static final AliasToEntityMapResultTransformer INSTANCE = new AliasToEntityMapResultTransformer();
 
@@ -24,6 +25,12 @@ public class AliasToEntityMapResultTransformer implements ResultTransformer<Map<
 	 * Disallow instantiation of AliasToEntityMapResultTransformer.
 	 */
 	private AliasToEntityMapResultTransformer() {
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	public Class getTransformedType() {
+		return Map.class;
 	}
 
 	@Override

@@ -14,6 +14,7 @@ import jakarta.persistence.Tuple;
 import jakarta.persistence.TupleElement;
 
 import org.hibernate.HibernateException;
+import org.hibernate.query.TypedTupleTransformer;
 import org.hibernate.transform.ResultTransformer;
 
 /**
@@ -21,11 +22,16 @@ import org.hibernate.transform.ResultTransformer;
  *
  * @author Arnold Galovics
  */
-public class NativeQueryTupleTransformer implements ResultTransformer<Tuple> {
+public class NativeQueryTupleTransformer implements ResultTransformer<Tuple>, TypedTupleTransformer<Tuple> {
 
 	@Override
 	public Tuple transformTuple(Object[] tuple, String[] aliases) {
 		return new NativeTupleImpl( tuple, aliases );
+	}
+
+	@Override
+	public Class<Tuple> getTransformedType() {
+		return Tuple.class;
 	}
 
 	private static class NativeTupleElementImpl<X> implements TupleElement<X> {

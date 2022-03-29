@@ -17,9 +17,9 @@ import org.hibernate.LockOptions;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.query.spi.Limit;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
+import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.MutableQueryOptions;
 
 /**
@@ -43,6 +43,7 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 
 	private TupleTransformer tupleTransformer;
 	private ResultListTransformer resultListTransformer;
+	private Boolean deDupEnabled;
 
 	private RootGraphImplementor<?> rootGraph;
 	private GraphSemantic graphSemantic;
@@ -158,6 +159,15 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	@Override
 	public ResultListTransformer getResultListTransformer() {
 		return resultListTransformer;
+	}
+
+	@Override
+	public Boolean isDeDuplicationEnabled() {
+		return deDupEnabled;
+	}
+
+	public void setDeDuplicationEnabled(boolean enabled) {
+		this.deDupEnabled = enabled;
 	}
 
 	public void setResultCacheRegionName(String resultCacheRegionName) {

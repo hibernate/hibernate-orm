@@ -2447,7 +2447,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 				Object[].class)
 			.getResultList();
 			//end::hql-relational-comparisons-example[]
-			assertEquals(2, phonePayments.size());
+			assertEquals(3, phonePayments.size());
 		});
 	}
 

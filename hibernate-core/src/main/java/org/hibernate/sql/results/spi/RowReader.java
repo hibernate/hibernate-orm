@@ -23,27 +23,38 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public interface RowReader<R> {
 	/**
-	 * The overall row result Java type.  Might be a scalar type, an
-	 * entity type, etc.  Might also be a `Object[].class` for multiple
-	 * results (domain selections).
+	 * The type actually returned from this reader's {@link #readRow} call,
+	 * accounting for any transformers.
+	 * <p/>
+	 * May be null to indicate that no transformation is applied.
+	 * <p/>
+	 * Ultimately intended for use in comparing values are being de-duplicated
 	 */
-	Class<R> getResultJavaType();
+	Class<R> getDomainResultResultJavaType();
 
 	/**
-	 *  The JavaTypes of the result
+	 * The row result Java type, before any transformations.
+	 *
+	 * @apiNote along with {@link #getResultJavaTypes()}, describes the "raw"
+	 * values as determined from the {@link org.hibernate.sql.results.graph.DomainResult}
+	 * references associated with the JdbcValues being processed
 	 */
-	List<JavaType> getResultJavaTypes();
+	Class<?> getResultJavaType();
 
 	/**
-	 * The initializers associated with this reader
+	 * The individual JavaType for each DomainResult
+	 */
+	List<JavaType<?>> getResultJavaTypes();
+
+	/**
+	 * The initializers associated with this reader.
+	 *
+	 * @see org.hibernate.sql.results.graph.DomainResult
 	 */
 	List<Initializer> getInitializers();
 
 	/**
 	 * The actual coordination of reading a row
-	 *
-	 * todo (6.0) : JdbcValuesSourceProcessingOptions is available through RowProcessingState - why pass it in separately
-	 * 		should use one approach or the other
 	 */
 	R readRow(RowProcessingState processingState, JdbcValuesSourceProcessingOptions options);
 

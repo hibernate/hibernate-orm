@@ -13,6 +13,9 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 
 /**
+ * Consumes {@link JdbcValues} and returns the consumed values in whatever form this
+ * consumer returns, generally a {@link java.util.List} or a {@link org.hibernate.ScrollableResults}
+ *
  * @author Steve Ebersole
  */
 public interface ResultsConsumer<T, R> {

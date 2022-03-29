@@ -57,10 +57,12 @@ public class ResultsHelper {
 			ExecutionContext executionContext,
 			LockOptions lockOptions,
 			RowTransformer<R> rowTransformer,
+			Class<R> transformedResultJavaType,
 			JdbcValues jdbcValues) {
+		final SessionFactoryImplementor sessionFactory = executionContext.getSession().getFactory();
+
 		final Map<NavigablePath, Initializer> initializerMap = new LinkedHashMap<>();
 		final List<Initializer> initializers = new ArrayList<>();
-		final SessionFactoryImplementor sessionFactory = executionContext.getSession().getFactory();
 
 		final List<DomainResultAssembler<?>> assemblers = jdbcValues.getValuesMapping().resolveAssemblers(
 				new AssemblerCreationState() {
@@ -107,7 +109,7 @@ public class ResultsHelper {
 
 		logInitializers( initializerMap );
 
-		return new StandardRowReader<>( assemblers, initializers, rowTransformer );
+		return new StandardRowReader<>( assemblers, initializers, rowTransformer, transformedResultJavaType );
 	}
 
 	private static void logInitializers(Map<NavigablePath, Initializer> initializerMap) {

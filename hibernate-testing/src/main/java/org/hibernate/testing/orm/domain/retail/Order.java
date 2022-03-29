@@ -25,6 +25,20 @@ public class Order {
 	private Payment payment;
 	private SalesAssociate salesAssociate;
 
+	public Order() {
+	}
+
+	public Order(Integer id, Payment payment, SalesAssociate salesAssociate) {
+		this( id, Instant.now(), payment, salesAssociate );
+	}
+
+	public Order(Integer id, Instant transacted, Payment payment, SalesAssociate salesAssociate) {
+		this.id = id;
+		this.transacted = transacted;
+		this.payment = payment;
+		this.salesAssociate = salesAssociate;
+	}
+
 	@Id
 	public Integer getId() {
 		return id;

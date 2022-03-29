@@ -81,11 +81,6 @@ public abstract class QueryOptionsAdapter implements QueryOptions {
 	}
 
 	@Override
-	public Boolean isDeDuplicationEnabled() {
-		return null;
-	}
-
-	@Override
 	public String getResultCacheRegionName() {
 		return null;
 	}

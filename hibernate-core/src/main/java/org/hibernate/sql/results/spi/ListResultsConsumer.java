@@ -14,8 +14,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.ResultListTransformer;
-import org.hibernate.query.TupleTransformer;
-import org.hibernate.query.TypedTupleTransformer;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
@@ -33,6 +31,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 	private static final ListResultsConsumer<?> NEVER_DE_DUP_CONSUMER = new ListResultsConsumer<>( UniqueSemantic.NEVER );
+	private static final ListResultsConsumer<?> ALLOW_DE_DUP_CONSUMER = new ListResultsConsumer<>( UniqueSemantic.ALLOW );
 	private static final ListResultsConsumer<?> IGNORE_DUP_CONSUMER = new ListResultsConsumer<>( UniqueSemantic.NONE );
 	private static final ListResultsConsumer<?> DE_DUP_CONSUMER = new ListResultsConsumer<>( UniqueSemantic.FILTER );
 	private static final ListResultsConsumer<?> ERROR_DUP_CONSUMER = new ListResultsConsumer<>( UniqueSemantic.ASSERT );
@@ -48,6 +47,9 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			}
 			case NEVER: {
 				return (ListResultsConsumer<R>) NEVER_DE_DUP_CONSUMER;
+			}
+			case ALLOW: {
+				return (ListResultsConsumer<R>) ALLOW_DE_DUP_CONSUMER;
 			}
 			default: {
 				return (ListResultsConsumer<R>) IGNORE_DUP_CONSUMER;
@@ -78,7 +80,12 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 		 * Never apply unique handling.  E.g. for NativeQuery.  Whereas {@link #NONE} can be adjusted,
 		 * NEVER will never apply unique handling
 		 */
-		NEVER
+		NEVER,
+
+		/**
+		 * De-duplication is allowed if the query and result type allow
+		 */
+		ALLOW
 	}
 
 	private final UniqueSemantic uniqueSemantic;
@@ -108,7 +115,6 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			RowReader<R> rowReader) {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		final TypeConfiguration typeConfiguration = session.getTypeConfiguration();
-		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		final QueryOptions queryOptions = rowProcessingState.getQueryOptions();
 
 		RuntimeException ex = null;
@@ -117,57 +123,20 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 
 			final List<R> results = new ArrayList<>();
 
-			final JavaType<R> domainResultJavaType;
+			final JavaType<R> domainResultJavaType = resolveDomainResultJavaType(
+					rowReader.getDomainResultResultJavaType(),
+					rowReader.getResultJavaTypes(),
+					typeConfiguration
+			);
+
 			final ResultHandler<R> resultHandlerToUse;
 
-			final TupleTransformer<?> tupleTransformer = queryOptions.getTupleTransformer();
-			if ( tupleTransformer instanceof TypedTupleTransformer ) {
-				//noinspection unchecked
-				final TypedTupleTransformer<R> typedTupleTransformer = (TypedTupleTransformer<R>) tupleTransformer;
-				domainResultJavaType = javaTypeRegistry.resolveDescriptor( typedTupleTransformer.getTransformedType() );
-
-				if ( uniqueSemantic == UniqueSemantic.NEVER ) {
-					resultHandlerToUse = this.resultHandler;
-				}
-				else if ( queryOptions.shouldApplyDeDuplication() ) {
-					resultHandlerToUse = ListResultsConsumer::deDuplicationHandling;
-				}
-				else if ( domainResultJavaType instanceof EntityJavaType ) {
-					resultHandlerToUse = ListResultsConsumer::deDuplicationHandling;
-				}
-				else {
-					resultHandlerToUse = this.resultHandler;
-				}
+			if ( uniqueSemantic == UniqueSemantic.ALLOW
+					&& domainResultJavaType instanceof EntityJavaType ) {
+				resultHandlerToUse = ListResultsConsumer::deDuplicationHandling;
 			}
 			else {
-				domainResultJavaType = resolveDomainResultJavaType(
-						rowReader.getDomainResultResultJavaType(),
-						rowReader.getResultJavaTypes(),
-						typeConfiguration
-				);
-
-				if ( uniqueSemantic == UniqueSemantic.NEVER ) {
-					resultHandlerToUse = this.resultHandler;
-				}
-				else if ( queryOptions.shouldApplyDeDuplication() ) {
-					resultHandlerToUse = ListResultsConsumer::deDuplicationHandling;
-				}
-				else {
-					if ( uniqueSemantic == UniqueSemantic.ASSERT ) {
-						if ( rowProcessingState.hasCollectionInitializers ) {
-							resultHandlerToUse = ListResultsConsumer::deDuplicationHandling;
-						}
-						else {
-							resultHandlerToUse = this.resultHandler;
-						}
-					}
-					else if ( domainResultJavaType instanceof EntityJavaType ) {
-						resultHandlerToUse = ListResultsConsumer::deDuplicationHandling;
-					}
-					else {
-						resultHandlerToUse = this.resultHandler;
-					}
-				}
+				resultHandlerToUse = this.resultHandler;
 			}
 
 			while ( rowProcessingState.next() ) {

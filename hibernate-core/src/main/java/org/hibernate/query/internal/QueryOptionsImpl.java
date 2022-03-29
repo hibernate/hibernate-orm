@@ -43,7 +43,6 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 
 	private TupleTransformer tupleTransformer;
 	private ResultListTransformer resultListTransformer;
-	private Boolean deDupEnabled;
 
 	private RootGraphImplementor<?> rootGraph;
 	private GraphSemantic graphSemantic;
@@ -159,15 +158,6 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	@Override
 	public ResultListTransformer getResultListTransformer() {
 		return resultListTransformer;
-	}
-
-	@Override
-	public Boolean isDeDuplicationEnabled() {
-		return deDupEnabled;
-	}
-
-	public void setDeDuplicationEnabled(boolean enabled) {
-		this.deDupEnabled = enabled;
 	}
 
 	public void setResultCacheRegionName(String resultCacheRegionName) {

@@ -448,6 +448,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForInstant() {
+		return delegate.getPreferredSqlTypeCodeForInstant();
+	}
+
+	@Override
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 		return delegate.getDefaultTimeZoneStorageStrategy();
 	}

@@ -304,6 +304,8 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	int getPreferredSqlTypeCodeForUuid();
 
+	int getPreferredSqlTypeCodeForInstant();
+
 	TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy();
 
 	FormatMapper getJsonFormatMapper();

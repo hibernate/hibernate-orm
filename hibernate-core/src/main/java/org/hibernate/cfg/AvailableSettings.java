@@ -2515,6 +2515,20 @@ public interface AvailableSettings {
 	String PREFERRED_DURATION_JDBC_TYPE = "hibernate.type.preferred_duration_jdbc_type";
 
 	/**
+	 * Specifies the preferred JDBC type for storing instant values. When no
+	 * type is explicitly specified, {@link org.hibernate.type.SqlTypes#TIMESTAMP_UTC} is used.
+	 *
+	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
+	 * {@link org.hibernate.annotations.JdbcTypeCode} and friends
+	 *
+	 * Can also specify the name of the constant in {@link org.hibernate.type.SqlTypes} instead.  E.g.
+	 * {@code hibernate.type.preferred_instant_jdbc_type=TIMESTAMP}
+	 *
+	 * @since 6.0
+	 */
+	String PREFERRED_INSTANT_JDBC_TYPE = "hibernate.type.preferred_instant_jdbc_type";
+
+	/**
 	 * Specifies a {@link org.hibernate.type.FormatMapper} used for for JSON serialization
 	 * and deserialization, either:
 	 * <ul>

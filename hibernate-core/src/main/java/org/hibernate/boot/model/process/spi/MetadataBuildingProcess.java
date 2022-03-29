@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.process.spi;
 
 import java.sql.Types;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.Collection;
@@ -446,6 +447,22 @@ public class MetadataBuildingProcess {
 					"org.hibernate.type.ZonedDateTimeType",
 					ZonedDateTime.class.getSimpleName(),
 					ZonedDateTime.class.getName()
+			);
+		}
+		final int preferredSqlTypeCodeForInstant = ConfigurationHelper.getPreferredSqlTypeCodeForInstant( bootstrapContext.getServiceRegistry() );
+		if ( preferredSqlTypeCodeForInstant != SqlTypes.TIMESTAMP_UTC ) {
+			final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
+			final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
+			final BasicType<?> instantType = new NamedBasicTypeImpl<>(
+					javaTypeRegistry.getDescriptor( Instant.class ),
+					jdbcTypeRegistry.getDescriptor( preferredSqlTypeCodeForInstant ),
+					"instant"
+			);
+			basicTypeRegistry.register(
+					instantType,
+					"org.hibernate.type.InstantType",
+					Instant.class.getSimpleName(),
+					Instant.class.getName()
 			);
 		}
 	}

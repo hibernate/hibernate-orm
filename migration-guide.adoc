@@ -292,6 +292,16 @@ The migration to `uuid` might require a migration expression like `cast(old as u
 
 To retain backwards compatibility, configure the setting `hibernate.type.preferred_uuid_jdbc_type` to `BINARY`.
 
+=== Instant mapping changes
+
+Instant now maps to the type code `SqlType.TIMESTAMP_UTC` by default, which maps to the SQL type `timestamp with time zone`
+if possible, and falls back to `timestamp`.
+Due to this change, schema validation errors could occur on some databases.
+
+The migration to `timestamp with time zone` might require a migration expression like `cast(old as timestamp with time zone)`.
+
+To retain backwards compatibility, configure the setting `hibernate.type.preferred_instant_jdbc_type` to `TIMESTAMP`.
+
 [[query]]
 == Query
 

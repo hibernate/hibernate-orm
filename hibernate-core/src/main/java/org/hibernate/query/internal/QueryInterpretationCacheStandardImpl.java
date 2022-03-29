@@ -9,6 +9,7 @@ package org.hibernate.query.internal;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import jakarta.persistence.Tuple;
 
 import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 import org.hibernate.query.QueryLogging;
@@ -27,7 +28,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.jboss.logging.Logger;
 
 /**
- * Standard QueryPlanCache implementation
+ * Standard QueryInterpretationCache implementation
  *
  * @author Steve Ebersole
  */
@@ -104,50 +105,59 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			Class<?> expectedResultType,
 			Function<String, SqmStatement<?>> creator) {
 		log.tracef( "QueryPlan#resolveHqlInterpretation( `%s` )", queryString );
-		final StatisticsImplementor statistics = statisticsSupplier.get();
-		final boolean stats = statistics.isStatisticsEnabled();
-		final long startTime = ( stats ) ? System.nanoTime() : 0L;
 
 		final String cacheKey;
-		if ( expectedResultType != null && expectedResultType.isArray() ) {
-			cacheKey = queryString + "_array";
+		if ( expectedResultType != null
+				&& ( expectedResultType.isArray() || Tuple.class.isAssignableFrom( expectedResultType ) ) ) {
+			cacheKey = "multi_" + queryString;
 		}
 		else {
 			cacheKey = queryString;
 		}
 
-		final DomainParameterXref domainParameterXref;
-		HqlInterpretation hqlInterpretation = hqlInterpretationCache.get( cacheKey );
-		if ( hqlInterpretation == null ) {
-			log.debugf( "Creating and caching HqlInterpretation - %s", queryString );
-			final SqmStatement<?> sqmStatement = creator.apply( queryString );
-			final ParameterMetadataImplementor parameterMetadata;
 
-			if ( sqmStatement.getSqmParameters().isEmpty() ) {
-				domainParameterXref = DomainParameterXref.empty();
-				parameterMetadata = ParameterMetadataImpl.EMPTY;
-			}
-			else {
-				domainParameterXref = DomainParameterXref.from( sqmStatement );
-				parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
-			}
-
-			hqlInterpretation = new SimpleHqlInterpretationImpl( sqmStatement, parameterMetadata, domainParameterXref );
-			hqlInterpretationCache.put( cacheKey, hqlInterpretation );
-
-			if ( stats ) {
-				final long endTime = System.nanoTime();
-				final long microseconds = TimeUnit.MICROSECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
-				statistics.queryCompiled( queryString, microseconds );
-			}
-		}
-		else {
-			if ( stats ) {
+		final HqlInterpretation existing = hqlInterpretationCache.get( cacheKey );
+		if ( existing != null ) {
+			final StatisticsImplementor statistics = statisticsSupplier.get();
+			if ( statistics.isStatisticsEnabled() ) {
 				statistics.queryPlanCacheHit( queryString );
 			}
+			return existing;
 		}
 
+		final HqlInterpretation hqlInterpretation = createHqlInterpretation( queryString, creator, statisticsSupplier );
+		hqlInterpretationCache.put( cacheKey, hqlInterpretation );
 		return hqlInterpretation;
+	}
+
+	protected static HqlInterpretation createHqlInterpretation(
+			String queryString,
+			Function<String, SqmStatement<?>> creator,
+			Supplier<StatisticsImplementor> statisticsSupplier) {
+		final StatisticsImplementor statistics = statisticsSupplier.get();
+		final boolean stats = statistics.isStatisticsEnabled();
+		final long startTime = ( stats ) ? System.nanoTime() : 0L;
+
+		final SqmStatement<?> sqmStatement = creator.apply( queryString );
+		final ParameterMetadataImplementor parameterMetadata;
+		final DomainParameterXref domainParameterXref;
+
+		if ( sqmStatement.getSqmParameters().isEmpty() ) {
+			domainParameterXref = DomainParameterXref.empty();
+			parameterMetadata = ParameterMetadataImpl.EMPTY;
+		}
+		else {
+			domainParameterXref = DomainParameterXref.from( sqmStatement );
+			parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
+		}
+
+		if ( stats ) {
+			final long endTime = System.nanoTime();
+			final long microseconds = TimeUnit.MICROSECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
+			statistics.queryCompiled( queryString, microseconds );
+		}
+
+		return new SimpleHqlInterpretationImpl( sqmStatement, parameterMetadata, domainParameterXref );
 	}
 
 	@Override

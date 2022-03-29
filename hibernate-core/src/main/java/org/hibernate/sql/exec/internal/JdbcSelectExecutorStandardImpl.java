@@ -217,7 +217,6 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		final AppliedGraph appliedGraph = queryOptions.getAppliedGraph();
 		final TupleTransformer<?> tupleTransformer = queryOptions.getTupleTransformer();
 		final ResultListTransformer<?> resultListTransformer = queryOptions.getResultListTransformer();
-		final Boolean deDuplicationEnabled = queryOptions.isDeDuplicationEnabled();
 		final Boolean resultCachingEnabled = queryOptions.isResultCachingEnabled();
 		final CacheRetrieveMode cacheRetrieveMode = queryOptions.getCacheRetrieveMode();
 		final CacheStoreMode cacheStoreMode = queryOptions.getCacheStoreMode();
@@ -261,11 +260,6 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 					@Override
 					public ResultListTransformer<?> getResultListTransformer() {
 						return resultListTransformer;
-					}
-
-					@Override
-					public Boolean isDeDuplicationEnabled() {
-						return deDuplicationEnabled;
 					}
 
 					@Override

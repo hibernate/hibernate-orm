@@ -122,9 +122,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 							}
 						},
 						rowTransformer,
-						queryOptions.shouldApplyDeDuplication()
-								? ListResultsConsumer.UniqueSemantic.FILTER
-								: ListResultsConsumer.UniqueSemantic.NONE
+						ListResultsConsumer.UniqueSemantic.ALLOW
 				);
 			}
 			finally {

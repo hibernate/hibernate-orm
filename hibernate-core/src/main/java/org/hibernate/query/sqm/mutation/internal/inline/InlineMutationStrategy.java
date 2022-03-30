@@ -26,17 +26,17 @@ import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
  */
 @SuppressWarnings("unused")
 public class InlineMutationStrategy implements SqmMultiTableMutationStrategy {
-	private final Function<SqmDeleteOrUpdateStatement,MatchingIdRestrictionProducer> matchingIdsStrategy;
+	private final Function<SqmDeleteOrUpdateStatement<?>,MatchingIdRestrictionProducer> matchingIdsStrategy;
 
 	public InlineMutationStrategy(Dialect dialect) {
 		this( determinePredicateProducer( dialect ) );
 	}
 
-	private static Function<SqmDeleteOrUpdateStatement,MatchingIdRestrictionProducer> determinePredicateProducer(Dialect dialect) {
+	private static Function<SqmDeleteOrUpdateStatement<?>,MatchingIdRestrictionProducer> determinePredicateProducer(Dialect dialect) {
 		return statement -> new InPredicateRestrictionProducer();
 	}
 
-	public InlineMutationStrategy(Function<SqmDeleteOrUpdateStatement,MatchingIdRestrictionProducer> matchingIdsStrategy) {
+	public InlineMutationStrategy(Function<SqmDeleteOrUpdateStatement<?>,MatchingIdRestrictionProducer> matchingIdsStrategy) {
 		this.matchingIdsStrategy = matchingIdsStrategy;
 	}
 

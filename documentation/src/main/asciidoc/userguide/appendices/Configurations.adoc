@@ -551,8 +551,8 @@ therefore reusing its execution plan.
 
 ==== Multi-table bulk HQL operations
 
-`*hibernate.hql.bulk_id_strategy*` (e.g. A fully-qualified class name, an instance, or a `Class` object reference)::
-Provide a custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/hql/spi/id/MultiTableBulkIdStrategy.html[`org.hibernate.hql.spi.id.MultiTableBulkIdStrategy`] implementation for handling multi-table bulk HQL operations.
+`*hibernate.query.mutation_strategy*` (e.g. A fully-qualified class name, an instance, or a `Class` object reference)::
+Provide a custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/query/sqm/mutation/spi/SqmMultiTableMutationStrategy.html[`org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy`] implementation for handling multi-table bulk HQL operations.
 
 `*hibernate.hql.bulk_id_strategy.global_temporary.drop_tables*` (e.g. `true` or `false` (default value))::
  For databases that don't support local tables, but just global ones, this configuration property allows you to DROP the global tables used for multi-table bulk HQL operations when the `SessionFactory` or the `EntityManagerFactory` is closed.

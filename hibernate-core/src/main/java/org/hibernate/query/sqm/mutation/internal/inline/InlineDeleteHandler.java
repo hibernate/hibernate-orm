@@ -43,7 +43,7 @@ import org.hibernate.sql.exec.spi.StatementCreatorHelper;
  */
 public class InlineDeleteHandler implements DeleteHandler {
 	private final MatchingIdRestrictionProducer matchingIdsPredicateProducer;
-	private final SqmDeleteStatement sqmDeleteStatement;
+	private final SqmDeleteStatement<?> sqmDeleteStatement;
 	private final DomainParameterXref domainParameterXref;
 
 	private final DomainQueryExecutionContext executionContext;
@@ -54,7 +54,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 
 	protected InlineDeleteHandler(
 			MatchingIdRestrictionProducer matchingIdsPredicateProducer,
-			SqmDeleteStatement sqmDeleteStatement,
+			SqmDeleteStatement<?> sqmDeleteStatement,
 			DomainParameterXref domainParameterXref,
 			DomainQueryExecutionContext context) {
 		this.sqmDeleteStatement = sqmDeleteStatement;

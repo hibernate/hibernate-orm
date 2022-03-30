@@ -12,7 +12,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Values {
-	private final List<Expression> expressions = new ArrayList<>();
+	private final List<Expression> expressions;
+
+	public Values() {
+		this.expressions = new ArrayList<>();
+	}
+
+	public Values(List<Expression> expressions) {
+		this.expressions = expressions;
+	}
 
 	public List<Expression> getExpressions() {
 		return expressions;

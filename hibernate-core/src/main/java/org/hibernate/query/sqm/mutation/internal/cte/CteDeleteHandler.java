@@ -36,7 +36,7 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 
 /**
- * Bulk-id delete handler that uses CTE and VALUES lists.
+ * Bulk mutation delete handler that uses CTE and VALUES lists.
  *
  * @author Christian Beikov
  */

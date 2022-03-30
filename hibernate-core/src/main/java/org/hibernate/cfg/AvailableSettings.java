@@ -2503,11 +2503,12 @@ public interface AvailableSettings {
 	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
 	 * {@link org.hibernate.annotations.JdbcTypeCode} and friends
 	 *
-	 * Can also specify the name of the constant in {@link org.hibernate.type.SqlTypes} instead.  E.g.
+	 * Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant field.  E.g.
 	 * {@code hibernate.type.preferred_boolean_jdbc_type=BIT}
 	 *
 	 * @since 6.0
 	 */
+	@Incubating
 	String PREFERRED_BOOLEAN_JDBC_TYPE = "hibernate.type.preferred_boolean_jdbc_type";
 
 	/**
@@ -2516,23 +2517,27 @@ public interface AvailableSettings {
 	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
 	 * {@link org.hibernate.annotations.JdbcTypeCode} and friends
 	 *
-	 * Can also specify the name of the constant in {@link org.hibernate.type.SqlTypes} instead.  E.g.
+	 * Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant field.  E.g.
 	 * {@code hibernate.type.preferred_uuid_jdbc_type=CHAR}
+	 *
+	 * @since 6.0
 	 */
+	@Incubating
 	String PREFERRED_UUID_JDBC_TYPE = "hibernate.type.preferred_uuid_jdbc_type";
 
 	/**
-	 * Specifies the preferred JDBC type for storing duration values. When no
-	 * type is explicitly specified, {@link org.hibernate.type.SqlTypes#INTERVAL_SECOND} is used.
+	 * The preferred JDBC type to use for storing duration values.  Falls back to
+	 * {@link org.hibernate.type.SqlTypes#INTERVAL_SECOND}.
 	 *
 	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
 	 * {@link org.hibernate.annotations.JdbcTypeCode} and friends
 	 *
-	 * Can also specify the name of the constant in {@link org.hibernate.type.SqlTypes} instead.  E.g.
+	 *Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant field.  E.g.
 	 * {@code hibernate.type.preferred_duration_jdbc_type=NUMERIC}
 	 *
 	 * @since 6.0
 	 */
+	@Incubating
 	String PREFERRED_DURATION_JDBC_TYPE = "hibernate.type.preferred_duration_jdbc_type";
 
 	/**
@@ -2542,15 +2547,16 @@ public interface AvailableSettings {
 	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
 	 * {@link org.hibernate.annotations.JdbcTypeCode} and friends
 	 *
-	 * Can also specify the name of the constant in {@link org.hibernate.type.SqlTypes} instead.  E.g.
+	 * Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant field.  E.g.
 	 * {@code hibernate.type.preferred_instant_jdbc_type=TIMESTAMP}
 	 *
 	 * @since 6.0
 	 */
+	@Incubating
 	String PREFERRED_INSTANT_JDBC_TYPE = "hibernate.type.preferred_instant_jdbc_type";
 
 	/**
-	 * Specifies a {@link org.hibernate.type.FormatMapper} used for for JSON serialization
+	 * Specifies a {@link org.hibernate.type.FormatMapper} used for JSON serialization
 	 * and deserialization, either:
 	 * <ul>
 	 *     <li>an instance of {@code FormatMapper},

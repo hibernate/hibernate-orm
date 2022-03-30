@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
+import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.TimeZoneStorageStrategy;
@@ -298,12 +299,16 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 		return false;
 	}
 
+	@Incubating
 	int getPreferredSqlTypeCodeForBoolean();
 
+	@Incubating
 	int getPreferredSqlTypeCodeForDuration();
 
+	@Incubating
 	int getPreferredSqlTypeCodeForUuid();
 
+	@Incubating
 	int getPreferredSqlTypeCodeForInstant();
 
 	TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy();

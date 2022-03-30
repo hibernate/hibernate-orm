@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -51,18 +52,22 @@ public interface MetadataBuildingContext {
 	 */
 	ObjectNameNormalizer getObjectNameNormalizer();
 
+	@Incubating
 	default int getPreferredSqlTypeCodeForBoolean() {
 		return ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( getBootstrapContext().getServiceRegistry() );
 	}
 
+	@Incubating
 	default int getPreferredSqlTypeCodeForDuration() {
 		return ConfigurationHelper.getPreferredSqlTypeCodeForDuration( getBootstrapContext().getServiceRegistry() );
 	}
 
+	@Incubating
 	default int getPreferredSqlTypeCodeForUuid() {
 		return ConfigurationHelper.getPreferredSqlTypeCodeForUuid( getBootstrapContext().getServiceRegistry() );
 	}
 
+	@Incubating
 	default int getPreferredSqlTypeCodeForInstant() {
 		return ConfigurationHelper.getPreferredSqlTypeCodeForInstant( getBootstrapContext().getServiceRegistry() );
 	}

@@ -13,6 +13,7 @@ import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.function.Supplier;
 
+import org.hibernate.Incubating;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -21,6 +22,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
+
+import static org.hibernate.internal.log.IncubationLogger.INCUBATION_LOGGER;
 
 /**
  * Collection of helper methods for dealing with configuration settings.
@@ -513,12 +516,14 @@ public final class ConfigurationHelper {
 		}
 	}
 
+	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForBoolean(StandardServiceRegistry serviceRegistry) {
 		final Integer typeCode = serviceRegistry.getService( ConfigurationService.class ).getSetting(
 				AvailableSettings.PREFERRED_BOOLEAN_JDBC_TYPE,
 				TypeCodeConverter.INSTANCE
 		);
 		if ( typeCode != null ) {
+			INCUBATION_LOGGER.incubatingSetting( AvailableSettings.PREFERRED_BOOLEAN_JDBC_TYPE );
 			return typeCode;
 		}
 
@@ -529,28 +534,46 @@ public final class ConfigurationHelper {
 				.getPreferredSqlTypeCodeForBoolean();
 	}
 
+	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForDuration(StandardServiceRegistry serviceRegistry) {
-		return serviceRegistry.getService( ConfigurationService.class ).getSetting(
+		final Integer explicitSetting = serviceRegistry.getService( ConfigurationService.class ).getSetting(
 				AvailableSettings.PREFERRED_DURATION_JDBC_TYPE,
-				TypeCodeConverter.INSTANCE,
-				SqlTypes.INTERVAL_SECOND
+				TypeCodeConverter.INSTANCE
 		);
+		if ( explicitSetting != null ) {
+			INCUBATION_LOGGER.incubatingSetting( AvailableSettings.PREFERRED_DURATION_JDBC_TYPE );
+			return explicitSetting;
+		}
+
+		return SqlTypes.INTERVAL_SECOND;
 	}
 
+	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForUuid(StandardServiceRegistry serviceRegistry) {
-		return serviceRegistry.getService( ConfigurationService.class ).getSetting(
+		final Integer explicitSetting = serviceRegistry.getService( ConfigurationService.class ).getSetting(
 				AvailableSettings.PREFERRED_UUID_JDBC_TYPE,
-				TypeCodeConverter.INSTANCE,
-				SqlTypes.UUID
+				TypeCodeConverter.INSTANCE
 		);
+		if ( explicitSetting != null ) {
+			INCUBATION_LOGGER.incubatingSetting( AvailableSettings.PREFERRED_UUID_JDBC_TYPE );
+			return explicitSetting;
+		}
+
+		return SqlTypes.UUID;
 	}
 
+	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForInstant(StandardServiceRegistry serviceRegistry) {
-		return serviceRegistry.getService( ConfigurationService.class ).getSetting(
+		final Integer explicitSetting = serviceRegistry.getService( ConfigurationService.class ).getSetting(
 				AvailableSettings.PREFERRED_INSTANT_JDBC_TYPE,
-				TypeCodeConverter.INSTANCE,
-				SqlTypes.TIMESTAMP_UTC
+				TypeCodeConverter.INSTANCE
 		);
+		if ( explicitSetting != null ) {
+			INCUBATION_LOGGER.incubatingSetting( AvailableSettings.PREFERRED_INSTANT_JDBC_TYPE );
+			return explicitSetting;
+		}
+
+		return SqlTypes.TIMESTAMP_UTC;
 	}
 
 	private static class TypeCodeConverter implements ConfigurationService.Converter<Integer> {

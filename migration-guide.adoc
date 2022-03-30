@@ -719,7 +719,13 @@ Hibernate no longer provides built-in support for integrating itself with JACC e
 // todo (6.0) - surely there are more than this...
 
 
-== Width-first fetch determination
+== Fetch circularity determination
+
+As back-ground, Hibernate does understand whether a fetch is actually, truly circular.  It simply
+understands that while walking a fetch-graph it encounters the same table/column(s) making up a particular
+foreign-key.  In this case, it simply stops walking the graph any deeper.
+
+This
 
 Previous versions of Hibernate determined fetches using a depth-first approach, which occasionally led
 to odd "circularity" determination.  Starting with 6.0, we now perform fetch determination using a width

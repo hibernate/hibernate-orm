@@ -31,10 +31,10 @@ discussion in <<jpa>>.
 
 Applications using Hibernate APIs will generally be bytecode and source compatible, aside
 from the removal of deprecated stuff.  There are a few one-off changes that break bytecode and/or
-source compatibility; these are covered in the <<{migration-guide-url},migration guide>>.
+source compatibility; these are covered in the link:{migration-guide-url}[migration guide].
 
 Quite a few SPI changes have changed to support many of the topics discussed here as well as in
-the <<{migration-guide-url},migration guide>>.  Many will also be the subject of the mentioned
+the link:{migration-guide-url}[migration guide].  Many will also be the subject of the mentioned
 follow-up posts.
 
 
@@ -47,7 +47,7 @@ for persistence, that means changing from `javax.persistence` to `jakarta.persis
 for package names as well as property and hint names.
 
 This is clearly an unfortunate and invasive change, but beyond our control.  Luckily Jakarta
-have developed a <<{jakarta-transformer-url},transformer>> to help with these migrations.  We actually
+have developed a link:{jakarta-transformer-url}[transformer] to help with these migrations.  We actually
 used this tool to migrate Hibernate's own source code.  It works well-ish.
 
 For those using Maven, you are in luck (well, within the bounds of actually using Maven) in that
@@ -55,7 +55,7 @@ Jakarta themselves provide a Maven plugin to integrate this transformer.
 
 For those using Gradle, you can use the tasks we developed to transform Hibernate's source code.
 
-There is also a command-line form.  See the <<{jakarta-transformer-url},transformer>> docs for details.
+There is also a command-line form.  See the link:{jakarta-transformer-url}[transformer] docs for details.
 
 
 [[read-by-position]]

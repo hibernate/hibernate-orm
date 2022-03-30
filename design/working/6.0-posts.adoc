@@ -99,22 +99,40 @@ This was by far the biggest force behind 6.0 initially.
 - Attribute order
 
 
-[[width-first]]
-== Width-first fetching
-
-- examples mainly
-
-
 [[annotations]]
 == Annotations
 
 - type-safety
+- `SqlTypes` - extension to `java.sql.Types`
+
+
+[[query]]
+== Query API
+
+- Parameter binding
+- `Session#createSelectionQuery`
+- `Session#createMutationQuery`
+- others???
+
+
+[[sqm]]
+== Semantic Query Model
+
+- HQL and Criteria
+- selection of a single entity - de-dup
+- set operations (union, intersect, except)
+- set aggregations
+- window functions
+- Functions
+- ILIKE support
+- improved temporal support (arithmetic, etc)
 
 
 [[hql]]
 == HQL
 
 - poor and unmaintainable grammars
+- Antlr 2 -> Antlr 4
 
 
 [[criteria]]
@@ -122,6 +140,10 @@ This was by far the biggest force behind 6.0 initially.
 
 - removal of legacy Criteria
 - no longer Criteria -> HQL -> Query
+- `hibernate.criteria.copy_tree` (performance)
+- improved handling of parameter vs. literal
+
+
 
 
 [[sql-ast]]

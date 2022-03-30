@@ -84,22 +84,20 @@ to define custom generators to use for identifier generation.
 
 // todo (6.0 - @Steve - need to add content about this to the User Guide
 
-[[id-sequence-generation]]
-== Id Sequence and Table generation
+[[id-sequence-table-name]]
+== Implicit Identifier Sequence and Table Name
 
-For a sequence id generation strategy Hibernate 6.0 by default does not create anymore a single sequence named `hibernate_sequence` but it creates one sequence for each entity.
+The way in which Hibernate determines implicit names for sequences and tables associated with identifier
+generation has changed in 6.0 which may affect migrating applications.
 
-In order to maintain backward compatibility a new setting `hibernate.id.db_structure_naming_strategy`
- has been introduced.
+To help with backwards compatibility, or to apply any general naming strategy, 6.0 introduces the
+`org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy` contract which can be specified using
+the `hibernate.id.db_structure_naming_strategy` setting.  See discussion at
+link:{javadocsBase}/org/hibernate/cfg/AvailableSettings.html#ID_DB_STRUCTURE_NAMING_STRATEGY
 
-In case the code has a generator name with no matching generator or with a generator not specifying a sequence or table name
-and the property `hibernate.model.generator_name_as_sequence_name` is not set to `false` then to maintain the backward compatibility is necessary to set
-hibernate.id.db_structure_naming_strategy=org.hibernate.id.enhanced.LegacyPreferGeneratorNameNamingStrategy
-```
-otherwise
-```
-hibernate.id.db_structure_naming_strategy=org.hibernate.id.enhanced.LegacyNamingStrategy
-```
+For backwards compatibility, use either `hibernate.id.db_structure_naming_strategy=single` or
+`hibernate.id.db_structure_naming_strategy=legacy` depending on needs
+
 
 [[type]]
 == Type system

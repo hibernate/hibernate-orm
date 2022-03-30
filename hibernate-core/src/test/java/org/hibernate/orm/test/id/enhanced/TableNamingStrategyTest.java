@@ -9,7 +9,6 @@ package org.hibernate.orm.test.id.enhanced;
 import java.util.function.Consumer;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.TableGenerator;
 
@@ -21,8 +20,8 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.enhanced.LegacyNamingStrategy;
-import org.hibernate.id.enhanced.LegacyPreferGeneratorNameNamingStrategy;
-import org.hibernate.id.enhanced.StandardDatabaseObjectNamingStrategy;
+import org.hibernate.id.enhanced.SingleNamingStrategy;
+import org.hibernate.id.enhanced.StandardNamingStrategy;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
@@ -87,18 +86,18 @@ public class TableNamingStrategyTest {
 
 	private void verifyStandardStrategy(Class<?> entityClass, String expectedName) {
 		verify( entityClass, expectedName );
-		verify( entityClass, StandardDatabaseObjectNamingStrategy.STRATEGY_NAME, expectedName );
-		verify( entityClass, StandardDatabaseObjectNamingStrategy.class.getName(), expectedName );
+		verify( entityClass, StandardNamingStrategy.STRATEGY_NAME, expectedName );
+		verify( entityClass, StandardNamingStrategy.class.getName(), expectedName );
 	}
 
 	private void verifyLegacyStrategy(Class<?> entityClass, String expectedName) {
-		verify( entityClass, LegacyNamingStrategy.STRATEGY_NAME, expectedName );
-		verify( entityClass, LegacyNamingStrategy.class.getName(), expectedName );
+		verify( entityClass, SingleNamingStrategy.STRATEGY_NAME, expectedName );
+		verify( entityClass, SingleNamingStrategy.class.getName(), expectedName );
 	}
 
 	private void verifyLegacyPreferStrategy(Class<?> entityClass, String expectedName) {
-		verify( entityClass, LegacyPreferGeneratorNameNamingStrategy.STRATEGY_NAME, expectedName );
-		verify( entityClass, LegacyPreferGeneratorNameNamingStrategy.class.getName(), expectedName );
+		verify( entityClass, LegacyNamingStrategy.STRATEGY_NAME, expectedName );
+		verify( entityClass, LegacyNamingStrategy.class.getName(), expectedName );
 	}
 
 	private void verify(Class<?> entityType, String expectedName) {

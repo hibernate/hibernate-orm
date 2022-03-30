@@ -60,31 +60,6 @@ As discussed in <<type>> though, this change has a very big impact on Hibernate'
 3. Better definition of joins
 4. Better determination of unnecessary joins (secondary tables, inheritance tables)
 
-
-== Bulk SQM against entities mapped to multiple tables
-
-The implementations for bulk SQM DML statements like `insert`, `update` and `delete` were significantly improved in 6.0.
-An important bug fix is, that `delete` statements now properly clean up collection tables.
-`insert` statements now also support inserting into multi-table entities by making use of special purpose temporary tables
-into which the insert goes and is then split up into the respective tables.
-
-There are currently 2 implementation strategies:
-
-* Using temporary tables (the default)
-* Using DML in CTEs (used on DB2 and PostgreSQL)
-
-The temporary table approach is pretty simple and works in a similar way to how 5.x already implemented it.
-Data or primary key values are first inserted into a temporary table and then the DML changes are applied to the various
-tables that are affected by the SQM DML statement.
-
-The CTE approach is new and implements a more performant approach by executing a single statement,
-containing the various individual DML statements that would normally be executed separately.
-This allows to run SQM DML statements in a single JDBC operation that does not move any data between the database and the application,
-which should provide a significant boost for statements that involve many rows.
-
-Note that the configuration property `hibernate.hql.bulk_id_strategy` was changed to `hibernate.query.mutation_strategy`
-which will now refer to classes or objects implementing `org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy`.
-
 [[identifier-object]]
 == Identifier as Object
 
@@ -322,105 +297,16 @@ To retain backwards compatibility, configure the setting `hibernate.type.preferr
 [[query]]
 == Query
 
-// todo (6.0) - Query parameter binding overloads accepting `Type`, `BindableType`
-// todo (6.0) - addition of parameter binding overloads accepting Class - AttributeConverter, UserType, Java Type (resolved from JavaTypeRegistry), ...
+Quite a few changes have been made to how Query works.
 
-[[query-stream]]
-=== Stream
-
-`jakarta.persistence.Query#getResultStream()` and `org.hibernate.query.Query#stream()` no longer
-return a `Stream` decorator.  In order to close the underlying IO resources, it is now necessary to
-explicitly call the `Stream#close()` method.
-
-This change makes the Streams returned by Hibernate behave as defined in the JDK
-https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/stream/Stream.html[Stream]
-documentation, which is quite explicit about the need for an explicit call to `close` by the user
-to avoid resource leakages.
-
-
-[[query-iterate]]
-=== Iterate
-
-The `Query#iterate()` method has been removed. The alternative is to use one of
-
-* `Query#stream()`
-* `Query#getResultStream()`
-* Get the `Iterator` from `List` returned by `Query#list()` / `Query#getResultList()`
-
-[[query-result-cache]]
-== Query result cache
-
-Another change in 6.0 is related to the query result cache.
-
-In previous versions, when the query-cache is enabled and a query returning entities is executed, only the entity identifiers were stored in the query-cache.  If second-level caching is enabled for a returned entity, the entity data was stored in its second-level cache region.
-
-Storing just the identifiers in the query-cache has a major drawback when fetching is defined for the query (dynamic fetch, entity-graph, etc) as it can, and often does, lead to N+1 selects.
-
-Starting in 6.0, we now store the complete set of data for the entity into the query-cache.  This also can have a drawback related to the size of caches.  We plan to address this further in later 6.x releases to allow storing just the identifiers along the lines of the previous behavior.
-
-E.g.
-
-```
-Statistics stats = sessionFacroty.getStatistics();
-
-// First time the query is executed, query and results are cached and both the query and entity chache will be populated.
-
-TypedQuery<Employee> query = session.createQuery( "select e from Employee e", Employee.class )
-							.setHint( HINT_CACHEABLE, true );
-
-List<Employee> employees = query.getResultList();
-assertEquals( 1, employees.size() );
-
-assertEquals( 0, stats.getQueryCacheHitCount() );
-assertEquals( 1, stats.getQueryCacheMissCount() );
-assertEquals( 1, stats.getQueryCachePutCount() ); // query cache is populated.
-
-assertEquals( 0, stats.getSecondLevelCacheHitCount() );
-assertEquals( 0, stats.getSecondLevelCacheMissCount() );
-assertEquals( 1, stats.getSecondLevelCachePutCount() ); // entity cache is populated as well.
-
-stats.clear();
-
-// Second time the same query is executed only the query cache will be hit.
-
-TypedQuery<Employee> query = session.createQuery( "select e from Employee e", Employee.class )
-							.setHint( HINT_CACHEABLE, true );
-List<Employee> employees = query.getResultList();
-assertEquals( 1, employees.size() );
-
-assertEquals( 1, stats.getQueryCacheHitCount() ); // the query cache is hit.
-assertEquals( 0, stats.getQueryCacheMissCount() );
-assertEquals( 0, stats.getQueryCachePutCount() );
-
-assertEquals( 0, stats.getSecondLevelCacheHitCount() );
-assertEquals( 0, stats.getSecondLevelCacheMissCount() );
-assertEquals( 0, stats.getSecondLevelCachePutCount() ); // No need to hit the entity cache because the query cache contains all the entity data.
-
-```
 
 [[query-sqm]]
-== SQM (HQL/Criteria)
+=== SQM (HQL/Criteria)
 
 Another major change in 6.0 is the move to a dedicated tree structure to model
 HQL and Criteria queries.  This tree structure is called the Semantic Query Model, or
 SQM for short.
 
-todo (6.0) - cover functions
-todo (6.0) - cover new temporal capabilities
-todo (6.0) - cover new syntaxes
-todo (6.0) - cover bulk manipulation query handling
-
-
-[[query-criteria-copy]]
-== Hibernate Criteria behavior change
-
-By default, when bootstrapping Hibernate through the native bootstrap APIs or when explicitly disabling the newly introduced
-`hibernate.criteria.copy_tree` configuration property, it is expected that criteria queries passed to
-`jakarta.persistence.EntityManager#createQuery(CriteriaQuery)`, `jakarta.persistence.EntityManager#createQuery(CriteriaUpdate)`
-or `jakarta.persistence.EntityManager#createQuery(CriteriaDelete)` are not mutated afterwards to avoid the need for copying the criteria query.
-
-Prior to 6.0, mutations to criteria queries didn't affect `Query` instances created from that.
-To retain backwards compatibility, enable the `hibernate.criteria.copy_tree` configuration property.
 
 [[query-sqm-rows]]
 ==== Result "rows"
@@ -433,8 +319,46 @@ The HQL query `select p, a from Person p join p.address a` returns instead a `Li
 
 ```
 List<Person> result = session.createQuery("from Person p join p.address").list();
-List<Object[]> results = session.createQuery("select p, a from Person p join p.address a").list();
+List<Object[]> results
 ```
+
+
+==== Multi-table Mutation Queries
+
+The implementations for bulk SQM DML statements like `insert`, `update` and `delete` were significantly improved in 6.0.
+An important bug fix is, that `delete` statements now properly clean up collection tables.
+`insert` statements now also support inserting into multi-table entities by making use of special purpose temporary tables
+into which the insert goes and is then split up into the respective tables.
+
+There are currently 2 implementation strategies:
+
+* Using temporary tables (the default)
+* Using DML in CTEs (used on DB2 and PostgreSQL)
+
+The temporary table approach is pretty simple and works in a similar way to how 5.x already implemented it.
+Data or primary key values are first inserted into a temporary table and then the DML changes are applied to the various
+tables that are affected by the SQM DML statement.
+
+The CTE approach is new and implements a more performant approach by executing a single statement,
+containing the various individual DML statements that would normally be executed separately.
+This allows to run SQM DML statements in a single JDBC operation that does not move any data between the database and the application,
+which should provide a significant boost for statements that involve many rows.
+
+Note that the configuration property `hibernate.hql.bulk_id_strategy` was changed to `hibernate.query.mutation_strategy`
+which will now refer to classes or objects implementing `org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy`.
+
+
+
+[[query-criteria-copy]]
+==== Hibernate Criteria behavior change
+
+By default, when bootstrapping Hibernate through the native bootstrap APIs or when explicitly disabling the newly introduced
+`hibernate.criteria.copy_tree` configuration property, it is expected that criteria queries passed to
+`jakarta.persistence.EntityManager#createQuery(CriteriaQuery)`, `jakarta.persistence.EntityManager#createQuery(CriteriaUpdate)`
+or `jakarta.persistence.EntityManager#createQuery(CriteriaDelete)` are not mutated afterwards to avoid the need for copying the criteria query.
+
+Prior to 6.0, mutations to criteria queries didn't affect `Query` instances created from that.
+To retain backwards compatibility, enable the `hibernate.criteria.copy_tree` configuration property.
 
 
 [[query-sqm-pass-thru]]
@@ -508,7 +432,7 @@ The collection minimum element can be determined by using the `minelement( plura
 
 
 [[query-native]]
-== NativeQuery
+=== NativeQuery
 
 As `NativeQuery` extends from `Query`, all the changes listed in <<query>> also apply
 to `NativeQuery`.
@@ -533,131 +457,78 @@ s.createQuery( "select p from Parent p where id in ?`", Parent.class );
 query.setParameter( 1, Arrays.asList( 0, 1, 2, 3 ) );
 ```
 
-[[proc-call-nativequery]]
-=== Callable via NativeQuery
-
-Using `NativeQuery` to call SQL functions and procedures is no longer
-supported.  `org.hibernate.procedure.ProcedureCall` or
-`jakarta.persistence.StoredProcedureQuery` should be used instead.
-
-`@NamedNativeQuery` references defining execution of procedure or
-functions should be migrated to use `@NamedStoredProcedureQuery`
-instead.
-
-E.g., the following `@NamedNativeQuery` -
-
-```
-@NamedNativeQuery(
-    name = "personAndPhones",
-    query = "{ ? = call fn_person_and_phones( ? ) }",
-    callable = true,
-    resultSetMapping = "personWithPhonesResultMapping"
-)
-
-...
-
-final List<Object[]> personAndPhones = entityManager
-        .createNamedQuery("personAndPhones" )
-        .setParameter( 1, 1L )
-        .getResultList();
-```
-
-should be changed to use `@NamedStoredProcedureQuery` instead -
-
-```
-@NamedStoredProcedureQuery(
-    name = "personAndPhones",
-    procedureName = "fn_person_and_phones",
-    resultSetMappings = "personWithPhonesResultMapping",
-    hints = @QueryHint(name = "org.hibernate.callableFunction", value = "true"),
-    parameters = @StoredProcedureParameter(type = Long.class)
-)
-```
-
-Callable named native queries in hbm.xml files should be migrated to the orm.xml version.
-
-E.g., the following `<sql-query callable="true">` -
-
-```
-<sql-query name="simpleScalar" callable="true">
-    <return-scalar column="name" type="string"/>
-    <return-scalar column="`value`" type="long"/>
-    { ? = call simpleScalar(:number) }
-</sql-query>
-
-...
-
-final List<Object[]> results = entityManager
-        .createNamedQuery("simpleScalar" )
-        .setParameter( 1, 1L )
-        .getResultList();
-```
-
-should be changed to use `<named-stored-procedure-query/>` instead -
-
-```xml
-<named-stored-procedure-query name="simpleScalar" procedure-name="simpleScalar">
-    <parameter class="java.lang.Integer" mode="IN" name="number"/>
-    <result-set-mapping>simpleScalar</result-set-mapping>
-    <hint name="org.hibernate.callableFunction" value="true"/>
-</named-stored-procedure-query>
-<sql-result-set-mapping name="simpleScalar">
-    <column-result name="name" class="java.lang.String"/>
-    <column-result name="value" class="java.lang.Long"/>
-</sql-result-set-mapping>
-```
-
-TIP: To ease the migration, `<sql-query callable="true"/>` and `@NamedNativeQuery(callable = true)` queries
-will be translated and registered as named stored procedure in 6.0, but future versions will drop this automatic translation.
-
-Either `org.hibernate.procedure.ProcedureCall` or `jakarta.persistence.StoredProcedureQuery`
-can be used to execute the named query -
-
-```
-// Use StoredProcedureQuery
-final List<Object[]> personAndPhones = entityManager
-        .createNamedStoredProcedureQuery( "simpleScalar" )
-        .setParameter( 1, 1L )
-        .getResultList();
-
-// Use ProcedureCall
-final List<Object[]> personAndPhones = entityManager
-        .unwrap( Session.class )
-        .getNamedProcedureCall( "simpleScalar" )
-        .setParameter( 1, 1L )
-        .getResultList();
-```
-
-
-It is also no longer supported to execute procedures and functions
-via a dynamic (unnamed) `NativeQuery`.  All such usages should be converted
-to use `ProcedureCall` or `StoredProcedureQuery` instead via
-`Session#createStoredProcedureCall` or `EntityManager#createStoredProcedureQuery`,
-respectively.
-
-```
-// Use StoredProcedureQuery
-final List<Object[]> personAndPhones = entityManager
-        .createStoredProcedureQuery( "fn_person_and_phones", "personWithPhonesResultMapping" )
-        .setParameter( 1, 1L )
-        .getResultList();
-
-// Use ProcedureCall
-final List<Object[]> personAndPhones = entityManager
-        .unwrap( Session.class )
-        .createStoredProcedureCall( "fn_person_and_phones", "personWithPhonesResultMapping" )
-        .setParameter( 1, 1L )
-        .getResultList();
-```
-
 
 [[proc-call-param]]
-== ProcedureCall / StoredProcedureQuery Parameters
+=== ProcedureCall / StoredProcedureQuery Parameters
 
 For parameters defined on a ProcedureCall as accepting binding (IN and INOUT), a distinction is now
 made between whether `setParameter` is called or not.  If `setParameter` was called, whatever value
 was set by the user is passed to the database.  If it was not called, Hibernate will not
 set any value which triggers the default value defined on the database procedure argument be used
+
+[[query-result-cache]]
+=== Query result cache
+
+Another change in 6.0 is related to the query result cache.
+
+In previous versions, when the query-cache is enabled and a query returning entities is executed, only the entity identifiers were stored in the query-cache.  If second-level caching is enabled for a returned entity, the entity data was stored in its second-level cache region.
+
+Storing just the identifiers in the query-cache has a major drawback when fetching is defined for the query (dynamic fetch, entity-graph, etc) as it can, and often does, lead to N+1 selects.
+
+Starting in 6.0, we now store the complete set of data for the entity into the query-cache.  This also can have a drawback related to the size of caches.  We plan to address this further in later 6.x releases to allow storing just the identifiers along the lines of the previous behavior.
+
+E.g.
+
+```
+Statistics stats = sessionFacroty.getStatistics();
+
+// First time the query is executed, query and results are cached and both the query and entity chache will be populated.
+
+TypedQuery<Employee> query = session.createQuery( "select e from Employee e", Employee.class )
+							.setHint( HINT_CACHEABLE, true );
+
+List<Employee> employees = query.getResultList();
+assertEquals( 1, employees.size() );
+
+assertEquals( 0, stats.getQueryCacheHitCount() );
+assertEquals( 1, stats.getQueryCacheMissCount() );
+assertEquals( 1, stats.getQueryCachePutCount() ); // query cache is populated.
+
+assertEquals( 0, stats.getSecondLevelCacheHitCount() );
+assertEquals( 0, stats.getSecondLevelCacheMissCount() );
+assertEquals( 1, stats.getSecondLevelCachePutCount() ); // entity cache is populated as well.
+
+stats.clear();
+
+// Second time the same query is executed only the query cache will be hit.
+
+TypedQuery<Employee> query = session.createQuery( "select e from Employee e", Employee.class )
+							.setHint( HINT_CACHEABLE, true );
+List<Employee> employees = query.getResultList();
+assertEquals( 1, employees.size() );
+
+assertEquals( 1, stats.getQueryCacheHitCount() ); // the query cache is hit.
+assertEquals( 0, stats.getQueryCacheMissCount() );
+assertEquals( 0, stats.getQueryCachePutCount() );
+
+assertEquals( 0, stats.getSecondLevelCacheHitCount() );
+assertEquals( 0, stats.getSecondLevelCacheMissCount() );
+assertEquals( 0, stats.getSecondLevelCachePutCount() ); // No need to hit the entity cache because the query cache contains all the entity data.
+
+```
+
+
+[[query-stream]]
+=== Stream
+
+`jakarta.persistence.Query#getResultStream()` and `org.hibernate.query.Query#stream()` no longer
+return a `Stream` decorator.  In order to close the underlying IO resources, it is now necessary to
+explicitly call the `Stream#close()` method.
+
+This change makes the Streams returned by Hibernate behave as defined in the JDK
+https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/stream/Stream.html[Stream]
+documentation, which is quite explicit about the need for an explicit call to `close` by the user
+to avoid resource leakages.
 
 
 == Interceptor
@@ -679,47 +550,6 @@ See <<identifier-object>>.
 If custom Interceptor implementations do not use `@Override` on their implementations, this
 can lead to situations where a custom Interceptor no longer overrides this method.  Moral
 of the story... always use `@Override` - this is why it exists
-
-
-== Removals
-
-
-=== Legacy Hibernate Criteria API
-
-The legacy Hibernate Criteria API which was deprecated back in Hibernate 5.x and removed in 6.0.
-Usually, all queries using the legacy API can be modeled with the JPA Criteria API.
-In some cases it is necessary to use the Hibernate JPA Criteria extensions.
-
-=== HQL fetch all properties clause
-
-The `fetch all properties` clause was removed from the HQL language without a replacement.
-A similar behavior can be achieved by constructing an entity graph and applying that as load graph:
-
-```java
-EntityGraph<Document> entityGraph = entityManager.createEntityGraph( Document.class );
-for ( Attribute<Document, ?> attr : entityManager.getMetamodel().entity( Document.class ).getAttributes() ) {
-    entityGraph.addAttributeNodes( attr.getName() );
-}
-List<Document> documents = s.createQuery( "from Document", Document.class )
-        .setHint( "jakarta.persistence.loadgraph", entityGraph )
-        .getResultList();
-```
-
-=== JMX integration
-
-Hibernate no longer provides built-in support for integrating itself with JMX environments.
-
-=== JACC integration
-
-Hibernate no longer provides built-in support for integrating itself with JACC environments.
-
-
-=== Previously Deprecated features:
-
-* 'hibernate.classLoader.application', 'hibernate.classLoader.resources', 'hibernate.classLoader.hibernate' and 'hibernate.classLoader.environment': use 'hibernate.classLoaders' instead.
-* 'hibernate.hbm2dll.create_namespaces': use 'jakarta.persistence.create-database-schemas' or 'hibernate.hbm2ddl.create_namespaces'
-
-// todo (6.0) - surely there are more than this...
 
 
 == Fetch circularity determination
@@ -880,6 +710,10 @@ Consider the following example:
 Prior to 6.0, a query would return a list of tuples [`Organization`, `Employee`],
 but now this will return a list of `Organization` with an initialized `employments` collection.
 
+== Removals
+
+The following features have been removed
+
 == hbm.xml multiple <column/> now disallowed
 
 In 6.0 the support for basic property mappings with multiple columns was removed. The only use case for that was when a
@@ -906,3 +740,168 @@ have to be migrated to proper components:
 ```
 
 The component class attribute now supports interpreting a `CompositeUserType` class properly.
+
+=== Legacy Hibernate Criteria API
+
+The legacy Hibernate Criteria API which was deprecated back in Hibernate 5.x and removed in 6.0.
+Usually, all queries using the legacy API can be modeled with the JPA Criteria API.
+In some cases it is necessary to use the Hibernate JPA Criteria extensions.
+
+[[query-iterate]]
+=== Iterate
+
+The `Query#iterate()` method has been removed. The alternative is to use one of
+
+* `Query#stream()`
+* `Query#getResultStream()`
+* Get the `Iterator` from `List` returned by `Query#list()` / `Query#getResultList()`
+
+
+[[proc-call-nativequery]]
+=== Callable via NativeQuery
+
+Using `NativeQuery` to call SQL functions and procedures is no longer
+supported.  `org.hibernate.procedure.ProcedureCall` or
+`jakarta.persistence.StoredProcedureQuery` should be used instead.
+
+`@NamedNativeQuery` references defining execution of procedure or
+functions should be migrated to use `@NamedStoredProcedureQuery`
+instead.
+
+E.g., the following `@NamedNativeQuery` -
+
+```
+@NamedNativeQuery(
+    name = "personAndPhones",
+    query = "{ ? = call fn_person_and_phones( ? ) }",
+    callable = true,
+    resultSetMapping = "personWithPhonesResultMapping"
+)
+
+...
+
+final List<Object[]> personAndPhones = entityManager
+        .createNamedQuery("personAndPhones" )
+        .setParameter( 1, 1L )
+        .getResultList();
+```
+
+should be changed to use `@NamedStoredProcedureQuery` instead -
+
+```
+@NamedStoredProcedureQuery(
+    name = "personAndPhones",
+    procedureName = "fn_person_and_phones",
+    resultSetMappings = "personWithPhonesResultMapping",
+    hints = @QueryHint(name = "org.hibernate.callableFunction", value = "true"),
+    parameters = @StoredProcedureParameter(type = Long.class)
+)
+```
+
+Callable named native queries in hbm.xml files should be migrated to the orm.xml version.
+
+E.g., the following `<sql-query callable="true">` -
+
+```
+<sql-query name="simpleScalar" callable="true">
+    <return-scalar column="name" type="string"/>
+    <return-scalar column="`value`" type="long"/>
+    { ? = call simpleScalar(:number) }
+</sql-query>
+
+...
+
+final List<Object[]> results = entityManager
+        .createNamedQuery("simpleScalar" )
+        .setParameter( 1, 1L )
+        .getResultList();
+```
+
+should be changed to use `<named-stored-procedure-query/>` instead -
+
+```xml
+<named-stored-procedure-query name="simpleScalar" procedure-name="simpleScalar">
+    <parameter class="java.lang.Integer" mode="IN" name="number"/>
+    <result-set-mapping>simpleScalar</result-set-mapping>
+    <hint name="org.hibernate.callableFunction" value="true"/>
+</named-stored-procedure-query>
+<sql-result-set-mapping name="simpleScalar">
+    <column-result name="name" class="java.lang.String"/>
+    <column-result name="value" class="java.lang.Long"/>
+</sql-result-set-mapping>
+```
+
+TIP: To ease the migration, `<sql-query callable="true"/>` and `@NamedNativeQuery(callable = true)` queries
+will be translated and registered as named stored procedure in 6.0, but future versions will drop this automatic translation.
+
+Either `org.hibernate.procedure.ProcedureCall` or `jakarta.persistence.StoredProcedureQuery`
+can be used to execute the named query -
+
+```
+// Use StoredProcedureQuery
+final List<Object[]> personAndPhones = entityManager
+        .createNamedStoredProcedureQuery( "simpleScalar" )
+        .setParameter( 1, 1L )
+        .getResultList();
+
+// Use ProcedureCall
+final List<Object[]> personAndPhones = entityManager
+        .unwrap( Session.class )
+        .getNamedProcedureCall( "simpleScalar" )
+        .setParameter( 1, 1L )
+        .getResultList();
+```
+
+
+It is also no longer supported to execute procedures and functions
+via a dynamic (unnamed) `NativeQuery`.  All such usages should be converted
+to use `ProcedureCall` or `StoredProcedureQuery` instead via
+`Session#createStoredProcedureCall` or `EntityManager#createStoredProcedureQuery`,
+respectively.
+
+```
+// Use StoredProcedureQuery
+final List<Object[]> personAndPhones = entityManager
+        .createStoredProcedureQuery( "fn_person_and_phones", "personWithPhonesResultMapping" )
+        .setParameter( 1, 1L )
+        .getResultList();
+
+// Use ProcedureCall
+final List<Object[]> personAndPhones = entityManager
+        .unwrap( Session.class )
+        .createStoredProcedureCall( "fn_person_and_phones", "personWithPhonesResultMapping" )
+        .setParameter( 1, 1L )
+        .getResultList();
+```
+
+
+=== HQL fetch all properties clause
+
+The `fetch all properties` clause was removed from the HQL language without a replacement.
+A similar behavior can be achieved by constructing an entity graph and applying that as load graph:
+
+```java
+EntityGraph<Document> entityGraph = entityManager.createEntityGraph( Document.class );
+for ( Attribute<Document, ?> attr : entityManager.getMetamodel().entity( Document.class ).getAttributes() ) {
+    entityGraph.addAttributeNodes( attr.getName() );
+}
+List<Document> documents = s.createQuery( "from Document", Document.class )
+        .setHint( "jakarta.persistence.loadgraph", entityGraph )
+        .getResultList();
+```
+
+=== JMX integration
+
+Hibernate no longer provides built-in support for integrating itself with JMX environments.
+
+=== JACC integration
+
+Hibernate no longer provides built-in support for integrating itself with JACC environments.
+
+
+=== Previously Deprecated features
+
+* 'hibernate.classLoader.application', 'hibernate.classLoader.resources', 'hibernate.classLoader.hibernate' and 'hibernate.classLoader.environment': use 'hibernate.classLoaders' instead.
+* 'hibernate.hbm2dll.create_namespaces': use 'jakarta.persistence.create-database-schemas' or 'hibernate.hbm2ddl.create_namespaces'
+
+// todo (6.0) - surely there are more than this...

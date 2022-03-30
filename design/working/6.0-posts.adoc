@@ -1,17 +1,20 @@
-= Hibernate 6.0 is Coming
+= Hibernate 6.0 Final
 Steve Ebersole
 :awestruct-tags: ["Hibernate ORM"]
 :awestruct-layout: blog-post
 :docs-url: https://docs.jboss.org/hibernate/orm/6.0
+:javadocs-url: {docs-url}/javadocs
 :migration-guide-url: {docs-url}/migration-guide/migration-guide.html
 :user-guide-url: {docs-url}/userguide/html_single/Hibernate_User_Guide.html
 :jakarta-transformer-url: https://github.com/eclipse/transformer
 
-As Hibernate ORM 6.0 approaches Final, I wanted to take a moment to look back at its origins and
-driving forces; and to give insight into why certain choices were made.
+It has been years in the making, but ORM 6.0 Final has finally been released!
 
-This post will be followed by a series of more focused posts targeting specific improvements or
-cool new features.
+This announcement will discuss the major changes as well as give insight into why
+certain choices were made.
+
+We will also be following up with a series of more focused posts targeting specific
+improvements or cool new features.  Stay tuned!
 
 
 [[api-spi]]
@@ -26,14 +29,17 @@ See https://hibernate.org/community/compatibility-policy/ for a discussion of wh
 an API versus an SPI.
 ====
 
-Applications which use only the Jakarta Persistence APIs will be "source compatible" within the
+Applications which use only the Jakarta Persistence APIs will be source compatible within the
 discussion in <<jpa>>.
 
 Applications using Hibernate APIs will generally be bytecode and source compatible, aside
 from the removal of deprecated stuff.  There are a few one-off changes that break bytecode and/or
 source compatibility; these are covered in the link:{migration-guide-url}[migration guide].
 
-Quite a few SPI changes have changed to support many of the topics discussed here as well as in
+One specific change to note is that many of these contracts have been better defined with type
+parameters.  Theses where inconsistently and sometimes poorly defined in previous versions.
+
+Quite a few SPI contracts have changed to support many of the topics discussed here as well as in
 the link:{migration-guide-url}[migration guide].  Many will also be the subject of the mentioned
 follow-up posts.
 
@@ -83,7 +89,8 @@ which were later used to access the specific result.  We've all seen these "ugly
 changes, those select-clause aliases are no longer needed resulting in much more readable generated
 SQL.
 3. Although we implemented some improved support for limiting needed joins within an entity mapping
-(joined inheritance, secondary tables) in 5.x, 6.0 allows even better opportunity for this.
+(joined inheritance, secondary tables) in 5.x, 6.0 allows even better opportunity for this.  In
+fact, the support for this in 5.x was conceptually back-ported from the 6.0 work.
 4. (2) and (3) combined results in much smaller SQL needing to be sent to the server which can
 have an impact on network communication.  Every bit helps.
 
@@ -94,9 +101,22 @@ This was by far the biggest force behind 6.0 initially.
 [[mapping-model]]
 == Mapping Model
 
-- Object-oriented
-- More user-friendly
-- Attribute order
+The mapping model is an SPI and as such will not be seen by all users.  But
+it is a major development and impacts many users providing extensions.
+
+The main driving force behind this mapping model work was <<read-by-position>>,
+and we had a number of design goals in developing it:
+
+- support positional processing of attributes
+- make it object-oriented
+- make it user friendly
+
+This model can be accessed though
+link:{javadocs-url}/org/hibernate/engine/spi/SessionFactoryImplementor.html#getRuntimeMetamodels()[`RuntimeMetamodelsImplementor`]
+which provides access to both:
+
+- The Jakarta Persistence model : link:{javadocs-url}/org/hibernate/metamodel/spi/RuntimeMetamodelsImplementor.html#getJpaMetamodel()[`JpaMetamodelImplementor`]
+- Hibernate's mapping model : link:{javadocs-url}/org/hibernate/metamodel/spi/RuntimeMetamodelsImplementor.html#getMappingMetamodel()[`MappingMetamodelImplementor`]
 
 
 [[annotations]]
@@ -118,21 +138,34 @@ This was by far the biggest force behind 6.0 initially.
 [[sqm]]
 == Semantic Query Model
 
-- HQL and Criteria
-- selection of a single entity - de-dup
-- set operations (union, intersect, except)
-- set aggregations
-- window functions
-- Functions
-- ILIKE support
-- improved temporal support (arithmetic, etc)
+Hibernate's Semantic Query Model (SQM) is its semantic representation of HQL
+and Criteria queries.  HQL is interpreted into SQM; Hibernate's Criteria
+implementations are SQM nodes.
+
+6.0 implements quite a few changes shared between HQL and Criteria.  Most of
+these are covered in link:{user-guide-url}#query-language[HQL] and
+link:{user-guide-url}#criteria[Criteria] chapters of the User Guide.
+
+Some specific changes include
+
+- Automatic de-duplication of single entity results in a Query.  See the link:{migration-guide-url}#query-sqm-rows[Migration Guide] for details
+- Set operations (union, intersect, except)
+- Set aggregations (listagg, e.g.)
+- Window operations (over, e.g.)
+- Vastly improved function support.  See the link:{user-guide-url}#hql-exp-functions[User Guide] for details.
+- ILIKE operator
+- Improved temporal support (arithmetic, etc)
 
 
 [[hql]]
 == HQL
 
-- poor and unmaintainable grammars
-- Antlr 2 -> Antlr 4
+Previous versions of Hibernate used Antlr 2 for parsing.  6.0 updates to Antlr 4 for a few reasons:
+
+- Antlr 2 is no longer supported, and has not for years
+- Antlr 4 is faster than Antlr 2
+- Antlr 4 grammars are easier to maintain, while the previous Antlr 2 grammars were poorly defined (largely as a function of Antlr 2 itself) and difficult to maintain.
+
 
 
 [[criteria]]

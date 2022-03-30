@@ -22,10 +22,10 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.enhanced.LegacyNamingStrategy;
-import org.hibernate.id.enhanced.LegacyPreferGeneratorNameNamingStrategy;
+import org.hibernate.id.enhanced.SingleNamingStrategy;
 import org.hibernate.id.enhanced.SequenceStructure;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.id.enhanced.StandardDatabaseObjectNamingStrategy;
+import org.hibernate.id.enhanced.StandardNamingStrategy;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.service.ServiceRegistry;
 
@@ -44,77 +44,77 @@ public class SequenceNamingStrategyTest {
 	@Test
 	public void testSequenceNameStandardStrategy() {
 		verify( TestEntity.class, "TestEntity_SEQ" );
-		verify( TestEntity.class, StandardDatabaseObjectNamingStrategy.STRATEGY_NAME, "TestEntity_SEQ" );
-		verify( TestEntity.class, StandardDatabaseObjectNamingStrategy.class.getName(), "TestEntity_SEQ" );
+		verify( TestEntity.class, StandardNamingStrategy.STRATEGY_NAME, "TestEntity_SEQ" );
+		verify( TestEntity.class, StandardNamingStrategy.class.getName(), "TestEntity_SEQ" );
 	}
 
 	@Test
 	public void testSequenceNameHibernateSequenceStrategy() {
+		verify( TestEntity.class, SingleNamingStrategy.STRATEGY_NAME, "hibernate_sequence" );
+		verify( TestEntity.class, SingleNamingStrategy.class.getName(), "hibernate_sequence" );
+	}
+
+	@Test
+	public void testSequenceNamePreferGeneratorNameStrategy() {
 		verify( TestEntity.class, LegacyNamingStrategy.STRATEGY_NAME, "hibernate_sequence" );
 		verify( TestEntity.class, LegacyNamingStrategy.class.getName(), "hibernate_sequence" );
 	}
 
 	@Test
-	public void testSequenceNamePreferGeneratorNameStrategy() {
-		verify( TestEntity.class, LegacyPreferGeneratorNameNamingStrategy.STRATEGY_NAME, "hibernate_sequence" );
-		verify( TestEntity.class, LegacyPreferGeneratorNameNamingStrategy.class.getName(), "hibernate_sequence" );
-	}
-
-	@Test
 	public void testNoGeneratorStandardStrategy() {
 		verify( TestEntity2.class, "table_generator" );
-		verify( TestEntity2.class, StandardDatabaseObjectNamingStrategy.STRATEGY_NAME, "table_generator" );
-		verify( TestEntity2.class, StandardDatabaseObjectNamingStrategy.class.getName(), "table_generator" );
+		verify( TestEntity2.class, StandardNamingStrategy.STRATEGY_NAME, "table_generator" );
+		verify( TestEntity2.class, StandardNamingStrategy.class.getName(), "table_generator" );
 	}
 
 	@Test
 	public void testNoGeneratorHibernateSequenceStrategy() {
-		verify( TestEntity2.class, LegacyNamingStrategy.STRATEGY_NAME, "hibernate_sequence" );
-		verify( TestEntity2.class, LegacyNamingStrategy.class.getName(), "hibernate_sequence" );
+		verify( TestEntity2.class, SingleNamingStrategy.STRATEGY_NAME, "hibernate_sequence" );
+		verify( TestEntity2.class, SingleNamingStrategy.class.getName(), "hibernate_sequence" );
 	}
 
 	@Test
 	public void testNoGeneratorPreferGeneratorNameStrategy() {
-		verify( TestEntity2.class, LegacyPreferGeneratorNameNamingStrategy.STRATEGY_NAME, "table_generator" );
-		verify( TestEntity2.class, LegacyPreferGeneratorNameNamingStrategy.class.getName(), "table_generator" );
+		verify( TestEntity2.class, LegacyNamingStrategy.STRATEGY_NAME, "table_generator" );
+		verify( TestEntity2.class, LegacyNamingStrategy.class.getName(), "table_generator" );
 	}
 
 	@Test
 	public void testGeneratorWithoutSequenceNameStandardStrategy() {
 		verify( TestEntity3.class, "table_generator" );
-		verify( TestEntity3.class, StandardDatabaseObjectNamingStrategy.STRATEGY_NAME, "table_generator" );
-		verify( TestEntity3.class, StandardDatabaseObjectNamingStrategy.class.getName(), "table_generator" );
+		verify( TestEntity3.class, StandardNamingStrategy.STRATEGY_NAME, "table_generator" );
+		verify( TestEntity3.class, StandardNamingStrategy.class.getName(), "table_generator" );
 	}
 
 	@Test
 	public void testGeneratorWithoutSequenceNameHibernateSequenceStrategy() {
-		verify( TestEntity3.class, LegacyNamingStrategy.STRATEGY_NAME, "hibernate_sequence" );
-		verify( TestEntity3.class, LegacyNamingStrategy.class.getName(), "hibernate_sequence" );
+		verify( TestEntity3.class, SingleNamingStrategy.STRATEGY_NAME, "hibernate_sequence" );
+		verify( TestEntity3.class, SingleNamingStrategy.class.getName(), "hibernate_sequence" );
 	}
 
 	@Test
 	public void testGeneratorWithoutSequenceNamePreferGeneratorNameStrategy() {
-		verify( TestEntity3.class, LegacyPreferGeneratorNameNamingStrategy.STRATEGY_NAME, "table_generator" );
-		verify( TestEntity3.class, LegacyPreferGeneratorNameNamingStrategy.class.getName(), "table_generator" );
+		verify( TestEntity3.class, LegacyNamingStrategy.STRATEGY_NAME, "table_generator" );
+		verify( TestEntity3.class, LegacyNamingStrategy.class.getName(), "table_generator" );
 	}
 
 	@Test
 	public void testGeneratorWithSequenceNameStandardStrategy() throws Exception {
 		verify( TestEntity4.class, "test_sequence" );
-		verify( TestEntity4.class, StandardDatabaseObjectNamingStrategy.STRATEGY_NAME, "test_sequence" );
-		verify( TestEntity4.class, StandardDatabaseObjectNamingStrategy.class.getName(), "test_sequence" );
+		verify( TestEntity4.class, StandardNamingStrategy.STRATEGY_NAME, "test_sequence" );
+		verify( TestEntity4.class, StandardNamingStrategy.class.getName(), "test_sequence" );
 	}
 
 	@Test
 	public void testGeneratorWithSequenceNameHibernateSequenceStrategy() {
-		verify( TestEntity4.class, LegacyNamingStrategy.STRATEGY_NAME, "test_sequence" );
-		verify( TestEntity4.class, LegacyNamingStrategy.class.getName(), "test_sequence" );
+		verify( TestEntity4.class, SingleNamingStrategy.STRATEGY_NAME, "test_sequence" );
+		verify( TestEntity4.class, SingleNamingStrategy.class.getName(), "test_sequence" );
 	}
 
 	@Test
 	public void testGeneratorWithSequenceNamePreferGeneratorNameStrategy() throws Exception {
-		verify( TestEntity4.class, LegacyPreferGeneratorNameNamingStrategy.STRATEGY_NAME, "test_sequence" );
-		verify( TestEntity4.class, LegacyPreferGeneratorNameNamingStrategy.class.getName(), "test_sequence" );
+		verify( TestEntity4.class, LegacyNamingStrategy.STRATEGY_NAME, "test_sequence" );
+		verify( TestEntity4.class, LegacyNamingStrategy.class.getName(), "test_sequence" );
 	}
 
 	private void verify(Class<?> entityType, String expectedName) {

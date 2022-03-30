@@ -8,6 +8,8 @@ package org.hibernate.id.enhanced;
 
 import java.util.Map;
 
+import jakarta.persistence.GeneratedValue;
+
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedName;
@@ -26,10 +28,41 @@ import static org.hibernate.id.enhanced.SequenceStyleGenerator.DEF_SEQUENCE_SUFF
 import static org.hibernate.id.enhanced.TableGenerator.DEF_TABLE;
 
 /**
+ * Hibernate's standard implicit naming strategy for identifier sequences and tables.
+ *
+ * For sequences (including forced-table sequences):<ol>
+ *     <li>
+ *         If {@value SequenceStyleGenerator#CONFIG_SEQUENCE_PER_ENTITY_SUFFIX} is specified,
+ *         a name composed of the "base" name with the specified suffix.  The base name
+ *         depends on the usage of the generator, but is generally the root entity-name if
+ *         applied to an entity identifier or the table we are generating values for
+ *     </li>
+ *     <li>
+ *         If annotations are used and {@link GeneratedValue#generator()} is specified,
+ *         its value is used as the sequence name
+ *     </li>
+ *     <li>
+ *         If the "base" name is known, use that
+ *     </li>
+ *     <li>
+ *         Throw an exception
+ *     </li>
+ * </ol>
+ *
+ * For tables:<ol>
+ *     <li>
+ *         If annotations are used and {@link GeneratedValue#generator()} is specified,
+ *         its value is used as the table name
+ *     </li>
+ *     <li>
+ *         Fall back is to use {@value TableGenerator#DEF_TABLE}
+ *     </li>
+ * </ol>
+ *
  * @author Steve Ebersole
  */
-public class StandardDatabaseObjectNamingStrategy implements ImplicitDatabaseObjectNamingStrategy {
-	public static final String STRATEGY_NAME = "default";
+public class StandardNamingStrategy implements ImplicitDatabaseObjectNamingStrategy {
+	public static final String STRATEGY_NAME = "standard";
 
 	@Override
 	public QualifiedName determineSequenceName(
@@ -40,7 +73,7 @@ public class StandardDatabaseObjectNamingStrategy implements ImplicitDatabaseObj
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 
 		final String rootTableName = ConfigurationHelper.getString( PersistentIdentifierGenerator.TABLE, configValues );
-		final String implicitName = implicitName( rootTableName, configValues, serviceRegistry );
+		final String implicitName = implicitSequenceName( rootTableName, configValues, serviceRegistry );
 
 		if ( implicitName.contains( "." ) ) {
 			return QualifiedNameParser.INSTANCE.parse( implicitName );
@@ -53,7 +86,7 @@ public class StandardDatabaseObjectNamingStrategy implements ImplicitDatabaseObj
 		);
 	}
 
-	private static String implicitName(
+	private static String implicitSequenceName(
 			String rootTableName,
 			Map<?, ?> configValues,
 			ServiceRegistry serviceRegistry) {

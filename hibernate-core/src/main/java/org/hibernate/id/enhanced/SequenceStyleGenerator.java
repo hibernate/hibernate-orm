@@ -339,7 +339,7 @@ public class SequenceStyleGenerator
 					}
 					return globalSetting;
 				},
-				StandardDatabaseObjectNamingStrategy.class::getName
+				StandardNamingStrategy.class::getName
 		);
 
 		final ImplicitDatabaseObjectNamingStrategy namingStrategy = strategySelector.resolveStrategy(

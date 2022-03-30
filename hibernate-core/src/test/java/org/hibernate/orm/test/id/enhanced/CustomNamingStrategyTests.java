@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.namingstrategy;
+package org.hibernate.orm.test.id.enhanced;
 
 import java.util.Map;
 import jakarta.persistence.Basic;
@@ -41,11 +41,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @org.hibernate.testing.orm.junit.ServiceRegistry(
 		settings = @Setting(
 				name = AvailableSettings.ID_DB_STRUCTURE_NAMING_STRATEGY,
-				value = "org.hibernate.orm.test.namingstrategy.ImplicitDatabaseObjectNamingStrategyTests$Strategy"
+				value = "org.hibernate.orm.test.id.enhanced.CustomNamingStrategyTests$Strategy"
 		)
 )
-@DomainModel( annotatedClasses = ImplicitDatabaseObjectNamingStrategyTests.TheEntity.class )
-public class ImplicitDatabaseObjectNamingStrategyTests {
+@DomainModel( annotatedClasses = CustomNamingStrategyTests.TheEntity.class )
+public class CustomNamingStrategyTests {
 
 	@Test
 	public void testIt(DomainModelScope domainModelScope, ServiceRegistryScope serviceRegistryScope) {

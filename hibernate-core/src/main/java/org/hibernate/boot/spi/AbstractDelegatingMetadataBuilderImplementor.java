@@ -149,19 +149,19 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Met
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(BasicType type) {
+	public MetadataBuilder applyBasicType(BasicType<?> type) {
 		delegate.applyBasicType( type );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(BasicType type, String... keys) {
+	public MetadataBuilder applyBasicType(BasicType<?> type, String... keys) {
 		delegate.applyBasicType( type, keys );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(UserType type, String... keys) {
+	public MetadataBuilder applyBasicType(UserType<?> type, String... keys) {
 		delegate.applyBasicType( type, keys );
 		return getThis();
 	}

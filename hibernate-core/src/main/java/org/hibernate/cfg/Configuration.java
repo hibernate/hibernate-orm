@@ -363,7 +363,7 @@ public class Configuration {
 		void registerType(MetadataBuilder metadataBuilder);
 	}
 
-	public Configuration registerTypeOverride(UserType type, String[] keys) {
+	public Configuration registerTypeOverride(UserType<?> type, String[] keys) {
 		if ( userTypeRegistrations == null ) {
 			userTypeRegistrations = new ArrayList<>();
 		}

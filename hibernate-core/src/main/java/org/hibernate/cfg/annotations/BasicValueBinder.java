@@ -322,7 +322,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 		applyJpaConverter( modelXProperty, converterDescriptor );
 
-		final Class<? extends UserType> userTypeImpl = kind.mappingAccess.customType( modelXProperty );
+		final Class<? extends UserType<?>> userTypeImpl = kind.mappingAccess.customType( modelXProperty );
 		if ( userTypeImpl != null ) {
 			applyExplicitType( userTypeImpl, kind.mappingAccess.customTypeParameters( modelXProperty ) );
 
@@ -366,9 +366,8 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private void applyExplicitType(Class<? extends UserType> impl, Parameter[] params) {
-		this.explicitCustomType = (Class) impl;
+	private void applyExplicitType(Class<? extends UserType<?>> impl, Parameter[] params) {
+		this.explicitCustomType = impl;
 		this.explicitLocalTypeParams = extractTypeParams( params );
 	}
 
@@ -467,7 +466,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 				}
 			}
 
-			final Class<? extends UserType> customTypeImpl = Kind.ATTRIBUTE.mappingAccess.customType( modelXProperty );
+			final Class<? extends UserType<?>> customTypeImpl = Kind.ATTRIBUTE.mappingAccess.customType( modelXProperty );
 			if ( customTypeImpl.isAnnotationPresent( Immutable.class ) ) {
 				return ImmutableMutabilityPlan.instance();
 			}
@@ -582,7 +581,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 				}
 			}
 
-			final Class<? extends UserType> customTypeImpl = Kind.MAP_KEY.mappingAccess.customType( mapAttribute );
+			final Class<? extends UserType<?>> customTypeImpl = Kind.MAP_KEY.mappingAccess.customType( mapAttribute );
 			if ( customTypeImpl != null ) {
 				if ( customTypeImpl.isAnnotationPresent( Immutable.class ) ) {
 					return ImmutableMutabilityPlan.instance();
@@ -912,7 +911,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 				}
 			}
 
-			final Class<? extends UserType> customTypeImpl = Kind.ATTRIBUTE.mappingAccess.customType( attributeXProperty );
+			final Class<? extends UserType<?>> customTypeImpl = Kind.ATTRIBUTE.mappingAccess.customType( attributeXProperty );
 			if ( customTypeImpl != null ) {
 				if ( customTypeImpl.isAnnotationPresent( Immutable.class ) ) {
 					return ImmutableMutabilityPlan.instance();
@@ -1288,7 +1287,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	 * Access to detail of basic value mappings based on {@link Kind}
 	 */
 	private interface BasicMappingAccess {
-		Class<? extends UserType> customType(XProperty xProperty);
+		Class<? extends UserType<?>> customType(XProperty xProperty);
 		Parameter[] customTypeParameters(XProperty xProperty);
 	}
 

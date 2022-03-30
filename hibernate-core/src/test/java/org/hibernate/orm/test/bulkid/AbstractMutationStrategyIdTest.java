@@ -1,4 +1,4 @@
-package org.hibernate.test.bulkid;
+package org.hibernate.orm.test.bulkid;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -8,7 +8,7 @@ import jakarta.persistence.InheritanceType;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
-public abstract class AbstractBulkIdTest extends BaseCoreFunctionalTestCase {
+public abstract class AbstractMutationStrategyIdTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -32,14 +32,19 @@ public abstract class AbstractBulkIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	@Override
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
-		configuration.setProperty( AvailableSettings.HQL_BULK_ID_STRATEGY, getMultiTableBulkIdStrategyClass().getName() );
+		final Class<? extends SqmMultiTableMutationStrategy> multiTableBulkIdStrategyClass = getMultiTableBulkIdStrategyClass();
+		if ( multiTableBulkIdStrategyClass != null ) {
+			configuration.setProperty(
+					AvailableSettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY,
+					multiTableBulkIdStrategyClass.getName()
+			);
+		}
 	}
 
 
-	protected abstract Class<? extends MultiTableBulkIdStrategy> getMultiTableBulkIdStrategyClass();
+	protected abstract Class<? extends SqmMultiTableMutationStrategy> getMultiTableBulkIdStrategyClass();
 
 	@Override
 	protected boolean isCleanupTestDataRequired() {

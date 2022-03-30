@@ -1,4 +1,4 @@
-package org.hibernate.test.bulkid;
+package org.hibernate.orm.test.bulkid;
 
 import java.sql.Timestamp;
 import java.util.Arrays;
@@ -13,17 +13,13 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.inline.InlineIdsOrClauseBulkIdStrategy;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.query.sqm.mutation.internal.inline.InlineMutationStrategy;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
@@ -31,8 +27,7 @@ import static org.junit.Assert.assertEquals;
  * @author Vlad Mihalcea
  */
 @TestForIssue( jiraKey = "HHH-12561" )
-public class GlobalQuotedIdentifiersBulkIdTest
-		extends BaseEntityManagerFunctionalTestCase {
+public class GlobalQuotedIdentifiersBulkIdTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -46,7 +41,7 @@ public class GlobalQuotedIdentifiersBulkIdTest
 	@Override
 	protected void addConfigOptions(Map options) {
 		options.put( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, Boolean.TRUE );
-		options.put( AvailableSettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY, InlineIdsOrClauseBulkIdStrategy.class.getName() );
+		options.put( AvailableSettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY, InlineMutationStrategy.class.getName() );
 	}
 
 	@Before

@@ -29,6 +29,7 @@ import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.internal.SqlAstQueryPartProcessingStateImpl;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
+import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -47,6 +48,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
+import org.hibernate.sql.results.spi.RowTransformer;
 
 import org.jboss.logging.Logger;
 
@@ -190,7 +192,7 @@ public class MatchingIdSelectionHelper {
 	 * or UPDATE SQM query
 	 */
 	public static List<Object> selectMatchingIds(
-			SqmDeleteOrUpdateStatement sqmMutationStatement,
+			SqmDeleteOrUpdateStatement<?> sqmMutationStatement,
 			DomainParameterXref domainParameterXref,
 			DomainQueryExecutionContext executionContext) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
@@ -236,46 +238,50 @@ public class MatchingIdSelectionHelper {
 				factory
 		);
 
-		sqmConverter.getProcessingStateStack().push(
-				new SqlAstQueryPartProcessingStateImpl(
-						matchingIdSelection.getQuerySpec(),
-						sqmConverter.getCurrentProcessingState(),
-						sqmConverter.getSqlAstCreationState(),
-						sqmConverter.getCurrentClauseStack()::getCurrent,
-						true
-				)
-		);
-		entityDescriptor.visitSubTypeAttributeMappings(
-				attribute -> {
-					if ( attribute instanceof PluralAttributeMapping ) {
-						final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) attribute;
+		if ( sqmMutationStatement instanceof SqmDeleteStatement<?> ) {
+			// For delete statements we also want to collect FK values to execute collection table cleanups
 
-						if ( pluralAttribute.getSeparateCollectionTable() != null ) {
-							// Ensure that the FK target columns are available
-							final boolean useFkTarget = !( pluralAttribute.getKeyDescriptor()
-									.getTargetPart() instanceof EntityIdentifierMapping );
-							if ( useFkTarget ) {
-								final TableGroup mutatingTableGroup = sqmConverter.getMutatingTableGroup();
-								pluralAttribute.getKeyDescriptor().getTargetPart().applySqlSelections(
-										mutatingTableGroup.getNavigablePath(),
-										mutatingTableGroup,
-										sqmConverter,
-										(selection, jdbcMapping) -> {
-											matchingIdSelection.getDomainResultDescriptors().add(
-													new BasicResult<>(
-															selection.getValuesArrayPosition(),
-															null,
-															jdbcMapping.getJavaTypeDescriptor()
-													)
-											);
-										}
-								);
+			sqmConverter.getProcessingStateStack().push(
+					new SqlAstQueryPartProcessingStateImpl(
+							matchingIdSelection.getQuerySpec(),
+							sqmConverter.getCurrentProcessingState(),
+							sqmConverter.getSqlAstCreationState(),
+							sqmConverter.getCurrentClauseStack()::getCurrent,
+							true
+					)
+			);
+			entityDescriptor.visitSubTypeAttributeMappings(
+					attribute -> {
+						if ( attribute instanceof PluralAttributeMapping ) {
+							final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) attribute;
+
+							if ( pluralAttribute.getSeparateCollectionTable() != null ) {
+								// Ensure that the FK target columns are available
+								final boolean useFkTarget = !( pluralAttribute.getKeyDescriptor()
+										.getTargetPart() instanceof EntityIdentifierMapping );
+								if ( useFkTarget ) {
+									final TableGroup mutatingTableGroup = sqmConverter.getMutatingTableGroup();
+									pluralAttribute.getKeyDescriptor().getTargetPart().applySqlSelections(
+											mutatingTableGroup.getNavigablePath(),
+											mutatingTableGroup,
+											sqmConverter,
+											(selection, jdbcMapping) -> {
+												matchingIdSelection.getDomainResultDescriptors().add(
+														new BasicResult<>(
+																selection.getValuesArrayPosition(),
+																null,
+																jdbcMapping.getJavaTypeDescriptor()
+														)
+												);
+											}
+									);
+								}
 							}
 						}
 					}
-				}
-		);
-		sqmConverter.getProcessingStateStack().pop();
+			);
+			sqmConverter.getProcessingStateStack().pop();
+		}
 
 		final JdbcServices jdbcServices = factory.getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
@@ -318,11 +324,18 @@ public class MatchingIdSelectionHelper {
 		);
 		lockOptions.setLockMode( lockMode );
 
+		final RowTransformer<Object> rowTransformer;
+		if ( matchingIdSelection.getDomainResultDescriptors().size() == 1 ) {
+			rowTransformer = row -> row[0];
+		}
+		else {
+			rowTransformer = row -> row;
+		}
 		return jdbcServices.getJdbcSelectExecutor().list(
 				idSelectJdbcOperation,
 				jdbcParameterBindings,
 				SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext ),
-				row -> row[0],
+				rowTransformer,
 				ListResultsConsumer.UniqueSemantic.FILTER
 		);
 	}

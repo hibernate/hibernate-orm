@@ -82,6 +82,9 @@ containing the various individual DML statements that would normally be executed
 This allows to run SQM DML statements in a single JDBC operation that does not move any data between the database and the application,
 which should provide a significant boost for statements that involve many rows.
 
+Note that the configuration property `hibernate.hql.bulk_id_strategy` was changed to `hibernate.query.mutation_strategy`
+which will now refer to classes or objects implementing `org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy`.
+
 [[identifier-object]]
 == Identifier as Object
 

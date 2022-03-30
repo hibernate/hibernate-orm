@@ -16,9 +16,9 @@ import org.hibernate.usertype.UserType;
  * @author Steve Ebersole
  */
 public class UserTypeMutabilityPlanAdapter<T> implements MutabilityPlan<T> {
-	private final UserType userType;
+	private final UserType<T> userType;
 
-	public UserTypeMutabilityPlanAdapter(UserType userType) {
+	public UserTypeMutabilityPlanAdapter(UserType<T> userType) {
 		this.userType = userType;
 	}
 
@@ -28,9 +28,8 @@ public class UserTypeMutabilityPlanAdapter<T> implements MutabilityPlan<T> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public T deepCopy(T value) {
-		return (T) userType.deepCopy( value );
+		return userType.deepCopy( value );
 	}
 
 	@Override
@@ -39,8 +38,7 @@ public class UserTypeMutabilityPlanAdapter<T> implements MutabilityPlan<T> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public T assemble(Serializable cached, SharedSessionContract session) {
-		return (T) userType.assemble( cached, null );
+		return userType.assemble( cached, null );
 	}
 }

@@ -9,6 +9,7 @@ package org.hibernate.userguide.mapping.basic.bitset;
 import java.util.BitSet;
 
 import org.hibernate.annotations.Type;
+import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -35,6 +36,19 @@ public class BitSetUserTypeTest extends BaseCoreFunctionalTestCase {
 			Product.class
 		};
 	}
+
+	// Note that the following is just for legacy documentation purposes
+	/*
+	@Override
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
+		//tag::basic-custom-type-register-UserType-example[]
+		configuration.registerTypeContributor( (typeContributions, serviceRegistry) -> {
+			typeContributions.contributeType( BitSetUserType.INSTANCE, "bitset");
+		} );
+		//end::basic-custom-type-register-UserType-example[]
+	}
+	*/
 
 	@Test
 	public void test() {

@@ -38,7 +38,7 @@ public class UserTypeResolution implements BasicValue.Resolution {
 		this.combinedTypeParameters = combinedTypeParameters;
 		this.mutabilityPlan = explicitMutabilityPlan != null
 				? explicitMutabilityPlan
-				: new UserTypeMutabilityPlanAdapter( userTypeAdapter.getUserType() );
+				: new UserTypeMutabilityPlanAdapter<>( userTypeAdapter.getUserType() );
 	}
 
 	@Override

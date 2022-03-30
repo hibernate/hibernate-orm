@@ -539,12 +539,19 @@ public final class StandardBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Byte Byte[]} to JDBC {@link org.hibernate.type.SqlTypes#VARBINARY VARBINARY}.
 	 */
-	public static final BasicTypeReference<Byte[]> WRAPPER_BINARY = new BasicTypeReference<>(
-			//TODO find a decent name before documenting
-			"wrapper-binary",
+	public static final BasicTypeReference<Byte[]> BINARY_WRAPPER = new BasicTypeReference<>(
+			"binary_wrapper",
 			Byte[].class,
 			SqlTypes.VARBINARY
 	);
+
+	/**
+	 * The standard Hibernate type for mapping {@link Byte Byte[]} to JDBC {@link org.hibernate.type.SqlTypes#VARBINARY VARBINARY}.
+	 *
+	 * @deprecated use {@link #BINARY_WRAPPER} instead
+	 */
+	@Deprecated(forRemoval = true)
+	public static final BasicTypeReference<Byte[]> WRAPPER_BINARY = BINARY_WRAPPER;
 
 	/**
 	 * The standard Hibernate type for mapping {@code byte[]} to JDBC {@link org.hibernate.type.SqlTypes#LONGVARBINARY LONGVARBINARY}.
@@ -586,8 +593,8 @@ public final class StandardBasicTypes {
 	 * @see #MATERIALIZED_BLOB
 	 * @see #IMAGE
 	 */
-	public static final BasicTypeReference<Byte[]> WRAPPED_MATERIALIZED_BLOB = new BasicTypeReference<>(
-			"wrapped_materialized_blob",
+	public static final BasicTypeReference<Byte[]> MATERIALIZED_BLOB_WRAPPER = new BasicTypeReference<>(
+			"materialized_blob_wrapper",
 			Byte[].class,
 			SqlTypes.BLOB
 	);
@@ -767,10 +774,10 @@ public final class StandardBasicTypes {
 		);
 
 		handle(
-				WRAPPER_BINARY,
+				BINARY_WRAPPER,
 				"org.hibernate.type.WrapperBinaryType",
 				basicTypeRegistry,
-				"wrapper-binary", "Byte[]", Byte[].class.getName()
+				"binary_wrapper", "wrapper-binary", "Byte[]", Byte[].class.getName()
 		);
 
 		handle(
@@ -796,10 +803,10 @@ public final class StandardBasicTypes {
 		);
 
 		handle(
-				WRAPPED_MATERIALIZED_BLOB,
-				"org.hibernate.type.MaterializedBlobType",
+				MATERIALIZED_BLOB_WRAPPER,
+				"org.hibernate.type.WrappedMaterializedBlobType",
 				basicTypeRegistry,
-				"wrapped_materialized_blob"
+				"materialized_blob_wrapper"
 		);
 
 
@@ -1109,7 +1116,7 @@ public final class StandardBasicTypes {
 				UUID,
 				"org.hibernate.type.PostgresUUIDType",
 				basicTypeRegistry,
-				"uuid", UUID.class.getName()
+				"uuid", UUID.class.getName(), "pg-uuid"
 		);
 
 		handle(

@@ -18,6 +18,7 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Tuple;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -78,8 +79,6 @@ import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOption
  * @author Steve Ebersole
  */
 public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implements SqmSelectionQuery<R>, InterpretationsKeySource {
-	public static final String CRITERIA_HQL_STRING = "<criteria>";
-
 	private final String hql;
 	private final SqmSelectStatement<R> sqm;
 
@@ -105,14 +104,19 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
 		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
 
-		visitQueryReturnType( sqm.getQueryPart(), expectedResultType, getSessionFactory() );
+//		visitQueryReturnType( sqm.getQueryPart(), expectedResultType, getSessionFactory() );
 		this.resultType = determineResultType( sqm, expectedResultType );
 
 		setComment( hql );
-		this.tupleMetadata = null;
+		this.tupleMetadata = buildTupleMetadata( sqm, expectedResultType );
 	}
 
 	private static <T> Class<T> determineResultType(SqmSelectStatement<?> sqm, Class<?> expectedResultType) {
+		if ( expectedResultType != null && expectedResultType.equals( Tuple.class ) ) {
+			//noinspection unchecked
+			return (Class<T>) Tuple.class;
+		}
+
 		if ( expectedResultType == null || ! expectedResultType.isArray() ) {
 			final List<SqmSelection<?>> selections = sqm.getQuerySpec().getSelectClause().getSelections();
 			if ( selections.size() == 1 ) {
@@ -152,10 +156,9 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 
 		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
 
-		visitQueryReturnType( sqm.getQueryPart(), resultType, getSessionFactory() );
 		setComment( hql );
-
 		applyOptions( memento );
+
 		this.tupleMetadata = buildTupleMetadata( sqm, resultType );
 	}
 

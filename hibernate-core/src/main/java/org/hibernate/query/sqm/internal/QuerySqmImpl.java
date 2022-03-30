@@ -119,11 +119,6 @@ import static org.hibernate.query.sqm.internal.SqmUtil.isSelect;
 public class QuerySqmImpl<R>
 		extends AbstractSelectionQuery<R>
 		implements SqmQueryImplementor<R>, InterpretationsKeySource, DomainQueryExecutionContext {
-
-	/**
-	 * The value used for {@link #getQueryString} for Criteria-based queries
-	 */
-	public static final String CRITERIA_HQL_STRING = "<criteria>";
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( QuerySqmImpl.class );
 
 	private final String hql;

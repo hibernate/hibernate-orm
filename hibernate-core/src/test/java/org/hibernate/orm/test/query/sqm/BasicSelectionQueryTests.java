@@ -6,11 +6,13 @@
  */
 package org.hibernate.orm.test.query.sqm;
 
+import java.util.List;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
+import jakarta.persistence.Tuple;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -22,8 +24,10 @@ import org.hibernate.testing.orm.domain.contacts.Contact;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -60,6 +64,54 @@ public class BasicSelectionQueryTests {
 
 			final SelectionQuery<String> firstNameQuery = session.createSelectionQuery( "select c.name.first from Contact c", String.class );
 			checkResults( firstNameQuery, session );
+		} );
+	}
+
+	private void createDummyEntity(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			session.persist( new DummyEntity( 1, "whatever" ) );
+		} );
+	}
+
+	private final String tuple_selection_hql = "select c.id as id, c.name as name from DummyEntity c";
+
+	@Test
+	public void tupleSelectionTestBaseline(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			checkResults( session.createQuery( tuple_selection_hql, Tuple.class ), session );
+		} );
+	}
+
+	@Test
+	public void tupleSelectionTest(SessionFactoryScope scope) {
+		createDummyEntity( scope );
+
+		// first make sure we get back the correct results via list
+		scope.inTransaction( (session) -> {
+			final SelectionQuery<Tuple> selectionQuery = session.createSelectionQuery( tuple_selection_hql, Tuple.class );
+
+			final List<Tuple> tuples = selectionQuery.list();
+			assertThat( tuples ).hasSize( 1 );
+
+			assertThat( tuples.get( 0 ) ).isInstanceOf( Tuple.class );
+			final Tuple tuple = tuples.get( 0 );
+			assertThat( tuple.get( 0 ) ).isEqualTo( 1 );
+			assertThat( tuple.get( "id" ) ).isEqualTo( 1 );
+			assertThat( tuple.get( 1 ) ).isEqualTo( "whatever" );
+			assertThat( tuple.get( "name" ) ).isEqualTo( "whatever" );
+		} );
+
+		// next make sure the rest of the execution methods work
+		scope.inTransaction( (session) -> {
+			final SelectionQuery<Tuple> selectionQuery = session.createSelectionQuery( tuple_selection_hql, Tuple.class );
+			checkResults( selectionQuery, session );
+		} );
+	}
+
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			session.createMutationQuery( "delete DummyEntity" ).executeUpdate();
 		} );
 	}
 

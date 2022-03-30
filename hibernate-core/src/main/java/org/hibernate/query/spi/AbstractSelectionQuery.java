@@ -86,6 +86,10 @@ import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 public abstract class AbstractSelectionQuery<R>
 		extends AbstractCommonQueryContract
 		implements SelectionQuery<R>, DomainQueryExecutionContext {
+	/**
+	 * The value used for {@link #getQueryString} for Criteria-based queries
+	 */
+	public static final String CRITERIA_HQL_STRING = "<criteria>";
 
 	private Callback callback;
 
@@ -189,10 +193,17 @@ public abstract class AbstractSelectionQuery<R>
 		}
 	}
 
+	protected abstract String getQueryString();
+
+	/**
+	 * Used during handling of Criteria queries
+	 */
 	protected void visitQueryReturnType(
 			SqmQueryPart<R> queryPart,
 			Class<R> resultType,
 			SessionFactoryImplementor factory) {
+		assert getQueryString().equals( CRITERIA_HQL_STRING );
+
 		if ( queryPart instanceof SqmQuerySpec<?> ) {
 			final SqmQuerySpec<R> sqmQuerySpec = (SqmQuerySpec<R>) queryPart;
 			final List<SqmSelection<?>> sqmSelections = sqmQuerySpec.getSelectClause().getSelections();

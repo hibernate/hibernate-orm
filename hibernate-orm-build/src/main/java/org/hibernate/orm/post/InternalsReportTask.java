@@ -27,7 +27,7 @@ public abstract class InternalsReportTask extends AbstractJandexAwareTask {
 	public InternalsReportTask(IndexManager indexManager, Project project) {
 		super(
 				indexManager,
-				project.getLayout().getBuildDirectory().file( "reports/orm/internal.txt" )
+				project.getLayout().getBuildDirectory().file( "orm/reports/internal.txt" )
 		);
 	}
 

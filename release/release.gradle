@@ -215,11 +215,10 @@ task aggregateJavadocs(type: Javadoc) {
     }
 }
 
-
 task stageIntegrationGuide(type: Copy) {
     group 'Release'
 
-    dependsOn ':documentation:buildDocsForPublishing'
+    dependsOn ':documentation:renderIntegrationGuide'
 
     from "${project( ':documentation' ).buildDir}/asciidoc/integrationguide"
     into "${buildDir}/documentation/integrationguide"
@@ -229,7 +228,7 @@ task stageIntegrationGuide(type: Copy) {
 task stageQuickstart(type: Copy) {
     group 'Release'
 
-    dependsOn ':documentation:buildDocsForPublishing'
+    dependsOn ':documentation:renderGettingStartedGuides'
 
     from "${project( ':documentation' ).buildDir}/asciidoc/quickstart"
     into "${buildDir}/documentation/quickstart"
@@ -239,7 +238,7 @@ task stageQuickstart(type: Copy) {
 task stageTopicalGuide(type: Copy) {
     group 'Release'
 
-    dependsOn ':documentation:buildDocsForPublishing'
+    dependsOn ':documentation:renderTopicalGuides'
 
     from "${project( ':documentation' ).buildDir}/asciidoc/topical"
     into "${buildDir}/documentation/topical"
@@ -249,7 +248,7 @@ task stageTopicalGuide(type: Copy) {
 task stageUserGuide(type: Copy) {
     group 'Release'
 
-    dependsOn ':documentation:buildDocsForPublishing'
+    dependsOn ':documentation:renderUserGuide'
 
     from "${project( ':documentation' ).buildDir}/asciidoc/userguide"
     into "${buildDir}/documentation/userguide"
@@ -259,11 +258,48 @@ task stageUserGuide(type: Copy) {
 task stageMigrationGuide(type: Copy) {
     group 'Release'
 
-    dependsOn ':documentation:buildDocsForPublishing'
+    dependsOn ':documentation:renderMigrationGuide'
 
     from "${project( ':documentation' ).buildDir}/asciidoc/migration-guide"
     into "${buildDir}/documentation/migration-guide"
 }
+
+task stageOrmReports {
+    group 'Release'
+
+    dependsOn ':documentation:generateHibernateReports'
+}
+
+task stageOrmIncubationReport(type: Copy) { task ->
+    group 'Release'
+
+    dependsOn ':documentation:generateIncubationReport'
+    tasks.stageOrmReports.dependsOn task
+
+    from project( ":documentation" ).tasks.generateIncubationReport.reportFileReferenceAccess
+    into "${buildDir}/documentation/incubating"
+}
+
+task stageOrmInternalsReport(type: Copy) { task ->
+    group 'Release'
+
+    dependsOn ':documentation:generateInternalsReport'
+    tasks.stageOrmReports.dependsOn task
+
+    from project( ":documentation" ).tasks.generateInternalsReport.reportFileReferenceAccess
+    into "${buildDir}/documentation/internals"
+}
+
+task stageOrmLoggingReport(type: Copy) { task ->
+    group 'Release'
+
+    dependsOn ':documentation:renderLoggingReport'
+    tasks.stageOrmReports.dependsOn task
+
+    from project( ":documentation" ).tasks.renderLoggingReport.outputDir
+    into "${buildDir}/documentation/logging"
+}
+
 
 /**
  * Assembles all documentation into the {buildDir}/documentation directory.
@@ -281,6 +317,7 @@ task assembleDocumentation {
     dependsOn tasks.stageQuickstart
     dependsOn tasks.stageUserGuide
     dependsOn tasks.stageMigrationGuide
+    dependsOn tasks.stageOrmReports
 }
 
 //task assembleProjectTemplates(type:Copy, dependsOn: project( ":project-template" ).tasks.assembleDist) {

@@ -37,7 +37,7 @@ from the removal of deprecated stuff.  There are a few one-off changes that brea
 source compatibility; these are covered in the link:{migration-guide-url}[migration guide].
 
 One specific change to note is that many of these contracts have been better defined with type
-parameters.  Theses where inconsistently and sometimes poorly defined in previous versions.
+parameters.  Theses were inconsistently and sometimes poorly defined in previous versions.
 
 Quite a few SPI contracts have changed to support many of the topics discussed here as well as in
 the link:{migration-guide-url}[migration guide].  Many will also be the subject of the mentioned
@@ -219,3 +219,32 @@ which is why Hibernate  had so many version-specific subclasses.
 
 6.0 changes the way Dialects are created to allow them to initialize themselves based on the
 version of the database/driver being used.
+
+
+[[incubating]]
+== @Incubating
+
+6.0 also introduces a new `@Incubating` annotation which is intended to notify users that
+a particular contract may change in the future.  These are typically new contracts which
+we may need to change in response to additional use cases or clarification of existing use cases.
+
+Think of it as a "use at your own risk" kind of notice.  Obviously we will strive to not change
+such contracts, but this gives us the flexibility to do so if needed and communicating that this
+could potentially happen to the user.
+
+Sometimes settings are considered incubating.  These are indicated by `@Incubating` on the
+corresponding `org.hibernate.cfg.AvailableSettings` field and are also logged using the
+`org.hibernate.orm.incubating` category.
+
+We also generate a <<documentation-artifacts,report>>.
+
+
+[[documentation-artifacts]]
+== New documentation artifacts
+
+Starting in 6.0 we also now publish additional documentation artifacts, such as:
+
+- The link:{migration-guide-url}[Migration Guide]
+- The generated link:{docs-url}/logging/logging.html[logging] report
+- The generated link:{docs-url}/incubating/incubating.txt[incubation] report
+- The generated link:{docs-url}/internals/internal.txt[internals] report

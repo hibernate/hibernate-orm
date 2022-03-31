@@ -48,7 +48,7 @@ public abstract class LoggingReportTask2 extends AbstractJandexAwareTask {
 	public LoggingReportTask2(IndexManager indexManager, Project project) {
 		super(
 				indexManager,
-				project.getLayout().getBuildDirectory().file( "reports/orm/logging.adoc" )
+				project.getLayout().getBuildDirectory().file( "orm/reports/logging.adoc" )
 		);
 	}
 

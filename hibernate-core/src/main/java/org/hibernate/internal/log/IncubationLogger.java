@@ -20,7 +20,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 @MessageLogger(projectCode = "HHH")
 @ValidIdRange(min = 90006001, max = 90007000)
 public interface IncubationLogger {
-	String CATEGORY = SubSystemLogging.BASE + ".deprecation";
+	String CATEGORY = SubSystemLogging.BASE + ".incubating";
 
 	IncubationLogger INCUBATION_LOGGER = Logger.getMessageLogger( IncubationLogger.class, CATEGORY );
 

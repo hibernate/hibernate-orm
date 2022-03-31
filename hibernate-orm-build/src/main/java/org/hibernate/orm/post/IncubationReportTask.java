@@ -25,7 +25,7 @@ public abstract class IncubationReportTask extends AbstractJandexAwareTask {
 	public IncubationReportTask(IndexManager indexManager, Project project) {
 		super(
 				indexManager,
-				project.getLayout().getBuildDirectory().file( "reports/orm/incubating.txt" )
+				project.getLayout().getBuildDirectory().file( "orm/reports/incubating.txt" )
 		);
 		setDescription( "Generates a report for things considered incubating" );
 	}

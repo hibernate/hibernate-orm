@@ -159,7 +159,7 @@ task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {task->
     sources {
         include 'Hibernate_User_Guide.adoc'
     }
-    outputDir = new File("$buildDir/asciidoc/userguide/html_single")
+    outputDir = "$buildDir/asciidoc/userguide/html_single"
 
 	attributes linkcss: true,
 			   stylesheet: "css/hibernate.css",
@@ -194,7 +194,7 @@ task renderIntegrationGuide(type: AsciidoctorTask, group: 'Documentation') {task
 		include 'Hibernate_Integration_Guide.adoc'
 	}
 
-	outputDir = new File("$buildDir/asciidoc/integrationguide/html_single")
+	outputDir = project.layout.buildDirectory.dir( 'asciidoc/integrationguide/html_single' )
 
 	attributes linkcss: true,
 				stylesheet: "css/hibernate.css"
@@ -218,6 +218,8 @@ task renderIntegrationGuide(type: AsciidoctorTask, group: 'Documentation') {task
 
 task renderMigrationGuide(type: AsciidoctorTask, group: 'Documentation') {task->
 	description = 'Renders the Migration Guide in HTML format using Asciidoctor.'
+
+	tasks.buildDocs.dependsOn task
 	tasks.buildDocsForPublishing.dependsOn task
 
 	sourceDir = rootProject.layout.projectDirectory
@@ -240,7 +242,50 @@ task renderMigrationGuide(type: AsciidoctorTask, group: 'Documentation') {task->
 	}
 }
 
-tasks.buildDocsForPublishing.dependsOn generateHibernateReports
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ORM Reports
+
+task renderOrmReports { task ->
+	group 'Documentation'
+	description 'Grouping task for rendering all ORM reports'
+
+	dependsOn tasks.generateIncubationReport
+	dependsOn tasks.generateInternalsReport
+
+	tasks.buildDocs.dependsOn task
+	tasks.buildDocsForPublishing.dependsOn task
+}
+
+task renderLoggingReport(type: AsciidoctorTask, group: 'Documentation') { task ->
+	group 'Documentation'
+	description = 'Renders the ORM logging report in HTML format using Asciidoctor.'
+
+	dependsOn tasks.generateLoggingReport
+
+	tasks.renderOrmReports.dependsOn task
+
+	sourceDir = layout.buildDirectory.dir( 'orm/reports' )
+	sources {
+		include 'logging.adoc'
+	}
+
+	outputDir = project.layout.buildDirectory.dir( 'asciidoc/logging' )
+
+	attributes linkcss: true,
+			stylesheet: "css/hibernate.css"
+
+	resources {
+		from('src/main/style/asciidoctor') {
+			include 'images/**'
+		}
+		from('src/main/style/asciidoctor') {
+			include 'css/**'
+		}
+	}
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 tasks.withType(AsciidoctorTask).all {
 	baseDirFollowsSourceDir()
@@ -250,31 +295,11 @@ tasks.withType(AsciidoctorTask).all {
 	}
 }
 
-// Testing
-
-test {
-	include '**/**'
-}
-
 // resources inherently exclude sources
 sourceSets.test.resources {
 	setSrcDirs( ['src/test/java','src/test/resources'] )
 }
 
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// grouping tasks
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-buildDocs.dependsOn renderTopicalGuides
-buildDocs.dependsOn renderGettingStartedGuides
-buildDocs.dependsOn renderUserGuide
-buildDocs.dependsOn renderIntegrationGuide
-
-buildDocsForPublishing.dependsOn renderTopicalGuides
-buildDocsForPublishing.dependsOn renderGettingStartedGuides
-buildDocsForPublishing.dependsOn renderUserGuide
-buildDocsForPublishing.dependsOn renderIntegrationGuide
 
 checkstyleMain.exclude '**/org/hibernate/userguide/model/*'
 

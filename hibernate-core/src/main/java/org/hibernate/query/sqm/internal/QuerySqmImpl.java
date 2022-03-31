@@ -285,11 +285,6 @@ public class QuerySqmImpl<R>
 	private void validateStatement(SqmStatement<R> sqmStatement, Class<R> resultType) {
 		if ( sqmStatement instanceof SqmSelectStatement<?> ) {
 			SqmUtil.verifyIsSelectStatement( sqmStatement, hql );
-			visitQueryReturnType(
-					( (SqmSelectStatement<R>) sqmStatement ).getQueryPart(),
-					resultType,
-					getSessionFactory()
-			);
 		}
 		else {
 			if ( resultType != null ) {

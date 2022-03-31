@@ -4894,9 +4894,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			listExpression.accept( this );
 			separator = COMA_SEPARATOR;
 			itemNumber++;
-			// If we encounter an expression that is not a parameter, we reset the inExprLimit and bindValueMaxCount
+			// If we encounter an expression that is not a parameter or literal, we reset the inExprLimit and bindValueMaxCount
 			// and just render through the in list expressions as they are without padding/splitting
-			if ( !( listExpression instanceof JdbcParameter || listExpression instanceof SqmParameterInterpretation ) ) {
+			if ( !( listExpression instanceof JdbcParameter || listExpression instanceof SqmParameterInterpretation || listExpression instanceof Literal ) ) {
 				inExprLimit = 0;
 				bindValueMaxCount = bindValueCount;
 			}
@@ -4909,7 +4909,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		if ( inExprLimit > 0 && bindValueCount > inExprLimit ) {
 			do {
-				append( ") and " );
+				append( ") or " );
 				inListPredicate.getTestExpression().accept( this );
 				if ( inListPredicate.isNegated() ) {
 					appendSql( " not" );
@@ -4927,18 +4927,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			} while ( iterator.hasNext() );
 		}
 
-		int i;
-		if ( inExprLimit > 0 && bindValueCount > inExprLimit ) {
-			i = bindValueCount % inExprLimit;
-		}
-		else {
-			i = bindValueCount;
-		}
-		final Expression lastExpression = itemAccessor.apply( listExpressions.get( listExpressions.size() - 1 ) );
-		for ( ; i < bindValueMaxCount; i++ ) {
-			appendSql( separator );
-			lastExpression.accept( this );
-			separator = COMA_SEPARATOR;
+		if ( inClauseParameterPaddingEnabled ) {
+			final Expression lastExpression = itemAccessor.apply( listExpressions.get( listExpressions.size() - 1 ) );
+			for ( ; itemNumber < bindValueMaxCount; itemNumber++ ) {
+				appendSql( separator );
+				lastExpression.accept( this );
+				separator = COMA_SEPARATOR;
+			}
 		}
 		appendSql( CLOSE_PARENTHESIS );
 	}

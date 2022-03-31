@@ -3,6 +3,46 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.0.0.Final (March 31, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32049
+
+** Bug
+    * [HHH-15131] - JPA Compliance issue with Envers
+    * [HHH-15118] - PooledOptimizer generates duplicate ids when several JVMs initialize optimizer and sequence value is the initial value
+    * [HHH-15117] - ConstraintViolationException is thrown using same @SecondaryTable on two entities
+    * [HHH-15115] - Deleting an entity with Joined inheritance and default schema set is throwing and error
+    * [HHH-15113] - Exception setting ParameterExpressions on Update Queries
+    * [HHH-15111] - MappingException is thrown for @JoinColumn with referencedColumnName on a @SecondaryTable 
+    * [HHH-15105] - Getting the CacheRegionStatistics before executing a query leads to a NPE later on
+    * [HHH-15098] - suboptimal/incorrect behavior when updating managed oneToMany collection on entity with naturalId
+    * [HHH-15091] - EntityManager.persist does not verify the existence of the one side of a many-to-one relationship, introduced 5.4.17
+    * [HHH-14487] - PropertyAccessStrategyMapImpl imports wrong class
+
+** Improvement
+    * [HHH-15144] - Add IncubationLogger
+    * [HHH-15143] - Add an "implicit naming strategy" for database structures (sequence and tables) for identifier generators
+    * [HHH-15138] - Remove support for Eviction Listeners in BoundedConcurrentHashMap
+    * [HHH-15078] - Support for Tuple and SelectionQuery
+    * [HHH-15055] - Document SelectionQuery and MutationQuery
+    * [HHH-14672] - Allow specifying CHAR-based storage for UUID mappings
+    * [HHH-14510] - Remove deprecated id-gen related contracts and classes
+    * [HHH-13135] - Add support for KEY/NO KEY locking in PostgreSQL
+
+** New Feature
+    * [HHH-14739] - Implement ILike support in 6
+
+** Task
+    * [HHH-15139] - Improvements for QueryInterpretationCache
+    * [HHH-15133] - Use specified result-type to better infer "shape" of query results with implicit selections
+    * [HHH-15132] - Improvements for NavigablePath
+    * [HHH-15119] - Upgrade to ByteBuddy 1.12.8
+    * [HHH-15107] - Update build to make tests pass against JDK19
+    * [HHH-14884] - More improvements to Domain Model chapter of the User Guide
+    * [HHH-14872] - Re-enable hibernate-gradle-plugin
+
+
 Changes in 6.0.0.CR2 (March 09, 2022)
 ------------------------------------------------------------------------------------------------------------------------
 

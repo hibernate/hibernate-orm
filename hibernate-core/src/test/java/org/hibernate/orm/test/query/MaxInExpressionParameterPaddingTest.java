@@ -142,7 +142,7 @@ public class MaxInExpressionParameterPaddingTest {
 			expectedInClause.append( ",?" );
 		}
 		expectedInClause.append( ")" );
-		expectedInClause.append( " and p1_0.id in(?)" );
+		expectedInClause.append( " or p1_0.id in(?)" );
 
 		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( expectedInClause.toString() ) );
 	}
@@ -168,7 +168,7 @@ public class MaxInExpressionParameterPaddingTest {
 			expectedInClause.append( ",?" );
 		}
 		expectedInClause.append( ")" );
-		expectedInClause.append( " and p1_0.id in(?,?,?,?)" );
+		expectedInClause.append( " or p1_0.id in(?,?,?,?)" );
 
 		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( expectedInClause.toString() ) );
 	}
@@ -194,12 +194,12 @@ public class MaxInExpressionParameterPaddingTest {
 			expectedInClause.append( ",?" );
 		}
 		expectedInClause.append( ")" );
-		expectedInClause.append( " and p1_0.id in(?");
+		expectedInClause.append( " or p1_0.id in(?");
 		for ( int i = 1; i < MAX_COUNT; i++ ) {
 			expectedInClause.append( ",?" );
 		}
 		expectedInClause.append( ")" );
-		expectedInClause.append( " and p1_0.id in(?,?,?,?)" );
+		expectedInClause.append( " or p1_0.id in(?,?,?,?)" );
 
 
 		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( expectedInClause.toString() ) );

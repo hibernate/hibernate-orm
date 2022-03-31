@@ -10,7 +10,7 @@ Steve Ebersole
 
 It has been years in the making, but ORM 6.0 Final has finally been released!
 
-This announcement will discuss the major changes as well as give insight into why
+This announcement will discuss the major changes, as well as give insight into why
 certain choices were made.
 
 We will also be following up with a series of more focused posts targeting specific
@@ -236,15 +236,35 @@ Sometimes settings are considered incubating.  These are indicated by `@Incubati
 corresponding `org.hibernate.cfg.AvailableSettings` field and are also logged using the
 `org.hibernate.orm.incubating` category.
 
-We also generate a <<documentation-artifacts,report>>.
+We also generate a documentation <<release-artifacts,report>>.
 
 
-[[documentation-artifacts]]
-== New documentation artifacts
+[[release-artifacts]]
+== Release artifacts
 
-Starting in 6.0 we also now publish additional documentation artifacts, such as:
+Starting with 6.0 we will no longer be publishing zip and tgz bundles to SourceForge.
+
+Starting in 6.0 we now publish additional documentation artifacts, such as:
 
 - The link:{migration-guide-url}[Migration Guide]
 - The generated link:{docs-url}/logging/logging.html[logging] report
 - The generated link:{docs-url}/incubating/incubating.txt[incubation] report
 - The generated link:{docs-url}/internals/internal.txt[internals] report
+
+Over the next few weeks we will also begin re-evaluating both:
+
+- The link:{docs-url}/integrationguide/[Integration Guide]
+- The link:{docs-url}/topical/[Topical Guide]
+
+Much of this content is either out-of-date or incorporated elsewhere.
+
+
+== Conclusion
+
+For additional details, see:
+
+- the link:{user-guide-url}[User Guide]
+- the link:{migration-guide-url}[Migration Guide]
+- the https://hibernate.org/orm/releases/6.0/[release page].
+
+To get in touch, use the usual channels as discussed on the https://hibernate.org/community/[website].

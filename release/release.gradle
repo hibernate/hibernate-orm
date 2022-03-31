@@ -13,7 +13,6 @@ apply from: rootProject.file( 'gradle/module.gradle' )
 apply from: rootProject.file( 'gradle/libraries.gradle' )
 
 apply plugin: 'idea'
-apply plugin: 'distribution'
 
 idea.module {
 }
@@ -355,152 +354,6 @@ task uploadDocumentation(type:Exec) {
     }
 }
 
-/**
- * Configuration of the distribution plugin, used to build the ZIP and TGZ "release" bundles
- */
-distributions {
-    main {
-        distributionBaseName = 'hibernate-release'
-        contents {
-            from rootProject.file( 'lgpl.txt' )
-            from rootProject.file( 'changelog.txt' )
-            from rootProject.file( 'hibernate_logo.gif' )
-
-            into('lib/required') {
-                from configurations.core
-            }
-
-            // todo (6.0) - add back
-//            into( 'project-template' ) {
-//                // todo : hook in some form of variable replacement - especially for version
-//                from project( ':project-template' ).files( 'src/main/dist' )
-//            }
-
-            into( 'lib/spatial' ) {
-                from( configurations.spatial - configurations.core )
-            }
-
-            into( 'lib/jpa-metamodel-generator' ) {
-                from( configurations.jpamodelgen - configurations.core )
-            }
-
-            into( 'lib/envers' ) {
-                from( configurations.envers - configurations.core )
-            }
-
-//            into( 'lib/testing' ) {
-//                from( configurations.testing - configurations.core )
-//            }
-//
-            into( 'lib/optional' ) {
-                into( 'agroal' ) {
-                    from( configurations.agroal - configurations.core )
-                }
-                into( 'c3p0' ) {
-                    from( configurations.c3p0 - configurations.core )
-                }
-                into( 'hikaricp' ) {
-                    from( configurations.hikaricp - configurations.core )
-                }
-                into( 'jcache' ) {
-                    from( configurations.jcache - configurations.core )
-                }
-                into( 'proxool' ) {
-                    from( configurations.proxool - configurations.core )
-                }
-                into( 'vibur' ) {
-                    from( configurations.vibur - configurations.core )
-                }
-            }
-
-            into('documentation') {
-                from "${buildDir}/documentation"
-            }
-
-            into( 'project' ) {
-                from ( rootProject.projectDir ) {
-                    exclude( '.git' )
-                    exclude( '.gitignore' )
-                    exclude( 'changelog.txt' )
-                    exclude( 'lgpl.txt' )
-                    exclude( 'hibernate_logo.gif' )
-                    exclude( 'tagRelease.sh' )
-                    exclude( 'gradlew' )
-                    exclude( 'gradlew.bat' )
-                    exclude( 'wrapper/*' )
-                    exclude( '**/.gradle/**' )
-                    exclude( '**/target/**' )
-                    exclude( '.idea' )
-                    exclude( '**/*.ipr' )
-                    exclude( '**/*.iml' )
-                    exclude( '**/*.iws' )
-                    exclude( '**/atlassian-ide-plugin.xml' )
-                    exclude( '**/.classpath' )
-                    exclude( '**/.project' )
-                    exclude( '**/.settings' )
-                    exclude( '**/.nbattrs' )
-                    exclude( '**/out/**' )
-                    exclude( '**/bin/**' )
-                    exclude( 'build/**' )
-                    exclude( '*/build/**' )
-                }
-            }
-        }
-    }
-}
-
-distTar.compression = Compression.GZIP
-
-distTar.dependsOn assembleDocumentation
-distZip.dependsOn assembleDocumentation
-
-/**
- * "virtual" task for building both types of dist bundles
- */
-task buildBundles {
-    group 'Release'
-    description 'Builds all release bundles (pseudonym for `assembleDist`)'
-
-    dependsOn assembleDist
-}
-
-task uploadBundlesSourceForge(type: Exec) {
-    group 'Release'
-    description 'Uploads release bundles to SourceForge'
-
-    dependsOn buildBundles
-
-    final String url = "frs.sourceforge.net:/home/frs/project/hibernate/hibernate-orm/${version}";
-
-    executable 'rsync'
-    args '-vr', '-e ssh', "${project.buildDir}/distributions/", url
-
-    doFirst {
-        if ( rootProject.ormVersion.isSnapshot ) {
-            logger.error( "Cannot perform upload of SNAPSHOT bundles to SourceForge" );
-            throw new RuntimeException( "Cannot perform upload of SNAPSHOT bundles to SourceForge" )
-        }
-        else {
-            logger.lifecycle( "Uploading release bundles to SourceForge..." )
-        }
-    }
-
-    doLast {
-        logger.lifecycle( 'Done uploading release bundles to SourceForge' )
-    }
-}
-
-configurations {
-    bundles {
-        description = 'Configuration used to group the archives output from the distribution plugin.'
-    }
-}
-
-artifacts {
-    bundles distTar
-    bundles distZip
-}
-
 task releaseChecks {
     group 'Release'
     description 'Checks and preparation for release'
@@ -576,7 +429,6 @@ void updateVersionFile(String version) {
 task publishReleaseArtifacts {
     dependsOn releaseChecks
     dependsOn uploadDocumentation
-    dependsOn uploadBundlesSourceForge
 
     mustRunAfter gitPreparationForRelease
 }

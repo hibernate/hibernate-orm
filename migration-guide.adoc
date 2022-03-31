@@ -899,6 +899,19 @@ Hibernate no longer provides built-in support for integrating itself with JMX en
 Hibernate no longer provides built-in support for integrating itself with JACC environments.
 
 
+[[release-artifacts]]
+=== Release artifacts
+
+We no longer publishing zip and tgz bundles to SourceForge.
+
+We now publish additional documentation artifacts, such as:
+
+- This link:{migration-guide-url}[Migration Guide]
+- The generated link:{docs-url}/logging/logging.html[logging] report
+- The generated link:{docs-url}/incubating/incubating.txt[incubation] report
+- The generated link:{docs-url}/internals/internal.txt[internals] report
+
+
 === Previously Deprecated features
 
 * 'hibernate.classLoader.application', 'hibernate.classLoader.resources', 'hibernate.classLoader.hibernate' and 'hibernate.classLoader.environment': use 'hibernate.classLoaders' instead.

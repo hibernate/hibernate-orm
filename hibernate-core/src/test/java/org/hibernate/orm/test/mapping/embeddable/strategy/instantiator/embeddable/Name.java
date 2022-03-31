@@ -9,9 +9,11 @@ package org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.embeddab
 import org.hibernate.annotations.EmbeddableInstantiator;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 
 
 //tag::embeddable-instantiator-class[]
+@Embeddable
 @EmbeddableInstantiator( NameInstantiator.class )
 public class Name {
 	@Column(name = "first_name")

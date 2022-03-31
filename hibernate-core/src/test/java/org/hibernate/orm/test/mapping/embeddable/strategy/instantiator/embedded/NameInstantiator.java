@@ -13,6 +13,7 @@ import org.hibernate.metamodel.spi.ValueAccess;
 /**
  * @author Steve Ebersole
  */
+//tag::embeddable-instantiator-impl[]
 public class NameInstantiator implements EmbeddableInstantiator {
 	@Override
 	public Object instantiate(ValueAccess valueAccess, SessionFactoryImplementor sessionFactory) {
@@ -21,6 +22,10 @@ public class NameInstantiator implements EmbeddableInstantiator {
 		final String last = valueAccess.getValue( 1, String.class );
 		return new Name( first, last );
 	}
+
+	// ...
+
+//end::embeddable-instantiator-impl[]
 
 	@Override
 	public boolean isInstance(Object object, SessionFactoryImplementor sessionFactory) {
@@ -31,4 +36,6 @@ public class NameInstantiator implements EmbeddableInstantiator {
 	public boolean isSameClass(Object object, SessionFactoryImplementor sessionFactory) {
 		return object.getClass().equals( Name.class );
 	}
+//tag::embeddable-instantiator-impl[]
 }
+//end::embeddable-instantiator-impl[]

@@ -122,8 +122,21 @@ which provides access to both:
 [[annotations]]
 == Annotations
 
-- type-safety
-- `SqlTypes` - extension to `java.sql.Types`
+Historically, Hibernate's annotations grew directly from its `hbm.xml` mappings. These old
+annotations are String-based just like XML, providing all the cons of XML and really none
+of the benefits of annotations.
+
+6.0 redesigns Hibernate's annotations with type-safety in mind, as well as better leveraging
+the benefits of annotations.  Most are also usable as meta-annotations.
+
+Annotations for mapping basic values saw the most change.  The
+link:{user-guide-url}/html_single/Hibernate_User_Guide.html#basic[User Guide] contains
+the details.
+
+The mapping of embeddables has also changed.  Again, see the
+link:{user-guide-url}/html_single/Hibernate_User_Guide.html#embeddable[User Guide] for
+details.  Embeddables now support
+link:{user-guide-url}/html_single/Hibernate_User_Guide.html#embeddable-instantiator[constructor injection]
 
 
 [[query]]
@@ -171,22 +184,38 @@ Previous versions of Hibernate used Antlr 2 for parsing.  6.0 updates to Antlr 4
 [[criteria]]
 == Criteria
 
-- removal of legacy Criteria
-- no longer Criteria -> HQL -> Query
-- `hibernate.criteria.copy_tree` (performance)
-- improved handling of parameter vs. literal
+Hibernate's legacy Criteria API has been deprecated for many years and has been fully removed in 6.0.
+Support for Criteria queries is now offered solely through the Jakarta Persistence APIs plus extensions.
 
+As mentioned in <<sqm>>, Hibernate's SQM model is the implementation of the Jakarta Persistence
+Criteria node APIs.  This offers significantly better performance in terms of execution compared to
+previous versions which essentially converted the Criteria to HQL and translated the HQL.
+
+6.0 also adds a new setting related to Criteria performance - `hibernate.criteria.copy_tree`.
+The Jakarta Persistence specification requires that a copy be made of the Criteria tree passed to
+`EntityManager#createQuery`.  This obviously has a performance impact, but is intended for safety.
+`hibernate.criteria.copy_tree` allows Hibernate to not make a copy of the tree which results in
+better performance.  Just be sure to not mutate the tree after the call to `#createQuery`.
 
 
 
 [[sql-ast]]
 == SQL as AST
 
-mention Dialect involvement
+6.0 goes all-in in terms of modeling queries as trees.  We discussed above how that works
+for HQL and Criteria queries, but we also now model SQL queries as trees.
+
+This has quite a few benefits, but the main one is direct Dialect involvement.  The tree acts
+as an API to a contract which translates the AST into JDBC calls, which allows much more
+powerful involvement by the Dialect in this process.
 
 
 [[dialect-init]]
 == Dialect initialization
 
-- `Dialect` constructor
-- `Dialect#initializeFunctionRegistry`
+In previous versions, Dialect was essentially static details about the database being used.
+This meant that Dialect implementations could not incorporate version-specific deviations,
+which is why Hibernate  had so many version-specific subclasses.
+
+6.0 changes the way Dialects are created to allow them to initialize themselves based on the
+version of the database/driver being used.

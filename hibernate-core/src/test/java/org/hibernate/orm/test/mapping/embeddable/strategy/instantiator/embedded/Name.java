@@ -7,8 +7,10 @@
 package org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.embedded;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 
-//tag::embeddable-instantiator-property[]
+//tag::embeddable-instantiator-embeddable[]
+@Embeddable
 public class Name {
 	@Column(name = "first_name")
 	private final String first;
@@ -32,4 +34,4 @@ public class Name {
 		return last;
 	}
 }
-//end::embeddable-instantiator-property[]
+//end::embeddable-instantiator-embeddable[]

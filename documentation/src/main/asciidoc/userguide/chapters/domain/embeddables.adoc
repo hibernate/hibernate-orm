@@ -261,45 +261,63 @@ definition of a non-arg constructor.  However, not all value compositions applic
 values follow Java Bean conventions - e.g. a struct or Java 15 record.
 
 Hibernate allows the use of a custom instantiator for creating the embeddable instances through the
-`org.hibernate.metamodel.spi.EmbeddableInstantiator` contract.  The custom instantiator is specified
-using the `@org.hibernate.annotations.EmbeddableInstantiator` annotation.
+`org.hibernate.metamodel.spi.EmbeddableInstantiator` contract.  For example, consider the following
+embeddable:
 
-A custom instantiator can be defined on the property:
+[[embeddable-instantiator-embeddable-ex]]
+.`EmbeddableInstantiator` - Embeddable
+====
+[source, JAVA, indent=0]
+----
+include::{instantiatorTestDir}/embedded/Name.java[tags=embeddable-instantiator-embeddable]
+----
+====
+
+Here, `Name` only allows use of the constructor accepting its state.  Because this class does not follow Java Bean
+conventions, in terms of constructor, a custom strategy for instantiation is needed.
+
+[[embeddable-instantiator-impl-ex]]
+.`EmbeddableInstantiator` - Implementation
+====
+[source, JAVA, indent=0]
+----
+include::{instantiatorTestDir}/embedded/NameInstantiator.java[tags=embeddable-instantiator-impl]
+----
+====
+
+There are a few ways to specify the custom instantiator.  The `@org.hibernate.annotations.EmbeddableInstantiator`
+annotation can be used on the embedded attribute:
 
 [[embeddable-instantiator-property-ex]]
 .`@EmbeddableInstantiator` on attribute
 ====
 [source, JAVA, indent=0]
 ----
-include::{instantiatorTestDir}/embedded/Name.java[tags=embeddable-instantiator-property]
-
 include::{instantiatorTestDir}/embedded/Person.java[tags=embeddable-instantiator-property]
 ----
 ====
 
-or on the embeddable class:
+`@EmbeddableInstantiator` may also be specified on the embeddable class:
 
 [[embeddable-instantiator-class-ex]]
 .`@EmbeddableInstantiator` on class
 ====
 [source, JAVA, indent=0]
 ----
-include::{instantiatorTestDir}/embeddable/Name.java[tags=embeddable-instantiator-class]
-
 include::{instantiatorTestDir}/embeddable/Person.java[tags=embeddable-instantiator-class]
 ----
 ====
 
 
-or registered:
+Lastly, `@org.hibernate.annotations.EmbeddableInstantiatorRegistration` may be used, which is useful
+when the application developer does not control the embeddable to be able to apply the instantiator
+on the <<embeddable-instantiator-class-ex,embeddable>>.
 
 [[embeddable-instantiator-registration-ex]]
 .`@EmbeddableInstantiatorRegistration`
 ====
 [source, JAVA, indent=0]
 ----
-include::{instantiatorTestDir}/registered/Name.java[tags=embeddable-instantiator-registration]
-
 include::{instantiatorTestDir}/registered/Person.java[tags=embeddable-instantiator-registration]
 ----
 ====

@@ -456,7 +456,9 @@ public abstract class AbstractSelectionQuery<R>
 		try {
 			final List<R> list = list();
 			if ( list.isEmpty() ) {
-				throw new NoResultException( "No result found for query" );
+				throw new NoResultException(
+						String.format( "No result found for query [%s]", getQueryString() )
+				);
 			}
 			return uniqueElement( list );
 		}

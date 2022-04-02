@@ -274,6 +274,56 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-15161")
+	public void testInsertWithNullParamValue() {
+		TestData data = new TestData();
+		data.prepare();
+
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		Query q = s.createQuery( "insert into Pickup (id, owner, vin) select id, :owner, vin from Car" );
+		q.setParameter( "owner", null );
+
+		q.executeUpdate();
+
+		t.commit();
+		t = s.beginTransaction();
+
+		s.createQuery( "delete Vehicle" ).executeUpdate();
+
+		t.commit();
+		s.close();
+
+		data.cleanup();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-15161")
+	public void testInsertWithNullParamValueSetOperation() {
+		TestData data = new TestData();
+		data.prepare();
+
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		Query q = s.createQuery( "insert into Pickup (id, owner, vin) (select id, :owner, vin from Car union all select id, :owner, vin from Car) order by 1 limit 1" );
+		q.setParameter( "owner", null );
+
+		q.executeUpdate();
+
+		t.commit();
+		t = s.beginTransaction();
+
+		s.createQuery( "delete Vehicle" ).executeUpdate();
+
+		t.commit();
+		s.close();
+
+		data.cleanup();
+	}
+
+	@Test
 	public void testInsertWithMultipleNamedParams() {
 		TestData data = new TestData();
 		data.prepare();

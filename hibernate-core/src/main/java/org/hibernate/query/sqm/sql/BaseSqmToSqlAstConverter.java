@@ -108,7 +108,6 @@ import org.hibernate.query.QueryLogging;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaPath;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -255,6 +254,7 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlTreeCreationException;
@@ -1886,10 +1886,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final SelectClause sqlSelectClause = currentQuerySpec().getSelectClause();
 			if ( selectClause == null ) {
 				final SqmFrom<?, ?> implicitSelection = determineImplicitSelection( (SqmQuerySpec<?>) currentSqmQueryPart );
-				visitSelection( new SqmSelection<>( implicitSelection, implicitSelection.nodeBuilder() ) );
+				visitSelection( 0, new SqmSelection<>( implicitSelection, implicitSelection.nodeBuilder() ) );
 			}
 			else {
-				super.visitSelectClause( selectClause );
+				final List<SqmSelection<?>> selections = selectClause.getSelections();
+				for ( int i = 0; i < selections.size(); i++ ) {
+					visitSelection( i, selections.get( i ) );
+				}
 				sqlSelectClause.makeDistinct( selectClause.isDistinct() );
 			}
 			return sqlSelectClause;
@@ -1906,6 +1909,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Void visitSelection(SqmSelection<?> sqmSelection) {
+		return visitSelection(
+				currentSqmQueryPart.getFirstQuerySpec().getSelectClause().getSelections().indexOf( sqmSelection ),
+				sqmSelection
+		);
+	}
+
+	public Void visitSelection(int index, SqmSelection<?> sqmSelection) {
+		final boolean contributesToTopLevelSelectClause = currentClauseStack.depth() == 1 && currentClauseStack.getCurrent() == Clause.SELECT;
+		// Only infer the type on the "top level" select clauses
+		final boolean inferTargetPath = statement instanceof SqmInsertSelectStatement<?> && contributesToTopLevelSelectClause;
+		if ( inferTargetPath ) {
+			final SqmPath<?> path = ( (SqmInsertSelectStatement<?>) statement ).getInsertionTargetPaths().get( index );
+			inferrableTypeAccessStack.push( () -> determineValueMapping( path ) );
+		}
 		final List<Map.Entry<String, DomainResultProducer<?>>> resultProducers;
 		final SqmSelectableNode<?> selectionNode = sqmSelection.getSelectableNode();
 		if ( selectionNode instanceof SqmJpaCompoundSelection<?> ) {
@@ -1937,7 +1954,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 
 		final Stack<SqlAstProcessingState> processingStateStack = getProcessingStateStack();
-		final boolean needsDomainResults = domainResults != null && currentClauseContributesToTopLevelSelectClause();
+		final boolean needsDomainResults = domainResults != null && contributesToTopLevelSelectClause;
 		final boolean collectDomainResults;
 		if ( processingStateStack.depth() == 1 ) {
 			collectDomainResults = needsDomainResults;
@@ -2002,12 +2019,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					}
 			);
 		}
+		if ( inferTargetPath ) {
+			inferrableTypeAccessStack.pop();
+		}
 		return null;
-	}
-
-	private boolean currentClauseContributesToTopLevelSelectClause() {
-		// The current clause contributes to the top level select if the clause stack contains just SELECT
-		return currentClauseStack.findCurrentFirst( clause -> clause == Clause.SELECT ? null : clause ) == null;
 	}
 
 	protected Expression resolveGroupOrOrderByExpression(SqmExpression<?> groupByClauseExpression) {

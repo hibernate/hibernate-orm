@@ -2903,7 +2903,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				appendSql( OPEN_PARENTHESIS );
 			}
 			appendSql( "select " );
-			if ( getClauseStack().isEmpty() ) {
+			if ( getClauseStack().isEmpty() && !( statement instanceof InsertStatement ) ) {
 				appendSql( '*' );
 			}
 			else {
@@ -3097,6 +3097,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			selectItemsToInline = null;
 		}
 		final SqlAstNodeRenderingMode original = parameterRenderingMode;
+		final SqlAstNodeRenderingMode defaultRenderingMode;
+		if ( statement instanceof InsertStatement && clauseStack.depth() == 1 && queryPartStack.depth() == 1 ) {
+			// Databases support inferring parameter types for simple insert-select statements
+			defaultRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
+		}
+		else {
+			defaultRenderingMode = SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER;
+		}
 		if ( needsSelectAliases || referenceStrategy == SelectItemReferenceStrategy.ALIAS && hasSelectAliasInGroupByClause() ) {
 			String separator = NO_SEPARATOR;
 			if ( columnAliases == null ) {
@@ -3107,7 +3115,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						parameterRenderingMode = SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS;
 					}
 					else {
-						parameterRenderingMode = SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER;
+						parameterRenderingMode = defaultRenderingMode;
 					}
 					visitSqlSelection( sqlSelection );
 					parameterRenderingMode = original;
@@ -3124,7 +3132,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						parameterRenderingMode = SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS;
 					}
 					else {
-						parameterRenderingMode = SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER;
+						parameterRenderingMode = defaultRenderingMode;
 					}
 					visitSqlSelection( sqlSelection );
 					parameterRenderingMode = original;
@@ -3146,7 +3154,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					parameterRenderingMode = SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS;
 				}
 				else {
-					parameterRenderingMode = SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER;
+					parameterRenderingMode = defaultRenderingMode;
 				}
 				visitSqlSelection( sqlSelection );
 				parameterRenderingMode = original;
@@ -3162,7 +3170,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					parameterRenderingMode = SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS;
 				}
 				else {
-					parameterRenderingMode = SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER;
+					parameterRenderingMode = defaultRenderingMode;
 				}
 				visitSqlSelection( sqlSelection );
 				appendSql( WHITESPACE );

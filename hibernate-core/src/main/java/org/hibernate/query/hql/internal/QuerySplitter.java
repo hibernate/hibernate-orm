@@ -21,7 +21,7 @@ import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.internal.SqmDmlCreationProcessingState;
-import org.hibernate.query.sqm.internal.SqmQuerySpecCreationProcessingStateStandardImpl;
+import org.hibernate.query.sqm.internal.SqmQueryPartCreationProcessingStateStandardImpl;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
@@ -266,7 +266,7 @@ public class QuerySplitter {
 			final SqmSelectStatement<R> copy = new SqmSelectStatement<>( statement.nodeBuilder() );
 
 			processingStateStack.push(
-					new SqmQuerySpecCreationProcessingStateStandardImpl(
+					new SqmQueryPartCreationProcessingStateStandardImpl(
 							processingStateStack.getCurrent(),
 							copy,
 							this

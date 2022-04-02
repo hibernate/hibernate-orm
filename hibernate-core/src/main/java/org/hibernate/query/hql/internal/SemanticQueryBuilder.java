@@ -94,7 +94,7 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.internal.ParameterCollector;
 import org.hibernate.query.sqm.internal.SqmCreationProcessingStateImpl;
 import org.hibernate.query.sqm.internal.SqmDmlCreationProcessingState;
-import org.hibernate.query.sqm.internal.SqmQuerySpecCreationProcessingStateStandardImpl;
+import org.hibernate.query.sqm.internal.SqmQueryPartCreationProcessingStateStandardImpl;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.spi.ParameterDeclarationContext;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
@@ -383,7 +383,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		parameterCollector = selectStatement;
 
 		processingStateStack.push(
-				new SqmQuerySpecCreationProcessingStateStandardImpl(
+				new SqmQueryPartCreationProcessingStateStandardImpl(
 						processingStateStack.getCurrent(),
 						selectStatement,
 						this
@@ -470,7 +470,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				try {
 					for ( HqlParser.SimplePathContext stateFieldCtx : targetFieldsSpecContext.simplePath() ) {
 						final SqmPath<?> stateField = (SqmPath<?>) visitSimplePath( stateFieldCtx );
-						// todo : validate each resolved stateField...
 						insertStatement.addInsertTargetStateField( stateField );
 					}
 				}
@@ -509,7 +508,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 				for ( HqlParser.SimplePathContext stateFieldCtx : targetFieldsSpecContext.simplePath() ) {
 					final SqmPath<?> stateField = (SqmPath<?>) visitSimplePath( stateFieldCtx );
-					// todo : validate each resolved stateField...
 					insertStatement.addInsertTargetStateField( stateField );
 				}
 
@@ -518,7 +516,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			finally {
 				processingStateStack.pop();
 			}
-
 		}
 	}
 
@@ -639,9 +636,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( children.size() > 3 ) {
 			final SqmCreationProcessingState firstProcessingState = processingStateStack.pop();
 			processingStateStack.push(
-					new SqmQuerySpecCreationProcessingStateStandardImpl(
+					new SqmQueryPartCreationProcessingStateStandardImpl(
 							processingStateStack.getCurrent(),
-							(SqmSelectQuery<?>) firstProcessingState.getProcessingQuery(),
+							firstProcessingState.getProcessingQuery(),
 							this
 					)
 			);
@@ -676,9 +673,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					(HqlParser.OrderedQueryContext) children.get( i + 1 );
 			final List<SqmQueryPart<Object>> queryParts;
 			processingStateStack.push(
-					new SqmQuerySpecCreationProcessingStateStandardImpl(
+					new SqmQueryPartCreationProcessingStateStandardImpl(
 							processingStateStack.getCurrent(),
-							(SqmSelectQuery<?>) firstProcessingState.getProcessingQuery(),
+							firstProcessingState.getProcessingQuery(),
 							this
 					)
 			);
@@ -709,7 +706,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					try {
 						final SqmSelectStatement<Object> selectStatement = new SqmSelectStatement<>( creationContext.getNodeBuilder() );
 						processingStateStack.push(
-								new SqmQuerySpecCreationProcessingStateStandardImpl(
+								new SqmQueryPartCreationProcessingStateStandardImpl(
 										processingStateStack.getCurrent(),
 										selectStatement,
 										this
@@ -4531,7 +4528,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		);
 
 		processingStateStack.push(
-				new SqmQuerySpecCreationProcessingStateStandardImpl(
+				new SqmQueryPartCreationProcessingStateStandardImpl(
 						processingStateStack.getCurrent(),
 						subQuery,
 						this

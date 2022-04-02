@@ -32,6 +32,7 @@ import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableGroup;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
+import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -125,7 +126,9 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		// Even if Oracle supports the OFFSET/FETCH clause, there are conditions where we still want to use the ROWNUM pagination
 		if ( supportsOffsetFetchClause() ) {
 			// When the query has no sort specifications and offset, we want to use the ROWNUM pagination as that is a special locking case
-			return !queryPart.hasSortSpecifications() && !hasOffset( queryPart );
+			return !queryPart.hasSortSpecifications() && !hasOffset( queryPart )
+					// Workaround an Oracle bug, segmentation fault for insert queries with a plain query group and fetch clause
+					|| queryPart instanceof QueryGroup && getClauseStack().isEmpty() && getStatement() instanceof InsertStatement;
 		}
 		return true;
 	}

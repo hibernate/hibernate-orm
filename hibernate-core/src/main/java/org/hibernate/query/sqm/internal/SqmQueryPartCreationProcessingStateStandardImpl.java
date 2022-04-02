@@ -8,8 +8,7 @@ package org.hibernate.query.sqm.internal;
 
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmCreationState;
-import org.hibernate.query.hql.spi.SqmQuerySpecCreationProcessingState;
-import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
+import org.hibernate.query.sqm.tree.SqmQuery;
 
 /**
  * Models the state related to parsing a sqm spec.  As a "linked list" to account for
@@ -18,15 +17,13 @@ import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
  * @author Steve Ebersole
  * @author Andrea Boriero
  */
-public class SqmQuerySpecCreationProcessingStateStandardImpl
-		extends SqmCreationProcessingStateImpl
-		implements SqmQuerySpecCreationProcessingState {
+public class SqmQueryPartCreationProcessingStateStandardImpl extends SqmCreationProcessingStateImpl {
 
 	private final SqmCreationProcessingState parentState;
 
-	public SqmQuerySpecCreationProcessingStateStandardImpl(
+	public SqmQueryPartCreationProcessingStateStandardImpl(
 			SqmCreationProcessingState parentState,
-			SqmSelectQuery<?> processingQuery,
+			SqmQuery<?> processingQuery,
 			SqmCreationState creationState) {
 		super( processingQuery, creationState );
 		this.parentState = parentState;
@@ -37,8 +34,4 @@ public class SqmQuerySpecCreationProcessingStateStandardImpl
 		return parentState;
 	}
 
-	@Override
-	public SqmSelectQuery<?> getProcessingQuery() {
-		return (SqmSelectQuery<?>) super.getProcessingQuery();
-	}
 }

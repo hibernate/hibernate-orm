@@ -7,10 +7,15 @@
 package org.hibernate.jpamodelgen.annotation;
 
 import java.beans.Introspector;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 
 import org.hibernate.jpamodelgen.model.MetaAttribute;
@@ -34,6 +39,57 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 		this.element = element;
 		this.parent = parent;
 		this.type = type;
+	}
+
+	public String getType(){
+		return element.asType().toString();
+	}
+
+	public String getTypedAttributeDeclarationString(MetaEntity entityForImports, String mtype, List<? extends TypeMirror> toImport) {
+		return "public static volatile " +
+				entityForImports.importType(getMetaType()) +
+				"<" +
+				entityForImports.importType(parent.getQualifiedName()) +
+				getNonGenericTypesFromTypeMirror(entityForImports, toImport) +
+				", " +
+				entityForImports.importType(mtype) +
+				"> " +
+				getPropertyName() +
+				";";
+	}
+
+	protected String getNonGenericTypesFromTypeMirror(MetaEntity entityForImports, List<? extends TypeMirror>list) {
+		return getFilteredTypesString(entityForImports, list, it -> it.getKind() != TypeKind.TYPEVAR, TypeMirror::toString);
+	}
+
+	protected String getNonGenericTypesFromTypeParameter(MetaEntity entityForImports, List<? extends TypeParameterElement> list) {
+		return getFilteredTypesString(entityForImports, list, it -> it.getKind() != ElementKind.TYPE_PARAMETER, it -> it.getSimpleName().toString());
+	}
+
+	protected <T> String getFilteredTypesString(MetaEntity entityForImports, List<T> types, Predicate<T> predicate, Function<T, String> mapper) {
+		List<T> filtered = types.stream()
+				.filter(predicate)
+				.collect(Collectors.toList());
+		if(filtered.isEmpty() || filtered.size() < types.size()){
+			return "";
+		}
+		return "<" + types.stream()
+				.map(mapper)
+				.map(entityForImports::importType)
+				.collect(Collectors.joining(",")) + ">";
+	}
+
+	public String getAttributeDeclarationString(List<? extends TypeParameterElement> toImport) {
+		return "public static volatile " +
+				parent.importType(getMetaType()) +
+				"<" +
+				parent.importType(parent.getQualifiedName()) +
+				getNonGenericTypesFromTypeParameter(parent, toImport) +
+				", " +
+				parent.importType(getTypeDeclaration()) +
+				"> " +
+				getPropertyName() +
+				";";
 	}
 
 	@Override

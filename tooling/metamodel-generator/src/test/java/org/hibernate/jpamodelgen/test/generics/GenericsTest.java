@@ -23,4 +23,25 @@ public class GenericsTest extends CompilationTest {
 		assertMetamodelClassGeneratedFor( Parent.class );
 		assertMetamodelClassGeneratedFor( Child.class );
 	}
+
+	@Test
+	@WithClasses({NoChildrenGeneric.class})
+	public void testGenericsWithoutChildren() {
+		assertMetamodelClassGeneratedFor(NoChildrenGeneric.class);
+	}
+
+	@Test
+	@WithClasses({GenericWithExtendsSuper.class, GenericWithExtendsChild.class})
+	public void testGenericsWithExtendDefinition() {
+		assertMetamodelClassGeneratedFor(GenericWithExtendsSuper.class);
+		assertMetamodelClassGeneratedFor(GenericWithExtendsChild.class);
+	}
+
+	@Test
+	@WithClasses({TwoChildrenInteger.class, TwoClildrenSuperclass.class, TwoChildrenString.class})
+	public void testParentTwoChildren() {
+		assertMetamodelClassGeneratedFor(TwoChildrenInteger.class);
+		assertMetamodelClassGeneratedFor(TwoClildrenSuperclass.class);
+		assertMetamodelClassGeneratedFor(TwoChildrenString.class);
+	}
 }

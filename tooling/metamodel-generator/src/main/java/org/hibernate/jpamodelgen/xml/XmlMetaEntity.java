@@ -7,6 +7,7 @@
 package org.hibernate.jpamodelgen.xml;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -162,6 +163,17 @@ public class XmlMetaEntity implements MetaEntity {
 		}
 
 		return members;
+	}
+
+	@Override
+	public void mergeInParentMembers(Collection<MetaAttribute> toAdd) {
+		for ( MetaAttribute attribute : toAdd ) {
+			// propagate types to be imported
+			importType( attribute.getMetaType() );
+			importType( attribute.getTypeDeclaration() );
+
+			members.add( attribute );
+		}
 	}
 
 	public String generateImports() {

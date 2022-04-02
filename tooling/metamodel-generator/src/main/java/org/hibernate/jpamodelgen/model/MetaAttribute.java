@@ -6,6 +6,10 @@
  */
 package org.hibernate.jpamodelgen.model;
 
+import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.type.TypeMirror;
+import java.util.List;
+
 /**
  * @author Hardy Ferentschik
  */
@@ -13,7 +17,13 @@ public interface MetaAttribute {
 
 	String getAttributeDeclarationString();
 
+	String getTypedAttributeDeclarationString(MetaEntity entityForImports, String mtype, List<? extends TypeMirror> toImport);
+
+	String getAttributeDeclarationString(List<? extends TypeParameterElement> typeParameters);
+
 	String getAttributeNameDeclarationString();
+
+	String getType();
 
 	String getMetaType();
 

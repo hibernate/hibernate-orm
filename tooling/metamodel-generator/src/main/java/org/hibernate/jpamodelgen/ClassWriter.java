@@ -6,26 +6,31 @@
  */
 package org.hibernate.jpamodelgen;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
+import org.hibernate.jpamodelgen.annotation.AnnotationMetaEntity;
+import org.hibernate.jpamodelgen.model.MetaAttribute;
+import org.hibernate.jpamodelgen.model.MetaEntity;
+import org.hibernate.jpamodelgen.util.Constants;
+import org.hibernate.jpamodelgen.util.TypeUtils;
+
 import javax.annotation.processing.FilerException;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
-
-import org.hibernate.jpamodelgen.model.MetaAttribute;
-import org.hibernate.jpamodelgen.model.MetaEntity;
-import org.hibernate.jpamodelgen.util.Constants;
-import org.hibernate.jpamodelgen.util.TypeUtils;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Helper class to write the actual meta model class using the  {@link javax.annotation.processing.Filer} API.
@@ -109,10 +114,33 @@ public final class ClassWriter {
 
 			pw.println();
 
+			List<? extends TypeMirror> castParent = entity.getTypeElement().getSuperclass() == null ?
+					new ArrayList<>() :
+					((DeclaredType) entity.getTypeElement().getSuperclass()).getTypeArguments();
 			List<MetaAttribute> members = entity.getMembers();
-			for ( MetaAttribute metaMember : members ) {
-				pw.println( "	" + metaMember.getAttributeDeclarationString() );
+			for (MetaAttribute metaMember : members) {
+					pw.println("	" + metaMember.getAttributeDeclarationString(entity.getTypeElement().getTypeParameters()));
 			}
+
+			//check for superclass members, which types have been changed by applying casts
+			MetaEntity parent = context.getMetaEntity(((DeclaredType) entity.getTypeElement().getSuperclass()).asElement().toString());
+			if (parent != null) {
+				List<? extends TypeParameterElement> parentTypes = parent.getTypeElement().getTypeParameters();
+				List<? extends TypeMirror> currentTypes = ((DeclaredType) entity.getTypeElement().getSuperclass()).getTypeArguments();
+				List<MetaAttribute> parentAttrs = new ArrayList<>();
+				for (MetaAttribute metaAttribute : parent.getMembers()) {
+					for (int i = 0; i < parentTypes.size(); ++i) {
+						TypeMirror typeMirror = currentTypes.get(i);
+						if (typeMirror.getKind() != TypeKind.TYPEVAR &&
+								parentTypes.get(i).asType().toString().equalsIgnoreCase(metaAttribute.getType())) {
+							pw.println("	" + metaAttribute.getTypedAttributeDeclarationString(entity, typeMirror.toString(), castParent));
+							parentAttrs.add(metaAttribute);
+						}
+					}
+				}
+				entity.mergeInParentMembers(parentAttrs);
+			}
+
 			pw.println();
 			for ( MetaAttribute metaMember : members ) {
 				pw.println( "	" + metaMember.getAttributeNameDeclarationString() );
@@ -129,12 +157,43 @@ public final class ClassWriter {
 		}
 	}
 
+	private static String getTypesFromTypeParameterElement(MetaEntity entity, List<? extends TypeParameterElement> list) {
+		if(list.isEmpty()){
+			return "";
+		}
+		StringBuilder sb = new StringBuilder();
+		for (TypeParameterElement typeEl : list) {
+			sb.append(typeEl.getSimpleName());
+			if (typeEl.getKind() == ElementKind.TYPE_PARAMETER) {
+				if (!typeEl.getBounds().isEmpty() && !"java.lang.Object".equalsIgnoreCase( typeEl.getBounds().get(0).toString() )  ) {
+					sb.append(" extends ")
+							.append(typeEl.getBounds().stream()
+									.map(typeMirror -> entity.importType(typeMirror.toString()))
+									.collect(Collectors.joining("&")));
+				}
+			}
+			sb.append(",");
+		}
+		return "<" + sb.substring(0,sb.toString().length()-1) + ">";
+	}
+
+	private static String getTypesFromTypeMirror(MetaEntity entity, List<? extends TypeMirror> list) {
+		if(list.isEmpty()){
+			return "";
+		}
+		return "<" + list.stream()
+				.map(typeMirror -> entity.importType(typeMirror.toString()))
+				.collect(Collectors.joining(",")) + ">";
+	}
+
 	private static void printClassDeclaration(MetaEntity entity, PrintWriter pw, Context context) {
 		pw.print( "public abstract class " + entity.getSimpleName() + META_MODEL_CLASS_NAME_SUFFIX );
+		pw.print(getTypesFromTypeParameterElement(entity, entity.getTypeElement().getTypeParameters()));
 
 		String superClassName = findMappedSuperClass( entity, context );
 		if ( superClassName != null ) {
 			pw.print( " extends " + superClassName + META_MODEL_CLASS_NAME_SUFFIX );
+			pw.print(getTypesFromTypeMirror(entity, ((DeclaredType) entity.getTypeElement().getSuperclass()).getTypeArguments()));
 		}
 
 		pw.println( " {" );

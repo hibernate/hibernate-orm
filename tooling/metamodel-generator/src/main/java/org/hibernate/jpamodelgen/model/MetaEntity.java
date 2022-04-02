@@ -6,6 +6,7 @@
  */
 package org.hibernate.jpamodelgen.model;
 
+import java.util.Collection;
 import java.util.List;
 import javax.lang.model.element.TypeElement;
 
@@ -30,4 +31,6 @@ public interface MetaEntity extends ImportContext {
 	TypeElement getTypeElement();
 
 	boolean isMetaComplete();
+
+	void mergeInParentMembers(Collection<MetaAttribute> toAdd);
 }

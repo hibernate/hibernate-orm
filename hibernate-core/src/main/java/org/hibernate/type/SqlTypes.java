@@ -488,6 +488,27 @@ public class SqlTypes {
 	 * character string type?
 	 * @param sqlType a JDBC type code from {@link Types}
 	 */
+	public static boolean isCharacterOrClobType(int sqlType) {
+		switch (sqlType) {
+			case Types.CHAR:
+			case Types.VARCHAR:
+			case Types.LONGVARCHAR:
+			case Types.NCHAR:
+			case Types.NVARCHAR:
+			case Types.LONGNVARCHAR:
+			case Types.CLOB:
+			case Types.NCLOB:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	/**
+	 * Does the given JDBC type code represent some sort of
+	 * character string type?
+	 * @param sqlType a JDBC type code from {@link Types}
+	 */
 	public static boolean isCharacterType(int sqlType) {
 		switch (sqlType) {
 			case Types.CHAR:

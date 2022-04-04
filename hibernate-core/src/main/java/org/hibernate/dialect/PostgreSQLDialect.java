@@ -441,7 +441,6 @@ public class PostgreSQLDialect extends Dialect {
 		}
 		functionFactory.cbrt();
 		functionFactory.trim2();
-		functionFactory.octetLength();
 		functionFactory.repeat();
 		functionFactory.md5();
 		functionFactory.initcap();
@@ -450,11 +449,12 @@ public class PostgreSQLDialect extends Dialect {
 		//also natively supports ANSI-style substring()
 		functionFactory.translate();
 		functionFactory.toCharNumberDateTimestamp();
-		functionFactory.concat_pipeOperator();
+		functionFactory.concat_pipeOperator( "convert_from(lo_get(?1),pg_client_encoding())" );
 		functionFactory.localtimeLocaltimestamp();
 		functionFactory.dateTrunc();
-		functionFactory.bitLength();
-		functionFactory.octetLength();
+		functionFactory.length_characterLength_pattern( "length(lo_get(?1),pg_client_encoding())" );
+		functionFactory.bitLength_pattern( "bit_length(?1)", "length(lo_get(?1))*8" );
+		functionFactory.octetLength_pattern( "octet_length(?1)", "length(lo_get(?1))" );
 		functionFactory.ascii();
 		functionFactory.char_chr();
 		functionFactory.position();

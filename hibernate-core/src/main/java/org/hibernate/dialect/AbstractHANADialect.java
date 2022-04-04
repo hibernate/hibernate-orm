@@ -366,6 +366,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		functionFactory.format_toVarchar();
 		functionFactory.currentUtcdatetimetimestamp();
 		functionFactory.everyAny_minMaxCase();
+		functionFactory.octetLength_pattern( "length(to_binary(?1))" );
 		functionFactory.bitLength_pattern( "length(to_binary(?1))*8" );
 
 		functionFactory.windowFunctions();

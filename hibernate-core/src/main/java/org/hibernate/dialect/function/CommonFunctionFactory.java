@@ -13,9 +13,6 @@ import org.hibernate.dialect.Dialect;
 
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
-import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
-import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.type.BasicType;
@@ -1114,6 +1111,10 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public void concat_pipeOperator(String clobPattern) {
+		functionRegistry.register( "concat", new ConcatPipeFunction( clobPattern, typeConfiguration ) );
+	}
+
 	/**
 	 * Oracle-style
 	 */
@@ -1350,9 +1351,17 @@ public class CommonFunctionFactory {
 		functionRegistry.namedDescriptorBuilder( "character_length" )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING)
+				.setParameterTypes(STRING_OR_CLOB)
 				.register();
 		functionRegistry.registerAlternateKey( "length", "character_length" );
+	}
+
+	public void length_characterLength_pattern(String clobPattern) {
+		functionRegistry.register(
+				"character_length",
+				new LengthFunction( "character_length", "character_length(?1)", clobPattern, typeConfiguration )
+		);
+		functionRegistry.registerAlternateKey( "character_length", "length" );
 	}
 
 	/**
@@ -1362,7 +1371,7 @@ public class CommonFunctionFactory {
 		functionRegistry.namedDescriptorBuilder( "len" )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING)
+				.setParameterTypes(STRING_OR_CLOB)
 				.register();
 		functionRegistry.registerAlternateKey( "character_length", "len" );
 		functionRegistry.registerAlternateKey( "length", "len" );
@@ -1375,9 +1384,17 @@ public class CommonFunctionFactory {
 		functionRegistry.namedDescriptorBuilder( "length" )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING)
+				.setParameterTypes(STRING_OR_CLOB)
 				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
+		functionRegistry.registerAlternateKey( "character_length", "length" );
+	}
+
+	public void characterLength_length(String clobPattern) {
+		functionRegistry.register(
+				"length",
+				new LengthFunction( "length", "length(?1)", clobPattern, typeConfiguration )
+		);
 		functionRegistry.registerAlternateKey( "character_length", "length" );
 	}
 
@@ -1385,15 +1402,30 @@ public class CommonFunctionFactory {
 		functionRegistry.namedDescriptorBuilder( "octet_length" )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING)
+				.setParameterTypes(STRING_OR_CLOB)
 				.register();
+	}
+
+	public void octetLength_pattern(String pattern) {
+		functionRegistry.patternDescriptorBuilder( "octet_length", pattern )
+				.setInvariantType(integerType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(STRING_OR_CLOB)
+				.register();
+	}
+
+	public void octetLength_pattern(String pattern, String clobPattern) {
+		functionRegistry.register(
+				"octet_length",
+				new LengthFunction( "octet_length", pattern, clobPattern, typeConfiguration )
+		);
 	}
 
 	public void bitLength() {
 		functionRegistry.namedDescriptorBuilder( "bit_length" )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING)
+				.setParameterTypes(STRING_OR_CLOB)
 				.register();
 	}
 
@@ -1401,8 +1433,15 @@ public class CommonFunctionFactory {
 		functionRegistry.patternDescriptorBuilder( "bit_length", pattern )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING)
+				.setParameterTypes(STRING_OR_CLOB)
 				.register();
+	}
+
+	public void bitLength_pattern(String pattern, String clobPattern) {
+		functionRegistry.register(
+				"bit_length",
+				new LengthFunction( "bit_length", pattern, clobPattern, typeConfiguration )
+		);
 	}
 
 	/**

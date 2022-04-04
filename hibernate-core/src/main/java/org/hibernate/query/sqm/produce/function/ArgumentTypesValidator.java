@@ -163,6 +163,11 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 					throwError(type, javaType, functionName, count);
 				}
 				break;
+			case STRING_OR_CLOB:
+				if ( !isCharacterOrClobType(code) ) {
+					throwError(type, javaType, functionName, count);
+				}
+				break;
 			case NUMERIC:
 				if ( !isNumericType(code) ) {
 					throwError(type, javaType, functionName, count);

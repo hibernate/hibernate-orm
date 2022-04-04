@@ -142,6 +142,7 @@ public final class StandardFunctionArgumentTypeResolvers {
 			FunctionParameterType type) {
 		switch ( type ) {
 			case STRING:
+			case STRING_OR_CLOB:
 				return typeConfiguration.getBasicTypeForJavaType( String.class );
 			case NUMERIC:
 				return typeConfiguration.getBasicTypeForJavaType( BigDecimal.class );

@@ -24,6 +24,7 @@ dependencies {
     implementation( project(':hibernate-core') ) { transitive = false }
     implementation( libraries.jakarta_jpa ) { transitive = false }
     implementation( libraries.jakarta_jta ) { transitive = false }
+    implementation libraries.byteBuddy
     implementation( libraries.maven_core ) { transitive = false }
     implementation( libraries.maven_artifact ) { transitive = false }
     implementation( libraries.maven_plugin ) { transitive = false }

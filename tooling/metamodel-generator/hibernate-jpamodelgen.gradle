@@ -19,7 +19,7 @@ ext {
 }
 
 dependencies {
-    implementation libraries.jaxb_api
+    implementation libraries.jakarta_jaxb_api
     implementation libraries.jakarta_jaxb_runtime
 
     xjc libraries.jakarta_jaxb_xjc

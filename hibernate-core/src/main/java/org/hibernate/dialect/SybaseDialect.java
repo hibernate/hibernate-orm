@@ -223,7 +223,8 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 		functionFactory.replace_strReplace();
 		functionFactory.everyAny_minMaxCase();
-		functionFactory.bitLength_pattern( "datalength(?1) * 8" );
+		functionFactory.octetLength_pattern( "datalength(?1)" );
+		functionFactory.bitLength_pattern( "datalength(?1)*8" );
 
 		queryEngine.getSqmFunctionRegistry().register( "timestampadd",
 				new IntegralTimestampaddFunction( this, queryEngine.getTypeConfiguration() ) );

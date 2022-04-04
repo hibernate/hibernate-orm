@@ -61,7 +61,6 @@ import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -163,7 +162,6 @@ public class OracleDialect extends Dialect {
 		functionFactory.rownumRowid();
 		functionFactory.sysdate();
 		functionFactory.systimestamp();
-		functionFactory.characterLength_length( SqlAstNodeRenderingMode.DEFAULT );
 		functionFactory.addMonths();
 		functionFactory.monthsBetween();
 		functionFactory.everyAny_minMaxCase();
@@ -176,7 +174,10 @@ public class OracleDialect extends Dialect {
 		functionFactory.covarPopSamp();
 		functionFactory.corr();
 		functionFactory.regrLinearRegressionAggregates();
-		functionFactory.bitLength_pattern( "vsize(?1)*8" );
+		functionFactory.characterLength_length( "dbms_lob.getlength(?1)" );
+		// Approximate octet and bit length for clobs since exact size determination would require a custom function
+		functionFactory.octetLength_pattern( "lengthb(?1)", "dbms_lob.getlength(?1)*2" );
+		functionFactory.bitLength_pattern( "lengthb(?1)*8", "dbms_lob.getlength(?1)*16" );
 
 		if ( getVersion().isBefore( 9 ) ) {
 			queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );

@@ -241,7 +241,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 		functionFactory.truncate_round();
 		functionFactory.everyAny_minMaxIif();
-		functionFactory.bitLength_pattern( "datalength(?1) * 8" );
+		functionFactory.octetLength_pattern( "datalength(?1)" );
+		functionFactory.bitLength_pattern( "datalength(?1)*8" );
 
 		if ( getVersion().isSameOrAfter( 10 ) ) {
 			functionFactory.locate_charindex();

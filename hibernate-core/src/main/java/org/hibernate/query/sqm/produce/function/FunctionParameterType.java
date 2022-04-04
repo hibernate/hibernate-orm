@@ -78,5 +78,9 @@ public enum FunctionParameterType {
 	/**
 	 * Any type with an order (numeric, string, and temporal types)
 	 */
-	COMPARABLE
+	COMPARABLE,
+	/**
+	 * @see org.hibernate.type.SqlTypes#isCharacterOrClobType(int)
+	 */
+	STRING_OR_CLOB
 }

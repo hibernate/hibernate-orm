@@ -1,7 +1,10 @@
-package org.hibernate.orm.test.jpa.compliance;
+package org.hibernate.orm.test.jpa.association.toone;
 
 import java.util.List;
 
+import org.hibernate.Hibernate;
+
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -18,7 +21,10 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Jpa(
 		annotatedClasses = {
@@ -27,6 +33,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 				CriteriaQueryTest.Order.class,
 		}
 )
+@TestForIssue( jiraKey = "HHH-15167")
 public class CriteriaQueryTest {
 
 	@Test
@@ -35,7 +42,7 @@ public class CriteriaQueryTest {
 				entityManager -> {
 					final Payment payment = new Payment( 1, "1111-2222-3333-4444" );
 
-					final Order order = new Order( 2 );
+					final Order order = new Order( 2, "ABC" );
 					order.addPayment( payment );
 
 					final LineItem lineItem = new LineItem( 1, "Line item # 1" );
@@ -54,12 +61,25 @@ public class CriteriaQueryTest {
 					final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 
 					final CriteriaQuery<Order> criteriaQuery = criteriaBuilder.createQuery( Order.class );
-					final Root<Order> order = criteriaQuery.from( Order.class );
+					final Root<Order> from = criteriaQuery.from( Order.class );
 
-					criteriaQuery.select( order );
+					criteriaQuery.select( from );
 
-					List<Order> result = entityManager.createQuery( criteriaQuery ).getResultList();
-					assertThat( result.size(), is( 1 ) );
+					List<Order> orders = entityManager.createQuery( criteriaQuery ).getResultList();
+					assertThat( orders.size(), is( 1 ) );
+					Order order = orders.get( 0 );
+					assertThat( order.getOrderCode(), is( "ABC" ) );
+
+					Payment payment = order.getPayment();
+					assertThat( payment, notNullValue() );
+					assertTrue( Hibernate.isInitialized( payment ) );
+					assertSame( payment.getOrder(), order );
+
+					LineItem sampleLineItem = order.getSampleLineItem();
+					assertThat( sampleLineItem, notNullValue() );
+					assertTrue( Hibernate.isInitialized( sampleLineItem ) );
+					assertSame( sampleLineItem.getOrder(), order );
+
 				}
 		);
 	}
@@ -125,8 +145,9 @@ public class CriteriaQueryTest {
 		public Order() {
 		}
 
-		public Order(Integer id) {
+		public Order(Integer id, String code) {
 			this.id = id;
+			this.orderCode = code;
 		}
 
 		@Id

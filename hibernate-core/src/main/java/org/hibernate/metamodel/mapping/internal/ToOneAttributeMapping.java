@@ -43,6 +43,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -947,12 +948,13 @@ public class ToOneAttributeMapping
 			hasBidirectionalFetchParent = true;
 		}
 		else if ( CollectionPart.Nature.fromNameExact( parentNavigablePath.getLocalName() ) != null ) {
-			referencedNavigablePath = parentNavigablePath.getParent().getParent();
+			referencedNavigablePath = getReferencedNavigablePath( creationState, parentNavigablePath.getParent() );
 			hasBidirectionalFetchParent = fetchParent instanceof Fetch
 				&& ( (Fetch) fetchParent ).getFetchParent() instanceof Fetch;
 		}
 		else {
-			referencedNavigablePath = parentNavigablePath.getParent();
+			referencedNavigablePath = getReferencedNavigablePath( creationState, parentNavigablePath );
+
 			hasBidirectionalFetchParent = fetchParent instanceof Fetch;
 		}
 		// The referencedNavigablePath can be null if this is a collection initialization
@@ -1031,6 +1033,75 @@ public class ToOneAttributeMapping
 					isSelectByUniqueKey( sideNature )
 			);
 		}
+	}
+
+	private NavigablePath getReferencedNavigablePath(
+			DomainResultCreationState creationState,
+			NavigablePath parentNavigablePath) {
+		NavigablePath referencedNavigablePath = parentNavigablePath.getParent();
+		MappingType partMappingType = creationState.resolveModelPart( referencedNavigablePath ).getPartMappingType();
+
+		/*
+				class LineItem {
+					@ManyToOne
+					Order order;
+				}
+
+				class Order {
+					@OneToOne(mappedBy = "order")
+					Payment payment;
+
+					@OneToOne
+					LineItem sampleLineItem;
+				}
+
+				class Payment {
+					@OneToOne
+					Order order;
+				}
+
+				When we have `Payment -> order -> LIneItem -> Order -> payment`
+				we need to navigate back till we find the root Payment and use ir as `referencedNavigablePath` (partMappingType == entityMappingType)
+
+				In case of polymorphism
+
+				class Level1 {
+					@OneToOne(mappedBy = "level1Parent")
+					DerivedLevel2 level2Child;
+				}
+
+				 class Level2 {
+				 	@OneToOne(mappedBy = "level2Parent")
+					Level3 level3Child;
+				 }
+
+				 class DerivedLevel2 extends Level2 {
+				 	@OneToOne
+					Level1 level1Parent;
+				 }
+
+				 class Level3 {
+				 	@OneToOne
+					Level2 level2Parent;
+				 }
+
+				We have Level1->leve2Child->level3Child->level2Parent
+
+				where leve2Child is of type DerivedLevel2 while level2Parent of type Level2
+
+				for this reason we need the check entityMappingType.isSubclassEntityName( partMappingType.getMappedJavaType().getJavaType().getTypeName() )
+				to be sure that the referencedNavigablePath corresponds to leve2Child
+
+		 */
+		while ( !( partMappingType instanceof EntityMappingType )
+				|| ( partMappingType != entityMappingType
+				&& !entityMappingType.getEntityPersister().isSubclassEntityName( partMappingType.getMappedJavaType().getJavaType().getTypeName() )
+				&& !( (EntityMappingType) partMappingType ).getEntityPersister().isSubclassEntityName( entityMappingType.getEntityName() ) ) ) {
+
+			referencedNavigablePath = referencedNavigablePath.getParent();
+			partMappingType = creationState.resolveModelPart( referencedNavigablePath ).getPartMappingType();
+		}
+		return referencedNavigablePath;
 	}
 
 	@Override

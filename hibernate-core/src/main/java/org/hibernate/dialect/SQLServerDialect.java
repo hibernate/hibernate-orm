@@ -171,6 +171,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 		if ( getVersion().isSameOrAfter( 10 ) ) {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
 		}
 	}
 

@@ -56,6 +56,7 @@ import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.GEOGRAPHY;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INET;
 import static org.hibernate.type.SqlTypes.JSON;
@@ -161,6 +162,7 @@ public class CockroachDialect extends Dialect {
 
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
 		ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
 
 		// Prefer jsonb if possible
@@ -193,8 +195,10 @@ public class CockroachDialect extends Dialect {
 					jdbcTypeCode = INET;
 					break;
 				case "geometry":
-				case "geography":
 					jdbcTypeCode = GEOMETRY;
+					break;
+				case "geography":
+					jdbcTypeCode = GEOGRAPHY;
 					break;
 			}
 		}

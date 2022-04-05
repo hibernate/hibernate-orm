@@ -88,6 +88,7 @@ import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.GEOGRAPHY;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INET;
 import static org.hibernate.type.SqlTypes.JSON;
@@ -204,6 +205,7 @@ public class PostgreSQLDialect extends Dialect {
 
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
 		ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
 
 		if ( getVersion().isSameOrAfter( 8, 2 ) ) {
@@ -257,8 +259,10 @@ public class PostgreSQLDialect extends Dialect {
 					jdbcTypeCode = INET;
 					break;
 				case "geometry":
-				case "geography":
 					jdbcTypeCode = GEOMETRY;
+					break;
+				case "geography":
+					jdbcTypeCode = GEOGRAPHY;
 					break;
 			}
 		}

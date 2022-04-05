@@ -457,6 +457,13 @@ public class SqlTypes {
 	 */
 	public static final int POINT = 3201;
 
+	/**
+	 * The constant in the Java programming language, sometimes referred to
+	 * as a type code, that identifies the generic SQL type
+	 * {@code GEOGRAPHY}.
+	 */
+	public static final int GEOGRAPHY = 3250;
+
 	private SqlTypes() {
 	}
 

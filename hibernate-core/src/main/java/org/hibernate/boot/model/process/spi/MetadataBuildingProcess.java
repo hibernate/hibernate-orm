@@ -51,6 +51,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.internal.NamedBasicTypeImpl;
@@ -396,8 +397,10 @@ public class MetadataBuildingProcess {
 		}
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.GEOMETRY, SqlTypes.VARBINARY );
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.POINT, SqlTypes.VARBINARY );
+		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.GEOGRAPHY, SqlTypes.GEOMETRY );
 
 		final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+		// Fallback to the biggest varchar DdlType when json is requested
 		ddlTypeRegistry.addDescriptorIfAbsent(
 				new DdlTypeImpl(
 						SqlTypes.JSON,
@@ -405,6 +408,17 @@ public class MetadataBuildingProcess {
 						dialect
 				)
 		);
+		// Fallback to the geometry DdlType when geography is requested
+		final DdlType geometryType = ddlTypeRegistry.getDescriptor( SqlTypes.GEOMETRY );
+		if ( geometryType != null ) {
+			ddlTypeRegistry.addDescriptorIfAbsent(
+					new DdlTypeImpl(
+							SqlTypes.GEOGRAPHY,
+							geometryType.getTypeName( null, null, null ),
+							dialect
+					)
+			);
+		}
 
 		// add explicit application registered types
 		typeConfiguration.addBasicTypeRegistrationContributions( options.getBasicTypeRegistrations() );

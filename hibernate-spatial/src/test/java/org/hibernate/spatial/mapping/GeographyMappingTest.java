@@ -7,9 +7,10 @@
 
 package org.hibernate.spatial.mapping;
 
-import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.spatial.GeolatteGeometryJavaType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
@@ -21,24 +22,27 @@ import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import org.geolatte.geom.C2D;
-import org.geolatte.geom.MultiLineString;
+import org.geolatte.geom.G2D;
+import org.geolatte.geom.Point;
+import org.geolatte.geom.codec.Wkt;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 
-@DomainModel(annotatedClasses = { GeometryMappingTest.MLEntity.class })
+@DomainModel(annotatedClasses = { GeographyMappingTest.PointEntity.class })
 @ServiceRegistry
 @SessionFactory
-public class GeometryMappingTest {
+public class GeographyMappingTest {
 
 	@Test
 	public void testSimpleEntity(SessionFactoryScope scope) {
 		final EntityPersister entityDescriptor = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
-				.getEntityDescriptor( MLEntity.class );
+				.getEntityDescriptor( PointEntity.class );
 		final JdbcTypeRegistry jdbcTypeRegistry = entityDescriptor.getFactory()
 				.getTypeConfiguration()
 				.getJdbcTypeRegistry();
@@ -47,26 +51,44 @@ public class GeometryMappingTest {
 				.getTypeConfiguration()
 				.getJavaTypeRegistry();
 
-		ModelPart part = entityDescriptor.findSubPart( "lineString" );
-		assertThat( part.getJavaType(), equalTo( GeolatteGeometryJavaType.MULTILINESTRING_INSTANCE ) );
+		BasicValuedModelPart part = (BasicValuedModelPart) entityDescriptor.findSubPart( "location" );
+		assertThat( part.getJdbcMapping().getJdbcType(), equalTo( jdbcTypeRegistry.getDescriptor( SqlTypes.GEOGRAPHY ) ) );
+		scope.inTransaction(
+				s -> {
+					s.persist(
+							new PointEntity(
+									1,
+									"test",
+									(Point<G2D>) Wkt.fromWkt(
+											"SRID=4326;POINT(48.2083736 16.3724441)"
+									)
+							)
+					);
+					s.flush();
+					s.clear();
 
+					PointEntity pointEntity = s.find( PointEntity.class, 1 );
+					assertThat( pointEntity.location, is( notNullValue() ) );
+				}
+		);
 	}
 
 	@Entity(name = "MLEntity")
-	public static class MLEntity {
+	public static class PointEntity {
 
 		@Id
 		private Integer id;
 		private String type;
-		private MultiLineString<C2D> lineString;
+		@JdbcTypeCode(SqlTypes.GEOGRAPHY)
+		private Point<G2D> location;
 
-		public MLEntity() {
+		public PointEntity() {
 		}
 
-		public MLEntity(Integer id, String type, MultiLineString<C2D> lineString) {
+		public PointEntity(Integer id, String type, Point<G2D> location) {
 			this.id = id;
 			this.type = type;
-			this.lineString = lineString;
+			this.location = location;
 		}
 
 		public Integer getId() {
@@ -85,12 +107,12 @@ public class GeometryMappingTest {
 			this.type = type;
 		}
 
-		public MultiLineString<C2D> getLineString() {
-			return lineString;
+		public Point<G2D> getLineString() {
+			return location;
 		}
 
-		public void setLineString(MultiLineString<C2D> lineString) {
-			this.lineString = lineString;
+		public void setLineString(Point<G2D> location) {
+			this.location = location;
 		}
 	}
 }

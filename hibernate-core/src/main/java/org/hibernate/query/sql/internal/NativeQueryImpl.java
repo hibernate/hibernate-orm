@@ -1515,16 +1515,15 @@ public class NativeQueryImpl<R>
 			final StringBuilder buffer = new StringBuilder( "ParameterInterpretationImpl (" )
 					.append( sqlString )
 					.append( ") : {" );
-
-			for ( int i = 0, size = parameterList.size(); i < size; i++ ) {
-				buffer.append( System.lineSeparator() ).append( "    " );
-
-				if ( i != size - 1 ) {
-					buffer.append( "," );
+			final String lineSeparator = System.lineSeparator();
+			if ( CollectionHelper.isNotEmpty( parameterList ) ) {
+				for ( int i = 0, size = parameterList.size(); i < size; i++ ) {
+					buffer.append( lineSeparator ).append( "    ," );
 				}
+				buffer.setLength( buffer.length() - 1 );
 			}
 
-			return buffer.append( System.lineSeparator() ).append( "}" ).toString();
+			return buffer.append( lineSeparator ).append( "}" ).toString();
 		}
 	}
 }

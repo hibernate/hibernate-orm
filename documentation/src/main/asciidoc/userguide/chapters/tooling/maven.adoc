@@ -1,0 +1,16 @@
+[[tooling-maven]]
+=== Maven Plugin
+
+Hibernate provides a https://maven.apache.org/[Maven] plugin capable of providing
+build-time enhancement of the domain model as they are compiled as part of a Maven
+build.  See the section on the <<tooling-gradle>> for details
+on the configuration settings.  By default, all enhancements are disabled.
+
+
+.Apply the Maven plugin
+====
+[source,xml]
+----
+include::extras/maven-example.pom[]
+----
+====

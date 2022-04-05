@@ -300,6 +300,7 @@ public class JpaMetamodelGenerationTask extends DefaultTask {
 	public static void apply(HibernateOrmSpec ormDsl, SourceSet mainSourceSet, Project project) {
 		final String mainCompileTaskName = mainSourceSet.getCompileJavaTaskName();
 		final JavaCompile mainCompileTask = (JavaCompile) project.getTasks().getByName( mainCompileTaskName );
+		final Task compileResourcesTask = project.getTasks().getByName( "processResources" );
 
 		final JpaMetamodelGenerationTask genTask = project.getTasks().create(
 				DSL_NAME,
@@ -313,8 +314,6 @@ public class JpaMetamodelGenerationTask extends DefaultTask {
 		genTask.setDescription( "Generates the JPA 'static metamodel'" );
 
 		genTask.dependsOn( mainCompileTask );
-
-		final Task compileResourcesTask = project.getTasks().getByName( "processResources" );
 		genTask.dependsOn( compileResourcesTask );
 
 		final JavaCompile compileJpaMetamodelTask = project.getTasks().create( COMPILE_DSL_NAME, JavaCompile.class );
@@ -323,6 +322,7 @@ public class JpaMetamodelGenerationTask extends DefaultTask {
 		compileJpaMetamodelTask.setSourceCompatibility( mainCompileTask.getSourceCompatibility() );
 		compileJpaMetamodelTask.setTargetCompatibility( mainCompileTask.getTargetCompatibility() );
 		genTask.finalizedBy( compileJpaMetamodelTask );
+		mainCompileTask.finalizedBy( compileJpaMetamodelTask );
 		compileJpaMetamodelTask.dependsOn( genTask );
 		compileJpaMetamodelTask.source( project.files( ormDsl.getJpaMetamodelSpec().getGenerationOutputDirectory() ) );
 		compileJpaMetamodelTask.getDestinationDirectory().set( ormDsl.getJpaMetamodelSpec().getCompileOutputDirectory() );

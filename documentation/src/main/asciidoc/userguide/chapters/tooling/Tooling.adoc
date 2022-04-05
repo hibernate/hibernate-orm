@@ -1,90 +1,25 @@
 [[tooling]]
 == Build Tool Integration
+:rootProjectDir: ../../../../../../..
+:documentationProjectDir: {rootProjectDir}/documentation
+:documentationModel: {documentationProjectDir}/src/main/java/org/hibernate/userguide/model
 
-Hibernate provides a few build-time services available as plugins for
-https://gradle.org[Gradle], https://maven.org[Maven] and https://ant.org[Ant].
+Hibernate provides build-time services available as plugins for
 
-These services include -
+* <<tooling-gradle,Gradle>>
+* <<tooling-maven,Maven>>
+* <<tooling-ant,Ant>>
 
-* Bytecode enhancement
-* Schema management
-* Static Metamodel generation
+These services include
 
+* <<tooling-enhancement,Bytecode enhancement>>
+* <<tooling-modelgen,Static Metamodel generation>>
+* <<tooling-schema,Schema management>>
 
-[[tooling-enhancement]]
-=== Bytecode Enhancement
+include::enhancement.adoc[]
+include::modelgen.adoc[]
+include::schema.adoc[]
 
-Hibernate performs bytecode enhancement through its `org.hibernate.bytecode.enhance.spi.Enhancer`
-contract.  These build time tools provide a way to incorporate configuration and execution of
-the enhancer into a build.
-
-See <<BytecodeEnhancement>> for discussion of the capabilities of an enhanced model.
-
-[NOTE]
-====
-At the moment, only annotated classes are supported for enhancement.
-====
-
-
-[[tooling-enhancement-runtime]]
-==== Runtime Bytecode Enhancement
-
-Hibernate can also perform run-time bytecode enhancement when used in Jakarta EE compliant
-containers through `jakarta.persistence.spi.ClassTransformer`.  See the documentation of
-your container for any additional details.  Run-time enhancement is controlled through
-3 true/false settings (all of which default to false):
-
-`hibernate.enhancer.enableDirtyTracking`:: Whether to enhance the model for dirty-tracking
-`hibernate.enhancer.enableLazyInitialization`:: Whether to enhance the model for lazy loading at the attribute level.  This allows
-even basic types to be fetched lazily.  It also allows definition of fetch groups (`LazyGroup`).
-`hibernate.enhancer.enableAssociationManagement`:: Whether to automatically synchronize a bidirectional association when only one side is changed.
-
-
-
-[[tooling-schema]]
-=== Schema Management
-
-
-[[tooling-modelgen]]
-=== Static Metamodel Generation
-
-
-
-
-
-[[tooling-gradle]]
-=== Gradle Plugin
-
-For integrating with Gradle, Hibernate provides the
-https://plugins.gradle.org/plugin/org.hibernate.orm[org.hibernate.orm] plugin which
-supports bytecode enhancement and static metamodel generation but not schema tooling.
-
-[source,gradle]
-----
-include::extras/gradle-example.gradle[]
-----
-
-
-[[tooling-maven]]
-=== Maven Plugin
-
-Hibernate provides a Maven plugin capable of providing build-time enhancement of the domain
-model as they are compiled as part of a Maven build.  See the section on the
-<<BytecodeEnhancement-enhancement-gradle>> for details on the configuration settings. Again, the default for those 3 is `false`.
-
-The Maven plugin supports one additional configuration settings: failOnError, which controls what happens in case of error.
-The default behavior is to fail the build, but it can be set so that only a warning is issued.
-
-.Apply the Maven plugin
-====
-[source,xml]
-----
-include::extras/maven-example.pom[]
-----
-====
-
-
-[[tooling-ant]]
-=== Ant Plugin
-
-todo - https://hibernate.atlassian.net/browse/HHH-15171
+include::gradle.adoc[]
+include::maven.adoc[]
+include::ant.adoc[]

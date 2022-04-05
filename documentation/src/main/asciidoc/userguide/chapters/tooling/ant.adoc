@@ -1,0 +1,36 @@
+[[tooling-ant]]
+=== Ant Plugin
+
+Hibernate provides https://ant.apache.org/[Ant] support ...
+
+
+[[tooling-ant-modelgen]]
+==== Static Metamodel Generation in Ant
+
+As mentioned in <<tooling-modelgen>>, the generator is implemented as an
+annotation processor and can be used anywhere javac is used - such as
+Ant's https://ant.apache.org/manual/Tasks/javac.html[javac] task.
+
+[[javac-task-example]]
+.Javac task configuration
+====
+[source, XML]
+----
+<javac srcdir="${src.dir}"
+        destdir="${target.dir}"
+        failonerror="false"
+        fork="true"
+        classpath="${classpath}">
+    <compilerarg value="-processorpath" />
+    <compilerarg value="/path/to/metamodel-generator.jar"/>
+    <compilerarg value="-proc:only"/>
+</javac>
+----
+
+====
+
+
+[[tooling-ant-schema]]
+==== Schema Management
+
+Coming soon

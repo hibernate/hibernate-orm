@@ -62,7 +62,8 @@ It was done here only for completeness of an example.
 
 The `Person_.name` reference is an example of the static form of Jakarta Persistence Metamodel reference.
 We will use that form exclusively in this chapter.
-See the documentation for the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/topical/html_single/metamodelgen/MetamodelGenerator.html[Hibernate Jakarta Persistence Metamodel Generator] for additional details on the Jakarta Persistence static Metamodel.
+
+See <<tooling>> for details on generating this static metamodel.
 ====
 
 [[criteria-typedquery-expression]]

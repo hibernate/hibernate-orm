@@ -77,6 +77,10 @@ public class JpaMetamodelGenerationSpec {
 		return applyGeneratedAnnotation;
 	}
 
+	public void applyGeneratedAnnotation(boolean apply) {
+		applyGeneratedAnnotation.set( apply );
+	}
+
 	public SetProperty<String> getSuppressions() {
 		return suppressions;
 	}

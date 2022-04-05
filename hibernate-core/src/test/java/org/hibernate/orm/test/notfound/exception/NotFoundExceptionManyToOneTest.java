@@ -15,24 +15,20 @@ import org.hibernate.ObjectNotFoundException;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.jdbc.SQLStatementInterceptor;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-import org.assertj.core.api.Assertions;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 /**
  * Tests for `@ManyToOne @NotFound(EXCEPTION)`
@@ -44,42 +40,52 @@ import static org.junit.jupiter.api.Assertions.fail;
  *
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = { NotFoundExceptionManyToOneTest.Coin.class, NotFoundExceptionManyToOneTest.Currency.class } )
-@SessionFactory( useCollectingStatementInspector = true )
-public class NotFoundExceptionManyToOneTest {
+public class NotFoundExceptionManyToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 
-	@Test
-	@JiraKey( "HHH-15060" )
-	public void testProxy(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			// the non-existent Child
-			final Currency proxy = session.byId( Currency.class ).getReference( 1 );
-			try {
-				Hibernate.initialize( proxy );
-				Assertions.fail( "Expecting ObjectNotFoundException" );
-			}
-			catch (ObjectNotFoundException expected) {
-				assertThat( expected.getEntityName() ).endsWith( "Currency" );
-				assertThat( expected.getIdentifier() ).isEqualTo( 1 );
-			}
-		} );
+	private SQLStatementInterceptor statementInspector;
+
+
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[]{Coin.class, Currency.class};
+	}
+
+	@Override
+	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
+		statementInspector = new SQLStatementInterceptor( sfb );
 	}
 
 	@Test
-	@JiraKey( "HHH-15060" )
-	public void testGet(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+	@TestForIssue(jiraKey = "HHH-15060")
+	public void testProxy() {
+		inTransaction( (session) -> {
+			// the non-existent Child
+			//  - this is the one valid deviation from treating the broken fk as null
+			try {
+				final Currency proxy = session.byId( Currency.class ).getReference( 1 );
+				Hibernate.initialize( proxy );
+				fail( "Expecting ObjectNotFoundException" );
+			}
+			catch (ObjectNotFoundException expected) {
+				assertThat( expected.getEntityName(), endsWith( "Currency"  ) );
+				assertThat( expected.getIdentifier(), equalTo( 1 )  );
+			}
+		} );
+	}
+	@Test
+	@TestForIssue(jiraKey = "HHH-15060")
+	public void testGet() {
 		statementInspector.clear();
 
-		scope.inTransaction( (session) -> {
+		inTransaction( (session) -> {
 			try {
 				// should fail here loading the Coin due to missing currency (see NOTE#1)
 				final Coin coin = session.get( Coin.class, 1 );
 				fail( "Expecting FetchNotFoundException for broken fk" );
 			}
 			catch (FetchNotFoundException expected) {
-				assertThat( expected.getEntityName() ).isEqualTo( Currency.class.getName() );
-				assertThat( expected.getIdentifier() ).isEqualTo( 1 );
+				assertThat( expected.getEntityName(), equalTo(Currency.class.getName() ));
+				assertThat( expected.getIdentifier(), equalTo( 1 ));
 
 				// atm, 5.x generates 2 selects here; which wouldn't be bad, except that
 				// the first one contains a join
@@ -89,22 +95,21 @@ public class NotFoundExceptionManyToOneTest {
 //				assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
 //				assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
 				// what actually happens
-				assertThat( statementInspector.getSqlQueries() ).hasSize( 2 );
-				assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Coin " );
-				assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
-				assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Currency " );
-				assertThat( statementInspector.getSqlQueries().get( 1 ) ).doesNotContain( " Coin " );
+				assertThat( statementInspector.getSqlQueries().size(), is( 2 ));
+				assertThat( statementInspector.getSqlQueries().get( 0 ), containsString( " Coin " ));
+				assertThat( statementInspector.getSqlQueries().get( 0 ), containsString( " join " ));
+				assertThat( statementInspector.getSqlQueries().get( 0 ), containsString( " Currency " ));
+				assertThat( statementInspector.getSqlQueries().get( 1 ), not(containsString(" coin ")));
 			}
 		} );
 	}
 
 	@Test
-	@JiraKey( "HHH-15060" )
-	public void testQueryImplicitPathDereferencePredicate(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+	@TestForIssue(jiraKey = "HHH-15060")
+	public void testQueryImplicitPathDereferencePredicate() {
 		statementInspector.clear();
 
-		scope.inTransaction( (session) -> {
+		inTransaction( (session) -> {
 			try {
 				final String hql = "select c from Coin c where c.currency.id = 1";
 				session.createQuery( hql, Coin.class ).getResultList();
@@ -112,83 +117,45 @@ public class NotFoundExceptionManyToOneTest {
 				fail( "Expecting FetchNotFoundException for broken fk" );
 			}
 			catch (FetchNotFoundException expected) {
-				assertThat( expected.getEntityName() ).isEqualTo( Currency.class.getName() );
-				assertThat( expected.getIdentifier() ).isEqualTo( 1 );
+				assertThat( expected.getEntityName(), equalTo( Currency.class.getName() ));
+				assertThat( expected.getIdentifier(), equalTo( 1 ));
 
 				// join may be better here.  but for now, 5.x generates 2 selects here
 				// which is not wrong
 //				assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
 //				assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
 //				assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
-				assertThat( statementInspector.getSqlQueries() ).hasSize( 2 );
-				assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " Currency " );
-				assertThat( statementInspector.getSqlQueries().get( 1 ) ).doesNotContain( " Coin " );
+				assertThat( statementInspector.getSqlQueries().size(), is(2));
+				assertThat( statementInspector.getSqlQueries().get( 0 ), not(containsString(" Currency " )));
+				assertThat( statementInspector.getSqlQueries().get( 1 ), not(containsString(" coin " )));
 			}
 		} );
 	}
 
 	@Test
-	@JiraKey( "HHH-15060" )
-	public void testQueryOwnerSelection(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+	@TestForIssue(jiraKey = "HHH-15060")
+	public void testQueryOwnerSelection() {
 		statementInspector.clear();
 
-		scope.inTransaction( (session) -> {
+		inTransaction( (session) -> {
 			final String hql = "select c from Coin c where c.id = 1";
 			try {
 				session.createQuery( hql, Coin.class ).getResultList();
 				fail( "Expecting ObjectNotFoundException for broken fk" );
 			}
 			catch (FetchNotFoundException expected) {
-				assertThat( expected.getEntityName() ).isEqualTo( Currency.class.getName() );
-				assertThat( expected.getIdentifier() ).isEqualTo( 1 );
+				assertThat( expected.getEntityName(), equalTo( Currency.class.getName() ));
+				assertThat( expected.getIdentifier(),equalTo( 1 ));
 
 				// join may be better here.  but for now, 5.x generates 2 selects here
 				// which is not wrong
 //				assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
 //				assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
 //				assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " inner " );
-				assertThat( statementInspector.getSqlQueries() ).hasSize( 2 );
-				assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " Currency " );
-				assertThat( statementInspector.getSqlQueries().get( 1 ) ).doesNotContain( " Coin " );
+				assertThat( statementInspector.getSqlQueries().size(), is(2));
+				assertThat( statementInspector.getSqlQueries().get( 0 ), not(containsString(" Currency " )));
+				assertThat( statementInspector.getSqlQueries().get( 1 ), not(containsString(" coin " )));
 			}
-		} );
-	}
-
-	@Test
-	@JiraKey( "HHH-15060" )
-	public void testQueryAssociationSelection(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			final String hql = "select c.currency from Coin c where c.id = 1";
-			final List<Currency> currencies = session.createQuery( hql, Currency.class ).getResultList();
-			assertThat( currencies ).isEmpty();
-		} );
-	}
-
-	@BeforeEach
-	public void prepareTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			Currency euro = new Currency( 1, "Euro" );
-			Coin fiveC = new Coin( 1, "Five cents", euro );
-			session.persist( euro );
-			session.persist( fiveC );
-
-			Currency usd = new Currency( 2, "USD" );
-			Coin penny = new Coin( 2, "Penny", usd );
-			session.persist( usd );
-			session.persist( penny );
-		} );
-
-		scope.inTransaction( (session) -> {
-			session.createQuery( "delete Currency where id = 1" ).executeUpdate();
-		} );
-	}
-
-	@AfterEach
-	public void cleanupTest(SessionFactoryScope scope) throws Exception {
-		scope.inTransaction( (session) -> {
-			session.createQuery( "delete Coin" ).executeUpdate();
-			session.createQuery( "delete Currency" ).executeUpdate();
 		} );
 	}
 

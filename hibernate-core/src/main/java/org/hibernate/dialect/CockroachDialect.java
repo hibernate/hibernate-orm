@@ -310,6 +310,11 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsDistinctFromPredicate() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsIfExistsBeforeTableName() {
 		return true;
 	}
@@ -425,6 +430,11 @@ public class CockroachDialect extends Dialect {
 	@Override
 	public int getMaxIdentifierLength() {
 		return 63;
+	}
+
+	@Override
+	public boolean supportsStandardArrays() {
+		return true;
 	}
 
 	@Override

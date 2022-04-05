@@ -22,6 +22,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
@@ -79,6 +80,12 @@ public abstract class PostgreSQLPGObjectJdbcType implements JdbcType {
 
 	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) {
 		return javaType.unwrap( value, String.class, options );
+	}
+
+	@Override
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
+		// No literal support for now
+		return null;
 	}
 
 	@Override

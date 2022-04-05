@@ -91,6 +91,13 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 		}
 
 		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return options.useStreamForLobBinding() ?
+					STREAM_BINDING.getPreferredJavaTypeClass( options ) :
+					CLOB_BINDING.getPreferredJavaTypeClass( options );
+		}
+
+		@Override
 		public <X> BasicBinder<X> getClobBinder(final JavaType<X> javaType) {
 			return new BasicBinder<>( javaType, this ) {
 				@Override
@@ -122,6 +129,11 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 		@Override
 		public String toString() {
 			return "ClobTypeDescriptor(STRING_BINDING)";
+		}
+
+		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return String.class;
 		}
 
 		@Override
@@ -171,6 +183,11 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 		}
 
 		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return Clob.class;
+		}
+
+		@Override
 		public <X> BasicBinder<X> getClobBinder(final JavaType<X> javaType) {
 			return new BasicBinder<>( javaType, this ) {
 				@Override
@@ -192,6 +209,11 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 		@Override
 		public String toString() {
 			return "ClobTypeDescriptor(STREAM_BINDING)";
+		}
+
+		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return CharacterStream.class;
 		}
 
 		@Override
@@ -226,6 +248,11 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 		@Override
 		public String toString() {
 			return "ClobTypeDescriptor(STREAM_BINDING_EXTRACTING)";
+		}
+
+		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return CharacterStream.class;
 		}
 
 		@Override

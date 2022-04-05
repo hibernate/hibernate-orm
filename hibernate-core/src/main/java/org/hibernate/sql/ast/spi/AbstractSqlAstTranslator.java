@@ -172,6 +172,7 @@ import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcUpdate;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesMappingProducerStandard;
+import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
@@ -3582,6 +3583,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void renderCasted(Expression expression) {
+		if ( expression instanceof SqmParameterInterpretation ) {
+			expression = ( (SqmParameterInterpretation) expression ).getResolvedExpression();
+		}
 		final List<SqlAstNode> arguments = new ArrayList<>( 2 );
 		arguments.add( expression );
 		if ( expression instanceof SqlTypedMappingJdbcParameter ) {
@@ -4296,6 +4300,23 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else {
 			final SqlExpressible expressionType = (SqlExpressible) castTarget.getExpressionType();
+			if ( expressionType instanceof BasicPluralType<?, ?> ) {
+				final BasicPluralType<?, ?> containerType = (BasicPluralType<?, ?>) expressionType;
+				final BasicType<?> elementType = containerType.getElementType();
+				final String elementTypeName = sessionFactory.getTypeConfiguration().getDdlTypeRegistry()
+						.getDescriptor( elementType.getJdbcType().getDefaultSqlTypeCode() )
+						.getCastTypeName(
+								elementType,
+								castTarget.getLength(),
+								castTarget.getPrecision(),
+								castTarget.getScale()
+						);
+				final String arrayTypeName = dialect.getArrayTypeName( elementTypeName );
+				if ( arrayTypeName != null ) {
+					appendSql( arrayTypeName );
+					return;
+				}
+			}
 			final DdlTypeRegistry ddlTypeRegistry = getSessionFactory().getTypeConfiguration().getDdlTypeRegistry();
 			DdlType ddlType = ddlTypeRegistry
 					.getDescriptor( expressionType.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() );
@@ -5483,7 +5504,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * @return True if this SQL dialect is known to support some kind of distinct from predicate; false otherwise
 	 */
 	protected boolean supportsDistinctFromPredicate() {
-		return true;
+		return dialect.supportsDistinctFromPredicate();
 	}
 
 	/**

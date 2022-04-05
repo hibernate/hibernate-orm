@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FetchClauseType;
@@ -40,6 +41,7 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.type.SqlTypes;
 
 /**
  * A SQL AST translator for Oracle.
@@ -352,7 +354,56 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
-		renderComparisonEmulateDecode( lhs, operator, rhs );
+		if ( lhs.getExpressionType() == null ) {
+			renderComparisonEmulateDecode( lhs, operator, rhs );
+			return;
+		}
+		final JdbcMapping lhsMapping = lhs.getExpressionType().getJdbcMappings().get( 0 );
+		switch ( lhsMapping.getJdbcType().getJdbcTypeCode() ) {
+			case SqlTypes.SQLXML:
+				// In Oracle, XMLTYPE is not "comparable", so we have to use the xmldiff function for this purpose
+				switch ( operator ) {
+					case EQUAL:
+					case NOT_DISTINCT_FROM:
+						appendSql( "0=" );
+						break;
+					case NOT_EQUAL:
+					case DISTINCT_FROM:
+						appendSql( "1=" );
+						break;
+					default:
+						renderComparisonEmulateDecode( lhs, operator, rhs );
+						return;
+				}
+				appendSql( "existsnode(xmldiff(" );
+				lhs.accept( this );
+				appendSql( ',' );
+				rhs.accept( this );
+				appendSql( "),'/*[local-name()=''xdiff'']/*')" );
+				break;
+			case SqlTypes.BLOB:
+				// In Oracle, BLOB types are not "comparable", so we have to use the dbms_lob.compare function for this purpose
+				switch ( operator ) {
+					case EQUAL:
+						appendSql( "0=" );
+						break;
+					case NOT_EQUAL:
+						appendSql( "-1=" );
+						break;
+					default:
+						renderComparisonEmulateDecode( lhs, operator, rhs );
+						return;
+				}
+				appendSql( "dbms_lob.compare(" );
+				lhs.accept( this );
+				appendSql( ',' );
+				rhs.accept( this );
+				appendSql( ')' );
+				break;
+			default:
+				renderComparisonEmulateDecode( lhs, operator, rhs );
+				break;
+		}
 	}
 
 	@Override

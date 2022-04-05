@@ -52,6 +52,10 @@ public class UnknownBasicJavaType<T> extends AbstractJavaType<T> {
 
 	@Override
 	public <X> X unwrap(T value, Class<X> type, WrapperOptions options) {
+		if ( type.isAssignableFrom( getJavaTypeClass() ) ) {
+			//noinspection unchecked
+			return (X) value;
+		}
 		throw new UnsupportedOperationException(
 				"Unwrap strategy not known for this Java type : " + getJavaType().getTypeName()
 		);
@@ -59,6 +63,10 @@ public class UnknownBasicJavaType<T> extends AbstractJavaType<T> {
 
 	@Override
 	public <X> T wrap(X value, WrapperOptions options) {
+		if ( getJavaTypeClass().isInstance( value ) ) {
+			//noinspection unchecked
+			return (T) value;
+		}
 		throw new UnsupportedOperationException(
 				"Wrap strategy not known for this Java type : " + getJavaType().getTypeName()
 		);

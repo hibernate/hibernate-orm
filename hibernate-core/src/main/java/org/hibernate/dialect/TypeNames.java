@@ -102,12 +102,24 @@ public final class TypeNames {
 	 *         the default type name otherwise
 	 */
 	public String get(int typeCode, Long size, Integer precision, Integer scale) {
+		final Long compareValue;
 		if ( size != null ) {
+			compareValue = size;
+		}
+		else if ( precision != null ) {
+			// In case size is null, but a precision is available, use that to search a type for that capacity
+			compareValue = precision.longValue();
+		}
+		else {
+			compareValue = null;
+		}
+		if ( compareValue != null ) {
 			final Map<Long, String> map = weighted.get( typeCode );
 			if ( map != null && map.size() > 0 ) {
+				final long value = compareValue;
 				// iterate entries ordered by capacity to find first fit
 				for ( Map.Entry<Long, String> entry : map.entrySet() ) {
-					if ( size <= entry.getKey() ) {
+					if ( value <= entry.getKey() ) {
 						return replace( entry.getValue(), size, precision, scale );
 					}
 				}

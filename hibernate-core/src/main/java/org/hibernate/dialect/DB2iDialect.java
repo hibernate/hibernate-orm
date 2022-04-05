@@ -73,6 +73,11 @@ public class DB2iDialect extends DB2Dialect {
 				: super.createUniqueDelegate();
 	}
 
+	@Override
+	public boolean supportsDistinctFromPredicate() {
+		return true;
+	}
+
 	/**
 	 * No support for sequences.
 	 */

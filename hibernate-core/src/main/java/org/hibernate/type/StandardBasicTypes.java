@@ -1252,9 +1252,8 @@ public final class StandardBasicTypes {
 		basicTypeRegistry.primed();
 	}
 
-	@SuppressWarnings("rawtypes")
 	private static void handle(
-			BasicType type,
+			BasicType<?> type,
 			String legacyTypeClassName,
 			BasicTypeRegistry basicTypeRegistry,
 			String... registrationKeys) {

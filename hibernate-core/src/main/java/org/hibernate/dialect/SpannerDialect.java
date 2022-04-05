@@ -156,6 +156,16 @@ public class SpannerDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsStandardArrays() {
+		return true;
+	}
+
+	@Override
+	public String getArrayTypeName(String elementTypeName) {
+		return "ARRAY<" + elementTypeName + ">";
+	}
+
+	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();

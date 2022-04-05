@@ -48,6 +48,10 @@ public abstract class AbstractDescriptorTest<T> extends BaseUnitTestCase {
 		testData = getTestData();
 	}
 
+	protected JavaType<T> typeDescriptor() {
+		return typeDescriptor;
+	}
+
 	protected abstract Data<T> getTestData();
 
 	protected abstract boolean shouldBeMutable();

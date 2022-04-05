@@ -478,6 +478,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				getColumn(),
 				ownerName,
 				propertyName,
+				getMetadata().getDatabase().getDialect(),
 				typeConfiguration
 		);
 
@@ -692,6 +693,11 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	@Override
 	public int getPreferredSqlTypeCodeForInstant() {
 		return getBuildingContext().getPreferredSqlTypeCodeForInstant();
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForArray() {
+		return getBuildingContext().getPreferredSqlTypeCodeForArray();
 	}
 
 	@Override

@@ -9,6 +9,7 @@ package org.hibernate.type.descriptor.sql;
 import java.io.Serializable;
 import java.sql.Types;
 
+import org.hibernate.Incubating;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SqlExpressible;
@@ -30,7 +31,18 @@ public interface DdlType extends Serializable {
 	 */
 	int getSqlTypeCode();
 
+	/**
+	 * Returns the default type name without precision/length and scale parameters.
+	 */
 	String getRawTypeName();
+
+	/**
+	 * Returns all type names without precision/length and scale parameters.
+	 */
+	@Incubating
+	default String[] getRawTypeNames() {
+		return new String[] { getRawTypeName() };
+	}
 
 	String getTypeNamePattern();
 

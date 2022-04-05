@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
+import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.TimeZoneStorageStrategy;
@@ -450,6 +451,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public int getPreferredSqlTypeCodeForInstant() {
 		return delegate.getPreferredSqlTypeCodeForInstant();
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForArray() {
+		return delegate.getPreferredSqlTypeCodeForArray();
 	}
 
 	@Override

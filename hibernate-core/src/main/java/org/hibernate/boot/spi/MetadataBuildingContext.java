@@ -72,6 +72,11 @@ public interface MetadataBuildingContext {
 		return ConfigurationHelper.getPreferredSqlTypeCodeForInstant( getBootstrapContext().getServiceRegistry() );
 	}
 
+	@Incubating
+	default int getPreferredSqlTypeCodeForArray() {
+		return ConfigurationHelper.getPreferredSqlTypeCodeForArray( getBootstrapContext().getServiceRegistry() );
+	}
+
 	TypeDefinitionRegistry getTypeDefinitionRegistry();
 
 	/**

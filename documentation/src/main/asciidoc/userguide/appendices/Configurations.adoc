@@ -396,6 +396,12 @@ Can also specify the name of the constant in `org.hibernate.type.SqlTypes` inste
 Global setting identifying the preferred JDBC type code for storing instant values.
 Can also specify the name of the constant in `org.hibernate.type.SqlTypes` instead.
 
+`*hibernate.type.preferred_array_jdbc_type*` (e.g. `2003` for `java.sql.Types.ARRAY`)::
+Global setting identifying the preferred JDBC type code for storing basic array and collection values.
+Can also specify the name of the constant in `org.hibernate.type.SqlTypes` instead.
++
+The default value is determined via `org.hibernate.dialect.Dialect.getPreferredSqlTypeCodeForArray()`.
+
 ==== Bean Validation options
 `*jakarta.persistence.validation.factory*` (e.g. `jakarta.validation.ValidationFactory` implementation)::
 Specify the  `javax.validation.ValidationFactory` implementation to use for Bean Validation.

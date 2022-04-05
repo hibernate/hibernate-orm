@@ -11,9 +11,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
@@ -154,5 +156,14 @@ public interface UserType<J> {
 
 	default int getDefaultSqlScale(Dialect dialect, JdbcType jdbcType) {
 		return Size.DEFAULT_SCALE;
+	}
+
+	/**
+	 * Returns the converter that this user type uses for transforming from the domain type, to the relational type,
+	 * or <code>null</code> if there is no conversion.
+	 */
+	@Incubating
+	default BasicValueConverter<J, Object> getValueConverter() {
+		return null;
 	}
 }

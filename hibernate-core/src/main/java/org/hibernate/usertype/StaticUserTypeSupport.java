@@ -79,6 +79,7 @@ public class StaticUserTypeSupport<T> implements UserType<T> {
 		return mutabilityPlan;
 	}
 
+	@Override
 	public BasicValueConverter<T, Object> getValueConverter() {
 		return valueConverter;
 	}

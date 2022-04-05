@@ -9,11 +9,13 @@ package org.hibernate.type.descriptor.jdbc;
 import java.io.Serializable;
 import java.sql.Types;
 
+import org.hibernate.Incubating;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
@@ -108,6 +110,14 @@ public interface JdbcType extends Serializable {
 	 * @return The appropriate extractor
 	 */
 	<X> ValueExtractor<X> getExtractor(JavaType<X> javaType);
+
+	/**
+	 * The Java type class that is preferred by the binder or null.
+	 */
+	@Incubating
+	default Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+		return null;
+	}
 
 	default boolean isInteger() {
 		return isInteger( getJdbcTypeCode() );

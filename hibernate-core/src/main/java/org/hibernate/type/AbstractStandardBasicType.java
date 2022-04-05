@@ -210,7 +210,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	protected void nullSafeSet(PreparedStatement st, T value, int index, WrapperOptions options) throws SQLException {
-		jdbcType.getBinder( javaType ).bind( st, value, index, options );
+		getJdbcValueBinder().bind( st, value, index, options );
 	}
 
 	@Override
@@ -283,7 +283,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	@Override
 	public T extract(CallableStatement statement, int startIndex, final SharedSessionContractImplementor session) throws SQLException {
-		return jdbcType.getExtractor( javaType ).extract(
+		return getJdbcValueExtractor().extract(
 				statement,
 				startIndex,
 				session
@@ -292,7 +292,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	@Override
 	public T extract(CallableStatement statement, String paramName, final SharedSessionContractImplementor session) throws SQLException {
-		return jdbcType.getExtractor( javaType ).extract(
+		return getJdbcValueExtractor().extract(
 				statement,
 				paramName,
 				session
@@ -316,7 +316,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	@SuppressWarnings("unchecked")
 	protected final void nullSafeSet(CallableStatement st, Object value, String name, WrapperOptions options) throws SQLException {
-		jdbcType.getBinder( javaType ).bind( st, (T) value, name, options );
+		getJdbcValueBinder().bind( st, (T) value, name, options );
 	}
 
 	@Override

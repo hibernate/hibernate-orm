@@ -8,6 +8,7 @@ package org.hibernate.type.descriptor.jdbc;
 
 import java.sql.Types;
 
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -47,4 +48,10 @@ public class RealJdbcType extends FloatJdbcType {
 			TypeConfiguration typeConfiguration) {
 		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( Float.class );
 	}
+
+	@Override
+	public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+		return Float.class;
+	}
+
 }

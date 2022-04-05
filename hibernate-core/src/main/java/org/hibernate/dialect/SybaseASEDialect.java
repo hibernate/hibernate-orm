@@ -209,6 +209,11 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
+	public boolean supportsDistinctFromPredicate() {
+		return getVersion().isSameOrAfter( 16, 3 );
+	}
+
+	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 

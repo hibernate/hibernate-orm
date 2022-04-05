@@ -54,7 +54,13 @@ public class DdlTypeImpl implements DdlType {
 	public String getRawTypeName() {
 		//trim off the length/precision/scale
 		final int paren = typeNamePattern.indexOf( '(' );
-		return paren > 0 ? typeNamePattern.substring( 0, paren ) : typeNamePattern;
+		if ( paren > 0 ) {
+			final int parenEnd = typeNamePattern.lastIndexOf( ')' );
+			return parenEnd == typeNamePattern.length()
+					? typeNamePattern.substring( 0, paren )
+					: ( typeNamePattern.substring( 0, paren ) + typeNamePattern.substring( parenEnd + 1 ) );
+		}
+		return typeNamePattern;
 	}
 
 	@Override

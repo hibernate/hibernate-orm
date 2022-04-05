@@ -146,11 +146,14 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.InstantAsTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.InstantAsTimestampWithTimeZoneJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.LongNVarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NCharJdbcType;
@@ -472,13 +475,57 @@ public abstract class Dialect implements ConversionContext {
 		return version;
 	}
 
+	/**
+	 * Resolves the {@link SqlTypes} type code for the given column type name as reported by the database,
+	 * or <code>null</code> if it can't be resolved.
+	 */
+	protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
+		final int parenthesisIndex = columnTypeName.lastIndexOf( '(' );
+		final String baseTypeName;
+		if ( parenthesisIndex == -1 ) {
+			baseTypeName = columnTypeName;
+		}
+		else {
+			baseTypeName = columnTypeName.substring( 0, parenthesisIndex ).trim();
+		}
+		return resolveSqlTypeCode( columnTypeName, baseTypeName, typeConfiguration );
+	}
+
+	/**
+	 * Resolves the {@link SqlTypes} type code for the given column type name as reported by the database
+	 * and the base type name (i.e. without precision/length and scale), or <code>null</code> if it can't be resolved.
+	 */
+	protected Integer resolveSqlTypeCode(String typeName, String baseTypeName, TypeConfiguration typeConfiguration) {
+		return typeConfiguration.getDdlTypeRegistry().getSqlTypeCode( baseTypeName );
+	}
+
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
 			int precision,
 			int scale,
 			JdbcTypeRegistry jdbcTypeRegistry) {
-		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
+		final JdbcType jdbcType = jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
+		if ( jdbcTypeCode == Types.ARRAY && jdbcType instanceof ArrayJdbcType ) {
+			// Special handling for array types, because we need the proper element/component type
+			// To determine the element JdbcType, we pass the database reported type to #resolveSqlTypeCode
+			final int arraySuffixIndex = columnTypeName.toLowerCase( Locale.ROOT ).indexOf( " array" );
+			if ( arraySuffixIndex != -1 ) {
+				final String componentTypeName = columnTypeName.substring( 0, arraySuffixIndex );
+				final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
+				if ( sqlTypeCode != null ) {
+					return ( (ArrayJdbcType) jdbcType ).resolveType(
+							jdbcTypeRegistry.getTypeConfiguration(),
+							jdbcTypeRegistry.getTypeConfiguration().getServiceRegistry()
+									.getService( JdbcServices.class )
+									.getDialect(),
+							jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
+							null
+					);
+				}
+			}
+		}
+		return jdbcType;
 	}
 
 	public int resolveSqlTypeLength(
@@ -1170,8 +1217,8 @@ public abstract class Dialect implements ConversionContext {
 	 * {@link Types#LONGVARBINARY LONGVARBINARY} as the same type, since
 	 * Hibernate doesn't really differentiate these types.
 	 *
-	 * @param typeCode1 the first JDBC type code
-	 * @param typeCode2 the second JDBC type code
+	 * @param column1 the first column type info
+	 * @param column2 the second column type info
 	 *
 	 * @return {@code true} if the two type codes are equivalent
 	 */
@@ -1254,6 +1301,10 @@ public abstract class Dialect implements ConversionContext {
 		}
 		else {
 			typeContributions.contributeJdbcType( InstantAsTimestampJdbcType.INSTANCE );
+		}
+
+		if ( supportsStandardArrays() ) {
+			typeContributions.contributeJdbcType( ArrayJdbcType.INSTANCE );
 		}
 	}
 
@@ -3240,6 +3291,84 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * Database has native support for SQL standard arrays which can be referred to through base type name.
+	 * Oracle for example doesn't support this, but instead has support for named arrays.
+	 *
+	 * @return boolean
+	 * @since 6.1
+	 */
+	public boolean supportsStandardArrays() {
+		return false;
+	}
+
+	/**
+	 * The SQL type name for the array of the given type name.
+	 *
+	 * @since 6.1
+	 */
+	public String getArrayTypeName(String elementTypeName) {
+		if ( supportsStandardArrays() ) {
+			return elementTypeName + " array";
+		}
+		return null;
+	}
+
+	public void appendArrayLiteral(
+			SqlAppender appender,
+			Object[] literal,
+			JdbcLiteralFormatter<Object> elementFormatter,
+			WrapperOptions wrapperOptions) {
+		if ( !supportsStandardArrays() ) {
+			throw new UnsupportedOperationException( getClass().getName() + " does not support array literals" );
+		}
+		appender.appendSql( "ARRAY[" );
+		if ( literal.length != 0 ) {
+			if ( literal[0] == null ) {
+				appender.appendSql( "null" );
+			}
+			else {
+				elementFormatter.appendJdbcLiteral( appender, literal[0], this, wrapperOptions );
+			}
+			for ( int i = 1; i < literal.length; i++ ) {
+				appender.appendSql( ',' );
+				if ( literal[i] == null ) {
+					appender.appendSql( "null" );
+				}
+				else {
+					elementFormatter.appendJdbcLiteral( appender, literal[i], this, wrapperOptions );
+				}
+			}
+		}
+		appender.appendSql( ']' );
+	}
+
+	/**
+	 * Is this SQL dialect known to support some kind of distinct from predicate.
+	 * <p/>
+	 * Basically, does it support syntax like
+	 * "... where FIRST_NAME IS DISTINCT FROM LAST_NAME"
+	 *
+	 * @return True if this SQL dialect is known to support some kind of distinct from predicate; false otherwise
+	 * @since 6.1
+	 */
+	public boolean supportsDistinctFromPredicate() {
+		return false;
+	}
+
+	/**
+	 * The JDBC {@link SqlTypes type code} to use for mapping
+	 * properties of basic Java array or {@code Collection} types.
+	 * <p>
+	 * Usually {@link SqlTypes#ARRAY} or {@link SqlTypes#VARBINARY}.
+	 *
+	 * @return one of the type codes defined by {@link SqlTypes}.
+	 * @since 6.1
+	 */
+	public int getPreferredSqlTypeCodeForArray() {
+		return supportsStandardArrays() ? ARRAY : VARBINARY;
+	}
+
+	/**
 	 * The JDBC {@link Types type code} to use for mapping
 	 * properties of Java type {@code boolean}.
 	 * <p>
@@ -3644,6 +3773,7 @@ public abstract class Dialect implements ConversionContext {
 				case SqlTypes.DOUBLE:
 				case SqlTypes.REAL:
 					// this is almost always the thing we use:
+					length = null;
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
 					if ( scale != null && scale != 0 ) {
 						throw new IllegalArgumentException("scale has no meaning for floating point numbers");
@@ -3658,6 +3788,7 @@ public abstract class Dialect implements ConversionContext {
 				case SqlTypes.TIMESTAMP:
 				case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
 				case SqlTypes.TIMESTAMP_UTC:
+					length = null;
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
 					if ( scale != null && scale != 0 ) {
 						throw new IllegalArgumentException("scale has no meaning for timestamps");

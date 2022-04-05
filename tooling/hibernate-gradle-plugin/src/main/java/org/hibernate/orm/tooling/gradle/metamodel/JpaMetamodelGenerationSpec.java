@@ -29,6 +29,7 @@ public class JpaMetamodelGenerationSpec {
 	public static final String DSL_NAME = JPA_METAMODEL;
 
 	private final Property<Boolean> applyGeneratedAnnotation;
+	private final Project project;
 	private final SetProperty<String> suppressions;
 	private final DirectoryProperty generationOutputDirectory;
 	private final DirectoryProperty compileOutputDirectory;
@@ -38,6 +39,8 @@ public class JpaMetamodelGenerationSpec {
 	@Inject
 	@SuppressWarnings( "UnstableApiUsage" )
 	public JpaMetamodelGenerationSpec(HibernateOrmSpec ormDsl, Project project) {
+		this.project = project;
+
 		applyGeneratedAnnotation = project.getObjects().property( Boolean.class );
 		applyGeneratedAnnotation.convention( true );
 
@@ -78,11 +81,23 @@ public class JpaMetamodelGenerationSpec {
 		return suppressions;
 	}
 
+	public void suppress(String warning) {
+		suppressions.add( warning );
+	}
+
 	public DirectoryProperty getGenerationOutputDirectory() {
 		return generationOutputDirectory;
 	}
 
+	public void generationOutputDirectory(Object ref) {
+		generationOutputDirectory.set( project.file( ref ) );
+	}
+
 	public DirectoryProperty getCompileOutputDirectory() {
 		return compileOutputDirectory;
+	}
+
+	public void compileOutputDirectory(Object ref) {
+		compileOutputDirectory.set( project.file( ref ) );
 	}
 }

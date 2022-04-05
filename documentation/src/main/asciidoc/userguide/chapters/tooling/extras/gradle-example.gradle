@@ -1,0 +1,23 @@
+plugins {
+    // e.g., let's use the 6.0.0.Final version of the plugin
+    id "org.hibernate.orm" version "6.0.0.Final"
+}
+
+hibernate {
+    enhancement {
+        // all default to false
+        lazyInitialization true
+        dirtyTracking true
+        associationManagement true
+    }
+    jpaMetamodel {
+        // defaults to true
+        applyGeneratedAnnotation true
+        // defaults to ['raw', 'deprecation']
+        suppress 'raw'
+        // defaults to `${buildDir}/generated/sources/jpaMetamodel
+        generationOutputDirectory "${buildDir}/generated/sources/modelgen"
+        // defaults to `${buildDir}/classes/java/jpaMetamodel
+        compileOutputDirectory "${buildDir}/classes/java/modelgen"
+    }
+}

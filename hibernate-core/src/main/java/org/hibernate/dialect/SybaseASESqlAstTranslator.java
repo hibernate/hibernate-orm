@@ -237,11 +237,6 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	protected boolean supportsDistinctFromPredicate() {
-		return getDialect().getVersion().isSameOrAfter( 16, 3 );
-	}
-
-	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		// I think intersect is only supported in 16.0 SP3
 		if ( getDialect().isAnsiNullOn() ) {

@@ -40,6 +40,12 @@ public class XmlJdbcType implements JdbcType {
 	}
 
 	@Override
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
+		// No literal support for now
+		return null;
+	}
+
+	@Override
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
 		return new XmlValueBinder<>( javaType, this );
 	}

@@ -1374,6 +1374,42 @@ include::{sourcedir}/basic/XmlMappingTests.java[tags=basic-xml-example]
 ----
 ====
 
+[[basic-mapping-array]]
+==== Basic array mapping
+
+Basic arrays, other than `byte[]`/Byte[] and `char[]`/`Character[]`, map to the type code `SqlTypes.ARRAY` by default,
+which maps to the SQL standard `array` type if possible,
+as determined via the new methods `getArrayTypeName` and `supportsStandardArrays` of `org.hibernate.dialect.Dialect`.
+If SQL standard array types are not available, data will be modeled as `SqlTypes.JSON`, `SqlTypes.XML` or `SqlTypes.VARBINARY`,
+depending on the database support as determined via the new method `org.hibernate.dialect.Dialect.getPreferredSqlTypeCodeForArray`.
+
+[[basic-array-example]]
+.Mapping basic arrays
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/BasicArrayMappingTests.java[tags=basic-array-example]
+----
+====
+
+[[basic-mapping-collection]]
+==== Basic collection mapping
+
+Basic collections (only subtypes of `Collection`), which are not annotated with `@ElementCollection`,
+map to the type code `SqlTypes.ARRAY` by default, which maps to the SQL standard `array` type if possible,
+as determined via the new methods `getArrayTypeName` and `supportsStandardArrays` of `org.hibernate.dialect.Dialect`.
+If SQL standard array types are not available, data will be modeled as `SqlTypes.JSON`, `SqlTypes.XML` or `SqlTypes.VARBINARY`,
+depending on the database support as determined via the new method `org.hibernate.dialect.Dialect.getPreferredSqlTypeCodeForArray`.
+
+[[basic-collection-example]]
+.Mapping basic collections
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/BasicCollectionMappingTests.java[tags=basic-collection-example]
+----
+====
+
 
 [[basic-mapping-composition]]
 ==== Compositional basic mapping

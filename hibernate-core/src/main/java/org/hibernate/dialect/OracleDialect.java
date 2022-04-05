@@ -15,6 +15,7 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.TypeContributions;
@@ -684,6 +685,20 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	public String getArrayTypeName(String elementTypeName) {
+		// Return null to signal that there is no array type since Oracle only has named array types
+		// TODO: discuss if it makes sense to parse a config parameter to a map which we can query here
+		//  e.g. `hibernate.oracle.array_types=numeric(10,0)=intarray,...`
+		return null;
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForArray() {
+		// Prefer to resolve to the OracleArrayJdbcType, since that will fall back to XML later if needed
+		return ARRAY;
+	}
+
+	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
@@ -705,6 +720,7 @@ public class OracleDialect extends Dialect {
 			typeContributions.contributeJdbcType( descriptor );
 		}
 
+		typeContributions.contributeJdbcType( OracleArrayJdbcType.INSTANCE );
 		// Oracle requires a custom binder for binding untyped nulls with the NULL type
 		typeContributions.contributeJdbcType( NullJdbcType.INSTANCE );
 		typeContributions.contributeJdbcType( ObjectNullAsNullTypeJdbcType.INSTANCE );

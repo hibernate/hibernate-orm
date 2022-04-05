@@ -90,6 +90,11 @@ public abstract class BlobJdbcType implements JdbcType {
 		}
 
 		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return byte[].class;
+		}
+
+		@Override
 		public <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaType) {
 			return new BasicBinder<>( javaType, this ) {
 				@Override
@@ -130,6 +135,11 @@ public abstract class BlobJdbcType implements JdbcType {
 		}
 
 		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return byte[].class;
+		}
+
+		@Override
 		public <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaType) {
 			return new BasicBinder<>( javaType, this ) {
 				@Override
@@ -154,6 +164,11 @@ public abstract class BlobJdbcType implements JdbcType {
 		}
 
 		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return Blob.class;
+		}
+
+		@Override
 		public <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaType) {
 			return new BasicBinder<>( javaType, this ) {
 				@Override
@@ -175,6 +190,11 @@ public abstract class BlobJdbcType implements JdbcType {
 		@Override
 		public String toString() {
 			return "BlobTypeDescriptor(STREAM_BINDING)";
+		}
+
+		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return BinaryStream.class;
 		}
 
 		@Override

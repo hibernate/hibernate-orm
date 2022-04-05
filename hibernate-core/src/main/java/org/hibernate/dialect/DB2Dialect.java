@@ -192,6 +192,11 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsDistinctFromPredicate() {
+		return getDB2Version().isSameOrAfter( 11, 1 );
+	}
+
+	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 

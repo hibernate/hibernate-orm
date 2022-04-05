@@ -28,7 +28,7 @@ public class ConvertedBasicTypeImpl<J> extends NamedBasicTypeImpl<J> implements 
 	}
 
 	@Override
-	public BasicValueConverter<J, ?> getValueConverter() {
+	public BasicValueConverter getValueConverter() {
 		return converter;
 	}
 }

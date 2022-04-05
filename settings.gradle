@@ -58,7 +58,7 @@ dependencyResolutionManagement {
     versionCatalogs {
         libs {
             version( "antlr", "4.10" )
-            version( "hcann", "6.0.1.Final" )
+            version( "hcann", "6.0.2.Final" )
             version( "geolatte", "1.8.2" )
             version( "byteBuddy", "1.12.9" )
             version( "agroal", "2.0" )

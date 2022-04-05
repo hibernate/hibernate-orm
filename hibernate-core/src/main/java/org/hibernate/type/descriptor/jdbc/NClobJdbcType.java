@@ -78,6 +78,13 @@ public abstract class NClobJdbcType implements JdbcType {
 		}
 
 		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return options.useStreamForLobBinding() ?
+					STREAM_BINDING.getPreferredJavaTypeClass( options ) :
+					NCLOB_BINDING.getPreferredJavaTypeClass( options );
+		}
+
+		@Override
 		public <X> BasicBinder<X> getNClobBinder(final JavaType<X> javaType) {
 			return new BasicBinder<>( javaType, this ) {
 				@Override
@@ -112,6 +119,11 @@ public abstract class NClobJdbcType implements JdbcType {
 		}
 
 		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return NClob.class;
+		}
+
+		@Override
 		public <X> BasicBinder<X> getNClobBinder(final JavaType<X> javaType) {
 			return new BasicBinder<>( javaType, this ) {
 				@Override
@@ -133,6 +145,11 @@ public abstract class NClobJdbcType implements JdbcType {
 		@Override
 		public String toString() {
 			return "NClobTypeDescriptor(STREAM_BINDING)";
+		}
+
+		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return CharacterStream.class;
 		}
 
 		@Override

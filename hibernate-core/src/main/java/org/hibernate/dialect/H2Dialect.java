@@ -8,6 +8,7 @@ package org.hibernate.dialect;
 
 import java.sql.CallableStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.List;
 
 import org.hibernate.PessimisticLockException;
@@ -64,6 +65,7 @@ import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
 
@@ -166,6 +168,11 @@ public class H2Dialect extends Dialect {
 	public boolean getDefaultNonContextualLobCreation() {
 		// http://code.google.com/p/h2database/issues/detail?id=235
 		return true;
+	}
+
+	@Override
+	public boolean supportsStandardArrays() {
+		return getVersion().isSameOrAfter( 2 );
 	}
 
 	@Override
@@ -327,6 +334,16 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
+		switch ( columnTypeName ) {
+			case "FLOAT(24)":
+				// Use REAL instead of FLOAT to get Float as recommended Java type
+				return Types.REAL;
+		}
+		return super.resolveSqlTypeCode( columnTypeName, typeConfiguration );
+	}
+
+	@Override
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -338,6 +355,15 @@ public class H2Dialect extends Dialect {
 			return jdbcTypeRegistry.getDescriptor( DOUBLE );
 		}
 		return super.resolveSqlTypeDescriptor( columnTypeName, jdbcTypeCode, precision, scale, jdbcTypeRegistry );
+	}
+
+	@Override
+	protected Integer resolveSqlTypeCode(String typeName, String baseTypeName, TypeConfiguration typeConfiguration) {
+		switch ( baseTypeName ) {
+			case "CHARACTER VARYING":
+				return VARCHAR;
+		}
+		return super.resolveSqlTypeCode( typeName, baseTypeName, typeConfiguration );
 	}
 
 	@Override
@@ -418,6 +444,11 @@ public class H2Dialect extends Dialect {
 	@Override
 	public LimitHandler getLimitHandler() {
 		return limitHandler;
+	}
+
+	@Override
+	public boolean supportsDistinctFromPredicate() {
+		return true;
 	}
 
 	@Override

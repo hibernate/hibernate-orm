@@ -311,6 +311,9 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	@Incubating
 	int getPreferredSqlTypeCodeForInstant();
 
+	@Incubating
+	int getPreferredSqlTypeCodeForArray();
+
 	TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy();
 
 	FormatMapper getJsonFormatMapper();

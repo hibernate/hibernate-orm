@@ -134,7 +134,7 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 
 	@Override
 	public BasicValueConverter<E,E> getValueConverter() {
-		return null;
+		return legacyType.getValueConverter();
 	}
 
 	@Override

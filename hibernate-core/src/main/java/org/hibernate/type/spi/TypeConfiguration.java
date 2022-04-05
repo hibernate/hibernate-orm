@@ -8,6 +8,7 @@ package org.hibernate.type.spi;
 
 import java.io.InvalidObjectException;
 import java.io.Serializable;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Time;
@@ -33,6 +34,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.annotations.common.reflection.java.generics.ParameterizedTypeImpl;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BasicTypeRegistration;
@@ -546,9 +548,17 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 
-	private final ConcurrentHashMap<Class<?>, BasicType<?>> basicTypeByJavaType = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<Type, BasicType<?>> basicTypeByJavaType = new ConcurrentHashMap<>();
+
+	public <J> BasicType<J> getBasicTypeForGenericJavaType(Class<? super J> javaType, Type... typeArguments) {
+		return getBasicTypeForJavaType( new ParameterizedTypeImpl( javaType, typeArguments, null ) );
+	}
 
 	public <J> BasicType<J> getBasicTypeForJavaType(Class<J> javaType) {
+		return getBasicTypeForJavaType( (Type) javaType );
+	}
+
+	public <J> BasicType<J> getBasicTypeForJavaType(Type javaType) {
 		final BasicType<?> existing = basicTypeByJavaType.get( javaType );
 		if ( existing != null ) {
 			//noinspection unchecked
@@ -580,6 +590,12 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	public <J> BasicType<J> standardBasicTypeForJavaType(
 			Class<J> javaType,
+			Function<JavaType<J>, BasicType<J>> creator) {
+		return standardBasicTypeForJavaType( (Type) javaType, creator );
+	}
+
+	public <J> BasicType<J> standardBasicTypeForJavaType(
+			Type javaType,
 			Function<JavaType<J>, BasicType<J>> creator) {
 		if ( javaType == null ) {
 			return null;

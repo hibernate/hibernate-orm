@@ -280,4 +280,10 @@ abstract public class DialectChecks {
 		}
 	}
 
+	public static class SupportsArrayDataTypes implements DialectCheck {
+		@Override
+		public boolean isMatch(Dialect dialect) {
+			return dialect.supportsStandardArrays();
+		}
+	}
 }

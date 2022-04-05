@@ -34,6 +34,7 @@ import org.hibernate.type.descriptor.java.BigDecimalJavaType;
 import org.hibernate.type.descriptor.java.BigIntegerJavaType;
 import org.hibernate.type.descriptor.java.BlobJavaType;
 import org.hibernate.type.descriptor.java.BooleanJavaType;
+import org.hibernate.type.descriptor.java.BooleanPrimitiveArrayJavaType;
 import org.hibernate.type.descriptor.java.ByteArrayJavaType;
 import org.hibernate.type.descriptor.java.ByteJavaType;
 import org.hibernate.type.descriptor.java.CalendarJavaType;
@@ -44,12 +45,16 @@ import org.hibernate.type.descriptor.java.ClobJavaType;
 import org.hibernate.type.descriptor.java.CurrencyJavaType;
 import org.hibernate.type.descriptor.java.DateJavaType;
 import org.hibernate.type.descriptor.java.DoubleJavaType;
+import org.hibernate.type.descriptor.java.DoublePrimitiveArrayJavaType;
 import org.hibernate.type.descriptor.java.DurationJavaType;
 import org.hibernate.type.descriptor.java.FloatJavaType;
+import org.hibernate.type.descriptor.java.FloatPrimitiveArrayJavaType;
 import org.hibernate.type.descriptor.java.InetAddressJavaType;
 import org.hibernate.type.descriptor.java.InstantJavaType;
+import org.hibernate.type.descriptor.java.IntegerPrimitiveArrayJavaType;
 import org.hibernate.type.descriptor.java.IntegerJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.LongPrimitiveArrayJavaType;
 import org.hibernate.type.descriptor.java.ObjectJavaType;
 import org.hibernate.type.descriptor.java.JdbcDateJavaType;
 import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
@@ -65,6 +70,7 @@ import org.hibernate.type.descriptor.java.OffsetTimeJavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.java.PrimitiveCharacterArrayJavaType;
 import org.hibernate.type.descriptor.java.ShortJavaType;
+import org.hibernate.type.descriptor.java.ShortPrimitiveArrayJavaType;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.java.TimeZoneJavaType;
 import org.hibernate.type.descriptor.java.UUIDJavaType;
@@ -96,7 +102,6 @@ public class JavaTypeBaseline {
 	/**
 	 * The process of registering all the baseline registrations
 	 */
-	@SuppressWarnings("unchecked")
 	public static void prime(BaselineTarget target) {
 		primePrimitive( target, ByteJavaType.INSTANCE );
 		primePrimitive( target, BooleanJavaType.INSTANCE );
@@ -122,6 +127,14 @@ public class JavaTypeBaseline {
 		target.addBaselineDescriptor( CharacterArrayJavaType.INSTANCE );
 		target.addBaselineDescriptor( PrimitiveByteArrayJavaType.INSTANCE );
 		target.addBaselineDescriptor( PrimitiveCharacterArrayJavaType.INSTANCE );
+
+		// Register special ArrayJavaType implementations for primitive types
+		target.addBaselineDescriptor( BooleanPrimitiveArrayJavaType.INSTANCE );
+		target.addBaselineDescriptor( ShortPrimitiveArrayJavaType.INSTANCE );
+		target.addBaselineDescriptor( IntegerPrimitiveArrayJavaType.INSTANCE );
+		target.addBaselineDescriptor( LongPrimitiveArrayJavaType.INSTANCE );
+		target.addBaselineDescriptor( FloatPrimitiveArrayJavaType.INSTANCE );
+		target.addBaselineDescriptor( DoublePrimitiveArrayJavaType.INSTANCE );
 
 		target.addBaselineDescriptor( DurationJavaType.INSTANCE );
 		target.addBaselineDescriptor( InstantJavaType.INSTANCE );
@@ -173,8 +186,8 @@ public class JavaTypeBaseline {
 		target.addBaselineDescriptor( new CollectionJavaType( LinkedHashMap.class, StandardOrderedMapSemantics.INSTANCE ) );
 	}
 
-	private static void primePrimitive(BaselineTarget target, JavaType descriptor) {
+	private static void primePrimitive(BaselineTarget target, JavaType<?> descriptor) {
 		target.addBaselineDescriptor( descriptor );
-		target.addBaselineDescriptor( ( (PrimitiveJavaType) descriptor ).getPrimitiveClass(), descriptor );
+		target.addBaselineDescriptor( ( (PrimitiveJavaType<?>) descriptor ).getPrimitiveClass(), descriptor );
 	}
 }

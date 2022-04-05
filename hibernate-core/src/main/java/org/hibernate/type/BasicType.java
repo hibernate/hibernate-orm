@@ -9,12 +9,14 @@ package org.hibernate.type;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.Incubating;
 import org.hibernate.cache.internal.CacheKeyValueDescriptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -73,6 +75,15 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	@Override
 	default JavaType<T> getMappedJavaType() {
 		return getJavaTypeDescriptor();
+	}
+
+	/**
+	 * Returns the converter that this basic type uses for transforming from the domain type, to the relational type,
+	 * or <code>null</code> if there is no conversion.
+	 */
+	@Incubating
+	default BasicValueConverter<T, ?> getValueConverter() {
+		return null;
 	}
 
 	@Override

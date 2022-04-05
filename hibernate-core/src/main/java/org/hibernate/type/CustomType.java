@@ -19,6 +19,7 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.BasicJavaType;
@@ -30,6 +31,7 @@ import org.hibernate.type.internal.UserTypeSqlTypeAdapter;
 import org.hibernate.type.internal.UserTypeVersionJavaTypeWrapper;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.EnhancedUserType;
+import org.hibernate.usertype.LoggableUserType;
 import org.hibernate.usertype.UserType;
 import org.hibernate.usertype.UserVersionType;
 
@@ -49,7 +51,7 @@ import org.hibernate.usertype.UserVersionType;
  */
 public class CustomType<J>
 		extends AbstractType
-		implements BasicType<J>, ProcedureParameterNamedBinder<J>, ProcedureParameterExtractionAware<J> {
+		implements ConvertedBasicType<J>, ProcedureParameterNamedBinder<J>, ProcedureParameterExtractionAware<J> {
 
 	private final UserType<J> userType;
 	private final String[] registrationKeys;
@@ -205,6 +207,9 @@ public class CustomType<J>
 		if ( value == null ) {
 			return "null";
 		}
+		else if ( userType instanceof LoggableUserType ) {
+			return ( (LoggableUserType) userType ).toLoggableString( value, factory );
+		}
 		else if ( userType instanceof EnhancedUserType<?> ) {
 			return ( (EnhancedUserType<Object>) userType ).toString( value );
 		}
@@ -312,5 +317,10 @@ public class CustomType<J>
 	@Override
 	public JavaType<J> getJavaTypeDescriptor() {
 		return this.getMappedJavaType();
+	}
+
+	@Override
+	public BasicValueConverter<J, Object> getValueConverter() {
+		return userType.getValueConverter();
 	}
 }

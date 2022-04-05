@@ -7,10 +7,12 @@
 package org.hibernate.mapping;
 
 import java.io.Serializable;
+import java.sql.Types;
 import java.util.Locale;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.TruthValue;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
@@ -19,9 +21,13 @@ import org.hibernate.loader.internal.AliasConstantsHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.sql.Template;
+import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.type.BasicPluralType;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.internal.util.StringHelper.safeInterning;
@@ -31,7 +37,7 @@ import static org.hibernate.internal.util.StringHelper.safeInterning;
  *
  * @author Gavin King
  */
-public class Column implements Selectable, Serializable, Cloneable {
+public class Column implements Selectable, Serializable, Cloneable, ColumnTypeInformation {
 
 	private Long length;
 	private Integer precision;
@@ -224,6 +230,44 @@ public class Column implements Selectable, Serializable, Cloneable {
 		}
 	}
 
+	private String getSqlTypeName(TypeConfiguration typeConfiguration, Dialect dialect, Mapping mapping) {
+		final Type type = getValue().getType();
+		if ( type instanceof BasicPluralType<?, ?> && ( (BasicType<?>) type ).getJdbcType() instanceof ArrayJdbcType ) {
+			final BasicPluralType<?, ?> containerType = (BasicPluralType<?, ?>) type;
+			final BasicType<?> elementType = containerType.getElementType();
+			final int sqlTypeCode;
+			try {
+				sqlTypeCode = elementType.getJdbcType().getDefaultSqlTypeCode();
+			}
+			catch (Exception e) {
+				throw new MappingException(
+						"Could not determine type for column " +
+								name +
+								" of type " +
+								type.getClass().getName() +
+								": " +
+								e.getClass().getName(),
+						e
+				);
+			}
+
+			final String elementTypeName = typeConfiguration.getDdlTypeRegistry().getTypeName(
+					sqlTypeCode,
+					dialect.getSizeStrategy().resolveSize(
+							elementType.getJdbcMapping().getJdbcType(),
+							elementType.getJavaTypeDescriptor(),
+							precision,
+							scale,
+							length
+					)
+			);
+			return dialect.getArrayTypeName( elementTypeName );
+		}
+		else {
+			return typeConfiguration.getDdlTypeRegistry().getTypeName( getSqlTypeCode( mapping ), getColumnSize( dialect, mapping ) );
+		}
+	}
+
 	/**
 	 * Returns the underlying columns SqlTypeCode.
 	 * If null, it is because the SqlTypeCode is unknown.
@@ -244,7 +288,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	public String getSqlType(TypeConfiguration typeConfiguration, Dialect dialect, Mapping mapping) throws HibernateException {
 		if ( sqlType == null ) {
 			try {
-				sqlType = typeConfiguration.getDdlTypeRegistry().getTypeName( getSqlTypeCode( mapping ), getColumnSize( dialect, mapping ) );
+				sqlType = getSqlTypeName( typeConfiguration, dialect, mapping );
 			}
 			catch (HibernateException cause) {
 				throw new HibernateException(
@@ -259,6 +303,34 @@ public class Column implements Selectable, Serializable, Cloneable {
 			}
 		}
 		return sqlType;
+	}
+
+	@Override
+	public String getTypeName() {
+		return sqlType;
+	}
+
+	@Override
+	public TruthValue getNullable() {
+		return nullable ? TruthValue.TRUE : TruthValue.FALSE;
+	}
+
+	@Override
+	public int getTypeCode() {
+		return sqlTypeCode == null ? Types.OTHER : sqlTypeCode;
+	}
+
+	@Override
+	public int getColumnSize() {
+		if ( length == null ) {
+			return precision == null ? 0 : precision;
+		}
+		return length.intValue();
+	}
+
+	@Override
+	public int getDecimalDigits() {
+		return scale == null ? 0 : scale;
 	}
 
 	public Size getColumnSize(Dialect dialect, Mapping mapping) {

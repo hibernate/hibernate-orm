@@ -44,7 +44,9 @@ public class StandardSortedSetSemantics<E> extends AbstractSetSemantics<SortedSe
 	public SortedSet<E> instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
-		return new TreeSet<E>( (Comparator) collectionDescriptor.getSortingComparator() );
+		return new TreeSet<E>(
+				collectionDescriptor == null ? null : (Comparator) collectionDescriptor.getSortingComparator()
+		);
 	}
 
 	@Override

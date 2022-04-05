@@ -28,6 +28,7 @@ import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 
 /**
  * A SQL AST translator for HSQL.
@@ -215,10 +216,18 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		switch ( operator ) {
 			case DISTINCT_FROM:
 			case NOT_DISTINCT_FROM:
-				// HSQL does not like parameters in the distinct from predicate
-				render( lhs, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
-				appendSql( operator.sqlText() );
-				render( rhs, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+				if ( lhs.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType() instanceof ArrayJdbcType ) {
+					// HSQL implements distinct from semantics for arrays
+					lhs.accept( this );
+					appendSql( operator == ComparisonOperator.DISTINCT_FROM ? "<>" : "=" );
+					rhs.accept( this );
+				}
+				else {
+					// HSQL does not like parameters in the distinct from predicate
+					render( lhs, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+					appendSql( operator.sqlText() );
+					render( rhs, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+				}
 				break;
 			default:
 				renderComparisonStandard( lhs, operator, rhs );

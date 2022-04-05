@@ -71,6 +71,11 @@ public class DoubleJdbcType implements JdbcType {
 	}
 
 	@Override
+	public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+		return Double.class;
+	}
+
+	@Override
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
 		return new BasicBinder<>( javaType, this ) {
 			@Override

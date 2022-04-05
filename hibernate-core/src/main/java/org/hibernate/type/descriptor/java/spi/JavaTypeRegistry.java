@@ -12,6 +12,7 @@ import java.lang.reflect.Type;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
+import org.hibernate.type.descriptor.java.ArrayJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
@@ -136,23 +137,43 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 						final ParameterizedType parameterizedType = (ParameterizedType) javaType;
 						final JavaType<J> rawType = findDescriptor( ( parameterizedType ).getRawType() );
 						if ( rawType != null ) {
-							return rawType.createJavaType( parameterizedType );
+							return rawType.createJavaType( parameterizedType, typeConfiguration );
 						}
 					}
-					return RegistryHelper.INSTANCE.createTypeDescriptor(
-							javaType,
-							() -> {
-								final MutabilityPlan<J> determinedPlan = RegistryHelper.INSTANCE.determineMutabilityPlan( javaType, typeConfiguration );
-								if ( determinedPlan != null ) {
-									return determinedPlan;
-								}
+					final Type elementJavaType;
+					JavaType<J> elementTypeDescriptor;
+					if ( javaType instanceof Class<?> && ( (Class<?>) javaType ).isArray() ) {
+						elementJavaType = ( (Class<?>) javaType ).getComponentType();
+						elementTypeDescriptor = findDescriptor( elementJavaType );
+					}
+					else {
+						elementJavaType = javaType;
+						elementTypeDescriptor = null;
+					}
+					if ( elementTypeDescriptor == null ) {
+						elementTypeDescriptor = RegistryHelper.INSTANCE.createTypeDescriptor(
+								elementJavaType,
+								() -> {
+									final MutabilityPlan<J> determinedPlan = RegistryHelper.INSTANCE.determineMutabilityPlan(
+											elementJavaType,
+											typeConfiguration
+									);
+									if ( determinedPlan != null ) {
+										return determinedPlan;
+									}
 
-								//noinspection unchecked
-								return (MutabilityPlan<J>) MutableMutabilityPlan.INSTANCE;
+									//noinspection unchecked
+									return (MutabilityPlan<J>) MutableMutabilityPlan.INSTANCE;
 
-							},
-							typeConfiguration
-					);
+								},
+								typeConfiguration
+						);
+					}
+					if ( javaType != elementJavaType ) {
+						//noinspection unchecked
+						return (JavaType<J>) new ArrayJavaType<>( elementTypeDescriptor );
+					}
+					return elementTypeDescriptor;
 				}
 		);
 	}

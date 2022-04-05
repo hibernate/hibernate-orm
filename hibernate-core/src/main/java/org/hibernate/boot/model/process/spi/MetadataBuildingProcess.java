@@ -401,6 +401,15 @@ public class MetadataBuildingProcess {
 		}
 		jdbcTypeRegistry.addDescriptorIfAbsent( JsonJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( XmlAsStringJdbcType.INSTANCE );
+
+		final int preferredSqlTypeCodeForArray = ConfigurationHelper.getPreferredSqlTypeCodeForArray( bootstrapContext.getServiceRegistry() );
+		if ( preferredSqlTypeCodeForArray != SqlTypes.ARRAY ) {
+			jdbcTypeRegistry.addDescriptor( SqlTypes.ARRAY, jdbcTypeRegistry.getDescriptor( preferredSqlTypeCodeForArray ) );
+		}
+		else if ( jdbcTypeRegistry.findDescriptor( SqlTypes.ARRAY ) == null ) {
+			// Fallback to VARBINARY
+			jdbcTypeRegistry.addDescriptor( SqlTypes.ARRAY, jdbcTypeRegistry.getDescriptor( SqlTypes.VARBINARY ) );
+		}
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.INET, SqlTypes.VARBINARY );
 		final int preferredSqlTypeCodeForDuration = ConfigurationHelper.getPreferredSqlTypeCodeForDuration( bootstrapContext.getServiceRegistry() );
 		if ( preferredSqlTypeCodeForDuration != SqlTypes.INTERVAL_SECOND ) {

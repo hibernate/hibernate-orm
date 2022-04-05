@@ -14,6 +14,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.FunctionKey;
 import org.hibernate.spatial.HSMessageLogger;
 import org.hibernate.spatial.contributor.ContributorImplementor;
+import org.hibernate.spatial.dialect.postgis.PGGeographyJdbcType;
 import org.hibernate.spatial.dialect.postgis.PGGeometryJdbcType;
 import org.hibernate.spatial.dialect.postgis.PostgisSqmFunctionDescriptors;
 
@@ -29,6 +30,7 @@ public class CockroachDbContributor implements ContributorImplementor {
 	public void contributeJdbcTypes(TypeContributions typeContributions) {
 		HSMessageLogger.SPATIAL_MSG_LOGGER.typeContributions( this.getClass().getCanonicalName() );
 		typeContributions.contributeJdbcType( PGGeometryJdbcType.INSTANCE_WKB_2 );
+		typeContributions.contributeJdbcType( PGGeographyJdbcType.INSTANCE_WKB_2 );
 	}
 
 	@Override

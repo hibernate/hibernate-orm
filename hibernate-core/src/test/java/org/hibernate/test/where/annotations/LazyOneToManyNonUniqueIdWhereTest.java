@@ -197,7 +197,7 @@ public class LazyOneToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCas
 
 		@OneToMany
 		@JoinColumn( name = "MATERIAL_OWNER_ID")
-		@Where( clause = "name = 'high' or name = 'medium'" )
+		@Where( clause = "NAME = 'high' or NAME = 'medium'" )
 		@Immutable
 		public List<Rating> getMediumOrHighRatingsFromCombined() {
 			return mediumOrHighRatingsFromCombined;

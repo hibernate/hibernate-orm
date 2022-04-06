@@ -79,16 +79,13 @@ dependencies {
 	testRuntime( libraries.derby )
 	testRuntime( libraries.hsqldb )
 	testRuntime( libraries.postgresql )
-	testRuntime( libraries.mysql )
-	testRuntime( libraries.mariadb )
 	testRuntime( libraries.mssql )
 	testRuntime( libraries.informix )
-	testRuntime( libraries.hana )
 	testRuntime( libraries.cockroachdb )
+	testRuntime( libraries.oracle )
+	testRuntime( libraries.sybase )
 
 	asciidoclet 'org.asciidoctor:asciidoclet:1.+'
-
-	testRuntime( libraries.oracle )
 
 	// Since both the DB2 driver and HANA have a package "net.jpountz" we have to add dependencies conditionally
 	// This is due to the "no split-packages" requirement of Java 9+
@@ -98,6 +95,12 @@ dependencies {
 	}
 	else if ( db.startsWith( 'hana' ) ) {
 		testRuntime( libraries.hana )
+	}
+	else if ( db.startsWith( 'mysql' ) ) {
+		testRuntimeOnly libraries.mysql
+	}
+	else if ( db.startsWith( 'mariadb' ) ) {
+		testRuntimeOnly libraries.mariadb
 	}
 
 	// Mac-specific

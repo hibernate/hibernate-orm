@@ -19,33 +19,36 @@ import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 this.helper = new JobHelper(this)
 
 helper.runWithNotification {
-
+def defaultJdk = '11'
 stage('Configure') {
 	this.environments = [
-// 		buildEnv('11', 'h2'),
-// 		buildEnv('11', 'hsqldb'),
-// 		buildEnv('11', 'derby'),
-// 		buildEnv('11', 'mysql8'),
-// 		buildEnv('11', 'mariadb'),
-// 		buildEnv('11', 'postgresql_9_5'),
-// 		buildEnv('11', 'postgresql_13'),
-// 		buildEnv('11', 'oracle'),
-		buildEnv('11', 'oracle_ee'),
-// 		buildEnv('11', 'db2'),
-// 		buildEnv('11', 'mssql'),
-// 		buildEnv('11', 'sybase'),
-		buildEnv('11', 'hana', 'HANA'),
-		buildEnv('11', 's390x', 's390x'),
-		buildEnv('11', 'tidb', 'tidb', 'tidb_hibernate@pingcap.com'),
+// 		buildEnv(defaultJdk, 'h2'),
+// 		buildEnv(defaultJdk, 'hsqldb'),
+// 		buildEnv(defaultJdk, 'derby'),
+// 		buildEnv(defaultJdk, 'mysql8'),
+// 		buildEnv(defaultJdk, 'mariadb'),
+// 		buildEnv(defaultJdk, 'postgresql_9_5'),
+// 		buildEnv(defaultJdk, 'postgresql_13'),
+// 		buildEnv(defaultJdk, 'oracle'),
+		buildEnv(defaultJdk, 'oracle_ee'),
+// 		buildEnv(defaultJdk, 'db2'),
+// 		buildEnv(defaultJdk, 'mssql'),
+// 		buildEnv(defaultJdk, 'sybase'),
+		buildEnv(defaultJdk, 'hana', 'HANA'),
+		buildEnv(defaultJdk, 's390x', 's390x'),
+		buildEnv(defaultJdk, 'tidb', 'tidb', 'tidb_hibernate@pingcap.com'),
 		// Disable EDB for now as the image is not available anymore
-// 		buildEnv('11', 'edb')
+// 		buildEnv(defaultJdk, 'edb')
+		buildEnv('17', 'h2'),
+		buildEnv('18', 'h2'),
+		buildEnv('19', 'h2'),
 	];
 
 	helper.configure {
 		file 'job-configuration.yaml'
 		// We don't require the following, but the build helper plugin apparently does
 		jdk {
-			defaultTool 'OpenJDK 11 Latest'
+			defaultTool "OpenJDK ${defaultJdk} Latest"
 		}
 		maven {
 			defaultTool 'Apache Maven 3.8'
@@ -72,6 +75,10 @@ if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
 stage('Build') {
 	Map<String, Closure> executions = [:]
 	environments.each { BuildEnvironment buildEnv ->
+		// Don't build environments for newer JDKs when this is a PR
+		if ( buildEnv.getVersion() != defaultJdk && helper.scmSource.pullRequest ) {
+			return
+		}
 		executions.put(buildEnv.tag, {
 			runBuildOnNode(buildEnv.node) {
 				// Use withEnv instead of setting env directly, as that is global!
@@ -118,7 +125,7 @@ stage('Build') {
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
 										docker.image('quillbuilduser/oracle-18-xe').pull()
 									}
-									sh "./docker_db.sh oracle"
+									sh "./docker_db.sh oracle_18"
 									containerName = "oracle"
 									break;
 								case "db2":
@@ -279,22 +286,14 @@ public class BuildEnvironment {
 		this.notificationRecipients = notificationRecipients;
 		String buildJdkTool;
 		String testJdkTool;
-		switch ( version ) {
-			case "8":
-				buildJdkTool = testJdkTool = "OpenJDK 8 Latest";
-				break;
-			case "11":
-				buildJdkTool = testJdkTool = "OpenJDK 11 Latest";
-				break;
-			default:
-				throw new IllegalArgumentException( "Unsupported version: ${version}" );
-		}
+		buildJdkTool = testJdkTool = "OpenJDK ${version} Latest";
 		this.buildJdkTool = buildJdkTool;
 		this.testJdkTool = testJdkTool;
 	}
 	String toString() { getTag() }
 	String getTag() { "jdk-$version-$dbName" }
 	String getNode() { node }
+	String getVersion() { version }
 	String getNotificationRecipients() { notificationRecipients }
 }
 

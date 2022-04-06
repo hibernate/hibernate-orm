@@ -109,7 +109,7 @@ public class EntityGraphAttributeResolutionTest extends BaseEntityManagerFunctio
 			attributeNodes = {
 					@NamedAttributeNode("permissions")
 			})
-	@Table(name = "groups") // Name 'group' not accepted by H2
+	@Table( name = "t_group") // Name 'group' not accepted by H2
 	public static class Group {
 		public static final String ENTITY_GRAPH = "group-with-permissions";
 

@@ -3417,20 +3417,8 @@ public final class AnnotationBinder {
 			javax.persistence.ForeignKey fkOverride,
 			JoinColumn joinColumn,
 			JoinColumns joinColumns) {
-
-		final NotFound notFoundAnn= property.getAnnotation( NotFound.class );
-		if ( notFoundAnn != null ) {
-			// supersedes all others
-			value.setForeignKeyName( "none" );
-		}
-		else if ( joinColumn != null && (
-				joinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
-						|| ( joinColumn.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT) ) ) {
-			value.setForeignKeyName( "none" );
-		}
-		else if ( joinColumns != null && (
-				joinColumns.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
-						|| ( joinColumns.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT) ) ) {
+		if ( ( joinColumn != null && joinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT )
+				|| ( joinColumns != null && joinColumns.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) ) {
 			value.setForeignKeyName( "none" );
 		}
 		else {

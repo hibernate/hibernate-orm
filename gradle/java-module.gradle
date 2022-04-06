@@ -83,8 +83,6 @@ dependencies {
 	testRuntimeOnly libraries.derby
 	testRuntimeOnly libraries.hsqldb
 	testRuntimeOnly libraries.postgresql
-	testRuntimeOnly libraries.mysql
-	testRuntimeOnly libraries.mariadb
 	testRuntimeOnly libraries.mssql
 	testRuntimeOnly libraries.informix
 	testRuntimeOnly libraries.cockroachdb
@@ -99,6 +97,12 @@ dependencies {
 	}
 	else if ( db.startsWith( 'hana' ) ) {
 		testRuntimeOnly libraries.hana
+	}
+	else if ( db.startsWith( 'mysql' ) || db.startsWith( 'tidb' ) ) {
+		testRuntimeOnly libraries.mysql
+	}
+	else if ( db.startsWith( 'mariadb' ) ) {
+		testRuntimeOnly libraries.mariadb
 	}
 
 	annotationProcessor libraries.logging_processor

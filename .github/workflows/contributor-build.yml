@@ -1,4 +1,4 @@
-# The main CI of Hibernate ORM is https://ci.hibernate.org/job/hibernate-orm-6.0-h2-main/.
+# The main CI of Hibernate ORM is https://ci.hibernate.org/job/hibernate-orm-pipeline/.
 # However, Hibernate ORM builds run on GitHub actions regularly
 # to check that it still works and can be used in GitHub forks.
 # See https://docs.github.com/en/free-pro-team@latest/actions
@@ -30,34 +30,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # When GitHub Actions supports it: https://github.com/actions/toolkit/issues/399
-        # We will use the experimental flag as indicator whether a failure should cause a workflow failure
         include:
           - rdbms: h2
-            experimental: false
           - rdbms: hsqldb
-            experimental: false
           - rdbms: derby
-            experimental: false
           - rdbms: mysql8
-            experimental: false
           - rdbms: mariadb
-            experimental: false
           - rdbms: postgresql_9_5
-            experimental: false
           - rdbms: postgresql_13
-            experimental: false
           - rdbms: oracle
-            experimental: false
           - rdbms: db2
-            experimental: false
           - rdbms: mssql
-            experimental: false
           - rdbms: sybase
-            experimental: false
 # Running with HANA requires at least 8GB memory just for the database, which we don't have on GH Actions runners
 #          - rdbms: hana
-#            experimental: true
     steps:
       - uses: actions/checkout@v2
         with:

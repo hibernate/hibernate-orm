@@ -188,6 +188,18 @@ The following table illustrates a list of commands for various databases that ca
 |`./docker_db.sh oracle`
 |`./gradlew test -Pdb=oracle_ci`
 
+|Oracle 11g
+|`./docker_db.sh oracle_11`
+|`./gradlew test -Pdb=oracle_ci`
+
+|Oracle XE 18
+|`./docker_db.sh oracle_18`
+|`./gradlew test -Pdb=oracle_ci`
+
+|Oracle XE 21
+|`./docker_db.sh oracle_21`
+|`./gradlew test -Pdb=oracle_ci`
+
 |Oracle EE
 |`./docker_db.sh oracle_ee`
 |`./gradlew test -Pdb=oracle_docker`

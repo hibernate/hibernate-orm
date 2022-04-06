@@ -59,6 +59,9 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	// cache the status of the type
 	private volatile Type type;
 
+	// lazily computed based on 'properties' field: invalidate by setting to null when properties are modified
+	private List<Selectable> cachedSelectables;
+
 	public Component(MetadataBuildingContext metadata, PersistentClass owner) throws MappingException {
 		this( metadata, owner.getTable(), owner );
 	}
@@ -117,6 +120,11 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	public void addProperty(Property p) {
 		properties.add( p );
+		propertiesListModified();
+	}
+
+	private void propertiesListModified() {
+		cachedSelectables = null;
 	}
 
 	@Override
@@ -146,9 +154,15 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	@Override
 	public List<Selectable> getSelectables() {
-		return properties.stream()
-				.flatMap( p -> p.getSelectables().stream() )
-				.collect(Collectors.toList());
+		if ( cachedSelectables != null ) {
+			return cachedSelectables;
+		}
+		else {
+			cachedSelectables = properties.stream()
+					.flatMap( p -> p.getSelectables().stream() )
+					.collect( Collectors.toList() );
+			return cachedSelectables;
+		}
 	}
 
 	@Override
@@ -568,6 +582,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 				}
 			}
 		}
+		propertiesListModified();
 		return this.originalPropertyOrder = originalPropertyOrder;
 	}
 

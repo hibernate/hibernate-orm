@@ -11,6 +11,7 @@ import java.sql.Types;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
@@ -110,6 +111,10 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 			return (X) offsetDateTime.toZonedDateTime();
 		}
 
+		if ( Instant.class.isAssignableFrom( type ) ) {
+			return (X) offsetDateTime.toInstant();
+		}
+
 		if ( Calendar.class.isAssignableFrom( type ) ) {
 			return (X) GregorianCalendar.from( offsetDateTime.toZonedDateTime() );
 		}
@@ -167,6 +172,11 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 		if (value instanceof ZonedDateTime) {
 			ZonedDateTime zonedDateTime = (ZonedDateTime) value;
 			return OffsetDateTime.of( zonedDateTime.toLocalDateTime(), zonedDateTime.getOffset() );
+		}
+
+		if (value instanceof Instant) {
+			Instant instant = (Instant) value;
+			return instant.atOffset( ZoneOffset.UTC );
 		}
 
 		if (value instanceof Timestamp) {

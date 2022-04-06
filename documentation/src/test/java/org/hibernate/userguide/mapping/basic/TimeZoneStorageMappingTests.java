@@ -149,22 +149,37 @@ public class TimeZoneStorageMappingTests {
 		);
 	}
 
-//	@Test
-//	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class)
-//	public void testNormalize(SessionFactoryScope scope) {
-//		scope.inSession(
-//				session -> {
-//					List<Tuple> resultList = session.createQuery(
-//							"select e.offsetDateTimeNormalized, extract(offset from e.offsetDateTimeNormalized), e.zonedDateTimeNormalized, extract(offset from e.zonedDateTimeNormalized) from TimeZoneStorageEntity e",
-//							Tuple.class
-//					).getResultList();
-//					assertThat( resultList.get( 0 ).get( 0, OffsetDateTime.class ), Matchers.is( OFFSET_DATE_TIME ) );
-//					assertThat( resultList.get( 0 ).get( 1, ZoneOffset.class ), Matchers.is( OFFSET_DATE_TIME.getOffset() ) );
-//					assertThat( resultList.get( 0 ).get( 2, ZonedDateTime.class ), Matchers.is( ZONED_DATE_TIME ) );
-//					assertThat( resultList.get( 0 ).get( 3, ZoneOffset.class ), Matchers.is( ZONED_DATE_TIME.getOffset() ) );
-//				}
-//		);
-//	}
+	@Test
+	public void testNormalize(SessionFactoryScope scope) {
+		scope.inSession(
+				session -> {
+					List<Tuple> resultList = session.createQuery(
+							"select e.offsetDateTimeNormalized, e.zonedDateTimeNormalized, e.offsetDateTimeNormalizedUtc, e.zonedDateTimeNormalizedUtc from TimeZoneStorageEntity e",
+							Tuple.class
+					).getResultList();
+					assertThat( resultList.get( 0 ).get( 0, OffsetDateTime.class ).toInstant(), Matchers.is( OFFSET_DATE_TIME.toInstant() ) );
+					assertThat( resultList.get( 0 ).get( 1, ZonedDateTime.class ).toInstant(), Matchers.is( ZONED_DATE_TIME.toInstant() ) );
+					assertThat( resultList.get( 0 ).get( 2, OffsetDateTime.class ).toInstant(), Matchers.is( OFFSET_DATE_TIME.toInstant() ) );
+					assertThat( resultList.get( 0 ).get( 3, ZonedDateTime.class ).toInstant(), Matchers.is( ZONED_DATE_TIME.toInstant() ) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimezoneTypes.class)
+	public void testNormalizeOffset(SessionFactoryScope scope) {
+		scope.inSession(
+				session -> {
+					List<Tuple> resultList = session.createQuery(
+							"select extract(offset from e.offsetDateTimeNormalizedUtc), extract(offset from e.zonedDateTimeNormalizedUtc) from TimeZoneStorageEntity e",
+							Tuple.class
+					).getResultList();
+					assertThat( resultList.get( 0 ).get( 0, ZoneOffset.class ), Matchers.is( ZoneOffset.systemDefault().getRules().getOffset( OFFSET_DATE_TIME.toInstant() ) ) );
+					assertThat( resultList.get( 0 ).get( 1, ZoneOffset.class ), Matchers.is( ZoneOffset.UTC ) );
+				}
+		);
+	}
 
 	@Entity(name = "TimeZoneStorageEntity")
 	@Table(name = "TimeZoneStorageEntity")
@@ -200,6 +215,14 @@ public class TimeZoneStorageMappingTests {
 		@Column(name = "birthday_zoned_normalized")
 		private ZonedDateTime zonedDateTimeNormalized;
 
+		@TimeZoneStorage(TimeZoneStorageType.NORMALIZE_UTC)
+		@Column(name = "birthday_offset_normalized_utc")
+		private OffsetDateTime offsetDateTimeNormalizedUtc;
+
+		@TimeZoneStorage(TimeZoneStorageType.NORMALIZE_UTC)
+		@Column(name = "birthday_zoned_normalized_utc")
+		private ZonedDateTime zonedDateTimeNormalizedUtc;
+
 		public TimeZoneStorageEntity() {
 		}
 
@@ -211,6 +234,8 @@ public class TimeZoneStorageMappingTests {
 			this.zonedDateTimeAuto = zonedDateTime;
 			this.offsetDateTimeNormalized = offsetDateTime;
 			this.zonedDateTimeNormalized = zonedDateTime;
+			this.offsetDateTimeNormalizedUtc = offsetDateTime;
+			this.zonedDateTimeNormalizedUtc = zonedDateTime;
 		}
 	}
 }

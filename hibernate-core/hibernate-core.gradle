@@ -272,6 +272,13 @@ test {
     beforeTest { descriptor ->
         //println "Starting test: " + descriptor
     }
+
+    // Allow to exclude specific tests
+    if (project.hasProperty('excludeTests')) {
+        test.filter {
+            excludeTestsMatching project.property('excludeTests').toString()
+        }
+    }
 }
 
 //Create the task that runs the integration tests found from the

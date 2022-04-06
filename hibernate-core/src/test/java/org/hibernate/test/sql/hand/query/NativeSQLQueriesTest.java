@@ -102,7 +102,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 	}
 
 	protected String getEmploymentSQLMixedScalarEntity() {
-		return "SELECT e.*, e.employer as employerid  FROM EMPLOYMENT e" ;
+		return "SELECT e.*, e.EMPLOYER as employerid  FROM EMPLOYMENT e" ;
 	}
 
 	protected String getOrgEmpRegionSQL() {

@@ -232,7 +232,7 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 		// Value returned by Oracle native query is a Types.NUMERIC, which is mapped to a BigDecimalType;
 		// Cast returned value to Number then call Number.doubleValue() so it works on all dialects.
 		Double heightViaSql =
-				( (Number)s.createSQLQuery("select height_centimeters from T_USER where T_USER.username='steve'").uniqueResult())
+				( (Number)s.createSQLQuery("select height_centimeters from T_USER where T_USER.userName='steve'").uniqueResult())
 						.doubleValue();
 		assertEquals(HEIGHT_CENTIMETERS, heightViaSql, 0.01d);
 
@@ -257,7 +257,7 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 		u.getPerson().setHeightInches(1);
 		s.flush();
 		heightViaSql =
-				( (Number)s.createSQLQuery("select height_centimeters from T_USER where T_USER.username='steve'").uniqueResult() )
+				( (Number)s.createSQLQuery("select height_centimeters from T_USER where T_USER.userName='steve'").uniqueResult() )
 						.doubleValue();
 		assertEquals(2.54d, heightViaSql, 0.01d);
 		s.delete(u);

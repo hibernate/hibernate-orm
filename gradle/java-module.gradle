@@ -77,26 +77,30 @@ dependencies {
 
 	//Databases
 	testRuntime( libraries.h2 )
+	testRuntime( libraries.derby )
 	testRuntime( libraries.hsqldb )
 	testRuntime( libraries.postgresql )
-	testRuntime( libraries.mysql )
-	testRuntime( libraries.mariadb )
 	testRuntime( libraries.mssql )
 	testRuntime( libraries.informix )
-	testRuntime( libraries.hana )
+	testRuntime( libraries.oracle )
+	testRuntime( libraries.sybase )
 
 	asciidoclet 'org.asciidoctor:asciidoclet:1.+'
 
-	if ( db.equalsIgnoreCase( 'oracle' ) ) {
-		testRuntime( libraries.oracle ) {
-			exclude group: 'com.oracle.jdbc', module: 'xmlparserv2'
-		}
-	}
-	else if ( db.equalsIgnoreCase( 'db2' ) ) {
+	// Since both the DB2 driver and HANA have a package "net.jpountz" we have to add dependencies conditionally
+	// This is due to the "no split-packages" requirement of Java 9+
+
+	if ( db.startsWith( 'db2' ) ) {
 		testRuntime( libraries.db2 )
 	}
-	else if ( db.equalsIgnoreCase( 'hana' ) ) {
+	else if ( db.startsWith( 'hana' ) ) {
 		testRuntime( libraries.hana )
+	}
+	else if ( db.startsWith( 'mysql' ) ) {
+		testRuntimeOnly libraries.mysql
+	}
+	else if ( db.startsWith( 'mariadb' ) ) {
+		testRuntimeOnly libraries.mariadb
 	}
 
 	// Mac-specific
@@ -289,6 +293,8 @@ test {
 	systemProperty 'user.country', 'US'
 	systemProperty 'user.timezone', 'UTC'
 	systemProperty 'file.encoding', 'UTF-8'
+	// Needed for AdoptOpenJDK on alpine? The problem is similar to this: https://github.com/mockito/mockito/issues/978
+	jvmArgs '-XX:+StartAttachListener'
 }
 
 // Enable the experimental features of ByteBuddy with JDK 19+

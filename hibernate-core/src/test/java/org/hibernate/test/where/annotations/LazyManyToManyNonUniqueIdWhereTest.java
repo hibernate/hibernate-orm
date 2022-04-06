@@ -295,7 +295,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 				inverseJoinColumns = { @JoinColumn( name = "ASSOCIATION_ID" ) }
 		)
 		@WhereJoinTable( clause = "MAIN_CODE='MATERIAL' AND ASSOCIATION_CODE='RATING'" )
-		@Where( clause = "name = 'high' or name = 'medium'" )
+		@Where( clause = "NAME = 'high' or NAME = 'medium'" )
 		@Immutable
 		public List<Rating> getMediumOrHighRatingsFromCombined() {
 			return mediumOrHighRatingsFromCombined;
@@ -382,7 +382,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 				joinColumns = { @JoinColumn( name = "BUILDING_ID") },
 				inverseJoinColumns = { @JoinColumn( name = "RATING_ID" ) }
 		)
-		@Where( clause = "name = 'high' or name = 'medium'" )
+		@Where( clause = "NAME = 'high' or NAME = 'medium'" )
 		@Immutable
 		public List<Rating> getMediumOrHighRatings() {
 			return mediumOrHighRatings;

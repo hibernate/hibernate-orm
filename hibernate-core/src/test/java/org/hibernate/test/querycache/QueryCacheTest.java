@@ -368,15 +368,11 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature(
-			value = DialectChecks.CaseSensitiveCheck.class,
-			comment = "i.name='widget' should not match on case sensitive database."
-	)
-	public void testCaseInsensitiveComparison() {
+	public void testComparison() {
 		Session s = openSession();
 		s.beginTransaction();
 		Item i = new Item();
-		i.setName( "Widget" );
+		i.setName( "widget" );
 		i.setDescription( "A really top-quality, full-featured widget." );
 		s.save( i );
 		s.getTransaction().commit();
@@ -387,7 +383,7 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 		List result = s.createQuery( queryString ).list();
 		assertEquals(1, result.size());
 		i = (Item) s.get( Item.class, new Long(i.getId()) );
-		assertEquals( i.getName(), "Widget" );
+		assertEquals( i.getName(), "widget" );
 		s.delete(i);
 		s.getTransaction().commit();
 		s.close();

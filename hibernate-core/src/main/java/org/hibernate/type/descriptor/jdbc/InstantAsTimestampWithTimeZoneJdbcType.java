@@ -14,6 +14,7 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Calendar;
 import java.util.TimeZone;
 
@@ -84,7 +85,7 @@ public class InstantAsTimestampWithTimeZoneJdbcType implements JdbcType {
 					WrapperOptions wrapperOptions) throws SQLException {
 				final OffsetDateTime dateTime = javaType.unwrap( value, OffsetDateTime.class, wrapperOptions );
 				// supposed to be supported in JDBC 4.2
-				st.setObject( index, dateTime, Types.TIMESTAMP_WITH_TIMEZONE );
+				st.setObject( index, dateTime.withOffsetSameInstant( ZoneOffset.UTC ), Types.TIMESTAMP_WITH_TIMEZONE );
 			}
 
 			@Override
@@ -96,7 +97,7 @@ public class InstantAsTimestampWithTimeZoneJdbcType implements JdbcType {
 					throws SQLException {
 				final OffsetDateTime dateTime = javaType.unwrap( value, OffsetDateTime.class, wrapperOptions );
 				// supposed to be supported in JDBC 4.2
-				st.setObject( name, dateTime, Types.TIMESTAMP_WITH_TIMEZONE );
+				st.setObject( name, dateTime.withOffsetSameInstant( ZoneOffset.UTC ), Types.TIMESTAMP_WITH_TIMEZONE );
 			}
 		};
 	}

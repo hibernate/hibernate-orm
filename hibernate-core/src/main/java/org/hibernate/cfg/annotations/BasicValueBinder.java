@@ -674,24 +674,6 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			enumType = null;
 		}
 
-		final TimeZoneStorage timeZoneStorageAnn = attributeXProperty.getAnnotation( TimeZoneStorage.class );
-		if ( timeZoneStorageAnn != null ) {
-			timeZoneStorageType = timeZoneStorageAnn.value();
-			final TimeZoneColumn timeZoneColumnAnn = attributeXProperty.getAnnotation( TimeZoneColumn.class );
-			if ( timeZoneColumnAnn != null ) {
-				if ( timeZoneStorageType != TimeZoneStorageType.AUTO && timeZoneStorageType != TimeZoneStorageType.COLUMN ) {
-					throw new IllegalStateException(
-							"@TimeZoneColumn can not be used in conjunction with @TimeZoneStorage( " + timeZoneStorageType +
-									" ) with attribute " + attributeXProperty.getDeclaringClass().getName() +
-									'.' + attributeXProperty.getName()
-					);
-				}
-			}
-		}
-		else {
-			timeZoneStorageType = null;
-		}
-
 		normalSupplementalDetails( attributeXProperty);
 
 		// layer in support for JPA's approach for specifying a specific Java type for the collection elements...
@@ -957,6 +939,24 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		final Temporal temporalAnn = attributeXProperty.getAnnotation( Temporal.class );
 		if ( temporalAnn != null ) {
 			temporalPrecision = temporalAnn.value();
+		}
+
+		final TimeZoneStorage timeZoneStorageAnn = attributeXProperty.getAnnotation( TimeZoneStorage.class );
+		if ( timeZoneStorageAnn != null ) {
+			timeZoneStorageType = timeZoneStorageAnn.value();
+			final TimeZoneColumn timeZoneColumnAnn = attributeXProperty.getAnnotation( TimeZoneColumn.class );
+			if ( timeZoneColumnAnn != null ) {
+				if ( timeZoneStorageType != TimeZoneStorageType.AUTO && timeZoneStorageType != TimeZoneStorageType.COLUMN ) {
+					throw new IllegalStateException(
+							"@TimeZoneColumn can not be used in conjunction with @TimeZoneStorage( " + timeZoneStorageType +
+									" ) with attribute " + attributeXProperty.getDeclaringClass().getName() +
+									'.' + attributeXProperty.getName()
+					);
+				}
+			}
+		}
+		else {
+			timeZoneStorageType = null;
 		}
 	}
 

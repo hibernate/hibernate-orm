@@ -33,16 +33,17 @@ import static org.hibernate.orm.tooling.gradle.HibernateOrmSpec.HIBERNATE;
 public class EnhancementTask extends DefaultTask {
 	public static final String DSL_NAME = "hibernateEnhance";
 
-	public static void apply(HibernateOrmSpec ormDsl, SourceSet mainSourceSet, Project project) {
+	public static void apply(HibernateOrmSpec pluginDsl, SourceSet mainSourceSet, Project project) {
 		final EnhancementTask enhancementTask = project.getTasks().create(
 				DSL_NAME,
 				EnhancementTask.class,
-				ormDsl,
+				pluginDsl,
 				mainSourceSet,
 				project
 		);
 		enhancementTask.setGroup( HIBERNATE );
 		enhancementTask.setDescription( "Performs Hibernate ORM enhancement of the project's compiled classes" );
+		enhancementTask.onlyIf( (t) -> pluginDsl.getSupportEnhancementProperty().getOrElse( true ) );
 
 		final String compileJavaTaskName = mainSourceSet.getCompileJavaTaskName();
 		final Task compileJavaTask = project.getTasks().getByName( compileJavaTaskName );
@@ -55,10 +56,8 @@ public class EnhancementTask extends DefaultTask {
 	private final DirectoryProperty outputDirectory;
 
 	@Inject
-	@SuppressWarnings( "UnstableApiUsage" )
-	public EnhancementTask(HibernateOrmSpec ormSpec, SourceSet mainSourceSet, Project project) {
-		this.enhancementDsl = ormSpec.getEnhancementSpec();
-
+	public EnhancementTask(HibernateOrmSpec pluginDsl, SourceSet mainSourceSet, Project project) {
+		enhancementDsl = pluginDsl.getEnhancementSpec();
 		javaCompileOutputDirectory = mainSourceSet.getJava().getDestinationDirectory();
 
 		outputDirectory = project.getObjects().directoryProperty();

@@ -297,7 +297,7 @@ public class JpaMetamodelGenerationTask extends DefaultTask {
 	}
 
 	@SuppressWarnings( "UnstableApiUsage" )
-	public static void apply(HibernateOrmSpec ormDsl, SourceSet mainSourceSet, Project project) {
+	public static void apply(HibernateOrmSpec pluginDsl, SourceSet mainSourceSet, Project project) {
 		final String mainCompileTaskName = mainSourceSet.getCompileJavaTaskName();
 		final JavaCompile mainCompileTask = (JavaCompile) project.getTasks().getByName( mainCompileTaskName );
 		final Task compileResourcesTask = project.getTasks().getByName( "processResources" );
@@ -305,13 +305,14 @@ public class JpaMetamodelGenerationTask extends DefaultTask {
 		final JpaMetamodelGenerationTask genTask = project.getTasks().create(
 				DSL_NAME,
 				JpaMetamodelGenerationTask.class,
-				ormDsl,
+				pluginDsl,
 				mainSourceSet,
 				mainCompileTask,
 				project
 		);
 		genTask.setGroup( HIBERNATE );
 		genTask.setDescription( "Generates the JPA 'static metamodel'" );
+		genTask.onlyIf( (t) -> pluginDsl.getSupportJpaMetamodelProperty().getOrElse( true ) );
 
 		genTask.dependsOn( mainCompileTask );
 		genTask.dependsOn( compileResourcesTask );
@@ -324,8 +325,8 @@ public class JpaMetamodelGenerationTask extends DefaultTask {
 		genTask.finalizedBy( compileJpaMetamodelTask );
 		mainCompileTask.finalizedBy( compileJpaMetamodelTask );
 		compileJpaMetamodelTask.dependsOn( genTask );
-		compileJpaMetamodelTask.source( project.files( ormDsl.getJpaMetamodelSpec().getGenerationOutputDirectory() ) );
-		compileJpaMetamodelTask.getDestinationDirectory().set( ormDsl.getJpaMetamodelSpec().getCompileOutputDirectory() );
+		compileJpaMetamodelTask.source( project.files( pluginDsl.getJpaMetamodelSpec().getGenerationOutputDirectory() ) );
+		compileJpaMetamodelTask.getDestinationDirectory().set( pluginDsl.getJpaMetamodelSpec().getCompileOutputDirectory() );
 		compileJpaMetamodelTask.setClasspath(
 				project.getConfigurations().getByName( "runtimeClasspath" ).plus( mainSourceSet.getRuntimeClasspath() )
 		);

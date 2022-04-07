@@ -8,11 +8,7 @@ package org.hibernate.orm.tooling.gradle;
 
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.plugins.JavaPlugin;
-import org.gradle.api.plugins.JavaPluginConvention;
-import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.tasks.SourceSetContainer;
 
 import org.hibernate.orm.tooling.gradle.enhance.EnhancementTask;
 import org.hibernate.orm.tooling.gradle.metamodel.JpaMetamodelGenerationTask;
@@ -28,25 +24,15 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 		project.getLogger().debug( "Adding Hibernate extensions to the build [{}]", project.getPath() );
 		final HibernateOrmSpec ormDsl = project.getExtensions().create( HibernateOrmSpec.DSL_NAME,  HibernateOrmSpec.class, project );
 
-		final Configuration hibernateOrm = project.getConfigurations().maybeCreate( "hibernateOrm" );
-		project.getDependencies().add(
-				"hibernateOrm",
-				project.provider( () -> "org.hibernate.orm:hibernate-core:" + HibernateVersion.version )
-		);
-		project.getConfigurations().getByName( "implementation" ).extendsFrom( hibernateOrm );
-
-		final JavaPluginConvention javaPluginConvention = project.getConvention().findPlugin( JavaPluginConvention.class );
-		assert javaPluginConvention != null;
-
-		final SourceSetContainer sourceSets = javaPluginConvention.getSourceSets();
-		final SourceSet mainSourceSet = sourceSets.getByName( SourceSet.MAIN_SOURCE_SET_NAME );
-
-		EnhancementTask.apply( ormDsl, mainSourceSet, project );
-		JpaMetamodelGenerationTask.apply( ormDsl, mainSourceSet, project );
+		EnhancementTask.apply( ormDsl, ormDsl.getSourceSetProperty().get(), project );
+		JpaMetamodelGenerationTask.apply( ormDsl, ormDsl.getSourceSetProperty().get(), project );
 
 		project.getDependencies().add(
 				"implementation",
-				project.provider( () -> "org.hibernate.orm:hibernate-core:" + ormDsl.getHibernateVersionProperty().get() )
+				ormDsl.getHibernateVersionProperty().map( (ormVersion) -> Character.isDigit( ormVersion.charAt( 0 ) )
+						? "org.hibernate.orm:hibernate-core:" + ormVersion
+						: null
+				)
 		);
 	}
 }

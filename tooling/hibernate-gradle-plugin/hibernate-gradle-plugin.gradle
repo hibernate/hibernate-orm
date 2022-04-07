@@ -76,11 +76,11 @@ task publish {
 }
 
 processResources {
+	inputs.property( "orm-version", getVersion() )
 	filter( ReplaceTokens, tokens: [ 'hibernateVersion': getVersion() ] )
 }
 
-
-tasks.withType( GroovyCompile ) {
+tasks.withType( JavaCompile ) {
 	options.encoding = 'UTF-8'
 }
 

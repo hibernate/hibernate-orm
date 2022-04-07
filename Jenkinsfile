@@ -301,7 +301,7 @@ public class BuildEnvironment {
 		this.testJdkTool = "OpenJDK ${testVersion} Latest";
 	}
 	String toString() { getTag() }
-	String getTag() { "jdk-$version-$dbName" }
+	String getTag() { "jdk-$testVersion-$dbName" }
 	String getNode() { node }
 	String getVersion() { version }
 	String getTestVersion() { testVersion }

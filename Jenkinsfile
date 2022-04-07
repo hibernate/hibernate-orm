@@ -39,9 +39,9 @@ stage('Configure') {
 		buildEnv(defaultJdk, 'tidb', 'tidb', 'tidb_hibernate@pingcap.com'),
 		// Disable EDB for now as the image is not available anymore
 // 		buildEnv(defaultJdk, 'edb')
-		buildEnv('17', 'h2'),
-		buildEnv('18', 'h2'),
-		buildEnv('19', 'h2'),
+		jdkBuildEnv(defaultJdk, '17', 'yoann@hibernate.org sanne@hibernate.org'),
+		jdkBuildEnv(defaultJdk, '18', 'yoann@hibernate.org sanne@hibernate.org'),
+		jdkBuildEnv(defaultJdk, '19', 'yoann@hibernate.org sanne@hibernate.org'),
 	];
 
 	helper.configure {
@@ -76,14 +76,21 @@ stage('Build') {
 	Map<String, Closure> executions = [:]
 	environments.each { BuildEnvironment buildEnv ->
 		// Don't build environments for newer JDKs when this is a PR
-		if ( buildEnv.getVersion() != defaultJdk && helper.scmSource.pullRequest ) {
-			return
+		def isNewerJdk = buildEnv.getVersion() != defaultJdk
+		if ( isNewerJdk ) {
+			if ( helper.scmSource.pullRequest ) {
+				return
+			}
 		}
 		executions.put(buildEnv.tag, {
 			runBuildOnNode(buildEnv.node) {
 				// Use withEnv instead of setting env directly, as that is global!
 				// See https://github.com/jenkinsci/pipeline-plugin/blob/master/TUTORIAL.md
-				withEnv(["JAVA_HOME=${tool buildEnv.buildJdkTool}", "PATH+JAVA=${tool buildEnv.buildJdkTool}/bin"]) {
+				withEnv(["JAVA_HOME=${tool buildEnv.buildJdkTool}", "PATH+JAVA=${tool buildEnv.buildJdkTool}/bin", "TEST_JAVA_HOME=${tool buildEnv.testJdkTool}"]) {
+					def additionalOptions = ""
+					if ( isNewerJdk ) {
+						additionalOptions = " -Ptest.jdk.version=${buildEnv.getTestVersion()} -Porg.gradle.java.installations.paths=${JAVA_HOME},${TEST_JAVA_HOME}"
+					}
 					def containerName = null
 					stage('Checkout') {
 						checkout scm
@@ -164,35 +171,35 @@ stage('Build') {
 								case "h2":
 								case "derby":
 								case "hsqldb":
-									runTest("-Pdb=${buildEnv.dbName}")
+									runTest("-Pdb=${buildEnv.dbName}${additionalOptions}")
 									break;
 								case "mysql8":
-									runTest("-Pdb=mysql_ci")
+									runTest("-Pdb=mysql_ci${additionalOptions}")
 									break;
 								case "tidb":
-									runTest("-Pdb=tidb -DdbHost=localhost:4000", 'TIDB')
+									runTest("-Pdb=tidb -DdbHost=localhost:4000${additionalOptions}", 'TIDB')
 									break;
 								case "postgresql_9_5":
 								case "postgresql_13":
-									runTest("-Pdb=pgsql_ci")
+									runTest("-Pdb=pgsql_ci${additionalOptions}")
 									break;
 								case "oracle":
-									runTest("-Pdb=oracle_ci -PexcludeTests=**.LockTest.testQueryTimeout*")
+									runTest("-Pdb=oracle_ci -PexcludeTests=**.LockTest.testQueryTimeout*${additionalOptions}")
 									break;
 								case "oracle_ee":
-									runTest("-Pdb=oracle_jenkins", 'ORACLE_RDS')
+									runTest("-Pdb=oracle_jenkins${additionalOptions}", 'ORACLE_RDS')
 									break;
 								case "hana":
-									runTest("-Pdb=hana_jenkins", 'HANA')
+									runTest("-Pdb=hana_jenkins${additionalOptions}", 'HANA')
 									break;
 								case "edb":
-									runTest("-Pdb=edb_ci -DdbHost=localhost:5433")
+									runTest("-Pdb=edb_ci -DdbHost=localhost:5433${additionalOptions}")
 									break;
 								case "s390x":
-									runTest("-Pdb=h2")
+									runTest("-Pdb=h2${additionalOptions}")
 									break;
 								default:
-									runTest("-Pdb=${buildEnv.dbName}_ci")
+									runTest("-Pdb=${buildEnv.dbName}_ci${additionalOptions}")
 									break;
 							}
 						}
@@ -260,40 +267,44 @@ stage('Build') {
 // Job-specific helpers
 
 BuildEnvironment buildEnv(String version, String dbName) {
-	return new BuildEnvironment( version, dbName, NODE_PATTERN_BASE, null );
+	return new BuildEnvironment( version, version, dbName, NODE_PATTERN_BASE, null );
 }
 
 BuildEnvironment buildEnv(String version, String dbName, String node) {
-	return new BuildEnvironment( version, dbName, node, null );
+	return new BuildEnvironment( version, version, dbName, node, null );
 }
 
 BuildEnvironment buildEnv(String version, String dbName, String node, String notificationRecipients) {
-	return new BuildEnvironment( version, dbName, node, notificationRecipients );
+	return new BuildEnvironment( version, version, dbName, node, notificationRecipients );
+}
+
+BuildEnvironment jdkBuildEnv(String version, String testVersion, String notificationRecipients) {
+	return new BuildEnvironment( version,testVersion,  "h2", NODE_PATTERN_BASE, notificationRecipients );
 }
 
 public class BuildEnvironment {
 	private String version;
+	private String testVersion;
 	private String buildJdkTool;
 	private String testJdkTool;
 	private String dbName;
 	private String node;
 	private String notificationRecipients;
 
-	public BuildEnvironment(String version, String dbName, String node, String notificationRecipients) {
+	public BuildEnvironment(String version, String testVersion, String dbName, String node, String notificationRecipients) {
 		this.version = version;
+		this.testVersion = testVersion;
 		this.dbName = dbName;
 		this.node = node;
 		this.notificationRecipients = notificationRecipients;
-		String buildJdkTool;
-		String testJdkTool;
-		buildJdkTool = testJdkTool = "OpenJDK ${version} Latest";
-		this.buildJdkTool = buildJdkTool;
-		this.testJdkTool = testJdkTool;
+		this.buildJdkTool = "OpenJDK ${version} Latest";
+		this.testJdkTool = "OpenJDK ${testVersion} Latest";
 	}
 	String toString() { getTag() }
 	String getTag() { "jdk-$version-$dbName" }
 	String getNode() { node }
 	String getVersion() { version }
+	String getTestVersion() { testVersion }
 	String getNotificationRecipients() { notificationRecipients }
 }
 

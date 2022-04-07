@@ -41,8 +41,8 @@ public class LegacySpecHelper {
 
 		final Object javaeeValue = valueAccess.apply( javaeeName );
 		if ( javaeeValue != null ) {
-			DEPRECATION_LOGGER.deprecatedSetting( javaeeName, specName );
 			if ( valueChecker == null || valueChecker.apply( javaeeValue ) ) {
+				DEPRECATION_LOGGER.deprecatedSetting( javaeeName, specName );
 				return javaeeValue;
 			}
 		}

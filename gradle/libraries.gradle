@@ -21,9 +21,6 @@ ext {
     jnpVersion = '5.0.6.CR1'
 
     hibernateCommonsVersion = '6.0.0.Final'
-    hibernateValidatorVersion = '6.2.1.Final'
-    validationApiVersion = '2.0.1.Final'
-    elVersion = '3.0.1-b09'
     hibernateValidatorJakartaVersion = '7.0.2.Final'
 
     cdiVersion = '2.0'
@@ -98,7 +95,6 @@ ext {
             // javax
             jpa:            "javax.persistence:javax.persistence-api:${project.jpaVersion}",
             jta:            'org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec:1.1.1.Final',
-            validation:     "javax.validation:validation-api:${validationApiVersion}",
             jacc:           'org.jboss.spec.javax.security.jacc:jboss-jacc-api_1.4_spec:1.0.2.Final',
             interceptor:    'javax.interceptor:javax.interceptor-api:1.2',
             // required by JAXB from JDK 9 as it is not available anymore in JDK 9
@@ -114,8 +110,6 @@ ext {
             jaxb2_basics_ant: 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.12.0',
             jboss_jta:       "org.jboss.narayana.jta:narayana-jta:5.11.2.Final",
             jboss_tx_spi:    "org.jboss:jboss-transaction-spi:7.6.1.Final",
-            validator:       "org.hibernate.validator:hibernate-validator:${hibernateValidatorVersion}",
-            expression_language: "org.glassfish:javax.el:${elVersion}",
 
 
             // logging

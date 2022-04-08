@@ -206,7 +206,7 @@ stage('Build') {
 									runTest("-Pdb=${buildEnv.dbName}_ci${state[buildEnv.tag]['additionalOptions']}")
 									break;
 							}
-							env[buildEnv.tag + '_status'] = flowRun.state.result;
+							env[buildEnv.tag + '_status'] = currentBuild.result;
 						}
 					}
 					finally {

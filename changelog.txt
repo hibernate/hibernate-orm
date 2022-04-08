@@ -3,6 +3,23 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.3.26.Final (April 08, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32011
+
+** Bug
+    * [HHH-14649] - Oracle limit handler create wrong sql query when multiple spaces are present in the query 
+
+** Improvement
+    * [HHH-15106] -  fk() SQM function
+    * [HHH-14624] - Oracle from version 12 started supporting the `offset ? rows fetch next ? rows only`syntax for pagination
+
+** Task
+    * [HHH-15026] - Upgrade to Log4J 2.17.1
+    * [HHH-14987] - Upgrade to Log4j 2.17.0
+
+
 Changes in 5.3.25.Final (December 15, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

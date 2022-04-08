@@ -82,6 +82,8 @@ stage('Build') {
 				return
 			}
 		}
+		state[buildEnv.tag] = [:]
+		env[buildEnv.tag + '_status'] = null;
 		executions.put(buildEnv.tag, {
 			runBuildOnNode(buildEnv.node) {
 				// Use withEnv instead of setting env directly, as that is global!
@@ -204,6 +206,7 @@ stage('Build') {
 									runTest("-Pdb=${buildEnv.dbName}_ci${state[buildEnv.tag]['additionalOptions']}")
 									break;
 							}
+							env[buildEnv.tag + '_status'] = flowRun.state.result;
 						}
 					}
 					finally {
@@ -239,7 +242,7 @@ BuildEnvironment buildEnv(String version, String dbName, String node, String not
 }
 
 BuildEnvironment jdkBuildEnv(String version, String testVersion, String notificationRecipients) {
-	return new BuildEnvironment( version,testVersion,  "h2", NODE_PATTERN_BASE, notificationRecipients );
+	return new BuildEnvironment( version,testVersion, "h2", NODE_PATTERN_BASE, notificationRecipients );
 }
 
 public class BuildEnvironment {
@@ -261,7 +264,7 @@ public class BuildEnvironment {
 		this.testJdkTool = "OpenJDK ${testVersion} Latest";
 	}
 	String toString() { getTag() }
-	String getTag() { "jdk-$testVersion-$dbName" }
+	String getTag() { "jdk_${testVersion}_${dbName}" }
 	String getNode() { node }
 	String getVersion() { version }
 	String getTestVersion() { testVersion }
@@ -305,17 +308,18 @@ void runTest(String goal, String lockableResource = null, boolean clean = true) 
 		}
 	}
 	finally {
-		junit '**/target/test-results/test/*.xml'
+		junit '**/target/test-results/test/*.xml,**/target/test-results/testKitTest/*.xml'
 	}
 }
 
 
 void handleNotifications(currentBuild, buildEnv) {
-	boolean success = currentBuild.result == 'SUCCESS'
-	String previousResult = currentBuild.previousBuild == null ? null : currentBuild.previousBuild.result == 'SUCCESS'
+	def currentResult = env[buildEnv.tag + '_status']
+	boolean success = currentResult == 'SUCCESS'
+	def previousResult = currentBuild.previousBuild == null ? null : currentBuild.previousBuild.buildVariables[buildEnv.tag + '_status']
 
 	// Ignore success after success
-	if ( !( success && previousResult == 'SUCCESS' ) ) {
+	if ( !( success && previousSuccess ) ) {
 		def subject
 		def body
 		if ( success ) {
@@ -330,7 +334,7 @@ void handleNotifications(currentBuild, buildEnv) {
 					<p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to view the results.</p>"""
 			}
 		}
-		else if ( currentBuild.result == 'FAILURE' ) {
+		else if ( currentResult == 'FAILURE' ) {
 			if ( previousResult != null && previousResult == "FAILURE" ) {
 				subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Still failing"
 				body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Still failing:</p>
@@ -343,8 +347,8 @@ void handleNotifications(currentBuild, buildEnv) {
 			}
 		}
 		else {
-			subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - ${currentBuild.result}"
-			body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - ${currentBuild.result}:</p>
+			subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - ${currentResult}"
+			body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - ${currentResult}:</p>
 				<p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to view the results.</p>"""
 		}
 

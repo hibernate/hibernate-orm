@@ -21,7 +21,7 @@ ext {
     jnpVersion = '5.0.6.CR1'
 
     hibernateCommonsVersion = '6.0.0.Final'
-    hibernateValidatorJakartaVersion = '7.0.2.Final'
+    hibernateValidatorJakartaVersion = '7.0.4.Final'
 
     cdiVersion = '2.0'
     weldVersion = '3.1.5.Final'

@@ -2,7 +2,7 @@
 	<div id="header">
 
 		<div id="logo">
-			<a href="http://www.hibernate.org/" target="_blank">
+			<a href="https://www.hibernate.org/" target="_blank">
 				<#assign src = docFileManager.getRef(docFile, docFileManager.getHibernateImageDocFile())>
 				<img src="${src}" alt="Hibernate"/>
 			</a>

@@ -41,7 +41,7 @@ public class DocumentationPublishing {
 				.convention( project.getLayout().getBuildDirectory().dir( "documentation" ) );
 		docServerUrl = project.getObjects()
 				.property( String.class )
-				.convention( "filemgmt.jboss.org:/docs_htdocs/hibernate/orm" );
+				.convention( "filemgmt-prod-sync.jboss.org:/docs_htdocs/hibernate/orm" );
 
 		updatedJsonFile = project.getObjects()
 				.fileProperty()

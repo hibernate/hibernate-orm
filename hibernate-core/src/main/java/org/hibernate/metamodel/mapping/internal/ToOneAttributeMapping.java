@@ -775,6 +775,7 @@ public class ToOneAttributeMapping
 						fetchablePath,
 						fetchParent,
 						parentNavigablePath,
+						fetchTiming,
 						creationState
 				);
 			}
@@ -935,6 +936,7 @@ public class ToOneAttributeMapping
 			NavigablePath fetchablePath,
 			FetchParent fetchParent,
 			NavigablePath parentNavigablePath,
+			FetchTiming fetchTiming,
 			DomainResultCreationState creationState) {
 		final NavigablePath referencedNavigablePath;
 		final boolean hasBidirectionalFetchParent;
@@ -1019,17 +1021,29 @@ public class ToOneAttributeMapping
 				realParent = parentNavigablePath;
 			}
 			final TableGroup tableGroup = fromClauseAccess.getTableGroup( realParent );
+			final DomainResult<?> domainResult = foreignKeyDescriptor.createDomainResult(
+					fetchablePath,
+					tableGroup,
+					sideNature,
+					fetchParent,
+					creationState
+			);
+			if ( fetchTiming == FetchTiming.IMMEDIATE ) {
+				return new EntityFetchSelectImpl(
+						fetchParent,
+						this,
+						fetchablePath,
+						domainResult,
+						isSelectByUniqueKey( sideNature ),
+						creationState
+				);
+			}
+
 			return new EntityDelayedFetchImpl(
 					fetchParent,
 					this,
 					fetchablePath,
-					foreignKeyDescriptor.createDomainResult(
-							fetchablePath,
-							tableGroup,
-							sideNature,
-							fetchParent,
-							creationState
-					),
+					domainResult,
 					isSelectByUniqueKey( sideNature )
 			);
 		}
@@ -1097,8 +1111,10 @@ public class ToOneAttributeMapping
 				|| ( partMappingType != entityMappingType
 				&& !entityMappingType.getEntityPersister().isSubclassEntityName( partMappingType.getMappedJavaType().getJavaType().getTypeName() )
 				&& !( (EntityMappingType) partMappingType ).getEntityPersister().isSubclassEntityName( entityMappingType.getEntityName() ) ) ) {
-
 			referencedNavigablePath = referencedNavigablePath.getParent();
+			if ( referencedNavigablePath == null ) {
+				return null;
+			}
 			partMappingType = creationState.resolveModelPart( referencedNavigablePath ).getPartMappingType();
 		}
 		return referencedNavigablePath;

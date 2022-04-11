@@ -157,6 +157,9 @@ public class SubselectFetch {
 		}
 
 		public void addKey(EntityKey key, LoadingEntityEntry entry) {
+			if ( !entry.getDescriptor().hasSubselectLoadableCollections() ) {
+				return;
+			}
 			final SubselectFetch subselectFetch = subselectFetches.computeIfAbsent(
 					entry.getEntityInitializer().getNavigablePath(),
 					navigablePath -> new SubselectFetch(

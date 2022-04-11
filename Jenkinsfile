@@ -6,6 +6,9 @@
  */
 
 import groovy.transform.Field
+import io.jenkins.blueocean.rest.impl.pipeline.PipelineNodeGraphVisitor
+import io.jenkins.blueocean.rest.impl.pipeline.FlowNodeWrapper
+import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
 /*
  * See https://github.com/hibernate/hibernate-jenkins-pipeline-helpers
@@ -39,9 +42,9 @@ stage('Configure') {
 		buildEnv(defaultJdk, 'tidb', 'tidb', 'tidb_hibernate@pingcap.com'),
 		// Disable EDB for now as the image is not available anymore
 // 		buildEnv(defaultJdk, 'edb')
-		jdkBuildEnv(defaultJdk, '17', 'yoann@hibernate.org sanne@hibernate.org'),
-		jdkBuildEnv(defaultJdk, '18', 'yoann@hibernate.org sanne@hibernate.org'),
-		jdkBuildEnv(defaultJdk, '19', 'yoann@hibernate.org sanne@hibernate.org'),
+		jdkBuildEnv(defaultJdk, '17'),
+		jdkBuildEnv(defaultJdk, '18'),
+		jdkBuildEnv(defaultJdk, '19'),
 	];
 
 	helper.configure {
@@ -83,7 +86,6 @@ stage('Build') {
 			}
 		}
 		state[buildEnv.tag] = [:]
-		env[buildEnv.tag + '_status'] = null;
 		executions.put(buildEnv.tag, {
 			runBuildOnNode(buildEnv.node) {
 				// Use withEnv instead of setting env directly, as that is global!
@@ -206,7 +208,6 @@ stage('Build') {
 									runTest("-Pdb=${buildEnv.dbName}_ci${state[buildEnv.tag]['additionalOptions']}")
 									break;
 							}
-							env[buildEnv.tag + '_status'] = currentBuild.result;
 						}
 					}
 					finally {
@@ -239,6 +240,10 @@ BuildEnvironment buildEnv(String version, String dbName, String node) {
 
 BuildEnvironment buildEnv(String version, String dbName, String node, String notificationRecipients) {
 	return new BuildEnvironment( version, version, dbName, node, notificationRecipients );
+}
+
+BuildEnvironment jdkBuildEnv(String version, String testVersion) {
+	return new BuildEnvironment( version,testVersion, "h2", NODE_PATTERN_BASE, null );
 }
 
 BuildEnvironment jdkBuildEnv(String version, String testVersion, String notificationRecipients) {
@@ -314,12 +319,12 @@ void runTest(String goal, String lockableResource = null, boolean clean = true) 
 
 
 void handleNotifications(currentBuild, buildEnv) {
-	def currentResult = env[buildEnv.tag + '_status']
-	boolean success = currentResult == 'SUCCESS'
-	def previousResult = currentBuild.previousBuild == null ? null : currentBuild.previousBuild.buildVariables[buildEnv.tag + '_status']
+	def currentResult = getParallelResult(currentBuild, buildEnv.tag)
+	boolean success = currentResult == 'SUCCESS' || currentResult == 'UNKNOWN'
+	def previousResult = currentBuild.previousBuild == null ? null : getParallelResult(currentBuild.previousBuild, buildEnv.tag)
 
 	// Ignore success after success
-	if ( !( success && previousSuccess ) ) {
+	if ( !( success && previousResult == 'SUCCESS' ) ) {
 		def subject
 		def body
 		if ( success ) {
@@ -358,4 +363,11 @@ void handleNotifications(currentBuild, buildEnv) {
 				to: buildEnv.notificationRecipients
 		)
 	}
+}
+
+@NonCPS
+String getParallelResult( RunWrapper build, String parallelBranchName ) {
+    def visitor = new PipelineNodeGraphVisitor( build.rawBuild )
+    def branch = visitor.pipelineNodes.find{ it.type == FlowNodeWrapper.NodeType.PARALLEL && parallelBranchName == it.displayName }
+    return branch.status.result
 }

@@ -33,7 +33,6 @@ dependencies {
     implementation libraries.commons_annotations
 
     implementation libraries.byteBuddy
-    implementation libraries.jakarta_activation
     implementation libraries.jakarta_jaxb_api
     implementation libraries.jakarta_jaxb_runtime
     implementation libraries.jakarta_inject

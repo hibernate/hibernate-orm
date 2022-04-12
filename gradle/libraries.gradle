@@ -78,7 +78,6 @@ ext {
             jakarta_validation:     'jakarta.validation:jakarta.validation-api:3.0.0',
             jakarta_jacc:           'jakarta.authorization:jakarta.authorization-api:2.0.0',
             jakarta_interceptor:    'jakarta.interceptor:jakarta.interceptor-api:2.0.0',
-            jakarta_activation:     'jakarta.activation:jakarta.activation-api:2.0.1',
             jakarta_resource:       'jakarta.resource:jakarta.resource-api:2.0.0',
             jakarta_jaxb_api:       'jakarta.xml.bind:jakarta.xml.bind-api:3.0.1',
             jakarta_jaxb_xjc:       "org.glassfish.jaxb:jaxb-xjc:${jakartaJaxbRuntimeVersion}",
@@ -97,8 +96,6 @@ ext {
             jta:            'org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec:1.1.1.Final',
             jacc:           'org.jboss.spec.javax.security.jacc:jboss-jacc-api_1.4_spec:1.0.2.Final',
             interceptor:    'javax.interceptor:javax.interceptor-api:1.2',
-            // required by JAXB from JDK 9 as it is not available anymore in JDK 9
-            activation:     'javax.activation:javax.activation-api:1.2.0',
             cdi: "javax.enterprise:cdi-api:${cdiVersion}",
             weld: "org.jboss.weld.se:weld-se-shaded:${weldVersion}",
             jaxb_api: "javax.xml.bind:jaxb-api:${jaxbApiVersion}",

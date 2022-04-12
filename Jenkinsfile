@@ -369,5 +369,12 @@ void handleNotifications(currentBuild, buildEnv) {
 String getParallelResult( RunWrapper build, String parallelBranchName ) {
     def visitor = new PipelineNodeGraphVisitor( build.rawBuild )
     def branch = visitor.pipelineNodes.find{ it.type == FlowNodeWrapper.NodeType.PARALLEL && parallelBranchName == it.displayName }
+    if ( branch == null ) {
+    	echo "Couldn't find parallel branch name '$parallelBranchName'. Available parallel branch names:"
+		visitor.pipelineNodes.findAll{ it.type == FlowNodeWrapper.NodeType.PARALLEL }.each{
+			echo " - ${it.displayName}"
+		}
+    	return null;
+    }
     return branch.status.result
 }

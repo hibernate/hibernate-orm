@@ -15,6 +15,9 @@ plugins {
 	// which unfortunately also means we do not get any functional testing of the plugin
 //	id 'com.github.sebersole.testkit-junit5' version '1.2.0'
 	id 'checkstyle'
+
+	// for local publishing
+	id 'maven-publish'
 }
 
 apply from: rootProject.file( 'gradle/module.gradle' )
@@ -68,15 +71,40 @@ pluginBundle {
 	}
 }
 
-tasks.release {
-	dependsOn tasks.publishPlugins
+// Publish to the Gradle Plugin Portal
+tasks.release.dependsOn tasks.publishPlugins
+
+// local publishing (SNAPSHOT testing)
+tasks.publish.dependsOn tasks.publishPlugins
+
+// local publishing (SNAPSHOT testing)
+publishing {
+	repositories {
+		maven {
+			name = 'localPluginRepository'
+			url = "${buildDir}/local-plugin-repository"
+		}
+	}
 }
-task publish {
-	dependsOn tasks.publishPlugins
+
+// local publishing (SNAPSHOT testing), cont.
+//		- https://github.com/gradle-nexus/publish-plugin/issues/143
+//		- https://github.com/gradle-nexus/publish-plugin/pull/144
+gradle.taskGraph.whenReady {
+	tasks.withType(PublishToMavenRepository) { PublishToMavenRepository t ->
+		if ( t.repository == null ) {
+			logger.info( "Task `{}` had null repository", t.path )
+		}
+		else if ( t.repository.name == "sonatype" ) {
+			logger.lifecycle( "Disabling task `{}` because it publishes to Sonatype", t.path )
+			t.enabled = false
+		}
+	}
 }
 
 processResources {
 	inputs.property( "orm-version", getVersion() )
+	description = description + " (injected with Hibernate version)"
 	filter( ReplaceTokens, tokens: [ 'hibernateVersion': getVersion() ] )
 }
 

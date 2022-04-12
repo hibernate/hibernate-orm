@@ -150,7 +150,7 @@ ext {
             h2:              "com.h2database:h2:${h2Version}",
             h2gis:           "org.orbisgis:h2gis:${h2GisVersion}",
             hsqldb:          "org.hsqldb:hsqldb:2.6.1",
-            derby:           "org.apache.derby:derby:10.14.2.0",
+            derby:           "org.apache.derby:derby:10.15.2.0",
             postgresql:      'org.postgresql:postgresql:42.2.16',
             mysql:           'mysql:mysql-connector-java:8.0.27',
             tidb:            'mysql:mysql-connector-java:8.0.27',

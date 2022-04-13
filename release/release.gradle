@@ -307,7 +307,7 @@ task ciRelease( dependsOn: [releaseChecks, addVersionCommit, release] ) {
                 tag = tag.replace( ".Final", "" )
             }
             logger.lifecycle( "Tagging '${tag}'..." )
-            executeGitCommand( 'tag', tag )
+            executeGitCommand( 'tag', '-a', tag, '-m', "Release $project.ormVersion.fullName" )
         }
 
         logger.lifecycle( "Adding commit to update version to '${project.developmentVersion}'..." )

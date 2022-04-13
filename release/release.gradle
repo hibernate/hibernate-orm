@@ -406,7 +406,7 @@ task gitTasksAfterRelease {
 
         if ( project.createTag ) {
             logger.lifecycle("Tagging release : `${project.releaseTag}`...")
-            executeGitCommand( 'tag', project.releaseTag )
+            executeGitCommand( 'tag', '-a', project.releaseTag, '-m', "Release $project.ormVersion.fullName" )
         }
     }
 }

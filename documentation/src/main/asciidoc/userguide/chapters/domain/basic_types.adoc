@@ -373,7 +373,7 @@ include::{sourcedir}/basic/EnumerationCustomTypeTest.java[tags=basic-enums-custo
 
 include::{sourcedir}/basic/GenderType.java[tags=basic-enums-custom-type-example, indent=0]
 
-include::{sourcedir}/basic/GenderJavaTypeDescriptor.java[tags=basic-enums-custom-type-example, indent=0]
+include::{sourcedir}/basic/GenderJavaType.java[tags=basic-enums-custom-type-example, indent=0]
 ----
 ====
 
@@ -1459,7 +1459,7 @@ Generally speaking, immutable values perform better in all of these cases
 3. The same value can be used from the second-level cache as well as the value we put into the
     second-level cache.
 
-If a particular Java type is considered mutable (a `Date` e.g.), `@Immuatble` or a immutable-specific
+If a particular Java type is considered mutable (a `Date` e.g.), `@Immutable` or a immutable-specific
 `MutabilityPlan` implementation can be specified to have Hibernate treat the value as immutable.  This
 also acts as a contract from the application that the internal state of these objects is not changed
 by the application. Specifying that a mutable type is immutable and then changing the internal state
@@ -1506,7 +1506,7 @@ If an `AttributeConverter` is applied, we use it as the basis for the resolution
 . If `@JavaType` is also used, that specific `JavaType` is used for the converter's "domain type".  Otherwise,
     the Java type defined by the converter as its "domain type" is resolved against the `JavaTypeRegistry`
 . If `@JdbcType` or `@JdbcTypeCode` is used, the indicated `JdbcType` is used and the converted "relational Java
-    type" is determined by `JdbcType#getJdbcRecommendedJavaTypeMapping`.  Otherwise, the Java type define by the
+    type" is determined by `JdbcType#getJdbcRecommendedJavaTypeMapping`.  Otherwise, the Java type defined by the
     converter as its relational type is used and the `JdbcType` is determined by `JdbcType#getRecommendedJdbcType`
 . The `MutabilityPlan` can be specified using `@Mutability` or `@Immutable` on the `AttributeConverter` implementation,
     the basic value mapping or the Java type used as the domain-type.  Otherwise, `JdbcType#getJdbcRecommendedJavaTypeMapping`
@@ -1875,9 +1875,9 @@ Hibernate will fallback to a `java.io.Serializable` type.
 
 If the Java type is not known to Hibernate, you will encounter the following message:
 
-> HHH000481: Encountered Java type for which we could not locate a JavaTypeDescriptor and which does not appear to implement equals and/or hashCode.
+> HHH000481: Encountered Java type for which we could not locate a JavaType and which does not appear to implement equals and/or hashCode.
 > This can lead to significant performance problems when performing equality/dirty checking involving this Java type.
-> Consider registering a custom JavaTypeDescriptor or at least implementing equals/hashCode.
+> Consider registering a custom JavaType or at least implementing equals/hashCode.
 
 A Java type is "known" if it has an entry in the `JavaTypeRegistry`.  While Hibernate does load many JDK types into
 the `JavaTypeRegistry`, an application can also expand the `JavaTypeRegistry` by adding new `JavaType`
@@ -1960,7 +1960,7 @@ include::{resourcedir}/mapping/converter/hbm/MoneyConverterHbmTest.hbm.xml[]
 A basic type that's converted by a Jakarta Persistence `AttributeConverter` is immutable if the underlying Java type is immutable
 and is mutable if the associated attribute type is mutable as well.
 
-Therefore, mutability is given by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/type/descriptor/java/JavaTypeDescriptor.html#getMutabilityPlan--[`JavaTypeDescriptor#getMutabilityPlan`]
+Therefore, mutability is given by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/type/descriptor/java/JavaType.html#getMutabilityPlan--[`JavaType#getMutabilityPlan`]
 of the associated entity attribute type.
 
 This can be adjusted by using `@Immutable` or `@Mutability` on any of:
@@ -2000,7 +2000,7 @@ On the other hand, consider the following example where the `Money` type is a mu
 include::{sourcedir}/converter/MoneyConverterTest.java[tags=basic-jpa-convert-money-converter-mapping-example]
 ----
 
-A mutable `Object` allows you to modify its internal structure, and Hibernate dirty checking mechanism is going to propagate the change to the database:
+A mutable `Object` allows you to modify its internal structure, and Hibernate's dirty checking mechanism is going to propagate the change to the database:
 
 [source, JAVA, indent=0]
 ----

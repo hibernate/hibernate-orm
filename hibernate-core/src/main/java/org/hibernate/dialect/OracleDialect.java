@@ -1013,13 +1013,15 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public int getMaxAliasLength() {
-		// Max identifier length is 30, but Hibernate needs to add "uniqueing info" so we account for that
-		return 20;
+		// Max identifier length is 30 for pre 12.2 versions, and 128 for 12.2+
+		// but Hibernate needs to add "uniqueing info" so we account for that
+		return getVersion().isSameOrAfter( 12, 2 ) ? 118 : 20;
 	}
 
 	@Override
 	public int getMaxIdentifierLength() {
-		return 30;
+		// Since 12.2 version, maximum identifier length is 128
+		return getVersion().isSameOrAfter( 12, 2 ) ? 128 : 30;
 	}
 
 	@Override

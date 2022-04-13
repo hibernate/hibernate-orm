@@ -51,7 +51,7 @@ ext {
 
     antlrVersion = '4.9.1'
 
-    micrometerVersion = '1.6.1'
+    micrometerVersion = '1.8.4'
 
     libraries = [
             // Ant

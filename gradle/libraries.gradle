@@ -27,7 +27,7 @@ ext {
     weldVersion = '3.1.5.Final'
     jakartaWeldVersion = '4.0.1.SP1'
 
-    byteBuddyVersion = '1.12.8'
+    byteBuddyVersion = '1.12.9'
 
     agroalVersion = '1.14'
 

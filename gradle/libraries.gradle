@@ -49,7 +49,7 @@ ext {
     //GraalVM
     graalvmVersion = '21.3.0'
 
-    antlrVersion = '4.9.1'
+    antlrVersion = '4.10'
 
     micrometerVersion = '1.6.1'
 

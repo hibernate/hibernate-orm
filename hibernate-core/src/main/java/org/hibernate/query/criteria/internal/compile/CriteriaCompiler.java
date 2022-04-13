@@ -94,7 +94,7 @@ public class CriteriaCompiler implements Serializable {
 			public ExplicitParameterInfo registerExplicitParameter(ParameterExpression<?> criteriaQueryParameter) {
 				ExplicitParameterInfo parameterInfo = explicitParameterInfoMap.get( criteriaQueryParameter );
 				if ( parameterInfo == null ) {
-					if ( StringHelper.isNotEmpty( criteriaQueryParameter.getName() ) ) {
+					if ( StringHelper.isNotEmpty( criteriaQueryParameter.getName() ) && !( (ParameterExpressionImpl) criteriaQueryParameter ).isNameGenerated() ) {
 						parameterInfo = new ExplicitParameterInfo(
 								criteriaQueryParameter.getName(),
 								null,
@@ -109,9 +109,8 @@ public class CriteriaCompiler implements Serializable {
 						);
 					}
 					else {
-						final String name = generateParameterName();
 						parameterInfo = new ExplicitParameterInfo(
-								name,
+								generateParameterName(),
 								null,
 								criteriaQueryParameter.getJavaType()
 						);

@@ -25,6 +25,7 @@ public class ParameterExpressionImpl<T>
 		implements ParameterExpression<T>, Serializable {
 	private String name;
 	private final Integer position;
+	private boolean isNameGenerated;
 
 	public ParameterExpressionImpl(
 			CriteriaBuilderImpl criteriaBuilder,
@@ -57,6 +58,10 @@ public class ParameterExpressionImpl<T>
 		return name;
 	}
 
+	public boolean isNameGenerated() {
+		return isNameGenerated;
+	}
+
 	@Override
 	public Integer getPosition() {
 		return position;
@@ -76,6 +81,7 @@ public class ParameterExpressionImpl<T>
 	public String render(RenderingContext renderingContext) {
 		final ExplicitParameterInfo parameterInfo = renderingContext.registerExplicitParameter( this );
 		if ( name == null && position == null ) {
+			isNameGenerated = true;
 			name = parameterInfo.getName();
 		}
 		return parameterInfo.render();

@@ -3,6 +3,23 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.6.8.Final (April 13, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32056
+
+** Bug
+    * [HHH-15147] - hibernate-jpamodelgen-jakarta annotation processor ignores jakarta.* annotations
+    * [HHH-15141] - Bytecode enhancement fails for a protected, embedded field in a MappedSuperclass from a different package than the entity
+    * [HHH-15118] - PooledOptimizer generates duplicate ids when several JVMs initialize optimizer and sequence value is the initial value
+    * [HHH-14487] - PropertyAccessStrategyMapImpl imports wrong class
+    * [HHH-13694] - Numeric Overflow Exception when retrieving the Meta-data for sequences from Oracle Database
+
+** Task
+    * [HHH-15209] - Upgrade to bytebuddy 1.12.9
+    * [HHH-15146] - Run tests against hibernate-jpamodelgen-jakarta
+
+
 Changes in 5.6.7.Final (March 16, 2022)
 ------------------------------------------------------------------------------------------------------------------------
 

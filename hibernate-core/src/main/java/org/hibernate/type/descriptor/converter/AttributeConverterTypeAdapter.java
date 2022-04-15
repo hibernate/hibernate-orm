@@ -88,7 +88,7 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 		return relationalJtd;
 	}
 
-	public JpaAttributeConverter<? extends T,?> getAttributeConverter() {
+	public JpaAttributeConverter<? extends T, ?> getAttributeConverter() {
 		return attributeConverter;
 	}
 
@@ -119,6 +119,12 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 	public boolean isEqual(Object one, Object another) {
 		//noinspection unchecked
 		return ( (JavaType<Object>) getDomainJtd() ).areEqual( one, another );
+	}
+
+	@Override
+	public int getHashCode(Object x) {
+		//noinspection unchecked
+		return getDomainJtd().extractHashCode( (T) x );
 	}
 
 	@Override

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test.mapping.converted.converter.elementCollection.embeddable;
+package org.hibernate.orm.test.mapping.converted.converter.elementCollection;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -15,6 +15,8 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.AttributeConverter;
@@ -23,7 +25,6 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 /**
@@ -32,34 +33,49 @@ import jakarta.persistence.Id;
  */
 
 @DomainModel(annotatedClasses = {
-		EmbeddableTests.ProductEntity.class,
-		EmbeddableTests.MyBigDecimalConverter.class
+		CollectionEmbeddableElementConversionTest.ProductEntity.class,
+		CollectionEmbeddableElementConversionTest.MyBigDecimalConverter.class
 })
 @SessionFactory
 @TestForIssue(jiraKey = "HHH-15211")
-class EmbeddableTests {
+class CollectionEmbeddableElementConversionTest {
 
-	@Test
-	void testNoClassCastExceptionThrown(SessionFactoryScope scope) {
-		final ProductEntity entity = new ProductEntity();
+	@BeforeEach
+	void setUp(SessionFactoryScope scope) {
+		final ProductEntity entity = new ProductEntity( 1 );
 		entity.prices = Collections.singletonList( new ProductPrice( new MyBigDecimal( 100.0 ) ) );
-		final Integer productId = scope.fromTransaction( session -> {
+		scope.fromTransaction( session -> {
 			session.persist( entity );
 			return entity.productId;
 		} );
+	}
 
-		// without fixing, the following statement would thrown "ClassCastException"
+	@Test
+	void testNoClassCastExceptionThrown(SessionFactoryScope scope) {
 		scope.inTransaction( session -> session.get(
 				ProductEntity.class,
-				productId
+				1
 		) );
+	}
+
+	@AfterEach
+	void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> session.createQuery( "delete ProductEntity" ).executeUpdate()
+		);
 	}
 
 	@Entity(name = "ProductEntity")
 	static class ProductEntity {
 		@Id
-		@GeneratedValue
 		Integer productId;
+
+		ProductEntity() {
+		}
+
+		ProductEntity(Integer productId) {
+			this.productId = productId;
+		}
 
 		@ElementCollection(fetch = FetchType.EAGER)
 		List<ProductPrice> prices = new ArrayList<>();
@@ -69,7 +85,9 @@ class EmbeddableTests {
 	static class ProductPrice {
 		MyBigDecimal price;
 
-		ProductPrice() {}
+		ProductPrice() {
+		}
+
 		ProductPrice(MyBigDecimal price) {
 			this.price = price;
 		}
@@ -95,9 +113,6 @@ class EmbeddableTests {
 			return new MyBigDecimal( dbData.doubleValue() );
 		}
 
-		public MyBigDecimalConverter() {
-			System.out.println( "Registered MyBigDecimalConverter" );
-		}
 	}
 
 }

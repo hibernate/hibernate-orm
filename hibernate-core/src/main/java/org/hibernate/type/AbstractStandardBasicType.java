@@ -161,7 +161,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public final int getHashCode(Object x) {
+	public int getHashCode(Object x) {
 		return javaType.extractHashCode( (T) x );
 	}
 

@@ -109,7 +109,7 @@ public class CacheEntityLoaderHelper {
 	 * of entity hierarchies.
 	 * <p/>
 	 * If checkDeleted was set to true, then if the entity is found in the
-	 * session-level cache, it's current status within the session cache
+	 * session-level cache, its current status within the session cache
 	 * is checked to see if it has previously been scheduled for deletion.
 	 *
 	 * @param event The load event

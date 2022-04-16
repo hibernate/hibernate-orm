@@ -114,7 +114,7 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 	 * Extract the generated key value from the given result set.
 	 *
 	 * @param session The session
-	 * @param rs The result set containing the generated primay key values.
+	 * @param rs The result set containing the generated primary key values.
 	 * @param entity The entity being saved.
 	 *
 	 * @return The generated identifier

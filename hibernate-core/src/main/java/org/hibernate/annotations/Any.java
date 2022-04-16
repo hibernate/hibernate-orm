@@ -28,7 +28,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * the {@code @Any} approach would be to keep that discriminator and matching value on the
  * {@code Order} itself instead as part of the {@code Payment} class. Thought of another way,
  * the "foreign key" is really made up of the value and discriminator.  Note however that this
- * composite foreign-key is a conceptual and cannot be phsical.
+ * composite foreign-key is a conceptual and cannot be physical.
  * <ul>
  *     <li>Use {@link Column} or {@link Formula} to define the "column" to which the
  *         discriminator is mapped.

@@ -297,7 +297,7 @@ public final class ArrayHelper {
 	}
 
 	private static int SEED = 23;
-	private static int PRIME_NUMER = 37;
+	private static int PRIME_NUMBER = 37;
 
 	/**
 	 * calculate the array hash (only the first level)
@@ -333,7 +333,7 @@ public final class ArrayHelper {
 	}
 
 	private static int hash(int seed, int i) {
-		return PRIME_NUMER * seed + i;
+		return PRIME_NUMBER * seed + i;
 	}
 
 	public static Serializable[] extractNonNull(Serializable[] array) {

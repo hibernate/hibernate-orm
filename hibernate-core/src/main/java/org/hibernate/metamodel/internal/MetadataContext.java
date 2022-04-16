@@ -636,7 +636,7 @@ public class MetadataContext {
 				// mismatch in how the annotation processor interpreted the attribute and how our metamodel
 				// and/or annotation binder did.
 
-//              This is particularly the case as arrays are nto handled propery by the StaticMetamodel generator
+//              This is particularly the case as arrays are not handled properly by the StaticMetamodel generator
 
 //				throw new AssertionFailure(
 //						"Illegal argument on static metamodel field injection : " + metamodelClass.getName() + '#' + name

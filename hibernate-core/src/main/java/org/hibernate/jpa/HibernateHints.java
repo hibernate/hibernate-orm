@@ -109,7 +109,7 @@ public interface HibernateHints {
 	 * Hint for specifying the lock-mode to apply to the results from a
 	 * native-query.
 	 *
-	 * While Hibernate supports applying lock-mode to a natove-query, the specification
+	 * While Hibernate supports applying lock-mode to a native-query, the specification
 	 * requires that {@link jakarta.persistence.Query#setLockMode} throw an
 	 * {@link IllegalStateException} if called for a native query.
 	 *

@@ -62,7 +62,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	// lazily computed based on 'properties' field: invalidate by setting to null when properties are modified
 	private List<Selectable> cachedSelectables;
 	// lazily computed based on 'properties' field: invalidate by setting to null when properties are modified
-	private List<Column> cachedColums;
+	private List<Column> cachedColumns;
 
 	public Component(MetadataBuildingContext metadata, PersistentClass owner) throws MappingException {
 		this( metadata, owner.getTable(), owner );
@@ -127,7 +127,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	private void propertiesListModified() {
 		this.cachedSelectables = null;
-		this.cachedColums = null;
+		this.cachedColumns = null;
 	}
 
 	@Override
@@ -170,14 +170,14 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	@Override
 	public List<Column> getColumns() {
-		if ( cachedColums != null ) {
-			return cachedColums;
+		if ( cachedColumns != null ) {
+			return cachedColumns;
 		}
 		else {
-			this.cachedColums = properties.stream()
+			this.cachedColumns = properties.stream()
 					.flatMap( p -> p.getValue().getColumns().stream() )
 					.collect( Collectors.toList() );
-			return cachedColums;
+			return cachedColumns;
 		}
 	}
 

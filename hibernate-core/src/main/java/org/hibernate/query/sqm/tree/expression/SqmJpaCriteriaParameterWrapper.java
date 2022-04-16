@@ -95,7 +95,7 @@ public class SqmJpaCriteriaParameterWrapper<T>
 	 * Unsupported.  Visitation for a criteria parameter should be handled
 	 * as part of {@link SemanticQueryWalker#visitJpaCriteriaParameter}.  This wrapper
 	 * is intended just for representing unique SqmParameter references for each
-	 * JpaCriteriaParameter occurence in the SQM true as part of the {@link org.hibernate.query.QueryParameter}
+	 * JpaCriteriaParameter occurrence in the SQM true as part of the {@link org.hibernate.query.QueryParameter}
 	 * -> {@link SqmParameter} -> {@link JdbcParameter} transformation.
 	 * Each occurrence requires a unique SqmParameter to make sure we ultimately get the complete
 	 * set of JdbcParameter references

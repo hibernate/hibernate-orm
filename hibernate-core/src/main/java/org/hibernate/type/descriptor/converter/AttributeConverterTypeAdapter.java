@@ -63,7 +63,7 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 		this.attributeConverter = (JpaAttributeConverter<T, Object>) attributeConverter;
 
 		// NOTE : the way that JpaAttributeConverter get built, their "domain JTD" already
-		// contains the proper MutabilityPlan based on whether the `@Immuatble` is present
+		// contains the proper MutabilityPlan based on whether the `@Immutable` is present
 		if ( mutabilityPlan == null ) {
 			this.mutabilityPlan = (MutabilityPlan<T>) attributeConverter.getDomainJavaType().getMutabilityPlan();
 		}

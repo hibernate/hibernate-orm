@@ -436,7 +436,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 			);
 
 			if ( columnInfo == null ) {
-				// the column doesnt exist at all.
+				// the column doesn't exist at all.
 				StringBuilder alter = new StringBuilder( root.toString() )
 						.append( ' ' )
 						.append( column.getQuotedName( dialect ) );

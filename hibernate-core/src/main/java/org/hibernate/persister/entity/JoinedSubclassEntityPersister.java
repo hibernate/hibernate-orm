@@ -427,7 +427,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 
 		if ( jk != -1 ) {
-			throw new AssertionFailure( "Tablespan does not match height of joined-subclass hiearchy." );
+			throw new AssertionFailure( "Tablespan does not match height of joined-subclass hierarchy." );
 		}
 
 		int j = coreTableSpan;

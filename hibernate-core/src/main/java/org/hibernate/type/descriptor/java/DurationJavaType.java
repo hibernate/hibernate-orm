@@ -27,7 +27,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
  * capable of representing six centuries in nanoseconds and are
  * sufficient for many applications. However, by default, we map
  * Java {@link Duration} to SQL {@code numeric(21)} here, which
- * can comfortably represent 60 millenia of nanos.
+ * can comfortably represent 60 millennia of nanos.
  *
  * @author Steve Ebersole
  * @author Gavin King
@@ -150,7 +150,7 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 			// 19+9 = 28 digits is the maximum possible Duration
 			// precision, but is an unnecessarily large default,
 			// except for cosmological applications. Thirty
-			// millenia in both timelike directions should be
+			// millennia in both timelike directions should be
 			// sufficient time for most businesses!
 			return Math.min( 21, dialect.getDefaultDecimalPrecision() );
 		}

@@ -63,7 +63,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 	private final List<DomainResultAssembler<?>> assemblers;
 
-	private final boolean usesStandardInstatiation;
+	private final boolean usesStandardInstantiation;
 
 	// per-row state
 	private final Object[] rowState;
@@ -88,7 +88,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		}
 
 		this.representationStrategy = representationEmbeddable.getRepresentationStrategy();
-		this.usesStandardInstatiation = representationStrategy.getInstantiator() instanceof StandardEmbeddableInstantiator;
+		this.usesStandardInstantiation = representationStrategy.getInstantiator() instanceof StandardEmbeddableInstantiator;
 
 		final int numOfAttrs = embeddableTypeDescriptor.getNumberOfAttributeMappings();
 		this.rowState = new Object[ numOfAttrs ];
@@ -177,7 +177,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		//		critical in the case we have custom constructor injection.  Luckily, custom instantiation
 		//		is only allowed for non-key usage atm, so we leverage that distinction here
 
-		if ( ! usesStandardInstatiation ) {
+		if ( !usesStandardInstantiation ) {
 			// we have a custom instantiator
 			if ( compositeInstance != null ) {
 				return;

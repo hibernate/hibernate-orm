@@ -61,7 +61,7 @@ public interface RowProcessingState extends ExecutionContext {
 	void finishRowProcessing();
 
 	/**
-	 * Locate the Initalizer registered for the given path
+	 * Locate the Initializer registered for the given path
 	 */
 	Initializer resolveInitializer(NavigablePath path);
 }

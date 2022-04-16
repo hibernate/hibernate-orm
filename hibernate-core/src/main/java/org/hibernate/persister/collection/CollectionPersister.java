@@ -169,7 +169,7 @@ public interface CollectionPersister extends Restrictable {
 	 */
 	boolean hasIndex();
 	/**
-	 * Is this collection lazyily initialized?
+	 * Is this collection lazily initialized?
 	 */
 	boolean isLazy();
 	/**

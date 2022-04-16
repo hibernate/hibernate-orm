@@ -50,7 +50,7 @@ public class StatusTranslator {
 				break;
 		}
 		if ( transactionStatus == null ) {
-			throw new TransactionException( "TransactionManager reported transaction status as unknwon" );
+			throw new TransactionException( "TransactionManager reported transaction status as unknown" );
 		}
 		return transactionStatus;
 	}

@@ -31,7 +31,7 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.annotations.reflection.internal.JPAXMLOverriddenMetadataProvider;
+import org.hibernate.cfg.annotations.reflection.JPAXMLOverriddenMetadataProvider;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.MutableJpaCompliance;

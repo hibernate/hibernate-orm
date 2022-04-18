@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
-package org.hibernate.cfg.annotations.reflection.internal;
+package org.hibernate.cfg.annotations.reflection;
 
 import java.beans.Introspector;
 import java.lang.annotation.Annotation;
@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.Internal;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -98,7 +99,7 @@ import org.hibernate.boot.jaxb.mapping.ManagedType;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
-import org.hibernate.cfg.annotations.reflection.PersistentAttributeFilter;
+import org.hibernate.cfg.annotations.reflection.internal.PropertyMappingElementCollector;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -209,6 +210,7 @@ import static org.hibernate.cfg.annotations.reflection.internal.PropertyMappingE
  */
 // FIXME HHH-14529 Change this class to use JaxbEntityMappings instead of Document.
 //   I'm delaying this change in order to keep the commits simpler and easier to review.
+@Internal
 @SuppressWarnings("unchecked")
 public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JPAXMLOverriddenAnnotationReader.class );

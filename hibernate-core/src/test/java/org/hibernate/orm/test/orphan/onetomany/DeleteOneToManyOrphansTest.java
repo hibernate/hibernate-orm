@@ -17,6 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gail Badnmer
@@ -111,6 +112,58 @@ public class DeleteOneToManyOrphansTest {
 					assertEquals( 0, results.size() );
 					results = session.createQuery( "from Product" ).list();
 					assertEquals( 1, results.size() );
+				}
+		);
+
+	}
+
+	@Test
+	public void testOrphanedWhileQueued(SessionFactoryScope scope) {
+
+		Product p = scope.fromTransaction(
+				session -> {
+					// given...
+					List results = session.createQuery( "from Feature" ).list();
+					assertEquals( 1, results.size() );
+					results = session.createQuery( "from Product" ).list();
+					assertEquals( 1, results.size() );
+					Product product = (Product) results.get( 0 );
+					assertEquals( 1, product.getFeatures().size() );
+
+					// when...
+					// ... "Feature 2" added
+					Feature f2 = new Feature(product);
+					f2.setName("Feature 2");
+					session.persist(f2);
+
+					product.getFeatures().add(f2);
+
+					// ... executing a query queues the entry into session.actionQueue.inserts,
+					// but as auto-flush sees that product is queried and not features, it doesn't flush them
+					session.createQuery( "from Product" ).list();
+
+					// ... test will only be green with an explicit flush here
+					// session.flush();
+
+					// ... "Feature 2" removed, expecting it to be orphan-removed from the database
+					product.getFeatures().remove(f2);
+
+					// ... "Feature 3" added
+					Feature f3 = new Feature(product);
+					f3.setName("Feature 3");
+					session.persist( f3 );
+  				    product.getFeatures().add(f3);
+
+					return product;
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					Product product = session.get( Product.class, p.getId() );
+					// if there are 3 elements, the orphan removal didn't work as expected
+					assertEquals( 2, product.getFeatures().size() );
+					assertTrue( product.getFeatures().stream().anyMatch(feature -> feature.getName().equals("Feature 3")) );
 				}
 		);
 

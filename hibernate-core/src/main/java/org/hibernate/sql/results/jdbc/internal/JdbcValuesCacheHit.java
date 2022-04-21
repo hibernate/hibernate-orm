@@ -136,7 +136,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 			// we need to subtract it from `numberOfRows`
 			final int newPosition = numberOfRows + position;
 			ResultsLogger.RESULTS_MESSAGE_LOGGER.debugf(
-					"Translated negative absolute position `%i` into `%` based on `%i` number of rows",
+					"Translated negative absolute position `%i` into `%i` based on `%i` number of rows",
 					position,
 					newPosition,
 					numberOfRows

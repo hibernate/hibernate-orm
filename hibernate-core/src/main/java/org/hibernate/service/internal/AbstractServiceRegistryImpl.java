@@ -416,7 +416,8 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	/**
-	 * Very advanced and tricky to handle: not designed for this. Intended for experiments only!
+	 * Not intended for general use. We need the ability to stop and "reactivate" a registry to allow
+	 * experimentation with technologies such as GraalVM, Quarkus and Cri-O.
 	 */
 	public synchronized void resetParent(BootstrapServiceRegistry newParent) {
 		if ( this.parent != null ) {
@@ -434,6 +435,10 @@ public abstract class AbstractServiceRegistryImpl
 		}
 	}
 
+	/**
+	 * Not intended for general use. We need the ability to stop and "reactivate" a registry to allow
+	 * experimentation with technologies such as GraalVM, Quarkus and Cri-O.
+	 */
 	public synchronized void reactivate() {
 		if ( !active.compareAndSet(false, true) ) {
 			throw new IllegalStateException( "Was not inactive, could not reactivate!" );

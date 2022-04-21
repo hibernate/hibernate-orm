@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.registry.internal;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -93,6 +94,24 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 			throw e;
 		}
 	}
+
+	/**
+	 * Not intended for general use. We need the ability to stop and "reactivate" a registry to allow
+	 * experimentation with technologies such as GraalVM, Quarkus and Cri-O.
+	 */
+	public synchronized void resetAndReactivate(BootstrapServiceRegistry bootstrapServiceRegistry,
+												List<StandardServiceInitiator<?>> serviceInitiators,
+												List<ProvidedService<?>> providedServices,
+												Map<?, ?> configurationValues) {
+		if ( super.isActive() ) {
+			throw new IllegalStateException( "Can't reactivate an active registry!" );
+		}
+		super.resetParent( bootstrapServiceRegistry );
+		this.configurationValues = new HashMap( configurationValues );
+		super.reactivate();
+		applyServiceRegistrations( serviceInitiators, providedServices );
+	}
+
 
 	@Override
 	public synchronized <R extends Service> R initiateService(ServiceInitiator<R> serviceInitiator) {

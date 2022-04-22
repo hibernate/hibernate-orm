@@ -462,7 +462,9 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 		@Override
 		public void markRollbackOnly() {
-			jtaTransactionAdapter.markRollbackOnly();
+			if ( jtaTransactionAdapter.getStatus() != TransactionStatus.NOT_ACTIVE  ) {
+				jtaTransactionAdapter.markRollbackOnly();
+			}
 		}
 	}
 

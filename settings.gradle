@@ -13,6 +13,8 @@ pluginManagement {
             url = uri( "${gradle.gradleUserHomeDir}/tmp/plugins" )
         }
     }
+
+    includeBuild 'local-build-plugins'
 }
 
 plugins {
@@ -134,8 +136,6 @@ else {
 
 logger.lifecycle "Java versions for main code: " + gradle.ext.javaVersions.main
 logger.lifecycle "Java versions for tests: " + gradle.ext.javaVersions.test
-
-includeBuild('hibernate-orm-build')
 
 include 'hibernate-core'
 include 'hibernate-testing'

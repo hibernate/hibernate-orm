@@ -33,6 +33,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class EmbeddableResultImpl<T> extends AbstractFetchParent implements EmbeddableResultGraphNode, DomainResult<T>, EmbeddableResult<T> {
 	private final String resultVariable;
 	private final boolean containsAnyNonScalars;
+	private final NavigablePath initializerNavigablePath;
 
 	public EmbeddableResultImpl(
 			NavigablePath navigablePath,
@@ -41,6 +42,12 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 			DomainResultCreationState creationState) {
 		super( modelPart.getEmbeddableTypeDescriptor(), navigablePath );
 		this.resultVariable = resultVariable;
+		/*
+			An `{embeddable_result}` sub-path is created for the corresponding initializer to differentiate it from a fetch-initializer if this embedded is also fetched.
+			The Jakarta Persistence spec says that any embedded value selected in the result should not be part of the state of any managed entity.
+			Using this `{embeddable_result}` sub-path avoids this situation.
+		*/
+		this.initializerNavigablePath = navigablePath.append( "{embeddable_result}" );
 
 		final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
 
@@ -114,7 +121,7 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
 		final EmbeddableInitializer initializer = (EmbeddableInitializer) creationState.resolveInitializer(
-				getNavigablePath(),
+				initializerNavigablePath,
 				getReferencedModePart(),
 				() -> new EmbeddableResultInitializer(
 						this,

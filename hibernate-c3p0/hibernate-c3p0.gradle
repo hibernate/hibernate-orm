@@ -11,13 +11,11 @@ apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 
 dependencies {
     implementation project( ':hibernate-core' )
-    implementation libraries.c3p0
-    testImplementation project( ':hibernate-testing' )
-    testImplementation libraries.mockito
-    testImplementation libraries.mockito_inline
+    implementation "com.mchange:c3p0:0.9.5.5"
 
-    testImplementation libraries.jakarta_validator
-    testRuntimeOnly libraries.jakarta_el
+    testImplementation project( ':hibernate-testing' )
+    testImplementation libs.validator
+    testRuntimeOnly jakartaLibs.el
 
     if ( db.equalsIgnoreCase( 'oracle' ) ) {
         testRuntimeOnly libraries.oracle

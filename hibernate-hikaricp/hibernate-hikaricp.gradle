@@ -11,8 +11,7 @@ apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 
 dependencies {
     implementation project( ':hibernate-core' )
-    implementation libraries.hikaricp
+    implementation "com.zaxxer:HikariCP:3.2.0"
 
     testImplementation project( ':hibernate-testing' )
-    testImplementation libraries.mockito
 }

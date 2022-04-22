@@ -1,0 +1,45 @@
+plugins {
+    id 'java-platform'
+}
+
+apply from: rootProject.file( "gradle/base-information.gradle" )
+apply from: rootProject.file( "gradle/publishing-pom.gradle" )
+
+dependencies {
+    constraints {
+        api project( ":hibernate-core" )
+        api project( ":hibernate-testing" )
+        api project( ":hibernate-envers" )
+        api project( ":hibernate-spatial" )
+
+        api project( ":hibernate-agroal" )
+        api project( ":hibernate-c3p0" )
+        api project( ":hibernate-hikaricp" )
+        api project( ":hibernate-proxool" )
+        api project( ":hibernate-vibur" )
+
+        api project( ":hibernate-jcache" )
+
+        api project( ":hibernate-micrometer" )
+        api project( ":hibernate-graalvm")
+
+        api project( ":hibernate-jpamodelgen" )
+        api project( ":hibernate-gradle-plugin" )
+        api project( ":hibernate-enhance-maven-plugin" )
+        api project( ":hibernate-ant" )
+
+        api jakartaLibs.jpa
+        api jakartaLibs.jta
+
+        api libs.byteBuddy
+        api "net.bytebuddy:byte-buddy-agent:${libs.versions.byteBuddy}"
+    }
+}
+
+publishing {
+    publications {
+        publishedArtifacts {
+            from components.javaPlatform
+        }
+    }
+}

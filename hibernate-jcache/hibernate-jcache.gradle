@@ -5,13 +5,11 @@ apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 
 dependencies {
     api project( ':hibernate-core' )
-    api libraries.jcache
+    api "javax.cache:cache-api:1.0.0"
 
     testImplementation project( ':hibernate-testing' )
-    testImplementation libraries.mockito
-    testImplementation libraries.mockito_inline
 
-    testRuntimeOnly(libraries.ehcache3) {
+    testRuntimeOnly(libs.ehcache3) {
         capabilities {
             requireCapability 'org.ehcache.modules:ehcache-xml-jakarta'
         }

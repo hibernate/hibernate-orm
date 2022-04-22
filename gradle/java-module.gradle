@@ -56,58 +56,58 @@ if ( !project.description ) {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Configurations and Dependencies
 
-dependencies {
-	implementation libraries.logging
 
-	compileOnly libraries.logging_annotations
+dependencies {
+	implementation libs.logging
+
+	compileOnly libs.loggingAnnotations
 
 	// JUnit dependencies made up of:
 	// 		* JUnit 5
 	// 		* the Jupiter engine which runs JUnit 5 based tests
 	//		* the "vintage" engine - which runs JUnit 3 and 4 based tests
-	testImplementation libraries.junit5_api
-	testImplementation libraries.junit5_jupiter
-	testImplementation libraries.junit5_params
-	testImplementation libraries.junit
-	testImplementation libraries.junit5_vintage
+	testImplementation testLibs.junit5Api
+	testImplementation testLibs.junit5Engine
+	testImplementation testLibs.junit5Params
+	testImplementation testLibs.junit4
+	testImplementation testLibs.junit4Engine
+	testImplementation testLibs.assertjCore
 
-	testImplementation libraries.byteman
-	testImplementation libraries.byteman_install
-	testImplementation libraries.byteman_bmunit
+	testImplementation testLibs.byteman
 
-	testRuntimeOnly libraries.log4j2
-	testRuntimeOnly libraries.byteBuddy
+	testRuntimeOnly testLibs.log4j2
+	testRuntimeOnly libs.byteBuddy
 
 	//Databases
-	testRuntimeOnly libraries.h2
-	testRuntimeOnly libraries.derby
-	testRuntimeOnly libraries.hsqldb
-	testRuntimeOnly libraries.postgresql
-	testRuntimeOnly libraries.mssql
-	testRuntimeOnly libraries.informix
-	testRuntimeOnly libraries.cockroachdb
-	testRuntimeOnly libraries.oracle
-	testRuntimeOnly libraries.sybase
+	testRuntimeOnly dbLibs.h2
+	testRuntimeOnly dbLibs.derby
+	testRuntimeOnly dbLibs.hsqldb
+	testRuntimeOnly dbLibs.postgresql
+	testRuntimeOnly dbLibs.mssql
+	testRuntimeOnly dbLibs.informix
+	testRuntimeOnly dbLibs.cockroachdb
+	testRuntimeOnly dbLibs.oracle
+	testRuntimeOnly dbLibs.sybase
 
 	// Since both the DB2 driver and HANA have a package "net.jpountz" we have to add dependencies conditionally
 	// This is due to the "no split-packages" requirement of Java 9+
 
 	if ( db.startsWith( 'db2' ) ) {
-		testRuntimeOnly libraries.db2
+		testRuntimeOnly dbLibs.db2
 	}
 	else if ( db.startsWith( 'hana' ) ) {
-		testRuntimeOnly libraries.hana
+		testRuntimeOnly dbLibs.hana
 	}
 	else if ( db.startsWith( 'mysql' ) || db.startsWith( 'tidb' ) ) {
-		testRuntimeOnly libraries.mysql
+		testRuntimeOnly dbLibs.mysql
 	}
 	else if ( db.startsWith( 'mariadb' ) ) {
-		testRuntimeOnly libraries.mariadb
+		testRuntimeOnly dbLibs.mariadb
 	}
 
-	annotationProcessor libraries.logging_processor
-	annotationProcessor libraries.logging
-	annotationProcessor libraries.logging_annotations
+	annotationProcessor libs.loggingProcessor
+	annotationProcessor libs.logging
+	annotationProcessor libs.loggingAnnotations
 
 
 	constraints {
@@ -199,6 +199,7 @@ else {
 		}
 	}
 }
+
 
 task compile(dependsOn: [compileJava, processResources, compileTestJava, processTestResources] )
 

@@ -55,6 +55,14 @@ gradlePlugin {
 			id = 'org.hibernate.orm.build.doc-pub'
 			implementationClass = 'org.hibernate.orm.docs.DocumentationPublishingPlugin'
 		}
+		envSettings {
+			id = 'org.hibernate.orm.build.env-settings'
+			implementationClass = 'org.hibernate.orm.env.EnvironmentSettingsPlugin'
+		}
+		envProject {
+			id = 'org.hibernate.orm.build.env-project'
+			implementationClass = 'org.hibernate.orm.env.EnvironmentProjectPlugin'
+		}
 	}
 }
 

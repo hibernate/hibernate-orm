@@ -5,6 +5,6 @@ apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'version-injection'
 
 dependencies {
-    compileOnly libraries.ant
+    compileOnly libs.ant
     implementation project( ':hibernate-core' )
 }

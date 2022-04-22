@@ -10,7 +10,6 @@ import groovy.json.JsonSlurper
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 apply from: rootProject.file( 'gradle/module.gradle' )
-apply from: rootProject.file( 'gradle/libraries.gradle' )
 
 apply plugin: 'org.hibernate.orm.build.doc-pub'
 apply plugin: 'idea'
@@ -136,14 +135,14 @@ dependencies {
     jpamodelgen project( ':hibernate-jpamodelgen' )
     javadocSources project( path: ':hibernate-jpamodelgen', configuration: 'javadocSources' )
 
-    javadocClasspath libraries.logging_annotations
-    javadocClasspath libraries.jakarta_validation
-    javadocClasspath libraries.jakarta_cdi
-    javadocClasspath libraries.jakarta_jacc
-    javadocClasspath libraries.jakarta_jsonb
-    javadocClasspath libraries.ant
-    javadocClasspath libraries.postgresql
-    javadocClasspath libraries.jackson
+    javadocClasspath libs.loggingAnnotations
+    javadocClasspath jakartaLibs.validation
+    javadocClasspath jakartaLibs.cdi
+    javadocClasspath jakartaLibs.jacc
+    javadocClasspath jakartaLibs.jsonb
+    javadocClasspath libs.ant
+    javadocClasspath dbLibs.postgresql
+    javadocClasspath libs.jackson
     javadocClasspath gradleApi()
 }
 

@@ -22,7 +22,6 @@ plugins {
 
 apply from: rootProject.file( 'gradle/module.gradle' )
 apply from: rootProject.file( 'gradle/javadoc.gradle' )
-apply from: rootProject.file( 'gradle/libraries.gradle' )
 apply from: rootProject.file( 'gradle/releasable.gradle' )
 
 description = "Gradle plugin for integrating Hibernate aspects into your build"
@@ -34,10 +33,10 @@ ext {
 
 dependencies {
 	implementation project( ':hibernate-core' )
-	implementation libraries.byteBuddy
+	implementation libs.byteBuddy
 	implementation gradleApi()
 	// for Gradle
-	implementation libraries.jakarta_inject
+	implementation jakartaLibs.inject
 	implementation localGroovy()
 }
 

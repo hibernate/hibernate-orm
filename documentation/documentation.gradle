@@ -52,17 +52,17 @@ dependencies {
 	testImplementation 'org.apache.commons:commons-lang3:3.4'
 	testImplementation 'org.osgi:org.osgi.core:4.3.1'
 
-	testImplementation libraries.mockito
-	testImplementation libraries.mockito_inline
+	testImplementation testLibs.mockito
+	testImplementation testLibs.mockitoInline
 
-	testRuntimeOnly libraries.wildfly_transaction_client
-	testRuntimeOnly(libraries.ehcache3) {
+	testRuntimeOnly testLibs.wildFlyTxnClient
+	testRuntimeOnly(libs.ehcache3) {
 		capabilities {
 			requireCapability 'org.ehcache.modules:ehcache-xml-jakarta'
 		}
 	}
 	// Needed for JSON tests
-	testRuntimeOnly libraries.jackson
+	testRuntimeOnly libs.jackson
 }
 
 
@@ -141,8 +141,8 @@ task buildTutorialZip(type: Zip) {task->
 	expand(
 			version: project.version,
 			slf4j: "1.7.5",
-			junit: project.junitVersion,
-			h2: project.h2Version
+			junit: testLibs.versions.junit4,
+			h2: dbLibs.versions.h2
 	)
 	tasks.renderGettingStartedGuides.dependsOn task
 }

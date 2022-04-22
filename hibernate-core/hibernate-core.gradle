@@ -25,57 +25,53 @@ configurations {
 
 
 dependencies {
-    api libraries.jakarta_jpa
-    api libraries.jakarta_jta
+    api jakartaLibs.jpa
+    api jakartaLibs.jta
 
-    implementation libraries.jandex
-    implementation libraries.classmate
-    implementation libraries.commons_annotations
+    implementation libs.hcann
+    implementation libs.jandex
+    implementation libs.classmate
+    implementation libs.byteBuddy
 
-    implementation libraries.byteBuddy
-    implementation libraries.jakarta_jaxb_api
-    implementation libraries.jakarta_jaxb_runtime
-    implementation libraries.jakarta_inject
+    implementation jakartaLibs.jaxbApi
+    implementation jakartaLibs.jaxb
+    implementation jakartaLibs.inject
 
-    implementation libraries.antlr4_runtime
+    implementation libs.antlrRuntime
 
-    compileOnly libraries.jakarta_jacc
-    compileOnly libraries.jakarta_validation
-    compileOnly libraries.jakarta_cdi
-
-    compileOnly libraries.jackson
-    compileOnly libraries.jakarta_jsonb
+    compileOnly jakartaLibs.jacc
+    compileOnly jakartaLibs.validation
+    compileOnly jakartaLibs.cdi
+    compileOnly jakartaLibs.jsonb
+    compileOnly libs.jackson
 
     testImplementation project(':hibernate-testing')
     testImplementation project(':hibernate-ant')
-    testImplementation libraries.shrinkwrap_api
-    testImplementation libraries.shrinkwrap
-    testImplementation libraries.shrinkwrap_descriptors_api_javaee
-    testImplementation libraries.shrinkwrap_descriptors_impl_javaee
-    testImplementation libraries.jakarta_jacc
-    testImplementation libraries.jakarta_validation
-    testImplementation libraries.jakarta_el
-    testImplementation( libraries.jakarta_validator ) {
+    testImplementation testLibs.shrinkwrapApi
+    testImplementation testLibs.shrinkwrap
+    testImplementation testLibs.shrinkwrapDescriptors
+    testImplementation testLibs.shrinkwrapDescriptorsApi
+    testImplementation jakartaLibs.cdi
+    testImplementation jakartaLibs.jacc
+    testImplementation jakartaLibs.validation
+    testImplementation jakartaLibs.el
+    testImplementation( libs.validator ) {
         // for test runtime
         transitive = true
     }
-    testImplementation libraries.jakarta_cdi
-    testImplementation libraries.mockito
-    testImplementation libraries.mockito_inline
-    testImplementation libraries.jodaTime
-    testImplementation libraries.assertj
+    testImplementation "joda-time:joda-time:2.3"
 
-    testRuntimeOnly libraries.byteBuddy
-    testRuntimeOnly libraries.jakarta_weld
-    testRuntimeOnly libraries.wildfly_transaction_client
-    testRuntimeOnly libraries.jackson
+    testRuntimeOnly libs.byteBuddy
+    testRuntimeOnly testLibs.weld
+    testRuntimeOnly testLibs.wildFlyTxnClient
+    testRuntimeOnly libs.jackson
 
     testAnnotationProcessor project( ':hibernate-jpamodelgen' )
 
-    antlr libraries.antlr
+    antlr libs.antlr
 
-    xjc libraries.jakarta_jaxb_xjc
-    xjc libraries.jakarta_jaxb_runtime
+    xjc jakartaLibs.xjc
+    xjc jakartaLibs.jaxb
     xjc rootProject.fileTree(dir: 'patched-libs/jaxb2-basics', include: '*.jar')
 }
 

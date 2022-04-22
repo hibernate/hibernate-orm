@@ -18,9 +18,15 @@ pluginManagement {
 }
 
 plugins {
+    id 'org.hibernate.orm.build.env-settings'
     id 'com.gradle.enterprise' version '3.8'
     id 'com.gradle.common-custom-user-data-gradle-plugin' version '1.4.2'
 }
+
+// version catalog support
+//      - https://docs.gradle.org/7.3.3/userguide/platforms.html#sub:central-declaration-of-dependencies
+enableFeaturePreview("VERSION_CATALOGS")
+
 
 dependencyResolutionManagement {
     repositories {
@@ -40,6 +46,126 @@ dependencyResolutionManagement {
             flatDir {
                 dirs "${System.env.ADDITIONAL_REPO}"
             }
+        }
+    }
+
+    pluginManagement {
+        repositories {
+            gradlePluginPortal()
+        }
+    }
+
+    versionCatalogs {
+        libs {
+            version( "antlr", "4.9.1" )
+            version( "hcann", "6.0.0.Final" )
+            version( "geolatte", "1.8.2" )
+            version( "byteBuddy", "1.12.9" )
+
+            alias( "antlr" ).to( "org.antlr", "antlr4" ).versionRef( "antlr")
+            alias( "antlrRuntime" ).to( "org.antlr", "antlr4-runtime" ).versionRef( "antlr")
+
+            alias( "byteBuddy" ).to( "net.bytebuddy", "byte-buddy" ).versionRef( "byteBuddy" )
+
+            alias( "logging" ).to ( "org.jboss.logging", "jboss-logging" ).version( "3.4.3.Final" )
+            alias( "loggingAnnotations" ).to ( "org.jboss.logging", "jboss-logging-annotations" ).version( "2.2.1.Final" )
+            alias( "loggingProcessor" ).to ( "org.jboss.logging", "jboss-logging-processor" ).version( "2.2.1.Final" )
+
+            alias( "hcann" ).to( "org.hibernate.common", "hibernate-commons-annotations" ).versionRef( "hcann" )
+            alias( "jandex" ).to("org.jboss", "jandex" ).version( "2.4.2.Final" )
+            alias( "classmate" ).to( "com.fasterxml", "classmate" ).version( "1.5.1" )
+
+            alias( "jackson" ).to ( "com.fasterxml.jackson.core", "jackson-databind" ).version( "2.13.0" )
+            alias( "validator" ).to( "org.hibernate.validator", "hibernate-validator" ).version( "7.0.4.Final" )
+
+            alias( "ant" ).to( "org.apache.ant", "ant" ).version( "1.8.2" )
+
+            alias( "geolatte" ).to( "org.geolatte", "geolatte-geom" ).versionRef( "geolatte" )
+
+            alias( "ehcache3" ).to( "org.ehcache:ehcache:3.10.0-alpha0" )
+        }
+        jakartaLibs {
+            version( "jaxbRuntime", "3.0.2" )
+
+            // `jakartaJpaVersion` comes from the `` plugin - accounting for command-line overriding of the JPA version to use
+            alias( "jpa" ).to( "jakarta.persistence", "jakarta.persistence-api" ).version( "${jakartaJpaVersion}" )
+            alias( "jta" ).to( "jakarta.transaction", "jakarta.transaction-api" ).version( "2.0.0")
+            alias( "validation" ).to( "jakarta.validation", "jakarta.validation-api" ).version( "3.0.0" )
+            alias( "jacc" ).to( "jakarta.authorization", "jakarta.authorization-api" ).version( "2.0.0" )
+            alias( "cdi" ).to( "jakarta.enterprise", "jakarta.enterprise.cdi-api" ).version( "3.0.0" )
+            alias( "jsonb" ).to( "jakarta.json.bind", "jakarta.json.bind-api" ).version( "2.0.0" )
+            alias( "inject" ).to( "jakarta.inject", "jakarta.inject-api" ).version( "2.0.0" )
+            alias( "jaxbApi" ).to( "jakarta.xml.bind", "jakarta.xml.bind-api" ).version( "3.0.1" )
+            alias( "jaxb" ).to( "org.glassfish.jaxb", "jaxb-runtime" ).versionRef( "jaxbRuntime" )
+            alias( "xjc" ).to( "org.glassfish.jaxb", "jaxb-xjc" ).versionRef( "jaxbRuntime" )
+            alias( "el" ).to( "org.glassfish", "jakarta.el" ).version( "4.0.1" )
+        }
+        testLibs {
+            version( "junit4", "4.13.2" )
+            version( "junit5", "5.8.2" )
+            version( "assertj", "3.14.0" )
+            version( "mockito", "4.3.1" )
+            version( "byteman", "4.0.16" )
+            version( "shrinkwrap", "1.2.6" )
+            version( "shrinkwrapDescriptors", "2.0.0" )
+
+            alias( "junit5Api" ).to( "org.junit.jupiter", "junit-jupiter-api" ).versionRef( "junit5" )
+            alias( "junit5Engine" ).to( "org.junit.jupiter", "junit-jupiter-engine" ).versionRef( "junit5" )
+            alias( "junit5Params" ).to( "org.junit.jupiter", "junit-jupiter-params" ).versionRef( "junit5" )
+            alias( "junit4Engine" ).to( "org.junit.vintage", "junit-vintage-engine" ).versionRef( "junit5" )
+            alias( "junit4" ).to( "junit", "junit" ).versionRef( "junit4" )
+
+            alias( "assertjCore" ).to( "org.assertj", "assertj-core" ).versionRef( "assertj" )
+            alias( "assertjApi" ).to( "org.assertj", "assertj-core-api" ).versionRef( "assertj" )
+
+            alias( "mockito" ).to( "org.mockito", "mockito-core" ).versionRef( "mockito" )
+            alias( "mockitoInline" ).to( "org.mockito", "mockito-inline" ).versionRef( "mockito" )
+
+            alias( "log4j2" ).to( "org.apache.logging.log4j", "log4j-core" ).version( "2.17.1" )
+
+            alias( "byteman" ).to ( "org.jboss.byteman", "byteman" ).versionRef("byteman" )
+            alias( "bytemanInstall" ).to ( "org.jboss.byteman", "byteman-install" ).versionRef("byteman" )
+            alias( "bytemanBmunit" ).to ( "org.jboss.byteman", "byteman-bmunit" ).versionRef("byteman" )
+
+            alias( "xapool" ).to( "com.experlog", "xapool" ).version( "1.5.0" )
+
+            alias( "shrinkwrap" ).to( "org.jboss.shrinkwrap", "shrinkwrap-impl-base" ).versionRef( "shrinkwrap" )
+            alias( "shrinkwrapApi" ).to( "org.jboss.shrinkwrap", "shrinkwrap-api" ).versionRef( "shrinkwrap" )
+            alias( "shrinkwrapDescriptors" ).to( "org.jboss.shrinkwrap.descriptors", "shrinkwrap-descriptors-impl-javaee" ).versionRef( "shrinkwrapDescriptors" )
+            alias( "shrinkwrapDescriptorsApi" ).to( "org.jboss.shrinkwrap.descriptors", "shrinkwrap-descriptors-api-javaee" ).versionRef( "shrinkwrapDescriptors" )
+
+            alias( "jbossJta" ).to( "org.jboss.narayana.jta", "narayana-jta-jakarta" ).version( "5.11.2.Final" )
+            alias( "jbossTxSpi" ).to( "org.jboss", "jboss-transaction-spi-jakarta" ).version( "7.6.1.Final" )
+            alias( "wildFlyTxnClient" ).to( "org.wildfly.transaction", "wildfly-transaction-client-jakarta" ).version( "2.0.0.Final" )
+            alias( "weld" ).to( "org.jboss.weld.se", "weld-se-shaded" ).version( "4.0.1.SP1" )
+        }
+        dbLibs {
+            version( "h2", "2.1.210" )
+            version( "pgsql", "42.2.16" )
+            version( "mysql", "8.0.27" )
+
+            alias( "h2" ).to( "com.h2database", "h2" ).versionRef( "h2" )
+            alias( "h2gis" ).to( "org.orbisgis", "h2gis" ).version( "2.0.0" )
+            alias( "hsqldb" ).to( "org.hsqldb", "hsqldb" ).version( "2.6.1" )
+            alias( "derby" ).to( "org.apache.derby", "derby" ).version( "10.14.2.0" )
+            alias( "postgresql" ).to( "org.postgresql", "postgresql" ).versionRef( "pgsql" )
+            alias( "cockroachdb" ).to( "org.postgresql", "postgresql" ).version( "42.2.8" )
+            alias( "mysql" ).to( "mysql", "mysql-connector-java" ).versionRef( "mysql" )
+            alias( "tidb" ).to( "mysql", "mysql-connector-java" ).versionRef( "mysql" )
+            alias( "mariadb" ).to( "org.mariadb.jdbc", "mariadb-java-client" ).version( "2.2.3" )
+            alias( "oracle" ).to( "com.oracle.database.jdbc", "ojdbc8" ).version( "21.3.0.0" )
+            alias( "mssql" ).to( "com.microsoft.sqlserver", "mssql-jdbc" ).version( "7.2.1.jre8" )
+            alias( "db2" ).to( "com.ibm.db2", "jcc" ).version( "11.5.7.0" )
+            alias( "hana" ).to( "com.sap.cloud.db.jdbc", "ngdbc" ).version( "2.4.59" )
+            alias( "sybase" ).to( "net.sourceforge.jtds", "jtds" ).version( "1.3.1" )
+            alias( "informix" ).to( "com.ibm.informix", "jdbc" ).version( "4.10.12" )
+            alias( "firebird" ).to( "org.firebirdsql.jdbc", "jaybird" ).version( "4.0.3.java8" )
+        }
+        mavenLibs {
+            alias( "mavenCore" ).to( "org.apache.maven", "maven-core" ).version( "3.8.1" )
+            alias( "mavenArtifact" ).to( "org.apache.maven", "maven-artifact" ).version( "3.0.5" )
+            alias( "mavenPlugin" ).to( "org.apache.maven", "maven-plugin-api" ).version( "3.0.5" )
+            alias( "mavenPluginTools" ).to( "org.apache.maven.plugin-tools", "maven-plugin-annotations" ).version( "3.2" )
         }
     }
 }
@@ -143,6 +269,8 @@ include 'hibernate-testing'
 include 'hibernate-envers'
 include 'hibernate-spatial'
 
+include 'hibernate-platform'
+
 include 'hibernate-community-dialects'
 
 include 'hibernate-c3p0'
@@ -173,7 +301,6 @@ project(':hibernate-enhance-maven-plugin').projectDir = new File(rootProject.pro
 include 'hibernate-ant'
 project(':hibernate-ant').projectDir = new File(rootProject.projectDir, "tooling/hibernate-ant")
 
-include 'hibernate-community-dialects'
 
 rootProject.children.each { project ->
     project.buildFileName = "${project.name}.gradle"
@@ -181,4 +308,5 @@ rootProject.children.each { project ->
     assert project.buildFile.exists()
     assert project.buildFile.isFile()
 }
+include 'hibernate-platform'
 

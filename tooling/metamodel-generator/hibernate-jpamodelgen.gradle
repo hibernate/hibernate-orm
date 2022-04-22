@@ -19,18 +19,16 @@ ext {
 }
 
 dependencies {
-    implementation libraries.jakarta_jaxb_api
-    implementation libraries.jakarta_jaxb_runtime
+    implementation jakartaLibs.jaxbApi
+    implementation jakartaLibs.jaxb
 
-    xjc libraries.jakarta_jaxb_xjc
-    xjc libraries.jakarta_jaxb_runtime
+    xjc jakartaLibs.xjc
+    xjc jakartaLibs.jaxb
     xjc rootProject.fileTree(dir: 'patched-libs/jaxb2-basics', include: '*.jar')
 
     testImplementation project( ':hibernate-core' )
-    testImplementation libraries.junit
-//    testImplementation libraries.jakarta_jpa
 
-    testImplementation libraries.jakarta_validation
+    testImplementation jakartaLibs.validation
 }
 
 sourceSets.main {

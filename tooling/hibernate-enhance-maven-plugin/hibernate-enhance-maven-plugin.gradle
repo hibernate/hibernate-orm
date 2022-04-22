@@ -22,20 +22,22 @@ processResources {
 
 dependencies {
     implementation( project(':hibernate-core') ) { transitive = false }
-    implementation( libraries.jakarta_jpa ) { transitive = false }
-    implementation( libraries.jakarta_jta ) { transitive = false }
-    implementation libraries.byteBuddy
-    implementation( libraries.maven_core ) { transitive = false }
-    implementation( libraries.maven_artifact ) { transitive = false }
-    implementation( libraries.maven_plugin ) { transitive = false }
-    implementation( libraries.maven_plugin_tools ) { transitive = false }
+    implementation( jakartaLibs.jpa ) { transitive = false }
+    implementation( jakartaLibs.jta ) { transitive = false }
+    implementation libs.byteBuddy
+
+    implementation( mavenLibs.mavenCore ) { transitive = false }
+    implementation( mavenLibs.mavenArtifact ) { transitive = false }
+    implementation( mavenLibs.mavenPlugin ) { transitive = false }
+    implementation( mavenLibs.mavenPluginTools ) { transitive = false }
+
     implementation 'org.codehaus.plexus:plexus-utils:3.0.24'
     implementation 'org.sonatype.plexus:plexus-build-api:0.0.7'
 
-    runtimeOnly libraries.maven_core
-    runtimeOnly libraries.maven_artifact
-    runtimeOnly libraries.maven_plugin
-    runtimeOnly libraries.maven_plugin_tools
+    runtimeOnly mavenLibs.mavenCore
+    runtimeOnly mavenLibs.mavenArtifact
+    runtimeOnly mavenLibs.mavenPlugin
+    runtimeOnly mavenLibs.mavenPluginTools
 }
 
 // Inject dependencies into plugin.xml
@@ -48,12 +50,12 @@ task processPluginXml(type: Copy) {
     from "src/main/resources/META-INF/maven/plugin.xml"
     into "$processResources.destinationDir/META-INF/maven"
     filter(ReplaceTokens, tokens: ['version' : project.version, 'generated-dependencies' :\
-            generateMavenDependency(libraries.jakarta_jpa)\
-            + generateMavenDependency(libraries.antlr)\
-            + generateMavenDependency(libraries.jakarta_jta)\
-            + generateMavenDependency(libraries.commons_annotations)\
-            + generateMavenDependency(libraries.byteBuddy)\
-            + generateMavenDependency(libraries.logging)\
+            generateMavenDependency(jakartaLibs.jpa)\
+            + generateMavenDependency(libs.antlr)\
+            + generateMavenDependency(jakartaLibs.jta)\
+            + generateMavenDependency(libs.hcann)\
+            + generateMavenDependency(libs.byteBuddy)\
+            + generateMavenDependency(libs.logging)\
             + generateMavenDependency("org.hibernate:hibernate-core:" + project.version)])
 }
 
@@ -61,6 +63,16 @@ task processPluginXml(type: Copy) {
 // and I'd rather not rely on it yet.
 def generateMavenDependency(String gradleDependency) {
     String[] split = gradleDependency.split(":")
+    return    "\n<dependency>"\
+            + "\n  <groupId>" + split[0] + "</groupId>"\
+            + "\n  <artifactId>" + split[1] + "</artifactId>"\
+            + "\n  <version>" + split[2] + "</version>"\
+            + "\n  <type>jar</type>"\
+            + "\n</dependency>"
+}
+
+def generateMavenDependency(Provider<?> gradleDependencyProvider) {
+    String[] split = gradleDependencyProvider.get().toString().split(":")
     return    "\n<dependency>"\
             + "\n  <groupId>" + split[0] + "</groupId>"\
             + "\n  <artifactId>" + split[1] + "</artifactId>"\

@@ -6,6 +6,7 @@
  */
 
 apply plugin: 'base'
+apply plugin: 'org.hibernate.orm.build.env-project'
 
 buildscript {
 	dependencies {
@@ -21,81 +22,5 @@ buildscript {
 	}
 }
 
-ext {
-	ormVersionFile = file("${rootProject.projectDir}/gradle/version.properties")
-
-	if ( project.hasProperty( 'releaseVersion' ) ) {
-		// Override during releases
-		ormVersion = new HibernateVersion( project.property( 'releaseVersion' ) as String, project )
-	}
-	else {
-		ormVersion = HibernateVersion.fromFile(ormVersionFile, project)
-	}
-
-	def version = System.getProperty( 'jakartaJpaVersion', '3.0.0' )
-	jpaVersion = new JpaVersion('2.2')
-	jakartaJpaVersion = new JpaVersion(version)
-}
-
 group = 'org.hibernate.orm'
 version = project.ormVersion.fullName
-
-class JpaVersion {
-	/** The *normal* name (1.0, 2.0, ..) */
-	final String name
-
-	final String osgiName
-
-	JpaVersion(String version){
-		this.name = version
-		this.osgiName = version + ".0"
-	}
-
-	@Override
-	String toString() {
-		return name
-	}
-}
-
-class HibernateVersion {
-	final String fullName
-	final String majorVersion
-	final String family
-
-	final String osgiVersion
-
-	final boolean isSnapshot
-
-	HibernateVersion(String fullName, Project project) {
-		this.fullName = fullName
-
-		final String[] hibernateVersionComponents = fullName.split( '\\.' )
-		this.majorVersion = hibernateVersionComponents[0]
-		this.family = hibernateVersionComponents[0] + '.' + hibernateVersionComponents[1]
-
-		this.isSnapshot = fullName.endsWith( '-SNAPSHOT' )
-
-		this.osgiVersion = isSnapshot ? family + '.' + hibernateVersionComponents[2] + '.SNAPSHOT' : fullName
-	}
-
-	static HibernateVersion fromFile(File file, Project project){
-		def fullName = readVersionProperties(file)
-		return new HibernateVersion(fullName, project)
-	}
-
-	private static String readVersionProperties(File file) {
-		if ( !file.exists() ) {
-			throw new GradleException( "Version file $file.canonicalPath does not exists" )
-		}
-		Properties versionProperties = new Properties()
-		file.withInputStream {
-			stream -> versionProperties.load( stream )
-		}
-		return versionProperties.hibernateVersion
-	}
-
-	@Override
-	String toString() {
-		return this.fullName
-	}
-}

@@ -219,8 +219,21 @@ public class IllegalArgumentExceptionTest {
 	}
 
 	@Test
-	public void testQueryWrongReturnType(EntityManagerFactoryScope scope) {
+	public void testNonExistingNativeQuery(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
+				entityManager ->
+						Assertions.assertThrows(
+								IllegalArgumentException.class,
+								() -> {
+									entityManager.createNamedQuery( "NonExisting_NativeQuery" );
+								}
+						)
+		);
+	}
+
+	@Test
+	public void testQueryWrongReturnType(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					Assertions.assertThrows(
 							IllegalArgumentException.class,

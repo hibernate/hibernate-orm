@@ -97,14 +97,40 @@ publishing {
 }
 
 signing {
-	required { !rootProject.ormVersion.isSnapshot && gradle.taskGraph.hasTask("publish") }
-
-	def signingKey = findProperty('signingKey')
-	def signingPassword = findProperty('signingPassword')
-
-	useInMemoryPgpKeys(signingKey, signingPassword)
+	var signingKey = resolveSigningKey()
+	var signingPassword = findSigningProperty( "signingPassword" )
+	useInMemoryPgpKeys( signingKey, signingPassword )
 
 	sign publishing.publications.publishedArtifacts
+}
+
+String resolveSigningKey() {
+	var key = findSigningProperty( "signingKey" )
+	if ( key != null ) {
+		return key
+	}
+
+	var keyFile = findSigningProperty( "signingKeyFile" )
+	if ( keyFile != null ) {
+		return new File( keyFile ).text
+	}
+
+	return null
+}
+
+String findSigningProperty(String propName) {
+	if ( System.getProperty(propName ) != null ) {
+		logger.lifecycle "Found `{}` as a system property", propName
+		return System.getProperty(propName )
+	}
+	else if ( project.hasProperty( propName ) ) {
+		logger.lifecycle "Found `{}` as a project property", propName
+		return project.hasProperty( propName )
+	}
+	else {
+		logger.lifecycle "Did not find `{}`", propName
+		return null
+	}
 }
 
 
@@ -112,7 +138,7 @@ signing {
 // Release / publishing tasks
 
 task ciBuild {
-	dependsOn test, publish
+	dependsOn test, publishToSonatype
 }
 
 tasks.release.dependsOn tasks.test, tasks.publishToSonatype

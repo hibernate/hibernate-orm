@@ -34,4 +34,5 @@ public class RoundFunction extends StandardSQLFunction {
 	public Type getReturnType(Type firstArgumentType, Mapping mapping) {
 		return firstArgumentType == StandardBasicTypes.BIG_DECIMAL ? firstArgumentType : StandardBasicTypes.DOUBLE;
 	}
+
 }

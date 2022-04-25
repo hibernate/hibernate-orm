@@ -1148,6 +1148,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "See https://issues.apache.org/jira/browse/DERBY-2072")
 	public void test_hql_concat_function_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-concat-function-example[]
@@ -1355,6 +1356,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "See https://issues.apache.org/jira/browse/DERBY-2072")
 	public void test_hql_cast_function_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-cast-function-example[]
@@ -1368,6 +1370,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't support extract function")
 	public void test_hql_extract_function_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-extract-function-example[]
@@ -1523,6 +1526,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "Comparisons between 'DATE' and 'TIMESTAMP' are not supported")
 	public void test_hql_collection_expressions_example_7() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-collection-expressions-example[]
@@ -1538,6 +1542,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "Comparisons between 'DATE' and 'TIMESTAMP' are not supported")
 	public void test_hql_collection_expressions_example_8() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-collection-expressions-example[]

@@ -12,6 +12,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.query.Query;
@@ -66,6 +67,7 @@ public class CoalesceTest extends BaseCoreFunctionalTestCase {
     @Test
     @SkipForDialect( jiraKey = "HHH-10463", value =  PostgreSQL81Dialect.class)
     @SkipForDialect( jiraKey = "HHH-10463", value =  Oracle8iDialect.class)
+    @SkipForDialect(value = DerbyDialect.class, comment = "Cannot convert untyped null (assumed to be VARBINARY type) to VARCHAR")
     public void HHH_10463_NullInCoalesce() {
         doInHibernate( this::sessionFactory, session -> {
             Query query = session.createQuery("from Person p where p.name = coalesce(:name, p.name) ");

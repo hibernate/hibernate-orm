@@ -45,7 +45,7 @@ public class OrderSequenceGenerationTest extends BaseEnversJPAFunctionalTestCase
 		return new Class<?>[] { StrTestEntity.class };
 	}
 
-	@Before
+	@Override
 	public void buildEntityManagerFactory() throws Exception {
 		createSchema = File.createTempFile( "create_schema", ".sql" );
 		dropSchema = File.createTempFile( "drop_schema", ".sql" );

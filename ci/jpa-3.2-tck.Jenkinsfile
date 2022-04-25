@@ -7,6 +7,9 @@ pipeline {
     tools {
         jdk 'OpenJDK 11 Latest'
     }
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '3', artifactNumToKeepStr: '3'))
+    }
     parameters {
         choice(name: 'IMAGE_JDK', choices: ['jdk11'], description: 'The JDK base image version to use for the TCK image.')
         string(name: 'TCK_VERSION', defaultValue: '3.1.0', description: 'The version of the Jakarta JPA TCK i.e. `2.2.0` or `3.0.1`')

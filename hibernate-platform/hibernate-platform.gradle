@@ -9,6 +9,7 @@ dependencies {
     constraints {
         api project( ":hibernate-core" )
         api project( ":hibernate-testing" )
+
         api project( ":hibernate-envers" )
         api project( ":hibernate-spatial" )
 
@@ -28,11 +29,36 @@ dependencies {
         api project( ":hibernate-enhance-maven-plugin" )
         api project( ":hibernate-ant" )
 
+        api libs.hcann
+
         api jakartaLibs.jpa
         api jakartaLibs.jta
 
-        api libs.byteBuddy
-        api "net.bytebuddy:byte-buddy-agent:${libs.versions.byteBuddy}"
+        runtime libs.antlr
+        runtime libs.logging
+        runtime libs.byteBuddy
+        runtime libs.byteBuddyAgent
+        runtime libs.jandex
+        runtime libs.classmate
+
+        runtime jakartaLibs.jaxb
+        runtime jakartaLibs.jaxbApi
+        runtime jakartaLibs.inject
+
+
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // todo : imo these are questionable
+        runtime libs.agroal
+        runtime libs.agroalPool
+        runtime libs.c3p0
+        runtime libs.hikaricp
+        runtime libs.proxool
+        runtime libs.vibur
+
+        runtime libs.jcache
+
+        runtime libs.micrometer
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     }
 }
 

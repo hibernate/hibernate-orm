@@ -10,11 +10,9 @@ description = 'Integration for Agroal as a ConnectionProvider for Hibernate ORM'
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 
 dependencies {
-    var agroalVersion = "1.14"
-
     implementation project( ':hibernate-core' )
-    implementation "io.agroal:agroal-api:${agroalVersion}"
+    implementation libs.agroal
 
     testImplementation project( ':hibernate-testing' )
-    testRuntimeOnly "io.agroal:agroal-pool:${agroalVersion}"
+    testRuntimeOnly libs.agroalPool
 }

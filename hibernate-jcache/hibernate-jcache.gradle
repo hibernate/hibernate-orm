@@ -5,7 +5,7 @@ apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 
 dependencies {
     api project( ':hibernate-core' )
-    api "javax.cache:cache-api:1.0.0"
+    api libs.jcache
 
     testImplementation project( ':hibernate-testing' )
 

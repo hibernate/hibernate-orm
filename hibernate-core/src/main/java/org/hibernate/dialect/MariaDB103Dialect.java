@@ -8,6 +8,7 @@ package org.hibernate.dialect;
 
 
 import org.hibernate.LockOptions;
+import org.hibernate.MappingException;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -37,6 +38,22 @@ public class MariaDB103Dialect extends MariaDB102Dialect {
 	@Override
 	public String getCreateSequenceString(String sequenceName) {
 		return "create sequence " + sequenceName;
+	}
+
+	@Override
+	protected String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize)
+			throws MappingException {
+		final String sequenceString = getCreateSequenceString( sequenceName ) + " start with " + initialValue + " increment by " + incrementSize;
+		// MariaDB has defaults for min and max value that don't play well with settings then sign( increment ) != sign( initialValue )
+		if ( incrementSize > 0 && initialValue < 0 ) {
+			return sequenceString + " minvalue " + initialValue;
+		}
+		else if ( incrementSize < 0 && initialValue > 0 ) {
+			return sequenceString + " maxvalue " + initialValue;
+		}
+		else {
+			return sequenceString;
+		}
 	}
 
 	@Override

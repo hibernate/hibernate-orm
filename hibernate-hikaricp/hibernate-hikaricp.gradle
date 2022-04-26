@@ -14,4 +14,5 @@ dependencies {
     compile( libraries.hikaricp )
     testCompile project( ':hibernate-testing' )
     testCompile(libraries.mockito)
+    testCompile( libraries.mockito_inline )
 }

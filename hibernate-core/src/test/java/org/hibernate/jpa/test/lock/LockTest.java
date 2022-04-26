@@ -25,6 +25,7 @@ import javax.persistence.QueryTimeoutException;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.TransactionException;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.Oracle10gDialect;
@@ -560,6 +561,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	// ASE15.5 will generate select...holdlock and fail at this test, but ASE15.7 passes it. Skip it for ASE15.5
 	// only.
 	@SkipForDialect(value = { SQLServerDialect.class })
+	@SkipForDialect(DerbyDialect.class)
 	public void testContendedPessimisticLock() throws Exception {
 		final CountDownLatch latch = new CountDownLatch( 1 );
 		final Lock lock = new Lock();

@@ -595,4 +595,9 @@ public class DerbyDialect extends DB2Dialect {
 			}
 		}, AfterUseAction.CLEAN, null);
 	}
+
+	@Override
+	public boolean supportsPartitionBy() {
+		return false;
+	}
 }

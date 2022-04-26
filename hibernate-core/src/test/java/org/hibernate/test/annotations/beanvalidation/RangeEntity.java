@@ -6,7 +6,6 @@
  */
 
 package org.hibernate.test.annotations.beanvalidation;
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -15,21 +14,20 @@ import javax.persistence.Id;
  * @author Hardy Ferentschik
  */
 @Entity
-public class Range {
+public class RangeEntity {
 
 	@Id
 	@GeneratedValue
 	private Long id;
 
 	@org.hibernate.validator.constraints.Range(min = 2, max = 10)
-    @Column(name = "`value`")
-	private Integer value;
+	private Integer rangeProperty;
 
-	private Range() {
+	private RangeEntity() {
 	}
 
-	public Range(Integer value) {
-		this.value = value;
+	public RangeEntity(Integer value) {
+		this.rangeProperty = value;
 	}
 }
 

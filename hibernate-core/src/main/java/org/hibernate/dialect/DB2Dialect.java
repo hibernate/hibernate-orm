@@ -233,6 +233,11 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public String[] getDropSchemaCommand(String schemaName) {
+		return new String[] {"drop schema " + schemaName + " restrict"};
+	}
+
+	@Override
 	public String getSequenceNextValString(String sequenceName) {
 		return "values nextval for " + sequenceName;
 	}

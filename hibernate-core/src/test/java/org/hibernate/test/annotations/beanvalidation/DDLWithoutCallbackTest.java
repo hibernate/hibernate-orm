@@ -58,13 +58,13 @@ public class DDLWithoutCallbackTest extends BaseNonConfigCoreFunctionalTestCase 
 	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsColumnCheck.class)
 	public void testRangeChecksGetApplied() {
-		Range range = new Range( 1 );
+		RangeEntity range = new RangeEntity( 1 );
 		assertDatabaseConstraintViolationThrown( range );
 
-		range = new Range( 11 );
+		range = new RangeEntity( 11 );
 		assertDatabaseConstraintViolationThrown( range );
 
-		range = new Range( 5 );
+		range = new RangeEntity( 5 );
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		s.persist( range );
@@ -91,7 +91,7 @@ public class DDLWithoutCallbackTest extends BaseNonConfigCoreFunctionalTestCase 
 				Address.class,
 				CupHolder.class,
 				MinMax.class,
-				Range.class
+				RangeEntity.class
 		};
 	}
 

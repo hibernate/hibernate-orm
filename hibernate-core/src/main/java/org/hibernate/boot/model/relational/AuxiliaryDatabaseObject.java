@@ -56,7 +56,9 @@ public interface AuxiliaryDatabaseObject extends Exportable, Serializable {
 	 * @param dialect The dialect for which to generate the SQL creation strings
 	 *
 	 * @return the SQL strings for creating the database object.
-	 * @deprecated Implement {@link #sqlCreateStrings(SqlStringGenerationContext)} instead.
+	 * @deprecated Hibernate ORM may never call this method,
+	 * and implementations cannot properly handle default catalogs/schemas.
+	 * Call/implement {@link #sqlCreateStrings(SqlStringGenerationContext)} instead.
 	 */
 	@Deprecated
 	default String[] sqlCreateStrings(Dialect dialect) {
@@ -80,7 +82,9 @@ public interface AuxiliaryDatabaseObject extends Exportable, Serializable {
 	 * @param dialect The dialect for which to generate the SQL drop strings
 	 *
 	 * @return the SQL strings for dropping the database object.
-	 * @deprecated Implement {@link #sqlDropStrings(SqlStringGenerationContext)} instead.
+	 * @deprecated Hibernate ORM may never call this method,
+	 * and implementations cannot properly handle default catalogs/schemas.
+	 * Call/implement {@link #sqlDropStrings(SqlStringGenerationContext)} instead.
 	 */
 	@Deprecated
 	default String[] sqlDropStrings(Dialect dialect) {

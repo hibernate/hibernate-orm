@@ -21,15 +21,14 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.cfg.Environment;
-import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.cache.internal.CacheKeyValueDescriptor;
+import org.hibernate.cache.internal.ComponentCacheKeyValueDescriptor;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
@@ -64,7 +63,6 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 
 	private final boolean isKey;
 	private boolean hasNotNullProperty;
-	private final boolean createEmptyCompositesEnabled;
 	private final CompositeUserType<Object> compositeUserType;
 
 	private EmbeddableValuedModelPart mappingModelPart;
@@ -100,11 +98,6 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			i++;
 		}
 
-		this.createEmptyCompositesEnabled = ConfigurationHelper.getBoolean(
-				Environment.CREATE_EMPTY_COMPOSITES_ENABLED,
-				buildingContext.getBootstrapContext().getServiceRegistry().getService( ConfigurationService.class ).getSettings(),
-				false
-		);
 		if ( component.getTypeName() != null ) {
 			//noinspection unchecked
 			this.compositeUserType = (CompositeUserType<Object>) buildingContext.getBootstrapContext()
@@ -709,6 +702,17 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	}
 
 	@Override
+	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
+		return new ComponentCacheKeyValueDescriptor(
+				sessionFactory,
+				mappingModelPart.getNavigableRole(),
+				propertyTypes,
+				compositeUserType,
+				propertySpan
+		);
+	}
+
+	@Override
 	public boolean isEmbedded() {
 		return false;
 	}
@@ -823,10 +827,6 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	@Override
 	public boolean hasNotNullProperty() {
 		return hasNotNullProperty;
-	}
-
-	private boolean isCreateEmptyCompositesEnabled() {
-		return createEmptyCompositesEnabled;
 	}
 
 	@Override

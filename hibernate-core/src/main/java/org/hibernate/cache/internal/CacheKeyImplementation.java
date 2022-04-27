@@ -26,7 +26,7 @@ import org.hibernate.type.Type;
 @Internal
 public final class CacheKeyImplementation implements Serializable {
 	private final Object id;
-	private final Type type;
+	private final CacheKeyValueDescriptor cacheKeyValueDescriptor;
 	private final String entityOrRoleName;
 	private final String tenantId;
 	private final int hashCode;
@@ -50,15 +50,15 @@ public final class CacheKeyImplementation implements Serializable {
 			final String tenantId,
 			final SessionFactoryImplementor factory) {
 		this.id = id;
-		this.type = type;
+		this.cacheKeyValueDescriptor = type.toCacheKeyDescriptor( factory );
 		this.entityOrRoleName = entityOrRoleName;
 		this.tenantId = tenantId;
-		this.hashCode = calculateHashCode( type, factory );
+		this.hashCode = calculateHashCode( );
 	}
 
-	private int calculateHashCode(Type type, SessionFactoryImplementor factory) {
-		int result = type.getHashCode( id, factory );
-		result = 31 * result + (tenantId != null ? tenantId.hashCode() : 0);
+	private int calculateHashCode() {
+		int result = cacheKeyValueDescriptor.getHashCode( id );
+		result = 31 * result + ( tenantId != null ? tenantId.hashCode() : 0 );
 		return result;
 	}
 
@@ -80,7 +80,7 @@ public final class CacheKeyImplementation implements Serializable {
 		}
 		final CacheKeyImplementation that = (CacheKeyImplementation) other;
 		return Objects.equals( entityOrRoleName, that.entityOrRoleName )
-				&& type.isEqual( id, that.id )
+				&& cacheKeyValueDescriptor.isEqual( id, that.id )
 				&& Objects.equals( tenantId, that.tenantId );
 	}
 

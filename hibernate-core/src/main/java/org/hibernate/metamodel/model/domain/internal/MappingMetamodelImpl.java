@@ -49,6 +49,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
@@ -73,6 +74,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -116,7 +118,7 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 	private final Map<String, CollectionPersister> collectionPersisterMap = new ConcurrentHashMap<>();
 	private final Map<String, Set<String>> collectionRolesByEntityParticipant = new ConcurrentHashMap<>();
 
-
+	private final Map<NavigableRole, EmbeddableValuedModelPart> embeddableValuedModelPart = new ConcurrentHashMap<>();
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// DomainMetamodel
 
@@ -236,6 +238,7 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 
 		collectionPersisterMap.values().forEach( CollectionPersister::postInstantiate );
 
+		registerEmbeddableMappingType( bootModel );
 
 		( (JpaMetamodelImpl) this.jpaMetamodel ).processJpa(
 				bootModel,
@@ -245,6 +248,18 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 				jpaMetaModelPopulationSetting,
 				bootModel.getNamedEntityGraphs().values(),
 				runtimeModelCreationContext
+		);
+	}
+
+	private void registerEmbeddableMappingType(MetadataImplementor bootModel) {
+		bootModel.visitRegisteredComponents(
+				composite -> {
+					final EmbeddableValuedModelPart mappingModelPart = ((ComponentType) composite.getType()).getMappingModelPart();
+					embeddableValuedModelPart.put(
+							mappingModelPart.getNavigableRole(),
+							mappingModelPart
+					);
+				}
 		);
 	}
 
@@ -398,6 +413,15 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 	@Override
 	public EntityPersister getEntityDescriptor(NavigableRole name) {
 		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public EmbeddableValuedModelPart getEmbeddableValuedModelPart(NavigableRole role){
+		EmbeddableValuedModelPart embeddableMappingType = embeddableValuedModelPart.get( role );
+		if ( embeddableMappingType == null ) {
+			throw new IllegalArgumentException( "Unable to locate EmbeddableValuedModelPart: " + role );
+		}
+		return embeddableMappingType;
 	}
 
 	@Override

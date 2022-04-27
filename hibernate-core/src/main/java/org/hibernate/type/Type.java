@@ -14,6 +14,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.cache.internal.CacheKeyValueDescriptor;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -34,7 +35,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Steve Ebersole
  */
 @Internal
-public interface Type extends Serializable {
+public interface Type extends CacheKeyValueDescriptor {
 	/**
 	 * Return true if the implementation is castable to {@link AssociationType}. This does not necessarily imply that
 	 * the type actually represents an association.  Essentially a polymorphic version of
@@ -431,4 +432,7 @@ public interface Type extends Serializable {
 	 */
 	boolean[] toColumnNullness(Object value, Mapping mapping);
 
+	default CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
+		return this;
+	}
 }

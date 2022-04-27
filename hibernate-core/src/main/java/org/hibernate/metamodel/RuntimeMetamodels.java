@@ -11,6 +11,7 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 
 /**
  * Access to Hibernate's runtime metamodels which includes its domain-model (JPA impl) and its
@@ -45,8 +46,12 @@ public interface RuntimeMetamodels {
 		return getMappingMetamodel().findCollectionDescriptor( role ).getAttributeMapping();
 	}
 
-	// todo (6.0) : I think we might need a form of mapping-model look-up for embeddables, something like:
+	/**
+		@deprecated Use {@link #getEmbedded(NavigableRole)} instead
+	 */
+	@Deprecated
 	EmbeddableValuedModelPart getEmbedded(String role);
+	EmbeddableValuedModelPart getEmbedded(NavigableRole role);
 
 	default String getImportedName(String name) {
 		return getMappingMetamodel().getImportedName( name );

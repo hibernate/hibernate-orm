@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 import org.hibernate.spi.DotIdentifierSequence;
@@ -21,7 +22,7 @@ import org.hibernate.spi.NavigablePath;
  *
  * @author Steve Ebersole
  */
-public class NavigableRole implements DotIdentifierSequence {
+public class NavigableRole implements DotIdentifierSequence, Serializable {
 	public static final String IDENTIFIER_MAPPER_PROPERTY = NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
 
 	private final NavigableRole parent;

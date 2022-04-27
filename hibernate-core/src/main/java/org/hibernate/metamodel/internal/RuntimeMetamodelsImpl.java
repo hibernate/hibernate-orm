@@ -11,6 +11,7 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -39,6 +40,11 @@ public class RuntimeMetamodelsImpl implements RuntimeMetamodelsImplementor {
 	@Override
 	public EmbeddableValuedModelPart getEmbedded(String role) {
 		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public EmbeddableValuedModelPart getEmbedded(NavigableRole role) {
+		return mappingMetamodel.getEmbeddableValuedModelPart( role );
 	}
 
 	/**

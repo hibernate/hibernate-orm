@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 import org.hibernate.Incubating;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.BindableType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -90,6 +91,16 @@ public interface MappingMetamodel {
 	 * @see #findEntityDescriptor
 	 */
 	EntityPersister getEntityDescriptor(NavigableRole name);
+
+	/**
+	 * Get an EmbeddableMappingType based on its NavigableRole.
+	 *
+	 * @throws IllegalArgumentException if the role does not refer to an entity
+	 *
+	 * @see #findEntityDescriptor
+	 */
+	EmbeddableValuedModelPart getEmbeddableValuedModelPart(NavigableRole role);
+
 
 	/**
 	 * Get an entity mapping descriptor based on its Class.

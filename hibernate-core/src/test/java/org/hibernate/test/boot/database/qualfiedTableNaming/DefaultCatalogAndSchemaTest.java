@@ -65,7 +65,6 @@ import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
@@ -86,7 +85,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(CustomParameterized.class)
-@TestForIssue(jiraKey = { "HHH-14921", "HHH-14922" })
+@TestForIssue(jiraKey = { "HHH-14921", "HHH-14922", "HHH-15212" })
 @SkipForDialect(value = SybaseDialect.class, comment = "Sybase doesn't support sequences")
 @SkipForDialect(value = MySQLDialect.class, comment = "MySQL doesn't support sequences")
 @SkipForDialect(value = MariaDB53Dialect.class, strictMatching = true,
@@ -217,6 +216,8 @@ public class DefaultCatalogAndSchemaTest {
 		final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
 		metadataSources.addInputStream( getClass().getResourceAsStream( "implicit-file-level-catalog-and-schema.orm.xml" ) );
 		metadataSources.addInputStream( getClass().getResourceAsStream( "implicit-file-level-catalog-and-schema.hbm.xml" ) );
+		metadataSources.addInputStream( getClass().getResourceAsStream( "database-object-using-catalog-placeholder.hbm.xml" ) );
+		metadataSources.addInputStream( getClass().getResourceAsStream( "database-object-using-schema-placeholder.hbm.xml" ) );
 		if ( configuredXmlMappingPath != null ) {
 			metadataSources.addInputStream( getClass().getResourceAsStream( configuredXmlMappingPath ) );
 		}
@@ -585,6 +586,15 @@ public class DefaultCatalogAndSchemaTest {
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithExplicitQualifiersWithEnhancedSequenceGenerator.NAME, expectedExplicitQualifier() );
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithDefaultQualifiersWithLegacySequenceGenerator.NAME, expectedDefaultQualifier() );
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithExplicitQualifiersWithLegacySequenceGenerator.NAME, expectedExplicitQualifier() );
+
+		if ( dbSupportsCatalogs && expectedDefaultCatalog != null ) {
+			verifyOnlyQualifier( sql, SqlType.DDL, "catalogPrefixedAuxObject",
+					expectedQualifier( expectedDefaultCatalog, null ) );
+		}
+		if ( dbSupportsSchemas && expectedDefaultSchema != null ) {
+			verifyOnlyQualifier( sql, SqlType.DDL, "schemaPrefixedAuxObject",
+					expectedQualifier( null, expectedDefaultSchema ) );
+		}
 	}
 
 	private enum SqlType {

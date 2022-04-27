@@ -25,8 +25,24 @@ public interface SqlStringGenerationContext {
 	 * @return The helper for dealing with identifiers in the current JDBC environment.
 	 * <p>
 	 * Note that the Identifiers returned from this helper already account for auto-quoting.
+	 *
+	 * @deprecated Use {@link #toIdentifier(String)} instead.
 	 */
+	@Deprecated
 	IdentifierHelper getIdentifierHelper();
+
+	/**
+	 * Generate an Identifier instance from its simple name as obtained from mapping
+	 * information.
+	 * <p/>
+	 * Note that Identifiers returned from here may be implicitly quoted based on
+	 * 'globally quoted identifiers' or based on reserved words.
+	 *
+	 * @param text The text form of a name as obtained from mapping information.
+	 *
+	 * @return The identifier form of the name.
+	 */
+	Identifier toIdentifier(String text);
 
 	/**
 	 * @return The default catalog, used for table/sequence names that do not explicitly mention a catalog.

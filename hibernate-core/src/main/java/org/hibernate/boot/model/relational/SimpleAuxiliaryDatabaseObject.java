@@ -78,7 +78,7 @@ public class SimpleAuxiliaryDatabaseObject extends AbstractAuxiliaryDatabaseObje
 	public String[] sqlCreateStrings(SqlStringGenerationContext context) {
 		final String[] copy = new String[createStrings.length];
 		for ( int i = 0, max =createStrings.length; i<max; i++ ) {
-			copy[i] = injectCatalogAndSchema( createStrings[i] );
+			copy[i] = injectCatalogAndSchema( createStrings[i], context );
 		}
 		return copy;
 	}
@@ -87,7 +87,7 @@ public class SimpleAuxiliaryDatabaseObject extends AbstractAuxiliaryDatabaseObje
 	public String[] sqlDropStrings(SqlStringGenerationContext context) {
 		final String[] copy = new String[dropStrings.length];
 		for ( int i = 0, max = dropStrings.length; i<max; i++ ) {
-			copy[i] = injectCatalogAndSchema( dropStrings[i] );
+			copy[i] = injectCatalogAndSchema( dropStrings[i], context );
 		}
 		return copy;
 	}
@@ -100,9 +100,11 @@ public class SimpleAuxiliaryDatabaseObject extends AbstractAuxiliaryDatabaseObje
 		return schemaName;
 	}
 
-	private String injectCatalogAndSchema(String ddlString) {
-		String rtn = StringHelper.replace( ddlString, CATALOG_NAME_PLACEHOLDER, catalogName == null ? "" : catalogName );
-		rtn = StringHelper.replace( rtn, SCHEMA_NAME_PLACEHOLDER, schemaName == null ? "" : schemaName );
+	private String injectCatalogAndSchema(String ddlString, SqlStringGenerationContext context) {
+		Identifier defaultedCatalogName = context.catalogWithDefault( catalogName == null ? null : context.toIdentifier( catalogName ) );
+		Identifier defaultedSchemaName = context.schemaWithDefault( schemaName == null ? null : context.toIdentifier( schemaName ) );
+		String rtn = StringHelper.replace( ddlString, CATALOG_NAME_PLACEHOLDER, defaultedCatalogName == null ? "" : defaultedCatalogName.getText() );
+		rtn = StringHelper.replace( rtn, SCHEMA_NAME_PLACEHOLDER, defaultedSchemaName == null ? "" : defaultedSchemaName.getText() );
 		return rtn;
 	}
 }

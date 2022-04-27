@@ -115,6 +115,11 @@ public class SqlStringGenerationContextImpl
 	}
 
 	@Override
+	public Identifier toIdentifier(String text) {
+		return identifierHelper != null ? identifierHelper.toIdentifier( text ) : Identifier.toIdentifier( text );
+	}
+
+	@Override
 	public Identifier getDefaultCatalog() {
 		return defaultCatalog;
 	}

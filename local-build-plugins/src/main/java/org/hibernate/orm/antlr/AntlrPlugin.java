@@ -10,7 +10,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.SourceSet;
 
 /**
@@ -46,8 +46,8 @@ public class AntlrPlugin implements Plugin<Project> {
 
 		final Configuration antlrDependencies = project.getConfigurations().maybeCreate( ANTLR );
 
-		final SourceSet mainSourceSet = project.getConvention()
-				.getPlugin( JavaPluginConvention.class )
+		final SourceSet mainSourceSet = project.getExtensions()
+				.getByType( JavaPluginExtension.class )
 				.getSourceSets()
 				.getByName( SourceSet.MAIN_SOURCE_SET_NAME );
 		mainSourceSet.setCompileClasspath( mainSourceSet.getCompileClasspath().plus( antlrDependencies ) );

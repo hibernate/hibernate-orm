@@ -68,7 +68,12 @@ dependencies {
 
     testAnnotationProcessor project( ':hibernate-jpamodelgen' )
 
+    // NOTE: it seems like, since 4.10, the Antlr Tool no longer defines
+    // transitive dep on the corresponding Antlr Runtime.  At least, I get
+    // errors about mismatched versions if I do not include the runtime
+    // dependency here.
     antlr libs.antlr
+    antlr libs.antlrRuntime
 
     xjc jakartaLibs.xjc
     xjc jakartaLibs.jaxb

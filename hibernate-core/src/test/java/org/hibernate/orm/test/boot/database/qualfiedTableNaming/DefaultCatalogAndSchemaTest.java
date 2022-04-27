@@ -80,7 +80,7 @@ import jakarta.persistence.TableGenerator;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(CustomParameterized.class)
-@TestForIssue(jiraKey = { "HHH-14921", "HHH-14922" })
+@TestForIssue(jiraKey = { "HHH-14921", "HHH-14922", "HHH-15212" })
 public class DefaultCatalogAndSchemaTest {
 
 	private static final String SQL_QUOTE_CHARACTER_CLASS = "([`\"]|\\[|\\])";
@@ -197,6 +197,8 @@ public class DefaultCatalogAndSchemaTest {
 		final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
 		metadataSources.addInputStream( getClass().getResourceAsStream( "implicit-file-level-catalog-and-schema.orm.xml" ) );
 		metadataSources.addInputStream( getClass().getResourceAsStream( "implicit-file-level-catalog-and-schema.hbm.xml" ) );
+		metadataSources.addInputStream( getClass().getResourceAsStream( "database-object-using-catalog-placeholder.hbm.xml" ) );
+		metadataSources.addInputStream( getClass().getResourceAsStream( "database-object-using-schema-placeholder.hbm.xml" ) );
 		if ( configuredXmlMappingPath != null ) {
 			metadataSources.addInputStream( getClass().getResourceAsStream( configuredXmlMappingPath ) );
 		}
@@ -512,6 +514,15 @@ public class DefaultCatalogAndSchemaTest {
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithExplicitQualifiersWithIncrementGenerator.NAME, expectedExplicitQualifier() );
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithDefaultQualifiersWithEnhancedSequenceGenerator.NAME, expectedDefaultQualifier() );
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithExplicitQualifiersWithEnhancedSequenceGenerator.NAME, expectedExplicitQualifier() );
+
+		if ( dbSupportsCatalogs && expectedDefaultCatalog != null ) {
+			verifyOnlyQualifier( sql, SqlType.DDL, "catalogPrefixedAuxObject",
+					expectedQualifier( expectedDefaultCatalog, null ) );
+		}
+		if ( dbSupportsSchemas && expectedDefaultSchema != null ) {
+			verifyOnlyQualifier( sql, SqlType.DDL, "schemaPrefixedAuxObject",
+					expectedQualifier( null, expectedDefaultSchema ) );
+		}
 	}
 
 	private enum SqlType {

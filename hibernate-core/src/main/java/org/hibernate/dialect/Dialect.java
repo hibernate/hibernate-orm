@@ -437,7 +437,7 @@ public abstract class Dialect implements ConversionContext {
 			return "cast(" + value + " as char(" + length + "))";
 		}
 		else {
-			return "cast(" + value + "as " + getTypeName( jdbcTypeCode, length, precision, scale ) + ")";
+			return "cast(" + value + " as " + getTypeName( jdbcTypeCode, length, precision, scale ) + ")";
 		}
 	}
 

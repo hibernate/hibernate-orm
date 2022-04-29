@@ -11,20 +11,20 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -44,6 +44,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
  */
 public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapping implements NonAggregatedIdentifierMapping {
 	private final IdClassEmbeddable idClassEmbeddable;
+	private final EntityMappingType entityDescriptor;
 
 	private final NonAggregatedIdentifierMapping.IdentifierValueMapper identifierValueMapper;
 
@@ -63,6 +64,9 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 				embeddableTypeDescriptor,
 				creationProcess
 		);
+
+		this.entityDescriptor = inverseModelPart.findContainingEntityMapping();
+
 		if ( inverseModelPart.getIdClassEmbeddable() == null ) {
 			this.idClassEmbeddable = null;
 			this.identifierValueMapper = (NonAggregatedIdentifierMapping.IdentifierValueMapper) super.getEmbeddableTypeDescriptor();
@@ -236,14 +240,6 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 
 	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
-		final EntityPersister entityDescriptor = session.getFactory().getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entity.getClass() );
-		setIdentifier( entity, id, entityDescriptor, session );
-	}
-
-	@Override
-	public void setIdentifier(Object entity, Object id, EntityPersister entityDescriptor, SharedSessionContractImplementor session) {
 		final List<AttributeMapping> mappedIdAttributeMappings = identifierValueMapper.getAttributeMappings();
 		final Object[] propertyValues = new Object[mappedIdAttributeMappings.size()];
 
@@ -263,11 +259,11 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 							// otherwise look for an initialized version
 							propertyValues[position] = persistenceContext.getEntity( entityKey );
 							if ( propertyValues[position] == null ) {
-								// get the association out of the entity itself
-								propertyValues[position] = entityDescriptor.getPropertyValue(
-										entity,
-										toOneAttributeMapping.getAttributeName()
-								);
+								propertyValues[position] = entityDescriptor
+										.findAttributeMapping( toOneAttributeMapping.getAttributeName() )
+										.getPropertyAccess()
+										.getGetter()
+										.get( entity );
 							}
 						}
 					}

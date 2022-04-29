@@ -11,7 +11,6 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Component;
@@ -25,8 +24,8 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -47,6 +46,8 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
  * Can also be a single {@link jakarta.persistence.Id} with {@link jakarta.persistence.MapsId}
  */
 public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentifierMapping implements NonAggregatedIdentifierMapping {
+	private final EntityPersister entityDescriptor;
+
 	private final VirtualIdEmbeddable virtualIdEmbeddable;
 	private final IdClassEmbeddable idClassEmbeddable;
 
@@ -59,6 +60,8 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 			String[] rootTableKeyColumnNames,
 			MappingModelCreationProcess creationProcess) {
 		super( entityPersister, rootTableName, creationProcess );
+		entityDescriptor = entityPersister;
+
 		if ( bootEntityDescriptor.getIdentifierMapper() == null
 				|| bootEntityDescriptor.getIdentifierMapper() == bootEntityDescriptor.getIdentifier() ) {
 			// cid -> getIdentifier
@@ -102,6 +105,13 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 			);
 			identifierValueMapper = idClassEmbeddable;
 		}
+	}
+
+	/**
+	 * The entity whose identifier this mapping is the inverse of
+	 */
+	public EntityPersister getIdentifiedEntityDescriptor() {
+		return entityDescriptor;
 	}
 
 	@Override
@@ -256,14 +266,6 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 
 	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
-		final EntityPersister entityDescriptor = session.getFactory().getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entity.getClass() );
-		setIdentifier( entity, id, entityDescriptor, session );
-	}
-
-	@Override
-	public void setIdentifier(Object entity, Object id, EntityPersister entityDescriptor, SharedSessionContractImplementor session) {
 		final List<AttributeMapping> mappedIdAttributeMappings = identifierValueMapper.getAttributeMappings();
 		final Object[] propertyValues = new Object[mappedIdAttributeMappings.size()];
 

@@ -94,6 +94,7 @@ import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPath;
@@ -4878,9 +4879,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( inferredValueMapping != null ) {
 				return inferredValueMapping;
 			}
-			return getTypeConfiguration().getBasicTypeForJavaType(
+
+			final BasicType basicTypeForJavaType = getTypeConfiguration().getBasicTypeForJavaType(
 					paramSqmType.getExpressibleJavaType().getJavaTypeClass()
 			);
+
+			if ( basicTypeForJavaType == null && paramSqmType instanceof EntityDomainType ) {
+				final SimpleDomainType idType = ( (EntityDomainType) paramSqmType ).getIdType();
+				if ( idType != null ) {
+					return getTypeConfiguration().getBasicTypeForJavaType(
+							idType.getExpressibleJavaType().getJavaTypeClass() );
+				}
+			}
+
+			return basicTypeForJavaType;
 		}
 
 		throw new ConversionException( "Could not determine ValueMapping for SqmParameter: " + sqmParameter );

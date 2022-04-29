@@ -61,7 +61,7 @@ dependencyResolutionManagement {
             version( "hcann", "6.0.0.Final" )
             version( "geolatte", "1.8.2" )
             version( "byteBuddy", "1.12.9" )
-            version( "agroal", "1.14" )
+            version( "agroal", "2.0" )
             version( "c3po", "0.9.5.5" )
             version( "hikaricp", "3.2.0" )
             version( "proxool", "0.8.3" )

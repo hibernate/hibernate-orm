@@ -5191,7 +5191,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
-		identifierMapping.setIdentifier( entity, id, session );
+		identifierMapping.setIdentifier( entity, id, this, session );
 	}
 
 	@Override

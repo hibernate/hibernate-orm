@@ -8,6 +8,8 @@ package org.hibernate.metamodel.mapping;
 
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.entity.EntityPersister;
+
 
 /**
  * Describes the mapping of an entity's identifier.
@@ -41,7 +43,15 @@ public interface EntityIdentifierMapping extends ValueMapping, ModelPart {
 
 	Object getIdentifier(Object entity);
 
+	/**
+	 * @deprecated use {@link #setIdentifier(Object, Object, EntityPersister, SharedSessionContractImplementor)} instead.
+	 */
+	@Deprecated
 	void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session);
+
+	default void setIdentifier(Object entity, Object id, EntityPersister entityDescriptor, SharedSessionContractImplementor session){
+		setIdentifier( entity, id, session );
+	}
 
 	Object instantiate();
 }

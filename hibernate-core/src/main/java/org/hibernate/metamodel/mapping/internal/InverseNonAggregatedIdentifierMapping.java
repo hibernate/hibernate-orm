@@ -236,12 +236,16 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 
 	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
-		final List<AttributeMapping> mappedIdAttributeMappings = identifierValueMapper.getAttributeMappings();
-		final Object[] propertyValues = new Object[mappedIdAttributeMappings.size()];
-		final SessionFactoryImplementor factory = session.getFactory();
-		final EntityPersister entityDescriptor = factory.getRuntimeMetamodels()
+		final EntityPersister entityDescriptor = session.getFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entity.getClass() );
+		setIdentifier( entity, id, entityDescriptor, session );
+	}
+
+	@Override
+	public void setIdentifier(Object entity, Object id, EntityPersister entityDescriptor, SharedSessionContractImplementor session) {
+		final List<AttributeMapping> mappedIdAttributeMappings = identifierValueMapper.getAttributeMappings();
+		final Object[] propertyValues = new Object[mappedIdAttributeMappings.size()];
 
 		getEmbeddableTypeDescriptor().forEachAttributeMapping(
 				(position, attribute) -> {

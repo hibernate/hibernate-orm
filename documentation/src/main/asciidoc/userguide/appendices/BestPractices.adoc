@@ -34,9 +34,10 @@ For Log4j, you can use the following appenders:
 ### log just the SQL
 log4j.logger.org.hibernate.SQL=debug
 
-### log JDBC bind parameters ###
+### log JDBC bind parameters and extracted values ###
 log4j.logger.org.hibernate.type=trace
-log4j.logger.org.hibernate.type.descriptor.jdbc=trace
+log4j.logger.org.hibernate.orm.jdbc.bind=trace
+log4j.logger.org.hibernate.orm.jdbc.extract=trace
 ----
 
 However, there are some other alternatives like using datasource-proxy or p6spy.

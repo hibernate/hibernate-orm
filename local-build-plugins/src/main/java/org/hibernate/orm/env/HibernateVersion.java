@@ -10,7 +10,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 import java.util.Properties;
 import java.util.function.Consumer;
 
@@ -64,7 +63,7 @@ public class HibernateVersion {
 		return isSnapshot;
 	}
 
-	public static HibernateVersion from(Project project) {
+	public static HibernateVersion from(Project project, File versionFile) {
 		if ( project.hasProperty( VERSION_KEY ) ) {
 			final Object version = project.property( VERSION_KEY );
 			if ( version != null ) {
@@ -72,7 +71,6 @@ public class HibernateVersion {
 			}
 		}
 
-		final File versionFile = project.getRootProject().file( RELATIVE_FILE );
 		final String fullName = readVersionProperties( versionFile );
 		return new HibernateVersion( fullName );
 	}

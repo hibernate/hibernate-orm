@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 /**
- * @author Gail Badner
+ * @author Andrea Boriero
  */
 @BaseUnitTest
 public class CacheKeySerializationTest {

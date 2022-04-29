@@ -6,45 +6,47 @@
  */
 package org.hibernate.cache.internal;
 
+import java.util.List;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.type.Type;
-import org.hibernate.usertype.CompositeUserType;
+import org.hibernate.type.descriptor.java.JavaType;
 
+/**
+ * CacheKeyValueDescriptor used to describe normal composite mappings
+ *
+ * @see CustomComponentCacheKeyValueDescriptor
+ */
 public class ComponentCacheKeyValueDescriptor implements CacheKeyValueDescriptor {
+	private final NavigableRole role;
+	private final SessionFactoryImplementor sessionFactory;
 
-	private SessionFactoryImplementor sessionFactory;
-	private NavigableRole role;
-	private Type[] propertyTypes;
-	private CompositeUserType<Object> compositeUserType;
-	private int propertySpan;
+	private transient EmbeddableValuedModelPart embeddedMapping;
 
-	public ComponentCacheKeyValueDescriptor(
-			SessionFactoryImplementor sessionFactory,
-			NavigableRole role,
-			Type[] propertyTypes,
-			CompositeUserType<Object> compositeUserType,
-			int propertySpan) {
-		this.sessionFactory = sessionFactory;
+	public ComponentCacheKeyValueDescriptor(NavigableRole role, SessionFactoryImplementor sessionFactory) {
 		this.role = role;
-		this.propertyTypes = propertyTypes;
-		this.compositeUserType = compositeUserType;
-		this.propertySpan = propertySpan;
+		this.sessionFactory = sessionFactory;
 	}
 
 	@Override
 	public int getHashCode(Object key) {
-		if ( compositeUserType != null ) {
-			return compositeUserType.hashCode( key );
-		}
+		final List<AttributeMapping> attrs = getEmbeddedMapping().getEmbeddableTypeDescriptor().getAttributeMappings();
 		int result = 17;
-		for ( int i = 0; i < propertySpan; i++ ) {
-			Object y = getPropertyValue( key, i );
+
+		for ( int i = 0; i < attrs.size(); i++ ) {
+			final AttributeMapping attr = attrs.get( i );
+			final Object attrValue = getAttributeValue( key, i, attr );
 			result *= 37;
-			if ( y != null ) {
-				result += propertyTypes[i].getHashCode( y );
+			if ( attrValue != null ) {
+				//noinspection rawtypes
+				final JavaType javaType = attr.getJavaType();
+				//noinspection unchecked
+				result += javaType.extractHashCode( attrValue );
 			}
 		}
+
 		return result;
 	}
 
@@ -53,34 +55,38 @@ public class ComponentCacheKeyValueDescriptor implements CacheKeyValueDescriptor
 		if ( key1 == key2 ) {
 			return true;
 		}
-		if ( compositeUserType != null ) {
-			return compositeUserType.equals( key1, key2 );
-		}
-		// null value and empty component are considered equivalent
-		for ( int i = 0; i < propertySpan; i++ ) {
-			if ( !propertyTypes[i].isEqual( getPropertyValue( key1, i ), getPropertyValue( key2, i ) ) ) {
+
+		final List<AttributeMapping> attrs = getEmbeddedMapping().getEmbeddableTypeDescriptor().getAttributeMappings();
+		for ( int i = 0; i < attrs.size(); i++ ) {
+			final AttributeMapping attr = attrs.get( i );
+
+			final Object value1 = getAttributeValue( key1, i, attr );
+			final Object value2 = getAttributeValue( key2, i, attr );
+
+			//noinspection unchecked
+			final JavaType<Object> javaType = (JavaType<Object>) attr.getJavaType();
+			if ( ! javaType.areEqual( value1, value2 ) ) {
 				return false;
 			}
 		}
+
 		return true;
 	}
 
-	public Object getPropertyValue(Object component, int i) {
-		if ( component == null ) {
-			return null;
-		}
-
+	public Object getAttributeValue(Object component, int i, AttributeMapping attr) {
 		if ( component instanceof Object[] ) {
-			// A few calls to hashCode pass the property values already in an
-			// Object[] (ex: QueryKey hash codes for cached queries).
-			// It's easiest to just check for the condition here prior to
-			// trying reflection.
 			return ( (Object[]) component )[i];
 		}
 		else {
-			return sessionFactory.getRuntimeMetamodels().getEmbedded( role )
-					.getEmbeddableTypeDescriptor()
-					.getValue( component, i );
+			return attr.getValue( component );
 		}
+	}
+
+
+	private EmbeddableValuedModelPart getEmbeddedMapping() {
+		if ( embeddedMapping == null ) {
+			embeddedMapping = sessionFactory.getRuntimeMetamodels().getEmbedded( role );
+		}
+		return embeddedMapping;
 	}
 }

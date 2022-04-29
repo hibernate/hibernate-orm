@@ -23,6 +23,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.cache.internal.CacheKeyValueDescriptor;
 import org.hibernate.cache.internal.ComponentCacheKeyValueDescriptor;
+import org.hibernate.cache.internal.CustomComponentCacheKeyValueDescriptor;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -31,9 +32,9 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -66,6 +67,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	private final CompositeUserType<Object> compositeUserType;
 
 	private EmbeddableValuedModelPart mappingModelPart;
+	private CacheKeyValueDescriptor cacheKeyValueDescriptor;
 
 	public ComponentType(Component component, int[] originalPropertyOrder, MetadataBuildingContext buildingContext) {
 		this.componentClass = component.isDynamic()
@@ -703,13 +705,22 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 
 	@Override
 	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		return new ComponentCacheKeyValueDescriptor(
-				sessionFactory,
-				mappingModelPart.getNavigableRole(),
-				propertyTypes,
-				compositeUserType,
-				propertySpan
-		);
+		if ( cacheKeyValueDescriptor == null ) {
+			if ( compositeUserType != null ) {
+				cacheKeyValueDescriptor = new CustomComponentCacheKeyValueDescriptor(
+						mappingModelPart.getNavigableRole(),
+						compositeUserType
+				);
+			}
+			else {
+				cacheKeyValueDescriptor = new ComponentCacheKeyValueDescriptor(
+						mappingModelPart.getNavigableRole(),
+						sessionFactory
+				);
+			}
+		}
+
+		return cacheKeyValueDescriptor;
 	}
 
 	@Override

@@ -16,8 +16,8 @@ import jakarta.persistence.TemporalType;
  * {@link jakarta.persistence.Query} and {@link jakarta.persistence.StoredProcedureQuery} implementations.  Used to track
  * information known about the parameter.
  * <p/>
- * For parameter information as known to JPA criteria queries, see {@link org.hibernate.query.criteria.internal.expression.ParameterExpressionImpl}
- * instead.
+ * For parameter information as known to JPA criteria queries,
+ * see {@link org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter} instead.
  *
  * @author Steve Ebersole
  */

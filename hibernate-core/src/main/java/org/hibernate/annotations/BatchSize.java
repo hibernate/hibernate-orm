@@ -19,19 +19,19 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * collection.
  * <p>
  * For example:
- * <pre>{@code
- * @Entity
- * @BatchSize(size = 100)
- * class Product {
- *     ...
- * }
- * }</pre>
+ * <pre>
+ *    &#64;Entity
+ *    &#64;BatchSize(size = 100)
+ *    class Product {
+ *        ...
+ *    }
+ * </pre>
  * will initialize up to 100 lazy Product entity proxies at a time, but:
- * <pre>{@code
- * @OneToMany
- * @BatchSize(size = 5) /
- * Set<Product> getProducts() { ... };
- * }</pre>
+ * <pre>
+ *    &#64;OneToMany
+ *    &#64;BatchSize(size = 5) /
+ *    Set&lt;Product&gt; getProducts() { ... };
+ * </pre>
  * will initialize up to 5 lazy collections of products at a time.
  *
  * @see org.hibernate.cfg.AvailableSettings#DEFAULT_BATCH_FETCH_SIZE

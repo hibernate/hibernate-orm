@@ -8,8 +8,7 @@ package org.hibernate.jpa.spi;
 
 /**
  * ParameterRegistration extension specifically for stored procedure parameters
- * exposing some functionality of Hibernate's native
- * {@link org.hibernate.procedure.ParameterRegistration} contract
+ * exposing some functionality of Hibernate's native {@link ParameterRegistration} contract
  *
  * @author Steve Ebersole
  */
@@ -19,18 +18,15 @@ public interface StoredProcedureQueryParameterRegistration<T> extends ParameterR
 	 *
 	 * @return {@code true} here indicates that NULL should be passed; {@code false} indicates
 	 * that it is ignored.
-	 *
-	 * @see ParameterRegistrationImplementor#isPassNullsEnabled()
 	 */
 	boolean isPassNullsEnabled();
 
 	/**
 	 * Controls how unbound values for this IN/INOUT parameter registration will be handled prior to
-	 * execution.  For details see {@link org.hibernate.procedure.ParameterRegistration#enablePassingNulls}
+	 * execution.
 	 *
 	 * @param enabled {@code true} indicates that the NULL should be passed; {@code false} indicates it should not.
 	 *
-	 * @see org.hibernate.procedure.ParameterRegistration#enablePassingNulls
 	 */
 	void enablePassingNulls(boolean enabled);
 }

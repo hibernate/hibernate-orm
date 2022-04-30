@@ -20,18 +20,18 @@ import org.hibernate.service.Service;
  * strategy is any interface that has multiple, (possibly short) named implementations.
  * <p/>
  * StrategySelector manages resolution of particular implementation by (possibly short) name via the
- * {@link #selectStrategyImplementor} method, which is the main contract here.  As indicated in the docs of that
+ * {@link StrategySelector#selectStrategyImplementor} method, which is the main contract here.  As indicated in the docs of that
  * method the given name might be either a short registered name or the implementation FQN.  As an example, consider
  * resolving the {@link org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder} implementation to use.  To use the
  * JDBC-based TransactionCoordinatorBuilder the passed name might be either {@code "jdbc"} or
  * {@code "org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl"} (which is the FQN).
  * <p/>
- * Strategy implementations can be managed by {@link #registerStrategyImplementor} and
- * {@link #unRegisterStrategyImplementor}.  Originally designed to help the OSGi use case, though no longer used there.
+ * Strategy implementations can be managed by {@link StrategySelector#registerStrategyImplementor} and
+ * {@link StrategySelector#unRegisterStrategyImplementor}.  Originally designed to help the OSGi use case, though no longer used there.
  * <p/>
- * The service also exposes a general typing API via {@link #resolveStrategy} and {@link #resolveDefaultableStrategy}
+ * The service also exposes a general typing API via {@link StrategySelector#resolveStrategy} and {@link StrategySelector#resolveDefaultableStrategy}
  * which accept implementation references rather than implementation names, allowing for a multitude of interpretations
- * of said "implementation reference".  See the docs for {@link #resolveDefaultableStrategy} for details.
+ * of said "implementation reference".  See the docs for {@link StrategySelector#resolveDefaultableStrategy} for details.
  *
  * @author Christian Beikov
  */

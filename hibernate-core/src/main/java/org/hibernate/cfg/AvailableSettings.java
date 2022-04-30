@@ -1637,7 +1637,7 @@ public interface AvailableSettings {
 	 * Allows passing a specific {@link java.sql.Connection} instance to be used by
 	 * {@link org.hibernate.tool.schema.spi.SchemaManagementTool} for the purpose of
 	 * determining the {@link org.hibernate.dialect.Dialect}, and for performing
-	 * {@value #JAKARTA_HBM2DDL_DATABASE_ACTION database actions} if requested.
+	 * {@link #JAKARTA_HBM2DDL_DATABASE_ACTION database actions} if requested.
 	 * <p>
 	 * For {@code Dialect} resolution, {@value #JAKARTA_HBM2DDL_DB_NAME} and, optionally,
 	 * {@value JAKARTA_HBM2DDL_DB_VERSION}, {@value #JAKARTA_HBM2DDL_DB_MAJOR_VERSION},
@@ -1663,7 +1663,7 @@ public interface AvailableSettings {
 	 * @see #JAKARTA_HBM2DDL_DB_MAJOR_VERSION
 	 * @see #JAKARTA_HBM2DDL_DB_MINOR_VERSION
 	 *
-	 * @implSpec {@value #JAKARTA_HBM2DDL_DATABASE_ACTION database actions} are not
+	 * @implSpec {@link #JAKARTA_HBM2DDL_DATABASE_ACTION database actions} are not
 	 * available when supplying just the name and versions
 	 */
 	String JAKARTA_HBM2DDL_DB_NAME = "jakarta.persistence.database-product-name";

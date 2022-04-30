@@ -47,7 +47,7 @@ import static org.hibernate.mapping.MappingHelper.injectParameters;
  * to delay instantiation of the actual {@link Type} instance.
  *
  * Generally speaking this information would come from annotations
- * ({@link org.hibernate.annotations.TypeDef}) or XML mappings.  An alternative form of
+ * ({@link org.hibernate.annotations.Type}) or XML mappings.  An alternative form of
  * supplying custom types is programmatically via one of:<ul>
  *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(BasicType)}</li>
  *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(UserType, String[])}</li>

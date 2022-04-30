@@ -73,10 +73,10 @@ public class QueryStatisticsImpl implements QueryStatistics {
 
 	/**
 	 * Number of lines returned by all the executions of this query (from DB)
-	 * For now, {@link Query#iterate()}
+	 * For now, {@link Query#stream()}}
 	 * and {@link Query#scroll()} do not fill this statistic
 	 *
-	 * @return The number of rows cumulatively returned by the given query; iterate
+	 * @return The number of rows cumulatively returned by the given query; stream
 	 *         and scroll queries do not effect this total as their number of returned rows
 	 *         is not known at execution time.
 	 */

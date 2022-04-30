@@ -7,20 +7,19 @@
 package org.hibernate.persister.entity;
 
 import org.hibernate.QueryException;
+import org.hibernate.persister.collection.CompositeElementPropertyMapping;
 import org.hibernate.type.Type;
 
 /**
  * Contract for all things that know how to map a property to the needed bits of SQL.
  * <p/>
  * The column/formula fragments that represent a property in the table defining the property be obtained by
- * calling either {@link #toColumns(String, String)} or {@link #toColumns(String)} to obtain SQL-aliased
- * column/formula fragments aliased or un-aliased, respectively.
- *
+ * calling {@link #toColumns(String)}.
  *
  * <p/>
  * Note, the methods here are generally ascribed to accept "property paths".  That is a historical necessity because
  * of how Hibernate originally understood composites (embeddables) internally.  That is in the process of changing
- * as Hibernate has added {@link org.hibernate.loader.plan.build.internal.spaces.CompositePropertyMapping}
+ * as Hibernate has added {@link CompositeElementPropertyMapping}
  *
  * todo (6.0) : move to {@link org.hibernate.persister.spi} - that is its more logical home.  AFAIK this
  * 		has never been documented as a public API

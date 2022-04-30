@@ -20,7 +20,7 @@ package org.hibernate.boot.model.source.spi;
  *     </li>
  * </ul>
  *
- * @todo Would love to link this in with {@link org.hibernate.engine.jdbc.internal.TypeInfo}
+ * @todo Would love to link this in with {@link org.hibernate.engine.jdbc.spi.TypeInfo}
  *
  * @author Steve Ebersole
  */

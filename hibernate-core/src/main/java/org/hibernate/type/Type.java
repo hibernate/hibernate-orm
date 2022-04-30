@@ -112,8 +112,7 @@ public interface Type extends Serializable {
 	int[] getSqlTypeCodes(Mapping mapping) throws MappingException;
 
 	/**
-	 * The class returned by {@link #nullSafeGet} methods. This is used to  establish the class of an array of
-	 * this type.
+	 * The class handled by this type.
 	 *
 	 * @return The java type class handled by this type.
 	 */

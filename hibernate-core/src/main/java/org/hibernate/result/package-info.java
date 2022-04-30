@@ -10,20 +10,20 @@ package org.hibernate.result;
  * Defines support for dealing with database results, accounting for mixed result sets and update counts hiding the
  * complexity (IMO) of how this is exposed in the JDBC API.
  *
- * {@link Result} represents the overall group of results.
+ * {@link org.hibernate.result.Outputs} represents the overall group of results.
  *
- * {@link Return} represents the mixed individual outcomes, which might be either a {@link ResultSetReturn} or
- * a {@link UpdateCountReturn}.
+ * {@link org.hibernate.result.Output} represents the mixed individual outcomes, which might be either a {@link org.hibernate.result.ResultSetOutput} or
+ * a {@link org.hibernate.result.UpdateCountOutput}.
  *
  * <code>
- *     Result result = ...;
- *     while ( result.hasMoreReturns() ) {
- *         final Return rtn = result.getNextReturn();
+ *     Outputs outputs = ...;
+ *     while ( outputs.goToNext() ) {
+ *         final Output output = outputs.getCurrent();
  *         if ( rtn.isResultSet() ) {
- *             handleResultSetReturn( (ResultSetReturn) rtn );
+ *             handleResultSetOutput( (ResultSetOutput) output );
  *         }
  *         else {
- *             handleUpdateCountReturn( (UpdateCountReturn) rtn );
+ *             handleUpdateCountOutput( (UpdateCountOutput) output );
  *         }
  *     }
  * </code>

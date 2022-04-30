@@ -24,8 +24,6 @@ import org.hibernate.type.descriptor.ValueExtractor;
  * 		{@link #getValuesArrayPosition}:: The position for this selection in relation to the "JDBC values array" (see {@link RowProcessingState#getJdbcValue})
  * 		{@link #getJdbcResultSetIndex()}:: The position for this selection in relation to the JDBC object (ResultSet, etc)
  *
- * Additional support for allowing a selection to "prepare" itself prior to first use is defined through
- * {@link #prepare}.  This is generally only used for NativeQuery execution.
  *
  * @author Steve Ebersole
  */

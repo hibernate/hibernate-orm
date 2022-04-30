@@ -20,7 +20,7 @@ public interface ProcedureOutputs extends Outputs {
 	 * Retrieve the value of an OUTPUT parameter by the parameter's registration memento.
 	 * <p/>
 	 * Should NOT be called for parameters registered as REF_CURSOR.  REF_CURSOR parameters should be
-	 * accessed via the returns (see {@link #getNextOutput}
+	 * accessed via the returns (see {@link #goToNext()}
 	 *
 	 * @param parameter The parameter's registration memento.
 	 *

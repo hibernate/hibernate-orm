@@ -29,6 +29,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -62,7 +63,7 @@ import org.hibernate.type.Type;
  * load and update collection elements.
  * <p>
  * Unless a custom {@link org.hibernate.persister.spi.PersisterFactory} is
- * used, it is expected that implementations of {@link CollectionDefinition}
+ * used, it is expected that implementations of {@link CollectionPersister}
  * define a constructor accepting the following arguments:
  * <ol>
  *     <li>
@@ -74,9 +75,8 @@ import org.hibernate.type.Type;
  *         for this collection, and
  *     </li>
  *     <li>
- *         {@link org.hibernate.persister.spi.PersisterCreationContext} -
- *         access to additional information useful while constructing the
- *         persister.
+ *         {@link RuntimeModelCreationContext} - access to additional
+ *         information useful while constructing the persister.
  *     </li>
  * </ol>
  *

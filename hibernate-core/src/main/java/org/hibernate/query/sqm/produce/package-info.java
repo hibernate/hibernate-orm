@@ -27,14 +27,8 @@
  *
  * == From Criteria
  *
- * Because criteria queries are already typed, `SemanticQueryProducer` offers 3 distinct methods for transforming
- * select, update and delete criteria trees.  Mainly this is done to take advantage of the distinct typing to
- * define better return types.  See
- *
- * 		* {@link org.hibernate.query.criteria.sqm.CriteriaQueryToSqmTransformer#transform}:: For select criteria
- * 			transformation
- * 	    * _update and delete criteria transformations not yet implemented_
- *
+ * `SemanticQueryProducer` builds SQM directly.
+ * See {@link org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder} for details
  *
  *
  * == Exceptions

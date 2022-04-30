@@ -55,7 +55,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	}
 
 	/**
-	 * When the offset of the given {@link RowSelection} is {@literal 0},
+	 * When the offset of the current row is {@literal 0},
 	 * add a {@code top(?)} clause to the given SQL query. When the offset
 	 * is non-zero, wrap the given query in an outer query that limits the
 	 * results using the {@code row_number()} window function.

@@ -6,6 +6,8 @@
  */
 package org.hibernate.service.spi;
 
+import org.hibernate.service.UnknownUnwrapTypeException;
+
 /**
  * Optional contract for services that wrap stuff that to which it is useful to have access.  For example, a service
  * that maintains a {@link javax.sql.DataSource} might want to expose access to the {@link javax.sql.DataSource} or

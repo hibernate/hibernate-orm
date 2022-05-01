@@ -6433,6 +6433,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return processInSingleParameter( sqmPredicate, sqmWrapper, jpaCriteriaParameter, domainParamBinding );
 	}
 
+	@SuppressWarnings( "rawtypes" )
 	private Predicate processInSingleParameter(
 			SqmInListPredicate<?> sqmPredicate,
 			SqmParameter<?> sqmParameter,
@@ -6445,11 +6446,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				sqmPredicate.isNegated(),
 				getBooleanType()
 		);
+
+		final FromClauseIndex fromClauseIndex = fromClauseIndexStack.getCurrent();
+
 		if ( !iterator.hasNext() ) {
+			domainParamBinding.setType( (MappingModelExpressible) determineValueMapping( sqmPredicate.getTestExpression(), fromClauseIndex ) );
 			return inListPredicate;
 		}
 
-		final FromClauseIndex fromClauseIndex = fromClauseIndexStack.getCurrent();
 		inferrableTypeAccessStack.push(
 				() -> determineValueMapping( sqmPredicate.getTestExpression(), fromClauseIndex )
 		);

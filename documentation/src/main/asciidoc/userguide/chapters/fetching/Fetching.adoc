@@ -525,7 +525,7 @@ and then navigate their `employees` collections.
 
 Hibernate is going to avoid the N + 1 query issue by generating a single SQL statement to initialize all `employees` collections
 for all `Department` entities that were previously fetched.
-Instead of using passing all entity identifiers, Hibernate simply reruns the previous query that fetched the `Department` entities.
+Instead of passing all entity identifiers, Hibernate simply reruns the previous query that fetched the `Department` entities.
 
 [[fetching-strategies-fetch-mode-subselect-example]]
 .`FetchMode.SUBSELECT` mapping example

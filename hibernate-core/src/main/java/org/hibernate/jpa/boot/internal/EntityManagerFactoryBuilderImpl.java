@@ -273,8 +273,15 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			metamodelBuilder.applyTempClassLoader( null );
 		}
 		catch (Throwable t) {
-			bsr.close();
-			cleanup();
+			try {
+				bsr.close();
+			}
+			catch (RuntimeException e) {
+				t.addSuppressed( e );
+			}
+			finally {
+				cleanup();
+			}
 			throw t;
 		}
 	}

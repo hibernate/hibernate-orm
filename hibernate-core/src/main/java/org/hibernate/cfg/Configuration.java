@@ -726,7 +726,12 @@ public class Configuration {
 			return buildSessionFactory( serviceRegistry );
 		}
 		catch (Throwable t) {
-			serviceRegistry.close();
+			try {
+				serviceRegistry.close();
+			}
+			catch (RuntimeException e) {
+				t.addSuppressed( e );
+			}
 			throw t;
 		}
 	}

@@ -986,6 +986,12 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
+	public List<R> uniqueList() {
+		//noinspection unchecked
+		return super.uniqueList();
+	}
+
+	@Override
 	public ScrollableResultsImplementor<R> scroll() {
 		//noinspection unchecked
 		return super.scroll();

@@ -8,6 +8,7 @@ package org.hibernate.query.spi;
 
 import java.sql.Types;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -15,6 +16,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
@@ -39,6 +41,7 @@ import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.AppliedGraph;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -376,6 +379,22 @@ public abstract class AbstractSelectionQuery<R>
 		finally {
 			afterQuery( success );
 		}
+	}
+
+	@Override
+	public List<R> uniqueList() {
+		final List<R> list = list();
+		if ( list.isEmpty() ) {
+			return list;
+		}
+		Set<R> dict = CollectionHelper.linkedSetOfSize( list.size() );
+		List<R> uniqueList = new ArrayList<>( list.size() );
+		for ( R listElement : list ) {
+			if ( dict.add( listElement ) ) {
+				uniqueList.add( listElement );
+			}
+		}
+		return uniqueList;
 	}
 
 	protected void beforeQuery() {

@@ -80,6 +80,17 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	List<R> list();
 
 	/**
+	 * Execute the query and return the query results as a {@link List} after deduplication.
+	 * The first candidate will be retained in face of duplication as per the original order.
+	 * If the query contains multiple items in the selection list, then
+	 * by default each result in the list is packaged in an array of type
+	 * {@code Object[]}.
+	 *
+	 * @return the result list only containing unique values
+	 */
+	List<R> uniqueList();
+
+	/**
 	 * Execute the query and return the query results as a {@link List}.
 	 * If the query contains multiple items in the selection list, then
 	 * by default each result in the list is packaged in an array of type

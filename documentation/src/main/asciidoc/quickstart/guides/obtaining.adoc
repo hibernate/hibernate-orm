@@ -8,7 +8,6 @@ Hibernate's functionality is split into a number of modules/artifacts meant to i
 hibernate-core:: The main (core) Hibernate module.  Defines its ORM features and APIs as well as the various integration SPIs.
 hibernate-envers:: Hibernate's historical entity versioning feature
 hibernate-spatial:: Hibernate's Spatial/GIS data-type support
-hibernate-osgi:: Hibernate support for running in OSGi containers.
 hibernate-agroal:: Integrates the https://agroal.github.io/[Agroal] connection pooling library into Hibernate
 hibernate-c3p0:: Integrates the https://www.mchange.com/projects/c3p0/[C3P0] connection pooling library into Hibernate
 hibernate-hikaricp:: Integrates the https://github.com/brettwooldridge/HikariCP/[HikariCP] connection pooling library into Hibernate
@@ -16,7 +15,11 @@ hibernate-vibur:: Integrates the https://www.vibur.org/[Vibur DBCP] connection p
 hibernate-proxool:: Integrates the https://proxool.sourceforge.net/[Proxool] connection pooling library into Hibernate
 hibernate-jcache:: Integrates the https://jcp.org/en/jsr/detail?id=107$$[JCache] caching specification into Hibernate,
 enabling any compliant implementation to become a second-level cache provider.
-hibernate-ehcache:: Integrates the https://ehcache.org/[Ehcache] caching library into Hibernate as a second-level cache provider.
+hibernate-community-dialects:: Hibernate's community supported dialects
+hibernate-graalvm:: Experimental extension to make it easier to compile applications into a https://www.graalvm.org/[GraalVM] native image
+hibernate-micrometer:: Integration for Micrometer metrics into Hibernate as a metrics collection package
+hibernate-testing:: Support for testing Hibernate ORM functionality
+hibernate-integrationtest-java-modules:: Integration tests for running Hibernate ORM in the Java module path
 
 === Release Bundle Downloads
 

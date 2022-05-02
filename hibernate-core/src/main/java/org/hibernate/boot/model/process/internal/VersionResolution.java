@@ -83,7 +83,7 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 		final BasicType<?> basicType = typeConfiguration.getBasicTypeRegistry().resolve( jtd, recommendedJdbcType );
 		final BasicType legacyType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( jtd.getJavaType() );
 
-		assert legacyType.getJdbcType().equals( recommendedJdbcType );
+		assert legacyType.getJdbcType().getJdbcTypeCode() == recommendedJdbcType.getJdbcTypeCode();
 
 		return new VersionResolution<>( jtd, recommendedJdbcType, basicType, legacyType );
 	}

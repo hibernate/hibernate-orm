@@ -96,11 +96,22 @@ publishing {
 	}
 }
 
-signing {
-	var signingKey = resolveSigningKey()
-	var signingPassword = findSigningProperty( "signingPassword" )
-	useInMemoryPgpKeys( signingKey, signingPassword )
+var signingKey = resolveSigningKey()
+var signingPassword = findSigningProperty( "signingPassword" )
+var forceSigning = System.getProperty( "forceSigning" ) != null
+var isReleaseVersion = !version.endsWith( "SNAPSHOT" )
 
+gradle.taskGraph.whenReady {tg ->
+	if ( signingKey == null && ( isReleaseVersion || forceSigning ) ) {
+		throw new GradleException(
+				"`signing`-related tasks require the following properties: 'signingKey' or 'signingKeyFile'"
+		)
+	}
+}
+
+signing {
+	required { isReleaseVersion || forceSigning }
+	useInMemoryPgpKeys( signingKey, signingPassword )
 	sign publishing.publications.publishedArtifacts
 }
 

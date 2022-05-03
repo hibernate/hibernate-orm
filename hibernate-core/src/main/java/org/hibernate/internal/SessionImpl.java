@@ -25,6 +25,7 @@ import java.util.Set;
 import jakarta.persistence.metamodel.Metamodel;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
+import org.hibernate.FetchNotFoundException;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -2332,7 +2333,14 @@ public class SessionImpl
 
 			return loadAccess.load( primaryKey );
 		}
-		catch ( EntityNotFoundException ignored ) {
+		catch (EntityNotFoundException entityNotFoundException) {
+			/*
+			This may happen if the entity has an associations mapped with @NotFound(action = NotFoundAction.EXCEPTION)
+			and this associated entity is not found.
+			 */
+			if ( entityNotFoundException instanceof FetchNotFoundException ) {
+				throw entityNotFoundException;
+			}
 			// DefaultLoadEventListener#returnNarrowedProxy() may throw ENFE (see HHH-7861 for details),
 			// which find() should not throw.  Find() should return null if the entity was not found.
 			if ( log.isDebugEnabled() ) {

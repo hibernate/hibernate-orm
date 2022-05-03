@@ -43,7 +43,7 @@ public class CockroachDBTestSupport extends TestSupport {
 		return new GeomCodec() {
 			@Override
 			public Geometry<?> toGeometry(Object in) {
-				return PGGeometryJdbcType.INSTANCE_WKB_2.toGeometry( in );
+				return (Geometry<?>)( in );
 			}
 		};
 	}

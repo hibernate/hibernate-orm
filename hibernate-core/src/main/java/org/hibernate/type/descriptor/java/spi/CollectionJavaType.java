@@ -6,10 +6,15 @@
  */
 package org.hibernate.type.descriptor.java.spi;
 
+import java.lang.reflect.ParameterizedType;
+
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
@@ -39,6 +44,13 @@ public class CollectionJavaType<C> extends AbstractClassJavaType<C> {
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
 		// none
 		return null;
+	}
+
+	@Override
+	public JavaType<C> createJavaType(ParameterizedType parameterizedType) {
+		//noinspection unchecked
+		// Construct a basic java type that knows its parametrization
+		return new UnknownBasicJavaType<>( parameterizedType, (MutabilityPlan<C>) MutableMutabilityPlan.INSTANCE );
 	}
 
 	@Override

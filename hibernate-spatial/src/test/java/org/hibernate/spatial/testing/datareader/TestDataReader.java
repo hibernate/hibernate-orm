@@ -19,6 +19,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
@@ -31,10 +34,16 @@ public class TestDataReader {
 		}
 		List<TestDataElement> testDataElements = new ArrayList<TestDataElement>();
 		SAXReader reader = new SAXReader();
+		// Make sure we use the "right" implementation as the Oracle XDB driver comes with a JAXP implementation as well
+		SAXParserFactory factory = SAXParserFactory.newInstance( "org.apache.xerces.jaxp.SAXParserFactoryImpl", null );
+		factory.setValidating(false);
+		factory.setNamespaceAware(true);
 		try {
-			reader.setFeature( "http://apache.org/xml/features/nonvalidating/load-external-dtd", false );
-			reader.setFeature( "http://xml.org/sax/features/external-general-entities", false );
-			reader.setFeature( "http://xml.org/sax/features/external-parameter-entities", false );
+			factory.setFeature( "http://apache.org/xml/features/nonvalidating/load-external-dtd", false );
+			factory.setFeature( "http://xml.org/sax/features/external-general-entities", false );
+			factory.setFeature( "http://xml.org/sax/features/external-parameter-entities", false );
+			SAXParser parser = factory.newSAXParser();
+			reader.setXMLReader( parser.getXMLReader() );
 			Document document = reader.read( getInputStream( fileName ) );
 			addDataElements( document, testDataElements );
 		}

@@ -28,6 +28,8 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -36,20 +38,20 @@ import static org.hamcrest.Matchers.is;
 /**
  * @author Christian Beikov
  */
-@DomainModel(annotatedClasses = JsonMappingTests.EntityWithJson.class)
+@DomainModel(annotatedClasses = XmlMappingTests.EntityWithXml.class)
 @SessionFactory
-public abstract class JsonMappingTests {
+public abstract class XmlMappingTests {
 
-	@ServiceRegistry(settings = @Setting(name = AvailableSettings.JSON_FORMAT_MAPPER, value = "jsonb"))
-	public static class JsonB extends JsonMappingTests {
+	@ServiceRegistry(settings = @Setting(name = AvailableSettings.XML_FORMAT_MAPPER, value = "jaxb"))
+	public static class Jaxb extends XmlMappingTests {
 
-		public JsonB() {
+		public Jaxb() {
 			super( true );
 		}
 	}
 
-	@ServiceRegistry(settings = @Setting(name = AvailableSettings.JSON_FORMAT_MAPPER, value = "jackson"))
-	public static class Jackson extends JsonMappingTests {
+	@ServiceRegistry(settings = @Setting(name = AvailableSettings.XML_FORMAT_MAPPER, value = "jackson-xml"))
+	public static class Jackson extends XmlMappingTests {
 
 		public Jackson() {
 			super( false );
@@ -58,7 +60,7 @@ public abstract class JsonMappingTests {
 
 	private final boolean supportsObjectMapKey;
 
-	protected JsonMappingTests(boolean supportsObjectMapKey) {
+	protected XmlMappingTests(boolean supportsObjectMapKey) {
 		this.supportsObjectMapKey = supportsObjectMapKey;
 	}
 
@@ -67,74 +69,73 @@ public abstract class JsonMappingTests {
 		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
-		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor( EntityWithJson.class );
+		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor( EntityWithXml.class);
 		final JdbcTypeRegistry jdbcTypeRegistry = mappingMetamodel.getTypeConfiguration().getJdbcTypeRegistry();
 
-		final BasicAttributeMapping payloadAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "payload" );
+		final BasicAttributeMapping stringMapAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "stringMap" );
 		final BasicAttributeMapping objectMapAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "objectMap" );
 		final BasicAttributeMapping listAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "list" );
-
-		assertThat( payloadAttribute.getJavaType().getJavaTypeClass(), equalTo( Map.class ) );
+		assertThat( stringMapAttribute.getJavaType().getJavaTypeClass(), equalTo( Map.class ) );
 		assertThat( objectMapAttribute.getJavaType().getJavaTypeClass(), equalTo( Map.class ) );
 		assertThat( listAttribute.getJavaType().getJavaTypeClass(), equalTo( List.class ) );
 
-		final JdbcType jsonType = jdbcTypeRegistry.getDescriptor( SqlTypes.JSON );
-		assertThat( payloadAttribute.getJdbcMapping().getJdbcType(), is( jsonType ) );
-		assertThat( objectMapAttribute.getJdbcMapping().getJdbcType(), is( jsonType ) );
-		assertThat( listAttribute.getJdbcMapping().getJdbcType(), is( jsonType ) );
+		final JdbcType xmlType = jdbcTypeRegistry.getDescriptor(SqlTypes.SQLXML);
+		assertThat( stringMapAttribute.getJdbcMapping().getJdbcType(), is( xmlType ) );
+		assertThat( objectMapAttribute.getJdbcMapping().getJdbcType(), is( xmlType ) );
+		assertThat( listAttribute.getJdbcMapping().getJdbcType(), is( xmlType ) );
 
-		Map<String, String> stringMap = Map.of( "name", "ABC" );
+		Map<String, StringNode> stringMap = Map.of( "name", new StringNode( "ABC" ) );
 		Map<StringNode, StringNode> objectMap = supportsObjectMapKey ? Map.of( new StringNode( "name" ), new StringNode( "ABC" ) ) : null;
 		List<StringNode> list = List.of( new StringNode( "ABC" ) );
-
 		scope.inTransaction(
 				(session) -> {
-					session.persist( new EntityWithJson( 1, stringMap, objectMap, list ) );
+					session.persist( new EntityWithXml( 1, stringMap, objectMap, list ) );
 				}
 		);
 
 		scope.inTransaction(
-				(session) ->  {
-					EntityWithJson entityWithJson = session.find( EntityWithJson.class, 1 );
-					assertThat( entityWithJson.payload, is( stringMap ) );
-					assertThat( entityWithJson.objectMap, is( objectMap ) );
-					assertThat( entityWithJson.list, is( list ) );
+				(session) -> {
+					EntityWithXml entityWithXml = session.find( EntityWithXml.class, 1 );
+					assertThat( entityWithXml.stringMap, is( stringMap ) );
+					assertThat( entityWithXml.objectMap, is( objectMap ) );
+					assertThat( entityWithXml.list, is( list ) );
 				}
 		);
 	}
 
-	@Entity(name = "EntityWithJson")
-	@Table(name = "EntityWithJson")
-	public static class EntityWithJson {
+	@Entity(name = "EntityWithXml")
+	@Table(name = "EntityWithXml")
+	public static class EntityWithXml {
 		@Id
 		private Integer id;
 
-		//tag::basic-json-example[]
-		@JdbcTypeCode( SqlTypes.JSON )
-		private Map<String, String> payload;
-		//end::basic-json-example[]
+		//tag::basic-xml-example[]
+		@JdbcTypeCode( SqlTypes.SQLXML )
+		private Map<String, StringNode> stringMap;
+		//end::basic-xml-example[]
 
-		@JdbcTypeCode( SqlTypes.JSON )
+		@JdbcTypeCode( SqlTypes.SQLXML )
 		private Map<StringNode, StringNode> objectMap;
 
-		@JdbcTypeCode( SqlTypes.JSON )
+		@JdbcTypeCode( SqlTypes.SQLXML )
 		private List<StringNode> list;
 
-		public EntityWithJson() {
+		public EntityWithXml() {
 		}
 
-		public EntityWithJson(
+		public EntityWithXml(
 				Integer id,
-				Map<String, String> payload,
+				Map<String, StringNode> stringMap,
 				Map<StringNode, StringNode> objectMap,
 				List<StringNode> list) {
 			this.id = id;
-			this.payload = payload;
+			this.stringMap = stringMap;
 			this.objectMap = objectMap;
 			this.list = list;
 		}
 	}
 
+	@XmlRootElement(name = "stringNode")
 	public static class StringNode {
 		private String string;
 
@@ -145,6 +146,7 @@ public abstract class JsonMappingTests {
 			this.string = string;
 		}
 
+		@XmlElement
 		public String getString() {
 			return string;
 		}

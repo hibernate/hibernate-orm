@@ -430,8 +430,22 @@ Can reference a
 `FormatMapper` instance,
 `FormatMapper` implementation `Class` reference,
 `FormatMapper` implementation class name (fully-qualified class name) or
-one of the following short hand constants `jackson` or `jsonb`.
-By default the first of the possible providers that is available in the runtime is used, according to the listing order.
+one of the following shorthand constants `jackson` or `jsonb`.
+By default, the first of the possible providers that is available in the runtime is used, according to the listing order.
++
+Note that the default serialization format of collections can differ depending on the serialization library.
+
+`*hibernate.type.xml_format_mapper*` (e.g. A fully-qualified class name, an instance, or a `Class` object reference)::
+Names a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/type/FormatMapper.html[`FormatMapper`] implementation to be applied to the `SessionFactory` for XML serialization and deserialization.
++
+Can reference a
+`FormatMapper` instance,
+`FormatMapper` implementation `Class` reference,
+`FormatMapper` implementation class name (fully-qualified class name) or
+one of the following shorthand constants `jackson-xml` or `jaxb`.
+By default, the first of the possible providers that is available in the runtime is used, according to the listing order.
++
+Note that the default serialization format of collections can differ depending on the serialization library.
 
 [[configurations-bytecode-enhancement]]
 === Bytecode Enhancement Properties

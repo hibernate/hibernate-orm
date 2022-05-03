@@ -314,4 +314,11 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy();
 
 	FormatMapper getJsonFormatMapper();
+
+	/**
+	 * The format mapper to use for serializing/deserializing XML data.
+	 *
+	 * @since 6.0.1
+	 */
+	FormatMapper getXmlFormatMapper();
 }

@@ -42,8 +42,9 @@ dependencies {
     compileOnly jakartaLibs.jacc
     compileOnly jakartaLibs.validation
     compileOnly jakartaLibs.cdi
-    compileOnly jakartaLibs.jsonb
+    compileOnly jakartaLibs.jsonbApi
     compileOnly libs.jackson
+    compileOnly libs.jacksonXml
 
     testImplementation project(':hibernate-testing')
     testImplementation project(':hibernate-ant')

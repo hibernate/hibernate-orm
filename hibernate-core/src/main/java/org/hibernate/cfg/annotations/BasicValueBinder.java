@@ -306,7 +306,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 		// If we get into this method we know that there is a Java type for the value
 		//		and that it is safe to load on the app classloader.
-		final Class<?> modelJavaType = resolveJavaType( modelTypeXClass );
+		final java.lang.reflect.Type modelJavaType = resolveJavaType( modelTypeXClass );
 		if ( modelJavaType == null ) {
 			throw new IllegalStateException( "BasicType requires Java type" );
 		}
@@ -495,9 +495,10 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		else {
 			mapKeyClass = modelPropertyTypeXClass;
 		}
-		final Class<?> implicitJavaType = resolveJavaType( mapKeyClass );
+		final java.lang.reflect.Type javaType = resolveJavaType( mapKeyClass );
+		final Class<Object> javaTypeClass = ReflectHelper.getClass( javaType );
 
-		implicitJavaTypeAccess = (typeConfiguration) -> implicitJavaType;
+		implicitJavaTypeAccess = (typeConfiguration) -> javaType;
 
 		final MapKeyEnumerated mapKeyEnumeratedAnn = mapAttribute.getAnnotation( MapKeyEnumerated.class );
 		if ( mapKeyEnumeratedAnn != null ) {
@@ -638,7 +639,8 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		XClass xclass = elementTypeXClass == null && attributeXProperty.isArray() 
 				? attributeXProperty.getElementClass() 
 				: elementTypeXClass;
-		Class<?> javaType = resolveJavaType( xclass );
+		final java.lang.reflect.Type javaType = resolveJavaType( xclass );
+		final Class<Object> javaTypeClass = ReflectHelper.getClass( javaType );
 
 		implicitJavaTypeAccess = typeConfiguration -> javaType;
 
@@ -657,7 +659,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			temporalPrecision = null;
 		}
 
-		if ( javaType.isEnum() ) {
+		if ( javaTypeClass.isEnum() ) {
 			final Enumerated enumeratedAnn = attributeXProperty.getAnnotation( Enumerated.class );
 			if ( enumeratedAnn != null ) {
 				enumType = enumeratedAnn.value();
@@ -697,7 +699,8 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 	private void prepareBasicAttribute(String declaringClassName, XProperty attributeDescriptor, XClass attributeType) {
 		
-		final Class<?> javaType = resolveJavaType( attributeType );
+		final java.lang.reflect.Type javaType = resolveJavaType( attributeType );
+		final Class<Object> javaTypeClass = ReflectHelper.getClass( javaType );
 
 		implicitJavaTypeAccess = typeConfiguration -> javaType;
 
@@ -716,7 +719,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			this.temporalPrecision = null;
 		}
 
-		if ( javaType.isEnum() ) {
+		if ( javaTypeClass.isEnum() ) {
 			final Enumerated enumeratedAnn = attributeDescriptor.getAnnotation( Enumerated.class );
 			if ( enumeratedAnn != null ) {
 				this.enumType = enumeratedAnn.value();
@@ -976,10 +979,10 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		return mutability;
 	}
 
-	private Class<?> resolveJavaType(XClass returnedClassOrElement) {
+	private java.lang.reflect.Type resolveJavaType(XClass returnedClassOrElement) {
 		return buildingContext.getBootstrapContext()
-					.getReflectionManager()
-					.toClass( returnedClassOrElement );
+				.getReflectionManager()
+				.toType( returnedClassOrElement );
 	}
 
 	private Dialect getDialect() {

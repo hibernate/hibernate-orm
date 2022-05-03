@@ -72,6 +72,8 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.Statistics;
 import org.hibernate.type.FormatMapper;
 import org.hibernate.type.JacksonJsonFormatMapper;
+import org.hibernate.type.JacksonXmlFormatMapper;
+import org.hibernate.type.JaxbXmlFormatMapper;
 import org.hibernate.type.JsonBJsonFormatMapper;
 
 import static org.hibernate.cfg.AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS;
@@ -151,6 +153,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private Object beanManagerReference;
 	private Object validatorFactoryReference;
 	private FormatMapper jsonFormatMapper;
+	private FormatMapper xmlFormatMapper;
 
 	// SessionFactory behavior
 	private boolean jpaBootstrap;
@@ -296,6 +299,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 		this.jsonFormatMapper = determineJsonFormatMapper(
 				configurationSettings.get( AvailableSettings.JSON_FORMAT_MAPPER ),
+				strategySelector
+		);
+		this.xmlFormatMapper = determineXmlFormatMapper(
+				configurationSettings.get( AvailableSettings.XML_FORMAT_MAPPER ),
 				strategySelector
 		);
 
@@ -809,6 +816,32 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 	}
 
+	private static FormatMapper determineXmlFormatMapper(Object setting, StrategySelector strategySelector) {
+		return strategySelector.resolveDefaultableStrategy(
+				FormatMapper.class,
+				setting,
+				(Callable<FormatMapper>) () -> {
+					try {
+						// Force initialization of the instance
+						JacksonXmlFormatMapper.INSTANCE.hashCode();
+						return JacksonXmlFormatMapper.INSTANCE;
+					}
+					catch (NoClassDefFoundError ex) {
+						// Ignore
+					}
+					try {
+						// Force initialization of the instance
+						JaxbXmlFormatMapper.INSTANCE.hashCode();
+						return JaxbXmlFormatMapper.INSTANCE;
+					}
+					catch (NoClassDefFoundError ex) {
+						// Ignore
+					}
+					return null;
+				}
+		);
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SessionFactoryOptionsState
@@ -1218,7 +1251,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	public FormatMapper getJsonFormatMapper() {
 		return jsonFormatMapper;
 	}
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	public FormatMapper getXmlFormatMapper() {
+		return xmlFormatMapper;
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// In-flight mutation access
 
 	public void applyBeanManager(Object beanManager) {

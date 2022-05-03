@@ -18,15 +18,15 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * Specialized type mapping for {@code JSON} and the JSON SQL data type.
+ * Specialized type mapping for {@code SQLXML} and the XML SQL data type.
  *
  * @author Christian Beikov
  */
-public class JsonJdbcType implements JdbcType {
+public class XmlAsStringJdbcType implements JdbcType {
 	/**
 	 * Singleton access
 	 */
-	public static final JsonJdbcType INSTANCE = new JsonJdbcType();
+	public static final XmlAsStringJdbcType INSTANCE = new XmlAsStringJdbcType();
 
 	@Override
 	public int getJdbcTypeCode() {
@@ -35,12 +35,12 @@ public class JsonJdbcType implements JdbcType {
 
 	@Override
 	public int getDefaultSqlTypeCode() {
-		return SqlTypes.JSON;
+		return SqlTypes.SQLXML;
 	}
 
 	@Override
 	public String toString() {
-		return "JsonJdbcType";
+		return "XmlAsStringJdbcType";
 	}
 
 	@Override
@@ -49,23 +49,23 @@ public class JsonJdbcType implements JdbcType {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				final String json = options.getSessionFactory().getFastSessionServices().getJsonFormatMapper().toString(
+				final String xml = options.getSessionFactory().getFastSessionServices().getXmlFormatMapper().toString(
 						value,
 						getJavaType(),
 						options
 				);
-				st.setString( index, json );
+				st.setString( index, xml );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				final String json = options.getSessionFactory().getFastSessionServices().getJsonFormatMapper().toString(
+				final String xml = options.getSessionFactory().getFastSessionServices().getXmlFormatMapper().toString(
 						value,
 						getJavaType(),
 						options
 				);
-				st.setString( name, json );
+				st.setString( name, xml );
 			}
 		};
 	}
@@ -73,6 +73,7 @@ public class JsonJdbcType implements JdbcType {
 	@Override
 	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
 		return new BasicExtractor<>( javaType, this ) {
+
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				return getObject( rs.getString( paramIndex ), options );
@@ -88,12 +89,12 @@ public class JsonJdbcType implements JdbcType {
 				return getObject( statement.getString( name ), options );
 			}
 
-			private X getObject(String json, WrapperOptions options) throws SQLException {
-				if ( json == null ) {
+			private X getObject(String xml, WrapperOptions options) throws SQLException {
+				if ( xml == null ) {
 					return null;
 				}
-				return options.getSessionFactory().getFastSessionServices().getJsonFormatMapper().fromString(
-						json,
+				return options.getSessionFactory().getFastSessionServices().getXmlFormatMapper().fromString(
+						xml,
 						getJavaType(),
 						options
 				);

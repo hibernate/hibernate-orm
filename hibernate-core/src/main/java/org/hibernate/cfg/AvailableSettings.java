@@ -2562,14 +2562,30 @@ public interface AvailableSettings {
 	 *     <li>an instance of {@code FormatMapper},
 	 *     <li>a {@link Class} representing a class that implements {@code FormatMapper},
 	 *     <li>the name of a class that implements {@code FormatMapper}, or
-	 *     <li>one of the short hand constants {@code jackson} or {@code jsonb}.
+	 *     <li>one of the shorthand constants {@code jackson} or {@code jsonb}.
 	 * </ul>
-	 * By default, the first of the possible providers that is available in the runtime is
+	 * By default, the first of the possible providers that is available at runtime is
 	 * used, according to the listing order.
 	 *
 	 * @since 6.0
 	 */
 	String JSON_FORMAT_MAPPER = "hibernate.type.json_format_mapper";
+
+	/**
+	 * Specifies a {@link org.hibernate.type.FormatMapper} used for XML serialization
+	 * and deserialization, either:
+	 * <ul>
+	 *     <li>an instance of {@code FormatMapper},
+	 *     <li>a {@link Class} representing a class that implements {@code FormatMapper},
+	 *     <li>the name of a class that implements {@code FormatMapper}, or
+	 *     <li>one of the shorthand constants {@code jackson} or {@code jaxb}.
+	 * </ul>
+	 * By default, the first of the possible providers that is available at runtime is
+	 * used, according to the listing order.
+	 *
+	 * @since 6.0.1
+	 */
+	String XML_FORMAT_MAPPER = "hibernate.type.xml_format_mapper";
 
 	/**
 	 * Specifies the default strategy for storage of the timezone information

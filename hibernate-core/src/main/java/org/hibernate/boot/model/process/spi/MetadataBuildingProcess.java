@@ -50,6 +50,7 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
+import org.hibernate.type.descriptor.jdbc.XmlAsStringJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
@@ -387,6 +388,7 @@ public class MetadataBuildingProcess {
 			addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.UUID, SqlTypes.BINARY );
 		}
 		jdbcTypeRegistry.addDescriptorIfAbsent( JsonJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptorIfAbsent( XmlAsStringJdbcType.INSTANCE );
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.INET, SqlTypes.VARBINARY );
 		final int preferredSqlTypeCodeForDuration = ConfigurationHelper.getPreferredSqlTypeCodeForDuration( bootstrapContext.getServiceRegistry() );
 		if ( preferredSqlTypeCodeForDuration != SqlTypes.INTERVAL_SECOND ) {
@@ -404,6 +406,13 @@ public class MetadataBuildingProcess {
 		ddlTypeRegistry.addDescriptorIfAbsent(
 				new DdlTypeImpl(
 						SqlTypes.JSON,
+						ddlTypeRegistry.getTypeName( SqlTypes.VARCHAR, null, null, null ),
+						dialect
+				)
+		);
+		ddlTypeRegistry.addDescriptorIfAbsent(
+				new DdlTypeImpl(
+						SqlTypes.SQLXML,
 						ddlTypeRegistry.getTypeName( SqlTypes.VARCHAR, null, null, null ),
 						dialect
 				)

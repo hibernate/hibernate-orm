@@ -7,6 +7,7 @@
 package org.hibernate.type.descriptor.java;
 
 import java.io.Serializable;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Comparator;
 import java.util.Objects;
@@ -247,5 +248,13 @@ public interface JavaType<T> extends Serializable {
 	 */
 	default String getCheckCondition(String columnName, JdbcType sqlType, Dialect dialect) {
 		return null;
+	}
+
+	/**
+	 * Creates the {@link JavaType} for the given {@link ParameterizedType} based on this {@link JavaType} registered
+	 * for the raw type.
+	 */
+	default JavaType<T> createJavaType(ParameterizedType parameterizedType) {
+		return this;
 	}
 }

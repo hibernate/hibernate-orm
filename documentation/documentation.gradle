@@ -55,6 +55,11 @@ dependencies {
 	testImplementation testLibs.mockito
 	testImplementation testLibs.mockitoInline
 
+	testImplementation jakartaLibs.jaxbApi
+	testImplementation jakartaLibs.jaxb
+	testImplementation jakartaLibs.jsonb
+	testImplementation libs.jacksonXml
+
 	testRuntimeOnly testLibs.wildFlyTxnClient
 	testRuntimeOnly(libs.ehcache3) {
 		capabilities {

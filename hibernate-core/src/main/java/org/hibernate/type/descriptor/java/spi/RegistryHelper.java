@@ -102,7 +102,7 @@ public class RegistryHelper {
 			return new SerializableJavaType( javaTypeClass, plan );
 		}
 
-		return new JavaTypeBasicAdaptor<>( javaTypeClass, plan );
+		return new UnknownBasicJavaType<>( javaType, plan );
 	}
 
 	private <J> Class<J> determineJavaTypeClass(Type javaType) {

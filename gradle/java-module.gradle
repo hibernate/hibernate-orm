@@ -87,6 +87,8 @@ dependencies {
 	testRuntimeOnly dbLibs.informix
 	testRuntimeOnly dbLibs.cockroachdb
 	testRuntimeOnly dbLibs.oracle
+	testRuntimeOnly dbLibs.oracleXml
+	testRuntimeOnly dbLibs.oracleXmlParser
 	testRuntimeOnly dbLibs.sybase
 
 	// Since both the DB2 driver and HANA have a package "net.jpountz" we have to add dependencies conditionally

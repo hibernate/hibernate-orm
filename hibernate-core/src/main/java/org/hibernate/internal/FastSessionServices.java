@@ -169,6 +169,7 @@ public final class FastSessionServices {
 	private final CacheRetrieveMode defaultCacheRetrieveMode;
 	private final ConnectionObserverStatsBridge defaultJdbcObservers;
 	private final FormatMapper jsonFormatMapper;
+	private final FormatMapper xmlFormatMapper;
 
 	FastSessionServices(SessionFactoryImpl sf) {
 		Objects.requireNonNull( sf );
@@ -243,6 +244,7 @@ public final class FastSessionServices {
 		this.defaultLockOptions = initializeDefaultLockOptions( defaultSessionProperties );
 		this.initialSessionFlushMode = initializeDefaultFlushMode( defaultSessionProperties );
 		this.jsonFormatMapper = sessionFactoryOptions.getJsonFormatMapper();
+		this.xmlFormatMapper = sessionFactoryOptions.getXmlFormatMapper();
 	}
 
 	private static FlushMode initializeDefaultFlushMode(Map<String, Object> defaultSessionProperties) {
@@ -373,5 +375,9 @@ public final class FastSessionServices {
 
 	public FormatMapper getJsonFormatMapper() {
 		return jsonFormatMapper;
+	}
+
+	public FormatMapper getXmlFormatMapper() {
+		return xmlFormatMapper;
 	}
 }

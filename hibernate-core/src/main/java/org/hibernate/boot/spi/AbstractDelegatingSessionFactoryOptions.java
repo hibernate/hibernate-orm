@@ -461,4 +461,9 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	public FormatMapper getJsonFormatMapper() {
 		return delegate.getJsonFormatMapper();
 	}
+
+	@Override
+	public FormatMapper getXmlFormatMapper() {
+		return delegate.getXmlFormatMapper();
+	}
 }

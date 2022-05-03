@@ -1357,6 +1357,23 @@ include::{sourcedir}/basic/JsonMappingTests.java[tags=basic-json-example]
 ----
 ====
 
+[[basic-mapping-xml]]
+==== XML mapping
+
+Hibernate will only use the `XML` type if explicitly configured through `@JdbcTypeCode( SqlTypes.SQLXML )`.
+The XML library used for serialization/deserialization is detected automatically,
+but can be overridden by setting `hibernate.type.xml_format_mapper`
+as can be read in the <<appendices/Configurations.adoc#misc-options,Configurations>> section.
+
+[[basic-xml-example]]
+.Mapping XML
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/XmlMappingTests.java[tags=basic-xml-example]
+----
+====
+
 
 [[basic-mapping-composition]]
 ==== Compositional basic mapping

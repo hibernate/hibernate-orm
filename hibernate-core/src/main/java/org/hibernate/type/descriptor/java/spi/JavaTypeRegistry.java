@@ -132,17 +132,15 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 		return resolveDescriptor(
 				javaType,
 				() -> {
-					final Class<?> javaTypeClass;
-					if ( javaType instanceof Class<?> ) {
-						javaTypeClass = (Class<?>) javaType;
-					}
-					else {
+					if ( javaType instanceof ParameterizedType ) {
 						final ParameterizedType parameterizedType = (ParameterizedType) javaType;
-						javaTypeClass = (Class<?>) parameterizedType.getRawType();
+						final JavaType<J> rawType = findDescriptor( ( parameterizedType ).getRawType() );
+						if ( rawType != null ) {
+							return rawType.createJavaType( parameterizedType );
+						}
 					}
-
 					return RegistryHelper.INSTANCE.createTypeDescriptor(
-							javaTypeClass,
+							javaType,
 							() -> {
 								final MutabilityPlan<J> determinedPlan = RegistryHelper.INSTANCE.determineMutabilityPlan( javaType, typeConfiguration );
 								if ( determinedPlan != null ) {

@@ -16,6 +16,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.GetterFieldImpl;
 import org.hibernate.property.access.spi.GetterMethodImpl;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
@@ -58,7 +59,7 @@ public class AccessMappingTest {
 			sf = cfg.buildSessionFactory( serviceRegistry );
 			fail( "@Id and @OneToMany are not placed consistently in test entities. SessionFactory creation should fail." );
 		}
-		catch (MappingException e) {
+		catch (MappingException | JdbcTypeRecommendationException e) {
 			// success
 		}
 		finally {

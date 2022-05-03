@@ -40,6 +40,8 @@ import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoo
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.type.FormatMapper;
 import org.hibernate.type.JacksonJsonFormatMapper;
+import org.hibernate.type.JacksonXmlFormatMapper;
+import org.hibernate.type.JaxbXmlFormatMapper;
 import org.hibernate.type.JsonBJsonFormatMapper;
 
 import org.jboss.logging.Logger;
@@ -114,6 +116,7 @@ public class StrategySelectorBuilder {
 		addImplicitNamingStrategies( strategySelector );
 		addCacheKeysFactories( strategySelector );
 		addJsonFormatMappers( strategySelector );
+		addXmlFormatMappers( strategySelector );
 
 		// apply auto-discovered registrations
 		for ( StrategyRegistrationProvider provider : classLoaderService.loadJavaServices( StrategyRegistrationProvider.class ) ) {
@@ -263,6 +266,19 @@ public class StrategySelectorBuilder {
 				FormatMapper.class,
 				JsonBJsonFormatMapper.SHORT_NAME,
 				JsonBJsonFormatMapper.class
+		);
+	}
+
+	private void addXmlFormatMappers(StrategySelectorImpl strategySelector) {
+		strategySelector.registerStrategyImplementor(
+				FormatMapper.class,
+				JacksonXmlFormatMapper.SHORT_NAME,
+				JacksonXmlFormatMapper.class
+		);
+		strategySelector.registerStrategyImplementor(
+				FormatMapper.class,
+				JaxbXmlFormatMapper.SHORT_NAME,
+				JaxbXmlFormatMapper.class
 		);
 	}
 }

@@ -54,6 +54,7 @@ import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
+import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
@@ -173,6 +174,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
 		}
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( SQLXML, "xml", this ) );
 	}
 
 	@Override
@@ -211,6 +213,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				Types.TINYINT,
 				SmallIntJdbcType.INSTANCE
 		);
+		typeContributions.contributeJdbcType( XmlJdbcType.INSTANCE );
 	}
 
 	@Override

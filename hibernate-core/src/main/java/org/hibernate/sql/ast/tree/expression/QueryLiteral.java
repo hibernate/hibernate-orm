@@ -29,9 +29,8 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
  * Represents a literal in the SQL AST.  This form accepts a {@link BasicValuedMapping}
  * as its {@link org.hibernate.metamodel.mapping.MappingModelExpressible}.
  *
- * @see JdbcLiteral
- *
  * @author Steve Ebersole
+ * @see JdbcLiteral
  */
 public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 	private final T value;
@@ -46,22 +45,23 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 				final Object literalValue = value;
 				final Object sqlLiteralValue;
 
-				if ( valueConverter.getDomainJavaType().getJavaTypeClass().isInstance( literalValue ) ) {
+				if ( literalValue == null || valueConverter.getDomainJavaType().getJavaTypeClass().isInstance(
+						literalValue ) ) {
 					sqlLiteralValue = valueConverter.toRelationalValue( literalValue );
 				}
-				else {
-					if ( !valueConverter.getRelationalJavaType().getJavaTypeClass().isInstance( literalValue ) ) {
-						throw new SqlTreeCreationException(
-								String.format(
-										Locale.ROOT,
-										"QueryLiteral type [`%s`] did not match domain Java-type [`%s`] nor JDBC Java-type [`%s`]",
-										literalValue.getClass(),
-										valueConverter.getDomainJavaType().getJavaTypeClass().getName(),
-										valueConverter.getRelationalJavaType().getJavaTypeClass().getName()
-								)
-						);
-					}
+				else if ( valueConverter.getRelationalJavaType().getJavaTypeClass().isInstance( literalValue ) ) {
 					sqlLiteralValue = literalValue;
+				}
+				else {
+					throw new SqlTreeCreationException(
+							String.format(
+									Locale.ROOT,
+									"QueryLiteral type [`%s`] did not match domain Java-type [`%s`] nor JDBC Java-type [`%s`]",
+									literalValue.getClass(),
+									valueConverter.getDomainJavaType().getJavaTypeClass().getName(),
+									valueConverter.getRelationalJavaType().getJavaTypeClass().getName()
+							)
+					);
 				}
 				this.value = (T) sqlLiteralValue;
 				this.type = convertibleModelPart;
@@ -101,7 +101,8 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 	public DomainResult<T> createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
+		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlAstCreationState()
+				.getSqlExpressionResolver();
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				this,
 				type.getMappedType().getMappedJavaType(),

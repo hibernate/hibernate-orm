@@ -5,6 +5,7 @@
 :coreProjectDir: {rootProjectDir}/hibernate-core
 :coreTestSrcDir: {rootProjectDir}/hibernate-core/src/test/java
 :instantiatorTestDir: {coreTestSrcDir}/org/hibernate/orm/test/mapping/embeddable/strategy/instantiator
+:usertypeTestDir: {coreTestSrcDir}/org/hibernate/orm/test/mapping/embeddable/strategy/usertype
 :extrasdir: extras
 
 Historically Hibernate called these components.
@@ -319,6 +320,78 @@ on the <<embeddable-instantiator-class-ex,embeddable>>.
 [source, JAVA, indent=0]
 ----
 include::{instantiatorTestDir}/registered/Person.java[tags=embeddable-instantiator-registration]
+----
+====
+
+
+
+
+[[embeddable-mapping-custom]]
+==== Custom type mapping
+
+Another approach is to supply the implementation of the `org.hibernate.usertype.CompositeUserType` contract using `@CompositeType`,
+which is an extension to the `org.hibernate.metamodel.spi.EmbeddableInstantiator` contract.
+
+There are also corresponding, specialized forms of `@CompositeType` for specific model parts:
+
+* When mapping a Map, `@CompositeType` describes the Map value while `@MapKeyCompositeType` describes the Map key
+* For collection mappings, `@CompositeType` describes the elements
+
+For example, consider the following custom type:
+
+[[embeddable-usertype-domain-ex]]
+.`CompositeUserType` - Domain type
+====
+[source, JAVA, indent=0]
+----
+include::{usertypeTestDir}/embedded/Name.java[tags=embeddable-usertype-domain]
+----
+====
+
+Here, `Name` only allows use of the constructor accepting its state.  Because this class does not follow Java Bean
+conventions, a custom user type for instantiation and state access is needed.
+
+[[embeddable-usertype-impl-ex]]
+.`CompositeUserType` - Implementation
+====
+[source, JAVA, indent=0]
+----
+include::{usertypeTestDir}/embedded/NameCompositeUserType.java[tags=embeddable-usertype-impl]
+----
+====
+
+A composite user type needs an embeddable mapper class, which represents the embeddable mapping structure of the type
+i.e. the way the type would look like if you had the option to write a custom `@Embeddable` class.
+
+In addition to the instantiation logic, a composite user type also has to provide a way to decompose the returned type
+into the individual components/properties of the embeddable mapper class through `getPropertyValue`.
+The property index, just like in the `instantiate` method, is based on the alphabetical order of the attribute names
+of the embeddable mapper class.
+
+The composite user type also needs to provide methods to handle the mutability, equals, hashCode and the cache
+serialization and deserialization of the returned type.
+
+There are a few ways to specify the composite user type.  The `@org.hibernate.annotations.CompositeType`
+annotation can be used on the embedded and element collection attributes:
+
+[[embeddable-usertype-property-ex]]
+.`@CompositeType` on attribute
+====
+[source, JAVA, indent=0]
+----
+include::{usertypeTestDir}/embedded/Person.java[tags=embeddable-usertype-property]
+----
+====
+
+Or `@org.hibernate.annotations.CompositeTypeRegistration` may be used, which is useful
+when the application developer wants to apply the composite user type for all domain type uses.
+
+[[embeddable-usertype-registration-ex]]
+.`@CompositeTypeRegistration`
+====
+[source, JAVA, indent=0]
+----
+include::{usertypeTestDir}/registered/Person.java[tags=embeddable-usertype-registration]
 ----
 ====
 

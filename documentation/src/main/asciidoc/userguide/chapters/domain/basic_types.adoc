@@ -1568,7 +1568,7 @@ There are also corresponding, specialized forms of `@Type` for specific model pa
 * For other collection mappings, `@Type` describes the elements
 * For discriminated association mappings (`@Any` and `@ManyToAny`), `@Type` describes the discriminator value
 
-`@Type` allows for more complex mapping concerns; but, <<basic-jpa-convert,AttributeConverter> and
+`@Type` allows for more complex mapping concerns; but, <<basic-jpa-convert,AttributeConverter>> and
 <<basic-mapping-composition>> should generally be preferred as simpler solutions
 
 [[basic-nationalized]]

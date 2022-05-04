@@ -6,11 +6,18 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.SQLException;
+import java.sql.Types;
+
 import org.hibernate.JDBCException;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.function.*;
+import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
+import org.hibernate.dialect.function.NoArgSQLFunction;
+import org.hibernate.dialect.function.RoundFunction;
+import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.H2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -37,9 +44,6 @@ import org.hibernate.type.StandardBasicTypes;
 
 import org.jboss.logging.Logger;
 
-import java.sql.SQLException;
-import java.sql.Types;
-
 /**
  * A dialect compatible with the H2 database.
  *
@@ -55,7 +59,7 @@ public class H2Dialect extends Dialect {
 		@Override
 		public String processSql(String sql, RowSelection selection) {
 			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
-			return sql + ( hasOffset ? " limit ? offset ?" : " limit ?" );
+			return sql + (hasOffset ? " limit ? offset ?" : " limit ?");
 		}
 
 		@Override
@@ -90,11 +94,11 @@ public class H2Dialect extends Dialect {
 				querySequenceString = "select name from information_schema.sequences";
 				sequenceInformationExtractor = SequenceInformationExtractorLegacyImpl.INSTANCE;
 			}
-			if ( !( majorVersion > 1 || minorVersion > 2 || buildId >= 139 ) ) {
+			if ( ! ( majorVersion > 1 || minorVersion > 2 || buildId >= 139 ) ) {
 				LOG.unsupportedMultiTableBulkHqlJpaql( majorVersion, minorVersion, buildId );
 			}
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			// probably H2 not in the classpath, though in certain app server environments it might just mean we are
 			// not using the correct classloader
 			LOG.undeterminedH2Version();
@@ -198,10 +202,7 @@ public class H2Dialect extends Dialect {
 		registerFunction( "curtimestamp", new NoArgSQLFunction( "curtimestamp", StandardBasicTypes.TIME ) );
 		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardBasicTypes.DATE ) );
 		registerFunction( "current_time", new NoArgSQLFunction( "current_time", StandardBasicTypes.TIME ) );
-		registerFunction(
-				"current_timestamp",
-				new NoArgSQLFunction( "current_timestamp", StandardBasicTypes.TIMESTAMP )
-		);
+		registerFunction( "current_timestamp", new NoArgSQLFunction( "current_timestamp", StandardBasicTypes.TIMESTAMP ) );
 		registerFunction( "datediff", new StandardSQLFunction( "datediff", StandardBasicTypes.INTEGER ) );
 		registerFunction( "dayname", new StandardSQLFunction( "dayname", StandardBasicTypes.STRING ) );
 		registerFunction( "dayofmonth", new StandardSQLFunction( "dayofmonth", StandardBasicTypes.INTEGER ) );
@@ -243,7 +244,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public String getLimitString(String sql, boolean hasOffset) {
-		return sql + ( hasOffset ? " limit ? offset ?" : " limit ?" );
+		return sql + (hasOffset ? " limit ? offset ?" : " limit ?");
 	}
 
 	@Override
@@ -337,26 +338,25 @@ public class H2Dialect extends Dialect {
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		SQLExceptionConversionDelegate delegate = super.buildSQLExceptionConversionDelegate();
-		if ( delegate == null ) {
+		if (delegate == null) {
 			delegate = new SQLExceptionConversionDelegate() {
 				@Override
 				public JDBCException convert(SQLException sqlException, String message, String sql) {
 					final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
 
-					if ( 40001 == errorCode ) {
+					if (40001 == errorCode) {
 						// DEADLOCK DETECTED
-						return new LockAcquisitionException( message, sqlException, sql );
+						return new LockAcquisitionException(message, sqlException, sql);
 					}
 
-					if ( 50200 == errorCode ) {
+					if (50200 == errorCode) {
 						// LOCK NOT AVAILABLE
-						return new PessimisticLockException( message, sqlException, sql );
+						return new PessimisticLockException(message, sqlException, sql);
 					}
 
 					if ( 90006 == errorCode ) {
 						// NULL not allowed for column [90006-145]
-						final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName(
-								sqlException );
+						final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName( sqlException );
 						return new ConstraintViolationException( message, sqlException, sql, constraintName );
 					}
 
@@ -381,8 +381,7 @@ public class H2Dialect extends Dialect {
 						// actually 2 different options are specified here:
 						//		1) [on commit drop] - says to drop the table on transaction commit
 						//		2) [transactional] - says to not perform an implicit commit of any current transaction
-						return "on commit drop transactional";
-					}
+						return "on commit drop transactional";					}
 				},
 				AfterUseAction.CLEAN,
 				TempTableDdlTransactionHandling.NONE

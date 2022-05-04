@@ -27,7 +27,7 @@ public class RoundFunction extends StandardSQLFunction {
 	 * @param name
 	 */
 	public RoundFunction(String name) {
-		super(name);
+		super( name );
 	}
 
 	@Override

@@ -96,9 +96,11 @@ publishing {
 	}
 }
 
+
+var signingKey = resolveSigningKey()
+var signingPassword = findSigningProperty( "signingPassword" )
+
 signing {
-	var signingKey = resolveSigningKey()
-	var signingPassword = findSigningProperty( "signingPassword" )
 	useInMemoryPgpKeys( signingKey, signingPassword )
 
 	sign publishing.publications.publishedArtifacts
@@ -119,9 +121,13 @@ String resolveSigningKey() {
 }
 
 String findSigningProperty(String propName) {
-	if ( System.getProperty(propName ) != null ) {
+	if ( System.getProperty( propName ) != null ) {
 		logger.lifecycle "Found `{}` as a system property", propName
 		return System.getProperty(propName )
+	}
+	else if ( System.getenv().get( propName ) != null ) {
+		logger.lifecycle "Found `{}` as an env-var property", propName
+		return System.getenv().get( propName );
 	}
 	else if ( project.hasProperty( propName ) ) {
 		logger.lifecycle "Found `{}` as a project property", propName
@@ -130,6 +136,50 @@ String findSigningProperty(String propName) {
 	else {
 		logger.lifecycle "Did not find `{}`", propName
 		return null
+	}
+}
+
+
+final publishTaskName = "publishPublishedArtifactsPublicationToSonatypeRepository"
+final signingTaskName = "signPublishedArtifactsPublication"
+final signingTaskPath = project.path + ":" + signingTaskName
+final signingExplicitlyRequested = gradle.startParameter.taskNames.contains( signingTaskName )
+		|| gradle.startParameter.taskNames.contains( signingTaskPath )
+
+var signingTask = project.tasks.getByName( signingTaskName ) as Sign
+var signingExtension = project.getExtensions().getByType(SigningExtension) as SigningExtension
+
+signingTask.doFirst {
+	if ( signingKey == null || signingPassword == null ) {
+		throw new GradleException(
+				"Cannot perform signing without GPG details.  Please set the `signingKey` and `signingKeyFile` properties"
+		)
+	}
+}
+
+if ( signingExplicitlyRequested ) {
+	// signing was explicitly requested
+	signingExtension.required = true
+}
+else {
+	gradle.taskGraph.whenReady { graph ->
+		var publishingTask = project.tasks.getByName( publishTaskName ) as PublishToMavenRepository
+		if ( graph.hasTask( signingTask ) ) {
+			// signing is scheduled to happen.
+			//
+			// we know, from above if-check, that it was not explicitly requested -
+			// so it is triggered via task dependency. make sure we want it to happen
+			if ( graph.hasTask( publishingTask ) ) {
+				// we are publishing to Sonatype OSSRH - we need the signing to happen
+				signingExtension.required = true
+			}
+			else {
+				// signing was not explicitly requested and we are not publishign to OSSRH
+				// so do not sign
+				signingTask.enabled = false
+			}
+		}
+
 	}
 }
 

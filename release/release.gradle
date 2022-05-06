@@ -335,7 +335,7 @@ tasks.uploadDocumentation {
             throw new RuntimeException( "Cannot perform upload of SNAPSHOT documentation" );
         }
         else {
-            logger.lifecycle( "Uploading documentation [{$url}]..." )
+            logger.lifecycle( "Uploading documentation ..." )
         }
     }
 

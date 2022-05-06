@@ -27,6 +27,7 @@ public class DocumentationPublishing {
 
 	private final DirectoryProperty stagingDirectory;
 	private final Property<String> docServerUrl;
+	private final Property<String> docDescriptorServerUrl;
 
 	private final RegularFileProperty updatedJsonFile;
 
@@ -42,6 +43,11 @@ public class DocumentationPublishing {
 		docServerUrl = project.getObjects()
 				.property( String.class )
 				.convention( "filemgmt-prod-sync.jboss.org:/docs_htdocs/hibernate/orm" );
+
+		docDescriptorServerUrl = project.getObjects()
+				.property( String.class )
+				.convention( "filemgmt-prod-sync.jboss.org:/docs_htdocs/hibernate" );
+
 
 		updatedJsonFile = project.getObjects()
 				.fileProperty()
@@ -62,6 +68,10 @@ public class DocumentationPublishing {
 
 	public Property<String> getDocServerUrl() {
 		return docServerUrl;
+	}
+
+	public Property<String> getDocDescriptorServerUrl() {
+		return docDescriptorServerUrl;
 	}
 
 	public DirectoryProperty getStagingDirectory() {

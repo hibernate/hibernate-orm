@@ -28,7 +28,7 @@ public abstract class PublishDescriptorTask extends DefaultTask {
 		setGroup( "Release" );
 		setDescription( "Publishes the documentation publication descriptor (JSON)" );
 
-		docServerUrl = config.getDocServerUrl();
+		docServerUrl = config.getDocDescriptorServerUrl();
 		jsonFile = config.getUpdatedJsonFile();
 	}
 

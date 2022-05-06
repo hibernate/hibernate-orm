@@ -43,7 +43,6 @@ public class H2DialectTest {
 				StandardBasicTypes.BIG_DECIMAL,
 				sqlFunction.getReturnType( StandardBasicTypes.BIG_DECIMAL, null )
 		);
-		sqlFunction.
 
 	}
 }

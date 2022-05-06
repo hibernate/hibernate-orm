@@ -52,8 +52,8 @@ public abstract class PublishDescriptorTask extends DefaultTask {
 		final String jsonPath = jsonFile.get().getAsFile().getAbsolutePath();
 
 		getProject().exec( (exec) -> {
-			exec.executable( "scp" );
-			exec.args( jsonPath, url );
+			exec.executable( "rsync" );
+			exec.args( "--port=2222", "-z", jsonPath, url );
 		} );
 	}
 }

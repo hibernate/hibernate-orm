@@ -144,6 +144,7 @@ dependencies {
     javadocClasspath dbLibs.postgresql
     javadocClasspath libs.jackson
     javadocClasspath gradleApi()
+    javadocClasspath libs.jacksonXml
 }
 
 

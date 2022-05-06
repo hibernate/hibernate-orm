@@ -3,6 +3,71 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.0.1.Final (May 06, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32061
+
+** Bug
+    * [HHH-15246] - HQL fails to set enum col to NULL
+    * [HHH-15245] - Minor regression in CockroachDB test cases
+    * [HHH-15241] - fix nonexistent references in hibernate core's Javadoc
+    * [HHH-15240] - Defining a UserVersionType causes AssertionError from VersionResolution if running in JVM with "-ea" flag set
+    * [HHH-15239] - "user guide" for 5.6 is missing after 6.0 is released
+    * [HHH-15238] - Documentation: update JDBC logging configuration for 6.0
+    * [HHH-15236] - Fix signing of published artifacts
+    * [HHH-15233] - Query NPE when using ":param IS NULL" and the parameter value is an Entity 
+
+    * [HHH-15232] - OneToOne-Relation: Exception when using empty List in setParameter
+    * [HHH-15229] - Query returns null for broken foreign key reference and NotFoundAction.EXCEPTION
+    * [HHH-15225] - Jta transactions,  name queries with errors throw IllegalStateException instead of IllegalArgumentException when transaction is not active
+    * [HHH-15223] - Embeddables in the Query Result, the embeddable instance returned by the query will not be in the managed state 
+    * [HHH-15212] - SchemaExport.execute does not replace the ${schema}-placeholder in HBM database-object with configured schema
+    * [HHH-15211] - ClassCastException being thrown in transaction commit()
+    * [HHH-15202] - Unnecessary memory waste due to SubselectFetch
+    * [HHH-15201] - Composite ID with dynamic-map entities fails with an exception
+    * [HHH-15196] - LikeExpression.getTypedValues() should use the default Locale instead of Locale.ROOT for lowercasing.
+    * [HHH-15193] - Fix Gradle plugin - forcing dependency on hibernate-core SNAPSHOT
+    * [HHH-15174] - TimeZoneStorageType.NORMALIZE_UTC doesn't normalize to UTC
+    * [HHH-15168] - Trying to execute a native query without parameters throws a NPE
+    * [HHH-15167] - IllegalArgumentException occurred while calling setter for property 
+    * [HHH-15164] - Byte Code Enhancement : ClassNotFoundException: net.bytebuddy.NamingStrategy$SuffixingRandom$BaseNameResolver
+    * [HHH-15163] - hibernate-jpamodelgen 6.0 throws java.lang.ClassNotFoundException: jakarta.xml.bind.JAXBException at build time
+    * [HHH-15162] - Predicate with LENGTH(<clob>) is causing a QueryException
+    * [HHH-15161] - Insert statement not inferring types in select clause based on target paths
+    * [HHH-15154] - User Guide: "using passing" in section 11.11 FetchMode.SUBSELECT
+    * [HHH-15150] - Hibernate 6 EmbeddedId CacheKeys are no longer Serializable
+    * [HHH-15141] - Bytecode enhancement fails for a protected, embedded field in a MappedSuperclass from a different package than the entity
+
+** Improvement
+    * [HHH-15221] - Fix a logging error in JdbcValuesCacheHit
+    * [HHH-15220] - correct obvious typos in either comment or variable name
+    * [HHH-15210] - Oracle dialect should have MaxIdentifierLength to 128 for version equals or above 12.2
+    * [HHH-15208] - Upgrade to Micrometer 1.8.4
+    * [HHH-15207] - Upgrade GraalVM SDK to 22.0.0.2
+    * [HHH-15206] - Upgrade to ANTLR 4.10
+    * [HHH-15204] - Remove dependency to jakarta.activation:jakarta.activation-api
+    * [HHH-15200] - Support XML DDL type
+    * [HHH-15189] - Deprecation warning for lock timeout is always printed
+    * [HHH-15187] - Upgrade to HCANN 6.0.0.Final
+    * [HHH-15184] - Improve efficiency of Component#getSelectables()
+    * [HHH-15170] - Dedicated chapter for "Build Tool Support" 
+    * [HHH-15157] - Add HQL query to NoResultException
+    * [HHH-14992] - Stop building ZIP and TGZ dists to upload to SF
+    * [HHH-4384] - @JoinColumn must be set for @AssociationOverride to work
+
+** New Feature
+    * [HHH-15165] - Add GEOGRAPHY constant to SqlTypes
+
+** Task
+    * [HHH-15237] - Upgrade to Agroal 2.0
+    * [HHH-15226] - Publish a Gradle platform (Maven Bom++) for Hibernate ORM
+    * [HHH-15224] - Update list of modules in the documentation
+    * [HHH-15222] - Introduce an helper class SPI for decorating a Session instance when the instance is lazily provided
+    * [HHH-15219] - Re-introduce the ability to stop and then reactivate a ServiceRegistry
+    * [HHH-15209] - Upgrade to bytebuddy 1.12.9
+
+
 Changes in 6.0.0.Final (March 31, 2022)
 ------------------------------------------------------------------------------------------------------------------------
 

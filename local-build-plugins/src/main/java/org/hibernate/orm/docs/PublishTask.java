@@ -51,7 +51,7 @@ public abstract class PublishTask extends DefaultTask {
 		final String releaseFamily = buildingFamily.toExternalForm();
 		final String base = docServerUrl.get();
 		final String normalizedBase = base.endsWith( "/" ) ? base : base + "/";
-		final String url = normalizedBase + "orm/" + releaseFamily;
+		final String url = normalizedBase + releaseFamily;
 
 		final String stagingDirPath = stagingDirectory.get().getAsFile().getAbsolutePath();
 

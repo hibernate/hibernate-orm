@@ -14,4 +14,3 @@ updates:
       - gradle-plugin-portal
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10

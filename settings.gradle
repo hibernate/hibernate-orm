@@ -67,6 +67,7 @@ dependencyResolutionManagement {
             version( "proxool", "0.8.3" )
             version( "vibur", "25.0" )
             version( "micrometer", "1.6.1" )
+            version( "jmh", "0.9" )
 
             alias( "antlr" ).to( "org.antlr", "antlr4" ).versionRef( "antlr")
             alias( "antlrRuntime" ).to( "org.antlr", "antlr4-runtime" ).versionRef( "antlr")
@@ -100,6 +101,9 @@ dependencyResolutionManagement {
             alias( "vibur" ).to( "org.vibur", "vibur-dbcp" ).versionRef( "vibur" )
 
             alias( "micrometer" ).to ( "io.micrometer", "micrometer-core" ).versionRef( "micrometer" )
+
+            alias( "jmh" ).to( "org.openjdk.jmh", "jmh-core" ).versionRef( "jmh" )
+            alias( "jmhAnnotations" ).to( "org.openjdk.jmh", "jmh-generator-annprocess" ).versionRef( "jmh" )
         }
         jakartaLibs {
             version( "jaxbRuntime", "3.0.2" )

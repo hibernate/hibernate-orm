@@ -8,6 +8,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
     id 'org.hibernate.build.xjc-jakarta'
+    id "me.champeau.jmh" version "0.6.6"
 }
 
 description = 'Hibernate\'s core ORM functionality'
@@ -78,6 +79,9 @@ dependencies {
     xjc jakartaLibs.xjc
     xjc jakartaLibs.jaxb
     xjc rootProject.fileTree(dir: 'patched-libs/jaxb2-basics', include: '*.jar')
+
+    jmh libs.jmh
+    jmh libs.jmhAnnotations
 }
 
 jar {
@@ -129,6 +133,13 @@ xjc {
             xjcExtensions += ['inheritance']
         }
     }
+}
+
+jmh {
+    warmupIterations = 2
+    iterations = 5
+    fork = 1
+    includeTests = true // add @Benchmark to any existing testing method to benchmark it
 }
 
 

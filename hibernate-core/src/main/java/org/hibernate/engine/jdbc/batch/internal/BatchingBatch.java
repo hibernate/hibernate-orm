@@ -30,8 +30,6 @@ public class BatchingBatch extends AbstractBatchImpl {
 			BatchingBatch.class.getName()
 	);
 
-	// IMPL NOTE : Until HHH-5797 is fixed, there will only be 1 statement in a batch
-
 	private int batchSize;
 	private final int configuredBatchSize;
 	private int batchPosition;

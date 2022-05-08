@@ -1730,14 +1730,9 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 		List<Column> columns = new ArrayList<>( 1 );
 		columns.add( getColumn( element, false, nodeName ) );
-		if ( columns.size() > 0 ) {
-			AnnotationDescriptor columnsDescr = new AnnotationDescriptor( Columns.class );
-			columnsDescr.setValue( "columns", columns.toArray( new Column[columns.size()] ) );
-			return AnnotationFactory.create( columnsDescr );
-		}
-		else {
-			return null;
-		}
+		AnnotationDescriptor columnsDescr = new AnnotationDescriptor( Columns.class );
+		columnsDescr.setValue( "columns", columns.toArray( new Column[columns.size()] ) );
+		return AnnotationFactory.create( columnsDescr );
 	}
 
 	private Columns buildColumns(List<JaxbColumn> elements, String nodeName) {

@@ -369,6 +369,7 @@ import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.NullType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.EnumJavaType;
@@ -383,6 +384,8 @@ import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
 import org.jboss.logging.Logger;
 
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.Type;
 
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
@@ -4884,11 +4887,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					paramSqmType.getExpressibleJavaType().getJavaTypeClass()
 			);
 
-			if ( basicTypeForJavaType == null && paramSqmType instanceof EntityDomainType ) {
-				final SimpleDomainType idType = ( (EntityDomainType) paramSqmType ).getIdType();
-				if ( idType != null ) {
-					return getTypeConfiguration().getBasicTypeForJavaType(
-							idType.getExpressibleJavaType().getJavaTypeClass() );
+			if ( basicTypeForJavaType == null ) {
+				if ( paramSqmType instanceof EntityDomainType ) {
+					return getIdType( (EntityDomainType) paramSqmType );
+				}
+				else if ( paramSqmType instanceof SingularAttribute ) {
+					final Type type = ( (SingularAttribute) paramSqmType ).getType();
+					if ( type instanceof EntityDomainType ) {
+						return getIdType( (EntityDomainType) type );
+					}
 				}
 			}
 
@@ -4896,6 +4903,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 
 		throw new ConversionException( "Could not determine ValueMapping for SqmParameter: " + sqmParameter );
+	}
+
+	private BasicType getIdType(EntityDomainType entityDomainType) {
+		final SimpleDomainType idType = entityDomainType.getIdType();
+		if ( idType != null ) {
+			return getTypeConfiguration().getBasicTypeForJavaType(
+					idType.getExpressibleJavaType().getJavaTypeClass() );
+		}
+		return null;
 	}
 
 	private void resolveSqmParameter(
@@ -4958,6 +4974,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				}
 			}
 			if ( sqlTypedMapping == null ) {
+				if ( bindable == null ) {
+					throw new ConversionException(
+							"Could not determine neither the SqlTypedMapping nor the Bindable value for SqmParameter: " + expression );
+				}
 				bindable.forEachJdbcType(
 						(index, jdbcMapping) -> jdbcParameterConsumer.accept(
 								index,

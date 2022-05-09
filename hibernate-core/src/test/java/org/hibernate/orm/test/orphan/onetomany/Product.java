@@ -8,6 +8,7 @@ package org.hibernate.orm.test.orphan.onetomany;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,7 +20,7 @@ import jakarta.persistence.Table;
 @Table(name="product")
 public class Product {
 	@Id
-	@GeneratedValue(strategy= GenerationType.AUTO)
+	@GeneratedValue(strategy= GenerationType.IDENTITY)
 	private Long id;
 
 	@OneToMany(mappedBy = "product", orphanRemoval = true)

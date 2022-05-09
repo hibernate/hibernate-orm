@@ -17,6 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Gail Badnmer
@@ -151,6 +152,19 @@ public class DeleteOneToManyOrphansTest {
 					Product productQueried = (Product) results.get( 0 );
 					assertEquals( 1, productQueried.getFeatures().size() );
 					assertEquals( featureQueried, productQueried.getFeatures().get( 0 ) );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-15258")
+	public void testPersistAndQuery(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Product product = new Product();
+					session.persist( product );
+					assertNotNull( session.createQuery( "from Product" ).list() );
+					assertNotNull( session.createQuery( "from Product" ).list() );
 				}
 		);
 	}

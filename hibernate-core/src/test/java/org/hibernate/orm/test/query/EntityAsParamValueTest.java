@@ -10,6 +10,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -19,6 +20,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @DomainModel(
@@ -28,8 +31,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15223")
 public class EntityAsParamValueTest {
+
+	public static long ID_ENTITY_WHITOUT_ORGANIZER = 1;
+	public static long ID_ENTITY_WHIT_ORGANIZER = 2;
 
 	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
@@ -37,8 +42,8 @@ public class EntityAsParamValueTest {
 				session -> {
 					Organizer organizer = new Organizer( 1L, "Test Organizer" );
 
-					Event eventWithOrganizer = new Event( 1L, "Test Event", organizer );
-					Event eventWithoutOrganizer = new Event( 2L, "Null Event", null );
+					Event eventWithOrganizer = new Event( ID_ENTITY_WHIT_ORGANIZER, "Test Event", organizer );
+					Event eventWithoutOrganizer = new Event( ID_ENTITY_WHITOUT_ORGANIZER, "Null Event", null );
 
 					session.persist( organizer );
 					session.persist( eventWithOrganizer );
@@ -47,7 +52,49 @@ public class EntityAsParamValueTest {
 		);
 	}
 
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createMutationQuery( "delete from Event" ).executeUpdate();
+					session.createMutationQuery( "delete from Organizer" ).executeUpdate();
+				}
+		);
+	}
+
 	@Test
+	@TestForIssue(jiraKey = "HHH-15256")
+	public void testQueryWithLeftJoinEntityAsParamValue(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Organizer organizer = session.get( Organizer.class, 1L );
+					assertNotNull( organizer );
+
+					Event event = session.createQuery(
+									"FROM Event e LEFT JOIN e.organizer WHERE (:organizer IS NULL AND e.organizer IS NULL OR e.organizer = :organizer)",
+									Event.class
+							)
+							.setParameter( "organizer", organizer )
+							.setMaxResults( 1 )
+							.uniqueResult();
+					assertNotNull( event );
+					assertThat( event.getId(), is( ID_ENTITY_WHIT_ORGANIZER ) );
+
+					event = session.createQuery(
+									"FROM Event e LEFT JOIN e.organizer WHERE (:organizer IS NULL AND e.organizer IS NULL OR e.organizer = :organizer)",
+									Event.class
+							)
+							.setParameter( "organizer", null )
+							.setMaxResults( 1 )
+							.uniqueResult();
+					assertNotNull( event );
+					assertThat( event.getId(), is( ID_ENTITY_WHITOUT_ORGANIZER ) );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-15223")
 	public void testQueryWithEntityAsParamValue(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -62,6 +109,7 @@ public class EntityAsParamValueTest {
 							.setMaxResults( 1 )
 							.uniqueResult();
 					assertNotNull( event );
+					assertThat( event.getId(), is( ID_ENTITY_WHIT_ORGANIZER ) );
 
 					event = session.createQuery(
 									"FROM Event e WHERE (:organizer IS NULL AND e.organizer IS NULL OR e.organizer = :organizer)",
@@ -71,6 +119,7 @@ public class EntityAsParamValueTest {
 							.setMaxResults( 1 )
 							.uniqueResult();
 					assertNotNull( event );
+					assertThat( event.getId(), is( ID_ENTITY_WHITOUT_ORGANIZER ) );
 				}
 		);
 	}

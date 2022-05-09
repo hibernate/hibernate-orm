@@ -38,15 +38,14 @@ public class SubqueryJoinTest {
 
 					final CriteriaQuery<TestContext> c = cb.createQuery( TestContext.class );
 					final Root<TestContext> from = c.from( TestContext.class );
+					from.join( "user" );
 
 					final Subquery<TestUser.TestMarker> subQuery = c.subquery( TestUser.TestMarker.class );
 					final Root<TestUser> sRoot = subQuery.from( TestUser.class );
 					final Join<TestUser, TestUser.TestMarker> join = sRoot.join( "markers" );
 					subQuery.where( cb.equal( sRoot.get( "id" ), from.get( "user" ).get( "id" ) ) );
 					subQuery.select( join );
-
-					from.join( "user" );
-					c.where( cb.and( cb.exists( subQuery ).not() ) );
+					c.where( cb.exists( subQuery ).not() );
 
 					entityManager.createQuery( c ).getResultList();
 				}
@@ -58,26 +57,11 @@ public class SubqueryJoinTest {
 
 		@Id
 		private Integer id;
-
+		
 		@NotNull
 		@OneToOne(optional = false)
 		private TestUser user;
-
-		public Integer getId() {
-			return id;
-		}
-
-		public void setId(Integer id) {
-			this.id = id;
-		}
-
-		public TestUser getUser() {
-			return user;
-		}
-
-		public void setUser(TestUser user) {
-			this.user = user;
-		}
+		
 	}
 
 	@Entity
@@ -85,26 +69,10 @@ public class SubqueryJoinTest {
 
 		@Id
 		private Integer id;
-
+		
 		@ElementCollection
 		@Enumerated(EnumType.STRING)
 		private List<TestMarker> markers = new ArrayList<>();
-
-		public Integer getId() {
-			return id;
-		}
-
-		public void setId(Integer id) {
-			this.id = id;
-		}
-
-		public List<TestMarker> getMarkers() {
-			return markers;
-		}
-
-		public void setMarkers(List<TestMarker> markers) {
-			this.markers = markers;
-		}
 
 		public enum TestMarker {
 			TEST

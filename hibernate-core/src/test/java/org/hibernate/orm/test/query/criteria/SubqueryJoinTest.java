@@ -54,7 +54,7 @@ public class SubqueryJoinTest {
 	}
 
 	@Entity
-	public class TestContext {
+	public static class TestContext {
 
 		@Id
 		private Integer id;
@@ -81,7 +81,7 @@ public class SubqueryJoinTest {
 	}
 
 	@Entity
-	public class TestUser {
+	public static class TestUser {
 
 		@Id
 		private Integer id;

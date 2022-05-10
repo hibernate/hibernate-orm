@@ -2,28 +2,29 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
 package org.hibernate.cfg;
 
 import java.util.function.Supplier;
-import jakarta.persistence.criteria.CriteriaDelete;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.CriteriaUpdate;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
-import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.query.spi.QueryPlan;
 import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
 
 /**
  * Enumerates the configuration properties supported by Hibernate, including
@@ -2934,4 +2935,31 @@ public interface AvailableSettings {
 	 * By default, the persistent context is not discarded, as per the JPA specification.
 	 */
 	String DISCARD_PC_ON_CLOSE = "hibernate.discard_pc_on_close";
+
+	/**
+	 * Whether XML should be validated against their schema as Hibernate reads them.
+	 * <p/>
+	 * Default is {@code true}
+	 *
+	 * @since 6.1
+	 */
+	String VALIDATE_XML = "hibernate.validate_xml";
+
+	/**
+	 * Enables processing `hbm.xml` mappings by transforming them to `mapping.xml` and using
+	 * that processor.  Default is false, must be opted-into.
+	 *
+	 * @since 6.1
+	 */
+	String TRANSFORM_HBM_XML = "hibernate.transform_hbm_xml.enabled";
+
+	/**
+	 * How features in a `hbm.xml` file which are not supported for transformation should be handled.
+	 * <p/>
+	 * Default is {@link org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling#ERROR}
+	 *
+	 * @see org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling
+	 * @since 6.1
+	 */
+	String TRANSFORM_HBM_XML_FEATURE_HANDLING = "hibernate.transform_hbm_xml.unsupported_feature_handling";
 }

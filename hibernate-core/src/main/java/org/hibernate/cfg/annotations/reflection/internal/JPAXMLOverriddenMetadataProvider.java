@@ -2,7 +2,7 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
 package org.hibernate.cfg.annotations.reflection.internal;
 
@@ -12,6 +12,17 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.hibernate.annotations.common.reflection.AnnotationReader;
+import org.hibernate.annotations.common.reflection.MetadataProvider;
+import org.hibernate.annotations.common.reflection.java.JavaMetadataProvider;
+import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
+import org.hibernate.boot.jaxb.mapping.JaxbSequenceGenerator;
+import org.hibernate.boot.jaxb.mapping.JaxbTableGenerator;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.ClassLoaderAccess;
+
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.NamedQuery;
@@ -19,16 +30,6 @@ import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.TableGenerator;
-
-import org.hibernate.annotations.common.reflection.AnnotationReader;
-import org.hibernate.annotations.common.reflection.MetadataProvider;
-import org.hibernate.annotations.common.reflection.java.JavaMetadataProvider;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappings;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbSequenceGenerator;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbTableGenerator;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.ClassLoaderAccess;
 
 /**
  * MetadataProvider aware of the JPA Deployment descriptor (orm.xml, ...).
@@ -105,14 +106,14 @@ public final class JPAXMLOverriddenMetadataProvider implements MetadataProvider 
 					try {
 						entityListeners.add( classLoaderAccess.classForName( className ) );
 					}
-					catch ( ClassLoadingException e ) {
+					catch (ClassLoadingException e) {
 						throw new IllegalStateException( "Default entity listener class not found: " + className );
 					}
 				}
 				defaults.put( EntityListeners.class, entityListeners );
 				for ( JaxbEntityMappings entityMappings : xmlContext.getAllDocuments() ) {
 					List<JaxbSequenceGenerator> jaxbSequenceGenerators = entityMappings.getSequenceGenerator();
-					List<SequenceGenerator> sequenceGenerators = ( List<SequenceGenerator> ) defaults.get( SequenceGenerator.class );
+					List<SequenceGenerator> sequenceGenerators = (List<SequenceGenerator>) defaults.get( SequenceGenerator.class );
 					if ( sequenceGenerators == null ) {
 						sequenceGenerators = new ArrayList<>();
 						defaults.put( SequenceGenerator.class, sequenceGenerators );
@@ -122,7 +123,7 @@ public final class JPAXMLOverriddenMetadataProvider implements MetadataProvider 
 					}
 
 					List<JaxbTableGenerator> jaxbTableGenerators = entityMappings.getTableGenerator();
-					List<TableGenerator> tableGenerators = ( List<TableGenerator> ) defaults.get( TableGenerator.class );
+					List<TableGenerator> tableGenerators = (List<TableGenerator>) defaults.get( TableGenerator.class );
 					if ( tableGenerators == null ) {
 						tableGenerators = new ArrayList<>();
 						defaults.put( TableGenerator.class, tableGenerators );
@@ -130,7 +131,8 @@ public final class JPAXMLOverriddenMetadataProvider implements MetadataProvider 
 					for ( JaxbTableGenerator element : jaxbTableGenerators ) {
 						tableGenerators.add(
 								JPAXMLOverriddenAnnotationReader.buildTableGeneratorAnnotation(
-										element, xmlDefaults
+										element,
+										xmlDefaults
 								)
 						);
 					}
@@ -141,7 +143,7 @@ public final class JPAXMLOverriddenMetadataProvider implements MetadataProvider 
 						defaults.put( NamedQuery.class, namedQueries );
 					}
 					List<NamedQuery> currentNamedQueries = JPAXMLOverriddenAnnotationReader.buildNamedQueries(
-							entityMappings.getNamedQuery(),
+							entityMappings.getNamedQueries(),
 							xmlDefaults,
 							classLoaderAccess
 					);
@@ -153,7 +155,7 @@ public final class JPAXMLOverriddenMetadataProvider implements MetadataProvider 
 						defaults.put( NamedNativeQuery.class, namedNativeQueries );
 					}
 					List<NamedNativeQuery> currentNamedNativeQueries = JPAXMLOverriddenAnnotationReader.buildNamedNativeQueries(
-							entityMappings.getNamedNativeQuery(),
+							entityMappings.getNamedNativeQueries(),
 							xmlDefaults,
 							classLoaderAccess
 					);
@@ -166,8 +168,8 @@ public final class JPAXMLOverriddenMetadataProvider implements MetadataProvider 
 						sqlResultSetMappings = new ArrayList<>();
 						defaults.put( SqlResultSetMapping.class, sqlResultSetMappings );
 					}
-					List<SqlResultSetMapping> currentSqlResultSetMappings = JPAXMLOverriddenAnnotationReader.buildSqlResultsetMappings(
-							entityMappings.getSqlResultSetMapping(),
+					List<SqlResultSetMapping> currentSqlResultSetMappings = JPAXMLOverriddenAnnotationReader.buildSqlResultSetMappings(
+							entityMappings.getSqlResultSetMappings(),
 							xmlDefaults,
 							classLoaderAccess
 					);
@@ -180,7 +182,7 @@ public final class JPAXMLOverriddenMetadataProvider implements MetadataProvider 
 					}
 					List<NamedStoredProcedureQuery> currentNamedStoredProcedureQueries = JPAXMLOverriddenAnnotationReader
 							.buildNamedStoreProcedureQueries(
-							entityMappings.getNamedStoredProcedureQuery(),
+							entityMappings.getNamedProcedureQueries(),
 							xmlDefaults,
 							classLoaderAccess
 					);

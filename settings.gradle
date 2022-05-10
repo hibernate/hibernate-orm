@@ -106,7 +106,7 @@ dependencyResolutionManagement {
             version( "jaxbRuntime", "3.0.2" )
             version( "jsonbRuntime", "2.0.4" )
 
-            // `jakartaJpaVersion` comes from the `` plugin - accounting for command-line overriding of the JPA version to use
+            // `jakartaJpaVersion` comes from the local-build-plugins to allow for command-line overriding of the JPA version to use
             alias( "jpa" ).to( "jakarta.persistence", "jakarta.persistence-api" ).version( "${jakartaJpaVersion}" )
             alias( "jta" ).to( "jakarta.transaction", "jakarta.transaction-api" ).version( "2.0.0")
             alias( "validation" ).to( "jakarta.validation", "jakarta.validation-api" ).version( "3.0.0" )

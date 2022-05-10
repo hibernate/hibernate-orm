@@ -124,10 +124,15 @@ xjc {
             xjcBindingFile = file( 'src/main/xjb/hbm-mapping-bindings.xjb' )
             xjcExtensions += ['inheritance', 'simplify']
         }
+//        orm {
+//            xsdFile = file( 'src/main/resources/org/hibernate/jpa/orm_2_2.xsd' )
+//            xjcBindingFile = file( 'src/main/xjb/mapping-bindings.xjb' )
+//            xjcExtensions += ['inheritance']
+//        }
         mapping {
-            xsdFile = file( 'src/main/resources/org/hibernate/jpa/orm_2_2.xsd' )
+            xsdFile = file( 'src/main/resources/org/hibernate/xsd/mapping/mapping-3.1.0.xsd' )
             xjcBindingFile = file( 'src/main/xjb/mapping-bindings.xjb' )
-            xjcExtensions += ['inheritance']
+            xjcExtensions += ['inheritance', 'simplify']
         }
     }
 }

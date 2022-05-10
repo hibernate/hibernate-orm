@@ -435,12 +435,39 @@ public abstract class AbstractServiceRegistryImpl
 		}
 	}
 
+	@Override
+	public <T extends Service> T fromRegistryOrChildren(Class<T> serviceRole) {
+		return fromRegistryOrChildren( serviceRole, this, childRegistries );
+	}
+
+	public static <T extends Service> T fromRegistryOrChildren(
+			Class<T> serviceRole,
+			ServiceRegistryImplementor serviceRegistry,
+			Set<ServiceRegistryImplementor> childRegistries) {
+		// prefer `serviceRegistry`
+		final T localService = serviceRegistry.getService( serviceRole );
+		if ( localService != null ) {
+			return localService;
+		}
+
+		if ( childRegistries != null ) {
+			for ( ServiceRegistryImplementor childRegistry : childRegistries ) {
+				final T extracted = childRegistry.getService( serviceRole );
+				if ( extracted != null ) {
+					return extracted;
+				}
+			}
+		}
+
+		return null;
+	}
+
 	/**
 	 * Not intended for general use. We need the ability to stop and "reactivate" a registry to allow
 	 * experimentation with technologies such as GraalVM, Quarkus and Cri-O.
 	 */
 	public synchronized void reactivate() {
-		if ( !active.compareAndSet(false, true) ) {
+		if ( !active.compareAndSet( false, true ) ) {
 			throw new IllegalStateException( "Was not inactive, could not reactivate!" );
 		}
 	}

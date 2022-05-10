@@ -2,9 +2,12 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
 package org.hibernate.internal.log;
+
+import org.hibernate.boot.jaxb.SourceType;
+import org.hibernate.cfg.AvailableSettings;
 
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
@@ -238,4 +241,18 @@ public interface DeprecationLogger extends BasicLogger {
 			value = "Encountered deprecated setting [%s]; instead %s"
 	)
 	void deprecatedSetting2(String settingName, String alternative);
+
+	/**
+	 * Different from {@link #deprecatedSetting} in that sometimes there is no
+	 * direct alternative
+	 */
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000028,
+			value = "Support for `<hibernate-mappings/>` is deprecated [%s : %s]; " +
+					"migrate to orm.xml or mapping.xml, or enable `" + AvailableSettings.TRANSFORM_HBM_XML +
+					"` for on the fly transformation"
+	)
+	void logDeprecatedHbmXmlProcessing(SourceType sourceType, String name);
+
 }

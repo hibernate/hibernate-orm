@@ -1,0 +1,107 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ */
+package org.hibernate.boot.jaxb.hbm.transform;
+
+import org.hibernate.boot.jaxb.mapping.JaxbJoinColumn;
+
+/**
+ * @author Steve Ebersole
+ */
+public class TargetColumnAdapterJaxbJoinColumn implements TargetColumnAdapter {
+	private final JaxbJoinColumn jaxbColumn;
+
+	public TargetColumnAdapterJaxbJoinColumn(ColumnDefaults columnDefaults) {
+		this( new JaxbJoinColumn(), columnDefaults );
+	}
+
+	public TargetColumnAdapterJaxbJoinColumn(JaxbJoinColumn jaxbColumn, ColumnDefaults columnDefaults) {
+		this.jaxbColumn = jaxbColumn;
+		this.jaxbColumn.setNullable( columnDefaults.isNullable() );
+		this.jaxbColumn.setUnique( columnDefaults.isUnique() );
+		this.jaxbColumn.setInsertable( columnDefaults.isInsertable() );
+		this.jaxbColumn.setUpdatable( columnDefaults.isUpdateable() );
+	}
+
+	public JaxbJoinColumn getTargetColumn() {
+		return jaxbColumn;
+	}
+
+	@Override
+	public void setName(String value) {
+		jaxbColumn.setName( value );
+	}
+
+	@Override
+	public void setTable(String value) {
+		jaxbColumn.setTable( value );
+	}
+
+	@Override
+	public void setNullable(Boolean value) {
+		if ( value != null ) {
+			jaxbColumn.setNullable( value );
+		}
+	}
+
+	@Override
+	public void setUnique(Boolean value) {
+		if ( value != null ) {
+			jaxbColumn.setUnique( value );
+		}
+	}
+
+	@Override
+	public void setInsertable(Boolean value) {
+		if ( value != null ) {
+			jaxbColumn.setInsertable( value );
+		}
+	}
+
+	@Override
+	public void setUpdatable(Boolean value) {
+		if ( value != null ) {
+			jaxbColumn.setUpdatable( value );
+		}
+	}
+
+	@Override
+	public void setLength(Integer value) {
+	}
+
+	@Override
+	public void setPrecision(Integer value) {
+	}
+
+	@Override
+	public void setScale(Integer value) {
+	}
+
+	@Override
+	public void setColumnDefinition(String value) {
+		jaxbColumn.setColumnDefinition( value );
+	}
+
+	@Override
+	public void setDefault(String value) {
+	}
+
+	@Override
+	public void setCheck(String value) {
+	}
+
+	@Override
+	public void setComment(String value) {
+	}
+
+	@Override
+	public void setRead(String value) {
+	}
+
+	@Override
+	public void setWrite(String value) {
+	}
+}

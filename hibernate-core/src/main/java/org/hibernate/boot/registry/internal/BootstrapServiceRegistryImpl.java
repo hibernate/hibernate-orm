@@ -22,6 +22,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.internal.AbstractServiceRegistryImpl;
 import org.hibernate.service.spi.ServiceBinding;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceInitiator;
@@ -305,5 +306,10 @@ public class BootstrapServiceRegistryImpl
 				);
 			}
 		}
+	}
+
+	@Override
+	public <T extends Service> T fromRegistryOrChildren(Class<T> serviceRole) {
+		return AbstractServiceRegistryImpl.fromRegistryOrChildren( serviceRole, this, childRegistries );
 	}
 }

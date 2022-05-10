@@ -6,9 +6,9 @@
         extensionBindingPrefixes="inheritance"
         version="3.0">
 
-    <bindings schemaLocation="../resources/org/hibernate/jpa/orm_2_2.xsd" node="/xsd:schema">
+    <bindings schemaLocation="../resources/org/hibernate/xsd/mapping/mapping-3.1.0.xsd" node="/xsd:schema">
         <schemaBindings>
-			<package name="org.hibernate.boot.jaxb.mapping.spi" />
+			<package name="org.hibernate.boot.jaxb.mapping" />
             <nameXmlTransform>
                 <typeName prefix="Jaxb" />
                 <elementName prefix="Jaxb" />
@@ -17,173 +17,375 @@
             </nameXmlTransform>
         </schemaBindings>
 
+        <bindings node="//xsd:element[@name='entity-mappings']/xsd:complexType">
+        	<inheritance:implements>org.hibernate.boot.jaxb.spi.BindableMappingDescriptor</inheritance:implements>
+
+            <bindings node=".//xsd:element[@name='filter-def']">
+	            <property name="filterDefinitions"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='fetch-profile']">
+	            <property name="fetchProfiles"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='identifier-generator']">
+	            <property name="genericGenerators"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='database-object']">
+	            <property name="databaseObjects"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='import']">
+	            <property name="hqlImports"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='named-query']">
+	            <property name="namedQueries"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='named-native-query']">
+	            <property name="namedNativeQueries"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='named-stored-procedure-query']">
+	            <property name="namedProcedureQueries"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='sql-result-set-mapping']">
+	            <property name="sqlResultSetMappings"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='mapped-superclass']">
+	            <property name="mappedSuperclasses"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='entity']">
+	            <property name="entities"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='embeddable']">
+	            <property name="embeddables"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='converter']">
+	            <property name="converters"/>
+            </bindings>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='entity']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.EntityOrMappedSuperclass</inheritance:implements>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='embeddable']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.ManagedType</inheritance:implements>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='mapped-superclass']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.EntityOrMappedSuperclass</inheritance:implements>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='attributes']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.AttributesContainer</inheritance:implements>
+            <bindings node=".//xsd:element[@name='basic']">
+	            <property name="basicAttributes"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='embedded']">
+	            <property name="embeddedAttributes"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='one-to-one']">
+	            <property name="oneToOneAttributes"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='many-to-one']">
+	            <property name="manyToOneAttributes"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='any']">
+	            <property name="discriminatedAssociations"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='element-collection']">
+	            <property name="elementCollectionAttributes"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='one-to-many']">
+	            <property name="oneToManyAttributes"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='many-to-many']">
+	            <property name="manyToManyAttributes"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='many-to-any']">
+	            <property name="pluralDiscriminatedAssociations"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='transient']">
+	            <property name="transients"/>
+            </bindings>
+        </bindings>
+        <bindings node="//xsd:complexType[@name='embeddable-attributes']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.AttributesContainer</inheritance:implements>
+            <bindings node=".//xsd:element[@name='basic']">
+	            <property name="basicAttributes"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='embedded']">
+	            <property name="embeddedAttributes"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='one-to-one']">
+	            <property name="oneToOneAttributes"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='many-to-one']">
+	            <property name="manyToOneAttributes"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='any']">
+	            <property name="discriminatedAssociations"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='element-collection']">
+	            <property name="elementCollectionAttributes"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='one-to-many']">
+	            <property name="oneToManyAttributes"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='many-to-many']">
+	            <property name="manyToManyAttributes"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='many-to-any']">
+	            <property name="pluralDiscriminatedAssociations"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='transient']">
+	            <property name="transients"/>
+            </bindings>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='id']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.PersistentAttribute</inheritance:implements>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='embedded-id']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.PersistentAttribute</inheritance:implements>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='version']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.PersistentAttribute</inheritance:implements>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='basic']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.PersistentAttribute</inheritance:implements>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='embedded']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.PersistentAttribute</inheritance:implements>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='one-to-one']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.ToOneAttribute</inheritance:implements>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='many-to-one']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.ToOneAttribute</inheritance:implements>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='hbm-any-mapping']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.DiscriminatedAssociation</inheritance:implements>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='element-collection']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.CollectionAttribute</inheritance:implements>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='one-to-many']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.CollectionAttribute</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.AssociationAttribute</inheritance:implements>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='many-to-many']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.CollectionAttribute</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.AssociationAttribute</inheritance:implements>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='hbm-many-to-any']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.DiscriminatedAssociation</inheritance:implements>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='hbm-any-discriminator']">
+           	<inheritance:implements>org.hibernate.boot.jaxb.mapping.DiscriminatedAssociation.Discriminator</inheritance:implements>
+			<bindings node=".//xsd:element[@name='mapping']">
+               	<property name="valueMappings"/>
+            </bindings>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='hbm-any-discriminator-value-mapping']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.DiscriminatorMapping</inheritance:implements>
+            <property name="correspondingEntityName"/>
+        	<bindings node=".//xsd:attribute[@name='value']">
+                <property name="discriminatorValue"/>
+            </bindings>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='hbm-any-key']">
+			<inheritance:implements>org.hibernate.boot.jaxb.mapping.DiscriminatedAssociation.Key</inheritance:implements>
+			<bindings node=".//xsd:element[@name='column']">
+                <property name="columns"/>
+            </bindings>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='secondary-table']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.SchemaAware</inheritance:implements>
+        </bindings>
+        <bindings node="//xsd:complexType[@name='table']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.SchemaAware</inheritance:implements>
+        </bindings>
+        <bindings node="//xsd:complexType[@name='join-table']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.SchemaAware</inheritance:implements>
+        </bindings>
+        <bindings node="//xsd:complexType[@name='collection-table']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.SchemaAware</inheritance:implements>
+        </bindings>
+        <bindings node="//xsd:complexType[@name='table-generator']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.SchemaAware</inheritance:implements>
+        </bindings>
+        <bindings node="//xsd:complexType[@name='sequence-generator']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.SchemaAware</inheritance:implements>
+        </bindings>
+        <bindings node="//xsd:complexType[@name='database-object']">
+        	<bindings node=".//xsd:element[@name='dialect-scope']">
+                <property name="dialectScopes"/>
+        	</bindings>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='entity-listener']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.LifecycleCallbackContainer</inheritance:implements>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='pre-persist']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.LifecycleCallback</inheritance:implements>
+        </bindings>
+        <bindings node="//xsd:complexType[@name='pre-remove']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.LifecycleCallback</inheritance:implements>
+        </bindings>
+        <bindings node="//xsd:complexType[@name='pre-update']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.LifecycleCallback</inheritance:implements>
+        </bindings>
+        <bindings node="//xsd:complexType[@name='post-load']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.LifecycleCallback</inheritance:implements>
+        </bindings>
+        <bindings node="//xsd:complexType[@name='post-remove']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.LifecycleCallback</inheritance:implements>
+        </bindings>
+        <bindings node="//xsd:complexType[@name='post-update']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.LifecycleCallback</inheritance:implements>
+        </bindings>
+        <bindings node="//xsd:complexType[@name='post-persist']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.LifecycleCallback</inheritance:implements>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='named-native-query']">
+			<bindings node=".//xsd:element[@name='synchronize']">
+                <property name="synchronizations"/>
+            </bindings>
+        </bindings>
+
+
+
+		<!--
+			#################################################################
+			Marshalling of enum values
+			#################################################################
+		-->
+
 		<bindings node="//xsd:simpleType[@name='access-type']">
 			<javaType name="jakarta.persistence.AccessType"
-					parseMethod="org.hibernate.boot.jaxb.mapping.internal.AccessTypeMarshalling.fromXml"
-					printMethod="org.hibernate.boot.jaxb.mapping.internal.AccessTypeMarshalling.toXml" />
+					parseMethod="org.hibernate.boot.jaxb.mapping.marshall.AccessTypeMarshalling.fromXml"
+					printMethod="org.hibernate.boot.jaxb.mapping.marshall.AccessTypeMarshalling.toXml" />
+        </bindings>
+
+		<bindings node="//xsd:simpleType[@name='cache-access-type']">
+			<javaType name="org.hibernate.cache.spi.access.AccessType"
+					parseMethod="org.hibernate.boot.jaxb.mapping.marshall.CacheAccessTypeMarshalling.fromXml"
+					printMethod="org.hibernate.boot.jaxb.mapping.marshall.CacheAccessTypeMarshalling.toXml" />
+        </bindings>
+
+		<bindings node="//xsd:simpleType[@name='hbm-cache-mode-type']">
+			<javaType name="org.hibernate.CacheMode"
+					parseMethod="org.hibernate.boot.jaxb.mapping.marshall.CacheModeMarshalling.fromXml"
+					printMethod="org.hibernate.boot.jaxb.mapping.marshall.CacheModeMarshalling.toXml" />
         </bindings>
 
 		<bindings node="//xsd:simpleType[@name='discriminator-type']">
 			<javaType name="jakarta.persistence.DiscriminatorType"
-					parseMethod="org.hibernate.boot.jaxb.mapping.internal.DiscriminatorTypeMarshalling.fromXml"
-					printMethod="org.hibernate.boot.jaxb.mapping.internal.DiscriminatorTypeMarshalling.toXml" />
+					parseMethod="org.hibernate.boot.jaxb.mapping.marshall.DiscriminatorTypeMarshalling.fromXml"
+					printMethod="org.hibernate.boot.jaxb.mapping.marshall.DiscriminatorTypeMarshalling.toXml" />
         </bindings>
 
 		<bindings node="//xsd:simpleType[@name='enum-type']">
 			<javaType name="jakarta.persistence.EnumType"
-					parseMethod="org.hibernate.boot.jaxb.mapping.internal.EnumTypeMarshalling.fromXml"
-					printMethod="org.hibernate.boot.jaxb.mapping.internal.EnumTypeMarshalling.toXml" />
+					parseMethod="org.hibernate.boot.jaxb.mapping.marshall.EnumTypeMarshalling.fromXml"
+					printMethod="org.hibernate.boot.jaxb.mapping.marshall.EnumTypeMarshalling.toXml" />
         </bindings>
 
 		<bindings node="//xsd:simpleType[@name='fetch-type']">
 			<javaType name="jakarta.persistence.FetchType"
-					parseMethod="org.hibernate.boot.jaxb.mapping.internal.FetchTypeMarshalling.fromXml"
-					printMethod="org.hibernate.boot.jaxb.mapping.internal.FetchTypeMarshalling.toXml" />
+					parseMethod="org.hibernate.boot.jaxb.mapping.marshall.FetchTypeMarshalling.fromXml"
+					printMethod="org.hibernate.boot.jaxb.mapping.marshall.FetchTypeMarshalling.toXml" />
+        </bindings>
+
+		<bindings node="//xsd:simpleType[@name='flush-mode-type']">
+			<javaType name="org.hibernate.FlushMode"
+					parseMethod="org.hibernate.boot.jaxb.mapping.marshall.FlushModeMarshalling.fromXml"
+					printMethod="org.hibernate.boot.jaxb.mapping.marshall.FlushModeMarshalling.toXml" />
         </bindings>
 
 		<bindings node="//xsd:simpleType[@name='lock-mode-type']">
 			<javaType name="jakarta.persistence.LockModeType"
-					parseMethod="org.hibernate.boot.jaxb.mapping.internal.LockModeTypeMarshalling.fromXml"
-					printMethod="org.hibernate.boot.jaxb.mapping.internal.LockModeTypeMarshalling.toXml" />
+					parseMethod="org.hibernate.boot.jaxb.mapping.marshall.LockModeTypeMarshalling.fromXml"
+					printMethod="org.hibernate.boot.jaxb.mapping.marshall.LockModeTypeMarshalling.toXml" />
         </bindings>
+
+		<bindings node="//xsd:simpleType[@name='optimistic-locking-type']">
+			<javaType name="org.hibernate.engine.OptimisticLockStyle"
+					parseMethod="org.hibernate.boot.jaxb.mapping.marshall.OptimisticLockStyleMarshalling.fromXml"
+					printMethod="org.hibernate.boot.jaxb.mapping.marshall.OptimisticLockStyleMarshalling.toXml" />
+		</bindings>
 
 		<bindings node="//xsd:simpleType[@name='parameter-mode']">
 			<javaType name="jakarta.persistence.ParameterMode"
-					parseMethod="org.hibernate.boot.jaxb.mapping.internal.ParameterModeMarshalling.fromXml"
-					printMethod="org.hibernate.boot.jaxb.mapping.internal.ParameterModeMarshalling.toXml" />
+					parseMethod="org.hibernate.boot.jaxb.mapping.marshall.ParameterModeMarshalling.fromXml"
+					printMethod="org.hibernate.boot.jaxb.mapping.marshall.ParameterModeMarshalling.toXml" />
         </bindings>
+
+		<bindings node="//xsd:simpleType[@name='custom-sql-check-type']">
+			<javaType name="org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle"
+					parseMethod="org.hibernate.boot.jaxb.mapping.marshall.ResultCheckStyleMarshalling.fromXml"
+					printMethod="org.hibernate.boot.jaxb.mapping.marshall.ResultCheckStyleMarshalling.toXml" />
+		</bindings>
+
+		<bindings node="//xsd:simpleType[@name='on-delete-type']">
+			<javaType name="org.hibernate.annotations.OnDeleteAction"
+					parseMethod="org.hibernate.boot.jaxb.mapping.marshall.OnDeleteActionMarshalling.fromXml"
+					printMethod="org.hibernate.boot.jaxb.mapping.marshall.OnDeleteActionMarshalling.toXml" />
+		</bindings>
+
+		<bindings node="//xsd:simpleType[@name='polymorphism-type']">
+			<javaType name="org.hibernate.annotations.PolymorphismType"
+					parseMethod="org.hibernate.boot.jaxb.mapping.marshall.PolymorphismTypeMarshalling.fromXml"
+					printMethod="org.hibernate.boot.jaxb.mapping.marshall.PolymorphismTypeMarshalling.toXml" />
+		</bindings>
 
 		<bindings node="//xsd:simpleType[@name='temporal-type']">
 			<javaType name="jakarta.persistence.TemporalType"
-					parseMethod="org.hibernate.boot.jaxb.mapping.internal.TemporalTypeMarshalling.fromXml"
-					printMethod="org.hibernate.boot.jaxb.mapping.internal.TemporalTypeMarshalling.toXml" />
+					parseMethod="org.hibernate.boot.jaxb.mapping.marshall.TemporalTypeMarshalling.fromXml"
+					printMethod="org.hibernate.boot.jaxb.mapping.marshall.TemporalTypeMarshalling.toXml" />
         </bindings>
 
 		<bindings node="//xsd:simpleType[@name='inheritance-type']">
 			<javaType name="jakarta.persistence.InheritanceType"
-					parseMethod="org.hibernate.boot.jaxb.mapping.internal.InheritanceTypeMarshalling.fromXml"
-					printMethod="org.hibernate.boot.jaxb.mapping.internal.InheritanceTypeMarshalling.toXml" />
+					parseMethod="org.hibernate.boot.jaxb.mapping.marshall.InheritanceTypeMarshalling.fromXml"
+					printMethod="org.hibernate.boot.jaxb.mapping.marshall.InheritanceTypeMarshalling.toXml" />
         </bindings>
 
 		<bindings node="//xsd:simpleType[@name='generation-type']">
 			<javaType name="jakarta.persistence.GenerationType"
-					parseMethod="org.hibernate.boot.jaxb.mapping.internal.GenerationTypeMarshalling.fromXml"
-					printMethod="org.hibernate.boot.jaxb.mapping.internal.GenerationTypeMarshalling.toXml" />
+					parseMethod="org.hibernate.boot.jaxb.mapping.marshall.GenerationTypeMarshalling.fromXml"
+					printMethod="org.hibernate.boot.jaxb.mapping.marshall.GenerationTypeMarshalling.toXml" />
+        </bindings>
+
+		<bindings node="//xsd:simpleType[@name='basic-generation-timing-type']">
+			<javaType name="org.hibernate.tuple.GenerationTiming"
+					parseMethod="org.hibernate.boot.jaxb.mapping.marshall.GenerationTimingMarshalling.fromXml"
+					printMethod="org.hibernate.boot.jaxb.mapping.marshall.GenerationTimingMarshalling.toXml" />
         </bindings>
 
 		<bindings node="//xsd:simpleType[@name='constraint-mode']">
 			<javaType name="jakarta.persistence.ConstraintMode"
-					parseMethod="org.hibernate.boot.jaxb.mapping.internal.ConstraintModeMarshalling.fromXml"
-					printMethod="org.hibernate.boot.jaxb.mapping.internal.ConstraintModeMarshalling.toXml" />
+					parseMethod="org.hibernate.boot.jaxb.mapping.marshall.ConstraintModeMarshalling.fromXml"
+					printMethod="org.hibernate.boot.jaxb.mapping.marshall.ConstraintModeMarshalling.toXml" />
         </bindings>
 
-
-        <bindings node="//xsd:complexType[@name='secondary-table']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.SchemaAware</inheritance:implements>
-        </bindings>
-        <bindings node="//xsd:complexType[@name='table']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.SchemaAware</inheritance:implements>
-        </bindings>
-        <bindings node="//xsd:complexType[@name='join-table']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.SchemaAware</inheritance:implements>
-        </bindings>
-        <bindings node="//xsd:complexType[@name='collection-table']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.SchemaAware</inheritance:implements>
-        </bindings>
-        <bindings node="//xsd:complexType[@name='table-generator']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.SchemaAware</inheritance:implements>
-        </bindings>
-        <bindings node="//xsd:complexType[@name='sequence-generator']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.SchemaAware</inheritance:implements>
-        </bindings>
-
-        <bindings node="//xsd:complexType[@name='entity']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.ManagedType</inheritance:implements>
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.EntityOrMappedSuperclass</inheritance:implements>
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.LifecycleCallbackContainer</inheritance:implements>
-        </bindings>
-        <bindings node="//xsd:complexType[@name='embeddable']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.ManagedType</inheritance:implements>
-        </bindings>
-        <bindings node="//xsd:complexType[@name='mapped-superclass']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.ManagedType</inheritance:implements>
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.EntityOrMappedSuperclass</inheritance:implements>
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.LifecycleCallbackContainer</inheritance:implements>
-        </bindings>
-
-        <bindings node="//xsd:complexType[@name='entity-listener']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.LifecycleCallbackContainer</inheritance:implements>
-        </bindings>
-
-        <bindings node="//xsd:complexType[@name='id']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.PersistentAttribute</inheritance:implements>
-        </bindings>
-        <bindings node="//xsd:complexType[@name='version']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.PersistentAttribute</inheritance:implements>
-        </bindings>
-        <bindings node="//xsd:complexType[@name='basic']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.PersistentAttribute</inheritance:implements>
-        </bindings>
-        <bindings node="//xsd:complexType[@name='many-to-one']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.PersistentAttribute</inheritance:implements>
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.FetchableAttribute</inheritance:implements>
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.AssociationAttribute</inheritance:implements>
-        </bindings>
-        <bindings node="//xsd:complexType[@name='one-to-many']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.PersistentAttribute</inheritance:implements>
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.CollectionAttribute</inheritance:implements>
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.AssociationAttribute</inheritance:implements>
-        </bindings>
-        <bindings node="//xsd:complexType[@name='one-to-one']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.PersistentAttribute</inheritance:implements>
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.FetchableAttribute</inheritance:implements>
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.AssociationAttribute</inheritance:implements>
-        </bindings>
-        <bindings node="//xsd:complexType[@name='embedded-id']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.PersistentAttribute</inheritance:implements>
-        </bindings>
-        <bindings node="//xsd:complexType[@name='embedded']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.PersistentAttribute</inheritance:implements>
-        </bindings>
-        <bindings node="//xsd:complexType[@name='many-to-many']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.PersistentAttribute</inheritance:implements>
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.CollectionAttribute</inheritance:implements>
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.AssociationAttribute</inheritance:implements>
-        </bindings>
-        <bindings node="//xsd:complexType[@name='element-collection']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.PersistentAttribute</inheritance:implements>
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.CollectionAttribute</inheritance:implements>
-        </bindings>
-
-        <bindings node="//xsd:complexType[@name='pre-persist']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.LifecycleCallback</inheritance:implements>
-        </bindings>
-        <bindings node="//xsd:complexType[@name='pre-remove']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.LifecycleCallback</inheritance:implements>
-        </bindings>
-        <bindings node="//xsd:complexType[@name='pre-update']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.LifecycleCallback</inheritance:implements>
-        </bindings>
-        <bindings node="//xsd:complexType[@name='post-load']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.LifecycleCallback</inheritance:implements>
-        </bindings>
-        <bindings node="//xsd:complexType[@name='post-remove']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.LifecycleCallback</inheritance:implements>
-        </bindings>
-        <bindings node="//xsd:complexType[@name='post-update']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.LifecycleCallback</inheritance:implements>
-        </bindings>
-        <bindings node="//xsd:complexType[@name='post-persist']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.LifecycleCallback</inheritance:implements>
-        </bindings>
-
-        <bindings node="//xsd:complexType[@name='attributes']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.AttributesContainer</inheritance:implements>
-        </bindings>
-        <bindings node="//xsd:complexType[@name='embeddable-attributes']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.AttributesContainer</inheritance:implements>
-        </bindings>
     </bindings>
+
 
     <!-- All bindings need to be serializable for cached metadata sources. -->
 	<globalBindings>

@@ -264,7 +264,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 			this.standardServiceRegistry = ssrBuilder.build();
 
-			final MetadataSources metadataSources = new MetadataSources( bsr );
+			final MetadataSources metadataSources = new MetadataSources( standardServiceRegistry );
 			this.metamodelBuilder = (MetadataBuilderImplementor) metadataSources.getMetadataBuilder( standardServiceRegistry );
 			List<ConverterDescriptor> attributeConverterDefinitions = applyMappingResources( metadataSources );
 

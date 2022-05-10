@@ -1637,7 +1637,7 @@ public class ToOneAttributeMapping
 						return false;
 					}
 
-					if ( navigablePath.equals( np.getParent() ) ) {
+					if ( navigablePath.pathsMatch( np.getParent() ) ) {
 						return targetKeyPropertyNames.contains( np.getLocalName() );
 					}
 

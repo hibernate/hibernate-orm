@@ -281,6 +281,18 @@ public class ActionQueue {
 			executeInserts();
 			LOG.debug( "Executing identity-insert immediately" );
 			execute( insert );
+
+			addAction(	// HHH-15258
+					OrphanRemovalAction.class,
+					new OrphanRemovalAction( insert.getId(),
+											 insert.getState(),
+											 null,
+											 insert.getInstance(),
+											 insert.getPersister(),
+											 false,
+											 (SessionImplementor) insert.getSession()
+					)
+			);
 		}
 		else {
 			LOG.trace( "Adding resolved non-early insert action." );

@@ -191,6 +191,11 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		return false;
 	}
 
+	public boolean pathsMatch(NavigablePath p) {
+		return this == p || p != null && localName.equals( p.localName )
+				&& ( parent == null ? p.parent == null && Objects.equals( alias, p.alias ) : parent.pathsMatch( p.parent ) );
+	}
+
 	/**
 	 * Ignores aliases in the resulting String
 	 */

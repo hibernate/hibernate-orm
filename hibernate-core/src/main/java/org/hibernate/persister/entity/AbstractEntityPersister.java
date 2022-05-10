@@ -1614,7 +1614,7 @@ public abstract class AbstractEntityPersister
 
 	}
 
-	protected Object getCollectionKey(
+	public Object getCollectionKey(
 			CollectionPersister persister,
 			Object owner,
 			EntityEntry ownerEntry,

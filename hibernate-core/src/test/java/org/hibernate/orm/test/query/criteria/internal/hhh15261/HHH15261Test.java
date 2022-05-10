@@ -24,11 +24,11 @@ public class HHH15261Test {
 			final CriteriaQuery<EntityB> query = builder.createQuery( EntityB.class );
 			
 			final Root<EntityA> root = query.from( EntityA.class );
-			root.fetch( "b" )
+			root.join( "b" )
 					.fetch( "c" );
 			query.select( root.get( "b" ) );
 
-			assertDoesNotThrow( () -> entityManager.createQuery( query ).getSingleResult() );
+			assertDoesNotThrow( () -> entityManager.createQuery( query ).getResultList() );
 		} );
 	}
 

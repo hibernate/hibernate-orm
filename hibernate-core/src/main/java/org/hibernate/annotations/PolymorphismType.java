@@ -6,8 +6,12 @@
  */
 package org.hibernate.annotations;
 
+import java.util.Locale;
+
 /**
  * Type of available polymorphism for a particular entity.
+ *
+ * @see Polymorphism
  *
  * @author Emmanuel Bernard
  */
@@ -19,5 +23,26 @@ public enum PolymorphismType {
 	/**
 	 * This entity is retrieved only if explicitly asked.
 	 */
-	EXPLICIT
+	EXPLICIT;
+
+	public static PolymorphismType fromExternalValue(Object externalValue) {
+		if ( externalValue != null ) {
+			if ( externalValue instanceof PolymorphismType ) {
+				return (PolymorphismType) externalValue;
+			}
+
+			final String externalValueStr = externalValue.toString();
+			for ( PolymorphismType checkType : values() ) {
+				if ( checkType.name().equalsIgnoreCase( externalValueStr ) ) {
+					return checkType;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	public String getExternalForm() {
+		return name().toLowerCase( Locale.ROOT );
+	}
 }

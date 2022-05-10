@@ -18,18 +18,16 @@ import org.jboss.logging.Logger;
 
 /**
  * Helper for resolving XML Schema references locally.
- * <p/>
- * Note that *by design* we always use our ClassLoader to perform the lookups here.
+ *
+ * @implNote *By design* we always use our ClassLoader to perform the lookups here.
  *
  * @author Steve Ebersole
  */
 public class LocalSchemaLocator {
 	private static final Logger log = Logger.getLogger( LocalSchemaLocator.class );
 
-	/**
-	 * Disallow direct instantiation
-	 */
 	private LocalSchemaLocator() {
+		// Disallow direct instantiation
 	}
 
 	/**

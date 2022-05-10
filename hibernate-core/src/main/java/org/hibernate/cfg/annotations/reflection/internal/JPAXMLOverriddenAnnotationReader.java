@@ -2,7 +2,7 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
 package org.hibernate.cfg.annotations.reflection.internal;
 
@@ -21,6 +21,88 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+
+import org.hibernate.AnnotationException;
+import org.hibernate.annotations.Any;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.Columns;
+import org.hibernate.annotations.ManyToAny;
+import org.hibernate.annotations.Subselect;
+import org.hibernate.annotations.common.annotationfactory.AnnotationDescriptor;
+import org.hibernate.annotations.common.annotationfactory.AnnotationFactory;
+import org.hibernate.annotations.common.reflection.AnnotationReader;
+import org.hibernate.annotations.common.reflection.ReflectionUtil;
+import org.hibernate.boot.jaxb.mapping.AssociationAttribute;
+import org.hibernate.boot.jaxb.mapping.AttributesContainer;
+import org.hibernate.boot.jaxb.mapping.EntityOrMappedSuperclass;
+import org.hibernate.boot.jaxb.mapping.JaxbAssociationOverride;
+import org.hibernate.boot.jaxb.mapping.JaxbAttributeOverride;
+import org.hibernate.boot.jaxb.mapping.JaxbAttributes;
+import org.hibernate.boot.jaxb.mapping.JaxbBasic;
+import org.hibernate.boot.jaxb.mapping.JaxbCaching;
+import org.hibernate.boot.jaxb.mapping.JaxbCascadeType;
+import org.hibernate.boot.jaxb.mapping.JaxbCollectionTable;
+import org.hibernate.boot.jaxb.mapping.JaxbColumn;
+import org.hibernate.boot.jaxb.mapping.JaxbColumnResult;
+import org.hibernate.boot.jaxb.mapping.JaxbConstructorResult;
+import org.hibernate.boot.jaxb.mapping.JaxbConvert;
+import org.hibernate.boot.jaxb.mapping.JaxbDiscriminatorColumn;
+import org.hibernate.boot.jaxb.mapping.JaxbElementCollection;
+import org.hibernate.boot.jaxb.mapping.JaxbEmbeddable;
+import org.hibernate.boot.jaxb.mapping.JaxbEmbedded;
+import org.hibernate.boot.jaxb.mapping.JaxbEmbeddedId;
+import org.hibernate.boot.jaxb.mapping.JaxbEmptyType;
+import org.hibernate.boot.jaxb.mapping.JaxbEntity;
+import org.hibernate.boot.jaxb.mapping.JaxbEntityListener;
+import org.hibernate.boot.jaxb.mapping.JaxbEntityListeners;
+import org.hibernate.boot.jaxb.mapping.JaxbEntityResult;
+import org.hibernate.boot.jaxb.mapping.JaxbFieldResult;
+import org.hibernate.boot.jaxb.mapping.JaxbGeneratedValue;
+import org.hibernate.boot.jaxb.mapping.JaxbId;
+import org.hibernate.boot.jaxb.mapping.JaxbIdClass;
+import org.hibernate.boot.jaxb.mapping.JaxbIndex;
+import org.hibernate.boot.jaxb.mapping.JaxbInheritance;
+import org.hibernate.boot.jaxb.mapping.JaxbJoinColumn;
+import org.hibernate.boot.jaxb.mapping.JaxbJoinTable;
+import org.hibernate.boot.jaxb.mapping.JaxbLob;
+import org.hibernate.boot.jaxb.mapping.JaxbManyToMany;
+import org.hibernate.boot.jaxb.mapping.JaxbManyToOne;
+import org.hibernate.boot.jaxb.mapping.JaxbMapKey;
+import org.hibernate.boot.jaxb.mapping.JaxbMapKeyClass;
+import org.hibernate.boot.jaxb.mapping.JaxbMapKeyColumn;
+import org.hibernate.boot.jaxb.mapping.JaxbMapKeyJoinColumn;
+import org.hibernate.boot.jaxb.mapping.JaxbMappedSuperclass;
+import org.hibernate.boot.jaxb.mapping.JaxbNamedAttributeNode;
+import org.hibernate.boot.jaxb.mapping.JaxbNamedEntityGraph;
+import org.hibernate.boot.jaxb.mapping.JaxbNamedNativeQuery;
+import org.hibernate.boot.jaxb.mapping.JaxbNamedQuery;
+import org.hibernate.boot.jaxb.mapping.JaxbNamedStoredProcedureQuery;
+import org.hibernate.boot.jaxb.mapping.JaxbNamedSubgraph;
+import org.hibernate.boot.jaxb.mapping.JaxbOneToMany;
+import org.hibernate.boot.jaxb.mapping.JaxbOneToOne;
+import org.hibernate.boot.jaxb.mapping.JaxbOrderColumn;
+import org.hibernate.boot.jaxb.mapping.JaxbPrimaryKeyJoinColumn;
+import org.hibernate.boot.jaxb.mapping.JaxbQueryHint;
+import org.hibernate.boot.jaxb.mapping.JaxbSecondaryTable;
+import org.hibernate.boot.jaxb.mapping.JaxbSequenceGenerator;
+import org.hibernate.boot.jaxb.mapping.JaxbSqlResultSetMapping;
+import org.hibernate.boot.jaxb.mapping.JaxbStoredProcedureParameter;
+import org.hibernate.boot.jaxb.mapping.JaxbTable;
+import org.hibernate.boot.jaxb.mapping.JaxbTableGenerator;
+import org.hibernate.boot.jaxb.mapping.JaxbUniqueConstraint;
+import org.hibernate.boot.jaxb.mapping.JaxbVersion;
+import org.hibernate.boot.jaxb.mapping.LifecycleCallbackContainer;
+import org.hibernate.boot.jaxb.mapping.ManagedType;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.ClassLoaderAccess;
+import org.hibernate.cfg.annotations.reflection.PersistentAttributeFilter;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
+
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.AssociationOverride;
@@ -113,84 +195,6 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Version;
-
-import org.hibernate.AnnotationException;
-import org.hibernate.annotations.Any;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.Columns;
-import org.hibernate.annotations.ManyToAny;
-import org.hibernate.annotations.common.annotationfactory.AnnotationDescriptor;
-import org.hibernate.annotations.common.annotationfactory.AnnotationFactory;
-import org.hibernate.annotations.common.reflection.AnnotationReader;
-import org.hibernate.annotations.common.reflection.ReflectionUtil;
-import org.hibernate.boot.jaxb.mapping.spi.AssociationAttribute;
-import org.hibernate.boot.jaxb.mapping.spi.AttributesContainer;
-import org.hibernate.boot.jaxb.mapping.spi.EntityOrMappedSuperclass;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbAssociationOverride;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributeOverride;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributes;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbBasic;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbCascadeType;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionTable;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbColumn;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnResult;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbConstructorResult;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbConvert;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbDiscriminatorColumn;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbElementCollection;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddable;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbedded;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedId;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEmptyType;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEntity;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListener;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListeners;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityResult;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbFieldResult;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbGeneratedValue;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbId;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbIdClass;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbIndex;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbInheritance;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumn;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinTable;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbLob;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToMany;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOne;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKey;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyClass;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyColumn;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyJoinColumn;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclass;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedAttributeNode;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedEntityGraph;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeQuery;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedQuery;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedStoredProcedureQuery;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedSubgraph;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToMany;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToOne;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbOrderColumn;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbPrimaryKeyJoinColumn;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbQueryHint;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbSecondaryTable;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbSequenceGenerator;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbSqlResultSetMapping;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbStoredProcedureParameter;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbTable;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbTableGenerator;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbTransient;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbUniqueConstraint;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbVersion;
-import org.hibernate.boot.jaxb.mapping.spi.LifecycleCallbackContainer;
-import org.hibernate.boot.jaxb.mapping.spi.ManagedType;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.ClassLoaderAccess;
-import org.hibernate.cfg.annotations.reflection.PersistentAttributeFilter;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 
 import static org.hibernate.cfg.annotations.reflection.internal.PropertyMappingElementCollector.JAXB_TRANSIENT_NAME;
 import static org.hibernate.cfg.annotations.reflection.internal.PropertyMappingElementCollector.PERSISTENT_ATTRIBUTE_NAME;
@@ -300,6 +304,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		annotationToXml.put( Convert.class, "convert" );
 		annotationToXml.put( Converts.class, "convert" );
 		annotationToXml.put( ConstructorResult.class, "constructor-result" );
+
 	}
 
 	private final XMLContext xmlContext;
@@ -412,7 +417,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			XMLContext.Default defaults = xmlContext.getDefaultWithoutGlobalCatalogAndSchema( className );
 			if ( className != null && propertyName == null ) {
 				//is a class
-				ManagedType managedTypeOverride = xmlContext.getManagedTypeOverride( className );
+				final ManagedType managedTypeOverride = xmlContext.getManagedTypeOverride( className );
 				Annotation[] annotations = getPhysicalAnnotations();
 				List<Annotation> annotationList = new ArrayList<>( annotations.length + 5 );
 				annotationsMap = new HashMap<>( annotations.length + 5 );
@@ -430,6 +435,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 				addIfNotNull( annotationList, getPrimaryKeyJoinColumns( managedTypeOverride, defaults ) );
 				addIfNotNull( annotationList, getIdClass( managedTypeOverride, defaults ) );
 				addIfNotNull( annotationList, getCacheable( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getCaching( managedTypeOverride, defaults ) );
 				addIfNotNull( annotationList, getInheritance( managedTypeOverride, defaults ) );
 				addIfNotNull( annotationList, getDiscriminatorValue( managedTypeOverride, defaults ) );
 				addIfNotNull( annotationList, getDiscriminatorColumn( managedTypeOverride, defaults ) );
@@ -455,8 +461,8 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 				checkForOrphanProperties( managedTypeOverride );
 			}
 			else if ( className != null ) { //&& propertyName != null ) { //always true but less confusing
-				ManagedType managedTypeOverride = xmlContext.getManagedTypeOverride( className );
-				JaxbEntityListener entityListenerOverride = xmlContext.getEntityListenerOverride( className );
+				final ManagedType managedTypeOverride = xmlContext.getManagedTypeOverride( className );
+				final JaxbEntityListener entityListenerOverride = xmlContext.getEntityListenerOverride( className );
 				Annotation[] annotations = getPhysicalAnnotations();
 				List<Annotation> annotationList = new ArrayList<>( annotations.length + 5 );
 				annotationsMap = new HashMap<>( annotations.length + 5 );
@@ -509,13 +515,17 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
+	private void remove(List<Annotation> annotationList, Class<? extends Annotation> annotationToRemove) {
+		annotationList.removeIf( next -> next.getClass().equals( annotationToRemove ) );
+	}
+
 	private Annotation getConvertsForAttribute(PropertyMappingElementCollector elementsForProperty, XMLContext.Default defaults) {
 		// NOTE : we use a map here to make sure that an xml and annotation referring to the same attribute
 		// properly overrides.  Very sparse map, yes, but easy setup.
 		// todo : revisit this
 		// although bear in mind that this code is no longer used in 5.0...
 
-		final Map<String,Convert> convertAnnotationsMap = new HashMap<>();
+		final Map<String, Convert> convertAnnotationsMap = new HashMap<>();
 
 		for ( JaxbBasic element : elementsForProperty.getBasic() ) {
 			JaxbConvert convert = element.getConvert();
@@ -551,7 +561,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	private Converts getConverts(ManagedType root, XMLContext.Default defaults) {
 		// NOTE : we use a map here to make sure that an xml and annotation referring to the same attribute
 		// properly overrides.  Bit sparse, but easy...
-		final Map<String,Convert> convertAnnotationsMap = new HashMap<>();
+		final Map<String, Convert> convertAnnotationsMap = new HashMap<>();
 
 		if ( root instanceof JaxbEntity ) {
 			applyXmlDefinedConverts( ( (JaxbEntity) root ).getConvert(), defaults, null, convertAnnotationsMap );
@@ -577,7 +587,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			List<JaxbConvert> elements,
 			XMLContext.Default defaults,
 			String attributeNamePrefix,
-			Map<String,Convert> convertAnnotationsMap) {
+			Map<String, Convert> convertAnnotationsMap) {
 		for ( JaxbConvert convertElement : elements ) {
 			final AnnotationDescriptor convertAnnotationDescriptor = new AnnotationDescriptor( Convert.class );
 			copyAttribute( convertAnnotationDescriptor, "attribute-name", convertElement.getAttributeName(), false );
@@ -678,14 +688,14 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 				checkForOrphanProperties( jaxbAttributes.getEmbeddedId(), properties, PERSISTENT_ATTRIBUTE_NAME );
 				checkForOrphanProperties( jaxbAttributes.getVersion(), properties, PERSISTENT_ATTRIBUTE_NAME );
 			}
-			checkForOrphanProperties( container.getBasic(), properties, PERSISTENT_ATTRIBUTE_NAME );
-			checkForOrphanProperties( container.getManyToOne(), properties, PERSISTENT_ATTRIBUTE_NAME );
-			checkForOrphanProperties( container.getOneToMany(), properties, PERSISTENT_ATTRIBUTE_NAME );
-			checkForOrphanProperties( container.getOneToOne(), properties, PERSISTENT_ATTRIBUTE_NAME );
-			checkForOrphanProperties( container.getManyToMany(), properties, PERSISTENT_ATTRIBUTE_NAME );
-			checkForOrphanProperties( container.getElementCollection(), properties, PERSISTENT_ATTRIBUTE_NAME );
-			checkForOrphanProperties( container.getEmbedded(), properties, PERSISTENT_ATTRIBUTE_NAME );
-			checkForOrphanProperties( container.getTransient(), properties, JAXB_TRANSIENT_NAME );
+			checkForOrphanProperties( container.getBasicAttributes(), properties, PERSISTENT_ATTRIBUTE_NAME );
+			checkForOrphanProperties( container.getManyToOneAttributes(), properties, PERSISTENT_ATTRIBUTE_NAME );
+			checkForOrphanProperties( container.getOneToManyAttributes(), properties, PERSISTENT_ATTRIBUTE_NAME );
+			checkForOrphanProperties( container.getOneToOneAttributes(), properties, PERSISTENT_ATTRIBUTE_NAME );
+			checkForOrphanProperties( container.getManyToManyAttributes(), properties, PERSISTENT_ATTRIBUTE_NAME );
+			checkForOrphanProperties( container.getElementCollectionAttributes(), properties, PERSISTENT_ATTRIBUTE_NAME );
+			checkForOrphanProperties( container.getEmbeddedAttributes(), properties, PERSISTENT_ATTRIBUTE_NAME );
+			checkForOrphanProperties( container.getTransients(), properties, JAXB_TRANSIENT_NAME );
 		}
 	}
 
@@ -811,7 +821,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	private EntityListeners getEntityListeners(ManagedType root, XMLContext.Default defaults) {
 		JaxbEntityListeners element = root instanceof EntityOrMappedSuperclass ? ( (EntityOrMappedSuperclass) root ).getEntityListeners() : null;
 		if ( element != null ) {
-			List<Class> entityListenerClasses = new ArrayList<>();
+			final List<Class<?>> entityListenerClasses = new ArrayList<>();
 			for ( JaxbEntityListener subelement : element.getEntityListener() ) {
 				String className = subelement.getClazz();
 				try {
@@ -821,14 +831,14 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 							)
 					);
 				}
-				catch ( ClassLoadingException e ) {
+				catch (ClassLoadingException e) {
 					throw new AnnotationException(
 							"Unable to find class: " + className, e
 					);
 				}
 			}
 			AnnotationDescriptor ad = new AnnotationDescriptor( EntityListeners.class );
-			ad.setValue( "value", entityListenerClasses.toArray( new Class[entityListenerClasses.size()] ) );
+			ad.setValue( "value", entityListenerClasses.toArray( new Class[0] ) );
 			return AnnotationFactory.create( ad );
 		}
 		else if ( defaults.canUseJavaAnnotations() ) {
@@ -1215,7 +1225,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 				joinColumns.add( AnnotationFactory.create( column ) );
 			}
 		}
-		return joinColumns.toArray( new MapKeyJoinColumn[joinColumns.size()] );
+		return joinColumns.toArray( new MapKeyJoinColumn[0] );
 	}
 
 	private AttributeOverrides getMapKeyAttributeOverrides(List<JaxbAttributeOverride> elements, XMLContext.Default defaults) {
@@ -1223,7 +1233,27 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		return mergeAttributeOverrides( defaults, attributes, false );
 	}
 
-	private Cacheable getCacheable(ManagedType root, XMLContext.Default defaults){
+	private Cache getCaching(ManagedType root, XMLContext.Default defaults) {
+		if ( root instanceof JaxbEntity ) {
+			final JaxbCaching caching = ( (JaxbEntity) root ).getCaching();
+			if ( caching != null ) {
+				final AnnotationDescriptor ad = new AnnotationDescriptor( Cache.class );
+				ad.setValue( "usage", CacheConcurrencyStrategy.fromAccessType( caching.getAccess() ) );
+				ad.setValue( "region", caching.getRegion() );
+				ad.setValue( "include", caching.getInclude().value() );
+				return AnnotationFactory.create( ad );
+			}
+		}
+
+		if ( defaults.canUseJavaAnnotations() ) {
+			return getPhysicalAnnotation( Cache.class );
+		}
+		else {
+			return null;
+		}
+	}
+
+	private Cacheable getCacheable(ManagedType root, XMLContext.Default defaults) {
 		if ( root instanceof JaxbEntity ) {
 			Boolean attValue = ( (JaxbEntity) root ).isCacheable();
 			if ( attValue != null ) {
@@ -1730,14 +1760,9 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 		List<Column> columns = new ArrayList<>( 1 );
 		columns.add( getColumn( element, false, nodeName ) );
-		if ( columns.size() > 0 ) {
-			AnnotationDescriptor columnsDescr = new AnnotationDescriptor( Columns.class );
-			columnsDescr.setValue( "columns", columns.toArray( new Column[columns.size()] ) );
-			return AnnotationFactory.create( columnsDescr );
-		}
-		else {
-			return null;
-		}
+		AnnotationDescriptor columnsDescr = new AnnotationDescriptor( Columns.class );
+		columnsDescr.setValue( "columns", columns.toArray( new Column[ columns.size() ] ) );
+		return AnnotationFactory.create( columnsDescr );
 	}
 
 	private Columns buildColumns(List<JaxbColumn> elements, String nodeName) {
@@ -1747,7 +1772,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 		if ( columns.size() > 0 ) {
 			AnnotationDescriptor columnsDescr = new AnnotationDescriptor( Columns.class );
-			columnsDescr.setValue( "columns", columns.toArray( new Column[columns.size()] ) );
+			columnsDescr.setValue( "columns", columns.toArray( new Column[ columns.size() ] ) );
 			return AnnotationFactory.create( columnsDescr );
 		}
 		else {
@@ -1804,11 +1829,11 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 
 	/**
 	 * @param mergeWithAnnotations Whether to use Java annotations for this
-	 * element, if present and not disabled by the XMLContext defaults.
-	 * In some contexts (such as an element-collection mapping) merging
+	 * 		element, if present and not disabled by the XMLContext defaults.
+	 * 		In some contexts (such as an element-collection mapping) merging
 	 */
 	private AssociationOverrides getAssociationOverrides(List<JaxbAssociationOverride> elements, XMLContext.Default defaults,
-			boolean mergeWithAnnotations) {
+														 boolean mergeWithAnnotations) {
 		List<AssociationOverride> attributes = buildAssociationOverrides( elements, defaults );
 		if ( mergeWithAnnotations && defaults.canUseJavaAnnotations() ) {
 			AssociationOverride annotation = getPhysicalAnnotation( AssociationOverride.class );
@@ -1891,12 +1916,12 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 
 	/**
 	 * @param mergeWithAnnotations Whether to use Java annotations for this
-	 * element, if present and not disabled by the XMLContext defaults.
-	 * In some contexts (such as an association mapping) merging with
-	 * annotations is never allowed.
+	 * 		element, if present and not disabled by the XMLContext defaults.
+	 * 		In some contexts (such as an association mapping) merging with
+	 * 		annotations is never allowed.
 	 */
 	private AttributeOverrides getAttributeOverrides(List<JaxbAttributeOverride> elements, XMLContext.Default defaults,
-			boolean mergeWithAnnotations) {
+													 boolean mergeWithAnnotations) {
 		List<AttributeOverride> attributes = buildAttributeOverrides( elements, "attribute-override" );
 		return mergeAttributeOverrides( defaults, attributes, mergeWithAnnotations );
 	}
@@ -2002,23 +2027,27 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private ExcludeSuperclassListeners getExcludeSuperclassListeners(ManagedType root, XMLContext.Default defaults) {
-		return (ExcludeSuperclassListeners) getMarkerAnnotation( ExcludeSuperclassListeners.class,
+		return (ExcludeSuperclassListeners) getMarkerAnnotation(
+				ExcludeSuperclassListeners.class,
 				root instanceof EntityOrMappedSuperclass
 						? ( (EntityOrMappedSuperclass) root ).getExcludeSuperclassListeners()
 						: null,
-				defaults );
+				defaults
+		);
 	}
 
 	private ExcludeDefaultListeners getExcludeDefaultListeners(ManagedType root, XMLContext.Default defaults) {
-		return (ExcludeDefaultListeners) getMarkerAnnotation( ExcludeDefaultListeners.class,
+		return (ExcludeDefaultListeners) getMarkerAnnotation(
+				ExcludeDefaultListeners.class,
 				root instanceof EntityOrMappedSuperclass
 						? ( (EntityOrMappedSuperclass) root ).getExcludeDefaultListeners()
 						: null,
-				defaults );
+				defaults
+		);
 	}
 
 	private Annotation getMarkerAnnotation(Class<? extends Annotation> clazz, JaxbEmptyType element,
-			XMLContext.Default defaults) {
+										   XMLContext.Default defaults) {
 		if ( element != null ) {
 			return AnnotationFactory.create( new AnnotationDescriptor( clazz ) );
 		}
@@ -2033,7 +2062,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 
 	private SqlResultSetMappings getSqlResultSetMappings(ManagedType root, XMLContext.Default defaults) {
 		List<SqlResultSetMapping> results = root instanceof JaxbEntity
-				? buildSqlResultsetMappings( ( (JaxbEntity) root ).getSqlResultSetMapping(), defaults, classLoaderAccess )
+				? buildSqlResultSetMappings( ( (JaxbEntity) root ).getSqlResultSetMapping(), defaults, classLoaderAccess )
 				: new ArrayList<>();
 		if ( defaults.canUseJavaAnnotations() ) {
 			SqlResultSetMapping annotation = getPhysicalAnnotation( SqlResultSetMapping.class );
@@ -2080,8 +2109,8 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			String annotationAttributeName,
 			List<JaxbNamedSubgraph> subgraphNodes,
 			ClassLoaderAccess classLoaderAccess) {
-		List<NamedSubgraph> annSubgraphNodes = new ArrayList<>(  );
-		for(JaxbNamedSubgraph subgraphNode : subgraphNodes){
+		List<NamedSubgraph> annSubgraphNodes = new ArrayList<>();
+		for ( JaxbNamedSubgraph subgraphNode : subgraphNodes ) {
 			AnnotationDescriptor annSubgraphNode = new AnnotationDescriptor( NamedSubgraph.class );
 			copyAttribute( annSubgraphNode, "name", subgraphNode.getName(), true );
 			String clazzName = subgraphNode.getClazz();
@@ -2099,19 +2128,19 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			annSubgraphNodes.add( AnnotationFactory.create( annSubgraphNode ) );
 		}
 
-		ann.setValue( annotationAttributeName, annSubgraphNodes.toArray( new NamedSubgraph[annSubgraphNodes.size()] ) );
+		ann.setValue( annotationAttributeName, annSubgraphNodes.toArray( new NamedSubgraph[ annSubgraphNodes.size() ] ) );
 	}
 
 	private static void bindNamedAttributeNodes(List<JaxbNamedAttributeNode> elements, AnnotationDescriptor ann) {
-		List<NamedAttributeNode> annNamedAttributeNodes = new ArrayList<>(  );
-		for( JaxbNamedAttributeNode element : elements){
+		List<NamedAttributeNode> annNamedAttributeNodes = new ArrayList<>();
+		for ( JaxbNamedAttributeNode element : elements ) {
 			AnnotationDescriptor annNamedAttributeNode = new AnnotationDescriptor( NamedAttributeNode.class );
-			copyAttribute( annNamedAttributeNode, "value", "name", element.getName(),true );
+			copyAttribute( annNamedAttributeNode, "value", "name", element.getName(), true );
 			copyAttribute( annNamedAttributeNode, "subgraph", element.getSubgraph(), false );
 			copyAttribute( annNamedAttributeNode, "key-subgraph", element.getKeySubgraph(), false );
 			annNamedAttributeNodes.add( AnnotationFactory.create( annNamedAttributeNode ) );
 		}
-		ann.setValue( "attributeNodes", annNamedAttributeNodes.toArray( new NamedAttributeNode[annNamedAttributeNodes.size()] ) );
+		ann.setValue( "attributeNodes", annNamedAttributeNodes.toArray( new NamedAttributeNode[0] ) );
 	}
 
 	public static List<NamedStoredProcedureQuery> buildNamedStoreProcedureQueries(
@@ -2152,7 +2181,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 
 			ann.setValue(
 					"parameters",
-					storedProcedureParameters.toArray( new StoredProcedureParameter[storedProcedureParameters.size()] )
+					storedProcedureParameters.toArray( new StoredProcedureParameter[0] )
 			);
 
 			List<Class<?>> returnClasses = new ArrayList<>();
@@ -2168,7 +2197,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 				}
 				returnClasses.add( clazz );
 			}
-			ann.setValue( "resultClasses", returnClasses.toArray( new Class[returnClasses.size()] ) );
+			ann.setValue( "resultClasses", returnClasses.toArray( new Class[0] ) );
 
 
 			ann.setValue( "resultSetMappings", element.getResultSetMapping().toArray( new String[0] ) );
@@ -2179,7 +2208,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 
 	}
 
-	public static List<SqlResultSetMapping> buildSqlResultsetMappings(
+	public static List<SqlResultSetMapping> buildSqlResultSetMappings(
 			List<JaxbSqlResultSetMapping> elements,
 			XMLContext.Default defaults,
 			ClassLoaderAccess classLoaderAccess) {
@@ -2501,7 +2530,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private static void buildQueryHints(List<JaxbQueryHint> elements, AnnotationDescriptor ann){
+	private static void buildQueryHints(List<JaxbQueryHint> elements, AnnotationDescriptor ann) {
 		List<QueryHint> queryHints = new ArrayList<>( elements.size() );
 		for ( JaxbQueryHint hint : elements ) {
 			AnnotationDescriptor hintDescriptor = new AnnotationDescriptor( QueryHint.class );
@@ -2566,7 +2595,10 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private TableGenerator getTableGenerator(ManagedType root, XMLContext.Default defaults) {
-		return getTableGenerator( root instanceof JaxbEntity ? ( (JaxbEntity) root ).getTableGenerator() : null, defaults );
+		return getTableGenerator(
+				root instanceof JaxbEntity ? ( (JaxbEntity) root ).getTableGenerator() : null,
+				defaults
+		);
 	}
 
 	private TableGenerator getTableGenerator(JaxbTableGenerator element, XMLContext.Default defaults) {
@@ -2631,8 +2663,10 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private SequenceGenerator getSequenceGenerator(ManagedType root, XMLContext.Default defaults) {
-		return getSequenceGenerator( root instanceof JaxbEntity ? ( (JaxbEntity) root ).getSequenceGenerator() : null,
-				defaults );
+		return getSequenceGenerator(
+				root instanceof JaxbEntity ? ( (JaxbEntity) root ).getSequenceGenerator() : null,
+				defaults
+		);
 	}
 
 	private SequenceGenerator getSequenceGenerator(JaxbSequenceGenerator element, XMLContext.Default defaults) {
@@ -2716,8 +2750,9 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private IdClass getIdClass(ManagedType root, XMLContext.Default defaults) {
-		JaxbIdClass element = root instanceof EntityOrMappedSuperclass ?
-				( (EntityOrMappedSuperclass) root ).getIdClass() : null;
+		final JaxbIdClass element = root instanceof EntityOrMappedSuperclass
+				? ( (EntityOrMappedSuperclass) root ).getIdClass()
+				: null;
 		if ( element != null ) {
 			String className = element.getClazz();
 			if ( className != null ) {
@@ -2756,8 +2791,10 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	 * element, if present and not disabled by the XMLContext defaults.
 	 * In some contexts (such as an association mapping) merging with
 	 */
-	private PrimaryKeyJoinColumns getPrimaryKeyJoinColumns(List<JaxbPrimaryKeyJoinColumn> elements,
-			XMLContext.Default defaults, boolean mergeWithAnnotations) {
+	private PrimaryKeyJoinColumns getPrimaryKeyJoinColumns(
+			List<JaxbPrimaryKeyJoinColumn> elements,
+			XMLContext.Default defaults,
+			boolean mergeWithAnnotations) {
 		PrimaryKeyJoinColumn[] columns = buildPrimaryKeyJoinColumns( elements );
 		if ( mergeWithAnnotations ) {
 			if ( columns.length == 0 && defaults.canUseJavaAnnotations() ) {
@@ -2835,8 +2872,19 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
+	private Subselect getTableExpression(JaxbEntity entity, XMLContext.Default defaults) {
+		final String tableExpression = entity.getTableExpression();
+		if ( StringHelper.isEmpty( tableExpression ) ) {
+			return null;
+		}
+
+		final AnnotationDescriptor annotation = new AnnotationDescriptor( Subselect.class );
+		annotation.setValue( "value", tableExpression );
+		return AnnotationFactory.create( annotation );
+	}
+
 	private Table getTable(ManagedType root, XMLContext.Default defaults) {
-		JaxbTable element = root instanceof JaxbEntity ? ( (JaxbEntity) root ).getTable() : null;
+		final JaxbTable element = root instanceof JaxbEntity ? ( (JaxbEntity) root ).getTable() : null;
 		if ( element == null ) {
 			//no element but might have some default or some annotation
 			if ( StringHelper.isNotEmpty( defaults.getCatalog() )
@@ -2890,9 +2938,10 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private SecondaryTables getSecondaryTables(ManagedType root, XMLContext.Default defaults) {
-		List<JaxbSecondaryTable> elements = root instanceof JaxbEntity ?
-				( (JaxbEntity) root ).getSecondaryTable() : Collections.emptyList();
-		List<SecondaryTable> secondaryTables = new ArrayList<>( 3 );
+		final List<JaxbSecondaryTable> elements = root instanceof JaxbEntity
+				? ( (JaxbEntity) root ).getSecondaryTable()
+				: Collections.emptyList();
+		final List<SecondaryTable> secondaryTables = new ArrayList<>( 3 );
 		for ( JaxbSecondaryTable element : elements ) {
 			AnnotationDescriptor annotation = new AnnotationDescriptor( SecondaryTable.class );
 			copyAttribute( annotation, "name", element.getName(), false );
@@ -2964,42 +3013,43 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			}
 		}
 	}
+
 	private static void buildIndex(AnnotationDescriptor annotation, List<JaxbIndex> elements) {
-		Index[] indexes = new Index[elements.size()];
+		Index[] indexes = new Index[ elements.size() ];
 		int i = 0;
 		for ( JaxbIndex element : elements ) {
 			AnnotationDescriptor indexAnn = new AnnotationDescriptor( Index.class );
 			copyAttribute( indexAnn, "name", element.getName(), false );
 			copyAttribute( indexAnn, "column-list", element.getColumnList(), true );
 			copyAttribute( indexAnn, "unique", element.isUnique(), false );
-			indexes[i++] = AnnotationFactory.create( indexAnn );
+			indexes[ i++ ] = AnnotationFactory.create( indexAnn );
 		}
 		annotation.setValue( "indexes", indexes );
 	}
 
 	private static void buildUniqueConstraints(AnnotationDescriptor annotation,
-			List<JaxbUniqueConstraint> elements) {
-		UniqueConstraint[] uniqueConstraints = new UniqueConstraint[elements.size()];
+											   List<JaxbUniqueConstraint> elements) {
+		UniqueConstraint[] uniqueConstraints = new UniqueConstraint[ elements.size() ];
 		int i = 0;
 		for ( JaxbUniqueConstraint element : elements ) {
-			String[] columnNames = element.getColumnName().toArray( new String[0] );
+			String[] columnNames = element.getColumnName().toArray( new String[ 0 ] );
 			AnnotationDescriptor ucAnn = new AnnotationDescriptor( UniqueConstraint.class );
 			copyAttribute( ucAnn, "name", element.getName(), false );
 			ucAnn.setValue( "columnNames", columnNames );
-			uniqueConstraints[i++] = AnnotationFactory.create( ucAnn );
+			uniqueConstraints[ i++ ] = AnnotationFactory.create( ucAnn );
 		}
 		annotation.setValue( "uniqueConstraints", uniqueConstraints );
 	}
 
 	private PrimaryKeyJoinColumn[] buildPrimaryKeyJoinColumns(List<JaxbPrimaryKeyJoinColumn> elements) {
-		PrimaryKeyJoinColumn[] pkJoinColumns = new PrimaryKeyJoinColumn[elements.size()];
+		PrimaryKeyJoinColumn[] pkJoinColumns = new PrimaryKeyJoinColumn[ elements.size() ];
 		int i = 0;
 		for ( JaxbPrimaryKeyJoinColumn element : elements ) {
 			AnnotationDescriptor pkAnn = new AnnotationDescriptor( PrimaryKeyJoinColumn.class );
 			copyAttribute( pkAnn, "name", element.getName(), false );
 			copyAttribute( pkAnn, "referenced-column-name", element.getReferencedColumnName(), false );
 			copyAttribute( pkAnn, "column-definition", element.getColumnDefinition(), false );
-			pkJoinColumns[i++] = AnnotationFactory.create( pkAnn );
+			pkJoinColumns[ i++ ] = AnnotationFactory.create( pkAnn );
 		}
 		return pkJoinColumns;
 	}

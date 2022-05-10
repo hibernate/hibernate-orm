@@ -2,7 +2,7 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
 package org.hibernate.boot.registry.classloading.spi;
 
@@ -12,6 +12,8 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 
+import org.hibernate.boot.ResourceLocator;
+import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.service.Service;
 import org.hibernate.service.spi.Stoppable;
 
@@ -20,7 +22,7 @@ import org.hibernate.service.spi.Stoppable;
  *
  * @author Steve Ebersole
  */
-public interface ClassLoaderService extends Service, Stoppable {
+public interface ClassLoaderService extends ResourceLocator, ResourceStreamLocator, Service, Stoppable {
 	/**
 	 * Locate a class by name.
 	 *

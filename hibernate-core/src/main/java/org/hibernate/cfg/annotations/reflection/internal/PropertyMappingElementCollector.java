@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
 package org.hibernate.cfg.annotations.reflection.internal;
 
@@ -11,29 +11,30 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
-import org.hibernate.boot.jaxb.mapping.spi.AttributesContainer;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributes;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbBasic;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbElementCollection;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbedded;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedId;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbId;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToMany;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOne;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToMany;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToOne;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbPostLoad;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbPostPersist;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbPostRemove;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbPostUpdate;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbPrePersist;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbPreRemove;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbPreUpdate;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbTransient;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbVersion;
-import org.hibernate.boot.jaxb.mapping.spi.LifecycleCallback;
-import org.hibernate.boot.jaxb.mapping.spi.LifecycleCallbackContainer;
-import org.hibernate.boot.jaxb.mapping.spi.PersistentAttribute;
+import org.hibernate.boot.jaxb.mapping.AttributesContainer;
+import org.hibernate.boot.jaxb.mapping.JaxbAttributes;
+import org.hibernate.boot.jaxb.mapping.JaxbBasic;
+import org.hibernate.boot.jaxb.mapping.JaxbElementCollection;
+import org.hibernate.boot.jaxb.mapping.JaxbEmbedded;
+import org.hibernate.boot.jaxb.mapping.JaxbEmbeddedId;
+import org.hibernate.boot.jaxb.mapping.JaxbId;
+import org.hibernate.boot.jaxb.mapping.JaxbManyToMany;
+import org.hibernate.boot.jaxb.mapping.JaxbManyToOne;
+import org.hibernate.boot.jaxb.mapping.JaxbOneToMany;
+import org.hibernate.boot.jaxb.mapping.JaxbOneToOne;
+import org.hibernate.boot.jaxb.mapping.JaxbPostLoad;
+import org.hibernate.boot.jaxb.mapping.JaxbPostPersist;
+import org.hibernate.boot.jaxb.mapping.JaxbPostRemove;
+import org.hibernate.boot.jaxb.mapping.JaxbPostUpdate;
+import org.hibernate.boot.jaxb.mapping.JaxbPrePersist;
+import org.hibernate.boot.jaxb.mapping.JaxbPreRemove;
+import org.hibernate.boot.jaxb.mapping.JaxbPreUpdate;
+import org.hibernate.boot.jaxb.mapping.JaxbTransient;
+import org.hibernate.boot.jaxb.mapping.JaxbVersion;
+import org.hibernate.boot.jaxb.mapping.LifecycleCallback;
+import org.hibernate.boot.jaxb.mapping.LifecycleCallbackContainer;
+import org.hibernate.boot.jaxb.mapping.PersistentAttribute;
+
 
 /**
  * Reproduces what we used to do with a {@code List<Element>} in {@link JPAXMLOverriddenAnnotationReader},
@@ -52,14 +53,14 @@ final class PropertyMappingElementCollector {
 
 	private List<JaxbId> id;
 	private List<JaxbEmbeddedId> embeddedId;
-	private List<JaxbBasic> basic;
 	private List<JaxbVersion> version;
-	private List<JaxbManyToOne> manyToOne;
-	private List<JaxbOneToMany> oneToMany;
-	private List<JaxbOneToOne> oneToOne;
-	private List<JaxbManyToMany> manyToMany;
-	private List<JaxbElementCollection> elementCollection;
+	private List<JaxbBasic> basic;
 	private List<JaxbEmbedded> embedded;
+	private List<JaxbOneToOne> oneToOne;
+	private List<JaxbManyToOne> manyToOne;
+	private List<JaxbElementCollection> elementCollection;
+	private List<JaxbOneToMany> oneToMany;
+	private List<JaxbManyToMany> manyToMany;
 	private List<JaxbTransient> _transient;
 
 	private List<JaxbPrePersist> prePersist;
@@ -95,19 +96,19 @@ final class PropertyMappingElementCollector {
 
 	public void collectPersistentAttributesIfMatching(AttributesContainer container) {
 		if ( container instanceof JaxbAttributes ) {
-			JaxbAttributes jaxbAttributes = (JaxbAttributes) container;
+			final JaxbAttributes jaxbAttributes = (JaxbAttributes) container;
 			id = collectIfMatching( id, jaxbAttributes.getId(), PERSISTENT_ATTRIBUTE_NAME );
 			embeddedId = collectIfMatching( embeddedId, jaxbAttributes.getEmbeddedId(), PERSISTENT_ATTRIBUTE_NAME );
 			version = collectIfMatching( version, jaxbAttributes.getVersion(), PERSISTENT_ATTRIBUTE_NAME );
 		}
-		basic = collectIfMatching( basic, container.getBasic(), PERSISTENT_ATTRIBUTE_NAME );
-		manyToOne = collectIfMatching( manyToOne, container.getManyToOne(), PERSISTENT_ATTRIBUTE_NAME );
-		oneToMany = collectIfMatching( oneToMany, container.getOneToMany(), PERSISTENT_ATTRIBUTE_NAME );
-		oneToOne = collectIfMatching( oneToOne, container.getOneToOne(), PERSISTENT_ATTRIBUTE_NAME );
-		manyToMany = collectIfMatching( manyToMany, container.getManyToMany(), PERSISTENT_ATTRIBUTE_NAME );
-		elementCollection = collectIfMatching( elementCollection, container.getElementCollection(), PERSISTENT_ATTRIBUTE_NAME );
-		embedded = collectIfMatching( embedded, container.getEmbedded(), PERSISTENT_ATTRIBUTE_NAME );
-		_transient = collectIfMatching( _transient, container.getTransient(), JAXB_TRANSIENT_NAME );
+		basic = collectIfMatching( basic, container.getBasicAttributes(), PERSISTENT_ATTRIBUTE_NAME );
+		manyToOne = collectIfMatching( manyToOne, container.getManyToOneAttributes(), PERSISTENT_ATTRIBUTE_NAME );
+		oneToMany = collectIfMatching( oneToMany, container.getOneToManyAttributes(), PERSISTENT_ATTRIBUTE_NAME );
+		oneToOne = collectIfMatching( oneToOne, container.getOneToOneAttributes(), PERSISTENT_ATTRIBUTE_NAME );
+		manyToMany = collectIfMatching( manyToMany, container.getManyToManyAttributes(), PERSISTENT_ATTRIBUTE_NAME );
+		elementCollection = collectIfMatching( elementCollection, container.getElementCollectionAttributes(), PERSISTENT_ATTRIBUTE_NAME );
+		embedded = collectIfMatching( embedded, container.getEmbeddedAttributes(), PERSISTENT_ATTRIBUTE_NAME );
+		_transient = collectIfMatching( _transient, container.getTransients(), JAXB_TRANSIENT_NAME );
 	}
 
 	public void collectLifecycleCallbacksIfMatching(LifecycleCallbackContainer container) {

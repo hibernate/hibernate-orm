@@ -32,11 +32,14 @@ ext {
 }
 
 dependencies {
-	implementation project( ':hibernate-core' )
+	implementation project(':hibernate-core')
 	implementation libs.byteBuddy
+	implementation jakartaLibs.jaxbApi
+
 	implementation gradleApi()
+	implementation localGroovy()
+
 	// for Gradle
-	implementation jakartaLibs.inject
 	implementation jakartaLibs.inject
 	implementation localGroovy()
 }

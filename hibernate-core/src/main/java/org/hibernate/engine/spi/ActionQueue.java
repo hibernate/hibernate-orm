@@ -101,6 +101,8 @@ public class ActionQueue {
 	private AfterTransactionCompletionProcessQueue afterTransactionProcesses;
 	private BeforeTransactionCompletionProcessQueue beforeTransactionProcesses;
 
+	private Serializable[] earlyInsertQuerySpaces;
+
 	/**
 	 * A LinkedHashMap containing providers for all the ExecutableLists, inserted in execution order
 	 */
@@ -239,6 +241,7 @@ public class ActionQueue {
 		if ( unresolvedInsertions != null ) {
 			unresolvedInsertions.clear();
 		}
+		earlyInsertQuerySpaces = null;
 	}
 
 	/**
@@ -257,6 +260,7 @@ public class ActionQueue {
 			// TODO: find out why this is necessary
 			LOG.tracev( "Executing inserts before finding non-nullable transient entities for early insert: [{0}]", insert );
 			executeInserts();
+			earlyInsertQuerySpaces = insert.getPersister().getQuerySpaces();
 		}
 		NonNullableTransientDependencies nonNullableTransientDependencies = insert.findNonNullableTransientEntities();
 		if ( nonNullableTransientDependencies == null ) {
@@ -559,6 +563,13 @@ public class ActionQueue {
 			ExecutableList<?> l = listProvider.get( this );
 			if ( areTablesToBeUpdated( l, tables ) ) {
 				return true;
+			}
+		}
+		if ( earlyInsertQuerySpaces != null ) {
+			for ( Serializable table : earlyInsertQuerySpaces ) {
+				if ( tables.contains( table ) ) {
+					return true;
+				}
 			}
 		}
 		if ( unresolvedInsertions == null ) {

@@ -3105,6 +3105,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				}
 				else {
 					tableGroup = compatibleTableGroup;
+					// Also register the table group under its original navigable path, which possibly contains an alias
+					// This is important, as otherwise we might create new joins in subqueries which are unnecessary
+					fromClauseIndex.registerTableGroup( tableGroup.getNavigablePath(), tableGroup );
 				}
 			}
 

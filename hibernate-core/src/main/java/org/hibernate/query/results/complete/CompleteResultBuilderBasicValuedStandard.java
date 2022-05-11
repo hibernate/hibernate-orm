@@ -60,7 +60,7 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 
 	@Override
 	public Class<?> getJavaType() {
-		return explicitJavaType.getJavaTypeClass();
+		return explicitJavaType == null ? null : explicitJavaType.getJavaTypeClass();
 	}
 
 	@Override
@@ -160,20 +160,13 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 
 		CompleteResultBuilderBasicValuedStandard that = (CompleteResultBuilderBasicValuedStandard) o;
 
-		if ( !Objects.equals( explicitColumnName, that.explicitColumnName ) ) {
-			return false;
-		}
-		if ( !Objects.equals( explicitType, that.explicitType ) ) {
-			return false;
-		}
-		return explicitJavaType.equals( that.explicitJavaType );
+		return Objects.equals( explicitColumnName, that.explicitColumnName )
+				&& Objects.equals( explicitType, that.explicitType )
+				&& Objects.equals( explicitJavaType, that.explicitJavaType );
 	}
 
 	@Override
 	public int hashCode() {
-		int result = explicitColumnName != null ? explicitColumnName.hashCode() : 0;
-		result = 31 * result + ( explicitType != null ? explicitType.hashCode() : 0 );
-		result = 31 * result + explicitJavaType.hashCode();
-		return result;
+		return Objects.hash( explicitColumnName, explicitType, explicitJavaType );
 	}
 }

@@ -8,6 +8,7 @@ package org.hibernate.orm.test.annotations.query;
 
 import java.util.List;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -24,6 +25,7 @@ import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Query;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
@@ -72,6 +74,19 @@ public class NamedQueryTest {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-15263" )
+	public void testNoExceptionThrownForNamedUpdate(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Query query = session.getNamedQuery( "NamedUpdate" );
+					query.setParameter( 1, GAME_TITLES[0] + " 2" );
+					query.setParameter( 2, GAME_TITLES[0] );
+					assertDoesNotThrow( () -> query.executeUpdate(), "without fixing, 'java.lang.IllegalStateException: Expecting a SELECT query' exception would be thrown" );
+				}
+		);
+	}
+
+	@Test
 	public void testNativeNamedQueriesOrdinalParametersAreOneBased(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -84,7 +99,10 @@ public class NamedQueryTest {
 	}
 
 	@Entity(name = "Game")
-	@NamedQueries(@NamedQuery(name = "NamedQuery", query = "select g from Game g where title = ?1"))
+	@NamedQueries({
+			@NamedQuery(name = "NamedQuery", query = "select g from Game g where title = ?1"),
+			@NamedQuery(name = "NamedUpdate", query = "update Game set title = ?1 where title = ?2")
+	})
 	@NamedNativeQueries(@NamedNativeQuery(name = "NamedNativeQuery", query = "select * from Game g where title = ?"))
 	public static class Game {
 		private Long id;

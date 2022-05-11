@@ -788,6 +788,24 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CreationTimestamp.html[`@CreationTimestamp`] annotation is used to specify that the currently annotated temporal type must be initialized with the current JVM timestamp value.
 
+The supported property types are:
+
+- `java.util.Date`
+- `java.util.Calendar`
+- `java.sql.Date`
+- `java.sql.Time`
+- `java.sql.Timestamp`
+- `java.time.Instant`
+- `java.time.LocalDate`
+- `java.time.LocalDateTime`
+- `java.time.LocalTime`
+- `java.time.MonthDay`
+- `java.time.OffsetDateTime`
+- `java.time.OffsetTime`
+- `java.time.Year`
+- `java.time.YearMonth`
+- `java.time.ZonedDateTime`
+
 See the <<chapters/domain/basic_types.adoc#mapping-generated-CreationTimestamp,`@CreationTimestamp` mapping>> section for more info.
 
 [[annotations-hibernate-discriminatorformula]]
@@ -1373,11 +1391,23 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/UpdateTimestamp.html[`@UpdateTimestamp`] annotation is used to specify that the currently annotated timestamp attribute should be updated with the current JVM timestamp whenever the owning entity gets modified.
 
+The supported property types are:
+
 - `java.util.Date`
 - `java.util.Calendar`
 - `java.sql.Date`
 - `java.sql.Time`
 - `java.sql.Timestamp`
+- `java.time.Instant`
+- `java.time.LocalDate`
+- `java.time.LocalDateTime`
+- `java.time.LocalTime`
+- `java.time.MonthDay`
+- `java.time.OffsetDateTime`
+- `java.time.OffsetTime`
+- `java.time.Year`
+- `java.time.YearMonth`
+- `java.time.ZonedDateTime`
 
 See the <<chapters/domain/basic_types.adoc#mapping-generated-UpdateTimestamp,`@UpdateTimestamp` mapping>> section for more info.
 

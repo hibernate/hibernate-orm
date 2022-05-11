@@ -27,7 +27,7 @@ import static org.hibernate.query.results.ResultsHelper.impl;
 /**
  * ResultBuilder for scalar results defined via:<ul>
  *     <li>JPA {@link jakarta.persistence.ColumnResult}</li>
- *     <li>`<return-scalar/>` as part of a `<resultset/>` stanza in `hbm.xml`</li>
+ *     <li>`&lt;return-scalar/&gt;` as part of a `&lt;resultset/&gt;` stanza in `hbm.xml`</li>
  * </ul>
  *
  * @author Steve Ebersole
@@ -60,7 +60,7 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 
 	@Override
 	public Class<?> getJavaType() {
-		return explicitJavaType.getJavaTypeClass();
+		return explicitJavaType == null ? null : explicitJavaType.getJavaTypeClass();
 	}
 
 	@Override
@@ -173,7 +173,7 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 	public int hashCode() {
 		int result = explicitColumnName != null ? explicitColumnName.hashCode() : 0;
 		result = 31 * result + ( explicitType != null ? explicitType.hashCode() : 0 );
-		result = 31 * result + explicitJavaType.hashCode();
+		result = 31 * result + ( explicitJavaType != null ? explicitJavaType.hashCode() : 0 );
 		return result;
 	}
 }

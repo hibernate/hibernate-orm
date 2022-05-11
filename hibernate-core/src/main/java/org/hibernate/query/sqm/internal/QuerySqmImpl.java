@@ -817,14 +817,14 @@ public class QuerySqmImpl<R>
 
 	@Override
 	public SqmQueryImplementor<R> setLockOptions(LockOptions lockOptions) {
-		verifySelect();
+		// No verifySelect call, because in Hibernate we support locking in subqueries
 		getQueryOptions().getLockOptions().overlay( lockOptions );
 		return this;
 	}
 
 	@Override
 	public SqmQueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
-		verifySelect();
+		// No verifySelect call, because in Hibernate we support locking in subqueries
 		getQueryOptions().getLockOptions().setAliasSpecificLockMode( alias, lockMode );
 		return this;
 	}
@@ -869,6 +869,7 @@ public class QuerySqmImpl<R>
 	@Override
 	public SqmQueryImplementor<R> setLockMode(LockModeType lockMode) {
 		if ( lockMode != LockModeType.NONE ) {
+			// JPA requires an exception to be thrown when this is not a select statement
 			verifySelect();
 		}
 		getSession().checkOpen( false );

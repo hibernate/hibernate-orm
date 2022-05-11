@@ -278,7 +278,7 @@ public class NativeQueryImpl<R>
 					throw new IllegalArgumentException( "Named query exists but its result type is not compatible" );
 				case 1:
 					final Class<?> actualResultJavaType = resultSetMapping.getResultBuilders().get( 0 ).getJavaType();
-					if ( !resultJavaType.isAssignableFrom( actualResultJavaType ) ) {
+					if ( actualResultJavaType != null && !resultJavaType.isAssignableFrom( actualResultJavaType ) ) {
 						throw buildIncompatibleException( resultJavaType, actualResultJavaType );
 					}
 					break;

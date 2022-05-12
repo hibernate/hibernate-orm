@@ -20,7 +20,6 @@ pipeline {
     options {
   		rateLimitBuilds(throttle: [count: 1, durationName: 'hour', userBoost: true])
         buildDiscarder(logRotator(numToKeepStr: '3', artifactNumToKeepStr: '3'))
-    	configFileProvider([configFile(fileId: 'job-configuration.yaml', variable: 'JOB_CONFIGURATION_FILE')])
     }
     triggers {
       cron 'H * * * *'
@@ -55,7 +54,9 @@ pipeline {
     }
     post {
         always {
-            notifyBuildResult maintainers: (String) readYaml(file: $JOB_CONFIGURATION_FILE).notification?.email?.recipients
+    		configFileProvider([configFile(fileId: 'job-configuration.yaml', variable: 'JOB_CONFIGURATION_FILE')]) {
+            	notifyBuildResult maintainers: (String) readYaml(file: $JOB_CONFIGURATION_FILE).notification?.email?.recipients
+            }
         }
     }
 }

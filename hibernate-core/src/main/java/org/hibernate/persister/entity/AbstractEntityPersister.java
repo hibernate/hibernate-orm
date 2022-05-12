@@ -5145,8 +5145,9 @@ public abstract class AbstractEntityPersister
 		}
 		else if ( identifierMapping instanceof NonAggregatedIdentifierMapping ) {
 			final EmbeddedAttributeMapping embeddedAttributeMapping = (EmbeddedAttributeMapping) findAttributeMapping( NavigableRole.IDENTIFIER_MAPPER_PROPERTY );
-			final AttributeMapping mapping = embeddedAttributeMapping.getMappedType()
-					.findAttributeMapping( basePropertyName );
+			final AttributeMapping mapping = embeddedAttributeMapping == null
+					? null
+					: embeddedAttributeMapping.getMappedType().findAttributeMapping( basePropertyName );
 			if ( mapping != null ) {
 				baseValue = mapping.getAttributeMetadataAccess()
 						.resolveAttributeMetadata( this )

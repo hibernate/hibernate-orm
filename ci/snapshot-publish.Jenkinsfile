@@ -7,6 +7,8 @@ if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
   return
 }
 
+this.helper = new JobHelper(this)
+
 pipeline {
     agent {
         label 'Fedora'
@@ -36,7 +38,7 @@ pipeline {
 					string(credentialsId: 'release.gpg.passphrase', variable: 'SIGNING_PASS'),
 					file(credentialsId: 'release.gpg.private-key', variable: 'SIGNING_KEYRING')
 				]) {
-					sh """./gradlew clean publish \
+					sh '''./gradlew clean publish \
 						-PhibernatePublishUsername=$hibernatePublishUsername \
 						-PhibernatePublishPassword=$hibernatePublishPassword \
 						-PhibernatePluginPortalUsername=$hibernatePluginPortalUsername \
@@ -44,15 +46,14 @@ pipeline {
 						--no-scan \
 						-DsigningPassword=$SIGNING_PASS \
 						-DsigningKeyFile=$SIGNING_KEYRING \
-					"""
+					'''
 				}
 			}
         }
     }
     post {
         always {
-            // Space-separated
-            notifyBuildResult maintainers: 'christian.beikov@gmail.com'
+            notifyBuildResult
         }
     }
 }

@@ -2,7 +2,6 @@
  * See https://github.com/hibernate/hibernate-jenkins-pipeline-helpers
  */
 @Library('hibernate-jenkins-pipeline-helpers@1.5') _
-import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 
 // Avoid running the pipeline on branch indexing
 if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
@@ -10,8 +9,6 @@ if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
   currentBuild.result = 'ABORTED'
   return
 }
-
-this.helper = new JobHelper(this)
 
 pipeline {
     agent {
@@ -23,6 +20,7 @@ pipeline {
     options {
   		rateLimitBuilds(throttle: [count: 1, durationName: 'hour', userBoost: true])
         buildDiscarder(logRotator(numToKeepStr: '3', artifactNumToKeepStr: '3'))
+    	configFileProvider([configFile(fileId: 'job-configuration.yaml', variable: 'JOB_CONFIGURATION_FILE')])
     }
     triggers {
       cron 'H * * * *'
@@ -57,7 +55,7 @@ pipeline {
     }
     post {
         always {
-            notifyBuildResult
+            notifyBuildResult maintainers: (String) readYaml(file: $JOB_CONFIGURATION_FILE).notification?.email?.recipients
         }
     }
 }

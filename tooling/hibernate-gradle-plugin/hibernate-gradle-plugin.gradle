@@ -37,6 +37,7 @@ dependencies {
 	implementation gradleApi()
 	// for Gradle
 	implementation jakartaLibs.inject
+	implementation jakartaLibs.inject
 	implementation localGroovy()
 }
 
@@ -95,7 +96,7 @@ gradle.taskGraph.whenReady {
 			logger.info( "Task `{}` had null repository", t.path )
 		}
 		else if ( t.repository.name == "sonatype" ) {
-			logger.lifecycle( "Disabling task `{}` because it publishes to Sonatype", t.path )
+			logger.debug( "Disabling task `{}` because it publishes to Sonatype", t.path )
 			t.enabled = false
 		}
 	}

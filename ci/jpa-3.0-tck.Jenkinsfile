@@ -1,5 +1,12 @@
 @Library('hibernate-jenkins-pipeline-helpers@1.5') _
 
+// Avoid running the pipeline on branch indexing
+if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
+  print "INFO: Build skipped due to trigger being Branch Indexing"
+  currentBuild.result = 'ABORTED'
+  return
+}
+
 pipeline {
     agent {
         label 'LongDuration'
@@ -8,7 +15,9 @@ pipeline {
         jdk 'OpenJDK 11 Latest'
     }
     options {
+  		rateLimitBuilds(throttle: [count: 1, durationName: 'day', userBoost: true])
         buildDiscarder(logRotator(numToKeepStr: '3', artifactNumToKeepStr: '3'))
+        disableConcurrentBuilds(abortPrevious: true)
     }
     parameters {
         choice(name: 'IMAGE_JDK', choices: ['jdk11'], description: 'The JDK base image version to use for the TCK image.')
@@ -76,8 +85,9 @@ pipeline {
     }
     post {
         always {
-            // Space-separated
-            notifyBuildResult maintainers: 'christian.beikov@gmail.com'
+    		configFileProvider([configFile(fileId: 'job-configuration.yaml', variable: 'JOB_CONFIGURATION_FILE')]) {
+            	notifyBuildResult maintainers: (String) readYaml(file: env.JOB_CONFIGURATION_FILE).notification?.email?.recipients
+            }
         }
     }
 }

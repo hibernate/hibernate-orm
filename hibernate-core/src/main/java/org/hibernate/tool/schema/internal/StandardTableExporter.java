@@ -16,6 +16,7 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
+import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
@@ -48,10 +49,11 @@ public class StandardTableExporter implements Exporter<Table> {
 		);
 
 		try {
+			String formattedTableName = context.format( tableName );
 			StringBuilder buf =
 					new StringBuilder( tableCreateString( table.hasPrimaryKey() ) )
 							.append( ' ' )
-							.append( context.format( tableName ) )
+							.append( formattedTableName )
 							.append( " (" );
 
 
@@ -162,7 +164,7 @@ public class StandardTableExporter implements Exporter<Table> {
 			List<String> sqlStrings = new ArrayList<>();
 			sqlStrings.add( buf.toString() );
 
-			applyComments( table, tableName, sqlStrings );
+			applyComments( table, formattedTableName, sqlStrings );
 
 		applyInitCommands( table, sqlStrings, context );
 
@@ -173,15 +175,32 @@ public class StandardTableExporter implements Exporter<Table> {
 		}
 	}
 
-	protected void applyComments(Table table, QualifiedName tableName, List<String> sqlStrings) {
+	/**
+	 * @param table The table.
+	 * @param tableName The qualified table name.
+	 * @param sqlStrings The list of SQL strings to add comments to.
+	 * @deprecated Use {@link #applyComments(Table, String, List)} instead.
+	 */
+	// For backwards compatibility with subclasses that happen to call this method...
+	@Deprecated
+	protected void applyComments(Table table, QualifiedTableName tableName, List<String> sqlStrings) {
+		applyComments( table, tableName.toString(), sqlStrings );
+	}
+
+	/**
+	 * @param table The table.
+	 * @param formattedTableName The formatted table name.
+	 * @param sqlStrings The list of SQL strings to add comments to.
+	 */
+	protected void applyComments(Table table, String formattedTableName, List<String> sqlStrings) {
 		if ( dialect.supportsCommentOn() ) {
 			if ( table.getComment() != null ) {
-				sqlStrings.add( "comment on table " + tableName + " is '" + table.getComment() + "'" );
+				sqlStrings.add( "comment on table " + formattedTableName + " is '" + table.getComment() + "'" );
 			}
 			for ( Column column : table.getColumns() ) {
 				String columnComment = column.getComment();
 				if ( columnComment != null ) {
-					sqlStrings.add( "comment on column " + tableName + '.' + column.getQuotedName( dialect ) + " is '" + columnComment + "'" );
+					sqlStrings.add( "comment on column " + formattedTableName + '.' + column.getQuotedName( dialect ) + " is '" + columnComment + "'" );
 				}
 			}
 		}

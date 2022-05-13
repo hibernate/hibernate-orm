@@ -11,7 +11,16 @@
 				   package="org.hibernate.orm.test.boot.database.qualfiedTableNaming"
 				   default-access="field">
 	<class name="DefaultCatalogAndSchemaTest$EntityWithHbmXmlNoFileLevelQualifiers" entity-name="EntityWithHbmXmlNoFileLevelQualifiers">
-		<id name="id" />
-		<property name="basic" />
+		<comment>Some entity-level comment</comment>
+		<id name="id">
+			<column name="id">
+				<comment>Some column-level comment for "id"</comment>
+			</column>
+		</id>
+		<property name="basic">
+			<column name="basic">
+				<comment>Some column-level comment for "property"</comment>
+			</column>
+		</property>
 	</class>
 </hibernate-mapping>

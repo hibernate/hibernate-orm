@@ -26,7 +26,7 @@ public class QueryKey implements Serializable {
 	/**
 	 * todo (6.0) : integrate work from original 6.0 branch
 	 */
-	public interface ParameterBindingsMemento {
+	public interface ParameterBindingsMemento extends Serializable {
 	}
 
 	public static QueryKey from(

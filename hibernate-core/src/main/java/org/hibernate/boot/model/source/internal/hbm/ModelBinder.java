@@ -2948,7 +2948,7 @@ public class ModelBinder {
 			return database.toIdentifier( tableSpecSource.getExplicitCatalogName() );
 		}
 		else {
-			return database.toIdentifier( metadataBuildingContext.getMappingDefaults().getImplicitCatalogName() );
+			return null;
 		}
 	}
 

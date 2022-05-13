@@ -67,8 +67,10 @@ public class NativeNonSelectQueryPlanImpl implements NonSelectQueryPlan {
 			);
 		}
 
+		final SQLQueryParser parser = new SQLQueryParser( sql, null, session.getSessionFactory() );
+
 		final JdbcMutation jdbcMutation = new NativeJdbcMutation(
-				sql,
+				parser.process(),
 				jdbcParameterBinders,
 				affectedTableNames
 		);

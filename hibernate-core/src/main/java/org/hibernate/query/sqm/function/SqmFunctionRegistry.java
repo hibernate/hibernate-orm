@@ -292,6 +292,7 @@ public class SqmFunctionRegistry {
 	}
 
 	public void registerAlternateKey(String alternateKey, String mappedKey) {
+		assert functionMap.containsKey( mappedKey );
 		log.debugf( "Registering alternate key : %s -> %s", alternateKey, mappedKey );
 		alternateKeyMap.put( alternateKey, mappedKey );
 	}

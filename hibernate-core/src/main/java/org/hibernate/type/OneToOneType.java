@@ -106,17 +106,12 @@ public class OneToOneType extends EntityType {
 
 	@Override
 	public boolean isDirty(Object old, Object current, SharedSessionContractImplementor session) {
-		if ( isSame( old, current ) ) {
-			return false;
-		}
-
-		return getIdentifierType( session )
-				.isDirty( getIdentifier( old, session ), getIdentifier( current, session ), session );
+		return false;
 	}
 
 	@Override
 	public boolean isDirty(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session) {
-		return isDirty(old, current, session);
+		return false;
 	}
 
 	@Override
@@ -159,6 +154,12 @@ public class OneToOneType extends EntityType {
 
 	@Override
 	public Object assemble(Serializable oid, SharedSessionContractImplementor session, Object owner) throws HibernateException {
+		if ( oid == null ) {
+			if ( uniqueKeyPropertyName != null ) {
+				return resolve( session.getContextEntityIdentifier( owner ), session, owner );
+			}
+			return null;
+		}
 
 		//the owner of the association is not the owner of the id
 		Object id = getIdentifierType( session ).assemble( oid, session, null );
@@ -169,9 +170,14 @@ public class OneToOneType extends EntityType {
 
 		return resolveIdentifier( id, session );
 	}
-	
+
+	/**
+	 * We don't need to dirty check one-to-one because of how
+	 * assemble/disassemble is implemented and because a one-to-one
+	 * association is never dirty
+	 */
 	@Override
 	public boolean isAlwaysDirtyChecked() {
-		return true;
+		return false;
 	}
 }

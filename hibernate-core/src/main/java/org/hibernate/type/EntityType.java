@@ -385,7 +385,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	/**
 	 * Resolve an identifier or unique key value
 	 */
-	private Object resolve(Object value, SharedSessionContractImplementor session, Object owner) {
+	protected Object resolve(Object value, SharedSessionContractImplementor session, Object owner) {
 		if ( value != null && !isNull( owner, session ) ) {
 			if ( isReferenceToPrimaryKey() ) {
 				return resolveIdentifier( value, session, null );

@@ -3,6 +3,28 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.6.9.Final (May 14, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32067
+
+** Bug
+    * [HHH-15270] - Inconsistent precedence of orm.xml implicit catalog over "default_catalog" in XML-mapped entities
+    * [HHH-15265] - SchemaExport.execute does not add the configured schema to comments
+    * [HHH-15212] - SchemaExport.execute does not replace the ${schema}-placeholder in HBM database-object with configured schema
+    * [HHH-15142] - CriteriaQuery with Like predicate fails when repeated with java.lang.IllegalArgumentException: Parameter value [] did not match expected type [java.lang.String (n/a)]
+    * [HHH-15134] - Update a bytecode enhanced Entity with a Version attribute causes OptimisticLockException
+    * [HHH-15091] - EntityManager.persist does not verify the existence of the one side of a many-to-one relationship, introduced 5.4.17
+
+** Improvement
+    * [HHH-4384] - @JoinColumn must be set for @AssociationOverride to work
+
+** Task
+    * [HHH-15274] - Small optimisation for how LazyAttributeLoadingInterceptor is dealing with lazy fields
+    * [HHH-15222] - Introduce an helper class SPI for decorating a Session instance when the instance is lazily provided
+    * [HHH-15178] - Backport Jenkinsfile and GH actions
+
+
 Changes in 5.6.8.Final (April 13, 2022)
 ------------------------------------------------------------------------------------------------------------------------
 

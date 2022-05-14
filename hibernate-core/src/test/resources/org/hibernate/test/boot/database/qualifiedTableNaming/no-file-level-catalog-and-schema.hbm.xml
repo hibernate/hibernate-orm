@@ -8,7 +8,7 @@
 <hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
 				   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 				   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://www.hibernate.org/xsd/hibernate-mapping/hibernate-mapping-4.0.xsd"
-				   package="org.hibernate.orm.test.boot.database.qualfiedTableNaming"
+				   package="org.hibernate.test.boot.database.qualifiedTableNaming"
 				   default-access="field">
 	<class name="DefaultCatalogAndSchemaTest$EntityWithHbmXmlNoFileLevelQualifiers" entity-name="EntityWithHbmXmlNoFileLevelQualifiers">
 		<comment>Some entity-level comment</comment>

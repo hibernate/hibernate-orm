@@ -10,7 +10,7 @@
 				 xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence/orm
                  http://xmlns.jcp.org/xml/ns/persistence/orm_2_1.xsd"
 				 version="2.1">
-	<package>org.hibernate.test.boot.database.qualfiedTableNaming</package>
+	<package>org.hibernate.test.boot.database.qualifiedTableNaming</package>
 	<schema>someImplicitFileLevelSchema</schema>
 	<catalog>someImplicitFileLevelCatalog</catalog>
 	<entity class="DefaultCatalogAndSchemaTest$EntityWithOrmXmlImplicitFileLevelQualifiers" name="EntityWithOrmXmlImplicitFileLevelQualifiers"

@@ -8,15 +8,15 @@
 <hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
 				   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 				   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://www.hibernate.org/xsd/hibernate-mapping/hibernate-mapping-4.0.xsd"
-				   package="org.hibernate.test.boot.database.qualfiedTableNaming"
+				   package="org.hibernate.test.boot.database.qualifiedTableNaming"
 				   default-access="field">
 	<database-object>
 		<!-- Note this code does not actually get executed.
-		     We just generate the script and check that ${catalog} gets replaced correctly.
+		     We just generate the script and check that ${schema} gets replaced correctly.
 		     So the actual language used here does not need to be compatible with the DB dialect under test.
 		 -->
 		<create>
-			CREATE OR REPLACE FUNCTION ${catalog}.catalogPrefixedAuxObject()
+			CREATE OR REPLACE FUNCTION ${schema}.schemaPrefixedAuxObject()
 			RETURNS varchar AS
 			$BODY$
 			BEGIN
@@ -25,6 +25,6 @@
 			$BODY$
 			LANGUAGE plpgsql
 		</create>
-		<drop>DROP FUNCTION ${catalog}.catalogPrefixedAuxObject()</drop>
+		<drop>DROP FUNCTION ${schema}.schemaPrefixedAuxObject()</drop>
 	</database-object>
 </hibernate-mapping>

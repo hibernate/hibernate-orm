@@ -124,7 +124,7 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 	}
 
 	private boolean isLazyAttribute(String fieldName) {
-		return lazyFields == null || lazyFields.contains( fieldName );
+		return lazyFields.contains( fieldName );
 	}
 
 	private boolean isInitializedLazyField(String fieldName) {
@@ -132,7 +132,7 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 	}
 
 	public boolean hasAnyUninitializedAttributes() {
-		if ( lazyFields == null || lazyFields.isEmpty() ) {
+		if ( lazyFields.isEmpty() ) {
 			return false;
 		}
 

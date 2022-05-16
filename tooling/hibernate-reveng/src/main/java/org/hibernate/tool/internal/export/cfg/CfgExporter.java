@@ -69,7 +69,7 @@ public class CfgExporter extends AbstractExporter {
 		pw.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<!DOCTYPE hibernate-configuration PUBLIC\r\n" + 
 				"		\"-//Hibernate/Hibernate Configuration DTD 3.0//EN\"\r\n" + 
-				"		\"https://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd\">\r\n" + 
+				"		\"http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd\">\r\n" + 
 				"<hibernate-configuration>");
 
         boolean ejb3 = Boolean.valueOf((String)getProperties().get("ejb3")).booleanValue();

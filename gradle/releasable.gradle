@@ -5,3 +5,7 @@ task release {
     mustRunAfter ':release:releaseChecks'
     enabled !project.ormVersion.isSnapshot
 }
+
+task preVerifyRelease {
+    dependsOn ':release:preVerifyRelease'
+}

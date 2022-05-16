@@ -349,6 +349,15 @@ task releaseChecks {
     description 'Checks and preparation for release'
 }
 
+task preVerifyRelease{
+    group 'Release'
+    description 'Pre-verifies a release job execution (Run locally before a CI release)'
+
+    dependsOn clean
+    dependsOn assembleDocumentation
+}
+
+
 task changeLogFile {
     group 'Release'
     description 'Updates the changelog.txt file based on the change-log report from Jira'

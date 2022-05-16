@@ -11,6 +11,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 import org.hibernate.Hibernate;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.FailureExpected;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
@@ -61,6 +62,7 @@ public class LoadGraphAfterMergeTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
+	@FailureExpected( jiraKey = "HHH-15271" )
 	public void checkIfInitializedAfterMerge() {
 		final Information[] result = new Information[1];
 

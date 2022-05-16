@@ -232,6 +232,12 @@ task ciBuild {
 }
 
 tasks.release.dependsOn tasks.test, tasks.publishToSonatype
+
+tasks.preVerifyRelease.dependsOn build
+tasks.preVerifyRelease.dependsOn generateMetadataFileForPublishedArtifactsPublication
+tasks.preVerifyRelease.dependsOn generatePomFileForPublishedArtifactsPublication
+tasks.preVerifyRelease.dependsOn generatePomFileForRelocationPomPublication
+
 tasks.publishToSonatype.mustRunAfter test
 
 

@@ -32,4 +32,9 @@ public class NullType extends JavaObjectType {
 	public String getName() {
 		return "null";
 	}
+
+	@Override
+	protected boolean registerUnderJavaType() {
+		return false;
+	}
 }

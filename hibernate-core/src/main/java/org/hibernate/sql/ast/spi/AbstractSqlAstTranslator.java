@@ -173,9 +173,12 @@ import org.hibernate.sql.exec.spi.JdbcUpdate;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesMappingProducerStandard;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
+import org.hibernate.type.descriptor.sql.DdlType;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
 import static org.hibernate.sql.ast.SqlTreePrinter.logSqlAst;
@@ -4293,15 +4296,22 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else {
 			final SqlExpressible expressionType = (SqlExpressible) castTarget.getExpressionType();
+			final DdlTypeRegistry ddlTypeRegistry = getSessionFactory().getTypeConfiguration().getDdlTypeRegistry();
+			DdlType ddlType = ddlTypeRegistry
+					.getDescriptor( expressionType.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() );
+			if ( ddlType == null ) {
+				// this may happen when selecting a null value like `SELECT null from ...`
+				// some dbs need the value to be cast so not knowing the real type we fall back to INTEGER
+				ddlType = ddlTypeRegistry.getDescriptor( SqlTypes.INTEGER );
+			}
+
 			appendSql(
-					sessionFactory.getTypeConfiguration().getDdlTypeRegistry()
-							.getDescriptor( expressionType.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() )
-							.getCastTypeName(
-									expressionType,
-									castTarget.getLength(),
-									castTarget.getPrecision(),
-									castTarget.getScale()
-							)
+					ddlType.getCastTypeName(
+							expressionType,
+							castTarget.getLength(),
+							castTarget.getPrecision(),
+							castTarget.getScale()
+					)
 			);
 		}
 	}

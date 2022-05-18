@@ -1205,7 +1205,7 @@ public final class StandardBasicTypes {
 		);
 
 		handle(
-				OBJECT_TYPE,
+				JavaObjectType.INSTANCE,
 				null,
 				basicTypeRegistry,
 				"object", Object.class.getName()

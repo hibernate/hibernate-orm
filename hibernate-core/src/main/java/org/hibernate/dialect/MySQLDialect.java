@@ -61,6 +61,7 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.NullType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
@@ -491,6 +492,14 @@ public class MySQLDialect extends Dialect {
 		functionFactory.adddateSubdateAddtimeSubtime();
 		functionFactory.format_dateFormat();
 		functionFactory.makedateMaketime();
+		functionFactory.localtimeLocaltimestamp();
+
+		BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
+
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "localtime" )
+				.setInvariantType(basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP ))
+				.setUseParenthesesWhenNoArgs( false )
+				.register();
 
 		if ( getMySQLVersion().isBefore( 5, 7 ) ) {
 			functionFactory.sysdateParens();

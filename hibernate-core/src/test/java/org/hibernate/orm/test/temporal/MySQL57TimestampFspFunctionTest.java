@@ -12,7 +12,6 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -30,7 +29,7 @@ import static org.junit.Assert.assertTrue;
 @TestForIssue( jiraKey = "HHH-8401")
 @RequiresDialect( value = MySQLDialect.class, majorVersion = 5, minorVersion = 7)
 @ServiceRegistry
-@DomainModel( standardModels = StandardDomainModel.GAMBIT )
+@DomainModel
 @SessionFactory
 public class MySQL57TimestampFspFunctionTest {
 

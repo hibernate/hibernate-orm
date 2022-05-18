@@ -21,6 +21,7 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -142,7 +143,9 @@ public class EmbeddedAttributeMapping
 				null,
 				inverseModelPart.getMappedFetchOptions(),
 				keyDeclaringType,
-				null,
+				inverseModelPart instanceof PropertyBasedMapping ?
+						( (PropertyBasedMapping) inverseModelPart ).getPropertyAccess() :
+						null,
 				null
 		);
 

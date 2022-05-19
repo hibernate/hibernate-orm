@@ -6,6 +6,7 @@
  */
 package org.hibernate.internal.util.config;
 
+import java.sql.Types;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;

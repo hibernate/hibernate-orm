@@ -96,7 +96,7 @@ public class SmokeTests {
 
 			assertThat(
 					genderAttrMapping.getJdbcMapping().getJdbcType(),
-					is( jdbcTypeRegistry.getDescriptor( Types.TINYINT ) )
+					is( jdbcTypeRegistry.getDescriptor( Types.SMALLINT ) )
 			);
 		}
 

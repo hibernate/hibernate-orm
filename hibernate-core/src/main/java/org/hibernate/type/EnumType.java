@@ -433,13 +433,13 @@ public class EnumType<T extends Enum<T>>
 	@Override
 	public String toString(T value) {
 		verifyConfigured();
-		return enumValueConverter.getDomainJavaType().unwrap( value, String.class, null );
+		return enumValueConverter.getRelationalJavaType().toString( enumValueConverter.toRelationalValue( value ) );
 	}
 
 	@Override
 	public T fromStringValue(CharSequence sequence) {
 		verifyConfigured();
-		return enumValueConverter.getDomainJavaType().wrap( sequence, null );
+		return enumValueConverter.toDomainValue( enumValueConverter.getRelationalJavaType().fromString( sequence ) );
 	}
 
 	@Override

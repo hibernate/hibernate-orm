@@ -77,6 +77,31 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 						}
 						return context.getBuildingOptions().getDefaultTimeZoneStorage();
 					}
+
+					@Override
+					public int getPreferredSqlTypeCodeForBoolean() {
+						return context.getPreferredSqlTypeCodeForBoolean();
+					}
+
+					@Override
+					public int getPreferredSqlTypeCodeForDuration() {
+						return context.getPreferredSqlTypeCodeForDuration();
+					}
+
+					@Override
+					public int getPreferredSqlTypeCodeForUuid() {
+						return context.getPreferredSqlTypeCodeForUuid();
+					}
+
+					@Override
+					public int getPreferredSqlTypeCodeForInstant() {
+						return context.getPreferredSqlTypeCodeForInstant();
+					}
+
+					@Override
+					public int getPreferredSqlTypeCodeForArray() {
+						return context.getPreferredSqlTypeCodeForArray();
+					}
 				}
 		);
 

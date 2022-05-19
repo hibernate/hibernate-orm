@@ -25,6 +25,7 @@ import org.hibernate.type.AdjustableBasicType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.SerializableType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.EnumJavaType;
@@ -144,6 +145,16 @@ public class InferredBasicValueResolver {
 						stdIndicators,
 						typeConfiguration
 				);
+			}
+			else if ( explicitJdbcType != null ) {
+				// we also have an explicit JdbcType
+
+				jdbcMapping = typeConfiguration.getBasicTypeRegistry().resolve(
+						reflectedJtd,
+						explicitJdbcType
+				);
+
+				legacyType = jdbcMapping;
 			}
 			else if ( explicitJdbcType != null ) {
 				// we also have an explicit JdbcType
@@ -417,7 +428,7 @@ public class InferredBasicValueResolver {
 
 		final JdbcType jdbcType = explicitJdbcType != null
 				? explicitJdbcType
-				: typeConfiguration.getJdbcTypeRegistry().getDescriptor( stdIndicators.getPreferredSqlTypeCodeForEnum() );
+				: typeConfiguration.getJdbcTypeRegistry().getDescriptor( SqlTypes.SMALLINT );
 
 		final OrdinalEnumValueConverter<E> valueConverter = new OrdinalEnumValueConverter<>(
 				enumJavaType,

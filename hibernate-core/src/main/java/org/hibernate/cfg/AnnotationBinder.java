@@ -158,6 +158,7 @@ import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
@@ -1702,7 +1703,39 @@ public final class AnnotationBinder {
 
 		final JavaType<Object> jtd = typeConfiguration.getJavaTypeRegistry().findDescriptor( type );
 		if ( jtd != null ) {
-			final JdbcType jdbcType = jtd.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
+			final JdbcType jdbcType = jtd.getRecommendedJdbcType(
+					new JdbcTypeIndicators() {
+						@Override
+						public TypeConfiguration getTypeConfiguration() {
+							return typeConfiguration;
+						}
+
+						@Override
+						public int getPreferredSqlTypeCodeForBoolean() {
+							return context.getPreferredSqlTypeCodeForBoolean();
+						}
+
+						@Override
+						public int getPreferredSqlTypeCodeForDuration() {
+							return context.getPreferredSqlTypeCodeForDuration();
+						}
+
+						@Override
+						public int getPreferredSqlTypeCodeForUuid() {
+							return context.getPreferredSqlTypeCodeForUuid();
+						}
+
+						@Override
+						public int getPreferredSqlTypeCodeForInstant() {
+							return context.getPreferredSqlTypeCodeForInstant();
+						}
+
+						@Override
+						public int getPreferredSqlTypeCodeForArray() {
+							return context.getPreferredSqlTypeCodeForArray();
+						}
+					}
+			);
 			return typeConfiguration.getBasicTypeRegistry().resolve( jtd, jdbcType );
 		}
 

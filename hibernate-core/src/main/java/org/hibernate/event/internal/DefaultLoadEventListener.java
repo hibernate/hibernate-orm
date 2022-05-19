@@ -153,6 +153,9 @@ public class DefaultLoadEventListener implements LoadEventListener {
 						return;
 					}
 				}
+				else if ( idClass.isInstance( event.getEntityId() ) ) {
+					return;
+				}
 			}
 			else if ( idMapping instanceof NonAggregatedIdentifierMapping ) {
 				if ( idClass.isInstance( event.getEntityId() ) ) {

@@ -38,14 +38,12 @@ This mapping was not quite correct as Java effectively allows up to 32K enum ent
 
 In practice, this isn't a big issue though for two reasons. A lot of databases do not support a 1 byte integer DDL type,
 so Hibernate falls back to the 2+ byte integer type as DDL type. Apart from that, enums in ORM models usually do not exceed the 255 value limit.
-Even though a migration is not necessary, schema validation errors could occur as of 6.1 due to the switch to a bigger data type.
+Note that the migration is not required as schema validation is able to handle the use of `SMALLINT` when the DDL type is `TINYINT`.
 
 The migration usually requires running only a simple alter command `alter table tbl alter column enum_col smallint`
 or `alter table tbl modify column enum_col smallint`, depending on your database dialect.
 
-To retain backwards compatibility, configure the setting `hibernate.type.preferred_enum_jdbc_type` to `TINYINT`.
-
-The following dialects currently have DDL types registered for `TINYINT` and might require migration:
+The following dialects currently have DDL types registered for `TINYINT` and might produce a different schema now:
 
 * Cachè
 * Ingres

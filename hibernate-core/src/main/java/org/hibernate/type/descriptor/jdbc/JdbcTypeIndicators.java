@@ -70,7 +70,7 @@ public interface JdbcTypeIndicators {
 	 * {@link JdbcTypeRegistry}.
 	 */
 	default int getPreferredSqlTypeCodeForBoolean() {
-		return getTypeConfiguration().getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForBoolean();
+		return getTypeConfiguration().getCurrentBaseSqlTypeIndicators().getPreferredSqlTypeCodeForBoolean();
 	}
 
 	/**
@@ -80,7 +80,7 @@ public interface JdbcTypeIndicators {
 	 * {@link JdbcTypeRegistry}.
 	 */
 	default int getPreferredSqlTypeCodeForDuration() {
-		return getTypeConfiguration().getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForDuration();
+		return getTypeConfiguration().getCurrentBaseSqlTypeIndicators().getPreferredSqlTypeCodeForDuration();
 	}
 
 	/**
@@ -90,7 +90,7 @@ public interface JdbcTypeIndicators {
 	 * {@link JdbcTypeRegistry}.
 	 */
 	default int getPreferredSqlTypeCodeForUuid() {
-		return getTypeConfiguration().getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForUuid();
+		return getTypeConfiguration().getCurrentBaseSqlTypeIndicators().getPreferredSqlTypeCodeForUuid();
 	}
 
 	/**
@@ -100,7 +100,7 @@ public interface JdbcTypeIndicators {
 	 * {@link JdbcTypeRegistry}.
 	 */
 	default int getPreferredSqlTypeCodeForInstant() {
-		return getTypeConfiguration().getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForInstant();
+		return getTypeConfiguration().getCurrentBaseSqlTypeIndicators().getPreferredSqlTypeCodeForInstant();
 	}
 
 	/**
@@ -108,9 +108,10 @@ public interface JdbcTypeIndicators {
 	 * <p/>
 	 * Specifically names the key into the
 	 * {@link JdbcTypeRegistry}.
+	 * @since 6.1
 	 */
 	default int getPreferredSqlTypeCodeForArray() {
-		return getTypeConfiguration().getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForArray();
+		return getTypeConfiguration().getCurrentBaseSqlTypeIndicators().getPreferredSqlTypeCodeForArray();
 	}
 
 	/**
@@ -135,7 +136,7 @@ public interface JdbcTypeIndicators {
 	}
 
 	default TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
-		return getTypeConfiguration().getSessionFactory().getFastSessionServices().getDefaultTimeZoneStorageStrategy();
+		return getTypeConfiguration().getCurrentBaseSqlTypeIndicators().getDefaultTimeZoneStorageStrategy();
 	}
 
 	/**

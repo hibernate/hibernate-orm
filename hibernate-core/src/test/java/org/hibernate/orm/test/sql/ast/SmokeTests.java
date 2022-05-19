@@ -187,7 +187,7 @@ public class SmokeTests {
 					assertThat( basicType.getJavaTypeDescriptor().getJavaTypeClass(), AssignableMatcher.assignableTo( Integer.class ) );
 					assertThat(
 							basicType.getJdbcType(),
-							is( jdbcTypeRegistry.getDescriptor( Types.TINYINT ) )
+							is( jdbcTypeRegistry.getDescriptor( Types.SMALLINT ) )
 					);
 
 

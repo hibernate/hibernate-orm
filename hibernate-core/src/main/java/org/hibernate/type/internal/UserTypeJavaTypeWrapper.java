@@ -20,6 +20,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.MutabilityPlanExposer;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -115,7 +116,18 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 
 	@Override
 	public J fromString(CharSequence string) {
+		if ( userType instanceof EnhancedUserType<?> ) {
+			return ( (EnhancedUserType<J>) userType ).fromStringValue( string );
+		}
 		throw new UnsupportedOperationException( "No support for parsing UserType values from String: " + userType );
+	}
+
+	@Override
+	public String toString(J value) {
+		if ( userType.returnedClass().isInstance( value ) && userType instanceof EnhancedUserType<?> ) {
+			return ( (EnhancedUserType<J>) userType ).toString( value );
+		}
+		return value == null ? "null" : value.toString();
 	}
 
 	@Override

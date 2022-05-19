@@ -10,6 +10,7 @@ import java.sql.Types;
 import jakarta.persistence.EnumType;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -40,7 +41,7 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 					: registry.getDescriptor( Types.VARCHAR );
 		}
 		else {
-			return registry.getDescriptor( Types.TINYINT );
+			return registry.getDescriptor( SqlTypes.SMALLINT );
 		}
 	}
 

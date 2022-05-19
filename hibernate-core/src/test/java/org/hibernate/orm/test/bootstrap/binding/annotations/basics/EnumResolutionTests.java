@@ -15,6 +15,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -59,7 +60,7 @@ public class EnumResolutionTests {
 
 		verifyEnumResolution(
 				entityBinding.getProperty( "rawEnum" ),
-				Types.TINYINT,
+				Types.SMALLINT,
 				Integer.class,
 				OrdinalEnumValueConverter.class,
 				true
@@ -74,7 +75,7 @@ public class EnumResolutionTests {
 
 		verifyEnumResolution(
 				entityBinding.getProperty( "unspecifiedMappingEnum" ),
-				Types.TINYINT,
+				Types.SMALLINT,
 				Integer.class,
 				OrdinalEnumValueConverter.class,
 				true
@@ -89,7 +90,7 @@ public class EnumResolutionTests {
 
 		verifyEnumResolution(
 				entityBinding.getProperty( "ordinalEnum" ),
-				Types.TINYINT,
+				Types.SMALLINT,
 				Integer.class,
 				OrdinalEnumValueConverter.class,
 				true
@@ -131,6 +132,21 @@ public class EnumResolutionTests {
 				(legacyResolution) -> {
 					assertThat( legacyResolution, instanceOf( AttributeConverterTypeAdapter.class ) );
 				}
+		);
+	}
+
+	@Test
+	public void testExplicitEnumResolution(DomainModelScope scope) {
+		final PersistentClass entityBinding = scope
+				.getDomainModel()
+				.getEntityBinding( EntityWithEnums.class.getName() );
+
+		verifyEnumResolution(
+				entityBinding.getProperty( "explicitEnum" ),
+				Types.TINYINT,
+				Integer.class,
+				OrdinalEnumValueConverter.class,
+				true
 		);
 	}
 
@@ -204,6 +220,10 @@ public class EnumResolutionTests {
 
 		@Enumerated( STRING )
 		private Values namedEnum;
+
+		@Enumerated( ORDINAL )
+		@JdbcTypeCode( Types.TINYINT )
+		private Values explicitEnum;
 	}
 
 	enum Values { FIRST, SECOND }

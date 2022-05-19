@@ -5952,7 +5952,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 
 		final EnumJavaType<?> enumJtd = sqmEnumLiteral.getExpressibleJavaType();
-		final JdbcType jdbcType = getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( SqlTypes.TINYINT );
+		final JdbcType jdbcType = getTypeConfiguration().getJdbcTypeRegistry()
+				.getDescriptor( SqlTypes.SMALLINT );
 		final BasicJavaType<Number> relationalJtd = (BasicJavaType) getTypeConfiguration()
 				.getJavaTypeRegistry()
 				.getDescriptor( Integer.class );

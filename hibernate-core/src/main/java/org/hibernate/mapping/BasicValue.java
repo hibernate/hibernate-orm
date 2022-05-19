@@ -589,7 +589,11 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			}
 			else if ( basicTypeByName instanceof ConvertedBasicType ) {
 				final ConvertedBasicType<?> convertedType = (ConvertedBasicType<?>) basicTypeByName;
-				return new ConvertedBasicTypeResolution<>( convertedType, stdIndicators );
+				if ( convertedType.getValueConverter() != null ) {
+					return new ConvertedBasicTypeResolution<>( convertedType, stdIndicators );
+				}
+				valueConverter = null;
+				domainJtd = basicTypeByName.getJavaTypeDescriptor();
 			}
 			else {
 				valueConverter = null;

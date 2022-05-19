@@ -102,6 +102,11 @@ public abstract class AbstractPluralAttribute<D, C, E>
 	}
 
 	@Override
+	public Class<C> getJavaType() {
+		return getAttributeJavaType().getJavaTypeClass();
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public SimpleDomainType<E> getValueGraphType() {
 		return (SimpleDomainType<E>) super.getValueGraphType();

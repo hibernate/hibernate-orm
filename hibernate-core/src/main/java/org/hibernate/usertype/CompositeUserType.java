@@ -34,8 +34,8 @@ import org.hibernate.metamodel.spi.ValueAccess;
  * <br>
  * Properties are ordered by the order of their names
  * i.e. they are alphabetically ordered, such that
- * <code>properties[i].name < properties[i + 1].name</code>
- * for all <code>i >= 0</code>.
+ * <code>properties[i].name &lt; properties[i + 1].name</code>
+ * for all <code>i &gt;= 0</code>.
  */
 @Incubating
 public interface CompositeUserType<J> extends EmbeddableInstantiator {

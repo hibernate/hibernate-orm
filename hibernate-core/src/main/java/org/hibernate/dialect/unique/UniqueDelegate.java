@@ -28,7 +28,7 @@ import org.hibernate.mapping.UniqueKey;
  *     </li>
  * </ol>
  *
- * #1 & #2 are preferred, if possible; #3 should be solely a fall-back.
+ * #1 &amp; #2 are preferred, if possible; #3 should be solely a fall-back.
  * 
  * See HHH-7797.
  * 

@@ -169,7 +169,7 @@ public class OneToOneType extends EntityType {
 
 		return resolveIdentifier( id, session );
 	}
-	
+
 	@Override
 	public boolean isAlwaysDirtyChecked() {
 		return true;

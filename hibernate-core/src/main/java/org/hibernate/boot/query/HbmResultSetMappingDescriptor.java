@@ -207,7 +207,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 
 	/**
-	 * Constructor for an implicit resultset mapping defined inline as part of a `<sql-query/>`
+	 * Constructor for an implicit resultset mapping defined inline as part of a `&lt;sql-query/&gt;`
 	 * stanza
 	 */
 	public HbmResultSetMappingDescriptor(

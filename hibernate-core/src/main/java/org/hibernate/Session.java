@@ -1311,7 +1311,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	<R> Query<R> createQuery(CriteriaQuery<R> criteriaQuery);
 
 	/**
-	 * Create a {@link MutationQuery} for the given JPA {@link CriteriaDelete}
+	 * Create a {@link Query} for the given JPA {@link CriteriaDelete}
 	 *
 	 * @deprecated use {@link #createMutationQuery(CriteriaDelete)}
 	 */
@@ -1319,7 +1319,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	Query createQuery(CriteriaDelete deleteQuery);
 
 	/**
-	 * Create a {@link MutationQuery} for the given JPA {@link CriteriaUpdate}
+	 * Create a {@link Query} for the given JPA {@link CriteriaUpdate}
 	 *
 	 * @deprecated use {@link #createMutationQuery(CriteriaUpdate)}
 	 */

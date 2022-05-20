@@ -147,7 +147,7 @@ public final class MessageHelper {
 	 * @param persister The persister for the entities
 	 * @param ids The entity id values
 	 * @param factory The session factory
-	 * @return An info string, in the form [FooBar#<1,2,3>]
+	 * @return An info string, in the form [FooBar#&lt;1,2,3&gt;]
 	 */
 	public static String infoString(
 			EntityPersister persister,
@@ -279,7 +279,7 @@ public final class MessageHelper {
 	 * @param persister The persister for the collections
 	 * @param ids The id values of the owners
 	 * @param factory The session factory
-	 * @return An info string, in the form [Foo.bars#<1,2,3>]
+	 * @return An info string, in the form [Foo.bars#&lt;1,2,3&gt;]
 	 */
 	public static String collectionInfoString(
 			CollectionPersister persister,

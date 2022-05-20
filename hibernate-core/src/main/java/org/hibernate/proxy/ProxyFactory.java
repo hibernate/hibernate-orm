@@ -39,7 +39,7 @@ public interface ProxyFactory {
 	 * @param componentIdType For composite identifier types, a reference to
 	 * the {@linkplain CompositeType type} of the identifier
 	 * property; again accessing the id should generally not cause
-	 * initialization - but need to bear in mind <key-many-to-one/>
+	 * initialization - but need to bear in mind &lt;key-many-to-one/&gt;
 	 * mappings.
 	 * @throws HibernateException Indicates a problem completing post
 	 * instantiation initialization.

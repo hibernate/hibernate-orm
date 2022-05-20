@@ -217,7 +217,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 
 	/**
 	 * Get column overriding, property first, then parent, then holder
-	 * replace the placeholder 'collection&&element' with nothing
+	 * replace the placeholder 'collection&amp;&amp;element' with nothing
 	 *
 	 * These rules are here to support both JPA 2 and legacy overriding rules.
 	 */
@@ -300,7 +300,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 
 	/**
 	 * Get column overriding, property first, then parent, then holder
-	 * replace the placeholder 'collection&&element' with nothing
+	 * replace the placeholder 'collection&amp;&amp;element' with nothing
 	 *
 	 * These rules are here to support both JPA 2 and legacy overriding rules.
 	 */
@@ -358,7 +358,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 
 	/**
 	 * Get column overriding, property first, then parent, then holder
-	 * replace the placeholder 'collection&&element' with nothing
+	 * replace the placeholder 'collection&amp;&amp;element' with nothing
 	 *
 	 * These rules are here to support both JPA 2 and legacy overriding rules.
 	 */
@@ -374,7 +374,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 
 	/**
 	 * Get column overriding, property first, then parent, then holder
-	 * replace the placeholder 'collection&&element' with nothing
+	 * replace the placeholder 'collection&amp;&amp;element' with nothing
 	 *
 	 * These rules are here to support both JPA 2 and legacy overriding rules.
 	 */

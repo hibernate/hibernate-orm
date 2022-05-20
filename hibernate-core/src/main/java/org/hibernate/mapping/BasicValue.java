@@ -735,7 +735,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 						.getService( ClassLoaderService.class );
 				try {
 					//noinspection rawtypes
-					final Class<AttributeConverter> converterClass = cls.classForName( converterClassName );
+					final Class<AttributeConverter<?,?>> converterClass = cls.classForName( converterClassName );
 					setAttributeConverterDescriptor( new ClassBasedConverterDescriptor(
 							converterClass,
 							false,

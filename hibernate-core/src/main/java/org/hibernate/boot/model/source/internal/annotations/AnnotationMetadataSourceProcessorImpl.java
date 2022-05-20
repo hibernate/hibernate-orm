@@ -50,7 +50,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 	private final MetadataBuildingContextRootImpl rootMetadataBuildingContext;
 
-	@SuppressWarnings("FieldCanBeLocal")
+	@SuppressWarnings({ "FieldCanBeLocal", "unused" })
 	private final IndexView jandexView;
 
 	private final ReflectionManager reflectionManager;
@@ -112,8 +112,8 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		final XClass xClass = reflectionManager.toXClass( annotatedClass );
 		// categorize it, based on assumption it does not fall into multiple categories
 		if ( xClass.isAnnotationPresent( Converter.class ) ) {
-			//noinspection unchecked, rawtypes
-			attributeConverterManager.addAttributeConverter( (Class<? extends AttributeConverter>) annotatedClass );
+			//noinspection unchecked
+			attributeConverterManager.addAttributeConverter( (Class<? extends AttributeConverter<?,?>>) annotatedClass );
 		}
 		else if ( xClass.isAnnotationPresent( Entity.class )
 				|| xClass.isAnnotationPresent( MappedSuperclass.class ) ) {
@@ -319,8 +319,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 			rootMetadataBuildingContext.getMetadataCollector().addAttributeConverter( descriptor );
 		}
 
-		@SuppressWarnings("rawtypes")
-		public void addAttributeConverter(Class<? extends AttributeConverter> converterClass) {
+		public void addAttributeConverter(Class<? extends AttributeConverter<?,?>> converterClass) {
 			rootMetadataBuildingContext.getMetadataCollector().addAttributeConverter( converterClass );
 		}
 	}

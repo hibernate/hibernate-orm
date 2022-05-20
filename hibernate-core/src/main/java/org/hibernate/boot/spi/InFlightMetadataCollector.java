@@ -7,7 +7,6 @@
 package org.hibernate.boot.spi;
 
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -19,7 +18,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
@@ -232,8 +230,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	/**
 	 * Apply an {@link AttributeConverter}
 	 */
-	void addAttributeConverter(Class<? extends AttributeConverter> converterClass);
-
+	void addAttributeConverter(Class<? extends AttributeConverter<?,?>> converterClass);
 
 	ConverterAutoApplyHandler getAttributeConverterAutoApplyHandler();
 

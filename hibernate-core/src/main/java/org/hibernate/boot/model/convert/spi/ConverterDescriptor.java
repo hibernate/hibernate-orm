@@ -6,11 +6,10 @@
  */
 package org.hibernate.boot.model.convert.spi;
 
-import jakarta.persistence.AttributeConverter;
-
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 
 import com.fasterxml.classmate.ResolvedType;
+import jakarta.persistence.AttributeConverter;
 
 /**
  * Boot-time descriptor of a JPA AttributeConverter
@@ -23,7 +22,7 @@ public interface ConverterDescriptor {
 	/**
 	 * The AttributeConverter class
 	 */
-	Class<? extends AttributeConverter> getAttributeConverterClass();
+	Class<? extends AttributeConverter<?,?>> getAttributeConverterClass();
 
 	/**
 	 * The resolved Classmate type descriptor for the conversion's domain type

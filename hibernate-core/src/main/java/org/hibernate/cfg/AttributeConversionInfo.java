@@ -6,10 +6,10 @@
  */
 package org.hibernate.cfg;
 
+import org.hibernate.annotations.common.reflection.XAnnotatedElement;
+
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Convert;
-
-import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 
 /**
  * Describes a {@link jakarta.persistence.Convert} conversion
@@ -17,7 +17,7 @@ import org.hibernate.annotations.common.reflection.XAnnotatedElement;
  * @author Steve Ebersole
  */
 public class AttributeConversionInfo {
-	private final Class<? extends AttributeConverter> converterClass;
+	private final Class<? extends AttributeConverter<?,?>> converterClass;
 	private final boolean conversionDisabled;
 
 	private final String attributeName;
@@ -25,7 +25,7 @@ public class AttributeConversionInfo {
 	private final XAnnotatedElement source;
 
 	public AttributeConversionInfo(
-			Class<? extends AttributeConverter> converterClass,
+			Class<? extends AttributeConverter<?,?>> converterClass,
 			boolean conversionDisabled,
 			String attributeName,
 			XAnnotatedElement source) {
@@ -45,7 +45,7 @@ public class AttributeConversionInfo {
 		);
 	}
 
-	public Class<? extends AttributeConverter> getConverterClass() {
+	public Class<? extends AttributeConverter<?,?>> getConverterClass() {
 		return converterClass;
 	}
 

@@ -27,7 +27,7 @@ import static org.hibernate.query.results.ResultsHelper.impl;
 /**
  * ResultBuilder for scalar results defined via:<ul>
  *     <li>JPA {@link jakarta.persistence.ColumnResult}</li>
- *     <li>`<return-scalar/>` as part of a `<resultset/>` stanza in `hbm.xml`</li>
+ *     <li>`&lt;return-scalar/&gt;` as part of a `&lt;resultset/&gt;` stanza in `hbm.xml`</li>
  * </ul>
  *
  * @author Steve Ebersole

@@ -464,7 +464,7 @@ public interface PersistentCollection<E> {
 	}
 
 	/**
-	 * Like {@link #toString()} but without the silliness of rendering the elements
+	 * Like {@link Object#toString()} but without the silliness of rendering the elements
 	 */
 	default String render() {
 		return getRole() + "#" + getKey() + "(initialized: " + wasInitialized() + ")";

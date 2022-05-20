@@ -473,7 +473,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	// attribute converters
 
 	@Override
-	public void addAttributeConverter(Class<? extends AttributeConverter> converterClass) {
+	public void addAttributeConverter(Class<? extends AttributeConverter<?,?>> converterClass) {
 		attributeConverterManager.addConverter(
 				new ClassBasedConverterDescriptor( converterClass, getBootstrapContext().getClassmateContext() )
 		);

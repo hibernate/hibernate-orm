@@ -65,7 +65,6 @@ public class XMLContext implements Serializable {
 	 * @param entityMappings The xml document to add
 	 * @return Add an xml document to this context and return the list of added class names.
 	 */
-	@SuppressWarnings("unchecked")
 	public List<String> addDocument(JaxbEntityMappings entityMappings) {
 		hasContext = true;
 
@@ -172,7 +171,7 @@ public class XMLContext implements Serializable {
 			final boolean autoApply = Boolean.TRUE.equals( converterElement.isAutoApply() );
 
 			try {
-				final Class<? extends AttributeConverter> attributeConverterClass = classLoaderAccess.classForName(
+				final Class<? extends AttributeConverter<?,?>> attributeConverterClass = classLoaderAccess.classForName(
 						buildSafeClassName( className, packageName )
 				);
 				converterDescriptors.add(
@@ -231,7 +230,7 @@ public class XMLContext implements Serializable {
 		return hasContext;
 	}
 
-	private List<ConverterDescriptor> converterDescriptors = new ArrayList<>();
+	private final List<ConverterDescriptor> converterDescriptors = new ArrayList<>();
 
 	public void applyDiscoveredAttributeConverters(AttributeConverterDefinitionCollector collector) {
 		for ( ConverterDescriptor descriptor : converterDescriptors ) {

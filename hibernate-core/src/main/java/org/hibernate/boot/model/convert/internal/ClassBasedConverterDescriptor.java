@@ -6,11 +6,11 @@
  */
 package org.hibernate.boot.model.convert.internal;
 
-import jakarta.persistence.AttributeConverter;
-
 import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
 import org.hibernate.resource.beans.spi.ManagedBean;
+
+import jakarta.persistence.AttributeConverter;
 
 /**
  * ConverterDescriptor implementation for cases where we know the
@@ -20,13 +20,13 @@ import org.hibernate.resource.beans.spi.ManagedBean;
  */
 public class ClassBasedConverterDescriptor extends AbstractConverterDescriptor {
 	public ClassBasedConverterDescriptor(
-			Class<? extends AttributeConverter> converterClass,
+			Class<? extends AttributeConverter<?,?>> converterClass,
 			ClassmateContext classmateContext) {
 		super( converterClass, null, classmateContext );
 	}
 
 	public ClassBasedConverterDescriptor(
-			Class<? extends AttributeConverter> converterClass,
+			Class<? extends AttributeConverter<?,?>> converterClass,
 			Boolean forceAutoApply,
 			ClassmateContext classmateContext) {
 		super( converterClass, forceAutoApply, classmateContext );

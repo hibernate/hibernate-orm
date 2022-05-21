@@ -1,105 +1,87 @@
 package org.hibernate.orm.test.onetoone.flush;
 
-import java.util.List;
-import java.util.Map;
-
-import org.hibernate.CallbackException;
-import org.hibernate.Interceptor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.orm.test.jpa.SettingsGenerator;
-import org.hibernate.type.Type;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
-import org.hibernate.testing.orm.junit.DialectContext;
-import org.hibernate.testing.orm.transaction.TransactionUtil;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Version;
 
 /**
  * @author Nathan Xu
  */
 @TestForIssue( jiraKey = "HHH-15045" )
+@Jpa(
+	annotatedClasses = {
+		DirtyFlushTest.User.class,
+		DirtyFlushTest.Profile.class
+	},
+	properties = @Setting(name = AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, value = "true")
+)
 class DirtyFlushTest {
 
-	List<Class> getAnnotatedClasses() {
-		return List.of( User.class, Profile.class );
-	}
-
-	Map basicSettings() {
-		return SettingsGenerator.generateSettings(
-				AvailableSettings.HBM2DDL_AUTO, "create-drop",
-				AvailableSettings.DIALECT, DialectContext.getDialect().getClass().getName(),
-				AvailableSettings.LOADED_CLASSES, getAnnotatedClasses(),
-				AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, "true"
-		);
-	}
-
-	EntityManagerFactory buildEntityManagerFactory(Map settings) {
-		return Bootstrap
-				.getEntityManagerFactoryBuilder( new PersistenceUnitDescriptorAdapter(), settings )
-				.build();
-	}
-
-	EntityManagerFactory entityManagerFactory;
-
 	@BeforeEach
-	void setUp() {
-		DirtyFlushInterceptor.dirtyFlushedForUser = false;
+	void setUp(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			final User user = new User();
+			user.id = 1;
+			user.version = 1;
+
+			final Profile profile = new Profile();
+			profile.id = 1;
+			profile.version = 1;
+
+			em.persist( user );
+			em.persist( profile );
+		} );
 	}
 
 	@Test
-	void testDirtyFlushNotHappened() {
-		var settings = basicSettings();
-		settings.put( AvailableSettings.INTERCEPTOR, new DirtyFlushInterceptor() );
-		entityManagerFactory = buildEntityManagerFactory( settings );
-		var em = entityManagerFactory.createEntityManager();
+	void testDirtyFlushNotHappened(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			final User user = em.find( User.class, 1 );
+			final Profile profile = em.find( Profile.class, 1 );
+			profile.user = user;
+			user.profile = profile;
 
-		TransactionUtil.inTransaction( em, entityManager -> {
-			var user = new User();
-			user.id = 1;
-			entityManager.persist( user );
+			em.persist( profile );
+			em.flush();
 		} );
 
-		try {
-			TransactionUtil.inTransaction( em, entityManager -> {
-				var user = entityManager.find( User.class, 1 );
-				var profile = new Profile();
-				profile.id = 1;
-				profile.user = user;
-				user.profile = profile;
-				entityManager.persist( profile );
-			} );
+		scope.inTransaction( em -> {
+			final Profile profile = em.find( Profile.class, 1 );
+			Assertions.assertEquals( 2, profile.version );
 
-			Assertions.assertFalse( DirtyFlushInterceptor.dirtyFlushedForUser, "User should not be dirty-flushed when only Profile changes!" );
-
-		} finally {
-			TransactionUtil.inTransaction( em, entityManager -> {
-				entityManager.createQuery( "delete from Profile " ).executeUpdate();
-				entityManager.createQuery( "delete from User" ).executeUpdate();
-			} );
-		}
+			final User user = em.find( User.class, 1 );
+			Assertions.assertEquals( 1, user.version, "without fixing, the version will be bumped due to erroneous dirty flushing" );
+		} );
 	}
 
 	@AfterEach
-	void releaseResources() {
-		if ( entityManagerFactory != null ) {
-			entityManagerFactory.close();
-		}
+	void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			em.createQuery( "delete from Profile" ).executeUpdate();
+			em.createQuery( "delete from User" ).executeUpdate();
+		} );
 	}
 
 
 	@Entity(name = "User")
 	static class User {
-		@Id int id;
+		@Id
+		int id;
+
+		@Version
+		int version;
 
 		@OneToOne(mappedBy = "user")
 		Profile profile;
@@ -107,30 +89,12 @@ class DirtyFlushTest {
 
 	@Entity(name = "Profile")
 	static class Profile {
-		@Id int id;
+		@Id
+		int id;
 
+		@Version int version;
 		@OneToOne // internally Hibernate will use `@ManyToOne` for this field
 		User user;
-	}
-
-	static class DirtyFlushInterceptor implements Interceptor {
-		static boolean dirtyFlushedForUser;
-
-		@Override
-		public boolean onFlushDirty(
-				Object entity,
-				Object id,
-				Object[] currentState,
-				Object[] previousState,
-				String[] propertyNames,
-				Type[] types) throws CallbackException {
-
-			System.out.println( "onFlushDirty invoked on entity: " + entity.getClass().getSimpleName() );
-
-			dirtyFlushedForUser = entity instanceof DirtyFlushTest.User;
-
-			return false;
-		}
 	}
 
 }

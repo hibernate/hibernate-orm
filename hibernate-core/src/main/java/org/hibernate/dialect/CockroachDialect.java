@@ -42,8 +42,10 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.jdbc.InstantAsTimestampWithTimeZoneJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
@@ -223,6 +225,19 @@ public class CockroachDialect extends Dialect {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonJdbcType.INSTANCE );
 			}
 		}
+
+		// The next two contributions are the same as for Postgresql
+		typeContributions.contributeJdbcType( ObjectNullAsBinaryTypeJdbcType.INSTANCE );
+
+		// Until we remove StandardBasicTypes, we have to keep this
+		typeContributions.contributeType(
+				new JavaObjectType(
+						ObjectNullAsBinaryTypeJdbcType.INSTANCE,
+						typeContributions.getTypeConfiguration()
+								.getJavaTypeRegistry()
+								.getDescriptor( Object.class )
+				)
+		);
 	}
 
 	@Override

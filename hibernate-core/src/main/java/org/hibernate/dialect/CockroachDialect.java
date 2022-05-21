@@ -127,7 +127,6 @@ public class CockroachDialect extends Dialect {
 
 			case BINARY:
 			case VARBINARY:
-				return "bytes($l)";
 			case BLOB:
 				return "bytes";
 

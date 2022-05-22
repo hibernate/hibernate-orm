@@ -117,14 +117,32 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 			domainType = conversion.getExplicitDomainType();
 		}
 
+		// make sure we are not overriding a previous conversion registration
+		final RegisteredConversion existingRegistration = registeredConversionsByDomainType.get( domainType );
+		if ( existingRegistration != null ) {
+			if ( !conversion.equals( existingRegistration ) ) {
+				throw new AnnotationException(
+						"Attempt to register non-matching `@ConverterRegistration` descriptors for `AttributeConverter` "
+								+ conversion.getConverterType().getName()
+				);
+			}
+			else {
+				if ( log.isDebugEnabled() ) {
+					log.debugf( "Skipping duplicate `@ConverterRegistration` for `%s`", conversion.getConverterType().getName() );
+				}
+			}
+		}
+
 		// see if we have a matching entry in `attributeConverterDescriptorsByClass`.
 		// if so, remove it.  The conversion being registered will always take precedence
-		final ConverterDescriptor removed = attributeConverterDescriptorsByClass.remove( conversion.getConverterType() );
-		if ( removed != null && log.isDebugEnabled() ) {
-			log.debugf(
-					"Removed potentially auto-applicable converter `%s` due to @ConverterRegistration",
-					removed.getAttributeConverterClass().getName()
-			);
+		if ( attributeConverterDescriptorsByClass != null ) {
+			final ConverterDescriptor removed = attributeConverterDescriptorsByClass.remove( conversion.getConverterType() );
+			if ( removed != null && log.isDebugEnabled() ) {
+				log.debugf(
+						"Removed potentially auto-applicable converter `%s` due to @ConverterRegistration",
+						removed.getAttributeConverterClass().getName()
+				);
+			}
 		}
 
 		registeredConversionsByDomainType.put( domainType, conversion );
@@ -176,12 +194,7 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 			final ResolvedType resolveAttributeType = ConverterHelper.resolveAttributeType( xProperty, context );
 			final RegisteredConversion registrationForDomainType = registeredConversionsByDomainType.get( resolveAttributeType.getErasedType() );
 			if ( registrationForDomainType != null ) {
-				if ( registrationForDomainType.isAutoApply() ) {
-					return registrationForDomainType.getConverterDescriptor();
-				}
-				else {
-					return null;
-				}
+				return registrationForDomainType.isAutoApply() ? registrationForDomainType.getConverterDescriptor() : null;
 			}
 		}
 

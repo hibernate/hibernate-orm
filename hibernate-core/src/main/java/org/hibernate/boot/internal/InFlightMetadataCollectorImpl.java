@@ -40,6 +40,7 @@ import org.hibernate.boot.model.convert.internal.AttributeConverterManager;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
+import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitForeignKeyNameSource;
 import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
@@ -482,6 +483,11 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	@Override
 	public void addAttributeConverter(ConverterDescriptor descriptor) {
 		attributeConverterManager.addConverter( descriptor );
+	}
+
+	@Override
+	public void addRegisteredConversion(RegisteredConversion conversion) {
+		attributeConverterManager.addRegistration( conversion, bootstrapContext );
 	}
 
 	@Override

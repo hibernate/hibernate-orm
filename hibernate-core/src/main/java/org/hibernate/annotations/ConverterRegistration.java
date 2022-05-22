@@ -6,8 +6,17 @@
  */
 package org.hibernate.annotations;
 
+import java.lang.annotation.Repeatable;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
+
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.ElementType.PACKAGE;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Registers an {@link jakarta.persistence.AttributeConverter}.  The main
@@ -17,6 +26,9 @@ import jakarta.persistence.Converter;
  *
  * @author Steve Ebersole
  */
+@Target( {TYPE, ANNOTATION_TYPE, PACKAGE} )
+@Retention( RUNTIME )
+@Repeatable( ConverterRegistrations.class )
 public @interface ConverterRegistration {
 	/**
 	 * The converter class to register

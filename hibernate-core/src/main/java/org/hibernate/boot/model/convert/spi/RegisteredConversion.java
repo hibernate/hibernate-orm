@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.convert.spi;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.boot.model.convert.internal.AutoApplicableConverterDescriptorBypassedImpl;
 import org.hibernate.boot.model.convert.internal.AutoApplicableConverterDescriptorStandardImpl;
@@ -40,11 +41,32 @@ public class RegisteredConversion {
 			Class<? extends AttributeConverter<?,?>> converterType,
 			boolean autoApply,
 			MetadataBuildingContext context) {
+		assert converterType != null;
+
 		this.explicitDomainType = explicitDomainType;
 		this.converterType = converterType;
 		this.autoApply = autoApply;
 
 		this.converterDescriptor = determineConverterDescriptor( explicitDomainType, converterType, autoApply, context );
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		RegisteredConversion that = (RegisteredConversion) o;
+		return autoApply == that.autoApply
+				&& Objects.equals( explicitDomainType, that.explicitDomainType )
+				&& converterType.equals( that.converterType );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( explicitDomainType, converterType );
 	}
 
 	private static ConverterDescriptor determineConverterDescriptor(
@@ -58,7 +80,7 @@ public class RegisteredConversion {
 		);
 		final ResolvedType relationalType = resolvedParamTypes.get( 1 );
 		final ResolvedType domainTypeToMatch;
-		if ( explicitDomainType != null ) {
+		if ( !void.class.equals( explicitDomainType ) ) {
 			domainTypeToMatch = context.getBootstrapContext().getClassmateContext().getTypeResolver().resolve( explicitDomainType );
 		}
 		else {

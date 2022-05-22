@@ -24,6 +24,7 @@ import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
+import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.QualifiedTableName;
@@ -231,6 +232,8 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 * Apply an {@link AttributeConverter}
 	 */
 	void addAttributeConverter(Class<? extends AttributeConverter<?,?>> converterClass);
+
+	void addRegisteredConversion(RegisteredConversion conversion);
 
 	ConverterAutoApplyHandler getAttributeConverterAutoApplyHandler();
 

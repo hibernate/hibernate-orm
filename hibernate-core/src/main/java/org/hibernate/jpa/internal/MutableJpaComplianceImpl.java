@@ -26,6 +26,7 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	private boolean closedCompliance;
 	private boolean cachingCompliance;
 	private boolean loadByIdCompliance;
+	private boolean converterCompliance;
 
 	public MutableJpaComplianceImpl(Map configurationSettings) {
 		this(
@@ -92,6 +93,12 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 				configurationSettings,
 				jpaByDefault
 		);
+
+		converterCompliance = ConfigurationHelper.getBoolean(
+				AvailableSettings.JPA_CONVERTER_COMPLIANCE,
+				configurationSettings,
+				jpaByDefault
+		);
 	}
 
 	@Override
@@ -137,6 +144,11 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	@Override
 	public boolean isLoadByIdComplianceEnabled() {
 		return loadByIdCompliance;
+	}
+
+	@Override
+	public boolean isConverterComplianceEnabled() {
+		return converterCompliance;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -197,7 +209,8 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 				.setTransactionCompliance( transactionCompliance )
 				.setClosedCompliance( closedCompliance )
 				.setCachingCompliance( cachingCompliance )
-				.setLoadByIdCompliance( loadByIdCompliance );
+				.setLoadByIdCompliance( loadByIdCompliance )
+				.setConverterCompliance( converterCompliance );
 		return builder.createJpaCompliance();
 	}
 }

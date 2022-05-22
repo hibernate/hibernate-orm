@@ -155,4 +155,15 @@ public interface JpaCompliance {
 	 */
 	boolean isLoadByIdComplianceEnabled();
 
+	/**
+	 * Whether Hibernate should strictly comply with the specification
+	 * in terms of {@link jakarta.persistence.AttributeConverter} handling
+	 *
+	 * @return {@code true} indicates Hibernate should strictly adhere to
+	 * the spec; {@code false} enables extensions such as the ability to
+	 * apply conversions to embeddable values.
+	 *
+	 * @since 6.1
+	 */
+	boolean isConverterComplianceEnabled();
 }

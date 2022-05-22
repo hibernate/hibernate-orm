@@ -17,6 +17,7 @@ import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.jpa.LegacySpecHints;
+import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.query.spi.QueryPlan;
 import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -2401,6 +2402,16 @@ public interface AvailableSettings {
 	 * @since 6.0
 	 */
 	String JPA_LOAD_BY_ID_COMPLIANCE = "hibernate.jpa.compliance.load_by_id";
+
+	/**
+	 * Whether Hibernate should strictly comply with the specification
+	 * in terms of {@link jakarta.persistence.AttributeConverter} handling
+	 *
+	 * @see JpaCompliance#isConverterComplianceEnabled()
+	 *
+	 * @since 6.1
+	 */
+	String JPA_CONVERTER_COMPLIANCE = "hibernate.jpa.compliance.converter";
 
 	/**
 	 * Determines if the identifier value stored in the database table backing a

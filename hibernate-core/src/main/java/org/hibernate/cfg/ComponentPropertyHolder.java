@@ -8,17 +8,11 @@ package org.hibernate.cfg;
 
 import java.util.HashMap;
 import java.util.Map;
-import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Converts;
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.PropertyPath;
@@ -28,6 +22,14 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Converts;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 
 /**
  * PropertyHolder for composites (Embeddable/Embedded).
@@ -78,13 +80,16 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		final XProperty embeddedXProperty = inferredData.getProperty();
 		setCurrentProperty( embeddedXProperty );
 		this.component = component;
-		this.isOrWithinEmbeddedId =
-				parent.isOrWithinEmbeddedId()
-						|| ( embeddedXProperty != null &&
-						( embeddedXProperty.isAnnotationPresent( Id.class )
-								|| embeddedXProperty.isAnnotationPresent( EmbeddedId.class ) ) );
-		this.isWithinElementCollection = parent.isWithinElementCollection() ||
-			parent instanceof CollectionPropertyHolder;
+		this.isOrWithinEmbeddedId = parent.isOrWithinEmbeddedId()
+				|| ( embeddedXProperty != null && hasIdAnnotation( embeddedXProperty ) );
+		this.isWithinElementCollection = parent.isWithinElementCollection()
+				|| parent instanceof CollectionPropertyHolder;
+
+		// NOTE : in terms of conversions here, we have 2 cases:
+		//
+		// 1. The converter is for the embedded value itself
+		// 2. One or more converters apply to sub-attributes
+
 
 		if ( embeddedXProperty != null ) {
 //			this.virtual = false;
@@ -101,6 +106,57 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			this.embeddedAttributeName = "";
 			this.attributeConversionInfoMap = processAttributeConversions( inferredData.getClassOrElement() );
 		}
+	}
+
+	private boolean hasIdAnnotation(XProperty embeddedXProperty) {
+		return embeddedXProperty.isAnnotationPresent( Id.class )
+				|| embeddedXProperty.isAnnotationPresent( EmbeddedId.class );
+	}
+
+	/**
+	 * Find the converter, if one, intended for the composition as a whole rather
+	 * than its sub-attributes.
+	 *
+	 * @return The converter, or null if there is not
+	 */
+	private AttributeConversionInfo determineEmbeddedConverter(XProperty embeddedXProperty, MetadataBuildingContext context) {
+		final Convert convertAnnotation = embeddedXProperty.getAnnotation( Convert.class );
+		if ( convertAnnotation != null ) {
+			// if the convert annotation defines a sub-attribute name, then it does not apply to the composition itself
+			if ( StringHelper.isEmpty( convertAnnotation.attributeName() ) ) {
+				return null;
+			}
+			else if ( convertAnnotation.disableConversion() ) {
+				return null;
+			}
+			else {
+				// otherwise, apply the conversion at the composition-level
+				return new AttributeConversionInfo( convertAnnotation, embeddedXProperty.getType() );
+			}
+		}
+
+		// check to see if it defines multiple, which indicates there is no compositional conversion
+		final Converts convertsAnnotation = embeddedXProperty.getAnnotation( Converts.class );
+		if ( convertsAnnotation != null && convertsAnnotation.value().length > 0 ) {
+			return null;
+		}
+
+		// see if there is an auto-apply conversion registered...
+		final ConverterDescriptor autoAppliedConverter = context
+				.getMetadataCollector()
+				.getAttributeConverterAutoApplyHandler()
+				.findAutoApplyConverterForAttribute( embeddedXProperty, context );
+		if ( autoAppliedConverter == null ) {
+			return null;
+		}
+
+		return new AttributeConversionInfo(
+				autoAppliedConverter.getAttributeConverterClass(),
+				false,
+				embeddedAttributeName,
+				embeddedXProperty
+		);
+
 	}
 
 	/**
@@ -136,9 +192,17 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			if ( convertAnnotation != null ) {
 				final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, embeddableXClass );
 				if ( StringHelper.isEmpty( info.getAttributeName() ) ) {
-					throw new IllegalStateException( "Convert placed on Embedded attribute must define (sub)attributeName" );
+					//noinspection StatementWithEmptyBody
+					if ( getContext().getBootstrapContext().getJpaCompliance().isConverterComplianceEnabled() ) {
+						throw new IllegalStateException( "Convert placed on Embedded attribute must define (sub) attribute-name" );
+					}
+					else {
+						// assume it targets the embedded value itself
+					}
 				}
-				infoMap.put( info.getAttributeName(), info );
+				else {
+					infoMap.put( info.getAttributeName(), info );
+				}
 			}
 		}
 		{
@@ -148,7 +212,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 				for ( Convert convertAnnotation : convertsAnnotation.value() ) {
 					final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, embeddableXClass );
 					if ( StringHelper.isEmpty( info.getAttributeName() ) ) {
-						throw new IllegalStateException( "Convert placed on Embedded attribute must define (sub)attributeName" );
+						throw new IllegalStateException( "Convert placed on Embedded attribute must define (sub) attribute-name" );
 					}
 					infoMap.put( info.getAttributeName(), info );
 				}
@@ -164,12 +228,22 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			final Convert convertAnnotation = embeddableXClass.getAnnotation( Convert.class );
 			if ( convertAnnotation != null ) {
 				final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, embeddableXClass );
+
 				if ( StringHelper.isEmpty( info.getAttributeName() ) ) {
-					throw new IllegalStateException( "@Convert placed on @Embeddable must define attributeName" );
+					//noinspection StatementWithEmptyBody
+					if ( getContext().getBootstrapContext().getJpaCompliance().isConverterComplianceEnabled() ) {
+						throw new IllegalStateException( "Convert placed on Embedded attribute must define (sub) attribute-name" );
+					}
+					else {
+						// assume it targets the embedded value itself
+					}
 				}
-				infoMap.put( info.getAttributeName(), info );
+				else {
+					infoMap.put( info.getAttributeName(), info );
+				}
 			}
 		}
+
 		{
 			// @Converts annotation on the Embeddable class level
 			final Converts convertsAnnotation = embeddableXClass.getAnnotation( Converts.class );
@@ -177,7 +251,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 				for ( Convert convertAnnotation : convertsAnnotation.value() ) {
 					final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, embeddableXClass );
 					if ( StringHelper.isEmpty( info.getAttributeName() ) ) {
-						throw new IllegalStateException( "@Converts placed on @Embeddable must define attributeName" );
+						throw new IllegalStateException( "@Converts placed on @Embeddable must define (sub) attribute-name" );
 					}
 					infoMap.put( info.getAttributeName(), info );
 				}

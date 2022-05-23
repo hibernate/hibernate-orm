@@ -125,14 +125,27 @@ public final class Helper {
 			FrameworkMethod frameworkMethod,
 			TestClass testClass) {
 		final List<S> collection = new LinkedList<S>();
-		final S singularAnn = Helper.locateAnnotation( singularAnnotationClass, frameworkMethod, testClass );
-		if ( singularAnn != null ) {
-			collection.add( singularAnn );
+		final S methodSingularAnn = frameworkMethod.getAnnotation( singularAnnotationClass );
+		if ( methodSingularAnn != null ) {
+			collection.add( methodSingularAnn );
 		}
-		final P pluralAnn = Helper.locateAnnotation( pluralAnnotationClass, frameworkMethod, testClass );
-		if ( pluralAnn != null ) {
+		final S classSingularAnn = testClass.getAnnotation( singularAnnotationClass );
+		if ( classSingularAnn != null ) {
+			collection.add( classSingularAnn );
+		}
+		final P methodPluralAnn = frameworkMethod.getAnnotation( pluralAnnotationClass );
+		if ( methodPluralAnn != null ) {
 			try {
-				collection.addAll( Arrays.asList( (S[]) pluralAnnotationClass.getDeclaredMethods()[0].invoke( pluralAnn ) ) );
+				collection.addAll( Arrays.asList( (S[]) pluralAnnotationClass.getDeclaredMethods()[0].invoke( methodPluralAnn ) ) );
+			}
+			catch (Exception e) {
+				throw new RuntimeException( e );
+			}
+		}
+		final P classPluralAnn = testClass.getAnnotation( pluralAnnotationClass );
+		if ( classPluralAnn != null ) {
+			try {
+				collection.addAll( Arrays.asList( (S[]) pluralAnnotationClass.getDeclaredMethods()[0].invoke( classPluralAnn ) ) );
 			}
 			catch (Exception e) {
 				throw new RuntimeException( e );

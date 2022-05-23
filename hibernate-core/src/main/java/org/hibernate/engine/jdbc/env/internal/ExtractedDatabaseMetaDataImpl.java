@@ -168,7 +168,8 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		private boolean supportsNamedParameters;
 		private boolean supportsScrollableResults;
 		private boolean supportsGetGeneratedKeys;
-		private boolean supportsBatchUpdates;
+		// In absence of DatabaseMetaData batching updates is assumed to be supported
+		private boolean supportsBatchUpdates = true;
 		private boolean supportsDataDefinitionInTransaction;
 		private boolean doesDataDefinitionCauseTransactionCommit;
 		private SQLStateType sqlStateType;

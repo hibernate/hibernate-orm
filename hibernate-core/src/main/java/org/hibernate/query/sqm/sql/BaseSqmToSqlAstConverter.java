@@ -109,6 +109,7 @@ import org.hibernate.query.QueryLogging;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaPath;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -182,6 +183,7 @@ import org.hibernate.query.sqm.tree.expression.SqmByUnit;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
+import org.hibernate.query.sqm.tree.expression.SqmCoalesce;
 import org.hibernate.query.sqm.tree.expression.SqmCollation;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.SqmDistinct;
@@ -5192,6 +5194,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Object visitFormat(SqmFormat sqmFormat) {
 		return new Format( sqmFormat.getLiteralValue() );
+	}
+
+	@Override
+	public Object visitCoalesce(SqmCoalesce<?> sqmCoalesce) {
+		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
+		final QueryEngine queryEngine = sessionFactory.getQueryEngine();
+		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "coalesce" )
+				.generateSqmExpression(
+						sqmCoalesce.getArguments(),
+						null,
+						queryEngine,
+						sessionFactory.getTypeConfiguration()
+				)
+				.accept( this );
 	}
 
 	@Override

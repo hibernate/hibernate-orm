@@ -94,6 +94,8 @@ public class EagerOneToManyOrphanWithIdentityIdTest {
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		Long id;
 
+		String name;
+
 		@OneToMany(mappedBy = "parent", orphanRemoval = true, fetch = FetchType.EAGER)
 		List<Child> children = new ArrayList<>();
 
@@ -125,6 +127,8 @@ public class EagerOneToManyOrphanWithIdentityIdTest {
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		Long id;
+
+		String name;
 
 		@ManyToOne
 		Parent parent;

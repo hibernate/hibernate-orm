@@ -93,6 +93,8 @@ public class LazyOneToManyOrphanWithIdentityIdTest {
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		Long id;
 
+		String name;
+
 		@OneToMany(mappedBy = "parent", orphanRemoval = true)
 		List<Child> children = new ArrayList<>();
 
@@ -124,6 +126,8 @@ public class LazyOneToManyOrphanWithIdentityIdTest {
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		Long id;
+
+		String name;
 
 		@ManyToOne
 		Parent parent;

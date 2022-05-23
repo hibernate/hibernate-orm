@@ -44,7 +44,7 @@ public class NoDatabaseMetaDataTest extends BaseUnitTestCase {
 		assertFalse( extractedDatabaseMetaData.supportsRefCursors() );
 		assertFalse( extractedDatabaseMetaData.supportsScrollableResults() );
 		assertFalse( extractedDatabaseMetaData.supportsGetGeneratedKeys() );
-		assertFalse( extractedDatabaseMetaData.supportsBatchUpdates() );
+		assertTrue( extractedDatabaseMetaData.supportsBatchUpdates() );
 		assertFalse( extractedDatabaseMetaData.supportsDataDefinitionInTransaction() );
 		assertFalse( extractedDatabaseMetaData.doesDataDefinitionCauseTransactionCommit() );
 		assertNull( extractedDatabaseMetaData.getSqlStateType() );
@@ -68,7 +68,7 @@ public class NoDatabaseMetaDataTest extends BaseUnitTestCase {
 		assertFalse( extractedDatabaseMetaData.supportsRefCursors() );
 		assertFalse( extractedDatabaseMetaData.supportsScrollableResults() );
 		assertFalse( extractedDatabaseMetaData.supportsGetGeneratedKeys() );
-		assertFalse( extractedDatabaseMetaData.supportsBatchUpdates() );
+		assertTrue( extractedDatabaseMetaData.supportsBatchUpdates() );
 		assertFalse( extractedDatabaseMetaData.supportsDataDefinitionInTransaction() );
 		assertFalse( extractedDatabaseMetaData.doesDataDefinitionCauseTransactionCommit() );
 		assertNull( extractedDatabaseMetaData.getSqlStateType() );

@@ -10,9 +10,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.hibernate.annotations.OnDeleteAction;
@@ -20,6 +18,7 @@ import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.JaxbLogger;
 import org.hibernate.boot.jaxb.Origin;
+import org.hibernate.boot.jaxb.hbm.spi.Discriminatable;
 import org.hibernate.boot.jaxb.hbm.spi.EntityInfo;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmAnyAssociationType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmArrayType;
@@ -75,10 +74,11 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSetType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSimpleIdType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSynchronizeType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTimestampAttributeType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTypeDefinitionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmUnionSubclassEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmVersionAttributeType;
 import org.hibernate.boot.jaxb.hbm.spi.PluralAttributeInfo;
+import org.hibernate.boot.jaxb.hbm.spi.ResultSetMappingContainer;
+import org.hibernate.boot.jaxb.hbm.spi.ToolingHintContainer;
 import org.hibernate.boot.jaxb.mapping.AttributesContainer;
 import org.hibernate.boot.jaxb.mapping.CollectionAttribute;
 import org.hibernate.boot.jaxb.mapping.JaxbAttributes;
@@ -141,6 +141,7 @@ import org.hibernate.boot.jaxb.mapping.JaxbTransient;
 import org.hibernate.boot.jaxb.mapping.JaxbVersion;
 import org.hibernate.boot.jaxb.mapping.ToOneAttribute;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 
 import org.jboss.logging.Logger;
 
@@ -149,6 +150,7 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.TemporalType;
 import jakarta.xml.bind.JAXBElement;
 
+import static org.hibernate.boot.jaxb.hbm.transform.HbmTransformationLogging.TRANSFORMATION_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
@@ -162,8 +164,6 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
  * representation
  */
 public class HbmXmlTransformer {
-	private static final Logger log = Logger.getLogger( HbmXmlTransformer.class );
-
 	/**
 	 * Main entry into hbm.xml transformation
 	 *
@@ -185,10 +185,6 @@ public class HbmXmlTransformer {
 
 	private final Options options;
 
-	private String defaultHbmAccess;
-	private String defaultHbmCascade;
-	private Boolean defaultHbmLazy;
-
 	public HbmXmlTransformer(JaxbHbmHibernateMapping hbmXmlMapping, Origin origin, Options options) {
 		this.origin = origin;
 		this.hbmXmlMapping = hbmXmlMapping;
@@ -202,21 +198,25 @@ public class HbmXmlTransformer {
 	}
 
 	private JaxbEntityMappings doTransform() {
+		TRANSFORMATION_LOGGER.tracef(
+				"Starting hbm.xml transformation - `%s`",
+				origin
+		);
+
 		final JaxbPersistenceUnitMetadata metadata = new JaxbPersistenceUnitMetadata();
 		ormRoot.setPersistenceUnitMetadata( metadata );
 		metadata.setXmlMappingMetadataComplete( new JaxbEmptyType() );
 
-		defaultHbmAccess = hbmXmlMapping.getDefaultAccess();
-		defaultHbmCascade = hbmXmlMapping.getDefaultCascade();
-		defaultHbmLazy = hbmXmlMapping.isDefaultLazy();
-
-		ormRoot.setPackage( hbmXmlMapping.getPackage() );
-		ormRoot.setSchema( hbmXmlMapping.getSchema() );
-		ormRoot.setCatalog( hbmXmlMapping.getCatalog() );
+		transfer( hbmXmlMapping::getPackage, ormRoot::setPackage );
+		transfer( hbmXmlMapping::getCatalog, ormRoot::setCatalog );
+		transfer( hbmXmlMapping::getSchema, ormRoot::setSchema );
+		transfer( hbmXmlMapping::getDefaultAccess, ormRoot::setAttributeAccessor );
+		transfer( hbmXmlMapping::getDefaultCascade, ormRoot::setDefaultCascade );
+		transfer( hbmXmlMapping::isDefaultLazy, ormRoot::setDefaultLazy );
 
 		transferTypeDefs();
 		transferIdentifierGenerators();
-		transferFilterDefs();
+		transferFilterDefinitions();
 		transferFetchProfiles();
 		transferImports();
 		transferResultSetMappings();
@@ -228,56 +228,64 @@ public class HbmXmlTransformer {
 		return ormRoot;
 	}
 
-	private void logUnhandledContent(String description) {
-		log.warnf(
-				"Transformation of hbm.xml [%s] encountered unsupported content : %s",
+	private <T> void transfer(Supplier<T> source, Consumer<T> target) {
+		target.accept( source.get() );
+	}
+
+	private void handleUnsupportedContent(String description) {
+		handleUnsupported(
+				"Transformation of hbm.xml `%s` encountered unsupported content : %s",
 				origin.toString(),
 				description
 		);
 	}
 
+	private void handleUnsupported(String message, Object... messageArgs) {
+		if ( options.unsupportedFeatureHandling() == UnsupportedFeatureHandling.ERROR ) {
+			throw new UnsupportedOperationException(
+					String.format(
+							Locale.ROOT,
+							message,
+							messageArgs
+					)
+			);
+		}
+
+		final Logger.Level logLevel = options.unsupportedFeatureHandling() == UnsupportedFeatureHandling.WARN
+				? Logger.Level.WARN
+				: Logger.Level.DEBUG;
+		//noinspection deprecation
+		TRANSFORMATION_LOGGER.log(
+				logLevel,
+				message,
+				messageArgs
+		);
+	}
+
 	private void transferTypeDefs() {
-		JaxbLogger.JAXB_LOGGER.tracef(
-				"Starting transformation of type-def mappings in `{}`",
+		if ( hbmXmlMapping.getTypedef().isEmpty() ) {
+			return;
+		}
+
+		handleUnsupported(
+				"Transformation of type-def mapping not supported - `%s`",
 				origin
 		);
-
-		for ( JaxbHbmTypeDefinitionType hbmXmlTypeDef : hbmXmlMapping.getTypedef() ) {
-			JaxbLogger.JAXB_LOGGER.debugf(
-					"Starting transformation of type-def mapping `{}` in `{}`",
-					hbmXmlTypeDef.getName(),
-					origin
-			);
-
-			JaxbLogger.JAXB_LOGGER.infof(
-					"Skipping type-def mapping (`{}` in `{}` as type-defs are not supported in mapping.xml",
-					hbmXmlTypeDef.getName(),
-					origin
-			);
-
-//			final JaxbHbmTypeDef typeDef = new JaxbHbmTypeDef();
-//			ormRoot.getHbmTypeDef().add( typeDef );
-//			typeDef.setName( hbmXmlTypeDef.getName() );
-//			typeDef.setClazz( hbmXmlTypeDef.getClazz() );
-//
-//			for ( JaxbHbmConfigParameterType hbmParam : hbmXmlTypeDef.getConfigParameters() ) {
-//				final JaxbHbmParam param = new JaxbHbmParam();
-//				typeDef.getParam().add( param );
-//				param.setName( hbmParam.getName() );
-//				param.setValue( hbmParam.getValue() );
-//			}
-		}
 	}
 
 	private void transferIdentifierGenerators() {
+		if ( hbmXmlMapping.getIdentifierGenerator().isEmpty() ) {
+			return;
+		}
+
 		JaxbLogger.JAXB_LOGGER.tracef(
-				"Starting transformation of identifier-generator mappings in `{}`",
+				"Starting transformation of identifier-generator mappings in `%s`",
 				origin
 		);
 
 		for ( JaxbHbmIdentifierGeneratorDefinitionType hbmGenerator : hbmXmlMapping.getIdentifierGenerator() ) {
 			JaxbLogger.JAXB_LOGGER.debugf(
-					"Starting transformation of identifier-generator mapping `{}` in `{}`",
+					"STarting transformation of identifier-generator mapping `%s` - `%s`",
 					hbmGenerator.getName(),
 					origin
 			);
@@ -290,15 +298,19 @@ public class HbmXmlTransformer {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void transferFilterDefs() {
+	private void transferFilterDefinitions() {
+		if ( hbmXmlMapping.getFilterDef().isEmpty() ) {
+			return;
+		}
+
 		JaxbLogger.JAXB_LOGGER.tracef(
-				"Starting transformation of filter-def mappings in `{}`",
+				"Starting transformation of filter-def mappings in `%s`",
 				origin
 		);
 
 		for ( JaxbHbmFilterDefinitionType hbmFilterDef : hbmXmlMapping.getFilterDef() ) {
 			JaxbLogger.JAXB_LOGGER.debugf(
-					"Starting transformation of filter-def mapping `{}` in `{}`",
+					"Starting transformation of filter-def mapping `%s` - `%s`",
 					hbmFilterDef.getName(),
 					origin
 			);
@@ -332,14 +344,18 @@ public class HbmXmlTransformer {
 	}
 
 	private void transferImports() {
+		if ( hbmXmlMapping.getImport().isEmpty() ) {
+			return;
+		}
+
 		JaxbLogger.JAXB_LOGGER.tracef(
-				"Starting transformation of import mappings in `{}`",
+				"Starting transformation of import mappings - `%s`",
 				origin
 		);
 
 		for ( JaxbHbmClassRenameType hbmImport : hbmXmlMapping.getImport() ) {
 			JaxbLogger.JAXB_LOGGER.debugf(
-					"Starting transformation of import for `{}` -> `{}` in `{}`",
+					"Starting transformation of import `%s` -> `%s` - `%s`",
 					hbmImport.getClazz(),
 					hbmImport.getRename(),
 					origin
@@ -353,72 +369,84 @@ public class HbmXmlTransformer {
 	}
 
 	private void transferResultSetMappings() {
+		if ( hbmXmlMapping.getResultset().isEmpty() ) {
+			return;
+		}
+
 		JaxbLogger.JAXB_LOGGER.tracef(
-				"Starting transformation of resultset mappings in `{}`",
+				"Starting transformation of resultset mappings - `%s`",
 				origin
 		);
 
 		for ( JaxbHbmResultSetMappingType hbmResultSet : hbmXmlMapping.getResultset() ) {
-			JaxbLogger.JAXB_LOGGER.debugf(
-					"Starting transformation of resultset mapping `{}` in `{}`",
-					hbmResultSet.getName(),
-					origin
-			);
-
-			final String resultMappingName = hbmResultSet.getName();
-
-			final JaxbSqlResultSetMapping mapping = new JaxbSqlResultSetMapping();
-			mapping.setName( resultMappingName );
-			mapping.setDescription( "SQL ResultSet mapping - " + resultMappingName );
-
-			for ( Serializable hbmReturn : hbmResultSet.getValueMappingSources() ) {
-				if ( hbmReturn instanceof JaxbHbmNativeQueryReturnType ) {
-					mapping.getEntityResult().add(
-							transferEntityReturnElement(
-									resultMappingName,
-									(JaxbHbmNativeQueryReturnType) hbmReturn
-							)
-					);
-				}
-				else if ( hbmReturn instanceof JaxbHbmNativeQueryScalarReturnType ) {
-					mapping.getColumnResult().add(
-							transferScalarReturnElement(
-									resultMappingName,
-									(JaxbHbmNativeQueryScalarReturnType) hbmReturn
-							)
-					);
-				}
-				else if ( hbmReturn instanceof JaxbHbmNativeQueryJoinReturnType ) {
-					logUnhandledContent(
-							String.format(
-									"SQL ResultSet mapping [name=%s] contained a <return-join/> element, " +
-											"which is not supported for transformation",
-									resultMappingName
-							)
-					);
-				}
-				else if ( hbmReturn instanceof JaxbHbmNativeQueryCollectionLoadReturnType ) {
-					logUnhandledContent(
-							String.format(
-									"SQL ResultSet mapping [name=%s] contained a <collection-load/> element, " +
-											"which is not supported for transformation",
-									resultMappingName
-							)
-					);
-				}
-				else {
-					// should never happen thanks to XSD
-					logUnhandledContent(
-							String.format(
-									"SQL ResultSet mapping [name=%s] contained an unexpected element type",
-									resultMappingName
-							)
-					);
-				}
-			}
-
+			final JaxbSqlResultSetMapping mapping = transformResultSetMapping( null, hbmResultSet );
 			ormRoot.getSqlResultSetMappings().add( mapping );
 		}
+	}
+
+	private JaxbSqlResultSetMapping transformResultSetMapping(
+			String namePrefix,
+			JaxbHbmResultSetMappingType hbmResultSet) {
+		final String resultMappingName = namePrefix == null
+				? hbmResultSet.getName()
+				: namePrefix + "." + hbmResultSet.getName();
+
+		JaxbLogger.JAXB_LOGGER.debugf(
+				"Starting transformation of resultset mapping `{}` in `{}`",
+				resultMappingName,
+				origin
+		);
+
+		final JaxbSqlResultSetMapping mapping = new JaxbSqlResultSetMapping();
+		mapping.setName( resultMappingName );
+		mapping.setDescription( "SQL ResultSet mapping - " + resultMappingName );
+
+		for ( Serializable hbmReturn : hbmResultSet.getValueMappingSources() ) {
+			if ( hbmReturn instanceof JaxbHbmNativeQueryReturnType ) {
+				mapping.getEntityResult().add(
+						transferEntityReturnElement(
+								resultMappingName,
+								(JaxbHbmNativeQueryReturnType) hbmReturn
+						)
+				);
+			}
+			else if ( hbmReturn instanceof JaxbHbmNativeQueryScalarReturnType ) {
+				mapping.getColumnResult().add(
+						transferScalarReturnElement(
+								resultMappingName,
+								(JaxbHbmNativeQueryScalarReturnType) hbmReturn
+						)
+				);
+			}
+			else if ( hbmReturn instanceof JaxbHbmNativeQueryJoinReturnType ) {
+				handleUnsupportedContent(
+						String.format(
+								"SQL ResultSet mapping [name=%s] contained a <return-join/> element, " +
+										"which is not supported for transformation",
+								resultMappingName
+						)
+				);
+			}
+			else if ( hbmReturn instanceof JaxbHbmNativeQueryCollectionLoadReturnType ) {
+				handleUnsupportedContent(
+						String.format(
+								"SQL ResultSet mapping [name=%s] contained a <collection-load/> element, " +
+										"which is not supported for transformation",
+								resultMappingName
+						)
+				);
+			}
+			else {
+				// should never happen thanks to XSD
+				handleUnsupportedContent(
+						String.format(
+								"SQL ResultSet mapping [name=%s] contained an unexpected element type",
+								resultMappingName
+						)
+				);
+			}
+		}
+		return mapping;
 	}
 
 	private JaxbEntityResult transferEntityReturnElement(
@@ -439,7 +467,7 @@ public class HbmXmlTransformer {
 			}
 
 			if ( columns.size() > 1 ) {
-				logUnhandledContent(
+				handleUnsupportedContent(
 						String.format(
 								"SQL ResultSet mapping [name=%s] contained a <return-property name='%s'/> element " +
 										"declaring multiple 1 column mapping, which is not supported for transformation;" +
@@ -464,7 +492,7 @@ public class HbmXmlTransformer {
 		final JaxbColumnResult columnResult = new JaxbColumnResult();
 		columnResult.setName( hbmReturn.getColumn() );
 		columnResult.setClazz( hbmReturn.getType() );
-		logUnhandledContent(
+		handleUnsupportedContent(
 				String.format(
 						"SQL ResultSet mapping [name=%s] contained a <return-scalar column='%s'/> element; " +
 								"transforming type->class likely requires manual adjustment",
@@ -476,6 +504,10 @@ public class HbmXmlTransformer {
 	}
 
 	private void transferFetchProfiles() {
+		if ( hbmXmlMapping.getFetchProfile().isEmpty() ) {
+			return;
+		}
+
 		JaxbLogger.JAXB_LOGGER.tracef(
 				"Starting transformation of fetch-profile mappings in `{}`",
 				origin
@@ -506,17 +538,21 @@ public class HbmXmlTransformer {
 	}
 
 	private void transferNamedQueries() {
+		if ( hbmXmlMapping.getQuery().isEmpty() ) {
+			return;
+		}
+
 		JaxbLogger.JAXB_LOGGER.tracef(
 				"Starting transformation of named-query mappings in `{}`",
 				origin
 		);
 
 		for ( JaxbHbmNamedQueryType hbmQuery : hbmXmlMapping.getQuery() ) {
-			ormRoot.getNamedQueries().add( transferNamedQuery( hbmQuery, hbmQuery.getName() ) );
+			ormRoot.getNamedQueries().add( transformNamedQuery( hbmQuery, hbmQuery.getName() ) );
 		}
 	}
 
-	private JaxbNamedQuery transferNamedQuery(JaxbHbmNamedQueryType hbmQuery, String name) {
+	private JaxbNamedQuery transformNamedQuery(JaxbHbmNamedQueryType hbmQuery, String name) {
 		JaxbLogger.JAXB_LOGGER.debugf(
 				"Starting transformation of named-query mapping `{}` in `{}`",
 				name,
@@ -555,17 +591,21 @@ public class HbmXmlTransformer {
 	}
 
 	private void transferNamedNativeQueries() {
+		if ( hbmXmlMapping.getSqlQuery().isEmpty() ) {
+			return;
+		}
+
 		JaxbLogger.JAXB_LOGGER.tracef(
 				"Starting transformation of (named) query mappings in `{}`",
 				origin
 		);
 
 		for ( JaxbHbmNamedNativeQueryType hbmQuery : hbmXmlMapping.getSqlQuery() ) {
-			ormRoot.getNamedNativeQueries().add( transferNamedNativeQuery( hbmQuery, hbmQuery.getName() ) );
+			ormRoot.getNamedNativeQueries().add( transformNamedNativeQuery( hbmQuery, hbmQuery.getName() ) );
 		}
 	}
 
-	private JaxbNamedNativeQuery transferNamedNativeQuery(JaxbHbmNamedNativeQueryType hbmQuery, String queryName) {
+	private JaxbNamedNativeQuery transformNamedNativeQuery(JaxbHbmNamedNativeQueryType hbmQuery, String queryName) {
 		JaxbLogger.JAXB_LOGGER.debugf(
 				"Starting transformation of (named) query mapping `{}` in `{}`",
 				queryName,
@@ -645,7 +685,7 @@ public class HbmXmlTransformer {
 					);
 				}
 				else if ( element instanceof JaxbHbmNativeQueryCollectionLoadReturnType ) {
-					logUnhandledContent(
+					handleUnsupportedContent(
 							String.format(
 									"Named native query [name=%s] contained a <collection-load/> element, " +
 											"which is not supported for transformation",
@@ -654,7 +694,7 @@ public class HbmXmlTransformer {
 					);
 				}
 				else if ( element instanceof JaxbHbmNativeQueryJoinReturnType ) {
-					logUnhandledContent(
+					handleUnsupportedContent(
 							String.format(
 									"Named native query [name=%s] contained a <return-join/> element, " +
 											"which is not supported for transformation",
@@ -670,7 +710,7 @@ public class HbmXmlTransformer {
 				}
 				else {
 					// should never happen thanks to XSD
-					logUnhandledContent(
+					handleUnsupportedContent(
 							String.format(
 									"Named native query [name=%s] contained an unexpected element type",
 									queryName
@@ -684,6 +724,10 @@ public class HbmXmlTransformer {
 	}
 
 	private void transferDatabaseObjects() {
+		if ( hbmXmlMapping.getDatabaseObject().isEmpty() ) {
+			return;
+		}
+
 		JaxbLogger.JAXB_LOGGER.tracef(
 				"Starting transformation of database-object mappings in `{}`",
 				origin
@@ -691,7 +735,7 @@ public class HbmXmlTransformer {
 
 
 		for ( JaxbHbmAuxiliaryDatabaseObjectType hbmDatabaseObject : hbmXmlMapping.getDatabaseObject() ) {
-			// NOTE: database-object does not define a name nor a good "identifier" for logging
+			// NOTE: database-object does not define a name nor a good "identifier" for logging (exportable)
 
 			final JaxbDatabaseObject databaseObject = new JaxbDatabaseObject();
 			ormRoot.getDatabaseObjects().add( databaseObject );
@@ -726,27 +770,37 @@ public class HbmXmlTransformer {
 		for ( JaxbHbmDiscriminatorSubclassEntityType hbmSubclass : hbmXmlMapping.getSubclass() ) {
 			final JaxbEntity entity = new JaxbEntity();
 			ormRoot.getEntities().add( entity );
-
 			transferDiscriminatorSubclass( hbmSubclass, entity );
 		}
 
 		for ( JaxbHbmJoinedSubclassEntityType hbmSubclass : hbmXmlMapping.getJoinedSubclass() ) {
 			final JaxbEntity entity = new JaxbEntity();
 			ormRoot.getEntities().add( entity );
-
 			transferJoinedSubclass( hbmSubclass, entity );
 		}
 
 		for ( JaxbHbmUnionSubclassEntityType hbmSubclass : hbmXmlMapping.getUnionSubclass() ) {
 			final JaxbEntity entity = new JaxbEntity();
 			ormRoot.getEntities().add( entity );
-
 			transferUnionSubclass( hbmSubclass, entity );
 		}
 
 	}
 
+	private String extractEntityName(EntityInfo entityInfo) {
+		if ( entityInfo.getEntityName() != null ) {
+			return entityInfo.getEntityName();
+		}
+		return entityInfo.getName();
+	}
+
 	private void transferRootEntity(JaxbHbmRootEntityType hbmClass, JaxbEntity entity) {
+		TRANSFORMATION_LOGGER.debugf(
+				"Starting transformation of root entity `%s` - `%s`",
+				extractEntityName( hbmClass ),
+				origin
+		);
+
 		transferBaseEntityInformation( hbmClass, entity );
 
 		entity.setMutable( hbmClass.isMutable() );
@@ -758,7 +812,7 @@ public class HbmXmlTransformer {
 		entity.getTable().setComment( hbmClass.getComment() );
 		entity.getTable().setCheck( hbmClass.getCheck() );
 		entity.setTableExpression( hbmClass.getSubselect() );
-		
+
 		for ( JaxbHbmSynchronizeType hbmSync : hbmClass.getSynchronize() ) {
 			final JaxbSynchronizedTable sync = new JaxbSynchronizedTable();
 			sync.setTable( hbmSync.getTable() );
@@ -794,6 +848,16 @@ public class HbmXmlTransformer {
 			if ( options.unsupportedFeatureHandling() == UnsupportedFeatureHandling.ERROR ) {
 				throw new MappingException( "HBM transformation: Tuplizer not supported", origin );
 			}
+
+			TRANSFORMATION_LOGGER.logf(
+					options.unsupportedFeatureHandling() == UnsupportedFeatureHandling.WARN
+							? Logger.Level.WARN
+							: Logger.Level.DEBUG,
+					"Transformation of <tuplizer/> is not supported - `%s`",
+					origin
+			);
+
+			return;
 		}
 
 		entity.setOptimisticLock( hbmClass.getOptimisticLock() );
@@ -803,16 +867,16 @@ public class HbmXmlTransformer {
 		entity.setPolymorphism( convert( hbmClass.getPolymorphism() ) );
 
 		if ( hbmClass.getCache() != null ) {
-			transferEntityCaching( hbmClass, entity );
+			transformEntityCaching( hbmClass, entity );
 		}
 		
 		for ( JaxbHbmNamedQueryType hbmQuery : hbmClass.getQuery() ) {
-			entity.getNamedQuery().add( transferNamedQuery( hbmQuery, entity.getName() + "." + hbmQuery.getName() ) );
+			entity.getNamedQuery().add( transformNamedQuery( hbmQuery, entity.getName() + "." + hbmQuery.getName() ) );
 		}
 		
 		for ( JaxbHbmNamedNativeQueryType hbmQuery : hbmClass.getSqlQuery() ) {
 			entity.getNamedNativeQuery().add(
-					transferNamedNativeQuery(
+					transformNamedNativeQuery(
 							hbmQuery,
 							entity.getName() + "." + hbmQuery.getName()
 					)
@@ -856,17 +920,17 @@ public class HbmXmlTransformer {
 		for ( JaxbHbmNamedQueryType hbmQuery : hbmClass.getQuery() ) {
 			// Tests implied this was the case...
 			final String name = hbmClass.getName() + "." + hbmQuery.getName();
-			ormRoot.getNamedQueries().add( transferNamedQuery( hbmQuery, name ) );
+			ormRoot.getNamedQueries().add( transformNamedQuery( hbmQuery, name ) );
 		}
 
 		for ( JaxbHbmNamedNativeQueryType hbmQuery : hbmClass.getSqlQuery() ) {
 			// Tests implied this was the case...
 			final String name = hbmClass.getName() + "." + hbmQuery.getName();
-			ormRoot.getNamedNativeQueries().add( transferNamedNativeQuery( hbmQuery, name ) );
+			ormRoot.getNamedNativeQueries().add( transformNamedNativeQuery( hbmQuery, name ) );
 		}
 	}
 
-	private void transferEntityCaching(JaxbHbmRootEntityType hbmClass, JaxbEntity entity) {
+	private void transformEntityCaching(JaxbHbmRootEntityType hbmClass, JaxbEntity entity) {
 		entity.setCaching( new JaxbCaching() );
 		entity.getCaching().setRegion( hbmClass.getCache().getRegion() );
 		entity.getCaching().setAccess( hbmClass.getCache().getUsage() );
@@ -896,54 +960,85 @@ public class HbmXmlTransformer {
 		return polymorphism == JaxbHbmPolymorphismEnum.EXPLICIT ? PolymorphismType.EXPLICIT : PolymorphismType.IMPLICIT;
 	}
 
-	private static <T> void transferIfSet(Supplier<T> source, Consumer<T> target) {
-		transferIfSet( source, target, Objects::nonNull );
-	}
-
-	private static <T> void transferIfSet(Supplier<T> source, Consumer<T> target, Function<T,Boolean> valueChecker) {
-		final T value = source.get();
-		if ( valueChecker.apply( value ) ) {
-			target.accept( value );
-		}
-	}
-
 	private void transferBaseEntityInformation(JaxbHbmEntityBaseDefinition hbmClass, JaxbEntity entity) {
 		entity.setMetadataComplete( true );
-		entity.setName( hbmClass.getEntityName() );
-		entity.setClazz( hbmClass.getName() );
-		entity.setAbstract( hbmClass.isAbstract() );
-		entity.setLazy( hbmClass.isLazy() );
-		entity.setProxy( hbmClass.getProxy() );
 
-		entity.setBatchSize( hbmClass.getBatchSize() );
+		transfer( hbmClass::getEntityName, entity::setName );
+		transfer( hbmClass::getName, entity::setClazz );
 
-		entity.setDynamicInsert( hbmClass.isDynamicInsert() );
-		entity.setDynamicUpdate( hbmClass.isDynamicUpdate() );
-		entity.setSelectBeforeUpdate( hbmClass.isSelectBeforeUpdate() );
+		if ( hbmClass instanceof Discriminatable ) {
+			final Discriminatable discriminatable = (Discriminatable) hbmClass;
+			transfer( discriminatable::getDiscriminatorValue, entity::setDiscriminatorValue );
+		}
+
+		// todo (6.1) : what to do with abstract? add abstract attribute to mapping xsd, or handle as mapped-superclass?
+		if ( hbmClass.isAbstract() != null ) {
+			handleUnsupported(
+					"Transformation of abstract entity mappings is not supported : `%s` - `%s`",
+					extractEntityName( hbmClass ),
+					origin
+			);
+			return;
+		}
 
 		if ( hbmClass.getPersister() != null ) {
-			if ( options.unsupportedFeatureHandling() == UnsupportedFeatureHandling.ERROR ) {
-				throw new UnsupportedOperationException(
-						String.format(
-								Locale.ROOT,
-								"Transforming <persister/> mappings not supported for `%s` in `%s`",
-								entity.getName(),
-								origin
-						)
-				);
-			}
+			handleUnsupported(
+					"Transforming <persister/> mappings not supported - `%s` in `%s`",
+					entity.getName(),
+					origin
+			);
+			return;
+		}
+
+		transfer( hbmClass::isLazy, entity::setLazy );
+		transfer( hbmClass::getProxy, entity::setProxy );
+
+		transfer( hbmClass::getBatchSize, entity::setBatchSize );
+
+		transfer( hbmClass::isDynamicInsert, entity::setDynamicInsert );
+		transfer( hbmClass::isDynamicUpdate, entity::setDynamicUpdate );
+		transfer( hbmClass::isSelectBeforeUpdate, entity::setSelectBeforeUpdate );
+
+		transferToolingHints( hbmClass );
+		transferResultSetMappings( entity.getName(), hbmClass );
+	}
+
+	private void transferResultSetMappings(String namePrefix, ResultSetMappingContainer container) {
+		final List<JaxbHbmResultSetMappingType> resultSetMappings = container.getResultset();
+		resultSetMappings.forEach( (hbmMapping) -> {
+					final JaxbSqlResultSetMapping mapping = transformResultSetMapping( namePrefix, hbmMapping );
+					ormRoot.getSqlResultSetMappings().add( mapping );
+		} );
+	}
+
+	private void transferToolingHints(ToolingHintContainer container) {
+		if ( CollectionHelper.isNotEmpty( container.getToolingHints() ) ) {
+			handleUnsupported(
+					"Transformation of <meta/> (tooling hint) is not supported - `%s`",
+					origin
+			);
 		}
 	}
 
 	private void transferDiscriminatorSubclass(JaxbHbmDiscriminatorSubclassEntityType hbmSubclass, JaxbEntity subclassEntity) {
+		TRANSFORMATION_LOGGER.debugf(
+				"Starting transformation of subclass entity `%` - `%s`",
+				extractEntityName( hbmSubclass ),
+				origin
+		);
+
 		transferBaseEntityInformation( hbmSubclass, subclassEntity );
-		if ( !StringHelper.isEmpty( hbmSubclass.getDiscriminatorValue() ) ) {
-			subclassEntity.setDiscriminatorValue( hbmSubclass.getDiscriminatorValue() );
-		}
+
 		transferEntityElementAttributes( hbmSubclass, subclassEntity );
 	}
 
 	private void transferJoinedSubclass(JaxbHbmJoinedSubclassEntityType hbmSubclass, JaxbEntity subclassEntity) {
+		TRANSFORMATION_LOGGER.debugf(
+				"Starting transformation of joined-subclass entity `%` - `%s`",
+				extractEntityName( hbmSubclass ),
+				origin
+		);
+
 		transferBaseEntityInformation( hbmSubclass, subclassEntity );
 		transferEntityElementAttributes( hbmSubclass, subclassEntity );
 
@@ -1136,7 +1231,7 @@ public class HbmXmlTransformer {
 			}
 			else if ( hbmAttributeMapping instanceof JaxbHbmDynamicComponentType ) {
 				final String name = ( (JaxbHbmDynamicComponentType) hbmAttributeMapping ).getName();
-				logUnhandledContent(
+				handleUnsupportedContent(
 						String.format(
 								Locale.ROOT,
 								"<dynamic-component/> mappings not supported for transformation [name=%s]",
@@ -1287,6 +1382,7 @@ public class HbmXmlTransformer {
 					}
 				},
 				// todo : need to push the table name down into this method to pass along
+				// todo : need to push the table name down into this method to pass along
 				null
 		);
 	}
@@ -1310,9 +1406,10 @@ public class HbmXmlTransformer {
 
 	private void transformOneToOne(JaxbHbmOneToOneType hbmOneToOne, AttributesContainer attributes) {
 		if ( !hbmOneToOne.getFormula().isEmpty() || !StringHelper.isEmpty( hbmOneToOne.getFormulaAttribute() ) ) {
-			if ( options.unsupportedFeatureHandling() == UnsupportedFeatureHandling.ERROR ) {
-				throw new MappingException( "HBM transformation: Formulas within one-to-ones are not yet supported.", origin );
-			}
+			handleUnsupported(
+					"Transformation of formulas within one-to-ones are not supported - `%s`",
+					origin
+			);
 			return;
 		}
 
@@ -1382,7 +1479,7 @@ public class HbmXmlTransformer {
 
 					@Override
 					public void addFormula(String formula) {
-						logUnhandledContent(
+						handleUnsupportedContent(
 								"<many-to-one/> [name=" + hbmM2O.getName() + "] specified formula [" + formula +
 										"] which is not supported for transformation; skipping"
 						);
@@ -1544,7 +1641,7 @@ public class HbmXmlTransformer {
 
 					@Override
 					public void addFormula(String formula) {
-						logUnhandledContent(
+						handleUnsupportedContent(
 								"formula as part of element-collection key is not supported for transformation; skipping"
 						);
 					}
@@ -1555,7 +1652,7 @@ public class HbmXmlTransformer {
 		);
 
 		if ( isNotEmpty( source.getKey().getPropertyRef() ) ) {
-			logUnhandledContent(
+			handleUnsupportedContent(
 					"Foreign-key (<key/>) for persistent collection (name=" + source.getName() +
 							") specified property-ref which is not supported for transformation; " +
 							"transformed <join-column/> will need manual adjustment of referenced-column-name"
@@ -1646,9 +1743,10 @@ public class HbmXmlTransformer {
 		}
 		else if ( source.getMapKey() != null ) {
 			if ( ! StringHelper.isEmpty( source.getMapKey().getFormulaAttribute() ) ) {
-				if ( options.unsupportedFeatureHandling() == UnsupportedFeatureHandling.ERROR ) {
-					throw new MappingException( "HBM transformation: Formulas within map keys are not yet supported.", origin );
-				}
+				handleUnsupported(
+						"Transformation of formulas within map-keys are not supported - `%s`",
+						origin
+				);
 				return;
 			}
 
@@ -1994,7 +2092,7 @@ public class HbmXmlTransformer {
 					);
 				}
 				else if ( attributeMapping instanceof JaxbHbmDynamicComponentType ) {
-					logUnhandledContent(
+					handleUnsupportedContent(
 							"<dynamic-component/> mappings not supported; skipping"
 					);
 				}
@@ -2044,10 +2142,13 @@ public class HbmXmlTransformer {
 	}
 
 	private void transferUnionSubclass(JaxbHbmUnionSubclassEntityType hbmSubclass, JaxbEntity subclassEntity) {
-		if ( !StringHelper.isEmpty( hbmSubclass.getProxy() ) ) {
-			// TODO
-			throw new MappingException( "HBM transformation: proxy attributes not yet supported", origin );
-		}
+		TRANSFORMATION_LOGGER.debugf(
+				"Starting transformation of union-subclass entity `%` - `%s`",
+				extractEntityName( hbmSubclass ),
+				origin
+		);
+
+		subclassEntity.setProxy( hbmSubclass.getProxy() );
 		transferBaseEntityInformation( hbmSubclass, subclassEntity );
 		transferEntityElementAttributes( hbmSubclass, subclassEntity );
 

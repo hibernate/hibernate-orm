@@ -13,16 +13,16 @@ import java.util.List;
  *
  * @author Steve Ebersole
  */
-public interface EntityInfo extends ToolingHintContainer {
+public interface EntityInfo extends ToolingHintContainer, ResultSetMappingContainer {
 	String getName();
 
 	String getEntityName();
 
+	String getProxy();
+
 	Boolean isAbstract();
 
 	Boolean isLazy();
-
-	String getProxy();
 
 	int getBatchSize();
 

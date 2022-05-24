@@ -84,11 +84,6 @@
 		</jaxb:bindings>
 
 
-
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<!-- Binding model customizations -->
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-
         <jaxb:bindings node="//xsd:element[@name='hibernate-mapping']/xsd:complexType">
         	<inheritance:implements>org.hibernate.boot.jaxb.spi.BindableMappingDescriptor</inheritance:implements>
 		</jaxb:bindings>
@@ -123,6 +118,7 @@
 			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.TableInformationContainer</inheritance:implements>
 			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.SecondaryTableContainer</inheritance:implements>
 			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.ToolingHintContainer</inheritance:implements>
+			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.Discriminatable</inheritance:implements>
 		</jaxb:bindings>
 		<jaxb:bindings node="//xsd:complexType[@name='RootEntityType']//xsd:attribute[@name='subselect']">
 			<jaxb:property name="subselectAttribute"/>
@@ -132,12 +128,14 @@
 			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.SubEntityInfo</inheritance:implements>
 			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.SecondaryTableContainer</inheritance:implements>
 			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.ToolingHintContainer</inheritance:implements>
+			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.Discriminatable</inheritance:implements>
 		</jaxb:bindings>
 
 		<jaxb:bindings node="//xsd:complexType[@name='JoinedSubclassEntityType']">
 			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.SubEntityInfo</inheritance:implements>
 			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.TableInformationContainer</inheritance:implements>
 			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.ToolingHintContainer</inheritance:implements>
+			<inheritance:implements>org.hibernate.boot.jaxb.hbm.spi.Discriminatable</inheritance:implements>
 		</jaxb:bindings>
 
 		<jaxb:bindings node="//xsd:complexType[@name='UnionSubclassEntityType']">

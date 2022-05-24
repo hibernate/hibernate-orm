@@ -312,11 +312,9 @@
             <xsd:element name="id-class" type="orm:id-class" minOccurs="0"/>
 
             <xsd:element name="inheritance" type="orm:inheritance" minOccurs="0"/>
-            <!-- hbm: is the entity considered abstract -->
-            <xsd:element name="abstract" type="xsd:boolean" minOccurs="0" />
             <!-- hbm : name the interface/class to act as the proxy contract for this entity  : @Proxy -->
             <xsd:element name="proxy" type="xsd:string" minOccurs="0" />
-            <!-- hbm : used in query language to control how inherited "abstract schema" references are handled : @Polymorphism -->
+            <!-- hbm : used in query language to control how inherited "domain schema" references are handled : @Polymorphism -->
             <xsd:element name="polymorphism" type="orm:polymorphism-type" default="implicit" minOccurs="0" />
 
             <xsd:element name="discriminator-value" type="orm:discriminator-value" minOccurs="0"/>
@@ -724,6 +722,7 @@
             <xsd:element name="attributes" type="orm:embeddable-attributes" minOccurs="0"/>
         </xsd:sequence>
         <xsd:attribute name="class" type="xsd:string" use="required"/>
+        <xsd:attribute name="instantiator" type="xsd:string"/>
         <xsd:attribute name="access" type="orm:access-type"/>
         <xsd:attribute name="metadata-complete" type="xsd:boolean"/>
     </xsd:complexType>

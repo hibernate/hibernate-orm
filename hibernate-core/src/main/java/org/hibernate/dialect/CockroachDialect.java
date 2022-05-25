@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TimeZone;
+
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.LockMode;
@@ -21,6 +22,8 @@ import org.hibernate.LockOptions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.FormatFunction;
+import org.hibernate.dialect.identity.CockroachDBIdentityColumnSupport;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
@@ -92,9 +95,10 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  */
 public class CockroachDialect extends Dialect {
 
+	private static final CockroachDBIdentityColumnSupport IDENTITY_COLUMN_SUPPORT = new CockroachDBIdentityColumnSupport();
 	// KNOWN LIMITATIONS:
-
 	// * no support for java.sql.Clob
+
 
 	private final PostgreSQLDriverKind driverKind;
 
@@ -315,6 +319,11 @@ public class CockroachDialect extends Dialect {
 	@Override
 	public boolean qualifyIndexName() {
 		return false;
+	}
+
+	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return IDENTITY_COLUMN_SUPPORT;
 	}
 
 	@Override

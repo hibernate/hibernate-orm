@@ -229,7 +229,10 @@ public class HbmXmlTransformer {
 	}
 
 	private <T> void transfer(Supplier<T> source, Consumer<T> target) {
-		target.accept( source.get() );
+		final T value = source.get();
+		if ( value != null ) {
+			target.accept( value );
+		}
 	}
 
 	private void handleUnsupportedContent(String description) {
@@ -808,15 +811,14 @@ public class HbmXmlTransformer {
 		if ( hbmClass.getTable() != null ) {
 			entity.setTable( new JaxbTable() );
 			transfer( hbmClass::getTable, entity.getTable()::setName );
+			transfer( hbmClass::getCatalog, entity.getTable()::setCatalog );
+			transfer( hbmClass::getSchema, entity.getTable()::setSchema );
+			transfer( hbmClass::getComment, entity.getTable()::setComment );
+			transfer( hbmClass::getCheck, entity.getTable()::setCheck );
 		}
 		else {
 			transfer( hbmClass::getSubselect, entity::setTableExpression );
 		}
-
-		transfer( hbmClass::getCatalog, entity.getTable()::setCatalog );
-		transfer( hbmClass::getSchema, entity.getTable()::setSchema );
-		transfer( hbmClass::getComment, entity.getTable()::setComment );
-		transfer( hbmClass::getCheck, entity.getTable()::setCheck );
 
 		for ( JaxbHbmSynchronizeType hbmSync : hbmClass.getSynchronize() ) {
 			final JaxbSynchronizedTable sync = new JaxbSynchronizedTable();

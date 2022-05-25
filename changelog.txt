@@ -124,6 +124,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/32033
     * [HHH-14932] - Spatial support for PostgreSQL 10+ uses invalid WKB dialect
     * [HHH-13694] - Numeric Overflow Exception when retrieving the Meta-data for sequences from Oracle Database
     * [HHH-10463] - Coalesce does not handle NULL values properly for PostgreSQL 
+    * [HHH-15090] - Access to public field with extended bytecode enhancement returns null for entity lazy-loaded from polymorphic toOne association
 
 ** Improvement
     * [HHH-15106] -  fk() SQM function

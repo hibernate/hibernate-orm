@@ -19,6 +19,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.exception.ConstraintViolationException;
@@ -30,6 +31,7 @@ import org.hibernate.query.Query;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -81,6 +83,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = CockroachDialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/41943")
 	public void testUpdateWithSubquery() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -518,7 +521,8 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature( value = DialectChecks.SupportsTemporaryTableIdentity.class, comment = "The use of the native generator leads to using identity which also needs to be supported on temporary tables")
+	@SkipForDialect(value = CockroachDialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/75101")
+	@RequiresDialectFeature(value = DialectChecks.SupportsTemporaryTableIdentity.class, comment = "The use of the native generator leads to using identity which also needs to be supported on temporary tables")
 	public void testInsertIntoSuperclassPropertiesFails() {
 		TestData data = new TestData();
 		data.prepare();

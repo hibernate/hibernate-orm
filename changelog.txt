@@ -69,6 +69,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/32031
     * [HHH-15051] - Association with id class misses property mapping for target FK attributes
     * [HHH-14932] - Spatial support for PostgreSQL 10+ uses invalid WKB dialect
     * [HHH-14817] - hibernate-core-jakarta source jar does not contain source
+    * [HHH-15090] - Access to public field with extended bytecode enhancement returns null for entity lazy-loaded from polymorphic toOne association
 
 ** Improvement
     * [HHH-15106] -  fk() SQM function

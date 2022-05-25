@@ -8,6 +8,7 @@ package org.hibernate.dialect;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
@@ -52,10 +53,14 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
+import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.InstantAsTimestampWithTimeZoneJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
+import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
@@ -98,7 +103,6 @@ public class CockroachDialect extends Dialect {
 	private static final CockroachDBIdentityColumnSupport IDENTITY_COLUMN_SUPPORT = new CockroachDBIdentityColumnSupport();
 	// KNOWN LIMITATIONS:
 	// * no support for java.sql.Clob
-
 
 	private final PostgreSQLDriverKind driverKind;
 
@@ -235,6 +239,10 @@ public class CockroachDialect extends Dialect {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonJdbcType.INSTANCE );
 			}
 		}
+
+		// Force Blob binding to byte[] for CockroachDB
+		jdbcTypeRegistry.addDescriptor( Types.BLOB, VarbinaryJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( Types.CLOB, VarcharJdbcType.INSTANCE );
 
 		// The next two contributions are the same as for Postgresql
 		typeContributions.contributeJdbcType( ObjectNullAsBinaryTypeJdbcType.INSTANCE );
@@ -390,6 +398,11 @@ public class CockroachDialect extends Dialect {
 	@Override
 	public String getQuerySequencesString() {
 		return "select sequence_name,sequence_schema,sequence_catalog,start_value,minimum_value,maximum_value,increment from information_schema.sequences";
+	}
+
+	@Override
+	public boolean supportsLobValueChangePropagation() {
+		return false;
 	}
 
 	@Override

@@ -14,6 +14,7 @@ import org.jboss.logging.Logger;
 
 import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
  * Centralize logging for SQL statements.
@@ -138,10 +139,7 @@ public class SqlStatementLogger {
 	 * @param startTimeNanos Start time in nanoseconds.
 	 */
 	public void logSlowQuery(Statement statement, long startTimeNanos) {
-		if ( logSlowQuery < 1 ) {
-			return;
-		}
-		logSlowQuery( statement.toString(), startTimeNanos );
+		logSlowQuery( statement::toString, startTimeNanos );
 	}
 
 	/**
@@ -152,6 +150,15 @@ public class SqlStatementLogger {
 	 */
 	@AllowSysOut
 	public void logSlowQuery(String sql, long startTimeNanos) {
+		logSlowQuery( () -> sql, startTimeNanos );
+	}
+
+	/**
+	 * @param sqlSupplier Supplier to generate The SQL query.
+	 * @param startTimeNanos Start time in nanoseconds.
+	 */
+	@AllowSysOut
+	private void logSlowQuery(Supplier<String> sqlSupplier, long startTimeNanos) {
 		if ( logSlowQuery < 1 ) {
 			return;
 		}
@@ -162,7 +169,7 @@ public class SqlStatementLogger {
 		long queryExecutionMillis = TimeUnit.NANOSECONDS.toMillis( System.nanoTime() - startTimeNanos );
 
 		if ( queryExecutionMillis > logSlowQuery ) {
-			String logData = "SlowQuery: " + queryExecutionMillis + " milliseconds. SQL: '" + sql + "'";
+			String logData = "SlowQuery: " + queryExecutionMillis + " milliseconds. SQL: '" + sqlSupplier.get() + "'";
 			LOG_SLOW.info( logData );
 			if ( logToStdout ) {
 				System.out.println( logData );

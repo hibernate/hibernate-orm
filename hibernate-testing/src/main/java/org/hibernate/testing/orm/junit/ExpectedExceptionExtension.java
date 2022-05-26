@@ -6,8 +6,10 @@
  */
 package org.hibernate.testing.orm.junit;
 
+import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
+import org.junit.jupiter.api.extension.TestInstancePostProcessor;
 
 import org.jboss.logging.Logger;
 
@@ -20,8 +22,13 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class ExpectedExceptionExtension implements TestExecutionExceptionHandler {
+public class ExpectedExceptionExtension implements TestInstancePostProcessor, TestExecutionExceptionHandler, AfterAllCallback {
 	private static final Logger log = Logger.getLogger( ExpectedExceptionExtension.class );
+
+	@Override
+	public void postProcessTestInstance(Object testInstance, ExtensionContext context) {
+		JUnitHelper.discoverCallbacks( context, getClass(), ExpectedExceptionCallback.class );
+	}
 
 	@Override
 	public void handleTestExecutionException(
@@ -29,6 +36,8 @@ public class ExpectedExceptionExtension implements TestExecutionExceptionHandler
 			Throwable throwable) throws Throwable {
 		final ExpectedException annotation = context.getRequiredTestMethod().getAnnotation( ExpectedException.class );
 		if ( annotation != null ) {
+			JUnitHelper.invokeCallbacks( context, getClass() );
+
 			if ( annotation.value().isInstance( throwable ) ) {
 				log.debugf(
 						"Test [%s] threw exception [%s] which matched @ExpectedException : swallowing exception",
@@ -40,5 +49,10 @@ public class ExpectedExceptionExtension implements TestExecutionExceptionHandler
 		}
 
 		throw throwable;
+	}
+
+	@Override
+	public void afterAll(ExtensionContext context) {
+		JUnitHelper.cleanupCallbacks( context, getClass() );
 	}
 }

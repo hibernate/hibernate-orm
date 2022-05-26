@@ -8,7 +8,6 @@ package org.hibernate.userguide.hql;
 
 import org.hibernate.query.Query;
 import org.hibernate.query.SelectionQuery;
-import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.userguide.model.Account;
 import org.hibernate.userguide.model.Call;
 import org.hibernate.userguide.model.CreditCardPayment;
@@ -18,6 +17,7 @@ import org.hibernate.userguide.model.WireTransferPayment;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.FailureExpectedCallback;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -46,6 +46,13 @@ public class SelectionQueryExampleTests {
 			// can be validated while creating the SelectionQuery
 			SelectionQuery<?> badQuery = session.createSelectionQuery( "delete Person" );
 			//end::example-hql-selection-query[]
+		} );
+	}
+
+	@FailureExpectedCallback
+	public void cleanTestData(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			session.createMutationQuery( "delete Person" ).executeUpdate();
 		} );
 	}
 

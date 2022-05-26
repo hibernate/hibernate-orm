@@ -29,9 +29,7 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 
-import org.hibernate.testing.orm.junit.FailureExpectedExtension;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -51,7 +49,6 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Steve Ebersole
  */
-@ExtendWith( FailureExpectedExtension.class )
 public class AutoGenerationTypeTests {
 	@Test
 	public void testAutoDefaults() {

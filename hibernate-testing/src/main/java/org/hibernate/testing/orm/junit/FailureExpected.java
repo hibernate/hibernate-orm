@@ -13,13 +13,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * Marks a test method or class as being expected to fail.
  *
  * @see FailureExpectedExtension
+ * @see FailureExpectedCallback
  *
  * @author Steve Ebersole
  */

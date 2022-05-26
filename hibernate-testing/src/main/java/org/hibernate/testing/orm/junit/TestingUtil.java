@@ -28,10 +28,32 @@ public class TestingUtil {
 	private TestingUtil() {
 	}
 
+	public static List<Method> findAnnotatedMethods(
+			ExtensionContext context,
+			Class<? extends Annotation> annotationType) {
+		if ( context.getElement().isEmpty() ) {
+			return Collections.emptyList();
+		}
+
+		final Method[] methods = context.getRequiredTestClass().getMethods();
+		if ( methods.length <= 0 ) {
+			return Collections.emptyList();
+		}
+
+		final ArrayList<Method> results = new ArrayList<>();
+		for ( int i = 0; i < methods.length; i++ ) {
+			if ( methods[i].isAnnotationPresent( annotationType ) ) {
+				results.add( methods[i] );
+			}
+		}
+
+		return results;
+	}
+
 	public static <A extends Annotation> Optional<A> findEffectiveAnnotation(
 			ExtensionContext context,
 			Class<A> annotationType) {
-		if ( !context.getElement().isPresent() ) {
+		if ( context.getElement().isEmpty() ) {
 			return Optional.empty();
 		}
 

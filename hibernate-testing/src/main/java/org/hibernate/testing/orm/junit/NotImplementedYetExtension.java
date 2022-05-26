@@ -11,12 +11,14 @@ import java.util.Optional;
 
 import org.hibernate.NotImplementedYetException;
 
+import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
+import org.junit.jupiter.api.extension.TestInstancePostProcessor;
 
 import org.jboss.logging.Logger;
 
@@ -28,7 +30,8 @@ import static org.hibernate.testing.orm.junit.FailureExpectedExtension.failureEx
  * @author Jan Schatteman
  */
 public class NotImplementedYetExtension
-		implements ExecutionCondition, BeforeEachCallback, AfterEachCallback, TestExecutionExceptionHandler {
+		implements TestInstancePostProcessor, ExecutionCondition, BeforeEachCallback,
+		AfterEachCallback, AfterAllCallback, TestExecutionExceptionHandler {
 
 	private static final Logger log = Logger.getLogger( NotImplementedYetExtension.class );
 
@@ -37,27 +40,34 @@ public class NotImplementedYetExtension
 	private static final String EXCEPTION_STORE_KEY = "NOT_IMPLEMENTED";
 
 	@Override
+	public void postProcessTestInstance(Object testInstance, ExtensionContext context) throws Exception {
+		JUnitHelper.discoverCallbacks( context, getClass(), NotImplementedYetCallback.class );
+	}
+
+	@Override
 	public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
 		log.debugf( "#evaluateExecutionCondition(%s)", context.getDisplayName() );
 
-		if ( !context.getElement().isPresent() ) {
+		if ( context.getElement().isEmpty() ) {
 			throw new RuntimeException( "Unable to determine how to handle given ExtensionContext : " + context.getDisplayName() );
 		}
 
 		log.debugf( "Evaluating context - %s [failureExpectedValidation = %s]", context.getDisplayName(), failureExpectedValidation );
 
 		// Test this in case some other annotation were extended with NotImplementedYetExtension
-		if ( TestingUtil.hasEffectiveAnnotation( context, NotImplementedYet.class ) ) {
+		final Optional<NotImplementedYet> annotation = TestingUtil.findEffectiveAnnotation( context, NotImplementedYet.class );
+		if ( annotation.isPresent() ) {
 			// The test is marked as `NotImplementedYet`...
 			if ( failureExpectedValidation ) {
 				log.debugf( "Executing test marked with `@NotImplementedYet` for validation" );
 				return ConditionEvaluationResult.enabled( "@NotImplementedYet validation" );
 			}
 			else {
-				final Optional<NotImplementedYet> annotation = TestingUtil.findEffectiveAnnotation( context, NotImplementedYet.class );
+
 				return ConditionEvaluationResult.disabled( "Disabled : @NotImplementedYet - " + annotation.get().reason() );
 			}
 		}
+
 		return ConditionEvaluationResult.enabled( "No @NotImplementedYet" );
 	}
 
@@ -133,6 +143,8 @@ public class NotImplementedYetExtension
 		final Boolean isStrict = (Boolean) store.get( IS_STRICT_STORE_KEY );
 
 		if ( isMarked ) {
+			JUnitHelper.invokeCallbacks( context, getClass() );
+
 			Throwable t = throwable;
 			do {
 				if ( t instanceof NotImplementedYetException || ! isStrict ) {
@@ -155,6 +167,11 @@ public class NotImplementedYetExtension
 				context.getRequiredTestMethod().getClass(),
 				context.getRequiredTestMethod().getName()
 		);
+	}
+
+	@Override
+	public void afterAll(ExtensionContext context) {
+		JUnitHelper.cleanupCallbacks( context, getClass() );
 	}
 
 	public static class NotImplementedYetExceptionExpected extends RuntimeException {

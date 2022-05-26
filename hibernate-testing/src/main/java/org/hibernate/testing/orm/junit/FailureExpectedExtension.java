@@ -8,12 +8,14 @@ package org.hibernate.testing.orm.junit;
 
 import java.util.Locale;
 
+import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
+import org.junit.jupiter.api.extension.TestInstancePostProcessor;
 
 import org.jboss.logging.Logger;
 
@@ -23,19 +25,29 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class FailureExpectedExtension
-		implements ExecutionCondition, BeforeEachCallback, AfterEachCallback, TestExecutionExceptionHandler {
+		implements TestInstancePostProcessor, ExecutionCondition, BeforeEachCallback,
+		AfterEachCallback, AfterAllCallback, TestExecutionExceptionHandler {
 
 	private static final Logger log = Logger.getLogger( FailureExpectedExtension.class );
 
 	private static final String IS_MARKED_STORE_KEY = "IS_MARKED";
 	private static final String EXPECTED_FAILURE_STORE_KEY = "EXPECTED_FAILURE";
 
-
 	public static final boolean failureExpectedValidation;
 
 	static {
 		failureExpectedValidation = Boolean.getBoolean( FailureExpected.VALIDATE_FAILURE_EXPECTED );
 		log.debugf( "FailureExpectedExtension#failureExpectedValidation = %s", failureExpectedValidation );
+	}
+
+	@Override
+	public void postProcessTestInstance(Object testInstance, ExtensionContext context) {
+		JUnitHelper.discoverCallbacks( context, getClass(), FailureExpectedCallback.class );
+	}
+
+	@Override
+	public void afterAll(ExtensionContext context) {
+		JUnitHelper.cleanupCallbacks( context, getClass() );
 	}
 
 
@@ -51,7 +63,7 @@ public class FailureExpectedExtension
 	public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
 		log.tracef( "#evaluateExecutionCondition(%s)", context.getDisplayName() );
 
-		if ( !context.getElement().isPresent() ) {
+		if ( context.getElement().isEmpty() ) {
 			throw new RuntimeException( "Unable to determine how to handle given ExtensionContext : " + context.getDisplayName() );
 		}
 
@@ -92,11 +104,11 @@ public class FailureExpectedExtension
 	}
 
 	private ExtensionContext.Namespace generateNamespace(ExtensionContext context) {
-		return ExtensionContext.Namespace.create(
-				getClass().getName(),
-				context.getRequiredTestMethod().getClass(),
-				context.getRequiredTestMethod().getName()
-		);
+		return JUnitHelper.createNamespace( getClass(), context );
+	}
+
+	private ExtensionContext.Namespace generateClassNamespace(ExtensionContext context) {
+		return JUnitHelper.createClassNamespace( getClass(), context );
 	}
 
 
@@ -151,11 +163,14 @@ public class FailureExpectedExtension
 		if ( isMarked == Boolean.TRUE ) {
 			// test is marked as an `@ExpectedFailure`:
 
-			//		1) add the exception to the store
+			// 		1) Invoke any `@FailureExpectedCallback` callbacks
+			JUnitHelper.invokeCallbacks( context, getClass() );
+
+			//		2) add the exception to the store
 			store.put( EXPECTED_FAILURE_STORE_KEY, throwable );
 			log.debugf( "  >> Stored expected failure - %s", throwable );
 
-			// 		2) eat the failure
+			// 		3) eat the failure
 			return;
 		}
 

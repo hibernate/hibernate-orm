@@ -8,7 +8,7 @@ package org.hibernate.dialect.identity;
 
 import java.sql.Types;
 
-public class CockroachDB1920IdentityColumnSupport extends IdentityColumnSupportImpl {
+public class CockroachDBIdentityColumnSupport extends IdentityColumnSupportImpl {
 	@Override
 	public boolean supportsIdentityColumns() {
 		// Full support requires setting the sql.defaults.serial_normalization=sql_sequence in CockroachDB.

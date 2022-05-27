@@ -11,10 +11,14 @@ import java.util.Arrays;
 import org.junit.Test;
 
 import org.hibernate.Session;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
@@ -32,6 +36,7 @@ public class MaterializedBlobTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = CockroachDialect.class, comment = "Blob in CockroachDB is same as a varbinary, to assertions will fail")
 	public void testTypeSelection() {
         int index = sessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(MaterializedBlobEntity.class.getName()).getEntityMetamodel().getPropertyIndex( "theBytes" );
         BasicType<?> type = (BasicType<?>) sessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(MaterializedBlobEntity.class.getName()).getEntityMetamodel().getProperties()[index].getType();

@@ -51,7 +51,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
 	private final JdbcObserver jdbcObserver;
 
-	private final HashMap<Statement, HashMap<ResultSet,Object>> xref = new HashMap<>();
+	private final HashMap<Statement, StatementRegistryEntry> xref = new HashMap<>();
 	private final HashMap<ResultSet,Object> unassociatedResultSets = new HashMap<ResultSet,Object>();
 
 	private ArrayList<Blob> blobs;
@@ -82,7 +82,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	public void register(Statement statement, boolean cancelable) {
 		log.tracef( "Registering statement [%s]", statement );
 
-		HashMap<ResultSet,Object> previousValue = xref.putIfAbsent( statement, EMPTY );
+		StatementRegistryEntry previousValue = xref.putIfAbsent( statement, new StatementRegistryEntry( EMPTY ) );
 		if ( previousValue != null ) {
 			throw new HibernateException( "JDBC Statement already registered" );
 		}
@@ -93,12 +93,26 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	}
 
 	@Override
+	public void setStatementSql(Statement statement, String sql) {
+		StatementRegistryEntry statementRegistryEntry = xref.get( statement );
+		if ( statementRegistryEntry != null ) {
+			statementRegistryEntry.sql = sql;
+		}
+	}
+
+	@Override
+	public String getStatementSql(Statement statement) {
+		StatementRegistryEntry statementRegistryEntry = xref.get( statement );
+		return statementRegistryEntry != null ? statementRegistryEntry.sql : null;
+	}
+
+	@Override
 	public void release(Statement statement) {
 		log.tracev( "Releasing statement [{0}]", statement );
 
-		final HashMap<ResultSet,Object> resultSets = xref.remove( statement );
-		if ( resultSets != null ) {
-			closeAll( resultSets );
+		final StatementRegistryEntry statementRegistryEntry = xref.remove( statement );
+		if ( statementRegistryEntry != null && statementRegistryEntry.resultSets != null ) {
+			closeAll( statementRegistryEntry.resultSets );
 		}
 		else {
 			// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
@@ -126,13 +140,13 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			}
 		}
 		if ( statement != null ) {
-			final HashMap<ResultSet,Object> resultSets = xref.get( statement );
-			if ( resultSets == null ) {
+			final StatementRegistryEntry statementRegistryEntry = xref.get( statement );
+			if ( statementRegistryEntry == null || statementRegistryEntry.resultSets == null ) {
 				log.unregisteredStatement();
 			}
 			else {
-				resultSets.remove( resultSet );
-				if ( resultSets.isEmpty() ) {
+				statementRegistryEntry.resultSets.remove( resultSet );
+				if ( statementRegistryEntry.resultSets.isEmpty() ) {
 					xref.remove( statement );
 				}
 			}
@@ -151,8 +165,8 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		resultSets.clear();
 	}
 
-	private static void releaseXref(final Statement s, final HashMap<ResultSet, Object> r) {
-		closeAll( r );
+	private static void releaseXref(final Statement s, final StatementRegistryEntry r) {
+		closeAll( r.resultSets );
 		close( s );
 	}
 
@@ -219,7 +233,9 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			}
 		}
 		if ( statement != null ) {
-			HashMap<ResultSet,Object> resultSets = xref.get( statement );
+			final StatementRegistryEntry statementRegistryEntry = xref.get( statement );
+			HashMap<ResultSet, Object> resultSets = statementRegistryEntry != null ?
+					statementRegistryEntry.resultSets : null;
 
 			// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
 			// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
@@ -229,7 +245,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
 			if ( resultSets == null || resultSets == EMPTY ) {
 				resultSets = new HashMap<ResultSet,Object>();
-				xref.put( statement, resultSets );
+				xref.put( statement, new StatementRegistryEntry( resultSets ) );
 			}
 			resultSets.put( resultSet, PRESENT );
 		}
@@ -369,5 +385,26 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
 	private boolean hasRegistered(final ArrayList resource) {
 		return resource != null && !resource.isEmpty();
+	}
+
+	/**
+	 * This class encapsulate the Statement-related info that's being kept in the
+	 * registry for a given Statement.
+	 */
+	private static class StatementRegistryEntry {
+		private String sql;
+		private final HashMap<ResultSet, Object> resultSets;
+
+		StatementRegistryEntry(HashMap<ResultSet, Object> resultSets) {
+			this.resultSets = resultSets;
+		}
+
+		public String getSql() {
+			return sql;
+		}
+
+		public void setSql(String sql) {
+			this.sql = sql;
+		}
 	}
 }

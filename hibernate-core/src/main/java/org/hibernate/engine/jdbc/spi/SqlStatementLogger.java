@@ -14,6 +14,7 @@ import org.jboss.logging.Logger;
 
 import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
  * Centralize logging for SQL statements.
@@ -151,24 +152,11 @@ public class SqlStatementLogger {
 	/**
 	 * Log a slow SQL query
 	 *
-	 * @param statement SQL statement.
-	 * @param startTimeNanos Start time in nanoseconds.
-	 */
-	public void logSlowQuery(Statement statement, long startTimeNanos) {
-		if ( logSlowQuery < 1 ) {
-			return;
-		}
-		logSlowQuery( statement.toString(), startTimeNanos );
-	}
-
-	/**
-	 * Log a slow SQL query
-	 *
-	 * @param sql The SQL query.
+	 * @param sql Supplier for the SQL query.
 	 * @param startTimeNanos Start time in nanoseconds.
 	 */
 	@AllowSysOut
-	public void logSlowQuery(String sql, long startTimeNanos) {
+	public void logSlowQuery(Supplier<String> sql, long startTimeNanos) {
 		if ( logSlowQuery < 1 ) {
 			return;
 		}
@@ -179,7 +167,7 @@ public class SqlStatementLogger {
 		long queryExecutionMillis = TimeUnit.NANOSECONDS.toMillis( System.nanoTime() - startTimeNanos );
 
 		if ( queryExecutionMillis > logSlowQuery ) {
-			String logData = "SlowQuery: " + queryExecutionMillis + " milliseconds. SQL: '" + sql + "'";
+			String logData = "SlowQuery: " + queryExecutionMillis + " milliseconds. SQL: '" + sql.get() + "'";
 			LOG_SLOW.info( logData );
 			if ( logToStdout ) {
 				System.out.println( logData );

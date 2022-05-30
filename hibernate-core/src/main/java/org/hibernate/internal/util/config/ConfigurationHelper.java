@@ -578,15 +578,6 @@ public final class ConfigurationHelper {
 
 	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForArray(StandardServiceRegistry serviceRegistry) {
-		final Integer typeCode = serviceRegistry.getService( ConfigurationService.class ).getSetting(
-				AvailableSettings.PREFERRED_ARRAY_JDBC_TYPE,
-				TypeCodeConverter.INSTANCE
-		);
-		if ( typeCode != null ) {
-			INCUBATION_LOGGER.incubatingSetting( AvailableSettings.PREFERRED_ARRAY_JDBC_TYPE );
-			return typeCode;
-		}
-
 		// default to the Dialect answer
 		return serviceRegistry.getService( JdbcServices.class )
 				.getJdbcEnvironment()

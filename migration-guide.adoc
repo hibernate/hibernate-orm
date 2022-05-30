@@ -30,8 +30,6 @@ A possible migration could involve the following steps in a migration script:
 5. For every result, load the Hibernate entity by primary key and set the deserialized value
 6. Finally, drop the old column `alter table tbl drop column array_col_old`
 
-To retain backwards compatibility, configure the setting `hibernate.type.preferred_array_jdbc_type` to `VARBINARY`.
-
 
 == Enum mapping changes
 

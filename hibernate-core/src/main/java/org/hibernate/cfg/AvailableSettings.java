@@ -2557,23 +2557,6 @@ public interface AvailableSettings {
 	String PREFERRED_INSTANT_JDBC_TYPE = "hibernate.type.preferred_instant_jdbc_type";
 
 	/**
-	 * Specifies the preferred JDBC type for storing basic array and collection values. When no
-	 * type is explicitly specified, a sensible
-	 * {@link org.hibernate.dialect.Dialect#getPreferredSqlTypeCodeForArray()
-	 * dialect-specific default type code} is used.
-	 *
-	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
-	 * {@link org.hibernate.annotations.JdbcTypeCode} and friends
-	 *
-	 * Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant field.  E.g.
-	 * {@code hibernate.type.preferred_array_jdbc_type=VARBINARY}
-	 *
-	 * @since 6.1
-	 */
-	@Incubating
-	String PREFERRED_ARRAY_JDBC_TYPE = "hibernate.type.preferred_array_jdbc_type";
-
-	/**
 	 * Specifies a {@link org.hibernate.type.FormatMapper} used for JSON serialization
 	 * and deserialization, either:
 	 * <ul>

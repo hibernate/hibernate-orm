@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -21,6 +21,18 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.NationalizationSupport;
+import org.hibernate.dialect.PostgreSQLDriverKind;
+import org.hibernate.dialect.PostgreSQLInetJdbcType;
+import org.hibernate.dialect.PostgreSQLIntervalSecondJdbcType;
+import org.hibernate.dialect.PostgreSQLJsonJdbcType;
+import org.hibernate.dialect.PostgreSQLJsonbJdbcType;
+import org.hibernate.dialect.PostgreSQLPGObjectJdbcType;
+import org.hibernate.dialect.RowLockStrategy;
+import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.FormatFunction;
 import org.hibernate.dialect.identity.CockroachDBIdentityColumnSupport;
@@ -66,27 +78,7 @@ import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
-import static org.hibernate.type.SqlTypes.BINARY;
-import static org.hibernate.type.SqlTypes.BLOB;
-import static org.hibernate.type.SqlTypes.CHAR;
-import static org.hibernate.type.SqlTypes.CLOB;
-import static org.hibernate.type.SqlTypes.GEOGRAPHY;
-import static org.hibernate.type.SqlTypes.GEOMETRY;
-import static org.hibernate.type.SqlTypes.INET;
-import static org.hibernate.type.SqlTypes.JSON;
-import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
-import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
-import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
-import static org.hibernate.type.SqlTypes.NCHAR;
-import static org.hibernate.type.SqlTypes.NCLOB;
-import static org.hibernate.type.SqlTypes.NVARCHAR;
-import static org.hibernate.type.SqlTypes.OTHER;
-import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
-import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
-import static org.hibernate.type.SqlTypes.TINYINT;
-import static org.hibernate.type.SqlTypes.UUID;
-import static org.hibernate.type.SqlTypes.VARBINARY;
-import static org.hibernate.type.SqlTypes.VARCHAR;
+import static org.hibernate.type.SqlTypes.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
@@ -96,38 +88,31 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  *
  * @author Gavin King
  */
-public class CockroachDialect extends Dialect {
+public class CockroachLegacyDialect extends Dialect {
 
 	private static final CockroachDBIdentityColumnSupport IDENTITY_COLUMN_SUPPORT = new CockroachDBIdentityColumnSupport();
 	// KNOWN LIMITATIONS:
 	// * no support for java.sql.Clob
 
-	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 21, 1 );
-
 	private final PostgreSQLDriverKind driverKind;
 
-	public CockroachDialect() {
-		this( MINIMUM_VERSION );
+	public CockroachLegacyDialect() {
+		this( DatabaseVersion.make( 19, 2 ) );
 	}
 
-	public CockroachDialect(DialectResolutionInfo info) {
+	public CockroachLegacyDialect(DialectResolutionInfo info) {
 		super(info);
 		driverKind = PostgreSQLDriverKind.determineKind( info );
 	}
 
-	public CockroachDialect(DatabaseVersion version) {
+	public CockroachLegacyDialect(DatabaseVersion version) {
 		super(version);
 		driverKind = PostgreSQLDriverKind.PG_JDBC;
 	}
 
-	public CockroachDialect(DatabaseVersion version, PostgreSQLDriverKind driverKind) {
+	public CockroachLegacyDialect(DatabaseVersion version, PostgreSQLDriverKind driverKind) {
 		super(version);
 		this.driverKind = driverKind;
-	}
-
-	@Override
-	protected DatabaseVersion getMinimumSupportedVersion() {
-		return MINIMUM_VERSION;
 	}
 
 	@Override
@@ -182,14 +167,18 @@ public class CockroachDialect extends Dialect {
 
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
 		if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
-			// The following DDL types require that the PGobject class is usable/visible
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
 			ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
 
 			// Prefer jsonb if possible
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
+			if ( getVersion().isSameOrAfter( 20 ) ) {
+				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
+				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
+			}
+			else {
+				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+			}
 		}
 	}
 
@@ -234,8 +223,14 @@ public class CockroachDialect extends Dialect {
 			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 			if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonbJdbcType.INSTANCE );
+
+				if ( getVersion().isSameOrAfter( 20, 0 ) ) {
+					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
+					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonbJdbcType.INSTANCE );
+				}
+				else {
+					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonJdbcType.INSTANCE );
+				}
 			}
 		}
 
@@ -415,7 +410,7 @@ public class CockroachDialect extends Dialect {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new CockroachSqlAstTranslator<>( sessionFactory, statement );
+				return new CockroachLegacySqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
 	}
@@ -626,11 +621,19 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public String getForUpdateString(LockOptions lockOptions) {
+		// Support was added in 20.1: https://www.cockroachlabs.com/docs/v20.1/select-for-update.html
+		if ( getVersion().isBefore( 20, 1 ) ) {
+			return "";
+		}
 		return super.getForUpdateString( lockOptions );
 	}
 
 	@Override
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
+		// Support was added in 20.1: https://www.cockroachlabs.com/docs/v20.1/select-for-update.html
+		if ( getVersion().isBefore( 20, 1 ) ) {
+			return "";
+		}
 		/*
 		 * Parent's implementation for (aliases, lockOptions) ignores aliases.
 		 */
@@ -754,12 +757,12 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public boolean supportsLateral() {
-		return true;
+		return getVersion().isSameOrAfter( 20, 1 );
 	}
 
 	@Override
 	public boolean supportsNoWait() {
-		return true;
+		return getVersion().isSameOrAfter( 20, 1 );
 	}
 
 	@Override
@@ -769,12 +772,12 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return true;
+		return getVersion().isSameOrAfter( 20, 1 );
 	}
 
 	@Override
 	public RowLockStrategy getWriteRowLockStrategy() {
-		return RowLockStrategy.TABLE;
+		return getVersion().isSameOrAfter( 20, 1 ) ? RowLockStrategy.TABLE : RowLockStrategy.NONE;
 	}
 
 	@Override

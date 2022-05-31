@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
@@ -24,9 +24,9 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  *
  * @author Christian Beikov
  */
-public class CockroachSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+public class CockroachLegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
-	public CockroachSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+	public CockroachLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
 	}
 
@@ -63,12 +63,18 @@ public class CockroachSqlAstTranslator<T extends JdbcOperation> extends Abstract
 			ForUpdateClause forUpdateClause,
 			Boolean followOnLocking) {
 		// Support was added in 20.1: https://www.cockroachlabs.com/docs/v20.1/select-for-update.html
+		if ( getDialect().getVersion().isBefore( 20, 1 ) ) {
+			return LockStrategy.NONE;
+		}
 		return super.determineLockingStrategy( querySpec, forUpdateClause, followOnLocking );
 	}
 
 	@Override
 	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
 		// Support was added in 20.1: https://www.cockroachlabs.com/docs/v20.1/select-for-update.html
+		if ( getDialect().getVersion().isBefore( 20, 1 ) ) {
+			return;
+		}
 		super.renderForUpdateClause( querySpec, forUpdateClause );
 	}
 
@@ -124,7 +130,7 @@ public class CockroachSqlAstTranslator<T extends JdbcOperation> extends Abstract
 			// This could theoretically be emulated by rendering all grouping variations of the query and
 			// connect them via union all but that's probably pretty inefficient and would have to happen
 			// on the query spec level
-			throw new UnsupportedOperationException( "Summarization is not supported by DBMS" );
+			throw new UnsupportedOperationException( "Summarization is not supported by DBMS!" );
 		}
 		else {
 			expression.accept( this );

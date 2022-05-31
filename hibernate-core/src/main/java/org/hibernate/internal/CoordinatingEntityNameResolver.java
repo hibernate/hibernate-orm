@@ -6,21 +6,23 @@
  */
 package org.hibernate.internal;
 
+import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 
 /**
+ * This is the default EntityNameResolver and is shared across the SessionFactory
  * @author Steve Ebersole
  */
-public class CoordinatingEntityNameResolver implements EntityNameResolver {
-	private final SessionFactoryImplementor sessionFactory;
+public final class CoordinatingEntityNameResolver implements EntityNameResolver {
 	private final Interceptor interceptor;
+	private final EntityNameResolver[] entityNameResolvers;
 
 	public CoordinatingEntityNameResolver(SessionFactoryImplementor sessionFactory, Interceptor interceptor) {
-		this.sessionFactory = sessionFactory;
 		this.interceptor = interceptor;
+		//We're assuming this instance is initialized only once per SessionFactory, so make this copy to benefit the many iterations we'll do at runtime:
+		this.entityNameResolvers = sessionFactory.getRuntimeMetamodels().getMappingMetamodel().getEntityNameResolvers().toArray(new EntityNameResolver[0]);
 	}
 
 	@Override
@@ -30,8 +32,7 @@ public class CoordinatingEntityNameResolver implements EntityNameResolver {
 			return entityName;
 		}
 
-		final MappingMetamodelImplementor mappingMetamodel = sessionFactory.getRuntimeMetamodels().getMappingMetamodel();
-		for ( EntityNameResolver resolver : mappingMetamodel.getEntityNameResolvers() ) {
+		for ( EntityNameResolver resolver : entityNameResolvers ) {
 			entityName = resolver.resolveEntityName( entity );
 			if ( entityName != null ) {
 				break;
@@ -44,5 +45,14 @@ public class CoordinatingEntityNameResolver implements EntityNameResolver {
 
 		// the old-time stand-by...
 		return entity.getClass().getName();
+	}
+
+	public EntityNameResolver createSessionScopedEntityNameResolver(Interceptor sessionInterceptor) {
+		if ( sessionInterceptor == null || sessionInterceptor == EmptyInterceptor.INSTANCE ) {
+			return this;
+		}
+		else {
+			return new SessionScopedEntityNameResolver(this, sessionInterceptor );
+		}
 	}
 }

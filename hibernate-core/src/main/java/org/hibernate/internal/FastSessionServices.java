@@ -15,7 +15,9 @@ import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.PessimisticLockScope;
 
 import org.hibernate.CacheMode;
+import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
+import org.hibernate.Interceptor;
 import org.hibernate.LockOptions;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -170,6 +172,7 @@ public final class FastSessionServices {
 	private final ConnectionObserverStatsBridge defaultJdbcObservers;
 	private final FormatMapper jsonFormatMapper;
 	private final FormatMapper xmlFormatMapper;
+	private final CoordinatingEntityNameResolver coordinatingEntityNameResolver;
 
 	FastSessionServices(SessionFactoryImpl sf) {
 		Objects.requireNonNull( sf );
@@ -245,6 +248,7 @@ public final class FastSessionServices {
 		this.initialSessionFlushMode = initializeDefaultFlushMode( defaultSessionProperties );
 		this.jsonFormatMapper = sessionFactoryOptions.getJsonFormatMapper();
 		this.xmlFormatMapper = sessionFactoryOptions.getXmlFormatMapper();
+		this.coordinatingEntityNameResolver = sf.getEntityNameResolver();
 	}
 
 	private static FlushMode initializeDefaultFlushMode(Map<String, Object> defaultSessionProperties) {
@@ -380,4 +384,9 @@ public final class FastSessionServices {
 	public FormatMapper getXmlFormatMapper() {
 		return xmlFormatMapper;
 	}
+
+	public EntityNameResolver buildSessionScopedEntityNameResolver(Interceptor sessionInterceptor) {
+		return this.coordinatingEntityNameResolver.createSessionScopedEntityNameResolver( sessionInterceptor );
+	}
+
 }

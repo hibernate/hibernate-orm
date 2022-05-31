@@ -188,7 +188,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient SessionBuilder defaultSessionOpenOptions;
 	private final transient SessionBuilder temporarySessionOpenOptions;
 	private final transient StatelessSessionBuilder defaultStatelessOptions;
-	private final transient EntityNameResolver entityNameResolver;
+	private final transient CoordinatingEntityNameResolver entityNameResolver;
 
 	public SessionFactoryImpl(
 			final MetadataImplementor bootMetamodel,
@@ -375,6 +375,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			this.defaultSessionOpenOptions = createDefaultSessionOpenOptionsIfPossible();
 			this.temporarySessionOpenOptions = this.defaultSessionOpenOptions == null ? null : buildTemporarySessionOpenOptions();
 			this.defaultStatelessOptions = this.defaultSessionOpenOptions == null ? null : withStatelessOptions();
+			this.entityNameResolver = new CoordinatingEntityNameResolver( this, getInterceptor() );
 			this.fastSessionServices = new FastSessionServices( this );
 			this.wrapperOptions = new SessionFactoryBasedWrapperOptions( this );
 
@@ -391,8 +392,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			//As last operation, delete all caches from ReflectionManager
 			//(not modelled as a listener as we want this to be last)
 			bootstrapContext.getReflectionManager().reset();
-
-			this.entityNameResolver = new CoordinatingEntityNameResolver( this, getInterceptor() );
 		}
 		catch (Exception e) {
 			for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
@@ -1562,6 +1561,15 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public FastSessionServices getFastSessionServices() {
 		return this.fastSessionServices;
+	}
+
+	/**
+	 * @return the global CoordinatingEntityNameResolver for this SessionFactory.
+	 * Intentionally exposed to package-private only as this should only be used
+	 * by FastSessionServices.
+	 */
+	CoordinatingEntityNameResolver getEntityNameResolver() {
+		return this.entityNameResolver;
 	}
 
 	@Override

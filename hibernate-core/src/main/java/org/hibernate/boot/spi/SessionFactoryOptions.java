@@ -196,6 +196,11 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 
 	CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy();
+
+	/**
+	 * @deprecated as this is not the most efficient way to get the EntityNameResolver(s) list.
+	 */
+	@Deprecated
 	EntityNameResolver[] getEntityNameResolvers();
 
 	/**

@@ -181,7 +181,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			sessionEventsManager = new SessionEventListenerManagerImpl( customSessionEventListener.toArray( new SessionEventListener[0] ) );
 		}
 
-		this.entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
+		this.entityNameResolver = fastSessionServices.buildSessionScopedEntityNameResolver( interceptor );
 
 		final StatementInspector statementInspector = interpret( options.getStatementInspector() );
 		if ( options instanceof SharedSessionCreationOptions && ( (SharedSessionCreationOptions) options ).isTransactionCoordinatorShared() ) {
@@ -1390,7 +1390,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				.getService( TransactionCoordinatorBuilder.class )
 				.buildTransactionCoordinator( jdbcCoordinator, this );
 
-		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
+		entityNameResolver = fastSessionServices.buildSessionScopedEntityNameResolver( interceptor );
 	}
 
 }

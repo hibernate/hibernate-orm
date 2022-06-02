@@ -15,6 +15,8 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.PostgreSQLDialect;
 
+import org.hibernate.testing.orm.junit.DialectFeatureCheck;
+
 /**
  * Container class for different implementation of the {@link DialectCheck} interface.
  *
@@ -281,9 +283,16 @@ abstract public class DialectChecks {
 	}
 
 	public static class SupportsArrayDataTypes implements DialectCheck {
-		@Override
 		public boolean isMatch(Dialect dialect) {
 			return dialect.supportsStandardArrays();
+		}
+	}
+
+	public static class SupportsOrderByInCorrelatedSubquery implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.supportsOrderByInSubquery()
+					// For some reason, HANA doesn't support order by in correlated sub queries...
+					&& !( dialect instanceof AbstractHANADialect );
 		}
 	}
 }

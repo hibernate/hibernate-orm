@@ -11,6 +11,7 @@ import java.util.List;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FetchClauseType;
@@ -354,12 +355,12 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
-		if ( lhs.getExpressionType() == null ) {
+		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
+		if ( lhsExpressionType == null ) {
 			renderComparisonEmulateDecode( lhs, operator, rhs );
 			return;
 		}
-		final JdbcMapping lhsMapping = lhs.getExpressionType().getJdbcMappings().get( 0 );
-		switch ( lhsMapping.getJdbcType().getJdbcTypeCode() ) {
+		switch ( lhsExpressionType.getJdbcMappings().get( 0 ).getJdbcType().getJdbcTypeCode() ) {
 			case SqlTypes.SQLXML:
 				// In Oracle, XMLTYPE is not "comparable", so we have to use the xmldiff function for this purpose
 				switch ( operator ) {

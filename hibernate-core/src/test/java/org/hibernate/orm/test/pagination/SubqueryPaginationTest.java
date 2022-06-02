@@ -32,7 +32,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
 @ServiceRegistry
 @SessionFactory
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsOrderByInSubquery.class)
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class)
 public class SubqueryPaginationTest {
     @BeforeEach
     public void createTestData(SessionFactoryScope scope) {

@@ -16,7 +16,15 @@ public class Address {
 	private Classification classification;
 	private String line1;
 	private String line2;
-	private PostalCode postalCode;
+	private PostalCode postalCode = new PostalCode();
+
+	public Address() {
+	}
+
+	public Address(String line1, int zip) {
+		this.line1 = line1;
+		this.postalCode.setZipCode( zip );
+	}
 
 	public Classification getClassification() {
 		return classification;

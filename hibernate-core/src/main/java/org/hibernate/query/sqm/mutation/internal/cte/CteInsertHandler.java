@@ -128,7 +128,7 @@ public class CteInsertHandler implements InsertHandler {
 		this.sessionFactory = sessionFactory;
 
 		final String entityName = this.sqmStatement.getTarget()
-				.getReferencedPathSource()
+				.getModel()
 				.getHibernateEntityName();
 
 		this.entityDescriptor = sessionFactory.getRuntimeMetamodels().getEntityMappingType( entityName );

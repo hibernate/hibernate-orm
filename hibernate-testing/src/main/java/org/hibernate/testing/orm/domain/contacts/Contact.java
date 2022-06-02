@@ -13,7 +13,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
@@ -33,6 +35,7 @@ public class Contact {
 
 	private LocalDate birthDay;
 
+	private Contact alternativeContact;
 	private List<Address> addresses;
 	private List<PhoneNumber> phoneNumbers;
 
@@ -79,6 +82,15 @@ public class Contact {
 
 	public void setBirthDay(LocalDate birthDay) {
 		this.birthDay = birthDay;
+	}
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	public Contact getAlternativeContact() {
+		return alternativeContact;
+	}
+
+	public void setAlternativeContact(Contact alternativeContact) {
+		this.alternativeContact = alternativeContact;
 	}
 
 	@ElementCollection

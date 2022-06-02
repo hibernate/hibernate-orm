@@ -9,12 +9,12 @@ package org.hibernate.query.criteria;
 import java.util.List;
 import java.util.Set;
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.SetJoin;
+import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.Subquery;
 
-import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
+import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
@@ -24,11 +24,48 @@ import org.hibernate.query.sqm.tree.from.SqmJoin;
  */
 public interface JpaSubQuery<T> extends Subquery<T>, JpaSelectCriteria<T>, JpaExpression<T> {
 
+	JpaSubQuery<T> multiselect(Selection<?>... selections);
+
+	JpaSubQuery<T> multiselect(List<Selection<?>> selectionList);
+
 	<X> SqmCrossJoin<X> correlate(SqmCrossJoin<X> parentCrossJoin);
 
 	<X> SqmEntityJoin<X> correlate(SqmEntityJoin<X> parentEntityJoin);
 
 	Set<SqmJoin<?, ?>> getCorrelatedSqmJoins();
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Limit/Offset/Fetch clause
+
+	JpaExpression<Number> getOffset();
+
+	JpaSubQuery<T> offset(JpaExpression<? extends Number> offset);
+
+	JpaSubQuery<T> offset(Number offset);
+
+	JpaExpression<Number> getFetch();
+
+	JpaSubQuery<T> fetch(JpaExpression<? extends Number> fetch);
+
+	JpaSubQuery<T> fetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);
+
+	JpaSubQuery<T> fetch(Number fetch);
+
+	JpaSubQuery<T> fetch(Number fetch, FetchClauseType fetchClauseType);
+
+	FetchClauseType getFetchClauseType();
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Order by clause
+
+	List<JpaOrder> getOrderList();
+
+	JpaSubQuery<T> orderBy(Order... o);
+
+	JpaSubQuery<T> orderBy(List<Order> o);
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Covariant overrides
 
 	@Override
 	JpaSubQuery<T> distinct(boolean distinct);

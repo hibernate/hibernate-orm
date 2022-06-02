@@ -24,6 +24,9 @@ import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.query.criteria.JpaDerivedJoin;
+import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
+import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaEntityJoin;
@@ -45,6 +48,7 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 import jakarta.persistence.criteria.Fetch;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.CollectionAttribute;
 import jakarta.persistence.metamodel.ListAttribute;
 import jakarta.persistence.metamodel.MapAttribute;
@@ -99,7 +103,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	 */
 	protected AbstractSqmFrom(
 			NavigablePath navigablePath,
-			EntityDomainType<T> entityType,
+			SqmPathSource<T> entityType,
 			String alias,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, entityType, null, nodeBuilder );
@@ -553,6 +557,47 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		//noinspection unchecked
 		addSqmJoin( (SqmJoin<T, ?>) join );
 		return join;
+	}
+
+	@Override
+	public <X> JpaDerivedJoin<X> join(Subquery<X> subquery) {
+		return join( subquery, SqmJoinType.INNER, false, null );
+	}
+
+	@Override
+	public <X> JpaDerivedJoin<X> join(Subquery<X> subquery, SqmJoinType joinType) {
+		return join( subquery, joinType, false, null );
+	}
+
+	@Override
+	public <X> JpaDerivedJoin<X> joinLateral(Subquery<X> subquery) {
+		return join( subquery, SqmJoinType.INNER, true, null );
+	}
+
+	@Override
+	public <X> JpaDerivedJoin<X> joinLateral(Subquery<X> subquery, SqmJoinType joinType) {
+		return join( subquery, joinType, true, null );
+	}
+
+	@Override
+	public <X> JpaDerivedJoin<X> join(Subquery<X> subquery, SqmJoinType joinType, boolean lateral) {
+		return join( subquery, joinType, lateral, null );
+	}
+
+	public <X> JpaDerivedJoin<X> join(Subquery<X> subquery, SqmJoinType joinType, boolean lateral, String alias) {
+		validateComplianceFromSubQuery();
+		final JpaDerivedJoin<X> join = new SqmDerivedJoin<>( (SqmSubQuery<X>) subquery, alias, joinType, lateral, findRoot() );
+		//noinspection unchecked
+		addSqmJoin( (SqmJoin<T, ?>) join );
+		return join;
+	}
+
+	private void validateComplianceFromSubQuery() {
+		if ( nodeBuilder().getDomainModel().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+			throw new IllegalStateException(
+					"The JPA specification does not support subqueries in the from clause. " +
+							"Please disable the JPA query compliance if you want to use this feature." );
+		}
 	}
 
 	@Override

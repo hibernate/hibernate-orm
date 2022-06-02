@@ -132,6 +132,17 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		return false;
 	}
 
+	@Override
+	protected boolean supportsIntersect() {
+		return getDialect().getVersion().isSameOrAfter( 10, 3 );
+	}
+
+	@Override
+	protected boolean supportsDistinctFromPredicate() {
+		// It supports a proprietary operator
+		return true;
+	}
+
 	private boolean supportsWindowFunctions() {
 		return getDialect().getVersion().isSameOrAfter( 10, 2 );
 	}

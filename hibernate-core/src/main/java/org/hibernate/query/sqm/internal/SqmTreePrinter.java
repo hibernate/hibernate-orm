@@ -20,6 +20,7 @@ import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
+import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmFkExpression;
@@ -65,6 +66,7 @@ import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
+import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
@@ -501,6 +503,18 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 		return null;
 	}
 
+	@Override
+	public Object visitRootDerived(SqmDerivedRoot<?> sqmRoot) {
+		processStanza(
+				"derived",
+				"`" + sqmRoot.getNavigablePath() + "`",
+				() -> {
+					processJoins( sqmRoot );
+				}
+		);
+		return null;
+	}
+
 	private void processJoins(SqmFrom<?,?> sqmFrom) {
 		if ( !sqmFrom.hasJoins() ) {
 			return;
@@ -578,6 +592,24 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 					() -> {
 						logIndented( "[fetched = " + joinedFromElement.isFetched() + ']' );
 
+						processJoinPredicate( joinedFromElement );
+						processJoins( joinedFromElement );
+					}
+			);
+		}
+		return null;
+	}
+
+	@Override
+	public Object visitQualifiedDerivedJoin(SqmDerivedJoin<?> joinedFromElement) {
+		if ( inJoinPredicate ) {
+			logWithIndentation( "-> [joined-path] - `%s`", joinedFromElement.getNavigablePath() );
+		}
+		else {
+			processStanza(
+					"derived",
+					"`" + joinedFromElement.getNavigablePath() + "`",
+					() -> {
 						processJoinPredicate( joinedFromElement );
 						processJoins( joinedFromElement );
 					}

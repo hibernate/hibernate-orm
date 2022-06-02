@@ -51,6 +51,7 @@ import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -3041,6 +3042,49 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			.setReadOnly(true)
 			.getResultList();
 			//end::hql-read-only-entities-native-example[]
+		});
+	}
+
+	@Test
+	public void test_hql_derived_root_example() {
+
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			//tag::hql-derived-root-example[]
+			List<Tuple> calls = entityManager.createQuery(
+							"select d.owner, d.payed " +
+									"from (" +
+									"  select p.person as owner, c.payment is not null as payed " +
+									"  from Call c " +
+									"  join c.phone p " +
+									"  where p.number = :phoneNumber) d",
+							Tuple.class)
+					.setParameter("phoneNumber", "123-456-7890")
+					.getResultList();
+			//end::hql-derived-root-example[]
+		});
+	}
+
+	@Test
+	@SkipForDialect(value = TiDBDialect.class, comment = "TiDB db does not support subqueries for ON condition")
+	@RequiresDialectFeature(DialectChecks.SupportsOrderByInCorrelatedSubquery.class)
+	public void test_hql_derived_join_example() {
+
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			//tag::hql-derived-join-example[]
+			List<Tuple> calls = entityManager.createQuery(
+							"select longest.duration " +
+									"from Phone p " +
+									"left join lateral (" +
+									"  select c.duration as duration " +
+									"  from p.calls c" +
+									"  order by c.duration desc" +
+									"  limit 1 " +
+									"  ) longest " +
+									"where p.number = :phoneNumber",
+							Tuple.class)
+					.setParameter("phoneNumber", "123-456-7890")
+					.getResultList();
+			//end::hql-derived-join-example[]
 		});
 	}
 }

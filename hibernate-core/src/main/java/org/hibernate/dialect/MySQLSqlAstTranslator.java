@@ -150,6 +150,17 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
+	protected boolean supportsIntersect() {
+		return false;
+	}
+
+	@Override
+	protected boolean supportsDistinctFromPredicate() {
+		// It supports a proprietary operator
+		return true;
+	}
+
+	@Override
 	protected String getFromDual() {
 		return " from dual";
 	}

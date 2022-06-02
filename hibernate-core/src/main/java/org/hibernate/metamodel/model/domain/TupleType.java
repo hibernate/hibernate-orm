@@ -8,7 +8,11 @@ package org.hibernate.metamodel.model.domain;
 
 import java.util.List;
 
+import org.hibernate.Incubating;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
+import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 
 /**
  * Describes any structural type without a direct java type representation.
@@ -23,4 +27,5 @@ public interface TupleType<J> extends SqmExpressible<J> {
 
 	SqmExpressible<?> get(int index);
 	SqmExpressible<?> get(String componentName);
+
 }

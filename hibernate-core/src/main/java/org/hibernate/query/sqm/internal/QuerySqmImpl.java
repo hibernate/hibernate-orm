@@ -731,7 +731,7 @@ public class QuerySqmImpl<R>
 	}
 
 	private NonSelectQueryPlan buildConcreteDeleteQueryPlan(@SuppressWarnings("rawtypes") SqmDeleteStatement sqmDelete) {
-		final EntityDomainType<?> entityDomainType = sqmDelete.getTarget().getReferencedPathSource();
+		final EntityDomainType<?> entityDomainType = sqmDelete.getTarget().getModel();
 		final String entityNameToDelete = entityDomainType.getHibernateEntityName();
 		final EntityPersister entityDescriptor = getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
@@ -759,7 +759,7 @@ public class QuerySqmImpl<R>
 		//noinspection rawtypes
 		final SqmUpdateStatement sqmUpdate = (SqmUpdateStatement) getSqmStatement();
 
-		final String entityNameToUpdate = sqmUpdate.getTarget().getReferencedPathSource().getHibernateEntityName();
+		final String entityNameToUpdate = sqmUpdate.getTarget().getModel().getHibernateEntityName();
 		final EntityPersister entityDescriptor = getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityNameToUpdate );
@@ -777,7 +777,7 @@ public class QuerySqmImpl<R>
 		//noinspection rawtypes
 		final SqmInsertStatement sqmInsert = (SqmInsertStatement) getSqmStatement();
 
-		final String entityNameToInsert = sqmInsert.getTarget().getReferencedPathSource().getHibernateEntityName();
+		final String entityNameToInsert = sqmInsert.getTarget().getModel().getHibernateEntityName();
 		final EntityPersister entityDescriptor = getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityNameToInsert );

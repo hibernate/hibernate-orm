@@ -207,6 +207,7 @@ IS					: [iI] [sS];
 JOIN				: [jJ] [oO] [iI] [nN];
 KEY					: [kK] [eE] [yY];
 LAST				: [lL] [aA] [sS] [tT];
+LATERAL				: [lL] [aA] [tT] [eE] [rR] [aA] [lL];
 LEADING				: [lL] [eE] [aA] [dD] [iI] [nN] [gG];
 LEFT				: [lL] [eE] [fF] [tT];
 LIKE				: [lL] [iI] [kK] [eE];

@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -213,10 +215,15 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
+		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
+		if ( lhsExpressionType == null ) {
+			renderComparisonStandard( lhs, operator, rhs );
+			return;
+		}
 		switch ( operator ) {
 			case DISTINCT_FROM:
 			case NOT_DISTINCT_FROM:
-				if ( lhs.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType() instanceof ArrayJdbcType ) {
+				if ( lhsExpressionType.getJdbcMappings().get( 0 ).getJdbcType() instanceof ArrayJdbcType ) {
 					// HSQL implements distinct from semantics for arrays
 					lhs.accept( this );
 					appendSql( operator == ComparisonOperator.DISTINCT_FROM ? "<>" : "=" );

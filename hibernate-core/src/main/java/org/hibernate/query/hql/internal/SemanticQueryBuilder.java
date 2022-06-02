@@ -105,6 +105,7 @@ import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
+import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmFkExpression;
@@ -147,6 +148,7 @@ import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
+import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
@@ -437,11 +439,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				dmlTargetIndex + 1
 		);
 		final SqmRoot<R> root = visitTargetEntity( dmlTargetContext );
-		if ( root.getReferencedPathSource() instanceof SqmPolymorphicRootDescriptor<?> ) {
+		if ( root.getModel() instanceof SqmPolymorphicRootDescriptor<?> ) {
 			throw new SemanticException(
 					String.format(
 							"Target type '%s' in insert statement is not an entity",
-							root.getReferencedPathSource().getHibernateEntityName()
+							root.getModel().getHibernateEntityName()
 					)
 			);
 		}
@@ -525,11 +527,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final int dmlTargetIndex = versioned ? 2 : 1;
 		final HqlParser.TargetEntityContext dmlTargetContext = (HqlParser.TargetEntityContext) ctx.getChild( dmlTargetIndex );
 		final SqmRoot<R> root = visitTargetEntity( dmlTargetContext );
-		if ( root.getReferencedPathSource() instanceof SqmPolymorphicRootDescriptor<?> ) {
+		if ( root.getModel() instanceof SqmPolymorphicRootDescriptor<?> ) {
 			throw new SemanticException(
 					String.format(
 							"Target type '%s' in update statement is not an entity",
-							root.getReferencedPathSource().getHibernateEntityName()
+							root.getModel().getHibernateEntityName()
 					)
 			);
 		}
@@ -1540,7 +1542,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmRoot<?> visitEntityWithJoins(HqlParser.EntityWithJoinsContext parserSpace) {
-		final SqmRoot<?> sqmRoot = visitRootEntity( (HqlParser.RootEntityContext) parserSpace.getChild( 0 ) );
+		final SqmRoot<?> sqmRoot = (SqmRoot<?>) parserSpace.getChild( 0 ).accept( this );
 		final SqmFromClause fromClause = currentQuerySpec().getFromClause();
 		// Correlations are implicitly added to the from clause
 		if ( !( sqmRoot instanceof SqmCorrelation<?, ?> ) ) {
@@ -1641,6 +1643,41 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 
 		final SqmRoot<?> sqmRoot = new SqmRoot<>( entityDescriptor, alias, true, creationContext.getNodeBuilder() );
+
+		pathRegistry.register( sqmRoot );
+
+		return sqmRoot;
+	}
+
+	@Override
+	public SqmRoot<?> visitRootSubquery(HqlParser.RootSubqueryContext ctx) {
+		if ( getCreationOptions().useStrictJpaCompliance() ) {
+			throw new StrictJpaComplianceViolation(
+					"The JPA specification does not support subqueries in the from clause. " +
+							"Please disable the JPA query compliance if you want to use this feature.",
+					StrictJpaComplianceViolation.Type.FROM_SUBQUERY
+			);
+		}
+		final ParseTree firstChild = ctx.getChild( 0 );
+		final boolean lateral = ( (TerminalNode) firstChild ).getSymbol().getType() == HqlParser.LATERAL;
+		final int subqueryIndex = lateral ? 2 : 1;
+		final SqmSubQuery<?> subQuery = (SqmSubQuery<?>) ctx.getChild( subqueryIndex ).accept( this );
+
+		final ParseTree lastChild = ctx.getChild( ctx.getChildCount() - 1 );
+		final HqlParser.VariableContext identificationVariableDefContext;
+		if ( lastChild instanceof HqlParser.VariableContext ) {
+			identificationVariableDefContext = (HqlParser.VariableContext) lastChild;
+		}
+		else {
+			identificationVariableDefContext = null;
+		}
+		final String alias = applyJpaCompliance(
+				visitVariable( identificationVariableDefContext )
+		);
+
+		final SqmCreationProcessingState processingState = processingStateStack.getCurrent();
+		final SqmPathRegistry pathRegistry = processingState.getPathRegistry();
+		final SqmRoot<?> sqmRoot = new SqmDerivedRoot<>( subQuery, alias, lateral );
 
 		pathRegistry.register( sqmRoot );
 
@@ -1775,10 +1812,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				break;
 		}
 
-		final HqlParser.JoinPathContext qualifiedJoinPathContext = parserJoin.joinPath();
+		final HqlParser.JoinTargetContext qualifiedJoinTargetContext = parserJoin.joinTarget();
+		final ParseTree lastChild = qualifiedJoinTargetContext.getChild( qualifiedJoinTargetContext.getChildCount() - 1 );
 		final HqlParser.VariableContext identificationVariableDefContext;
-		if ( qualifiedJoinPathContext.getChildCount() > 1 ) {
-			identificationVariableDefContext = (HqlParser.VariableContext) qualifiedJoinPathContext.getChild( 1 );
+		if ( lastChild instanceof HqlParser.VariableContext ) {
+			identificationVariableDefContext = (HqlParser.VariableContext) lastChild;
 		}
 		else {
 			identificationVariableDefContext = null;
@@ -1799,13 +1837,36 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						this
 				)
 		);
-
 		try {
-			//noinspection unchecked
-			final SqmQualifiedJoin<X, ?> join = (SqmQualifiedJoin<X, ?>) qualifiedJoinPathContext.getChild( 0 ).accept( this );
+			final SqmQualifiedJoin<X, ?> join;
+			if ( qualifiedJoinTargetContext instanceof HqlParser.JoinPathContext ) {
+				//noinspection unchecked
+				join = (SqmQualifiedJoin<X, ?>) qualifiedJoinTargetContext.getChild( 0 ).accept( this );
+			}
+			else {
+				if ( fetch ) {
+					throw new SemanticException( "fetch not allowed for subquery join" );
+				}
+				if ( getCreationOptions().useStrictJpaCompliance() ) {
+					throw new StrictJpaComplianceViolation(
+							"The JPA specification does not support subqueries in the from clause. " +
+									"Please disable the JPA query compliance if you want to use this feature.",
+							StrictJpaComplianceViolation.Type.FROM_SUBQUERY
+					);
+				}
+				final TerminalNode terminalNode = (TerminalNode) qualifiedJoinTargetContext.getChild( 0 );
+				final boolean lateral = terminalNode.getSymbol().getType() == HqlParser.LATERAL;
+				final int subqueryIndex = lateral ? 2 : 1;
+				final DotIdentifierConsumer identifierConsumer = dotIdentifierConsumerStack.pop();
+				final SqmSubQuery<?> subQuery = (SqmSubQuery<?>) qualifiedJoinTargetContext.getChild( subqueryIndex ).accept( this );
+				dotIdentifierConsumerStack.push( identifierConsumer );
+				//noinspection unchecked,rawtypes
+				join = new SqmDerivedJoin( subQuery, alias, joinType, lateral, sqmRoot );
+				processingStateStack.getCurrent().getPathRegistry().register( join );
+			}
 
 			final HqlParser.JoinRestrictionContext qualifiedJoinRestrictionContext = parserJoin.joinRestriction();
-			if ( join instanceof SqmEntityJoin<?> ) {
+			if ( join instanceof SqmEntityJoin<?> || join instanceof SqmDerivedJoin<?> ) {
 				sqmRoot.addSqmJoin( join );
 			}
 			else if ( join instanceof SqmAttributeJoin<?, ?> ) {

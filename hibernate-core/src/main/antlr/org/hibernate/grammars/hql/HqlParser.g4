@@ -169,14 +169,15 @@ fromClause
  * The declaration of a root entity in 'from' clause, along with its joins
  */
 entityWithJoins
-	: rootEntity (join | crossJoin | jpaCollectionJoin)*
+	: fromRoot (join | crossJoin | jpaCollectionJoin)*
 	;
 
 /**
  * A root entity declaration in the 'from' clause, with optional identification variable
  */
-rootEntity
-	: entityName variable?
+fromRoot
+	: entityName variable?									# RootEntity
+	| LATERAL? LEFT_PAREN subquery RIGHT_PAREN variable?	# RootSubquery
 	;
 
 /**
@@ -212,7 +213,7 @@ jpaCollectionJoin
  * A 'join', with an optional 'on' or 'with' clause
  */
 join
-	: joinType JOIN FETCH? joinPath joinRestriction?
+	: joinType JOIN FETCH? joinTarget joinRestriction?
 	;
 
 /**
@@ -226,8 +227,9 @@ joinType
 /**
  * The joined path, with an optional identification variable
  */
-joinPath
-	: path variable?
+joinTarget
+	: path variable?										#JoinPath
+	| LATERAL? LEFT_PAREN subquery RIGHT_PAREN variable?	#JoinSubquery
 	;
 
 /**

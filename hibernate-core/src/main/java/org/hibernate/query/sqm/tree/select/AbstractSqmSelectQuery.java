@@ -20,12 +20,14 @@ import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.EntityType;
 
 /**
@@ -139,6 +141,24 @@ public abstract class AbstractSqmSelectQuery<T>
 
 	}
 
+	@Override
+	public <X> SqmDerivedRoot<X> from(Subquery<X> subquery) {
+		return from( subquery, false );
+	}
+
+	@Override
+	public <X> SqmDerivedRoot<X> fromLateral(Subquery<X> subquery) {
+		return from( subquery, true );
+	}
+
+	@Override
+	public <X> SqmDerivedRoot<X> from(Subquery<X> subquery, boolean lateral) {
+		validateComplianceFromSubQuery();
+		final SqmDerivedRoot<X> root = new SqmDerivedRoot<>( (SqmSubQuery<X>) subquery, null, lateral );
+		addRoot( root );
+		return root;
+	}
+
 	private <X> SqmRoot<X> addRoot(SqmRoot<X> root) {
 		getQuerySpec().addRoot( root );
 		return root;
@@ -149,6 +169,13 @@ public abstract class AbstractSqmSelectQuery<T>
 		return addRoot( new SqmRoot<>( (EntityDomainType<X>) entityType, null, true, nodeBuilder() ) );
 	}
 
+	private void validateComplianceFromSubQuery() {
+		if ( nodeBuilder().getDomainModel().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+			throw new IllegalStateException(
+					"The JPA specification does not support subqueries in the from clause. " +
+							"Please disable the JPA query compliance if you want to use this feature." );
+		}
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Selection

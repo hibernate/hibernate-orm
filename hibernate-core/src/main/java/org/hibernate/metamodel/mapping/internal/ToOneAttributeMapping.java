@@ -642,6 +642,10 @@ public class ToOneAttributeMapping
 				&& declaringTableGroupProducer.containsTableReference( identifyingColumnsTableExpression );
 	}
 
+	public String getIdentifyingColumnsTableExpression() {
+		return identifyingColumnsTableExpression;
+	}
+
 	public void setIdentifyingColumnsTableExpression(String tableExpression) {
 		identifyingColumnsTableExpression = tableExpression;
 	}
@@ -654,6 +658,10 @@ public class ToOneAttributeMapping
 	@Override
 	public ForeignKeyDescriptor.Nature getSideNature() {
 		return sideNature;
+	}
+
+	public boolean isReferenceToPrimaryKey() {
+		return foreignKeyDescriptor.getSide( sideNature.inverse() ).getModelPart() instanceof EntityIdentifierMapping;
 	}
 
 	public String getReferencedPropertyName() {

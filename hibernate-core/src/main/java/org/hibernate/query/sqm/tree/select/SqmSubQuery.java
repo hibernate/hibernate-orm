@@ -14,8 +14,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSubQuery;
+import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
@@ -47,12 +50,14 @@ import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.AbstractQuery;
 import jakarta.persistence.criteria.CollectionJoin;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.ListJoin;
 import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.PluralJoin;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
@@ -166,6 +171,90 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
+	public SqmSubQuery<T> multiselect(Selection<?>... selections) {
+		validateComplianceMultiselect();
+
+		final Selection<? extends T> resultSelection;
+		Class<T> resultType = getResultType();
+		if ( resultType == null || resultType == Object.class ) {
+			switch ( selections.length ) {
+				case 0: {
+					throw new IllegalArgumentException(
+							"empty selections passed to criteria query typed as Object"
+					);
+				}
+				case 1: {
+					resultSelection = ( Selection<? extends T> ) selections[0];
+					break;
+				}
+				default: {
+					setResultType( (Class<T>) Object[].class );
+					resultSelection = ( Selection<? extends T> ) nodeBuilder().array( selections );
+				}
+			}
+		}
+		else if ( Tuple.class.isAssignableFrom( resultType ) ) {
+			resultSelection = ( Selection<? extends T> ) nodeBuilder().tuple( selections );
+		}
+		else if ( resultType.isArray() ) {
+			resultSelection = nodeBuilder().array( resultType, selections );
+		}
+		else {
+			resultSelection = nodeBuilder().construct( resultType, selections );
+		}
+		final SqmQuerySpec<T> querySpec = getQuerySpec();
+		if ( querySpec.getSelectClause() == null ) {
+			querySpec.setSelectClause( new SqmSelectClause( false, 1, nodeBuilder() ) );
+		}
+		querySpec.setSelection( (JpaSelection<T>) resultSelection );
+		return this;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public SqmSubQuery<T> multiselect(List<Selection<?>> selectionList) {
+		validateComplianceMultiselect();
+
+		final Selection<? extends T> resultSelection;
+		final Class<T> resultType = getResultType();
+		final List<? extends JpaSelection<?>> selections = (List<? extends JpaSelection<?>>) (List<?>) selectionList;
+		if ( resultType == null || resultType == Object.class ) {
+			switch ( selections.size() ) {
+				case 0: {
+					throw new IllegalArgumentException(
+							"empty selections passed to criteria query typed as Object"
+					);
+				}
+				case 1: {
+					resultSelection = ( Selection<? extends T> ) selections.get( 0 );
+					break;
+				}
+				default: {
+					setResultType( (Class<T>) Object[].class );
+					resultSelection = ( Selection<? extends T> ) nodeBuilder().array( selections );
+				}
+			}
+		}
+		else if ( Tuple.class.isAssignableFrom( resultType ) ) {
+			resultSelection = ( Selection<? extends T> ) nodeBuilder().tuple( selections );
+		}
+		else if ( resultType.isArray() ) {
+			resultSelection = nodeBuilder().array( resultType, selections );
+		}
+		else {
+			resultSelection = nodeBuilder().construct( resultType, selections );
+		}
+		final SqmQuerySpec<T> querySpec = getQuerySpec();
+		if ( querySpec.getSelectClause() == null ) {
+			querySpec.setSelectClause( new SqmSelectClause( false, 1, nodeBuilder() ) );
+		}
+		querySpec.setSelection( (JpaSelection<T>) resultSelection );
+
+		return this;
+	}
+
+	@Override
 	public SqmExpression<T> getSelection() {
 		final SqmSelectClause selectClause = getQuerySpec().getSelectClause();
 		if ( selectClause == null ) {
@@ -225,6 +314,117 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	@Override
 	public SqmSubQuery<T> having(Predicate... predicates) {
 		return (SqmSubQuery<T>) super.having( predicates );
+	}
+
+	@Override
+	public JpaExpression<Number> getOffset() {
+		//noinspection unchecked
+		return (JpaExpression<Number>) getQueryPart().getOffset();
+	}
+
+	@Override
+	public JpaSubQuery<T> offset(JpaExpression<? extends Number> offset) {
+		validateComplianceFetchOffset();
+		getQueryPart().setOffset( offset );
+		return this;
+	}
+
+	@Override
+	public JpaSubQuery<T> offset(Number offset) {
+		validateComplianceFetchOffset();
+		getQueryPart().setOffset( nodeBuilder().value( offset ) );
+		return this;
+	}
+
+	@Override
+	public JpaExpression<Number> getFetch() {
+		//noinspection unchecked
+		return (JpaExpression<Number>) getQueryPart().getFetch();
+	}
+
+	@Override
+	public JpaSubQuery<T> fetch(JpaExpression<? extends Number> fetch) {
+		validateComplianceFetchOffset();
+		getQueryPart().setFetch( fetch );
+		return this;
+	}
+
+	@Override
+	public JpaSubQuery<T> fetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType) {
+		validateComplianceFetchOffset();
+		getQueryPart().setFetch( fetch, fetchClauseType );
+		return this;
+	}
+
+	@Override
+	public JpaSubQuery<T> fetch(Number fetch) {
+		validateComplianceFetchOffset();
+		getQueryPart().setFetch( nodeBuilder().value( fetch ) );
+		return this;
+	}
+
+	@Override
+	public JpaSubQuery<T> fetch(Number fetch, FetchClauseType fetchClauseType) {
+		validateComplianceFetchOffset();
+		getQueryPart().setFetch( nodeBuilder().value( fetch ), fetchClauseType );
+		return this;
+	}
+
+	@Override
+	public FetchClauseType getFetchClauseType() {
+		return getQueryPart().getFetchClauseType();
+	}
+
+	@Override
+	public List<JpaOrder> getOrderList() {
+		//noinspection rawtypes,unchecked
+		return (List) getQueryPart().getSortSpecifications();
+	}
+
+	@Override
+	public JpaSubQuery<T> orderBy(Order... orders) {
+		validateComplianceOrderBy();
+		final SqmOrderByClause sqmOrderByClause = new SqmOrderByClause( orders.length );
+		for ( Order order : orders ) {
+			sqmOrderByClause.addSortSpecification( (SqmSortSpecification) order );
+		}
+		getQueryPart().setOrderByClause( sqmOrderByClause );
+		return this;
+	}
+
+	@Override
+	public JpaSubQuery<T> orderBy(List<Order> orders) {
+		validateComplianceOrderBy();
+		final SqmOrderByClause sqmOrderByClause = new SqmOrderByClause( orders.size() );
+		for ( Order order : orders ) {
+			sqmOrderByClause.addSortSpecification( (SqmSortSpecification) order );
+		}
+		getQueryPart().setOrderByClause( sqmOrderByClause );
+		return this;
+	}
+
+	private void validateComplianceMultiselect() {
+		if ( nodeBuilder().getDomainModel().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+			throw new IllegalStateException(
+					"The JPA specification does not support subqueries having multiple select items. " +
+							"Please disable the JPA query compliance if you want to use this feature." );
+		}
+	}
+
+	private void validateComplianceOrderBy() {
+		if ( nodeBuilder().getDomainModel().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+			throw new IllegalStateException(
+					"The JPA specification does not support subqueries having an order by clause. " +
+							"Please disable the JPA query compliance if you want to use this feature." );
+		}
+	}
+
+	private void validateComplianceFetchOffset() {
+		if ( nodeBuilder().getDomainModel().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+			throw new IllegalStateException(
+					"The JPA specification does not support subqueries having a fetch or offset clause. " +
+							"Please disable the JPA query compliance if you want to use this feature." );
+		}
 	}
 
 	@Override

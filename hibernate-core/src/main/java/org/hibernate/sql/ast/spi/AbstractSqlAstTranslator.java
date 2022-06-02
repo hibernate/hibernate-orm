@@ -1618,6 +1618,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected final void visitWhereClause(Predicate whereClauseRestrictions) {
+		final Predicate additionalWherePredicate = this.additionalWherePredicate;
 		if ( whereClauseRestrictions != null && !whereClauseRestrictions.isEmpty() || additionalWherePredicate != null ) {
 			appendSql( " where " );
 
@@ -1627,13 +1628,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					whereClauseRestrictions.accept( this );
 					if ( additionalWherePredicate != null ) {
 						appendSql( " and " );
+						this.additionalWherePredicate = null;
 						additionalWherePredicate.accept( this );
-						additionalWherePredicate = null;
 					}
 				}
 				else if ( additionalWherePredicate != null ) {
+					this.additionalWherePredicate = null;
 					additionalWherePredicate.accept( this );
-					additionalWherePredicate = null;
 				}
 			}
 			finally {
@@ -3564,6 +3565,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 		else if ( isParameter( expression ) ) {
+			final SqlAstNodeRenderingMode parameterRenderingMode = getParameterRenderingMode();
 			if ( parameterRenderingMode == SqlAstNodeRenderingMode.INLINE_PARAMETERS || parameterRenderingMode == SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS ) {
 				renderExpressionAsLiteral( expression, getJdbcParameterBindings() );
 			}
@@ -4077,10 +4079,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					&& supportsDistinctFromPredicate() ) {
 				// Special case for limit 1 sub-queries to avoid double nested sub-query
 				// ... x(c) on x.c is not distinct from (... fetch first 1 rows only)
-				if ( queryPart.getFetchClauseType() == FetchClauseType.ROWS_ONLY
-						&& queryPart.getFetchClauseExpression() instanceof QueryLiteral<?>
-						&& Integer.valueOf( 1 )
-						.equals( ( (QueryLiteral<?>) queryPart.getFetchClauseExpression() ).getLiteralValue() ) ) {
+				if ( isFetchFirstRowOnly( queryPart ) ) {
 					return new ComparisonPredicate(
 							new SqlTuple( columnReferences, tableGroup.getModelPart() ),
 							ComparisonOperator.NOT_DISTINCT_FROM,
@@ -4159,6 +4158,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			return new ExistsPredicate( existsQuery, false, getBooleanType() );
 		}
 		return null;
+	}
+
+	private boolean isFetchFirstRowOnly(QueryPart queryPart) {
+		return queryPart.getFetchClauseType() == FetchClauseType.ROWS_ONLY
+				&& queryPart.getFetchClauseExpression() instanceof QueryLiteral<?>
+				&& Integer.valueOf( 1 )
+				.equals( ( (QueryLiteral<?>) queryPart.getFetchClauseExpression() ).getLiteralValue() );
 	}
 
 	private QueryPart stripToSelectClause(QueryPart queryPart) {
@@ -4364,7 +4370,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitParameter(JdbcParameter jdbcParameter) {
-		switch ( parameterRenderingMode ) {
+		switch ( getParameterRenderingMode() ) {
 			case NO_PLAIN_PARAMETER:
 				renderCasted( jdbcParameter );
 				break;
@@ -5104,7 +5110,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else {
 			// TODO: We could use nested queries and use row numbers to emulate this
-			throw new IllegalArgumentException( "Can't emulate in predicate with tuples and limit/offset or set operations: " + predicate );
+			throw new IllegalArgumentException( "Can't emulate IN predicate with tuples and limit/offset or set operations: " + predicate );
 		}
 	}
 
@@ -5401,6 +5407,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							);
 							return;
 						}
+					}
+					// If we get here, this is an equality-like comparison, though we support scalar row value comparison
+					// For this special case, we can rely on scalar sub query handling, given that the sub query fetches only one row
+					if ( isFetchFirstRowOnly( subquery ) ) {
+						renderComparison( lhsTuple, operator, subquery );
+						return;
 					}
 				}
 				emulateSubQueryRelationalRestrictionPredicate(

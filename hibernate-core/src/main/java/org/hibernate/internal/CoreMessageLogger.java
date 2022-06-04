@@ -1792,4 +1792,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Association with `fetch=\"join\"`/`@Fetch(FetchMode.JOIN)` and `lazy=\"true\"`/`FetchType.LAZY` found. This will be interpreted as lazy: %s", id = 510)
 	void fetchModeJoinWithLazyWarning(String role);
 
+	@LogMessage(level = WARN)
+	@Message(value = "The %2$s version for [%s] is no longer supported, hence certain features may not work properly. The minimum supported version is %3$s. Check the community dialects project for available legacy versions.", id = 511)
+	void unsupportedDatabaseVersion(String databaseName, String actualVersion, String minimumVersion);
+
 }

@@ -41,7 +41,6 @@ import java.util.regex.Pattern;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.query.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.model.TypeContributions;
@@ -96,6 +95,7 @@ import org.hibernate.exception.spi.ConversionContext;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.MathHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -110,15 +110,16 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.Query;
+import org.hibernate.query.hql.HqlTranslator;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.NullOrdering;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
-import org.hibernate.query.hql.HqlTranslator;
-import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.mutation.internal.temptable.AfterUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableInsertStrategy;
@@ -165,12 +166,49 @@ import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import org.jboss.logging.Logger;
+
 import jakarta.persistence.TemporalType;
 
 import static java.lang.Math.ceil;
 import static java.lang.Math.log;
 import static org.hibernate.internal.util.StringHelper.parseCommaSeparatedString;
-import static org.hibernate.type.SqlTypes.*;
+import static org.hibernate.type.SqlTypes.ARRAY;
+import static org.hibernate.type.SqlTypes.BIGINT;
+import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BLOB;
+import static org.hibernate.type.SqlTypes.BOOLEAN;
+import static org.hibernate.type.SqlTypes.CHAR;
+import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.DATE;
+import static org.hibernate.type.SqlTypes.DECIMAL;
+import static org.hibernate.type.SqlTypes.DOUBLE;
+import static org.hibernate.type.SqlTypes.FLOAT;
+import static org.hibernate.type.SqlTypes.INTEGER;
+import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
+import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
+import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
+import static org.hibernate.type.SqlTypes.NCHAR;
+import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.NUMERIC;
+import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.REAL;
+import static org.hibernate.type.SqlTypes.SMALLINT;
+import static org.hibernate.type.SqlTypes.TIME;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.VARBINARY;
+import static org.hibernate.type.SqlTypes.VARCHAR;
+import static org.hibernate.type.SqlTypes.isCharacterType;
+import static org.hibernate.type.SqlTypes.isFloatOrRealOrDouble;
+import static org.hibernate.type.SqlTypes.isIntegral;
+import static org.hibernate.type.SqlTypes.isNumericOrDecimal;
+import static org.hibernate.type.SqlTypes.isNumericType;
+import static org.hibernate.type.SqlTypes.isVarbinaryType;
+import static org.hibernate.type.SqlTypes.isVarcharType;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME;
@@ -235,6 +273,8 @@ public abstract class Dialect implements ConversionContext {
 	private static final Pattern ESCAPE_CLOSING_COMMENT_PATTERN = Pattern.compile( "\\*/" );
 	private static final Pattern ESCAPE_OPENING_COMMENT_PATTERN = Pattern.compile( "/\\*" );
 
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, Dialect.class.getName() );
+
 	//needed for converting precision from decimal to binary digits
 	protected static final double LOG_BASE2OF10 = log(10)/log(2);
 
@@ -259,15 +299,29 @@ public abstract class Dialect implements ConversionContext {
 
 	protected Dialect(DatabaseVersion version) {
 		this.version = version;
+		checkVersion();
 		registerDefaultKeywords();
 		initDefaultProperties();
 	}
 
 	protected Dialect(DialectResolutionInfo info) {
 		this.version = info.makeCopy();
+		checkVersion();
 		registerDefaultKeywords();
 		registerKeywords(info);
 		initDefaultProperties();
+	}
+
+	protected void checkVersion() {
+		final DatabaseVersion version = getVersion();
+		final DatabaseVersion minimumVersion = getMinimumSupportedVersion();
+		if ( version != null && version.isBefore( minimumVersion.getMajor(), minimumVersion.getMinor(), minimumVersion.getMicro() ) ) {
+			LOG.unsupportedDatabaseVersion(
+					getClass().getName(),
+					version.getMajor() + "." + version.getMinor() + "." + version.getMicro(),
+					minimumVersion.getMajor() + "." + minimumVersion.getMinor() + "." + minimumVersion.getMicro()
+			);
+		}
 	}
 
 	/**
@@ -473,6 +527,10 @@ public abstract class Dialect implements ConversionContext {
 
 	public DatabaseVersion getVersion() {
 		return version;
+	}
+
+	protected DatabaseVersion getMinimumSupportedVersion() {
+		return SimpleDatabaseVersion.ZERO_VERSION;
 	}
 
 	/**
@@ -1217,8 +1275,8 @@ public abstract class Dialect implements ConversionContext {
 	 * {@link Types#LONGVARBINARY LONGVARBINARY} as the same type, since
 	 * Hibernate doesn't really differentiate these types.
 	 *
-	 * @param column1 the first column type info
-	 * @param column2 the second column type info
+	 * @param typeCode1 the first column type info
+	 * @param typeCode2 the second column type info
 	 *
 	 * @return {@code true} if the two type codes are equivalent
 	 */

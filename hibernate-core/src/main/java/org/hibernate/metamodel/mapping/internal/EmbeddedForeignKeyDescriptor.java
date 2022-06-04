@@ -359,7 +359,26 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			TableReference keySideReference,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		return getPredicate( targetSideReference, keySideReference, creationContext, targetSelectableMappings, keySelectableMappings );
+		final Junction predicate = new Junction( Junction.Nature.CONJUNCTION );
+		targetSelectableMappings.forEachSelectable(
+				(i, selection) -> {
+					final ComparisonPredicate comparisonPredicate = new ComparisonPredicate(
+							new ColumnReference(
+									targetSideReference,
+									selection,
+									creationContext.getSessionFactory()
+							),
+							ComparisonOperator.EQUAL,
+							new ColumnReference(
+									keySideReference,
+									keySelectableMappings.getSelectable( i ),
+									creationContext.getSessionFactory()
+							)
+					);
+					predicate.add( comparisonPredicate );
+				}
+		);
+		return predicate;
 	}
 
 	@Override
@@ -438,34 +457,6 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		}
 
 		return true;
-	}
-
-	private Predicate getPredicate(
-			TableReference lhs,
-			TableReference rhs,
-			SqlAstCreationContext creationContext,
-			SelectableMappings lhsMappings,
-			SelectableMappings rhsMappings) {
-		final Junction predicate = new Junction( Junction.Nature.CONJUNCTION );
-		lhsMappings.forEachSelectable(
-				(i, selection) -> {
-					final ComparisonPredicate comparisonPredicate = new ComparisonPredicate(
-							new ColumnReference(
-									lhs,
-									selection,
-									creationContext.getSessionFactory()
-							),
-							ComparisonOperator.EQUAL,
-							new ColumnReference(
-									rhs,
-									rhsMappings.getSelectable( i ),
-									creationContext.getSessionFactory()
-							)
-					);
-					predicate.add( comparisonPredicate );
-				}
-		);
-		return predicate;
 	}
 
 	protected TableReference getTableReference(TableGroup lhs, TableGroup tableGroup, String table) {

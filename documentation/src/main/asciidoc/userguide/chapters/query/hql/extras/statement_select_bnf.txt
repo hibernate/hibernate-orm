@@ -13,3 +13,20 @@ query
 
 queryOrder
 	: orderByClause limitClause? offsetClause? fetchClause?
+
+fromClause
+	: FROM entityWithJoins (COMMA entityWithJoins)*
+
+entityWithJoins
+	: fromRoot (join | crossJoin | jpaCollectionJoin)*
+
+fromRoot
+	: entityName variable?
+	| LATERAL? LEFT_PAREN subquery RIGHT_PAREN variable?
+
+join
+	: joinType JOIN FETCH? joinTarget joinRestriction?
+
+joinTarget
+	: path variable?
+	| LATERAL? LEFT_PAREN subquery RIGHT_PAREN variable?

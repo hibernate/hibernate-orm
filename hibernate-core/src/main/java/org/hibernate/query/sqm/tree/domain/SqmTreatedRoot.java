@@ -76,7 +76,7 @@ public class SqmTreatedRoot<T, S extends T> extends SqmRoot<S> implements SqmTre
 
 	@Override
 	public EntityDomainType<S> getReferencedPathSource() {
-		return getManagedType();
+		return getTreatTarget();
 	}
 
 	@Override

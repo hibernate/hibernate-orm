@@ -19,6 +19,7 @@ import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
+import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmFkExpression;
@@ -67,6 +68,7 @@ import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
+import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -235,12 +237,20 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitFromClause(SqmFromClause fromClause) {
-		fromClause.visitRoots( this::visitRootPath );
+		fromClause.visitRoots( root -> root.accept( this ) );
 		return fromClause;
 	}
 
 	@Override
 	public Object visitRootPath(SqmRoot<?> sqmRoot) {
+		sqmRoot.visitReusablePaths( path -> path.accept( this ) );
+		sqmRoot.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
+		return sqmRoot;
+	}
+
+	@Override
+	public Object visitRootDerived(SqmDerivedRoot<?> sqmRoot) {
+		sqmRoot.getQueryPart().accept( this );
 		sqmRoot.visitReusablePaths( path -> path.accept( this ) );
 		sqmRoot.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
 		return sqmRoot;
@@ -272,6 +282,17 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitQualifiedAttributeJoin(SqmAttributeJoin<?,?> joinedFromElement) {
+		joinedFromElement.visitReusablePaths( path -> path.accept( this ) );
+		joinedFromElement.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
+		if ( joinedFromElement.getJoinPredicate() != null ) {
+			joinedFromElement.getJoinPredicate().accept( this );
+		}
+		return joinedFromElement;
+	}
+
+	@Override
+	public Object visitQualifiedDerivedJoin(SqmDerivedJoin<?> joinedFromElement) {
+		joinedFromElement.getQueryPart().accept( this );
 		joinedFromElement.visitReusablePaths( path -> path.accept( this ) );
 		joinedFromElement.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
 		if ( joinedFromElement.getJoinPredicate() != null ) {

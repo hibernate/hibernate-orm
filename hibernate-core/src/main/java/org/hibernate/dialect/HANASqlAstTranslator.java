@@ -31,6 +31,8 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  */
 public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
+	private boolean inLateral;
+
 	public HANASqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
 	}
@@ -64,7 +66,20 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 
 	@Override
 	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
-		emulateQueryPartTableReferenceColumnAliasing( tableReference );
+		if ( tableReference.isLateral() && !inLateral ) {
+			inLateral = true;
+			emulateQueryPartTableReferenceColumnAliasing( tableReference );
+			inLateral = false;
+		}
+		else {
+			emulateQueryPartTableReferenceColumnAliasing( tableReference );
+		}
+	}
+
+	@Override
+	protected SqlAstNodeRenderingMode getParameterRenderingMode() {
+		// HANA does not support parameters in lateral sub queries for some reason, so inline all the parameters in this case
+		return inLateral ? SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS : super.getParameterRenderingMode();
 	}
 
 	@Override

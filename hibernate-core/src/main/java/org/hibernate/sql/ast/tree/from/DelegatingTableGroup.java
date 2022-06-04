@@ -89,7 +89,8 @@ public abstract class DelegatingTableGroup implements TableGroup {
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization, boolean resolve) {
+			boolean allowFkOptimization,
+			boolean resolve) {
 		return getTableGroup().getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
 	}
 

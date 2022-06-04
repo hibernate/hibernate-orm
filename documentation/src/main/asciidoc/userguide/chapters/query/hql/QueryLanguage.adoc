@@ -1470,6 +1470,21 @@ This behavior may be slightly adjusted using the `@Polymorphism` annotation.
 
 See <<chapters/domain/inheritance.adoc#entity-inheritance-polymorphism>> for more.
 
+[[hql-derived-root]]
+==== Derived root
+
+As of Hibernate 6.1, HQL allows to declare derived roots, based on a sub query in the `from` clause.
+
+[[hql-derived-root-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-derived-root-example, indent=0]
+----
+====
+
+This can be used to split up more complicated queries into smaller parts.
+
 [[hql-join]]
 === Declaring joined entities
 
@@ -1625,6 +1640,31 @@ Here, the identification variable `ccp` declared to the right of `treat()` has t
 This allows the attribute `cardNumber` declared by the subtype `CreditCardPayment` to be referenced in the rest of the query.
 
 See <<hql-treat-type>> for more information about `treat()`.
+
+[[hql-join-derived]]
+==== Join subquery
+
+As of Hibernate 6.1, HQL allows against to join sub queries.
+
+[[hql-derived-join-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-derived-join-example, indent=0]
+----
+====
+
+This is very similar to defining a <<hql-derived-root,derived root>>, but the particular interesting part here,
+is the use of the `lateral` keyword, which allows to refer to previous from clause nodes within the subquery.
+
+This is particularly useful for computing top-N elements of multiple groups.
+
+[NOTE]
+====
+Most databases support lateral natively, but for certain databases it is necessary to emulate this feature.
+Beware that the emulation is neither very efficient, nor does it support all possible query shapes,
+so be sure to test such queries against your desired target database.
+====
 
 [[hql-implicit-join]]
 ==== Implicit joins (path expressions)

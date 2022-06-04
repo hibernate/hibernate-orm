@@ -74,4 +74,22 @@ public interface ResourceRegistry {
 
 	void cancelLastQuery();
 
+	/**
+	 * Set the provided SQL string value to the given {@link Statement} that was previously registered.
+	 *
+	 * @param statement JDBC Statement
+	 * @param sql SQL string value
+	 */
+	void setStatementSql(Statement statement, String sql);
+
+	/**
+	 * Get the SQL string value associated with the given {@link Statement} or null if
+	 * the statement did not have the SQL string value registered as well.
+	 *
+	 * @param statement JDBC Statement
+	 *
+	 * @return SQL string value
+	 */
+	String getStatementSql(Statement statement);
+
 }

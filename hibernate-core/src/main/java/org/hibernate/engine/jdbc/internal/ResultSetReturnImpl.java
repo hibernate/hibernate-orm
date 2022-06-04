@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.function.Supplier;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
@@ -58,7 +59,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			}
 			finally {
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( statement, executeStartNanos );
+				sqlStatementLogger.logSlowQuery( getStatementSql( statement ), executeStartNanos );
 			}
 			postExtract( rs, statement );
 			return rs;
@@ -91,7 +92,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			}
 			finally {
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( callableStatement, executeStartNanos );
+				sqlStatementLogger.logSlowQuery( getStatementSql( callableStatement ), executeStartNanos );
 			}
 			postExtract( rs, callableStatement );
 			return rs;
@@ -116,7 +117,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			}
 			finally {
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( sql, executeStartNanos );
+				sqlStatementLogger.logSlowQuery( () -> sql , executeStartNanos );
 			}
 			postExtract( rs, statement );
 			return rs;
@@ -146,7 +147,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			}
 			finally {
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( statement, executeStartNanos );
+				sqlStatementLogger.logSlowQuery( getStatementSql( statement ), executeStartNanos );
 			}
 			postExtract( rs, statement );
 			return rs;
@@ -176,7 +177,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			}
 			finally {
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( statement, executeStartNanos );
+				sqlStatementLogger.logSlowQuery( getStatementSql( statement ), executeStartNanos );
 			}
 			postExtract( rs, statement );
 			return rs;
@@ -201,7 +202,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		finally {
 			jdbcExecuteStatementEnd();
-			sqlStatementLogger.logSlowQuery( statement, executeStartNanos );
+			sqlStatementLogger.logSlowQuery( getStatementSql( statement ), executeStartNanos );
 		}
 	}
 
@@ -221,7 +222,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		finally {
 			jdbcExecuteStatementEnd();
-			sqlStatementLogger.logSlowQuery( statement, executeStartNanos );
+			sqlStatementLogger.logSlowQuery( getStatementSql( statement ), executeStartNanos );
 		}
 	}
 
@@ -229,6 +230,11 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		if ( rs != null ) {
 			jdbcCoordinator.getLogicalConnection().getResourceRegistry().register( rs, st );
 		}
+	}
+
+	private Supplier<String> getStatementSql(Statement statement) {
+		String sql = jdbcCoordinator.getLogicalConnection().getResourceRegistry().getStatementSql( statement );
+		return sql != null ? () -> sql : statement::toString;
 	}
 
 }

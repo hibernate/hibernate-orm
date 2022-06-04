@@ -9,8 +9,10 @@ package org.hibernate.sql.results.jdbc.internal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Collections;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -218,7 +220,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 			}
 			finally {
 				eventListenerManager.jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( preparedStatement, executeStartNanos );
+				sqlStatementLogger.logSlowQuery( getStatementSql( preparedStatement ), executeStartNanos );
 			}
 
 			// For dialects that don't support an offset clause
@@ -295,5 +297,13 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 					.release( preparedStatement );
 			preparedStatement = null;
 		}
+	}
+
+	private Supplier<String> getStatementSql(Statement statement) {
+		String sql = getPersistenceContext().getJdbcCoordinator()
+				.getLogicalConnection()
+				.getResourceRegistry()
+				.getStatementSql( statement );
+		return sql != null ? () -> sql : statement::toString;
 	}
 }

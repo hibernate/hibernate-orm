@@ -12,7 +12,6 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.build.AllowSysOut;
 import org.jboss.logging.Logger;
 
-import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -133,32 +132,11 @@ public class SqlStatementLogger {
 	}
 
 	/**
-	 * Log a slow SQL query
-	 *
-	 * @param statement SQL statement.
-	 * @param startTimeNanos Start time in nanoseconds.
-	 */
-	public void logSlowQuery(Statement statement, long startTimeNanos) {
-		logSlowQuery( statement::toString, startTimeNanos );
-	}
-
-	/**
-	 * Log a slow SQL query
-	 *
-	 * @param sql The SQL query.
-	 * @param startTimeNanos Start time in nanoseconds.
-	 */
-	@AllowSysOut
-	public void logSlowQuery(String sql, long startTimeNanos) {
-		logSlowQuery( () -> sql, startTimeNanos );
-	}
-
-	/**
 	 * @param sqlSupplier Supplier to generate The SQL query.
 	 * @param startTimeNanos Start time in nanoseconds.
 	 */
 	@AllowSysOut
-	private void logSlowQuery(Supplier<String> sqlSupplier, long startTimeNanos) {
+	public void logSlowQuery(Supplier<String> sqlSupplier, long startTimeNanos) {
 		if ( logSlowQuery < 1 ) {
 			return;
 		}

@@ -33,6 +33,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.type.TypeHelper;
 
 /**
  * A base implementation of EntityEntry
@@ -434,6 +435,13 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			}
 			setStatus( Status.MANAGED );
 			loadedState = getPersister().getPropertyValues( entity );
+			TypeHelper.deepCopy(
+					loadedState,
+					persister.getPropertyTypes(),
+					persister.getPropertyCheckability(),
+					loadedState,
+					getPersistenceContext().getSession()
+			);
 			getPersistenceContext().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
 					persister,
 					id,

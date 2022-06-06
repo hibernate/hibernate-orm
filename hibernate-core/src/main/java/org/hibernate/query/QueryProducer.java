@@ -6,6 +6,8 @@
  */
 package org.hibernate.query;
 
+import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
+
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
@@ -207,6 +209,11 @@ public interface QueryProducer {
 	 * Create a {@link MutationQuery} from the given delete criteria tree
 	 */
 	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery);
+
+	/**
+	 * Create a {@link MutationQuery} from the given insert-select criteria tree
+	 */
+	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsertSelect insertSelect);
 
 	/**
 	 * Create a {@link NativeQuery} instance for the given native (SQL) statement

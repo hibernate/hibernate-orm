@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.Incubating;
 import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -26,6 +27,7 @@ import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 /**
  * @author Steve Ebersole
  */
+@Incubating
 public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> implements JpaCriteriaInsertSelect<T> {
 	private SqmQueryPart<T> selectQueryPart;
 

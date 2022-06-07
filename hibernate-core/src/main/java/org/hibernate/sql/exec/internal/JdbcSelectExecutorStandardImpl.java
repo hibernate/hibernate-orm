@@ -16,8 +16,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -66,6 +64,9 @@ import org.hibernate.sql.results.spi.ScrollableResultsConsumer;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 
 /**
  * Standard JdbcSelectExecutor implementation used by Hibernate,
@@ -146,7 +147,8 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		return stream.onClose( scrollableResults::close );
 	}
 
-	private <T, R> T executeQuery(
+	@Override
+	public <T, R> T executeQuery(
 			JdbcSelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,

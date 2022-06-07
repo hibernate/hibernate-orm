@@ -21,7 +21,7 @@ import org.hibernate.sql.results.spi.RowTransformer;
  * @author Steve Ebersole
  */
 @Incubating
-public interface JdbcSelectExecutor {
+public interface JdbcSelectExecutor extends SelectExecutor {
 	default <R> List<R> list(
 			JdbcSelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,

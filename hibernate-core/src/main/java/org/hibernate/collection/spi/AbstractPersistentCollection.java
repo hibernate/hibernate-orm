@@ -145,9 +145,10 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 				return true;
 			}
 			else {
-				final boolean isExtraLazy = withTemporarySessionIfNeeded(
+				return withTemporarySessionIfNeeded(
 						() -> {
-							final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
+							final CollectionEntry entry = session.getPersistenceContextInternal()
+									.getCollectionEntry(this);
 
 							if ( entry != null ) {
 								final CollectionPersister persister = entry.getLoadedPersister();
@@ -162,16 +163,34 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 									read();
 								}
 							}
-							else{
+							else {
 								throwLazyInitializationExceptionIfNotConnected();
 							}
 							return false;
 						}
 				);
-				return isExtraLazy;
 			}
 		}
 		return false;
+	}
+
+	public int  getSize() {
+		if ( cachedSize>=0 ) {
+			return cachedSize;
+		}
+		CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry(this);
+		if ( entry == null ) {
+			throwLazyInitializationExceptionIfNotConnected();
+			throwLazyInitializationException("collection not associated with session");
+			throw new AssertionFailure("impossible");
+		}
+		else {
+			if ( hasQueuedOperations() ) {
+				session.flush();
+			}
+			cachedSize = entry.getLoadedPersister().getSize( entry.getLoadedKey(), session );
+			return cachedSize;
+		}
 	}
 
 	/**
@@ -332,6 +351,22 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		return null;
 	}
 
+	@Override
+	public boolean elementExists(Object element) {
+		final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
+		if ( entry == null ) {
+			throwLazyInitializationExceptionIfNotConnected();
+			throwLazyInitializationException("collection not associated with session");
+			throw new AssertionFailure("impossible");
+		}
+		else {
+			if ( hasQueuedOperations() ) {
+				session.flush();
+			}
+			return entry.getLoadedPersister().elementExists( entry.getLoadedKey(), element, session );
+		}
+	}
+
 	protected static final Object UNKNOWN = new MarkerObject( "UNKNOWN" );
 
 	protected Object readElementByIndex(final Object index) {
@@ -366,6 +401,22 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		}
 		return UNKNOWN;
 
+	}
+
+	@Override
+	public Object elementByIndex(Object index) {
+		final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
+		if ( entry == null ) {
+			throwLazyInitializationExceptionIfNotConnected();
+			throwLazyInitializationException("collection not associated with session");
+			throw new AssertionFailure("impossible");
+		}
+		else {
+			if ( hasQueuedOperations() ) {
+				session.flush();
+			}
+			return entry.getLoadedPersister().getElementByIndex( entry.getLoadedKey(), index, session, owner );
+		}
 	}
 
 	protected int getCachedSize() {

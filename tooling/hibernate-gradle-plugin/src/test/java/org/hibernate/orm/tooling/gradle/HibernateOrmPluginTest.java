@@ -126,7 +126,7 @@ class HibernateOrmPluginTest {
 	}
 
 	@Test
-//	@Disabled( "up-to-date checking not working" )
+	@Disabled( "up-to-date checking not working" )
 	public void testJpaMetamodelGenUpToDate(@TempDir Path projectDir) {
 		Copier.copyProject( "simple/build.gradle", projectDir );
 

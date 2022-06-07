@@ -120,6 +120,68 @@ public final class Hibernate {
 	}
 
 	/**
+	 * Obtain the {@linkplain Collection#size() size} of a persistent collection,
+	 * without fetching its state from the database.
+	 *
+	 * @param collection a persistent collection associated with an open session
+	 * @return the size of the collection
+	 *
+	 * @since 6.1.1
+	 */
+	public static int size(Collection<?> collection) {
+		return collection instanceof PersistentCollection
+				? ((PersistentCollection<?>) collection).getSize()
+				: collection.size();
+	}
+
+	/**
+	 * Determine if the given persistent collection {@linkplain Collection#contains(Object) contains}
+	 * the given element, without fetching its state from the database.
+	 *
+	 * @param collection a persistent collection associated with an open session
+	 * @return true if the collection does contain the given element
+	 *
+	 * @since 6.1.1
+	 */
+	public static <T> boolean contains(Collection<? super T> collection, T element) {
+		return collection instanceof PersistentCollection
+				? ((PersistentCollection<?>) collection).elementExists(element)
+				: collection.contains(element);
+	}
+
+	/**
+	 * Obtain the value associated with the given key by the given persistent
+	 * map, without fetching the state of the map from the database.
+	 *
+	 * @param map a persistent map associated with an open session
+	 * @param key a key belonging to the map
+	 * @return the value associated by the map with the given key
+	 *
+	 * @since 6.1.1
+	 */
+	public static <K,V> V get(Map<? super K, V> map, K key) {
+		return map instanceof PersistentCollection
+				? (V) ((PersistentCollection<?>) map).elementByIndex(key)
+				: map.get(key);
+	}
+
+	/**
+	 * Obtain the element of the given persistent list with the given index,
+	 * without fetching the state of the list from the database.
+	 *
+	 * @param list a persistent list associated with an open session
+	 * @param key an index belonging to the list
+	 * @return the element of the list with the given index
+	 *
+	 * @since 6.1.1
+	 */
+	public static <T> T get(List<T> list, int key) {
+		return list instanceof PersistentCollection
+				? (T) ((PersistentCollection<?>) list).elementByIndex(key)
+				: list.get(key);
+	}
+
+	/**
 	 * Get the true, underlying class of a proxied persistent class. This operation
 	 * will initialize a proxy by side effect.
 	 *
@@ -225,6 +287,8 @@ public final class Hibernate {
 	 * @param id the id of the persistent entity instance
 	 *
 	 * @return a detached uninitialized proxy
+	 *
+	 * @since 6.0
 	 */
 	@SuppressWarnings("unchecked")
 	public static <E> E createDetachedProxy(SessionFactory sessionFactory, Class<E> entityClass, Object id) {
@@ -242,6 +306,8 @@ public final class Hibernate {
 	 * Operations for obtaining references to persistent collections of a certain type.
 	 *
 	 * @param <C> the type of collection, for example, {@code List&lt;User&gt;}
+	 *
+	 * @since 6.0
 	 */
 	public static final class CollectionInterface<C> {
 		private final Supplier<C> detached;
@@ -281,6 +347,8 @@ public final class Hibernate {
 	 * of a given element type.
 	 *
 	 * @param <U> the element type
+	 *
+	 * @since 6.0
 	 */
 	public static <U> CollectionInterface<Collection<U>> bag() {
 		return new CollectionInterface<>(PersistentBag::new, ArrayList::new);
@@ -291,6 +359,8 @@ public final class Hibernate {
 	 * of a given element type.
 	 *
 	 * @param <U> the element type
+	 *
+	 * @since 6.0
 	 */
 	public static <U> CollectionInterface<Set<U>> set() {
 		return new CollectionInterface<>(PersistentSet::new, HashSet::new);
@@ -301,6 +371,8 @@ public final class Hibernate {
 	 * of a given element type.
 	 *
 	 * @param <U> the element type
+	 *
+	 * @since 6.0
 	 */
 	public static <U> CollectionInterface<List<U>> list() {
 		return new CollectionInterface<>(PersistentList::new, ArrayList::new);
@@ -312,6 +384,8 @@ public final class Hibernate {
 	 *
 	 * @param <U> the key type
 	 * @param <V> the value type
+	 *
+	 * @since 6.0
 	 */
 	public static <U,V> CollectionInterface<Map<U,V>> map() {
 		return new CollectionInterface<>(PersistentMap::new, HashMap::new);
@@ -322,6 +396,8 @@ public final class Hibernate {
 	 * of a given element type.
 	 *
 	 * @param <U> the element type
+	 *
+	 * @since 6.0
 	 */
 	public static <U> CollectionInterface<SortedSet<U>> sortedSet() {
 		return new CollectionInterface<>(PersistentSortedSet::new, TreeSet::new);
@@ -334,6 +410,7 @@ public final class Hibernate {
 	 * @param <U> the key type
 	 * @param <V> the value type
 	 *
+	 * @since 6.0
 	 */
 	public static <U,V> CollectionInterface<Map<U,V>> sortedMap() {
 		return new CollectionInterface<>(PersistentSortedMap::new, TreeMap::new);
@@ -344,6 +421,8 @@ public final class Hibernate {
 	 * of the given type.
 	 *
 	 * @param collectionClass the Java class object representing the collection type
+	 *
+	 * @since 6.0
 	 */
 	@SuppressWarnings("unchecked")
 	public static <C> CollectionInterface<C> collection(Class<C> collectionClass) {

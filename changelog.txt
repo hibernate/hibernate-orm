@@ -3,6 +3,51 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.1.0.Final (June 07, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32066
+
+** Bug
+    * [HHH-15297] - Invalid Automatic-Module-Name org.hibernate.orm.community-dialects
+    * [HHH-15293] - CockroachDB BYTES type does not have a length specification
+    * [HHH-15291] - ClassCastException Regression in CriteriaBuilder
+    * [HHH-15288] - Switch to SMALLINT as recommended type for enums
+    * [HHH-15286] - Query with a Composite Identifier (@IdClass) throws an exception
+    * [HHH-15285] - Calling getJavaType() of @ElementCollection with basic types returns wrong type
+    * [HHH-15283] - NullPointerException from EntityManager.createNamedNativeQuery(…)
+    * [HHH-15281] - INSERTs/UPDATEs no longer executed as JDBC Batch statements if hibernate.temp.use_jdbc_metadata_defaults is set to false
+    * [HHH-15279] - NPE with Id on OneToOne referencing entity with multi-level EmbeddedId
+    * [HHH-15278] - NPE when NULL is used in a query projection
+    * [HHH-15270] - Inconsistent precedence of orm.xml implicit catalog over "default_catalog" in XML-mapped entities
+    * [HHH-15269] - Update NativeQuery unable to use h-schema placeholder, just emits placeholder contents into SQL
+    * [HHH-15267] - Some cache objects aren't implement Serializable interface
+    * [HHH-15266] - NullPointerException on 
+    * [HHH-15265] - SchemaExport.execute does not add the configured schema to comments
+    * [HHH-15263] - @NamedQuery is not supported with UPDATE statement
+    * [HHH-15260] - Criteria query is unable to determine TableReference when combining subquery with join
+    * [HHH-15258] - Orphan removal for OneToMany relations is broken when used with GenerationType.IDENTITY
+    * [HHH-15256] - Query NPE when using ":param IS NULL" with a Left Join
+    * [HHH-15255] - Fix org.hibernate.orm.test.batch.BatchTest
+    * [HHH-15153] - @OneToOne does not support @EmbeddedId
+    * [HHH-15134] - Update a bytecode enhanced Entity with a Version attribute causes OptimisticLockException
+    * [HHH-15010] - @CreationTimestamp and @UpdateTimestamp documentation have an incomplete list of supported field types
+
+** Improvement
+    * [HHH-15292] - escape special html chars in JavaDoc
+    * [HHH-15276] - Introduce ConverterRegistration annotation
+    * [HHH-15259] - Explicitly add JavaDoc to make @deprecated hint visible in Eclipse
+
+** New Feature
+    * [HHH-15251] - Unified mapping XSD based on JPA 3.1
+    * [HHH-10999] - Arrays datatype support via java.sql.Array
+    * [HHH-3356] - Support for subselect (subquery) in from clause
+
+** Task
+    * [HHH-15274] - Small optimisation for how LazyAttributeLoadingInterceptor is dealing with lazy fields
+    * [HHH-14614] - Better support for JUnit 5 on-failure handling 
+
+
 Changes in 6.0.1.Final (May 06, 2022)
 ------------------------------------------------------------------------------------------------------------------------
 

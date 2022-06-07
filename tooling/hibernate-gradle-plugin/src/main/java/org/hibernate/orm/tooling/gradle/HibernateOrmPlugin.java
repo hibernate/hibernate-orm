@@ -27,12 +27,12 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 		EnhancementTask.apply( ormDsl, ormDsl.getSourceSetProperty().get(), project );
 		JpaMetamodelGenerationTask.apply( ormDsl, ormDsl.getSourceSetProperty().get(), project );
 
-		project.getDependencies().add(
-				"implementation",
-				ormDsl.getHibernateVersionProperty().map( (ormVersion) -> Character.isDigit( ormVersion.charAt( 0 ) )
-						? "org.hibernate.orm:hibernate-core:" + ormVersion
-						: null
-				)
-		);
+//		project.getDependencies().add(
+//				"implementation",
+//				ormDsl.getHibernateVersionProperty().map( (ormVersion) -> Character.isDigit( ormVersion.charAt( 0 ) )
+//						? "org.hibernate.orm:hibernate-core:" + ormVersion
+//						: null
+//				)
+//		);
 	}
 }

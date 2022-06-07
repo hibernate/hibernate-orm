@@ -11,9 +11,6 @@ plugins {
 	id 'java-gradle-plugin'
 	id 'com.gradle.plugin-publish' version '0.20.0'
 
-	// disable the TestKit tests for the time being as it is having trouble
-	// which unfortunately also means we do not get any functional testing of the plugin
-//	id 'com.github.sebersole.testkit-junit5' version '1.2.0'
 	id 'checkstyle'
 
 	// for local publishing
@@ -42,6 +39,12 @@ dependencies {
 	// for Gradle
 	implementation jakartaLibs.inject
 	implementation localGroovy()
+
+	testImplementation gradleTestKit()
+	testImplementation testLibs.assertjCore
+	testImplementation testLibs.junit5Api
+
+	testRuntimeOnly testLibs.junit5Engine
 }
 
 gradlePlugin {
@@ -72,6 +75,10 @@ pluginBundle {
 			description = 'Applies Hibernate aspects into the build'
 		}
 	}
+}
+
+test {
+	useJUnitPlatform()
 }
 
 // Publish to the Gradle Plugin Portal

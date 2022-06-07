@@ -44,33 +44,40 @@ public class EnhancementHelper {
 
 		final String classesDirPath = classesDirFile.getAbsolutePath();
 
-		inputChanges.getFileChanges( classesDirectoryProperty ).forEach(
-				change -> {
-					switch ( change.getChangeType() ) {
-						case ADDED:
-						case MODIFIED: {
-							final File changedFile = change.getFile();
-							if ( changedFile.getName().endsWith( ".class" ) ) {
-								final String classFilePath = changedFile.getAbsolutePath();
-								if ( classFilePath.startsWith( classesDirPath ) ) {
-									// we found the directory it came from
-									//		-use that to determine the class name
-									enhance( changedFile, determineClassName( classesDirFile, changedFile ), enhancer, project );
-									break;
-								}
+		inputChanges.getFileChanges( classesDirectoryProperty ).forEach( (change) -> {
+			switch ( change.getChangeType() ) {
+				case ADDED:
+				case MODIFIED: {
+					final File changedFile = change.getFile();
+					if ( changedFile.getName().endsWith( ".class" ) ) {
+						final String classFilePath = changedFile.getAbsolutePath();
+						if ( classFilePath.startsWith( classesDirPath ) ) {
+							// we found the directory it came from - use that to determine the class name
+							final String className = determineClassName( classesDirFile, changedFile );
+
+							final long lastModified = changedFile.lastModified();
+
+							enhance( changedFile, className, enhancer, project );
+
+							final boolean timestampReset = changedFile.setLastModified( lastModified );
+							if ( !timestampReset ) {
+								project.getLogger().debug( "`{}`.setLastModified failed", project.relativePath( changedFile ) );
 							}
+
 							break;
-						}
-						case REMOVED: {
-							// nothing to do
-							break;
-						}
-						default: {
-							throw new UnsupportedOperationException( "Unexpected ChangeType : " + change.getChangeType().name() );
 						}
 					}
+					break;
 				}
-		);
+				case REMOVED: {
+					// nothing to do
+					break;
+				}
+				default: {
+					throw new UnsupportedOperationException( "Unexpected ChangeType : " + change.getChangeType().name() );
+				}
+			}
+		} );
 	}
 
 	private static void enhance(

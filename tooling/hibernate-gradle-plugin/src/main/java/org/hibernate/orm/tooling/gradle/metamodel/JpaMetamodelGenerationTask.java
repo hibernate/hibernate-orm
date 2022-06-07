@@ -15,11 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import javax.inject.Inject;
-import jakarta.persistence.SharedCacheMode;
-import jakarta.persistence.ValidationMode;
-import jakarta.persistence.spi.ClassTransformer;
-import jakarta.persistence.spi.PersistenceUnitInfo;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
 
 import org.gradle.api.DefaultTask;
@@ -43,6 +38,12 @@ import org.hibernate.orm.tooling.gradle.Helper;
 import org.hibernate.orm.tooling.gradle.HibernateOrmSpec;
 import org.hibernate.orm.tooling.gradle.metamodel.model.JpaStaticMetamodelGenerator;
 import org.hibernate.orm.tooling.gradle.metamodel.model.MetamodelClass;
+
+import jakarta.persistence.SharedCacheMode;
+import jakarta.persistence.ValidationMode;
+import jakarta.persistence.spi.ClassTransformer;
+import jakarta.persistence.spi.PersistenceUnitInfo;
+import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
 import static org.hibernate.orm.tooling.gradle.HibernateOrmSpec.HIBERNATE;
 
@@ -329,18 +330,6 @@ public class JpaMetamodelGenerationTask extends DefaultTask {
 		compileJpaMetamodelTask.getDestinationDirectory().set( pluginDsl.getJpaMetamodelSpec().getCompileOutputDirectory() );
 		compileJpaMetamodelTask.setClasspath(
 				project.getConfigurations().getByName( "runtimeClasspath" ).plus( mainSourceSet.getRuntimeClasspath() )
-		);
-
-		compileJpaMetamodelTask.doFirst(
-				(task) -> {
-					project.getLogger().lifecycle( "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-					project.getLogger().lifecycle( "compileJpaMetamodel classpath" );
-					project.getLogger().lifecycle( "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-					( (JavaCompile) task ).getClasspath().forEach(
-							entry -> project.getLogger().lifecycle( "    > {}", entry.getAbsolutePath() )
-					);
-					project.getLogger().lifecycle( "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-				}
 		);
 	}
 

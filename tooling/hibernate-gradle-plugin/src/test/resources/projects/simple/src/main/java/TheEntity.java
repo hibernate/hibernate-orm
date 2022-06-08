@@ -12,9 +12,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
+import org.hibernate.annotations.BatchSize;
+
 import java.util.Set;
 
 @Entity
+@BatchSize( size = 20 )
 public class TheEntity {
 	@Id
 	private Integer id;

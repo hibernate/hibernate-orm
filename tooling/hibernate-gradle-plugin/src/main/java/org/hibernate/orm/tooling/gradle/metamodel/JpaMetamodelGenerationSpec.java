@@ -12,11 +12,11 @@ import javax.inject.Inject;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.compile.JavaCompile;
 
 import org.hibernate.orm.tooling.gradle.HibernateOrmSpec;
@@ -37,7 +37,6 @@ public class JpaMetamodelGenerationSpec {
 	private final Provider<JavaVersion> targetJavaVersionAccess;
 
 	@Inject
-	@SuppressWarnings( "UnstableApiUsage" )
 	public JpaMetamodelGenerationSpec(HibernateOrmSpec ormDsl, Project project) {
 		this.project = project;
 
@@ -57,16 +56,13 @@ public class JpaMetamodelGenerationSpec {
 				project.getLayout().getBuildDirectory().dir( "classes/java/" + JPA_METAMODEL )
 		);
 
-		targetJavaVersionAccess = project.provider(
-				() -> {
-					final JavaPluginConvention javaPluginConvention = project.getConvention().findPlugin( JavaPluginConvention.class );
-					assert javaPluginConvention != null;
-					final SourceSet sourceSet = javaPluginConvention.getSourceSets().getByName( SourceSet.MAIN_SOURCE_SET_NAME );
-					final String compileTaskName = sourceSet.getCompileJavaTaskName();
-					final JavaCompile compileTask = (JavaCompile) project.getTasks().getByName( compileTaskName );
-					return JavaVersion.toVersion( compileTask.getTargetCompatibility() );
-				}
-		);
+		targetJavaVersionAccess = project.provider( () -> {
+			final SourceSetContainer sourceSets = project.getExtensions().getByType( SourceSetContainer.class );
+			final SourceSet sourceSet = sourceSets.getByName( SourceSet.MAIN_SOURCE_SET_NAME );
+			final String compileTaskName = sourceSet.getCompileJavaTaskName();
+			final JavaCompile compileTask = (JavaCompile) project.getTasks().getByName( compileTaskName );
+			return JavaVersion.toVersion( compileTask.getTargetCompatibility() );
+		} );
 	}
 
 	public Provider<JavaVersion> getTargetJavaVersionAccess() {

@@ -14,12 +14,8 @@ import org.gradle.testkit.runner.BuildTask;
 import org.gradle.testkit.runner.GradleRunner;
 import org.gradle.testkit.runner.TaskOutcome;
 
-import org.hibernate.engine.spi.Managed;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-
-import org.assertj.core.api.Condition;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -29,15 +25,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
  *
  * @author Steve Ebersole
  */
-class HibernateOrmPluginTest {
-	private static final Condition<TaskOutcome> SUCCESS = new Condition<>(
-			(taskOutcome) -> taskOutcome == TaskOutcome.SUCCESS,
-			"task succeeded"
-	);
-	private static final Condition<TaskOutcome> UP_TO_DATE = new Condition<>(
-			(taskOutcome) -> taskOutcome == TaskOutcome.UP_TO_DATE,
-			"task up-to-date"
-	);
+class JavaProjectTests {
 
 	@Test
 	public void testEnhancement(@TempDir Path projectDir) throws Exception {
@@ -59,13 +47,8 @@ class HibernateOrmPluginTest {
 		// make sure the class is enhanced
 		final File classesDir = new File( projectDir.toFile(), "build/classes/java/main" );
 		final ClassLoader classLoader = Helper.toClassLoader( classesDir );
-		verifyEnhanced( classLoader, "TheEmbeddable" );
-		verifyEnhanced( classLoader, "TheEntity" );
-	}
-
-	private void verifyEnhanced(ClassLoader classLoader, String className) throws Exception {
-		final Class<?> loadedClass = classLoader.loadClass( className );
-		assertThat( Managed.class ).isAssignableFrom( loadedClass );
+		TestHelper.verifyEnhanced( classLoader, "TheEmbeddable" );
+		TestHelper.verifyEnhanced( classLoader, "TheEntity" );
 	}
 
 	@Test
@@ -89,7 +72,7 @@ class HibernateOrmPluginTest {
 			// make sure the class is enhanced
 			final File classesDir = new File( projectDir.toFile(), "build/classes/java/main" );
 			final ClassLoader classLoader = Helper.toClassLoader( classesDir );
-			verifyEnhanced( classLoader, "TheEntity" );
+			TestHelper.verifyEnhanced( classLoader, "TheEntity" );
 		}
 
 		{
@@ -108,7 +91,7 @@ class HibernateOrmPluginTest {
 			// and again
 			final File classesDir = new File( projectDir.toFile(), "build/classes/java/main" );
 			final ClassLoader classLoader = Helper.toClassLoader( classesDir );
-			verifyEnhanced( classLoader, "TheEntity" );
+			TestHelper.verifyEnhanced( classLoader, "TheEntity" );
 		}
 	}
 
@@ -127,10 +110,10 @@ class HibernateOrmPluginTest {
 		final BuildTask task = result.task( ":generateJpaMetamodel" );
 		assertThat( task ).isNotNull();
 		assertThat( task.getOutcome() ).isEqualTo( TaskOutcome.SUCCESS );
+		assertThat( new File( projectDir.toFile(), "build/classes/java/jpaMetamodel" ) ).exists();
 	}
 
 	@Test
-//	@Disabled( "up-to-date checking not working" )
 	public void testJpaMetamodelGenUpToDate(@TempDir Path projectDir) {
 		Copier.copyProject( "simple/build.gradle", projectDir );
 
@@ -147,6 +130,7 @@ class HibernateOrmPluginTest {
 			final BuildTask task = result.task( ":generateJpaMetamodel" );
 			assertThat( task ).isNotNull();
 			assertThat( task.getOutcome() ).isEqualTo( TaskOutcome.SUCCESS );
+			assertThat( new File( projectDir.toFile(), "build/classes/java/jpaMetamodel" ) ).exists();
 		}
 
 		{
@@ -162,75 +146,7 @@ class HibernateOrmPluginTest {
 			final BuildTask task2 = result2.task( ":generateJpaMetamodel" );
 			assertThat( task2 ).isNotNull();
 			assertThat( task2.getOutcome() ).isEqualTo( TaskOutcome.UP_TO_DATE );
+			assertThat( new File( projectDir.toFile(), "build/classes/java/jpaMetamodel" ) ).exists();
 		}
-	}
-
-	@Test
-	public void testEnhanceKotlinModel(@TempDir Path projectDir) throws Exception {
-		Copier.copyProject( "simple-kotlin/build.gradle", projectDir );
-
-		final GradleRunner gradleRunner = GradleRunner.create()
-				.withProjectDir( projectDir.toFile() )
-				.withPluginClasspath()
-				.withDebug( true )
-				.withArguments( "clean", "compileKotlin", "--stacktrace", "--no-build-cache" )
-				.forwardOutput();
-
-		final BuildResult result = gradleRunner.build();
-		final BuildTask task = result.task( ":compileKotlin" );
-		assertThat( task ).isNotNull();
-		assertThat( task.getOutcome() ).isEqualTo( TaskOutcome.SUCCESS );
-
-		// make sure the class is enhanced
-		final File classesDir = new File( projectDir.toFile(), "build/classes/kotlin/main" );
-		final ClassLoader classLoader = Helper.toClassLoader( classesDir );
-		verifyEnhanced( classLoader, "TheEntity" );
-	}
-
-	@Test
-	public void testEnhanceKotlinModelUpToDate(@TempDir Path projectDir) throws Exception {
-		Copier.copyProject( "simple-kotlin/build.gradle", projectDir );
-
-		{
-			System.out.println( "First execution ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-
-			final GradleRunner gradleRunner = GradleRunner.create()
-					.withProjectDir( projectDir.toFile() )
-					.withPluginClasspath()
-					.withDebug( true )
-					.withArguments( "clean", "compileKotlin", "--stacktrace", "--no-build-cache" )
-					.forwardOutput();
-
-			final BuildResult result = gradleRunner.build();
-			final BuildTask task = result.task( ":compileKotlin" );
-			assertThat( task ).isNotNull();
-			assertThat( task.getOutcome() ).isEqualTo( TaskOutcome.SUCCESS );
-
-			// make sure the class is enhanced
-			final File classesDir = new File( projectDir.toFile(), "build/classes/kotlin/main" );
-			final ClassLoader classLoader = Helper.toClassLoader( classesDir );
-			verifyEnhanced( classLoader, "TheEntity" );
-		}
-		{
-			System.out.println( "Second execution ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-
-			final GradleRunner gradleRunner = GradleRunner.create()
-					.withProjectDir( projectDir.toFile() )
-					.withPluginClasspath()
-					.withDebug( true )
-					.withArguments( "compileKotlin", "--stacktrace", "--no-build-cache" )
-					.forwardOutput();
-
-			final BuildResult result = gradleRunner.build();
-			final BuildTask task = result.task( ":compileKotlin" );
-			assertThat( task ).isNotNull();
-			assertThat( task.getOutcome() ).isEqualTo( TaskOutcome.UP_TO_DATE );
-
-			// make sure the class is enhanced
-			final File classesDir = new File( projectDir.toFile(), "build/classes/kotlin/main" );
-			final ClassLoader classLoader = Helper.toClassLoader( classesDir );
-			verifyEnhanced( classLoader, "TheEntity" );
-		}
-
 	}
 }

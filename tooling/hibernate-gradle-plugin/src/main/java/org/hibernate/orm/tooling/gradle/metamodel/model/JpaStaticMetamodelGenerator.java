@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import jakarta.persistence.spi.PersistenceUnitInfo;
 
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.RegularFile;
@@ -23,22 +22,24 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.orm.tooling.gradle.metamodel.JpaMetamodelGenerationSpec;
+
+import jakarta.persistence.spi.PersistenceUnitInfo;
 
 public class JpaStaticMetamodelGenerator {
+
 	public static void processMetamodel(
 			PersistenceUnitInfo persistenceUnitInfo,
-			JpaMetamodelGenerationSpec spec) {
+			GenerationOptions options) {
 		EntityManagerFactoryBuilder target = Bootstrap.getEntityManagerFactoryBuilder( persistenceUnitInfo, Collections.emptyMap() );
 		try {
-			new JpaStaticMetamodelGenerator( spec, target.metadata() ).process();
+			new JpaStaticMetamodelGenerator( options, target.metadata() ).process();
 		}
 		finally {
 			target.cancel();
 		}
 	}
 
-	private final JpaMetamodelGenerationSpec spec;
+	private final GenerationOptions options;
 	private final MetadataImplementor metadata;
 
 	private final Directory generationOutputDirectory;
@@ -46,10 +47,10 @@ public class JpaStaticMetamodelGenerator {
 
 	private final Set<String> processedDomainTypeNames = new HashSet<>();
 
-	private JpaStaticMetamodelGenerator(JpaMetamodelGenerationSpec spec, MetadataImplementor metadata) {
-		this.spec = spec;
+	private JpaStaticMetamodelGenerator(GenerationOptions options, MetadataImplementor metadata) {
+		this.options = options;
 		this.metadata = metadata;
-		this.generationOutputDirectory = spec.getGenerationOutputDirectory().get();
+		this.generationOutputDirectory = options.getGenerationDirectory().get();
 		this.objectFactory = new ObjectFactory( metadata );
 	}
 
@@ -94,10 +95,9 @@ public class JpaStaticMetamodelGenerator {
 		final RegularFile metamodelClassJavaFile = generationOutputDirectory.file( metamodelClassJavaFileName );
 
 		final File metamodelClassJavaFileAsFile = metamodelClassJavaFile.getAsFile();
-		metamodelClass.writeToFile( metamodelClassJavaFileAsFile, spec );
+		metamodelClass.writeToFile( metamodelClassJavaFileAsFile, options );
 	}
 
-	@SuppressWarnings( "unchecked" )
 	private void handleEmbeddable(Component embeddedValueMapping) {
 		final MetamodelClass metamodelClass = objectFactory.metamodelClass( embeddedValueMapping );
 		handleManagedClass( metamodelClass, embeddedValueMapping.getPropertyIterator() );

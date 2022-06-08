@@ -89,7 +89,7 @@ public class EnhancementHelper {
 	}
 
 	public static Enhancer generateEnhancer(ClassLoader classLoader, HibernateOrmSpec ormDsl) {
-		final EnhancementSpec enhancementDsl = ormDsl.getEnhancementSpec();
+		final EnhancementSpec enhancementDsl = ormDsl.getEnhancement();
 
 		final EnhancementContext enhancementContext = new DefaultEnhancementContext() {
 			@Override

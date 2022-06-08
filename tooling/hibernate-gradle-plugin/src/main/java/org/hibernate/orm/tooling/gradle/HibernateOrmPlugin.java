@@ -10,7 +10,9 @@ import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.JvmEcosystemPlugin;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
@@ -99,7 +101,11 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 			}
 
 			genTask.injectSourceSet( ormDsl.getSourceSet() );
+
 			genTask.getGenerationOutputDirectory().set( ormDsl.getJpaMetamodel().getGenerationOutputDirectory() );
+
+			genTask.getApplyGeneratedAnnotation().convention( ormDsl.getJpaMetamodel().getApplyGeneratedAnnotation() );
+			genTask.getSuppressions().convention( ormDsl.getJpaMetamodel().getSuppressions() );
 
 			final JavaCompile modelCompileTask = modelCompileTaskRef.get();
 
@@ -112,7 +118,6 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 
 				modelCompileTask.setSourceCompatibility( languageCompileTask.getSourceCompatibility() );
 				modelCompileTask.setTargetCompatibility( languageCompileTask.getTargetCompatibility() );
-				genTask.injectJavaVersion( languageCompileTask.getSourceCompatibility() );
 
 				modelCompileTask.finalizedBy( modelCompileTask );
 			} );
@@ -124,9 +129,17 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 			modelCompileTask.source( project.files( ormDsl.getJpaMetamodel().getGenerationOutputDirectory() ) );
 			modelCompileTask.getDestinationDirectory().set( ormDsl.getJpaMetamodel().getCompileOutputDirectory() );
 
-			modelCompileTask.setClasspath(
-					project.getConfigurations().getByName( "runtimeClasspath" ).plus( sourceSet.getRuntimeClasspath() )
-			);
+			FileCollection metamodelCompileClasspath = project.getConfigurations().getByName( "runtimeClasspath" )
+					.plus( sourceSet.getCompileClasspath() )
+					.plus( sourceSet.getRuntimeClasspath() );
+			if ( ormDsl.getJpaMetamodel().getApplyGeneratedAnnotation().getOrElse( true ) ) {
+				final Dependency jakartaAnnotationsDep = project.getDependencies().create( "jakarta.annotation:jakarta.annotation-api:2.0.0" );
+				metamodelCompileClasspath = metamodelCompileClasspath.plus(
+						project.getConfigurations().detachedConfiguration( jakartaAnnotationsDep )
+				);
+			}
+
+			modelCompileTask.setClasspath( metamodelCompileClasspath );
 		} );
 	}
 

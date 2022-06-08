@@ -28,12 +28,13 @@ public abstract class HibernateOrmSpec implements ExtensionAware {
 
 	public static final String DSL_NAME = HIBERNATE;
 
+	private final Project project;
+
 	private EnhancementSpec enhancementDsl;
 	private JpaMetamodelGenerationSpec jpaMetamodelDsl;
 
 	private final Property<Boolean> useSameVersion;
-	private final Project project;
-	private final Property<SourceSet> sourceSetProperty;
+	private final Property<SourceSet> sourceSet;
 
 	private final Provider<EnhancementSpec> enhancementDslAccess;
 	private final Provider<JpaMetamodelGenerationSpec> jpaMetamodelDslAccess;
@@ -46,8 +47,8 @@ public abstract class HibernateOrmSpec implements ExtensionAware {
 		useSameVersion = project.getObjects().property( Boolean.class );
 		useSameVersion.convention( true );
 
-		sourceSetProperty = project.getObjects().property( SourceSet.class );
-		sourceSetProperty.convention( mainSourceSet( project ) );
+		sourceSet = project.getObjects().property( SourceSet.class );
+		sourceSet.convention( mainSourceSet( project ) );
 
 		enhancementDslAccess = project.provider( () -> enhancementDsl );
 		jpaMetamodelDslAccess = project.provider( () -> jpaMetamodelDsl );
@@ -93,7 +94,7 @@ public abstract class HibernateOrmSpec implements ExtensionAware {
 	 * The source-set containing the domain model.  Defaults to the `main` source-set
 	 */
 	public Property<SourceSet> getSourceSet() {
-		return sourceSetProperty;
+		return sourceSet;
 	}
 
 	/**
@@ -107,7 +108,7 @@ public abstract class HibernateOrmSpec implements ExtensionAware {
 	 * @see #getSourceSet()
 	 */
 	public void setSourceSet(SourceSet sourceSet) {
-		sourceSetProperty.set( sourceSet );
+		this.sourceSet.set( sourceSet );
 	}
 
 	/**

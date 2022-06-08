@@ -66,13 +66,11 @@ public class JpaStaticMetamodelGenerator {
 		}
 	}
 
-	@SuppressWarnings( "unchecked" )
 	private void handleMappedClass(MappedSuperclass mappingDescriptor) {
 		final MetamodelClass metamodelClass = objectFactory.metamodelClass( mappingDescriptor );
 		handleManagedClass( metamodelClass, mappingDescriptor.getDeclaredPropertyIterator() );
 	}
 
-	@SuppressWarnings( "unchecked" )
 	private void handlePersistentClass(PersistentClass persistentClass) {
 		final MetamodelClass metamodelClass = objectFactory.metamodelClass( persistentClass );
 		handleManagedClass( metamodelClass, persistentClass.getDeclaredPropertyIterator() );

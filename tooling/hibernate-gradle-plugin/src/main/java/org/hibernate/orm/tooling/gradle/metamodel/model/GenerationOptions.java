@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.tooling.gradle.metamodel.model;
 
-import org.gradle.api.JavaVersion;
 import org.gradle.api.file.Directory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
@@ -18,5 +17,4 @@ public interface GenerationOptions {
 	Provider<Directory> getGenerationDirectory();
 	Provider<Boolean> getApplyGeneratedAnnotation();
 	SetProperty<String> getSuppressions();
-	Provider<JavaVersion> getTargetJavaVersionAccess();
 }

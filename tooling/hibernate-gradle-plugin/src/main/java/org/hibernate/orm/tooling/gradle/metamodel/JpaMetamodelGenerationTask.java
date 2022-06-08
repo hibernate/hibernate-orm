@@ -9,12 +9,10 @@ package org.hibernate.orm.tooling.gradle.metamodel;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.Properties;
 import javax.inject.Inject;
 
 import org.gradle.api.DefaultTask;
-import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.Directory;
@@ -50,13 +48,13 @@ public class JpaMetamodelGenerationTask extends DefaultTask {
 	public static final String GEN_TASK_NAME = "generateJpaMetamodel";
 	public static final String COMPILE_META_TASK_NAME = "compileJpaMetamodel";
 
+	private final Property<SourceSet> sourceSetProperty;
+
 	private final DirectoryProperty generationOutputDirectory;
 
-	private final Property<SourceSet> sourceSetProperty;
 	private final Property<Boolean> applyGeneratedAnnotation;
 	private final SetProperty<String> suppressions;
 
-	private final Property<JavaVersion> javaVersion;
 
 
 	@Inject
@@ -69,21 +67,12 @@ public class JpaMetamodelGenerationTask extends DefaultTask {
 		generationOutputDirectory = getProject().getObjects().directoryProperty();
 
 		applyGeneratedAnnotation = getProject().getObjects().property( Boolean.class );
-		applyGeneratedAnnotation.convention( true );
-
 		suppressions = getProject().getObjects().setProperty( String.class );
-		suppressions.convention( Arrays.asList( "raw", "deprecation" ) );
 
-		javaVersion = getProject().getObjects().property( JavaVersion.class );
-		javaVersion.convention( JavaVersion.current() );
 	}
 
 	public void injectSourceSet(Provider<SourceSet> sourceSetAccess) {
 		sourceSetProperty.set( sourceSetAccess );
-	}
-
-	public void injectJavaVersion(Object version) {
-		javaVersion.set( JavaVersion.toVersion( version ) );
 	}
 
 	@OutputDirectory
@@ -149,11 +138,6 @@ public class JpaMetamodelGenerationTask extends DefaultTask {
 			public SetProperty<String> getSuppressions() {
 				return suppressions;
 			}
-
-			@Override
-			public Provider<JavaVersion> getTargetJavaVersionAccess() {
-				return javaVersion;
-			}
 		};
 	}
 
@@ -187,6 +171,7 @@ public class JpaMetamodelGenerationTask extends DefaultTask {
 	}
 
 	public static void apply(HibernateOrmSpec pluginDsl, Project project) {
+		// todo : implement it
 	}
 
 }

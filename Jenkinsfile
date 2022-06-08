@@ -117,7 +117,7 @@ stage('Build') {
 							switch (buildEnv.dbName) {
 								case "mysql8":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mysql:8.0.21').pull()
+										docker.image('mysql:8.0.29').pull()
 									}
 									sh "./docker_db.sh mysql_8_0"
 									state[buildEnv.tag]['containerName'] = "mysql"

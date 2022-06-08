@@ -33,6 +33,12 @@ import static org.hibernate.orm.tooling.gradle.HibernateOrmSpec.HIBERNATE;
 public class EnhancementTask extends DefaultTask {
 	public static final String DSL_NAME = "hibernateEnhance";
 
+	private final DirectoryProperty compilationOutputDirectory;
+	private final DirectoryProperty outputDirectory;
+
+	public EnhancementTask() {
+	}
+
 	public static void apply(HibernateOrmSpec pluginDsl, SourceSet mainSourceSet, Project project) {
 		final EnhancementTask enhancementTask = project.getTasks().create(
 				DSL_NAME,
@@ -52,8 +58,6 @@ public class EnhancementTask extends DefaultTask {
 	}
 
 	private final EnhancementSpec enhancementDsl;
-	private final DirectoryProperty javaCompileOutputDirectory;
-	private final DirectoryProperty outputDirectory;
 
 	@Inject
 	public EnhancementTask(HibernateOrmSpec pluginDsl, SourceSet mainSourceSet, Project project) {

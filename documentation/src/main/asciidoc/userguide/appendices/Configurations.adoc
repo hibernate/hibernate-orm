@@ -636,11 +636,11 @@ Enables Hibernate to use JDBC2 scrollable resultsets. This property is only rele
 Allows Hibernate to use JDBC3 `PreparedStatement.getGeneratedKeys()` to retrieve natively-generated keys after insert. You need the JDBC3+ driver and JRE1.4+. Disable this property if your driver has problems with the Hibernate identifier generators. By default, it tries to detect the driver capabilities from connection metadata.
 
 `*hibernate.enable_lazy_load_no_trans*` (e.g. `true` or `false` (default value))::
-Initialize Lazy Proxies or Collections outside a given Transactional Persistence Context.
+Allows a detached proxy or lazy collection to be fetched even when not associated with an open session / persistence context, by creating a temporary persistence context when the proxy or collection is accessed.
 +
-Although enabling this configuration can make `LazyInitializationException` go away, it's better to use a fetch plan that guarantees that all properties are properly initialized before the Session is closed.
+Enabling this setting can make `LazyInitializationException` go away, but it's much better to use a fetch plan to ensure that needed associations are fully initialized before the session is closed.
 +
-In reality, you shouldn't probably enable this setting anyway.
+IMPORTANT: This setting is not recommended, since it can easily break transaction isolation or lead to data aliasing.
 
 [[configurations-logging]]
 === Statement logging and statistics

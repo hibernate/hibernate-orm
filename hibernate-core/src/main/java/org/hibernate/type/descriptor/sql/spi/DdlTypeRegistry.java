@@ -13,11 +13,11 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -75,6 +75,17 @@ public class DdlTypeRegistry implements Serializable {
 			if ( previousSqlTypeCode != null && JdbcTypeNameMapper.isStandardTypeCode( previousSqlTypeCode ) ) {
 				sqlTypes.put( rawTypeName, previousSqlTypeCode );
 			}
+		}
+	}
+
+	@Internal
+	public void removeDescriptor(int sqlTypeCode) {
+		final DdlType removable = ddlTypes.get( sqlTypeCode );
+		if ( removable != null ) {
+			for ( String rawTypeName : removable.getRawTypeNames() ) {
+				sqlTypes.remove( rawTypeName );
+			}
+			log.debugf( "removeDescriptor(%d) removed registration(%s)", sqlTypeCode, removable );
 		}
 	}
 

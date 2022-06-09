@@ -1971,6 +1971,12 @@ public interface AvailableSettings {
 	String STATEMENT_INSPECTOR = "hibernate.session_factory.statement_inspector";
 
 	/**
+	 * Allows a detached proxy or lazy collection to be fetched even when not
+	 * associated with an open persistence context, by creating a temporary
+	 * persistence context when the proxy or collection is accessed. This
+	 * behavior is not recommended, since it can easily break transaction
+	 * isolation or lead to data aliasing. It is therefore disabled by default.
+	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyLazyInitializationOutsideTransaction(boolean)
 	 */
 	String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";

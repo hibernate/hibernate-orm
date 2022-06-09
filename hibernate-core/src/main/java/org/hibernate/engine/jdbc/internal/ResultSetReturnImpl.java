@@ -177,7 +177,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			}
 			finally {
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( getStatementSql( statement ), executeStartNanos );
+				sqlStatementLogger.logSlowQuery( () -> sql, executeStartNanos );
 			}
 			postExtract( rs, statement );
 			return rs;
@@ -222,7 +222,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		finally {
 			jdbcExecuteStatementEnd();
-			sqlStatementLogger.logSlowQuery( getStatementSql( statement ), executeStartNanos );
+			sqlStatementLogger.logSlowQuery( () -> sql, executeStartNanos );
 		}
 	}
 

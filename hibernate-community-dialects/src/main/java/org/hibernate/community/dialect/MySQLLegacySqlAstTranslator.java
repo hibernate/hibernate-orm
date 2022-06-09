@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -27,9 +27,9 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  *
  * @author Christian Beikov
  */
-public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
-	public MySQLSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+	public MySQLLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
 	}
 
@@ -141,7 +141,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 
 	@Override
 	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return true;
+		return getDialect().getVersion().isSameOrAfter( 5, 7 );
 	}
 
 	@Override

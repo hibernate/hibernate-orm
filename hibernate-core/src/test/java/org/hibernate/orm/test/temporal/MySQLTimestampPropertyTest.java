@@ -36,13 +36,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * @author Gail Badner
  */
-@RequiresDialect(value = MySQLDialect.class, majorVersion = 5, minorVersion = 7)
+@RequiresDialect(value = MySQLDialect.class)
 @TestForIssue(jiraKey = "HHH-8401")
 @DomainModel(
-		annotatedClasses = MySQL57TimestampPropertyTest.Entity.class
+		annotatedClasses = MySQLTimestampPropertyTest.Entity.class
 )
 @SessionFactory
-public class MySQL57TimestampPropertyTest {
+public class MySQLTimestampPropertyTest {
 	private final DateFormat timestampFormat = new SimpleDateFormat( "HH:mm:ss.SSS" );
 
 	@Test

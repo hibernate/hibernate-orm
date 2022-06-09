@@ -231,6 +231,9 @@ if ( gradle.ext.javaToolchainEnabled ) {
 
 		// Configure JVM Options
 		jvmArgs( getProperty( 'toolchain.launcher.jvmargs' ).toString().split( ' ' ) )
+		if ( project.hasProperty( 'test.jdk.launcher.args' ) ) {
+			jvmArgs( project.getProperty( 'test.jdk.launcher.args' ).toString().split( ' ' ) )
+		}
 
 		// Display version of Java tools
 		doFirst {

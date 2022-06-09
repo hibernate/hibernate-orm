@@ -21,6 +21,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
@@ -288,7 +289,10 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 
 		final IdentifierGenerator identifierGenerator = entityDescriptor.getEntityPersister().getIdentifierGenerator();
 		final List<Assignment> assignments = assignmentsByTable.get( updatingTableReference );
-		if ( ( assignments == null || assignments.isEmpty() ) && !( identifierGenerator instanceof PostInsertIdentifierGenerator ) ) {
+		if ( ( assignments == null || assignments.isEmpty() )
+				&& !( identifierGenerator instanceof PostInsertIdentifierGenerator )
+				&& ( !( identifierGenerator instanceof BulkInsertionCapableIdentifierGenerator )
+				|| ( (BulkInsertionCapableIdentifierGenerator) identifierGenerator ).supportsBulkInsertionIdentifierGeneration() ) ) {
 			throw new IllegalStateException( "There must be at least a single root table assignment" );
 		}
 
@@ -312,24 +316,26 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		querySpec.getFromClause().addRoot( temporaryTableGroup );
 		final InsertStatement insertStatement = new InsertStatement( dmlTableReference );
 		insertStatement.setSourceSelectStatement( querySpec );
-		for ( Assignment assignment : assignments ) {
-			insertStatement.addTargetColumnReferences( assignment.getAssignable().getColumnReferences() );
-			for ( ColumnReference columnReference : assignment.getAssignable().getColumnReferences() ) {
-				querySpec.getSelectClause().addSqlSelection(
-						new SqlSelectionImpl(
-								1,
-								0,
-								new ColumnReference(
-										updatingTableReference.getIdentificationVariable(),
-										columnReference.getColumnExpression(),
-										false,
-										null,
-										null,
-										columnReference.getJdbcMapping(),
-										sessionFactory
-								)
-						)
-				);
+		if ( assignments != null ) {
+			for ( Assignment assignment : assignments ) {
+				insertStatement.addTargetColumnReferences( assignment.getAssignable().getColumnReferences() );
+				for ( ColumnReference columnReference : assignment.getAssignable().getColumnReferences() ) {
+					querySpec.getSelectClause().addSqlSelection(
+							new SqlSelectionImpl(
+									1,
+									0,
+									new ColumnReference(
+											updatingTableReference.getIdentificationVariable(),
+											columnReference.getColumnExpression(),
+											false,
+											null,
+											null,
+											columnReference.getJdbcMapping(),
+											sessionFactory
+									)
+							)
+					);
+				}
 			}
 		}
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
@@ -394,114 +400,113 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		}
 		else {
 			entityTableToRootIdentity = null;
-			if ( identifierGenerator instanceof OptimizableGenerator ) {
-				final Optimizer optimizer = ( (OptimizableGenerator) identifierGenerator ).getOptimizer();
-				// If the generator uses an optimizer, we have to generate the identifiers for the new rows
-				// but only if the target paths don't already contain the id
-				if ( optimizer != null && optimizer.getIncrementSize() > 1 && insertStatement.getTargetColumnReferences()
-						.stream()
-						.noneMatch( c -> keyColumns[0].equals( c.getColumnExpression() ) ) ) {
-					final BasicEntityIdentifierMapping identifierMapping = (BasicEntityIdentifierMapping) entityDescriptor.getIdentifierMapping();
+			// if the target paths don't already contain the id, and we need identifier generation,
+			// then we load update rows from the temporary table with the generated identifiers,
+			// to then insert into the target tables in once statement
+			if ( needsIdentifierGeneration( identifierGenerator )
+					&& insertStatement.getTargetColumnReferences()
+					.stream()
+					.noneMatch( c -> keyColumns[0].equals( c.getColumnExpression() ) ) ) {
+				final BasicEntityIdentifierMapping identifierMapping = (BasicEntityIdentifierMapping) entityDescriptor.getIdentifierMapping();
 
-					final JdbcParameter rowNumber = new JdbcParameterImpl( identifierMapping.getJdbcMapping() );
-					final JdbcParameter rootIdentity = new JdbcParameterImpl( identifierMapping.getJdbcMapping() );
-					final List<Assignment> temporaryTableAssignments = new ArrayList<>( 1 );
-					final ColumnReference idColumnReference = new ColumnReference(
-							(String) null,
-							identifierMapping,
-							sessionFactory
-					);
-					temporaryTableAssignments.add(
-							new Assignment(
-									idColumnReference,
-									rootIdentity
-							)
-					);
-					final TemporaryTableColumn rowNumberColumn = entityTable.getColumns().get(
-							entityTable.getColumns().size() - 1
-					);
-					final UpdateStatement updateStatement = new UpdateStatement(
-							temporaryTableReference,
-							temporaryTableAssignments,
-							new ComparisonPredicate(
-									new ColumnReference(
-											(String) null,
-											rowNumberColumn.getColumnName(),
-											false,
-											null,
-											null,
-											rowNumberColumn.getJdbcMapping(),
-											sessionFactory
-									),
-									ComparisonOperator.EQUAL,
-									rowNumber
-							)
-					);
-
-					final JdbcUpdate jdbcUpdate = jdbcServices.getJdbcEnvironment()
-							.getSqlAstTranslatorFactory()
-							.buildUpdateTranslator( sessionFactory, updateStatement )
-							.translate( null, executionContext.getQueryOptions() );
-					final JdbcParameterBindings updateBindings = new JdbcParameterBindingsImpl( 2 );
-
-					for ( int i = 0; i < rows; i++ ) {
-						updateBindings.addBinding(
-								rowNumber,
-								new JdbcParameterBindingImpl(
+				final JdbcParameter rowNumber = new JdbcParameterImpl( identifierMapping.getJdbcMapping() );
+				final JdbcParameter rootIdentity = new JdbcParameterImpl( identifierMapping.getJdbcMapping() );
+				final List<Assignment> temporaryTableAssignments = new ArrayList<>( 1 );
+				final ColumnReference idColumnReference = new ColumnReference(
+						(String) null,
+						identifierMapping,
+						sessionFactory
+				);
+				temporaryTableAssignments.add(
+						new Assignment(
+								idColumnReference,
+								rootIdentity
+						)
+				);
+				final TemporaryTableColumn rowNumberColumn = entityTable.getColumns().get(
+						entityTable.getColumns().size() - 1
+				);
+				final UpdateStatement updateStatement = new UpdateStatement(
+						temporaryTableReference,
+						temporaryTableAssignments,
+						new ComparisonPredicate(
+								new ColumnReference(
+										(String) null,
+										rowNumberColumn.getColumnName(),
+										false,
+										null,
+										null,
 										rowNumberColumn.getJdbcMapping(),
-										i + 1
-								)
-						);
-						updateBindings.addBinding(
-								rootIdentity,
-								new JdbcParameterBindingImpl(
-										identifierMapping.getJdbcMapping(),
-										identifierGenerator.generate(
-												executionContext.getSession(),
-												null
-										)
-								)
-						);
-						jdbcServices.getJdbcMutationExecutor().execute(
-								jdbcUpdate,
-								updateBindings,
-								sql -> executionContext.getSession()
-										.getJdbcCoordinator()
-										.getStatementPreparer()
-										.prepareStatement( sql ),
-								(integer, preparedStatement) -> {
-								},
-								executionContext
-						);
-					}
+										sessionFactory
+								),
+								ComparisonOperator.EQUAL,
+								rowNumber
+						)
+				);
 
-					insertStatement.addTargetColumnReferences(
-							new ColumnReference(
-									(String) null,
-									keyColumns[0],
-									false,
-									null,
-									null,
-									identifierMapping.getJdbcMapping(),
-									sessionFactory
+				final JdbcUpdate jdbcUpdate = jdbcServices.getJdbcEnvironment()
+						.getSqlAstTranslatorFactory()
+						.buildUpdateTranslator( sessionFactory, updateStatement )
+						.translate( null, executionContext.getQueryOptions() );
+				final JdbcParameterBindings updateBindings = new JdbcParameterBindingsImpl( 2 );
+
+				for ( int i = 0; i < rows; i++ ) {
+					updateBindings.addBinding(
+							rowNumber,
+							new JdbcParameterBindingImpl(
+									rowNumberColumn.getJdbcMapping(),
+									i + 1
 							)
 					);
-					querySpec.getSelectClause().addSqlSelection(
-							new SqlSelectionImpl(
-									1,
-									0,
-									new ColumnReference(
-											updatingTableReference.getIdentificationVariable(),
-											idColumnReference.getColumnExpression(),
-											false,
-											null,
-											null,
-											idColumnReference.getJdbcMapping(),
-											sessionFactory
+					updateBindings.addBinding(
+							rootIdentity,
+							new JdbcParameterBindingImpl(
+									identifierMapping.getJdbcMapping(),
+									identifierGenerator.generate(
+											executionContext.getSession(),
+											null
 									)
 							)
 					);
+					jdbcServices.getJdbcMutationExecutor().execute(
+							jdbcUpdate,
+							updateBindings,
+							sql -> executionContext.getSession()
+									.getJdbcCoordinator()
+									.getStatementPreparer()
+									.prepareStatement( sql ),
+							(integer, preparedStatement) -> {
+							},
+							executionContext
+					);
 				}
+
+				insertStatement.addTargetColumnReferences(
+						new ColumnReference(
+								(String) null,
+								keyColumns[0],
+								false,
+								null,
+								null,
+								identifierMapping.getJdbcMapping(),
+								sessionFactory
+						)
+				);
+				querySpec.getSelectClause().addSqlSelection(
+						new SqlSelectionImpl(
+								1,
+								0,
+								new ColumnReference(
+										updatingTableReference.getIdentificationVariable(),
+										idColumnReference.getColumnExpression(),
+										false,
+										null,
+										null,
+										idColumnReference.getJdbcMapping(),
+										sessionFactory
+								)
+						)
+				);
 			}
 		}
 
@@ -606,6 +611,17 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 					executionContext
 			);
 		}
+	}
+
+	private boolean needsIdentifierGeneration(IdentifierGenerator identifierGenerator) {
+		if ( !( identifierGenerator instanceof OptimizableGenerator ) ) {
+			return false;
+		}
+		// If the generator uses an optimizer or is not bulk insertion capable, we have to generate identifiers for the new rows,
+		// as that couldn't have been done through a SQL expression
+		final Optimizer optimizer = ( (OptimizableGenerator) identifierGenerator ).getOptimizer();
+		return optimizer != null && optimizer.getIncrementSize() > 1 || identifierGenerator instanceof BulkInsertionCapableIdentifierGenerator
+				&& !( (BulkInsertionCapableIdentifierGenerator) identifierGenerator ).supportsBulkInsertionIdentifierGeneration();
 	}
 
 	private void insertTable(

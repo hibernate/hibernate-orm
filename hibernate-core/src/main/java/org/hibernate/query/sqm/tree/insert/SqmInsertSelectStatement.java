@@ -29,11 +29,11 @@ import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
  */
 @Incubating
 public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> implements JpaCriteriaInsertSelect<T> {
-	private SqmQueryPart<T> selectQueryPart;
+	private SqmQueryPart<?> selectQueryPart;
 
 	public SqmInsertSelectStatement(SqmRoot<T> targetRoot, NodeBuilder nodeBuilder) {
 		super( targetRoot, SqmQuerySource.HQL, nodeBuilder );
-		this.selectQueryPart = new SqmQuerySpec<T>( nodeBuilder );
+		this.selectQueryPart = new SqmQuerySpec<>( nodeBuilder );
 	}
 
 	public SqmInsertSelectStatement(Class<T> targetEntity, NodeBuilder nodeBuilder) {
@@ -58,7 +58,7 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 			boolean withRecursiveCte,
 			SqmRoot<T> target,
 			List<SqmPath<?>> insertionTargetPaths,
-			SqmQueryPart<T> selectQueryPart) {
+			SqmQueryPart<?> selectQueryPart) {
 		super( builder, querySource, parameters, cteStatements, withRecursiveCte, target, insertionTargetPaths );
 		this.selectQueryPart = selectQueryPart;
 	}
@@ -84,11 +84,11 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 		);
 	}
 
-	public SqmQueryPart<T> getSelectQueryPart() {
+	public SqmQueryPart<?> getSelectQueryPart() {
 		return selectQueryPart;
 	}
 
-	public void setSelectQueryPart(SqmQueryPart<T> selectQueryPart) {
+	public void setSelectQueryPart(SqmQueryPart<?> selectQueryPart) {
 		this.selectQueryPart = selectQueryPart;
 	}
 

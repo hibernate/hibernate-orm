@@ -16,6 +16,7 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 @Library('hibernate-jenkins-pipeline-helpers@1.5') _
 import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 
+@Field final String DEFAULT_JDK_VERSION = '11'
 @Field final String NODE_PATTERN_BASE = 'Worker&&Containers'
 @Field List<BuildEnvironment> environments
 
@@ -25,26 +26,26 @@ helper.runWithNotification {
 def defaultJdk = '11'
 stage('Configure') {
 	this.environments = [
-// 		buildEnv(defaultJdk, 'h2'),
-// 		buildEnv(defaultJdk, 'hsqldb'),
-// 		buildEnv(defaultJdk, 'derby'),
-// 		buildEnv(defaultJdk, 'mysql8'),
-// 		buildEnv(defaultJdk, 'mariadb'),
-// 		buildEnv(defaultJdk, 'postgresql_9_5'),
-// 		buildEnv(defaultJdk, 'postgresql_13'),
-// 		buildEnv(defaultJdk, 'oracle'),
-		buildEnv(defaultJdk, 'oracle_ee'),
-// 		buildEnv(defaultJdk, 'db2'),
-// 		buildEnv(defaultJdk, 'mssql'),
-// 		buildEnv(defaultJdk, 'sybase'),
-		buildEnv(defaultJdk, 'hana', 'HANA'),
-		buildEnv(defaultJdk, 's390x', 's390x'),
-		buildEnv(defaultJdk, 'tidb', 'tidb', 'tidb_hibernate@pingcap.com'),
-		// Disable EDB for now as the image is not available anymore
-// 		buildEnv(defaultJdk, 'edb')
-		jdkBuildEnv(defaultJdk, '17'),
-		jdkBuildEnv(defaultJdk, '18'),
-		jdkBuildEnv(defaultJdk, '19'),
+//		new BuildEnvironment( dbName: 'h2' ),
+//		new BuildEnvironment( dbName: 'hsqldb' ),
+//		new BuildEnvironment( dbName: 'derby' ),
+//		new BuildEnvironment( dbName: 'mysql8' ),
+//		new BuildEnvironment( dbName: 'mariadb' ),
+//		new BuildEnvironment( dbName: 'postgresql_9_5' ),
+//		new BuildEnvironment( dbName: 'postgresql_13' ),
+//		new BuildEnvironment( dbName: 'oracle' ),
+		new BuildEnvironment( dbName: 'oracle_ee' ),
+//		new BuildEnvironment( dbName: 'db2' ),
+//		new BuildEnvironment( dbName: 'mssql' ),
+//		new BuildEnvironment( dbName: 'sybase' ),
+		new BuildEnvironment( dbName: 'hana', node: 'HANA' ),
+		new BuildEnvironment( dbName: 's390x', node: 's390x' ),
+		new BuildEnvironment( dbName: 'tidb', node: 'tidb', notificationRecipients: 'tidb_hibernate@pingcap.com' ),
+// Disable EDB for now as the image is not available anymore
+//		new BuildEnvironment( dbName: 'edb' ),
+		new BuildEnvironment( jdkVersion: '17' ),
+		new BuildEnvironment( jdkVersion: '18' ),
+		new BuildEnvironment( jdkVersion: '19' )
 	];
 
 	helper.configure {
@@ -80,19 +81,22 @@ stage('Build') {
 	Map<String, Map<String, String>> state = [:]
 	environments.each { BuildEnvironment buildEnv ->
 		// Don't build environments for newer JDKs when this is a PR
-		if ( buildEnv.getVersion() != defaultJdk ) {
-			if ( helper.scmSource.pullRequest ) {
-				return
-			}
+		if ( helper.scmSource.pullRequest && buildEnv.jdkVersion ) {
+			return
 		}
 		state[buildEnv.tag] = [:]
 		executions.put(buildEnv.tag, {
-			runBuildOnNode(buildEnv.node) {
+			runBuildOnNode(buildEnv.node ?: NODE_PATTERN_BASE) {
+				def testJavaHome
+				if ( buildEnv.testJdkVersion ) {
+					testJavaHome = tool(name: "OpenJDK ${buildEnv.testJdkVersion} Latest", type: 'jdk')
+				}
+				def javaHome = tool(name: "OpenJDK ${buildEnv.jdkVersion ?: DEFAULT_JDK_VERSION} Latest", type: 'jdk')
 				// Use withEnv instead of setting env directly, as that is global!
 				// See https://github.com/jenkinsci/pipeline-plugin/blob/master/TUTORIAL.md
-				withEnv(["JAVA_HOME=${tool buildEnv.buildJdkTool}", "PATH+JAVA=${tool buildEnv.buildJdkTool}/bin", "TEST_JAVA_HOME=${tool buildEnv.testJdkTool}"]) {
-					if ( buildEnv.getVersion() != defaultJdk ) {
-						state[buildEnv.tag]['additionalOptions'] = " -Ptest.jdk.version=${buildEnv.getTestVersion()} -Porg.gradle.java.installations.paths=${JAVA_HOME},${TEST_JAVA_HOME}";
+				withEnv(["JAVA_HOME=${javaHome}", "PATH+JAVA=${javaHome}/bin"]) {
+					if ( testJavaHome ) {
+						state[buildEnv.tag]['additionalOptions'] = " -Ptest.jdk.version=${buildEnv.testJdkVersion} -Porg.gradle.java.installations.paths=${javaHome},${testJavaHome}";
 					}
 					else {
 						state[buildEnv.tag]['additionalOptions'] = "";
@@ -230,50 +234,16 @@ stage('Build') {
 
 // Job-specific helpers
 
-BuildEnvironment buildEnv(String version, String dbName) {
-	return new BuildEnvironment( version, version, dbName, NODE_PATTERN_BASE, null );
-}
+class BuildEnvironment {
+	String jdkVersion
+	String testJdkVersion
+	String dbName = 'h2'
+	String node
+	String notificationRecipients
 
-BuildEnvironment buildEnv(String version, String dbName, String node) {
-	return new BuildEnvironment( version, version, dbName, node, null );
-}
-
-BuildEnvironment buildEnv(String version, String dbName, String node, String notificationRecipients) {
-	return new BuildEnvironment( version, version, dbName, node, notificationRecipients );
-}
-
-BuildEnvironment jdkBuildEnv(String version, String testVersion) {
-	return new BuildEnvironment( version,testVersion, "h2", NODE_PATTERN_BASE, null );
-}
-
-BuildEnvironment jdkBuildEnv(String version, String testVersion, String notificationRecipients) {
-	return new BuildEnvironment( version,testVersion, "h2", NODE_PATTERN_BASE, notificationRecipients );
-}
-
-public class BuildEnvironment {
-	private String version;
-	private String testVersion;
-	private String buildJdkTool;
-	private String testJdkTool;
-	private String dbName;
-	private String node;
-	private String notificationRecipients;
-
-	public BuildEnvironment(String version, String testVersion, String dbName, String node, String notificationRecipients) {
-		this.version = version;
-		this.testVersion = testVersion;
-		this.dbName = dbName;
-		this.node = node;
-		this.notificationRecipients = notificationRecipients;
-		this.buildJdkTool = "OpenJDK ${version} Latest";
-		this.testJdkTool = "OpenJDK ${testVersion} Latest";
-	}
 	String toString() { getTag() }
-	String getTag() { "jdk_${testVersion}_${dbName}" }
-	String getNode() { node }
-	String getVersion() { version }
-	String getTestVersion() { testVersion }
-	String getNotificationRecipients() { notificationRecipients }
+	String getTag() { "${testJdkVersion ? 'jdk_' + testJdkVersion + '_' : '' }${dbName}" }
+	String getTestJdkVersion() { testJdkVersion ?: jdkVersion }
 }
 
 void runBuildOnNode(String label, Closure body) {

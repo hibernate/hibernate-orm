@@ -17,6 +17,7 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 
 @Field final String DEFAULT_JDK_VERSION = '11'
+@Field final String DEFAULT_JDK_TOOL = "OpenJDK ${DEFAULT_JDK_VERSION} Latest"
 @Field final String NODE_PATTERN_BASE = 'Worker&&Containers'
 @Field List<BuildEnvironment> environments
 
@@ -43,9 +44,9 @@ stage('Configure') {
 		new BuildEnvironment( dbName: 'tidb', node: 'tidb', notificationRecipients: 'tidb_hibernate@pingcap.com' ),
 // Disable EDB for now as the image is not available anymore
 //		new BuildEnvironment( dbName: 'edb' ),
-		new BuildEnvironment( jdkVersion: '17' ),
-		new BuildEnvironment( jdkVersion: '18' ),
-		new BuildEnvironment( jdkVersion: '19' )
+		new BuildEnvironment( testJdkVersion: '17' ),
+		new BuildEnvironment( testJdkVersion: '18' ),
+		new BuildEnvironment( testJdkVersion: '19' )
 	];
 
 	helper.configure {
@@ -81,7 +82,7 @@ stage('Build') {
 	Map<String, Map<String, String>> state = [:]
 	environments.each { BuildEnvironment buildEnv ->
 		// Don't build environments for newer JDKs when this is a PR
-		if ( helper.scmSource.pullRequest && buildEnv.jdkVersion ) {
+		if ( helper.scmSource.pullRequest && buildEnv.testJdkVersion ) {
 			return
 		}
 		state[buildEnv.tag] = [:]
@@ -91,7 +92,7 @@ stage('Build') {
 				if ( buildEnv.testJdkVersion ) {
 					testJavaHome = tool(name: "OpenJDK ${buildEnv.testJdkVersion} Latest", type: 'jdk')
 				}
-				def javaHome = tool(name: "OpenJDK ${buildEnv.jdkVersion ?: DEFAULT_JDK_VERSION} Latest", type: 'jdk')
+				def javaHome = tool(name: "OpenJDK ${DEFAULT_JDK_VERSION} Latest", type: 'jdk')
 				// Use withEnv instead of setting env directly, as that is global!
 				// See https://github.com/jenkinsci/pipeline-plugin/blob/master/TUTORIAL.md
 				withEnv(["JAVA_HOME=${javaHome}", "PATH+JAVA=${javaHome}/bin"]) {
@@ -235,7 +236,6 @@ stage('Build') {
 // Job-specific helpers
 
 class BuildEnvironment {
-	String jdkVersion
 	String testJdkVersion
 	String dbName = 'h2'
 	String node
@@ -243,7 +243,6 @@ class BuildEnvironment {
 
 	String toString() { getTag() }
 	String getTag() { "${testJdkVersion ? 'jdk_' + testJdkVersion + '_' : '' }${dbName}" }
-	String getTestJdkVersion() { testJdkVersion ?: jdkVersion }
 }
 
 void runBuildOnNode(String label, Closure body) {

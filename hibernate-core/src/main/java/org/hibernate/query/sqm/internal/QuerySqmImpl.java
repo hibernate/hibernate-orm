@@ -93,6 +93,7 @@ import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
 import org.hibernate.query.sqm.tree.insert.SqmValues;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
@@ -371,10 +372,10 @@ public class QuerySqmImpl<R>
 		}
 		else {
 			final SqmInsertSelectStatement<R> statement = (SqmInsertSelectStatement<R>) sqmStatement;
-			final List<SqmSelection<?>> selections = statement.getSelectQueryPart()
+			final List<SqmSelectableNode<?>> selections = statement.getSelectQueryPart()
 					.getFirstQuerySpec()
 					.getSelectClause()
-					.getSelections();
+					.getSelectionItems();
 			verifyInsertTypesMatch( hqlString, insertionTargetPaths, selections );
 			statement.getSelectQueryPart().validateQueryStructureAndFetchOwners();
 		}

@@ -7,13 +7,13 @@
 package org.hibernate.orm.test.query.criteria;
 
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
@@ -21,22 +21,25 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Tuple;
 
 /**
  * @author Steve Ebersole
  */
 @DomainModel(annotatedClasses = InsertSelectTests.AnEntity.class)
 @SessionFactory
-@Disabled(value = "Disabled for now because this test fails on MySQL and Sybase (SequenceStyleGenerator is not bulk capable on those)")
 public class InsertSelectTests {
 	@Test
 	public void simpleTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
+			session.persist( new AnEntity( "test" ) );
 			final SqmCriteriaNodeBuilder criteriaBuilder = (SqmCriteriaNodeBuilder) session.getCriteriaBuilder();
 			final SqmInsertSelectStatement<AnEntity> insertSelect = criteriaBuilder.createCriteriaInsertSelect( AnEntity.class );
-			final SqmSelectStatement<AnEntity> select = criteriaBuilder.createQuery( AnEntity.class );
+			final SqmSelectStatement<Tuple> select = criteriaBuilder.createQuery( Tuple.class );
+			insertSelect.addInsertTargetStateField( insertSelect.getTarget().get( "name" ) );
+			final SqmRoot<AnEntity> root = select.from( AnEntity.class );
+			select.multiselect( root.get( "name" ) );
 			insertSelect.setSelectQueryPart( select.getQuerySpec() );
-			select.from( AnEntity.class );
 			session.createMutationQuery( insertSelect ).executeUpdate();
 		} );
 	}
@@ -53,6 +56,10 @@ public class InsertSelectTests {
 
 		private AnEntity() {
 			// for use by Hibernate
+		}
+
+		public AnEntity(String name) {
+			this.name = name;
 		}
 
 		public AnEntity(Integer id, String name) {

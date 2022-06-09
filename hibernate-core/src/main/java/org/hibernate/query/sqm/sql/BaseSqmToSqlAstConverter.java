@@ -1259,18 +1259,48 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			identifierGenerator = null;
 		}
 		else if ( identifierGenerator != null ) {
+			// When we have an identifier generator, we somehow must list the identifier column in the insert statement.
+			final boolean addIdColumn;
+			if ( sqmStatement instanceof SqmInsertValuesStatement<?> ) {
+				// For an InsertValuesStatement, we can just list the column, as we can inject a parameter in the VALUES clause.
+				addIdColumn = true;
+			}
+			else if ( !( identifierGenerator instanceof BulkInsertionCapableIdentifierGenerator ) ) {
+				// For non-identity generators that don't implement BulkInsertionCapableIdentifierGenerator, there is nothing we can do
+				addIdColumn = false;
+			}
+			else {
+				// Same condition as in AdditionalInsertValues#applySelections
+				final Optimizer optimizer;
+				if ( identifierGenerator instanceof OptimizableGenerator
+						&& ( optimizer = ( (OptimizableGenerator) identifierGenerator ).getOptimizer() ) != null
+						&& optimizer.getIncrementSize() > 1
+						|| !( (BulkInsertionCapableIdentifierGenerator) identifierGenerator ).supportsBulkInsertionIdentifierGeneration() ) {
+					// If the dialect does not support window functions, we don't need the id column in the temporary table insert
+					// because we will make use of the special "rn_" column that is auto-incremented and serves as temporary identifier for a row,
+					// which is needed to control the generation of proper identifier values with the generator afterwards
+					addIdColumn = creationContext.getSessionFactory().getJdbcServices().getDialect().supportsWindowFunctions();
+				}
+				else {
+					// If the generator supports bulk insertion and the optimizer uses an increment size of 1,
+					// we can list the column, because we can emit a SQL expression.
+					addIdColumn = true;
+				}
+			}
 			identifierMapping = (BasicEntityIdentifierMapping) entityDescriptor.getIdentifierMapping();
-			final BasicValuedPathInterpretation<?> identifierPath = new BasicValuedPathInterpretation<>(
-					new ColumnReference(
-							rootTableGroup.resolveTableReference( identifierMapping.getContainingTableExpression() ),
-							identifierMapping,
-							getCreationContext().getSessionFactory()
-					),
-					rootTableGroup.getNavigablePath().append( identifierMapping.getPartName() ),
-					identifierMapping,
-					rootTableGroup
-			);
-			targetColumnReferenceConsumer.accept( identifierPath, identifierPath.getColumnReferences() );
+			if ( addIdColumn ) {
+				final BasicValuedPathInterpretation<?> identifierPath = new BasicValuedPathInterpretation<>(
+						new ColumnReference(
+								rootTableGroup.resolveTableReference( identifierMapping.getContainingTableExpression() ),
+								identifierMapping,
+								getCreationContext().getSessionFactory()
+						),
+						rootTableGroup.getNavigablePath().append( identifierMapping.getPartName() ),
+						identifierMapping,
+						rootTableGroup
+				);
+				targetColumnReferenceConsumer.accept( identifierPath, identifierPath.getColumnReferences() );
+			}
 		}
 
 		return new AdditionalInsertValues(
@@ -1340,15 +1370,19 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 			if ( identifierGenerator != null ) {
 				if ( identifierSelection == null ) {
-					if ( !( identifierGenerator instanceof BulkInsertionCapableIdentifierGenerator )
-							|| !( (BulkInsertionCapableIdentifierGenerator) identifierGenerator ).supportsBulkInsertionIdentifierGeneration() ) {
+					if ( !( identifierGenerator instanceof BulkInsertionCapableIdentifierGenerator ) ) {
 						throw new SemanticException(
 								"SQM INSERT-SELECT without bulk insertion capable identifier generator: " + identifierGenerator );
 					}
 					if ( identifierGenerator instanceof OptimizableGenerator ) {
 						final Optimizer optimizer = ( (OptimizableGenerator) identifierGenerator ).getOptimizer();
-						if ( optimizer != null && optimizer.getIncrementSize() > 1 ) {
+						if ( optimizer != null && optimizer.getIncrementSize() > 1
+								|| !( (BulkInsertionCapableIdentifierGenerator) identifierGenerator ).supportsBulkInsertionIdentifierGeneration() ) {
 							// This is a special case where we have a sequence with an optimizer
+							// or a table based identifier generator
+							if ( !sessionFactory.getJdbcServices().getDialect().supportsWindowFunctions() ) {
+								return false;
+							}
 							final BasicType<Integer> rowNumberType = sessionFactory.getTypeConfiguration()
 									.getBasicTypeForJavaType( Integer.class );
 							identifierSelection = new SqlSelectionImpl(

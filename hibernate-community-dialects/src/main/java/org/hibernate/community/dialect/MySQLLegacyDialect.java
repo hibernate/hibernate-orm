@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import java.sql.CallableStatement;
 import java.sql.DatabaseMetaData;
@@ -16,6 +16,14 @@ import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.InnoDBStorageEngine;
+import org.hibernate.dialect.MyISAMStorageEngine;
+import org.hibernate.dialect.MySQLStorageEngine;
+import org.hibernate.dialect.Replacer;
+import org.hibernate.dialect.RowLockStrategy;
+import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -80,13 +88,11 @@ import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtract
 import static org.hibernate.type.SqlTypes.*;
 
 /**
- * A {@linkplain Dialect SQL dialect} for MySQL 5.7 and above.
+ * A {@linkplain Dialect SQL dialect} for MySQL 5 and above.
  *
  * @author Gavin King
  */
-public class MySQLDialect extends Dialect {
-
-	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 5, 7 );
+public class MySQLLegacyDialect extends Dialect {
 
 	private final UniqueDelegate uniqueDelegate = new MySQLUniqueDelegate( this );
 	private final MySQLStorageEngine storageEngine = createStorageEngine();
@@ -112,27 +118,22 @@ public class MySQLDialect extends Dialect {
 	private final int maxVarcharLength;
 	private final int maxVarbinaryLength;
 
-	public MySQLDialect() {
-		this( MINIMUM_VERSION );
+	public MySQLLegacyDialect() {
+		this( DatabaseVersion.make( 5, 0 ) );
 	}
 
-	public MySQLDialect(DatabaseVersion version) {
+	public MySQLLegacyDialect(DatabaseVersion version) {
 		super( version );
 		registerKeyword( "key" );
 		maxVarcharLength = maxVarcharLength( getMySQLVersion(), 4 ); //conservative assumption
 		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
 	}
 
-	public MySQLDialect(DialectResolutionInfo info) {
+	public MySQLLegacyDialect(DialectResolutionInfo info) {
 		super( info );
 		int bytesPerCharacter = getCharacterSetBytesPerCharacter( info.getDatabaseMetadata() );
 		maxVarcharLength = maxVarcharLength( getMySQLVersion(), bytesPerCharacter );
 		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
-	}
-
-	@Override
-	protected DatabaseVersion getMinimumSupportedVersion() {
-		return MINIMUM_VERSION;
 	}
 
 	@Override
@@ -156,7 +157,7 @@ public class MySQLDialect extends Dialect {
 			return MyISAMStorageEngine.INSTANCE;
 		}
 		else {
-			throw new UnsupportedOperationException( "The " + storageEngine + " storage engine is not supported" );
+			throw new UnsupportedOperationException( "The " + storageEngine + " storage engine is not supported!" );
 		}
 	}
 
@@ -168,9 +169,11 @@ public class MySQLDialect extends Dialect {
 				return "bit";
 
 			case TIMESTAMP:
-				return "datetime($p)";
+				return getMySQLVersion().isBefore( 5, 7 )
+						? "datetime" : "datetime($p)";
 			case TIMESTAMP_WITH_TIMEZONE:
-				return "timestamp($p)";
+				return getMySQLVersion().isBefore( 5, 7 )
+						? "timestamp" : "timestamp($p)";
 			case NUMERIC:
 				// it's just a synonym
 				return columnType( DECIMAL );
@@ -226,9 +229,11 @@ public class MySQLDialect extends Dialect {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
-		// MySQL 5.7 brings JSON native support with a dedicated datatype
-		// https://dev.mysql.com/doc/refman/5.7/en/json.html
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+		if ( getMySQLVersion().isSameOrAfter( 5, 7 ) ) {
+			// MySQL 5.7 brings JSON native support with a dedicated datatype
+			// https://dev.mysql.com/doc/refman/5.7/en/json.html
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+		}
 
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
 
@@ -349,20 +354,26 @@ public class MySQLDialect extends Dialect {
 	}
 
 	private static int maxVarbinaryLength(DatabaseVersion version) {
-		return 65_535;
+		return version.isBefore( 5 ) ? 255 : 65_535;
 	}
 
 	private static int maxVarcharLength(DatabaseVersion version, int bytesPerCharacter) {
-		switch ( bytesPerCharacter ) {
-			case 1:
-				return 65_535;
-			case 2:
-				return 32_767;
-			case 3:
-				return 21_844;
-			case 4:
-			default:
-				return 16_383;
+		// max length for VARCHAR changed in 5.0.3
+		if ( version.isBefore( 5 ) ) {
+			return 255;
+		}
+		else {
+			switch ( bytesPerCharacter ) {
+				case 1:
+					return 65_535;
+				case 2:
+					return 32_767;
+				case 3:
+					return 21_844;
+				case 4:
+				default:
+					return 16_383;
+			}
 		}
 	}
 
@@ -498,13 +509,18 @@ public class MySQLDialect extends Dialect {
 				.setUseParenthesesWhenNoArgs( false )
 				.register();
 
-		// MySQL timestamp type defaults to precision 0 (seconds) but
-		// we want the standard default precision of 6 (microseconds)
-		functionFactory.sysdateExplicitMicros();
-		if ( getMySQLVersion().isSameOrAfter( 8, 2 ) ) {
-			functionFactory.windowFunctions();
-			if ( getMySQLVersion().isSameOrAfter( 8, 11 ) ) {
-				functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+		if ( getMySQLVersion().isBefore( 5, 7 ) ) {
+			functionFactory.sysdateParens();
+		}
+		else {
+			// MySQL timestamp type defaults to precision 0 (seconds) but
+			// we want the standard default precision of 6 (microseconds)
+			functionFactory.sysdateExplicitMicros();
+			if ( getMySQLVersion().isSameOrAfter( 8, 2 ) ) {
+				functionFactory.windowFunctions();
+				if ( getMySQLVersion().isSameOrAfter( 8, 11 ) ) {
+					functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+				}
 			}
 		}
 
@@ -518,7 +534,9 @@ public class MySQLDialect extends Dialect {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 
-		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, JsonJdbcType.INSTANCE );
+		if ( getMySQLVersion().isSameOrAfter( 5, 7 ) ) {
+			jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, JsonJdbcType.INSTANCE );
+		}
 
 		// MySQL requires a custom binder for binding untyped nulls with the NULL type
 		typeContributions.contributeJdbcType( NullJdbcType.INSTANCE );
@@ -540,7 +558,7 @@ public class MySQLDialect extends Dialect {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new MySQLSqlAstTranslator<>( sessionFactory, statement );
+				return new MySQLLegacySqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
 	}
@@ -568,7 +586,7 @@ public class MySQLDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "time" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType(
-					queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
+						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
 				)
 				.register();
 	}
@@ -585,7 +603,7 @@ public class MySQLDialect extends Dialect {
 	 */
 	@Override
 	public String currentTimestamp() {
-		return "current_timestamp(6)";
+		return getMySQLVersion().isBefore( 5, 7 ) ? super.currentTimestamp() : "current_timestamp(6)";
 	}
 
 	// for consistency, we could do this: but I decided not to
@@ -665,7 +683,7 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsUnionAll() {
-		return true;
+		return getMySQLVersion().isSameOrAfter( 5 );
 	}
 
 	@Override
@@ -680,7 +698,9 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public String getQueryHintString(String query, String hints) {
-		return IndexQueryHintHandler.INSTANCE.addQueryHints( query, hints );
+		return getMySQLVersion().isBefore( 5 )
+				? super.getQueryHintString( query, hints )
+				: IndexQueryHintHandler.INSTANCE.addQueryHints( query, hints );
 	}
 
 	/**
@@ -692,7 +712,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
-		return EXTRACTOR;
+		return getMySQLVersion().isBefore( 5 ) ? super.getViolatedConstraintNameExtractor() : EXTRACTOR;
 	}
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
@@ -993,7 +1013,8 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public String getTableTypeString() {
-		return storageEngine.getTableTypeString( "engine" );
+		String engineKeyword = getMySQLVersion().isBefore( 5 ) ? "type" : "engine";
+		return storageEngine.getTableTypeString( engineKeyword );
 	}
 
 	@Override
@@ -1007,7 +1028,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	protected MySQLStorageEngine getDefaultMySQLStorageEngine() {
-		return InnoDBStorageEngine.INSTANCE;
+		return getMySQLVersion().isBefore( 5, 5 ) ? MyISAMStorageEngine.INSTANCE : InnoDBStorageEngine.INSTANCE;
 	}
 
 	@Override

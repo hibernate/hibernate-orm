@@ -27,11 +27,11 @@ import static org.junit.Assert.assertTrue;
  * @author Gail Badner.
  */
 @TestForIssue( jiraKey = "HHH-8401")
-@RequiresDialect( value = MySQLDialect.class, majorVersion = 5, minorVersion = 7)
+@RequiresDialect( value = MySQLDialect.class)
 @ServiceRegistry
 @DomainModel
 @SessionFactory
-public class MySQL57TimestampFspFunctionTest {
+public class MySQLTimestampFspFunctionTest {
 
 	@Test
 	public void testTimeStampFunctions(SessionFactoryScope scope) {

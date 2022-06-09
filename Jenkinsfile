@@ -46,7 +46,10 @@ stage('Configure') {
 //		new BuildEnvironment( dbName: 'edb' ),
 		new BuildEnvironment( testJdkVersion: '17' ),
 		new BuildEnvironment( testJdkVersion: '18' ),
-		new BuildEnvironment( testJdkVersion: '19' )
+		// We want to enable preview features when testing early-access builds of OpenJDK:
+		// even if we don't use these features, just enabling them can cause side effects
+		// and it's useful to test that.
+		new BuildEnvironment( testJdkVersion: '19', testJdkLauncherArgs: '--enable-preview' )
 	];
 
 	helper.configure {
@@ -96,11 +99,14 @@ stage('Build') {
 				// Use withEnv instead of setting env directly, as that is global!
 				// See https://github.com/jenkinsci/pipeline-plugin/blob/master/TUTORIAL.md
 				withEnv(["JAVA_HOME=${javaHome}", "PATH+JAVA=${javaHome}/bin"]) {
+					state[buildEnv.tag]['additionalOptions'] = ''
 					if ( testJavaHome ) {
-						state[buildEnv.tag]['additionalOptions'] = " -Ptest.jdk.version=${buildEnv.testJdkVersion} -Porg.gradle.java.installations.paths=${javaHome},${testJavaHome}";
+						state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
+								" -Ptest.jdk.version=${buildEnv.testJdkVersion} -Porg.gradle.java.installations.paths=${javaHome},${testJavaHome}"
 					}
-					else {
-						state[buildEnv.tag]['additionalOptions'] = "";
+					if ( buildEnv.testJdkLauncherArgs ) {
+						state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
+								"-Ptest.jdk.launcher.args=${buildEnv.testJdkLauncherArgs}"
 					}
 					state[buildEnv.tag]['containerName'] = null;
 					stage('Checkout') {
@@ -237,6 +243,7 @@ stage('Build') {
 
 class BuildEnvironment {
 	String testJdkVersion
+	String testJdkLauncherArgs
 	String dbName = 'h2'
 	String node
 	String notificationRecipients

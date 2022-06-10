@@ -133,7 +133,7 @@ ext {
             hsqldb:          "org.hsqldb:hsqldb:2.3.2",
             derby:           "org.apache.derby:derby:10.14.2.0",
             postgresql:      'org.postgresql:postgresql:42.2.16',
-            mysql:           'mysql:mysql-connector-java:8.0.27',
+            mysql:           'mysql:mysql-connector-java:8.0.29',
             mariadb:         'org.mariadb.jdbc:mariadb-java-client:2.2.3',
             cockroachdb:     'org.postgresql:postgresql:42.2.8',
 

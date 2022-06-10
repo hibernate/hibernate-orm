@@ -78,17 +78,6 @@ public class DdlTypeRegistry implements Serializable {
 		}
 	}
 
-	@Internal
-	public void removeDescriptor(int sqlTypeCode) {
-		final DdlType removable = ddlTypes.get( sqlTypeCode );
-		if ( removable != null ) {
-			for ( String rawTypeName : removable.getRawTypeNames() ) {
-				sqlTypes.remove( rawTypeName );
-			}
-			log.debugf( "removeDescriptor(%d) removed registration(%s)", sqlTypeCode, removable );
-		}
-	}
-
 	/**
 	 * Returns the {@link SqlTypes} type code for the given DDL raw type name, or <code>null</code> if it is unknown.
 	 */

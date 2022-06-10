@@ -182,12 +182,12 @@ public class DocExporter extends AbstractExporter {
 				File entityGraphDot = new File(getOutputDirectory(), "entities/entitygraph.dot");
 				dotToFile( cmd, entityGraphDot.toString(), new File(getOutputDirectory(), "entities/entitygraph.png").toString());
 				dotToFile( cmd, entityGraphDot.toString(), new File(getOutputDirectory(), "entities/entitygraph.svg").toString());
-				dotToFile( cmd, entityGraphDot.toString(), new File(getOutputDirectory(), "entities/entitygraph.cmap").toString());
+				dotToFile( cmd, entityGraphDot.toString(), new File(getOutputDirectory(), "entities/entitygraph.cmapx").toString());
 				
 				File tableGraphDot = new File(getOutputDirectory(), "tables/tablegraph.dot");
 				dotToFile( cmd, tableGraphDot.toString(), new File(getOutputDirectory(), "tables/tablegraph.png").toString());
 				dotToFile( cmd, tableGraphDot.toString(), new File(getOutputDirectory(), "tables/tablegraph.svg").toString());
-				dotToFile( cmd, tableGraphDot.toString(), new File(getOutputDirectory(), "tables/tablegraph.cmap").toString());
+				dotToFile( cmd, tableGraphDot.toString(), new File(getOutputDirectory(), "tables/tablegraph.cmapx").toString());
 			
 				return true;
 
@@ -348,7 +348,7 @@ public class DocExporter extends AbstractExporter {
         parameters.put( "graphsGenerated", Boolean.valueOf( graphsGenerated ) );
         if(graphsGenerated) {
         	StringBuffer sb = new StringBuffer();
-        	String fileName = "tables/tablegraph.cmap";
+        	String fileName = "tables/tablegraph.cmapx";
         	appendFile( sb, fileName );
             parameters.put( "tablegrapharea", sb );
         }
@@ -391,7 +391,7 @@ public class DocExporter extends AbstractExporter {
         parameters.put( "graphsGenerated", Boolean.valueOf( graphsGenerated ) );
         if(graphsGenerated) {
         	StringBuffer sb = new StringBuffer();
-        	String fileName = "entities/entitygraph.cmap";
+        	String fileName = "entities/entitygraph.cmapx";
         	appendFile( sb, fileName );
             parameters.put( "entitygrapharea", sb );
         }

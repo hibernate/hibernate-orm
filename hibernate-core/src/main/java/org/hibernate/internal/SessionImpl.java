@@ -310,7 +310,6 @@ public class SessionImpl
 		);
 		if ( specQueryTimeout != null ) {
 			query.setHint( HINT_SPEC_QUERY_TIMEOUT, specQueryTimeout );
-			query.setHint( HINT_JAVAEE_QUERY_TIMEOUT, specQueryTimeout );
 		}
 	}
 
@@ -326,7 +325,6 @@ public class SessionImpl
 		);
 		if ( specLockTimeout != null ) {
 			query.setHint( HINT_SPEC_LOCK_TIMEOUT, specLockTimeout );
-			query.setHint( HINT_JAVAEE_LOCK_TIMEOUT, specLockTimeout );
 		}
 	}
 

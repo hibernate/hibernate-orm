@@ -545,10 +545,10 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		}
 		// If the mapping type has an identifier type, that identifier is the key
 		if ( modelPart instanceof SingleAttributeIdentifierMapping ) {
-			return ( (SingleAttributeIdentifierMapping) modelPart ).getIdentifier( targetObject );
+			return ( (SingleAttributeIdentifierMapping) modelPart ).getIdentifierIfNotUnsaved( targetObject, session );
 		}
 		else if ( modelPart instanceof CompositeIdentifierMapping ) {
-			return ( (CompositeIdentifierMapping) modelPart ).getIdentifier( targetObject );
+			return ( (CompositeIdentifierMapping) modelPart ).getIdentifierIfNotUnsaved( targetObject, session );
 		}
 		// Otherwise, this is a key based on the target object i.e. without id-class
 		return targetObject;

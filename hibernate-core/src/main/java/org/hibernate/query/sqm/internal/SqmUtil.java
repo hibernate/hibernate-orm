@@ -355,7 +355,7 @@ public class SqmUtil {
 			final EntityIdentifierMapping identifierMapping = (EntityIdentifierMapping) parameterType;
 			final EntityMappingType entityMapping = identifierMapping.findContainingEntityMapping();
 			if ( entityMapping.getRepresentationStrategy().getInstantiator().isInstance( bindValue, session.getFactory() ) ) {
-				bindValue = identifierMapping.getIdentifier( bindValue );
+				bindValue = identifierMapping.getIdentifierIfNotUnsaved( bindValue, session );
 			}
 		}
 		else if ( parameterType instanceof EntityMappingType ) {
@@ -363,7 +363,7 @@ public class SqmUtil {
 			final EntityMappingType entityMapping = identifierMapping.findContainingEntityMapping();
 			parameterType = identifierMapping;
 			if ( entityMapping.getRepresentationStrategy().getInstantiator().isInstance( bindValue, session.getFactory() ) ) {
-				bindValue = identifierMapping.getIdentifier( bindValue );
+				bindValue = identifierMapping.getIdentifierIfNotUnsaved( bindValue, session );
 			}
 		}
 		else if ( parameterType instanceof EntityAssociationMapping ) {

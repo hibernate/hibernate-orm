@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
@@ -32,6 +33,7 @@ public class OptimisticLockTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@SkipForDialect(value = CockroachDialect.class, comment = "Fails at SERIALIZABLE isolation")
+	@SkipForDialect(value = TiDBDialect.class, comment = "Fails by Write conflict")
 	public void test() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Phone phone = new Phone();

@@ -22,7 +22,6 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,8 +31,8 @@ import org.junit.jupiter.api.Test;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-10529")
-@RequiresDialect(value = SQLServerDialect.class, majorVersion = 10)
-public class SQLServer2008NVarCharTypeTest {
+@RequiresDialect(value = SQLServerDialect.class)
+public class SQLServerNVarCharTypeTest {
 	private StandardServiceRegistry ssr;
 	private MetadataImplementor metadata;
 	private SchemaExport schemaExport;

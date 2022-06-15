@@ -29,12 +29,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Vlad Mihalcea
  */
 @TestForIssue(jiraKey = "HHH-10183")
-@RequiresDialect(value = SQLServerDialect.class, majorVersion = 10)
+@RequiresDialect(value = SQLServerDialect.class)
 @DomainModel(
-		annotatedClasses = SQLServer2008NationalizedScalarQueryTest.User.class
+		annotatedClasses = SQLServerNationalizedScalarQueryTest.User.class
 )
 @SessionFactory
-public class SQLServer2008NationalizedScalarQueryTest {
+public class SQLServerNationalizedScalarQueryTest {
 
 
 	@Test

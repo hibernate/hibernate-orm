@@ -9,20 +9,11 @@ package org.hibernate.dialect.function;
 import java.util.List;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
-import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
-import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.Format;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
-
-import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
-import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL;
 
 /**
  * SQL Server behaves strangely when the first argument to format is of the type time, so we cast to datetime.
@@ -31,11 +22,8 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEM
  */
 public class SQLServerFormatEmulation extends FormatFunction {
 
-	private final SQLServerDialect dialect;
-
-	public SQLServerFormatEmulation(SQLServerDialect dialect, TypeConfiguration typeConfiguration) {
+	public SQLServerFormatEmulation(TypeConfiguration typeConfiguration) {
 		super( "format", typeConfiguration );
-		this.dialect = dialect;
 	}
 
 	@Override

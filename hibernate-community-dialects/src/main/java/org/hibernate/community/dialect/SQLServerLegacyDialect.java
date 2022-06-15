@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import org.hibernate.*;
 import org.hibernate.boot.Metadata;
@@ -12,6 +12,11 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.dialect.AbstractTransactSQLDialect;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.Replacer;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.SQLServerFormatEmulation;
@@ -81,33 +86,27 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  *
  * @author Gavin King
  */
-public class SQLServerDialect extends AbstractTransactSQLDialect {
-	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 0 );
+public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	private static final int PARAM_LIST_SIZE_LIMIT = 2100;
 
 	private final StandardSequenceExporter exporter;
 
-	public SQLServerDialect() {
-		this( MINIMUM_VERSION );
+	public SQLServerLegacyDialect() {
+		this( DatabaseVersion.make( 8, 0 ) );
 	}
 
-	public SQLServerDialect(DatabaseVersion version) {
+	public SQLServerLegacyDialect(DatabaseVersion version) {
 		super(version);
 		exporter = createSequenceExporter(version);
 	}
 
-	public SQLServerDialect(DialectResolutionInfo info) {
+	public SQLServerLegacyDialect(DialectResolutionInfo info) {
 		super(info);
 		exporter = createSequenceExporter(info);
 	}
 
 	private StandardSequenceExporter createSequenceExporter(DatabaseVersion version) {
 		return version.isSameOrAfter(11) ? new SqlServerSequenceExporter(this) : null;
-	}
-
-	@Override
-	protected DatabaseVersion getMinimumSupportedVersion() {
-		return MINIMUM_VERSION;
 	}
 
 	@Override
@@ -119,50 +118,55 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			// there is no 'double' type in SQL server
-			// but 'float' is double precision by default
-			case DOUBLE:
-				return "float";
-			// Prefer 'varchar(max)' and 'varbinary(max)' to
-			// the deprecated TEXT and IMAGE types. Note that
-			// the length of a VARCHAR or VARBINARY column must
-			// be either between 1 and 8000 or exactly MAX, and
-			// the length of an NVARCHAR column must be either
-			// between 1 and 4000 or exactly MAX. (HHH-3965)
-			case CLOB:
-				return "varchar(max)";
-			case NCLOB:
-				return "nvarchar(max)";
-			case BLOB:
-				return "varbinary(max)";
-			case DATE:
-				return "date";
-			case TIME:
-				return "time";
-			case TIMESTAMP:
-				return "datetime2($p)";
-			case TIMESTAMP_WITH_TIMEZONE:
-				return "datetimeoffset($p)";
+		// there is no 'double' type in SQL server
+		// but 'float' is double precision by default
+		if ( sqlTypeCode == DOUBLE ) {
+			return "float";
+		}
+		if ( getVersion().isSameOrAfter( 9 ) ) {
+			switch ( sqlTypeCode ) {
+				// Prefer 'varchar(max)' and 'varbinary(max)' to
+				// the deprecated TEXT and IMAGE types. Note that
+				// the length of a VARCHAR or VARBINARY column must
+				// be either between 1 and 8000 or exactly MAX, and
+				// the length of an NVARCHAR column must be either
+				// between 1 and 4000 or exactly MAX. (HHH-3965)
+				case CLOB:
+					return "varchar(max)";
+				case NCLOB:
+					return "nvarchar(max)";
+				case BLOB:
+					return "varbinary(max)";
+				case DATE:
+					return getVersion().isSameOrAfter( 10 ) ? "date" : super.columnType( sqlTypeCode );
+				case TIME:
+					return getVersion().isSameOrAfter( 10 ) ? "time" : super.columnType( sqlTypeCode );
+				case TIMESTAMP:
+					return getVersion().isSameOrAfter( 10 ) ? "datetime2($p)" : super.columnType( sqlTypeCode );
+				case TIMESTAMP_WITH_TIMEZONE:
+					return getVersion().isSameOrAfter( 10 ) ? "datetimeoffset($p)" : super.columnType( sqlTypeCode );
+			}
 		}
 		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
 	protected String castType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case VARCHAR:
-			case LONG32VARCHAR:
-			case CLOB:
-				return "varchar(max)";
-			case NVARCHAR:
-			case LONG32NVARCHAR:
-			case NCLOB:
-				return "nvarchar(max)";
-			case VARBINARY:
-			case LONG32VARBINARY:
-			case BLOB:
-				return "varbinary(max)";
+		if ( getVersion().isSameOrAfter( 9 ) ) {
+			switch ( sqlTypeCode ) {
+				case VARCHAR:
+				case LONG32VARCHAR:
+				case CLOB:
+					return "varchar(max)";
+				case NVARCHAR:
+				case LONG32NVARCHAR:
+				case NCLOB:
+					return "nvarchar(max)";
+				case VARBINARY:
+				case LONG32VARBINARY:
+				case BLOB:
+					return "varbinary(max)";
+			}
 		}
 		return super.castType( sqlTypeCode );
 	}
@@ -171,8 +175,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
+		if ( getVersion().isSameOrAfter( 10 ) ) {
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
+		}
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( SQLXML, "xml", this ) );
 	}
 
@@ -188,7 +194,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public TimeZoneSupport getTimeZoneSupport() {
-		return TimeZoneSupport.NATIVE;
+		return getVersion().isSameOrAfter( 10 ) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
 	}
 
 	@Override
@@ -247,9 +253,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		functionFactory.octetLength_pattern( "datalength(?1)" );
 		functionFactory.bitLength_pattern( "datalength(?1)*8" );
 
-		functionFactory.locate_charindex();
-		functionFactory.stddevPopSamp_stdevp();
-		functionFactory.varPopSamp_varp();
+		if ( getVersion().isSameOrAfter( 10 ) ) {
+			functionFactory.locate_charindex();
+			functionFactory.stddevPopSamp_stdevp();
+			functionFactory.varPopSamp_varp();
+		}
 
 		if ( getVersion().isSameOrAfter( 11 ) ) {
 			queryEngine.getSqmFunctionRegistry().register(
@@ -308,7 +316,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new SQLServerSqlAstTranslator<>( sessionFactory, statement );
+				return new SQLServerLegacySqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
 	}
@@ -373,16 +381,19 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		if ( getVersion().isSameOrAfter( 11 ) ) {
 			return SQLServer2012LimitHandler.INSTANCE;
 		}
-		else {
+		else if ( getVersion().isSameOrAfter( 9 ) ) {
 			//this is a stateful class, don't cache
 			//it in the Dialect!
 			return new SQLServer2005LimitHandler();
+		}
+		else {
+			return new TopLimitHandler(false);
 		}
 	}
 
 	@Override
 	public boolean supportsValuesList() {
-		return true;
+		return getVersion().isSameOrAfter( 10 );
 	}
 
 	@Override
@@ -418,29 +429,45 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String appendLockHint(LockOptions lockOptions, String tableName) {
-		LockMode lockMode = lockOptions.getAliasSpecificLockMode( tableName );
-		if (lockMode == null) {
-			lockMode = lockOptions.getLockMode();
+		if ( getVersion().isSameOrAfter( 9 ) ) {
+			LockMode lockMode = lockOptions.getAliasSpecificLockMode( tableName );
+			if (lockMode == null) {
+				lockMode = lockOptions.getLockMode();
+			}
+
+			final String writeLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? "updlock" : "updlock,holdlock";
+			final String readLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? "updlock" : "holdlock";
+
+			final String noWaitStr = lockOptions.getTimeOut() == LockOptions.NO_WAIT ? ",nowait" : "";
+			final String skipLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? ",readpast" : "";
+
+			switch ( lockMode ) {
+				case PESSIMISTIC_WRITE:
+				case WRITE:
+					return tableName + " with (" + writeLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
+				case PESSIMISTIC_READ:
+					return tableName + " with (" + readLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
+				case UPGRADE_SKIPLOCKED:
+					return tableName + " with (updlock,rowlock,readpast" + noWaitStr + ")";
+				case UPGRADE_NOWAIT:
+					return tableName + " with (updlock,holdlock,rowlock,nowait)";
+				default:
+					return tableName;
+			}
 		}
-
-		final String writeLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? "updlock" : "updlock,holdlock";
-		final String readLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? "updlock" : "holdlock";
-
-		final String noWaitStr = lockOptions.getTimeOut() == LockOptions.NO_WAIT ? ",nowait" : "";
-		final String skipLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? ",readpast" : "";
-
-		switch ( lockMode ) {
-			case PESSIMISTIC_WRITE:
-			case WRITE:
-				return tableName + " with (" + writeLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
-			case PESSIMISTIC_READ:
-				return tableName + " with (" + readLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
-			case UPGRADE_SKIPLOCKED:
-				return tableName + " with (updlock,rowlock,readpast" + noWaitStr + ")";
-			case UPGRADE_NOWAIT:
-				return tableName + " with (updlock,holdlock,rowlock,nowait)";
-			default:
-				return tableName;
+		else {
+			switch ( lockOptions.getLockMode() ) {
+				case UPGRADE_NOWAIT:
+				case PESSIMISTIC_WRITE:
+				case WRITE:
+					return tableName + " with (updlock,rowlock)";
+				case PESSIMISTIC_READ:
+					return tableName + " with (holdlock,rowlock)";
+				case UPGRADE_SKIPLOCKED:
+					return tableName + " with (updlock,rowlock,readpast)";
+				default:
+					return tableName;
+			}
 		}
 	}
 
@@ -501,17 +528,17 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsNonQueryWithCTE() {
-		return true;
+		return getVersion().isSameOrAfter( 9 );
 	}
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return true;
+		return getVersion().isSameOrAfter( 9 );
 	}
 
 	@Override
 	public boolean supportsNoWait() {
-		return true;
+		return getVersion().isSameOrAfter( 9 );
 	}
 
 	@Override
@@ -583,7 +610,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsLateral() {
-		return true;
+		return getVersion().isSameOrAfter( 9 );
 	}
 
 	@Override
@@ -593,6 +620,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
+		if ( getVersion().isBefore( 9 ) ) {
+			return super.buildSQLExceptionConversionDelegate(); //null
+		}
 		return (sqlException, message, sql) -> {
 			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
 			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
@@ -650,6 +680,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			case SECOND:
 				//this should evaluate to a floating point type
 				return "(datepart(second,?2)+datepart(nanosecond,?2)/1e9)";
+			case WEEK:
+				// Thanks https://www.sqlservercentral.com/articles/a-simple-formula-to-calculate-the-iso-week-number
+				if ( getVersion().isBefore( 10 ) ) {
+					return "(DATEPART(dy,DATEADD(dd,DATEDIFF(dd,'17530101',?2)/7*7,'17530104'))+6)/7)";
+				}
 			default:
 				return "datepart(?1,?2)";
 		}
@@ -887,8 +922,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		}
 
 		@Override
-		protected String getFormattedSequenceName(QualifiedSequenceName name, Metadata metadata,
-				SqlStringGenerationContext context) {
+		protected String getFormattedSequenceName(QualifiedSequenceName name, Metadata metadata, SqlStringGenerationContext context) {
 			// SQL Server does not allow the catalog in the sequence name.
 			// See https://docs.microsoft.com/en-us/sql/t-sql/statements/create-sequence-transact-sql?view=sql-server-ver15&viewFallbackFrom=sql-server-ver12
 			// Keeping the catalog in the name does not break on ORM, but it fails using Vert.X for Reactive.

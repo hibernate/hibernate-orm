@@ -4,12 +4,13 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import java.util.List;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -41,13 +42,13 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  *
  * @author Christian Beikov
  */
-public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
 	private static final String UNION_ALL = " union all ";
 
 	private Predicate lateralPredicate;
 
-	public SQLServerSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+	public SQLServerLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
 	}
 
@@ -130,49 +131,69 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	private void renderLockHint(LockMode lockMode) {
-		final int effectiveLockTimeout = getEffectiveLockTimeout( lockMode );
-		switch ( lockMode ) {
-			case PESSIMISTIC_WRITE:
-			case WRITE: {
-				switch ( effectiveLockTimeout ) {
-					case LockOptions.SKIP_LOCKED:
+		if ( getDialect().getVersion().isSameOrAfter( 9 ) ) {
+			final int effectiveLockTimeout = getEffectiveLockTimeout( lockMode );
+			switch ( lockMode ) {
+				case PESSIMISTIC_WRITE:
+				case WRITE: {
+					switch ( effectiveLockTimeout ) {
+						case LockOptions.SKIP_LOCKED:
+							appendSql( " with (updlock,rowlock,readpast)" );
+							break;
+						case LockOptions.NO_WAIT:
+							appendSql( " with (updlock,holdlock,rowlock,nowait)" );
+							break;
+						default:
+							appendSql( " with (updlock,holdlock,rowlock)" );
+							break;
+					}
+					break;
+				}
+				case PESSIMISTIC_READ: {
+					switch ( effectiveLockTimeout ) {
+						case LockOptions.SKIP_LOCKED:
+							appendSql( " with (updlock,rowlock,readpast)" );
+							break;
+						case LockOptions.NO_WAIT:
+							appendSql( " with (holdlock,rowlock,nowait)" );
+							break;
+						default:
+							appendSql( " with (holdlock,rowlock)" );
+							break;
+					}
+					break;
+				}
+				case UPGRADE_SKIPLOCKED: {
+					if ( effectiveLockTimeout == LockOptions.NO_WAIT ) {
+						appendSql( " with (updlock,rowlock,readpast,nowait)" );
+					}
+					else {
 						appendSql( " with (updlock,rowlock,readpast)" );
-						break;
-					case LockOptions.NO_WAIT:
-						appendSql( " with (updlock,holdlock,rowlock,nowait)" );
-						break;
-					default:
-						appendSql( " with (updlock,holdlock,rowlock)" );
-						break;
+					}
+					break;
 				}
-				break;
+				case UPGRADE_NOWAIT: {
+					appendSql( " with (updlock,holdlock,rowlock,nowait)" );
+					break;
+				}
 			}
-			case PESSIMISTIC_READ: {
-				switch ( effectiveLockTimeout ) {
-					case LockOptions.SKIP_LOCKED:
-						appendSql( " with (updlock,rowlock,readpast)" );
-						break;
-					case LockOptions.NO_WAIT:
-						appendSql( " with (holdlock,rowlock,nowait)" );
-						break;
-					default:
-						appendSql( " with (holdlock,rowlock)" );
-						break;
+		}
+		else {
+			switch ( lockMode ) {
+				case UPGRADE_NOWAIT:
+				case PESSIMISTIC_WRITE:
+				case WRITE: {
+					appendSql( " with (updlock,rowlock)" );
+					break;
 				}
-				break;
-			}
-			case UPGRADE_SKIPLOCKED: {
-				if ( effectiveLockTimeout == LockOptions.NO_WAIT ) {
-					appendSql( " with (updlock,rowlock,readpast,nowait)" );
+				case PESSIMISTIC_READ: {
+					appendSql( " with (holdlock,rowlock)" );
+					break;
 				}
-				else {
+				case UPGRADE_SKIPLOCKED: {
 					appendSql( " with (updlock,rowlock,readpast)" );
+					break;
 				}
-				break;
-			}
-			case UPGRADE_NOWAIT: {
-				appendSql( " with (updlock,holdlock,rowlock,nowait)" );
-				break;
 			}
 		}
 	}
@@ -208,7 +229,7 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 			return null;
 		}
 		else {
-			if ( !hasOffset ) {
+			if ( version.isBefore( 9 ) || !hasOffset ) {
 				return hasLimit ? OffsetFetchClauseMode.TOP_ONLY : null;
 			}
 			else if ( version.isBefore( 11 ) || !isRowsOnlyFetchClauseType( queryPart ) ) {
@@ -269,7 +290,7 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	@Override
 	protected boolean needsRowsToSkip() {
-		return false;
+		return getDialect().getVersion().isBefore( 9 );
 	}
 
 	@Override
@@ -314,6 +335,9 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		if ( !isRowNumberingCurrentQueryPart() ) {
+			if ( getDialect().getVersion().isBefore( 9 ) && !queryPart.isRoot() && queryPart.getOffsetClauseExpression() != null ) {
+				throw new IllegalArgumentException( "Can't emulate offset clause in subquery" );
+			}
 			// Note that SQL Server is very strict i.e. it requires an order by clause for TOP or OFFSET
 			final OffsetFetchClauseMode offsetFetchClauseMode = getOffsetFetchClauseMode( queryPart );
 			if ( offsetFetchClauseMode == OffsetFetchClauseMode.STANDARD ) {

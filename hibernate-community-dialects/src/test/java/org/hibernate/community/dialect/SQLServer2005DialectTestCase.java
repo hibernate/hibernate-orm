@@ -4,12 +4,13 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test.dialect;
+package org.hibernate.community.dialect;
 
 import java.util.Locale;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.query.spi.Limit;
 
@@ -29,11 +30,11 @@ import static org.junit.Assert.assertEquals;
  * @author Chris Cranford
  */
 public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
-	private SQLServer2005Dialect dialect;
+	private SQLServerLegacyDialect dialect;
 
 	@Before
 	public void setup() {
-		dialect = new SQLServer2005Dialect();
+		dialect = new SQLServerLegacyDialect( DatabaseVersion.make( 9 ) );
 	}
 
 	@After

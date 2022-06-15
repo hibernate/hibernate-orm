@@ -17,9 +17,11 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
+import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.Test;
 
@@ -42,6 +44,7 @@ public class UniqueConstraintTest extends BaseEntityManagerFunctionalTestCase {
     }
 
     @Test
+    @SkipForDialect(value = TiDBDialect.class, comment = "TiDB not support ForeignKey yet")
     public void test() {
         //tag::schema-generation-columns-unique-constraint-persist-example[]
         Author _author = doInJPA(this::entityManagerFactory, entityManager -> {

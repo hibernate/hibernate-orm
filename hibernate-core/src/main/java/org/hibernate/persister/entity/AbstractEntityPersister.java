@@ -2287,7 +2287,7 @@ public abstract class AbstractEntityPersister
 			// We have to check the state for "mutable" properties as dirty tracking isn't aware of mutable types
 			final Type[] propertyTypes = entityMetamodel.getPropertyTypes();
 			final boolean[] propertyCheckability = entityMetamodel.getPropertyCheckability();
-			mutablePropertiesIndexes.stream().forEach( i -> {
+			for ( int i = mutablePropertiesIndexes.nextSetBit(0); i >= 0; i = mutablePropertiesIndexes.nextSetBit(i + 1) ) {
 				// This is kindly borrowed from org.hibernate.type.TypeHelper.findDirty
 				final boolean dirty = currentState[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY &&
 						// Consider mutable properties as dirty if we don't have a previous state
@@ -2302,7 +2302,7 @@ public abstract class AbstractEntityPersister
 				if ( dirty ) {
 					fields.add( i );
 				}
-			} );
+			}
 		}
 
 		if ( attributeNames != null ) {

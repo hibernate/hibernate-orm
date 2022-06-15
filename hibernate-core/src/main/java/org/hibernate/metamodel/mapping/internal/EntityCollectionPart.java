@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -138,11 +137,23 @@ public class EntityCollectionPart
 							compositeType.getSubtypes()[0],
 							creationProcess.getCreationContext().getSessionFactory()
 					);
+					ToOneAttributeMapping.addPrefixedPropertyNames(
+							targetKeyPropertyNames,
+							ForeignKeyDescriptor.PART_NAME,
+							compositeType.getSubtypes()[0],
+							creationProcess.getCreationContext().getSessionFactory()
+					);
 				}
 				else {
 					ToOneAttributeMapping.addPrefixedPropertyNames(
 							targetKeyPropertyNames,
 							null,
+							propertyType,
+							creationProcess.getCreationContext().getSessionFactory()
+					);
+					ToOneAttributeMapping.addPrefixedPropertyNames(
+							targetKeyPropertyNames,
+							ForeignKeyDescriptor.PART_NAME,
 							propertyType,
 							creationProcess.getCreationContext().getSessionFactory()
 					);
@@ -152,6 +163,12 @@ public class EntityCollectionPart
 				ToOneAttributeMapping.addPrefixedPropertyNames(
 						targetKeyPropertyNames,
 						entityBinding.getIdentifierProperty().getName(),
+						propertyType,
+						creationProcess.getCreationContext().getSessionFactory()
+				);
+				ToOneAttributeMapping.addPrefixedPropertyNames(
+						targetKeyPropertyNames,
+						ForeignKeyDescriptor.PART_NAME,
 						propertyType,
 						creationProcess.getCreationContext().getSessionFactory()
 				);
@@ -172,6 +189,12 @@ public class EntityCollectionPart
 					propertyType,
 					creationProcess.getCreationContext().getSessionFactory()
 			);
+			ToOneAttributeMapping.addPrefixedPropertyNames(
+					targetKeyPropertyNames,
+					ForeignKeyDescriptor.PART_NAME,
+					propertyType,
+					creationProcess.getCreationContext().getSessionFactory()
+			);
 			this.targetKeyPropertyNames = targetKeyPropertyNames;
 		}
 		else {
@@ -183,6 +206,12 @@ public class EntityCollectionPart
 				ToOneAttributeMapping.addPrefixedPropertyNames(
 						targetKeyPropertyNames,
 						compositeType.getPropertyNames()[0],
+						compositeType.getSubtypes()[0],
+						creationProcess.getCreationContext().getSessionFactory()
+				);
+				ToOneAttributeMapping.addPrefixedPropertyNames(
+						targetKeyPropertyNames,
+						ForeignKeyDescriptor.PART_NAME,
 						compositeType.getSubtypes()[0],
 						creationProcess.getCreationContext().getSessionFactory()
 				);
@@ -199,10 +228,16 @@ public class EntityCollectionPart
 							entityMappingType.getEntityPersister().getIdentifierType(),
 							creationProcess.getCreationContext().getSessionFactory()
 					);
+					ToOneAttributeMapping.addPrefixedPropertyNames(
+							targetKeyPropertyNames,
+							ForeignKeyDescriptor.PART_NAME,
+							entityMappingType.getEntityPersister().getIdentifierType(),
+							creationProcess.getCreationContext().getSessionFactory()
+					);
 					this.targetKeyPropertyNames = targetKeyPropertyNames;
 				}
 				else {
-					this.targetKeyPropertyNames = Collections.singleton( referencedPropertyName );
+					this.targetKeyPropertyNames = Set.of( referencedPropertyName, ForeignKeyDescriptor.PART_NAME );
 				}
 			}
 		}

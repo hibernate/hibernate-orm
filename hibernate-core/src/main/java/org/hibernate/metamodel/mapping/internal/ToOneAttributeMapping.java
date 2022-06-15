@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -391,6 +390,12 @@ public class ToOneAttributeMapping
 							compositeType.getSubtypes()[0],
 							declaringEntityPersister.getFactory()
 					);
+					addPrefixedPropertyNames(
+							targetKeyPropertyNames,
+							ForeignKeyDescriptor.PART_NAME,
+							compositeType.getSubtypes()[0],
+							declaringEntityPersister.getFactory()
+					);
 				}
 				else {
 					this.targetKeyPropertyName = EntityIdentifierMapping.ROLE_LOCAL_NAME;
@@ -406,6 +411,12 @@ public class ToOneAttributeMapping
 							propertyType,
 							declaringEntityPersister.getFactory()
 					);
+					addPrefixedPropertyNames(
+							targetKeyPropertyNames,
+							ForeignKeyDescriptor.PART_NAME,
+							propertyType,
+							declaringEntityPersister.getFactory()
+					);
 				}
 			}
 			else {
@@ -413,6 +424,12 @@ public class ToOneAttributeMapping
 				addPrefixedPropertyNames(
 						targetKeyPropertyNames,
 						targetKeyPropertyName,
+						propertyType,
+						declaringEntityPersister.getFactory()
+				);
+				addPrefixedPropertyNames(
+						targetKeyPropertyNames,
+						ForeignKeyDescriptor.PART_NAME,
 						propertyType,
 						declaringEntityPersister.getFactory()
 				);
@@ -425,6 +442,12 @@ public class ToOneAttributeMapping
 			addPrefixedPropertyNames(
 					targetKeyPropertyNames,
 					targetKeyPropertyName,
+					bootValue.getType(),
+					declaringEntityPersister.getFactory()
+			);
+			addPrefixedPropertyNames(
+					targetKeyPropertyNames,
+					ForeignKeyDescriptor.PART_NAME,
 					bootValue.getType(),
 					declaringEntityPersister.getFactory()
 			);
@@ -445,6 +468,12 @@ public class ToOneAttributeMapping
 						compositeType.getSubtypes()[0],
 						declaringEntityPersister.getFactory()
 				);
+				addPrefixedPropertyNames(
+						targetKeyPropertyNames,
+						ForeignKeyDescriptor.PART_NAME,
+						compositeType.getSubtypes()[0],
+						declaringEntityPersister.getFactory()
+				);
 				this.targetKeyPropertyNames = targetKeyPropertyNames;
 			}
 			else {
@@ -461,10 +490,19 @@ public class ToOneAttributeMapping
 							entityMappingType.getEntityPersister().getIdentifierType(),
 							declaringEntityPersister.getFactory()
 					);
+					addPrefixedPropertyNames(
+							targetKeyPropertyNames,
+							ForeignKeyDescriptor.PART_NAME,
+							entityMappingType.getEntityPersister().getIdentifierType(),
+							declaringEntityPersister.getFactory()
+					);
 					this.targetKeyPropertyNames = targetKeyPropertyNames;
 				}
 				else {
-					this.targetKeyPropertyNames = Collections.singleton( targetKeyPropertyName );
+					this.targetKeyPropertyNames = Set.of(
+							targetKeyPropertyName,
+							ForeignKeyDescriptor.PART_NAME
+					);
 				}
 			}
 		}
@@ -600,16 +638,21 @@ public class ToOneAttributeMapping
 				propertyName = entityType.getRHSUniqueKeyPropertyName();
 			}
 			final String newPrefix;
+			final String newFkPrefix;
 			if ( prefix == null ) {
 				newPrefix = propertyName;
+				newFkPrefix = ForeignKeyDescriptor.PART_NAME;
 			}
 			else if ( propertyName == null ) {
 				newPrefix = prefix;
+				newFkPrefix = prefix + "." + ForeignKeyDescriptor.PART_NAME;
 			}
 			else {
 				newPrefix = prefix + "." + propertyName;
+				newFkPrefix = prefix + "." + ForeignKeyDescriptor.PART_NAME;
 			}
 			addPrefixedPropertyNames( targetKeyPropertyNames, newPrefix, identifierOrUniqueKeyType, factory );
+			addPrefixedPropertyNames( targetKeyPropertyNames, newFkPrefix, identifierOrUniqueKeyType, factory );
 		}
 	}
 

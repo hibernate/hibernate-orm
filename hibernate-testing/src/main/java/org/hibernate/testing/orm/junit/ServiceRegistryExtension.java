@@ -61,10 +61,7 @@ public class ServiceRegistryExtension
 	}
 
 	@Override
-	public void beforeEach(ExtensionContext context) throws Exception {
-		assert context.getTestMethod().isPresent();
-		assert context.getRequiredTestMethod() == context.getElement().get();
-
+	public void beforeEach(ExtensionContext context) {
 		Optional<BootstrapServiceRegistry> bsrAnnRef = AnnotationSupport.findAnnotation(
 				context.getElement().get(),
 				BootstrapServiceRegistry.class

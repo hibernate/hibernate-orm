@@ -6,6 +6,7 @@
  */
 package org.hibernate.testing.orm.junit;
 
+import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Optional;
@@ -48,12 +49,62 @@ public class DomainModelExtension
 
 	private static final String MODEL_KEY = MetadataImplementor.class.getName();
 
+	/**
+	 * Intended for use from external consumers.  Will never create a scope, just
+	 * attempt to consume an already created and stored one
+	 */
+	public static DomainModelScope findDomainModelScope(Object testInstance, ExtensionContext context) {
+		final ExtensionContext.Store store = locateExtensionStore( testInstance, context );
+		final DomainModelScope existing = (DomainModelScope) store.get( MODEL_KEY );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		throw new RuntimeException( "Could not locate DomainModelScope : " + context.getDisplayName() );
+	}
+
+	public static DomainModelScope resolveForMethodLevelSessionFactoryScope(ExtensionContext context) {
+		assert context.getTestMethod().isPresent();
+
+		// if the test defines `@DomainModel` at the class-level but not at the method-level,
+		// we will run into problems with a shared `TypeConfiguration`.  In this case, we need
+		// to create a new DomainModelScope (well ask the DomainModelExtension to create it)
+		// and store it relative to the method-context
+		//
+		// first, look for `@DomainModel` at the method-level.  if it is there, no problem.
+		// otherwise we need to "act like it is" and create a method-level DomainModelScope
+
+		final Object testInstance = context.getRequiredTestInstance();
+		final Method testMethod = context.getRequiredTestMethod();
+
+		final Optional<DomainModel> methodLevelAnnRef = AnnotationSupport.findAnnotation(
+				testMethod,
+				DomainModel.class
+		);
+		if ( methodLevelAnnRef.isPresent() ) {
+			// just return the existing one
+			return findDomainModelScope( testInstance, context );
+		}
+
+		final Optional<DomainModel> classLevelAnnRef = AnnotationSupport.findAnnotation(
+				context.getRequiredTestClass(),
+				DomainModel.class
+		);
+
+		if ( classLevelAnnRef.isPresent()
+				|| testInstance instanceof DomainModelProducer ) {
+			final DomainModelScope created = createDomainModelScope( testInstance, classLevelAnnRef, context );
+			locateExtensionStore( testInstance, context ).put( MODEL_KEY, created );
+			return created;
+		}
+
+		throw new RuntimeException( "Could not locate @DomainModel to use with method-level @SessionFactory: " + context.getDisplayName() );
+	}
+
 	@Override
 	public void postProcessTestInstance(Object testInstance, ExtensionContext context) {
-		assert context.getTestClass().isPresent();
-
 		final Optional<DomainModel> domainModelAnnRef = AnnotationSupport.findAnnotation(
-				context.getElement().get(),
+				context.getRequiredTestClass(),
 				DomainModel.class
 		);
 
@@ -66,10 +117,6 @@ public class DomainModelExtension
 
 	@Override
 	public void beforeEach(ExtensionContext context) {
-		assert context.getTestMethod().isPresent();
-		assert context.getRequiredTestMethod() == context.getElement().get();
-		assert context.getTestInstance().isPresent();
-
 		final Optional<DomainModel> domainModelAnnRef = AnnotationSupport.findAnnotation(
 				context.getElement().get(),
 				DomainModel.class
@@ -196,16 +243,6 @@ public class DomainModelExtension
 		}
 
 		return scope;
-	}
-
-	public static DomainModelScope findDomainModelScope(Object testInstance, ExtensionContext context) {
-		final ExtensionContext.Store store = locateExtensionStore( testInstance, context );
-		final DomainModelScope existing = (DomainModelScope) store.get( MODEL_KEY );
-		if ( existing != null ) {
-			return existing;
-		}
-
-		throw new RuntimeException( "Could not locate @DomainModel annotation : " + context.getDisplayName() );
 	}
 
 	protected static void applyCacheSettings(Metadata metadata, boolean overrideCacheStrategy, String cacheConcurrencyStrategy) {

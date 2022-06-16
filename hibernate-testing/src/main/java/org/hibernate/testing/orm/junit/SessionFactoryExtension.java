@@ -30,7 +30,7 @@ import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGroup
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.transaction.TransactionUtil;
-import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 import org.junit.jupiter.api.extension.TestInstancePostProcessor;
@@ -48,15 +48,15 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class SessionFactoryExtension
-		implements TestInstancePostProcessor, AfterAllCallback, TestExecutionExceptionHandler {
+		implements TestInstancePostProcessor, BeforeEachCallback, TestExecutionExceptionHandler {
 
 	private static final Logger log = Logger.getLogger( SessionFactoryExtension.class );
 	private static final String SESSION_FACTORY_KEY = SessionFactoryScope.class.getName();
 
-	private static ExtensionContext.Store locateExtensionStore(Object testInstance, ExtensionContext context) {
-		return JUnitHelper.locateExtensionStore( SessionFactoryExtension.class, context, testInstance );
-	}
-
+	/**
+	 * Intended for use from external consumers.  Will never create a scope, just
+	 * attempt to consume an already created and stored one
+	 */
 	public static SessionFactoryScope findSessionFactoryScope(Object testInstance, ExtensionContext context) {
 		final ExtensionContext.Store store = locateExtensionStore( testInstance, context );
 		final SessionFactoryScope existing = (SessionFactoryScope) store.get( SESSION_FACTORY_KEY );
@@ -64,9 +64,55 @@ public class SessionFactoryExtension
 			return existing;
 		}
 
-		SessionFactoryProducer producer = null;
+		throw new RuntimeException( "Could not locate SessionFactoryScope : " + context.getDisplayName() );
+	}
 
-		final DomainModelScope domainModelScope = DomainModelExtension.findDomainModelScope( testInstance, context );
+	@Override
+	public void postProcessTestInstance(Object testInstance, ExtensionContext context) {
+		log.tracef( "#postProcessTestInstance(%s, %s)", testInstance, context.getDisplayName() );
+
+		final Optional<SessionFactory> sfAnnRef = AnnotationSupport.findAnnotation(
+				context.getRequiredTestClass(),
+				SessionFactory.class
+		);
+
+		if ( sfAnnRef.isPresent()
+				|| SessionFactoryProducer.class.isAssignableFrom( context.getRequiredTestClass() ) ) {
+			final DomainModelScope domainModelScope = DomainModelExtension.findDomainModelScope( testInstance, context );
+			final SessionFactoryScope created = createSessionFactoryScope( testInstance, sfAnnRef, domainModelScope, context );
+			locateExtensionStore( testInstance, context ).put( SESSION_FACTORY_KEY, created );
+		}
+	}
+
+	@Override
+	public void beforeEach(ExtensionContext context) {
+		final Optional<SessionFactory> sfAnnRef = AnnotationSupport.findAnnotation(
+				context.getRequiredTestMethod(),
+				SessionFactory.class
+		);
+
+		if ( sfAnnRef.isEmpty() ) {
+			// assume the annotations are defined on the class-level...
+			// will be validated by the parameter-resolver or SFS-extension
+			return;
+		}
+
+		final DomainModelScope domainModelScope = DomainModelExtension.resolveForMethodLevelSessionFactoryScope( context );
+		final SessionFactoryScope created = createSessionFactoryScope( context.getRequiredTestInstance(), sfAnnRef, domainModelScope, context );
+		final ExtensionContext.Store extensionStore = locateExtensionStore( context.getRequiredTestInstance(), context );
+		extensionStore.put( SESSION_FACTORY_KEY, created );
+	}
+
+	private static ExtensionContext.Store locateExtensionStore(Object testInstance, ExtensionContext context) {
+		return JUnitHelper.locateExtensionStore( SessionFactoryExtension.class, context, testInstance );
+	}
+
+	private static SessionFactoryScopeImpl createSessionFactoryScope(
+			Object testInstance,
+			Optional<SessionFactory> sfAnnRef,
+			DomainModelScope domainModelScope,
+			ExtensionContext context) {
+		SessionFactoryProducer producer = null;
 
 		if ( testInstance instanceof SessionFactoryProducer ) {
 			producer = (SessionFactoryProducer) testInstance;
@@ -76,13 +122,8 @@ public class SessionFactoryExtension
 				throw new RuntimeException( "Unable to determine how to handle given ExtensionContext : " + context.getDisplayName() );
 			}
 
-			final Optional<SessionFactory> sfAnnWrappper = AnnotationSupport.findAnnotation(
-					context.getElement().get(),
-					SessionFactory.class
-			);
-
-			if ( sfAnnWrappper.isPresent() ) {
-				final SessionFactory sessionFactoryConfig = sfAnnWrappper.get();
+			if ( sfAnnRef.isPresent() ) {
+				final SessionFactory sessionFactoryConfig = sfAnnRef.get();
 
 				producer = model -> {
 					try {
@@ -131,8 +172,6 @@ public class SessionFactoryExtension
 				producer
 		);
 
-		locateExtensionStore( testInstance, context ).put( SESSION_FACTORY_KEY, sfScope );
-
 		if ( testInstance instanceof SessionFactoryScopeAware ) {
 			( (SessionFactoryScopeAware) testInstance ).injectSessionFactoryScope( sfScope );
 		}
@@ -180,32 +219,6 @@ public class SessionFactoryExtension
 		);
 	}
 
-	@Override
-	public void postProcessTestInstance(Object testInstance, ExtensionContext context) {
-		log.tracef( "#postProcessTestInstance(%s, %s)", testInstance, context.getDisplayName() );
-
-		findSessionFactoryScope( testInstance, context );
-	}
-
-	@Override
-	public void afterAll(ExtensionContext context) {
-		log.tracef( "#afterAll(%s)", context.getDisplayName() );
-
-		final Object testInstance = context.getRequiredTestInstance();
-
-		if ( testInstance instanceof SessionFactoryScopeAware ) {
-			( (SessionFactoryScopeAware) testInstance ).injectSessionFactoryScope( null );
-		}
-
-		final SessionFactoryScopeImpl removed = (SessionFactoryScopeImpl) locateExtensionStore( testInstance, context ).remove( SESSION_FACTORY_KEY );
-		if ( removed != null ) {
-			removed.close();
-		}
-
-		if ( testInstance instanceof SessionFactoryScopeAware ) {
-			( (SessionFactoryScopeAware) testInstance ).injectSessionFactoryScope( null );
-		}
-	}
 
 	@Override
 	public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {

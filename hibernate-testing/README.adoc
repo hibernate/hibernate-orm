@@ -1,0 +1,4 @@
+The `hibernate-testing` module of Hibernate ORM defines utilities for writing
+tests easier....
+
+// todo : write more (duh)

@@ -23,7 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * @author Steve Ebersole
  */
 @Inherited
-@Target( ElementType.TYPE )
+@Target({ElementType.TYPE, ElementType.METHOD})
 @Retention( RetentionPolicy.RUNTIME )
 
 @TestInstance( TestInstance.Lifecycle.PER_CLASS )

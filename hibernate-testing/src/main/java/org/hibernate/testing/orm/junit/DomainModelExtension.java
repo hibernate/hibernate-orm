@@ -26,7 +26,7 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 
 import org.hibernate.testing.orm.domain.DomainModelDescriptor;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
-import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 import org.junit.jupiter.api.extension.TestInstancePostProcessor;
@@ -44,22 +44,67 @@ import jakarta.persistence.SharedCacheMode;
  * @author Steve Ebersole
  */
 public class DomainModelExtension
-		implements TestInstancePostProcessor, AfterAllCallback, TestExecutionExceptionHandler {
+		implements TestInstancePostProcessor, BeforeEachCallback, TestExecutionExceptionHandler {
 
 	private static final String MODEL_KEY = MetadataImplementor.class.getName();
+
+	@Override
+	public void postProcessTestInstance(Object testInstance, ExtensionContext context) {
+		assert context.getTestClass().isPresent();
+
+		final Optional<DomainModel> domainModelAnnRef = AnnotationSupport.findAnnotation(
+				context.getElement().get(),
+				DomainModel.class
+		);
+
+		if ( domainModelAnnRef.isPresent()
+				|| DomainModelProducer.class.isAssignableFrom( context.getRequiredTestClass() ) ) {
+			final DomainModelScope created = createDomainModelScope( testInstance, domainModelAnnRef, context );
+			locateExtensionStore( testInstance, context ).put( MODEL_KEY, created );
+		}
+	}
+
+	@Override
+	public void beforeEach(ExtensionContext context) {
+		assert context.getTestMethod().isPresent();
+		assert context.getRequiredTestMethod() == context.getElement().get();
+		assert context.getTestInstance().isPresent();
+
+		final Optional<DomainModel> domainModelAnnRef = AnnotationSupport.findAnnotation(
+				context.getElement().get(),
+				DomainModel.class
+		);
+
+		if ( domainModelAnnRef.isEmpty() ) {
+			// assume the annotations are defined on the class-level...
+			// will be validated by the parameter-resolver or SFS-extension
+			return;
+		}
+
+		final DomainModelScope created = createDomainModelScope( context.getRequiredTestInstance(), domainModelAnnRef, context );
+		final ExtensionContext.Store extensionStore = locateExtensionStore( context.getRequiredTestInstance(), context );
+		extensionStore.put( MODEL_KEY, created );
+	}
+
+	@Override
+	public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
+		final ExtensionContext.Store store = locateExtensionStore( context.getRequiredTestInstance(), context );
+		final DomainModelScopeImpl scope = (DomainModelScopeImpl) store.get( MODEL_KEY );
+
+		if ( scope != null ) {
+			scope.releaseModel();
+		}
+
+		throw throwable;
+	}
 
 	private static ExtensionContext.Store locateExtensionStore(Object testInstance, ExtensionContext context) {
 		return JUnitHelper.locateExtensionStore( ServiceRegistryExtension.class, context, testInstance );
 	}
 
-	public static DomainModelScope findDomainModelScope(Object testInstance, ExtensionContext context) {
-		final ExtensionContext.Store store = locateExtensionStore( testInstance, context );
-		final DomainModelScope existing = (DomainModelScope) store.get( MODEL_KEY );
-		if ( existing != null ) {
-			return existing;
-		}
-
-
+	private static DomainModelScope createDomainModelScope(
+			Object testInstance, Optional<DomainModel> domainModelAnnRef,
+			ExtensionContext context) {
 		final ServiceRegistryScope serviceRegistryScope = ServiceRegistryExtension.findServiceRegistryScope(
 				testInstance,
 				context
@@ -71,21 +116,14 @@ public class DomainModelExtension
 			modelProducer = (DomainModelProducer) testInstance;
 		}
 		else {
+			assert domainModelAnnRef != null && domainModelAnnRef.isPresent();
+
 			modelProducer = serviceRegistry -> {
-				if ( !context.getElement().isPresent() ) {
+				if ( context.getElement().isEmpty() ) {
 					throw new RuntimeException( "Unable to determine how to handle given ExtensionContext : " + context.getDisplayName() );
 				}
 
-				final Optional<DomainModel> domainModelAnnotationWrapper = AnnotationSupport.findAnnotation(
-						context.getElement().get(),
-						DomainModel.class
-				);
-
-				if ( !domainModelAnnotationWrapper.isPresent() ) {
-					throw new RuntimeException( "Could not locate @DomainModel annotation : " + context.getDisplayName() );
-				}
-
-				final DomainModel domainModelAnnotation = domainModelAnnotationWrapper.get();
+				final DomainModel domainModelAnnotation = domainModelAnnRef.get();
 
 				final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
 				final ManagedBeanRegistry managedBeanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
@@ -108,7 +146,7 @@ public class DomainModelExtension
 					}
 				}
 
-				for ( Class annotatedClass : domainModelAnnotation.annotatedClasses() ) {
+				for ( Class<?> annotatedClass : domainModelAnnotation.annotatedClasses() ) {
 					metadataSources.addAnnotatedClass( annotatedClass );
 				}
 
@@ -157,12 +195,34 @@ public class DomainModelExtension
 			( (DomainModelScopeAware) testInstance ).injectTestModelScope( scope );
 		}
 
-		locateExtensionStore( testInstance, context ).put( MODEL_KEY, scope );
-
 		return scope;
 	}
 
-	protected static final void applyCacheSettings(Metadata metadata, boolean overrideCacheStrategy, String cacheConcurrencyStrategy) {
+	public static DomainModelScope findDomainModelScope(Object testInstance, ExtensionContext context) {
+		// todo : allow for method-level
+
+		final ExtensionContext.Store store = locateExtensionStore( testInstance, context );
+		final DomainModelScope existing = (DomainModelScope) store.get( MODEL_KEY );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		final Optional<DomainModel> domainModelAnnRef = AnnotationSupport.findAnnotation(
+				context.getElement().get(),
+				DomainModel.class
+		);
+
+		if ( domainModelAnnRef.isEmpty() ) {
+			throw new RuntimeException( "Could not locate @DomainModel annotation : " + context.getDisplayName() );
+		}
+
+		final DomainModelScope created = createDomainModelScope( testInstance, domainModelAnnRef, context );
+		locateExtensionStore( testInstance, context ).put( MODEL_KEY, created );
+
+		return created;
+	}
+
+	protected static void applyCacheSettings(Metadata metadata, boolean overrideCacheStrategy, String cacheConcurrencyStrategy) {
 		if ( !overrideCacheStrategy ) {
 			return;
 		}
@@ -178,9 +238,9 @@ public class DomainModelExtension
 
 			boolean hasLob = false;
 
-			final Iterator props = entityBinding.getPropertyClosureIterator();
+			final Iterator<Property> props = entityBinding.getPropertyClosureIterator();
 			while ( props.hasNext() ) {
-				final Property prop = (Property) props.next();
+				final Property prop = props.next();
 				if ( prop.getValue().isSimpleValue() ) {
 					if ( isLob( (SimpleValue) prop.getValue() ) ) {
 						hasLob = true;
@@ -224,33 +284,6 @@ public class DomainModelExtension
 			}
 		}
 		return false;
-	}
-
-	@Override
-	public void postProcessTestInstance(Object testInstance, ExtensionContext context) {
-		findDomainModelScope( testInstance, context );
-	}
-
-	@Override
-	public void afterAll(ExtensionContext context) {
-		final ExtensionContext.Store store = locateExtensionStore( context.getRequiredTestInstance(), context );
-		final DomainModelScopeImpl scope = (DomainModelScopeImpl) store.remove( MODEL_KEY );
-
-		if ( scope != null ) {
-			scope.close();
-		}
-	}
-
-	@Override
-	public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
-		final ExtensionContext.Store store = locateExtensionStore( context.getRequiredTestInstance(), context );
-		final DomainModelScopeImpl scope = (DomainModelScopeImpl) store.get( MODEL_KEY );
-
-		if ( scope != null ) {
-			scope.releaseModel();
-		}
-
-		throw throwable;
 	}
 
 	public static class DomainModelScopeImpl implements DomainModelScope, ExtensionContext.Store.CloseableResource {

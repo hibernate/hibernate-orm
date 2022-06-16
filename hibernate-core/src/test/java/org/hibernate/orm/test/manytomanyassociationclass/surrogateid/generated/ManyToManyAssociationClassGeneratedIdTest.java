@@ -6,18 +6,26 @@
  */
 package org.hibernate.orm.test.manytomanyassociationclass.surrogateid.generated;
 
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.HashSet;
+
+import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.PersistenceException;
 
+import org.hibernate.TransactionException;
+import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.exception.ConstraintViolationException;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.orm.test.manytomanyassociationclass.AbstractManyToManyAssociationClassTest;
 import org.hibernate.orm.test.manytomanyassociationclass.Membership;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import static org.hibernate.testing.orm.junit.DialectContext.getDialect;
 import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
+import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -55,7 +63,13 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 					catch (Exception e) {
 						session.getTransaction().rollback();
 						// expected
-						assertTyping( ConstraintViolationException.class, e.getCause() );
+						Object expectException = ConstraintViolationException.class;
+						if (getDialect() instanceof TiDBDialect) {
+							// TiDB throw SQLIntegrityConstraintViolationException instead
+							expectException = SQLIntegrityConstraintViolationException.class;
+						}
+
+						Assertions.assertEquals(expectException, e.getCause().getClass());
 					}
 				}
 		);
@@ -84,7 +98,13 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 					catch (PersistenceException e) {
 						session.getTransaction().rollback();
 						// expected
-						assertTyping( ConstraintViolationException.class, e.getCause() );
+						Object expectException = ConstraintViolationException.class;
+						if (getDialect() instanceof TiDBDialect) {
+							// TiDB throw SQLIntegrityConstraintViolationException instead
+							expectException = SQLIntegrityConstraintViolationException.class;
+						}
+
+						Assertions.assertEquals(expectException, e.getCause().getClass());
 					}
 				}
 		);
@@ -113,7 +133,13 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 					catch (PersistenceException e) {
 						session.getTransaction().rollback();
 						// expected
-						assertTyping( ConstraintViolationException.class, e.getCause() );
+						Object expectException = ConstraintViolationException.class;
+						if (getDialect() instanceof TiDBDialect) {
+							// TiDB throw SQLIntegrityConstraintViolationException instead
+							expectException = SQLIntegrityConstraintViolationException.class;
+						}
+
+						Assertions.assertEquals(expectException, e.getCause().getClass());
 					}
 				}
 		);

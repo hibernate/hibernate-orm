@@ -12,6 +12,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 import org.hibernate.orm.test.jpa.model.Item;
@@ -20,6 +21,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
@@ -34,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Steve Ebersole
  */
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportNoWait.class)
+@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB PESSIMISTIC Transaction would not lock the read statement")
 public class LockExceptionTests extends AbstractJPATest {
 
 	private SQLServerSnapshotIsolationConnectionProvider connectionProvider = new SQLServerSnapshotIsolationConnectionProvider();

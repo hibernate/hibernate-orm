@@ -99,7 +99,7 @@ public class DomainModelExtension
 	}
 
 	private static ExtensionContext.Store locateExtensionStore(Object testInstance, ExtensionContext context) {
-		return JUnitHelper.locateExtensionStore( ServiceRegistryExtension.class, context, testInstance );
+		return JUnitHelper.locateExtensionStore( DomainModelExtension.class, context, testInstance );
 	}
 
 	private static DomainModelScope createDomainModelScope(
@@ -199,27 +199,13 @@ public class DomainModelExtension
 	}
 
 	public static DomainModelScope findDomainModelScope(Object testInstance, ExtensionContext context) {
-		// todo : allow for method-level
-
 		final ExtensionContext.Store store = locateExtensionStore( testInstance, context );
 		final DomainModelScope existing = (DomainModelScope) store.get( MODEL_KEY );
 		if ( existing != null ) {
 			return existing;
 		}
 
-		final Optional<DomainModel> domainModelAnnRef = AnnotationSupport.findAnnotation(
-				context.getElement().get(),
-				DomainModel.class
-		);
-
-		if ( domainModelAnnRef.isEmpty() ) {
-			throw new RuntimeException( "Could not locate @DomainModel annotation : " + context.getDisplayName() );
-		}
-
-		final DomainModelScope created = createDomainModelScope( testInstance, domainModelAnnRef, context );
-		locateExtensionStore( testInstance, context ).put( MODEL_KEY, created );
-
-		return created;
+		throw new RuntimeException( "Could not locate @DomainModel annotation : " + context.getDisplayName() );
 	}
 
 	protected static void applyCacheSettings(Metadata metadata, boolean overrideCacheStrategy, String cacheConcurrencyStrategy) {

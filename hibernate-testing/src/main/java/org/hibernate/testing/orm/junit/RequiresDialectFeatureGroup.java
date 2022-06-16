@@ -22,7 +22,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  */
 @Inherited
 @Retention( RetentionPolicy.RUNTIME )
-@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+@Target({ ElementType.TYPE, ElementType.METHOD})
 
 @ExtendWith( DialectFilterExtension.class )
 public @interface RequiresDialectFeatureGroup {

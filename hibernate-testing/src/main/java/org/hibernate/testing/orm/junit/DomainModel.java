@@ -12,8 +12,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import jakarta.persistence.SharedCacheMode;
-
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.cache.spi.access.AccessType;
 
@@ -21,6 +19,8 @@ import org.hibernate.testing.orm.domain.DomainModelDescriptor;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import jakarta.persistence.SharedCacheMode;
 
 /**
  * @asciidoc
@@ -81,7 +81,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * @author Steve Ebersole
  */
 @Inherited
-@Target(ElementType.TYPE)
+@Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 
 @TestInstance( TestInstance.Lifecycle.PER_CLASS )

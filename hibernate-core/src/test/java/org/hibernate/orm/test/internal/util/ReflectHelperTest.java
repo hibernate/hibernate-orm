@@ -14,7 +14,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.orm.test.internal.util.hib3rnat3.C0nst4nts३;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.hibernate.testing.TestForIssue;

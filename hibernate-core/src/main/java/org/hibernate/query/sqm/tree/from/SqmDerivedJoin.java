@@ -163,21 +163,21 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 
 	@Override
 	public <S extends T> SqmTreatedEntityJoin<T,S> treatAs(Class<S> treatJavaType) throws PathException {
-		throw new UnsupportedOperationException( "Derived joins can not be treated!" );
+		throw new UnsupportedOperationException( "Derived joins can not be treated" );
 	}
 	@Override
 	public <S extends T> SqmTreatedEntityJoin<T,S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		throw new UnsupportedOperationException( "Derived joins can not be treated!" );
+		throw new UnsupportedOperationException( "Derived joins can not be treated" );
 	}
 
 	@Override
 	public <S extends T> SqmFrom<?, S> treatAs(Class<S> treatJavaType, String alias) {
-		throw new UnsupportedOperationException( "Derived joins can not be treated!" );
+		throw new UnsupportedOperationException( "Derived joins can not be treated" );
 	}
 
 	@Override
 	public <S extends T> SqmFrom<?, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
-		throw new UnsupportedOperationException( "Derived joins can not be treated!" );
+		throw new UnsupportedOperationException( "Derived joins can not be treated" );
 	}
 
 }

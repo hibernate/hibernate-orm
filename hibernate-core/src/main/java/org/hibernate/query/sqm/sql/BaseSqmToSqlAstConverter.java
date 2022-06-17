@@ -667,7 +667,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public void registerLockMode(String identificationVariable, LockMode explicitLockMode) {
-		throw new UnsupportedOperationException( "Registering lock modes should only be done for result set mappings!" );
+		throw new UnsupportedOperationException( "Registering lock modes should only be done for result set mappings" );
 	}
 
 	public QueryOptions getQueryOptions() {
@@ -1593,7 +1593,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		throw new IllegalArgumentException(
 				String.format(
-						"Couldn't find cte column %s in cte %s!",
+						"Couldn't find cte column %s in cte %s",
 						cteColumn.getColumnName(),
 						cteTable.getTableExpression()
 				)
@@ -3066,7 +3066,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else if ( domainType instanceof ManagedDomainType<?> ) {
 			for ( Attribute<?, ?> attribute : ( (ManagedDomainType<?>) domainType ).getAttributes() ) {
 				if ( !( attribute instanceof SingularPersistentAttribute<?, ?> ) ) {
-					throw new IllegalArgumentException( "Only embeddables without collections are supported!" );
+					throw new IllegalArgumentException( "Only embeddables without collections are supported" );
 				}
 				final DomainType<?> attributeType = ( (SingularPersistentAttribute<?, ?>) attribute ).getType();
 				addColumnNames( columnNames, attributeType, componentName + "_" + attribute.getName() );

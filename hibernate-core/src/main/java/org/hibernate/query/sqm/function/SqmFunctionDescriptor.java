@@ -58,7 +58,7 @@ public interface SqmFunctionDescriptor {
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		throw new UnsupportedOperationException( "Not an aggregate function!" );
+		throw new UnsupportedOperationException( "Not an aggregate function" );
 	}
 
 	/**
@@ -72,7 +72,7 @@ public interface SqmFunctionDescriptor {
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		throw new UnsupportedOperationException( "Not an ordered set-aggregate function!" );
+		throw new UnsupportedOperationException( "Not an ordered set-aggregate function" );
 	}
 
 	/**
@@ -87,7 +87,7 @@ public interface SqmFunctionDescriptor {
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		throw new UnsupportedOperationException( "Not an aggregate function!" );
+		throw new UnsupportedOperationException( "Not an aggregate function" );
 	}
 
 	/**

@@ -3610,7 +3610,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmFunctionDescriptor functionTemplate = getFunctionDescriptor( "listagg" );
 		if ( functionTemplate == null ) {
 			throw new SemanticException(
-					"The listagg function was not registered for the dialect!"
+					"The listagg function was not registered for the dialect"
 			);
 		}
 		final int argumentStartIndex;

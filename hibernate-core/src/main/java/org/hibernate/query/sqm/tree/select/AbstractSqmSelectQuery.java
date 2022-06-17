@@ -95,7 +95,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	@Override
 	public void addCteStatement(SqmCteStatement<?> cteStatement) {
 		if ( cteStatements.putIfAbsent( cteStatement.getCteTable().getCteName(), cteStatement ) != null ) {
-			throw new IllegalArgumentException( "A CTE with the label " + cteStatement.getCteTable().getCteName() + " already exists!" );
+			throw new IllegalArgumentException( "A CTE with the label " + cteStatement.getCteTable().getCteName() + " already exists" );
 		}
 	}
 

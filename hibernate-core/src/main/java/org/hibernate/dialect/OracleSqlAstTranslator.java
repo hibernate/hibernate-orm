@@ -10,7 +10,6 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -64,7 +63,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		final boolean followOnLockingDisabled = Boolean.FALSE.equals( followOnLocking );
 		if ( strategy != LockStrategy.FOLLOW_ON && querySpec.hasSortSpecifications() ) {
 			if ( followOnLockingDisabled ) {
-				throw new IllegalQueryOperationException( "Locking with ORDER BY is not supported!" );
+				throw new IllegalQueryOperationException( "Locking with ORDER BY is not supported" );
 			}
 			strategy = LockStrategy.FOLLOW_ON;
 		}
@@ -72,19 +71,19 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		// See https://docs.oracle.com/cd/B19306_01/server.102/b14200/statements_10002.htm#i2066346
 		if ( strategy != LockStrategy.FOLLOW_ON && isPartOfQueryGroup() ) {
 			if ( followOnLockingDisabled ) {
-				throw new IllegalQueryOperationException( "Locking with set operators is not supported!" );
+				throw new IllegalQueryOperationException( "Locking with set operators is not supported" );
 			}
 			strategy = LockStrategy.FOLLOW_ON;
 		}
 		if ( strategy != LockStrategy.FOLLOW_ON && hasSetOperations( querySpec ) ) {
 			if ( followOnLockingDisabled ) {
-				throw new IllegalQueryOperationException( "Locking with set operators is not supported!" );
+				throw new IllegalQueryOperationException( "Locking with set operators is not supported" );
 			}
 			strategy = LockStrategy.FOLLOW_ON;
 		}
 		if ( strategy != LockStrategy.FOLLOW_ON && useOffsetFetchClause( querySpec ) && !isRowsOnlyFetchClauseType( querySpec ) ) {
 			if ( followOnLockingDisabled ) {
-				throw new IllegalQueryOperationException( "Locking with FETCH is not supported!" );
+				throw new IllegalQueryOperationException( "Locking with FETCH is not supported" );
 			}
 			strategy = LockStrategy.FOLLOW_ON;
 		}
@@ -100,7 +99,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 			}
 			if ( hasOffset ) {
 				if ( followOnLockingDisabled ) {
-					throw new IllegalQueryOperationException( "Locking with OFFSET is not supported!" );
+					throw new IllegalQueryOperationException( "Locking with OFFSET is not supported" );
 				}
 				strategy = LockStrategy.FOLLOW_ON;
 			}

@@ -544,7 +544,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			this.jdbcTimeZone = TimeZone.getTimeZone( ZoneId.of((String) jdbcTimeZoneValue) );
 		}
 		else if ( jdbcTimeZoneValue != null ) {
-			throw new IllegalArgumentException( "Configuration property " + JDBC_TIME_ZONE + " value [" + jdbcTimeZoneValue + "] is not supported!" );
+			throw new IllegalArgumentException( "Configuration property " + JDBC_TIME_ZONE + " value [" + jdbcTimeZoneValue + "] is not supported" );
 		}
 
 		this.criteriaValueHandlingMode = ValueHandlingMode.interpret(
@@ -629,7 +629,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 								e
 						);
 					}
-					throw new IllegalArgumentException( "Cannot instantiate the class [" + strategyClass.getName() + "] because it does not have a constructor that accepts a dialect or an empty constructor!" );
+					throw new IllegalArgumentException( "Cannot instantiate the class [" + strategyClass.getName() + "] because it does not have a constructor that accepts a dialect or an empty constructor" );
 				}
 		);
 	}
@@ -678,7 +678,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 								e
 						);
 					}
-					throw new IllegalArgumentException( "Cannot instantiate the class [" + strategyClass.getName() + "] because it does not have a constructor that accepts a dialect or an empty constructor!" );
+					throw new IllegalArgumentException( "Cannot instantiate the class [" + strategyClass.getName() + "] because it does not have a constructor that accepts a dialect or an empty constructor" );
 				}
 		);
 	}

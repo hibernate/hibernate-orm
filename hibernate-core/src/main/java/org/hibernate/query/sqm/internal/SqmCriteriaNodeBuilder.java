@@ -304,7 +304,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		queryParts.add( ( (SqmSelectQuery<T>) query1 ).getQueryPart() );
 		for ( CriteriaQuery<?> query : queries ) {
 			if ( query.getResultType() != resultType ) {
-				throw new IllegalArgumentException( "Result type of all operands must match!" );
+				throw new IllegalArgumentException( "Result type of all operands must match" );
 			}
 			queryParts.add( ( (SqmSelectQuery<T>) query ).getQueryPart() );
 		}

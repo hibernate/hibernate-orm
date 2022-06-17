@@ -533,13 +533,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else if ( expression instanceof JdbcParameter ) {
 			if ( jdbcParameterBindings == null ) {
-				throw new IllegalArgumentException( "Can't interpret expression because no parameter bindings are available!" );
+				throw new IllegalArgumentException( "Can't interpret expression because no parameter bindings are available" );
 			}
 			return (R) getParameterBindValue( (JdbcParameter) expression );
 		}
 		else if ( expression instanceof SqmParameterInterpretation ) {
 			if ( jdbcParameterBindings == null ) {
-				throw new IllegalArgumentException( "Can't interpret expression because no parameter bindings are available!" );
+				throw new IllegalArgumentException( "Can't interpret expression because no parameter bindings are available" );
 			}
 			return (R) getParameterBindValue( (JdbcParameter) ( (SqmParameterInterpretation) expression).getResolvedExpression() );
 		}
@@ -553,7 +553,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else if ( expression instanceof JdbcParameter ) {
 			if ( jdbcParameterBindings == null ) {
-				throw new IllegalArgumentException( "Can't interpret expression because no parameter bindings are available!" );
+				throw new IllegalArgumentException( "Can't interpret expression because no parameter bindings are available" );
 			}
 			final JdbcParameter parameter = (JdbcParameter) expression;
 			renderAsLiteral( parameter, getParameterBindValue( parameter ) );
@@ -561,7 +561,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else if ( expression instanceof SqmParameterInterpretation ) {
 			if ( jdbcParameterBindings == null ) {
-				throw new IllegalArgumentException( "Can't interpret expression because no parameter bindings are available!" );
+				throw new IllegalArgumentException( "Can't interpret expression because no parameter bindings are available" );
 			}
 			final JdbcParameter parameter = (JdbcParameter) ( (SqmParameterInterpretation) expression).getResolvedExpression();
 			renderAsLiteral( parameter, getParameterBindValue( parameter ) );
@@ -644,7 +644,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				jdbcOperation = translateSelect( (SelectStatement) statement );
 			}
 			else {
-				throw new IllegalArgumentException( "Unexpected statement!" );
+				throw new IllegalArgumentException( "Unexpected statement" );
 			}
 
 			if ( jdbcParameterBindings != null && CollectionHelper.isNotEmpty( getFilterJdbcParameters() ) ) {
@@ -1241,19 +1241,19 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		LockStrategy strategy = LockStrategy.CLAUSE;
 		if ( !querySpec.getGroupByClauseExpressions().isEmpty() ) {
 			if ( Boolean.FALSE.equals( followOnLocking ) ) {
-				throw new IllegalQueryOperationException( "Locking with GROUP BY is not supported!" );
+				throw new IllegalQueryOperationException( "Locking with GROUP BY is not supported" );
 			}
 			strategy = LockStrategy.FOLLOW_ON;
 		}
 		if ( querySpec.getHavingClauseRestrictions() != null ) {
 			if ( Boolean.FALSE.equals( followOnLocking ) ) {
-				throw new IllegalQueryOperationException( "Locking with HAVING is not supported!" );
+				throw new IllegalQueryOperationException( "Locking with HAVING is not supported" );
 			}
 			strategy = LockStrategy.FOLLOW_ON;
 		}
 		if ( querySpec.getSelectClause().isDistinct() ) {
 			if ( Boolean.FALSE.equals( followOnLocking ) ) {
-				throw new IllegalQueryOperationException( "Locking with DISTINCT is not supported!" );
+				throw new IllegalQueryOperationException( "Locking with DISTINCT is not supported" );
 			}
 			strategy = LockStrategy.FOLLOW_ON;
 		}
@@ -1267,7 +1267,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 								if ( tableGroupJoin.getJoinType() != SqlAstJoinType.INNER && !( group instanceof VirtualTableGroup ) ) {
 									if ( Boolean.FALSE.equals( followOnLocking ) ) {
 										throw new IllegalQueryOperationException(
-												"Locking with OUTER joins is not supported!" );
+												"Locking with OUTER joins is not supported" );
 									}
 									return Boolean.TRUE;
 								}
@@ -1285,7 +1285,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							if ( tableJoin.getJoinType() != SqlAstJoinType.INNER && !( tableJoin.getJoinedNode() instanceof VirtualTableGroup ) ) {
 								if ( Boolean.FALSE.equals( followOnLocking ) ) {
 									throw new IllegalQueryOperationException(
-											"Locking with OUTER joins is not supported!" );
+											"Locking with OUTER joins is not supported" );
 								}
 								return Boolean.TRUE;
 							}
@@ -1298,7 +1298,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		if ( hasAggregateFunctions( querySpec ) ) {
 			if ( Boolean.FALSE.equals( followOnLocking ) ) {
-				throw new IllegalQueryOperationException( "Locking with aggregate functions is not supported!" );
+				throw new IllegalQueryOperationException( "Locking with aggregate functions is not supported" );
 			}
 			strategy = LockStrategy.FOLLOW_ON;
 		}
@@ -4213,13 +4213,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public void visitTableGroup(TableGroup tableGroup) {
 		// TableGroup and TableGroup handling should be performed as part of `#visitFromClause`...
-		throw new UnsupportedOperationException( "This should never be invoked as org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter.visitTableGroup should handle this!" );
+		throw new UnsupportedOperationException( "This should never be invoked as org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter.visitTableGroup should handle this" );
 	}
 
 	@Override
 	public void visitTableGroupJoin(TableGroupJoin tableGroupJoin) {
 		// TableGroup and TableGroupJoin handling should be performed as part of `#visitFromClause`...
-		throw new UnsupportedOperationException( "This should never be invoked as org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter.visitTableGroup should handle this!" );
+		throw new UnsupportedOperationException( "This should never be invoked as org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter.visitTableGroup should handle this" );
 	}
 
 	@Override

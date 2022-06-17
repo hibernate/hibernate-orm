@@ -659,7 +659,7 @@ public class TableBinder {
 					//works cause the pk has to be on the primary table
 					Table table = referencedEntity.getTable();
 					if ( idColumns.isEmpty() ) {
-						LOG.debug( "No column in the identifier!" );
+						LOG.debug( "No column in the identifier" );
 					}
 					for ( Column col: idColumns ) {
 						boolean match = false;

@@ -146,7 +146,7 @@ public class EnhancerImpl implements Enhancer {
 	private DynamicType.Builder<?> doEnhance(DynamicType.Builder<?> builder, TypeDescription managedCtClass) {
 		// can't effectively enhance interfaces
 		if ( managedCtClass.isInterface() ) {
-			log.debugf( "Skipping enhancement of [%s]: it's an interface!", managedCtClass.getName() );
+			log.debugf( "Skipping enhancement of [%s]: it's an interface", managedCtClass.getName() );
 			return null;
 		}
 		// skip already enhanced classes

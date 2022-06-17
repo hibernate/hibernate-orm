@@ -343,7 +343,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		throw new UnsupportedOperationException( "AnonymousTupleEmbeddableValuedModelPart is not fetchable!" );
+		throw new UnsupportedOperationException( "AnonymousTupleEmbeddableValuedModelPart is not fetchable" );
 	}
 
 	@Override

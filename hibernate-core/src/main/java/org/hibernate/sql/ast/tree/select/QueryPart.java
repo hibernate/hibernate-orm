@@ -113,7 +113,7 @@ public abstract class QueryPart implements SqlAstNode, Expression, DomainResultP
 		}
 		else {
 			if ( fetchClauseType == null ) {
-				throw new IllegalArgumentException( "Fetch clause may not be null!" );
+				throw new IllegalArgumentException( "Fetch clause may not be null" );
 			}
 			this.fetchClauseExpression = fetchClauseExpression;
 			this.fetchClauseType = fetchClauseType;

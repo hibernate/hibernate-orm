@@ -457,7 +457,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	private void managedClose() {
 		if ( isClosed() ) {
-			throw new SessionException( "Session was already closed!" );
+			throw new SessionException( "Session was already closed" );
 		}
 		close();
 	}

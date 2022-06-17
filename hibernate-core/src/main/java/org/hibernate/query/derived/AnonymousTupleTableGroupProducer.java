@@ -175,7 +175,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 			final EmbeddableValuedModelPart modelPartContainer = (EmbeddableValuedModelPart) existingModelPart;
 			for ( Attribute<?, ?> attribute : attributes ) {
 				if ( !( attribute instanceof SingularPersistentAttribute<?, ?> ) ) {
-					throw new IllegalArgumentException( "Only embeddables without collections are supported!" );
+					throw new IllegalArgumentException( "Only embeddables without collections are supported" );
 				}
 				final DomainType<?> attributeType = ( (SingularPersistentAttribute<?, ?>) attribute ).getType();
 				final ModelPart modelPart = createModelPart(

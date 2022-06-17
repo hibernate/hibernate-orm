@@ -468,7 +468,7 @@ public abstract class AbstractServiceRegistryImpl
 	 */
 	public synchronized void reactivate() {
 		if ( !active.compareAndSet( false, true ) ) {
-			throw new IllegalStateException( "Was not inactive, could not reactivate!" );
+			throw new IllegalStateException( "Was not inactive, could not reactivate" );
 		}
 	}
 

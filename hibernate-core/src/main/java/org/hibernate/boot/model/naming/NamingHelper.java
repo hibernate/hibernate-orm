@@ -170,7 +170,7 @@ public class NamingHelper {
 			return bigInt.toString( 35 );
 		}
 		catch ( NoSuchAlgorithmException|UnsupportedEncodingException e ) {
-			throw new HibernateException( "Unable to generate a hashed name!", e );
+			throw new HibernateException( "Unable to generate a hashed name", e );
 		}
 	}
 }

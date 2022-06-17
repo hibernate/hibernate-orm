@@ -1908,7 +1908,7 @@ public final class AnnotationBinder {
 				if ( incomingIdProperty != null && existingIdProperty == null ) {
 					throw new MappingException(
 							String.format(
-									"You cannot override the [%s] non-identifier property from the [%s] base class or @MappedSuperclass and make it an identifier in the [%s] subclass!",
+									"You cannot override the [%s] non-identifier property from the [%s] base class or @MappedSuperclass and make it an identifier in the [%s] subclass",
 									propertyData.getProperty().getName(),
 									propertyData.getProperty().getDeclaringClass().getName(),
 									property.getDeclaringClass().getName()

@@ -644,7 +644,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 	public Index addIndex(Index index) {
 		Index current =  indexes.get( index.getName() );
 		if ( current != null ) {
-			throw new MappingException( "Index " + index.getName() + " already exists!" );
+			throw new MappingException( "Index " + index.getName() + " already exists" );
 		}
 		indexes.put( index.getName(), index );
 		return index;
@@ -653,7 +653,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 	public UniqueKey addUniqueKey(UniqueKey uniqueKey) {
 		UniqueKey current = uniqueKeys.get( uniqueKey.getName() );
 		if ( current != null ) {
-			throw new MappingException( "UniqueKey " + uniqueKey.getName() + " already exists!" );
+			throw new MappingException( "UniqueKey " + uniqueKey.getName() + " already exists" );
 		}
 		uniqueKeys.put( uniqueKey.getName(), uniqueKey );
 		return uniqueKey;

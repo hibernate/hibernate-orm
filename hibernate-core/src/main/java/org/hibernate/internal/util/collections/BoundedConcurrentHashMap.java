@@ -498,7 +498,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 					coldHit( evicted );
 					break;
 				case HIR_NONRESIDENT:
-					throw new IllegalStateException( "Can't hit a non-resident entry!" );
+					throw new IllegalStateException( "Can't hit a non-resident entry" );
 				default:
 					throw new AssertionError( "Hit with unknown status: " + state );
 			}

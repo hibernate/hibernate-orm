@@ -14,7 +14,7 @@ import org.hibernate.MappingException;
  */
 public class NotYetImplementedException extends MappingException {
 	public NotYetImplementedException() {
-		this( "Not yet implemented!" );
+		this( "Not yet implemented" );
 	}
 
 	public NotYetImplementedException(String msg, Throwable root) {

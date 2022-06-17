@@ -186,7 +186,7 @@ public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContain
 			);
 		}
 		else {
-			throw new UnsupportedOperationException("Domain result for non-scalar subquery shouldn't be created!");
+			throw new UnsupportedOperationException("Domain result for non-scalar subquery shouldn't be created");
 		}
 	}
 }

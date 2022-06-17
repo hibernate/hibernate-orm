@@ -316,7 +316,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		if ( matchingPersistentClass != null ) {
 			throw new DuplicateMappingException(
 					String.format(
-							"The [%s] and [%s] entities share the same JPA entity name: [%s], which is not allowed!",
+							"The [%s] and [%s] entities share the same JPA entity name: [%s], which is not allowed",
 							matchingPersistentClass.getClassName(),
 							persistentClass.getClassName(),
 							jpaEntityName

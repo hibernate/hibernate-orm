@@ -53,7 +53,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class SubQueryInFromIdClassTests {
 
 	@Test
-	@FailureExpected(reason = "Support for id class association selecting in from clause sub queries not yet supported")
+	@FailureExpected(reason = "Support for id class association selecting in from clause subqueries not yet supported")
 	public void testEntity(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -99,7 +99,7 @@ public class SubQueryInFromIdClassTests {
 	}
 
 	@Test
-	@FailureExpected(reason = "Support for id class association selecting in from clause sub queries not yet supported")
+	@FailureExpected(reason = "Support for id class association selecting in from clause subqueries not yet supported")
 	public void testEntityJoin(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -144,7 +144,7 @@ public class SubQueryInFromIdClassTests {
 	}
 
 	@Test
-	@FailureExpected(reason = "Support for id class association selecting in from clause sub queries not yet supported")
+	@FailureExpected(reason = "Support for id class association selecting in from clause subqueries not yet supported")
 	public void testEntityImplicit(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

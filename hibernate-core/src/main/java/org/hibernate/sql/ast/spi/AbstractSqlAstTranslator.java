@@ -1554,7 +1554,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						appendSql( "select" );
 						appendSql( queryGroupAlias );
 						appendSql( ".* from " );
-						// We need to assign aliases when we render a query spec as sub query to avoid clashing aliases
+						// We need to assign aliases when we render a query spec as subquery to avoid clashing aliases
 						this.needsSelectAliases = this.needsSelectAliases || hasDuplicateSelectItems( querySpec );
 					}
 					else if ( !supportsDuplicateSelectItemsInQueryGroup() ) {
@@ -5036,7 +5036,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( queryPart instanceof QuerySpec && queryPart.getFetchClauseExpression() == null
 				&& queryPart.getOffsetClauseExpression() == null ) {
 			subQuery = (QuerySpec) queryPart;
-			// We can only emulate the tuple sub query predicate as exists predicate when there are no limit/offsets
+			// We can only emulate the tuple subquery predicate as exists predicate when there are no limit/offsets
 			if ( negated ) {
 				appendSql( "not " );
 			}
@@ -5130,7 +5130,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final QuerySpec subQuery;
 		if ( queryPart instanceof QuerySpec && queryPart.getFetchClauseExpression() == null && queryPart.getOffsetClauseExpression() == null ) {
 			subQuery = (QuerySpec) queryPart;
-			// We can only emulate the tuple sub query predicate comparing against the top element when there are no limit/offsets
+			// We can only emulate the tuple subquery predicate comparing against the top element when there are no limit/offsets
 			lhsTuple.accept( this );
 			appendSql( tupleComparisonOperator.sqlText() );
 
@@ -5409,7 +5409,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						}
 					}
 					// If we get here, this is an equality-like comparison, though we support scalar row value comparison
-					// For this special case, we can rely on scalar sub query handling, given that the sub query fetches only one row
+					// For this special case, we can rely on scalar subquery handling, given that the subquery fetches only one row
 					if ( isFetchFirstRowOnly( subquery ) ) {
 						renderComparison( lhsTuple, operator, subquery );
 						return;

@@ -111,7 +111,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 		// for group by items, since these group by items are migrated to the outer query
 		final Map<Expression, Integer> selectionMapping = new HashMap<>( subSelections.size() );
 		// Create the expressions/selections for the outer query and the columnNames list
-		// for the QueryPartTableGroup within which the sub query spec is embedded
+		// for the QueryPartTableGroup within which the subquery spec is embedded
 		for ( int i = 0; i < subSelections.size(); i++ ) {
 			final BasicValuedMapping mapping = (BasicValuedMapping) subSelections.get( i )
 					.getExpressionType();
@@ -352,7 +352,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 			subQuerySpec.getSortSpecifications().clear();
 		}
 
-		// We need to add selection items for the expressions we order by to the sub query spec.
+		// We need to add selection items for the expressions we order by to the subquery spec.
 		final int selectionOffset = columnNames.size();
 		// Collect the sorting column references so we can apply the filter later
 		final List<ColumnReference> sortingColumns = new ArrayList<>( withinGroup.size() );

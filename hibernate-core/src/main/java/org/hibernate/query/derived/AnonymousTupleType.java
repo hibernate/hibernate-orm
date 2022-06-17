@@ -62,10 +62,10 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 	private static SqmSelectableNode<?>[] extractSqmExpressibles(SqmSubQuery<?> subQuery) {
 		final SqmSelectClause selectClause = subQuery.getQuerySpec().getSelectClause();
 		if ( selectClause == null || selectClause.getSelectionItems().isEmpty() ) {
-			throw new IllegalArgumentException( "Sub query has no selection items!" );
+			throw new IllegalArgumentException( "subquery has no selection items!" );
 		}
-		// todo: right now, we "snapshot" the state of the sub query when creating this type, but maybe we shouldn't?
-		//  i.e. what if the sub query changes later on? Or should we somehow mark the sub query to signal,
+		// todo: right now, we "snapshot" the state of the subquery when creating this type, but maybe we shouldn't?
+		//  i.e. what if the subquery changes later on? Or should we somehow mark the subquery to signal,
 		//  that changes to the select clause are invalid after a certain point?
 		return selectClause.getSelectionItems().toArray( SqmSelectableNode[]::new );
 	}

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -26,9 +26,9 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  *
  * @author Christian Beikov
  */
-public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
-	public MariaDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+	public MariaDBLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
 	}
 
@@ -134,7 +134,7 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 
 	@Override
 	protected boolean supportsIntersect() {
-		return true;
+		return getDialect().getVersion().isSameOrAfter( 10, 3 );
 	}
 
 	@Override
@@ -144,6 +144,6 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	private boolean supportsWindowFunctions() {
-		return true;
+		return getDialect().getVersion().isSameOrAfter( 10, 2 );
 	}
 }

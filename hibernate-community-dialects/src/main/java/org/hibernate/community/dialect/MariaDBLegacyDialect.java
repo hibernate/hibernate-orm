@@ -4,11 +4,15 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.InnoDBStorageEngine;
+import org.hibernate.dialect.MySQLStorageEngine;
+import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.sequence.MariaDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -33,30 +37,27 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Vlad Mihalcea
  * @author Gavin King
  */
-public class MariaDBDialect extends MySQLDialect {
-	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 3 );
-	private static final DatabaseVersion MYSQL57 = DatabaseVersion.make( 5, 7 );
+public class MariaDBLegacyDialect extends MySQLLegacyDialect {
+	private static final DatabaseVersion VERSION5 = DatabaseVersion.make( 5 );
+	private static final DatabaseVersion VERSION57 = DatabaseVersion.make( 5, 7 );
 
-	public MariaDBDialect() {
-		this( MINIMUM_VERSION );
+	public MariaDBLegacyDialect() {
+		this( DatabaseVersion.make( 5 ) );
 	}
 
-	public MariaDBDialect(DatabaseVersion version) {
+	public MariaDBLegacyDialect(DatabaseVersion version) {
 		super(version);
 	}
 
-	public MariaDBDialect(DialectResolutionInfo info) {
+	public MariaDBLegacyDialect(DialectResolutionInfo info) {
 		super(info);
 	}
 
 	@Override
 	public DatabaseVersion getMySQLVersion() {
-		return MYSQL57;
-	}
-
-	@Override
-	protected DatabaseVersion getMinimumSupportedVersion() {
-		return MINIMUM_VERSION;
+		return getVersion().isBefore( 5, 3 )
+				? VERSION5
+				: VERSION57;
 	}
 
 	@Override
@@ -68,16 +69,20 @@ public class MariaDBDialect extends MySQLDialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry(queryEngine);
 
-		CommonFunctionFactory commonFunctionFactory = new CommonFunctionFactory( queryEngine );
-		commonFunctionFactory.windowFunctions();
-		commonFunctionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
-		queryEngine.getSqmFunctionRegistry().registerNamed(
-				"json_valid",
-				queryEngine.getTypeConfiguration()
-						.getBasicTypeRegistry()
-						.resolve( StandardBasicTypes.BOOLEAN )
-		);
-		commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
+		if ( getVersion().isSameOrAfter( 10, 2 ) ) {
+			CommonFunctionFactory commonFunctionFactory = new CommonFunctionFactory( queryEngine );
+			commonFunctionFactory.windowFunctions();
+			commonFunctionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+			queryEngine.getSqmFunctionRegistry().registerNamed(
+					"json_valid",
+					queryEngine.getTypeConfiguration()
+							.getBasicTypeRegistry()
+							.resolve( StandardBasicTypes.BOOLEAN )
+			);
+			if ( getVersion().isSameOrAfter( 10, 3, 3 ) ) {
+				commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
+			}
+		}
 	}
 
 	@Override
@@ -86,19 +91,19 @@ public class MariaDBDialect extends MySQLDialect {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new MariaDBSqlAstTranslator<>( sessionFactory, statement );
+				return new MariaDBLegacySqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
 	}
 
 	@Override
 	public boolean supportsWindowFunctions() {
-		return true;
+		return getVersion().isSameOrAfter( 10, 2 );
 	}
 
 	@Override
 	public boolean supportsColumnCheck() {
-		return true;
+		return getVersion().isSameOrAfter( 10, 2 );
 	}
 
 	@Override
@@ -108,7 +113,7 @@ public class MariaDBDialect extends MySQLDialect {
 
 	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
-		return true;
+		return getVersion().isSameOrAfter( 10 );
 	}
 
 	@Override
@@ -118,7 +123,9 @@ public class MariaDBDialect extends MySQLDialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return MariaDBSequenceSupport.INSTANCE;
+		return getVersion().isBefore( 10, 3 )
+				? super.getSequenceSupport()
+				: MariaDBSequenceSupport.INSTANCE;
 	}
 
 	@Override
@@ -143,12 +150,12 @@ public class MariaDBDialect extends MySQLDialect {
 
 	@Override
 	public boolean supportsNoWait() {
-		return true;
+		return getVersion().isSameOrAfter( 10, 3 );
 	}
 
 	@Override
 	public boolean supportsWait() {
-		return true;
+		return getVersion().isSameOrAfter( 10, 3 );
 	}
 
 	@Override

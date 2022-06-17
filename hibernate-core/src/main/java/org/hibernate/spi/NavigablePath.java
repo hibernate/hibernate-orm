@@ -242,7 +242,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	}
 
 	protected void relativize(NavigablePath base, RelativePathCollector collector) {
-		if ( this == base ) {
+		if ( this.equals( base ) ) {
 			collector.matchedBase = true;
 			return;
 		}

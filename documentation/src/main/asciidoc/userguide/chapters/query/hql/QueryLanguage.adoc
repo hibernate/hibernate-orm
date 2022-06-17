@@ -1612,7 +1612,7 @@ Indeed, it's best to avoid even assigning an identification variable to a fetche
 
 [IMPORTANT]
 ====
-Fetch joins should not be used in limited or paged queries.
+Fetch joins should usually be avoided in limited or paged queries.
 This includes:
 
 - queries executed using `setFirstResult()` or `setMaxResults()`, as in <<jpql-pagination>>, or
@@ -1791,6 +1791,9 @@ The `select` list identifies which objects and values to return as the query res
 NOTE: This operation is called _projection_.
 
 Any of the expression types discussed in <<hql-expressions>> may occur in the projection list, unless otherwise noted.
+
+TIP: If a query has no explicit `select` list, the projection is inferred from the entities and joins occurring in the `from` clause, together with the result type specified by the call to `createQuery()`.
+It's better to specify the projection explicitly, except in the simplest cases.
 
 There might be multiple items in a projection list, in which case each query result is a tuple, and this poses a problem:
 Java doesn't have a good way to represent tuples.

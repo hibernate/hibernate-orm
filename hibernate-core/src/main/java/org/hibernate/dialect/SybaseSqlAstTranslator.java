@@ -146,7 +146,7 @@ public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 			// This could theoretically be emulated by rendering all grouping variations of the query and
 			// connect them via union all but that's probably pretty inefficient and would have to happen
 			// on the query spec level
-			throw new UnsupportedOperationException( "Summarization is not supported by DBMS!" );
+			throw new UnsupportedOperationException( "Summarization is not supported by DBMS" );
 		}
 		else {
 			expression.accept( this );

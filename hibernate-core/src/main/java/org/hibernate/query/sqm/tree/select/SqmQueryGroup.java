@@ -161,14 +161,14 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 				final SqmQuerySpec<?> querySpec = (SqmQuerySpec<?>) queryPart;
 				final List<SqmSelection<?>> selections = querySpec.getSelectClause().getSelections();
 				if ( firstSelectionSize != selections.size() ) {
-					throw new SemanticException( "All query parts in a query group must have the same arity!" );
+					throw new SemanticException( "All query parts in a query group must have the same arity" );
 				}
 				for ( int j = 0; j < firstSelectionSize; j++ ) {
 					final SqmTypedNode<?> firstSqmSelection = typedNodes.get( j );
 					final JavaType<?> firstJavaType = firstSqmSelection.getNodeJavaType();
 					if ( firstJavaType != selections.get( j ).getNodeJavaType() ) {
 						throw new SemanticException(
-								"Select items of the same index must have the same java type across all query parts!"
+								"Select items of the same index must have the same java type across all query parts"
 						);
 					}
 					if ( firstSqmSelection instanceof SqmFrom<?, ?> ) {
@@ -202,7 +202,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 					}
 					if ( matchingAttrJoin == null || firstAttrJoin.getModel() != matchingAttrJoin.getModel() ) {
 						throw new SemanticException(
-								"All query parts in a query group must have the same join fetches in the same order!"
+								"All query parts in a query group must have the same join fetches in the same order"
 						);
 					}
 					validateFetchesMatch( firstAttrJoin, matchingAttrJoin );
@@ -216,7 +216,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 				final SqmAttributeJoin<?, ?> attrJoin = (SqmAttributeJoin<?, ?>) sqmJoin;
 				if ( attrJoin.isFetched() ) {
 					throw new SemanticException(
-							"All query parts in a query group must have the same join fetches in the same order!"
+							"All query parts in a query group must have the same join fetches in the same order"
 					);
 				}
 			}

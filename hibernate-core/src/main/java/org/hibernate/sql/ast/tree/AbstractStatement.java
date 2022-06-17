@@ -47,7 +47,7 @@ public abstract class AbstractStatement implements Statement, CteContainer {
 	@Override
 	public void addCteStatement(CteStatement cteStatement) {
 		if ( cteStatements.putIfAbsent( cteStatement.getCteTable().getTableExpression(), cteStatement ) != null ) {
-			throw new IllegalArgumentException( "A CTE with the label " + cteStatement.getCteTable().getTableExpression() + " already exists!" );
+			throw new IllegalArgumentException( "A CTE with the label " + cteStatement.getCteTable().getTableExpression() + " already exists" );
 		}
 	}
 }

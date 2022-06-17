@@ -183,7 +183,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 				}
 			}
 		}
-		throw new IllegalStateException( "Should not reach this!" );
+		throw new IllegalStateException( "Should not reach this" );
 	}
 
 	/**

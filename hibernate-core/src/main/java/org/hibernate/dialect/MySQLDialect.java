@@ -149,7 +149,7 @@ public class MySQLDialect extends Dialect {
 			return MyISAMStorageEngine.INSTANCE;
 		}
 		else {
-			throw new UnsupportedOperationException( "The " + storageEngine + " storage engine is not supported!" );
+			throw new UnsupportedOperationException( "The " + storageEngine + " storage engine is not supported" );
 		}
 	}
 

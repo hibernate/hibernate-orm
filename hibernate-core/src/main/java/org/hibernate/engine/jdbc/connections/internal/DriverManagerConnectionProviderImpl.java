@@ -295,7 +295,7 @@ public class DriverManagerConnectionProviderImpl
 	protected void validateConnectionsReturned() {
 		int allocationCount = state.pool.allConnections.size() - state.pool.availableConnections.size();
 		if ( allocationCount != 0 ) {
-			CONNECTIONS_MESSAGE_LOGGER.error( "Connection leak detected: there are " + allocationCount + " unclosed connections!");
+			CONNECTIONS_MESSAGE_LOGGER.error( "Connection leak detected: there are " + allocationCount + " unclosed connections");
 		}
 	}
 
@@ -422,7 +422,7 @@ public class DriverManagerConnectionProviderImpl
 						}
 					}
 					throw new HibernateException(
-							"The internal connection pool has reached its maximum size and no connection is currently available!" );
+							"The internal connection pool has reached its maximum size and no connection is currently available" );
 				}
 				conn = prepareConnection( conn );
 			} while ( conn == null );

@@ -33,8 +33,6 @@ import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.query.QueryLogging;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializationException;
 import org.hibernate.type.Type;
 
@@ -61,7 +59,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = WARN)
-	@Message(value = "Already session bound on call to bind(); make sure you clean up your sessions!", id = 2)
+	@Message(value = "Already session bound on call to bind(); make sure you clean up your sessions", id = 2)
 	void alreadySessionBound();
 
 	@LogMessage(level = INFO)
@@ -445,7 +443,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Bytecode enhancement failed: %s", id = 142)
 	String bytecodeEnhancementFailed(String entityName);
 
-	@Message(value = "Bytecode enhancement failed because no public, protected or package-private default constructor was found for entity: %s. Private constructors don't work with runtime proxies!", id = 143)
+	@Message(value = "Bytecode enhancement failed because no public, protected or package-private default constructor was found for entity: %s. Private constructors don't work with runtime proxies", id = 143)
 	String bytecodeEnhancementFailedBecauseOfDefaultConstructor(String entityName);
 
 	@LogMessage(level = WARN)
@@ -515,7 +513,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void narrowingProxy(Class concreteProxyClass);
 
 	@LogMessage(level = WARN)
-	@Message(value = "FirstResult/maxResults specified on polymorphic query; applying in memory!", id = 180)
+	@Message(value = "FirstResult/maxResults specified on polymorphic query; applying in memory", id = 180)
 	void needsLimit();
 
 	@LogMessage(level = WARN)
@@ -599,7 +597,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void preparedStatementAlreadyInBatch(String sql);
 
 	@LogMessage(level = WARN)
-	@Message(value = "processEqualityExpression() : No expression to process!", id = 203)
+	@Message(value = "processEqualityExpression() : No expression to process", id = 203)
 	void processEqualityExpression();
 
 	@LogMessage(level = INFO)
@@ -666,7 +664,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void readOnlyCacheConfiguredForMutableCollection(String name);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Recognized obsolete hibernate namespace %s. Use namespace %s instead. Refer to Hibernate 3.6 Migration Guide!",
+	@Message(value = "Recognized obsolete hibernate namespace %s. Use namespace %s instead. Refer to Hibernate 3.6 Migration Guide",
 			id = 223)
 	void recognizedObsoleteHibernateNamespace(
 			String oldHibernateNamespace,
@@ -1348,7 +1346,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void usingDialect(Dialect dialect);
 
 	@LogMessage(level = ERROR)
-	@Message(value = "Don't use old DTDs, read the Hibernate 3.x Migration Guide!", id = 404)
+	@Message(value = "Don't use old DTDs, read the Hibernate 3.x Migration Guide", id = 404)
 	void usingOldDtd();
 
 	@LogMessage(level = INFO)

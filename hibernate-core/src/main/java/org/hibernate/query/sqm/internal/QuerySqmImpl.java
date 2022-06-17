@@ -332,7 +332,7 @@ public class QuerySqmImpl<R>
 				);
 			default:
 				throw new UnsupportedOperationException(
-						"The " + immutableEntityUpdateQueryHandlingMode + " is not supported!"
+						"The " + immutableEntityUpdateQueryHandlingMode + " is not supported"
 				);
 		}
 	}

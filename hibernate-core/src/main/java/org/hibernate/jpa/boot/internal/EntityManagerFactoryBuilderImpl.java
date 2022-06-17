@@ -1593,7 +1593,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 		else {
 			throw new IllegalArgumentException(
-				"The provided " + settingName + " setting value [" + settingValue + "] is not supported!"
+				"The provided " + settingName + " setting value [" + settingValue + "] is not supported"
 			);
 		}
 
@@ -1603,7 +1603,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 			catch (InstantiationException | IllegalAccessException e) {
 				throw new IllegalArgumentException(
-						"The " + clazz.getSimpleName() +" class [" + instanceClass + "] could not be instantiated!",
+						"The " + clazz.getSimpleName() +" class [" + instanceClass + "] could not be instantiated",
 						e
 				);
 			}

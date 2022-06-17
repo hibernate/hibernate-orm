@@ -110,7 +110,7 @@ public class LoaderSqlAstCreationState
 
 	@Override
 	public void registerLockMode(String identificationVariable, LockMode explicitLockMode) {
-		throw new UnsupportedOperationException( "Registering lock modes should only be done for result set mappings!" );
+		throw new UnsupportedOperationException( "Registering lock modes should only be done for result set mappings" );
 	}
 
 	@Override

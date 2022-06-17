@@ -117,7 +117,7 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	@Override
 	public Connection getConnection() throws SQLException {
 		if ( !available ) {
-			throw new HibernateException( "Provider is closed!" );
+			throw new HibernateException( "Provider is closed" );
 		}
 		return useCredentials ? dataSource.getConnection( user, pass ) : dataSource.getConnection();
 	}

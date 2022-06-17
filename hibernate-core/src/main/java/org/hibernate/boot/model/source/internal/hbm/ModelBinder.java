@@ -4068,7 +4068,7 @@ public class ModelBinder {
 						manyToOneBinding,
 						manyToOneSource.areValuesNullableByDefault(),
 						context -> {
-							throw new AssertionFailure( "Argh!!!" );
+							throw new AssertionFailure( "Should not be called" );
 						}
 				);
 			}

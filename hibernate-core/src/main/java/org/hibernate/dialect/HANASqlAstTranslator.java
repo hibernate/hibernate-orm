@@ -116,7 +116,7 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 			appendSql( "grouping sets (())" );
 		}
 		else if ( expression instanceof Summarization ) {
-			throw new UnsupportedOperationException( "Summarization is not supported by DBMS!" );
+			throw new UnsupportedOperationException( "Summarization is not supported by DBMS" );
 		}
 		else {
 			expression.accept( this );

@@ -96,7 +96,7 @@ public class FilterImpl implements Filter, Serializable {
 	public Filter setParameterList(String name, Collection<?> values) throws HibernateException  {
 		// Make sure this is a defined parameter and check the incoming value type
 		if ( values == null ) {
-			throw new IllegalArgumentException( "Collection must be not null!" );
+			throw new IllegalArgumentException( "Collection must be not null" );
 		}
 		JdbcMapping type = definition.getParameterJdbcMapping( name );
 		if ( type == null ) {

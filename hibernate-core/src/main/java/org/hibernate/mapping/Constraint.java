@@ -113,7 +113,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 			return bigInt.toString( 35 );
 		}
 		catch ( NoSuchAlgorithmException e ) {
-			throw new HibernateException( "Unable to generate a hashed Constraint name!", e );
+			throw new HibernateException( "Unable to generate a hashed Constraint name", e );
 		}
 	}
 

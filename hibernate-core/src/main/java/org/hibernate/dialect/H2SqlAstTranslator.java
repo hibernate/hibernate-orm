@@ -23,8 +23,6 @@ import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.expression.Summarization;
-import org.hibernate.sql.ast.tree.from.DerivedTableReference;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -147,7 +145,7 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 			// This could theoretically be emulated by rendering all grouping variations of the query and
 			// connect them via union all but that's probably pretty inefficient and would have to happen
 			// on the query spec level
-			throw new UnsupportedOperationException( "Summarization is not supported by DBMS!" );
+			throw new UnsupportedOperationException( "Summarization is not supported by DBMS" );
 		}
 		else {
 			expression.accept( this );

@@ -129,7 +129,7 @@ public class QuerySplitter {
 			final SqmQueryGroup<?> queryGroup = (SqmQueryGroup<?>) queryPart;
 			final SqmRoot<?> root = findUnmappedPolymorphicReference( queryGroup.getQueryParts().get( 0 ) );
 			if ( root != null ) {
-				throw new UnsupportedOperationException( "Polymorphic query group is unsupported!" );
+				throw new UnsupportedOperationException( "Polymorphic query group is unsupported" );
 			}
 			return null;
 		}

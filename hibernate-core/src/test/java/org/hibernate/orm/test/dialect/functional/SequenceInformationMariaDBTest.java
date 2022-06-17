@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Vlad Mihalcea
  */
 @TestForIssue(jiraKey = "HHH-12973")
-@RequiresDialect(value = MariaDBDialect.class, majorVersion = 10, minorVersion = 3)
+@RequiresDialect(value = MariaDBDialect.class)
 @Jpa(
 		annotatedClasses = {
 				SequenceInformationMariaDBTest.Book.class,

@@ -1031,8 +1031,7 @@ Next, functions for working with numeric values:
 | `greatest()` | Return the largest of the given arguments | `greatest(x, y, z)` | Very common in SQL dialects
 |===
 
-Finally, functions that evaluate the id, version, or natural id of an entity and the key-column of
-a to-one foreign-key:
+Finally, functions that evaluate the id, version, or natural id of an entity, or the foreign key of a to-one association:
 
 [[hql-model-functions]]
 |===
@@ -1041,7 +1040,8 @@ a to-one foreign-key:
 | `id()` | The value of the entity `@Id` attribute.
 | `version()` | The value of the entity `@Version` attribute.
 | `naturalid()` | The value of the entity `@NaturalId` attribute.
-| `fk()` | The value of the key-column of a `@ManyToOne` (or logical `@ManyToOne`) attribute.  Mainly useful with <<associations-not-found,`@NotFound` mappings>>
+| `fk()` | The value of the foreign key column mapped by a `@ManyToOne` (or logical `@ManyToOne`) association.
+           Mainly useful with <<associations-not-found,`@NotFound` mappings>>.
 |===
 
 [[hql-user-defined-functions]]
@@ -1473,7 +1473,7 @@ See <<chapters/domain/inheritance.adoc#entity-inheritance-polymorphism>> for mor
 [[hql-derived-root]]
 ==== Derived root
 
-As of Hibernate 6.1, HQL allows to declare derived roots, based on a subquery in the `from` clause.
+A _derived root_ is a subquery which occurs in the `from` clause.
 
 [[hql-derived-root-example]]
 ====
@@ -1483,7 +1483,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-derived-root-example, indent=0]
 ----
 ====
 
-This can be used to split up more complicated queries into smaller parts.
+This feature can be used to break a more complicated query into smaller pieces.
 
 [[hql-join]]
 === Declaring joined entities
@@ -1644,7 +1644,8 @@ See <<hql-treat-type>> for more information about `treat()`.
 [[hql-join-derived]]
 ==== Join subquery
 
-As of Hibernate 6.1, HQL allows against to join sub queries.
+A `join` clause may contain a subquery.
+This is very similar to a <<hql-derived-root,derived root>>.
 
 [[hql-derived-join-example]]
 ====
@@ -1654,16 +1655,14 @@ include::{sourcedir}/HQLTest.java[tags=hql-derived-join-example, indent=0]
 ----
 ====
 
-This is very similar to defining a <<hql-derived-root,derived root>>, but the particular interesting part here,
-is the use of the `lateral` keyword, which allows to refer to previous from clause nodes within the subquery.
+The `lateral` keyword allows the subquery to refer to aliases defined by previous `from` clauses.
 
 This is particularly useful for computing top-N elements of multiple groups.
 
-[NOTE]
+[IMPORTANT]
 ====
-Most databases support lateral natively, but for certain databases it is necessary to emulate this feature.
-Beware that the emulation is neither very efficient, nor does it support all possible query shapes,
-so be sure to test such queries against your desired target database.
+Most databases support `lateral` natively, and Hibernate emulates the feature for databases which don't.
+But emulation is neither very efficient, nor does it support all possible query shapes, so it's important to test on your target database.
 ====
 
 [[hql-implicit-join]]

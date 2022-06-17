@@ -30,31 +30,31 @@ public interface JpaSelectCriteria<T> extends AbstractQuery<T>, JpaCriteriaBase 
 	JpaQueryPart<T> getQueryPart();
 
 	/**
-	 * Create and add a query root corresponding to the given sub query,
+	 * Create and add a query root corresponding to the given subquery,
 	 * forming a cartesian product with any existing roots.
 	 *
-	 * @param subquery  the sub query
-	 * @return query root corresponding to the given sub query
+	 * @param subquery the subquery
+	 * @return query root corresponding to the given subquery
 	 */
 	<X> JpaDerivedRoot<X> from(Subquery<X> subquery);
 
 	/**
-	 * Create and add a query root corresponding to the given lateral sub query,
+	 * Create and add a query root corresponding to the given lateral subquery,
 	 * forming a cartesian product with any existing roots.
 	 *
-	 * @param subquery  the sub query
-	 * @return query root corresponding to the given sub query
+	 * @param subquery  the subquery
+	 * @return query root corresponding to the given subquery
 	 */
 	<X> JpaDerivedRoot<X> fromLateral(Subquery<X> subquery);
 
 	/**
-	 * Create and add a query root corresponding to the given sub query,
+	 * Create and add a query root corresponding to the given subquery,
 	 * forming a cartesian product with any existing roots.
-	 * If the sub query is marked as lateral, it may access previous from elements.
+	 * If the subquery is marked as lateral, it may access previous from elements.
 	 *
-	 * @param subquery  the sub query
-	 * @param lateral whether to allow access to previous from elements in the sub query
-	 * @return query root corresponding to the given sub query
+	 * @param subquery  the subquery
+	 * @param lateral whether to allow access to previous from elements in the subquery
+	 * @return query root corresponding to the given subquery
 	 */
 	<X> JpaDerivedRoot<X> from(Subquery<X> subquery, boolean lateral);
 

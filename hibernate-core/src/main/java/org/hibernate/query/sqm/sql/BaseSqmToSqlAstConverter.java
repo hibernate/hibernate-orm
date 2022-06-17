@@ -5948,7 +5948,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public QueryPart visitSubQueryExpression(SqmSubQuery<?> sqmSubQuery) {
 		// The only purpose for tracking the current join is to
-		// Reset the current join for sub queries because in there, we won't add nested joins
+		// Reset the current join for subqueries because in there, we won't add nested joins
 		final SqmJoin<?, ?> oldJoin = currentlyProcessingJoin;
 		currentlyProcessingJoin = null;
 		final QueryPart queryPart = visitQueryPart( sqmSubQuery.getQueryPart() );

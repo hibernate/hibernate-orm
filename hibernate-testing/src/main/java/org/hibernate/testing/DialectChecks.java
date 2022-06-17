@@ -291,7 +291,7 @@ abstract public class DialectChecks {
 	public static class SupportsOrderByInCorrelatedSubquery implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.supportsOrderByInSubquery()
-					// For some reason, HANA doesn't support order by in correlated sub queries...
+					// For some reason, HANA doesn't support order by in correlated subqueries...
 					&& !( dialect instanceof AbstractHANADialect );
 		}
 	}

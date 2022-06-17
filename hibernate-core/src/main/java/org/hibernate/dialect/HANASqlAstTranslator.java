@@ -78,7 +78,7 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 
 	@Override
 	protected SqlAstNodeRenderingMode getParameterRenderingMode() {
-		// HANA does not support parameters in lateral sub queries for some reason, so inline all the parameters in this case
+		// HANA does not support parameters in lateral subqueries for some reason, so inline all the parameters in this case
 		return inLateral ? SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS : super.getParameterRenderingMode();
 	}
 

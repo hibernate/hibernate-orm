@@ -1473,7 +1473,7 @@ See <<chapters/domain/inheritance.adoc#entity-inheritance-polymorphism>> for mor
 [[hql-derived-root]]
 ==== Derived root
 
-As of Hibernate 6.1, HQL allows to declare derived roots, based on a sub query in the `from` clause.
+As of Hibernate 6.1, HQL allows to declare derived roots, based on a subquery in the `from` clause.
 
 [[hql-derived-root-example]]
 ====

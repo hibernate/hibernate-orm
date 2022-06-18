@@ -139,15 +139,15 @@ public class EntityHierarchyBuilder {
 			MappingDocument mappingDocument,
 			JaxbHbmEntityBaseDefinition entityBinding,
 			AbstractEntitySourceImpl container) {
-		if ( JaxbHbmDiscriminatorSubclassEntityType.class.isInstance( entityBinding ) ) {
+		if ( entityBinding instanceof JaxbHbmDiscriminatorSubclassEntityType ) {
 			final JaxbHbmDiscriminatorSubclassEntityType jaxbSubclass = (JaxbHbmDiscriminatorSubclassEntityType) entityBinding;
 			processElements( mappingDocument, jaxbSubclass.getSubclass(), container );
 		}
-		else if ( JaxbHbmJoinedSubclassEntityType.class.isInstance( entityBinding ) ) {
+		else if ( entityBinding instanceof JaxbHbmJoinedSubclassEntityType ) {
 			final JaxbHbmJoinedSubclassEntityType jaxbJoinedSubclass = (JaxbHbmJoinedSubclassEntityType) entityBinding;
 			processElements( mappingDocument, jaxbJoinedSubclass.getJoinedSubclass(), container );
 		}
-		else if ( JaxbHbmUnionSubclassEntityType.class.isInstance( entityBinding ) ) {
+		else if ( entityBinding instanceof JaxbHbmUnionSubclassEntityType ) {
 			final JaxbHbmUnionSubclassEntityType jaxbUnionSubclass = (JaxbHbmUnionSubclassEntityType) entityBinding;
 			processElements( mappingDocument, jaxbUnionSubclass.getUnionSubclass(), container );
 		}
@@ -179,7 +179,7 @@ public class EntityHierarchyBuilder {
 			MappingDocument mappingDocument,
 			JaxbHbmSubclassEntityBaseDefinition jaxbSubEntity,
 			EntitySource superEntity) {
-		if ( JaxbHbmJoinedSubclassEntityType.class.isInstance( jaxbSubEntity ) ) {
+		if (jaxbSubEntity instanceof JaxbHbmJoinedSubclassEntityType) {
 			return new JoinedSubclassEntitySourceImpl(
 					mappingDocument,
 					JaxbHbmJoinedSubclassEntityType.class.cast( jaxbSubEntity ),

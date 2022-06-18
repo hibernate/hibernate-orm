@@ -57,7 +57,7 @@ public enum BatchFetchStyle {
 			return LEGACY; // as default
 		}
 
-		if ( BatchFetchStyle.class.isInstance( setting ) ) {
+		if ( setting instanceof BatchFetchStyle ) {
 			return (BatchFetchStyle) setting;
 		}
 

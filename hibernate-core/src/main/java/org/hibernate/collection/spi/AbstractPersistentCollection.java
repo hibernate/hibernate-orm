@@ -303,9 +303,9 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 	protected Boolean readIndexExistence(final Object index) {
 		if ( !initialized ) {
-			final Boolean extraLazyExistenceCheck = withTemporarySessionIfNeeded(
+			return withTemporarySessionIfNeeded(
 					() -> {
-						final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
+						final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry(this);
 						final CollectionPersister persister = entry.getLoadedPersister();
 						if ( persister.isExtraLazy() ) {
 							if ( hasQueuedOperations() ) {
@@ -319,18 +319,15 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 						return null;
 					}
 			);
-			if ( extraLazyExistenceCheck != null ) {
-				return extraLazyExistenceCheck;
-			}
 		}
 		return null;
 	}
 
 	protected Boolean readElementExistence(final Object element) {
 		if ( !initialized ) {
-			final Boolean extraLazyExistenceCheck = withTemporarySessionIfNeeded(
+			return withTemporarySessionIfNeeded(
 					() -> {
-						final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
+						final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry(this);
 						final CollectionPersister persister = entry.getLoadedPersister();
 						if ( persister.isExtraLazy() ) {
 							if ( hasQueuedOperations() ) {
@@ -344,9 +341,6 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 						return null;
 					}
 			);
-			if ( extraLazyExistenceCheck != null ) {
-				return extraLazyExistenceCheck;
-			}
 		}
 		return null;
 	}
@@ -525,9 +519,9 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	 * @param copyCache - mapping from entity in the process of being
 	 *					merged to managed copy.
 	 */
-	public final void replaceQueuedOperationValues(CollectionPersister persister, Map copyCache) {
+	public final void replaceQueuedOperationValues(CollectionPersister persister, Map<Object,Object> copyCache) {
 		for ( DelayedOperation<?> operation : operationQueue ) {
-			if ( ValueDelayedOperation.class.isInstance( operation ) ) {
+			if ( operation instanceof ValueDelayedOperation ) {
 				( (ValueDelayedOperation<?>) operation ).replace( persister, copyCache );
 			}
 		}
@@ -743,7 +737,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		// If this collection is connected to this.session, then this.role and this.key should
 		// be consistent with the CollectionEntry in this.session (as long as this.session doesn't
 		// change it). Don't access the CollectionEntry in this.session because that could result
-		// in multi-threaded access to this.session.
+		// in multithreaded access to this.session.
 		final String roleCurrent = role;
 		final Object keyCurrent = key;
 
@@ -838,7 +832,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	@Override
 	public final Iterator<E> queuedAdditionIterator() {
 		if ( hasQueuedOperations() ) {
-			return new Iterator<E>() {
+			return new Iterator<>() {
 				private int index;
 
 				@Override
@@ -899,7 +893,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	}
 
 	protected final class IteratorProxy<E> implements Iterator<E> {
-		protected final Iterator<E> itr;
+		private final Iterator<E> itr;
 
 		public IteratorProxy(Iterator<E> itr) {
 			this.itr = itr;
@@ -923,7 +917,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	}
 
 	protected final class ListIteratorProxy implements ListIterator<E> {
-		protected final ListIterator<E> itr;
+		private final ListIterator<E> itr;
 
 		public ListIteratorProxy(ListIterator<E> itr) {
 			this.itr = itr;
@@ -1058,7 +1052,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	}
 
 	protected final class ListProxy implements List<E> {
-		protected final List<E> list;
+		private final List<E> list;
 
 		public ListProxy(List<E> list) {
 			this.list = list;
@@ -1203,25 +1197,25 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	}
 
 	protected interface ValueDelayedOperation<E> extends DelayedOperation<E> {
-		void replace(CollectionPersister collectionPersister, Map copyCache);
+		void replace(CollectionPersister collectionPersister, Map<Object,Object> copyCache);
 	}
 
 	protected abstract class AbstractValueDelayedOperation implements ValueDelayedOperation<E> {
 		private E addedValue;
-		private E orphan;
+		private final E orphan;
 
 		protected AbstractValueDelayedOperation(E addedValue, E orphan) {
 			this.addedValue = addedValue;
 			this.orphan = orphan;
 		}
 
-		public void replace(CollectionPersister persister, Map copyCache) {
+		public void replace(CollectionPersister persister, Map<Object,Object> copyCache) {
 			if ( addedValue != null ) {
 				addedValue = getReplacement( persister.getElementType(), addedValue, copyCache );
 			}
 		}
 
-		protected final E getReplacement(Type type, Object current, Map copyCache) {
+		protected final E getReplacement(Type type, Object current, Map<Object,Object> copyCache) {
 			return (E) type.replace( current, null, session, owner, copyCache );
 		}
 

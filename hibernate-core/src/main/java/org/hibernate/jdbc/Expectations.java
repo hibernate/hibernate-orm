@@ -137,7 +137,7 @@ public class Expectations {
 		}
 
 		private CallableStatement toCallableStatement(PreparedStatement statement) {
-			if ( !CallableStatement.class.isInstance( statement ) ) {
+			if ( !(statement instanceof CallableStatement) ) {
 				throw new HibernateException(
 						"BasicParamExpectation operates exclusively on CallableStatements : " + statement.getClass()
 				);

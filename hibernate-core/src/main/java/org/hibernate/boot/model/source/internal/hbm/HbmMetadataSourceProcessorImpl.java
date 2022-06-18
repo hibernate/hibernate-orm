@@ -50,7 +50,7 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 		this.mappingDocuments = new ArrayList<>();
 
 		for ( Binding xmlBinding : xmlBindings ) {
-			if ( !JaxbHbmHibernateMapping.class.isInstance( xmlBinding.getRoot() ) ) {
+			if ( !(xmlBinding.getRoot() instanceof JaxbHbmHibernateMapping) ) {
 				continue;
 			}
 

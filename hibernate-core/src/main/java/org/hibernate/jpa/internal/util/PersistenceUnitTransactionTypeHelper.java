@@ -21,7 +21,7 @@ public class PersistenceUnitTransactionTypeHelper {
 			return null;
 		}
 
-		if ( PersistenceUnitTransactionType.class.isInstance( value ) ) {
+		if ( value instanceof PersistenceUnitTransactionType ) {
 			return (PersistenceUnitTransactionType) value;
 		}
 

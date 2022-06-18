@@ -101,7 +101,7 @@ public abstract class BlobJdbcType implements JdbcType {
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
 					BlobJdbcType descriptor = BLOB_BINDING;
-					if ( byte[].class.isInstance( value ) ) {
+					if ( value instanceof byte[] ) {
 						// performance shortcut for binding BLOB data in byte[] format
 						descriptor = PRIMITIVE_ARRAY_BINDING;
 					}
@@ -115,7 +115,7 @@ public abstract class BlobJdbcType implements JdbcType {
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
 					BlobJdbcType descriptor = BLOB_BINDING;
-					if ( byte[].class.isInstance( value ) ) {
+					if ( value instanceof byte[] ) {
 						// performance shortcut for binding BLOB data in byte[] format
 						descriptor = PRIMITIVE_ARRAY_BINDING;
 					}

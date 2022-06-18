@@ -262,7 +262,7 @@ public class BootstrapServiceRegistryImpl
 	@Override
 	public synchronized <R extends Service> void stopService(ServiceBinding<R> binding) {
 		final Service service = binding.getService();
-		if ( Stoppable.class.isInstance( service ) ) {
+		if ( service instanceof Stoppable ) {
 			try {
 				( (Stoppable) service ).stop();
 			}

@@ -117,7 +117,7 @@ public abstract class AbstractEntitySourceImpl
 
 	private FilterSource[] buildFilterSources() {
 		//todo for now, i think all EntityElement should support this.
-		if ( JaxbHbmRootEntityType.class.isInstance( jaxbEntityMapping() ) ) {
+		if ( jaxbEntityMapping() instanceof JaxbHbmRootEntityType ) {
 			final JaxbHbmRootEntityType jaxbClassElement = (JaxbHbmRootEntityType) jaxbEntityMapping();
 			final int size = jaxbClassElement.getFilter().size();
 			if ( size == 0 ) {
@@ -212,7 +212,7 @@ public abstract class AbstractEntitySourceImpl
 	}
 
 	private Map<String,SecondaryTableSource> buildSecondaryTableMap() {
-		if ( !SecondaryTableContainer.class.isInstance( jaxbEntityMapping ) ) {
+		if ( !(jaxbEntityMapping instanceof SecondaryTableContainer) ) {
 			return Collections.emptyMap();
 		}
 

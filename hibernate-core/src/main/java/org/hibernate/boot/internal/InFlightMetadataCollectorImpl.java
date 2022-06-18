@@ -1116,7 +1116,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				}
 			}
 
-			if ( DenormalizedTable.class.isInstance( currentTable ) ) {
+			if ( currentTable instanceof DenormalizedTable ) {
 				currentTable = ( (DenormalizedTable) currentTable ).getIncludedTable();
 			}
 			else {

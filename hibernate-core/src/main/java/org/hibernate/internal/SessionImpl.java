@@ -1624,8 +1624,7 @@ public class SessionImpl
 		}
 
 		try {
-			//noinspection RedundantClassCall
-			if ( !HibernateProxy.class.isInstance( object ) && persistenceContext.getEntry( object ) == null ) {
+			if ( !(object instanceof HibernateProxy) && persistenceContext.getEntry( object ) == null ) {
 				// check if it is an entity -> if not throw an exception (per JPA)
 				try {
 					getFactory().getRuntimeMetamodels()

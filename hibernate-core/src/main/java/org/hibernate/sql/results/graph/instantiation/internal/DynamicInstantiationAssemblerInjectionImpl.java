@@ -30,7 +30,7 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 			JavaType<T> target,
 			List<ArgumentReader<?>> argumentReaders) {
 		this.target = target;
-		final Class targetJavaType = target.getJavaTypeClass();
+		final Class<?> targetJavaType = target.getJavaTypeClass();
 
 		BeanInfoHelper.visitBeanInfo(
 				targetJavaType,
@@ -48,7 +48,7 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 										propertyDescriptor.getWriteMethod().setAccessible( true );
 										beanInjections.add(
 												new BeanInjection(
-														new BeanInjectorSetter( propertyDescriptor.getWriteMethod() ),
+														new BeanInjectorSetter<>( propertyDescriptor.getWriteMethod() ),
 														argumentReader
 												)
 										);
@@ -71,7 +71,7 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 						if ( field != null ) {
 							beanInjections.add(
 									new BeanInjection(
-											new BeanInjectorField( field ),
+											new BeanInjectorField<>( field ),
 											argumentReader
 									)
 							);
@@ -91,7 +91,7 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 		}
 	}
 
-	private Field findField(Class declaringClass, String name, Class javaType) {
+	private Field findField(Class<?> declaringClass, String name, Class<?> javaType) {
 		try {
 			Field field = declaringClass.getDeclaredField( name );
 			// field should never be null

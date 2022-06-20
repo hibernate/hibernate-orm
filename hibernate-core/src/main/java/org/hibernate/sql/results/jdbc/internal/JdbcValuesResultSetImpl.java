@@ -324,4 +324,14 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	public Object[] getCurrentRowValuesArray() {
 		return currentRowJdbcValues;
 	}
+
+	@Override
+	public void setFetchSize(int fetchSize) {
+		try {
+			resultSetAccess.getResultSet().setFetchSize(fetchSize);
+		}
+		catch (SQLException e) {
+			throw makeExecutionException( "Error calling ResultSet.setFetchSize()", e );
+		}
+	}
 }

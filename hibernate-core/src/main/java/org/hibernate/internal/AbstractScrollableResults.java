@@ -86,6 +86,11 @@ public abstract class AbstractScrollableResults<R> implements ScrollableResultsI
 	}
 
 	@Override
+	public void setFetchSize(int fetchSize) {
+		getJdbcValues().setFetchSize(fetchSize);
+	}
+
+	@Override
 	public final void close() {
 		if ( this.closed ) {
 			// noop if already closed

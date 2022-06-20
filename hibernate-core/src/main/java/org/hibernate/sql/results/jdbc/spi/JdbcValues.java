@@ -78,4 +78,6 @@ public interface JdbcValues {
 	 * Give implementations a chance to finish processing
 	 */
 	void finishUp(SharedSessionContractImplementor session);
+
+	void setFetchSize(int fetchSize);
 }

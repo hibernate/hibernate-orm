@@ -37,7 +37,7 @@ public class ColumnEntityAliases extends DefaultEntityAliases {
 	
 	protected String[] getPropertyAliases(Loadable persister, int j) {
 		String[] propertyColumnNames = persister.getPropertyColumnNames(j);
-		if ( Arrays.equals( propertyColumnNames, new String[] { null } ) ) {
+		if ( propertyColumnNames.length == 1 && propertyColumnNames[0] == null ) {
 			return new String[]{ persister.getPropertyNames()[j] };
 		}
 		return propertyColumnNames;

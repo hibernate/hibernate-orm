@@ -945,8 +945,9 @@ public interface AvailableSettings {
 	 * from the database when more rows are needed. If {@code 0}, the JDBC driver's
 	 * default settings will be used.
 	 *
-	 * @see java.sql.ResultSet#setFetchSize(int)
+	 * @see java.sql.PreparedStatement#setFetchSize(int)
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcFetchSize(int)
+	 * @see org.hibernate.ScrollableResults#setFetchSize(int)
 	 */
 	String STATEMENT_FETCH_SIZE = "hibernate.jdbc.fetch_size";
 

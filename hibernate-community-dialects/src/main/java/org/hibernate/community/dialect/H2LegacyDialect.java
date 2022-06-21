@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import java.sql.CallableStatement;
 import java.sql.SQLException;
@@ -13,6 +13,14 @@ import java.util.List;
 
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2DurationIntervalSecondJdbcType;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.Replacer;
+import org.hibernate.dialect.SelectItemReferenceStrategy;
+import org.hibernate.dialect.SimpleDatabaseVersion;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.H2IdentityColumnSupport;
@@ -84,19 +92,20 @@ import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
 import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
-import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 
 /**
- * A {@linkplain Dialect SQL dialect} for H2.
+ * A legacy {@linkplain Dialect SQL dialect} for H2.
  *
  * @author Thomas Mueller
  */
-public class H2Dialect extends Dialect {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( H2Dialect.class );
-	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 1, 4, 197 );
+public class H2LegacyDialect extends Dialect {
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( H2LegacyDialect.class );
+
+	private final LimitHandler limitHandler;
 
 	private final boolean ansiSequence;
 	private final boolean cascadeConstraints;
@@ -105,17 +114,26 @@ public class H2Dialect extends Dialect {
 	private final SequenceInformationExtractor sequenceInformationExtractor;
 	private final String querySequenceString;
 
-	public H2Dialect(DialectResolutionInfo info) {
+	public H2LegacyDialect(DialectResolutionInfo info) {
 		this( parseVersion( info ) );
 		registerKeywords( info );
 	}
 
-	public H2Dialect() {
-		this( MINIMUM_VERSION );
+	public H2LegacyDialect() {
+		this( SimpleDatabaseVersion.ZERO_VERSION );
 	}
 
-	public H2Dialect(DatabaseVersion version) {
+	public H2LegacyDialect(DatabaseVersion version) {
 		super(version);
+
+		// https://github.com/h2database/h2database/commit/b2cdf84e0b84eb8a482fa7dccdccc1ab95241440
+		limitHandler = version.isSameOrAfter( 1, 4, 195 )
+				? OffsetFetchLimitHandler.INSTANCE
+				: LimitOffsetLimitHandler.INSTANCE;
+
+		if ( version.isBefore( 1, 2, 139 ) ) {
+			LOG.unsupportedMultiTableBulkHqlJpaql( version.getMajor(), version.getMinor(), version.getMicro() );
+		}
 
 //		supportsTuplesInSubqueries = version.isSameOrAfter( 1, 4, 198 );
 
@@ -128,10 +146,16 @@ public class H2Dialect extends Dialect {
 		// 1.4.200 introduced changes in current_time and current_timestamp
 		useLocalTime = version.isSameOrAfter( 1, 4, 200 );
 
-		this.sequenceInformationExtractor = version.isSameOrAfter( 1, 4, 201 )
-				? SequenceInformationExtractorLegacyImpl.INSTANCE
-				: SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
-		this.querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
+		if ( version.isSameOrAfter( 1, 4, 32 ) ) {
+			this.sequenceInformationExtractor = version.isSameOrAfter( 1, 4, 201 )
+					? SequenceInformationExtractorLegacyImpl.INSTANCE
+					: SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
+			this.querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
+		}
+		else {
+			this.sequenceInformationExtractor = SequenceInformationExtractorNoOpImpl.INSTANCE;
+			this.querySequenceString = null;
+		}
 	}
 
 	private static DatabaseVersion parseVersion(DialectResolutionInfo info) {
@@ -201,10 +225,12 @@ public class H2Dialect extends Dialect {
 		if ( getVersion().isBefore( 2 ) ) {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( ARRAY, "array", this ) );
 		}
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
-		if ( getVersion().isSameOrAfter( 1, 4, 198 ) ) {
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INTERVAL_SECOND, "interval second($p,$s)", this ) );
+		if ( getVersion().isSameOrAfter( 1, 4, 197 ) ) {
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
+			if ( getVersion().isSameOrAfter( 1, 4, 198 ) ) {
+				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INTERVAL_SECOND, "interval second($p,$s)", this ) );
+			}
 		}
 	}
 
@@ -216,7 +242,9 @@ public class H2Dialect extends Dialect {
 				.getJdbcTypeRegistry();
 
 		jdbcTypeRegistry.addDescriptor( TIMESTAMP_UTC, InstantJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
+		if ( getVersion().isSameOrAfter( 1, 4, 197 ) ) {
+			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
+		}
 		if ( getVersion().isSameOrAfter( 1, 4, 198 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( H2DurationIntervalSecondJdbcType.INSTANCE );
 		}
@@ -376,7 +404,7 @@ public class H2Dialect extends Dialect {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new H2SqlAstTranslator<>( sessionFactory, statement );
+				return new H2LegacySqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
 	}
@@ -427,7 +455,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return OffsetFetchLimitHandler.INSTANCE;
+		return limitHandler;
 	}
 
 	@Override

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import java.util.List;
 
@@ -34,15 +34,15 @@ import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 /**
- * A SQL AST translator for H2.
+ * A legacy SQL AST translator for H2.
  *
  * @author Christian Beikov
  */
-public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
 	private boolean renderAsArray;
 
-	public H2SqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+	public H2LegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
 	}
 
@@ -146,7 +146,7 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 			// This could theoretically be emulated by rendering all grouping variations of the query and
 			// connect them via union all but that's probably pretty inefficient and would have to happen
 			// on the query spec level
-			throw new UnsupportedOperationException( "Summarization is not supported by DBMS" );
+			throw new UnsupportedOperationException( "Summarization is not supported by DBMS!" );
 		}
 		else {
 			expression.accept( this );
@@ -182,19 +182,19 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 	@Override
 	protected boolean supportsRowValueConstructorSyntax() {
 		// Just a guess
-		return true;
+		return getDialect().getVersion().isSameOrAfter( 1, 4, 197 );
 	}
 
 	@Override
 	protected boolean supportsRowValueConstructorSyntaxInInList() {
 		// Just a guess
-		return true;
+		return getDialect().getVersion().isSameOrAfter( 1, 4, 197 );
 	}
 
 	@Override
 	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
 		// Just a guess
-		return true;
+		return getDialect().getVersion().isSameOrAfter( 1, 4, 197 );
 	}
 
 	@Override
@@ -209,7 +209,7 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 	}
 
 	private boolean supportsOffsetFetchClause() {
-		return true;
+		return getDialect().getVersion().isSameOrAfter( 1, 4, 195 );
 	}
 
 	private boolean supportsOffsetFetchClausePercentWithTies() {

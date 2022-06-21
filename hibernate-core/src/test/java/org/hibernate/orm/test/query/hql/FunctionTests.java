@@ -529,7 +529,6 @@ public class FunctionTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "A TiDB bug: https://github.com/pingcap/tidb/issues/35451, treats space to 2 chars")
 	public void testPositionFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -541,7 +540,6 @@ public class FunctionTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "A TiDB bug: https://github.com/pingcap/tidb/issues/35451, treats space to 2 chars")
 	public void testLocateFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

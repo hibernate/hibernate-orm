@@ -6,8 +6,6 @@
  */
 package org.hibernate.orm.test.batch;
 
-import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -19,12 +17,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.Version;
 
-import org.hibernate.TransactionException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
 
-import org.hibernate.dialect.TiDBDialect;
-import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -97,16 +92,7 @@ public class BatchOptimisticLockingTest extends
 			} );
 		}
 		catch (Exception expected) {
-			Object expectException = OptimisticLockException.class;
-			if (getDialect() instanceof TiDBDialect) {
-				expectException = SQLException.class;
-			}
-
-			assertEquals(
-					expectException,
-					expected.getCause().getClass()
-			);
-
+			assertEquals( OptimisticLockException.class, expected.getClass() );
 			if ( getDialect() instanceof CockroachDialect ) {
 				// CockroachDB always runs in SERIALIZABLE isolation, and uses SQL state 40001 to indicate
 				// serialization failure.
@@ -114,10 +100,6 @@ public class BatchOptimisticLockingTest extends
 						"org.hibernate.exception.LockAcquisitionException: could not execute batch",
 						expected.getMessage()
 				);
-			} else if (getDialect() instanceof TiDBDialect) {
-				// TiDB will throw a TransactionException by writing conflict at commit
-				assertEquals("Unable to commit against JDBC Connection",
-						expected.getMessage());
 			}
 			else {
 				assertEquals(

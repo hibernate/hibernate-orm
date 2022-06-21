@@ -17,14 +17,11 @@ import jakarta.persistence.Table;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.exception.ConstraintViolationException;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
-
-import java.sql.SQLIntegrityConstraintViolationException;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
@@ -57,13 +54,8 @@ public class UniqueConstraintThrowsConstraintViolationExceptionTest extends Base
 			fail( "Should throw" );
 		}
 		catch ( PersistenceException e ) {
-			Object expectException = ConstraintViolationException.class;
-			if (getDialect() instanceof TiDBDialect) {
-				expectException = SQLIntegrityConstraintViolationException.class;
-			}
-
 			assertEquals(
-					expectException,
+					ConstraintViolationException.class,
 					e.getCause().getClass()
 			);
 		}

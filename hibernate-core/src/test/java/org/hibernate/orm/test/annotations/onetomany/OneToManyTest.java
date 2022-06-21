@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.annotations.onetomany;
 
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,7 +33,6 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
@@ -186,16 +184,9 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 		}
 		catch (PersistenceException ce) {
 			try {
-				Object expectException = ConstraintViolationException.class;
-				if (getDialect() instanceof TiDBDialect) {
-					expectException = SQLIntegrityConstraintViolationException.class;
-				}
-
-				assertEquals(
-						expectException,
-						ce.getCause().getClass()
-				);
+				assertTyping( ConstraintViolationException.class, ce.getCause() );
 				//success
+
 			}
 			finally {
 				tx.rollback();

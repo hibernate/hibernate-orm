@@ -11,11 +11,9 @@ import jakarta.persistence.OptimisticLockException;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -93,7 +91,6 @@ public class RemoveTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB does not support foreign key, so can not use this way to detect write conflict")
 	public void testUpdatedAndRemove(EntityManagerFactoryScope scope) {
 		EntityManager em = scope.getEntityManagerFactory().createEntityManager();
 		EntityManager em2 = scope.getEntityManagerFactory().createEntityManager();

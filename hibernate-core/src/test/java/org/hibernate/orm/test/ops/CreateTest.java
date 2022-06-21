@@ -6,26 +6,22 @@
  */
 package org.hibernate.orm.test.ops;
 
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.Collection;
 import jakarta.persistence.PersistenceException;
 
 import org.hibernate.PersistentObjectException;
 import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.exception.ConstraintViolationException;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.testing.orm.junit.DialectContext.getDialect;
 import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -130,9 +126,6 @@ public class CreateTest extends AbstractOperationTestCase {
 				}
 		);
 
-		final Object expectException = getDialect() instanceof TiDBDialect ?
-				SQLIntegrityConstraintViolationException.class : ConstraintViolationException.class;
-
 		scope.inSession(
 				session -> {
 					try {
@@ -142,8 +135,9 @@ public class CreateTest extends AbstractOperationTestCase {
 						fail( "Expecting constraint failure" );
 					}
 					catch (PersistenceException e) {
+
 						//verify that an exception is thrown!
-						Assertions.assertEquals(expectException, e.getCause().getClass());
+						assertTyping( ConstraintViolationException.class, e.getCause() );
 					}
 					finally {
 						if(session.getTransaction().isActive()){
@@ -166,7 +160,7 @@ public class CreateTest extends AbstractOperationTestCase {
 					}
 					catch (PersistenceException e) {
 						//verify that an exception is thrown!
-						Assertions.assertEquals(expectException, e.getCause().getClass());
+						assertTyping( ConstraintViolationException.class, e.getCause() );
 					}
 					finally {
 						if(session.getTransaction().isActive()){

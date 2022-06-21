@@ -10,11 +10,9 @@ import java.math.BigDecimal;
 
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.TransactionException;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;
@@ -24,7 +22,6 @@ import org.hibernate.orm.test.jpa.model.Part;
 import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
@@ -106,7 +103,6 @@ public class RepeatableReadTest extends AbstractJPATest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB will throw a TransactionException by writing conflict at commit, so can't pass")
 	public void testStaleVersionedInstanceFoundOnLock() {
 		if ( !readCommittedIsolationMaintained( "repeatable read tests" ) ) {
 			return;
@@ -243,48 +239,41 @@ public class RepeatableReadTest extends AbstractJPATest {
 		Long partId = p.getId();
 
 		// Now, open a new Session and re-load the part...
-		// TiDB will throw a TransactionException by writing conflict at commit
-		try {
-			inTransaction(
-					s1 -> {
-						Part part = s1.get( Part.class, partId );
+		inTransaction(
+				s1 -> {
+					Part part = s1.get( Part.class, partId );
 
-						// now that the item is associated with the persistence-context of that session,
-						// open a new session and modify it "behind the back" of the first session
-						inTransaction(
-								s2 -> {
-									Part part2 = s2.get( Part.class, partId );
-									part2.setName( "Lock Mode Types" );
-								}
-						);
+					// now that the item is associated with the persistence-context of that session,
+					// open a new session and modify it "behind the back" of the first session
+					inTransaction(
+							s2 -> {
+								Part part2 = s2.get( Part.class, partId );
+								part2.setName( "Lock Mode Types" );
+							}
+					);
 
-						// at this point, s1 now contains stale data, so acquire a READ lock
-						// and make sure we get the already associated state (i.e., the old
-						// name and the old version)
-						s1.lock( part, LockMode.READ );
-						Part part2 = s1.get( Part.class, partId );
-						assertTrue( part == part2 );
-						assertEquals( check, part2.getName(), "encountered non-repeatable read" );
+					// at this point, s1 now contains stale data, so acquire a READ lock
+					// and make sure we get the already associated state (i.e., the old
+					// name and the old version)
+					s1.lock( part, LockMode.READ );
+					Part part2 = s1.get( Part.class, partId );
+					assertTrue( part == part2 );
+					assertEquals( check, part2.getName(), "encountered non-repeatable read" );
 
-						// then acquire an UPGRADE lock; this should fail
-						try {
-							s1.lock( part, LockMode.PESSIMISTIC_WRITE );
-						}
-						catch (Throwable t) {
-							// SQLServer, for example, immediately throws an exception here...
-							s1.getTransaction().rollback();
-							s1.beginTransaction();
-						}
-						part2 = s1.get( Part.class, partId );
-						assertTrue( part == part2 );
-						assertEquals( check, part2.getName(), "encountered non-repeatable read" );
+					// then acquire an UPGRADE lock; this should fail
+					try {
+						s1.lock( part, LockMode.PESSIMISTIC_WRITE );
 					}
-			);
-		} catch (TransactionException e) {
-			if (!(getDialect() instanceof TiDBDialect)) {
-				throw e;
-			}
-		}
+					catch (Throwable t) {
+						// SQLServer, for example, immediately throws an exception here...
+						s1.getTransaction().rollback();
+						s1.beginTransaction();
+					}
+					part2 = s1.get( Part.class, partId );
+					assertTrue( part == part2 );
+					assertEquals( check, part2.getName(), "encountered non-repeatable read" );
+				}
+		);
 
 		// clean up
 		inTransaction(

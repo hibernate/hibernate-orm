@@ -19,8 +19,6 @@ import java.util.Set;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.TransactionException;
-import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.DialectChecks;
@@ -117,14 +115,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 			fail( "All optimistic locking should have make it fail" );
 		}
 		catch (OptimisticLockException e) {
-			// expect
 			if ( parallelTx != null ) parallelTx.rollback();
-		}
-		catch (TransactionException e) {
-			// TiDB will throw a TransactionException
-			if (!(getDialect() instanceof TiDBDialect)) {
-				throw e;
-			}
 		}
 		finally {
 			parallelSession.close();

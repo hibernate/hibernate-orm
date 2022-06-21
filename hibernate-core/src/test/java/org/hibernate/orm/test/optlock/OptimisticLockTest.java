@@ -17,8 +17,11 @@ import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 
-import org.hibernate.dialect.TiDBDialect;
-import org.hibernate.testing.orm.junit.*;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -99,10 +102,6 @@ public class OptimisticLockTest {
 
 					try {
 						document.setSummary( "A machiavellian achievement of epic proportions" );
-						// TiDB detect lock only at commit
-						if (isTiDB(mainSession)) {
-							mainSession.createNativeQuery("commit").executeUpdate();
-						}
 						mainSession.flush();
 						fail( "expecting opt lock failure" );
 					}
@@ -155,10 +154,6 @@ public class OptimisticLockTest {
 
 					try {
 						mainSession.delete( document );
-						// TiDB detect lock only at commit
-						if (isTiDB(mainSession)) {
-							mainSession.createNativeQuery("commit").executeUpdate();
-						}
 						mainSession.flush();
 						fail( "expecting opt lock failure" );
 					}
@@ -206,15 +201,5 @@ public class OptimisticLockTest {
 		}
 	}
 
-	private boolean isTiDB (Session session) {
-		try {
-			String version = (String) session.createNativeQuery("SELECT VERSION()").getSingleResult();
-			return version.contains("TiDB");
-		} catch (Exception e) {
-			// If any exception occur, it is not TiDB
-			return false;
-		}
-	}
 }
-
 

@@ -13,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import org.hamcrest.CoreMatchers;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.dialect.SybaseDialect;
@@ -29,6 +30,7 @@ import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -43,6 +45,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
@@ -202,9 +205,14 @@ public class EntityJoinTest {
                     assertThat( roots.size(), is( 1 ) );
 
                     final TableGroup rootTableGroup = roots.get( 0 );
-                    assertThat( rootTableGroup.getTableGroupJoins().size(), is( 1 ) );
+                    assertThat( rootTableGroup.getTableGroupJoins().size(), is( 2 ) );
 
-                    final TableGroupJoin tableGroupJoin = rootTableGroup.getTableGroupJoins().get( 0 );
+                    // The first table group is an uninitialized lazy table group for the path in the on clause
+                    final TableGroupJoin firstTableGroupJoin = rootTableGroup.getTableGroupJoins().get( 0 );
+                    assertThat( firstTableGroupJoin.getJoinedGroup(), instanceOf( LazyTableGroup.class ) );
+                    assertThat( ((LazyTableGroup) firstTableGroupJoin.getJoinedGroup()).getUnderlyingTableGroup(), is( CoreMatchers.nullValue() ) );
+
+                    final TableGroupJoin tableGroupJoin = rootTableGroup.getTableGroupJoins().get( 1 );
                     assertThat( tableGroupJoin.getJoinedGroup().getModelPart(), is( customerEntityDescriptor ) );
                 }
         );

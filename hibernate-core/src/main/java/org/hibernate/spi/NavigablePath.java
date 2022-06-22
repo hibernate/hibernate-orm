@@ -235,7 +235,8 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 
 		public String resolve() {
 			if ( buffer == null ) {
-				return null;
+				// Return an empty string instead of null in case the two navigable paths are equal
+				return matchedBase ? "" : null;
 			}
 			return buffer.toString();
 		}

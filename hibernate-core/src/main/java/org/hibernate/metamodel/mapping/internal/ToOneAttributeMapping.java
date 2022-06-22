@@ -703,8 +703,14 @@ public class ToOneAttributeMapping
 		return sideNature;
 	}
 
+	@Override
 	public boolean isReferenceToPrimaryKey() {
 		return foreignKeyDescriptor.getSide( sideNature.inverse() ).getModelPart() instanceof EntityIdentifierMapping;
+	}
+
+	@Override
+	public boolean isFkOptimizationAllowed() {
+		return canUseParentTableGroup;
 	}
 
 	public String getReferencedPropertyName() {
@@ -1576,7 +1582,9 @@ public class ToOneAttributeMapping
 											return false;
 										}
 
-										return targetKeyPropertyNames.contains( relativePath );
+										// Empty relative path means the navigable paths are equal,
+										// in which case we allow resolving the parent table group
+										return relativePath.isEmpty() || targetKeyPropertyNames.contains( relativePath );
 									}
 							),
 							null
@@ -1606,23 +1614,31 @@ public class ToOneAttributeMapping
 
 		final TableReference lhsTableReference = lhs.resolveTableReference( navigablePath, identifyingColumnsTableExpression );
 
-		lazyTableGroup.setTableGroupInitializerCallback( (tableGroup) -> join.applyPredicate(
-				foreignKeyDescriptor.generateJoinPredicate(
-						sideNature == ForeignKeyDescriptor.Nature.TARGET ? lhsTableReference : tableGroup.getPrimaryTableReference(),
-						sideNature == ForeignKeyDescriptor.Nature.TARGET ? tableGroup.getPrimaryTableReference() : lhsTableReference,
-						sqlExpressionResolver,
-						creationContext
-				)
-		) );
+		lazyTableGroup.setTableGroupInitializerCallback(
+				tableGroup -> {
+					join.applyPredicate(
+							foreignKeyDescriptor.generateJoinPredicate(
+									sideNature == ForeignKeyDescriptor.Nature.TARGET ?
+											lhsTableReference :
+											tableGroup.getPrimaryTableReference(),
+									sideNature == ForeignKeyDescriptor.Nature.TARGET ?
+											tableGroup.getPrimaryTableReference() :
+											lhsTableReference,
+									sqlExpressionResolver,
+									creationContext
+							)
+					);
 
-		if ( hasNotFoundAction() ) {
-			getAssociatedEntityMappingType().applyWhereRestrictions(
-					join::applyPredicate,
-					lazyTableGroup.getTableGroup(),
-					true,
-					null
-			);
-		}
+					if ( hasNotFoundAction() ) {
+						getAssociatedEntityMappingType().applyWhereRestrictions(
+								join::applyPredicate,
+								tableGroup,
+								true,
+								null
+						);
+					}
+				}
+		);
 
 		return join;
 	}
@@ -1697,7 +1713,9 @@ public class ToOneAttributeMapping
 						return false;
 					}
 
-					return targetKeyPropertyNames.contains( relativePath );
+					// Empty relative path means the navigable paths are equal,
+					// in which case we allow resolving the parent table group
+					return relativePath.isEmpty() || targetKeyPropertyNames.contains( relativePath );
 				},
 				tableGroupProducer,
 				explicitSourceAlias,

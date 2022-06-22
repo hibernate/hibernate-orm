@@ -332,6 +332,7 @@ import org.hibernate.sql.ast.tree.from.SyntheticVirtualTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
+import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
@@ -1080,8 +1081,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					rootTableGroup
 			);
 
-			if ( !rootTableGroup.getTableReferenceJoins().isEmpty()
-					|| !rootTableGroup.getTableGroupJoins().isEmpty() ) {
+			if ( hasJoins( rootTableGroup ) ) {
 				throw new SemanticException( "Not expecting multiple table references for an SQM INSERT-SELECT" );
 			}
 		}
@@ -1107,6 +1107,24 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 
 		return insertStatement;
+	}
+
+	private static boolean hasJoins(TableGroup rootTableGroup) {
+		if ( !rootTableGroup.getTableReferenceJoins().isEmpty() ) {
+			return true;
+		}
+		return hasJoins( rootTableGroup.getTableGroupJoins() ) || hasJoins( rootTableGroup.getNestedTableGroupJoins() );
+	}
+
+	private static boolean hasJoins(List<TableGroupJoin> tableGroupJoins) {
+		for ( TableGroupJoin tableGroupJoin : tableGroupJoins ) {
+			final TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
+			if ( joinedGroup instanceof LazyTableGroup && ( (LazyTableGroup) joinedGroup ).getUnderlyingTableGroup() == null ) {
+				continue;
+			}
+			return true;
+		}
+		return false;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3097,6 +3115,32 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			implicitJoinChecker = BaseSqmToSqlAstConverter::verifyManipulationImplicitJoin;
 		}
 		prepareReusablePath( fromClauseIndex, sqmPath, implicitJoinChecker );
+
+		// Create the table group for every path that can potentially require one,
+		// as some paths require joining the target table i.e. inverse one-to-one
+		// Note that this will not necessarily create joins immediately, as table groups are lazy
+		if ( sqmPath instanceof SqmEntityValuedSimplePath<?>
+				|| sqmPath instanceof SqmEmbeddedValuedSimplePath<?>
+				|| sqmPath instanceof SqmAnyValuedSimplePath<?> ) {
+			final TableGroup existingTableGroup = fromClauseIndex.findTableGroup( sqmPath.getNavigablePath() );
+			if ( existingTableGroup == null ) {
+				final TableGroup createdTableGroup = createTableGroup(
+						fromClauseIndex.getTableGroup( sqmPath.getLhs().getNavigablePath() ),
+						sqmPath
+				);
+				if ( createdTableGroup != null ) {
+					if ( sqmPath instanceof SqmTreatedPath<?, ?> ) {
+						fromClauseIndex.register( sqmPath, createdTableGroup );
+					}
+					if ( sqmPath instanceof SqmFrom<?, ?> ) {
+						registerTreatUsage( (SqmFrom<?, ?>) sqmPath, createdTableGroup );
+					}
+				}
+			}
+			else if ( sqmPath instanceof SqmFrom<?, ?> ) {
+				registerTreatUsage( (SqmFrom<?, ?>) sqmPath, existingTableGroup );
+			}
+		}
 		return supplier.get();
 	}
 
@@ -3190,26 +3234,29 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( tableGroup == null ) {
 			prepareReusablePath( path, () -> null );
 
-			final NavigablePath navigablePath;
-			if ( CollectionPart.Nature.fromNameExact( path.getNavigablePath().getLocalName() ) != null ) {
-				navigablePath = path.getLhs().getLhs().getNavigablePath();
-			}
-			else if ( path instanceof SqmTreatedRoot<?, ?> ) {
-				navigablePath = ( (SqmTreatedRoot<?, ?>) path ).getWrappedPath().getNavigablePath();
-			}
-			else {
-				navigablePath = path.getLhs().getNavigablePath();
-			}
-			final TableGroup createdTableGroup = createTableGroup(
-					fromClauseIndex.getTableGroup( navigablePath ),
-					path
-			);
-			if ( createdTableGroup != null ) {
-				if ( path instanceof SqmTreatedPath<?, ?> ) {
-					fromClauseIndex.register( path, createdTableGroup );
+			if ( !( path instanceof SqmEntityValuedSimplePath<?>
+					|| path instanceof SqmEmbeddedValuedSimplePath<?>
+					|| path instanceof SqmAnyValuedSimplePath<?> ) ) {
+				// Since this is a selection, we must create a table group for the path as a DomainResult will be created
+				// But only create it for paths that are not handled by #prepareReusablePath anyway
+				final NavigablePath navigablePath;
+				if ( path instanceof SqmTreatedRoot<?, ?> ) {
+					navigablePath = ( (SqmTreatedRoot<?, ?>) path ).getWrappedPath().getNavigablePath();
 				}
-				if ( path instanceof SqmFrom<?, ?> ) {
-					registerTreatUsage( (SqmFrom<?, ?>) path, createdTableGroup );
+				else {
+					navigablePath = path.getLhs().getNavigablePath();
+				}
+				final TableGroup createdTableGroup = createTableGroup(
+						fromClauseIndex.getTableGroup( navigablePath ),
+						path
+				);
+				if ( createdTableGroup != null ) {
+					if ( path instanceof SqmTreatedPath<?, ?> ) {
+						fromClauseIndex.register( path, createdTableGroup );
+					}
+					if ( path instanceof SqmFrom<?, ?> ) {
+						registerTreatUsage( (SqmFrom<?, ?>) path, createdTableGroup );
+					}
 				}
 			}
 		}
@@ -3288,7 +3335,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 
 			fromClauseIndex.register( joinedPath, tableGroup );
-			registerPluralTableGroupParts( tableGroup );
+			registerPluralTableGroupParts( joinedPath.getNavigablePath(), tableGroup );
 		}
 		else {
 			tableGroup = null;
@@ -3322,17 +3369,25 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private void registerPluralTableGroupParts(TableGroup tableGroup) {
+		registerPluralTableGroupParts( null, tableGroup );
+	}
+
+	private void registerPluralTableGroupParts(NavigablePath navigablePath, TableGroup tableGroup) {
 		if ( tableGroup instanceof PluralTableGroup ) {
 			final PluralTableGroup pluralTableGroup = (PluralTableGroup) tableGroup;
 			if ( pluralTableGroup.getElementTableGroup() != null ) {
 				getFromClauseAccess().registerTableGroup(
-						pluralTableGroup.getElementTableGroup().getNavigablePath(),
+						navigablePath == null || navigablePath == tableGroup.getNavigablePath()
+								? pluralTableGroup.getElementTableGroup().getNavigablePath()
+								: navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
 						pluralTableGroup.getElementTableGroup()
 				);
 			}
 			if ( pluralTableGroup.getIndexTableGroup() != null ) {
 				getFromClauseAccess().registerTableGroup(
-						pluralTableGroup.getIndexTableGroup().getNavigablePath(),
+						navigablePath == null || navigablePath == tableGroup.getNavigablePath()
+								? pluralTableGroup.getIndexTableGroup().getNavigablePath()
+								: navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
 						pluralTableGroup.getIndexTableGroup()
 				);
 			}
@@ -3422,95 +3477,130 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private Expression visitTableGroup(TableGroup tableGroup, SqmFrom<?, ?> path) {
-		final ModelPartContainer modelPart;
-		final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
-		// For plain SqmFrom node uses, prefer the mapping type from the context if possible
-		if ( !( inferredValueMapping instanceof ModelPartContainer ) ) {
-			modelPart = tableGroup.getModelPart();
-		}
-		else {
-			modelPart = (ModelPartContainer) inferredValueMapping;
-		}
-		final ModelPart resultModelPart;
-		final ModelPart interpretationModelPart;
-		final TableGroup parentGroupToUse;
-		if ( modelPart instanceof ToOneAttributeMapping ) {
-			final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) modelPart;
-			final ModelPart targetPart = toOneAttributeMapping.getForeignKeyDescriptor().getPart(
-					toOneAttributeMapping.getSideNature().inverse()
-			);
-			if ( tableGroup.getModelPart().getPartMappingType() == modelPart.getPartMappingType() ) {
-				resultModelPart = targetPart;
-			}
-			else {
-				// If the table group is for a different mapping type i.e. an inheritance subtype,
-				// lookup the target part on that mapping type
-				resultModelPart = tableGroup.getModelPart().findSubPart( targetPart.getPartName(), null );
-			}
-			interpretationModelPart = modelPart;
-			parentGroupToUse = null;
-		}
-		else if ( modelPart instanceof PluralAttributeMapping ) {
-			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) modelPart;
-			final CollectionPart elementDescriptor = pluralAttributeMapping.getElementDescriptor();
-			if ( elementDescriptor instanceof EntityCollectionPart ) {
-				// Usually, we need to resolve to the PK for visitTableGroup
-				final EntityCollectionPart collectionPart = (EntityCollectionPart) elementDescriptor;
-				final ModelPart collectionTargetPart = collectionPart.getForeignKeyDescriptor()
-						.getPart( collectionPart.getSideNature().inverse() );
-				final EntityIdentifierMapping identifierMapping = collectionPart.getEntityMappingType()
-						.getIdentifierMapping();
-				// If the FK points to the PK, we can use the FK part though, if this is not a root
-				if ( collectionTargetPart == identifierMapping && !( path instanceof SqmRoot<?> ) ) {
-					resultModelPart = collectionPart.getForeignKeyDescriptor().getPart( collectionPart.getSideNature() );
-				}
-				else {
-					resultModelPart = identifierMapping;
-				}
-			}
-			else {
-				resultModelPart = elementDescriptor;
-			}
-			interpretationModelPart = elementDescriptor;
-			parentGroupToUse = null;
-		}
-		else if ( modelPart instanceof EntityCollectionPart ) {
-			// Usually, we need to resolve to the PK for visitTableGroup
-			final EntityCollectionPart collectionPart = (EntityCollectionPart) modelPart;
-			final ModelPart collectionTargetPart = collectionPart.getForeignKeyDescriptor()
-					.getPart( collectionPart.getSideNature().inverse() );
-			final EntityIdentifierMapping identifierMapping = collectionPart.getEntityMappingType()
-					.getIdentifierMapping();
-			// If the FK points to the PK, we can use the FK part though, if this is not a root
-			if ( collectionTargetPart == identifierMapping && !( path instanceof SqmRoot<?> ) ) {
-				resultModelPart = collectionPart.getForeignKeyDescriptor().getPart( collectionPart.getSideNature() );
-			}
-			else {
-				resultModelPart = identifierMapping;
-			}
-			interpretationModelPart = modelPart;
-			parentGroupToUse = findTableGroup( tableGroup.getNavigablePath().getParent() );
-		}
-		else if ( modelPart instanceof EntityMappingType ) {
-			resultModelPart = ( (EntityMappingType) modelPart ).getIdentifierMapping();
-			interpretationModelPart = modelPart;
-			parentGroupToUse = null;
-		}
-		else {
-			resultModelPart = modelPart;
-			interpretationModelPart = modelPart;
-			parentGroupToUse = null;
-		}
+		final ModelPartContainer tableGroupModelPart = tableGroup.getModelPart();
+		final ModelPart actualModelPart;
 		final NavigablePath navigablePath;
-		if ( interpretationModelPart == modelPart ) {
+		if ( tableGroupModelPart instanceof PluralAttributeMapping ) {
+			actualModelPart = ( (PluralAttributeMapping) tableGroupModelPart ).getElementDescriptor();
+			navigablePath = tableGroup.getNavigablePath().append( actualModelPart.getPartName() );
+		}
+		else {
+			actualModelPart = tableGroupModelPart;
 			navigablePath = tableGroup.getNavigablePath();
 		}
-		else {
-			navigablePath = tableGroup.getNavigablePath().append( interpretationModelPart.getPartName() );
-		}
-
 		final Expression result;
-		if ( interpretationModelPart instanceof EntityValuedModelPart ) {
+		if ( actualModelPart instanceof EntityValuedModelPart ) {
+			final EntityValuedModelPart entityValuedModelPart = (EntityValuedModelPart) actualModelPart;
+			final EntityValuedModelPart inferredEntityMapping = (EntityValuedModelPart) getInferredValueMapping();
+			final ModelPart resultModelPart;
+			final ModelPart interpretationModelPart;
+			final TableGroup tableGroupToUse;
+			if ( inferredEntityMapping == null ) {
+				// When the inferred mapping is null, we try to resolve to the FK by default,
+				// which is fine because expansion to all target columns for select and group by clauses is handled below
+				if ( entityValuedModelPart instanceof EntityAssociationMapping && ( (EntityAssociationMapping) entityValuedModelPart ).getSideNature() != ForeignKeyDescriptor.Nature.TARGET ) {
+					// If the table group uses an association mapping that is not a one-to-many,
+					// we make use of the FK model part
+					final EntityAssociationMapping associationMapping = (EntityAssociationMapping) entityValuedModelPart;
+					final ModelPart targetPart = associationMapping.getForeignKeyDescriptor().getPart(
+							associationMapping.getSideNature()
+					);
+					if ( entityValuedModelPart.getPartMappingType() == associationMapping.getPartMappingType() ) {
+						resultModelPart = targetPart;
+					}
+					else {
+						// If the table group is for a different mapping type i.e. an inheritance subtype,
+						// lookup the target part on that mapping type
+						resultModelPart = entityValuedModelPart.findSubPart( targetPart.getPartName(), null );
+					}
+				}
+				else {
+					// Otherwise, we use the identifier mapping of the target entity type
+					resultModelPart = entityValuedModelPart.getEntityMappingType().getIdentifierMapping();
+				}
+				interpretationModelPart = entityValuedModelPart;
+				tableGroupToUse = null;
+			}
+			else if ( inferredEntityMapping instanceof ToOneAttributeMapping ) {
+				// If the inferred mapping is a to-one association,
+				// we use the FK target part, which must be located on the entity mapping
+				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) inferredEntityMapping;
+				final ModelPart targetPart = toOneAttributeMapping.getForeignKeyDescriptor().getPart(
+						toOneAttributeMapping.getSideNature().inverse()
+				);
+				if ( entityValuedModelPart.getPartMappingType() == toOneAttributeMapping.getPartMappingType() ) {
+					resultModelPart = targetPart;
+				}
+				else {
+					// If the table group is for a different mapping type i.e. an inheritance subtype,
+					// lookup the target part on that mapping type
+					resultModelPart = entityValuedModelPart.findSubPart( targetPart.getPartName(), null );
+				}
+				interpretationModelPart = toOneAttributeMapping;
+				tableGroupToUse = null;
+			}
+			else if ( inferredEntityMapping instanceof EntityCollectionPart ) {
+				// If the inferred mapping is a collection part, we try to make use of the FK again to avoid joins
+				final EntityCollectionPart collectionPart = (EntityCollectionPart) inferredEntityMapping;
+				final TableGroup collectionTableGroup;
+				if ( tableGroup.getModelPart() instanceof CollectionPart ) {
+					collectionTableGroup = findTableGroup( tableGroup.getNavigablePath().getParent() );
+				}
+				else {
+					collectionTableGroup = tableGroup;
+				}
+
+				if ( entityValuedModelPart == collectionPart ) {
+					// When we compare the same collection parts, we can just use the FK part
+					resultModelPart = collectionPart.getForeignKeyDescriptor()
+							.getPart( collectionPart.getSideNature() );
+				}
+				else if ( entityValuedModelPart instanceof EntityAssociationMapping ) {
+					// If the table group model part is an association, we check if the FK targets are compatible
+					final EntityAssociationMapping tableGroupAssociation = (EntityAssociationMapping) entityValuedModelPart;
+					final ModelPart pathTargetPart = tableGroupAssociation.getForeignKeyDescriptor()
+							.getPart( tableGroupAssociation.getSideNature().inverse() );
+					final ModelPart inferredTargetPart = collectionPart.getForeignKeyDescriptor()
+							.getPart( collectionPart.getSideNature().inverse() );
+					// If the inferred association and table group association targets are the same,
+					// or the table group association refers to the primary key, we can safely use the FK part
+					if ( pathTargetPart == inferredTargetPart || tableGroupAssociation.isReferenceToPrimaryKey() ) {
+						resultModelPart = tableGroupAssociation.getForeignKeyDescriptor()
+								.getPart( tableGroupAssociation.getSideNature() );
+					}
+					else {
+						// Otherwise, we must force the use of the identifier mapping and possibly create a join,
+						// because comparing by primary key is the only sensible thing to do in this case.
+						// Note that EntityValuedPathInterpretation does the same
+						resultModelPart = collectionPart.getAssociatedEntityMappingType().getIdentifierMapping();
+					}
+				}
+				else {
+					// Since the table group model part is an EntityMappingType,
+					// we can render the FK target model part of the inferred collection part,
+					// which might be a UK, but usually a PK
+					assert entityValuedModelPart instanceof EntityMappingType;
+					if ( collectionPart.getCollectionDescriptor().isOneToMany() ) {
+						// When the inferred mapping is a one-to-many collection part,
+						// we will render the entity identifier mapping for that collection part,
+						// so we will have to do the same for the EntityMappingType side
+						resultModelPart = collectionPart.getAssociatedEntityMappingType().getIdentifierMapping();
+					}
+					else {
+						resultModelPart = collectionPart.getForeignKeyDescriptor()
+								.getPart( collectionPart.getSideNature().inverse() );
+					}
+				}
+				interpretationModelPart = inferredEntityMapping;
+				tableGroupToUse = collectionTableGroup;
+			}
+			else {
+				// Render the identifier mapping if the inferred mapping is an EntityMappingType
+				assert inferredEntityMapping instanceof EntityMappingType;
+				resultModelPart = ( (EntityMappingType) inferredEntityMapping ).getIdentifierMapping();
+				interpretationModelPart = inferredEntityMapping;
+				tableGroupToUse = null;
+			}
 			final boolean expandToAllColumns;
 			if ( currentClauseStack.getCurrent() == Clause.GROUP ) {
 				// When the table group is known to be fetched i.e. a fetch join
@@ -3523,28 +3613,29 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 
 			final EntityValuedModelPart mapping = (EntityValuedModelPart) interpretationModelPart;
-			EntityMappingType mappingType;
+			final EntityMappingType treatedMapping;
 			if ( path instanceof SqmTreatedPath ) {
-				mappingType = creationContext.getSessionFactory()
+				treatedMapping = creationContext.getSessionFactory()
 						.getRuntimeMetamodels()
 						.getMappingMetamodel()
 						.findEntityDescriptor( ( (SqmTreatedPath<?,?>) path ).getTreatTarget().getHibernateEntityName() );
 			}
 			else {
-				mappingType = mapping.getEntityMappingType();
+				treatedMapping = mapping.getEntityMappingType();
 			}
 
 			result = EntityValuedPathInterpretation.from(
 					navigablePath,
-					parentGroupToUse == null ? tableGroup : parentGroupToUse,
+					tableGroupToUse == null ? tableGroup : tableGroupToUse,
 					expandToAllColumns ? null : resultModelPart,
+					true,
 					(EntityValuedModelPart) interpretationModelPart,
-					mappingType,
+					treatedMapping,
 					this
 			);
 		}
-		else if ( interpretationModelPart instanceof EmbeddableValuedModelPart ) {
-			final EmbeddableValuedModelPart mapping = (EmbeddableValuedModelPart) resultModelPart;
+		else if ( actualModelPart instanceof EmbeddableValuedModelPart ) {
+			final EmbeddableValuedModelPart mapping = (EmbeddableValuedModelPart) actualModelPart;
 			result = new EmbeddableValuedPathInterpretation<>(
 					mapping.toSqlExpression(
 							tableGroup,
@@ -3553,15 +3644,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							getSqlAstCreationState()
 					),
 					navigablePath,
-					(EmbeddableValuedModelPart) interpretationModelPart,
+					mapping,
 					tableGroup
 			);
 		}
 		else {
-			assert interpretationModelPart instanceof BasicValuedModelPart;
-			final BasicValuedModelPart mapping = (BasicValuedModelPart) resultModelPart;
+			assert actualModelPart instanceof BasicValuedModelPart;
+			final BasicValuedModelPart mapping = (BasicValuedModelPart) actualModelPart;
 			final TableReference tableReference = tableGroup.resolveTableReference(
-					navigablePath.append( resultModelPart.getPartName() ),
+					navigablePath.append( actualModelPart.getPartName() ),
 					mapping.getContainingTableExpression()
 			);
 
@@ -3591,14 +3682,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			result = new BasicValuedPathInterpretation<>(
 					columnReference,
 					navigablePath,
-					(BasicValuedModelPart) interpretationModelPart,
+					mapping,
 					tableGroup
 			);
 		}
 
 		return withTreatRestriction( result, path );
 	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SqmPath
@@ -3756,15 +3846,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Object visitFkExpression(SqmFkExpression<?> fkExpression) {
-		final EntityValuedPathInterpretation<?> toOneInterpretation = (EntityValuedPathInterpretation<?>) visitEntityValuedPath( fkExpression.getToOnePath() );
-		assert toOneInterpretation.getExpressionType() instanceof ToOneAttributeMapping;
+		final SqmPath<?> lhs = fkExpression.getToOnePath().getLhs();
+		prepareReusablePath( lhs, () -> null );
+		final TableGroup tableGroup = getFromClauseIndex().findTableGroup( lhs.getNavigablePath() );
+		final ModelPart subPart = tableGroup.getModelPart()
+				.findSubPart( fkExpression.getToOnePath().getModel().getPathName(), null );
+		assert subPart instanceof ToOneAttributeMapping;
 
-		final ToOneAttributeMapping toOneMapping = (ToOneAttributeMapping) toOneInterpretation.getExpressionType();
+		final ToOneAttributeMapping toOneMapping = (ToOneAttributeMapping) subPart;
 		final ForeignKeyDescriptor fkDescriptor = toOneMapping.getForeignKeyDescriptor();
-		final TableGroup tableGroup = toOneInterpretation.getTableGroup();
-		final TableReference tableReference = tableGroup.resolveTableReference( fkDescriptor.getKeyTable() );
+		final TableReference tableReference = tableGroup.resolveTableReference( fkDescriptor.getTable( toOneMapping.getSideNature() ) );
 
-		final ModelPart fkKeyPart = fkDescriptor.getKeyPart();
+		final ModelPart fkKeyPart = fkDescriptor.getPart( toOneMapping.getSideNature() );
 		if ( fkKeyPart instanceof BasicValuedModelPart ) {
 			final BasicValuedModelPart basicFkPart = (BasicValuedModelPart) fkKeyPart;
 
@@ -4686,15 +4779,23 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final EntityValuedModelPart entityValuedModelPart = (EntityValuedModelPart) expressible;
 			final Object associationKey;
 			final ModelPart associationKeyPart;
-			if ( entityValuedModelPart instanceof Association ) {
-				final Association association = (Association) entityValuedModelPart;
+			if ( entityValuedModelPart instanceof EntityAssociationMapping ) {
+				final EntityAssociationMapping association = (EntityAssociationMapping) entityValuedModelPart;
 				final ForeignKeyDescriptor foreignKeyDescriptor = association.getForeignKeyDescriptor();
-				associationKey = foreignKeyDescriptor.getAssociationKeyFromSide(
-						literal.getLiteralValue(),
-						association.getSideNature().inverse(),
-						null
-				);
-				associationKeyPart = foreignKeyDescriptor.getPart( association.getSideNature() );
+				if ( association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
+					// If the association is the target, we must use the identifier of the EntityMappingType
+					associationKey = association.getAssociatedEntityMappingType().getIdentifierMapping()
+							.getIdentifier( literal.getLiteralValue() );
+					associationKeyPart = association.getAssociatedEntityMappingType().getIdentifierMapping();
+				}
+				else {
+					associationKey = foreignKeyDescriptor.getAssociationKeyFromSide(
+							literal.getLiteralValue(),
+							association.getSideNature().inverse(),
+							null
+					);
+					associationKeyPart = foreignKeyDescriptor.getPart( association.getSideNature() );
+				}
 			}
 			else {
 				final EntityIdentifierMapping identifierMapping = entityValuedModelPart.getEntityMappingType()
@@ -4974,11 +5075,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final MappingModelExpressible<?> inferredMapping = resolveInferredType();
 		if ( inferredMapping != null ) {
 			if ( inferredMapping instanceof PluralAttributeMapping ) {
-				final CollectionPart elementDescriptor = ( (PluralAttributeMapping) inferredMapping ).getElementDescriptor();
-				if ( elementDescriptor instanceof EntityCollectionPart ) {
-					return ( (EntityCollectionPart) elementDescriptor ).getEntityMappingType();
-				}
-				return elementDescriptor;
+				return ( (PluralAttributeMapping) inferredMapping ).getElementDescriptor();
 			}
 			else if ( !( inferredMapping instanceof JavaObjectType ) ) {
 				// Never report back the "object type" as inferred type and instead rely on the value type
@@ -5005,7 +5102,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( paramType == null ) {
 			final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
 			if ( inferredValueMapping != null ) {
-				return inferredValueMapping;
+				return resolveInferredValueMappingForParameter( inferredValueMapping );
 			}
 			// Default to the Object type
 			return basicType( Object.class );
@@ -5019,7 +5116,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final JdbcMapping inferredJdbcMapping = inferredValueMapping.getJdbcMappings().get( 0 );
 				// If the bind type has a different JDBC type, we prefer that
 				if ( paramJdbcMapping.getJdbcType() == inferredJdbcMapping.getJdbcType() ) {
-					return inferredValueMapping;
+					return resolveInferredValueMappingForParameter( inferredValueMapping );
 				}
 			}
 			return paramModelType;
@@ -5030,7 +5127,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// inferrable type and fallback to resolving the binding type
 			final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
 			if ( inferredValueMapping != null ) {
-				return inferredValueMapping;
+				return resolveInferredValueMappingForParameter( inferredValueMapping );
 			}
 		}
 		else if ( paramType instanceof EntityDomainType ) {
@@ -5039,7 +5136,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// otherwise this would default to binding the PK which might be wrong
 			final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
 			if ( inferredValueMapping != null ) {
-				return inferredValueMapping;
+				return resolveInferredValueMappingForParameter( inferredValueMapping );
 			}
 		}
 
@@ -5060,7 +5157,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				modelPart = getFromClauseAccess().getTableGroup( navigablePath ).getModelPart();
 			}
 			if ( modelPart instanceof PluralAttributeMapping ) {
-				return ( (PluralAttributeMapping) modelPart ).getElementDescriptor();
+				return resolveInferredValueMappingForParameter( ( (PluralAttributeMapping) modelPart ).getElementDescriptor() );
 			}
 			return modelPart;
 		}
@@ -5073,7 +5170,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// Try to infer the value mapping since the other side apparently is a path source
 			final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
 			if ( inferredValueMapping != null ) {
-				return inferredValueMapping;
+				return resolveInferredValueMappingForParameter( inferredValueMapping );
 			}
 			throw new NotYetImplementedFor6Exception( "Support for embedded-valued parameters not yet implemented" );
 		}
@@ -5082,21 +5179,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// Try to infer the value mapping since the other side apparently is a path source
 			final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
 			if ( inferredValueMapping != null ) {
-				return inferredValueMapping;
+				return resolveInferredValueMappingForParameter( inferredValueMapping );
 			}
 
-			final BasicType basicTypeForJavaType = getTypeConfiguration().getBasicTypeForJavaType(
+			final BasicType<?> basicTypeForJavaType = getTypeConfiguration().getBasicTypeForJavaType(
 					paramSqmType.getExpressibleJavaType().getJavaTypeClass()
 			);
 
 			if ( basicTypeForJavaType == null ) {
 				if ( paramSqmType instanceof EntityDomainType ) {
-					return getIdType( (EntityDomainType) paramSqmType );
+					return resolveEntityPersister( (EntityDomainType<?>) paramSqmType );
 				}
 				else if ( paramSqmType instanceof SingularAttribute ) {
-					final Type type = ( (SingularAttribute) paramSqmType ).getType();
+					final Type<?> type = ( (SingularAttribute<?, ?>) paramSqmType ).getType();
 					if ( type instanceof EntityDomainType ) {
-						return getIdType( (EntityDomainType) type );
+						return resolveEntityPersister( (EntityDomainType<?>) type );
 					}
 				}
 			}
@@ -5107,13 +5204,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		throw new ConversionException( "Could not determine ValueMapping for SqmParameter: " + sqmParameter );
 	}
 
-	private BasicType getIdType(EntityDomainType entityDomainType) {
-		final SimpleDomainType idType = entityDomainType.getIdType();
-		if ( idType != null ) {
-			return getTypeConfiguration().getBasicTypeForJavaType(
-					idType.getExpressibleJavaType().getJavaTypeClass() );
+	private MappingModelExpressible<?> resolveInferredValueMappingForParameter(MappingModelExpressible<?> inferredValueMapping) {
+		if ( inferredValueMapping instanceof PluralAttributeMapping ) {
+			// For parameters, we resolve to the element descriptor
+			inferredValueMapping = ( (PluralAttributeMapping) inferredValueMapping ).getElementDescriptor();
 		}
-		return null;
+		if ( inferredValueMapping instanceof EntityCollectionPart ) {
+			// For parameters, we resolve to the entity mapping type to bind the primary key
+			return ( (EntityCollectionPart) inferredValueMapping ).getAssociatedEntityMappingType();
+		}
+		return inferredValueMapping;
 	}
 
 	private void resolveSqmParameter(
@@ -6293,16 +6393,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) determineValueMapping(
 				pluralPath );
 
-		if ( pluralAttributeMapping.getElementDescriptor() instanceof EntityCollectionPart ) {
-			inferrableTypeAccessStack.push(
-					() -> ( (EntityCollectionPart) pluralAttributeMapping.getElementDescriptor() ).getKeyTargetMatchPart() );
-		}
-		else if ( pluralAttributeMapping.getElementDescriptor() instanceof EmbeddedCollectionPart ) {
-			inferrableTypeAccessStack.push(pluralAttributeMapping::getElementDescriptor);
-		}
-		else {
-			inferrableTypeAccessStack.push( () -> pluralAttributeMapping );
-		}
+		inferrableTypeAccessStack.push( () -> pluralAttributeMapping );
 
 		final Expression lhs;
 		try {

@@ -341,9 +341,14 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			SqlAstCreationContext creationContext) {
 		final TableReference lhsTableReference = targetSideTableGroup.resolveTableReference(
 				targetSideTableGroup.getNavigablePath(),
-				targetTable
+				targetTable,
+				false
 		);
-		final TableReference rhsTableKeyReference = keySideTableGroup.resolveTableReference( keyTable );
+		final TableReference rhsTableKeyReference = keySideTableGroup.resolveTableReference(
+				null,
+				keyTable,
+				false
+		);
 
 		return generateJoinPredicate(
 				lhsTableReference,
@@ -457,27 +462,6 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		}
 
 		return true;
-	}
-
-	protected TableReference getTableReference(TableGroup lhs, TableGroup tableGroup, String table) {
-		TableReference tableReference = lhs.getPrimaryTableReference().resolveTableReference( table );
-		if ( tableReference != null ) {
-			return tableReference;
-		}
-		tableReference = tableGroup.getPrimaryTableReference().resolveTableReference( table );
-		if ( tableReference != null ) {
-			return tableReference;
-		}
-
-		tableReference = lhs.resolveTableReference(
-				lhs.getNavigablePath().append( getNavigableRole().getNavigableName() ),
-				table
-		);
-		if ( tableReference != null ) {
-			return tableReference;
-		}
-
-		throw new IllegalStateException( "Could not resolve binding for table `" + table + "`" );
 	}
 
 	@Override

@@ -3209,7 +3209,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final NavigablePath parentParentPath = parentPath.getParentPath().getNavigablePath();
 				final TableGroup parentParentTableGroup = fromClauseIndex.findTableGroup( parentParentPath );
 				parentParentTableGroup.visitTableGroupJoins( (join) -> {
-					if ( join.getNavigablePath().equals( parentPath.getNavigablePath() ) ) {
+					if ( join.getNavigablePath().equals( parentPath.getNavigablePath() ) && join.isImplicit() ) {
 						join.setJoinType( SqlAstJoinType.INNER );
 					}
 				} );
@@ -3312,6 +3312,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							false,
 							this
 					);
+					tableGroupJoin.setImplicit();
 					// Implicit joins in the ON clause of attribute joins need to be added as nested table group joins
 					// We don't have to do that for entity joins etc. as these do not have an inherent dependency on the lhs.
 					// We can just add the implicit join before the currently processing join

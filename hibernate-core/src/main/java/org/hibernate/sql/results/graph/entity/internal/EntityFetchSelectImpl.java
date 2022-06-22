@@ -36,8 +36,6 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 			@SuppressWarnings("unused") DomainResultCreationState creationState) {
 		super( navigablePath, fetchedAttribute, fetchParent );
 
-		assert fetchedAttribute.getNotFoundAction() == null;
-
 		this.keyResult = keyResult;
 		this.selectByUniqueKey = selectByUniqueKey;
 	}

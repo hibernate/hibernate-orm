@@ -172,8 +172,8 @@ public class PostgreSQLDialect extends Dialect {
 			case BLOB:
 			case CLOB:
 			case NCLOB:
-				// use oid as the blob type on Postgres because
-				// the JDBC driver is rubbish
+				// use oid as the blob/clob type on Postgres because
+				// the JDBC driver doesn't allow using bytea/text through LOB APIs
 				return "oid";
 			// use bytea as the "long" binary type (that there is no
 			// real VARBINARY type in Postgres, so we always use this)

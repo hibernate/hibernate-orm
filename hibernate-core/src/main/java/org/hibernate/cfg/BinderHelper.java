@@ -135,6 +135,10 @@ public class BinderHelper {
 			String syntheticPropertyName =
 					"_" + associatedClass.getEntityName().replace('.', '_') +
 					"_" + columns[0].getPropertyName().replace('.', '_');
+			if ( inverse ) {
+				// Use a different name for inverse synthetic properties to avoid duplicate properties for self-referencing models
+				syntheticPropertyName += "_inverse";
+			}
 			//find properties associated to a certain column
 			Object columnOwner = findColumnOwner( ownerEntity, columns[0].getReferencedColumn(), context );
 			List<Property> properties = findPropertiesByColumns( columnOwner, columns, context );

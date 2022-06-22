@@ -2271,7 +2271,7 @@ public abstract class CollectionBinder {
 			}
 			String referencedPropertyName =
 					buildingContext.getMetadataCollector().getPropertyReferencedAssociation(
-							"inverse__" + referencedEntity.getEntityName(), mappedBy
+							referencedEntity.getEntityName(), mappedBy
 					);
 			if ( referencedPropertyName != null ) {
 				//TODO always a many to one?

@@ -50,6 +50,15 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValueMapping {
 
 	String getTargetTable();
 
+	default String getTable(Nature nature) {
+		if ( nature == Nature.KEY ) {
+			return getKeyTable();
+		}
+		else {
+			return getTargetTable();
+		}
+	}
+
 	ModelPart getKeyPart();
 
 	ModelPart getTargetPart();

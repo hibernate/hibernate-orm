@@ -601,6 +601,20 @@ public class EntityCollectionPart
 	}
 
 	@Override
+	public boolean isReferenceToPrimaryKey() {
+		return fkDescriptor.getSide( getSideNature().inverse() ).getModelPart() instanceof EntityIdentifierMapping;
+	}
+
+	@Override
+	public boolean isFkOptimizationAllowed() {
+		return !collectionDescriptor.isOneToMany();
+	}
+
+	public CollectionPersister getCollectionDescriptor() {
+		return collectionDescriptor;
+	}
+
+	@Override
 	public FetchStyle getStyle() {
 		return FetchStyle.JOIN;
 	}
@@ -710,7 +724,9 @@ public class EntityCollectionPart
 						return false;
 					}
 
-					return targetKeyPropertyNames.contains( relativePath );
+					// Empty relative path means the navigable paths are equal,
+					// in which case we allow resolving the parent table group
+					return relativePath.isEmpty() || targetKeyPropertyNames.contains( relativePath );
 				},
 				this,
 				explicitSourceAlias,

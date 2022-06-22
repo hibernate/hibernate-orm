@@ -1196,9 +1196,33 @@ public class ToOneAttributeMapping
 				|| fetchParent.getNavigablePath() instanceof TreatedNavigablePath
 				&& parentNavigablePath.equals( fetchParent.getNavigablePath().getRealParent() );
 
+		/*
+		 In case of @NotFound we are going to add fetch for the `fetchablePath` only if there is not already a `TableGroupJoin`.
 
-		if ( (hasNotFoundAction()
-				|| ( fetchTiming == FetchTiming.IMMEDIATE && selected )) ) {
+		 e.g. given :
+		 	public static class EntityA {
+				...
+
+			@ManyToOne(fetch = FetchType.LAZY)
+			@NotFound(action = NotFoundAction.IGNORE)
+			private EntityB entityB;
+		 	}
+
+			@Entity(name = "EntityB")
+			public static class EntityB {
+				...
+
+				private String name;
+			}
+
+		 and the HQL query :
+
+		 `Select a From EntityA a Left Join a.entityB b Where ( b.name IS NOT NULL )`
+
+		 having the left join we don't want to add an extra implicit join that will be translated into an SQL inner join (see HHH-15342)
+		*/
+		if ( ( ( hasNotFoundAction() && doesNotExistATableGroupJoin( parentTableGroup, fetchablePath ) )
+				|| ( fetchTiming == FetchTiming.IMMEDIATE && selected ) ) ) {
 			final TableGroup tableGroup = determineTableGroup(
 					fetchablePath,
 					fetchParent,
@@ -1308,6 +1332,15 @@ public class ToOneAttributeMapping
 		);
 	}
 
+	private boolean doesNotExistATableGroupJoin(TableGroup parentTableGroup, NavigablePath fetchablePath) {
+		for ( TableGroupJoin tableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
+			if ( tableGroupJoin.getNavigablePath().pathsMatch( fetchablePath ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	private TableGroup determineTableGroup(NavigablePath fetchablePath, FetchParent fetchParent, TableGroup parentTableGroup, String resultVariable, FromClauseAccess fromClauseAccess, DomainResultCreationState creationState) {
 		final TableGroup tableGroup;
 		if ( fetchParent instanceof EntityResultJoinedSubclassImpl
@@ -1321,6 +1354,10 @@ public class ToOneAttributeMapping
 					false,
 					creationState.getSqlAstCreationState()
 			);
+			if ( hasNotFoundAction() ) {
+				tableGroupJoin.setImplicit();
+			}
+
 			parentTableGroup.addTableGroupJoin( tableGroupJoin );
 			tableGroup = tableGroupJoin.getJoinedGroup();
 			fromClauseAccess.registerTableGroup( fetchablePath, tableGroup );
@@ -1338,6 +1375,9 @@ public class ToOneAttributeMapping
 								false,
 								creationState.getSqlAstCreationState()
 						);
+						if ( hasNotFoundAction() ) {
+							tableGroupJoin.setImplicit();
+						}
 						parentTableGroup.addTableGroupJoin( tableGroupJoin );
 						return tableGroupJoin.getJoinedGroup();
 					}

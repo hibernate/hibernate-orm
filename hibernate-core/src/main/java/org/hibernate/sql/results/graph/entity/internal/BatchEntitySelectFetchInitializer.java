@@ -6,7 +6,9 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -47,7 +49,7 @@ public class BatchEntitySelectFetchInitializer extends AbstractFetchParentAccess
 	protected Object entityInstance;
 	private EntityKey entityKey;
 
-	private Map<EntityKey, Object> toBatchLoad = new LinkedHashMap<>();
+	private Map<EntityKey, List<Object>> toBatchLoad = new HashMap<>();
 
 	private boolean isInitialized;
 
@@ -75,7 +77,6 @@ public class BatchEntitySelectFetchInitializer extends AbstractFetchParentAccess
 
 	@Override
 	public void resolveKey(RowProcessingState rowProcessingState) {
-
 
 	}
 
@@ -147,7 +148,13 @@ public class BatchEntitySelectFetchInitializer extends AbstractFetchParentAccess
 		}
 
 		persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
-		toBatchLoad.put( entityKey, parentAccess.getInitializedInstance() );
+		List<Object> objects = toBatchLoad.get( entityKey );
+		if ( objects == null ) {
+			objects = new ArrayList<>();
+			toBatchLoad.put( entityKey, objects );
+		}
+		objects.add( parentAccess.getInitializedInstance() );
+
 		isInitialized = true;
 	}
 
@@ -215,15 +222,17 @@ public class BatchEntitySelectFetchInitializer extends AbstractFetchParentAccess
 
 	@Override
 	public void endLoading(ExecutionContext context) {
+		final int propertyIndex = ( (UniqueKeyLoadable) ( (AbstractEntityInitializer) parentAccess ).getEntityDescriptor() )
+				.getPropertyIndex( referencedModelPart.getPartName() );
 		toBatchLoad.forEach(
-				(entityKey, parentInstance) -> {
+				(entityKey, parentInstances) -> {
 					final Object instance = context.getSession().internalLoad(
 							entityKey.getEntityName(),
 							entityKey.getIdentifier(),
 							true,
 							referencedModelPart.isInternalLoadNullable()
 					);
-					if ( instance != null ) {
+					for ( Object parentInstance : parentInstances ) {
 						( (AbstractEntityPersister) referencedModelPart.getDeclaringType() ).setPropertyValue(
 								parentInstance,
 								referencedModelPart.getPartName(),
@@ -232,8 +241,6 @@ public class BatchEntitySelectFetchInitializer extends AbstractFetchParentAccess
 						final EntityEntry entry = context.getSession()
 								.getPersistenceContext()
 								.getEntry( parentInstance );
-						final int propertyIndex = ( (UniqueKeyLoadable) ( (AbstractEntityInitializer) parentAccess ).getEntityDescriptor() ).getPropertyIndex(
-								referencedModelPart.getPartName() );
 						if ( entry != null ) {
 							final Object[] loadedState = entry.getLoadedState();
 							if ( loadedState != null ) {

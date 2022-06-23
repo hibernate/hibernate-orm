@@ -166,6 +166,18 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 	}
 
 	@Override
+	public boolean isWider(JavaType<?> javaType) {
+		switch ( javaType.getJavaType().getTypeName() ) {
+			case "java.sql.Date":
+			case "java.sql.Timestamp":
+			case "java.util.Calendar":
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	@Override
 	public Date next(
 			Date current,
 			Long length,

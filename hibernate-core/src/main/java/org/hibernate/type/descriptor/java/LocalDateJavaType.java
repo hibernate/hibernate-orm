@@ -157,4 +157,14 @@ public class LocalDateJavaType extends AbstractTemporalJavaType<LocalDate> {
 		throw unknownWrap( value.getClass() );
 	}
 
+	@Override
+	public boolean isWider(JavaType<?> javaType) {
+		switch ( javaType.getJavaType().getTypeName() ) {
+			case "java.sql.Date":
+				return true;
+			default:
+				return false;
+		}
+	}
+
 }

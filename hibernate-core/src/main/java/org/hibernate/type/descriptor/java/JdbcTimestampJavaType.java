@@ -176,6 +176,19 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 	}
 
 	@Override
+	public boolean isWider(JavaType<?> javaType) {
+		switch ( javaType.getJavaType().getTypeName() ) {
+			case "java.sql.Date":
+			case "java.sql.Timestamp":
+			case "java.util.Date":
+			case "java.util.Calendar":
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	@Override
 	public String toString(Date value) {
 		return LITERAL_FORMATTER.format( value.toInstant() );
 	}

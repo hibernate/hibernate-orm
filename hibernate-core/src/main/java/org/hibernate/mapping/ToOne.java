@@ -165,6 +165,9 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 	@Override
 	public int[] sortProperties() {
 		final PersistentClass entityBinding = getMetadata().getEntityBinding( getReferencedEntityName() );
+		if ( entityBinding == null ) {
+			return null;
+		}
 		final Value value;
 		if ( getReferencedPropertyName() == null ) {
 			value = entityBinding.getIdentifier();

@@ -4,15 +4,24 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
+
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.sql.Types;
 
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.NationalizationSupport;
+import org.hibernate.dialect.RowLockStrategy;
+import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.function.CastingConcatFunction;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.DerbyLpadEmulation;
 import org.hibernate.dialect.function.DerbyRpadEmulation;
-import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -21,6 +30,8 @@ import org.hibernate.dialect.pagination.DerbyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DerbySequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
@@ -30,16 +41,14 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
-import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
@@ -67,13 +76,26 @@ import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import java.sql.Types;
-
 import jakarta.persistence.TemporalType;
 
-import static org.hibernate.type.SqlTypes.*;
+import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BLOB;
+import static org.hibernate.type.SqlTypes.BOOLEAN;
+import static org.hibernate.type.SqlTypes.CHAR;
+import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.DECIMAL;
+import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
+import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
+import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
+import static org.hibernate.type.SqlTypes.NCHAR;
+import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.NUMERIC;
+import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.VARBINARY;
+import static org.hibernate.type.SqlTypes.VARCHAR;
 
 /**
  * A {@linkplain Dialect SQL dialect} for Apache Derby.
@@ -82,7 +104,7 @@ import static org.hibernate.type.SqlTypes.*;
  * @author Gavin King
  *
  */
-public class DerbyDialect extends Dialect {
+public class DerbyLegacyDialect extends Dialect {
 
 	// KNOWN LIMITATIONS:
 
@@ -95,25 +117,27 @@ public class DerbyDialect extends Dialect {
 	// * can't select a parameter unless wrapped
 	//   in a cast or function call
 
-	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 14, 2 );
+	private final LimitHandler limitHandler = getVersion().isBefore( 10, 5 )
+			? AbstractLimitHandler.NO_LIMIT
+			: new DerbyLimitHandler( getVersion().isSameOrAfter( 10, 6 ) );
 
-	private final LimitHandler limitHandler = new DerbyLimitHandler( true );
-
-	public DerbyDialect() {
-		this( MINIMUM_VERSION);
+	public DerbyLegacyDialect() {
+		this( DatabaseVersion.make( 10, 0 ) );
 	}
 
-	public DerbyDialect(DatabaseVersion version) {
+	public DerbyLegacyDialect(DatabaseVersion version) {
 		super(version);
 	}
 
-	public DerbyDialect(DialectResolutionInfo info) {
+	public DerbyLegacyDialect(DialectResolutionInfo info) {
 		super(info);
 	}
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
+			case BOOLEAN:
+				return getVersion().isBefore( 10, 7 ) ? "smallint" : super.columnType( sqlTypeCode );
 			case TINYINT:
 				//no tinyint
 				return "smallint";
@@ -206,6 +230,13 @@ public class DerbyDialect extends Dialect {
 	public int getDefaultDecimalPrecision() {
 		//this is the maximum allowed in Derby
 		return 31;
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return getVersion().isBefore( 10, 7 )
+				? Types.SMALLINT
+				: Types.BOOLEAN;
 	}
 
 	@Override
@@ -303,7 +334,7 @@ public class DerbyDialect extends Dialect {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new DerbySqlAstTranslator<>( sessionFactory, statement );
+				return new DerbyLegacySqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
 	}
@@ -429,22 +460,33 @@ public class DerbyDialect extends Dialect {
 
 	@Override
 	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
-		appender.appendSql( bool );
+		if ( getVersion().isBefore( 10, 7 ) ) {
+			appender.appendSql( bool ? '1' : '0' );
+		}
+		else {
+			appender.appendSql( bool );
+		}
 	}
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return DerbySequenceSupport.INSTANCE;
+		return getVersion().isBefore( 10, 6 )
+				? super.getSequenceSupport()
+				: DerbySequenceSupport.INSTANCE;
 	}
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select sys.sysschemas.schemaname as sequence_schema,sys.syssequences.* from sys.syssequences left join sys.sysschemas on sys.syssequences.schemaid=sys.sysschemas.schemaid";
+		return getVersion().isBefore( 10, 6 )
+				? null
+				: "select sys.sysschemas.schemaname as sequence_schema,sys.syssequences.* from sys.syssequences left join sys.sysschemas on sys.syssequences.schemaid=sys.sysschemas.schemaid";
 	}
 
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
-		return SequenceInformationExtractorDerbyDatabaseImpl.INSTANCE;
+		return getVersion().isBefore( 10, 6 )
+				? SequenceInformationExtractorNoOpImpl.INSTANCE
+				: SequenceInformationExtractorDerbyDatabaseImpl.INSTANCE;
 	}
 
 	@Override
@@ -558,7 +600,7 @@ public class DerbyDialect extends Dialect {
 	@Override
 	public boolean supportsOrderByInSubquery() {
 		// As of version 10.5 Derby supports OFFSET and FETCH as well as ORDER BY in subqueries
-		return true;
+		return getVersion().isSameOrAfter( 10, 5 );
 	}
 
 	@Override
@@ -566,6 +608,9 @@ public class DerbyDialect extends Dialect {
 		super.contributeTypes( typeContributions, serviceRegistry );
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
+		if ( getVersion().isBefore( 10, 7 ) ) {
+			jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, SmallIntJdbcType.INSTANCE );
+		}
 		jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( Types.TIMESTAMP_WITH_TIMEZONE, TimestampJdbcType.INSTANCE );
 
@@ -900,7 +945,7 @@ public class DerbyDialect extends Dialect {
 	@Override
 	public boolean supportsWindowFunctions() {
 		// It seems at least the row_number function is supported as of 10.4
-		return true;
+		return getVersion().isSameOrAfter( 10, 4 );
 	}
 
 	@Override

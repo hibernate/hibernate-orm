@@ -10,15 +10,13 @@ import java.util.List;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
+import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.Query;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -69,6 +67,7 @@ public class ILikeCriteriaTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB returned record number same as MySQL")
 	public void testLike(SessionFactoryScope scope) {
 		scope.inTransaction(
 			session -> {
@@ -90,6 +89,7 @@ public class ILikeCriteriaTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB returned record number same as MySQL")
 	public void testLikeEscape(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -121,6 +121,7 @@ public class ILikeCriteriaTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB returned record number same as MySQL")
 	public void testNotLike(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -142,6 +143,7 @@ public class ILikeCriteriaTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB returned record number same as MySQL")
 	public void testNotLikeEscape(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -152,6 +152,18 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 	}
 
 	@Override
+	public boolean isWider(JavaType<?> javaType) {
+		switch ( javaType.getJavaType().getTypeName() ) {
+			case "java.util.Date":
+			case "java.sql.Date":
+			case "java.sql.Timestamp":
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
 		return dialect.getDefaultTimestampPrecision();
 	}

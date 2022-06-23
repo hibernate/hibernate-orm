@@ -466,7 +466,7 @@ public class EntityCollectionPart
 		// to preserve the cardinality. Also, the OneToManyTableGroup has no reference to the parent table group
 		if ( !collectionDescriptor.isOneToMany() && targetKeyPropertyNames.contains( name ) ) {
 			if ( fkTargetModelPart instanceof ToOneAttributeMapping ) {
-				return fkTargetModelPart;
+				return ( (ToOneAttributeMapping) fkTargetModelPart ).findSubPart( name, targetType );
 			}
 			final ModelPart keyPart = fkDescriptor.getKeyPart();
 			if ( keyPart instanceof EmbeddableValuedModelPart && keyPart instanceof VirtualModelPart ) {

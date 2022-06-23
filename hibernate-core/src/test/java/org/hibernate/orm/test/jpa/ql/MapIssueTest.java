@@ -106,4 +106,19 @@ public class MapIssueTest {
 				}
 		);
 	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-15357")
+	public void testSelectMapKeyFk(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		statementInspector.clear();
+		scope.inTransaction(
+				s -> {
+					s.createQuery( "select key(c).id from MapOwner as o left join o.contents c" ).list();
+					statementInspector.assertExecutedCount( 1 );
+					// Assert that only the collection table and element table are joined
+					statementInspector.assertNumberOfJoins( 0, 2 );
+				}
+		);
+	}
 }

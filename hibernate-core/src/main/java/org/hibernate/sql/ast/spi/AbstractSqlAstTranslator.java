@@ -2230,7 +2230,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		final boolean renderNullPrecedence = nullPrecedence != null &&
 				!nullPrecedence.isDefaultOrdering( sortOrder, getDialect().getNullOrdering() );
-		if ( renderNullPrecedence && !getDialect().supportsNullPrecedence() ) {
+		final boolean supportsNullPrecedence = renderNullPrecedence && supportsNullPrecedence();
+		if ( renderNullPrecedence && !supportsNullPrecedence ) {
 			emulateSortSpecificationNullPrecedence( sortExpression, nullPrecedence );
 		}
 
@@ -2248,10 +2249,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( " desc" );
 		}
 
-		if ( renderNullPrecedence && getDialect().supportsNullPrecedence() ) {
+		if ( renderNullPrecedence && supportsNullPrecedence ) {
 			appendSql( " nulls " );
 			appendSql( nullPrecedence == NullPrecedence.LAST ? "last" : "first" );
 		}
+	}
+
+	protected boolean supportsNullPrecedence() {
+		return getDialect().supportsNullPrecedence();
 	}
 
 	protected void emulateSortSpecificationNullPrecedence(Expression sortExpression, NullPrecedence nullPrecedence) {

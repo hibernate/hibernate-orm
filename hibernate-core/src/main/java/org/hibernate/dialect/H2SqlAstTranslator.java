@@ -12,6 +12,7 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -196,6 +197,12 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
 		// Just a guess
 		return getDialect().getVersion().isSameOrAfter( 1, 4, 197 );
+	}
+
+	@Override
+	protected boolean supportsNullPrecedence() {
+		// Support for nulls clause in listagg was added in 2.0
+		return getClauseStack().getCurrent() != Clause.WITHIN_GROUP || getDialect().getVersion().isSameOrAfter( 2 );
 	}
 
 	@Override

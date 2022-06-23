@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -35,9 +35,9 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  *
  * @author Christian Beikov
  */
-public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
-	public DerbySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+	public DerbyLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
 	}
 
@@ -268,12 +268,12 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	private boolean supportsParameterOffsetFetchExpression() {
-		return true;
+		return getDialect().getVersion().isSameOrAfter( 10, 6 );
 	}
 
 	private boolean supportsOffsetFetchClause() {
 		// Before version 10.5 Derby didn't support OFFSET and FETCH
-		return true;
+		return getDialect().getVersion().isSameOrAfter( 10, 5 );
 	}
 
 	@Override

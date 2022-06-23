@@ -516,7 +516,7 @@ public class DB2Dialect extends Dialect {
 		return selectNullString(sqlType);
 	}
 
-	static String selectNullString(int sqlType) {
+	public static String selectNullString(int sqlType) {
 		String literal;
 		switch ( sqlType ) {
 			case Types.VARCHAR:

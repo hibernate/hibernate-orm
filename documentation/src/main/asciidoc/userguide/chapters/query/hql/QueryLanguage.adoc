@@ -1494,8 +1494,27 @@ There are:
 - _explicit joins_, declared within the `from` clause using the keyword ``join``,
 - and _implicit joins_, which don't need to be declared in the `from` clause.
 
+[[hql-root-join]]
+==== Explicit root joins
+
+An explicit root join works just like an ANSI-style join in SQL.
+
+[[hql-explicit-root-join-example]]
+//.Explicit root join examples
+====
+[source, SQL, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-explicit-root-join-example]
+----
+====
+
+[NOTE]
+====
+This looks nice and familiar, but it's _not_ the most common sort of join in HQL or JPQL.
+====
+
 [[hql-explicit-join]]
-==== Explicit joins
+==== Explicit association joins
 
 An explicit association join is declared using the `join` keyword.
 An explicit join may be either:
@@ -1537,7 +1556,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-explicit-outer-join-example]
 For further information about collection-valued association references, see <<hql-collection-valued-associations>>.
 
 [[hql-explicit-join-conditions]]
-==== Explicit joins with join conditions
+==== Explicit association joins with join conditions
 
 The `with` or `on` clause allows explicit qualification of the join conditions.
 
@@ -1666,7 +1685,7 @@ But emulation is neither very efficient, nor does it support all possible query 
 ====
 
 [[hql-implicit-join]]
-==== Implicit joins (path expressions)
+==== Implicit association joins (path expressions)
 
 It's not necessary to explicitly `join` every entity that occurs in a query.
 Instead, entity associations may be _navigated_, just like in Java:

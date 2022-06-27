@@ -100,8 +100,6 @@ import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
-import static java.util.Objects.requireNonNullElse;
-
 /**
  * @author Steve Ebersole
  */
@@ -1221,9 +1219,8 @@ public class ToOneAttributeMapping
 
 		 having the left join we don't want to add an extra implicit join that will be translated into an SQL inner join (see HHH-15342)
 		*/
-		if ( ( ( hasNotFoundAction() && doesNotExistATableGroupJoin( parentTableGroup, fetchablePath ) )
-				|| ( fetchTiming == FetchTiming.IMMEDIATE && selected ) ) ) {
-			final TableGroup tableGroup = determineTableGroup(
+		if ( fetchTiming == FetchTiming.IMMEDIATE && selected || hasNotFoundAction() ) {
+			final TableGroup tableGroup = determineTableGroupForFetch(
 					fetchablePath,
 					fetchParent,
 					parentTableGroup,
@@ -1332,58 +1329,66 @@ public class ToOneAttributeMapping
 		);
 	}
 
-	private boolean doesNotExistATableGroupJoin(TableGroup parentTableGroup, NavigablePath fetchablePath) {
-		for ( TableGroupJoin tableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
-			if ( tableGroupJoin.getNavigablePath().pathsMatch( fetchablePath ) ) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	private TableGroup determineTableGroup(NavigablePath fetchablePath, FetchParent fetchParent, TableGroup parentTableGroup, String resultVariable, FromClauseAccess fromClauseAccess, DomainResultCreationState creationState) {
-		final TableGroup tableGroup;
+	private TableGroup determineTableGroupForFetch(
+			NavigablePath fetchablePath,
+			FetchParent fetchParent,
+			TableGroup parentTableGroup,
+			String resultVariable,
+			FromClauseAccess fromClauseAccess,
+			DomainResultCreationState creationState) {
+		final SqlAstJoinType joinType;
 		if ( fetchParent instanceof EntityResultJoinedSubclassImpl
 				&& ( (EntityPersister) fetchParent.getReferencedModePart() ).findDeclaredAttributeMapping( getPartName() ) == null ) {
-			final TableGroupJoin tableGroupJoin = createTableGroupJoin(
-					fetchablePath,
-					parentTableGroup,
-					resultVariable,
-					getJoinType( fetchablePath, parentTableGroup ),
-					true,
-					false,
-					creationState.getSqlAstCreationState()
-			);
-			if ( hasNotFoundAction() ) {
-				tableGroupJoin.setImplicit();
-			}
-
-			parentTableGroup.addTableGroupJoin( tableGroupJoin );
-			tableGroup = tableGroupJoin.getJoinedGroup();
-			fromClauseAccess.registerTableGroup( fetchablePath, tableGroup );
+			joinType = getJoinTypeForFetch( fetchablePath, parentTableGroup );
 		}
 		else {
-			tableGroup = fromClauseAccess.resolveTableGroup(
-					fetchablePath,
-					np -> {
-						final TableGroupJoin tableGroupJoin = createTableGroupJoin(
-								fetchablePath,
-								parentTableGroup,
-								resultVariable,
-								getDefaultSqlAstJoinType( parentTableGroup ),
-								true,
-								false,
-								creationState.getSqlAstCreationState()
-						);
-						if ( hasNotFoundAction() ) {
-							tableGroupJoin.setImplicit();
-						}
-						parentTableGroup.addTableGroupJoin( tableGroupJoin );
-						return tableGroupJoin.getJoinedGroup();
-					}
-			);
+			joinType = null;
 		}
-		return tableGroup;
+		return fromClauseAccess.resolveTableGroup(
+				fetchablePath,
+				np -> {
+					// Try to reuse an existing join if possible,
+					// and note that we prefer reusing an inner over a left join,
+					// because a left join might stay uninitialized if unused
+					TableGroup leftJoined = null;
+					for ( TableGroupJoin tableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
+						switch ( tableGroupJoin.getJoinType() ) {
+							case INNER:
+								// If this is an inner joins, it's fine if the paths match
+								// Since this inner join would filter the parent row anyway,
+								// it makes no sense to add another left join for this association
+								if ( tableGroupJoin.getNavigablePath().pathsMatch( np ) ) {
+									return tableGroupJoin.getJoinedGroup();
+								}
+								break;
+							case LEFT:
+								// For an existing left join on the other hand which is row preserving,
+								// it is important to check if the predicate has user defined bits in it
+								// and only if it doesn't, we can reuse the join
+								if ( tableGroupJoin.getNavigablePath().pathsMatch( np )
+										&& isSimpleJoinPredicate( tableGroupJoin.getPredicate() ) ) {
+									leftJoined = tableGroupJoin.getJoinedGroup();
+								}
+						}
+					}
+
+					if ( leftJoined != null ) {
+						return leftJoined;
+					}
+
+					final TableGroupJoin tableGroupJoin = createTableGroupJoin(
+							fetchablePath,
+							parentTableGroup,
+							resultVariable,
+							joinType,
+							true,
+							false,
+							creationState.getSqlAstCreationState()
+					);
+					parentTableGroup.addTableGroupJoin( tableGroupJoin );
+					return tableGroupJoin.getJoinedGroup();
+				}
+		);
 	}
 
 	private boolean isSelectByUniqueKey(ForeignKeyDescriptor.Nature side) {
@@ -1531,7 +1536,9 @@ public class ToOneAttributeMapping
 
 	@Override
 	public boolean isSimpleJoinPredicate(Predicate predicate) {
-		return foreignKeyDescriptor.isSimpleJoinPredicate( predicate );
+		// Since the table group is lazy, the initial predicate is null,
+		// but if we get null here, we can safely assume this will be a simple join predicate
+		return predicate == null || foreignKeyDescriptor.isSimpleJoinPredicate( predicate );
 	}
 
 	@Override
@@ -1555,7 +1562,18 @@ public class ToOneAttributeMapping
 		// This is vital for the map key property check that comes next
 		assert !( lhs instanceof PluralTableGroup );
 
-		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
+		final SqlAstJoinType joinType;
+		if ( requestedJoinType == null ) {
+			if ( fetched ) {
+				joinType = getDefaultSqlAstJoinType( lhs );
+			}
+			else {
+				joinType = SqlAstJoinType.INNER;
+			}
+		}
+		else {
+			joinType = requestedJoinType;
+		}
 
 		// If a parent is a collection part, there is no custom predicate and the join is INNER or LEFT
 		// we check if this attribute is the map key property to reuse the existing index table group
@@ -1800,13 +1818,13 @@ public class ToOneAttributeMapping
 		}
 	}
 
-	private SqlAstJoinType getJoinType(NavigablePath navigablePath, TableGroup tableGroup) {
+	private SqlAstJoinType getJoinTypeForFetch(NavigablePath navigablePath, TableGroup tableGroup) {
 		for ( TableGroupJoin tableGroupJoin : tableGroup.getTableGroupJoins() ) {
 			if ( tableGroupJoin.getNavigablePath().equals( navigablePath ) ) {
 				return tableGroupJoin.getJoinType();
 			}
 		}
-		return getDefaultSqlAstJoinType( tableGroup );
+		return null;
 	}
 
 	public TableGroup createTableGroupInternal(

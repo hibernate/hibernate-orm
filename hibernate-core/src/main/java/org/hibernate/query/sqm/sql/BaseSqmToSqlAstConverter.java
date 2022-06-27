@@ -3312,7 +3312,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							false,
 							this
 					);
-					tableGroupJoin.setImplicit();
 					// Implicit joins in the ON clause of attribute joins need to be added as nested table group joins
 					// We don't have to do that for entity joins etc. as these do not have an inherent dependency on the lhs.
 					// We can just add the implicit join before the currently processing join
@@ -6987,7 +6986,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 									fetchablePath,
 									lhs,
 									alias,
-									tableGroupJoinProducer.getDefaultSqlAstJoinType( lhs ),
+									null,
 									true,
 									false,
 									BaseSqmToSqlAstConverter.this

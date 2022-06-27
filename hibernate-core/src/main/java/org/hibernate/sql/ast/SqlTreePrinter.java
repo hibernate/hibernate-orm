@@ -139,11 +139,7 @@ public class SqlTreePrinter {
 	}
 
 	private void logTableGroupDetails(TableGroup tableGroup) {
-		if ( tableGroup instanceof LazyTableGroup ) {
-			TableGroup underlyingTableGroup = ( (LazyTableGroup) tableGroup ).getUnderlyingTableGroup();
-			if ( underlyingTableGroup != null ) {
-				logTableGroupDetails( underlyingTableGroup );
-			}
+		if ( !tableGroup.isInitialized() ) {
 			return;
 		}
 		if ( tableGroup.getPrimaryTableReference() instanceof NamedTableReference ) {

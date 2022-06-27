@@ -11,8 +11,8 @@ import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.Tuple;
 
-import org.hibernate.dialect.TiDBDialect;
-import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterAll;
@@ -248,7 +248,7 @@ public class OuterJoinTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB db does not support subqueries for ON condition")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	public void testJoinOrderWithRightJoinWithInnerImplicitJoins(EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {
 			List<Tuple> resultList = em.createQuery(
@@ -378,7 +378,7 @@ public class OuterJoinTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB db does not support subqueries for ON condition")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	public void testSubQueryInOnClause(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				em -> {
@@ -395,7 +395,7 @@ public class OuterJoinTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB db does not support subqueries for ON condition")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	public void testSubQueryCorrelationInOnClause(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				em -> {

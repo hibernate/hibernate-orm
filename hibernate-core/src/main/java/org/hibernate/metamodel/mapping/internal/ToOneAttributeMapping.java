@@ -599,7 +599,7 @@ public class ToOneAttributeMapping
 		return null;
 	}
 
-	static void addPrefixedPropertyNames(
+	public static void addPrefixedPropertyNames(
 			Set<String> targetKeyPropertyNames,
 			String prefix,
 			Type type,

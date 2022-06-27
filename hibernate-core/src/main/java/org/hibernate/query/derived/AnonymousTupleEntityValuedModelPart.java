@@ -8,7 +8,10 @@ package org.hibernate.query.derived;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -20,12 +23,14 @@ import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -42,11 +47,14 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.from.LazyTableGroup;
+import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
@@ -70,6 +78,7 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 	private final DomainType<?> domainType;
 	private final String componentName;
 	private final EntityValuedModelPart delegate;
+	private final Set<String> targetKeyPropertyNames;
 
 	public AnonymousTupleEntityValuedModelPart(
 			EntityIdentifierMapping identifierMapping,
@@ -80,6 +89,17 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 		this.domainType = domainType;
 		this.componentName = componentName;
 		this.delegate = delegate;
+		final EntityPersister persister = ((EntityMappingType) delegate.getPartMappingType())
+				.getEntityPersister();
+		final Set<String> targetKeyPropertyNames = new HashSet<>();
+		targetKeyPropertyNames.add( EntityIdentifierMapping.ROLE_LOCAL_NAME );
+		ToOneAttributeMapping.addPrefixedPropertyNames(
+				targetKeyPropertyNames,
+				persister.getIdentifierPropertyName(),
+				persister.getIdentifierType(),
+				persister.getFactory()
+		);
+		this.targetKeyPropertyNames = targetKeyPropertyNames;
 	}
 
 	@Override
@@ -206,41 +226,72 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 			SqlAstCreationContext creationContext) {
 		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
 		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
-		// Need to create a root table group and join predicate separately instead of a table group join directly,
-		// because the column names on the "key-side" have different names
-		final TableGroup tableGroup = ( (TableGroupJoinProducer) delegate ).createRootTableGroupJoin(
+
+		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
+		final boolean canUseInnerJoin = joinType == SqlAstJoinType.INNER || lhs.canUseInnerJoins();
+		final EntityPersister entityPersister = delegate.getEntityMappingType().getEntityPersister();
+		final LazyTableGroup lazyTableGroup = new LazyTableGroup(
+				canUseInnerJoin,
 				navigablePath,
-				lhs,
-				explicitSourceAlias,
-				joinType,
 				fetched,
-				null,
-				aliasBaseGenerator,
-				sqlExpressionResolver,
-				fromClauseAccess,
-				creationContext
+				() -> createTableGroupInternal(
+						canUseInnerJoin,
+						navigablePath,
+						fetched,
+						null,
+						sqlAliasBase,
+						sqlExpressionResolver,
+						creationContext
+				),
+				(np, tableExpression) -> {
+					if ( !tableExpression.isEmpty() && !entityPersister.containsTableReference( tableExpression ) ) {
+						return false;
+					}
+					if ( navigablePath.equals( np.getParent() ) ) {
+						return targetKeyPropertyNames.contains( np.getLocalName() );
+					}
+
+					final String relativePath = np.relativize( navigablePath );
+					if ( relativePath == null ) {
+						return false;
+					}
+
+					// Empty relative path means the navigable paths are equal,
+					// in which case we allow resolving the parent table group
+					return relativePath.isEmpty() || targetKeyPropertyNames.contains( relativePath );
+				},
+				this,
+				explicitSourceAlias,
+				sqlAliasBase,
+				creationContext.getSessionFactory(),
+				lhs
 		);
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
-				tableGroup.getNavigablePath(),
+				lazyTableGroup.getNavigablePath(),
 				joinType,
-				tableGroup,
+				lazyTableGroup,
 				null
 		);
 
+		// -----------------
+		// Collect the selectable mappings for the FK key side and target side
+		// As we will "resolve" the derived column references for these mappings
+		// --------------
+
+		final EntityAssociationMapping associationMapping = (EntityAssociationMapping) delegate;
 		final List<SelectableMapping> keyMappings;
 		final List<SelectableMapping> targetMappings;
-		if ( delegate instanceof ToOneAttributeMapping ) {
-			final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) this.delegate;
-			final ModelPart targetJoinModelPart = toOneAttributeMapping.getForeignKeyDescriptor()
-					.getPart( toOneAttributeMapping.getSideNature().inverse() );
+		if ( associationMapping.isReferenceToPrimaryKey() && associationMapping.getSideNature() == ForeignKeyDescriptor.Nature.KEY ) {
+			final ModelPart targetJoinModelPart = associationMapping.getForeignKeyDescriptor()
+					.getPart( associationMapping.getSideNature().inverse() );
 			targetMappings = new ArrayList<>( targetJoinModelPart.getJdbcTypeCount() );
 			targetJoinModelPart.forEachSelectable(
 					0,
 					(i, selectableMapping) -> targetMappings.add( selectableMapping )
 			);
 			keyMappings = new ArrayList<>( targetJoinModelPart.getJdbcTypeCount() );
-			toOneAttributeMapping.getForeignKeyDescriptor()
-					.getPart( toOneAttributeMapping.getSideNature() )
+			associationMapping.getForeignKeyDescriptor()
+					.getPart( associationMapping.getSideNature() )
 					.forEachSelectable(
 							0,
 							(i, selectableMapping) -> keyMappings.add( selectableMapping )
@@ -256,42 +307,111 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 			keyMappings = targetMappings;
 		}
 		final TableReference tableReference = lhs.getPrimaryTableReference();
+		final List<ColumnReference> keyColumnReferences = new ArrayList<>( this.identifierMapping.getJdbcTypeCount() );
 		this.identifierMapping.forEachSelectable(
 				(i, selectableMapping) -> {
-					final SelectableMapping targetMapping = targetMappings.get( i );
-					final TableReference targetTableReference = tableGroup.resolveTableReference(
-							null,
-							targetMapping.getContainingTableExpression(),
-							false
-					);
-					tableGroupJoin.applyPredicate(
-							new ComparisonPredicate(
-									// It is important to resolve the sql expression here,
-									// as this selectableMapping is the "derived" one.
-									// We want to register the expression under the key of the original mapping
-									// which leads to this expression being used for a possible domain result
-									sqlExpressionResolver.resolveSqlExpression(
-											SqlExpressionResolver.createColumnReferenceKey(
-													tableReference,
-													keyMappings.get( i ).getSelectionExpression()
-											),
-											state -> new ColumnReference(
-													tableReference,
-													selectableMapping,
-													sessionFactory
-											)
+					// It is important to resolve the sql expression here,
+					// as this selectableMapping is the "derived" one.
+					// We want to register the expression under the key of the original mapping
+					// which leads to this expression being used for a possible domain result
+					keyColumnReferences.add(
+							(ColumnReference) sqlExpressionResolver.resolveSqlExpression(
+									SqlExpressionResolver.createColumnReferenceKey(
+											tableReference,
+											keyMappings.get( i ).getSelectionExpression()
 									),
-									ComparisonOperator.EQUAL,
-									new ColumnReference(
-											targetTableReference,
-											targetMapping,
+									state -> new ColumnReference(
+											tableReference,
+											selectableMapping,
 											sessionFactory
 									)
 							)
 					);
 				}
 		);
+		if ( keyMappings != targetMappings ) {
+			this.identifierMapping.forEachSelectable(
+					(i, selectableMapping) -> {
+						// It is important to resolve the sql expression here,
+						// as this selectableMapping is the "derived" one.
+						// We want to register the expression under the key of the original mapping
+						// which leads to this expression being used for a possible domain result
+						sqlExpressionResolver.resolveSqlExpression(
+								SqlExpressionResolver.createColumnReferenceKey(
+										tableReference,
+										targetMappings.get( i ).getSelectionExpression()
+								),
+								state -> new ColumnReference(
+										tableReference,
+										selectableMapping,
+										sessionFactory
+								)
+						);
+					}
+			);
+		}
+		lazyTableGroup.setTableGroupInitializerCallback(
+				tg -> {
+					this.identifierMapping.forEachSelectable(
+							(i, selectableMapping) -> {
+								final SelectableMapping targetMapping = targetMappings.get( i );
+								final TableReference targetTableReference = tg.resolveTableReference(
+										null,
+										targetMapping.getContainingTableExpression(),
+										false
+								);
+								tableGroupJoin.applyPredicate(
+										new ComparisonPredicate(
+												keyColumnReferences.get( i ),
+												ComparisonOperator.EQUAL,
+												new ColumnReference(
+														targetTableReference,
+														targetMapping,
+														sessionFactory
+												)
+										)
+								);
+							}
+					);
+				}
+		);
 		return tableGroupJoin;
+	}
+
+	public TableGroup createTableGroupInternal(
+			boolean canUseInnerJoins,
+			NavigablePath navigablePath,
+			boolean fetched,
+			String sourceAlias,
+			final SqlAliasBase sqlAliasBase,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		final EntityMappingType entityMappingType = delegate.getEntityMappingType();
+		final TableReference primaryTableReference = entityMappingType.createPrimaryTableReference(
+				sqlAliasBase,
+				sqlExpressionResolver,
+				creationContext
+		);
+
+		return new StandardTableGroup(
+				canUseInnerJoins,
+				navigablePath,
+				this,
+				fetched,
+				sourceAlias,
+				primaryTableReference,
+				true,
+				sqlAliasBase,
+				entityMappingType::containsTableReference,
+				(tableExpression, tg) -> entityMappingType.createTableReferenceJoin(
+						tableExpression,
+						sqlAliasBase,
+						primaryTableReference,
+						sqlExpressionResolver,
+						creationContext
+				),
+				creationContext.getSessionFactory()
+		);
 	}
 
 	@Override
@@ -436,7 +556,7 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 
 	@Override
 	public EntityIdentifierMapping getIdentifierMapping() {
-		return identifierMapping;
+		return delegate.getEntityMappingType().getIdentifierMapping();
 	}
 
 	@Override

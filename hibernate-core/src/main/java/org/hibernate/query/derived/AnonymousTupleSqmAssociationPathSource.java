@@ -25,17 +25,17 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Christian Beikov
  */
 @Incubating
-public class AnonymousTuplePersistentSingularAttribute<O, J> extends AnonymousTupleSqmPathSource<J> implements
+public class AnonymousTupleSqmAssociationPathSource<O, J> extends AnonymousTupleSqmPathSource<J> implements
 		SingularPersistentAttribute<O, J> {
 
-	private final SingularPersistentAttribute<O, J> delegate;
+	private final SimpleDomainType<J> domainType;
 
-	public AnonymousTuplePersistentSingularAttribute(
+	public AnonymousTupleSqmAssociationPathSource(
 			String localPathName,
 			SqmPath<J> path,
-			SingularPersistentAttribute<O, J> delegate) {
+			SimpleDomainType<J> domainType) {
 		super( localPathName, path );
-		this.delegate = delegate;
+		this.domainType = domainType;
 	}
 
 	@Override
@@ -57,66 +57,66 @@ public class AnonymousTuplePersistentSingularAttribute<O, J> extends AnonymousTu
 
 	@Override
 	public SimpleDomainType<J> getType() {
-		return delegate.getType();
+		return domainType;
 	}
 
 	@Override
 	public ManagedDomainType<O> getDeclaringType() {
-		return delegate.getDeclaringType();
+		return null;
 	}
 
 	@Override
 	public boolean isId() {
-		return delegate.isId();
+		return false;
 	}
 
 	@Override
 	public boolean isVersion() {
-		return delegate.isVersion();
+		return false;
 	}
 
 	@Override
 	public boolean isOptional() {
-		return delegate.isOptional();
+		return true;
 	}
 
 	@Override
 	public JavaType<J> getAttributeJavaType() {
-		return delegate.getAttributeJavaType();
+		return domainType.getExpressibleJavaType();
 	}
 
 	@Override
 	public AttributeClassification getAttributeClassification() {
-		return delegate.getAttributeClassification();
+		return AttributeClassification.MANY_TO_ONE;
 	}
 
 	@Override
 	public SimpleDomainType<?> getKeyGraphType() {
-		return delegate.getKeyGraphType();
+		return domainType;
 	}
 
 	@Override
 	public String getName() {
-		return delegate.getName();
+		return getPathName();
 	}
 
 	@Override
 	public PersistentAttributeType getPersistentAttributeType() {
-		return delegate.getPersistentAttributeType();
+		return PersistentAttributeType.MANY_TO_ONE;
 	}
 
 	@Override
 	public Member getJavaMember() {
-		return delegate.getJavaMember();
+		return null;
 	}
 
 	@Override
 	public boolean isAssociation() {
-		return delegate.isAssociation();
+		return true;
 	}
 
 	@Override
 	public boolean isCollection() {
-		return delegate.isCollection();
+		return false;
 	}
 }

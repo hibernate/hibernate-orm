@@ -10,7 +10,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaDerivedJoin;
@@ -22,7 +21,6 @@ import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.contacts.Address;
 import org.hibernate.testing.orm.domain.contacts.Contact;
@@ -84,7 +82,7 @@ public class SubQueryInFromTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB db does not support subqueries for ON condition")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class)
 	public void testBasic(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -171,7 +169,7 @@ public class SubQueryInFromTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB db does not support subqueries for ON condition")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class)
 	public void testEmbedded(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -254,7 +252,7 @@ public class SubQueryInFromTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB db does not support subqueries for ON condition")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class)
 	public void testEntity(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -300,7 +298,7 @@ public class SubQueryInFromTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB db does not support subqueries for ON condition")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class)
 	public void testEntityJoin(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -348,7 +346,7 @@ public class SubQueryInFromTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB db does not support subqueries for ON condition")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class)
 	public void testEntityImplicit(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -436,6 +434,7 @@ public class SubQueryInFromTests {
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
+			session.createQuery( "update Contact set alternativeContact = null" ).executeUpdate();
 			session.createQuery( "delete Contact" ).executeUpdate();
 		} );
 	}

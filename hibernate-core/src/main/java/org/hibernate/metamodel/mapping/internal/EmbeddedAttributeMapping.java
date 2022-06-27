@@ -256,7 +256,7 @@ public class EmbeddedAttributeMapping
 		final TableReference defaultTableReference = tableGroup.resolveTableReference( navigablePath, getContainingTableExpression() );
 		getEmbeddableTypeDescriptor().forEachSelectable(
 				(columnIndex, selection) -> {
-					final TableReference tableReference = defaultTableReference.resolveTableReference( selection.getContainingTableExpression() ) != null
+					final TableReference tableReference = getContainingTableExpression().equals( selection.getContainingTableExpression() )
 							? defaultTableReference
 							: tableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() );
 					final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(

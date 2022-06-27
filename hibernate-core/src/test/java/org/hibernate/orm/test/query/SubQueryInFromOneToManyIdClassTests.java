@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.query;
 
+import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -17,7 +18,6 @@ import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -29,10 +29,11 @@ import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 import jakarta.persistence.Tuple;
@@ -45,12 +46,11 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 /**
  * @author Christian Beikov
  */
-@DomainModel(annotatedClasses = SubQueryInFromEmbeddedIdTests.Contact.class)
+@DomainModel(annotatedClasses = SubQueryInFromOneToManyIdClassTests.Contact.class)
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class)
-public class SubQueryInFromEmbeddedIdTests {
+public class SubQueryInFromOneToManyIdClassTests {
 
 	@Test
 	public void testEntity(SessionFactoryScope scope) {
@@ -61,26 +61,26 @@ public class SubQueryInFromEmbeddedIdTests {
 					final JpaRoot<Contact> root = cq.from( Contact.class );
 					final JpaSubQuery<Tuple> subquery = cq.subquery( Tuple.class );
 					final Root<Contact> correlatedRoot = subquery.correlate( root );
-					final Join<Object, Object> alternativeContact = correlatedRoot.join( "alternativeContact" );
+					final Join<Object, Object> alternativeContacts = correlatedRoot.join( "alternativeContacts" );
 
-					subquery.multiselect( alternativeContact.alias( "contact" ) );
-					subquery.orderBy( cb.asc( alternativeContact.get( "name" ).get( "first" ) ) );
+					subquery.multiselect( alternativeContacts.alias( "contact" ) );
+					subquery.orderBy( cb.asc( alternativeContacts.get( "name" ).get( "first" ) ) );
 					subquery.fetch( 1 );
 
 					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, SqmJoinType.LEFT );
 
-					cq.multiselect( root.get( "name" ), a.get( "contact" ).get( "id" ) );
-					cq.orderBy( cb.asc( root.get( "id" ) ) );
+					cq.multiselect( root.get( "name" ), a.get( "contact" ).get( "id1" ), a.get( "contact" ).get( "id2" ) );
+					cq.orderBy( cb.asc( root.get( "id1" ) ) );
 
 					final QueryImplementor<Tuple> query = session.createQuery(
-							"select c.name, a.contact.id from Contact c " +
+							"select c.name, a.contact.id1, a.contact.id2 from Contact c " +
 									"left join lateral (" +
 									"select alt as contact " +
-									"from c.alternativeContact alt " +
+									"from c.alternativeContacts alt " +
 									"order by alt.name.first " +
 									"limit 1" +
 									") a " +
-									"order by c.id",
+									"order by c.id1",
 							Tuple.class
 					);
 					verifySame(
@@ -89,13 +89,14 @@ public class SubQueryInFromEmbeddedIdTests {
 							list -> {
 								assertEquals( 3, list.size() );
 								assertEquals( "John", list.get( 0 ).get( 0, Contact.Name.class ).getFirst() );
-								assertEquals( 2, list.get( 0 ).get( 1, Contact.ContactId.class ).getId1() );
-								assertEquals( 2, list.get( 0 ).get( 1, Contact.ContactId.class ).getId2() );
+								assertEquals( 2, list.get( 0 ).get( 1, Integer.class ) );
+								assertEquals( 2, list.get( 0 ).get( 2, Integer.class ) );
 								assertEquals( "Jane", list.get( 1 ).get( 0, Contact.Name.class ).getFirst() );
-								assertEquals( 3, list.get( 1 ).get( 1, Contact.ContactId.class ).getId1() );
-								assertEquals( 3, list.get( 1 ).get( 1, Contact.ContactId.class ).getId2() );
+								assertEquals( 3, list.get( 1 ).get( 1, Integer.class ) );
+								assertEquals( 3, list.get( 1 ).get( 2, Integer.class ) );
 								assertEquals( "Granny", list.get( 2 ).get( 0, Contact.Name.class ).getFirst() );
-								assertNull( list.get( 2 ).get( 1, Contact.ContactId.class ) );
+								assertNull( list.get( 2 ).get( 1, Integer.class ) );
+								assertNull( list.get( 2 ).get( 2, Integer.class ) );
 							}
 					);
 				}
@@ -111,28 +112,28 @@ public class SubQueryInFromEmbeddedIdTests {
 					final JpaRoot<Contact> root = cq.from( Contact.class );
 					final JpaSubQuery<Tuple> subquery = cq.subquery( Tuple.class );
 					final Root<Contact> correlatedRoot = subquery.correlate( root );
-					final Join<Object, Object> alternativeContact = correlatedRoot.join( "alternativeContact" );
+					final Join<Object, Object> alternativeContacts = correlatedRoot.join( "alternativeContacts" );
 
-					subquery.multiselect( alternativeContact.alias( "contact" ) );
-					subquery.orderBy( cb.desc( alternativeContact.get( "name" ).get( "first" ) ) );
+					subquery.multiselect( alternativeContacts.alias( "contact" ) );
+					subquery.orderBy( cb.desc( alternativeContacts.get( "name" ).get( "first" ) ) );
 					subquery.fetch( 1 );
 
 					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, SqmJoinType.LEFT );
 					final SqmAttributeJoin<Object, Object> alt = a.join( "contact" );
 
 					cq.multiselect( root.get( "name" ), alt.get( "name" ) );
-					cq.orderBy( cb.asc( root.get( "id" ) ) );
+					cq.orderBy( cb.asc( root.get( "id1" ) ) );
 
 					final QueryImplementor<Tuple> query = session.createQuery(
 							"select c.name, alt.name from Contact c " +
 									"left join lateral (" +
 									"select alt as contact " +
-									"from c.alternativeContact alt " +
+									"from c.alternativeContacts alt " +
 									"order by alt.name.first desc " +
 									"limit 1" +
 									") a " +
 									"join a.contact alt " +
-									"order by c.id",
+									"order by c.id1",
 							Tuple.class
 					);
 					verifySame(
@@ -159,26 +160,26 @@ public class SubQueryInFromEmbeddedIdTests {
 					final JpaRoot<Contact> root = cq.from( Contact.class );
 					final JpaSubQuery<Tuple> subquery = cq.subquery( Tuple.class );
 					final Root<Contact> correlatedRoot = subquery.correlate( root );
-					final Join<Object, Object> alternativeContact = correlatedRoot.join( "alternativeContact" );
+					final Join<Object, Object> alternativeContacts = correlatedRoot.join( "alternativeContacts" );
 
-					subquery.multiselect( alternativeContact.alias( "contact" ) );
-					subquery.orderBy( cb.desc( alternativeContact.get( "name" ).get( "first" ) ) );
+					subquery.multiselect( alternativeContacts.alias( "contact" ) );
+					subquery.orderBy( cb.desc( alternativeContacts.get( "name" ).get( "first" ) ) );
 					subquery.fetch( 1 );
 
 					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, SqmJoinType.LEFT );
 
 					cq.multiselect( root.get( "name" ), a.get( "contact" ).get( "name" ) );
-					cq.orderBy( cb.asc( root.get( "id" ) ) );
+					cq.orderBy( cb.asc( root.get( "id1" ) ) );
 
 					final QueryImplementor<Tuple> query = session.createQuery(
 							"select c.name, a.contact.name from Contact c " +
 									"left join lateral (" +
 									"select alt as contact " +
-									"from c.alternativeContact alt " +
+									"from c.alternativeContacts alt " +
 									"order by alt.name.first desc " +
 									"limit 1" +
 									") a " +
-									"order by c.id",
+									"order by c.id1",
 							Tuple.class
 					);
 					verifySame(
@@ -211,25 +212,25 @@ public class SubQueryInFromEmbeddedIdTests {
 					3,
 					new Contact.Name( "Granny", "Doe" )
 			);
-			alternativeContact.setAlternativeContact( alternativeContact2 );
-			contact.setAlternativeContact( alternativeContact );
-			session.persist( alternativeContact2 );
-			session.persist( alternativeContact );
+			alternativeContact2.setPrimaryContact( alternativeContact );
+			alternativeContact.setPrimaryContact( contact );
 			session.persist( contact );
-		} );
-	}
-
-	@AfterEach
-	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createQuery( "update Contact set alternativeContact = null" ).executeUpdate();
-			session.createQuery( "delete Contact" ).executeUpdate();
+			session.persist( alternativeContact );
+			session.persist( alternativeContact2 );
 		} );
 	}
 
 	private <T> void verifySame(T criteriaResult, T hqlResult, Consumer<T> verifier) {
 		verifier.accept( criteriaResult );
 		verifier.accept( hqlResult );
+	}
+
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			session.createQuery( "update Contact set primaryContact = null" ).executeUpdate();
+			session.createQuery( "delete Contact" ).executeUpdate();
+		} );
 	}
 
 	/**
@@ -239,26 +240,38 @@ public class SubQueryInFromEmbeddedIdTests {
 	@Table( name = "contacts" )
 	@SecondaryTable( name="contact_supp" )
 	public static class Contact {
-		private ContactId id;
+		private Integer id1;
+		private Integer id2;
 		private Name name;
 
-		private Contact alternativeContact;
+		private Set<Contact> alternativeContacts;
+		private Contact primaryContact;
 
 		public Contact() {
 		}
 
 		public Contact(Integer id, Name name) {
-			this.id = new ContactId( id, id );
+			this.id1 = id;
+			this.id2 = id;
 			this.name = name;
 		}
 
-		@EmbeddedId
-		public ContactId getId() {
-			return id;
+		@Id
+		public Integer getId1() {
+			return id1;
 		}
 
-		public void setId(ContactId id) {
-			this.id = id;
+		public void setId1(Integer id1) {
+			this.id1 = id1;
+		}
+
+		@Id
+		public Integer getId2() {
+			return id2;
+		}
+
+		public void setId2(Integer id2) {
+			this.id2 = id2;
 		}
 
 		public Name getName() {
@@ -269,43 +282,22 @@ public class SubQueryInFromEmbeddedIdTests {
 			this.name = name;
 		}
 
-		@ManyToOne(fetch = FetchType.LAZY)
-		public Contact getAlternativeContact() {
-			return alternativeContact;
+		@OneToMany(mappedBy = "primaryContact")
+		public Set<Contact> getAlternativeContacts() {
+			return alternativeContacts;
 		}
 
-		public void setAlternativeContact(Contact alternativeContact) {
-			this.alternativeContact = alternativeContact;
+		public void setAlternativeContacts(Set<Contact> alternativeContacts) {
+			this.alternativeContacts = alternativeContacts;
 		}
 
-		@Embeddable
-		public static class ContactId {
-			private Integer id1;
-			private Integer id2;
+		@OneToOne(fetch = FetchType.LAZY)
+		public Contact getPrimaryContact() {
+			return primaryContact;
+		}
 
-			public ContactId() {
-			}
-
-			public ContactId(Integer id1, Integer id2) {
-				this.id1 = id1;
-				this.id2 = id2;
-			}
-
-			public Integer getId1() {
-				return id1;
-			}
-
-			public void setId1(Integer id1) {
-				this.id1 = id1;
-			}
-
-			public Integer getId2() {
-				return id2;
-			}
-
-			public void setId2(Integer id2) {
-				this.id2 = id2;
-			}
+		public void setPrimaryContact(Contact primaryContact) {
+			this.primaryContact = primaryContact;
 		}
 
 		@Embeddable

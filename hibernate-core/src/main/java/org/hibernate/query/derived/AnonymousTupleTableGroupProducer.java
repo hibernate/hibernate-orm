@@ -18,6 +18,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -26,6 +27,8 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -41,6 +44,7 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
+import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -116,6 +120,9 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 	}
 
 	private ModelPart getModelPart(TableGroup tableGroup) {
+		if ( tableGroup instanceof PluralTableGroup ) {
+			tableGroup = ( (PluralTableGroup) tableGroup ).getElementTableGroup();
+		}
 		if ( tableGroup instanceof LazyTableGroup && ( (LazyTableGroup) tableGroup ).getUnderlyingTableGroup() != null ) {
 			return ( (LazyTableGroup) tableGroup ).getUnderlyingTableGroup().getModelPart();
 		}
@@ -137,13 +144,39 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 					.getIdentifierMapping();
 			final EntityIdentifierMapping newIdentifierMapping;
 			if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
+				final String attributeName = ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName();
 				if ( identifierMapping.getPartMappingType() instanceof ManagedMappingType ) {
-					// todo: implement
-					throw new UnsupportedOperationException("Support for embedded id in anonymous tuples is not yet implemented");
+					//noinspection unchecked
+					final Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) ( (ManagedDomainType<?>) ( (EntityDomainType<?>) domainType ).getIdentifierDescriptor().getSqmPathType() ).getAttributes();
+					final Map<String, ModelPart> modelParts = CollectionHelper.linkedMapOfSize( attributes.size() );
+					final EmbeddableValuedModelPart modelPartContainer = (EmbeddableValuedModelPart) identifierMapping;
+					for ( Attribute<?, ?> attribute : attributes ) {
+						if ( !( attribute instanceof SingularPersistentAttribute<?, ?> ) ) {
+							throw new IllegalArgumentException( "Only embeddables without collections are supported!" );
+						}
+						final DomainType<?> attributeType = ( (SingularPersistentAttribute<?, ?>) attribute ).getType();
+						final ModelPart modelPart = createModelPart(
+								sqmExpressible,
+								attributeType,
+								sqlSelections,
+								selectionIndex,
+								selectionExpression + "_" + attributeName + "_" + attribute.getName(),
+								attribute.getName(),
+								modelPartContainer.findSubPart( attribute.getName(), null ),
+								compatibleTableExpressions
+						);
+						modelParts.put( modelPart.getPartName(), modelPart );
+					}
+					newIdentifierMapping = new AnonymousTupleEmbeddedEntityIdentifierMapping(
+							modelParts,
+							domainType,
+							attributeName,
+							(CompositeIdentifierMapping) identifierMapping
+					);
 				}
 				else {
 					newIdentifierMapping = new AnonymousTupleBasicEntityIdentifierMapping(
-							selectionExpression + "_" + ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName(),
+							selectionExpression + "_" + attributeName,
 							sqmExpressible,
 							sqlSelections.get( selectionIndex )
 									.getExpressionType()
@@ -154,8 +187,33 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 				}
 			}
 			else {
-				// todo: implement
-				throw new UnsupportedOperationException("Support for id-class in anonymous tuples is not yet implemented");
+				//noinspection unchecked
+				final Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) ( (ManagedDomainType<?>) ( (EntityDomainType<?>) domainType ).getIdentifierDescriptor().getSqmPathType() ).getAttributes();
+				final Map<String, ModelPart> modelParts = CollectionHelper.linkedMapOfSize( attributes.size() );
+				final EmbeddableValuedModelPart modelPartContainer = (EmbeddableValuedModelPart) identifierMapping;
+				for ( Attribute<?, ?> attribute : attributes ) {
+					if ( !( attribute instanceof SingularPersistentAttribute<?, ?> ) ) {
+						throw new IllegalArgumentException( "Only embeddables without collections are supported!" );
+					}
+					final DomainType<?> attributeType = ( (SingularPersistentAttribute<?, ?>) attribute ).getType();
+					final ModelPart modelPart = createModelPart(
+							sqmExpressible,
+							attributeType,
+							sqlSelections,
+							selectionIndex,
+							selectionExpression + "_" + attribute.getName(),
+							attribute.getName(),
+							modelPartContainer.findSubPart( attribute.getName(), null ),
+							compatibleTableExpressions
+					);
+					modelParts.put( modelPart.getPartName(), modelPart );
+				}
+				newIdentifierMapping = new AnonymousTupleNonAggregatedEntityIdentifierMapping(
+						modelParts,
+						domainType,
+						selectionExpression,
+						(NonAggregatedIdentifierMapping) identifierMapping
+				);
 			}
 			if ( existingModelPartContainer instanceof ToOneAttributeMapping ) {
 				// We take "ownership" of FK columns by reporting the derived table group is compatible

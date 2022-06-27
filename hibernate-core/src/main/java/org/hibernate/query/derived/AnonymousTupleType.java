@@ -15,6 +15,9 @@ import org.hibernate.Incubating;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.TupleType;
 import org.hibernate.query.ReturnableType;
@@ -126,7 +129,27 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 			final SqmPath<?> sqmPath = (SqmPath<?>) component;
 			if ( sqmPath.getNodeType() instanceof SingularPersistentAttribute<?, ?> ) {
 				//noinspection unchecked,rawtypes
-				return new AnonymousTuplePersistentSingularAttribute( name, sqmPath, (SingularPersistentAttribute<?, ?>) sqmPath.getNodeType() );
+				return new AnonymousTupleSqmAssociationPathSource(
+						name,
+						sqmPath,
+						( (SingularPersistentAttribute<?, ?>) sqmPath.getNodeType() ).getType()
+				);
+			}
+			else if ( sqmPath.getNodeType() instanceof PluralPersistentAttribute<?, ?, ?> ) {
+				//noinspection unchecked,rawtypes
+				return new AnonymousTupleSqmAssociationPathSource(
+						name,
+						sqmPath,
+						( (PluralPersistentAttribute<?, ?, ?>) sqmPath.getNodeType() ).getElementType()
+				);
+			}
+			else if ( sqmPath.getNodeType() instanceof EntityDomainType<?> ) {
+				//noinspection unchecked,rawtypes
+				return new AnonymousTupleSqmAssociationPathSource(
+						name,
+						sqmPath,
+						(SimpleDomainType<?>) sqmPath.getNodeType()
+				);
 			}
 			else {
 				return new AnonymousTupleSqmPathSource<>( name, sqmPath );

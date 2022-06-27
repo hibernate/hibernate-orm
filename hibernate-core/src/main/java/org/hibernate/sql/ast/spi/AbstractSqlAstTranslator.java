@@ -3135,6 +3135,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 			}
 			else {
+				int offset = 0;
 				for ( int i = 0; i < size; i++ ) {
 					final SqlSelection sqlSelection = sqlSelections.get( i );
 					appendSql( separator );
@@ -3144,10 +3145,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					else {
 						parameterRenderingMode = defaultRenderingMode;
 					}
-					visitSqlSelection( sqlSelection );
+					offset += visitSqlSelectExpression( sqlSelection.getExpression(), offset, columnAliases );
 					parameterRenderingMode = original;
 					appendSql( WHITESPACE );
-					appendSql( columnAliases.get( i ) );
+					appendSql( columnAliases.get( offset - 1 ) );
 					separator = COMA_SEPARATOR;
 				}
 			}
@@ -3173,6 +3174,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else {
 			String separator = NO_SEPARATOR;
+			int offset = 0;
 			for ( int i = 0; i < size; i++ ) {
 				final SqlSelection sqlSelection = sqlSelections.get( i );
 				appendSql( separator );
@@ -3182,9 +3184,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				else {
 					parameterRenderingMode = defaultRenderingMode;
 				}
-				visitSqlSelection( sqlSelection );
+				offset += visitSqlSelectExpression( sqlSelection.getExpression(), offset, columnAliases );
 				appendSql( WHITESPACE );
-				appendSql( columnAliases.get( i ) );
+				appendSql( columnAliases.get( offset - 1 ) );
 				parameterRenderingMode = original;
 				separator = COMA_SEPARATOR;
 			}
@@ -3537,6 +3539,32 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
+	protected int visitSqlSelectExpression(Expression expression, int offset, List<String> columnAliases) {
+		final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( expression );
+		if ( sqlTuple != null ) {
+			boolean isFirst = true;
+			final List<? extends Expression> expressions = sqlTuple.getExpressions();
+			int i = 0;
+			for ( ; i < expressions.size(); i++ ) {
+				Expression e = expressions.get( i );
+				if ( isFirst ) {
+					isFirst = false;
+				}
+				else {
+					appendSql( WHITESPACE );
+					appendSql( columnAliases.get( offset + i - 1 ) );
+					appendSql( ',' );
+				}
+				renderSelectExpression( e );
+			}
+			return i;
+		}
+		else {
+			renderSelectExpression( expression );
+			return 1;
+		}
+	}
+
 	protected void renderSelectExpression(Expression expression) {
 		renderExpressionAsClauseItem( expression );
 	}
@@ -3805,19 +3833,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected boolean hasNestedTableGroupsToRender(List<TableGroupJoin> nestedTableGroupJoins) {
 		for ( TableGroupJoin nestedTableGroupJoin : nestedTableGroupJoins ) {
 			final TableGroup joinedGroup = nestedTableGroupJoin.getJoinedGroup();
-			final TableGroup realTableGroup;
-			if ( joinedGroup instanceof LazyTableGroup ) {
-				realTableGroup = ( (LazyTableGroup) joinedGroup ).getUnderlyingTableGroup();
+			if ( !joinedGroup.isInitialized() ) {
+				continue;
 			}
-			else {
-				realTableGroup = joinedGroup;
-			}
-			if ( realTableGroup instanceof VirtualTableGroup ) {
-				if ( hasNestedTableGroupsToRender( realTableGroup.getNestedTableGroupJoins() ) ) {
+			if ( joinedGroup instanceof VirtualTableGroup ) {
+				if ( hasNestedTableGroupsToRender( joinedGroup.getNestedTableGroupJoins() ) ) {
 					return true;
 				}
 			}
-			else if ( realTableGroup != null ) {
+			else {
 				return true;
 			}
 		}
@@ -3998,24 +4022,17 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected void processTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
 		final TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
-		final TableGroup realTableGroup;
-		if ( joinedGroup instanceof LazyTableGroup ) {
-			realTableGroup = ( (LazyTableGroup) joinedGroup ).getUnderlyingTableGroup();
-		}
-		else {
-			realTableGroup = joinedGroup;
-		}
 
-		if ( realTableGroup instanceof VirtualTableGroup ) {
-			processNestedTableGroupJoins( realTableGroup, tableGroupJoinCollector );
+		if ( joinedGroup instanceof VirtualTableGroup ) {
+			processNestedTableGroupJoins( joinedGroup, tableGroupJoinCollector );
 			if ( tableGroupJoinCollector != null ) {
-				tableGroupJoinCollector.addAll( realTableGroup.getTableGroupJoins() );
+				tableGroupJoinCollector.addAll( joinedGroup.getTableGroupJoins() );
 			}
 			else {
-				processTableGroupJoins( realTableGroup );
+				processTableGroupJoins( joinedGroup );
 			}
 		}
-		else if ( realTableGroup != null ) {
+		else if ( joinedGroup.isInitialized() ) {
 			renderTableGroupJoin(
 					tableGroupJoin,
 					tableGroupJoinCollector

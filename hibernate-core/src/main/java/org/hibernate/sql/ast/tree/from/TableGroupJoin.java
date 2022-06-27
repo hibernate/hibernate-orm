@@ -27,8 +27,6 @@ public class TableGroupJoin implements TableJoin, DomainResultProducer {
 	private SqlAstJoinType joinType;
 	private Predicate predicate;
 
-	private boolean implicit;
-
 	public TableGroupJoin(
 			NavigablePath navigablePath,
 			SqlAstJoinType joinType,
@@ -93,12 +91,8 @@ public class TableGroupJoin implements TableJoin, DomainResultProducer {
 		return navigablePath;
 	}
 
-	public void setImplicit(){
-		this.implicit = true;
-	}
-
-	public boolean isImplicit(){
-		return implicit;
+	public boolean isImplicit() {
+		return !navigablePath.isAliased();
 	}
 
 	@Override

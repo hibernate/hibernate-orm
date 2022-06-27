@@ -559,7 +559,12 @@ public class PluralAttributeMappingImpl
 			SqlAstCreationContext creationContext) {
 		final SqlAstJoinType joinType;
 		if ( requestedJoinType == null ) {
-			joinType = SqlAstJoinType.INNER;
+			if ( fetched ) {
+				joinType = getDefaultSqlAstJoinType( lhs );
+			}
+			else {
+				joinType = SqlAstJoinType.INNER;
+			}
 		}
 		else {
 			joinType = requestedJoinType;

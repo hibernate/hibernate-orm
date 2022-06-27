@@ -200,4 +200,9 @@ public abstract class DelegatingTableGroup implements TableGroup {
 	public boolean isFetched() {
 		return getTableGroup().isFetched();
 	}
+
+	@Override
+	public boolean isInitialized() {
+		return getTableGroup().isInitialized();
+	}
 }

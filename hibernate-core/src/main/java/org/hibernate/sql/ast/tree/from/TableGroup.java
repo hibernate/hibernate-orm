@@ -151,4 +151,12 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 	default boolean isFetched() {
 		return false;
 	}
+
+	/**
+	 * If this is a lazy table group, it may report that it is not initialized,
+	 * which would also mean that a join referring to this table group should not be rendered.
+	 */
+	default boolean isInitialized() {
+		return true;
+	}
 }

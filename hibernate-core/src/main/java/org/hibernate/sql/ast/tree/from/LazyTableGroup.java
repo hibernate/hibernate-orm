@@ -65,6 +65,11 @@ public class LazyTableGroup extends DelegatingTableGroup {
 		this.parentTableGroup = parentTableGroup;
 	}
 
+	@Override
+	public boolean isInitialized() {
+		return tableGroup != null;
+	}
+
 	public TableGroup getUnderlyingTableGroup() {
 		return tableGroup;
 	}

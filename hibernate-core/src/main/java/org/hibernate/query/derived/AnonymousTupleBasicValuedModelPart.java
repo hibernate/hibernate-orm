@@ -29,6 +29,7 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchOptions;
@@ -186,10 +187,14 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 			FetchParent fetchParent,
 			SqlAstCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlExpressionResolver();
+		final TableReference tableReference = tableGroup.resolveTableReference(
+				navigablePath,
+				getContainingTableExpression()
+		);
 		final Expression expression = expressionResolver.resolveSqlExpression(
-				createColumnReferenceKey( tableGroup.getPrimaryTableReference(), getSelectionExpression() ),
+				createColumnReferenceKey( tableReference, getSelectionExpression() ),
 				sqlAstProcessingState -> new ColumnReference(
-						tableGroup.resolveTableReference( navigablePath, "" ),
+						tableReference,
 						this,
 						creationState.getCreationContext().getSessionFactory()
 				)

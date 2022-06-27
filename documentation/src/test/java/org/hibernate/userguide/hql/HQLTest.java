@@ -32,7 +32,6 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.QueryProducer;
 import org.hibernate.type.StandardBasicTypes;
@@ -2037,7 +2036,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = TiDBDialect.class, comment = "TiDB db does not support subqueries for ON condition")
+	@RequiresDialectFeature(DialectChecks.SupportsSubqueryInOnClause.class)
 	public void test_hql_collection_index_operator_example_3() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-collection-index-operator-example[]
@@ -3081,8 +3080,10 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = TiDBDialect.class, comment = "TiDB db does not support subqueries for ON condition")
-	@RequiresDialectFeature(DialectChecks.SupportsOrderByInCorrelatedSubquery.class)
+	@RequiresDialectFeature({
+			DialectChecks.SupportsSubqueryInOnClause.class,
+			DialectChecks.SupportsOrderByInCorrelatedSubquery.class
+	})
 	public void test_hql_derived_join_example() {
 
 		doInJPA(this::entityManagerFactory, entityManager -> {

@@ -448,4 +448,11 @@ abstract public class DialectFeatureChecks {
 			return dialect instanceof PostgreSQLDialect;
 		}
 	}
+
+	public static class SupportsSubqueryInOnClause implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			// TiDB db does not support subqueries for ON condition
+			return !( dialect instanceof TiDBDialect );
+		}
+	}
 }

@@ -799,8 +799,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private static void verifyManipulationImplicitJoin(TableGroup tableGroup) {
 		//noinspection StatementWithEmptyBody
-		if ( tableGroup instanceof LazyTableGroup && ( (LazyTableGroup) tableGroup ).getUnderlyingTableGroup() == null
-				|| tableGroup instanceof VirtualTableGroup ) {
+		if ( !tableGroup.isInitialized() || tableGroup instanceof VirtualTableGroup ) {
 			// this is fine
 		}
 		else {
@@ -1119,7 +1118,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private static boolean hasJoins(List<TableGroupJoin> tableGroupJoins) {
 		for ( TableGroupJoin tableGroupJoin : tableGroupJoins ) {
 			final TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
-			if ( joinedGroup instanceof LazyTableGroup && ( (LazyTableGroup) joinedGroup ).getUnderlyingTableGroup() == null ) {
+			if ( !joinedGroup.isInitialized() ) {
 				continue;
 			}
 			return true;
@@ -3061,7 +3060,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			else {
 				idPath = componentName + "_" + idAttribute.getName();
 			}
-			addColumnNames( columnNames, entityDomainType.getIdType(), idPath );
+			addColumnNames( columnNames, entityDomainType.getIdentifierDescriptor().getSqmPathType(), idPath );
 		}
 		else if ( domainType instanceof ManagedDomainType<?> ) {
 			for ( Attribute<?, ?> attribute : ( (ManagedDomainType<?>) domainType ).getAttributes() ) {

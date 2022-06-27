@@ -17,7 +17,6 @@ import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -32,7 +31,8 @@ import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 import jakarta.persistence.Tuple;
@@ -45,12 +45,11 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 /**
  * @author Christian Beikov
  */
-@DomainModel(annotatedClasses = SubQueryInFromEmbeddedIdTests.Contact.class)
+@DomainModel(annotatedClasses = SubQueryInFromInverseOneEmbeddedIdTests.Contact.class)
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class)
-public class SubQueryInFromEmbeddedIdTests {
+public class SubQueryInFromInverseOneEmbeddedIdTests {
 
 	@Test
 	public void testEntity(SessionFactoryScope scope) {
@@ -211,25 +210,25 @@ public class SubQueryInFromEmbeddedIdTests {
 					3,
 					new Contact.Name( "Granny", "Doe" )
 			);
-			alternativeContact.setAlternativeContact( alternativeContact2 );
-			contact.setAlternativeContact( alternativeContact );
-			session.persist( alternativeContact2 );
-			session.persist( alternativeContact );
+			alternativeContact2.setPrimaryContact( alternativeContact );
+			alternativeContact.setPrimaryContact( contact );
 			session.persist( contact );
-		} );
-	}
-
-	@AfterEach
-	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createQuery( "update Contact set alternativeContact = null" ).executeUpdate();
-			session.createQuery( "delete Contact" ).executeUpdate();
+			session.persist( alternativeContact );
+			session.persist( alternativeContact2 );
 		} );
 	}
 
 	private <T> void verifySame(T criteriaResult, T hqlResult, Consumer<T> verifier) {
 		verifier.accept( criteriaResult );
 		verifier.accept( hqlResult );
+	}
+
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			session.createQuery( "update Contact set primaryContact = null" ).executeUpdate();
+			session.createQuery( "delete Contact" ).executeUpdate();
+		} );
 	}
 
 	/**
@@ -243,6 +242,7 @@ public class SubQueryInFromEmbeddedIdTests {
 		private Name name;
 
 		private Contact alternativeContact;
+		private Contact primaryContact;
 
 		public Contact() {
 		}
@@ -269,13 +269,22 @@ public class SubQueryInFromEmbeddedIdTests {
 			this.name = name;
 		}
 
-		@ManyToOne(fetch = FetchType.LAZY)
+		@OneToOne(fetch = FetchType.LAZY, mappedBy = "primaryContact")
 		public Contact getAlternativeContact() {
 			return alternativeContact;
 		}
 
 		public void setAlternativeContact(Contact alternativeContact) {
 			this.alternativeContact = alternativeContact;
+		}
+
+		@OneToOne(fetch = FetchType.LAZY)
+		public Contact getPrimaryContact() {
+			return primaryContact;
+		}
+
+		public void setPrimaryContact(Contact primaryContact) {
+			this.primaryContact = primaryContact;
 		}
 
 		@Embeddable

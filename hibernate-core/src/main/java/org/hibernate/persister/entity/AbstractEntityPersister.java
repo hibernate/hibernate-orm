@@ -806,7 +806,7 @@ public abstract class AbstractEntityPersister
 				}
 				containingClass = superclass;
 			}
-			this.sqlWhereStringTableExpression = containingClass.getTable().getName();
+			this.sqlWhereStringTableExpression = determineTableName( containingClass.getTable() );
 			sqlWhereStringTemplate = Template.renderWhereStringTemplate(
 					"(" + bootDescriptor.getWhere() + ")",
 					dialect,

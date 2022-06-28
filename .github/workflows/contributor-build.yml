@@ -23,6 +23,9 @@ concurrency:
   # for pull requests or pushes to forks (not the upstream repository).
   cancel-in-progress: ${{ github.event_name == 'pull_request' || github.repository != 'hibernate/hibernate-orm' }}
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Java 11

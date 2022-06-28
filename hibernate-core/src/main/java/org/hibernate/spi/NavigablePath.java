@@ -140,6 +140,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 			if ( ! Objects.equals( getAlias(), otherNavigablePath.getAlias() ) ) {
 				return false;
 			}
+			return Objects.equals( getRealParent(), otherNavigablePath.getRealParent() );
 		}
 
 		return Objects.equals( getParent(), otherPath.getParent() );

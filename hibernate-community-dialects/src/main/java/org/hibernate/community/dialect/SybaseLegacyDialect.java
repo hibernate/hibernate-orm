@@ -4,9 +4,16 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
+
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.sql.Types;
 
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.AbstractTransactSQLDialect;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.IntegralTimestampaddFunction;
@@ -17,13 +24,13 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
-import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
@@ -47,9 +54,6 @@ import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import java.sql.Types;
 import jakarta.persistence.TemporalType;
 
 
@@ -58,33 +62,26 @@ import jakarta.persistence.TemporalType;
  *
  * @author Brett Meyer
  */
-public class SybaseDialect extends AbstractTransactSQLDialect {
+public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 
 	protected final boolean jtdsDriver;
-
-	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 16, 0 );
 
 	//All Sybase dialects share an IN list size limit.
 	private static final int PARAM_LIST_SIZE_LIMIT = 250000;
 
-	public SybaseDialect() {
-		this( MINIMUM_VERSION );
+	public SybaseLegacyDialect() {
+		this( DatabaseVersion.make( 11, 0 ) );
 	}
 
-	public SybaseDialect(DatabaseVersion version) {
+	public SybaseLegacyDialect(DatabaseVersion version) {
 		super(version);
 		jtdsDriver = true;
 	}
 
-	public SybaseDialect(DialectResolutionInfo info) {
+	public SybaseLegacyDialect(DialectResolutionInfo info) {
 		super(info);
 		jtdsDriver = info.getDriverName() != null
 				&& info.getDriverName().contains( "jTDS" );
-	}
-
-	@Override
-	protected DatabaseVersion getMinimumSupportedVersion() {
-		return MINIMUM_VERSION;
 	}
 
 	@Override
@@ -126,7 +123,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 					LoadQueryInfluencers loadQueryInfluencers,
 					SqlAstCreationContext creationContext,
 					boolean deduplicateSelectionItems) {
-				return new SybaseSqmToSqlAstConverter<>(
+				return new SybaseLegacySqmToSqlAstConverter<>(
 						sqmSelectStatement,
 						queryOptions,
 						domainParameterXref,
@@ -145,7 +142,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new SybaseSqlAstTranslator<>( sessionFactory, statement );
+				return new SybaseLegacySqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
 	}
@@ -329,12 +326,10 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public NameQualifierSupport getNameQualifierSupport() {
-		if ( jtdsDriver ) {
-			return NameQualifierSupport.CATALOG;
-		}
-		else {
+		if ( getVersion().isSameOrAfter( 15 ) ) {
 			return NameQualifierSupport.BOTH;
 		}
+		return NameQualifierSupport.CATALOG;
 	}
 
 }

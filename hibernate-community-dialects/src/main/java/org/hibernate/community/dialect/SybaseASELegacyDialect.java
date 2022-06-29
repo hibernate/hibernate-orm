@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -14,6 +14,9 @@ import java.util.Map;
 
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.engine.jdbc.Size;
@@ -45,14 +48,17 @@ import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.type.SqlTypes.*;
+import static org.hibernate.type.SqlTypes.BIGINT;
+import static org.hibernate.type.SqlTypes.BOOLEAN;
+import static org.hibernate.type.SqlTypes.DATE;
+import static org.hibernate.type.SqlTypes.TIME;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 
 /**
- * A {@linkplain Dialect SQL dialect} for Sybase Adaptive Server Enterprise 16 and above.
+ * A {@linkplain Dialect SQL dialect} for Sybase Adaptive Server Enterprise 11.9 and above.
  */
-public class SybaseASEDialect extends SybaseDialect {
-
-	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 16, 0 );
+public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 
 	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
 		@Override
@@ -75,16 +81,16 @@ public class SybaseASEDialect extends SybaseDialect {
 
 	private final boolean ansiNull;
 
-	public SybaseASEDialect() {
-		this( MINIMUM_VERSION );
+	public SybaseASELegacyDialect() {
+		this( DatabaseVersion.make( 11 ) );
 	}
 
-	public SybaseASEDialect(DatabaseVersion version) {
+	public SybaseASELegacyDialect(DatabaseVersion version) {
 		super(version);
 		ansiNull = false;
 	}
 
-	public SybaseASEDialect(DialectResolutionInfo info) {
+	public SybaseASELegacyDialect(DialectResolutionInfo info) {
 		super(info);
 		ansiNull = isAnsiNull( info.getDatabaseMetadata() );
 	}
@@ -98,10 +104,13 @@ public class SybaseASEDialect extends SybaseDialect {
 				// tinyint to store signed bytes, we can use it
 				// to store boolean values)
 				return "tinyint";
+			case BIGINT:
+				// Sybase ASE didn't introduce 'bigint' until version 15.0
+				return getVersion().isBefore( 15 ) ? "numeric(19,0)" : super.columnType( sqlTypeCode );
 			case DATE:
-				return "date";
+				return getVersion().isSameOrAfter( 12 ) ? "date" : super.columnType( sqlTypeCode );
 			case TIME:
-				return "time";
+				return getVersion().isSameOrAfter( 12 ) ? "time" : super.columnType( sqlTypeCode );
 		}
 		return super.columnType( sqlTypeCode );
 	}
@@ -113,7 +122,7 @@ public class SybaseASEDialect extends SybaseDialect {
 
 		// According to Wikipedia bigdatetime and bigtime were added in 15.5
 		// But with jTDS we can't use them as the driver can't handle the types
-		if ( !jtdsDriver ) {
+		if ( getVersion().isSameOrAfter( 15, 5 ) && !jtdsDriver ) {
 			ddlTypeRegistry.addDescriptor(
 					CapacityDependentDdlType.builder( DATE, "bigdatetime", "bigdatetime", this )
 							.withTypeCapacity( 3, "datetime" )
@@ -191,7 +200,7 @@ public class SybaseASEDialect extends SybaseDialect {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new SybaseASESqlAstTranslator<>( sessionFactory, statement );
+				return new SybaseASELegacySqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
 	}
@@ -264,7 +273,7 @@ public class SybaseASEDialect extends SybaseDialect {
 			case NATIVE:
 				// If the driver or database do not support bigdatetime and bigtime types,
 				// we try to operate on milliseconds instead
-				if ( jtdsDriver ) {
+				if ( getVersion().isBefore( 15, 5 ) || jtdsDriver ) {
 					return "dateadd(millisecond,?2/1000000,?3)";
 				}
 				else {
@@ -279,7 +288,12 @@ public class SybaseASEDialect extends SybaseDialect {
 	public long getFractionalSecondPrecisionInNanos() {
 		// If the database does not support bigdatetime and bigtime types,
 		// we try to operate on milliseconds instead
-		return 1_000;
+		if ( getVersion().isBefore( 15, 5 ) ) {
+			return 1_000_000;
+		}
+		else {
+			return 1_000;
+		}
 	}
 
 	@Override
@@ -288,7 +302,14 @@ public class SybaseASEDialect extends SybaseDialect {
 		switch ( unit ) {
 			case NANOSECOND:
 			case NATIVE:
-				return "cast(datediff(mcs,cast(?2 as bigdatetime),cast(?3 as bigdatetime)) as numeric(21))";
+				// If the database does not support bigdatetime and bigtime types,
+				// we try to operate on milliseconds instead
+				if ( getVersion().isBefore( 15, 5 ) ) {
+					return "cast(datediff(ms,?2,?3) as numeric(21))";
+				}
+				else {
+					return "cast(datediff(mcs,cast(?2 as bigdatetime),cast(?3 as bigdatetime)) as numeric(21))";
+				}
 			default:
 				return "datediff(?1,?2,?3)";
 		}
@@ -564,7 +585,13 @@ public class SybaseASEDialect extends SybaseDialect {
 	public String getTableTypeString() {
 		//HHH-7298 I don't know if this would break something or cause some side affects
 		//but it is required to use 'select for update'
-		return " lock datarows";
+		return getVersion().isBefore( 15, 7 ) ? super.getTableTypeString() : " lock datarows";
+	}
+
+	@Override
+	public boolean supportsExpectedLobUsagePattern() {
+		// Earlier Sybase did not support LOB locators at all
+		return getVersion().isSameOrAfter( 15, 7 );
 	}
 
 	@Override
@@ -574,29 +601,33 @@ public class SybaseASEDialect extends SybaseDialect {
 
 	@Override
 	public RowLockStrategy getWriteRowLockStrategy() {
-		return RowLockStrategy.COLUMN;
+		return getVersion().isSameOrAfter( 15, 7 ) ? RowLockStrategy.COLUMN : RowLockStrategy.TABLE;
 	}
 
 	@Override
 	public String getForUpdateString() {
-		return " for update";
+		return getVersion().isBefore( 15, 7 ) ? "" : " for update";
 	}
 
 	@Override
 	public String getForUpdateString(String aliases) {
-		return getForUpdateString() + " of " + aliases;
+		return getVersion().isBefore( 15, 7 )
+				? ""
+				: getForUpdateString() + " of " + aliases;
 	}
 
 	@Override
 	public String appendLockHint(LockOptions mode, String tableName) {
 		//TODO: is this really necessary??!
-		return tableName;
+		return getVersion().isBefore( 15, 7 ) ? super.appendLockHint( mode, tableName ) : tableName;
 	}
 
 	@Override
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
 		//TODO: is this really correct?
-		return sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
+		return getVersion().isBefore( 15, 7 )
+				? super.applyLocksToSql( sql, aliasedLockOptions, keyColumnNames )
+				: sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
 	}
 
 	@Override
@@ -642,6 +673,10 @@ public class SybaseASEDialect extends SybaseDialect {
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
+		if ( getVersion().isBefore( 15, 7 ) ) {
+			return null;
+		}
+
 		return (sqlException, message, sql) -> {
 			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
 			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
@@ -680,6 +715,10 @@ public class SybaseASEDialect extends SybaseDialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
+		if ( getVersion().isBefore( 12, 5 ) ) {
+			//support for SELECT TOP was introduced in Sybase ASE 12.5.3
+			return super.getLimitHandler();
+		}
 		return new TopLimitHandler(false);
 	}
 }

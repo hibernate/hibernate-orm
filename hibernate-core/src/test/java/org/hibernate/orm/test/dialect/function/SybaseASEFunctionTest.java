@@ -51,7 +51,7 @@ import org.junit.jupiter.api.Test;
 		xmlMappings = "org/hibernate/orm/test/dialect/function/Product.hbm.xml"
 )
 @SessionFactory
-@RequiresDialect(value = SybaseASEDialect.class, majorVersion = 11)
+@RequiresDialect(value = SybaseASEDialect.class)
 @SuppressWarnings("rawtypes")
 public class SybaseASEFunctionTest {
 

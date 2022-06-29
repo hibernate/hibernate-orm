@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -43,9 +43,9 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  *
  * @author Christian Beikov
  */
-public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
-	public SybaseASESqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+	public SybaseASELegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
 	}
 
@@ -104,6 +104,12 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	protected boolean renderNamedTableReference(NamedTableReference tableReference, LockMode lockMode) {
 		super.renderNamedTableReference( tableReference, lockMode );
+		if ( getDialect().getVersion().isBefore( 15, 7 ) ) {
+			if ( LockMode.READ.lessThan( lockMode ) ) {
+				appendSql( " holdlock" );
+			}
+			return true;
+		}
 		return false;
 	}
 
@@ -136,6 +142,14 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 		else {
 			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
 		}
+	}
+
+	@Override
+	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
+		if ( getDialect().getVersion().isBefore( 15, 7 ) ) {
+			return;
+		}
+		super.renderForUpdateClause( querySpec, forUpdateClause );
 	}
 
 	@Override
@@ -380,7 +394,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	private boolean supportsTopClause() {
-		return true;
+		return getDialect().getVersion().isSameOrAfter( 12, 5 );
 	}
 
 	private boolean supportsParameterOffsetFetchExpression() {

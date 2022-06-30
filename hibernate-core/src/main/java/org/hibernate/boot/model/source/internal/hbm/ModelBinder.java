@@ -3178,19 +3178,7 @@ public class ModelBinder {
 				final PluralAttributeElementSourceOneToMany elementSource =
 						(PluralAttributeElementSourceOneToMany) pluralAttributeSource.getElementSource();
 
-				final PersistentClass persistentClass = mappingDocument.getMetadataCollector()
-						.getEntityBinding( elementSource.getReferencedEntityName() );
-				if ( persistentClass == null ) {
-					throw new MappingException(
-							String.format(
-									Locale.ENGLISH,
-									"Association [%s] references an unmapped entity [%s]",
-									pluralAttributeSource.getAttributeRole().getFullPath(),
-									pluralAttributeSource.getAttributeRole().getFullPath()
-							),
-							mappingDocument.getOrigin()
-					);
-				}
+				final PersistentClass persistentClass = getReferencedEntityBinding( elementSource.getReferencedEntityName() );
 
 				// even though <key/> defines a property-ref I do not see where legacy
 				// code ever attempts to use that to "adjust" the table in its use to
@@ -3289,7 +3277,7 @@ public class ModelBinder {
 					&& !collectionBinding.getKey().isNullable() ) {
 				// for non-inverse one-to-many, with a not-null fk, add a backref!
 				String entityName = ( (OneToMany) collectionBinding.getElement() ).getReferencedEntityName();
-				PersistentClass referenced = mappingDocument.getMetadataCollector().getEntityBinding( entityName );
+				PersistentClass referenced = getReferencedEntityBinding( entityName );
 				Backref prop = new Backref();
 				prop.setName( '_' + collectionBinding.getOwnerEntityName() + "." + pluralAttributeSource.getName() + "Backref" );
 				prop.setUpdateable( false );
@@ -3460,8 +3448,7 @@ public class ModelBinder {
 				);
 				collectionBinding.setElement( elementBinding );
 
-				final PersistentClass referencedEntityBinding = mappingDocument.getMetadataCollector()
-						.getEntityBinding( elementSource.getReferencedEntityName() );
+				final PersistentClass referencedEntityBinding = getReferencedEntityBinding( elementSource.getReferencedEntityName() );
 
 				if ( useEntityWhereClauseForCollections() ) {
 					// For a one-to-many association, there are 2 possible sources of "where" clauses that apply
@@ -3526,9 +3513,7 @@ public class ModelBinder {
 
 				getCollectionBinding().setElement( elementBinding );
 
-				final PersistentClass referencedEntityBinding = mappingDocument.getMetadataCollector().getEntityBinding(
-						elementSource.getReferencedEntityName()
-				);
+				final PersistentClass referencedEntityBinding = getReferencedEntityBinding( elementSource.getReferencedEntityName() );
 
 				// Collection#setWhere is used to set the "where" clause that applies to the collection table
 				// (which is the join table for a many-to-many association).
@@ -3632,6 +3617,24 @@ public class ModelBinder {
 				// This "where" clause comes from the collection mapping; e.g., <set name="..." ... where="..." .../>
 				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
 			}
+		}
+
+		private PersistentClass getReferencedEntityBinding(String referencedEntityName) {
+			PersistentClass entityBinding = mappingDocument.getMetadataCollector().getEntityBinding(
+					referencedEntityName
+			);
+			if ( entityBinding == null ) {
+				throw new MappingException(
+						String.format(
+								Locale.ENGLISH,
+								"Collection [%s] references an unmapped entity [%s]",
+								getPluralAttributeSource().getAttributeRole().getFullPath(),
+								referencedEntityName
+						),
+						getMappingDocument().getOrigin()
+				);
+			}
+			return entityBinding;
 		}
 	}
 

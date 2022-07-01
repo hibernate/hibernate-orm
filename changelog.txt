@@ -3,6 +3,36 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.1.1.Final (July 01, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32080
+
+** Bug
+    * [HHH-15369] - UnknownTableReferenceException when two subclasses have same field with different type
+    * [HHH-15361] - Update assignment type check should allow subtypes
+    * [HHH-15360] - Listagg with nulls clause emulation in H2 before 2.0
+    * [HHH-15358] - @Where annotation with globally_quoted_identifiers causes Unable to determine TableReference Exception
+    * [HHH-15357] - ClassCastException when selecting map key FK part
+    * [HHH-15354] - NPE building mapping from HBM for associations targeting a non existing entity
+    * [HHH-15349] - Comparing entity join alias with collection part fails
+    * [HHH-15347] - Parent identity check in NavigablePath#relativize is too strict
+    * [HHH-15346] - @ManyToOne associations not loaded correctly with default EAGER and batch fetch property set
+    * [HHH-15343] - NPE in type determination for case expression returning null literal
+    * [HHH-15342] - Inappropriate variation of HQL left join to SQL inner join
+    * [HHH-15341] - Disallow transient entities as parameters
+    * [HHH-15339] - Association in embedded id initialized to null when selected
+    * [HHH-15338] - Impossible to give same path expression multiple aliases
+    * [HHH-15331] - Constructor expressions in the SELECT clause ignores attribute converter
+    * [HHH-15324] - Hibernate (6.0.2) Regression. Sets Legacy java.persistence properties, then logs deprecation warnings on these which spams log
+    * [HHH-15314] - Hibernate Gradle plugin is not working for Kotlin projects
+
+** Improvement
+    * [HHH-15367] - Lift embedded/id-class to-one selection limitation for from clause subqueries
+    * [HHH-15329] - Remove workaround for HHH-10382
+    * [HHH-15325] - Avoid allocations from BitSet.stream() in AbstractEntityPersister.resolveDirtyAttributeIndexes()
+
+
 Changes in 6.1.0.Final (June 07, 2022)
 ------------------------------------------------------------------------------------------------------------------------
 

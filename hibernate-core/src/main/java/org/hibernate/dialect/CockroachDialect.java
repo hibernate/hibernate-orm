@@ -747,6 +747,11 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	public boolean useInputStreamToInsertBlob() {
+		return false;
+	}
+
+	@Override
 	public boolean supportsOffsetInSubquery() {
 		return true;
 	}

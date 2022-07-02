@@ -247,6 +247,136 @@ public class OuterJoinTest {
 		} );
 	}
 
+	@Test @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFullJoin.class)
+	public void testJoinOrderWithFullJoin(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			List<Tuple> resultList = em.createQuery(
+							"SELECT COALESCE(a.key, b.key, c.key, d.key), a.value, b.value, c.value, d.value " +
+									"FROM A a " +
+									"INNER JOIN B b ON a.key = b.key " +
+									"FULL JOIN C c ON a.key = c.key " +
+									"INNER JOIN D d ON d.key = c.key " +
+									"ORDER BY COALESCE(a.key, b.key, c.key, d.key) ASC",
+							Tuple.class
+					)
+					.getResultList();
+
+			assertEquals( 3, resultList.size() );
+
+			assertEquals( "a", resultList.get( 0 ).get( 1 ) );
+			assertEquals( "d", resultList.get( 0 ).get( 2 ) );
+			assertEquals( "g", resultList.get( 0 ).get( 3 ) );
+			assertEquals( "k", resultList.get( 0 ).get( 4 ) );
+
+			assertEquals( "b", resultList.get( 1 ).get( 1 ) );
+			assertEquals( "e", resultList.get( 1 ).get( 2 ) );
+			assertEquals( "h", resultList.get( 1 ).get( 3 ) );
+			assertEquals( "l", resultList.get( 1 ).get( 4 ) );
+
+			assertNull( resultList.get( 2 ).get( 1 ) );
+			assertNull( resultList.get( 2 ).get( 2 ) );
+			assertEquals( "j", resultList.get( 2 ).get( 3 ) );
+			assertEquals( "m", resultList.get( 2 ).get( 4 ) );
+		} );
+	}
+
+	@Test @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFullJoin.class)
+	public void testJoinOrderWithFullNormalJoin(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			List<Tuple> resultList = em.createQuery(
+							"SELECT COALESCE(a.key, b.key, c.key, d.key), a.value, b.value, c.value, d.value " +
+									"FROM A a " +
+									"INNER JOIN B b ON a.key = b.key " +
+									"FULL JOIN a.cAssociationByKey c " +
+									"INNER JOIN D d ON d.key = c.key " +
+									"ORDER BY COALESCE(a.key, b.key, c.key, d.key) ASC",
+							Tuple.class
+					)
+					.getResultList();
+
+			assertEquals( 3, resultList.size() );
+
+			assertEquals( "a", resultList.get( 0 ).get( 1 ) );
+			assertEquals( "d", resultList.get( 0 ).get( 2 ) );
+			assertEquals( "g", resultList.get( 0 ).get( 3 ) );
+			assertEquals( "k", resultList.get( 0 ).get( 4 ) );
+
+			assertEquals( "b", resultList.get( 1 ).get( 1 ) );
+			assertEquals( "e", resultList.get( 1 ).get( 2 ) );
+			assertEquals( "h", resultList.get( 1 ).get( 3 ) );
+			assertEquals( "l", resultList.get( 1 ).get( 4 ) );
+
+			assertNull( resultList.get( 2 ).get( 1 ) );
+			assertNull( resultList.get( 2 ).get( 2 ) );
+			assertEquals( "j", resultList.get( 2 ).get( 3 ) );
+			assertEquals( "m", resultList.get( 2 ).get( 4 ) );
+		} );
+	}
+
+	@Test @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFullJoin.class)
+	public void testJoinOrderWithFullJoinWithIdDereference(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			List<Tuple> resultList = em.createQuery(
+					"SELECT COALESCE(a.key, b.key, c.key, d.key), a.value, b.value, c.value, d.value " +
+							"FROM A a " +
+							"INNER JOIN B b ON a.key = b.key AND a.association.key = b.association.key " +
+							"FULL JOIN C c ON a.key = c.key AND a.association.key = c.association.key " +
+							"INNER JOIN D d ON d.key = c.key AND d.association.key = c.association.key " +
+							"ORDER BY COALESCE(a.key, b.key, c.key, d.key) ASC",
+					Tuple.class
+			).getResultList();
+
+			assertEquals( 3, resultList.size() );
+
+			assertEquals( "a", resultList.get( 0 ).get( 1 ) );
+			assertEquals( "d", resultList.get( 0 ).get( 2 ) );
+			assertEquals( "g", resultList.get( 0 ).get( 3 ) );
+			assertEquals( "k", resultList.get( 0 ).get( 4 ) );
+
+			assertEquals( "b", resultList.get( 1 ).get( 1 ) );
+			assertEquals( "e", resultList.get( 1 ).get( 2 ) );
+			assertEquals( "h", resultList.get( 1 ).get( 3 ) );
+			assertEquals( "l", resultList.get( 1 ).get( 4 ) );
+
+			assertNull( resultList.get( 2 ).get( 1 ) );
+			assertNull( resultList.get( 2 ).get( 2 ) );
+			assertEquals( "j", resultList.get( 2 ).get( 3 ) );
+			assertEquals( "m", resultList.get( 2 ).get( 4 ) );
+		} );
+	}
+
+	@Test @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFullJoin.class)
+	public void testJoinOrderWithFullNormalJoinWithIdDereference(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			List<Tuple> resultList = em.createQuery(
+					"SELECT COALESCE(a.key, b.key, c.key, d.key), a.value, b.value, c.value, d.value " +
+							"FROM A a " +
+							"INNER JOIN B b ON a.key = b.key AND a.association.key = b.association.key " +
+							"FULL JOIN a.cAssociationByKey c ON a.key = c.key AND a.association.key = c.association.key " +
+							"INNER JOIN D d ON d.key = c.key AND d.association.key = c.association.key " +
+							"ORDER BY COALESCE(a.key, b.key, c.key, d.key) ASC",
+					Tuple.class
+			).getResultList();
+
+			assertEquals( 3, resultList.size() );
+
+			assertEquals( "a", resultList.get( 0 ).get( 1 ) );
+			assertEquals( "d", resultList.get( 0 ).get( 2 ) );
+			assertEquals( "g", resultList.get( 0 ).get( 3 ) );
+			assertEquals( "k", resultList.get( 0 ).get( 4 ) );
+
+			assertEquals( "b", resultList.get( 1 ).get( 1 ) );
+			assertEquals( "e", resultList.get( 1 ).get( 2 ) );
+			assertEquals( "h", resultList.get( 1 ).get( 3 ) );
+			assertEquals( "l", resultList.get( 1 ).get( 4 ) );
+
+			assertNull( resultList.get( 2 ).get( 1 ) );
+			assertNull( resultList.get( 2 ).get( 2 ) );
+			assertEquals( "j", resultList.get( 2 ).get( 3 ) );
+			assertEquals( "m", resultList.get( 2 ).get( 4 ) );
+		} );
+	}
+
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	public void testJoinOrderWithRightJoinWithInnerImplicitJoins(EntityManagerFactoryScope scope) {

@@ -20,6 +20,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.sqm.FetchClauseType;
@@ -453,6 +454,16 @@ abstract public class DialectFeatureChecks {
 		public boolean apply(Dialect dialect) {
 			// TiDB db does not support subqueries for ON condition
 			return !( dialect instanceof TiDBDialect );
+		}
+	}
+
+	public static class SupportsFullJoin implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			// TiDB db does not support subqueries for ON condition
+			return !( dialect instanceof H2Dialect
+					|| dialect instanceof MySQLDialect
+					|| dialect instanceof SybaseDialect
+					|| dialect instanceof DerbyDialect);
 		}
 	}
 }

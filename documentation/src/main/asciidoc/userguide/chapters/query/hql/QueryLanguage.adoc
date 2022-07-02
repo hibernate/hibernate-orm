@@ -90,7 +90,7 @@ Most of the complexity here arises from the interplay of set operators (`union`,
 We'll describe the various clauses of a query later in this chapter, but to summarize, a query might have:
 
 * a `select` list, specifying a <<hql-select-clause,projection>> (the things to return from the query),
-* a `from` clause and joins, <<hql-from-clause,specifying>> the entities involved in the query,
+* a `from` clause and joins, <<hql-from-clause,specifying>> the entities involved in the query, and how they're <<hql-join,related>> to each other,
 * a `where` clause, specifying a <<hql-where-clause,restriction>>,
 * a `group by` clause, for <<hql-group-by,aggregation>>,
 * a `having` clause, specifying a <<hql-having,restriction>> to apply _after_ aggregation,
@@ -1363,7 +1363,7 @@ Just like SQL, logical expressions are based on ternary logic.
 A logical operator evaluates to null if it has a null operand.
 
 [[hql-from-clause]]
-=== Declaring root entities: `from`
+=== Declaring root entities: `from` and `cross join`
 
 The `from` clause is responsible for declaring the entities available in the rest of the query, and assigning them aliases, or, in the language of the JPQL specification, _identification variables_.
 
@@ -1491,8 +1491,15 @@ This feature can be used to break a more complicated query into smaller pieces.
 Joins allow us to navigate from one entity to another, via its associations, or via explicit join conditions.
 There are:
 
-- _explicit joins_, declared within the `from` clause using the keyword ``join``,
-- and _implicit joins_, which don't need to be declared in the `from` clause.
+- _explicit joins_, declared within the `from` clause using the keyword ``join``, and
+- _implicit joins_, which don't need to be declared in the `from` clause.
+
+An explicit join may be either:
+
+* an _inner join_, written as `join` or `inner join`,
+* a _left outer join_, written as `left join` or `left outer join`,
+* a _right outer join_, written as `right join` or `right outer join`, or
+* a _full outer join_, written as `full join` or `full outer join`.
 
 [[hql-root-join]]
 ==== Explicit root joins
@@ -1516,15 +1523,7 @@ This looks nice and familiar, but it's _not_ the most common sort of join in HQL
 [[hql-explicit-join]]
 ==== Explicit association joins
 
-An explicit association join is declared using the `join` keyword.
-An explicit join may be either:
-
-* an _inner join_, written as `join` or `inner join`,
-* a _left outer join_, written as `left join` or `left outer join`,
-* a _right outer join_, written as `right join` or `right outer join`, or
-* a _full outer join_, written as `full join` or `full outer join`.
-
-Every explicit join specifies an entity attribute to be joined.
+Every explicit association join specifies an entity attribute to be joined.
 The specified attribute:
 
 * is usually a `@OneToMany`, `@ManyToMany`, `@OneToOne`, or `@ManyToOne` association, but
@@ -2085,7 +2084,7 @@ NOTE: In short, _grouping_ controls the effect of _aggregation_.
 A query with aggregation may also have a `having` clause, a restriction applied to the groups.
 
 [[hql-group-by]]
-==== `group by`
+==== Aggregation and grouping: `group by`
 
 The `group by` clause looks quite similar to the `select` clause&mdash;it has a list of grouped items, but:
 
@@ -2117,7 +2116,7 @@ The first query retrieves the complete total over all orders.
 The second retrieves the total for each customer, after grouping the orders by customer.
 
 [[hql-group-by-rollup-cube]]
-==== `rollup` and `cube`
+==== Totals and subtotals: `rollup` and `cube`
 
 The special functions `rollup()` and `cube()` may be used in the `group by` clause, when supported by the database.
 The semantics are identical to SQL.
@@ -2128,7 +2127,7 @@ These functions are especially useful for reporting:
 * A `group by` clause with `cube()` allows totals for every combination of columns.
 
 [[hql-having]]
-==== `having`
+==== Aggregation and restriction: `having`
 
 In a grouped query, the `where` clause applies to the non-aggregated values (it determines which rows will make it into the aggregation).
 The `having` clause also restricts results, but it operates on the aggregated values.

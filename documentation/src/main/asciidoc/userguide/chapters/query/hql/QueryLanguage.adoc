@@ -1519,8 +1519,10 @@ This looks nice and familiar, but it's _not_ the most common sort of join in HQL
 An explicit association join is declared using the `join` keyword.
 An explicit join may be either:
 
-* an inner join, written as `join` or `inner join`, or
-* a left outer join, written as `left join` or `left outer join`.
+* an _inner join_, written as `join` or `inner join`,
+* a _left outer join_, written as `left join` or `left outer join`,
+* a _right outer join_, written as `right join` or `right outer join`, or
+* a _full outer join_, written as `full join` or `full outer join`.
 
 Every explicit join specifies an entity attribute to be joined.
 The specified attribute:

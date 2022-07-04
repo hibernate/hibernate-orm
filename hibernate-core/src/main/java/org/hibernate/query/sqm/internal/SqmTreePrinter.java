@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.internal;
 import java.util.List;
 import java.util.Locale;
 
+import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.sql.internal.SelfInterpretingSqmPath;
@@ -33,6 +34,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmAny;
+import org.hibernate.query.sqm.tree.expression.SqmAnyDiscriminatorValue;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmByUnit;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
@@ -1041,6 +1043,16 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	@Override
 	public Object visitSummarization(SqmSummarization<?> sqmSummarization) {
+		return null;
+	}
+
+	@Override
+	public Object visitAnyDiscriminatorTypeExpression(AnyDiscriminatorSqmPath expression) {
+		return null;
+	}
+
+	@Override
+	public Object visitAnyDiscriminatorTypeValueExpression(SqmAnyDiscriminatorValue expression) {
 		return null;
 	}
 

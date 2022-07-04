@@ -6,9 +6,9 @@
  */
 package org.hibernate.orm.test.any.annotations;
 
-
 public interface Property {
 
-	public String getName();
-	public String asString();
+	String getName();
+
+	String asString();
 }

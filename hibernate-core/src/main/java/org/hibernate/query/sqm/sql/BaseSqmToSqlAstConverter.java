@@ -63,6 +63,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
+import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
@@ -83,6 +84,7 @@ import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.ValueMapping;
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -96,6 +98,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
@@ -138,6 +141,7 @@ import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.sql.internal.BasicValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.DiscriminatedAssociationPathInterpretation;
+import org.hibernate.query.sqm.sql.internal.DiscriminatedAssociationTypePathInterpretation;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.sql.internal.EmbeddableValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.EntityValuedPathInterpretation;
@@ -182,6 +186,7 @@ import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmAny;
+import org.hibernate.query.sqm.tree.expression.SqmAnyDiscriminatorValue;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmByUnit;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
@@ -6225,6 +6230,60 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				.getEntityDescriptor( nodeType.getHibernateEntityName() );
 
 		return new EntityTypeLiteral( mappingDescriptor );
+	}
+
+	@Override
+	public Expression visitAnyDiscriminatorTypeExpression(AnyDiscriminatorSqmPath expression) {
+		return DiscriminatedAssociationTypePathInterpretation.from( expression, this );
+	}
+
+	@Override
+	public Expression visitAnyDiscriminatorTypeValueExpression(SqmAnyDiscriminatorValue expression) {
+		final EntityPersister mappingDescriptor = creationContext.getSessionFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( ((EntityDomainType)expression.getNodeType()).getHibernateEntityName() );
+		for ( AttributeMapping attributeMapping : mappingDescriptor.getAttributeMappings() ) {
+			if ( attributeMapping instanceof EmbeddedAttributeMapping ) {
+				final ModelPart subPart = ( (EmbeddedAttributeMapping) attributeMapping ).findSubPart(
+						expression.getPathName(),
+						null
+				);
+				if ( subPart != null ) {
+					return buildQueryLiteral( expression, subPart );
+				}
+			}
+			else if ( attributeMapping.getAttributeName().equals( expression.getPathName() ) ) {
+				return buildQueryLiteral( expression, attributeMapping );
+			}
+		}
+		throw new HibernateException(String.format(
+				Locale.ROOT,
+				"Could not locate attribute mapping : %s -> %s",
+				mappingDescriptor.getEntityName(),
+				expression.getPathName()
+		));
+	}
+
+	private QueryLiteral<Object> buildQueryLiteral(
+			SqmAnyDiscriminatorValue expression,
+			ModelPart attributeMapping) {
+		final DiscriminatedAssociationModelPart discriminatedAssociationModelPart;
+		if ( attributeMapping instanceof PluralAttributeMapping ) {
+			discriminatedAssociationModelPart = (DiscriminatedAssociationModelPart) ( (PluralAttributeMapping) attributeMapping ).getElementDescriptor();
+		}
+		else {
+			assert attributeMapping instanceof DiscriminatedAssociationModelPart;
+			discriminatedAssociationModelPart = (DiscriminatedAssociationModelPart) attributeMapping;
+		}
+		final Object value = discriminatedAssociationModelPart.resolveDiscriminatorForEntityType(
+				creationContext.getMappingMetamodel()
+						.findEntityDescriptor( expression.getEntityValue().getHibernateEntityName() ) );
+
+		return new QueryLiteral<>(
+				value,
+				discriminatedAssociationModelPart.getDiscriminatorPart()
+		);
 	}
 
 	@Override

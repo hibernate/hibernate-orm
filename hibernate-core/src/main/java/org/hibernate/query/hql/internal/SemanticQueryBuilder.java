@@ -56,6 +56,7 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
 import org.hibernate.query.PathException;
 import org.hibernate.query.ReturnableType;
@@ -118,6 +119,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmAny;
+import org.hibernate.query.sqm.tree.expression.SqmAnyDiscriminatorValue;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmByUnit;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
@@ -133,6 +135,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmOver;
@@ -2101,8 +2104,21 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					);
 					break;
 				}
-				left = (SqmExpression<?>) leftExpressionContext.accept( this );
-				right = (SqmExpression<?>) rightExpressionContext.accept( this );
+				final SqmExpression<?> l = (SqmExpression<?>) leftExpressionContext.accept( this );
+				final SqmExpression<?> r = (SqmExpression<?>) rightExpressionContext.accept( this );
+				if ( l instanceof AnyDiscriminatorSqmPath && r instanceof SqmLiteralEntityType ) {
+					left = l;
+					right = createDiscriminatorValue( (AnyDiscriminatorSqmPath) left, rightExpressionContext );
+				}
+				else if ( r instanceof AnyDiscriminatorSqmPath && l instanceof SqmLiteralEntityType ) {
+					left = createDiscriminatorValue( (AnyDiscriminatorSqmPath) r, leftExpressionContext );
+					right = r;
+				}
+				else {
+					left = l;
+					right = r;
+				}
+
 				// This is something that we used to support before 6 which is also used in our testsuite
 				if ( left instanceof SqmLiteralNull<?> ) {
 					return new SqmNullnessPredicate(
@@ -2132,6 +2148,20 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				left,
 				comparisonOperator,
 				right,
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	private <T> SqmExpression<T> createDiscriminatorValue(AnyDiscriminatorSqmPath anyDiscriminatorTypeSqmPath, HqlParser.ExpressionContext valueExpressionContext) {
+		final SqmPath<T> discriminatorSqmPath = anyDiscriminatorTypeSqmPath.getLhs();
+		final EntityDomainType<T> entityWithDiscriminator = creationContext.getJpaMetamodel()
+				.entity( discriminatorSqmPath.findRoot().getNavigablePath().getLocalName() );
+		final EntityDomainType<Object> entityDiscriminatorValue = creationContext.getJpaMetamodel()
+				.resolveHqlEntityReference( valueExpressionContext.getText() );
+		return new SqmAnyDiscriminatorValue<>(
+				entityWithDiscriminator,
+				discriminatorSqmPath.getNodeType().getPathName(),
+				entityDiscriminatorValue,
 				creationContext.getNodeBuilder()
 		);
 	}
@@ -3335,7 +3365,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			//noinspection unchecked
 			return new SqmLiteral<>(
 					value,
-					(SqmExpressible<Number>) type,
+					type,
 					creationContext.getNodeBuilder()
 			);
 		}

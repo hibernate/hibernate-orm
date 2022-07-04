@@ -22,6 +22,7 @@ import static jakarta.persistence.metamodel.Bindable.BindableType.SINGULAR_ATTRI
  */
 public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> implements BindableType<J> {
 	private final SqmPathSource<?> keyPathSource;
+	private final AnyDiscriminatorSqmPathSource discriminatorPathSource;
 
 	public AnyMappingSqmPathSource(
 			String localPathName,
@@ -29,6 +30,7 @@ public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> impleme
 			BindableType jpaBindableType) {
 		super( localPathName, domainType, jpaBindableType );
 		keyPathSource = new BasicSqmPathSource<>( "id", (BasicDomainType<?>) domainType.getKeyType(), SINGULAR_ATTRIBUTE );
+		discriminatorPathSource = new AnyDiscriminatorSqmPathSource<>( localPathName, domainType.getDiscriminatorType(), jpaBindableType );
 	}
 
 	@Override @SuppressWarnings("unchecked")
@@ -40,6 +42,9 @@ public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> impleme
 	public SqmPathSource<?> findSubPathSource(String name) {
 		if ( "id".equals( name ) ) {
 			return keyPathSource;
+		}
+		else if("{discriminator}".equals( name )) {
+			return discriminatorPathSource;
 		}
 
 		throw new UnsupportedMappingException( "De-referencing parts of an ANY mapping, other than the key, is not supported" );

@@ -20,6 +20,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.NavigablePath;
@@ -96,6 +97,14 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	@Override
 	public Object resolveDiscriminatorForEntityType(EntityMappingType entityMappingType) {
 		return discriminatorMapping.resolveDiscriminatorValueToEntityMapping( entityMappingType );
+	}
+
+	@Override
+	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+		discriminatorMapping.getDiscriminatorPart().forEachSelectable( offset, consumer );
+		discriminatorMapping.getKeyPart().forEachSelectable( offset + 1, consumer );
+
+		return 2;
 	}
 
 	@Override

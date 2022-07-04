@@ -144,7 +144,7 @@ public interface ScrollableResults<R> extends AutoCloseable, Closeable {
 	 * @see java.sql.ResultSet#setFetchSize(int)
 	 * @see org.hibernate.cfg.AvailableSettings#STATEMENT_FETCH_SIZE
 	 *
-	 * @since 6.1.1
+	 * @since 6.1.2
 	 */
 	void setFetchSize(int fetchSize);
 }

@@ -37,7 +37,7 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.TypedQuery;
 
 /**
- * Represents a {@link jakarta.persistence.criteria.CriteriaBuilder criteria query}
+ * Represents a {@linkplain jakarta.persistence.criteria.CriteriaBuilder criteria query}
  * or a query written in HQL. The subtype {@link NativeQuery} represents a query
  * written in native SQL.
  * <p>

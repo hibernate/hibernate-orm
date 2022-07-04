@@ -6,11 +6,14 @@
  */
 package org.hibernate.orm.test.any.annotations;
 
+import java.util.List;
+
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyKeyJavaClass;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -33,6 +36,7 @@ import static org.junit.Assert.assertTrue;
 @DomainModel( annotatedClasses = { EmbeddedAnyTest.Foo.class, EmbeddedAnyTest.Bar1.class, EmbeddedAnyTest.Bar2.class } )
 @SessionFactory
 public class EmbeddedAnyTest {
+
 	@BeforeEach
 	public void createTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -74,6 +78,28 @@ public class EmbeddedAnyTest {
 					final Foo foo = session.find( Foo.class, 1 );
 					assertTrue( foo.getFooEmbedded().getBar() instanceof Bar1 );
 					assertEquals( "bar 1", ( (Bar1) foo.getFooEmbedded().getBar() ).getBar1() );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-15323")
+	public void testEmbeddedTypeHql(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final List<Foo> foos = session.createQuery( "from Foo f where type(f.fooEmbedded.bar) = Bar1", Foo.class )
+							.list();
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-15323")
+	public void testEmbeddedTypeHql2(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final List<Foo> foos = session.createQuery( "from Foo f where Bar1 = type(f.fooEmbedded.bar)", Foo.class )
+							.list();
 				}
 		);
 	}

@@ -8,6 +8,7 @@ package org.hibernate.query.sqm;
 
 import java.util.List;
 
+import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.query.sqm.sql.internal.SelfInterpretingSqmPath;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
@@ -29,6 +30,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmAny;
+import org.hibernate.query.sqm.tree.expression.SqmAnyDiscriminatorValue;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmByUnit;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
@@ -226,6 +228,10 @@ public interface SemanticQueryWalker<T> {
 	T visitJpaCriteriaParameter(JpaCriteriaParameter<?> expression);
 
 	T visitEntityTypeLiteralExpression(SqmLiteralEntityType<?> expression);
+
+	T visitAnyDiscriminatorTypeExpression(AnyDiscriminatorSqmPath expression);
+
+	T visitAnyDiscriminatorTypeValueExpression(SqmAnyDiscriminatorValue expression);
 
 	T visitParameterizedEntityTypeExpression(SqmParameterizedEntityType<?> expression);
 

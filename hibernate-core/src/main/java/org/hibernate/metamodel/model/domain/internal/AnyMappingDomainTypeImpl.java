@@ -10,6 +10,7 @@ import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.MetaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -41,7 +42,7 @@ public class AnyMappingDomainTypeImpl<T> implements AnyMappingDomainType<T> {
 
 	@Override
 	public SimpleDomainType<?> getDiscriminatorType() {
-		return (BasicType<?>) anyType.getDiscriminatorType();
+		return (SimpleDomainType<?>) ((MetaType) anyType.getDiscriminatorType()).getBaseType();
 	}
 
 	@Override

@@ -39,6 +39,7 @@ Changes in 6.1.0.Final (June 07, 2022)
 https://hibernate.atlassian.net/projects/HHH/versions/32066
 
 ** Bug
+    * [HHH-15316] - Session.createQuery() doesn't accept JpaCriteriaInsertSelect
     * [HHH-15297] - Invalid Automatic-Module-Name org.hibernate.orm.community-dialects
     * [HHH-15293] - CockroachDB BYTES type does not have a length specification
     * [HHH-15291] - ClassCastException Regression in CriteriaBuilder
@@ -52,7 +53,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/32066
     * [HHH-15270] - Inconsistent precedence of orm.xml implicit catalog over "default_catalog" in XML-mapped entities
     * [HHH-15269] - Update NativeQuery unable to use h-schema placeholder, just emits placeholder contents into SQL
     * [HHH-15267] - Some cache objects aren't implement Serializable interface
-    * [HHH-15266] - NullPointerException on 
+    * [HHH-15266] - NullPointerException on
     * [HHH-15265] - SchemaExport.execute does not add the configured schema to comments
     * [HHH-15263] - @NamedQuery is not supported with UPDATE statement
     * [HHH-15260] - Criteria query is unable to determine TableReference when combining subquery with join

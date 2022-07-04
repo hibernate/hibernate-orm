@@ -116,24 +116,33 @@ However, it is good practice to close the `ScrollableResults` explicitly.
 
 ==== StatelessSession
 
-`StatelessSession` is a command-oriented API provided by Hibernate.
-Use it to stream data to and from the database in the form of detached objects.
-A `StatelessSession` has no persistence context associated with it and does not provide many of the higher-level lifecycle semantics.
+`StatelessSession` is an alternative to `Session` and provides:
 
-Some of the things not provided by a `StatelessSession` include:
+- a command-oriented API
+- with no associated persistence context.
 
-* a first-level cache
-* interaction with any second-level or query cache
-* transactional write-behind or automatic dirty checking
+Thus, a stateless session is a slightly lower-level abstraction that's closer to the underlying JDBC activity:
 
-Limitations of `StatelessSession`:
+* there's no first-level cache,
+* the stateless session does not interact with any second-level or query cache, and
+* there's no transactional write-behind or automatic dirty checking.
 
-* Operations performed using a stateless session never cascade to associated instances.
-* Collections are ignored by a stateless session.
-* Lazy loading of associations is not supported.
-* Operations performed via a stateless session bypass Hibernate's event model and interceptors.
-* Due to the lack of a first-level cache, Stateless sessions are vulnerable to data aliasing effects.
-* A stateless session is a lower-level abstraction that is much closer to the underlying JDBC.
+Instead, persistence operations occur synchronously when a method of `StatelessSession` is invoked, and entities returned by a stateless session are always detached.
+
+[TIP]
+====
+A stateless session may be used to stream data to and from the database in the form of detached objects.
+With a stateless session, there's no need to explicitly manage the size of the first-level cache by explicitly clearing the persistence context.
+====
+
+The `StatelessSession` API comes with certain limitations:
+
+* operations performed using a stateless session never cascade to associated instances,
+* collections are ignored by a stateless session,
+* lazy loading of associations is not transparent, and is only available via an explicit operation named `fetch()`, and
+* operations performed via a stateless session bypass Hibernate's event model and interceptors.
+
+IMPORTANT: Due to the lack of a first-level cache, stateless sessions are vulnerable to data aliasing effects.
 
 [[batch-stateless-session-example]]
 .Using a  `StatelessSession`
@@ -147,9 +156,12 @@ include::{sourcedir}/BatchTest.java[tags=batch-stateless-session-example]
 The `Customer` instances returned by the query are immediately detached.
 They are never associated with any persistence context.
 
+[NOTE]
+====
 The `insert()`, `update()`, and `delete()` operations defined by the `StatelessSession` interface operate directly on database rows.
 They cause the corresponding SQL operations to be executed immediately.
 They have different semantics from the `save()`, `saveOrUpdate()`, and `delete()` operations defined by the `Session` interface.
+====
 
 [[batch-bulk-hql]]
 === Hibernate Query Language for DML

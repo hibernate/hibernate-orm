@@ -32,6 +32,7 @@ import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.TypeHelper;
 
 /**
@@ -237,6 +238,18 @@ public class EntityUpdateAction extends EntityAction {
 			// have the entity entry doAfterTransactionCompletion post-update processing, passing it the
 			// update state and the new version (if one).
 			entry.postUpdate( instance, state, nextVersion );
+		}
+
+		if ( entry.getStatus() == Status.DELETED ) {
+			final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
+			final boolean isImpliedOptimisticLocking = !entityMetamodel.isVersioned()
+					&& entityMetamodel.getOptimisticLockStyle().isAllOrDirty();
+			if ( isImpliedOptimisticLocking && entry.getLoadedState() != null ) {
+				// The entity will be deleted and because we are going to create a delete statement that uses
+				// all the state values in the where clause, the entry state needs to be updated otherwise the statement execution will
+				// not delete any row (see HHH-15218).
+				entry.postUpdate( instance, state, nextVersion );
+			}
 		}
 
 		final StatisticsImplementor statistics = factory.getStatistics();

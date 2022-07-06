@@ -104,8 +104,9 @@ import jakarta.persistence.criteria.CriteriaUpdate;
 import static java.lang.Boolean.TRUE;
 
 /**
- * Base class for SharedSessionContract/SharedSessionContractImplementor
- * implementations.  Intended for Session and StatelessSession implementations
+ * Base class for implementations of {@link org.hibernate.SharedSessionContract} and
+ * {@link SharedSessionContractImplementor}. Intended for concrete implementations of
+ * {@link org.hibernate.Session} and {@link org.hibernate.StatelessSession}.
  * <P/>
  * NOTE: This implementation defines access to a number of instance state values
  * in a manner that is not exactly concurrent-access safe.  However, a Session/EntityManager
@@ -117,6 +118,9 @@ import static java.lang.Boolean.TRUE;
  *     <li>{@link #getJdbcServices()}</li>
  *     <li>{@link #getTransaction()} (and therefore related methods such as {@link #beginTransaction()}, etc)</li>
  * </ul>
+ *
+ * @see SessionImpl
+ * @see StatelessSessionImpl
  *
  * @author Steve Ebersole
  */

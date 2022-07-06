@@ -1100,13 +1100,14 @@ public interface AvailableSettings {
 	/**
 	 * JPA callbacks are enabled by default. Set this to {@code false} to disable them.
 	 * Mostly useful to save a bit of memory when they are not used.
-	 *
+	 * <p>
 	 * Experimental and will likely be removed as soon as the memory overhead is resolved.
 	 *
 	 * @see org.hibernate.jpa.event.spi.CallbackType
 	 *
 	 * @since 5.4
 	 */
+	@Incubating
 	String JPA_CALLBACKS_ENABLED = "hibernate.jpa_callbacks.enabled";
 
 	/**

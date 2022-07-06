@@ -7,8 +7,6 @@
 package org.hibernate.orm.test.stateless;
 
 import java.util.Date;
-import java.util.List;
-
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 
@@ -16,12 +14,9 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Transaction;
 
-import org.hibernate.cfg.Environment;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -36,9 +31,6 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 		xmlMappings = "org/hibernate/orm/test/stateless/Document.hbm.xml"
 )
 @SessionFactory
-@ServiceRegistry(
-		settings = @Setting(name = Environment.STATEMENT_BATCH_SIZE, value = "4")
-)
 public class StatelessSessionTest {
 
 	@AfterEach
@@ -49,42 +41,6 @@ public class StatelessSessionTest {
 		);
 	}
 
-
-	@Test
-	public void testCreateBatch(SessionFactoryScope scope) {
-		scope.inStatelessSession(
-				statelessSession -> {
-					try {
-						Transaction tx = statelessSession.beginTransaction();
-						Document doc1 = new Document( "blah", "Blahs1" );
-						statelessSession.insert( doc1 );
-						assertNotNull( doc1.getName() );
-
-						System.out.println("blah");
-						Document doc2 = new Document( "blah blah", "Blahs2" );
-						statelessSession.insert( doc2 );
-						assertNotNull( doc2.getName() );
-						System.out.println("blah blah");
-
-						Document doc3 = new Document( "blah blah blah", "Blahs3" );
-						statelessSession.insert( doc3 );
-						assertNotNull( doc3.getName() );
-						System.out.println("blah blah blah");
-						Date initVersion = doc1.getLastModified();
-						assertNotNull( initVersion );
-						tx.commit();
-
-						List documents = statelessSession.createQuery("from Document").getResultList();
-						assertEquals( 3, documents.size() );
-					}
-					catch (Exception e) {
-						if ( statelessSession.getTransaction().isActive() ) {
-							statelessSession.getTransaction().rollback();
-						}
-						throw e;
-					}
-				} );
-	}
 	@Test
 	public void testCreateUpdateReadDelete(SessionFactoryScope scope) {
 		scope.inStatelessSession(

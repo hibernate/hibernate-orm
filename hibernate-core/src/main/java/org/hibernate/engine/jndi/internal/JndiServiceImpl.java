@@ -119,7 +119,7 @@ public class JndiServiceImpl implements JndiService {
 		try {
 			final URI uri = new URI( jndiName );
 			final String scheme = uri.getScheme();
-			if ( scheme != null && (! "java".equals( scheme ) ) ) {
+			if ( scheme != null && (! allowedScheme( scheme ) ) ) {
 				throw new JndiException( "JNDI lookups for scheme '" + scheme + "' are not allowed" );
 			}
 		}
@@ -134,6 +134,16 @@ public class JndiServiceImpl implements JndiService {
 		}
 		catch ( NamingException e ) {
 			throw new JndiException( "Error parsing JNDI name [" + jndiName + "]", e );
+		}
+	}
+
+	private static boolean allowedScheme(final String scheme) {
+		switch ( scheme ) {
+			case "java" :
+			case "osgi" :
+				return true;
+			default:
+				return false;
 		}
 	}
 

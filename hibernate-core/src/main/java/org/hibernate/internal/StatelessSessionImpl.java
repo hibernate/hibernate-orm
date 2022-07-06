@@ -39,6 +39,15 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import jakarta.transaction.SystemException;
 
 /**
+ * Concrete implementation of the {@link StatelessSession} API.
+ * <p/>
+ * Exposes two interfaces:<ul>
+ * <li>{@link StatelessSession} to the application</li>
+ * <li>{@link org.hibernate.engine.spi.SharedSessionContractImplementor} to other Hibernate components (SPI)</li>
+ * </ul>
+ * <p/>
+ * This class is not thread-safe.
+ *
  * @author Gavin King
  * @author Steve Ebersole
  */

@@ -3,6 +3,23 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.6.10.Final (July 07, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32076
+
+** Bug
+    * [HHH-15281] - INSERTs/UPDATEs no longer executed as JDBC Batch statements if hibernate.temp.use_jdbc_metadata_defaults is set to false
+    * [HHH-15218] - @OptimisticLocking(DIRTY) leads to wrong query during delete of circular reference
+    * [HHH-7525] - @Formula annotation with native query returning entity value causes NullPointerException
+
+** Improvement
+    * [HHH-15325] - Avoid allocations from BitSet.stream() in AbstractEntityPersister.resolveDirtyAttributeIndexes()
+
+** Task
+    * [HHH-15322] - Allow JNDI lookups using the osgi scheme
+
+
 Changes in 5.6.9.Final (May 14, 2022)
 ------------------------------------------------------------------------------------------------------------------------
 

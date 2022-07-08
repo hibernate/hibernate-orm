@@ -10,14 +10,13 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.query.sqm.tree.SqmVisitableNode;
 
 /**
  * Represents an individual selection within a select clause.
  *
  * @author Steve Ebersole
  */
-public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T>, SqmVisitableNode {
+public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T> {
 	private final SqmSelectableNode<T> selectableNode;
 	private final String alias;
 

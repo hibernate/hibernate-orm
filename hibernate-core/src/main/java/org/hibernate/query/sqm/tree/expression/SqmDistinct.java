@@ -12,12 +12,11 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.SqmVisitableNode;
 
 /**
  * @author Gavin King
  */
-public class SqmDistinct<T> extends AbstractSqmNode implements SqmTypedNode<T>, SqmVisitableNode {
+public class SqmDistinct<T> extends AbstractSqmNode implements SqmTypedNode<T> {
 
 	private final SqmExpression<T> expression;
 

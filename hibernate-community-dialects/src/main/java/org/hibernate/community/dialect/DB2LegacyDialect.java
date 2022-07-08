@@ -4,10 +4,19 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
+
+import java.sql.CallableStatement;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
 
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.function.CastingConcatFunction;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
@@ -18,6 +27,7 @@ import org.hibernate.dialect.pagination.DB2LimitHandler;
 import org.hibernate.dialect.pagination.LegacyDB2LimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DB2SequenceSupport;
+import org.hibernate.dialect.sequence.LegacyDB2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.DB2UniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
@@ -30,9 +40,9 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -52,31 +62,42 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.jdbc.*;
+import org.hibernate.type.descriptor.jdbc.CharJdbcType;
+import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
+import org.hibernate.type.descriptor.jdbc.DecimalJdbcType;
+import org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcType;
+import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
+import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
+import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import java.sql.CallableStatement;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-
 import jakarta.persistence.TemporalType;
 
-import static org.hibernate.type.SqlTypes.*;
+import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BLOB;
+import static org.hibernate.type.SqlTypes.BOOLEAN;
+import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.DECIMAL;
+import static org.hibernate.type.SqlTypes.NUMERIC;
+import static org.hibernate.type.SqlTypes.SQLXML;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.VARBINARY;
+import static org.hibernate.type.SqlTypes.VARCHAR;
 
 /**
  * A {@linkplain Dialect SQL dialect} for DB2.
  *
  * @author Gavin King
  */
-public class DB2Dialect extends Dialect {
+public class DB2LegacyDialect extends Dialect {
 
-	final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 5 );
 	private static final int BIND_PARAMETERS_NUMBER_LIMIT = 32_767;
 
 	private static final String FOR_READ_ONLY_SQL = " for read only with rs";
@@ -91,21 +112,16 @@ public class DB2Dialect extends Dialect {
 			: DB2LimitHandler.INSTANCE;
 	private final UniqueDelegate uniqueDelegate = createUniqueDelegate();
 
-	public DB2Dialect() {
-		this( MINIMUM_VERSION );
+	public DB2LegacyDialect() {
+		this( DatabaseVersion.make( 9, 0 ) );
 	}
 
-	public DB2Dialect(DialectResolutionInfo info) {
+	public DB2LegacyDialect(DialectResolutionInfo info) {
 		super( info );
 	}
 
-	public DB2Dialect(DatabaseVersion version) {
+	public DB2LegacyDialect(DatabaseVersion version) {
 		super( version );
-	}
-
-	@Override
-	protected DatabaseVersion getMinimumSupportedVersion() {
-		return MINIMUM_VERSION;
 	}
 
 	@Override
@@ -170,11 +186,15 @@ public class DB2Dialect extends Dialect {
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( SQLXML, "xml", this ) );
-		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( BINARY, "varchar($l) for bit data", this )
-						.withTypeCapacity( 254, "char($l) for bit data" )
-						.build()
-		);
+
+		if ( getDB2Version().isBefore( 11 ) ) {
+			// should use 'binary' since version 11
+			ddlTypeRegistry.addDescriptor(
+					CapacityDependentDdlType.builder( BINARY, "varchar($l) for bit data", this )
+							.withTypeCapacity( 254, "char($l) for bit data" )
+							.build()
+			);
+		}
 	}
 
 	protected UniqueDelegate createUniqueDelegate() {
@@ -311,10 +331,12 @@ public class DB2Dialect extends Dialect {
 				.register();
 
 		functionFactory.windowFunctions();
-		functionFactory.listagg( null );
-		if ( getDB2Version().isSameOrAfter( 11, 1 ) ) {
-			functionFactory.inverseDistributionOrderedSetAggregates();
-			functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+		if ( getDB2Version().isSameOrAfter( 9, 5 ) ) {
+			functionFactory.listagg( null );
+			if ( getDB2Version().isSameOrAfter( 11, 1 ) ) {
+				functionFactory.inverseDistributionOrderedSetAggregates();
+				functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+			}
 		}
 	}
 
@@ -426,13 +448,20 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public String getLowercaseFunction() {
+		return getDB2Version().isBefore( 9, 7 ) ? "lcase" : super.getLowercaseFunction();
+	}
+
+	@Override
 	public boolean dropConstraints() {
 		return false;
 	}
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return DB2SequenceSupport.INSTANCE;
+		return getDB2Version().isBefore( 9, 7 )
+				? LegacyDB2SequenceSupport.INSTANCE
+				: DB2SequenceSupport.INSTANCE;
 	}
 
 	@Override
@@ -508,7 +537,7 @@ public class DB2Dialect extends Dialect {
 		return selectNullString(sqlType);
 	}
 
-	public static String selectNullString(int sqlType) {
+	static String selectNullString(int sqlType) {
 		String literal;
 		switch ( sqlType ) {
 			case Types.VARCHAR:
@@ -700,7 +729,7 @@ public class DB2Dialect extends Dialect {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new DB2SqlAstTranslator<>( sessionFactory, statement );
+				return new DB2LegacySqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
 	}
@@ -737,7 +766,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public boolean supportsLateral() {
-		return true;
+		return getDB2Version().isSameOrAfter( 9, 1 );
 	}
 
 	@Override

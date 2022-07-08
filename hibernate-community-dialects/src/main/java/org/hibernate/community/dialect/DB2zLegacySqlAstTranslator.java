@@ -4,13 +4,15 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import org.hibernate.LockMode;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -18,18 +20,19 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
-import static org.hibernate.dialect.DB2zDialect.DB2_LUW_VERSION;
+import static org.hibernate.community.dialect.DB2zLegacyDialect.DB2_LUW_VERSION9;
+
 
 /**
  * A SQL AST translator for DB2z.
  *
  * @author Christian Beikov
  */
-public class DB2zSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTranslator<T> {
+public class DB2zLegacySqlAstTranslator<T extends JdbcOperation> extends DB2LegacySqlAstTranslator<T> {
 
 	private final DatabaseVersion version;
 
-	public DB2zSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, DatabaseVersion version) {
+	public DB2zLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, DatabaseVersion version) {
 		super( sessionFactory, statement );
 		this.version = version;
 	}
@@ -38,7 +41,11 @@ public class DB2zSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTran
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Percent fetches or ties fetches aren't supported in DB2 z/OS
 		// Also, variable limit isn't supported before 12.0
-		return getQueryPartForRowNumbering() != queryPart && ( useOffsetFetchClause( queryPart ) && !isRowsOnlyFetchClauseType( queryPart ) );
+		return getQueryPartForRowNumbering() != queryPart && (
+				useOffsetFetchClause( queryPart ) && !isRowsOnlyFetchClauseType( queryPart )
+						|| version.isBefore(12) && queryPart.isRoot() && hasLimit()
+						|| version.isBefore(12) && queryPart.getFetchClauseExpression() != null && !( queryPart.getFetchClauseExpression() instanceof Literal )
+		);
 	}
 
 	@Override
@@ -75,6 +82,6 @@ public class DB2zSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTran
 
 	@Override
 	public DatabaseVersion getDB2Version() {
-		return DB2_LUW_VERSION;
+		return DB2_LUW_VERSION9;
 	}
 }

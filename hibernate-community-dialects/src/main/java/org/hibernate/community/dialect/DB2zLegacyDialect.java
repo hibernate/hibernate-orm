@@ -4,17 +4,19 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 
-import jakarta.persistence.TemporalType;
-
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.DB2zSequenceSupport;
+import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -27,6 +29,8 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
+import jakarta.persistence.TemporalType;
+
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 
 /**
@@ -34,27 +38,21 @@ import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
  *
  * @author Christian Beikov
  */
-public class DB2zDialect extends DB2Dialect {
+public class DB2zLegacyDialect extends DB2LegacyDialect {
 
-	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 12, 1 );
-	final static DatabaseVersion DB2_LUW_VERSION = DB2Dialect.MINIMUM_VERSION;
+	final static DatabaseVersion DB2_LUW_VERSION9 = DatabaseVersion.make( 9, 0);
 
-	public DB2zDialect(DialectResolutionInfo info) {
+	public DB2zLegacyDialect(DialectResolutionInfo info) {
 		this( info.makeCopy() );
 		registerKeywords( info );
 	}
 
-	public DB2zDialect() {
-		this( MINIMUM_VERSION );
+	public DB2zLegacyDialect() {
+		this( DatabaseVersion.make( 7 ) );
 	}
 
-	public DB2zDialect(DatabaseVersion version) {
+	public DB2zLegacyDialect(DatabaseVersion version) {
 		super(version);
-	}
-
-	@Override
-	protected DatabaseVersion getMinimumSupportedVersion() {
-		return MINIMUM_VERSION;
 	}
 
 	@Override
@@ -79,7 +77,7 @@ public class DB2zDialect extends DB2Dialect {
 
 	@Override
 	public DatabaseVersion getDB2Version() {
-		return DB2_LUW_VERSION;
+		return DB2_LUW_VERSION9;
 	}
 
 	@Override
@@ -95,17 +93,21 @@ public class DB2zDialect extends DB2Dialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return DB2zSequenceSupport.INSTANCE;
+		return getVersion().isBefore(8)
+				? NoSequenceSupport.INSTANCE
+				: DB2zSequenceSupport.INSTANCE;
 	}
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select * from sysibm.syssequences";
+		return getVersion().isBefore(8) ? null : "select * from sysibm.syssequences";
 	}
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return OffsetFetchLimitHandler.INSTANCE;
+		return getVersion().isBefore(12)
+				? FetchLimitHandler.INSTANCE
+				: OffsetFetchLimitHandler.INSTANCE;
 	}
 
 	@Override
@@ -180,7 +182,7 @@ public class DB2zDialect extends DB2Dialect {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new DB2zSqlAstTranslator<>( sessionFactory, statement, getVersion() );
+				return new DB2zLegacySqlAstTranslator<>( sessionFactory, statement, getVersion() );
 			}
 		};
 	}

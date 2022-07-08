@@ -4,8 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.tree.Statement;
@@ -14,18 +15,19 @@ import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
-import static org.hibernate.dialect.DB2iDialect.DB2_LUW_VERSION;
+import static org.hibernate.community.dialect.DB2iLegacyDialect.DB2_LUW_VERSION9;
+
 
 /**
  * A SQL AST translator for DB2i.
  *
  * @author Christian Beikov
  */
-public class DB2iSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTranslator<T> {
+public class DB2iLegacySqlAstTranslator<T extends JdbcOperation> extends DB2LegacySqlAstTranslator<T> {
 
 	private final DatabaseVersion version;
 
-	public DB2iSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, DatabaseVersion version) {
+	public DB2iLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, DatabaseVersion version) {
 		super( sessionFactory, statement );
 		this.version = version;
 	}
@@ -52,6 +54,6 @@ public class DB2iSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTran
 
 	@Override
 	public DatabaseVersion getDB2Version() {
-		return DB2_LUW_VERSION;
+		return DB2_LUW_VERSION9;
 	}
 }

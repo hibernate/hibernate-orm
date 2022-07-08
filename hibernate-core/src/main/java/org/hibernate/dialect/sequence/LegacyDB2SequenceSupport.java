@@ -12,7 +12,10 @@ import org.hibernate.MappingException;
  * Sequence support for {@link org.hibernate.dialect.DB2Dialect}.
  *
  * @author Gavin King
+ *
+ * @deprecated use {@code DB2SequenceSupport}
  */
+@Deprecated
 public class LegacyDB2SequenceSupport implements SequenceSupport {
 
 	public static final SequenceSupport INSTANCE = new LegacyDB2SequenceSupport();

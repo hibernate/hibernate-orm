@@ -49,7 +49,8 @@ stage('Configure') {
 		// We want to enable preview features when testing early-access builds of OpenJDK:
 		// even if we don't use these features, just enabling them can cause side effects
 		// and it's useful to test that.
-		new BuildEnvironment( testJdkVersion: '19', testJdkLauncherArgs: '--enable-preview' )
+		new BuildEnvironment( testJdkVersion: '19', testJdkLauncherArgs: '--enable-preview' ),
+		new BuildEnvironment( testJdkVersion: '20', testJdkLauncherArgs: '--enable-preview' )
 	];
 
 	helper.configure {

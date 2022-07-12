@@ -644,7 +644,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 
 	private void renderSQL() throws QueryException, MappingException {
 		final int rtsize;
-		if ( returnedTypes.size() == 0 && scalarTypes.size() == 0 ) {
+		if ( returnedTypes.isEmpty()  && scalarTypes.isEmpty()  ) {
 			//ie no select clause in HQL
 			returnedTypes = fromTypes;
 			rtsize = returnedTypes.size();
@@ -804,7 +804,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 
 		StringBuilder buf = new StringBuilder( 20 );
 
-		if ( scalarTypes.size() == 0 ) {
+		if ( scalarTypes.isEmpty()  ) {
 			//ie. no select clause
 			int size = returnedTypes.size();
 			for ( int k = 0; k < size; k++ ) {

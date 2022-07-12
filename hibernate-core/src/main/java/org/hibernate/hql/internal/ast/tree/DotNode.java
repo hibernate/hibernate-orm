@@ -257,7 +257,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 				&& getWalker().getSessionFactoryHelper().getFactory().getDialect().requiresParensForTupleDistinctCounts();
 		if ( cols.length > 1 &&
 				( getWalker().isComparativeExpressionClause() || countDistinct || getWalker().getCurrentClauseType() == HqlSqlTokenTypes.SET ) ) {
-			text = "(" + text + ")";
+			text = '(' + text + ')';
 		}
 		setText( text );
 	}

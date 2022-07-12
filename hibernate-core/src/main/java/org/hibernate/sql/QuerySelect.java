@@ -159,19 +159,19 @@ public class QuerySelect {
 				}
 				buf.append( whereConditions );
 				if ( hasOuterJoinsAfterWhere ) {
-					buf.append( ")" );
+					buf.append( ')' );
 				}
 			}
 		}
 
 		if ( groupBy.length() > 0 ) {
-			buf.append( " group by " ).append( groupBy.toString() );
+			buf.append( " group by " ).append( groupBy );
 		}
 		if ( having.length() > 0 ) {
-			buf.append( " having " ).append( having.toString() );
+			buf.append( " having " ).append( having );
 		}
 		if ( orderBy.length() > 0 ) {
-			buf.append( " order by " ).append( orderBy.toString() );
+			buf.append( " order by " ).append( orderBy);
 		}
 
 		return dialect.transformSelectString( buf.toString() );

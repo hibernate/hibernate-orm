@@ -271,7 +271,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
 		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
-		final Map configurationSettings = new HashMap();
+		final Map configurationSettings = new HashMap(cfgService.getSettings().size()+jdbcServices.getJdbcEnvironment().getDialect().getDefaultProperties().size());
 		//noinspection unchecked
 		configurationSettings.putAll( jdbcServices.getJdbcEnvironment().getDialect().getDefaultProperties() );
 		//noinspection unchecked

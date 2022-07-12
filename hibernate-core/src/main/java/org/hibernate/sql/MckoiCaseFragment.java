@@ -30,7 +30,7 @@ public class MckoiCaseFragment extends CaseFragment {
 				.append(", ")
 				.append( me.getValue() )
 				.append(", ");
-			buf2.append(")");
+			buf2.append(')');
 		}
 
 		buf.append("null");

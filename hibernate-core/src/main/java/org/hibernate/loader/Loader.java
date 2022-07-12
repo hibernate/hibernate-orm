@@ -1032,7 +1032,7 @@ public abstract class Loader {
 		final boolean createSubselects = isSubselectLoadingEnabled();
 		final EntityKey optionalObjectKey = getOptionalObjectKey( queryParameters, session );
 		final LockMode[] lockModesArray = getLockModes( queryParameters.getLockOptions() );
-		final List<Object> results = new ArrayList<>();
+		final List<Object> results = new ArrayList<>(1);
 
 		handleEmptyCollections( queryParameters.getCollectionKeys(), rs, session );
 		EntityKey[] keys = new EntityKey[entitySpan]; //we can reuse it for each row
@@ -1131,7 +1131,7 @@ public abstract class Loader {
 
 	private Map buildNamedParameterLocMap(QueryParameters queryParameters) {
 		if ( queryParameters.getNamedParameters() != null ) {
-			final Map namedParameterLocMap = new HashMap();
+			final Map namedParameterLocMap = new HashMap(((int)(queryParameters.getNamedParameters().keySet().size()/0.75))+1);
 			for ( String name : queryParameters.getNamedParameters().keySet() ) {
 				namedParameterLocMap.put(
 						name,
@@ -2692,7 +2692,7 @@ public abstract class Loader {
 
 		QueryKey key = generateQueryKey( session, queryParameters );
 
-		if ( querySpaces == null || querySpaces.size() == 0 ) {
+		if ( querySpaces == null || querySpaces.isEmpty() ) {
 			LOG.tracev( "Unexpected querySpaces is {0}", ( querySpaces == null ? querySpaces : "empty" ) );
 		}
 		else {

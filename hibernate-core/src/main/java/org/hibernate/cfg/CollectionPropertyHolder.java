@@ -319,7 +319,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 
 	@Override
 	public String toString() {
-		return super.toString() + "(" + collection.getRole() + ")";
+		return super.toString() + '(' + collection.getRole() + ')';
 	}
 
 	boolean prepared;

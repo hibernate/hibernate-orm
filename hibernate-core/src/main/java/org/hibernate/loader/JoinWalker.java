@@ -1085,7 +1085,7 @@ public class JoinWalker {
 	 */
 	protected final String selectString(List associations) throws MappingException {
 
-		if ( associations.size() == 0 ) {
+		if ( associations.isEmpty()  ) {
 			return "";
 		}
 		else {

@@ -170,22 +170,22 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		}
 		else {
 			this.currentPropertyColumnOverride = buildColumnOverride( property, getPath() );
-			if ( this.currentPropertyColumnOverride.size() == 0 ) {
+			if ( this.currentPropertyColumnOverride.isEmpty()  ) {
 				this.currentPropertyColumnOverride = null;
 			}
 
 			this.currentPropertyJoinColumnOverride = buildJoinColumnOverride( property, getPath() );
-			if ( this.currentPropertyJoinColumnOverride.size() == 0 ) {
+			if ( this.currentPropertyJoinColumnOverride.isEmpty()  ) {
 				this.currentPropertyJoinColumnOverride = null;
 			}
 
 			this.currentPropertyJoinTableOverride = buildJoinTableOverride( property, getPath() );
-			if ( this.currentPropertyJoinTableOverride.size() == 0 ) {
+			if ( this.currentPropertyJoinTableOverride.isEmpty() ) {
 				this.currentPropertyJoinTableOverride = null;
 			}
 
 			this.currentPropertyForeignKeyOverride = buildForeignKeyOverride( property, getPath() );
-			if ( this.currentPropertyForeignKeyOverride.size() == 0 ) {
+			if ( this.currentPropertyForeignKeyOverride.isEmpty()  ) {
 				this.currentPropertyForeignKeyOverride = null;
 			}
 		}

@@ -66,7 +66,7 @@ public final class FilterKey implements Serializable {
 	 * @return The filter keys, one per enabled filter
 	 */
 	public static Set<FilterKey> createFilterKeys(Map<String,Filter> enabledFilters) {
-		if ( enabledFilters.size() == 0 ) {
+		if ( enabledFilters.isEmpty() ) {
 			return null;
 		}
 		final Set<FilterKey> result = new HashSet<FilterKey>();

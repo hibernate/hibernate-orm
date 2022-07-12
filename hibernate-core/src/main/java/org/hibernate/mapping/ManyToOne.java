@@ -74,7 +74,7 @@ public class ManyToOne extends ToOne {
 			else {
 				// todo : if "none" another option is to create the ForeignKey object still	but to set its #disableCreation flag
 				if ( !hasFormula() && !"none".equals( getForeignKeyName() ) ) {
-					java.util.List refColumns = new ArrayList();
+					java.util.List refColumns = new ArrayList(5);
 					Iterator iter = property.getColumnIterator();
 					while ( iter.hasNext() ) {
 						Column col = (Column) iter.next();

@@ -1344,7 +1344,7 @@ public final class AnnotationBinder {
 	}
 
 	private static void bindFilterDef(FilterDef defAnn, MetadataBuildingContext context) {
-		Map<String, org.hibernate.type.Type> params = new HashMap<>();
+		Map<String, org.hibernate.type.Type> params = new HashMap<>(defAnn.parameters().length);
 		for ( ParamDef param : defAnn.parameters() ) {
 			params.put( param.name(), context.getMetadataCollector().getTypeResolver().heuristicType( param.type() ) );
 		}

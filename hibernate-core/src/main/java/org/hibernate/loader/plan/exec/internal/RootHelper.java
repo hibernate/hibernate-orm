@@ -42,7 +42,7 @@ public class RootHelper {
 	 */
 	@SuppressWarnings("unchecked")
 	public <T extends Return> T extractRootReturn(LoadPlan loadPlan, Class<T> returnType) {
-		if ( loadPlan.getReturns().size() == 0 ) {
+		if ( loadPlan.getReturns().isEmpty()  ) {
 			throw new IllegalStateException( "LoadPlan contained no root returns" );
 		}
 		else if ( loadPlan.getReturns().size() > 1 ) {
@@ -77,7 +77,7 @@ public class RootHelper {
 	 */
 	@SuppressWarnings("unchecked")
 	public <T extends QuerySpace> T extractRootQuerySpace(QuerySpaces querySpaces, Class<EntityQuerySpace> returnType) {
-		if ( querySpaces.getRootQuerySpaces().size() == 0 ) {
+		if ( querySpaces.getRootQuerySpaces().isEmpty() ) {
 			throw new IllegalStateException( "LoadPlan contained no root query-spaces" );
 		}
 		else if ( querySpaces.getRootQuerySpaces().size() > 1 ) {

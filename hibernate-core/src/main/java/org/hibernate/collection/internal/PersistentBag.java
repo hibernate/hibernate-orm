@@ -436,7 +436,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	@Override
 	@SuppressWarnings("unchecked")
 	public boolean addAll(Collection values) {
-		if ( values.size() == 0 ) {
+		if ( values.isEmpty() ) {
 			return false;
 		}
 		if ( !isOperationQueueEnabled() ) {

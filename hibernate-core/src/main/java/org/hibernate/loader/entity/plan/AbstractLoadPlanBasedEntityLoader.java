@@ -317,7 +317,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 	}
 
 	protected Object extractEntityResult(List results, Serializable id) {
-		if ( results.size() == 0 ) {
+		if ( results.isEmpty()  ) {
 			return null;
 		}
 		else if ( results.size() == 1 ) {

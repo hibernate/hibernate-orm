@@ -108,7 +108,7 @@ public class MapKeyHelpers {
 			else {
 				name = getAttribute().getName();
 			}
-			return "key(" + name + ")";
+			return "key(" + name + ')';
 		}
 	}
 

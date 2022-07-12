@@ -198,16 +198,18 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			boolean useBatch = expectation.canBeBatched() && jdbcBatchSizeToUse > 1;
 			final Iterator entries = collection.entries( this );
 
-			final List elements = new ArrayList();
+			final List elements =new ArrayList();
+
 			while ( entries.hasNext() ) {
 				elements.add( entries.next() );
 			}
 
 			final String sql = getSQLUpdateRowString();
 			int count = 0;
+			final int size = elements.size();
 			if ( collection.isElementRemoved() ) {
 				// the update should be done starting from the end to the list
-				for ( int i = elements.size() - 1; i >= 0; i-- ) {
+				for (int i = size - 1; i >= 0; i-- ) {
 					count = doUpdateRow(
 							id,
 							collection,
@@ -223,7 +225,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				}
 			}
 			else {
-				for ( int i = 0; i < elements.size(); i++ ) {
+				for (int i = 0; i < size; i++ ) {
 					count = doUpdateRow(
 							id,
 							collection,

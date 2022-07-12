@@ -98,7 +98,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 	private void initText(String[] columns) {
 		String text = String.join( ", ", columns );
 		if ( columns.length > 1 && getWalker().isComparativeExpressionClause() ) {
-			text = "(" + text + ")";
+			text = '(' + text + ')';
 		}
 		setText( text );
 	}
@@ -222,7 +222,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 						|| getWalker().getCurrentTopLevelClauseType() == HqlSqlTokenTypes.ORDER
 						|| getWalker().getCurrentTopLevelClauseType() == HqlSqlTokenTypes.GROUP;
 				if ( ! shouldSkipWrappingInParenthesis ) {
-					joinedFragment = "(" + joinedFragment + ")";
+					joinedFragment = '(' + joinedFragment + ')';
 				}
 				setText( joinedFragment );
 			}
@@ -275,7 +275,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 				? persister.toColumns(fromElement.getTableAlias(), property)
 				: persister.toColumns(property);
 		String text = String.join(", ", columns);
-		setText(columns.length == 1 ? text : "(" + text + ")");
+		setText(columns.length == 1 ? text : '(' + text + ')');
 		setType(SqlTokenTypes.SQL_TOKEN);
 
 		// these pieces are needed for usage in select clause

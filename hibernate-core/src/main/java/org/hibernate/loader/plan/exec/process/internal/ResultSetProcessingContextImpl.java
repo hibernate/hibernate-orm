@@ -255,7 +255,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 	@Override
 	public void registerHydratedEntity(EntityReference entityReference, EntityKey entityKey, Object entityInstance) {
 		if ( currentRowHydratedEntityRegistrationList == null ) {
-			currentRowHydratedEntityRegistrationList = new ArrayList<>();
+			currentRowHydratedEntityRegistrationList = new ArrayList<>(1);
 		}
 		currentRowHydratedEntityRegistrationList.add(
 				new HydratedEntityRegistration(

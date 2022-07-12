@@ -31,6 +31,6 @@ public class PathTypeExpression<T> extends ExpressionImpl<T> implements Serializ
 	}
 
 	public String render(RenderingContext renderingContext) {
-		return "type(" + pathImpl.getPathIdentifier() + ")";
+		return "type(" + pathImpl.getPathIdentifier() + ')';
 	}
 }

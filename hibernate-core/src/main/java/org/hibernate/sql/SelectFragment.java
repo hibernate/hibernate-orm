@@ -127,7 +127,7 @@ public class SelectFragment {
 		Iterator<String> iter = columns.iterator();
 		Iterator<String> columnAliasIter = columnAliases.iterator();
 		//HashMap columnsUnique = new HashMap();
-		HashSet<String> columnsUnique = new HashSet<String>();
+		HashSet<String> columnsUnique = new HashSet<String>(usedAliases!=null? (int)(usedAliases.length/0.75)+1:0 );
 		if (usedAliases!=null) {
 			columnsUnique.addAll( Arrays.asList(usedAliases) );
 		}

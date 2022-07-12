@@ -46,14 +46,15 @@ public class ConditionalParenthesisFunction extends StandardSQLFunction {
 		final boolean hasArgs = !arguments.isEmpty();
 		final StringBuilder buf = new StringBuilder( getName() );
 		if ( hasArgs ) {
-			buf.append( "(" );
-			for ( int i = 0; i < arguments.size(); i++ ) {
+			buf.append('(');
+			int size = arguments.size();
+			for (int i = 0; i < size; i++ ) {
 				buf.append( arguments.get( i ) );
-				if ( i < arguments.size() - 1 ) {
+				if ( i < size - 1 ) {
 					buf.append( ", " );
 				}
 			}
-			buf.append( ")" );
+			buf.append(')');
 		}
 		return buf.toString();
 	}

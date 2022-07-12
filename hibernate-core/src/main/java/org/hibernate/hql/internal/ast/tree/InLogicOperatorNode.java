@@ -183,7 +183,8 @@ public class InLogicOperatorNode extends BinaryLogicOperatorNode implements Bina
 			setType( negated ? HqlSqlTokenTypes.AND : HqlSqlTokenTypes.OR );
 			setText( negated ? "and" : "or" );
 			AST curNode = this;
-			for ( int i = andElementsNodeList.size() - 1; i > 1; i-- ) {
+			final int size = andElementsNodeList.size();
+			for (int i = size - 1; i > 1; i-- ) {
 				AST group = getASTFactory().create(
 						negated ? HqlSqlTokenTypes.AND : HqlSqlTokenTypes.OR,
 						negated ? "and" : "or"

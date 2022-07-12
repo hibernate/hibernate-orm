@@ -655,7 +655,7 @@ class FromElementType {
 						collectionPropertyMapping.toColumns( tableAlias, propertyName )
 				);
 				LOG.debugf( "toColumns(%s,%s) : subquery = %s", tableAlias, propertyName, subquery );
-				return new String[] {"(" + subquery + ")"};
+				return new String[] {'(' + subquery + ')'};
 			}
 		};
 	}

@@ -233,8 +233,10 @@ public class CriteriaLoader extends OuterJoinLoader {
 		locks.setScope( lockOptions.getScope());
 		locks.setTimeOut( lockOptions.getTimeOut());
 
-		final Map<String,String[]> keyColumnNames = dialect.forUpdateOfColumns() ? new HashMap() : null;
 		final String[] drivingSqlAliases = getAliases();
+		final Map<String,String[]> keyColumnNames = dialect.forUpdateOfColumns() ? new HashMap((int)(drivingSqlAliases.length/0.75)+1) : null;
+
+
 		for ( int i = 0; i < drivingSqlAliases.length; i++ ) {
 			final LockMode lockMode = lockOptions.getAliasSpecificLockMode( drivingSqlAliases[i] );
 			if ( lockMode != null ) {

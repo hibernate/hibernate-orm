@@ -241,7 +241,7 @@ public class BinderHelper {
 			Object columnOwner,
 			Ejb3JoinColumn[] columns,
 			MetadataBuildingContext context) {
-		Map<Column, Set<Property>> columnsToProperty = new HashMap<>();
+		Map<Column, Set<Property>> columnsToProperty = new HashMap<>(columns.length);
 		List<Column> orderedColumns = new ArrayList<>( columns.length );
 		Table referencedTable;
 		if ( columnOwner instanceof PersistentClass ) {
@@ -282,7 +282,7 @@ public class BinderHelper {
 		//first naive implementation
 		//only check 1 columns properties
 		//TODO make it smarter by checking correctly ordered multi column properties
-		List<Property> orderedProperties = new ArrayList<>();
+		List<Property> orderedProperties = new ArrayList<>(1);
 		for (Column column : orderedColumns) {
 			boolean found = false;
 			for (Property property : columnsToProperty.get( column ) ) {
@@ -979,7 +979,7 @@ public class BinderHelper {
 	}
 	
 	public static Map<String,String> toAliasTableMap(SqlFragmentAlias[] aliases){
-		Map<String,String> ret = new HashMap<>();
+		Map<String,String> ret = new HashMap<>(aliases!=null? aliases.length:0);
 		for ( SqlFragmentAlias aliase : aliases ) {
 			if ( StringHelper.isNotEmpty( aliase.table() ) ) {
 				ret.put( aliase.alias(), aliase.table() );
@@ -989,7 +989,7 @@ public class BinderHelper {
 	}
 	
 	public static Map<String,String> toAliasEntityMap(SqlFragmentAlias[] aliases){
-		Map<String,String> ret = new HashMap<>();
+		Map<String,String> ret = new HashMap<>(aliases!=null? aliases.length:0);
 		for ( SqlFragmentAlias aliase : aliases ) {
 			if ( aliase.entity() != void.class ) {
 				ret.put( aliase.alias(), aliase.entity().getName() );

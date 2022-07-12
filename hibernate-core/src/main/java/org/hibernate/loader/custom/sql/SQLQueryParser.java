@@ -318,7 +318,7 @@ public class SQLQueryParser {
 
 		private void registerPositionParamBinder(int label) {
 			if ( paramValueBinders == null ) {
-				paramValueBinders = new ArrayList<>();
+				paramValueBinders = new ArrayList<>(5);
 			}
 
 			paramValueBinders.add( new PositionalParamBinder( label ) );
@@ -338,7 +338,7 @@ public class SQLQueryParser {
 
 		private void registerNamedParamBinder(String name) {
 			if ( paramValueBinders == null ) {
-				paramValueBinders = new ArrayList<>();
+				paramValueBinders = new ArrayList<>(5);
 			}
 
 			paramValueBinders.add( new NamedParamBinder( name ) );

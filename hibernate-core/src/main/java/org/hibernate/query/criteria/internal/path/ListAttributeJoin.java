@@ -129,7 +129,7 @@ public class ListAttributeJoin<O,E>
 
 		@Override
 		public String render(RenderingContext renderingContext) {
-			return "treat(" + original.render( renderingContext ) + " as " + treatAsType.getName() + ")";
+			return "treat(" + original.render( renderingContext ) + " as " + treatAsType.getName() + ')';
 		}
 
 		@Override
@@ -139,7 +139,7 @@ public class ListAttributeJoin<O,E>
 
 		@Override
 		public String getPathIdentifier() {
-			return "treat(" + getAlias() + " as " + treatAsType.getName() + ")";
+			return "treat(" + getAlias() + " as " + treatAsType.getName() + ')';
 		}
 
 		@Override

@@ -215,7 +215,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	@Override
 	@SuppressWarnings("unchecked")
 	public boolean addAll(Collection values) {
-		if ( values.size() == 0 ) {
+		if ( values.isEmpty()==true) {
 			return false;
 		}
 		if ( !isOperationQueueEnabled() ) {

@@ -30,7 +30,7 @@ public class NaturalIdEntityJoinWalker extends EntityJoinWalker {
 
 	private static String[] naturalIdColumns(Loadable persister, boolean[] valueNullness) {
 		int i = 0;
-		List<String> columns = new ArrayList<>();
+		List<String> columns = new ArrayList<>(persister.getNaturalIdentifierProperties().length);
 		for ( int p : persister.getNaturalIdentifierProperties() ) {
 			if ( !valueNullness[i++] ) {
 				columns.addAll( asList( persister.getPropertyColumnNames(p) ) );

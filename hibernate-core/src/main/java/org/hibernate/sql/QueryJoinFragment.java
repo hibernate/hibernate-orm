@@ -137,7 +137,7 @@ public class QueryJoinFragment extends JoinFragment {
 			}
 		}
 		if ( fkColumns.length > 1 ) {
-			afterWhere.append( ")" );
+			afterWhere.append( ')' );
 		}
 	}
 

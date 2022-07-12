@@ -63,9 +63,9 @@ public class StandardAnsiSqlAggregationFunctions {
 				sep = ", ";
 			}
 			if (dialect.requiresParensForTupleDistinctCounts()) {
-				buffer.append(")");
+				buffer.append(')');
 			}
-			return buffer.append( ")" ).toString();
+			return buffer.append( ')' ).toString();
 		}
 	}
 
@@ -103,7 +103,7 @@ public class StandardAnsiSqlAggregationFunctions {
 
 		@SuppressWarnings("UnusedParameters")
 		protected String render(int firstArgumentJdbcType, String argument, SessionFactoryImplementor factory) {
-			return "avg(" + renderArgument( argument, firstArgumentJdbcType ) + ")";
+			return "avg(" + renderArgument( argument, firstArgumentJdbcType ) + ')';
 		}
 
 		protected String renderArgument(String argument, int firstArgumentJdbcType) {

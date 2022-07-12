@@ -1458,7 +1458,8 @@ public class ModelBinder {
 
 		// bind the collection type info
 		String typeName = source.getTypeInformation().getName();
-		Map typeParameters = new HashMap();
+		int initialSize=source.getTypeInformation().getParameters()!=null?source.getTypeInformation().getParameters().size():0;
+		Map typeParameters = new HashMap((int) (initialSize/0.75f)+1);
 		if ( typeName != null ) {
 			// see if there is a corresponding type-def
 			final TypeDefinition typeDef = mappingDocument.getMetadataCollector().getTypeDefinition( typeName );
@@ -2355,8 +2356,10 @@ public class ModelBinder {
 						.getTypeResolver()
 						.heuristicType( discriminatorTypeResolution.typeName );
 
-				final HashMap anyValueBindingMap = new HashMap();
-				for ( Map.Entry<String,String> discriminatorValueMappings : anyMapping.getDiscriminatorSource().getValueMappings().entrySet() ) {
+				java.util.Set<Map.Entry<String, String>> entries = anyMapping.getDiscriminatorSource().getValueMappings().entrySet();
+				final HashMap anyValueBindingMap = new HashMap((int) (entries.size()/0.75f)+1);
+
+				for ( Map.Entry<String,String> discriminatorValueMappings : entries) {
 					try {
 						final Object discriminatorValue = metaType.stringToObject( discriminatorValueMappings.getKey() );
 						final String mappedEntityName = sourceDocument.qualifyClassName( discriminatorValueMappings.getValue() );

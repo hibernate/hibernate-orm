@@ -1244,11 +1244,11 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			SharedSessionContractImplementor session) throws HibernateException {
 
 		// short-circuit(s)
-		if ( currentElements.size() == 0 ) {
+		if ( currentElements.isEmpty()  ) {
 			// no new elements, the old list contains only Orphans
 			return oldElements;
 		}
-		if ( oldElements.size() == 0 ) {
+		if ( oldElements.isEmpty()  ) {
 			// no old elements, so no Orphans neither
 			return oldElements;
 		}

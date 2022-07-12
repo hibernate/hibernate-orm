@@ -98,7 +98,7 @@ public class OneToOne extends ToOne {
 	}
 
 	public java.util.List getConstraintColumns() {
-		ArrayList list = new ArrayList();
+		ArrayList list = new ArrayList(5);
 		Iterator iter = identifier.getColumnIterator();
 		while ( iter.hasNext() ) {
 			list.add( iter.next() );

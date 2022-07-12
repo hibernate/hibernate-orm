@@ -173,7 +173,7 @@ public class AnnotationMetaEntity implements MetaEntity {
 		addPersistentMembers( fieldsOfClass, AccessType.FIELD );
 
 		List<? extends Element> methodsOfClass = ElementFilter.methodsIn( element.getEnclosedElements() );
-		List<Element> gettersAndSettersOfClass = new ArrayList<>();
+		List<Element> gettersAndSettersOfClass = new ArrayList<>(methodsOfClass.size());
 
 		for (Element rawMethodOfClass: methodsOfClass) {
 			if ( isGetterOrSetter( rawMethodOfClass)) {

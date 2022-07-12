@@ -344,7 +344,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 					}
 					else {
 						throw new HibernateException( "Calling method '" + methodName + "' is not valid without an active transaction (Current status: "
-								+ realSession.getTransaction().getStatus() + ")" );
+								+ realSession.getTransaction().getStatus() + ')');
 					}
 				}
 				LOG.tracef( "Allowing proxy invocation [%s] to proceed to real session", methodName );

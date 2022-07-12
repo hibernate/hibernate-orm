@@ -92,7 +92,7 @@ public class CollectionSizeNode extends SqlNode implements SelectExpression {
 
 		buffer.append( collectionDescriptor.filterFragment( collectionTableAlias,
 				collectionOwnerFromElement.getWalker().getEnabledFilters() ) );
-		buffer.append( ")" );
+		buffer.append( ')' );
 
 		if ( scalarName != null ) {
 			buffer.append( " as " ).append( scalarName );

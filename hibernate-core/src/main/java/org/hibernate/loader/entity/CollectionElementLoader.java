@@ -89,7 +89,7 @@ public class CollectionElementLoader extends OuterJoinLoader {
 		if ( list.size() == 1 ) {
 			return list.get( 0 );
 		}
-		else if ( list.size() == 0 ) {
+		else if ( list.isEmpty()  ) {
 			return null;
 		}
 		else {

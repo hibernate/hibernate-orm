@@ -314,7 +314,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	public Predicate isTrue(Expression<Boolean> expression) {
 		if ( CompoundPredicate.class.isInstance( expression ) ) {
 			final CompoundPredicate predicate = (CompoundPredicate) expression;
-			if ( predicate.getExpressions().size() == 0 ) {
+			if ( predicate.getExpressions().isEmpty() ) {
 				return new BooleanStaticAssertionPredicate(
 						this,
 						predicate.getOperator() == Predicate.BooleanOperator.AND
@@ -332,7 +332,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	public Predicate isFalse(Expression<Boolean> expression) {
 		if ( CompoundPredicate.class.isInstance( expression ) ) {
 			final CompoundPredicate predicate = (CompoundPredicate) expression;
-			if ( predicate.getExpressions().size() == 0 ) {
+			if ( predicate.getExpressions().isEmpty()  ) {
 				return new BooleanStaticAssertionPredicate(
 						this,
 						predicate.getOperator() == Predicate.BooleanOperator.OR

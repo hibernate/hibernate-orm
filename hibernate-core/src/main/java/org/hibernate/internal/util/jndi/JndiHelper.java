@@ -41,7 +41,7 @@ public final class JndiHelper {
 
 	public static InitialContext getInitialContext(Properties props) throws NamingException {
 		final Hashtable hash = extractJndiProperties( props );
-		return hash.size() == 0 ? new InitialContext() : new InitialContext( hash );
+		return hash.isEmpty()  ? new InitialContext() : new InitialContext( hash );
 	}
 
 	/**

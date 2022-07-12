@@ -1088,7 +1088,7 @@ public abstract class AbstractEntityPersister
 				}
 			}
 
-			if ( columnNumbers.size() == 0 && formulaNumbers.size() == 0 ) {
+			if ( columnNumbers.isEmpty()  && formulaNumbers.isEmpty()  ) {
 				// only one-to-one is lazily fetched
 				continue;
 			}

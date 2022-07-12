@@ -46,7 +46,7 @@ public class ParameterNode extends HqlSqlWalkerNode implements DisplayableNode, 
 			for ( int i = 1; i < count; i++ ) {
 				buffer.append( ", ?" );
 			}
-			buffer.append( ")" );
+			buffer.append( ')' );
 			return buffer.toString();
 		}
 		else {

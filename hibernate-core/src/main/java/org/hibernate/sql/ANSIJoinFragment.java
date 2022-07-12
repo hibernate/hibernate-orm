@@ -140,7 +140,7 @@ public class ANSIJoinFragment extends JoinFragment {
 			}
 		}
 		if ( lhsColumns.length > 1 ) {
-			this.buffer.append( ")" );
+			this.buffer.append( ')' );
 		}
 
 		addCondition( buffer, on );

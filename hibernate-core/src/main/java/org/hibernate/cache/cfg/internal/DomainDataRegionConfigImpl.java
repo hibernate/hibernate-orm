@@ -125,7 +125,7 @@ public class DomainDataRegionConfigImpl implements DomainDataRegionConfig {
 		@SuppressWarnings("UnusedReturnValue")
 		public Builder addNaturalIdConfig(RootClass rootEntityDescriptor, AccessType accessType) {
 			if ( naturalIdConfigs == null ) {
-				naturalIdConfigs = new ArrayList<>();
+				naturalIdConfigs = new ArrayList<>(1);
 			}
 
 			naturalIdConfigs.add( new NaturalIdDataCachingConfigImpl( rootEntityDescriptor, accessType ) );
@@ -135,7 +135,7 @@ public class DomainDataRegionConfigImpl implements DomainDataRegionConfig {
 		@SuppressWarnings("UnusedReturnValue")
 		public Builder addCollectionConfig(Collection collectionDescriptor, AccessType accessType) {
 			if ( collectionConfigs == null ) {
-				collectionConfigs = new ArrayList<>();
+				collectionConfigs = new ArrayList<>(1);
 			}
 
 			collectionConfigs.add( new CollectionDataCachingConfigImpl( collectionDescriptor, accessType ) );

@@ -287,7 +287,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 	public void addSqlFunction(String functionName, SQLFunction function) {
 		if ( this.sqlFunctionMap == null ) {
-			this.sqlFunctionMap = new HashMap<>();
+			this.sqlFunctionMap = new HashMap<>(1);
 		}
 		this.sqlFunctionMap.put( functionName, function );
 	}

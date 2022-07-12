@@ -378,7 +378,7 @@ public class QueryLoader extends BasicLoader {
 		// as the ultimate output of this section...
 		final LockOptions locks = new LockOptions( lockOptions.getLockMode() );
 		final Map<String, String[]> keyColumnNames = dialect.forUpdateOfColumns()
-				? new HashMap<>()
+				? new HashMap<>(5)
 				: null;
 
 		locks.setScope( lockOptions.getScope() );
@@ -503,7 +503,8 @@ public class QueryLoader extends BasicLoader {
 		// meant to handle dynamic instantiation queries...
 		HolderInstantiator holderInstantiator = buildHolderInstantiator( resultTransformer );
 		if ( holderInstantiator.isRequired() ) {
-			for ( int i = 0; i < results.size(); i++ ) {
+			int size = results.size();
+			for (int i = 0; i < size; i++ ) {
 				Object[] row = (Object[]) results.get( i );
 				Object result = holderInstantiator.instantiate( row );
 				results.set( i, result );

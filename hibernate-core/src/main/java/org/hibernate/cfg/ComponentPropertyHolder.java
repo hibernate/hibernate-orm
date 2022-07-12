@@ -385,6 +385,6 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 	@Override
 	public String toString() {
-		return super.toString() + "(" + parent.normalizeCompositePathForLogging( embeddedAttributeName ) + ")";
+		return super.toString() + '(' + parent.normalizeCompositePathForLogging( embeddedAttributeName ) + ')';
 	}
 }

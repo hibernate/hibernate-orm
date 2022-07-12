@@ -40,7 +40,7 @@ import org.hibernate.type.TypeFactory;
  * @author Steve Ebersole
  */
 public class Component extends SimpleValue implements MetaAttributable {
-	private ArrayList<Property> properties = new ArrayList<>();
+	private ArrayList<Property> properties = new ArrayList<>(5);
 	private String componentClassName;
 	private boolean embedded;
 	private String parentProperty;

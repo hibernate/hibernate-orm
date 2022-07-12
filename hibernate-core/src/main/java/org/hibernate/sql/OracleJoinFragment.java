@@ -68,7 +68,7 @@ public class OracleJoinFragment extends JoinFragment {
 			}
 		}
 		if ( fkColumns.length > 1 ) {
-			afterWhere.append( ")" );
+			afterWhere.append( ')' );
 		}
 	}
 

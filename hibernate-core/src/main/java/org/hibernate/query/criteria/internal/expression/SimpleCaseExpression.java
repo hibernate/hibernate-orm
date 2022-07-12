@@ -32,7 +32,7 @@ public class SimpleCaseExpression<C,R>
 		extends ExpressionImpl<R>
 		implements SimpleCase<C,R>, Serializable {
 	private final Expression<? extends C> expression;
-	private List<WhenClause> whenClauses = new ArrayList<WhenClause>();
+	private List<WhenClause> whenClauses = new ArrayList<WhenClause>(3);
 	private Expression<? extends R> otherwiseResult;
 
 	public class WhenClause {

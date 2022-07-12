@@ -43,7 +43,7 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 	 * All of the implicit FROM xxx JOIN yyy elements that are the destination of a collection.  These are created from
 	 * index operators on collection property references.
 	 */
-	private Map collectionJoinFromElementsByPath = new HashMap();
+	private Map collectionJoinFromElementsByPath = new HashMap(4);
 	/**
 	 * Pointer to the parent FROM clause, if there is one.
 	 */

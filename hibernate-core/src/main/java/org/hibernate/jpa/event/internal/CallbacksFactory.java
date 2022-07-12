@@ -84,7 +84,7 @@ public final class CallbacksFactory {
 		if ( callbackDefinitions == null || callbackDefinitions.isEmpty() ) {
 			return null;
 		}
-		List<Callback> callbacks = new ArrayList<>();
+		List<Callback> callbacks = new ArrayList<>(callbackDefinitions!=null?callbackDefinitions.size():0);
 		for ( CallbackDefinition definition : callbackDefinitions ) {
 			callbacks.add( definition.createCallback( beanRegistry ) );
 		}

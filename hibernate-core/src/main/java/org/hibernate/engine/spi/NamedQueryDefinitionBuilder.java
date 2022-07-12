@@ -89,7 +89,7 @@ public class NamedQueryDefinitionBuilder {
 
 	public NamedQueryDefinitionBuilder addParameterType(String name, String typeName) {
 		if ( this.parameterTypes == null ) {
-			this.parameterTypes = new HashMap();
+			this.parameterTypes = new HashMap(8);
 		}
 		this.parameterTypes.put( name, typeName );
 		return this;

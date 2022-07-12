@@ -186,7 +186,7 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 		}
 
 		if ( fetchStats != null && fetchStats.getJoinedBagAttributeFetches().size() > 1 ) {
-			final List<String> bagRoles = new ArrayList<>();
+			final List<String> bagRoles = new ArrayList<>(fetchStats.getJoinedBagAttributeFetches().size());
 			for ( CollectionAttributeFetch bagFetch : fetchStats.getJoinedBagAttributeFetches() ) {
 				bagRoles.add( bagFetch.getCollectionPersister().getRole() );
 			}

@@ -335,7 +335,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 			return cols[0];
 		}
 		else {
-			return "(" + String.join( ", ", cols ) + ")";
+			return '(' + String.join( ", ", cols ) + ')';
 		}
 	}
 

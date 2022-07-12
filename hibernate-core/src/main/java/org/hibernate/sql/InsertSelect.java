@@ -80,7 +80,7 @@ public class InsertSelect {
 					buf.append( ", " );
 				}
 			}
-			buf.append( ")" );
+			buf.append( ')');
 		}
 		buf.append( ' ' ).append( select.toStatementString() );
 		return buf.toString();

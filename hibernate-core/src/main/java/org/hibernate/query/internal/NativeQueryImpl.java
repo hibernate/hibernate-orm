@@ -109,7 +109,7 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 			this.queryReturns = new ArrayList<>( Arrays.asList( queryDef.getQueryReturns() ) );
 		}
 		else {
-			this.queryReturns = new ArrayList<>();
+			this.queryReturns = new ArrayList<>(0);
 		}
 
 
@@ -130,7 +130,7 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 		this.queryReturns = new ArrayList<>();
 		this.sqlString = sqlString;
 		this.callable = callable;
-		this.querySpaces = new ArrayList<>();
+		this.querySpaces = new ArrayList<>(0);
 
 		this.queryParameterBindings = QueryParameterBindingsImpl.from(
 				sqlParameterMetadata,
@@ -206,7 +206,7 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 					queryReturns.clear();
 					queryReturns = null;
 				}
-				queryReturns = new ArrayList<>();
+				queryReturns = new ArrayList<>(queryReturnBuilders.size());
 				for ( NativeQueryReturnBuilder builder : queryReturnBuilders ) {
 					queryReturns.add( builder.buildReturn() );
 				}

@@ -23,7 +23,7 @@ public final class CollectionProperties {
 	private static final String COLLECTION_INDEX_LOWER = CollectionPropertyNames.COLLECTION_INDEX.toLowerCase(Locale.ROOT);
 
 	static {
-		HQL_COLLECTION_PROPERTIES = new HashMap();
+		HQL_COLLECTION_PROPERTIES = new HashMap(8);
 		HQL_COLLECTION_PROPERTIES.put( CollectionPropertyNames.COLLECTION_ELEMENTS.toLowerCase(Locale.ROOT), CollectionPropertyNames.COLLECTION_ELEMENTS );
 		HQL_COLLECTION_PROPERTIES.put( CollectionPropertyNames.COLLECTION_INDICES.toLowerCase(Locale.ROOT), CollectionPropertyNames.COLLECTION_INDICES );
 		HQL_COLLECTION_PROPERTIES.put( CollectionPropertyNames.COLLECTION_SIZE.toLowerCase(Locale.ROOT), CollectionPropertyNames.COLLECTION_SIZE );

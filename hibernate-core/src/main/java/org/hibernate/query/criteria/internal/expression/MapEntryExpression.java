@@ -47,7 +47,7 @@ public class MapEntryExpression<K,V>
 	@Override
 	public String render(RenderingContext renderingContext) {
 		if ( renderingContext.getClauseStack().getCurrent() == Clause.SELECT ) {
-			return "entry(" + original.render( renderingContext ) + ")";
+			return "entry(" + original.render( renderingContext ) + ')';
 		}
 
 		// don't think this is valid outside of select clause...

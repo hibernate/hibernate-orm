@@ -48,7 +48,7 @@ public class BagType extends CollectionType {
 
 	@Override
 	public Object instantiate(int anticipatedSize) {
-		return anticipatedSize <= 0 ? new ArrayList() : new ArrayList( anticipatedSize + 1 );
+		return anticipatedSize <= 0 ? new ArrayList(0) : new ArrayList( anticipatedSize + 1 );
 	}
 
 }

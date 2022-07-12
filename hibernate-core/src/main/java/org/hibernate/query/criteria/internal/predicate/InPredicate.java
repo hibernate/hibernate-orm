@@ -168,7 +168,7 @@ public class InPredicate<T>
 					.append( parameterExpression.render( renderingContext ) )
 					.append( " as " )
 					.append( mappingType.getName() )
-					.append( ")" );
+					.append( ')');
 		}
 		else {
 			buffer.append( ( (Renderable) getExpression() ).render( renderingContext ) );

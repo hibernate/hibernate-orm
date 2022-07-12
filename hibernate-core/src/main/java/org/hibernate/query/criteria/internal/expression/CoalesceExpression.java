@@ -74,6 +74,6 @@ public class CoalesceExpression<T> extends ExpressionImpl<T> implements Coalesce
 					.append( ( (Renderable) expression ).render( renderingContext ) );
 			sep = ", ";
 		}
-		return buffer.append( ")" ).toString();
+		return buffer.append( ')').toString();
 	}
 }

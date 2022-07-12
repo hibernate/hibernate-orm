@@ -134,7 +134,7 @@ public class RootImpl<X> extends AbstractFromImpl<X,X> implements Root<X>, Seria
 		}
 
 		protected String getTreatFragment() {
-			return "treat(" + original.getAlias() + " as " + treatAsType.getName() + ")";
+			return "treat(" + original.getAlias() + " as " + treatAsType.getName() + ')';
 		}
 
 		@Override

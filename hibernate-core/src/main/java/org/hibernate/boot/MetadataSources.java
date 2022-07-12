@@ -174,7 +174,7 @@ public class MetadataSources implements Serializable {
 			final MetadataBuilder returnedBuilder = discoveredBuilderFactory.getMetadataBuilder( this, defaultBuilder );
 			if ( returnedBuilder != null ) {
 				if ( activeFactoryNames == null ) {
-					activeFactoryNames = new ArrayList<>();
+					activeFactoryNames = new ArrayList<>(discoveredBuilderFactories.size());
 				}
 				activeFactoryNames.add( discoveredBuilderFactory.getClass().getName() );
 				builder = returnedBuilder;

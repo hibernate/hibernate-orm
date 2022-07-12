@@ -48,6 +48,6 @@ public class SizeOfPluralAttributeExpression
 	}
 
 	public String render(RenderingContext renderingContext) {
-		return "size(" + getPluralAttributePath().render( renderingContext ) + ")";
+		return "size(" + getPluralAttributePath().render( renderingContext ) + ')';
 	}
 }

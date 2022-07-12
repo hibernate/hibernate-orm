@@ -526,7 +526,7 @@ public final class QueryParameters {
 
 	@SuppressWarnings( {"unchecked"})
 	public void processFilters(String sql, Map filters, SessionFactoryImplementor factory) {
-		if ( filters.size() == 0 || !sql.contains( ParserHelper.HQL_VARIABLE_PREFIX ) ) {
+		if ( filters.isEmpty()  || !sql.contains( ParserHelper.HQL_VARIABLE_PREFIX ) ) {
 			// HELLA IMPORTANT OPTIMIZATION!!!
 			processedPositionalParameterValues = getPositionalParameterValues();
 			processedPositionalParameterTypes = getPositionalParameterTypes();

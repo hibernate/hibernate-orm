@@ -59,7 +59,7 @@ public class BinaryArithmeticOperation<N extends Number>
 			@Override
 			String apply(String lhs, String rhs) {
 //				return lhs + " % " + rhs;
-				return "mod(" + lhs + "," + rhs + ")";
+				return "mod(" + lhs + ',' + rhs + ')';
 			}
 		};
 

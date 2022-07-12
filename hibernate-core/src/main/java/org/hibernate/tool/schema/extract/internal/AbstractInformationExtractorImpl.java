@@ -1009,7 +1009,8 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		}
 		else {
 			// validate column list is properly contiguous
-			for ( int i = 0; i < pkColumns.size(); i++ ) {
+			int colSize = pkColumns.size();
+			for (int i = 0; i < colSize; i++ ) {
 				if ( pkColumns.get( i ) == null ) {
 					throw new SchemaExtractionException( "Primary Key information was missing for KEY_SEQ = " + ( i+1) );
 				}
@@ -1099,7 +1100,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 
 	@Override
 	public Iterable<IndexInformation> getIndexes(TableInformation tableInformation) {
-		final Map<Identifier, IndexInformationImpl.Builder> builders = new HashMap<>();
+		final Map<Identifier, IndexInformationImpl.Builder> builders = new HashMap<>(5);
 		final QualifiedTableName tableName = tableInformation.getName();
 		final Identifier catalog = tableName.getCatalogName();
 		final Identifier schema = tableName.getSchemaName();
@@ -1251,7 +1252,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 
 	@Override
 	public Iterable<ForeignKeyInformation> getForeignKeys(TableInformation tableInformation) {
-		final Map<Identifier, ForeignKeyBuilder> fkBuilders = new HashMap<>();
+		final Map<Identifier, ForeignKeyBuilder> fkBuilders = new HashMap<>(5);
 		final QualifiedTableName tableName = tableInformation.getName();
 		final Identifier catalog = tableName.getCatalogName();
 		final Identifier schema = tableName.getSchemaName();

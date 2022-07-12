@@ -93,7 +93,7 @@ public class TableInformationImpl implements TableInformation {
 
 	protected Map<Identifier, ForeignKeyInformation> foreignKeys() {
 		if ( foreignKeys == null ) {
-			final Map<Identifier, ForeignKeyInformation> fkMap = new HashMap<>();
+			final Map<Identifier, ForeignKeyInformation> fkMap = new HashMap<>(8);
 			final Iterable<ForeignKeyInformation> fks = extractor.getForeignKeys( this );
 			for ( ForeignKeyInformation fk : fks ) {
 				fkMap.put( fk.getForeignKeyIdentifier(), fk );
@@ -118,7 +118,7 @@ public class TableInformationImpl implements TableInformation {
 
 	protected Map<Identifier, IndexInformation> indexes() {
 		if ( indexes == null ) {
-			final Map<Identifier, IndexInformation> indexMap = new HashMap<>();
+			final Map<Identifier, IndexInformation> indexMap = new HashMap<>(8 );
 			final Iterable<IndexInformation> indexes = extractor.getIndexes( this );
 			for ( IndexInformation index : indexes ) {
 				indexMap.put( index.getIndexIdentifier(), index );

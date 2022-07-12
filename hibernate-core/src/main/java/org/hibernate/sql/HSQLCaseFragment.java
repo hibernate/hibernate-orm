@@ -30,7 +30,7 @@ public class HSQLCaseFragment extends CaseFragment {
 				.append(", ")
 				.append( me.getValue() )
 				.append(", ");
-			buf2.append(")");
+			buf2.append(')');
 		}
 
 		buf.append("-1"); //null caused some problems

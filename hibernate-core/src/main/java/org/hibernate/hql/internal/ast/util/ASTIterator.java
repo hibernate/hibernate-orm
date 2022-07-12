@@ -78,7 +78,7 @@ public class ASTIterator implements Iterator {
 	}
 
 	private AST pop() {
-		if ( parents.size() == 0 ) {
+		if ( parents.isEmpty()  ) {
 			return null;
 		}
 		else {

@@ -470,7 +470,7 @@ public class NaturalIdXrefDelegate {
 
 		public void stashInvalidNaturalIdReference(Object[] invalidNaturalIdValues) {
 			if ( invalidNaturalIdList == null ) {
-				invalidNaturalIdList = new ArrayList<>();
+				invalidNaturalIdList = new ArrayList<>(1);
 			}
 			invalidNaturalIdList.add( new CachedNaturalId( persister, invalidNaturalIdValues ) );
 		}

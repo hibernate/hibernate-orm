@@ -189,7 +189,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			return;
 		}
 		String prefix = StringHelper.repeat( '-', ( traceDepth++ * 2 ) ) + "-> ";
-		String traceText = ruleName + " (" + buildTraceNodeName( tree ) + ")";
+		String traceText = ruleName + " (" + buildTraceNodeName( tree ) + ')';
 		LOG.trace( prefix + traceText );
 	}
 
@@ -512,7 +512,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			SqlGenerator sql = new SqlGenerator( getSessionFactoryHelper().getFactory() );
 			sql.whereExpr( hqlSqlWithNode.getFirstChild() );
 
-			fromElement.setWithClauseFragment( hqlSqlWithNode.getFirstChild(), "(" + sql.getSQL() + ")" );
+			fromElement.setWithClauseFragment( hqlSqlWithNode.getFirstChild(), "(" + sql.getSQL() + ')' );
 		}
 		catch (SemanticException e) {
 			throw e;
@@ -1149,7 +1149,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	@SuppressWarnings("unchecked")
 	private void trackPositionalParameterPositions(int label) {
 		if ( positionalParameters == null ) {
-			positionalParameters = new HashMap();
+			positionalParameters = new HashMap(5);
 		}
 
 		final Integer loc = parameterCount++;
@@ -1198,7 +1198,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	@SuppressWarnings("unchecked")
 	private void trackNamedParameterPositions(String name) {
 		if ( namedParameters == null ) {
-			namedParameters = new HashMap();
+			namedParameters = new HashMap(8);
 		}
 
 		final Integer loc = parameterCount++;

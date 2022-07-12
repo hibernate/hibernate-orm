@@ -162,7 +162,7 @@ public class HQLQueryPlan implements Serializable {
 	 * This method should only be called for debugging purposes as it regenerates a new array every time.
 	 */
 	public String[] getSqlStrings() {
-		List<String> sqlStrings = new ArrayList<>();
+		List<String> sqlStrings = new ArrayList<>(translators!=null?translators.length:0);
 		for ( QueryTranslator translator : translators ) {
 			sqlStrings.addAll( translator.collectSqlStrings() );
 		}

@@ -110,7 +110,7 @@ public class SingularAttributePath<X> extends AbstractPathImpl<X> implements Ser
 
 		@Override
 		public String render(RenderingContext renderingContext) {
-			return "treat(" + original.render( renderingContext ) + " as " + treatAsType.getName() + ")";
+			return "treat(" + original.render( renderingContext ) + " as " + treatAsType.getName() + ')';
 		}
 	}
 }

@@ -1833,7 +1833,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public boolean containsNullifiableEntityKey(Supplier<EntityKey> sek) {
-		if ( nullifiableEntityKeys == null || nullifiableEntityKeys.size() == 0 ) {
+		if ( nullifiableEntityKeys == null || nullifiableEntityKeys.isEmpty() ) {
 			return false;
 		}
 		else {
@@ -1852,7 +1852,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public boolean isNullifiableEntityKeysEmpty() {
-		return ( nullifiableEntityKeys == null || nullifiableEntityKeys.size() == 0 );
+		return ( nullifiableEntityKeys == null || nullifiableEntityKeys.isEmpty()  );
 	}
 
 	@Override

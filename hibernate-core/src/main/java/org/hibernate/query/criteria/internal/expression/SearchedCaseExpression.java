@@ -33,7 +33,7 @@ import org.hibernate.query.criteria.internal.compile.RenderingContext;
 public class SearchedCaseExpression<R>
 		extends ExpressionImpl<R>
 		implements Case<R>, Serializable {
-	private List<WhenClause> whenClauses = new ArrayList<WhenClause>();
+	private List<WhenClause> whenClauses = new ArrayList<WhenClause>(3);
 	private Expression<? extends R> otherwiseResult;
 
 	public class WhenClause {

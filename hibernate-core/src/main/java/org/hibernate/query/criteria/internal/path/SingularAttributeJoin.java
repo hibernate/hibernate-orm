@@ -161,7 +161,7 @@ public class SingularAttributeJoin<O,X> extends AbstractJoinImpl<O,X> {
 
 		@Override
 		public String render(RenderingContext renderingContext) {
-			return "treat(" + original.render( renderingContext ) + " as " + treatAsType.getName() + ")";
+			return "treat(" + original.render( renderingContext ) + " as " + treatAsType.getName() + ')';
 		}
 	}
 }

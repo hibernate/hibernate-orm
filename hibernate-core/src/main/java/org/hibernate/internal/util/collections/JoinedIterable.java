@@ -76,7 +76,7 @@ public class JoinedIterable<T> implements Iterable<T> {
 		protected void updateCurrentIterator() {
 
 			if ( currentIterator == null) {
-				if( iterables.size() == 0  ) {
+				if( iterables.isEmpty()   ) {
 					currentIterator = Collections.emptyIterator();
 				}
 				else {

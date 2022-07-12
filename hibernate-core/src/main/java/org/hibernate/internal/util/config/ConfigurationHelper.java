@@ -249,7 +249,7 @@ public final class ConfigurationHelper {
 			return (Properties) ( (Properties) configurationValues ).clone();
 		}
 		// Otherwise make a manual copy
-		HashMap clone = new HashMap();
+		HashMap clone = new HashMap( ((int)(configurationValues.size()/0.75)+1));
 		for ( Map.Entry entry : configurationValues.entrySet() ) {
 			clone.put( entry.getKey(), entry.getValue() );
 		}

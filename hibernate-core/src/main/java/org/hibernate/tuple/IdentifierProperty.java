@@ -108,6 +108,6 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 
 	@Override
 	public String toString() {
-		return "IdentifierAttribute(" + getName() + ")";
+		return "IdentifierAttribute(" + getName() + ')';
 	}
 }

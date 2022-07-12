@@ -221,7 +221,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	private static final Map<Class, String> annotationToXml;
 
 	static {
-		annotationToXml = new HashMap<>();
+		annotationToXml = new HashMap<>(78);
 		annotationToXml.put( Entity.class, "entity" );
 		annotationToXml.put( MappedSuperclass.class, "mapped-superclass" );
 		annotationToXml.put( Embeddable.class, "embeddable" );
@@ -811,7 +811,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	private EntityListeners getEntityListeners(ManagedType root, XMLContext.Default defaults) {
 		JaxbEntityListeners element = root instanceof EntityOrMappedSuperclass ? ( (EntityOrMappedSuperclass) root ).getEntityListeners() : null;
 		if ( element != null ) {
-			List<Class> entityListenerClasses = new ArrayList<>();
+			List<Class> entityListenerClasses = new ArrayList<>( element.getEntityListener().size());
 			for ( JaxbEntityListener subelement : element.getEntityListener() ) {
 				String className = subelement.getClazz();
 				try {
@@ -1200,7 +1200,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private MapKeyJoinColumn[] buildMapKeyJoinColumns(List<JaxbMapKeyJoinColumn> elements) {
-		List<MapKeyJoinColumn> joinColumns = new ArrayList<>();
+		List<MapKeyJoinColumn> joinColumns = new ArrayList<>(elements!=null?elements.size():0);
 		if ( elements != null ) {
 			for ( JaxbMapKeyJoinColumn element : elements ) {
 				AnnotationDescriptor column = new AnnotationDescriptor( MapKeyJoinColumn.class );
@@ -2916,7 +2916,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		 * You can't have both secondary tables in XML and Java,
 		 * since there would be no way to "remove" a secondary table
 		 */
-		if ( secondaryTables.size() == 0 && defaults.canUseJavaAnnotations() ) {
+		if ( secondaryTables.isEmpty()  && defaults.canUseJavaAnnotations() ) {
 			SecondaryTable secTableAnn = getPhysicalAnnotation( SecondaryTable.class );
 			overridesDefaultInSecondaryTable( secTableAnn, defaults, secondaryTables );
 			SecondaryTables secTablesAnn = getPhysicalAnnotation( SecondaryTables.class );

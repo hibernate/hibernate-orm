@@ -53,14 +53,14 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	/**
 	 * contains all columns, including the primary key
 	 */
-	private Map<String, Column> columns = new LinkedHashMap<>();
+	private Map<String, Column> columns = new LinkedHashMap<>(5);
 	private KeyValue idValue;
 	private PrimaryKey primaryKey;
-	private Map<ForeignKeyKey, ForeignKey> foreignKeys = new LinkedHashMap<>();
-	private Map<String, Index> indexes = new LinkedHashMap<>();
-	private Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<>();
+	private Map<ForeignKeyKey, ForeignKey> foreignKeys = new LinkedHashMap<>(5);
+	private Map<String, Index> indexes = new LinkedHashMap<>(5);
+	private Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<>(5);
 	private int uniqueInteger;
-	private List<String> checkConstraints = new ArrayList<>();
+	private List<String> checkConstraints = new ArrayList<>(5);
 	private String rowId;
 	private String subselect;
 	private boolean isAbstract;
@@ -870,7 +870,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 
 	public void addInitCommand(Function<SqlStringGenerationContext, InitCommand> commandProducer) {
 		if ( initCommandProducers == null ) {
-			initCommandProducers = new ArrayList<>();
+			initCommandProducers = new ArrayList<>(1);
 		}
 		initCommandProducers.add( commandProducer );
 	}

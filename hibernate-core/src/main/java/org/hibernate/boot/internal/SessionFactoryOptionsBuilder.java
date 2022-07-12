@@ -1351,7 +1351,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void applySqlFunction(String registrationName, SQLFunction sqlFunction) {
 		if ( this.sqlFunctions == null ) {
-			this.sqlFunctions = new HashMap<>();
+			this.sqlFunctions = new HashMap<>(0);
 		}
 		this.sqlFunctions.put( registrationName, sqlFunction );
 	}

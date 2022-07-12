@@ -327,7 +327,7 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 
 	protected void addReturnBuilder(NativeQueryReturnBuilder builder) {
 		if ( queryReturnBuilders == null ) {
-			queryReturnBuilders = new ArrayList<>();
+			queryReturnBuilders = new ArrayList<>(1);
 		}
 
 		queryReturnBuilders.add( builder );
@@ -454,7 +454,7 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 	protected void addQuerySpaces(String... spaces) {
 		if ( spaces != null ) {
 			if ( querySpaces == null ) {
-				querySpaces = new ArrayList<>();
+				querySpaces = new ArrayList<>(spaces.length);
 			}
 			querySpaces.addAll( Arrays.asList( spaces ) );
 		}
@@ -463,7 +463,7 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 	protected void addQuerySpaces(Serializable... spaces) {
 		if ( spaces != null ) {
 			if ( querySpaces == null ) {
-				querySpaces = new ArrayList<>();
+				querySpaces = new ArrayList<>(spaces.length);
 			}
 			querySpaces.addAll( Arrays.asList( (String[]) spaces ) );
 		}
@@ -493,10 +493,12 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 		}
 
 		if ( value instanceof Collection ) {
+			Collection<String> collection = (Collection<String>) value;
 			if ( querySpaces == null ) {
-				querySpaces = new ArrayList<>();
+				querySpaces = new ArrayList<>(collection.size());
 			}
-			querySpaces.addAll( (Collection<String>) value );
+
+			querySpaces.addAll(collection);
 			return true;
 		}
 

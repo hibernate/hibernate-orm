@@ -44,7 +44,7 @@ public class ParameterTranslationsImpl implements ParameterTranslations {
 		for ( ParameterSpecification specification : parameterSpecifications ) {
 			if ( PositionalParameterSpecification.class.isInstance( specification ) ) {
 				if ( ordinalParameters == null ) {
-					ordinalParameters = new HashMap<>();
+					ordinalParameters = new HashMap<>(0);
 				}
 
 				final PositionalParameterSpecification ordinalSpecification = (PositionalParameterSpecification) specification;
@@ -53,7 +53,7 @@ public class ParameterTranslationsImpl implements ParameterTranslations {
 			}
 			else if ( NamedParameterSpecification.class.isInstance( specification ) ) {
 				if ( namedParameters == null ) {
-					namedParameters = new HashMap<>();
+					namedParameters = new HashMap<>(0);
 				}
 
 				final NamedParameterSpecification namedSpecification = (NamedParameterSpecification) specification;

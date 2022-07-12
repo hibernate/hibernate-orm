@@ -291,7 +291,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 		if ( element != null ) {
 			final Object index = persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() );
 			if ( loadingEntries == null ) {
-				loadingEntries = new ArrayList<>();
+				loadingEntries = new ArrayList<>(1);
 			}
 			loadingEntries.add( new Object[] { index, element } );
 		}

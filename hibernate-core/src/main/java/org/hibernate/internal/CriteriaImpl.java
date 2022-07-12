@@ -41,15 +41,15 @@ public class CriteriaImpl implements Criteria, Serializable {
 	private transient SharedSessionContractImplementor session;
 	private final String rootAlias;
 
-	private List<CriterionEntry> criterionEntries = new ArrayList<>();
-	private List<OrderEntry> orderEntries = new ArrayList<>();
+	private List<CriterionEntry> criterionEntries = new ArrayList<>(5);
+	private List<OrderEntry> orderEntries = new ArrayList<>(3);
 	private Projection projection;
 	private Criteria projectionCriteria;
 
-	private List<Subcriteria> subcriteriaList = new ArrayList<>();
+	private List<Subcriteria> subcriteriaList = new ArrayList<>(10);
 
-	private Map<String, FetchMode> fetchModes = new HashMap<>();
-	private Map<String, LockMode> lockModes = new HashMap<>();
+	private Map<String, FetchMode> fetchModes = new HashMap<>(5);
+	private Map<String, LockMode> lockModes = new HashMap<>(5);
 
 	private Integer maxResults;
 	private Integer firstResult;
@@ -59,7 +59,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 	private boolean cacheable;
 	private String cacheRegion;
 	private String comment;
-	private final List<String> queryHints = new ArrayList<String>();
+	private final List<String> queryHints = new ArrayList<String>(0);
 
 	private FlushMode flushMode;
 	private CacheMode cacheMode;
@@ -418,7 +418,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 		if ( projection != null ) {
 			return false;
 		}
-		if ( subcriteriaList.size() > 0 ) {
+		if (!subcriteriaList.isEmpty() ) {
 			return false;
 		}
 		if ( criterionEntries.size() != 1 ) {

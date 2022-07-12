@@ -93,7 +93,7 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 			XProperty xProperty,
 			ConversionSite conversionSite,
 			Function<AutoApplicableConverterDescriptor, ConverterDescriptor> matcher) {
-		List<ConverterDescriptor> matches = new ArrayList<>();
+		List<ConverterDescriptor> matches = new ArrayList<>(5);
 
 		for ( ConverterDescriptor descriptor : converterDescriptors() ) {
 			log.debugf(

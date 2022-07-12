@@ -155,7 +155,7 @@ public class AttributeNodeImpl<J>
 		log.tracef( "Adding sub-graph : ( (%s) %s )", subGraph.getGraphedType().getName(), getAttributeName() );
 
 		if ( subGraphMap == null ) {
-			subGraphMap = new HashMap<>();
+			subGraphMap = new HashMap<>(3);
 		}
 
 		final SubGraphImplementor<? extends J> previous = subGraphMap.put( subType, (SubGraphImplementor) subGraph );
@@ -222,7 +222,7 @@ public class AttributeNodeImpl<J>
 		log.tracef( "Adding key sub-graph : ( (%s) %s )", subType.getName(), getAttributeName() );
 
 		if ( keySubGraphMap == null ) {
-			keySubGraphMap = new HashMap<>();
+			keySubGraphMap = new HashMap<>(0);
 		}
 
 		final SubGraphImplementor<? extends J> previous = keySubGraphMap.put( subType, (SubGraphImplementor) subGraph );
@@ -290,7 +290,7 @@ public class AttributeNodeImpl<J>
 				(incomingSubType, incomingGraph) -> {
 					SubGraphImplementor existing = null;
 					if ( subGraphMap == null ) {
-						subGraphMap = new HashMap<>();
+						subGraphMap = new HashMap<>(0);
 					}
 					else {
 						existing = subGraphMap.get( incomingSubType );
@@ -309,7 +309,7 @@ public class AttributeNodeImpl<J>
 				(incomingSubType, incomingGraph) -> {
 					SubGraphImplementor existing = null;
 					if ( keySubGraphMap == null ) {
-						keySubGraphMap = new HashMap<>();
+						keySubGraphMap = new HashMap<>(0);
 					}
 					else {
 						existing = keySubGraphMap.get( incomingSubType );

@@ -133,7 +133,7 @@ public class LoadQueryInfluencers implements Serializable {
 	public Filter enableFilter(String filterName) {
 		FilterImpl filter = new FilterImpl( sessionFactory.getFilterDefinition( filterName ) );
 		if ( enabledFilters == null ) {
-			this.enabledFilters = new HashMap<>();
+			this.enabledFilters = new HashMap<>(3);
 		}
 		enabledFilters.put( filterName, filter );
 		return filter;

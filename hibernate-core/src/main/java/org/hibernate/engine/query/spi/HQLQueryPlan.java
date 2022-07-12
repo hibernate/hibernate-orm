@@ -385,7 +385,8 @@ public class HQLQueryPlan implements Serializable {
 			ordinalParamDescriptors = Collections.emptyMap();
 		}
 		else {
-			final Map<Integer,OrdinalParameterDescriptor> temp = new HashMap<>();
+			int size=parameterTranslations.getPositionalParameterInformationMap().entrySet().size();
+			final Map<Integer,OrdinalParameterDescriptor> temp = new HashMap<>(size+(int)(1.25*size));
 			for ( Map.Entry<Integer, PositionalParameterInformation> entry :
 					parameterTranslations.getPositionalParameterInformationMap().entrySet() ) {
 				final int position = entry.getKey();
@@ -409,7 +410,8 @@ public class HQLQueryPlan implements Serializable {
 			namedParamDescriptorMap = Collections.emptyMap();
 		}
 		else {
-			final Map<String, NamedParameterDescriptor> tmp = new HashMap<>();
+			int size=parameterTranslations.getNamedParameterInformationMap().entrySet().size();
+			final Map<String, NamedParameterDescriptor> tmp = new HashMap<>(size+(int)(1.25*size));
 			for ( Map.Entry<String, NamedParameterInformation> namedEntry :
 					parameterTranslations.getNamedParameterInformationMap().entrySet() ) {
 				final String name = namedEntry.getKey();

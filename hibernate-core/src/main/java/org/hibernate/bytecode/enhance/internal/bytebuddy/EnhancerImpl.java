@@ -547,7 +547,7 @@ public class EnhancerImpl implements Enhancer {
 				Optional<MethodDescription> getter = getGetter();
 
 				// Note that the order here is important
-				List<AnnotationDescription> annotationDescriptions = new ArrayList<>();
+				List<AnnotationDescription> annotationDescriptions = new ArrayList<>(5);
 				if ( getter.isPresent() ) {
 					annotationDescriptions.addAll( getter.get().getDeclaredAnnotations() );
 				}

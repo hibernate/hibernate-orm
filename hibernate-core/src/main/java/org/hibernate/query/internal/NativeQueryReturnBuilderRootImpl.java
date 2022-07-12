@@ -45,7 +45,7 @@ public class NativeQueryReturnBuilderRootImpl implements NativeQuery.RootReturn,
 
 	public NativeQuery.ReturnProperty addProperty(final String propertyName) {
 		if ( propertyMappings == null ) {
-			propertyMappings = new HashMap<>();
+			propertyMappings = new HashMap<>(0);
 		}
 		return new NativeQuery.ReturnProperty() {
 			public NativeQuery.ReturnProperty addColumnAlias(String columnAlias) {

@@ -9,6 +9,7 @@ package org.hibernate.loader.plan.exec.process.internal;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.QueryParameters;
@@ -73,8 +74,10 @@ public class ResultSetProcessorHelper {
 			return null;
 		}
 
-		final Map<String, int[]> namedParameterLocMap = new HashMap<>();
-		for ( String name : queryParameters.getNamedParameters().keySet() ) {
+
+		Set<String> queryParams = queryParameters.getNamedParameters().keySet();
+		final Map<String, int[]> namedParameterLocMap = new HashMap<>(queryParams.size()+4);
+		for ( String name : queryParams) {
 			namedParameterLocMap.put(
 					name,
 					namedParameterContext.getNamedParameterLocations( name )

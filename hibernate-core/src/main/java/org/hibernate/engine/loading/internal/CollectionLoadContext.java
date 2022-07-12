@@ -175,7 +175,7 @@ public class CollectionLoadContext {
 			}
 			else if ( lce.getResultSet() == resultSet && lce.getPersister() == persister ) {
 				if ( matches == null ) {
-					matches = new ArrayList<>();
+					matches = new ArrayList<>(1);
 				}
 				matches.add( lce );
 				if ( lce.getCollection().getOwner() == null ) {

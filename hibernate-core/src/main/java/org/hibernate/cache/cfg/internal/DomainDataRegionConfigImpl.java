@@ -88,7 +88,7 @@ public class DomainDataRegionConfigImpl implements DomainDataRegionConfig {
 		@SuppressWarnings("UnusedReturnValue")
 		public Builder addEntityConfig(PersistentClass bootEntityDescriptor, AccessType accessType) {
 			if ( entityConfigsByRootName == null ) {
-				entityConfigsByRootName = new HashMap<>();
+				entityConfigsByRootName = new HashMap<>(0);
 			}
 
 			// todo (5.3) : this is another place where having `BootstrapContext` / `TypeConfiguration` helps

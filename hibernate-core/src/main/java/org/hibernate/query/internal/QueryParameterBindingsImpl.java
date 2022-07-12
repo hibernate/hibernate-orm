@@ -134,13 +134,13 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	@SuppressWarnings({"unchecked", "WeakerAccess"})
 	protected <T> QueryParameterListBinding<T> makeListBinding(QueryParameter<T> param) {
 		if ( parametersConvertedToListBindings == null ) {
-			parametersConvertedToListBindings = new HashSet<>();
+			parametersConvertedToListBindings = new HashSet<>(1);
 		}
 
 		parametersConvertedToListBindings.add( param );
 
 		if ( parameterListBindingMap == null ) {
-			parameterListBindingMap = new HashMap<>();
+			parameterListBindingMap = new HashMap<>(0);
 		}
 
 		return parameterListBindingMap.computeIfAbsent(
@@ -368,7 +368,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	@SuppressWarnings("unchecked")
 	public <T> QueryParameterListBinding<T> getQueryParameterListBinding(QueryParameter<T> queryParameter) {
 		if ( parameterListBindingMap == null ) {
-			parameterListBindingMap = new HashMap<>();
+			parameterListBindingMap = new HashMap<>(0);
 		}
 
 		return transformQueryParameterBindingToQueryParameterListBinding( queryParameter );
@@ -380,7 +380,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	@Deprecated
 	private QueryParameterListBinding locateQueryParameterListBinding(QueryParameter queryParameter) {
 		if ( parameterListBindingMap == null ) {
-			parameterListBindingMap = new HashMap<>();
+			parameterListBindingMap = new HashMap<>(0);
 		}
 
 		QueryParameterListBinding binding = parameterListBindingMap.get( queryParameter );

@@ -98,7 +98,7 @@ public class CustomLoader extends Loader {
 		List<Integer> collectionOwners = new ArrayList<>();
 		List<CollectionAliases> collectionAliases = new ArrayList<>();
 
-		List<LockMode> lockModes = new ArrayList<>();
+		List<LockMode> lockModes = new ArrayList<>(3);
 		List<ResultColumnProcessor> resultColumnProcessors = new ArrayList<>();
 		List<Return> nonScalarReturnList = new ArrayList<>();
 		List<Type> resultTypes = new ArrayList<>();

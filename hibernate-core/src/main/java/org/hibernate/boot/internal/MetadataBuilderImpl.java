@@ -776,7 +776,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		private ArrayList<MetadataSourceType> resolveInitialSourceProcessOrdering(ConfigurationService configService) {
-			final ArrayList<MetadataSourceType> initialSelections = new ArrayList<>();
+			final ArrayList<MetadataSourceType> initialSelections = new ArrayList<>(1);
 
 			final String sourceProcessOrderingSetting = configService.getSetting(
 					AvailableSettings.ARTIFACT_PROCESSING_ORDER,

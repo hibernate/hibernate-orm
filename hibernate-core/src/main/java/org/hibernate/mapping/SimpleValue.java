@@ -68,9 +68,9 @@ public class SimpleValue implements KeyValue {
 
 	private final MetadataImplementor metadata;
 
-	private final List<Selectable> columns = new ArrayList<>();
-	private final List<Boolean> insertability = new ArrayList<>();
-	private final List<Boolean> updatability = new ArrayList<>();
+	private final List<Selectable> columns = new ArrayList<>(5);
+	private final List<Boolean> insertability = new ArrayList<>(5);
+	private final List<Boolean> updatability = new ArrayList<>(5);
 
 	private String typeName;
 	private Properties typeParameters;

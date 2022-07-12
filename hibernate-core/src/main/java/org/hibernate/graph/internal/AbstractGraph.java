@@ -111,7 +111,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 
 		AttributeNodeImplementor<?> attributeNode = null;
 		if ( attrNodeMap == null ) {
-			attrNodeMap = new HashMap<>();
+			attrNodeMap = new HashMap<>(0);
 		}
 		else {
 			attributeNode = attrNodeMap.get( incomingAttributeNode.getAttributeDescriptor() );
@@ -188,7 +188,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 
 		AttributeNodeImplementor attrNode = null;
 		if ( attrNodeMap == null ) {
-			attrNodeMap = new HashMap<>();
+			attrNodeMap = new HashMap<>(0);
 		}
 		else {
 			attrNode = attrNodeMap.get( attribute );

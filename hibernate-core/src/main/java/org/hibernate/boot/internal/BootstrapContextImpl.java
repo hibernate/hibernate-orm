@@ -287,14 +287,14 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 	public void addSqlFunction(String functionName, SQLFunction function) {
 		if ( this.sqlFunctionMap == null ) {
-			this.sqlFunctionMap = new HashMap<>(1);
+			this.sqlFunctionMap = new HashMap<>(0);
 		}
 		this.sqlFunctionMap.put( functionName, function );
 	}
 
 	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
 		if ( this.auxiliaryDatabaseObjectList == null ) {
-			this.auxiliaryDatabaseObjectList = new ArrayList<>();
+			this.auxiliaryDatabaseObjectList = new ArrayList<>(1);
 		}
 		this.auxiliaryDatabaseObjectList.add( auxiliaryDatabaseObject );
 	}
@@ -302,7 +302,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 	public void addCacheRegionDefinition(CacheRegionDefinition cacheRegionDefinition) {
 		if ( cacheRegionDefinitions == null ) {
-			cacheRegionDefinitions = new ArrayList<>();
+			cacheRegionDefinitions = new ArrayList<>(0);
 		}
 		cacheRegionDefinitions.add( cacheRegionDefinition );
 	}

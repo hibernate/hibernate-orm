@@ -56,7 +56,7 @@ public class ProcedureParameterMetadata implements ParameterMetadata {
 
 
 		if ( parameters == null ) {
-			parameters = new ArrayList<>();
+			parameters = new ArrayList<>(0);
 		}
 		parameters.add( parameter );
 	}

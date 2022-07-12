@@ -20,8 +20,8 @@ public class Join implements AttributeContainer, Serializable {
 
 	private static final Alias PK_ALIAS = new Alias(15, "PK");
 
-	private ArrayList properties = new ArrayList();
-	private ArrayList declaredProperties = new ArrayList();
+	private ArrayList properties = new ArrayList(1);
+	private ArrayList declaredProperties = new ArrayList(1);
 	private Table table;
 	private KeyValue key;
 	private PersistentClass persistentClass;

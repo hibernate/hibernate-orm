@@ -962,7 +962,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		TableColumnNameBinding binding = null;
 
 		if ( columnNameBindingByTableMap == null ) {
-			columnNameBindingByTableMap = new HashMap<>();
+			columnNameBindingByTableMap = new HashMap<>(0);
 		}
 		else {
 			binding = columnNameBindingByTableMap.get( table );
@@ -1093,7 +1093,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	@Override
 	public void addAnyMetaDef(AnyMetaDef defAnn) {
 		if ( anyMetaDefs == null ) {
-			anyMetaDefs = new HashMap<>();
+			anyMetaDefs = new HashMap<>(0);
 		}
 		else {
 			if ( anyMetaDefs.containsKey( defAnn.name() ) ) {
@@ -1116,7 +1116,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	@Override
 	public void addMappedSuperclass(Class type, MappedSuperclass mappedSuperclass) {
 		if ( mappedSuperClasses == null ) {
-			mappedSuperClasses = new HashMap<>();
+			mappedSuperClasses = new HashMap<>(0);
 		}
 		mappedSuperClasses.put( type, mappedSuperclass );
 	}
@@ -1142,12 +1142,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	@Override
 	public void addPropertyAnnotatedWithMapsId(XClass entityType, PropertyData property) {
 		if ( propertiesAnnotatedWithMapsId == null ) {
-			propertiesAnnotatedWithMapsId = new HashMap<>();
+			propertiesAnnotatedWithMapsId = new HashMap<>(0);
 		}
 
 		Map<String, PropertyData> map = propertiesAnnotatedWithMapsId.get( entityType );
 		if ( map == null ) {
-			map = new HashMap<>();
+			map = new HashMap<>(0);
 			propertiesAnnotatedWithMapsId.put( entityType, map );
 		}
 		map.put( property.getProperty().getAnnotation( MapsId.class ).value(), property );
@@ -1156,7 +1156,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	@Override
 	public void addPropertyAnnotatedWithMapsIdSpecj(XClass entityType, PropertyData property, String mapsIdValue) {
 		if ( propertiesAnnotatedWithMapsId == null ) {
-			propertiesAnnotatedWithMapsId = new HashMap<>();
+			propertiesAnnotatedWithMapsId = new HashMap<>(0);
 		}
 
 		Map<String, PropertyData> map = propertiesAnnotatedWithMapsId.get( entityType );
@@ -1194,7 +1194,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	@Override
 	public void addMappedBy(String entityName, String propertyName, String inversePropertyName) {
 		if ( mappedByResolver == null ) {
-			mappedByResolver = new HashMap<>();
+			mappedByResolver = new HashMap<>(0);
 		}
 		mappedByResolver.put( entityName + "." + propertyName, inversePropertyName );
 	}
@@ -1210,7 +1210,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	@Override
 	public void addPropertyReferencedAssociation(String entityName, String propertyName, String propertyRef) {
 		if ( propertyRefResolver == null ) {
-			propertyRefResolver = new HashMap<>();
+			propertyRefResolver = new HashMap<>(0);
 		}
 		propertyRefResolver.put( entityName + "." + propertyName, propertyRef );
 	}
@@ -1299,7 +1299,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		List<UniqueConstraintHolder> holderList = null;
 
 		if ( uniqueConstraintHoldersByTable == null ) {
-			uniqueConstraintHoldersByTable = new HashMap<>();
+			uniqueConstraintHoldersByTable = new HashMap<>(0);
 		}
 		else {
 			holderList = uniqueConstraintHoldersByTable.get( table );
@@ -1318,7 +1318,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		List<JPAIndexHolder> holderList = null;
 
 		if ( jpaIndexHoldersByTable == null ) {
-			jpaIndexHoldersByTable = new HashMap<>();
+			jpaIndexHoldersByTable = new HashMap<>(0);
 		}
 		else {
 			holderList = jpaIndexHoldersByTable.get( table );
@@ -2095,7 +2095,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	@Override
 	public void registerNaturalIdUniqueKeyBinder(String entityName, NaturalIdUniqueKeyBinder ukBinder) {
 		if ( naturalIdUniqueKeyBinderMap == null ) {
-			naturalIdUniqueKeyBinderMap = new HashMap<>();
+			naturalIdUniqueKeyBinderMap = new HashMap<>(0);
 		}
 		final NaturalIdUniqueKeyBinder previous = naturalIdUniqueKeyBinderMap.put( entityName, ukBinder );
 		if ( previous != null ) {

@@ -127,8 +127,8 @@ public class SqlExceptionHelper {
 			}
 			final boolean warnEnabled = LOG.isEnabled( Level.WARN );
 
-			List<String> previousWarnMessages = new ArrayList<>();
-			List<String> previousErrorMessages = new ArrayList<>();
+			List<String> previousWarnMessages = new ArrayList<>(5);
+			List<String> previousErrorMessages = new ArrayList<>(5);
 
 			while ( sqlException != null ) {
 				if ( warnEnabled ) {

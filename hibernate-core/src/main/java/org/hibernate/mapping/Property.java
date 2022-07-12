@@ -374,7 +374,7 @@ public class Property implements Serializable, MetaAttributable {
 			return;
 		}
 		if ( this.callbackDefinitions == null ) {
-			this.callbackDefinitions = new ArrayList<>();
+			this.callbackDefinitions = new ArrayList<>(callbackDefinitions.size());
 		}
 		this.callbackDefinitions.addAll( callbackDefinitions );
 	}

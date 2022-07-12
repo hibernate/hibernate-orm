@@ -84,7 +84,7 @@ public class ParamLocationRecognizer implements ParameterParser.Recognizer {
 			ordinalParameterDescriptors = Collections.emptyMap();
 		}
 		else {
-			final Map<Integer, OrdinalParameterDescriptor> tmp = new HashMap<>();
+			final Map<Integer, OrdinalParameterDescriptor> tmp = new HashMap<>(4);
 			if ( inFlightOrdinalStateMap != null ) {
 				for ( InFlightOrdinalParameterState state : inFlightOrdinalStateMap.values() ) {
 					tmp.put( state.identifier, state.complete() );
@@ -122,7 +122,7 @@ public class ParamLocationRecognizer implements ParameterParser.Recognizer {
 	@Override
 	public void ordinalParameter(int position) {
 		if ( inFlightOrdinalStateMap == null ) {
-			inFlightOrdinalStateMap = new HashMap<>();
+			inFlightOrdinalStateMap = new HashMap<>(0);
 		}
 
 		final int label = jdbcStyleOrdinalCount++;
@@ -139,7 +139,7 @@ public class ParamLocationRecognizer implements ParameterParser.Recognizer {
 
 	private InFlightNamedParameterState getOrBuildNamedParameterDescription(String name) {
 		if ( inFlightNamedStateMap == null ) {
-			inFlightNamedStateMap = new HashMap<>();
+			inFlightNamedStateMap = new HashMap<>(0);
 		}
 
 		InFlightNamedParameterState descriptor = inFlightNamedStateMap.get( name );
@@ -157,7 +157,7 @@ public class ParamLocationRecognizer implements ParameterParser.Recognizer {
 
 	private InFlightJpaOrdinalParameterState getOrBuildJpaOrdinalParameterDescription(int name) {
 		if ( inFlightJpaOrdinalStateMap == null ) {
-			inFlightJpaOrdinalStateMap = new HashMap<>();
+			inFlightJpaOrdinalStateMap = new HashMap<>(0);
 		}
 
 		InFlightJpaOrdinalParameterState descriptor = inFlightJpaOrdinalStateMap.get( name );

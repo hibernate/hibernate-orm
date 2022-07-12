@@ -1648,7 +1648,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		private JaccPermissionDeclarations getJaccPermissions(String jaccContextId) {
 			if ( jaccPermissionsByContextId == null ) {
-				jaccPermissionsByContextId = new HashMap<>();
+				jaccPermissionsByContextId = new HashMap<>(2);
 			}
 
 			JaccPermissionDeclarations jaccPermissions = jaccPermissionsByContextId.get( jaccContextId );

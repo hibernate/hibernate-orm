@@ -985,7 +985,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 			return;
 		}
 		if ( this.callbackDefinitions == null ) {
-			this.callbackDefinitions = new ArrayList<>();
+			this.callbackDefinitions = new ArrayList<>(0);
 		}
 		this.callbackDefinitions.addAll( callbackDefinitions );
 	}

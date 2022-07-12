@@ -85,7 +85,7 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 			if ( property.getValue() instanceof Component ) {
 				final Component component = (Component) property.getValue();
 
-				List<Column> columns = new ArrayList<>();
+				List<Column> columns = new ArrayList<>(10);
 				component.getColumnIterator().forEachRemaining( selectable -> {
 					if ( selectable instanceof Column ) {
 						columns.add( (Column) selectable );

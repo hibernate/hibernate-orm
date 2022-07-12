@@ -42,7 +42,7 @@ public class NativeQueryReturnBuilderFetchImpl implements NativeQuery.FetchRetur
 
 	public NativeQuery.ReturnProperty addProperty(final String propertyName) {
 		if ( propertyMappings == null ) {
-			propertyMappings = new HashMap<>();
+			propertyMappings = new HashMap<>(0);
 		}
 		return new NativeQuery.ReturnProperty() {
 			public NativeQuery.ReturnProperty addColumnAlias(String columnAlias) {

@@ -90,7 +90,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 			TypeDescription managedCtClass,
 			ByteBuddyEnhancementContext enhancementContext,
 			TypePool classPool) {
-		List<AnnotatedFieldDescription> persistentFieldList = new ArrayList<>();
+		List<AnnotatedFieldDescription> persistentFieldList = new ArrayList<>(5);
 		for ( FieldDescription ctField : managedCtClass.getDeclaredFields() ) {
 			// skip static fields and skip fields added by enhancement and  outer reference in inner classes
 			if ( ctField.getName().startsWith( "$$_hibernate_" ) || "this$0".equals( ctField.getName() ) ) {
@@ -129,7 +129,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 
 		log.debugf( "Found @MappedSuperclass %s to collectPersistenceFields", managedCtSuperclass );
 
-		List<AnnotatedFieldDescription> persistentFieldList = new ArrayList<>();
+		List<AnnotatedFieldDescription> persistentFieldList = new ArrayList<>(5);
 
 		for ( FieldDescription ctField : managedCtSuperclass.getDeclaredFields() ) {
 			if ( ctField.getName().startsWith( "$$_hibernate_" ) || "this$0".equals( ctField.getName() ) ) {

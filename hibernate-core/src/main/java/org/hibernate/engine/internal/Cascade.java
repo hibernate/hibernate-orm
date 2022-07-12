@@ -233,7 +233,7 @@ public final class Cascade {
 			}
 			else if ( type.isComponentType() ) {
 				if ( componentPath == null && propertyName != null ) {
-					componentPath = new ArrayList<>();
+					componentPath = new ArrayList<>(0);
 				}
 				if ( componentPath != null ) {
 					componentPath.add( propertyName );

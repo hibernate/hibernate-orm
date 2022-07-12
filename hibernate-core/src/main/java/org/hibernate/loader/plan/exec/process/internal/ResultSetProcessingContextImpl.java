@@ -255,7 +255,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 	@Override
 	public void registerHydratedEntity(EntityReference entityReference, EntityKey entityKey, Object entityInstance) {
 		if ( currentRowHydratedEntityRegistrationList == null ) {
-			currentRowHydratedEntityRegistrationList = new ArrayList<>(1);
+			currentRowHydratedEntityRegistrationList = new ArrayList<>(0);
 		}
 		currentRowHydratedEntityRegistrationList.add(
 				new HydratedEntityRegistration(
@@ -291,7 +291,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 		// managing the map forms needed for subselect fetch generation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		if ( hadSubselectFetches ) {
 			if ( subselectLoadableEntityKeyMap == null ) {
-				subselectLoadableEntityKeyMap = new HashMap<>();
+				subselectLoadableEntityKeyMap = new HashMap<>(0);
 			}
 			for ( HydratedEntityRegistration registration : currentRowHydratedEntityRegistrationList ) {
 				Set<EntityKey> entityKeys = subselectLoadableEntityKeyMap.get(

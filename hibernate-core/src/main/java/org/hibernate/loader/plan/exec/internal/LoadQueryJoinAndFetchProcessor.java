@@ -713,7 +713,7 @@ public class LoadQueryJoinAndFetchProcessor {
 			}
 			if ( isJoinFetchedBag( fetch ) ) {
 				if ( joinedBagAttributeFetches == null ) {
-					joinedBagAttributeFetches = new HashSet<>();
+					joinedBagAttributeFetches = new HashSet<>(2);
 				}
 				joinedBagAttributeFetches.add( (CollectionAttributeFetch) fetch );
 			}

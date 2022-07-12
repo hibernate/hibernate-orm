@@ -236,7 +236,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
 
-		this.properties = new HashMap<>();
+		this.properties = new HashMap<>(configurationService.getSettings().size()+7);
 		this.properties.putAll( configurationService.getSettings() );
 		if ( !properties.containsKey( AvailableSettings.JPA_VALIDATION_FACTORY )
 				&& !properties.containsKey( AvailableSettings.JAKARTA_JPA_VALIDATION_FACTORY ) ) {
@@ -270,7 +270,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		this.typeHelper = new TypeLocatorImpl( metadata.getTypeConfiguration().getTypeResolver() );
 
-		this.filters = new HashMap<>();
+		this.filters = new HashMap<>(metadata.getFilterDefinitions().size()*2);
 		this.filters.putAll( metadata.getFilterDefinitions() );
 
 		LOG.debugf( "Session factory constructed with filter configurations : %s", filters );

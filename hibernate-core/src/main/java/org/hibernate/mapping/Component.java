@@ -321,7 +321,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 
 	public void addTuplizer(EntityMode entityMode, String implClassName) {
 		if ( tuplizerImpls == null ) {
-			tuplizerImpls = new HashMap<>();
+			tuplizerImpls = new HashMap<>(0);
 		}
 		tuplizerImpls.put( entityMode, implClassName );
 	}

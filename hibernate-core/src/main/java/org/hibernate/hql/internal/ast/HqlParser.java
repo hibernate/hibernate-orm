@@ -500,12 +500,12 @@ public final class HqlParser extends HqlBaseParser {
 		LOG.debugf( "Registering discovered request to treat(%s as %s)", path, subclassName );
 
 		if ( treatMap == null ) {
-			treatMap = new HashMap<>();
+			treatMap = new HashMap<>(0);
 		}
 
 		Set<String> subclassNames = treatMap.get( path );
 		if ( subclassNames == null ) {
-			subclassNames = new HashSet<>();
+			subclassNames = new HashSet<>(8);
 			treatMap.put( path, subclassNames );
 		}
 		subclassNames.add( subclassName );

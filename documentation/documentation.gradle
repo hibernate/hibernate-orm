@@ -142,7 +142,7 @@ task renderGettingStartedGuides(type: AsciidoctorTask, group: 'Documentation') {
 task buildTutorialZip(type: Zip) {task->
 	from 'src/main/asciidoc/quickstart/tutorials'
 	destinationDirectory = tasks.renderGettingStartedGuides.outputDir
-	archiveBaseName = 'hibernate-tutorials.zip'
+	archiveFileName = 'hibernate-tutorials.zip'
 	expand(
 			version: project.version,
 			slf4j: "1.7.5",

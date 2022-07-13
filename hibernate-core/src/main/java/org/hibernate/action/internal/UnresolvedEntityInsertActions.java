@@ -263,7 +263,7 @@ public class UnresolvedEntityInsertActions {
 					.append( insert )
 					.append( " dependencies=[" )
 					.append( dependencies.toLoggableString( insert.getSession() ) )
-					.append( "]" );
+					.append( ']' );
 		}
 		sb.append( ']');
 		return sb.toString();

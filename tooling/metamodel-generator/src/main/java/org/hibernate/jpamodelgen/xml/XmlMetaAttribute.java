@@ -33,7 +33,7 @@ public abstract class XmlMetaAttribute implements MetaAttribute {
 		return "public static volatile " + hostingEntity.importType( getMetaType() )
 				+ "<" + hostingEntity.importType( hostingEntity.getQualifiedName() )
 				+ ", " + hostingEntity.importType( getTypeDeclaration() )
-				+ "> " + getPropertyName() + ";";
+				+ "> " + getPropertyName() + ',';
 	}
 
 	@Override

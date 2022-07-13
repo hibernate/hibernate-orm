@@ -363,14 +363,14 @@ public class DB2Dialect extends Dialect {
 		else {
 			pattern.append("?3");
 		}
-		pattern.append(",");
+		pattern.append(',');
 		if (castFrom) {
 			pattern.append("cast(?2 as timestamp)");
 		}
 		else {
 			pattern.append("?2");
 		}
-		pattern.append(")");
+		pattern.append(')');
 		switch (unit) {
 			case NATIVE:
 				pattern.append("+(microsecond(?3)-microsecond(?2))/1e6)");
@@ -379,7 +379,7 @@ public class DB2Dialect extends Dialect {
 				pattern.append("*1e9+(microsecond(?3)-microsecond(?2))*1e3)");
 				break;
 			case MONTH:
-				pattern.append(")");
+				pattern.append(')');
 				break;
 			case QUARTER:
 				pattern.append("/3)");

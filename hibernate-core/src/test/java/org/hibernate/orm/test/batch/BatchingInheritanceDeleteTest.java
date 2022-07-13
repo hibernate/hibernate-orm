@@ -115,7 +115,7 @@ public class BatchingInheritanceDeleteTest extends BaseCoreFunctionalTestCase {
 		@Override
 		public String toString() {
 			final StringBuilder builder = new StringBuilder();
-			builder.append("Bar [name=").append(name).append("]");
+			builder.append("Bar [name=").append(name).append(']');
 			return builder.toString();
 		}
 	}
@@ -158,7 +158,7 @@ public class BatchingInheritanceDeleteTest extends BaseCoreFunctionalTestCase {
 		@Override
 		public String toString() {
 			final StringBuilder builder = new StringBuilder();
-			builder.append("Bar [name=").append(name).append("]");
+			builder.append("Bar [name=").append(name).append(']');
 			return builder.toString();
 		}
 	}

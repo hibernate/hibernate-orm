@@ -53,7 +53,7 @@ public class HelperId implements Serializable {
 		buf.append( ( this.getName() == null ) ? "null" : this.getName( ) );
 		buf.append( ";type:" );
 		buf.append( ( this.getType() == null ) ? "null" : this.getType() );
-		buf.append( "]" );
+		buf.append( ']' );
 		
 		return buf.toString( );
 	}

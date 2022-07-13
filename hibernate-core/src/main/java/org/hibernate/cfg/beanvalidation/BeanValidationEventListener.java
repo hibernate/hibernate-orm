@@ -142,7 +142,7 @@ public class BeanValidationEventListener
 				for (ConstraintViolation<?> violation : constraintViolations) {
 					builder.append( "\t" ).append( violation.toString() ).append("\n");
 				}
-				builder.append( "]" );
+				builder.append( ']' );
 
 				throw new ConstraintViolationException(
 						builder.toString(), propagatedViolations
@@ -156,7 +156,7 @@ public class BeanValidationEventListener
 		for ( Class<?> group : groups ) {
 			toString.append( group.getName() ).append( ", " );
 		}
-		toString.append( "]" );
+		toString.append( ']' );
 		return toString.toString();
 	}
 }

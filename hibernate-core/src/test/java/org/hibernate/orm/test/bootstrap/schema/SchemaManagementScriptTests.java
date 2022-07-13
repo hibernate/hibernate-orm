@@ -41,7 +41,7 @@ public class SchemaManagementScriptTests {
 		final String secondCommand = SECOND;
 		final String thirdCommand = THIRD;
 
-		final String commands = firstCommand + "; " + secondCommand + "; " + thirdCommand + ";";
+		final String commands = firstCommand + "; " + secondCommand + "; " + thirdCommand + ',';
 		final Reader reader = new BufferedReader( new StringReader( commands ) );
 
 		final MultiLineSqlScriptExtractor extractor = new MultiLineSqlScriptExtractor();
@@ -59,7 +59,7 @@ public class SchemaManagementScriptTests {
 		final String secondCommand = "second " + endOfLine() + "statement";
 		final String thirdCommand = "third " + endOfLine() + "statement";
 
-		final String commands = firstCommand + "; " + secondCommand + "; " + thirdCommand + ";";
+		final String commands = firstCommand + "; " + secondCommand + "; " + thirdCommand + ',';
 		final Reader reader = new BufferedReader( new StringReader( commands ) );
 
 		final MultiLineSqlScriptExtractor extractor = new MultiLineSqlScriptExtractor();
@@ -79,9 +79,9 @@ public class SchemaManagementScriptTests {
 	public void testMultiLineCommentExtraction() {
 		final String firstCommand = "first " + endOfLine() + "statement";
 		final String secondCommand = "second " + endOfLine() + "statement";
-		final String thirdCommand = "third " + endOfLine() + "/*" + endOfLine() + ";" + endOfLine() + "*/statement";
+		final String thirdCommand = "third " + endOfLine() + "/*" + endOfLine() + ',' + endOfLine() + "*/statement";
 
-		final String commands = firstCommand + "; " + secondCommand + "; " + thirdCommand + ";";
+		final String commands = firstCommand + "; " + secondCommand + "; " + thirdCommand + ',';
 		final Reader reader = new BufferedReader( new StringReader( commands ) );
 
 		final MultiLineSqlScriptExtractor extractor = new MultiLineSqlScriptExtractor();

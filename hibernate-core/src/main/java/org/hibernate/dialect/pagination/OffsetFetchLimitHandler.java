@@ -42,7 +42,7 @@ public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 		if ( hasFirstRow ) {
 			offsetFetch.append( " offset " );
 			if ( supportsVariableLimit() ) {
-				offsetFetch.append( "?" );
+				offsetFetch.append( '?' );
 			}
 			else {
 				offsetFetch.append( limit.getFirstRow() );
@@ -60,7 +60,7 @@ public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 				offsetFetch.append( " fetch first " );
 			}
 			if ( supportsVariableLimit() ) {
-				offsetFetch.append( "?" );
+				offsetFetch.append( '?' );
 			}
 			else {
 				offsetFetch.append( getMaxOrLimit( limit ) );

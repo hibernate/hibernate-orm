@@ -20,7 +20,7 @@ public class MapStringConverter implements AttributeConverter<Map<String, String
 			return null;
 		}
 		return attribute.entrySet().stream()
-				.map( entry -> entry.getKey() + ";" + entry.getValue() )
+				.map( entry -> entry.getKey() + ',' + entry.getValue() )
 				.collect( Collectors.joining( ";" ) );
 	}
 

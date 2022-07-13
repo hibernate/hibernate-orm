@@ -117,7 +117,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 		}
 
 		parameterList.add( new ParameterOccurrence( parameter, sqlStringBuffer.length() ) );
-		sqlStringBuffer.append( "?" );
+		sqlStringBuffer.append( '?' );
 	}
 
 	@Override
@@ -148,7 +148,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 		}
 
 		parameterList.add( new ParameterOccurrence( parameter, sqlStringBuffer.length() ) );
-		sqlStringBuffer.append( "?" );
+		sqlStringBuffer.append( '?' );
 	}
 
 	@Override
@@ -183,7 +183,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 		}
 
 		parameterList.add( new ParameterOccurrence( parameter, sqlStringBuffer.length() ) );
-		sqlStringBuffer.append( "?" );
+		sqlStringBuffer.append( '?' );
 	}
 
 	@Override

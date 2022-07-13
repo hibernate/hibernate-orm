@@ -91,7 +91,7 @@ public class DomainResultGraphPrinter {
 		if ( node.getNavigablePath() != null ) {
 			buffer.append( " [" )
 					.append( node.getNavigablePath().getFullPath() )
-					.append( "]" );
+					.append( ']' );
 		}
 		buffer.append( '\n' );
 

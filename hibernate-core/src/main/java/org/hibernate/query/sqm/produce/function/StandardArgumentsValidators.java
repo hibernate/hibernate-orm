@@ -127,7 +127,7 @@ public final class StandardArgumentsValidators {
 						sig.append(i);
 					}
 				}
-				sig.append(")");
+				sig.append(')');
 				return sig.toString();
 			}
 

@@ -69,7 +69,7 @@ public class StandardCallableStatementSupport extends AbstractStandardCallableSt
 			buffer = new StringBuilder( 9 + procedureName.length() + registrations.size() * 2 ).append( "{call " );
 		}
 
-		buffer.append( procedureName ).append( "(" );
+		buffer.append( procedureName ).append( '(' );
 
 		String sep = "";
 		for ( int i = 0; i < registrations.size(); i++ ) {
@@ -86,7 +86,7 @@ public class StandardCallableStatementSupport extends AbstractStandardCallableSt
 				buffer.append( ':' ).append( registration.getName() );
 			}
 			else {
-				buffer.append( "?" );
+				buffer.append( '?' );
 			}
 			sep = ",";
 			builder.addParameterRegistration( registration );

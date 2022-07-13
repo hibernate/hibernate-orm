@@ -215,18 +215,18 @@ public class SQLiteDialect extends Dialect {
 				extractField( pattern, YEAR, unit );
 				break;
 			case QUARTER:
-				pattern.append( "(" );
+				pattern.append( '(' );
 				extractField( pattern, YEAR, unit );
-				pattern.append( "+" );
+				pattern.append( '+' );
 				extractField( pattern, QUARTER, unit );
-				pattern.append( ")" );
+				pattern.append( ')' );
 				break;
 			case MONTH:
-				pattern.append( "(" );
+				pattern.append( '(' );
 				extractField( pattern, YEAR, unit );
-				pattern.append( "+" );
+				pattern.append( '+' );
 				extractField( pattern, MONTH, unit );
-				pattern.append( ")" );
+				pattern.append( ')' );
 				break;
 			case WEEK: //week is not supported by extract() when the argument is a duration
 			case DAY:

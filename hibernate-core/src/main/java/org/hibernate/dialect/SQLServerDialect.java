@@ -579,9 +579,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		else {
 			buffer.append( sql );
 		}
-		buffer.append( " OPTION (" ).append( hints ).append( ")" );
+		buffer.append( " OPTION (" ).append( hints ).append( ')' );
 		if ( pos > -1 ) {
-			buffer.append( ";" );
+			buffer.append( ';' );
 		}
 		sql = buffer.toString();
 

@@ -334,7 +334,7 @@ public class HSQLDialect extends Dialect {
 		else {
 			pattern.append("?3");
 		}
-		pattern.append(")");
+		pattern.append(')');
 		return pattern.toString();
 	}
 
@@ -367,7 +367,7 @@ public class HSQLDialect extends Dialect {
 		else {
 			pattern.append("?3");
 		}
-		pattern.append(")");
+		pattern.append(')');
 		if ( unit == TemporalUnit.WEEK ) {
 			pattern.append( "/7)" );
 		}

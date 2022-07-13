@@ -56,7 +56,7 @@ public class MapHolder {
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append( "MapHolder [id=" ).append( id ).append( "]" );
+		builder.append( "MapHolder [id=" ).append( id ).append( ']' );
 		return builder.toString();
 	}
 

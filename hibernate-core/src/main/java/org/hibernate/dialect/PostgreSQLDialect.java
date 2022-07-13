@@ -412,18 +412,18 @@ public class PostgreSQLDialect extends Dialect {
 					extractField( pattern, YEAR, fromTemporalType, toTemporalType, unit );
 					break;
 				case QUARTER:
-					pattern.append( "(" );
+					pattern.append( '(' );
 					extractField( pattern, YEAR, fromTemporalType, toTemporalType, unit );
-					pattern.append( "+" );
+					pattern.append( '+' );
 					extractField( pattern, QUARTER, fromTemporalType, toTemporalType, unit );
-					pattern.append( ")" );
+					pattern.append( ')' );
 					break;
 				case MONTH:
-					pattern.append( "(" );
+					pattern.append( '(' );
 					extractField( pattern, YEAR, fromTemporalType, toTemporalType, unit );
-					pattern.append( "+" );
+					pattern.append( '+' );
 					extractField( pattern, MONTH, fromTemporalType, toTemporalType, unit );
-					pattern.append( ")" );
+					pattern.append( ')' );
 					break;
 				case WEEK: //week is not supported by extract() when the argument is a duration
 				case DAY:
@@ -479,7 +479,7 @@ public class PostgreSQLDialect extends Dialect {
 					throw new SemanticException( unit + " is not a legal field" );
 			}
 		}
-		pattern.append( ")" ).append( unit.conversionFactor( toUnit, this ) );
+		pattern.append( ')' ).append( unit.conversionFactor( toUnit, this ) );
 	}
 
 	@Override

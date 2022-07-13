@@ -60,7 +60,7 @@ public final class ClassWriter {
 			PrintWriter pw = new PrintWriter( os );
 
 			if ( !metaModelPackage.isEmpty() ) {
-				pw.println( "package " + metaModelPackage + ";" );
+				pw.println( "package " + metaModelPackage + ',' );
 				pw.println();
 			}
 			pw.println( entity.generateImports() );

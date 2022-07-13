@@ -398,7 +398,7 @@ public class TestHANASpatialFunctions extends SpatialFunctionalTestCase {
 
 	public void geomfromewkt(String pckg) throws SQLException {
 		WKTWriter writer = new WKTWriter();
-		String ewkt = "SRID=" + expectationsFactory.getTestSrid() + ";" + writer.write( expectationsFactory.getTestPolygon() );
+		String ewkt = "SRID=" + expectationsFactory.getTestSrid() + ',' + writer.write( expectationsFactory.getTestPolygon() );
 		Map<Integer, Geometry> dbexpected = hanaExpectationsFactory.getGeomFromEWKT( ewkt );
 		String hql = format(
 				"SELECT 1, cast(geomfromewkt(:param) as %s) FROM %s g",

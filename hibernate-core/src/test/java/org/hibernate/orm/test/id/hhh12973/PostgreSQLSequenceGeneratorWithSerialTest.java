@@ -102,7 +102,7 @@ public class PostgreSQLSequenceGeneratorWithSerialTest extends EntityManagerFact
 		}
 
 		settings.put( AvailableSettings.HBM2DDL_DROP_SCRIPT_SOURCE, new StringReader(
-				DROP_TABLE + ";" + DROP_SEQUENCE
+				DROP_TABLE + ',' + DROP_SEQUENCE
 		) );
 		settings.put( AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY, SequenceMismatchStrategy.FIX );
 	}

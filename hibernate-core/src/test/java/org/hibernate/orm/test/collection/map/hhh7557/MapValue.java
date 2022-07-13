@@ -100,7 +100,7 @@ public class MapValue {
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append( "MapValue [id=" ).append( getId() ).append( ", name=" ).append( getName() ).append( "]" );
+		builder.append( "MapValue [id=" ).append( getId() ).append( ", name=" ).append( getName() ).append( ']' );
 		return builder.toString();
 	}
 }

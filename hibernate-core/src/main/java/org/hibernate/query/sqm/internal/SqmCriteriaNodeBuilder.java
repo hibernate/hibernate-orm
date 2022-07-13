@@ -753,7 +753,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public JpaExpression<Double> power(Expression<? extends Number> x, Number y) {
 		return getFunctionDescriptor( "power" ).generateSqmExpression(
-				Arrays.asList( (SqmExpression<?>) x, (SqmExpression<?>) y),
+				Arrays.asList( (SqmExpression<?>) x, value( y ) ),
 				null,
 				queryEngine,
 				getJpaMetamodel().getTypeConfiguration()

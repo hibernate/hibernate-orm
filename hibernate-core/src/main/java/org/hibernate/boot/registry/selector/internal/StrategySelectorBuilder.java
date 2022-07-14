@@ -143,7 +143,7 @@ public class StrategySelectorBuilder {
 		}
 	}
 
-	private void addTransactionCoordinatorBuilders(StrategySelectorImpl strategySelector) {
+	private static void addTransactionCoordinatorBuilders(StrategySelectorImpl strategySelector) {
 		strategySelector.registerStrategyImplementor(
 				TransactionCoordinatorBuilder.class,
 				JdbcResourceLocalTransactionCoordinatorBuilderImpl.SHORT_NAME,
@@ -173,7 +173,7 @@ public class StrategySelectorBuilder {
 		);
 	}
 
-	private void addSqmMultiTableMutationStrategies(StrategySelectorImpl strategySelector) {
+	private static void addSqmMultiTableMutationStrategies(StrategySelectorImpl strategySelector) {
 		strategySelector.registerStrategyImplementor(
 				SqmMultiTableMutationStrategy.class,
 				CteMutationStrategy.SHORT_NAME,
@@ -196,7 +196,7 @@ public class StrategySelectorBuilder {
 		);
 	}
 
-	private void addImplicitNamingStrategies(StrategySelectorImpl strategySelector) {
+	private static void addImplicitNamingStrategies(StrategySelectorImpl strategySelector) {
 		strategySelector.registerStrategyImplementor(
 				ImplicitNamingStrategy.class,
 				"default",
@@ -243,7 +243,7 @@ public class StrategySelectorBuilder {
 		);
 	}
 
-	private void addCacheKeysFactories(StrategySelectorImpl strategySelector) {
+	private static void addCacheKeysFactories(StrategySelectorImpl strategySelector) {
 		strategySelector.registerStrategyImplementor(
 			CacheKeysFactory.class,
 			DefaultCacheKeysFactory.SHORT_NAME,
@@ -256,7 +256,7 @@ public class StrategySelectorBuilder {
 		);
 	}
 
-	private void addJsonFormatMappers(StrategySelectorImpl strategySelector) {
+	private static void addJsonFormatMappers(StrategySelectorImpl strategySelector) {
 		strategySelector.registerStrategyImplementor(
 				FormatMapper.class,
 				JacksonJsonFormatMapper.SHORT_NAME,
@@ -269,7 +269,7 @@ public class StrategySelectorBuilder {
 		);
 	}
 
-	private void addXmlFormatMappers(StrategySelectorImpl strategySelector) {
+	private static void addXmlFormatMappers(StrategySelectorImpl strategySelector) {
 		strategySelector.registerStrategyImplementor(
 				FormatMapper.class,
 				JacksonXmlFormatMapper.SHORT_NAME,

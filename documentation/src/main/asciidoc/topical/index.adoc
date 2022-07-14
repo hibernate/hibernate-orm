@@ -1,4 +1,10 @@
 = Topical Guides
+:userguide_rel_link: ../../userguide/html_single/Hibernate_User_Guide.html
+:integrationguid_rel_link: ../../integrationguide/html_single/Hibernate_Integration_Guide.html
+:migrationguide_rel_link: ../../migration-guide/migration-guide.html
+:logging_rel_link: ../../logging/logging.html
+:incubating_rel_link: ../../incubating/incubating.txt
+:internal_rel_link: ../../internals/internal.txt
 :toc:
 
 Hibernate documentation is organized into several guides that cover specific topics.  This guide provides links to
@@ -7,39 +13,43 @@ all the guides to give some direction on where to look for information.
 NOTE: This is still very much a work in progress. <<helping,Help>> is definitely welcome!
 
 == User Guides
-
 * For information on bootstrapping Hibernate
-** For bootstrapping a SessionFactory, see the <<bootstrap/NativeBootstrapping.adoc#native-bootstrap,Native Bootstrapping Guide>>
-** For bootstrapping an EntityManagerFactory (Jakarta Persistence) using Hibernate, see the <<bootstrap/JpaBootstrapping.adoc#jpa-bootstrap-guide,Jakarta Persistence Bootstrap Guide>>
-** For (semi-deprecated) bootstrapping of a SessionFactory using the legacy Configuration approach, see the <<boocustom-sf-session-guidetstrap/LegacyBootstrapping.adoc#legacy-boostrap-guide,Legacy Bootsrap Guide>>
+** For bootstrapping a SessionFactory, see the link:{userguide_rel_link}#bootstrap-native[Native Bootstrapping Guide]
+** For bootstrapping an EntityManagerFactory (Jakarta Persistence) using Hibernate, see the link:{userguide_rel_link}#bootstrap-jpa[Jakarta Persistence Bootstrap Guide]
+** For (semi-deprecated) bootstrapping of a SessionFactory using the legacy Configuration approach, see the link:{userguide_rel_link}#appendix-legacy-bootstrap[Legacy Bootstrap Guide]
 * For information on generated (non-identifier) values, see the <<generated/GeneratedValues.adoc#generated-values-guide,Generated Values Guide>>
-* For information on logging, see <<logging/Logging.adoc#logging-guide,Logging Guide>>
-* For information on how to use the latest version of Hibernate ORM on WildFly, see <<wildfly/Wildfly.adoc#wildfly-guide,Using Hibernate ORM on Wildfly>>
 * Others coming soon
 
-== Tooling
 
-* See the <<metamodelgen/MetamodelGenerator.adoc#jpamodelgen-guide,Metamodel Generator Guide>> for details on generating a Jakarta Persistence "Static Metamodel"
-* see the <<bytecode/BytecodeEnhancement.adoc#bytecode-enhancement-guide,Bytecode Enhancement Guide>> for information on bytecode enhancement
-* Guide on the Gradle plugin coming soon
-* Guide on the Ant tasks coming soon
-* Guide on the Maven plugin coming soon
+== Migration
+* For information on how to migrate to the current Hibernate 6 version check out the link:{migrationguide_rel_link}[Migration Guide]
+
+
+== Tooling
+* See the link:{userguide_rel_link}#tooling[Tooling Guide] for information on:
+** Bytecode enhancement
+** Static Metamodel Generation
+** Gradle, Maven, and Ant plugins
+** Schema management (coming soon)
 
 
 == Integrator Guides
 * The <<registries/ServiceRegistries.adoc#registries-guide,Service Registries Guide>> discusses Hibernate Service and ServiceRegistry contracts.
-* Providers of custom `SessionFactory` implementations should see <<sessionfactory/CustomSessionFactory.adoc#custom-sf-session-guide,Custom SessionFactory and Session Implementations Guide>>
 * Others coming soon
+
+
+== Logging
+Check out the link:{logging_rel_link}[Logging Guide] for a list of available Hibernate loggers
+
+
+== Miscellaneous
+* For a list of `@Incubating` source elements, see the link:{incubating_rel_link}[incubating] list.
+* For a list of `@Internal` source elements, see the link:{internal_rel_link}[internal] list.
 
 
 [[helping]]
 == Helping
 
-* These "topical guides" are developed using Asciidoctor.  Meanwhile the legacy Hibernate reference manuals are
-written in  DocBook.  The conversion of knowledge into the "topical guide" format will take time and is an
-ongoing process.  A huge way to help would be to create topical guide(s) and pull over the relevant information
-from the corresponding reference information.  See the https://hibernate.atlassian.net/browse/HHH-8606[Jira task] for
-a list of ideas
 * Reporting/fixing problems.  Report any typos or inaccurate information to the
 https://hibernate.atlassian.net/browse/HHH[Hibernate ORM Jira] using the +documentation+ component.  Follow the same
 guidelines for contributing fixes and improvements as for contributing source code.

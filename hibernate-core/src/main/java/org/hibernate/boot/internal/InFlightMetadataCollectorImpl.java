@@ -1849,7 +1849,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		Set<FkSecondPass> dependencies = isADependencyOf.get( currentTable );
 
 		// bottom out
-		if ( dependencies == null || dependencies.size() == 0 ) {
+		if ( dependencies == null || dependencies.isEmpty()) {
 			return;
 		}
 
@@ -1887,7 +1887,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 					}
 				}
 			}
-			stopProcess = failingSecondPasses.size() == 0 || failingSecondPasses.size() == endOfQueueFkSecondPasses.size();
+			stopProcess = failingSecondPasses.isEmpty()|| failingSecondPasses.size() == endOfQueueFkSecondPasses.size();
 			endOfQueueFkSecondPasses = failingSecondPasses;
 		}
 		if ( endOfQueueFkSecondPasses.size() > 0 ) {

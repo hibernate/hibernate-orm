@@ -498,7 +498,7 @@ public class Parameters {
 	}
 
 	boolean isEmpty() {
-		return expressions.size() == 0 && subParameters.size() == 0 && negatedParameters.size() == 0;
+		return expressions.isEmpty()&& subParameters.isEmpty()&& negatedParameters.size() == 0;
 	}
 
 	void build(StringBuilder sb, Map<String, Object> queryParamValues) {

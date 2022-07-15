@@ -150,7 +150,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	 */
 	protected <T> void addQueryResults(Map<Integer, T> result, Query query) {
 		List<Object[]> rows = query.getResultList();
-		if ( rows.size() == 0 ) {
+		if ( rows.isEmpty()) {
 			getLogger().warn( "No results returned for query!!" );
 		}
 		for ( Object[] row : rows ) {

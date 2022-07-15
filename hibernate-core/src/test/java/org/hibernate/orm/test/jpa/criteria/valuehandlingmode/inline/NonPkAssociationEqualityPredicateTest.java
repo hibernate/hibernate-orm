@@ -56,7 +56,7 @@ public class NonPkAssociationEqualityPredicateTest {
 					);
 
 					List<Order> orders = entityManager.createQuery( orderCriteria ).getResultList();
-					assertTrue( orders.size() == 0 );
+					assertTrue( orders.isEmpty());
 				}
 		);
 	}

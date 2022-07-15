@@ -42,7 +42,7 @@ public class AuditDisjunction implements AuditCriterion, ExtendableCriterion {
 			Parameters parameters) {
 		Parameters orParameters = parameters.addSubParameters( Parameters.OR );
 
-		if ( criterions.size() == 0 ) {
+		if ( criterions.isEmpty()) {
 			orParameters.addWhere( "0", false, "=", "1", false );
 		}
 		else {

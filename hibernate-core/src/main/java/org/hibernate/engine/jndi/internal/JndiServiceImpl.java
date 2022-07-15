@@ -105,7 +105,7 @@ final class JndiServiceImpl implements JndiService {
 
 	private InitialContext buildInitialContext() {
 		try {
-			return initialContextSettings.size() == 0 ? new InitialContext() : new InitialContext( initialContextSettings );
+			return initialContextSettings.isEmpty() ? new InitialContext() : new InitialContext( initialContextSettings );
 		}
 		catch ( NamingException e ) {
 			throw new JndiException( "Unable to open InitialContext", e );

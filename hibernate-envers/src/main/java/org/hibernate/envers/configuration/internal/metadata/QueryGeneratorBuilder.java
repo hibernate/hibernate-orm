@@ -54,7 +54,7 @@ public final class QueryGeneratorBuilder {
 	}
 
 	RelationQueryGenerator build(MiddleComponentData... componentDatas) {
-		if ( idDatas.size() == 0 ) {
+		if ( idDatas.isEmpty()) {
 			return new OneEntityQueryGenerator(
 					configuration,
 					auditMiddleEntityName,

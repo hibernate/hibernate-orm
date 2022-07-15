@@ -254,7 +254,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		orderCriteria.where( p );
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
-		assertTrue( orders.size() == 0 );
+		assertTrue( orders.isEmpty());
 		em.getTransaction().commit();
 		em.close();
 	}
@@ -280,7 +280,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		orderCriteria.where( p );
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
-		assertTrue( orders.size() == 0 );
+		assertTrue( orders.isEmpty());
 		em.getTransaction().commit();
 		em.close();
 	}

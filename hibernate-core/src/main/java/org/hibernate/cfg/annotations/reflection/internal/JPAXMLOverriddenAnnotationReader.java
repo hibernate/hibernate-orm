@@ -2965,7 +2965,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		 * You can't have both secondary tables in XML and Java,
 		 * since there would be no way to "remove" a secondary table
 		 */
-		if ( secondaryTables.size() == 0 && defaults.canUseJavaAnnotations() ) {
+		if ( secondaryTables.isEmpty()&& defaults.canUseJavaAnnotations() ) {
 			SecondaryTable secTableAnn = getPhysicalAnnotation( SecondaryTable.class );
 			overridesDefaultInSecondaryTable( secTableAnn, defaults, secondaryTables );
 			SecondaryTables secTablesAnn = getPhysicalAnnotation( SecondaryTables.class );

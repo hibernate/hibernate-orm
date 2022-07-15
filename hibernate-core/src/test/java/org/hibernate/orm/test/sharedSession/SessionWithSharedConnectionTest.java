@@ -283,7 +283,7 @@ public class SessionWithSharedConnectionTest {
 			try {
 				//Some of these collections could be lazily initialize: check for null before invoking size()
 				final Collection collection = (Collection) field.get( session.getTransactionCoordinator() );
-				assertTrue( collection == null || collection.size() == 0 );
+				assertTrue( collection == null || collection.isEmpty());
 
 				//open secondary sessions with managed options and immediately close
 				Session secondarySession;

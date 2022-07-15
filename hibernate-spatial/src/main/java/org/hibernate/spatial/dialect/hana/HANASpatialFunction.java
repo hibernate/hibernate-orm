@@ -55,7 +55,7 @@ public class HANASpatialFunction extends StandardSQLFunction {
 
 
 	public String render(Type firstArgumentType, List arguments, SessionFactoryImplementor sessionFactory) {
-		if ( arguments.size() == 0 ) {
+		if ( arguments.isEmpty()) {
 			return getName() + "()";
 		}
 

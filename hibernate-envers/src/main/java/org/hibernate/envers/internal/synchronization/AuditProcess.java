@@ -143,7 +143,7 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 
 	@Override
 	public void doBeforeTransactionCompletion(SessionImplementor session) {
-		if ( workUnits.size() == 0 && undoQueue.size() == 0 ) {
+		if ( workUnits.isEmpty()&& undoQueue.isEmpty()) {
 			return;
 		}
 

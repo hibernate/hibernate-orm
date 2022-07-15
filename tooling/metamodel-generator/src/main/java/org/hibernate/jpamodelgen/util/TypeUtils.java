@@ -260,7 +260,7 @@ public final class TypeUtils {
 		}
 		else {
 			List<? extends TypeMirror> typeArguments = t.getTypeArguments();
-			if ( typeArguments.size() == 0 ) {
+			if ( typeArguments.isEmpty()) {
 				throw new MetaModelGenerationException( "Unable to determine collection type" );
 			}
 			else if ( Map.class.getCanonicalName().equals( fqNameOfReturnedType ) ) {
@@ -430,7 +430,7 @@ public final class TypeUtils {
 
 	public static String getKeyType(DeclaredType t, Context context) {
 		List<? extends TypeMirror> typeArguments = t.getTypeArguments();
-		if ( typeArguments.size() == 0 ) {
+		if ( typeArguments.isEmpty()) {
 			context.logMessage( Diagnostic.Kind.ERROR, "Unable to determine type argument for " + t );
 		}
 		return extractClosestRealTypeAsString( typeArguments.get( 0 ), context );

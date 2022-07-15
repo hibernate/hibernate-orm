@@ -225,7 +225,7 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 
 	@Override
 	public boolean addAll(Collection<? extends E> values) {
-		if ( values.size() == 0 ) {
+		if ( values.isEmpty()) {
 			return false;
 		}
 		if ( !isOperationQueueEnabled() ) {

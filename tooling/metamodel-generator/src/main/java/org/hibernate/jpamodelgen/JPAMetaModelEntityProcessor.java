@@ -112,7 +112,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	@Override
 	public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnvironment) {
 		// see also METAGEN-45
-		if ( roundEnvironment.processingOver() || annotations.size() == 0 ) {
+		if ( roundEnvironment.processingOver() || annotations.isEmpty()) {
 			return ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS;
 		}
 

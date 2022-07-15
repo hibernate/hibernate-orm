@@ -266,7 +266,7 @@ public class XmlMetaEntity implements MetaEntity {
 	private void determineTargetType(DeclaredType type, String propertyName, String explicitTargetEntity, String[] types) {
 		List<? extends TypeMirror> typeArguments = type.getTypeArguments();
 
-		if ( typeArguments.size() == 0 && explicitTargetEntity == null ) {
+		if ( typeArguments.isEmpty()&& explicitTargetEntity == null ) {
 			throw new MetaModelGenerationException( "Unable to determine target entity type for " + clazzName + "." + propertyName + "." );
 		}
 

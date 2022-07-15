@@ -118,7 +118,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	public Object getSingleResult() throws AuditException, NonUniqueResultException, NoResultException {
 		List result = list();
 
-		if ( result == null || result.size() == 0 ) {
+		if ( result == null || result.isEmpty()) {
 			throw new NoResultException();
 		}
 

@@ -60,7 +60,7 @@ public class InFragment {
 	}
 
 	public String toFragmentString() {
-		if ( values.size() == 0 ) {
+		if ( values.isEmpty()) {
 			return "1=2";
 		}
 

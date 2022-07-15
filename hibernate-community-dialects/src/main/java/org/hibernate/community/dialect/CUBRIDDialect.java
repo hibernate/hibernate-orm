@@ -452,32 +452,32 @@ public class CUBRIDDialect extends Dialect {
 				timediff(pattern, HOUR, unit);
 				break;
 			case MINUTE:
-				pattern.append("(");
+				pattern.append('(');
 				timediff(pattern, MINUTE, unit);
-				pattern.append("+");
+				pattern.append('+');
 				timediff(pattern, HOUR, unit);
-				pattern.append(")");
+				pattern.append(')');
 				break;
 			case SECOND:
-				pattern.append("(");
+				pattern.append('(');
 				timediff(pattern, SECOND, unit);
-				pattern.append("+");
+				pattern.append('+');
 				timediff(pattern, MINUTE, unit);
-				pattern.append("+");
+				pattern.append('+');
 				timediff(pattern, HOUR, unit);
-				pattern.append(")");
+				pattern.append(')');
 				break;
 			case NATIVE:
 			case NANOSECOND:
-				pattern.append("(");
+				pattern.append('(');
 				timediff(pattern, unit, unit);
-				pattern.append("+");
+				pattern.append('+');
 				timediff(pattern, SECOND, unit);
-				pattern.append("+");
+				pattern.append('+');
 				timediff(pattern, MINUTE, unit);
-				pattern.append("+");
+				pattern.append('+');
 				timediff(pattern, HOUR, unit);
-				pattern.append(")");
+				pattern.append(')');
 				break;
 			default:
 				throw new SemanticException("unsupported temporal unit for CUBRID: " + unit);

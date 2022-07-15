@@ -104,7 +104,7 @@ public class ForeignKey extends Constraint {
 			Column column = columns.next();
 			buf.append( column.getName() );
 			if ( columns.hasNext() ) {
-				buf.append( "," );
+				buf.append( ',' );
 			}
 		}
 	}

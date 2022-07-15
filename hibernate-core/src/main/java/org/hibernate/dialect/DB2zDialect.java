@@ -156,7 +156,7 @@ public class DB2zDialect extends DB2Dialect {
 		else {
 			pattern.append("?3");
 		}
-		pattern.append(",");
+		pattern.append(',');
 		switch (unit) {
 			case NANOSECOND:
 				pattern.append("(?2)/1e9");
@@ -170,7 +170,7 @@ public class DB2zDialect extends DB2Dialect {
 			default:
 				pattern.append("?2");
 		}
-		pattern.append(")");
+		pattern.append(')');
 		return pattern.toString();
 	}
 

@@ -107,7 +107,7 @@ public class Index implements RelationalModel, Exportable, Serializable {
 				buf.append( ", " );
 			}
 		}
-		buf.append( ")" );
+		buf.append( ')' );
 		return buf.toString();
 	}
 

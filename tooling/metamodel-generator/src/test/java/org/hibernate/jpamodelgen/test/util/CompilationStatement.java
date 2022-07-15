@@ -148,7 +148,7 @@ public class CompilationStatement extends Statement {
 			builder.append( "=" );
 			for ( String ormFile : xmlMappingFiles ) {
 				builder.append( ormFile );
-				builder.append( "," );
+				builder.append( ',' );
 			}
 			builder.deleteCharAt( builder.length() - 1 );
 			options.add( builder.toString() );

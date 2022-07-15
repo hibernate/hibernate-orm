@@ -46,7 +46,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 				.append( parent.importType( getTypeDeclaration() ) )
 				.append( "> " )
 				.append( getPropertyName() )
-				.append( ";" )
+				.append( ';' )
 				.toString();
 	}
 

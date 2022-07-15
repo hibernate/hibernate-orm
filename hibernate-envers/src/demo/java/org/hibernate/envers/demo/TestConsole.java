@@ -193,7 +193,7 @@ public class TestConsole {
             }
         }
 
-        sb.append(")");
+        sb.append(')');
     }
 
     @SuppressWarnings("unchecked")

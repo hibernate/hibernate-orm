@@ -29,6 +29,6 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
 				+ "<" + getHostingEntity().importType( getHostingEntity().getQualifiedName() )
 				+ ", " + getHostingEntity().importType( keyType ) + ", "
 				+ getHostingEntity().importType( getTypeDeclaration() ) + "> "
-				+ getPropertyName() + ";";
+				+ getPropertyName() + ',';
 	}
 }

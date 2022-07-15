@@ -423,12 +423,12 @@ public class OracleDialect extends Dialect {
 			default:
 				throw new SemanticException(unit + " is not a legal field");
 		}
-		pattern.append("(");
+		pattern.append('(');
 		switch ( unit ) {
 			case NANOSECOND:
 			case QUARTER:
 			case WEEK:
-				pattern.append("(");
+				pattern.append('(');
 				break;
 		}
 		pattern.append("?2");
@@ -459,7 +459,7 @@ public class OracleDialect extends Dialect {
 				pattern.append("?1");
 		}
 		pattern.append("')");
-		pattern.append(")");
+		pattern.append(')');
 		return pattern.toString();
 	}
 
@@ -475,50 +475,50 @@ public class OracleDialect extends Dialect {
 				break;
 			case QUARTER:
 			case MONTH:
-				pattern.append("(");
+				pattern.append('(');
 				extractField(pattern, YEAR, unit);
-				pattern.append("+");
+				pattern.append('+');
 				extractField(pattern, MONTH, unit);
-				pattern.append(")");
+				pattern.append(')');
 				break;
 			case WEEK:
 			case DAY:
 				extractField(pattern, DAY, unit);
 				break;
 			case HOUR:
-				pattern.append("(");
+				pattern.append('(');
 				extractField(pattern, DAY, unit);
 				if (timestamp) {
-					pattern.append("+");
+					pattern.append('+');
 					extractField(pattern, HOUR, unit);
 				}
-				pattern.append(")");
+				pattern.append(')');
 				break;
 			case MINUTE:
-				pattern.append("(");
+				pattern.append('(');
 				extractField(pattern, DAY, unit);
 				if (timestamp) {
-					pattern.append("+");
+					pattern.append('+');
 					extractField(pattern, HOUR, unit);
-					pattern.append("+");
+					pattern.append('+');
 					extractField(pattern, MINUTE, unit);
 				}
-				pattern.append(")");
+				pattern.append(')');
 				break;
 			case NATIVE:
 			case NANOSECOND:
 			case SECOND:
-				pattern.append("(");
+				pattern.append('(');
 				extractField(pattern, DAY, unit);
 				if (timestamp) {
-					pattern.append("+");
+					pattern.append('+');
 					extractField(pattern, HOUR, unit);
-					pattern.append("+");
+					pattern.append('+');
 					extractField(pattern, MINUTE, unit);
-					pattern.append("+");
+					pattern.append('+');
 					extractField(pattern, SECOND, unit);
 				}
-				pattern.append(")");
+				pattern.append(')');
 				break;
 			default:
 				throw new SemanticException("unrecognized field: " + unit);
@@ -546,7 +546,7 @@ public class OracleDialect extends Dialect {
 			default:
 				throw new SemanticException(unit + " is not a legal field");
 		}
-		pattern.append(")");
+		pattern.append(')');
 		pattern.append( unit.conversionFactor( toUnit, this ) );
 	}
 

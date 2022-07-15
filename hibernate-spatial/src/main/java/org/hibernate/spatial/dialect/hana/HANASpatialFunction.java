@@ -117,7 +117,7 @@ public class HANASpatialFunction extends StandardSQLFunction {
 		}
 		buf.append( stripEWKBSuffix( argument ) );
 		if ( parseFromWKB ) {
-			buf.append( ")" );
+			buf.append( ')' );
 		}
 	}
 }

@@ -764,7 +764,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		// only include the collection contents if debug logging
 		if ( LOG.isDebugEnabled() ) {
 			final String collectionContents = wasInitialized() ? toString() : "<uninitialized>";
-			sb.append( "\nCollection contents: [" ).append( collectionContents ).append( "]" );
+			sb.append( "\nCollection contents: [" ).append( collectionContents ).append( ']' );
 		}
 		return sb.toString();
 	}

@@ -198,9 +198,9 @@ public class Parameters {
 		
 		final StringBuilder expression = new StringBuilder();
 		
-		expression.append( leftFunction ).append( "(" );
+		expression.append( leftFunction ).append( '(' );
 		expression.append( alias ).append( "." );
-		expression.append( left ).append( ")" );
+		expression.append( left ).append( ')' );
 		expression.append( " " ).append( op ).append( " " );
 		expression.append( ":" ).append( paramName );
 		
@@ -281,9 +281,9 @@ public class Parameters {
 
 		expression.append( " " ).append( op ).append( " " );
 
-		expression.append( "(" );
+		expression.append( '(' );
 		right.build( expression, localQueryParamValues );
-		expression.append( ")" );
+		expression.append( ')' );
 
 		expressions.add( expression.toString() );
 	}
@@ -512,7 +512,7 @@ public class Parameters {
 			if ( !subParameters.isEmpty() ) {
 				append( sb, "(", isFirst );
 				sub.build( sb, queryParamValues );
-				sb.append( ")" );
+				sb.append( ')' );
 			}
 		}
 
@@ -520,7 +520,7 @@ public class Parameters {
 			if ( !negatedParameters.isEmpty() ) {
 				append( sb, "not (", isFirst );
 				negated.build( sb, queryParamValues );
-				sb.append( ")" );
+				sb.append( ')' );
 			}
 		}
 

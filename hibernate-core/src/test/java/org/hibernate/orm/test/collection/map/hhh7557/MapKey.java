@@ -130,7 +130,7 @@ public class MapKey {
 		builder.append( "MapKey [id=" ).append( getId() )
 				.append( ", name=" ).append( getName() )
 				.append( ", defaultValue=" ).append( getDefaultValue() )
-				.append( "]" );
+				.append( ']' );
 		return builder.toString();
 	}
 

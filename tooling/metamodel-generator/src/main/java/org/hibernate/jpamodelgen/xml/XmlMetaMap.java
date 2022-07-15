@@ -33,7 +33,7 @@ public class XmlMetaMap extends XmlMetaCollection {
 				.append( hostingEntity.importType( getTypeDeclaration() ) )
 				.append( "> " )
 				.append( getPropertyName() )
-				.append( ";" )
+				.append( ';' )
 				.toString();
 	}
 }

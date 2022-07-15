@@ -4044,35 +4044,35 @@ public final class AnnotationBinder {
 		for ( CascadeType aHibernateCascadeSet : hibernateCascadeSet ) {
 			switch ( aHibernateCascadeSet ) {
 				case ALL:
-					cascade.append( "," ).append( "all" );
+					cascade.append( ',' ).append( "all" );
 					break;
 				case SAVE_UPDATE:
-					cascade.append( "," ).append( "save-update" );
+					cascade.append( ',' ).append( "save-update" );
 					break;
 				case PERSIST:
-					cascade.append( "," ).append( "persist" );
+					cascade.append( ',' ).append( "persist" );
 					break;
 				case MERGE:
-					cascade.append( "," ).append( "merge" );
+					cascade.append( ',' ).append( "merge" );
 					break;
 				case LOCK:
-					cascade.append( "," ).append( "lock" );
+					cascade.append( ',' ).append( "lock" );
 					break;
 				case REFRESH:
-					cascade.append( "," ).append( "refresh" );
+					cascade.append( ',' ).append( "refresh" );
 					break;
 				case REPLICATE:
-					cascade.append( "," ).append( "replicate" );
+					cascade.append( ',' ).append( "replicate" );
 					break;
 				case DETACH:
-					cascade.append( "," ).append( "evict" );
+					cascade.append( ',' ).append( "evict" );
 					break;
 				case DELETE:
 				case REMOVE:
-					cascade.append( "," ).append( "delete" );
+					cascade.append( ',' ).append( "delete" );
 					break;
 				case DELETE_ORPHAN:
-					cascade.append( "," ).append( "delete-orphan" );
+					cascade.append( ',' ).append( "delete-orphan" );
 					break;
 			}
 		}

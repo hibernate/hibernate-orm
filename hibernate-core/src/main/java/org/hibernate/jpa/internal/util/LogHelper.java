@@ -97,7 +97,7 @@ public final class LogHelper {
 				sb.append( "\n\t\t" ).append( name ).append( ": " ).append( properties.getProperty( name ) );
 			}
 		}
-		sb.append( "]" );
+		sb.append( ']' );
 
 		log.debug( sb.toString() );
 	}

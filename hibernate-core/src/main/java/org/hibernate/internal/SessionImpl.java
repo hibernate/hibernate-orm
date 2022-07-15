@@ -1788,7 +1788,7 @@ public class SessionImpl
 		if ( !isClosed() ) {
 			if ( log.isTraceEnabled() ) {
 				buf.append( persistenceContext )
-					.append( ";" )
+					.append( ';' )
 					.append( actionQueue );
 			}
 			else {

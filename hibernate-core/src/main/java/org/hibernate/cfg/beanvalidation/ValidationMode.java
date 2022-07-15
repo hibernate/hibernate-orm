@@ -69,6 +69,6 @@ public enum ValidationMode {
 			buffer.append( sep ).append( mode.externalForm );
 			sep = ", ";
 		}
-		return buffer.append( "]" ).toString();
+		return buffer.append( ']' ).toString();
 	}
 }

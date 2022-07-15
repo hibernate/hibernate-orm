@@ -151,10 +151,10 @@ public class ImportContextImpl implements ImportContext {
 			// don't add automatically "imported" stuff
 			if ( !isAutoImported( next ) ) {
 				if ( staticImports.contains( next ) ) {
-					builder.append( "import static " ).append( next ).append( ";" ).append( System.lineSeparator() );
+					builder.append( "import static " ).append( next ).append( ';' ).append( System.lineSeparator() );
 				}
 				else {
-					builder.append( "import " ).append( next ).append( ";" ).append( System.lineSeparator() );
+					builder.append( "import " ).append( next ).append( ';' ).append( System.lineSeparator() );
 				}
 			}
 		}

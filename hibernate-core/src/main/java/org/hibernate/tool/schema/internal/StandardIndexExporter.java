@@ -75,7 +75,7 @@ public class StandardIndexExporter implements Exporter<Index> {
 				buf.append( " " ).append( columnOrderMap.get( column ) );
 			}
 		}
-		buf.append( ")" );
+		buf.append( ')' );
 		return new String[] { buf.toString() };
 	}
 

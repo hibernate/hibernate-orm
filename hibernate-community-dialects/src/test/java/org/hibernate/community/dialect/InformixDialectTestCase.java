@@ -9,6 +9,8 @@ package org.hibernate.community.dialect;
 import java.util.Collections;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl;
+import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.metamodel.model.domain.internal.JpaMetamodelImpl;
 import org.hibernate.orm.test.jpa.JpaComplianceStub;
 import org.hibernate.query.criteria.ValueHandlingMode;
@@ -57,7 +59,7 @@ public class InformixDialectTestCase extends BaseUnitTestCase {
 				dialect.getPreferredSqlTypeCodeForBoolean(),
 				false,
 				new NamedObjectRepositoryImpl( Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap() ),
-				null,
+				NativeQueryInterpreterStandardImpl.NATIVE_QUERY_INTERPRETER,
 				dialect,
 				ssr
 		);

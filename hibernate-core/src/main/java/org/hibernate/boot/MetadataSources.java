@@ -63,7 +63,7 @@ public class MetadataSources implements Serializable {
 	private final ServiceRegistry serviceRegistry;
 	private final ClassLoaderService classLoaderService;
 
-	private final XmlMappingBinderAccess xmlMappingBinderAccess;
+	private XmlMappingBinderAccess xmlMappingBinderAccess;
 
 	private List<Binding<?>> xmlBindings;
 	private LinkedHashSet<Class<?>> annotatedClasses;
@@ -85,7 +85,7 @@ public class MetadataSources implements Serializable {
 	 * @param serviceRegistry The service registry to use.
 	 */
 	public MetadataSources(ServiceRegistry serviceRegistry) {
-		this( serviceRegistry, new XmlMappingBinderAccess( serviceRegistry ) );
+		this( serviceRegistry, null );
 	}
 
 	/**
@@ -109,24 +109,15 @@ public class MetadataSources implements Serializable {
 		this.xmlMappingBinderAccess = xmlMappingBinderAccess;
 	}
 
-	/**
-	 * Consider this an SPI, used by Quarkus
-	 */
-	public MetadataSources(ServiceRegistry serviceRegistry, boolean disableXmlMappingBinders) {
-		Objects.requireNonNull( serviceRegistry );
-		this.serviceRegistry = serviceRegistry;
-		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-		this.xmlMappingBinderAccess = disableXmlMappingBinders
-				? null
-				: new XmlMappingBinderAccess( serviceRegistry );
-	}
-
 	protected static boolean isExpectedServiceRegistryType(ServiceRegistry serviceRegistry) {
 		return serviceRegistry instanceof BootstrapServiceRegistry
 			|| serviceRegistry instanceof StandardServiceRegistry;
 	}
 
 	public XmlMappingBinderAccess getXmlMappingBinderAccess() {
+		if ( xmlMappingBinderAccess == null ) {
+			xmlMappingBinderAccess = new XmlMappingBinderAccess( serviceRegistry );
+		}
 		return xmlMappingBinderAccess;
 	}
 

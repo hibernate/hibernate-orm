@@ -9,7 +9,7 @@ package org.hibernate.orm.test.envers.integration.basic;
 import java.util.Arrays;
 import jakarta.persistence.EntityManager;
 
-import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
@@ -23,7 +23,7 @@ import junit.framework.Assert;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @TestForIssue(jiraKey = "HHH-7246")
-@RequiresDialect(Oracle8iDialect.class)
+@RequiresDialect(OracleDialect.class)
 public class EmptyStringTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer emptyId = null;
 	private Integer nullId = null;

@@ -7,107 +7,106 @@
 package org.hibernate.userguide.sql;
 
 import java.sql.Statement;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.NamedNativeQueries;
-import jakarta.persistence.NamedNativeQuery;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLInsert;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.dialect.OracleDialect;
 
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.NamedNativeQueries;
+import jakarta.persistence.NamedNativeQuery;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(Oracle8iDialect.class)
-public class OracleCustomSQLWithStoredProcedureTest extends BaseEntityManagerFunctionalTestCase {
+@RequiresDialect(value = OracleDialect.class, majorVersion = 8)
+@Jpa(
+		annotatedClasses = OracleCustomSQLWithStoredProcedureTest.Person.class
+)
+public class OracleCustomSQLWithStoredProcedureTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Person.class
-		};
-	}
-
-	@Before
-	public void init() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			Session session = entityManager.unwrap(Session.class);
-			session.doWork(connection -> {
-				try(Statement statement = connection.createStatement();) {
-					statement.executeUpdate("ALTER TABLE person ADD valid NUMBER(1) DEFAULT 0 NOT NULL");
+	@BeforeAll
+	public void init(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			Session session = entityManager.unwrap( Session.class );
+			session.doWork( connection -> {
+				try (Statement statement = connection.createStatement();) {
+					statement.executeUpdate( "ALTER TABLE person ADD valid NUMBER(1) DEFAULT 0 NOT NULL" );
 					//tag::sql-sp-soft-delete-example[]
 					statement.executeUpdate(
-						"CREATE OR REPLACE PROCEDURE sp_delete_person (" +
-						"   personId IN NUMBER) " +
-						"AS  " +
-						"BEGIN " +
-						"    UPDATE person SET valid = 0 WHERE id = personId; " +
-						"END;"
-					);}
+							"CREATE OR REPLACE PROCEDURE sp_delete_person (" +
+									"   personId IN NUMBER) " +
+									"AS  " +
+									"BEGIN " +
+									"    UPDATE person SET valid = 0 WHERE id = personId; " +
+									"END;"
+					);
+				}
 				//end::sql-sp-soft-delete-example[]
-			});
-		});
+			} );
+		} );
 	}
 
 	@Test
-	public void test_sql_custom_crud() {
+	public void test_sql_custom_crud(EntityManagerFactoryScope scope) {
 
-		Person _person = doInJPA(this::entityManagerFactory, entityManager -> {
+		Person _person = scope.fromTransaction( entityManager -> {
 			Person person = new Person();
-			person.setName("John Doe");
-			entityManager.persist(person);
+			person.setName( "John Doe" );
+			entityManager.persist( person );
 			return person;
-		});
+		} );
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction(  entityManager -> {
 			Long postId = _person.getId();
-			Person person = entityManager.find(Person.class, postId);
-			assertNotNull(person);
-			entityManager.remove(person);
-		});
+			Person person = entityManager.find( Person.class, postId );
+			assertNotNull( person );
+			entityManager.remove( person );
+		} );
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction(  entityManager -> {
 			Long postId = _person.getId();
-			Person person = entityManager.find(Person.class, postId);
-			assertNull(person);
-		});
+			Person person = entityManager.find( Person.class, postId );
+			assertNull( person );
+		} );
 	}
 
 
 	@Entity(name = "Person")
 	@SQLInsert(
-		sql = "INSERT INTO person (name, id, valid) VALUES (?, ?, 1) ",
-		check = ResultCheckStyle.COUNT
+			sql = "INSERT INTO person (name, id, valid) VALUES (?, ?, 1) ",
+			check = ResultCheckStyle.COUNT
 	)
 	//tag::sql-sp-custom-crud-example[]
 	@SQLDelete(
-		sql =   "{ call sp_delete_person(?) } ",
-		callable = true
+			sql = "{ call sp_delete_person(?) } ",
+			callable = true
 	)
 	//end::sql-sp-custom-crud-example[]
 	@Loader(namedQuery = "find_valid_person")
 	@NamedNativeQueries({
-		@NamedNativeQuery(
-			name = "find_valid_person",
-			query = "SELECT id, name " +
-					"FROM person " +
-					"WHERE id = ? and valid = 1",
-			resultClass = Person.class
-		)
+			@NamedNativeQuery(
+					name = "find_valid_person",
+					query = "SELECT id, name " +
+							"FROM person " +
+							"WHERE id = ? and valid = 1",
+					resultClass = Person.class
+			)
 	})
 	public static class Person {
 

@@ -9,8 +9,11 @@ package org.hibernate.userguide.schema;
 import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
+
+import org.hibernate.annotations.LazyGroup;
+import org.hibernate.annotations.NaturalId;
+
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -19,61 +22,7 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.annotations.LazyGroup;
-import org.hibernate.annotations.NaturalId;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Test;
-
-/**
- * @author Vlad Mihalcea
- */
-public class SchemaGenerationTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Person.class,
-			Book.class,
-			Customer.class
-		};
-	}
-
-	@Override
-	protected Map buildSettings() {
-		Map settings = super.buildSettings();
-		if (getDialect().getClass().equals(H2Dialect.class)) {
-			settings.put(
-					AvailableSettings.HBM2DDL_IMPORT_FILES,
-					"schema-generation.sql"
-			);
-			settings.put(AvailableSettings.HBM2DDL_AUTO, "update");
-		}
-		return settings;
-	}
-
-	@Override
-	protected String[] getMappings() {
-		if (PostgreSQL81Dialect.class.isAssignableFrom(getDialect().getClass())) {
-			return new String[] { "org/hibernate/userguide/schema/SchemaGenerationTest.hbm.xml" };
-		}
-		return super.getMappings();
-	}
-
-	@Test
-	@RequiresDialect(H2Dialect.class)
-	public void testH2() {
-	}
-
-	@Test
-	@RequiresDialect(PostgreSQL81Dialect.class)
-	public void testPostgres() {
-	}
-
+public abstract class BaseSchemaGeneratorTest {
 	//tag::schema-generation-domain-model-example[]
 	@Entity(name = "Customer")
 	public class Customer {
@@ -93,7 +42,7 @@ public class SchemaGenerationTest extends BaseEntityManagerFunctionalTestCase {
 
 		//Getters and setters are omitted for brevity
 
-	//end::schema-generation-domain-model-example[]
+		//end::schema-generation-domain-model-example[]
 
 		public Integer getId() {
 			return id;
@@ -126,7 +75,7 @@ public class SchemaGenerationTest extends BaseEntityManagerFunctionalTestCase {
 		public void setImage(Blob image) {
 			this.image = image;
 		}
-	//tag::schema-generation-domain-model-example[]
+		//tag::schema-generation-domain-model-example[]
 	}
 
 	@Entity(name = "Person")
@@ -142,7 +91,7 @@ public class SchemaGenerationTest extends BaseEntityManagerFunctionalTestCase {
 
 		//Getters and setters are omitted for brevity
 
-	//end::schema-generation-domain-model-example[]
+		//end::schema-generation-domain-model-example[]
 
 		public Long getId() {
 			return id;
@@ -163,7 +112,7 @@ public class SchemaGenerationTest extends BaseEntityManagerFunctionalTestCase {
 		public List<Book> getBooks() {
 			return books;
 		}
-	//tag::schema-generation-domain-model-example[]
+		//tag::schema-generation-domain-model-example[]
 	}
 
 	@Entity(name = "Book")
@@ -182,7 +131,7 @@ public class SchemaGenerationTest extends BaseEntityManagerFunctionalTestCase {
 
 		//Getters and setters are omitted for brevity
 
-	//end::schema-generation-domain-model-example[]
+		//end::schema-generation-domain-model-example[]
 
 		public Long getId() {
 			return id;
@@ -215,7 +164,7 @@ public class SchemaGenerationTest extends BaseEntityManagerFunctionalTestCase {
 		public void setIsbn(String isbn) {
 			this.isbn = isbn;
 		}
-	//tag::schema-generation-domain-model-example[]
+		//tag::schema-generation-domain-model-example[]
 	}
 	//end::schema-generation-domain-model-example[]
 }

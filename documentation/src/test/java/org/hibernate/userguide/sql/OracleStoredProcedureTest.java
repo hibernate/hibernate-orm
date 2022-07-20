@@ -3,55 +3,57 @@ package org.hibernate.userguide.sql;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
-import jakarta.persistence.ParameterMode;
-import jakarta.persistence.StoredProcedureQuery;
 
 import org.hibernate.Session;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
+import org.hibernate.userguide.model.Account;
 import org.hibernate.userguide.model.AddressType;
 import org.hibernate.userguide.model.Call;
 import org.hibernate.userguide.model.Partner;
+import org.hibernate.userguide.model.Payment;
 import org.hibernate.userguide.model.Person;
 import org.hibernate.userguide.model.Phone;
 import org.hibernate.userguide.model.PhoneType;
 
-import org.hibernate.testing.RequiresDialect;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.StoredProcedureQuery;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(Oracle8iDialect.class)
-public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCase {
+@RequiresDialect(value = OracleDialect.class, majorVersion = 8)
+@Jpa(
+        annotatedClasses = {
+                Person.class,
+                Partner.class,
+                Phone.class,
+                Call.class,
+                Payment.class,
+                Account.class
+        }
+)
+public class OracleStoredProcedureTest {
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[] {
-            Person.class,
-            Partner.class,
-            Phone.class,
-            Call.class,
-        };
-    }
-
-    @Before
-    public void init() {
-        doInJPA(this::entityManagerFactory, entityManager -> {
+    @BeforeAll
+    public void init(EntityManagerFactoryScope scope) {
+        scope.inTransaction( entityManager -> {
             Session session = entityManager.unwrap(Session.class);
             session.doWork(connection -> {
                 try(Statement statement = connection.createStatement()) {
@@ -96,7 +98,7 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
                 }
 			});
         });
-        doInJPA(this::entityManagerFactory, entityManager -> {
+        scope.inTransaction( entityManager -> {
             Person person1 = new Person("John Doe");
             person1.setNickName("JD");
             person1.setAddress("Earth");
@@ -120,9 +122,9 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
         });
     }
 
-    @After
-    public void destroy() {
-        doInJPA(this::entityManagerFactory, entityManager -> {
+    @AfterAll
+    public void destroy(EntityManagerFactoryScope scope) {
+        scope.inTransaction( entityManager -> {
             Session session = entityManager.unwrap(Session.class);
             session.doWork(connection -> {
                 try(Statement statement = connection.createStatement()) {
@@ -132,7 +134,7 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
                 }
             });
         });
-        doInJPA(this::entityManagerFactory, entityManager -> {
+        scope.inTransaction( entityManager -> {
             Session session = entityManager.unwrap(Session.class);
             session.doWork(connection -> {
                 try(Statement statement = connection.createStatement()) {
@@ -142,7 +144,7 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
                 }
             });
         });
-        doInJPA(this::entityManagerFactory, entityManager -> {
+        scope.inTransaction( entityManager -> {
             Session session = entityManager.unwrap(Session.class);
             session.doWork(connection -> {
                 try(Statement statement = connection.createStatement()) {
@@ -155,8 +157,8 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
     }
 
     @Test
-    public void testStoredProcedureOutParameter() {
-        doInJPA(this::entityManagerFactory, entityManager -> {
+    public void testStoredProcedureOutParameter(EntityManagerFactoryScope scope) {
+        scope.inTransaction( entityManager -> {
             StoredProcedureQuery query = entityManager.createStoredProcedureQuery("sp_count_phones");
             query.registerStoredProcedureParameter(1, Long.class, ParameterMode.IN);
             query.registerStoredProcedureParameter(2, Long.class, ParameterMode.OUT);
@@ -165,13 +167,13 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
 
             query.execute();
             Long phoneCount = (Long) query.getOutputParameterValue(2);
-            assertEquals(Long.valueOf(2), phoneCount);
+            assertEquals(2l, phoneCount);
         });
     }
 
     @Test
-    public void testStoredProcedureRefCursor() {
-        doInJPA(this::entityManagerFactory, entityManager -> {
+    public void testStoredProcedureRefCursor(EntityManagerFactoryScope scope) {
+        scope.inTransaction( entityManager -> {
             //tag::sql-jpa-call-sp-ref-cursor-oracle-example[]
             StoredProcedureQuery query = entityManager.createStoredProcedureQuery("sp_person_phones");
             query.registerStoredProcedureParameter(1, Long.class, ParameterMode.IN);
@@ -186,8 +188,8 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
     }
 
     @Test
-    public void testStoredProcedureRefCursorUsingNamedQuery() {
-        doInJPA(this::entityManagerFactory, entityManager -> {
+    public void testStoredProcedureRefCursorUsingNamedQuery(EntityManagerFactoryScope scope) {
+        scope.inTransaction( entityManager -> {
             //tag::sql-jpa-call-sp-ref-cursor-oracle-named-query-example[]
             List<Object[]> postComments = entityManager
             .createNamedStoredProcedureQuery("sp_person_phones")
@@ -200,8 +202,8 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
     }
 
     @Test
-    public void testHibernateProcedureCallRefCursor() {
-        doInJPA(this::entityManagerFactory, entityManager -> {
+    public void testHibernateProcedureCallRefCursor(EntityManagerFactoryScope scope) {
+        scope.inTransaction( entityManager -> {
             //tag::sql-hibernate-call-sp-ref-cursor-oracle-example[]
             Session session = entityManager.unwrap(Session.class);
             
@@ -218,18 +220,13 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
     }
 
     @Test
-    public void testStoredProcedureReturnValue() {
-        try {
-            doInJPA(this::entityManagerFactory, entityManager -> {
-				BigDecimal phoneCount = (BigDecimal) entityManager
-						.createNativeQuery("SELECT fn_count_phones(:personId) FROM DUAL")
-						.setParameter("personId", 1)
-						.getSingleResult();
-				assertEquals(BigDecimal.valueOf(2), phoneCount);
-			});
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void testStoredProcedureReturnValue(EntityManagerFactoryScope scope) {
+        scope.inTransaction( entityManager -> {
+            BigDecimal phoneCount = (BigDecimal) entityManager
+                    .createNativeQuery( "SELECT fn_count_phones(:personId) FROM DUAL" )
+                    .setParameter( "personId", 1 )
+                    .getSingleResult();
+            assertEquals( BigDecimal.valueOf( 2 ), phoneCount );
+        } );
     }
 }

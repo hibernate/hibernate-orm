@@ -67,6 +67,10 @@ public class OutputsImpl implements Outputs {
 
 	}
 
+	protected ResultContext getResultContext(){
+		return context;
+	}
+
 	protected void executeStatement() {
 		try {
 			final boolean isResultSet = jdbcStatement.execute();
@@ -134,12 +138,7 @@ public class OutputsImpl implements Outputs {
 
 	@Override
 	public void release() {
-		try {
-			jdbcStatement.close();
-		}
-		catch (SQLException e) {
-			log.debug( "Unable to close PreparedStatement", e );
-		}
+		context.getSession().getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( jdbcStatement );
 	}
 
 	private List extractCurrentResults() {
@@ -281,9 +280,6 @@ public class OutputsImpl implements Outputs {
 			}
 			return results;
 		}
-//		catch (SQLException e) {
-//			throw context.getSession().getExceptionConverter().convert( e, "Error processing return rows" );
-//		}
 		finally {
 			rowReader.finishUp( jdbcValuesSourceProcessingState );
 			jdbcValuesSourceProcessingState.finishUp();

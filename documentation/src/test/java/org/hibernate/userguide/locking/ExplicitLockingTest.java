@@ -23,38 +23,51 @@ import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import org.jboss.logging.Logger;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 /**
  * @author Vlad Mihalcea
  */
-public class ExplicitLockingTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses =  {
+				ExplicitLockingTest.Person.class,
+				ExplicitLockingTest.Phone.class,
+		}
+)
+public class ExplicitLockingTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				Phone.class,
-		};
+	protected final Logger log = Logger.getLogger( getClass() );
+
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager ->
+						entityManager.createQuery( "delete from Person" ).executeUpdate()
+		);
 	}
 
 	@Test
-	public void testJPALockTimeout() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testJPALockTimeout(EntityManagerFactoryScope scope) {
+		Person p = scope.fromTransaction( entityManager -> {
 			Person person = new Person("John Doe");
 			entityManager.persist(person);
+			return person;
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			log.info("testJPALockTimeout");
-			Long id = 1L;
+			Long id = p.getId();
 			//tag::locking-jpa-query-hints-timeout-example[]
 			entityManager.find(
 				Person.class, id, LockModeType.PESSIMISTIC_WRITE,
@@ -65,8 +78,8 @@ public class ExplicitLockingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testJPALockScope() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testJPALockScope(EntityManagerFactoryScope scope) {
+		Person p = scope.fromTransaction( entityManager -> {
 			Person person = new Person("John Doe");
 			entityManager.persist(person);
 			Phone home = new Phone("123-456-7890");
@@ -74,10 +87,11 @@ public class ExplicitLockingTest extends BaseEntityManagerFunctionalTestCase {
 			person.getPhones().add(home);
 			person.getPhones().add(office);
 			entityManager.persist(person);
+			return person;
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			log.info("testJPALockScope");
-			Long id = 1L;
+			Long id = p.getId();
 			//tag::locking-jpa-query-hints-scope-example[]
 			Person person = entityManager.find(
 				Person.class, id, LockModeType.PESSIMISTIC_WRITE,
@@ -91,8 +105,8 @@ public class ExplicitLockingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testBuildLockRequest() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testBuildLockRequest(EntityManagerFactoryScope scope) {
+		Person p = scope.fromTransaction( entityManager -> {
 			log.info("testBuildLockRequest");
 			Person person = new Person("John Doe");
 			Phone home = new Phone("123-456-7890");
@@ -101,9 +115,10 @@ public class ExplicitLockingTest extends BaseEntityManagerFunctionalTestCase {
 			person.getPhones().add(office);
 			entityManager.persist(person);
 			entityManager.flush();
+			return person;
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			Long id = 1L;
+		scope.inTransaction( entityManager -> {
+			Long id = p.getId();
 			//tag::locking-buildLockRequest-example[]
 			Person person = entityManager.find(Person.class, id);
 			Session session = entityManager.unwrap(Session.class);
@@ -115,8 +130,8 @@ public class ExplicitLockingTest extends BaseEntityManagerFunctionalTestCase {
 			//end::locking-buildLockRequest-example[]
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			Long id = 1L;
+		scope.inTransaction( entityManager -> {
+			Long id = p.getId();
 			//tag::locking-buildLockRequest-scope-example[]
 			Person person = entityManager.find(Person.class, id);
 			Session session = entityManager.unwrap(Session.class);
@@ -132,9 +147,9 @@ public class ExplicitLockingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialect(Oracle8iDialect.class)
-	public void testFollowOnLocking() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	@RequiresDialect(value = OracleDialect.class, majorVersion = 8)
+	public void testFollowOnLocking(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			log.info("testBuildLockRequest");
 			Person person1 = new Person("John Doe");
 			Person person2 = new Person("Mrs. John Doe");
@@ -144,7 +159,7 @@ public class ExplicitLockingTest extends BaseEntityManagerFunctionalTestCase {
 			entityManager.flush();
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			//tag::locking-follow-on-example[]
 			List<Person> persons = entityManager.createQuery(
 				"select DISTINCT p from Person p", Person.class)
@@ -153,7 +168,7 @@ public class ExplicitLockingTest extends BaseEntityManagerFunctionalTestCase {
 			//end::locking-follow-on-example[]
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			//tag::locking-follow-on-secondary-query-example[]
 			List<Person> persons = entityManager.createQuery(
 				"select DISTINCT p from Person p", Person.class)
@@ -167,7 +182,7 @@ public class ExplicitLockingTest extends BaseEntityManagerFunctionalTestCase {
 			//end::locking-follow-on-secondary-query-example[]
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			//tag::locking-follow-on-explicit-example[]
 			List<Person> persons = entityManager.createQuery(
 				"select p from Person p", Person.class)

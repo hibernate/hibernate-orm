@@ -15,32 +15,30 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 
 import org.hibernate.annotations.DiscriminatorFormula;
-import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.dialect.PostgreSQLDialect;
 
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Assert;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class SingleTableDiscriminatorFormulaTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				DebitAccount.class,
-				CreditAccount.class,
-		};
-	}
+@Jpa(
+		annotatedClasses = {
+				SingleTableDiscriminatorFormulaTest.DebitAccount.class,
+				SingleTableDiscriminatorFormulaTest.CreditAccount.class,
+		}
+)
+public class SingleTableDiscriminatorFormulaTest {
 
 	@Test
-	@RequiresDialect({PostgreSQL81Dialect.class})
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 8, minorVersion = 1)
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction(entityManager -> {
 			DebitAccount debitAccount = new DebitAccount("123-debit");
 			debitAccount.setId(1L);
 			debitAccount.setOwner("John Doe");
@@ -59,10 +57,10 @@ public class SingleTableDiscriminatorFormulaTest extends BaseEntityManagerFuncti
 			entityManager.persist(creditAccount);
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction(entityManager -> {
 			List<Account> accounts =
 					entityManager.createQuery("select a from Account a").getResultList();
-			Assert.assertEquals(2, accounts.size());
+			assertEquals(2, accounts.size());
 		});
 	}
 

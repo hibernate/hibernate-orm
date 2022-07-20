@@ -148,4 +148,9 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 		}
 	}
 
+	@Override
+	public void release() {
+		super.release();
+		getResultContext().getSession().getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( callableStatement );
+	}
 }

@@ -17,6 +17,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.securitymanager.SystemSecurityManager;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyConfiguration;
 import org.hibernate.proxy.ProxyFactory;
@@ -119,7 +120,7 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 
 			}
 		};
-		return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
+		return SystemSecurityManager.isSecurityManagerEnabled() ? AccessController.doPrivileged( action ) : action.run();
 
 	}
 }

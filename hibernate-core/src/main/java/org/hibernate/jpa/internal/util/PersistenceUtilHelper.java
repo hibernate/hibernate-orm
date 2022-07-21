@@ -27,6 +27,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterc
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.securitymanager.SystemSecurityManager;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
@@ -378,7 +379,7 @@ public final class PersistenceUtilHelper {
 					return new NoSuchAttributeAccess( specifiedClass, attributeName );
 				}
 			};
-			return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
+			return SystemSecurityManager.isSecurityManagerEnabled() ? AccessController.doPrivileged( action ) : action.run();
 		}
 	}
 

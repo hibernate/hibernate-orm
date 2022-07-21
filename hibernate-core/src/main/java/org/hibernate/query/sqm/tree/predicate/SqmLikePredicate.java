@@ -58,7 +58,7 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 		matchExpression.applyInferableType( expressibleType );
 		pattern.applyInferableType( expressibleType );
 		if ( escapeCharacter != null ) {
-			escapeCharacter.applyInferableType( expressibleType );
+			escapeCharacter.applyInferableType( nodeBuilder.getCharacterType() );
 		}
 	}
 

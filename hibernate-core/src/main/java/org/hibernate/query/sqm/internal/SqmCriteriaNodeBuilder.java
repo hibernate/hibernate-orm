@@ -178,6 +178,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	private final transient ValueHandlingMode criteriaValueHandlingMode;
 	private transient BasicType<Boolean> booleanType;
 	private transient BasicType<Integer> integerType;
+	private transient BasicType<Character> characterType;
 
 	public SqmCriteriaNodeBuilder(
 			String uuid,
@@ -223,6 +224,15 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return this.integerType = getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
 		}
 		return integerType;
+	}
+
+	@Override
+	public BasicType<Character> getCharacterType() {
+		final BasicType<Character> characterType = this.characterType;
+		if ( characterType == null ) {
+			return this.characterType = getTypeConfiguration().getBasicTypeForJavaType( Character.class );
+		}
+		return characterType;
 	}
 
 	@Override

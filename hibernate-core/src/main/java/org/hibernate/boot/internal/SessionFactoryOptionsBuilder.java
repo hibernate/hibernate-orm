@@ -71,10 +71,9 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.Statistics;
 import org.hibernate.type.FormatMapper;
-import org.hibernate.type.JacksonJsonFormatMapper;
 import org.hibernate.type.JaxbXmlFormatMapper;
-import org.hibernate.type.JsonBJsonFormatMapper;
 import org.hibernate.type.jackson.JacksonIntegration;
+import org.hibernate.type.jakartajson.JakartaJsonIntegration;
 
 import static org.hibernate.cfg.AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY;
@@ -801,15 +800,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 					if (jsonJacksonFormatMapper != null) {
 						return jsonJacksonFormatMapper;
 					}
-					try {
-						// Force initialization of the instance
-						JsonBJsonFormatMapper.INSTANCE.hashCode();
-						return JsonBJsonFormatMapper.INSTANCE;
+					else {
+						return JakartaJsonIntegration.getJakartaJsonBFormatMapperOrNull();
 					}
-					catch (NoClassDefFoundError ex) {
-						// Ignore
-					}
-					return null;
 				}
 		);
 	}

@@ -2181,7 +2181,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return new SqmLikePredicate(
 					(SqmExpression<?>) ctx.getChild( 0 ).accept( this ),
 					(SqmExpression<?>) ctx.getChild( startIndex ).accept( this ),
-					(SqmExpression<?>) ctx.getChild( startIndex + 1 ).getChild( 1 ).accept( this ),
+					(SqmExpression<?>) ctx.getChild( startIndex + 1 ).accept( this ),
 					negated,
 					caseSensitive,
 					creationContext.getNodeBuilder()
@@ -2193,6 +2193,38 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					(SqmExpression<?>) ctx.getChild( startIndex ).accept( this ),
 					negated,
 					caseSensitive,
+					creationContext.getNodeBuilder()
+			);
+		}
+	}
+
+	@Override
+	public Object visitLikeEscape(HqlParser.LikeEscapeContext ctx) {
+		final ParseTree child = ctx.getChild( 1 );
+		if ( child instanceof HqlParser.NamedParameterContext ) {
+			return visitNamedParameter(
+					(HqlParser.NamedParameterContext) child,
+					creationContext.getNodeBuilder().getCharacterType()
+			);
+		}
+		else if ( child instanceof HqlParser.PositionalParameterContext ) {
+			return visitPositionalParameter(
+					(HqlParser.PositionalParameterContext) child,
+					creationContext.getNodeBuilder().getCharacterType()
+			);
+		}
+		else {
+			assert child instanceof TerminalNode;
+			final TerminalNode terminalNode = (TerminalNode) child;
+			final String escape = QuotingHelper.unquoteStringLiteral( terminalNode.getText() );
+			if ( escape.length() != 1 ) {
+				throw new SemanticException(
+						"Escape character literals must have exactly a single character, but found: " + escape
+				);
+			}
+			return new SqmLiteral<>(
+					escape.charAt( 0 ),
+					creationContext.getNodeBuilder().getCharacterType(),
 					creationContext.getNodeBuilder()
 			);
 		}
@@ -3398,10 +3430,17 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmNamedParameter<?> visitNamedParameter(HqlParser.NamedParameterContext ctx) {
+		return visitNamedParameter( ctx, null );
+	}
+
+	private <T> SqmNamedParameter<T> visitNamedParameter(
+			HqlParser.NamedParameterContext ctx,
+			SqmExpressible<T> expressibleType) {
 		parameterStyle = parameterStyle.withNamed();
-		final SqmNamedParameter<?> param = new SqmNamedParameter<>(
+		final SqmNamedParameter<T> param = new SqmNamedParameter<>(
 				ctx.getChild( 1 ).getText(),
 				parameterDeclarationContextStack.getCurrent().isMultiValuedBindingAllowed(),
+				expressibleType,
 				creationContext.getNodeBuilder()
 		);
 		parameterCollector.addParameter( param );
@@ -3410,13 +3449,20 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmPositionalParameter<?> visitPositionalParameter(HqlParser.PositionalParameterContext ctx) {
+		return visitPositionalParameter( ctx, null );
+	}
+
+	private <T> SqmPositionalParameter<T> visitPositionalParameter(
+			HqlParser.PositionalParameterContext ctx,
+			SqmExpressible<T> expressibleType) {
 		if ( ctx.getChildCount() == 1 ) {
 			throw new SemanticException( "Unlabeled ordinal parameter ('?' rather than ?1)" );
 		}
 		parameterStyle = parameterStyle.withPositional();
-		final SqmPositionalParameter<?> param = new SqmPositionalParameter<>(
+		final SqmPositionalParameter<T> param = new SqmPositionalParameter<>(
 				Integer.parseInt( ctx.getChild( 1 ).getText() ),
 				parameterDeclarationContextStack.getCurrent().isMultiValuedBindingAllowed(),
+				expressibleType,
 				creationContext.getNodeBuilder()
 		);
 		parameterCollector.addParameter( param );

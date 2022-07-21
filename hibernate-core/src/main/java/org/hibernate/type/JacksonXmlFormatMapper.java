@@ -19,7 +19,6 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 public class JacksonXmlFormatMapper implements FormatMapper {
 
 	public static final String SHORT_NAME = "jackson-xml";
-	public static final JacksonXmlFormatMapper INSTANCE = new JacksonXmlFormatMapper();
 
 	private final ObjectMapper objectMapper;
 

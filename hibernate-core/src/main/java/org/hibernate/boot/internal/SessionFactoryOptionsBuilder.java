@@ -816,14 +816,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 					if (jacksonFormatMapper != null) {
 						return jacksonFormatMapper;
 					}
-
-					try {
-						return new JaxbXmlFormatMapper();
-					}
-					catch (NoClassDefFoundError ex) {
-						// Ignore
-					}
-					return null;
+					return new JaxbXmlFormatMapper();
 				}
 		);
 	}

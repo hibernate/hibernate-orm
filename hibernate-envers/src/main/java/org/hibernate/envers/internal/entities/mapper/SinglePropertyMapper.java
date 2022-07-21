@@ -13,7 +13,8 @@ import java.util.Objects;
 
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
@@ -58,8 +59,9 @@ public class SinglePropertyMapper extends AbstractPropertyMapper implements Simp
 			Object oldObj) {
 		data.put( propertyData.getName(), newObj );
 		boolean dbLogicallyDifferent = true;
-		if ( (session.getFactory().getJdbcServices()
-				.getDialect() instanceof Oracle8iDialect) && (newObj instanceof String || oldObj instanceof String) ) {
+		final Dialect dialect = session.getFactory().getJdbcServices()
+				.getDialect();
+		if ( ( dialect instanceof OracleDialect && dialect.getVersion().isSameOrAfter( 8 ) ) && (newObj instanceof String || oldObj instanceof String) ) {
 			// Don't generate new revision when database replaces empty string with NULL during INSERT or UPDATE statements.
 			dbLogicallyDifferent = !(StringTools.isEmpty( newObj ) && StringTools.isEmpty( oldObj ));
 		}

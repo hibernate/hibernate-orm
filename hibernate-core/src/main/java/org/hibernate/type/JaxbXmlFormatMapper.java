@@ -44,7 +44,6 @@ import org.w3c.dom.Node;
 public class JaxbXmlFormatMapper implements FormatMapper {
 
 	public static final String SHORT_NAME = "jaxb";
-	public static final JaxbXmlFormatMapper INSTANCE = new JaxbXmlFormatMapper();
 
 	public JaxbXmlFormatMapper() {
 	}

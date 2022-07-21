@@ -18,7 +18,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class JacksonJsonFormatMapper implements FormatMapper {
 
 	public static final String SHORT_NAME = "jackson";
-	public static final JacksonJsonFormatMapper INSTANCE = new JacksonJsonFormatMapper();
 
 	private final ObjectMapper objectMapper;
 

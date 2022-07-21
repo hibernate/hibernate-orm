@@ -72,9 +72,9 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.Statistics;
 import org.hibernate.type.FormatMapper;
 import org.hibernate.type.JacksonJsonFormatMapper;
-import org.hibernate.type.JacksonXmlFormatMapper;
 import org.hibernate.type.JaxbXmlFormatMapper;
 import org.hibernate.type.JsonBJsonFormatMapper;
+import org.hibernate.type.jackson.JacksonIntegration;
 
 import static org.hibernate.cfg.AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY;
@@ -797,13 +797,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				FormatMapper.class,
 				setting,
 				(Callable<FormatMapper>) () -> {
-					try {
-						// Force initialization of the instance
-						JacksonJsonFormatMapper.INSTANCE.hashCode();
-						return JacksonJsonFormatMapper.INSTANCE;
-					}
-					catch (NoClassDefFoundError ex) {
-						// Ignore
+					final FormatMapper jsonJacksonFormatMapper = JacksonIntegration.getJsonJacksonFormatMapperOrNull();
+					if (jsonJacksonFormatMapper != null) {
+						return jsonJacksonFormatMapper;
 					}
 					try {
 						// Force initialization of the instance
@@ -823,18 +819,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				FormatMapper.class,
 				setting,
 				(Callable<FormatMapper>) () -> {
-					try {
-						// Force initialization of the instance
-						JacksonXmlFormatMapper.INSTANCE.hashCode();
-						return JacksonXmlFormatMapper.INSTANCE;
+					final FormatMapper jacksonFormatMapper = JacksonIntegration.getXMLJacksonFormatMapperOrNull();
+					if (jacksonFormatMapper != null) {
+						return jacksonFormatMapper;
 					}
-					catch (NoClassDefFoundError ex) {
-						// Ignore
-					}
+
 					try {
-						// Force initialization of the instance
-						JaxbXmlFormatMapper.INSTANCE.hashCode();
-						return JaxbXmlFormatMapper.INSTANCE;
+						return new JaxbXmlFormatMapper();
 					}
 					catch (NoClassDefFoundError ex) {
 						// Ignore

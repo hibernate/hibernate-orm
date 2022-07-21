@@ -7,7 +7,6 @@
 package org.hibernate.type.jakartajson;
 
 import org.hibernate.type.FormatMapper;
-import org.hibernate.type.JsonBJsonFormatMapper;
 
 public final class JakartaJsonIntegration {
 

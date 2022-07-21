@@ -4,28 +4,30 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.type;
+package org.hibernate.type.jackson;
 
+import org.hibernate.type.FormatMapper;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 /**
  * @author Christian Beikov
  */
-public class JacksonJsonFormatMapper implements FormatMapper {
+public final class JacksonXmlFormatMapper implements FormatMapper {
 
-	public static final String SHORT_NAME = "jackson";
+	public static final String SHORT_NAME = "jackson-xml";
 
 	private final ObjectMapper objectMapper;
 
-	public JacksonJsonFormatMapper() {
-		this(new ObjectMapper());
+	public JacksonXmlFormatMapper() {
+		this(new XmlMapper());
 	}
 
-	public JacksonJsonFormatMapper(ObjectMapper objectMapper) {
+	public JacksonXmlFormatMapper(ObjectMapper objectMapper) {
 		this.objectMapper = objectMapper;
 	}
 

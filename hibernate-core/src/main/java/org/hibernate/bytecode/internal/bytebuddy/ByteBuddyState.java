@@ -27,6 +27,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.securitymanager.SystemSecurityManager;
 import org.hibernate.proxy.ProxyConfiguration;
 import org.hibernate.proxy.ProxyFactory;
 
@@ -82,7 +83,7 @@ public final class ByteBuddyState {
 		this.proxyCache = new TypeCache( TypeCache.Sort.WEAK );
 		this.basicProxyCache = new TypeCache( TypeCache.Sort.WEAK );
 
-		if ( System.getSecurityManager() != null ) {
+		if ( SystemSecurityManager.isSecurityManagerEnabled() ) {
 			this.classRewriter = new SecurityManagerClassRewriter();
 		}
 		else {
@@ -276,7 +277,7 @@ public final class ByteBuddyState {
 				}
 			};
 
-			this.delegateToInterceptorDispatcherMethodDelegation = System.getSecurityManager() != null
+			this.delegateToInterceptorDispatcherMethodDelegation = SystemSecurityManager.isSecurityManagerEnabled()
 					? AccessController.doPrivileged( delegateToInterceptorDispatcherMethodDelegationPrivilegedAction )
 					: delegateToInterceptorDispatcherMethodDelegationPrivilegedAction.run();
 
@@ -290,7 +291,7 @@ public final class ByteBuddyState {
 				}
 			};
 
-			this.interceptorFieldAccessor = System.getSecurityManager() != null
+			this.interceptorFieldAccessor = SystemSecurityManager.isSecurityManagerEnabled()
 					? AccessController.doPrivileged( interceptorFieldAccessorPrivilegedAction )
 					: interceptorFieldAccessorPrivilegedAction.run();
 		}

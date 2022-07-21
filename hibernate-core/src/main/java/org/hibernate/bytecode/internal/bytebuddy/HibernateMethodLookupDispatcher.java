@@ -16,6 +16,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.hibernate.HibernateException;
+import org.hibernate.internal.util.securitymanager.SystemSecurityManager;
 
 /**
  * This dispatcher analyzes the stack frames to detect if a particular call should be authorized.
@@ -85,7 +86,7 @@ public class HibernateMethodLookupDispatcher {
 			throw new SecurityException( "Unauthorized call by class " + callerClass );
 		}
 
-		return System.getSecurityManager() != null ? AccessController.doPrivileged( privilegedAction ) :
+		return SystemSecurityManager.isSecurityManagerEnabled() ? AccessController.doPrivileged( privilegedAction ) :
 			privilegedAction.run();
 	}
 
@@ -133,13 +134,13 @@ public class HibernateMethodLookupDispatcher {
 			}
 		};
 
-		GET_CALLER_STACK_ACTION = System.getSecurityManager() != null
+		GET_CALLER_STACK_ACTION = SystemSecurityManager.isSecurityManagerEnabled()
 				? AccessController.doPrivileged( initializeGetCallerStackAction )
 				: initializeGetCallerStackAction.run();
 	}
 
 	private static Class<?> getCallerClass() {
-		Class<?>[] stackTrace = System.getSecurityManager() != null
+		Class<?>[] stackTrace = SystemSecurityManager.isSecurityManagerEnabled()
 				? AccessController.doPrivileged( GET_CALLER_STACK_ACTION )
 				: GET_CALLER_STACK_ACTION.run();
 

@@ -20,6 +20,7 @@ import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.entities.mapper.relation.query.RelationQueryGenerator;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.securitymanager.SystemSecurityManager;
 
 /**
  * Initializes a persistent collection.
@@ -74,7 +75,7 @@ public abstract class AbstractCollectionInitializor<T> implements Initializor<T>
 	 * @return the result of the privileged call, may be {@literal null}
 	 */
 	protected <R> R doPrivileged(Supplier<R> block) {
-		if ( System.getSecurityManager() != null ) {
+		if ( SystemSecurityManager.isSecurityManagerEnabled() ) {
 			return AccessController.doPrivileged( (PrivilegedAction<R>) block::get );
 		}
 		else {

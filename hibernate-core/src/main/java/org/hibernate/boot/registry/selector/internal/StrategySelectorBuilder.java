@@ -39,10 +39,10 @@ import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLoca
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.type.FormatMapper;
-import org.hibernate.type.JacksonJsonFormatMapper;
-import org.hibernate.type.JacksonXmlFormatMapper;
+import org.hibernate.type.jackson.JacksonJsonFormatMapper;
+import org.hibernate.type.jackson.JacksonXmlFormatMapper;
 import org.hibernate.type.JaxbXmlFormatMapper;
-import org.hibernate.type.JsonBJsonFormatMapper;
+import org.hibernate.type.jakartajson.JsonBJsonFormatMapper;
 
 import org.jboss.logging.Logger;
 

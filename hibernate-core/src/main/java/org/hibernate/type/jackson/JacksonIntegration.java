@@ -7,8 +7,6 @@
 package org.hibernate.type.jackson;
 
 import org.hibernate.type.FormatMapper;
-import org.hibernate.type.JacksonJsonFormatMapper;
-import org.hibernate.type.JacksonXmlFormatMapper;
 
 public final class JacksonIntegration {
 

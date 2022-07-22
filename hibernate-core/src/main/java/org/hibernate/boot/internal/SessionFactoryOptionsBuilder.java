@@ -71,7 +71,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.Statistics;
 import org.hibernate.type.FormatMapper;
-import org.hibernate.type.JaxbXmlFormatMapper;
+import org.hibernate.type.jaxb.JaxbXmlFormatMapper;
 import org.hibernate.type.jackson.JacksonIntegration;
 import org.hibernate.type.jakartajson.JakartaJsonIntegration;
 

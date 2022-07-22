@@ -21,7 +21,11 @@ public final class JakartaJsonIntegration {
 
 	private static boolean ableToLoadJakartaJsonB() {
 		try {
-			JakartaJsonIntegration.class.getClassLoader().loadClass( "jakarta.json.bind.Jsonb" );
+			//N.B. intentionally not using the context classloader
+			// as we're storing these in static references;
+			// IMO it's reasonable to expect that such dependencies are made reachable from the ORM classloader.
+			// (we can change this if it's more problematic than expected).
+			JakartaJsonIntegration.class.getClassLoader().loadClass( "jakarta.json.bind.JsonbBuilder" );
 			return true;
 		}
 		catch (ClassNotFoundException | LinkageError e) {

@@ -44,6 +44,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
@@ -734,13 +735,15 @@ public class LoaderSelectBuilder {
 			EntityGraphTraversalState.TraversalResult traversalResult = null;
 
 			final boolean isFetchablePluralAttributeMapping = fetchable instanceof PluralAttributeMapping;
+			final Integer maximumFetchDepth = creationContext.getMaximumFetchDepth();
+
 			if ( !( fetchable instanceof CollectionPart ) ) {
 				// 'entity graph' takes precedence over 'fetch profile'
 				if ( entityGraphTraversalState != null ) {
 					traversalResult = entityGraphTraversalState.traverse( fetchParent, fetchable, isKeyFetchable );
 					fetchTiming = traversalResult.getFetchTiming();
 					joined = traversalResult.isJoined();
-					explicitFetch = true;
+					explicitFetch = shouldExplicitFetch( maximumFetchDepth, fetchable, creationState );
 				}
 				else if ( loadQueryInfluencers.hasEnabledFetchProfiles() ) {
 					// There is no point in checking the fetch profile if it can't affect this fetchable
@@ -756,7 +759,7 @@ public class LoaderSelectBuilder {
 							if ( profileFetch != null ) {
 								fetchTiming = FetchTiming.IMMEDIATE;
 								joined = joined || profileFetch.getStyle() == org.hibernate.engine.profile.Fetch.Style.JOIN;
-								explicitFetch = true;
+								explicitFetch = shouldExplicitFetch( maximumFetchDepth, fetchable, creationState );
 							}
 						}
 					}
@@ -815,8 +818,6 @@ public class LoaderSelectBuilder {
 						return;
 					}
 				}
-
-				final Integer maximumFetchDepth = creationContext.getMaximumFetchDepth();
 
 				if ( maximumFetchDepth != null ) {
 					if ( fetchDepth == maximumFetchDepth + 1 ) {
@@ -884,6 +885,27 @@ public class LoaderSelectBuilder {
 				}
 			}
 		};
+	}
+
+	private boolean shouldExplicitFetch(Integer maxFetchDepth, Fetchable fetchable, LoaderSqlAstCreationState creationState) {
+		/*
+			Forcing the value of explicitFetch to true will disable the fetch circularity check and
+			for already visited association or collection this will cause a StackOverflow if maxFetchDepth is null, see HHH-15391.
+		 */
+		if ( maxFetchDepth == null ) {
+			if ( fetchable instanceof ToOneAttributeMapping ) {
+				return !creationState.isAssociationKeyVisited(
+						( (ToOneAttributeMapping) fetchable ).getForeignKeyDescriptor().getAssociationKey()
+				);
+			}
+			else if ( fetchable instanceof PluralAttributeMapping ) {
+				return !creationState.isAssociationKeyVisited(
+						( (PluralAttributeMapping) fetchable ).getKeyDescriptor().getAssociationKey()
+				);
+			}
+		}
+
+		return true;
 	}
 
 	private void applyOrdering(

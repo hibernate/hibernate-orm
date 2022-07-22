@@ -56,6 +56,7 @@ import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.Association;
+import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -485,6 +486,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private SqmExpressible<?> adjustedTimestampType; //TODO: remove this once we can get a Type directly from adjustedTimestamp
 	private Expression adjustmentScale;
 	private boolean negativeAdjustment;
+
+	private final Set<AssociationKey> visitedAssociationKeys = new HashSet<>();
 
 	public BaseSqmToSqlAstConverter(
 			SqlAstCreationContext creationContext,
@@ -3494,7 +3497,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final EntityValuedModelPart entityValuedModelPart = (EntityValuedModelPart) actualModelPart;
 			final EntityValuedModelPart inferredEntityMapping = (EntityValuedModelPart) getInferredValueMapping();
 			final ModelPart resultModelPart;
-			final ModelPart interpretationModelPart;
+			final EntityValuedModelPart interpretationModelPart;
 			final TableGroup tableGroupToUse;
 			if ( inferredEntityMapping == null ) {
 				// When the inferred mapping is null, we try to resolve to the FK by default,
@@ -3613,7 +3616,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				expandToAllColumns = false;
 			}
 
-			final EntityValuedModelPart mapping = (EntityValuedModelPart) interpretationModelPart;
 			final EntityMappingType treatedMapping;
 			if ( path instanceof SqmTreatedPath ) {
 				treatedMapping = creationContext.getSessionFactory()
@@ -3622,7 +3624,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						.findEntityDescriptor( ( (SqmTreatedPath<?,?>) path ).getTreatTarget().getHibernateEntityName() );
 			}
 			else {
-				treatedMapping = mapping.getEntityMappingType();
+				treatedMapping = interpretationModelPart.getEntityMappingType();
 			}
 
 			result = EntityValuedPathInterpretation.from(
@@ -3630,7 +3632,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					tableGroupToUse == null ? tableGroup : tableGroupToUse,
 					expandToAllColumns ? null : resultModelPart,
 					true,
-					(EntityValuedModelPart) interpretationModelPart,
+					interpretationModelPart,
 					treatedMapping,
 					this
 			);
@@ -6948,6 +6950,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		boolean explicitFetch = false;
 
 		final NavigablePath fetchablePath;
+		final Integer maxDepth = getCreationContext().getMaximumFetchDepth();
 		if ( fetchedJoin != null ) {
 			fetchablePath = fetchedJoin.getNavigablePath();
 			// there was an explicit fetch in the SQM
@@ -6973,9 +6976,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							fetchable,
 							isKeyFetchable
 					);
+
 					fetchTiming = traversalResult.getFetchTiming();
 					joined = traversalResult.isJoined();
-					explicitFetch = true;
+					if ( shouldExplicitFetch( maxDepth, fetchable ) ) {
+						explicitFetch = true;
+					}
 				}
 				else if ( getLoadQueryInfluencers().hasEnabledFetchProfiles() ) {
 					// There is no point in checking the fetch profile if it can't affect this fetchable
@@ -6993,7 +6999,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							if ( profileFetch != null ) {
 								fetchTiming = FetchTiming.IMMEDIATE;
 								joined = joined || profileFetch.getStyle() == org.hibernate.engine.profile.Fetch.Style.JOIN;
-								explicitFetch = true;
+								if ( shouldExplicitFetch( maxDepth, fetchable ) ) {
+									explicitFetch = true;
+								}
 
 								if ( currentBagRole != null && fetchable instanceof PluralAttributeMapping ) {
 									final CollectionClassification collectionClassification = ( (PluralAttributeMapping) fetchable ).getMappedType()
@@ -7023,7 +7031,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 //			}
 
 			// lastly, account for any app-defined max-fetch-depth
-			final Integer maxDepth = getCreationContext().getMaximumFetchDepth();
 			if ( maxDepth != null ) {
 				if ( fetchDepth >= maxDepth ) {
 					joined = false;
@@ -7031,7 +7038,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 
 			if ( joined && fetchable instanceof TableGroupJoinProducer ) {
-				TableGroupJoinProducer tableGroupJoinProducer = (TableGroupJoinProducer) fetchable;
 				fromClauseIndex.resolveTableGroup(
 						fetchablePath,
 						np -> {
@@ -7124,6 +7130,27 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		fetchParent.getReferencedMappingContainer().visitKeyFetchables( fetchable -> addFetch( fetches, fetchParent, fetchable, true ), null );
 		fetchParent.getReferencedMappingContainer().visitFetchables( fetchable -> addFetch( fetches, fetchParent, fetchable, false ), null );
 		return fetches;
+	}
+
+	private boolean shouldExplicitFetch(Integer maxDepth, Fetchable fetchable) {
+		/*
+			Forcing the value of explicitFetch to true will disable the fetch circularity check and
+			for already visited association or collection this will cause a StackOverflow if maxFetchDepth is null, see HHH-15391.
+		 */
+		if ( maxDepth == null ) {
+			if ( fetchable instanceof ToOneAttributeMapping ) {
+				return !this.isAssociationKeyVisited(
+						( (ToOneAttributeMapping) fetchable ).getForeignKeyDescriptor().getAssociationKey()
+				);
+			}
+			else if ( fetchable instanceof PluralAttributeMapping ) {
+				return !this.isAssociationKeyVisited(
+						( (PluralAttributeMapping) fetchable ).getKeyDescriptor().getAssociationKey()
+				);
+			}
+		}
+
+		return true;
 	}
 
 	private Fetch buildFetch(
@@ -7442,4 +7469,50 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			cteStatements.put( cteStatement.getCteTable().getTableExpression(), cteStatement );
 		}
 	}
+
+	@Override
+	public boolean registerVisitedAssociationKey(AssociationKey associationKey) {
+		return visitedAssociationKeys.add( associationKey );
+	}
+
+	@Override
+	public void removeVisitedAssociationKey(AssociationKey associationKey) {
+		visitedAssociationKeys.remove( associationKey );
+	}
+
+	@Override
+	public boolean isAssociationKeyVisited(AssociationKey associationKey) {
+		return visitedAssociationKeys.contains( associationKey );
+	}
+
+	@Override
+	public boolean isRegisteringVisitedAssociationKeys() {
+		/*
+			 We need to avoid loops in case of eager self-referencing associations
+
+			 	E.g.
+			 	@NamedEntityGraphs({
+				@NamedEntityGraph(
+						name = "User.overview",
+						attributeNodes = { @NamedAttributeNode("name") })
+				})
+				class Sample {
+
+					@ManyToOne
+					Sample parent;
+
+					String name;
+				}
+
+				TypedQuery<Sample> query = entityManager.createQuery(
+							"select s from Sample s",
+							Sample.class
+					);
+				query.setHint( SpecHints.HINT_SPEC_LOAD_GRAPH, entityGraph );
+
+			 */
+		return creationContext.getMaximumFetchDepth() == null
+				&& ( entityGraphTraversalState != null || getLoadQueryInfluencers().hasEnabledFetchProfiles() );
+	}
+
 }

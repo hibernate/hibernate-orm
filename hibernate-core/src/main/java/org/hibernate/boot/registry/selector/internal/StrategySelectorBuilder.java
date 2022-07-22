@@ -41,7 +41,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.type.FormatMapper;
 import org.hibernate.type.jackson.JacksonJsonFormatMapper;
 import org.hibernate.type.jackson.JacksonXmlFormatMapper;
-import org.hibernate.type.JaxbXmlFormatMapper;
+import org.hibernate.type.jaxb.JaxbXmlFormatMapper;
 import org.hibernate.type.jakartajson.JsonBJsonFormatMapper;
 
 import org.jboss.logging.Logger;

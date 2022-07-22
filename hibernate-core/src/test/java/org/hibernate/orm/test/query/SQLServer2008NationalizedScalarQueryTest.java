@@ -7,46 +7,48 @@
 package org.hibernate.orm.test.query;
 
 import java.util.List;
+
+import org.hibernate.annotations.Nationalized;
+import org.hibernate.dialect.SQLServerDialect;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.Nationalized;
-import org.hibernate.dialect.SQLServer2008Dialect;
-
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
 @TestForIssue(jiraKey = "HHH-10183")
-@RequiresDialect(SQLServer2008Dialect.class)
-public class SQLServer2008NationalizedScalarQueryTest extends BaseCoreFunctionalTestCase {
+@RequiresDialect(value = SQLServerDialect.class, majorVersion = 10)
+@DomainModel(
+		annotatedClasses = SQLServer2008NationalizedScalarQueryTest.User.class
+)
+@SessionFactory
+public class SQLServer2008NationalizedScalarQueryTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { User.class };
-	}
 
 	@Test
-	public void testScalarResult() {
+	public void testScalarResult(SessionFactoryScope scope) {
 
 		User user1 = new User( 1, "Chris" );
 		User user2 = new User( 2, "Steve" );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			session.save( user1 );
 			session.save( user2 );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			List<Object[]> users = session.createNativeQuery(
 					"select * from users" ).getResultList();
 			assertEquals( 2, users.size() );

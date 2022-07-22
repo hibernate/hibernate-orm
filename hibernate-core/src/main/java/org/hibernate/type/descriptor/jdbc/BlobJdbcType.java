@@ -90,13 +90,18 @@ public abstract class BlobJdbcType implements JdbcType {
 		}
 
 		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return byte[].class;
+		}
+
+		@Override
 		public <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaType) {
 			return new BasicBinder<>( javaType, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
 					BlobJdbcType descriptor = BLOB_BINDING;
-					if ( byte[].class.isInstance( value ) ) {
+					if ( value instanceof byte[] ) {
 						// performance shortcut for binding BLOB data in byte[] format
 						descriptor = PRIMITIVE_ARRAY_BINDING;
 					}
@@ -110,7 +115,7 @@ public abstract class BlobJdbcType implements JdbcType {
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
 					BlobJdbcType descriptor = BLOB_BINDING;
-					if ( byte[].class.isInstance( value ) ) {
+					if ( value instanceof byte[] ) {
 						// performance shortcut for binding BLOB data in byte[] format
 						descriptor = PRIMITIVE_ARRAY_BINDING;
 					}
@@ -127,6 +132,11 @@ public abstract class BlobJdbcType implements JdbcType {
 		@Override
 		public String toString() {
 			return "BlobTypeDescriptor(PRIMITIVE_ARRAY_BINDING)";
+		}
+
+		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return byte[].class;
 		}
 
 		@Override
@@ -154,6 +164,11 @@ public abstract class BlobJdbcType implements JdbcType {
 		}
 
 		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return Blob.class;
+		}
+
+		@Override
 		public <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaType) {
 			return new BasicBinder<>( javaType, this ) {
 				@Override
@@ -175,6 +190,11 @@ public abstract class BlobJdbcType implements JdbcType {
 		@Override
 		public String toString() {
 			return "BlobTypeDescriptor(STREAM_BINDING)";
+		}
+
+		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return BinaryStream.class;
 		}
 
 		@Override

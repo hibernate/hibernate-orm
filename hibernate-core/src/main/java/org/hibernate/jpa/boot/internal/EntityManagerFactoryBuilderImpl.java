@@ -264,7 +264,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 			this.standardServiceRegistry = ssrBuilder.build();
 
-			final MetadataSources metadataSources = new MetadataSources( bsr );
+			final MetadataSources metadataSources = new MetadataSources( standardServiceRegistry );
 			this.metamodelBuilder = (MetadataBuilderImplementor) metadataSources.getMetadataBuilder( standardServiceRegistry );
 			List<ConverterDescriptor> attributeConverterDefinitions = applyMappingResources( metadataSources );
 
@@ -1254,10 +1254,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		List<ConverterDescriptor> converterDescriptors = null;
 
 		// add any explicit Class references passed in
-		final List<Class<? extends AttributeConverter>> loadedAnnotatedClasses = (List<Class<? extends AttributeConverter>>)
+		final List<Class<? extends AttributeConverter<?,?>>> loadedAnnotatedClasses = (List<Class<? extends AttributeConverter<?,?>>>)
 				configurationValues.remove( AvailableSettings.LOADED_CLASSES );
 		if ( loadedAnnotatedClasses != null ) {
-			for ( Class<? extends AttributeConverter> cls : loadedAnnotatedClasses ) {
+			for ( Class<? extends AttributeConverter<?,?>> cls : loadedAnnotatedClasses ) {
 				if ( AttributeConverter.class.isAssignableFrom( cls ) ) {
 					if ( converterDescriptors == null ) {
 						converterDescriptors = new ArrayList<>();
@@ -1593,7 +1593,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 		else {
 			throw new IllegalArgumentException(
-				"The provided " + settingName + " setting value [" + settingValue + "] is not supported!"
+				"The provided " + settingName + " setting value [" + settingValue + "] is not supported"
 			);
 		}
 
@@ -1603,7 +1603,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 			catch (InstantiationException | IllegalAccessException e) {
 				throw new IllegalArgumentException(
-						"The " + clazz.getSimpleName() +" class [" + instanceClass + "] could not be instantiated!",
+						"The " + clazz.getSimpleName() +" class [" + instanceClass + "] could not be instantiated",
 						e
 				);
 			}

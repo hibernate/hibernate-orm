@@ -27,7 +27,7 @@ import static org.hibernate.query.results.ResultsHelper.impl;
 /**
  * ResultBuilder for scalar results defined via:<ul>
  *     <li>JPA {@link jakarta.persistence.ColumnResult}</li>
- *     <li>`<return-scalar/>` as part of a `<resultset/>` stanza in `hbm.xml`</li>
+ *     <li>`&lt;return-scalar/&gt;` as part of a `&lt;resultset/&gt;` stanza in `hbm.xml`</li>
  * </ul>
  *
  * @author Steve Ebersole
@@ -60,7 +60,7 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 
 	@Override
 	public Class<?> getJavaType() {
-		return explicitJavaType.getJavaTypeClass();
+		return explicitJavaType == null ? null : explicitJavaType.getJavaTypeClass();
 	}
 
 	@Override
@@ -157,23 +157,14 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 		if ( o == null || getClass() != o.getClass() ) {
 			return false;
 		}
-
 		CompleteResultBuilderBasicValuedStandard that = (CompleteResultBuilderBasicValuedStandard) o;
-
-		if ( !Objects.equals( explicitColumnName, that.explicitColumnName ) ) {
-			return false;
-		}
-		if ( !Objects.equals( explicitType, that.explicitType ) ) {
-			return false;
-		}
-		return explicitJavaType.equals( that.explicitJavaType );
+		return Objects.equals( explicitColumnName, that.explicitColumnName )
+				&& Objects.equals( explicitType, that.explicitType )
+				&& Objects.equals( explicitJavaType, that.explicitJavaType );
 	}
 
 	@Override
 	public int hashCode() {
-		int result = explicitColumnName != null ? explicitColumnName.hashCode() : 0;
-		result = 31 * result + ( explicitType != null ? explicitType.hashCode() : 0 );
-		result = 31 * result + explicitJavaType.hashCode();
-		return result;
+		return Objects.hash( explicitColumnName, explicitType, explicitJavaType );
 	}
 }

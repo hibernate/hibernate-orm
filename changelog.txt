@@ -3,6 +3,82 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.1.1.Final (July 01, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32080
+
+** Bug
+    * [HHH-15369] - UnknownTableReferenceException when two subclasses have same field with different type
+    * [HHH-15361] - Update assignment type check should allow subtypes
+    * [HHH-15360] - Listagg with nulls clause emulation in H2 before 2.0
+    * [HHH-15358] - @Where annotation with globally_quoted_identifiers causes Unable to determine TableReference Exception
+    * [HHH-15357] - ClassCastException when selecting map key FK part
+    * [HHH-15354] - NPE building mapping from HBM for associations targeting a non existing entity
+    * [HHH-15349] - Comparing entity join alias with collection part fails
+    * [HHH-15347] - Parent identity check in NavigablePath#relativize is too strict
+    * [HHH-15346] - @ManyToOne associations not loaded correctly with default EAGER and batch fetch property set
+    * [HHH-15343] - NPE in type determination for case expression returning null literal
+    * [HHH-15342] - Inappropriate variation of HQL left join to SQL inner join
+    * [HHH-15341] - Disallow transient entities as parameters
+    * [HHH-15339] - Association in embedded id initialized to null when selected
+    * [HHH-15338] - Impossible to give same path expression multiple aliases
+    * [HHH-15331] - Constructor expressions in the SELECT clause ignores attribute converter
+    * [HHH-15324] - Hibernate (6.0.2) Regression. Sets Legacy java.persistence properties, then logs deprecation warnings on these which spams log
+    * [HHH-15314] - Hibernate Gradle plugin is not working for Kotlin projects
+
+** Improvement
+    * [HHH-15367] - Lift embedded/id-class to-one selection limitation for from clause subqueries
+    * [HHH-15329] - Remove workaround for HHH-10382
+    * [HHH-15325] - Avoid allocations from BitSet.stream() in AbstractEntityPersister.resolveDirtyAttributeIndexes()
+
+
+Changes in 6.1.0.Final (June 07, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32066
+
+** Bug
+    * [HHH-15316] - Session.createQuery() doesn't accept JpaCriteriaInsertSelect
+    * [HHH-15297] - Invalid Automatic-Module-Name org.hibernate.orm.community-dialects
+    * [HHH-15293] - CockroachDB BYTES type does not have a length specification
+    * [HHH-15291] - ClassCastException Regression in CriteriaBuilder
+    * [HHH-15288] - Switch to SMALLINT as recommended type for enums
+    * [HHH-15286] - Query with a Composite Identifier (@IdClass) throws an exception
+    * [HHH-15285] - Calling getJavaType() of @ElementCollection with basic types returns wrong type
+    * [HHH-15283] - NullPointerException from EntityManager.createNamedNativeQuery(…)
+    * [HHH-15281] - INSERTs/UPDATEs no longer executed as JDBC Batch statements if hibernate.temp.use_jdbc_metadata_defaults is set to false
+    * [HHH-15279] - NPE with Id on OneToOne referencing entity with multi-level EmbeddedId
+    * [HHH-15278] - NPE when NULL is used in a query projection
+    * [HHH-15270] - Inconsistent precedence of orm.xml implicit catalog over "default_catalog" in XML-mapped entities
+    * [HHH-15269] - Update NativeQuery unable to use h-schema placeholder, just emits placeholder contents into SQL
+    * [HHH-15267] - Some cache objects aren't implement Serializable interface
+    * [HHH-15266] - NullPointerException on
+    * [HHH-15265] - SchemaExport.execute does not add the configured schema to comments
+    * [HHH-15263] - @NamedQuery is not supported with UPDATE statement
+    * [HHH-15260] - Criteria query is unable to determine TableReference when combining subquery with join
+    * [HHH-15258] - Orphan removal for OneToMany relations is broken when used with GenerationType.IDENTITY
+    * [HHH-15256] - Query NPE when using ":param IS NULL" with a Left Join
+    * [HHH-15255] - Fix org.hibernate.orm.test.batch.BatchTest
+    * [HHH-15153] - @OneToOne does not support @EmbeddedId
+    * [HHH-15134] - Update a bytecode enhanced Entity with a Version attribute causes OptimisticLockException
+    * [HHH-15010] - @CreationTimestamp and @UpdateTimestamp documentation have an incomplete list of supported field types
+
+** Improvement
+    * [HHH-15292] - escape special html chars in JavaDoc
+    * [HHH-15276] - Introduce ConverterRegistration annotation
+    * [HHH-15259] - Explicitly add JavaDoc to make @deprecated hint visible in Eclipse
+
+** New Feature
+    * [HHH-15251] - Unified mapping XSD based on JPA 3.1
+    * [HHH-10999] - Arrays datatype support via java.sql.Array
+    * [HHH-3356] - Support for subselect (subquery) in from clause
+
+** Task
+    * [HHH-15274] - Small optimisation for how LazyAttributeLoadingInterceptor is dealing with lazy fields
+    * [HHH-14614] - Better support for JUnit 5 on-failure handling 
+
+
 Changes in 6.0.1.Final (May 06, 2022)
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -124,6 +200,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/32033
     * [HHH-14932] - Spatial support for PostgreSQL 10+ uses invalid WKB dialect
     * [HHH-13694] - Numeric Overflow Exception when retrieving the Meta-data for sequences from Oracle Database
     * [HHH-10463] - Coalesce does not handle NULL values properly for PostgreSQL 
+    * [HHH-15090] - Access to public field with extended bytecode enhancement returns null for entity lazy-loaded from polymorphic toOne association
 
 ** Improvement
     * [HHH-15106] -  fk() SQM function

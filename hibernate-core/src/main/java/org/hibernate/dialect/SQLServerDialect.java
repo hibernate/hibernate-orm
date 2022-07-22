@@ -590,7 +590,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsNullPrecedence() {
-		return getVersion().isBefore( 10 );
+		return false;
 	}
 
 	@Override

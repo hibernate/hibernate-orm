@@ -24,9 +24,11 @@ import jakarta.persistence.GenerationType;
 public interface IdentifierGeneratorFactory {
 	/**
 	 * Get the dialect.
+	 * @deprecated should be removed
 	 *
 	 * @return the dialect
 	 */
+	@Deprecated(since = "6.2", forRemoval = true)
 	Dialect getDialect();
 
 	/**

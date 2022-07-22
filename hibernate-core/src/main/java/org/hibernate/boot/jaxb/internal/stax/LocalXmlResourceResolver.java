@@ -2,7 +2,7 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
 package org.hibernate.boot.jaxb.internal.stax;
 
@@ -11,9 +11,10 @@ import java.io.InputStream;
 import java.net.URL;
 import javax.xml.stream.XMLStreamException;
 
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.boot.xsd.ConfigXsdSupport;
 import org.hibernate.boot.xsd.MappingXsdSupport;
+import org.hibernate.boot.xsd.XsdDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -27,10 +28,10 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 
 	public static final String CLASSPATH_EXTENSION_URL_BASE = "classpath://";
 
-	private final ClassLoaderService classLoaderService;
+	private final ResourceStreamLocator resourceStreamLocator;
 
-	public LocalXmlResourceResolver(ClassLoaderService classLoaderService) {
-		this.classLoaderService = classLoaderService;
+	public LocalXmlResourceResolver(ResourceStreamLocator resourceStreamLocator) {
+		this.resourceStreamLocator = resourceStreamLocator;
 	}
 
 	@Override
@@ -39,42 +40,45 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 
 		if ( namespace != null ) {
 			log.debugf( "Interpreting namespace : %s", namespace );
+			if ( MappingXsdSupport._310.getNamespaceUri().matches( namespace ) ) {
+				return openUrlStream( MappingXsdSupport._310 );
+			}
 			if ( MappingXsdSupport.jpa10.getNamespaceUri().matches( namespace ) ) {
 				// JPA 1.0 and 2.0 share the same namespace URI
-				return openUrlStream( LocalSchemaLocator.resolveLocalSchemaUrl( MappingXsdSupport.jpa10.getLocalResourceName() ) );
+				return openUrlStream( MappingXsdSupport.jpa10 );
 			}
 			else if ( MappingXsdSupport.jpa21.getNamespaceUri().matches( namespace ) ) {
 				// JPA 2.1 and 2.2 share the same namespace URI
-				return openUrlStream( LocalSchemaLocator.resolveLocalSchemaUrl( MappingXsdSupport.jpa21.getLocalResourceName() ) );
+				return openUrlStream( MappingXsdSupport.jpa21 );
 			}
 			else if ( MappingXsdSupport.jpa30.getNamespaceUri().matches( namespace ) ) {
-				return openUrlStream( LocalSchemaLocator.resolveLocalSchemaUrl( MappingXsdSupport.jpa30.getLocalResourceName() ) );
+				return openUrlStream( MappingXsdSupport.jpa30 );
 			}
 			else if ( MappingXsdSupport.jpa31.getNamespaceUri().matches( namespace ) ) {
-				return openUrlStream( LocalSchemaLocator.resolveLocalSchemaUrl( MappingXsdSupport.jpa31.getLocalResourceName() ) );
+				return openUrlStream( MappingXsdSupport.jpa31 );
 			}
 			else if ( ConfigXsdSupport.getJPA10().getNamespaceUri().matches( namespace ) ) {
 				// JPA 1.0 and 2.0 share the same namespace URI
-				return openUrlStream( LocalSchemaLocator.resolveLocalSchemaUrl( ConfigXsdSupport.getJPA10().getLocalResourceName() ) );
+				return openUrlStream( ConfigXsdSupport.getJPA10() );
 			}
 			else if ( ConfigXsdSupport.getJPA21().getNamespaceUri().matches( namespace ) ) {
 				// JPA 2.1 and 2.2 share the same namespace URI
-				return openUrlStream( LocalSchemaLocator.resolveLocalSchemaUrl( ConfigXsdSupport.getJPA21().getLocalResourceName() ) );
+				return openUrlStream( ConfigXsdSupport.getJPA21() );
 			}
 			else if ( ConfigXsdSupport.getJPA30().getNamespaceUri().matches( namespace ) ) {
-				return openUrlStream( LocalSchemaLocator.resolveLocalSchemaUrl( ConfigXsdSupport.getJPA30().getLocalResourceName() ) );
+				return openUrlStream( ConfigXsdSupport.getJPA30() );
 			}
 			else if ( ConfigXsdSupport.getJPA31().getNamespaceUri().matches( namespace ) ) {
-				return openUrlStream( LocalSchemaLocator.resolveLocalSchemaUrl( ConfigXsdSupport.getJPA31().getLocalResourceName() ) );
+				return openUrlStream( ConfigXsdSupport.getJPA31() );
 			}
 			else if ( MappingXsdSupport.hibernateMappingXml.getNamespaceUri().matches( namespace ) ) {
-				return openUrlStream( LocalSchemaLocator.resolveLocalSchemaUrl( MappingXsdSupport.hibernateMappingXml.getLocalResourceName() ) );
+				return openUrlStream( MappingXsdSupport.hibernateMappingXml );
 			}
 			else if ( MappingXsdSupport.hbmXml.getNamespaceUri().matches( namespace ) ) {
-				return openUrlStream( LocalSchemaLocator.resolveLocalSchemaUrl( MappingXsdSupport.hbmXml.getLocalResourceName() ) );
+				return openUrlStream( MappingXsdSupport.hbmXml );
 			}
 			else if ( ConfigXsdSupport.cfgXsd().getNamespaceUri().matches( namespace ) ) {
-				return openUrlStream( LocalSchemaLocator.resolveLocalSchemaUrl( ConfigXsdSupport.cfgXsd().getLocalResourceName() ) );
+				return openUrlStream( ConfigXsdSupport.cfgXsd() );
 			}
 		}
 
@@ -128,6 +132,10 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 		return null;
 	}
 
+	private InputStream openUrlStream(XsdDescriptor xsdDescriptor) {
+		return openUrlStream( LocalSchemaLocator.resolveLocalSchemaUrl( xsdDescriptor.getLocalResourceName() ) );
+	}
+
 	private InputStream openUrlStream(URL url) {
 		try {
 			return url.openStream();
@@ -139,7 +147,7 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 
 	private InputStream resolveInLocalNamespace(String path) {
 		try {
-			return classLoaderService.locateResourceStream( path );
+			return resourceStreamLocator.locateResourceStream( path );
 		}
 		catch ( Throwable t ) {
 			return null;

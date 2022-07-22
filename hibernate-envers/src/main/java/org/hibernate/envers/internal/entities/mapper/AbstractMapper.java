@@ -16,6 +16,7 @@ import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.securitymanager.SystemSecurityManager;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.service.ServiceRegistry;
@@ -35,7 +36,7 @@ public abstract class AbstractMapper {
 	 * @return the result of the privileged call, may be {@literal null}
 	 */
 	protected <T> T doPrivileged(Supplier<T> block) {
-		if ( System.getSecurityManager() != null ) {
+		if ( SystemSecurityManager.isSecurityManagerEnabled() ) {
 			return AccessController.doPrivileged( (PrivilegedAction<T>) block::get );
 		}
 		else {

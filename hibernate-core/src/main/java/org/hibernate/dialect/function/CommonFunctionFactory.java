@@ -1361,7 +1361,7 @@ public class CommonFunctionFactory {
 				"character_length",
 				new LengthFunction( "character_length", "character_length(?1)", clobPattern, typeConfiguration )
 		);
-		functionRegistry.registerAlternateKey( "character_length", "length" );
+		functionRegistry.registerAlternateKey( "length", "character_length" );
 	}
 
 	/**

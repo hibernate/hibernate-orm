@@ -44,7 +44,7 @@ apply plugin: 'org.jetbrains.gradle.plugin.idea-ext'
 
 ext {
 	java9ModuleNameBase = project.name.startsWith( 'hibernate-' ) ? name.drop( 'hibernate-'.length() ): name
-	java9ModuleName = "org.hibernate.orm.$project.java9ModuleNameBase"
+	java9ModuleName = "org.hibernate.orm.$project.java9ModuleNameBase".replace('-','.')
 	forbiddenAPITargetJDKCompatibility = '11'
 }
 
@@ -231,6 +231,9 @@ if ( gradle.ext.javaToolchainEnabled ) {
 
 		// Configure JVM Options
 		jvmArgs( getProperty( 'toolchain.launcher.jvmargs' ).toString().split( ' ' ) )
+		if ( project.hasProperty( 'test.jdk.launcher.args' ) ) {
+			jvmArgs( project.getProperty( 'test.jdk.launcher.args' ).toString().split( ' ' ) )
+		}
 
 		// Display version of Java tools
 		doFirst {
@@ -357,15 +360,6 @@ test {
 			events "passed", "skipped", "failed"
 		}
 	}
-}
-
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Artifacts (jar, sources, javadoc)
-
-ext {
-	java9ModuleNameBase = project.name.startsWith( 'hibernate-' ) ? name.drop( 'hibernate-'.length() ): name
-	java9ModuleName = "org.hibernate.orm.$project.java9ModuleNameBase"
 }
 
 

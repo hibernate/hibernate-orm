@@ -11,37 +11,32 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.annotations.RowId;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.dialect.OracleDialect;
 
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(Oracle8iDialect.class)
-public class RowIdTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Product.class
-		};
-	}
+@RequiresDialect(value = OracleDialect.class, majorVersion = 8)
+@Jpa(
+		annotatedClasses = RowIdTest.Product.class
+)
+public class RowIdTest {
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Product product = new Product();
 			product.setId(1L);
 			product.setName("Mobile phone");
 			product.setNumber("123-456-7890");
 			entityManager.persist(product);
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			//tag::identifiers-rowid-example[]
 			Product product = entityManager.find(Product.class, 1L);
 

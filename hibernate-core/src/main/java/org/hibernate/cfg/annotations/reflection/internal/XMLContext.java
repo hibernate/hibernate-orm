@@ -2,7 +2,7 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
 package org.hibernate.cfg.annotations.reflection.internal;
 
@@ -11,20 +11,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import jakarta.persistence.AccessType;
-import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.internal.ClassmateContext;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbConverter;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEntity;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListener;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListeners;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappings;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclass;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitDefaults;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitMetadata;
-import org.hibernate.boot.jaxb.mapping.spi.ManagedType;
+import org.hibernate.boot.jaxb.mapping.JaxbConverter;
+import org.hibernate.boot.jaxb.mapping.JaxbEntity;
+import org.hibernate.boot.jaxb.mapping.JaxbEntityListener;
+import org.hibernate.boot.jaxb.mapping.JaxbEntityListeners;
+import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
+import org.hibernate.boot.jaxb.mapping.JaxbMappedSuperclass;
+import org.hibernate.boot.jaxb.mapping.JaxbPersistenceUnitDefaults;
+import org.hibernate.boot.jaxb.mapping.JaxbPersistenceUnitMetadata;
+import org.hibernate.boot.jaxb.mapping.ManagedType;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -34,6 +32,9 @@ import org.hibernate.cfg.annotations.reflection.AttributeConverterDefinitionColl
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+
+import jakarta.persistence.AccessType;
+import jakarta.persistence.AttributeConverter;
 
 /**
  * A helper for consuming orm.xml mappings.
@@ -64,21 +65,23 @@ public class XMLContext implements Serializable {
 	 * @param entityMappings The xml document to add
 	 * @return Add an xml document to this context and return the list of added class names.
 	 */
-	@SuppressWarnings( "unchecked" )
 	public List<String> addDocument(JaxbEntityMappings entityMappings) {
 		hasContext = true;
-		List<String> addedClasses = new ArrayList<>();
+
+		final List<String> addedClasses = new ArrayList<>();
+
 		//global defaults
-		JaxbPersistenceUnitMetadata metadata = entityMappings.getPersistenceUnitMetadata();
+		final JaxbPersistenceUnitMetadata metadata = entityMappings.getPersistenceUnitMetadata();
 		if ( metadata != null ) {
 			if ( globalDefaults == null ) {
 				globalDefaults = new Default();
 				globalDefaults.setMetadataComplete(
-						metadata.getXmlMappingMetadataComplete() != null ?
-								Boolean.TRUE :
-								null
+						metadata.getXmlMappingMetadataComplete() != null
+								? Boolean.TRUE
+								: null
 				);
-				JaxbPersistenceUnitDefaults defaultElement = metadata.getPersistenceUnitDefaults();
+
+				final JaxbPersistenceUnitDefaults defaultElement = metadata.getPersistenceUnitDefaults();
 				if ( defaultElement != null ) {
 					globalDefaults.setSchema( defaultElement.getSchema() );
 					globalDefaults.setCatalog( defaultElement.getCatalog() );
@@ -102,13 +105,13 @@ public class XMLContext implements Serializable {
 		entityMappingDefault.setAccess( entityMappings.getAccess() );
 		defaultElements.add( entityMappings );
 
-		setLocalAttributeConverterDefinitions( entityMappings.getConverter(), packageName );
+		setLocalAttributeConverterDefinitions( entityMappings.getConverters(), packageName );
 
-		addClass( entityMappings.getEntity(), packageName, entityMappingDefault, addedClasses );
+		addClass( entityMappings.getEntities(), packageName, entityMappingDefault, addedClasses );
 
-		addClass( entityMappings.getMappedSuperclass(), packageName, entityMappingDefault, addedClasses );
+		addClass( entityMappings.getMappedSuperclasses(), packageName, entityMappingDefault, addedClasses );
 
-		addClass( entityMappings.getEmbeddable(), packageName, entityMappingDefault, addedClasses );
+		addClass( entityMappings.getEmbeddables(), packageName, entityMappingDefault, addedClasses );
 
 		return addedClasses;
 	}
@@ -147,7 +150,7 @@ public class XMLContext implements Serializable {
 		List<String> localAddedClasses = new ArrayList<>();
 		if ( listeners != null ) {
 			List<JaxbEntityListener> elements = listeners.getEntityListener();
-			for (JaxbEntityListener listener : elements) {
+			for ( JaxbEntityListener listener : elements ) {
 				String listenerClassName = buildSafeClassName( listener.getClazz(), packageName );
 				if ( entityListenerOverride.containsKey( listenerClassName ) ) {
 					LOG.duplicateListener( listenerClassName );
@@ -162,14 +165,13 @@ public class XMLContext implements Serializable {
 		return localAddedClasses;
 	}
 
-	@SuppressWarnings("unchecked")
 	private void setLocalAttributeConverterDefinitions(List<JaxbConverter> converterElements, String packageName) {
 		for ( JaxbConverter converterElement : converterElements ) {
 			final String className = converterElement.getClazz();
 			final boolean autoApply = Boolean.TRUE.equals( converterElement.isAutoApply() );
 
 			try {
-				final Class<? extends AttributeConverter> attributeConverterClass = classLoaderAccess.classForName(
+				final Class<? extends AttributeConverter<?,?>> attributeConverterClass = classLoaderAccess.classForName(
 						buildSafeClassName( className, packageName )
 				);
 				converterDescriptors.add(
@@ -228,7 +230,7 @@ public class XMLContext implements Serializable {
 		return hasContext;
 	}
 
-	private List<ConverterDescriptor> converterDescriptors = new ArrayList<>();
+	private final List<ConverterDescriptor> converterDescriptors = new ArrayList<>();
 
 	public void applyDiscoveredAttributeConverters(AttributeConverterDefinitionCollector collector) {
 		for ( ConverterDescriptor descriptor : converterDescriptors ) {

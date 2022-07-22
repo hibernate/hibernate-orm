@@ -27,7 +27,7 @@ public abstract class AbstractMutationHandler implements Handler {
 		this.sessionFactory = sessionFactory;
 
 		final String entityName = sqmDeleteOrUpdateStatement.getTarget()
-				.getReferencedPathSource()
+				.getModel()
 				.getHibernateEntityName();
 
 		this.entityDescriptor = sessionFactory.getRuntimeMetamodels().getEntityMappingType( entityName );

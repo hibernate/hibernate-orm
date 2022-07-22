@@ -2,6 +2,8 @@ package org.hibernate.userguide.associations;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -14,6 +16,7 @@ import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,6 +31,13 @@ import static org.junit.Assert.assertNull;
  * @author Fábio Ueno
  */
 public class NotFoundTest extends BaseEntityManagerFunctionalTestCase {
+
+	private SQLStatementInterceptor sqlStatementInterceptor;
+
+	@Override
+	protected void addConfigOptions(Map options) {
+		sqlStatementInterceptor = new SQLStatementInterceptor( options );
+	}
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -111,19 +121,25 @@ public class NotFoundTest extends BaseEntityManagerFunctionalTestCase {
 		breakForeignKey();
 
 		inTransaction( entityManagerFactory(), (entityManager) -> {
+			sqlStatementInterceptor.clear();
 			//tag::associations-not-found-fk-function-example[]
-			final List<Person> nullResults = entityManager
-					.createSelectionQuery( "from Person p where fk( p.city ) is null", Person.class )
+			final List<String> nullResults = entityManager
+					.createSelectionQuery( "select p.name from Person p where fk( p.city ) is null", String.class )
 					.list();
 
 			assertThat( nullResults ).isEmpty();
 
-			final List<Person> nonNullResults = entityManager
-					.createSelectionQuery( "from Person p where fk( p.city ) is not null", Person.class )
+			final List<String> nonNullResults = entityManager
+					.createSelectionQuery( "select p.name from Person p where fk( p.city ) is not null", String.class )
 					.list();
 			assertThat( nonNullResults ).hasSize( 1 );
-			assertThat( nonNullResults.get( 0 ).getName() ).isEqualTo( "John Doe" );
+			assertThat( nonNullResults.get( 0 ) ).isEqualTo( "John Doe" );
 			//end::associations-not-found-fk-function-example[]
+
+			// In addition, make sure that the two executed queries do not create a join
+			assertThat( sqlStatementInterceptor.getQueryCount() ).isEqualTo( 2 );
+			assertThat( sqlStatementInterceptor.getSqlQueries().get( 0 ) ).doesNotContain( " join " );
+			assertThat( sqlStatementInterceptor.getSqlQueries().get( 1 ) ).doesNotContain( " join " );
 		} );
 	}
 

@@ -8,6 +8,8 @@ package org.hibernate.proxy.pojo.bytebuddy;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -15,6 +17,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.securitymanager.SystemSecurityManager;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyConfiguration;
 import org.hibernate.proxy.ProxyFactory;
@@ -85,21 +88,39 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 				overridesEquals
 		);
 
-		try {
-			final HibernateProxy proxy = (HibernateProxy) proxyClass.getConstructor().newInstance();
+
+			final HibernateProxy proxy = getHibernateProxy();
 			( (ProxyConfiguration) proxy ).$$_hibernate_set_interceptor( interceptor );
 
 			return proxy;
-		}
-		catch (NoSuchMethodException e) {
-			String logMessage = LOG.bytecodeEnhancementFailedBecauseOfDefaultConstructor( entityName );
-			LOG.error( logMessage, e );
-			throw new HibernateException( logMessage, e );
-		}
-		catch (Throwable t) {
-			String logMessage = LOG.bytecodeEnhancementFailed( entityName );
-			LOG.error( logMessage, t );
-			throw new HibernateException( logMessage, t );
-		}
+
+	}
+
+	private HibernateProxy getHibernateProxy()
+			throws HibernateException {
+
+		final PrivilegedAction<HibernateProxy> action = new PrivilegedAction<HibernateProxy>() {
+
+			@Override
+			public HibernateProxy run() {
+
+				try {
+					return (HibernateProxy) proxyClass.getConstructor().newInstance();
+				}
+				catch (NoSuchMethodException e) {
+					String logMessage = LOG.bytecodeEnhancementFailedBecauseOfDefaultConstructor( entityName );
+					LOG.error( logMessage, e );
+					throw new HibernateException( logMessage, e );
+				}
+				catch (Throwable t) {
+					String logMessage = LOG.bytecodeEnhancementFailed( entityName );
+					LOG.error( logMessage, t );
+					throw new HibernateException( logMessage, t );
+				}
+
+			}
+		};
+		return SystemSecurityManager.isSecurityManagerEnabled() ? AccessController.doPrivileged( action ) : action.run();
+
 	}
 }

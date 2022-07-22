@@ -220,10 +220,10 @@ public class SqmDynamicInstantiation<T>
 			sb.append( instantiationTarget.getTargetTypeDescriptor().getJavaTypeClass().getTypeName() );
 		}
 		sb.append( '(' );
-		( (SqmSelectableNode<?>) arguments.get( 0 ) ).appendHqlString( sb );
+		arguments.get( 0 ).appendHqlString( sb );
 		for ( int i = 1; i < arguments.size(); i++ ) {
 			sb.append(", ");
-			( (SqmSelectableNode<?>) arguments.get( i ) ).appendHqlString( sb );
+			arguments.get( i ).appendHqlString( sb );
 		}
 
 		sb.append( ')' );

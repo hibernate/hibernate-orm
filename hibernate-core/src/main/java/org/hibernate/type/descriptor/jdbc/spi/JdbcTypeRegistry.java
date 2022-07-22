@@ -29,14 +29,18 @@ import org.jboss.logging.Logger;
 public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serializable {
 	private static final Logger log = Logger.getLogger( JdbcTypeRegistry.class );
 
+	private final TypeConfiguration typeConfiguration;
 	private final ConcurrentHashMap<Integer, JdbcType> descriptorMap = new ConcurrentHashMap<>();
 
 	public JdbcTypeRegistry(TypeConfiguration typeConfiguration) {
-//		this.typeConfiguration = typeConfiguration;
+		this.typeConfiguration = typeConfiguration;
 		JdbcTypeBaseline.prime( this );
 	}
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	public TypeConfiguration getTypeConfiguration() {
+		return typeConfiguration;
+	}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// baseline descriptors
 
 	@Override
@@ -61,6 +65,10 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 
 	public void addDescriptorIfAbsent(int typeCode, JdbcType jdbcType) {
 		descriptorMap.putIfAbsent( typeCode, jdbcType );
+	}
+
+	public JdbcType findDescriptor(int jdbcTypeCode) {
+		return descriptorMap.get( jdbcTypeCode );
 	}
 
 	public JdbcType getDescriptor(int jdbcTypeCode) {

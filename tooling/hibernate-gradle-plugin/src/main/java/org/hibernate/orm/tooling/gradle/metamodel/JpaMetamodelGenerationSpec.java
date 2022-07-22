@@ -9,15 +9,10 @@ package org.hibernate.orm.tooling.gradle.metamodel;
 import java.util.Arrays;
 import javax.inject.Inject;
 
-import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.provider.Property;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
-import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.tasks.compile.JavaCompile;
 
 import org.hibernate.orm.tooling.gradle.HibernateOrmSpec;
 
@@ -28,24 +23,17 @@ public class JpaMetamodelGenerationSpec {
 	public static final String JPA_METAMODEL = "jpaMetamodel";
 	public static final String DSL_NAME = JPA_METAMODEL;
 
-	private final Property<Boolean> applyGeneratedAnnotation;
 	private final Project project;
-	private final SetProperty<String> suppressions;
+
 	private final DirectoryProperty generationOutputDirectory;
 	private final DirectoryProperty compileOutputDirectory;
 
-	private final Provider<JavaVersion> targetJavaVersionAccess;
+	private final Property<Boolean> applyGeneratedAnnotation;
+	private final SetProperty<String> suppressions;
 
 	@Inject
-	@SuppressWarnings( "UnstableApiUsage" )
 	public JpaMetamodelGenerationSpec(HibernateOrmSpec ormDsl, Project project) {
 		this.project = project;
-
-		applyGeneratedAnnotation = project.getObjects().property( Boolean.class );
-		applyGeneratedAnnotation.convention( true );
-
-		suppressions = project.getObjects().setProperty( String.class );
-		suppressions.convention( Arrays.asList( "raw", "deprecation" ) );
 
 		generationOutputDirectory = project.getObjects().directoryProperty();
 		generationOutputDirectory.convention(
@@ -57,20 +45,11 @@ public class JpaMetamodelGenerationSpec {
 				project.getLayout().getBuildDirectory().dir( "classes/java/" + JPA_METAMODEL )
 		);
 
-		targetJavaVersionAccess = project.provider(
-				() -> {
-					final JavaPluginConvention javaPluginConvention = project.getConvention().findPlugin( JavaPluginConvention.class );
-					assert javaPluginConvention != null;
-					final SourceSet sourceSet = javaPluginConvention.getSourceSets().getByName( SourceSet.MAIN_SOURCE_SET_NAME );
-					final String compileTaskName = sourceSet.getCompileJavaTaskName();
-					final JavaCompile compileTask = (JavaCompile) project.getTasks().getByName( compileTaskName );
-					return JavaVersion.toVersion( compileTask.getTargetCompatibility() );
-				}
-		);
-	}
+		applyGeneratedAnnotation = project.getObjects().property( Boolean.class );
+		applyGeneratedAnnotation.convention( true );
 
-	public Provider<JavaVersion> getTargetJavaVersionAccess() {
-		return targetJavaVersionAccess;
+		suppressions = project.getObjects().setProperty( String.class );
+		suppressions.convention( Arrays.asList( "raw", "deprecation" ) );
 	}
 
 	public Property<Boolean> getApplyGeneratedAnnotation() {

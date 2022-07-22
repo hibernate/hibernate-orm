@@ -120,6 +120,14 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 			} ).when( connectionSpy ).prepareStatement( ArgumentMatchers.anyString() );
 
 			Mockito.doAnswer( invocation -> {
+				PreparedStatement statement = (PreparedStatement) invocation.callRealMethod();
+				PreparedStatement statementSpy = spy( statement, settingsForStatements );
+				String sql = (String) invocation.getArguments()[0];
+				preparedStatementMap.put( statementSpy, sql );
+				return statementSpy;
+			} ).when( connectionSpy ).prepareCall( ArgumentMatchers.anyString() );
+
+			Mockito.doAnswer( invocation -> {
 				Statement statement = (Statement) invocation.callRealMethod();
 				Statement statementSpy = spy( statement, settingsForStatements );
 				Mockito.doAnswer( statementInvocation -> {

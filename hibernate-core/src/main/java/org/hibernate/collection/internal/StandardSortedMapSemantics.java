@@ -43,7 +43,9 @@ public class StandardSortedMapSemantics<K,V> extends AbstractMapSemantics<Sorted
 	public TreeMap<K,V> instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
-		return new TreeMap<K,V>( (Comparator) collectionDescriptor.getSortingComparator() );
+		return new TreeMap<K,V>(
+				collectionDescriptor == null ? null : (Comparator) collectionDescriptor.getSortingComparator()
+		);
 	}
 
 	@Override

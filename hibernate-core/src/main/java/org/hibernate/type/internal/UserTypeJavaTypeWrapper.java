@@ -12,6 +12,7 @@ import java.util.Comparator;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
@@ -19,6 +20,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.MutabilityPlanExposer;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -114,13 +116,29 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 
 	@Override
 	public J fromString(CharSequence string) {
+		if ( userType instanceof EnhancedUserType<?> ) {
+			return ( (EnhancedUserType<J>) userType ).fromStringValue( string );
+		}
 		throw new UnsupportedOperationException( "No support for parsing UserType values from String: " + userType );
+	}
+
+	@Override
+	public String toString(J value) {
+		if ( userType.returnedClass().isInstance( value ) && userType instanceof EnhancedUserType<?> ) {
+			return ( (EnhancedUserType<J>) userType ).toString( value );
+		}
+		return value == null ? "null" : value.toString();
 	}
 
 	@Override
 	public <X> X unwrap(J value, Class<X> type, WrapperOptions options) {
 		assert value == null || userType.returnedClass().isInstance( value );
 
+		final BasicValueConverter<J, Object> valueConverter = userType.getValueConverter();
+		if ( value != null && !type.isInstance( value ) && valueConverter != null ) {
+			final Object relationalValue = valueConverter.toRelationalValue( value );
+			return valueConverter.getRelationalJavaType().unwrap( relationalValue, type, options );
+		}
 		//noinspection unchecked
 		return (X) value;
 	}
@@ -129,6 +147,11 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 	public <X> J wrap(X value, WrapperOptions options) {
 //		assert value == null || userType.returnedClass().isInstance( value );
 
+		final BasicValueConverter<J, Object> valueConverter = userType.getValueConverter();
+		if ( value != null && !userType.returnedClass().isInstance( value ) && valueConverter != null ) {
+			final J domainValue = valueConverter.toDomainValue( value );
+			return valueConverter.getDomainJavaType().wrap( domainValue, options );
+		}
 		//noinspection unchecked
 		return (J) value;
 	}

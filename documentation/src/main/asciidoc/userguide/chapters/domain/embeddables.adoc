@@ -305,6 +305,8 @@ include::{instantiatorTestDir}/embedded/Person.java[tags=embeddable-instantiator
 ====
 [source, JAVA, indent=0]
 ----
+include::{instantiatorTestDir}/embeddable/Name.java[tags=embeddable-instantiator-class]
+
 include::{instantiatorTestDir}/embeddable/Person.java[tags=embeddable-instantiator-class]
 ----
 ====

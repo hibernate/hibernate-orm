@@ -91,6 +91,10 @@ public class TableGroupJoin implements TableJoin, DomainResultProducer {
 		return navigablePath;
 	}
 
+	public boolean isImplicit() {
+		return !navigablePath.isAliased();
+	}
+
 	@Override
 	public DomainResult createDomainResult(
 			String resultVariable,

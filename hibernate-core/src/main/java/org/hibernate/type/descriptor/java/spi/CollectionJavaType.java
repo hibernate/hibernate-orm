@@ -17,6 +17,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Extension of the general JavaType for "collection types"
@@ -47,9 +48,27 @@ public class CollectionJavaType<C> extends AbstractClassJavaType<C> {
 	}
 
 	@Override
-	public JavaType<C> createJavaType(ParameterizedType parameterizedType) {
-		//noinspection unchecked
+	public JavaType<C> createJavaType(
+			ParameterizedType parameterizedType,
+			TypeConfiguration typeConfiguration) {
+		switch ( semantics.getCollectionClassification() ) {
+			case ARRAY:
+			case BAG:
+			case ID_BAG:
+			case LIST:
+			case SET:
+			case SORTED_SET:
+			case ORDERED_SET:
+				//noinspection unchecked,rawtypes
+				return new BasicCollectionJavaType(
+						parameterizedType,
+						typeConfiguration.getJavaTypeRegistry()
+								.resolveDescriptor( parameterizedType.getActualTypeArguments()[0] ),
+						semantics
+				);
+		}
 		// Construct a basic java type that knows its parametrization
+		//noinspection unchecked
 		return new UnknownBasicJavaType<>( parameterizedType, (MutabilityPlan<C>) MutableMutabilityPlan.INSTANCE );
 	}
 

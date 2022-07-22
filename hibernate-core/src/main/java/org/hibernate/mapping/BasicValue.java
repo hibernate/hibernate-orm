@@ -478,6 +478,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				getColumn(),
 				ownerName,
 				propertyName,
+				getMetadata().getDatabase().getDialect(),
 				typeConfiguration
 		);
 
@@ -588,7 +589,11 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			}
 			else if ( basicTypeByName instanceof ConvertedBasicType ) {
 				final ConvertedBasicType<?> convertedType = (ConvertedBasicType<?>) basicTypeByName;
-				return new ConvertedBasicTypeResolution<>( convertedType, stdIndicators );
+				if ( convertedType.getValueConverter() != null ) {
+					return new ConvertedBasicTypeResolution<>( convertedType, stdIndicators );
+				}
+				valueConverter = null;
+				domainJtd = basicTypeByName.getJavaTypeDescriptor();
 			}
 			else {
 				valueConverter = null;
@@ -695,6 +700,11 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForArray() {
+		return getBuildingContext().getPreferredSqlTypeCodeForArray();
+	}
+
+	@Override
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 		if ( timeZoneStorageType != null ) {
 			switch ( timeZoneStorageType ) {
@@ -735,7 +745,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 						.getService( ClassLoaderService.class );
 				try {
 					//noinspection rawtypes
-					final Class<AttributeConverter> converterClass = cls.classForName( converterClassName );
+					final Class<AttributeConverter<?,?>> converterClass = cls.classForName( converterClassName );
 					setAttributeConverterDescriptor( new ClassBasedConverterDescriptor(
 							converterClass,
 							false,

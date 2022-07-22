@@ -7,10 +7,7 @@
 package org.hibernate.boot.model.convert.internal;
 
 import java.util.List;
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Converter;
 
-import org.hibernate.AnnotationException;
 import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.model.convert.spi.AutoApplicableConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -21,12 +18,16 @@ import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import com.fasterxml.classmate.ResolvedType;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
+
+import static org.hibernate.boot.model.convert.internal.ConverterHelper.resolveConverterClassParamTypes;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractConverterDescriptor implements ConverterDescriptor {
-	private final Class<? extends AttributeConverter> converterClass;
+	private final Class<? extends AttributeConverter<?,?>> converterClass;
 
 	private final ResolvedType domainType;
 	private final ResolvedType jdbcType;
@@ -34,25 +35,12 @@ public abstract class AbstractConverterDescriptor implements ConverterDescriptor
 	private final AutoApplicableConverterDescriptor autoApplicableDescriptor;
 
 	public AbstractConverterDescriptor(
-			Class<? extends AttributeConverter> converterClass,
+			Class<? extends AttributeConverter<?,?>> converterClass,
 			Boolean forceAutoApply,
 			ClassmateContext classmateContext) {
 		this.converterClass = converterClass;
 
-		final ResolvedType converterType = classmateContext.getTypeResolver().resolve( converterClass );
-		final List<ResolvedType> converterParamTypes = converterType.typeParametersFor( AttributeConverter.class );
-		if ( converterParamTypes == null ) {
-			throw new AnnotationException(
-					"Could not extract type parameter information from AttributeConverter implementation ["
-							+ converterClass.getName() + "]"
-			);
-		}
-		else if ( converterParamTypes.size() != 2 ) {
-			throw new AnnotationException(
-					"Unexpected type parameter information for AttributeConverter implementation [" +
-							converterClass.getName() + "]; expected 2 parameter types, but found " + converterParamTypes.size()
-			);
-		}
+		final List<ResolvedType> converterParamTypes = resolveConverterClassParamTypes( converterClass, classmateContext );
 
 		this.domainType = converterParamTypes.get( 0 );
 		this.jdbcType = converterParamTypes.get( 1 );
@@ -81,7 +69,7 @@ public abstract class AbstractConverterDescriptor implements ConverterDescriptor
 	}
 
 	@Override
-	public Class<? extends AttributeConverter> getAttributeConverterClass() {
+	public Class<? extends AttributeConverter<?,?>> getAttributeConverterClass() {
 		return converterClass;
 	}
 

@@ -22,7 +22,7 @@ import org.hibernate.service.spi.ServiceContributor;
 
 import org.hibernate.testing.boot.ExtraJavaServicesClassLoaderService;
 import org.hibernate.testing.boot.ExtraJavaServicesClassLoaderService.JavaServiceDescriptor;
-import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 import org.junit.jupiter.api.extension.TestInstancePostProcessor;
@@ -37,14 +37,81 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class ServiceRegistryExtension
-		implements TestInstancePostProcessor, AfterAllCallback, TestExecutionExceptionHandler {
+		implements TestInstancePostProcessor, BeforeEachCallback, TestExecutionExceptionHandler {
 	private static final Logger log = Logger.getLogger( ServiceRegistryExtension.class );
 	private static final String REGISTRY_KEY = ServiceRegistryScope.class.getName();
 
-	public static StandardServiceRegistry findServiceRegistry(
-			Object testInstance,
-			ExtensionContext context) {
-		return findServiceRegistryScope( testInstance, context ).getRegistry();
+	@Override
+	public void postProcessTestInstance(Object testInstance, ExtensionContext context) {
+		log.tracef( "#postProcessTestInstance(%s, %s)", testInstance, context.getDisplayName() );
+
+		assert context.getTestClass().isPresent();
+
+		final Optional<BootstrapServiceRegistry> bsrAnnRef = AnnotationSupport.findAnnotation(
+				context.getElement().get(),
+				BootstrapServiceRegistry.class
+		);
+		final Optional<ServiceRegistry> ssrAnnRef = AnnotationSupport.findAnnotation(
+				context.getElement().get(),
+				ServiceRegistry.class
+		);
+
+		final ServiceRegistryScope created = createServiceRegistryScope( testInstance, bsrAnnRef, ssrAnnRef, context );
+		locateExtensionStore( testInstance, context ).put( REGISTRY_KEY, created );
+	}
+
+	@Override
+	public void beforeEach(ExtensionContext context) {
+		Optional<BootstrapServiceRegistry> bsrAnnRef = AnnotationSupport.findAnnotation(
+				context.getElement().get(),
+				BootstrapServiceRegistry.class
+		);
+		Optional<ServiceRegistry> ssrAnnRef = AnnotationSupport.findAnnotation(
+				context.getElement().get(),
+				ServiceRegistry.class
+		);
+
+		if ( bsrAnnRef.isEmpty() && ssrAnnRef.isEmpty() ) {
+			// assume the annotations are defined on the class-level...
+			// will be validated by the parameter-resolver or consuming extension
+			return;
+		}
+		else if ( bsrAnnRef.isPresent() && ssrAnnRef.isPresent() ) {
+			// the method has both - use them -> fall through
+		}
+		else if ( bsrAnnRef.isPresent() ) {
+			// the method has BootstrapServiceRegistry but not ServiceRegistry
+			//
+			// see if there is a ServiceRegistry at the class-level:
+			//		yes -> use this class-level one
+			//		no -> treat it as implicit
+
+			ssrAnnRef = AnnotationSupport.findAnnotation(
+					context.getRequiredTestClass(),
+					ServiceRegistry.class
+			);
+		}
+		else if ( ssrAnnRef.isPresent() ) {
+			// the method has ServiceRegistry but not BootstrapServiceRegistry
+			//
+			// see if there is a BootstrapServiceRegistry at the class-level:
+			//		yes -> use this class-level one
+			//		no -> treat it as implicit
+
+			bsrAnnRef = AnnotationSupport.findAnnotation(
+					context.getRequiredTestClass(),
+					BootstrapServiceRegistry.class
+			);
+		}
+		else {
+			throw new RuntimeException( "Some clever text" );
+		}
+
+		final Object testInstance = context.getRequiredTestInstance();
+
+		final ServiceRegistryScope created = createServiceRegistryScope( testInstance, bsrAnnRef, ssrAnnRef, context );
+		final ExtensionContext.Store extensionStore = locateExtensionStore( testInstance, context );
+		extensionStore.put( REGISTRY_KEY, created );
 	}
 
 	private static ExtensionContext.Store locateExtensionStore(
@@ -57,62 +124,62 @@ public class ServiceRegistryExtension
 		log.tracef( "#findServiceRegistryScope(%s, %s)", testInstance, context.getDisplayName() );
 
 		final ExtensionContext.Store store = locateExtensionStore( testInstance, context );
-
-		ServiceRegistryScopeImpl existingScope = (ServiceRegistryScopeImpl) store.get( REGISTRY_KEY );
+		final ServiceRegistryScopeImpl existingScope = (ServiceRegistryScopeImpl) store.get( REGISTRY_KEY );
 
 		if ( existingScope == null ) {
-			log.debugf( "Creating ServiceRegistryScope - %s", context.getDisplayName() );
-
-			final BootstrapServiceRegistryProducer bsrProducer;
-
-			final Optional<BootstrapServiceRegistry> bsrAnnWrapper = AnnotationSupport.findAnnotation(
-					context.getElement().get(),
-					BootstrapServiceRegistry.class
-			);
-
-			if ( bsrAnnWrapper.isPresent() ) {
-				bsrProducer = bsrBuilder -> {
-					final BootstrapServiceRegistry bsrAnn = bsrAnnWrapper.get();
-					configureJavaServices( bsrAnn, bsrBuilder );
-					configureIntegrators( bsrAnn, bsrBuilder );
-
-					return bsrBuilder.enableAutoClose().build();
-				};
-			}
-			else {
-				bsrProducer = BootstrapServiceRegistryBuilder::build;
-			}
-
-			final ServiceRegistryProducer ssrProducer;
-
-			if ( testInstance instanceof ServiceRegistryProducer ) {
-				ssrProducer = (ServiceRegistryProducer) testInstance;
-			}
-			else {
-				ssrProducer = new ServiceRegistryProducerImpl(context);
-			}
-
-			final ServiceRegistryScopeImpl scope = new ServiceRegistryScopeImpl( bsrProducer, ssrProducer );
-			scope.getRegistry();
-
-			locateExtensionStore( testInstance, context ).put( REGISTRY_KEY, scope );
-
-			if ( testInstance instanceof ServiceRegistryScopeAware ) {
-				( (ServiceRegistryScopeAware) testInstance ).injectServiceRegistryScope( scope );
-			}
-			return scope;
+			throw new RuntimeException( "No ServiceRegistryScope known in context" );
 		}
 
 		return existingScope;
 	}
 
+	private static ServiceRegistryScopeImpl createServiceRegistryScope(
+			Object testInstance,
+			Optional<BootstrapServiceRegistry> bsrAnnRef,
+			Optional<ServiceRegistry> ssrAnnRef,
+			ExtensionContext context) {
+		log.debugf( "Creating ServiceRegistryScope - %s", context.getDisplayName() );
+
+		final BootstrapServiceRegistryProducer bsrProducer;
+
+		//noinspection OptionalIsPresent
+		if ( bsrAnnRef.isPresent() ) {
+			bsrProducer = bsrBuilder -> {
+				final BootstrapServiceRegistry bsrAnn = bsrAnnRef.get();
+				configureJavaServices( bsrAnn, bsrBuilder );
+				configureIntegrators( bsrAnn, bsrBuilder );
+
+				return bsrBuilder.enableAutoClose().build();
+			};
+		}
+		else {
+			bsrProducer = BootstrapServiceRegistryBuilder::build;
+		}
+
+		final ServiceRegistryProducer ssrProducer;
+
+		if ( testInstance instanceof ServiceRegistryProducer ) {
+			ssrProducer = (ServiceRegistryProducer) testInstance;
+		}
+		else {
+			ssrProducer = new ServiceRegistryProducerImpl( ssrAnnRef );
+		}
+
+		final ServiceRegistryScopeImpl scope = new ServiceRegistryScopeImpl( bsrProducer, ssrProducer );
+		scope.getRegistry();
+
+		if ( testInstance instanceof ServiceRegistryScopeAware ) {
+			( (ServiceRegistryScopeAware) testInstance ).injectServiceRegistryScope( scope );
+		}
+
+		return scope;
+	}
+
 	private static class ServiceRegistryProducerImpl implements ServiceRegistryProducer{
-		private final ExtensionContext context;
-		public ServiceRegistryProducerImpl(ExtensionContext context) {
-			this.context = context;
-			if ( !context.getElement().isPresent() ) {
-				throw new RuntimeException( "Unable to determine how to handle given ExtensionContext : " + context.getDisplayName() );
-			}
+		private final Optional<ServiceRegistry> ssrAnnRef;
+
+		public ServiceRegistryProducerImpl(Optional<ServiceRegistry> ssrAnnRef) {
+			this.ssrAnnRef = ssrAnnRef;
 		}
 
 		@Override
@@ -120,13 +187,8 @@ public class ServiceRegistryExtension
 			// set some baseline test settings
 			ssrb.applySetting( AvailableSettings.STATEMENT_INSPECTOR, org.hibernate.testing.jdbc.SQLStatementInspector.class );
 
-			final Optional<ServiceRegistry> ssrAnnWrapper = AnnotationSupport.findAnnotation(
-					context.getElement().get(),
-					ServiceRegistry.class
-			);
-
-			if ( ssrAnnWrapper.isPresent() ) {
-				final ServiceRegistry serviceRegistryAnn = ssrAnnWrapper.get();
+			if ( ssrAnnRef.isPresent() ) {
+				final ServiceRegistry serviceRegistryAnn = ssrAnnRef.get();
 				configureServices( serviceRegistryAnn, ssrb );
 			}
 
@@ -218,28 +280,22 @@ public class ServiceRegistryExtension
 		}
 	}
 
-	@Override
-	public void postProcessTestInstance(Object testInstance, ExtensionContext context) {
-		log.tracef( "#postProcessTestInstance(%s, %s)", testInstance, context.getDisplayName() );
-		findServiceRegistryScope( testInstance, context );
-	}
-
-	@Override
-	public void afterAll(ExtensionContext context) {
-		log.tracef( "#afterAll(%s)", context.getDisplayName() );
-
-		final Object testInstance = context.getRequiredTestInstance();
-
-		if ( testInstance instanceof ServiceRegistryScopeAware ) {
-			( (ServiceRegistryScopeAware) testInstance ).injectServiceRegistryScope( null );
-		}
-
-		final ExtensionContext.Store store = locateExtensionStore( testInstance, context );
-		final ServiceRegistryScopeImpl scope = (ServiceRegistryScopeImpl) store.remove( REGISTRY_KEY );
-		if ( scope != null ) {
-			scope.close();
-		}
-	}
+//	@Override
+//	public void afterAll(ExtensionContext context) {
+//		log.tracef( "#afterAll(%s)", context.getDisplayName() );
+//
+//		final Object testInstance = context.getRequiredTestInstance();
+//
+//		if ( testInstance instanceof ServiceRegistryScopeAware ) {
+//			( (ServiceRegistryScopeAware) testInstance ).injectServiceRegistryScope( null );
+//		}
+//
+//		final ExtensionContext.Store store = locateExtensionStore( testInstance, context );
+//		final ServiceRegistryScopeImpl scope = (ServiceRegistryScopeImpl) store.remove( REGISTRY_KEY );
+//		if ( scope != null ) {
+//			scope.close();
+//		}
+//	}
 
 	@Override
 	public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {

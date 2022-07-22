@@ -60,6 +60,11 @@ public class IntegerJdbcType implements JdbcType {
 	}
 
 	@Override
+	public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+		return Integer.class;
+	}
+
+	@Override
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
 		return new BasicBinder<>( javaType, this ) {
 			@Override

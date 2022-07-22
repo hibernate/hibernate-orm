@@ -37,8 +37,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.SerializationException;
 
-import org.w3c.dom.Document;
-
 /**
  * Entry point for working with sources of O/R mapping metadata, either
  * in the form of annotated classes, or as XML mapping documents.
@@ -64,7 +62,6 @@ public class MetadataSources implements Serializable {
 
 	private final ServiceRegistry serviceRegistry;
 	private final ClassLoaderService classLoaderService;
-	private final boolean disableXmlMappingBinders;
 
 	private XmlMappingBinderAccess xmlMappingBinderAccess;
 
@@ -88,8 +85,17 @@ public class MetadataSources implements Serializable {
 	 * @param serviceRegistry The service registry to use.
 	 */
 	public MetadataSources(ServiceRegistry serviceRegistry) {
+		this( serviceRegistry, null );
+	}
+
+	/**
+	 * Create a new instance using the given {@link ServiceRegistry}.
+	 *
+	 * @param serviceRegistry The service registry to use.
+	 */
+	public MetadataSources(ServiceRegistry serviceRegistry, XmlMappingBinderAccess xmlMappingBinderAccess) {
 		// service registry really should be either BootstrapServiceRegistry or StandardServiceRegistry type...
-		if ( ! isExpectedServiceRegistryType( serviceRegistry ) ) {
+		if ( !isExpectedServiceRegistryType( serviceRegistry ) ) {
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf(
 						"Unexpected ServiceRegistry type [%s] encountered during building of MetadataSources; may cause " +
@@ -100,17 +106,7 @@ public class MetadataSources implements Serializable {
 		}
 		this.serviceRegistry = serviceRegistry;
 		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-		this.disableXmlMappingBinders = false;
-	}
-
-	/**
-	 * Consider this an SPI, used by Quarkus
-	 */
-	public MetadataSources(ServiceRegistry serviceRegistry, boolean disableXmlMappingBinders) {
-		Objects.requireNonNull( serviceRegistry );
-		this.serviceRegistry = serviceRegistry;
-		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-		this.disableXmlMappingBinders = disableXmlMappingBinders;
+		this.xmlMappingBinderAccess = xmlMappingBinderAccess;
 	}
 
 	protected static boolean isExpectedServiceRegistryType(ServiceRegistry serviceRegistry) {
@@ -119,9 +115,6 @@ public class MetadataSources implements Serializable {
 	}
 
 	public XmlMappingBinderAccess getXmlMappingBinderAccess() {
-		if ( disableXmlMappingBinders ) {
-			return null;
-		}
 		if ( xmlMappingBinderAccess == null ) {
 			xmlMappingBinderAccess = new XmlMappingBinderAccess( serviceRegistry );
 		}

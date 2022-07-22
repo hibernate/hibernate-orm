@@ -67,7 +67,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 *     from ( [original-query] ) row_
 	 * )
 	 * select [alias-list] from query_
-	 * where rownumber_ >= ? and rownumber_ < ?
+	 * where rownumber_ &gt;= ? and rownumber_ &lt; ?
 	 * </pre>
 	 *
 	 * Where {@code [original-query]} is the original SQL query, with a

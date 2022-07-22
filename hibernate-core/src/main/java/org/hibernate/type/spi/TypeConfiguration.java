@@ -8,6 +8,7 @@ package org.hibernate.type.spi;
 
 import java.io.InvalidObjectException;
 import java.io.Serializable;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Time;
@@ -33,6 +34,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.annotations.common.reflection.java.generics.ParameterizedTypeImpl;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BasicTypeRegistration;
@@ -350,6 +353,48 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			public TypeConfiguration getTypeConfiguration() {
 				return typeConfiguration;
 			}
+
+			@Override
+			public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
+				return sessionFactory == null
+						? getMetadataBuildingContext().getBuildingOptions().getDefaultTimeZoneStorage()
+						: getTypeConfiguration().getSessionFactory().getSessionFactoryOptions().getDefaultTimeZoneStorageStrategy();
+			}
+
+			@Override
+			public int getPreferredSqlTypeCodeForBoolean() {
+				return sessionFactory == null
+						? getMetadataBuildingContext().getPreferredSqlTypeCodeForBoolean()
+						: getTypeConfiguration().getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForBoolean();
+			}
+
+			@Override
+			public int getPreferredSqlTypeCodeForDuration() {
+				return sessionFactory == null
+						? getMetadataBuildingContext().getPreferredSqlTypeCodeForDuration()
+						: getTypeConfiguration().getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForDuration();
+			}
+
+			@Override
+			public int getPreferredSqlTypeCodeForUuid() {
+				return sessionFactory == null
+						? getMetadataBuildingContext().getPreferredSqlTypeCodeForUuid()
+						: getTypeConfiguration().getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForUuid();
+			}
+
+			@Override
+			public int getPreferredSqlTypeCodeForInstant() {
+				return sessionFactory == null
+						? getMetadataBuildingContext().getPreferredSqlTypeCodeForInstant()
+						: getTypeConfiguration().getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForInstant();
+			}
+
+			@Override
+			public int getPreferredSqlTypeCodeForArray() {
+				return sessionFactory == null
+						? getMetadataBuildingContext().getPreferredSqlTypeCodeForArray()
+						: getTypeConfiguration().getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForArray();
+			}
 		};
 
 		public Scope(TypeConfiguration typeConfiguration) {
@@ -546,9 +591,17 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 
-	private final ConcurrentHashMap<Class<?>, BasicType<?>> basicTypeByJavaType = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<Type, BasicType<?>> basicTypeByJavaType = new ConcurrentHashMap<>();
+
+	public <J> BasicType<J> getBasicTypeForGenericJavaType(Class<? super J> javaType, Type... typeArguments) {
+		return getBasicTypeForJavaType( new ParameterizedTypeImpl( javaType, typeArguments, null ) );
+	}
 
 	public <J> BasicType<J> getBasicTypeForJavaType(Class<J> javaType) {
+		return getBasicTypeForJavaType( (Type) javaType );
+	}
+
+	public <J> BasicType<J> getBasicTypeForJavaType(Type javaType) {
 		final BasicType<?> existing = basicTypeByJavaType.get( javaType );
 		if ( existing != null ) {
 			//noinspection unchecked
@@ -580,6 +633,12 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	public <J> BasicType<J> standardBasicTypeForJavaType(
 			Class<J> javaType,
+			Function<JavaType<J>, BasicType<J>> creator) {
+		return standardBasicTypeForJavaType( (Type) javaType, creator );
+	}
+
+	public <J> BasicType<J> standardBasicTypeForJavaType(
+			Type javaType,
 			Function<JavaType<J>, BasicType<J>> creator) {
 		if ( javaType == null ) {
 			return null;

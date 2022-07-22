@@ -59,11 +59,11 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 
 	protected SqmRoot(
 			NavigablePath navigablePath,
-			EntityDomainType<E> entityType,
+			SqmPathSource<E> referencedNavigable,
 			String alias,
 			boolean allowJoins,
 			NodeBuilder nodeBuilder) {
-		super( navigablePath, entityType, alias, nodeBuilder );
+		super( navigablePath, referencedNavigable, alias, nodeBuilder );
 		this.allowJoins = allowJoins;
 	}
 
@@ -144,13 +144,8 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 		return this;
 	}
 
-	@Override
-	public EntityDomainType<E> getReferencedPathSource() {
-		return (EntityDomainType<E>) super.getReferencedPathSource();
-	}
-
 	public String getEntityName() {
-		return getReferencedPathSource().getHibernateEntityName();
+		return getModel().getHibernateEntityName();
 	}
 
 	@Override
@@ -170,8 +165,13 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 	// JPA
 
 	@Override
+	public EntityDomainType<E> getModel() {
+		return (EntityDomainType<E>) getReferencedPathSource();
+	}
+
+	@Override
 	public EntityDomainType<E> getManagedType() {
-		return getReferencedPathSource();
+		return getModel();
 	}
 
 	@Override
@@ -186,11 +186,6 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 			}
 		}
 		return !hasTreats();
-	}
-
-	@Override
-	public EntityDomainType<E> getModel() {
-		return getReferencedPathSource();
 	}
 
 	@Override

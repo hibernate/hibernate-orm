@@ -6,10 +6,12 @@
  */
 package org.hibernate.query.criteria;
 
+import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 
 import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.Subquery;
 
 /**
  * API extension to the JPA {@link From} contract
@@ -27,4 +29,20 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	<X> JpaEntityJoin<X> join(Class<X> entityJavaType, SqmJoinType joinType);
 
 	<X> JpaEntityJoin<X> join(EntityDomainType<X> entity, SqmJoinType joinType);
+
+	@Incubating
+	<X> JpaDerivedJoin<X> join(Subquery<X> subquery);
+
+	@Incubating
+	<X> JpaDerivedJoin<X> join(Subquery<X> subquery, SqmJoinType joinType);
+
+	@Incubating
+	<X> JpaDerivedJoin<X> joinLateral(Subquery<X> subquery);
+
+	@Incubating
+	<X> JpaDerivedJoin<X> joinLateral(Subquery<X> subquery, SqmJoinType joinType);
+
+	@Incubating
+	<X> JpaDerivedJoin<X> join(Subquery<X> subquery, SqmJoinType joinType, boolean lateral);
+
 }

@@ -1,0 +1,36 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.6.21'
+    id 'org.hibernate.orm'
+}
+
+repositories {
+    mavenCentral()
+
+    maven {
+        name 'jboss-snapshots-repository'
+        url 'https://repository.jboss.org/nexus/content/repositories/snapshots'
+    }
+}
+
+dependencies {
+    implementation 'org.hibernate.orm:hibernate-core:6.1.0.Final'
+}
+
+hibernate {
+    // to get using the same version to work, we'd have to install hibernate-core into maven local prior to running these.
+    // suck we won't be able to adequately test this part, but
+    useSameVersion = false
+    enhancement {
+        lazyInitialization( true )
+        dirtyTracking = true
+    }
+    jpaMetamodel {
+    }
+}

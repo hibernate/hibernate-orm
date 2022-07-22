@@ -197,6 +197,8 @@ public class DefaultCatalogAndSchemaTest {
 		final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
 		metadataSources.addInputStream( getClass().getResourceAsStream( "implicit-file-level-catalog-and-schema.orm.xml" ) );
 		metadataSources.addInputStream( getClass().getResourceAsStream( "implicit-file-level-catalog-and-schema.hbm.xml" ) );
+		metadataSources.addInputStream( getClass().getResourceAsStream( "no-file-level-catalog-and-schema.orm.xml" ) );
+		metadataSources.addInputStream( getClass().getResourceAsStream( "no-file-level-catalog-and-schema.hbm.xml" ) );
 		metadataSources.addInputStream( getClass().getResourceAsStream( "database-object-using-catalog-placeholder.hbm.xml" ) );
 		metadataSources.addInputStream( getClass().getResourceAsStream( "database-object-using-schema-placeholder.hbm.xml" ) );
 		if ( configuredXmlMappingPath != null ) {
@@ -317,6 +319,8 @@ public class DefaultCatalogAndSchemaTest {
 		verifyEntityPersisterQualifiers( EntityWithExplicitQualifiers.class, expectedExplicitQualifier() );
 		verifyEntityPersisterQualifiers( EntityWithOrmXmlImplicitFileLevelQualifiers.class, expectedImplicitFileLevelQualifier() );
 		verifyEntityPersisterQualifiers( EntityWithHbmXmlImplicitFileLevelQualifiers.class, expectedImplicitFileLevelQualifier() );
+		verifyEntityPersisterQualifiers( EntityWithOrmXmlNoFileLevelQualifiers.class, expectedDefaultQualifier() );
+		verifyEntityPersisterQualifiers( EntityWithHbmXmlNoFileLevelQualifiers.class, expectedDefaultQualifier() );
 
 		verifyEntityPersisterQualifiers( EntityWithJoinedInheritanceWithDefaultQualifiers.class, expectedDefaultQualifier() );
 		verifyEntityPersisterQualifiers( EntityWithJoinedInheritanceWithDefaultQualifiersSubclass.class, expectedDefaultQualifier() );
@@ -491,6 +495,8 @@ public class DefaultCatalogAndSchemaTest {
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithDefaultQualifiers.NAME, expectedDefaultQualifier() );
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithOrmXmlImplicitFileLevelQualifiers.NAME, expectedImplicitFileLevelQualifier() );
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithHbmXmlImplicitFileLevelQualifiers.NAME, expectedImplicitFileLevelQualifier() );
+		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithOrmXmlNoFileLevelQualifiers.NAME, expectedDefaultQualifier() );
+		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithHbmXmlNoFileLevelQualifiers.NAME, expectedDefaultQualifier() );
 
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithJoinedInheritanceWithDefaultQualifiers.NAME, expectedDefaultQualifier() );
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithJoinedInheritanceWithDefaultQualifiersSubclass.NAME, expectedDefaultQualifier() );
@@ -751,6 +757,21 @@ public class DefaultCatalogAndSchemaTest {
 
 	public static class EntityWithHbmXmlImplicitFileLevelQualifiers {
 		public static final String NAME = "EntityWithHbmXmlImplicitFileLevelQualifiers";
+		private Long id;
+		private String basic;
+	}
+
+	public static class EntityWithOrmXmlNoFileLevelQualifiers {
+		public static final String NAME = "EntityWithOrmXmlNoFileLevelQualifiers";
+		private Long id;
+		private String basic;
+		private List<EntityWithDefaultQualifiers> oneToMany;
+		private List<EntityWithDefaultQualifiers> manyToMany;
+		private List<String> elementCollection;
+	}
+
+	public static class EntityWithHbmXmlNoFileLevelQualifiers {
+		public static final String NAME = "EntityWithHbmXmlNoFileLevelQualifiers";
 		private Long id;
 		private String basic;
 	}

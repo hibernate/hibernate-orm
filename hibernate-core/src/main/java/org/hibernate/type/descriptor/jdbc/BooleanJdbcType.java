@@ -70,6 +70,11 @@ public class BooleanJdbcType implements AdjustableJdbcType {
 		return this;
 	}
 
+	@Override
+	public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+		return Boolean.class;
+	}
+
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
 		return new BasicBinder<>( javaType, this ) {
 			@Override

@@ -93,6 +93,7 @@ import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
 import org.hibernate.query.sqm.tree.insert.SqmValues;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
@@ -331,7 +332,7 @@ public class QuerySqmImpl<R>
 				);
 			default:
 				throw new UnsupportedOperationException(
-						"The " + immutableEntityUpdateQueryHandlingMode + " is not supported!"
+						"The " + immutableEntityUpdateQueryHandlingMode + " is not supported"
 				);
 		}
 	}
@@ -371,10 +372,10 @@ public class QuerySqmImpl<R>
 		}
 		else {
 			final SqmInsertSelectStatement<R> statement = (SqmInsertSelectStatement<R>) sqmStatement;
-			final List<SqmSelection<?>> selections = statement.getSelectQueryPart()
+			final List<SqmSelectableNode<?>> selections = statement.getSelectQueryPart()
 					.getFirstQuerySpec()
 					.getSelectClause()
-					.getSelections();
+					.getSelectionItems();
 			verifyInsertTypesMatch( hqlString, insertionTargetPaths, selections );
 			statement.getSelectQueryPart().validateQueryStructureAndFetchOwners();
 		}
@@ -731,7 +732,7 @@ public class QuerySqmImpl<R>
 	}
 
 	private NonSelectQueryPlan buildConcreteDeleteQueryPlan(@SuppressWarnings("rawtypes") SqmDeleteStatement sqmDelete) {
-		final EntityDomainType<?> entityDomainType = sqmDelete.getTarget().getReferencedPathSource();
+		final EntityDomainType<?> entityDomainType = sqmDelete.getTarget().getModel();
 		final String entityNameToDelete = entityDomainType.getHibernateEntityName();
 		final EntityPersister entityDescriptor = getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
@@ -759,7 +760,7 @@ public class QuerySqmImpl<R>
 		//noinspection rawtypes
 		final SqmUpdateStatement sqmUpdate = (SqmUpdateStatement) getSqmStatement();
 
-		final String entityNameToUpdate = sqmUpdate.getTarget().getReferencedPathSource().getHibernateEntityName();
+		final String entityNameToUpdate = sqmUpdate.getTarget().getModel().getHibernateEntityName();
 		final EntityPersister entityDescriptor = getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityNameToUpdate );
@@ -777,7 +778,7 @@ public class QuerySqmImpl<R>
 		//noinspection rawtypes
 		final SqmInsertStatement sqmInsert = (SqmInsertStatement) getSqmStatement();
 
-		final String entityNameToInsert = sqmInsert.getTarget().getReferencedPathSource().getHibernateEntityName();
+		final String entityNameToInsert = sqmInsert.getTarget().getModel().getHibernateEntityName();
 		final EntityPersister entityDescriptor = getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityNameToInsert );
@@ -817,14 +818,14 @@ public class QuerySqmImpl<R>
 
 	@Override
 	public SqmQueryImplementor<R> setLockOptions(LockOptions lockOptions) {
-		verifySelect();
+		// No verifySelect call, because in Hibernate we support locking in subqueries
 		getQueryOptions().getLockOptions().overlay( lockOptions );
 		return this;
 	}
 
 	@Override
 	public SqmQueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
-		verifySelect();
+		// No verifySelect call, because in Hibernate we support locking in subqueries
 		getQueryOptions().getLockOptions().setAliasSpecificLockMode( alias, lockMode );
 		return this;
 	}
@@ -869,6 +870,7 @@ public class QuerySqmImpl<R>
 	@Override
 	public SqmQueryImplementor<R> setLockMode(LockModeType lockMode) {
 		if ( lockMode != LockModeType.NONE ) {
+			// JPA requires an exception to be thrown when this is not a select statement
 			verifySelect();
 		}
 		getSession().checkOpen( false );

@@ -58,6 +58,9 @@ public class UserTypeResolution implements BasicValue.Resolution {
 
 	@Override
 	public BasicValueConverter getValueConverter() {
+		// Even though we could expose the value converter of the user type here,
+		// we can not do it, as the conversion is done behind the scenes in the binder/extractor,
+		// whereas the converter returned here would, AFAIU, be used to construct a converted attribute mapping
 		return null;
 	}
 

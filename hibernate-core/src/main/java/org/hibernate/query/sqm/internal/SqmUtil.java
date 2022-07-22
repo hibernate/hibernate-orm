@@ -28,6 +28,7 @@ import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -350,12 +351,16 @@ public class SqmUtil {
 		if ( parameterType == null ) {
 			throw new SqlTreeCreationException( "Unable to interpret mapping-model type for Query parameter : " + domainParam );
 		}
+		else if ( parameterType instanceof PluralAttributeMapping ) {
+			// Default to the collection element
+			parameterType = ( (PluralAttributeMapping) parameterType ).getElementDescriptor();
+		}
 
 		if ( parameterType instanceof EntityIdentifierMapping ) {
 			final EntityIdentifierMapping identifierMapping = (EntityIdentifierMapping) parameterType;
 			final EntityMappingType entityMapping = identifierMapping.findContainingEntityMapping();
 			if ( entityMapping.getRepresentationStrategy().getInstantiator().isInstance( bindValue, session.getFactory() ) ) {
-				bindValue = identifierMapping.getIdentifier( bindValue );
+				bindValue = identifierMapping.getIdentifierIfNotUnsaved( bindValue, session );
 			}
 		}
 		else if ( parameterType instanceof EntityMappingType ) {
@@ -363,22 +368,25 @@ public class SqmUtil {
 			final EntityMappingType entityMapping = identifierMapping.findContainingEntityMapping();
 			parameterType = identifierMapping;
 			if ( entityMapping.getRepresentationStrategy().getInstantiator().isInstance( bindValue, session.getFactory() ) ) {
-				bindValue = identifierMapping.getIdentifier( bindValue );
+				bindValue = identifierMapping.getIdentifierIfNotUnsaved( bindValue, session );
 			}
 		}
 		else if ( parameterType instanceof EntityAssociationMapping ) {
 			EntityAssociationMapping association = (EntityAssociationMapping) parameterType;
-			bindValue = association.getForeignKeyDescriptor().getAssociationKeyFromSide(
-					bindValue,
-					association.getSideNature().inverse(),
-					session
-			);
-			parameterType = association.getForeignKeyDescriptor();
-		}
-		else if ( parameterType instanceof PluralAttributeMapping ) {
-			// we'd expect the values to refer to the collection element
-			// for now, let's blow up and see where this happens and fix the specifics...
-			throw new NotYetImplementedFor6Exception( "Binding parameters whose inferred type comes from plural attribute not yet implemented" );
+			if ( association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
+				// If the association is the target, we must use the identifier of the EntityMappingType
+				bindValue = association.getAssociatedEntityMappingType().getIdentifierMapping()
+						.getIdentifier( bindValue );
+				parameterType = association.getAssociatedEntityMappingType().getIdentifierMapping();
+			}
+			else {
+				bindValue = association.getForeignKeyDescriptor().getAssociationKeyFromSide(
+						bindValue,
+						association.getSideNature().inverse(),
+						session
+				);
+				parameterType = association.getForeignKeyDescriptor();
+			}
 		}
 
 		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(

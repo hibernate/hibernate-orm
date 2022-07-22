@@ -15,6 +15,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
+import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
@@ -127,7 +129,7 @@ public class QuerySplitter {
 			final SqmQueryGroup<?> queryGroup = (SqmQueryGroup<?>) queryPart;
 			final SqmRoot<?> root = findUnmappedPolymorphicReference( queryGroup.getQueryParts().get( 0 ) );
 			if ( root != null ) {
-				throw new UnsupportedOperationException( "Polymorphic query group is unsupported!" );
+				throw new UnsupportedOperationException( "Polymorphic query group is unsupported" );
 			}
 			return null;
 		}
@@ -373,13 +375,33 @@ public class QuerySplitter {
 				pathSource = mappedDescriptor;
 			}
 			else {
-				pathSource = sqmRoot.getReferencedPathSource();
+				pathSource = sqmRoot.getModel();
 			}
 			final SqmRoot<?> copy = new SqmRoot<>(
 					pathSource,
 					sqmRoot.getExplicitAlias(),
 					sqmRoot.isAllowJoins(),
 					sqmRoot.nodeBuilder()
+			);
+			getProcessingStateStack().getCurrent().getPathRegistry().register( copy );
+			sqmFromCopyMap.put( sqmRoot, copy );
+			sqmPathCopyMap.put( sqmRoot.getNavigablePath(), copy );
+			if ( currentFromClauseCopy != null ) {
+				currentFromClauseCopy.addRoot( copy );
+			}
+			return copy;
+		}
+
+		@Override
+		public SqmDerivedRoot<?> visitRootDerived(SqmDerivedRoot<?> sqmRoot) {
+			SqmFrom<?, ?> sqmFrom = sqmFromCopyMap.get( sqmRoot );
+			if ( sqmFrom != null ) {
+				return (SqmDerivedRoot<?>) sqmFrom;
+			}
+			final SqmDerivedRoot<?> copy = new SqmDerivedRoot<>(
+					(SqmSubQuery<?>) sqmRoot.getQueryPart().accept( this ),
+					sqmRoot.getExplicitAlias(),
+					sqmRoot.isLateral()
 			);
 			getProcessingStateStack().getCurrent().getPathRegistry().register( copy );
 			sqmFromCopyMap.put( sqmRoot, copy );
@@ -461,6 +483,27 @@ public class QuerySplitter {
 			sqmFromCopyMap.put( join, copy );
 			sqmPathCopyMap.put( join.getNavigablePath(), copy );
 			( (SqmFrom<?, ?>) copy.getParent() ).addSqmJoin( copy );
+			return copy;
+		}
+
+		@Override
+		public SqmDerivedJoin<?> visitQualifiedDerivedJoin(SqmDerivedJoin<?> join) {
+			SqmFrom<?, ?> sqmFrom = sqmFromCopyMap.get( join );
+			if ( sqmFrom != null ) {
+				return (SqmDerivedJoin<?>) sqmFrom;
+			}
+			final SqmRoot<?> sqmRoot = (SqmRoot<?>) sqmFromCopyMap.get( join.findRoot() );
+			final SqmDerivedJoin copy = new SqmDerivedJoin(
+					(SqmSubQuery<?>) join.getQueryPart().accept( this ),
+					join.getExplicitAlias(),
+					join.getSqmJoinType(),
+					join.isLateral(),
+					sqmRoot
+			);
+			getProcessingStateStack().getCurrent().getPathRegistry().register( copy );
+			sqmFromCopyMap.put( join, copy );
+			sqmPathCopyMap.put( join.getNavigablePath(), copy );
+			sqmRoot.addSqmJoin( copy );
 			return copy;
 		}
 

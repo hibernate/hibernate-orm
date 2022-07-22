@@ -6,6 +6,7 @@
  */
 package org.hibernate.internal.util.config;
 
+import java.sql.Types;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -150,11 +151,11 @@ public final class ConfigurationHelper {
 			return defaultValue;
 		}
 
-		if ( Boolean.class.isInstance( value ) ) {
+		if (value instanceof Boolean) {
 			return (Boolean) value;
 		}
 
-		if ( String.class.isInstance( value ) ) {
+		if (value instanceof String) {
 			return Boolean.parseBoolean( (String) value );
 		}
 
@@ -174,10 +175,10 @@ public final class ConfigurationHelper {
 		if ( value == null ) {
 			return defaultValue;
 		}
-		if ( Boolean.class.isInstance( value ) ) {
+		if (value instanceof Boolean) {
 			return (Boolean) value;
 		}
-		if ( String.class.isInstance( value ) ) {
+		if (value instanceof String) {
 			return Boolean.valueOf( (String) value );
 		}
 		throw new ConfigurationException(
@@ -199,10 +200,10 @@ public final class ConfigurationHelper {
 		if ( value == null ) {
 			return defaultValue;
 		}
-		if ( Integer.class.isInstance( value ) ) {
+		if (value instanceof Integer) {
 			return (Integer) value;
 		}
-		if ( String.class.isInstance( value ) ) {
+		if (value instanceof String) {
 			return Integer.parseInt( (String) value );
 		}
 		throw new ConfigurationException(
@@ -224,10 +225,10 @@ public final class ConfigurationHelper {
 		if ( value == null ) {
 			return null;
 		}
-		if ( Integer.class.isInstance( value ) ) {
+		if (value instanceof Integer) {
 			return (Integer) value;
 		}
-		if ( String.class.isInstance( value ) ) {
+		if (value instanceof String) {
 			//empty values are ignored
 			final String trimmed = value.toString().trim();
 			if ( trimmed.isEmpty() ) {
@@ -246,10 +247,10 @@ public final class ConfigurationHelper {
 		if ( value == null ) {
 			return defaultValue;
 		}
-		if ( Long.class.isInstance( value ) ) {
+		if (value instanceof Long) {
 			return (Long) value;
 		}
-		if ( String.class.isInstance( value ) ) {
+		if (value instanceof String) {
 			return Long.parseLong( (String) value );
 		}
 		throw new ConfigurationException(
@@ -271,7 +272,7 @@ public final class ConfigurationHelper {
 			return null;
 		}
 		// If a Properties object, leverage its clone() impl
-		if ( Properties.class.isInstance( configurationValues ) ) {
+		if (configurationValues instanceof Properties) {
 			return (Properties) ( (Properties) configurationValues ).clone();
 		}
 		// Otherwise make a manual copy
@@ -451,7 +452,7 @@ public final class ConfigurationHelper {
 		while ( itr.hasNext() ) {
 			final Map.Entry entry = ( Map.Entry ) itr.next();
 			final Object value = entry.getValue();
-			if ( String.class.isInstance( value ) ) {
+			if (value instanceof String) {
 				final String resolved = resolvePlaceHolder( ( String ) value );
 				if ( !value.equals( resolved ) ) {
 					if ( resolved == null ) {
@@ -574,6 +575,15 @@ public final class ConfigurationHelper {
 		}
 
 		return SqlTypes.TIMESTAMP_UTC;
+	}
+
+	@Incubating
+	public static synchronized int getPreferredSqlTypeCodeForArray(StandardServiceRegistry serviceRegistry) {
+		// default to the Dialect answer
+		return serviceRegistry.getService( JdbcServices.class )
+				.getJdbcEnvironment()
+				.getDialect()
+				.getPreferredSqlTypeCodeForArray();
 	}
 
 	private static class TypeCodeConverter implements ConfigurationService.Converter<Integer> {

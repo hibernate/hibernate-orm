@@ -51,7 +51,7 @@ public class Helper {
 			Object scriptSourceSetting,
 			ClassLoaderService classLoaderService,
 			String charsetName ) {
-		if ( Reader.class.isInstance( scriptSourceSetting ) ) {
+		if ( scriptSourceSetting instanceof Reader ) {
 			return new ScriptSourceInputFromReader( (Reader) scriptSourceSetting );
 		}
 		else {
@@ -100,7 +100,7 @@ public class Helper {
 		if ( scriptTargetSetting == null ) {
 			return null;
 		}
-		else if ( Writer.class.isInstance( scriptTargetSetting ) ) {
+		else if ( scriptTargetSetting instanceof Writer ) {
 			return new ScriptTargetOutputToWriter( (Writer) scriptTargetSetting );
 		}
 		else {

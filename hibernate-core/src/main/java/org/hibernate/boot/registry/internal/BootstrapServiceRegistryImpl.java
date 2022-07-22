@@ -22,6 +22,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.internal.AbstractServiceRegistryImpl;
 import org.hibernate.service.spi.ServiceBinding;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceInitiator;
@@ -261,7 +262,7 @@ public class BootstrapServiceRegistryImpl
 	@Override
 	public synchronized <R extends Service> void stopService(ServiceBinding<R> binding) {
 		final Service service = binding.getService();
-		if ( Stoppable.class.isInstance( service ) ) {
+		if ( service instanceof Stoppable ) {
 			try {
 				( (Stoppable) service ).stop();
 			}
@@ -305,5 +306,10 @@ public class BootstrapServiceRegistryImpl
 				);
 			}
 		}
+	}
+
+	@Override
+	public <T extends Service> T fromRegistryOrChildren(Class<T> serviceRole) {
+		return AbstractServiceRegistryImpl.fromRegistryOrChildren( serviceRole, this, childRegistries );
 	}
 }

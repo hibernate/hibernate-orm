@@ -320,20 +320,5 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 					)
 			);
 		}
-
-		final SqmFrom<?, ?> registeredFromElement = sqmFromByAlias.get( alias );
-		if ( registeredFromElement != null ) {
-			if ( !registeredFromElement.equals( selection.getSelectableNode() ) ) {
-				throw new AliasCollisionException(
-						String.format(
-								Locale.ENGLISH,
-								"Alias [%s] used in select-clause [%s] also used in from-clause [%s]",
-								alias,
-								selection.getSelectableNode(),
-								registeredFromElement
-						)
-				);
-			}
-		}
 	}
 }

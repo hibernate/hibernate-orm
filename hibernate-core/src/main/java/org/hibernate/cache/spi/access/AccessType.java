@@ -2,7 +2,7 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
 package org.hibernate.cache.spi.access;
 
@@ -75,7 +75,7 @@ public enum AccessType {
 		}
 		// Check to see if making upper-case matches an enum name.
 		try {
-			return AccessType.valueOf( externalName.toUpperCase( Locale.ROOT) );
+			return AccessType.valueOf( externalName.toUpperCase( Locale.ROOT ) );
 		}
 		catch ( IllegalArgumentException e ) {
 			throw new UnknownAccessTypeException( externalName );

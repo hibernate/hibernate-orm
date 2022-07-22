@@ -6,9 +6,12 @@
  */
 package org.hibernate.orm.test.any.annotations;
 
+import java.util.List;
+
 import org.hibernate.LazyInitializationException;
 import org.hibernate.query.spi.QueryImplementor;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -16,6 +19,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -31,6 +35,7 @@ import static org.junit.Assert.fail;
 				LazyPropertySet.class,
 				PropertyMap.class,
 				PropertyList.class,
+				PropertyHolder.class,
 				CharProperty.class
 		}
 )
@@ -41,48 +46,68 @@ public class AnyTest {
 		scope.inTransaction(
 				session -> {
 					{
-						final PropertySet set1 = new PropertySet("string");
-						final Property property = new StringProperty("name", "Alex");
-						set1.setSomeProperty(property);
-						set1.addGeneralProperty(property);
-						session.save(set1);
+						final PropertySet set1 = new PropertySet( "string" );
+						final Property property = new StringProperty( "name", "Alex" );
+						set1.setSomeProperty( property );
+						set1.addGeneralProperty( property );
+						session.persist( set1 );
 
-						final PropertySet set2 = new PropertySet("integer");
-						final Property property2 = new IntegerProperty("age", 33);
-						set2.setSomeProperty(property2);
-						set2.addGeneralProperty(property2);
-						session.save(set2);
+						final PropertySet set2 = new PropertySet( "integer" );
+						final Property property2 = new IntegerProperty( "age", 33 );
+						set2.setSomeProperty( property2 );
+						set2.addGeneralProperty( property2 );
+						session.persist( set2 );
 					}
 
 					{
-						final PropertyMap map = new PropertyMap("sample");
-						map.getProperties().put("name", new StringProperty("name", "Alex"));
-						map.getProperties().put("age", new IntegerProperty("age", 33));
-						session.save(map);
+						final PropertyMap map = new PropertyMap( "sample" );
+						map.getProperties().put( "name", new StringProperty( "name", "Alex" ) );
+						map.getProperties().put( "age", new IntegerProperty( "age", 33 ) );
+						session.persist( map );
 					}
 
 					{
-						final PropertyList list = new PropertyList("sample");
-						final StringProperty stringProperty = new StringProperty("name", "Alex");
-						final IntegerProperty integerProperty = new IntegerProperty("age", 33);
-						final LongProperty longProperty = new LongProperty("distance", 121L);
-						final CharProperty charProp = new CharProperty("Est", 'E');
+						StringProperty nameProperty = new StringProperty( "name", "John Doe" );
+						session.persist( nameProperty );
 
-						list.setSomeProperty(longProperty);
+						PropertyHolder namePropertyHolder = new PropertyHolder();
+						namePropertyHolder.setId( 1 );
+						namePropertyHolder.setProperty( nameProperty );
 
-						list.addGeneralProperty(stringProperty);
-						list.addGeneralProperty(integerProperty);
-						list.addGeneralProperty(longProperty);
-						list.addGeneralProperty(charProp);
+						session.persist( namePropertyHolder );
 
-						session.save(list);
+						final IntegerProperty ageProperty = new IntegerProperty( "age", 23 );
+						session.persist( ageProperty );
+
+						PropertyHolder agePropertyHolder = new PropertyHolder();
+						agePropertyHolder.setId( 2 );
+						agePropertyHolder.setProperty( ageProperty );
+
+						session.persist( agePropertyHolder );
+					}
+
+					{
+						final PropertyList list = new PropertyList( "sample" );
+						final StringProperty stringProperty = new StringProperty( "name", "Alex" );
+						final IntegerProperty integerProperty = new IntegerProperty( "age", 33 );
+						final LongProperty longProperty = new LongProperty( "distance", 121L );
+						final CharProperty charProp = new CharProperty( "Est", 'E' );
+
+						list.setSomeProperty( longProperty );
+
+						list.addGeneralProperty( stringProperty );
+						list.addGeneralProperty( integerProperty );
+						list.addGeneralProperty( longProperty );
+						list.addGeneralProperty( charProp );
+
+						session.persist( list );
 					}
 
 					{
 						final LazyPropertySet set = new LazyPropertySet( "string" );
 						final Property property = new StringProperty( "name", "Alex" );
 						set.setSomeProperty( property );
-						session.save( set );
+						session.persist( set );
 					}
 				}
 		);
@@ -92,14 +117,66 @@ public class AnyTest {
 	public void dropTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "delete StringProperty" ).executeUpdate();
-					session.createQuery( "delete IntegerProperty" ).executeUpdate();
-					session.createQuery( "delete LongProperty" ).executeUpdate();
-					session.createQuery( "delete CharProperty" ).executeUpdate();
+					session.createMutationQuery( "delete StringProperty" ).executeUpdate();
+					session.createMutationQuery( "delete IntegerProperty" ).executeUpdate();
+					session.createMutationQuery( "delete LongProperty" ).executeUpdate();
+					session.createMutationQuery( "delete CharProperty" ).executeUpdate();
 
-					session.createQuery( "delete PropertyList" ).executeUpdate();
-					session.createQuery( "delete PropertyMap" ).executeUpdate();
-					session.createQuery( "delete PropertySet" ).executeUpdate();
+					session.createMutationQuery( "delete PropertyHolder" ).executeUpdate();
+					session.createMutationQuery( "delete PropertyList" ).executeUpdate();
+					session.createMutationQuery( "delete PropertyMap" ).executeUpdate();
+					session.createMutationQuery( "delete PropertySet" ).executeUpdate();
+					session.createMutationQuery( "delete LazyPropertySet" ).executeUpdate();
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-15323")
+	public void testHqlCollectionTypeQuery(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					List<PropertySet> propertySets = session.createQuery(
+									"select p from PropertySet p where type(p.generalProperties) = IntegerProperty ",
+									PropertySet.class ).list();
+					assertEquals( 1, propertySets.size() );
+
+					PropertySet propertySet = propertySets.get( 0 );
+					assertEquals( 1, propertySet.getGeneralProperties().size() );
+
+					assertEquals( "age", propertySet.getGeneralProperties().get( 0 ).getName() );
+
+					propertySets = session.createQuery(
+									"select p from PropertySet p where type(p.generalProperties) = StringProperty ",
+									PropertySet.class ).list();
+					assertEquals( 1, propertySets.size() );
+
+					propertySet = propertySets.get( 0 );
+					assertEquals( 1, propertySet.getGeneralProperties().size() );
+
+					assertEquals( "name", propertySet.getGeneralProperties().get( 0 ).getName() );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-15323")
+	public void testHqlTypeQuery(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					List<PropertyHolder> propertyHolders = session.createQuery(
+									"select p from PropertyHolder p where type(p.property) = IntegerProperty ",
+									PropertyHolder.class ).list();
+					assertEquals( 1, propertyHolders.size() );
+
+					assertEquals( "age", propertyHolders.get( 0 ).getProperty().getName() );
+
+					propertyHolders = session.createQuery(
+									"select p from PropertyHolder p where type(p.property) = StringProperty ",
+									PropertyHolder.class ).list();
+					assertEquals( 1, propertyHolders.size() );
+
+					assertEquals( "name", propertyHolders.get( 0 ).getProperty().getName() );
 				}
 		);
 	}
@@ -108,7 +185,10 @@ public class AnyTest {
 	public void testDefaultAnyAssociation(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<PropertySet> query = session.createQuery("select s from PropertySet s where name = :name", PropertySet.class);
+					final QueryImplementor<PropertySet> query = session.createQuery(
+							"select s from PropertySet s where name = :name",
+							PropertySet.class
+					);
 
 					{
 						final PropertySet result = query.setParameter( "name", "string" ).uniqueResult();
@@ -192,8 +272,11 @@ public class AnyTest {
 	public void testFetchEager(SessionFactoryScope scope) {
 		final PropertySet result = scope.fromTransaction(
 				session -> {
-					final PropertySet localResult = session.createQuery("select s from PropertySet s where name = :name", PropertySet.class)
-							.setParameter("name", "string")
+					final PropertySet localResult = session.createQuery(
+									"select s from PropertySet s where name = :name",
+									PropertySet.class
+							)
+							.setParameter( "name", "string" )
 							.getSingleResult();
 					assertNotNull( localResult );
 					assertNotNull( localResult.getSomeProperty() );
@@ -210,8 +293,11 @@ public class AnyTest {
 	public void testFetchLazy(SessionFactoryScope scope) {
 		final LazyPropertySet result = scope.fromTransaction(
 				session -> {
-					final LazyPropertySet localResult = session.createQuery("select s from LazyPropertySet s where name = :name", LazyPropertySet.class)
-							.setParameter("name", "string")
+					final LazyPropertySet localResult = session.createQuery(
+									"select s from LazyPropertySet s where name = :name",
+									LazyPropertySet.class
+							)
+							.setParameter( "name", "string" )
 							.getSingleResult();
 					assertNotNull( localResult );
 					assertNotNull( localResult.getSomeProperty() );

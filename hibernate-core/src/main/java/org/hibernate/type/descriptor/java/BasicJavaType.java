@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import org.hibernate.type.descriptor.jdbc.AdjustableJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeJavaClassMappings;
@@ -24,9 +25,13 @@ public interface BasicJavaType<T> extends JavaType<T> {
 	 */
 	default JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
 		// match legacy behavior
-		return indicators.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor(
+		final JdbcType descriptor = indicators.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor(
 				JdbcTypeJavaClassMappings.INSTANCE.determineJdbcTypeCodeForJavaClass( getJavaTypeClass() )
 		);
+		if ( descriptor instanceof AdjustableJdbcType ) {
+			return ( (AdjustableJdbcType) descriptor ).resolveIndicatedType( indicators, this );
+		}
+		return descriptor;
 	}
 
 	@Override

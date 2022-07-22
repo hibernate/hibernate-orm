@@ -12,6 +12,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.boot.MappingException;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmColumnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmIdBagCollectionType;
 import org.hibernate.boot.model.source.spi.AttributeSourceContainer;
 import org.hibernate.boot.model.source.spi.CollectionIdSource;
@@ -66,13 +67,13 @@ public class PluralAttributeSourceIdBagImpl extends AbstractPluralAttributeSourc
 					}
 
 					@Override
-					public List getColumnOrFormulaElements() {
+					public List<JaxbHbmColumnType> getColumnOrFormulaElements() {
 						return idBagMapping.getCollectionId().getColumn();
 					}
 				}
 		);
 
-		if ( !ColumnSource.class.isInstance( collectionIdRelationalValueSource ) ) {
+		if ( !(collectionIdRelationalValueSource instanceof ColumnSource) ) {
 			throw new MappingException(
 					String.format(
 							Locale.ENGLISH,

@@ -16,6 +16,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import jakarta.persistence.TemporalType;
@@ -38,6 +39,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -66,6 +68,7 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.InstantAsTimestampWithTimeZoneJdbcType;
@@ -74,6 +77,7 @@ import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
@@ -85,11 +89,13 @@ import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
 import static org.hibernate.query.sqm.TemporalUnit.MONTH;
 import static org.hibernate.query.sqm.TemporalUnit.QUARTER;
 import static org.hibernate.query.sqm.TemporalUnit.YEAR;
+import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.GEOGRAPHY;
+import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INET;
 import static org.hibernate.type.SqlTypes.JSON;
@@ -166,8 +172,8 @@ public class PostgreSQLDialect extends Dialect {
 			case BLOB:
 			case CLOB:
 			case NCLOB:
-				// use oid as the blob type on Postgres because
-				// the JDBC driver is rubbish
+				// use oid as the blob/clob type on Postgres because
+				// the JDBC driver doesn't allow using bytea/text through LOB APIs
 				return "oid";
 			// use bytea as the "long" binary type (that there is no
 			// real VARBINARY type in Postgres, so we always use this)
@@ -204,6 +210,16 @@ public class PostgreSQLDialect extends Dialect {
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+
+		// Register this type to be able to support Float[]
+		// The issue is that the JDBC driver can't handle createArrayOf( "float(24)", ... )
+		// It requires the use of "real" or "float4"
+		// Alternatively we could introduce a new API in Dialect for creating such base names
+		ddlTypeRegistry.addDescriptor(
+				CapacityDependentDdlType.builder( FLOAT, columnType( FLOAT ), castType( FLOAT ), this )
+						.withTypeCapacity( 24, "float4" )
+						.build()
+		);
 
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
@@ -249,30 +265,70 @@ public class PostgreSQLDialect extends Dialect {
 			int precision,
 			int scale,
 			JdbcTypeRegistry jdbcTypeRegistry) {
-		if ( jdbcTypeCode == OTHER ) {
-			switch ( columnTypeName ) {
-				case "uuid":
-					jdbcTypeCode = UUID;
-					break;
-				case "json":
-				case "jsonb":
-					jdbcTypeCode = JSON;
-					break;
-				case "xml":
-					jdbcTypeCode = SQLXML;
-					break;
-				case "inet":
-					jdbcTypeCode = INET;
-					break;
-				case "geometry":
-					jdbcTypeCode = GEOMETRY;
-					break;
-				case "geography":
-					jdbcTypeCode = GEOGRAPHY;
-					break;
-			}
+		switch ( jdbcTypeCode ) {
+			case OTHER:
+				switch ( columnTypeName ) {
+					case "uuid":
+						jdbcTypeCode = UUID;
+						break;
+					case "json":
+					case "jsonb":
+						jdbcTypeCode = JSON;
+						break;
+					case "xml":
+						jdbcTypeCode = SQLXML;
+						break;
+					case "inet":
+						jdbcTypeCode = INET;
+						break;
+					case "geometry":
+						jdbcTypeCode = GEOMETRY;
+						break;
+					case "geography":
+						jdbcTypeCode = GEOGRAPHY;
+						break;
+				}
+				break;
+			case ARRAY:
+				final JdbcType jdbcType = jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
+				// PostgreSQL names array types by prepending an underscore to the base name
+				if ( jdbcType instanceof ArrayJdbcType && columnTypeName.charAt( 0 ) == '_' ) {
+					final String componentTypeName = columnTypeName.substring( 1 );
+					final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
+					if ( sqlTypeCode != null ) {
+						return ( (ArrayJdbcType) jdbcType ).resolveType(
+								jdbcTypeRegistry.getTypeConfiguration(),
+								jdbcTypeRegistry.getTypeConfiguration().getServiceRegistry()
+										.getService( JdbcServices.class )
+										.getDialect(),
+								jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
+								null
+						);
+					}
+				}
+				return jdbcType;
 		}
 		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
+	}
+
+	@Override
+	protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
+		switch ( columnTypeName ) {
+			case "bool":
+				return Types.BOOLEAN;
+			case "float4":
+				// Use REAL instead of FLOAT to get Float as recommended Java type
+				return Types.REAL;
+			case "float8":
+				return Types.DOUBLE;
+			case "int2":
+				return Types.SMALLINT;
+			case "int4":
+				return Types.INTEGER;
+			case "int8":
+				return Types.BIGINT;
+		}
+		return super.resolveSqlTypeCode( columnTypeName, typeConfiguration );
 	}
 
 	@Override
@@ -505,6 +561,11 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public String getCurrentSchemaCommand() {
 		return "select current_schema()";
+	}
+
+	@Override
+	public boolean supportsDistinctFromPredicate() {
+		return true;
 	}
 
 	@Override
@@ -833,6 +894,11 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public int getMaxIdentifierLength() {
 		return 63;
+	}
+
+	@Override
+	public boolean supportsStandardArrays() {
+		return true;
 	}
 
 	@Override

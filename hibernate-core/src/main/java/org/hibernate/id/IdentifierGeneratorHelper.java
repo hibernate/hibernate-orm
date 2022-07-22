@@ -9,10 +9,12 @@ package org.hibernate.id;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.Objects;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
@@ -95,16 +97,16 @@ public final class IdentifierGeneratorHelper {
 	 */
 	public static Object get(ResultSet rs, String identifier, Type type, Dialect dialect)
 			throws SQLException, IdentifierGenerationException {
-		if ( ResultSetIdentifierConsumer.class.isInstance( type ) ) {
+		if ( type instanceof ResultSetIdentifierConsumer ) {
 			return ( (ResultSetIdentifierConsumer) type ).consumeIdentifier( rs );
 		}
-		if ( CustomType.class.isInstance( type ) ) {
-			final CustomType<Object> customType = (CustomType<Object>) type;
-			if ( ResultSetIdentifierConsumer.class.isInstance( customType.getUserType() ) ) {
+		if ( type instanceof CustomType ) {
+			final CustomType<?> customType = (CustomType<?>) type;
+			if (customType.getUserType() instanceof ResultSetIdentifierConsumer) {
 				return ( (ResultSetIdentifierConsumer) customType.getUserType() ).consumeIdentifier( rs );
 			}
 		}
-		ResultSetMetaData resultSetMetaData = null;
+		ResultSetMetaData resultSetMetaData;
 		int columnCount = 1;
 		try {
 			resultSetMetaData = rs.getMetaData();
@@ -114,7 +116,7 @@ public final class IdentifierGeneratorHelper {
 			//Oracle driver will throw NPE
 		}
 
-		Class clazz = type.getReturnedClass();
+		Class<?> clazz = type.getReturnedClass();
 		if ( columnCount == 1 ) {
 			if ( clazz == Long.class ) {
 				return rs.getLong( 1 );
@@ -129,10 +131,10 @@ public final class IdentifierGeneratorHelper {
 				return rs.getString( 1 );
 			}
 			else if ( clazz == BigInteger.class ) {
-				return rs.getBigDecimal( 1 ).setScale( 0, BigDecimal.ROUND_UNNECESSARY ).toBigInteger();
+				return rs.getBigDecimal( 1 ).setScale( 0, RoundingMode.UNNECESSARY ).toBigInteger();
 			}
 			else if ( clazz == BigDecimal.class ) {
-				return rs.getBigDecimal( 1 ).setScale( 0, BigDecimal.ROUND_UNNECESSARY );
+				return rs.getBigDecimal( 1 ).setScale( 0, RoundingMode.UNNECESSARY );
 			}
 			else {
 				throw new IdentifierGenerationException(
@@ -153,7 +155,7 @@ public final class IdentifierGeneratorHelper {
 		}
 	}
 
-	private static Object extractIdentifier(ResultSet rs, String identifier, Type type, Class clazz)
+	private static Object extractIdentifier(ResultSet rs, String identifier, Type type, Class<?> clazz)
 			throws SQLException {
 		if ( clazz == Long.class ) {
 			return rs.getLong( identifier );
@@ -168,10 +170,10 @@ public final class IdentifierGeneratorHelper {
 			return rs.getString( identifier );
 		}
 		else if ( clazz == BigInteger.class ) {
-			return rs.getBigDecimal( identifier ).setScale( 0, BigDecimal.ROUND_UNNECESSARY ).toBigInteger();
+			return rs.getBigDecimal( identifier ).setScale( 0, RoundingMode.UNNECESSARY ).toBigInteger();
 		}
 		else if ( clazz == BigDecimal.class ) {
-			return rs.getBigDecimal( identifier ).setScale( 0, BigDecimal.ROUND_UNNECESSARY );
+			return rs.getBigDecimal( identifier ).setScale( 0, RoundingMode.UNNECESSARY );
 		}
 		else {
 			throw new IdentifierGenerationException(
@@ -250,10 +252,10 @@ public final class IdentifierGeneratorHelper {
 	}
 
 	public static class BasicHolder implements IntegralDataTypeHolder {
-		private final Class exactType;
+		private final Class<?> exactType;
 		private long value = Long.MIN_VALUE;
 
-		public BasicHolder(Class exactType) {
+		public BasicHolder(Class<?> exactType) {
 			this.exactType = exactType;
 			if ( exactType != Long.class && exactType != Integer.class && exactType != Short.class ) {
 				throw new IdentifierGenerationException( "Invalid type for basic integral holder : " + exactType );
@@ -420,7 +422,7 @@ public final class IdentifierGeneratorHelper {
 			if ( resultSet.wasNull() ) {
 				return initialize( defaultValue );
 			}
-			this.value = rsValue.setScale( 0, BigDecimal.ROUND_UNNECESSARY ).toBigInteger();
+			this.value = rsValue.setScale( 0, RoundingMode.UNNECESSARY ).toBigInteger();
 			return this;
 		}
 
@@ -539,14 +541,12 @@ public final class IdentifierGeneratorHelper {
 
 			BigIntegerHolder that = (BigIntegerHolder) o;
 
-			return this.value == null
-					? that.value == null
-					: value.equals( that.value );
+			return Objects.equals( value, that.value );
 		}
 
 		@Override
 		public int hashCode() {
-			return value != null ? value.hashCode() : 0;
+			return Objects.hashCode( value );
 		}
 	}
 
@@ -563,7 +563,7 @@ public final class IdentifierGeneratorHelper {
 			if ( resultSet.wasNull() ) {
 				return initialize( defaultValue );
 			}
-			this.value = rsValue.setScale( 0, BigDecimal.ROUND_UNNECESSARY );
+			this.value = rsValue.setScale( 0, RoundingMode.UNNECESSARY );
 			return this;
 		}
 
@@ -682,14 +682,12 @@ public final class IdentifierGeneratorHelper {
 
 			BigDecimalHolder that = (BigDecimalHolder) o;
 
-			return this.value == null
-					? that.value == null
-					: this.value.equals( that.value );
+			return Objects.equals( this.value, that.value );
 		}
 
 		@Override
 		public int hashCode() {
-			return value != null ? value.hashCode() : 0;
+			return Objects.hashCode( value );
 		}
 	}
 

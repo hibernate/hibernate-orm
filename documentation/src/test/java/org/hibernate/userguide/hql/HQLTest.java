@@ -32,7 +32,6 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.QueryProducer;
 import org.hibernate.type.StandardBasicTypes;
@@ -304,6 +303,23 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 				Person.class)
 			.getResultList();
 			//end::hql-multiple-same-root-reference-jpql-example[]
+			assertEquals(1, persons.size());
+		});
+	}
+
+	@Test
+	public void test_hql_explicit_root_join_example_1() {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			//tag::hql-explicit-root-join-example[]
+			List<Person> persons = entityManager.createQuery(
+				"select distinct pr " +
+				"from Person pr " +
+				"join Phone ph on ph.person = pr " +
+				"where ph.type = :phoneType",
+				Person.class)
+			.setParameter("phoneType", PhoneType.MOBILE)
+			.getResultList();
+			//end::hql-explicit-root-join-example[]
 			assertEquals(1, persons.size());
 		});
 	}
@@ -2020,7 +2036,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = TiDBDialect.class, comment = "TiDB db does not support subqueries for ON condition")
+	@RequiresDialectFeature(DialectChecks.SupportsSubqueryInOnClause.class)
 	public void test_hql_collection_index_operator_example_3() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-collection-index-operator-example[]
@@ -3041,6 +3057,51 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			.setReadOnly(true)
 			.getResultList();
 			//end::hql-read-only-entities-native-example[]
+		});
+	}
+
+	@Test
+	public void test_hql_derived_root_example() {
+
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			//tag::hql-derived-root-example[]
+			List<Tuple> calls = entityManager.createQuery(
+				"select d.owner, d.payed " +
+				"from (" +
+				"  select p.person as owner, c.payment is not null as payed " +
+				"  from Call c " +
+				"  join c.phone p " +
+				"  where p.number = :phoneNumber) d",
+				Tuple.class)
+			.setParameter("phoneNumber", "123-456-7890")
+			.getResultList();
+			//end::hql-derived-root-example[]
+		});
+	}
+
+	@Test
+	@RequiresDialectFeature({
+			DialectChecks.SupportsSubqueryInOnClause.class,
+			DialectChecks.SupportsOrderByInCorrelatedSubquery.class
+	})
+	public void test_hql_derived_join_example() {
+
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			//tag::hql-derived-join-example[]
+			List<Tuple> calls = entityManager.createQuery(
+				"select longest.duration " +
+				"from Phone p " +
+				"left join lateral (" +
+				"  select c.duration as duration " +
+				"  from p.calls c" +
+				"  order by c.duration desc" +
+				"  limit 1 " +
+				"  ) longest " +
+				"where p.number = :phoneNumber",
+				Tuple.class)
+			.setParameter("phoneNumber", "123-456-7890")
+			.getResultList();
+			//end::hql-derived-join-example[]
 		});
 	}
 }

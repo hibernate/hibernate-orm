@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
 package org.hibernate.boot.xsd;
 
@@ -22,6 +22,12 @@ public class MappingXsdSupport {
 	 * Singleton access
 	 */
 	public static final MappingXsdSupport INSTANCE = new MappingXsdSupport();
+
+	public static final XsdDescriptor _310 = LocalXsdResolver.buildXsdDescriptor(
+			"org/hibernate/xsd/mapping/mapping-3.1.0.xsd",
+			"3.1",
+			"http://www.hibernate.org/xsd/orm/mapping"
+	);
 
 	public static final XsdDescriptor jpa10 = LocalXsdResolver.buildXsdDescriptor(
 			"org/hibernate/jpa/orm_1_0.xsd",
@@ -73,6 +79,10 @@ public class MappingXsdSupport {
 
 	private MappingXsdSupport() {
 		//Do not construct new instances
+	}
+
+	public static XsdDescriptor latestDescriptor() {
+		return _310;
 	}
 
 	public static XsdDescriptor latestJpaDescriptor() {

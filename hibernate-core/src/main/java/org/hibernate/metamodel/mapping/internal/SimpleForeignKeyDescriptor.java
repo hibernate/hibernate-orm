@@ -18,6 +18,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -315,10 +316,13 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			SqlAstCreationContext creationContext) {
 		final TableReference lhsTableReference = targetSideTableGroup.resolveTableReference(
 				targetSideTableGroup.getNavigablePath(),
-				targetSide.getModelPart().getContainingTableExpression()
+				targetSide.getModelPart().getContainingTableExpression(),
+				false
 		);
 		final TableReference rhsTableKeyReference = keySideTableGroup.resolveTableReference(
-				keySide.getModelPart().getContainingTableExpression()
+				null,
+				keySide.getModelPart().getContainingTableExpression(),
+				false
 		);
 
 		return generateJoinPredicate(
@@ -349,23 +353,6 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		final String targetExpression = targetSide.getModelPart().getSelectionExpression();
 		return ( lhs.equals( keyExpression ) && rhs.equals( targetExpression ) )
 				|| ( lhs.equals( targetExpression ) && rhs.equals( keyExpression ) );
-	}
-
-	protected TableReference getTableReference(TableGroup lhs, TableGroup tableGroup, String table) {
-		final NavigablePath navigablePath = lhs.getNavigablePath().append( getTargetPart().getFetchableName() );
-		if ( lhs.getPrimaryTableReference().getTableReference( navigablePath, table ) != null ) {
-			return lhs.getPrimaryTableReference();
-		}
-		else if ( tableGroup.getPrimaryTableReference().getTableReference( navigablePath, table ) != null ) {
-			return tableGroup.getPrimaryTableReference();
-		}
-
-		final TableReference tableReference = lhs.resolveTableReference( navigablePath, table );
-		if ( tableReference != null ) {
-			return tableReference;
-		}
-
-		throw new IllegalStateException( "Could not resolve binding for table `" + table + "`" );
 	}
 
 	@Override
@@ -410,6 +397,9 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		}
 		else {
 			modelPart = targetSide.getModelPart();
+		}
+		if ( modelPart instanceof EntityIdentifierMapping ) {
+			return ( (EntityIdentifierMapping) modelPart ).getIdentifierIfNotUnsaved( targetObject, session );
 		}
 		return ( (PropertyBasedMapping) modelPart ).getPropertyAccess().getGetter().get( targetObject );
 	}

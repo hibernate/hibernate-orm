@@ -232,6 +232,11 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForArray() {
+		return buildingContext.getPreferredSqlTypeCodeForArray();
+	}
+
+	@Override
 	public boolean isNationalized() {
 		return isNationalized;
 	}
@@ -719,10 +724,10 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			this.temporalPrecision = null;
 		}
 
-		if ( javaTypeClass.isEnum() ) {
-			final Enumerated enumeratedAnn = attributeDescriptor.getAnnotation( Enumerated.class );
-			if ( enumeratedAnn != null ) {
-				this.enumType = enumeratedAnn.value();
+		final Enumerated enumeratedAnn = attributeDescriptor.getAnnotation( Enumerated.class );
+		if ( enumeratedAnn != null ) {
+			this.enumType = enumeratedAnn.value();
+			if ( javaTypeClass.isEnum() || javaTypeClass.isArray() && javaTypeClass.getComponentType().isEnum() ) {
 				if ( this.enumType == null ) {
 					throw new IllegalStateException(
 							"jakarta.persistence.EnumType was null on @jakarta.persistence.Enumerated " +
@@ -731,9 +736,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 					);
 				}
 			}
-		}
-		else {
-			if ( attributeDescriptor.isAnnotationPresent( Enumerated.class ) ) {
+			else {
 				throw new AnnotationException(
 						String.format(
 								"Attribute [%s.%s] was annotated as enumerated, but its java type is not an enum [%s]",
@@ -743,6 +746,8 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 						)
 				);
 			}
+		}
+		else {
 			this.enumType = null;
 		}
 

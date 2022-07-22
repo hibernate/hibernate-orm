@@ -9,7 +9,7 @@ package org.hibernate.metamodel.model.convert.spi;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.hibernate.annotations.Remove;
+import org.hibernate.Remove;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;

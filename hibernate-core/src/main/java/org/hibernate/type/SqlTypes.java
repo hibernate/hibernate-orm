@@ -408,6 +408,8 @@ public class SqlTypes {
 	 * The constant in the Java programming language, sometimes referred to
 	 * as a type code, that identifies the generic SQL type
 	 * {@code UUID}.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#PREFERRED_UUID_JDBC_TYPE
 	 */
 	public static final int UUID = 3000;
 

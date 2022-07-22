@@ -11,9 +11,6 @@ plugins {
 	id 'java-gradle-plugin'
 	id 'com.gradle.plugin-publish' version '0.20.0'
 
-	// disable the TestKit tests for the time being as it is having trouble
-	// which unfortunately also means we do not get any functional testing of the plugin
-//	id 'com.github.sebersole.testkit-junit5' version '1.2.0'
 	id 'checkstyle'
 
 	// for local publishing
@@ -32,12 +29,22 @@ ext {
 }
 
 dependencies {
-	implementation project( ':hibernate-core' )
+	implementation project(':hibernate-core')
 	implementation libs.byteBuddy
+	implementation jakartaLibs.jaxbApi
+
 	implementation gradleApi()
+	implementation localGroovy()
+
 	// for Gradle
 	implementation jakartaLibs.inject
 	implementation localGroovy()
+
+	testImplementation gradleTestKit()
+	testImplementation testLibs.assertjCore
+	testImplementation testLibs.junit5Api
+
+	testRuntimeOnly testLibs.junit5Engine
 }
 
 gradlePlugin {
@@ -70,6 +77,10 @@ pluginBundle {
 	}
 }
 
+test {
+	useJUnitPlatform()
+}
+
 // Publish to the Gradle Plugin Portal
 tasks.release.dependsOn tasks.publishPlugins
 
@@ -95,7 +106,7 @@ gradle.taskGraph.whenReady {
 			logger.info( "Task `{}` had null repository", t.path )
 		}
 		else if ( t.repository.name == "sonatype" ) {
-			logger.lifecycle( "Disabling task `{}` because it publishes to Sonatype", t.path )
+			logger.debug( "Disabling task `{}` because it publishes to Sonatype", t.path )
 			t.enabled = false
 		}
 	}

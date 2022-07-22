@@ -44,6 +44,8 @@ import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.CompositeType;
 import org.hibernate.annotations.CompositeTypeRegistration;
 import org.hibernate.annotations.CompositeTypeRegistrations;
+import org.hibernate.annotations.ConverterRegistration;
+import org.hibernate.annotations.ConverterRegistrations;
 import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.DialectOverride.OverridesAnnotation;
 import org.hibernate.annotations.DiscriminatorFormula;
@@ -72,11 +74,11 @@ import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.annotations.ManyToAny;
-import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.MapKeyJavaType;
 import org.hibernate.annotations.MapKeyJdbcType;
 import org.hibernate.annotations.MapKeyJdbcTypeCode;
 import org.hibernate.annotations.MapKeyMutability;
+import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
@@ -100,6 +102,7 @@ import org.hibernate.annotations.common.reflection.XPackage;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -143,8 +146,8 @@ import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UnionSubclass;
-import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.internal.PropertyAccessStrategyCompositeUserTypeImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
@@ -155,6 +158,7 @@ import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
@@ -405,6 +409,7 @@ public final class AnnotationBinder {
 		handleTypeDescriptorRegistrations( pckg, context );
 		bindEmbeddableInstantiatorRegistrations( pckg, context );
 		bindCompositeUserTypeRegistrations( pckg, context );
+		handleConverterRegistrations( pckg, context );
 
 		bindGenericGenerators( pckg, context );
 		bindQueries( pckg, context );
@@ -665,6 +670,7 @@ public final class AnnotationBinder {
 		handleTypeDescriptorRegistrations( clazzToProcess, context );
 		bindEmbeddableInstantiatorRegistrations( clazzToProcess, context );
 		bindCompositeUserTypeRegistrations( clazzToProcess, context );
+		handleConverterRegistrations( clazzToProcess, context );
 
 		// check properties
 		final InheritanceState.ElementsToProcess elementsToProcess = inheritanceState.getElementsToProcess();
@@ -1150,6 +1156,34 @@ public final class AnnotationBinder {
 		context.getMetadataCollector().registerCompositeUserType(
 				annotation.embeddableClass(),
 				annotation.userType()
+		);
+	}
+
+	private static void handleConverterRegistrations(XAnnotatedElement container, MetadataBuildingContext context) {
+		final ConverterRegistration singular = container.getAnnotation( ConverterRegistration.class );
+		if ( singular != null ) {
+			handleConverterRegistration( singular, context );
+			return;
+		}
+
+		final ConverterRegistrations plural = container.getAnnotation( ConverterRegistrations.class );
+		if ( plural != null ) {
+			final ConverterRegistration[] registrations = plural.value();
+			for ( int i = 0; i < registrations.length; i++ ) {
+				handleConverterRegistration( registrations[i], context );
+			}
+		}
+	}
+
+	private static void handleConverterRegistration(ConverterRegistration registration, MetadataBuildingContext context) {
+		final InFlightMetadataCollector metadataCollector = context.getMetadataCollector();
+		metadataCollector.addRegisteredConversion(
+				new RegisteredConversion(
+						registration.domainType(),
+						registration.converter(),
+						registration.autoApply(),
+						context
+				)
 		);
 	}
 
@@ -1669,7 +1703,39 @@ public final class AnnotationBinder {
 
 		final JavaType<Object> jtd = typeConfiguration.getJavaTypeRegistry().findDescriptor( type );
 		if ( jtd != null ) {
-			final JdbcType jdbcType = jtd.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
+			final JdbcType jdbcType = jtd.getRecommendedJdbcType(
+					new JdbcTypeIndicators() {
+						@Override
+						public TypeConfiguration getTypeConfiguration() {
+							return typeConfiguration;
+						}
+
+						@Override
+						public int getPreferredSqlTypeCodeForBoolean() {
+							return context.getPreferredSqlTypeCodeForBoolean();
+						}
+
+						@Override
+						public int getPreferredSqlTypeCodeForDuration() {
+							return context.getPreferredSqlTypeCodeForDuration();
+						}
+
+						@Override
+						public int getPreferredSqlTypeCodeForUuid() {
+							return context.getPreferredSqlTypeCodeForUuid();
+						}
+
+						@Override
+						public int getPreferredSqlTypeCodeForInstant() {
+							return context.getPreferredSqlTypeCodeForInstant();
+						}
+
+						@Override
+						public int getPreferredSqlTypeCodeForArray() {
+							return context.getPreferredSqlTypeCodeForArray();
+						}
+					}
+			);
 			return typeConfiguration.getBasicTypeRegistry().resolve( jtd, jdbcType );
 		}
 
@@ -1842,7 +1908,7 @@ public final class AnnotationBinder {
 				if ( incomingIdProperty != null && existingIdProperty == null ) {
 					throw new MappingException(
 							String.format(
-									"You cannot override the [%s] non-identifier property from the [%s] base class or @MappedSuperclass and make it an identifier in the [%s] subclass!",
+									"You cannot override the [%s] non-identifier property from the [%s] base class or @MappedSuperclass and make it an identifier in the [%s] subclass",
 									propertyData.getProperty().getName(),
 									propertyData.getProperty().getDeclaringClass().getName(),
 									property.getDeclaringClass().getName()
@@ -3436,6 +3502,7 @@ public final class AnnotationBinder {
 					handleTypeDescriptorRegistrations( property, buildingContext );
 					bindEmbeddableInstantiatorRegistrations( property, buildingContext );
 					bindCompositeUserTypeRegistrations( property, buildingContext );
+					handleConverterRegistrations( property, buildingContext );
 				}
 				else {
 					Map<String, IdentifierGeneratorDefinition> localGenerators =

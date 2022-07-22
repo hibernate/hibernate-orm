@@ -178,6 +178,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	private final transient ValueHandlingMode criteriaValueHandlingMode;
 	private transient BasicType<Boolean> booleanType;
 	private transient BasicType<Integer> integerType;
+	private transient BasicType<Character> characterType;
 
 	public SqmCriteriaNodeBuilder(
 			String uuid,
@@ -223,6 +224,15 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return this.integerType = getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
 		}
 		return integerType;
+	}
+
+	@Override
+	public BasicType<Character> getCharacterType() {
+		final BasicType<Character> characterType = this.characterType;
+		if ( characterType == null ) {
+			return this.characterType = getTypeConfiguration().getBasicTypeForJavaType( Character.class );
+		}
+		return characterType;
 	}
 
 	@Override
@@ -304,7 +314,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		queryParts.add( ( (SqmSelectQuery<T>) query1 ).getQueryPart() );
 		for ( CriteriaQuery<?> query : queries ) {
 			if ( query.getResultType() != resultType ) {
-				throw new IllegalArgumentException( "Result type of all operands must match!" );
+				throw new IllegalArgumentException( "Result type of all operands must match" );
 			}
 			queryParts.add( ( (SqmSelectQuery<T>) query ).getQueryPart() );
 		}
@@ -753,7 +763,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public JpaExpression<Double> power(Expression<? extends Number> x, Number y) {
 		return getFunctionDescriptor( "power" ).generateSqmExpression(
-				Arrays.asList( (SqmExpression<?>) x, (SqmExpression<?>) y),
+				Arrays.asList( (SqmExpression<?>) x, value( y ) ),
 				null,
 				queryEngine,
 				getJpaMetamodel().getTypeConfiguration()

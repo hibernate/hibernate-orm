@@ -129,10 +129,12 @@ import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.Query;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.UnknownSqlResultSetMappingException;
+import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
@@ -148,6 +150,7 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TransactionRequiredException;
+import org.hibernate.type.descriptor.WrapperOptions;
 
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
@@ -165,11 +168,11 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 
 /**
- * Concrete implementation of a the {@link Session} API.
+ * Concrete implementation of the {@link Session} API.
  * <p/>
  * Exposes two interfaces:<ul>
  * <li>{@link Session} to the application</li>
- * <li>{@link SessionImplementor} to other Hibernate components (SPI)</li>
+ * <li>{@link SessionImplementor} and {@link EventSource} to other Hibernate components (SPI)</li>
  * </ul>
  * <p/>
  * This class is not thread-safe.
@@ -181,8 +184,9 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
  * @author Sanne Grinovero
  */
 public class SessionImpl
-		extends AbstractSessionImpl
-		implements SessionImplementor, LoadAccessContext, EventSource {
+		extends AbstractSharedSessionContract
+		implements Serializable, SharedSessionContractImplementor, JdbcSessionOwner, SessionImplementor, EventSource,
+				TransactionCoordinatorBuilder.Options, WrapperOptions, LoadAccessContext {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( SessionImpl.class );
 
 	// Defaults to null which means the properties are the default
@@ -310,7 +314,6 @@ public class SessionImpl
 		);
 		if ( specQueryTimeout != null ) {
 			query.setHint( HINT_SPEC_QUERY_TIMEOUT, specQueryTimeout );
-			query.setHint( HINT_JAVAEE_QUERY_TIMEOUT, specQueryTimeout );
 		}
 	}
 
@@ -326,7 +329,6 @@ public class SessionImpl
 		);
 		if ( specLockTimeout != null ) {
 			query.setHint( HINT_SPEC_LOCK_TIMEOUT, specLockTimeout );
-			query.setHint( HINT_JAVAEE_LOCK_TIMEOUT, specLockTimeout );
 		}
 	}
 
@@ -1626,8 +1628,7 @@ public class SessionImpl
 		}
 
 		try {
-			//noinspection RedundantClassCall
-			if ( !HibernateProxy.class.isInstance( object ) && persistenceContext.getEntry( object ) == null ) {
+			if ( !(object instanceof HibernateProxy) && persistenceContext.getEntry( object ) == null ) {
 				// check if it is an entity -> if not throw an exception (per JPA)
 				try {
 					getFactory().getRuntimeMetamodels()

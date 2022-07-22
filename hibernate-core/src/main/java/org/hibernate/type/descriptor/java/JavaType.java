@@ -12,6 +12,7 @@ import java.lang.reflect.Type;
 import java.util.Comparator;
 import java.util.Objects;
 
+import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -253,8 +254,24 @@ public interface JavaType<T> extends Serializable {
 	/**
 	 * Creates the {@link JavaType} for the given {@link ParameterizedType} based on this {@link JavaType} registered
 	 * for the raw type.
+	 *
+	 * @deprecated Use {@link #createJavaType(ParameterizedType, TypeConfiguration)} instead
 	 */
+	@Deprecated(since = "6.1")
 	default JavaType<T> createJavaType(ParameterizedType parameterizedType) {
 		return this;
+	}
+
+	/**
+	 * Creates the {@link JavaType} for the given {@link ParameterizedType} based on this {@link JavaType} registered
+	 * for the raw type.
+	 *
+	 * @since 6.1
+	 */
+	@Incubating
+	default JavaType<T> createJavaType(
+			ParameterizedType parameterizedType,
+			TypeConfiguration typeConfiguration) {
+		return createJavaType( parameterizedType );
 	}
 }

@@ -16,7 +16,6 @@ import org.gradle.api.Project;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.logging.Logger;
-import org.gradle.work.InputChanges;
 
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
@@ -24,7 +23,7 @@ import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
 import org.hibernate.cfg.Environment;
-import org.hibernate.orm.tooling.gradle.Helper;
+import org.hibernate.orm.tooling.gradle.HibernateOrmSpec;
 
 import static org.hibernate.orm.tooling.gradle.Helper.determineClassName;
 
@@ -34,43 +33,35 @@ import static org.hibernate.orm.tooling.gradle.Helper.determineClassName;
 public class EnhancementHelper {
 	public static void enhance(
 			DirectoryProperty classesDirectoryProperty,
-			InputChanges inputChanges,
-			EnhancementSpec enhancementDsl,
+			ClassLoader classLoader,
+			HibernateOrmSpec ormDsl,
 			Project project) {
-		final Directory classesDir = classesDirectoryProperty.get();
-		final File classesDirFile = classesDir.getAsFile();
+		final Directory classesDirectory = classesDirectoryProperty.get();
+		final File classesDir = classesDirectory.getAsFile();
 
-		final Enhancer enhancer = generateEnhancer( classesDir, enhancementDsl );
+		final Enhancer enhancer = generateEnhancer( classLoader, ormDsl );
 
-		final String classesDirPath = classesDirFile.getAbsolutePath();
+		walk( classesDir, classesDir, enhancer, project );
+	}
 
-		inputChanges.getFileChanges( classesDirectoryProperty ).forEach(
-				change -> {
-					switch ( change.getChangeType() ) {
-						case ADDED:
-						case MODIFIED: {
-							final File changedFile = change.getFile();
-							if ( changedFile.getName().endsWith( ".class" ) ) {
-								final String classFilePath = changedFile.getAbsolutePath();
-								if ( classFilePath.startsWith( classesDirPath ) ) {
-									// we found the directory it came from
-									//		-use that to determine the class name
-									enhance( changedFile, determineClassName( classesDirFile, changedFile ), enhancer, project );
-									break;
-								}
-							}
-							break;
-						}
-						case REMOVED: {
-							// nothing to do
-							break;
-						}
-						default: {
-							throw new UnsupportedOperationException( "Unexpected ChangeType : " + change.getChangeType().name() );
-						}
-					}
+	private static void walk(File classesDir, File dir, Enhancer enhancer, Project project) {
+		for ( File subLocation : dir.listFiles() ) {
+			if ( subLocation.isDirectory() ) {
+				walk( classesDir, subLocation, enhancer, project );
+			}
+			else if ( subLocation.isFile() && subLocation.getName().endsWith( ".class" ) ) {
+				final String className = determineClassName( classesDir, subLocation );
+				final long lastModified = subLocation.lastModified();
+
+				enhance( subLocation, className, enhancer, project );
+
+				final boolean timestampReset = subLocation.setLastModified( lastModified );
+				if ( !timestampReset ) {
+					project.getLogger().debug( "`{}`.setLastModified failed", project.relativePath( subLocation ) );
 				}
-		);
+
+			}
+		}
 	}
 
 	private static void enhance(
@@ -97,8 +88,8 @@ public class EnhancementHelper {
 		}
 	}
 
-	private static Enhancer generateEnhancer(Directory classesDir, EnhancementSpec enhancementDsl) {
-		final ClassLoader classLoader = Helper.toClassLoader( classesDir );
+	public static Enhancer generateEnhancer(ClassLoader classLoader, HibernateOrmSpec ormDsl) {
+		final EnhancementSpec enhancementDsl = ormDsl.getEnhancement();
 
 		final EnhancementContext enhancementContext = new DefaultEnhancementContext() {
 			@Override

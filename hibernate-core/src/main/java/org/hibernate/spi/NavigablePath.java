@@ -140,6 +140,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 			if ( ! Objects.equals( getAlias(), otherNavigablePath.getAlias() ) ) {
 				return false;
 			}
+			return Objects.equals( getRealParent(), otherNavigablePath.getRealParent() );
 		}
 
 		return Objects.equals( getParent(), otherPath.getParent() );
@@ -191,6 +192,11 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		return false;
 	}
 
+	public boolean pathsMatch(NavigablePath p) {
+		return this == p || p != null && localName.equals( p.localName )
+				&& ( parent == null ? p.parent == null && Objects.equals( alias, p.alias ) : parent.pathsMatch( p.parent ) );
+	}
+
 	/**
 	 * Ignores aliases in the resulting String
 	 */
@@ -230,14 +236,15 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 
 		public String resolve() {
 			if ( buffer == null ) {
-				return null;
+				// Return an empty string instead of null in case the two navigable paths are equal
+				return matchedBase ? "" : null;
 			}
 			return buffer.toString();
 		}
 	}
 
 	protected void relativize(NavigablePath base, RelativePathCollector collector) {
-		if ( this == base ) {
+		if ( this.equals( base ) ) {
 			collector.matchedBase = true;
 			return;
 		}

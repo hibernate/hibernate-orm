@@ -8,6 +8,7 @@ package org.hibernate.type.descriptor.jdbc;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
@@ -34,7 +35,23 @@ public class NullJdbcType implements JdbcType {
 
 	@Override
 	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
-		return null;
+		return new BasicExtractor<X>(javaType, this ) {
+			@Override
+			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+				return null;
+			}
+
+			@Override
+			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+				return null;
+			}
+
+			@Override
+			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
+					throws SQLException {
+				return null;
+			}
+		};
 	}
 
 	@Override
@@ -53,12 +70,12 @@ public class NullJdbcType implements JdbcType {
 
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) {
-				throw new UnsupportedOperationException( getClass().getName() + " should only be used to bind null!" );
+				throw new UnsupportedOperationException( getClass().getName() + " should only be used to bind null" );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options) {
-				throw new UnsupportedOperationException( getClass().getName() + " should only be used to bind null!" );
+				throw new UnsupportedOperationException( getClass().getName() + " should only be used to bind null" );
 			}
 		};
 	}

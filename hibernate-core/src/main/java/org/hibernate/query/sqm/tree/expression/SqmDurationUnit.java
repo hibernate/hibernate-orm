@@ -14,12 +14,11 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.SqmVisitableNode;
 
 /**
  * @author Gavin King
  */
-public class SqmDurationUnit<T> extends AbstractSqmNode implements SqmTypedNode<T>, SqmVisitableNode {
+public class SqmDurationUnit<T> extends AbstractSqmNode implements SqmTypedNode<T> {
 	private final TemporalUnit unit;
 	private final ReturnableType<T> type;
 

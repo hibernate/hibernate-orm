@@ -2,14 +2,11 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
 package org.hibernate.boot.jaxb.internal;
 
 import java.io.InputStream;
-import jakarta.xml.bind.JAXBContext;
-import jakarta.xml.bind.JAXBException;
-import jakarta.xml.bind.Unmarshaller;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -19,41 +16,36 @@ import javax.xml.transform.Source;
 import javax.xml.validation.Schema;
 
 import org.hibernate.boot.MappingException;
+import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.internal.stax.BufferedXMLEventReader;
 import org.hibernate.boot.jaxb.internal.stax.LocalXmlResourceResolver;
 import org.hibernate.boot.jaxb.spi.Binder;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-
 import org.hibernate.internal.util.StringHelper;
+
 import org.jboss.logging.Logger;
+
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Unmarshaller;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractBinder implements Binder {
+public abstract class AbstractBinder<T> implements Binder<T> {
 	private static final Logger log = Logger.getLogger( AbstractBinder.class );
 
 	private final LocalXmlResourceResolver xmlResourceResolver;
-	private final boolean validateXml;
 
-	@SuppressWarnings("unused")
-	protected AbstractBinder(ClassLoaderService classLoaderService) {
-		this( classLoaderService, true );
+	protected AbstractBinder(ResourceStreamLocator resourceStreamLocator) {
+		this.xmlResourceResolver = new LocalXmlResourceResolver( resourceStreamLocator );
 	}
 
-	protected AbstractBinder(ClassLoaderService classLoaderService, boolean validateXml) {
-		this.xmlResourceResolver = new LocalXmlResourceResolver( classLoaderService );
-		this.validateXml = validateXml;
-	}
-
-	public boolean isValidationEnabled() {
-		return validateXml;
-	}
+	public abstract boolean isValidationEnabled();
 
 	@Override
-	public Binding bind(InputStream stream, Origin origin) {
+	public <X extends T> Binding<X> bind(InputStream stream, Origin origin) {
 		final XMLEventReader eventReader = createReader( stream, origin );
 		try {
 			return doBind( eventReader, origin );
@@ -81,7 +73,7 @@ public abstract class AbstractBinder implements Binder {
 	}
 
 	@Override
-	public Binding bind(Source source, Origin origin) {
+	public <X extends T> Binding<X> bind(Source source, Origin origin) {
 		final XMLEventReader eventReader = createReader( source, origin );
 		return doBind( eventReader, origin );
 	}
@@ -98,7 +90,7 @@ public abstract class AbstractBinder implements Binder {
 		}
 	}
 
-	private Binding doBind(XMLEventReader eventReader, Origin origin) {
+	private <X extends T> Binding<X> doBind(XMLEventReader eventReader, Origin origin) {
 		try {
 			final StartElement rootElementStartEvent = seekRootElementStartEvent( eventReader, origin );
 			return doBind( eventReader, rootElementStartEvent, origin );
@@ -107,7 +99,7 @@ public abstract class AbstractBinder implements Binder {
 			try {
 				eventReader.close();
 			}
-			catch ( Exception e ) {
+			catch (Exception e) {
 				log.debug( "Unable to close StAX reader", e );
 
 			}
@@ -149,15 +141,14 @@ public abstract class AbstractBinder implements Binder {
 		return rootElementStartEvent.asStartElement();
 	}
 
-	protected abstract Binding doBind(XMLEventReader staxEventReader, StartElement rootElementStartEvent, Origin origin);
+	protected abstract <X extends T> Binding<X> doBind(XMLEventReader staxEventReader, StartElement rootElementStartEvent, Origin origin);
 
 	@SuppressWarnings("unused")
 	protected static boolean hasNamespace(StartElement startElement) {
 		return StringHelper.isNotEmpty( startElement.getName().getNamespaceURI() );
 	}
 
-	@SuppressWarnings("unchecked")
-	protected <T> T jaxb(XMLEventReader reader, Schema xsd, JAXBContext jaxbContext, Origin origin) {
+	protected <X extends T> X jaxb(XMLEventReader reader, Schema xsd, JAXBContext jaxbContext, Origin origin) {
 		final ContextProvidingValidationEventHandler handler = new ContextProvidingValidationEventHandler();
 
 		try {
@@ -170,7 +161,8 @@ public abstract class AbstractBinder implements Binder {
 			}
 			unmarshaller.setEventHandler( handler );
 
-			return (T) unmarshaller.unmarshal( reader );
+			//noinspection unchecked
+			return (X) unmarshaller.unmarshal( reader );
 		}
 		catch ( JAXBException e ) {
 			throw new MappingException(

@@ -2,28 +2,29 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
 package org.hibernate.cfg;
 
 import java.util.function.Supplier;
-import jakarta.persistence.criteria.CriteriaDelete;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.CriteriaUpdate;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
-import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.query.spi.QueryPlan;
 import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
 
 /**
  * Enumerates the configuration properties supported by Hibernate, including
@@ -944,8 +945,9 @@ public interface AvailableSettings {
 	 * from the database when more rows are needed. If {@code 0}, the JDBC driver's
 	 * default settings will be used.
 	 *
-	 * @see java.sql.ResultSet#setFetchSize(int)
+	 * @see java.sql.PreparedStatement#setFetchSize(int)
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcFetchSize(int)
+	 * @see org.hibernate.ScrollableResults#setFetchSize(int)
 	 */
 	String STATEMENT_FETCH_SIZE = "hibernate.jdbc.fetch_size";
 
@@ -1013,7 +1015,13 @@ public interface AvailableSettings {
 	/**
 	 * Specifies a {@link org.hibernate.context.spi.CurrentSessionContext} for
 	 * scoping the {@linkplain org.hibernate.SessionFactory#getCurrentSession()
-	 * current session}.
+	 * current session}, either:<ul>
+	 *     <li>{@code jta}, {@code thread}, or {@code managed}, or
+	 *     <li>the name of a class implementing
+	 *     {@code org.hibernate.context.spi.CurrentSessionContext}.
+	 * </ul>
+	 *
+	 * @see org.hibernate.SessionFactory#getCurrentSession()
 	 */
 	String CURRENT_SESSION_CONTEXT_CLASS = "hibernate.current_session_context_class";
 
@@ -1092,13 +1100,14 @@ public interface AvailableSettings {
 	/**
 	 * JPA callbacks are enabled by default. Set this to {@code false} to disable them.
 	 * Mostly useful to save a bit of memory when they are not used.
-	 *
+	 * <p>
 	 * Experimental and will likely be removed as soon as the memory overhead is resolved.
 	 *
 	 * @see org.hibernate.jpa.event.spi.CallbackType
 	 *
 	 * @since 5.4
 	 */
+	@Incubating
 	String JPA_CALLBACKS_ENABLED = "hibernate.jpa_callbacks.enabled";
 
 	/**
@@ -1970,6 +1979,12 @@ public interface AvailableSettings {
 	String STATEMENT_INSPECTOR = "hibernate.session_factory.statement_inspector";
 
 	/**
+	 * Allows a detached proxy or lazy collection to be fetched even when not
+	 * associated with an open persistence context, by creating a temporary
+	 * persistence context when the proxy or collection is accessed. This
+	 * behavior is not recommended, since it can easily break transaction
+	 * isolation or lead to data aliasing. It is therefore disabled by default.
+	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyLazyInitializationOutsideTransaction(boolean)
 	 */
 	String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";
@@ -2934,4 +2949,31 @@ public interface AvailableSettings {
 	 * By default, the persistent context is not discarded, as per the JPA specification.
 	 */
 	String DISCARD_PC_ON_CLOSE = "hibernate.discard_pc_on_close";
+
+	/**
+	 * Whether XML should be validated against their schema as Hibernate reads them.
+	 * <p/>
+	 * Default is {@code true}
+	 *
+	 * @since 6.1
+	 */
+	String VALIDATE_XML = "hibernate.validate_xml";
+
+	/**
+	 * Enables processing `hbm.xml` mappings by transforming them to `mapping.xml` and using
+	 * that processor.  Default is false, must be opted-into.
+	 *
+	 * @since 6.1
+	 */
+	String TRANSFORM_HBM_XML = "hibernate.transform_hbm_xml.enabled";
+
+	/**
+	 * How features in a `hbm.xml` file which are not supported for transformation should be handled.
+	 * <p/>
+	 * Default is {@link org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling#ERROR}
+	 *
+	 * @see org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling
+	 * @since 6.1
+	 */
+	String TRANSFORM_HBM_XML_FEATURE_HANDLING = "hibernate.transform_hbm_xml.unsupported_feature_handling";
 }

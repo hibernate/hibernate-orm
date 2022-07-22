@@ -54,11 +54,12 @@ public abstract class PublishTask extends DefaultTask {
 		final String url = normalizedBase + releaseFamily;
 
 		final String stagingDirPath = stagingDirectory.get().getAsFile().getAbsolutePath();
+		final String stagingDirPathContent =  stagingDirPath.endsWith( "/" ) ? stagingDirPath : stagingDirPath + "/";
 
 		getProject().getLogger().lifecycle( "Uploading documentation `{}` -> `{}`", stagingDirPath, url );
 		final ExecResult result = getProject().exec( (exec) -> {
 			exec.executable( "rsync" );
-			exec.args("--port=2222", "-avz", "--links", "--delete", stagingDirPath, url );
+			exec.args("--port=2222", "-avz", "--links", "--delete", stagingDirPathContent, url );
 		} );
 		getProject().getLogger().lifecycle( "Done uploading documentation - {}", result.getExitValue() == 0 ? "success" : "failure" );
 	}

@@ -401,12 +401,14 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 
 	@Override
 	public JpaCriteriaQuery<T> offset(JpaExpression<? extends Number> offset) {
+		validateComplianceFetchOffset();
 		getQueryPart().setOffset( offset );
 		return this;
 	}
 
 	@Override
 	public JpaCriteriaQuery<T> offset(Number offset) {
+		validateComplianceFetchOffset();
 		getQueryPart().setOffset( nodeBuilder().value( offset ) );
 		return this;
 	}
@@ -419,24 +421,28 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 
 	@Override
 	public JpaCriteriaQuery<T> fetch(JpaExpression<? extends Number> fetch) {
+		validateComplianceFetchOffset();
 		getQueryPart().setFetch( fetch );
 		return this;
 	}
 
 	@Override
 	public JpaCriteriaQuery<T> fetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType) {
+		validateComplianceFetchOffset();
 		getQueryPart().setFetch( fetch, fetchClauseType );
 		return this;
 	}
 
 	@Override
 	public JpaCriteriaQuery<T> fetch(Number fetch) {
+		validateComplianceFetchOffset();
 		getQueryPart().setFetch( nodeBuilder().value( fetch ) );
 		return this;
 	}
 
 	@Override
 	public JpaCriteriaQuery<T> fetch(Number fetch, FetchClauseType fetchClauseType) {
+		validateComplianceFetchOffset();
 		getQueryPart().setFetch( nodeBuilder().value( fetch ), fetchClauseType );
 		return this;
 	}
@@ -444,5 +450,13 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	@Override
 	public FetchClauseType getFetchClauseType() {
 		return getQueryPart().getFetchClauseType();
+	}
+
+	private void validateComplianceFetchOffset() {
+		if ( nodeBuilder().getDomainModel().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+			throw new IllegalStateException(
+					"The JPA specification does not support the fetch or offset clause. " +
+							"Please disable the JPA query compliance if you want to use this feature." );
+		}
 	}
 }

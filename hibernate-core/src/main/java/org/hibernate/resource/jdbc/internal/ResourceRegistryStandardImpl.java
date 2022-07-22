@@ -133,7 +133,14 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			else {
 				resultSets.remove( resultSet );
 				if ( resultSets.isEmpty() ) {
-					xref.remove( statement );
+					try {
+						if ( statement.isClosed() ) {
+							xref.remove( statement );
+						}
+					}
+					catch (SQLException e) {
+						log.debugf( "Unable to release JDBC statement [%s]", e.getMessage() );
+					}
 				}
 			}
 		}

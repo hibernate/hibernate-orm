@@ -207,7 +207,7 @@ public class TypeDefinition implements Serializable {
 
 					@Override
 					public BasicValueConverter getValueConverter() {
-						return null;
+						return resolvedBasicType.getValueConverter();
 					}
 
 					@Override
@@ -259,7 +259,7 @@ public class TypeDefinition implements Serializable {
 
 				@Override
 				public BasicValueConverter getValueConverter() {
-					return null;
+					return resolved.getValueConverter();
 				}
 
 				@Override

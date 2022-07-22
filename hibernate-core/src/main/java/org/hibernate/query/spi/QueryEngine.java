@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 import org.hibernate.Incubating;
@@ -137,9 +138,9 @@ public class QueryEngine {
 			Dialect dialect,
 			SqmFunctionRegistry userDefinedRegistry,
 			ServiceRegistry serviceRegistry) {
-		this.namedObjectRepository = namedObjectRepository;
+		this.namedObjectRepository = Objects.requireNonNull( namedObjectRepository );
 		this.sqmTranslatorFactory = sqmTranslatorFactory;
-		this.nativeQueryInterpreter = nativeQueryInterpreter;
+		this.nativeQueryInterpreter = Objects.requireNonNull( nativeQueryInterpreter );
 		this.interpretationCache = interpretationCache;
 		this.hqlTranslator = hqlTranslator;
 
@@ -202,9 +203,9 @@ public class QueryEngine {
 			NativeQueryInterpreter nativeQueryInterpreter,
 			Dialect dialect,
 			ServiceRegistry serviceRegistry) {
-		this.namedObjectRepository = namedObjectRepository;
+		this.namedObjectRepository = Objects.requireNonNull( namedObjectRepository );
 		this.sqmTranslatorFactory = null;
-		this.nativeQueryInterpreter = nativeQueryInterpreter;
+		this.nativeQueryInterpreter = Objects.requireNonNull( nativeQueryInterpreter );
 
 		this.sqmFunctionRegistry = new SqmFunctionRegistry();
 		this.typeConfiguration = jpaMetamodel.getTypeConfiguration();

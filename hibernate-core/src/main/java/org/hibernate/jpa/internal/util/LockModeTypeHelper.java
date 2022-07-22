@@ -32,13 +32,13 @@ public final class LockModeTypeHelper {
 		if ( value == null ) {
 			return LockMode.NONE;
 		}
-		if ( LockMode.class.isInstance( value ) ) {
+		if (value instanceof LockMode) {
 			return (LockMode) value;
 		}
-		else if ( LockModeType.class.isInstance( value ) ) {
+		else if (value instanceof LockModeType) {
 			return getLockMode( (LockModeType) value );
 		}
-		else if ( String.class.isInstance( value ) ) {
+		else if (value instanceof String) {
 			return LockMode.fromExternalForm( (String) value );
 		}
 

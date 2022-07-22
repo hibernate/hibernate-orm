@@ -103,7 +103,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 
 	@Override
 	public void setBindValue(T value, boolean resolveJdbcTypeIfNecessary) {
-		if ( handleAsMultiValue( value ) ) {
+		if ( handleAsMultiValue( value, null ) ) {
 			return;
 		}
 
@@ -149,7 +149,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		return sqmExpressible.getExpressibleJavaType().coerce( value, this );
 	}
 
-	private boolean handleAsMultiValue(T value) {
+	private boolean handleAsMultiValue(T value, BindableType<T> bindableType) {
 		if ( ! queryParameter.allowsMultiValuedBinding() ) {
 			return false;
 		}
@@ -158,7 +158,9 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			return false;
 		}
 
-		if ( value instanceof Collection && !isRegisteredAsBasicType( value.getClass() ) ) {
+		if ( value instanceof Collection
+				&& ( bindableType != null && !bindableType.getBindableJavaType().isInstance( value )
+				|| ( bindableType == null && !isRegisteredAsBasicType( value.getClass() ) ) ) ) {
 			//noinspection unchecked
 			setBindValues( (Collection<T>) value );
 			return true;
@@ -184,7 +186,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 
 	@Override
 	public void setBindValue(T value, BindableType<T> clarifiedType) {
-		if ( handleAsMultiValue( value ) ) {
+		if ( handleAsMultiValue( value, clarifiedType ) ) {
 			return;
 		}
 
@@ -206,7 +208,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 
 	@Override
 	public void setBindValue(T value, TemporalType temporalTypePrecision) {
-		if ( handleAsMultiValue( value ) ) {
+		if ( handleAsMultiValue( value, null ) ) {
 			return;
 		}
 

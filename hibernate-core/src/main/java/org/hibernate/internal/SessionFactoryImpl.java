@@ -506,7 +506,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	public Session getCurrentSession() throws HibernateException {
 		if ( currentSessionContext == null ) {
-			throw new HibernateException( "No CurrentSessionContext configured!" );
+			throw new HibernateException( "No CurrentSessionContext configured" );
 		}
 		return currentSessionContext.currentSession();
 	}

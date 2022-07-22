@@ -6,12 +6,12 @@
  */
 package org.hibernate.boot.model.convert.internal;
 
-import jakarta.persistence.AttributeConverter;
-
 import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
+
+import jakarta.persistence.AttributeConverter;
 
 /**
  * ConverterDescriptor implementation for cases where we are handed
@@ -28,11 +28,12 @@ public class InstanceBasedConverterDescriptor extends AbstractConverterDescripto
 		this( converterInstance, null, classmateContext );
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public InstanceBasedConverterDescriptor(
 			AttributeConverter<?,?> converterInstance,
 			Boolean forceAutoApply,
 			ClassmateContext classmateContext) {
-		super( converterInstance.getClass(), forceAutoApply, classmateContext );
+		super( (Class) converterInstance.getClass(), forceAutoApply, classmateContext );
 		this.converterInstance = converterInstance;
 	}
 

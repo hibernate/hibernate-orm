@@ -44,7 +44,7 @@ public class BeanInfoHelper {
 		visitBeanInfo( beanClass, stopClass, delegate );
 	}
 
-	public static void visitBeanInfo(Class beanClass, BeanInfoDelegate delegate) {
+	public static void visitBeanInfo(Class<?> beanClass, BeanInfoDelegate delegate) {
 		visitBeanInfo( beanClass, Object.class, delegate );
 	}
 

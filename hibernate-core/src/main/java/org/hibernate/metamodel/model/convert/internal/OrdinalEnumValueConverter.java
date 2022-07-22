@@ -26,19 +26,19 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  *
  * @author Steve Ebersole
  */
-public class OrdinalEnumValueConverter<E extends Enum<E>> implements EnumValueConverter<E,Integer>, Serializable {
+public class OrdinalEnumValueConverter<E extends Enum<E>> implements EnumValueConverter<E, Number>, Serializable {
 
 	private final EnumJavaType<E> enumJavaType;
 	private final JdbcType jdbcType;
-	private final JavaType<Integer> relationalJavaType;
+	private final JavaType<Number> relationalJavaType;
 
-	private transient ValueExtractor<Integer> valueExtractor;
-	private transient ValueBinder<Integer> valueBinder;
+	private transient ValueExtractor<Number> valueExtractor;
+	private transient ValueBinder<Number> valueBinder;
 
 	public OrdinalEnumValueConverter(
 			EnumJavaType<E> enumJavaType,
 			JdbcType jdbcType,
-			JavaType<Integer> relationalJavaType) {
+			JavaType<Number> relationalJavaType) {
 		this.enumJavaType = enumJavaType;
 		this.jdbcType = jdbcType;
 		this.relationalJavaType = relationalJavaType;
@@ -48,12 +48,12 @@ public class OrdinalEnumValueConverter<E extends Enum<E>> implements EnumValueCo
 	}
 
 	@Override
-	public E toDomainValue(Integer relationalForm) {
-		return enumJavaType.fromOrdinal( relationalForm );
+	public E toDomainValue(Number relationalForm) {
+		return enumJavaType.fromOrdinal( relationalForm == null ? null : relationalForm.intValue() );
 	}
 
 	@Override
-	public Integer toRelationalValue(E domainForm) {
+	public Number toRelationalValue(E domainForm) {
 		return enumJavaType.toOrdinal( domainForm );
 	}
 
@@ -68,7 +68,7 @@ public class OrdinalEnumValueConverter<E extends Enum<E>> implements EnumValueCo
 	}
 
 	@Override
-	public JavaType<Integer> getRelationalJavaType() {
+	public JavaType<Number> getRelationalJavaType() {
 		return relationalJavaType;
 	}
 
@@ -86,8 +86,7 @@ public class OrdinalEnumValueConverter<E extends Enum<E>> implements EnumValueCo
 	}
 
 	@Override
-	public void writeValue(
-			PreparedStatement statement, E value, int position, SharedSessionContractImplementor session)
+	public void writeValue(PreparedStatement statement, E value, int position, SharedSessionContractImplementor session)
 			throws SQLException {
 		valueBinder.bind( statement, toRelationalValue( value ), position, session );
 	}

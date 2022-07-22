@@ -49,6 +49,7 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
@@ -450,12 +451,20 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	@Override
 	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery) {
+		//noinspection resource
 		return delegate().createMutationQuery( updateQuery );
 	}
 
 	@Override
 	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery) {
+		//noinspection resource
 		return delegate().createMutationQuery( deleteQuery );
+	}
+
+	@Override
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsertSelect insertSelect) {
+		//noinspection resource
+		return delegate().createMutationQuery( insertSelect );
 	}
 
 	@Override
@@ -525,11 +534,13 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	@Override
 	public SelectionQuery<?> createNamedSelectionQuery(String name) {
+		//noinspection resource
 		return delegate().createNamedSelectionQuery( name );
 	}
 
 	@Override
 	public <R> SelectionQuery<R> createNamedSelectionQuery(String name, Class<R> resultType) {
+		//noinspection resource
 		return delegate().createNamedSelectionQuery( name, resultType );
 	}
 
@@ -649,6 +660,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return delegate.createStoredProcedureCall( procedureName, resultSetMappings );
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public SharedSessionBuilder sessionWithOptions() {
 		return delegate.sessionWithOptions();

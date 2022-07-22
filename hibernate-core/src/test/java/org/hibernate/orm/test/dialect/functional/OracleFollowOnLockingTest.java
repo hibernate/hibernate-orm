@@ -198,7 +198,7 @@ public class OracleFollowOnLockingTest extends
 			);
 			assertTrue(
 					expected.getCause().getMessage().contains(
-							"Locking with OFFSET is not supported!"
+							"Locking with OFFSET is not supported"
 					)
 			);
 		}
@@ -278,7 +278,7 @@ public class OracleFollowOnLockingTest extends
 			);
 			assertTrue(
 					expected.getCause().getMessage().contains(
-							"Locking with ORDER BY is not supported!"
+							"Locking with ORDER BY is not supported"
 					)
 			);
 		}
@@ -356,7 +356,7 @@ public class OracleFollowOnLockingTest extends
 			);
 			assertTrue(
 					expected.getCause().getMessage().contains(
-							"Locking with DISTINCT is not supported!"
+							"Locking with DISTINCT is not supported"
 					)
 			);
 		}
@@ -434,7 +434,7 @@ public class OracleFollowOnLockingTest extends
 			);
 			assertTrue(
 					expected.getCause().getMessage().contains(
-							"Locking with GROUP BY is not supported!"
+							"Locking with GROUP BY is not supported"
 					)
 			);
 		}
@@ -505,7 +505,7 @@ public class OracleFollowOnLockingTest extends
 			);
 			assertTrue(
 					expected.getCause().getMessage().contains(
-							"Locking with set operators is not supported!"
+							"Locking with set operators is not supported"
 					)
 			);
 		}

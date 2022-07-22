@@ -70,7 +70,7 @@ public interface JdbcTypeIndicators {
 	 * {@link JdbcTypeRegistry}.
 	 */
 	default int getPreferredSqlTypeCodeForBoolean() {
-		return Types.BOOLEAN;
+		return getTypeConfiguration().getCurrentBaseSqlTypeIndicators().getPreferredSqlTypeCodeForBoolean();
 	}
 
 	/**
@@ -80,7 +80,7 @@ public interface JdbcTypeIndicators {
 	 * {@link JdbcTypeRegistry}.
 	 */
 	default int getPreferredSqlTypeCodeForDuration() {
-		return SqlTypes.INTERVAL_SECOND;
+		return getTypeConfiguration().getCurrentBaseSqlTypeIndicators().getPreferredSqlTypeCodeForDuration();
 	}
 
 	/**
@@ -90,7 +90,7 @@ public interface JdbcTypeIndicators {
 	 * {@link JdbcTypeRegistry}.
 	 */
 	default int getPreferredSqlTypeCodeForUuid() {
-		return SqlTypes.UUID;
+		return getTypeConfiguration().getCurrentBaseSqlTypeIndicators().getPreferredSqlTypeCodeForUuid();
 	}
 
 	/**
@@ -100,7 +100,18 @@ public interface JdbcTypeIndicators {
 	 * {@link JdbcTypeRegistry}.
 	 */
 	default int getPreferredSqlTypeCodeForInstant() {
-		return SqlTypes.TIMESTAMP_UTC;
+		return getTypeConfiguration().getCurrentBaseSqlTypeIndicators().getPreferredSqlTypeCodeForInstant();
+	}
+
+	/**
+	 * When mapping a basic array or collection type to the database what is the preferred SQL type code to use?
+	 * <p/>
+	 * Specifically names the key into the
+	 * {@link JdbcTypeRegistry}.
+	 * @since 6.1
+	 */
+	default int getPreferredSqlTypeCodeForArray() {
+		return getTypeConfiguration().getCurrentBaseSqlTypeIndicators().getPreferredSqlTypeCodeForArray();
 	}
 
 	/**
@@ -125,7 +136,7 @@ public interface JdbcTypeIndicators {
 	}
 
 	default TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
-		return getTypeConfiguration().getSessionFactory().getFastSessionServices().getDefaultTimeZoneStorageStrategy();
+		return getTypeConfiguration().getCurrentBaseSqlTypeIndicators().getDefaultTimeZoneStorageStrategy();
 	}
 
 	/**

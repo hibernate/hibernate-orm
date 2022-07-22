@@ -86,7 +86,7 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> implements SqmQ
 
 	@Override
 	public void setJoinPredicate(SqmPredicate predicate) {
-		throw new UnsupportedOperationException( "Setting a predicate for a plural part join is unsupported!" );
+		throw new UnsupportedOperationException( "Setting a predicate for a plural part join is unsupported" );
 	}
 
 	@Override

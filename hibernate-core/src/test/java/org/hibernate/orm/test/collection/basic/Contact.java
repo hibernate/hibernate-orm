@@ -7,7 +7,9 @@
 package org.hibernate.orm.test.collection.basic;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import jakarta.persistence.Basic;
 import jakarta.persistence.CollectionTable;
@@ -17,6 +19,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -26,8 +29,9 @@ public class Contact implements Serializable {
     private static final long serialVersionUID = 1L;
     private Long id;
     private String name;
-    private Set<EmailAddress> emailAddresses = new HashSet<EmailAddress>();
-    private Set<EmailAddress> emailAddresses2 = new HashSet<EmailAddress>();
+    private Set<EmailAddress> emailAddresses = new HashSet<>();
+    private Set<EmailAddress> emailAddresses2 = new HashSet<>();
+    private Map<EmailAddress,Contact> contactsByEmail = new HashMap<>();
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -66,6 +70,16 @@ public class Contact implements Serializable {
 
     public void setEmailAddresses(Set<EmailAddress> emailAddresses) {
         this.emailAddresses = emailAddresses;
+    }
+
+    @ManyToMany
+    @CollectionTable(name="contact_email_addresses")
+    public Map<EmailAddress, Contact> getContactsByEmail() {
+        return contactsByEmail;
+    }
+
+    public void setContactsByEmail(Map<EmailAddress, Contact> contactsByEmail) {
+        this.contactsByEmail = contactsByEmail;
     }
 
     @Override

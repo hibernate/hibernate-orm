@@ -11,7 +11,7 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.enhanced.SequenceStructure;
 
@@ -70,9 +70,9 @@ public class OrderedSequenceStructure extends SequenceStructure {
 			);
 
 			//noinspection deprecation
-			if ( dialect instanceof Oracle8iDialect ) {
+			if ( dialect instanceof OracleDialect && dialect.getVersion().isSameOrAfter( 8 ) ) {
 				for ( int i = 0; i < createStrings.length; ++i ) {
-					createStrings[ i ] = createStrings[ i ] + ORDER;
+					createStrings[i] = createStrings[i] + ORDER;
 				}
 			}
 

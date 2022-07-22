@@ -80,7 +80,7 @@ public class BatchTest extends BaseCoreFunctionalTestCase {
 			dp.setX( new BigDecimal( i * 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
 			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
 			s.save( dp );
-			if ( i + 1 % nBeforeFlush == 0 ) {
+			if ( ( i + 1 ) % nBeforeFlush == 0 ) {
 				s.flush();
 				s.clear();
 			}

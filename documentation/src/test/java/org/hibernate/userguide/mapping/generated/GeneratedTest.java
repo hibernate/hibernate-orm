@@ -13,30 +13,26 @@ import jakarta.persistence.Id;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
 import org.hibernate.dialect.SQLServer2005Dialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(SQLServer2005Dialect.class)
-public class GeneratedTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Person.class
-		};
-	}
+@RequiresDialect(value = SQLServer2005Dialect.class, majorVersion = 9)
+@Jpa(
+		annotatedClasses = GeneratedTest.Person.class
+)
+public class GeneratedTest {
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			//tag::mapping-generated-Generated-persist-example[]
 			Person person = new Person();
 			person.setId(1L);
@@ -54,7 +50,7 @@ public class GeneratedTest extends BaseEntityManagerFunctionalTestCase {
 			assertEquals("John Flávio André Frederico Rúben Artur Doe", person.getFullName());
 			//end::mapping-generated-Generated-persist-example[]
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			//tag::mapping-generated-Generated-update-example[]
 			Person person = entityManager.find(Person.class, 1L);
 			person.setLastName("Doe Jr");

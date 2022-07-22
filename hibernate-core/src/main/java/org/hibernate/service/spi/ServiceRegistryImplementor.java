@@ -46,4 +46,6 @@ public interface ServiceRegistryImplementor extends ServiceRegistry {
 	 * via this callback.
 	 */
 	void deRegisterChild(ServiceRegistryImplementor child);
+
+	<T extends Service> T fromRegistryOrChildren(Class<T> serviceRole);
 }

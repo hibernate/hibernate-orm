@@ -7,16 +7,22 @@
 package org.hibernate.action.internal;
 
 import org.hibernate.LockMode;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
+import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -132,6 +138,27 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 				getPersister(),
 				isVersionIncrementDisabled
 		);
+		if ( isEarlyInsert() ) {
+			final SharedSessionContractImplementor session = getSession();
+			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+			Object[] objects = getState();
+			for ( int i = 0; i < objects.length; i++ ) {
+				if ( objects[i] instanceof PersistentCollection<?> ) {
+					final PersistentCollection<?> persistentCollection = (PersistentCollection<?>) objects[i];
+					final CollectionPersister collectionPersister = ( (PluralAttributeMapping) getPersister().getAttributeMapping( i ) ).getCollectionDescriptor();
+					final CollectionKey collectionKey = new CollectionKey(
+							collectionPersister,
+							( (AbstractEntityPersister) getPersister() ).getCollectionKey(
+									collectionPersister,
+									getInstance(),
+									persistenceContext.getEntry( getInstance() ),
+									getSession()
+							)
+					);
+					persistenceContext.addCollectionByKey( collectionKey, persistentCollection );
+				}
+			}
+		}
 	}
 
 	/**

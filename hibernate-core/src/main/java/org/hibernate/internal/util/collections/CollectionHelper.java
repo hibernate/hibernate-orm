@@ -312,6 +312,7 @@ public final class CollectionHelper {
 	 * The returned Set might be immutable, but there is no guarantee of this:
 	 * consider it immutable but don't rely on this.
 	 * The goal is to save memory.
+	 * @return will never return null, but might return an immutable collection.
 	 */
 	public static <T> Set<T> toSmallSet(Set<T> set) {
 		switch ( set.size() ) {

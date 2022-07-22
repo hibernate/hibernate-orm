@@ -32,6 +32,26 @@ public class CapacityDependentDdlType extends DdlTypeImpl {
 		this.typeEntries = builder.typeEntries.toArray(new TypeEntry[0]);
 	}
 
+	public String[] getRawTypeNames() {
+		final String[] rawTypeNames = new String[typeEntries.length + 1];
+		for ( int i = 0; i < typeEntries.length; i++ ) {
+			//trim off the length/precision/scale
+			final String typeNamePattern = typeEntries[i].typeNamePattern;
+			final int paren = typeNamePattern.indexOf( '(' );
+			if ( paren > 0 ) {
+				final int parenEnd = typeNamePattern.lastIndexOf( ')' );
+				rawTypeNames[i] = parenEnd + 1 == typeNamePattern.length()
+						? typeNamePattern.substring( 0, paren )
+						: ( typeNamePattern.substring( 0, paren ) + typeNamePattern.substring( parenEnd + 1 ) );
+			}
+			else {
+				rawTypeNames[i] = typeNamePattern;
+			}
+		}
+		rawTypeNames[typeEntries.length] = getRawTypeName();
+		return rawTypeNames;
+	}
+
 	@Override
 	public String getTypeName(Long size, Integer precision, Integer scale) {
 		if ( size != null && size > 0 ) {

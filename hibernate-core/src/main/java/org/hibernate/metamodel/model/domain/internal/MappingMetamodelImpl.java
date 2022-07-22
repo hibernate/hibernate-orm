@@ -77,6 +77,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -859,13 +860,24 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 			return managedType;
 		}
 
-		final JavaType<T> javaType = getTypeConfiguration().getJavaTypeRegistry()
-				.findDescriptor( javaClass );
+		final JavaTypeRegistry javaTypeRegistry = getTypeConfiguration().getJavaTypeRegistry();
+		final JavaType<T> javaType = javaTypeRegistry.findDescriptor( javaClass );
 		if ( javaType != null ) {
 			final JdbcType recommendedJdbcType = javaType.getRecommendedJdbcType( getTypeConfiguration().getCurrentBaseSqlTypeIndicators() );
 			if ( recommendedJdbcType != null ) {
 				return getTypeConfiguration().getBasicTypeRegistry().resolve(
 						javaType,
+						recommendedJdbcType
+				);
+			}
+		}
+
+		if ( javaClass.isArray() && javaTypeRegistry.findDescriptor( javaClass.getComponentType() ) != null ) {
+			final JavaType<T> resolvedJavaType = javaTypeRegistry.resolveDescriptor( javaClass );
+			final JdbcType recommendedJdbcType = resolvedJavaType.getRecommendedJdbcType( getTypeConfiguration().getCurrentBaseSqlTypeIndicators() );
+			if ( recommendedJdbcType != null ) {
+				return getTypeConfiguration().getBasicTypeRegistry().resolve(
+						resolvedJavaType,
 						recommendedJdbcType
 				);
 			}

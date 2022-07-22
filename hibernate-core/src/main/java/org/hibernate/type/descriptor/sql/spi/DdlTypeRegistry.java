@@ -10,11 +10,14 @@ import java.io.Serializable;
 import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -31,6 +34,7 @@ public class DdlTypeRegistry implements Serializable {
 	private static final Logger log = Logger.getLogger( DdlTypeRegistry.class );
 
 	private final Map<Integer, DdlType> ddlTypes = new HashMap<>();
+	private final Map<String, Integer> sqlTypes = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
 
 	public DdlTypeRegistry(TypeConfiguration typeConfiguration) {
 //		this.typeConfiguration = typeConfiguration;
@@ -40,25 +44,45 @@ public class DdlTypeRegistry implements Serializable {
 	// baseline descriptors
 
 	public void addDescriptor(DdlType ddlType) {
-		final DdlType previous = ddlTypes.put( ddlType.getSqlTypeCode(), ddlType );
-		if ( previous != null && previous != ddlType ) {
-			log.debugf( "addDescriptor(%s) replaced previous registration(%s)", ddlType, previous );
-		}
+		addDescriptor( ddlType.getSqlTypeCode(), ddlType );
 	}
 
 	public void addDescriptor(int sqlTypeCode, DdlType ddlType) {
 		final DdlType previous = ddlTypes.put( sqlTypeCode, ddlType );
 		if ( previous != null && previous != ddlType ) {
+			for ( String rawTypeName : previous.getRawTypeNames() ) {
+				sqlTypes.remove( rawTypeName );
+			}
 			log.debugf( "addDescriptor(%d, %s) replaced previous registration(%s)", sqlTypeCode, ddlType, previous );
+		}
+		addSqlType( ddlType, sqlTypeCode );
+	}
+
+	public void addDescriptorIfAbsent(DdlType ddlType) {
+		addDescriptorIfAbsent( ddlType.getSqlTypeCode(), ddlType );
+	}
+
+	public void addDescriptorIfAbsent(int sqlTypeCode, DdlType ddlType) {
+		if ( ddlTypes.putIfAbsent( sqlTypeCode, ddlType ) == null ) {
+			addSqlType( ddlType, sqlTypeCode );
 		}
 	}
 
-	public void addDescriptorIfAbsent(DdlType jdbcType) {
-		ddlTypes.putIfAbsent( jdbcType.getSqlTypeCode(), jdbcType );
+	private void addSqlType(DdlType ddlType, int sqlTypeCode) {
+		for ( String rawTypeName : ddlType.getRawTypeNames() ) {
+			final Integer previousSqlTypeCode = sqlTypes.put( rawTypeName, sqlTypeCode );
+			// Prefer the standard code over a custom code for a certain type name
+			if ( previousSqlTypeCode != null && JdbcTypeNameMapper.isStandardTypeCode( previousSqlTypeCode ) ) {
+				sqlTypes.put( rawTypeName, previousSqlTypeCode );
+			}
+		}
 	}
 
-	public void addDescriptorIfAbsent(int sqlTypeCode, DdlType jdbcType) {
-		ddlTypes.putIfAbsent( sqlTypeCode, jdbcType );
+	/**
+	 * Returns the {@link SqlTypes} type code for the given DDL raw type name, or <code>null</code> if it is unknown.
+	 */
+	public Integer getSqlTypeCode(String rawTypeName) {
+		return sqlTypes.get( rawTypeName );
 	}
 
 	/**

@@ -237,11 +237,6 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	protected boolean supportsDistinctFromPredicate() {
-		return getDialect().getVersion().isSameOrAfter( 16, 3 );
-	}
-
-	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		// I think intersect is only supported in 16.0 SP3
 		if ( getDialect().isAnsiNullOn() ) {
@@ -328,7 +323,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 			// This could theoretically be emulated by rendering all grouping variations of the query and
 			// connect them via union all but that's probably pretty inefficient and would have to happen
 			// on the query spec level
-			throw new UnsupportedOperationException( "Summarization is not supported by DBMS!" );
+			throw new UnsupportedOperationException( "Summarization is not supported by DBMS" );
 		}
 		else {
 			expression.accept( this );

@@ -145,16 +145,16 @@ public class SqmMappingModelHelper {
 			MappingMetamodel domainModel,
 			Function<NavigablePath,TableGroup> tableGroupLocator) {
 
-		if ( sqmPath instanceof SqmTreatedPath ) {
-			final SqmTreatedPath treatedPath = (SqmTreatedPath) sqmPath;
-			final EntityDomainType treatTargetType = treatedPath.getTreatTarget();
+		if ( sqmPath instanceof SqmTreatedPath<?, ?> ) {
+			final SqmTreatedPath<?, ?> treatedPath = (SqmTreatedPath<?, ?>) sqmPath;
+			final EntityDomainType<?> treatTargetType = treatedPath.getTreatTarget();
 			return domainModel.findEntityDescriptor( treatTargetType.getHibernateEntityName() );
 		}
 
 		// see if the LHS is treated
-		if ( sqmPath.getLhs() instanceof SqmTreatedPath ) {
-			final SqmTreatedPath treatedPath = (SqmTreatedPath) sqmPath.getLhs();
-			final EntityDomainType treatTargetType = treatedPath.getTreatTarget();
+		if ( sqmPath.getLhs() instanceof SqmTreatedPath<?, ?> ) {
+			final SqmTreatedPath<?, ?> treatedPath = (SqmTreatedPath<?, ?>) sqmPath.getLhs();
+			final EntityDomainType<?> treatTargetType = treatedPath.getTreatTarget();
 			final EntityPersister container = domainModel.findEntityDescriptor( treatTargetType.getHibernateEntityName() );
 
 			return container.findSubPart( sqmPath.getNavigablePath().getLocalName(), container );

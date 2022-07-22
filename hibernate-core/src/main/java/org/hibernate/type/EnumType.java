@@ -27,6 +27,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.model.convert.internal.NamedEnumValueConverter;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -103,6 +104,11 @@ public class EnumType<T extends Enum<T>>
 	}
 
 	public EnumValueConverter getEnumValueConverter() {
+		return enumValueConverter;
+	}
+
+	@Override
+	public BasicValueConverter<T, Object> getValueConverter() {
 		return enumValueConverter;
 	}
 
@@ -427,13 +433,13 @@ public class EnumType<T extends Enum<T>>
 	@Override
 	public String toString(T value) {
 		verifyConfigured();
-		return enumValueConverter.getDomainJavaType().unwrap( value, String.class, null );
+		return enumValueConverter.getRelationalJavaType().toString( enumValueConverter.toRelationalValue( value ) );
 	}
 
 	@Override
 	public T fromStringValue(CharSequence sequence) {
 		verifyConfigured();
-		return enumValueConverter.getDomainJavaType().wrap( sequence, null );
+		return enumValueConverter.toDomainValue( enumValueConverter.getRelationalJavaType().fromString( sequence ) );
 	}
 
 	@Override

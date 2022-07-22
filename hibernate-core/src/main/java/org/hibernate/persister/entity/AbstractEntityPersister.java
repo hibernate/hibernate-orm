@@ -806,7 +806,7 @@ public abstract class AbstractEntityPersister
 				}
 				containingClass = superclass;
 			}
-			this.sqlWhereStringTableExpression = containingClass.getTable().getName();
+			this.sqlWhereStringTableExpression = determineTableName( containingClass.getTable() );
 			sqlWhereStringTemplate = Template.renderWhereStringTemplate(
 					"(" + bootDescriptor.getWhere() + ")",
 					dialect,
@@ -1614,7 +1614,7 @@ public abstract class AbstractEntityPersister
 
 	}
 
-	protected Object getCollectionKey(
+	public Object getCollectionKey(
 			CollectionPersister persister,
 			Object owner,
 			EntityEntry ownerEntry,
@@ -2542,7 +2542,7 @@ public abstract class AbstractEntityPersister
 			// We have to check the state for "mutable" properties as dirty tracking isn't aware of mutable types
 			final Type[] propertyTypes = entityMetamodel.getPropertyTypes();
 			final boolean[] propertyCheckability = entityMetamodel.getPropertyCheckability();
-			mutablePropertiesIndexes.stream().forEach( i -> {
+			for ( int i = mutablePropertiesIndexes.nextSetBit(0); i >= 0; i = mutablePropertiesIndexes.nextSetBit(i + 1) ) {
 				// This is kindly borrowed from org.hibernate.type.TypeHelper.findDirty
 				final boolean dirty = currentState[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY &&
 						// Consider mutable properties as dirty if we don't have a previous state
@@ -2557,7 +2557,7 @@ public abstract class AbstractEntityPersister
 				if ( dirty ) {
 					fields.add( i );
 				}
-			} );
+			}
 		}
 
 		if ( attributeNames.length != 0 ) {
@@ -3804,7 +3804,7 @@ public abstract class AbstractEntityPersister
 		// Ensure that an immutable or non-modifiable entity is not being updated unless it is
 		// in the process of being deleted.
 		if ( entry == null && !isMutable() ) {
-			throw new IllegalStateException( "Updating immutable entity that is not in session yet!" );
+			throw new IllegalStateException( "Updating immutable entity that is not in session yet" );
 		}
 		if ( ( entityMetamodel.isDynamicUpdate() && dirtyFields != null ) ) {
 			// We need to generate the UPDATE SQL when dynamic-update="true"
@@ -5145,8 +5145,9 @@ public abstract class AbstractEntityPersister
 		}
 		else if ( identifierMapping instanceof NonAggregatedIdentifierMapping ) {
 			final EmbeddedAttributeMapping embeddedAttributeMapping = (EmbeddedAttributeMapping) findAttributeMapping( NavigableRole.IDENTIFIER_MAPPER_PROPERTY );
-			final AttributeMapping mapping = embeddedAttributeMapping.getMappedType()
-					.findAttributeMapping( basePropertyName );
+			final AttributeMapping mapping = embeddedAttributeMapping == null
+					? null
+					: embeddedAttributeMapping.getMappedType().findAttributeMapping( basePropertyName );
 			if ( mapping != null ) {
 				baseValue = mapping.getAttributeMetadataAccess()
 						.resolveAttributeMetadata( this )

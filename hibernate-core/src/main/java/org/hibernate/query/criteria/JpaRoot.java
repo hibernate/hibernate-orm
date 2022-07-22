@@ -17,5 +17,6 @@ public interface JpaRoot<T> extends JpaFrom<T,T>, Root<T> {
 	@Override
 	EntityDomainType<T> getModel();
 
+	// todo: deprecate and remove?
 	EntityDomainType<T> getManagedType();
 }

@@ -8,7 +8,7 @@ package org.hibernate.boot.model.source.spi;
 
 /**
  * Describes source information about the key of a persistent map.  At high
- * level this broken down further into 2 categories:<ul>
+ * level this is broken down further into 2 categories:<ul>
  *     <li>{@link PluralAttributeMapKeySourceEntityAttribute}</li>
  *     <li>
  *         <ul>

@@ -65,6 +65,11 @@ public class AttributeConverterJdbcTypeAdapter implements JdbcType {
 		return "AttributeConverterSqlTypeDescriptorAdapter(" + converter.getClass().getName() + ")";
 	}
 
+	@Override
+	public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+		return delegate.getPreferredJavaTypeClass( options );
+	}
+
 
 	// Binding ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

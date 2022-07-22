@@ -399,7 +399,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		final ClassLoaderService classLoaderService = sessionFactoryServiceRegistry.getService( ClassLoaderService.class );
 
 		for ( Map.Entry<?,?> entry : ( (Map<?, ?>) cfgService.getSettings() ).entrySet() ) {
-			if ( !String.class.isInstance( entry.getKey() ) ) {
+			if ( !(entry.getKey() instanceof String) ) {
 				continue;
 			}
 			final String propertyName = (String) entry.getKey();
@@ -498,6 +498,26 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	public BootstrapContext getBootstrapContext() {
 		return bootstrapContext;
+	}
+
+	public Map<String, NamedHqlQueryDefinition> getNamedQueryMap() {
+		return namedQueryMap;
+	}
+
+	public Map<String, NamedNativeQueryDefinition> getNamedNativeQueryMap() {
+		return namedNativeQueryMap;
+	}
+
+	public Map<String, NamedProcedureCallDefinition> getNamedProcedureCallMap() {
+		return namedProcedureCallMap;
+	}
+
+	public Map<String, NamedResultSetMappingDescriptor> getSqlResultSetMappingMap() {
+		return sqlResultSetMappingMap;
+	}
+
+	public java.util.List<org.hibernate.mapping.Component> getComposites() {
+		return composites;
 	}
 
 }

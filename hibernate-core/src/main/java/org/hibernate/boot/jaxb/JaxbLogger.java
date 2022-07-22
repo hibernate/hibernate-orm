@@ -24,7 +24,7 @@ import org.jboss.logging.annotations.ValidIdRange;
 		description = "Logging related to JAXB processing"
 )
 public interface JaxbLogger extends BasicLogger {
-	String LOGGER_NAME = BootLogging.NAME + "jaxb";
+	String LOGGER_NAME = BootLogging.NAME + ".jaxb";
 
 	JaxbLogger JAXB_LOGGER = Logger.getMessageLogger( JaxbLogger.class, LOGGER_NAME );
 

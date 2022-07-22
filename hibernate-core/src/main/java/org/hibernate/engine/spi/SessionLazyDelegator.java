@@ -38,6 +38,7 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.stat.SessionStatistics;
 
 import jakarta.persistence.EntityGraph;
@@ -476,6 +477,7 @@ public class SessionLazyDelegator implements Session {
 		return this.lazySession.get().getLobHelper();
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public SharedSessionBuilder sessionWithOptions() {
 		return this.lazySession.get().sessionWithOptions();
@@ -511,6 +513,7 @@ public class SessionLazyDelegator implements Session {
 		return this.lazySession.get().createQuery( queryString, resultClass );
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	@Deprecated
 	public Query createQuery(String queryString) {
@@ -522,6 +525,7 @@ public class SessionLazyDelegator implements Session {
 		return this.lazySession.get().createNamedQuery( name, resultClass );
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	@Deprecated
 	public Query createNamedQuery(String name) {
@@ -533,12 +537,14 @@ public class SessionLazyDelegator implements Session {
 		return this.lazySession.get().createQuery( criteriaQuery );
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	@Deprecated
 	public Query createQuery(CriteriaDelete deleteQuery) {
 		return this.lazySession.get().createQuery( deleteQuery );
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	@Deprecated
 	public Query createQuery(CriteriaUpdate updateQuery) {
@@ -605,7 +611,7 @@ public class SessionLazyDelegator implements Session {
 		return this.lazySession.get().createStoredProcedureQuery( procedureName );
 	}
 
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	@Override
 	public ProcedureCall createStoredProcedureQuery(String procedureName, Class... resultClasses) {
 		return this.lazySession.get().createStoredProcedureQuery( procedureName, resultClasses );
 	}
@@ -640,6 +646,7 @@ public class SessionLazyDelegator implements Session {
 		return this.lazySession.get().doReturningWork( work );
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	@Deprecated
 	public NativeQuery createNativeQuery(String sqlString) {
@@ -656,6 +663,7 @@ public class SessionLazyDelegator implements Session {
 		return this.lazySession.get().createNativeQuery( sqlString, resultClass, tableAlias );
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	@Deprecated
 	public NativeQuery createNativeQuery(String sqlString, String resultSetMappingName) {
@@ -688,13 +696,18 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(CriteriaUpdate updateQuery) {
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery) {
 		return this.lazySession.get().createMutationQuery( updateQuery );
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(CriteriaDelete deleteQuery) {
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery) {
 		return this.lazySession.get().createMutationQuery( deleteQuery );
+	}
+
+	@Override
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsertSelect insertSelect) {
+		return this.lazySession.get().createMutationQuery( insertSelect );
 	}
 
 	@Override
@@ -717,18 +730,21 @@ public class SessionLazyDelegator implements Session {
 		return this.lazySession.get().createNamedMutationQuery( name );
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	@Deprecated
 	public Query getNamedQuery(String queryName) {
 		return this.lazySession.get().getNamedQuery( queryName );
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	@Deprecated
 	public NativeQuery getNamedNativeQuery(String name) {
 		return this.lazySession.get().getNamedNativeQuery( name );
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	@Deprecated
 	public NativeQuery getNamedNativeQuery(String name, String resultSetMapping) {
@@ -813,6 +829,7 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	public <T> T unwrap(Class<T> cls) {
 		if ( cls.isAssignableFrom( Session.class ) ) {
+			//noinspection unchecked
 			return (T) this;
 		}
 		return this.lazySession.get().unwrap( cls );

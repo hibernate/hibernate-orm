@@ -223,15 +223,7 @@ public class OneToOneSecondPass implements SecondPass {
 				// HHH-6813
 				// Foo: @Id long id, @OneToOne(mappedBy="foo") Bar bar
 				// Bar: @Id @OneToOne Foo foo
-				boolean referencesDerivedId = false;
-				try {
-					referencesDerivedId = otherSide.getIdentifier() instanceof Component
-							&& ( (Component) otherSide.getIdentifier() ).getProperty( mappedBy ) != null;
-				}
-				catch ( MappingException e ) {
-					// ignore
-				}
-				boolean referenceToPrimaryKey  = referencesDerivedId || mappedBy == null;
+				boolean referenceToPrimaryKey  = ( mappedBy == null ) || otherSide.getIdentifier() instanceof Component && ! ( (Component) otherSide.getIdentifier() ).hasProperty( mappedBy ) ;
 				value.setReferenceToPrimaryKey( referenceToPrimaryKey );
 
 				String propertyRef = value.getReferencedPropertyName();

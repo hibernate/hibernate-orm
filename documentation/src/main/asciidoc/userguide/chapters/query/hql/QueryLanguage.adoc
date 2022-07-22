@@ -90,7 +90,7 @@ Most of the complexity here arises from the interplay of set operators (`union`,
 We'll describe the various clauses of a query later in this chapter, but to summarize, a query might have:
 
 * a `select` list, specifying a <<hql-select-clause,projection>> (the things to return from the query),
-* a `from` clause and joins, <<hql-from-clause,specifying>> the entities involved in the query,
+* a `from` clause and joins, <<hql-from-clause,specifying>> the entities involved in the query, and how they're <<hql-join,related>> to each other,
 * a `where` clause, specifying a <<hql-where-clause,restriction>>,
 * a `group by` clause, for <<hql-group-by,aggregation>>,
 * a `having` clause, specifying a <<hql-having,restriction>> to apply _after_ aggregation,
@@ -1031,8 +1031,7 @@ Next, functions for working with numeric values:
 | `greatest()` | Return the largest of the given arguments | `greatest(x, y, z)` | Very common in SQL dialects
 |===
 
-Finally, functions that evaluate the id, version, or natural id of an entity and the key-column of
-a to-one foreign-key:
+Finally, functions that evaluate the id, version, or natural id of an entity, or the foreign key of a to-one association:
 
 [[hql-model-functions]]
 |===
@@ -1041,7 +1040,8 @@ a to-one foreign-key:
 | `id()` | The value of the entity `@Id` attribute.
 | `version()` | The value of the entity `@Version` attribute.
 | `naturalid()` | The value of the entity `@NaturalId` attribute.
-| `fk()` | The value of the key-column of a `@ManyToOne` (or logical `@ManyToOne`) attribute.  Mainly useful with <<associations-not-found,`@NotFound` mappings>>
+| `fk()` | The value of the foreign key column mapped by a `@ManyToOne` (or logical `@ManyToOne`) association.
+           Mainly useful with <<associations-not-found,`@NotFound` mappings>>.
 |===
 
 [[hql-user-defined-functions]]
@@ -1363,7 +1363,7 @@ Just like SQL, logical expressions are based on ternary logic.
 A logical operator evaluates to null if it has a null operand.
 
 [[hql-from-clause]]
-=== Declaring root entities: `from`
+=== Declaring root entities: `from` and `cross join`
 
 The `from` clause is responsible for declaring the entities available in the rest of the query, and assigning them aliases, or, in the language of the JPQL specification, _identification variables_.
 
@@ -1470,25 +1470,60 @@ This behavior may be slightly adjusted using the `@Polymorphism` annotation.
 
 See <<chapters/domain/inheritance.adoc#entity-inheritance-polymorphism>> for more.
 
+[[hql-derived-root]]
+==== Derived root
+
+A _derived root_ is a subquery which occurs in the `from` clause.
+
+[[hql-derived-root-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-derived-root-example, indent=0]
+----
+====
+
+This feature can be used to break a more complicated query into smaller pieces.
+
 [[hql-join]]
 === Declaring joined entities
 
 Joins allow us to navigate from one entity to another, via its associations, or via explicit join conditions.
 There are:
 
-- _explicit joins_, declared within the `from` clause using the keyword ``join``,
-- and _implicit joins_, which don't need to be declared in the `from` clause.
+- _explicit joins_, declared within the `from` clause using the keyword ``join``, and
+- _implicit joins_, which don't need to be declared in the `from` clause.
 
-[[hql-explicit-join]]
-==== Explicit joins
-
-An explicit association join is declared using the `join` keyword.
 An explicit join may be either:
 
-* an inner join, written as `join` or `inner join`, or
-* a left outer join, written as `left join` or `left outer join`.
+* an _inner join_, written as `join` or `inner join`,
+* a _left outer join_, written as `left join` or `left outer join`,
+* a _right outer join_, written as `right join` or `right outer join`, or
+* a _full outer join_, written as `full join` or `full outer join`.
 
-Every explicit join specifies an entity attribute to be joined.
+[[hql-root-join]]
+==== Explicit root joins
+
+An explicit root join works just like an ANSI-style join in SQL.
+
+[[hql-explicit-root-join-example]]
+//.Explicit root join examples
+====
+[source, SQL, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-explicit-root-join-example]
+----
+====
+
+[NOTE]
+====
+This looks nice and familiar, but it's _not_ the most common sort of join in HQL or JPQL.
+====
+
+[[hql-explicit-join]]
+==== Explicit association joins
+
+Every explicit association join specifies an entity attribute to be joined.
 The specified attribute:
 
 * is usually a `@OneToMany`, `@ManyToMany`, `@OneToOne`, or `@ManyToOne` association, but
@@ -1522,7 +1557,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-explicit-outer-join-example]
 For further information about collection-valued association references, see <<hql-collection-valued-associations>>.
 
 [[hql-explicit-join-conditions]]
-==== Explicit joins with join conditions
+==== Explicit association joins with join conditions
 
 The `with` or `on` clause allows explicit qualification of the join conditions.
 
@@ -1597,7 +1632,7 @@ Indeed, it's best to avoid even assigning an identification variable to a fetche
 
 [IMPORTANT]
 ====
-Fetch joins should not be used in limited or paged queries.
+Fetch joins should usually be avoided in limited or paged queries.
 This includes:
 
 - queries executed using `setFirstResult()` or `setMaxResults()`, as in <<jpql-pagination>>, or
@@ -1626,8 +1661,32 @@ This allows the attribute `cardNumber` declared by the subtype `CreditCardPaymen
 
 See <<hql-treat-type>> for more information about `treat()`.
 
+[[hql-join-derived]]
+==== Join subquery
+
+A `join` clause may contain a subquery.
+This is very similar to a <<hql-derived-root,derived root>>.
+
+[[hql-derived-join-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-derived-join-example, indent=0]
+----
+====
+
+The `lateral` keyword allows the subquery to refer to aliases defined by previous `from` clauses.
+
+This is particularly useful for computing top-N elements of multiple groups.
+
+[IMPORTANT]
+====
+Most databases support `lateral` natively, and Hibernate emulates the feature for databases which don't.
+But emulation is neither very efficient, nor does it support all possible query shapes, so it's important to test on your target database.
+====
+
 [[hql-implicit-join]]
-==== Implicit joins (path expressions)
+==== Implicit association joins (path expressions)
 
 It's not necessary to explicitly `join` every entity that occurs in a query.
 Instead, entity associations may be _navigated_, just like in Java:
@@ -1751,6 +1810,9 @@ The `select` list identifies which objects and values to return as the query res
 NOTE: This operation is called _projection_.
 
 Any of the expression types discussed in <<hql-expressions>> may occur in the projection list, unless otherwise noted.
+
+TIP: If a query has no explicit `select` list, the projection is inferred from the entities and joins occurring in the `from` clause, together with the result type specified by the call to `createQuery()`.
+It's better to specify the projection explicitly, except in the simplest cases.
 
 There might be multiple items in a projection list, in which case each query result is a tuple, and this poses a problem:
 Java doesn't have a good way to represent tuples.
@@ -2022,7 +2084,7 @@ NOTE: In short, _grouping_ controls the effect of _aggregation_.
 A query with aggregation may also have a `having` clause, a restriction applied to the groups.
 
 [[hql-group-by]]
-==== `group by`
+==== Aggregation and grouping: `group by`
 
 The `group by` clause looks quite similar to the `select` clause&mdash;it has a list of grouped items, but:
 
@@ -2054,7 +2116,7 @@ The first query retrieves the complete total over all orders.
 The second retrieves the total for each customer, after grouping the orders by customer.
 
 [[hql-group-by-rollup-cube]]
-==== `rollup` and `cube`
+==== Totals and subtotals: `rollup` and `cube`
 
 The special functions `rollup()` and `cube()` may be used in the `group by` clause, when supported by the database.
 The semantics are identical to SQL.
@@ -2065,7 +2127,7 @@ These functions are especially useful for reporting:
 * A `group by` clause with `cube()` allows totals for every combination of columns.
 
 [[hql-having]]
-==== `having`
+==== Aggregation and restriction: `having`
 
 In a grouped query, the `where` clause applies to the non-aggregated values (it determines which rows will make it into the aggregation).
 The `having` clause also restricts results, but it operates on the aggregated values.

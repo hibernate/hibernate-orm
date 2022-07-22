@@ -68,7 +68,7 @@ public class QualifiedJoinPredicatePathConsumer extends BasicDotIdentifierConsum
 							return;
 						}
 					}
-					// If the current join is not part of the processing query, this must be a sub query in the ON clause
+					// If the current join is not part of the processing query, this must be a subquery in the ON clause
 					// in which case the path root is allowed to occur in the current processing query as root
 					if ( currentProcessingQuery instanceof SqmSubQuery<?> ) {
 						validateAsRootOnParentQueryClosure( pathRoot, root, processingState );
@@ -96,7 +96,7 @@ public class QualifiedJoinPredicatePathConsumer extends BasicDotIdentifierConsum
 					if ( processingQuery instanceof SqmSelectQuery<?> ) {
 						final SqmQuerySpec<?> querySpec = ( (SqmSelectQuery<?>) processingQuery ).getQuerySpec();
 						final SqmFromClause fromClause = querySpec.getFromClause();
-						// If we are in a sub query, the "foreign" from element could be one of the sub query roots,
+						// If we are in a subquery, the "foreign" from element could be one of the subquery roots,
 						// which is totally fine. The aim of this check is to prevent uses of different "spaces"
 						// i.e. `from A a, B b join b.id = a.id` would be illegal
 						if ( fromClause != null && fromClause.getRoots().contains( root ) ) {

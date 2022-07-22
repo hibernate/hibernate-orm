@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 import org.hibernate.Session;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.result.Output;
@@ -30,6 +31,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,6 +50,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @RequiresDialect(value = MySQLDialect.class, matchSubTypes = false, majorVersion = 5)
 @RequiresDialect(value = MariaDBDialect.class, majorVersion = 5)
+@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB doesn't support stored procedures")
 @Jpa(
 		annotatedClasses = {
 				Person.class,

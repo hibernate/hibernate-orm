@@ -12,7 +12,7 @@ import java.util.Set;
 import org.hibernate.Cache;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
-import org.hibernate.annotations.Remove;
+import org.hibernate.Remove;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;

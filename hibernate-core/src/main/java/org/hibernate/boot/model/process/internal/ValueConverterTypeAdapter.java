@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
+import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -22,7 +23,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 /**
  * @author Steve Ebersole
  */
-public class ValueConverterTypeAdapter<J> extends AbstractSingleColumnStandardBasicType<J> {
+public class ValueConverterTypeAdapter<J> extends AbstractSingleColumnStandardBasicType<J> implements ConvertedBasicType<J> {
 	private final String description;
 	private final BasicValueConverter<J, Object> converter;
 
@@ -73,6 +74,11 @@ public class ValueConverterTypeAdapter<J> extends AbstractSingleColumnStandardBa
 	public boolean isEqual(Object one, Object another) {
 		//noinspection unchecked
 		return ( (JavaType<Object>) converter.getDomainJavaType() ).areEqual( one, another );
+	}
+
+	@Override
+	public BasicValueConverter getValueConverter() {
+		return converter;
 	}
 
 	@Override

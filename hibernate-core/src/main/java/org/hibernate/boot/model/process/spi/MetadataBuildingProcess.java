@@ -15,7 +15,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
@@ -306,12 +305,25 @@ public class MetadataBuildingProcess {
 		processor.finishUp();
 
 		if ( options.isXmlMappingEnabled() ) {
+			//noinspection deprecation
 			final Iterable<AdditionalJaxbMappingProducer> producers = classLoaderService.loadJavaServices( AdditionalJaxbMappingProducer.class );
 			if ( producers != null ) {
 				final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
-				// final MappingBinder mappingBinder = new MappingBinder( true );
-				// We need to disable validation here.  It seems Envers is not producing valid (according to schema) XML
-				final MappingBinder mappingBinder = new MappingBinder( classLoaderService, false );
+				final MappingBinder mappingBinder = new MappingBinder(
+						classLoaderService,
+						new MappingBinder.Options() {
+							@Override
+							public boolean validateMappings() {
+								return false;
+							}
+
+							@Override
+							public boolean transformHbmMappings() {
+								return false;
+							}
+						}
+				);
+				//noinspection deprecation
 				for ( AdditionalJaxbMappingProducer producer : producers ) {
 					log.tracef( "Calling AdditionalJaxbMappingProducer : %s", producer );
 					Collection<MappingDocument> additionalMappings = producer.produceAdditionalMappings(
@@ -389,6 +401,15 @@ public class MetadataBuildingProcess {
 		}
 		jdbcTypeRegistry.addDescriptorIfAbsent( JsonJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( XmlAsStringJdbcType.INSTANCE );
+
+		final int preferredSqlTypeCodeForArray = ConfigurationHelper.getPreferredSqlTypeCodeForArray( bootstrapContext.getServiceRegistry() );
+		if ( preferredSqlTypeCodeForArray != SqlTypes.ARRAY ) {
+			jdbcTypeRegistry.addDescriptor( SqlTypes.ARRAY, jdbcTypeRegistry.getDescriptor( preferredSqlTypeCodeForArray ) );
+		}
+		else if ( jdbcTypeRegistry.findDescriptor( SqlTypes.ARRAY ) == null ) {
+			// Fallback to VARBINARY
+			jdbcTypeRegistry.addDescriptor( SqlTypes.ARRAY, jdbcTypeRegistry.getDescriptor( SqlTypes.VARBINARY ) );
+		}
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.INET, SqlTypes.VARBINARY );
 		final int preferredSqlTypeCodeForDuration = ConfigurationHelper.getPreferredSqlTypeCodeForDuration( bootstrapContext.getServiceRegistry() );
 		if ( preferredSqlTypeCodeForDuration != SqlTypes.INTERVAL_SECOND ) {

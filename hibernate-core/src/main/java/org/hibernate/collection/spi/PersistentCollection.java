@@ -452,6 +452,21 @@ public interface PersistentCollection<E> {
 	 */
 	Collection<E> getOrphans(Serializable snapshot, String entityName);
 
+	/**
+	 * Obtain the size of this collection without initializing it
+	 */
+	int getSize();
+
+	/**
+	 * Determine if the given element belongs to this collection without initializing it
+	 */
+	boolean elementExists(Object element);
+
+	/**
+	 * Obtain the element os this collection associated with the given index without initializing it
+	 */
+	Object elementByIndex(Object index);
+
 	void initializeEmptyCollection(CollectionPersister persister);
 
 	/**
@@ -464,7 +479,7 @@ public interface PersistentCollection<E> {
 	}
 
 	/**
-	 * Like {@link #toString()} but without the silliness of rendering the elements
+	 * Like {@link Object#toString()} but without the silliness of rendering the elements
 	 */
 	default String render() {
 		return getRole() + "#" + getKey() + "(initialized: " + wasInitialized() + ")";

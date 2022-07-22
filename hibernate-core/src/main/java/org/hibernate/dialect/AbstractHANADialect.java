@@ -1081,7 +1081,8 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public boolean supportsOrderByInSubquery() {
-		return false;
+		// Seems to work, though I don't know as of which version
+		return true;
 	}
 
 	@Override

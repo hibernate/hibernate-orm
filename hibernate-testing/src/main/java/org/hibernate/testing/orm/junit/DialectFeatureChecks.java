@@ -20,9 +20,12 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.sqm.FetchClauseType;
+
+import org.hibernate.testing.DialectCheck;
 
 /**
  * Container class for different implementation of the {@link DialectFeatureCheck} interface.
@@ -354,6 +357,14 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsOrderByInCorrelatedSubquery implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsOrderByInSubquery()
+					// For some reason, HANA doesn't support order by in correlated subqueries...
+					&& !( dialect instanceof AbstractHANADialect );
+		}
+	}
+
 	public static class SupportNoWait implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsNoWait();
@@ -436,6 +447,23 @@ abstract public class DialectFeatureChecks {
 		public boolean apply(Dialect dialect) {
 			// Derby doesn't really support window functions, only row_number()
 			return dialect instanceof PostgreSQLDialect;
+		}
+	}
+
+	public static class SupportsSubqueryInOnClause implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			// TiDB db does not support subqueries for ON condition
+			return !( dialect instanceof TiDBDialect );
+		}
+	}
+
+	public static class SupportsFullJoin implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			// TiDB db does not support subqueries for ON condition
+			return !( dialect instanceof H2Dialect
+					|| dialect instanceof MySQLDialect
+					|| dialect instanceof SybaseDialect
+					|| dialect instanceof DerbyDialect);
 		}
 	}
 }

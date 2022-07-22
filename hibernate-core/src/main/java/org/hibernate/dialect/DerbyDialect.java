@@ -577,7 +577,8 @@ public class DerbyDialect extends Dialect {
 
 	@Override
 	public boolean supportsOrderByInSubquery() {
-		return false;
+		// As of version 10.5 Derby supports OFFSET and FETCH as well as ORDER BY in subqueries
+		return getVersion().isSameOrAfter( 10, 5 );
 	}
 
 	@Override

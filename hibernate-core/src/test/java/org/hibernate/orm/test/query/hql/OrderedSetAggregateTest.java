@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -132,6 +133,18 @@ public class OrderedSetAggregateTest {
 				session -> {
 					TypedQuery<String> q = session.createQuery( "select listagg(eob.theString, ',') within group (order by eob.id desc) filter (where eob.theInt < 10) from EntityOfBasics eob", String.class );
 					assertEquals( "5,7,6,5", q.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-15360")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStringAggregation.class)
+	public void testListaggWithNullsClause(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					TypedQuery<String> q = session.createQuery( "select listagg(eob.theString, ',') within group (order by eob.id desc nulls first) from EntityOfBasics eob", String.class );
+					assertEquals( "5,13,7,6,5", q.getSingleResult() );
 				}
 		);
 	}

@@ -15,8 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.SharedCacheMode;
 
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.HibernateException;
@@ -39,14 +37,14 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
-import org.hibernate.boot.registry.BootstrapServiceRegistry;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
@@ -58,6 +56,9 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializationException;
 import org.hibernate.usertype.UserType;
+
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.SharedCacheMode;
 
 /**
  * A convenience API making it easier to bootstrap an instance of Hibernate
@@ -151,9 +152,16 @@ public class Configuration {
 	 */
 	public Configuration(BootstrapServiceRegistry serviceRegistry) {
 		this.bootstrapServiceRegistry = serviceRegistry;
-		this.metadataSources = new MetadataSources( serviceRegistry );
+		this.metadataSources = new MetadataSources( serviceRegistry, createMappingBinderAccess( serviceRegistry ) );
 		this.classmateContext = new ClassmateContext();
 		reset();
+	}
+
+	private XmlMappingBinderAccess createMappingBinderAccess(BootstrapServiceRegistry serviceRegistry) {
+		return new XmlMappingBinderAccess(
+				serviceRegistry,
+				(settingName) -> properties == null ? null : properties.get( settingName )
+		);
 	}
 
 	/**

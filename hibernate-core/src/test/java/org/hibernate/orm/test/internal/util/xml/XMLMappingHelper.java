@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
 package org.hibernate.orm.test.internal.util.xml;
 
@@ -12,7 +12,7 @@ import java.io.InputStream;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappings;
+import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
 import org.hibernate.boot.jaxb.spi.Binding;
 
 import org.hibernate.testing.boot.ClassLoaderServiceTestingImpl;
@@ -25,11 +25,11 @@ public final class XMLMappingHelper {
 	private final MappingBinder binder;
 
 	public XMLMappingHelper() {
-		binder = new MappingBinder( ClassLoaderServiceTestingImpl.INSTANCE, true );
+		binder = new MappingBinder( ClassLoaderServiceTestingImpl.INSTANCE, MappingBinder.VALIDATING );
 	}
 
 	public JaxbEntityMappings readOrmXmlMappings(String name) throws IOException {
-		try (InputStream is = ClassLoaderServiceTestingImpl.INSTANCE.locateResourceStream( name )) {
+		try ( InputStream is = ClassLoaderServiceTestingImpl.INSTANCE.locateResourceStream( name ) ) {
 			return readOrmXmlMappings( is, name );
 		}
 	}

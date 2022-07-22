@@ -90,7 +90,7 @@ public class JtaAfterCompletionTest extends BaseSessionFactoryFunctionalTest {
 			}
 			catch (HibernateException e) {
 				// This is expected
-				assertEquals( "Transaction was rolled back in a different thread!", e.getMessage() );
+				assertEquals( "Transaction was rolled back in a different thread", e.getMessage() );
 			}
 
 			// verify that the callback was fired.

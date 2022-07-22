@@ -15,7 +15,7 @@ import org.hibernate.boot.model.naming.Identifier;
  * @author Christoph Sturm
  * @author Steve Ebersole
  */
-public interface ColumnInformation {
+public interface ColumnInformation extends ColumnTypeInformation {
 	/**
 	 * Access to the containing table.
 	 *

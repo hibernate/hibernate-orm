@@ -122,32 +122,36 @@ String resolveSigningKey() {
 
 String findSigningProperty(String propName) {
 	if ( System.getProperty( propName ) != null ) {
-		logger.lifecycle "Found `{}` as a system property", propName
+		logger.debug "Found `{}` as a system property", propName
 		return System.getProperty(propName )
 	}
 	else if ( System.getenv().get( propName ) != null ) {
-		logger.lifecycle "Found `{}` as an env-var property", propName
-		return System.getenv().get( propName );
+		logger.debug "Found `{}` as an env-var property", propName
+		return System.getenv().get( propName )
 	}
 	else if ( project.hasProperty( propName ) ) {
-		logger.lifecycle "Found `{}` as a project property", propName
+		logger.debug "Found `{}` as a project property", propName
 		return project.hasProperty( propName )
 	}
 	else {
-		logger.lifecycle "Did not find `{}`", propName
+		logger.debug "Did not find `{}`", propName
 		return null
 	}
 }
 
 
-final publishTaskName = "publishPublishedArtifactsPublicationToSonatypeRepository"
-final signingTaskName = "signPublishedArtifactsPublication"
-final signingTaskPath = project.path + ":" + signingTaskName
-final signingExplicitlyRequested = gradle.startParameter.taskNames.contains( signingTaskName )
-		|| gradle.startParameter.taskNames.contains( signingTaskPath )
-
-var signingTask = project.tasks.getByName( signingTaskName ) as Sign
+var signingTask = project.tasks.getByName( "signPublishedArtifactsPublication" ) as Sign
 var signingExtension = project.getExtensions().getByType(SigningExtension) as SigningExtension
+
+task sign {
+	dependsOn "signPublications"
+}
+
+task signPublications { t ->
+	tasks.withType( Sign ).all { s ->
+		t.dependsOn s
+	}
+}
 
 signingTask.doFirst {
 	if ( signingKey == null || signingPassword == null ) {
@@ -157,25 +161,61 @@ signingTask.doFirst {
 	}
 }
 
-if ( signingExplicitlyRequested ) {
+
+boolean wasSigningExplicitlyRequested() {
+	// check whether signing task was explicitly requested when running the build
+	//
+	// NOTE: due to https://discuss.gradle.org/t/how-to-tell-if-a-task-was-explicitly-asked-for-on-the-command-line/42853/3
+	// we cannot definitively know whether the task was requested.  Gradle really just does not expose this information.
+	// so we make a convention - we check the "start parameters" object to see which task-names were requested;
+	// the problem is that these are the raw names directly from the command line.  e.g. it is perfectly legal to
+	// say `gradlew signPubArtPub` in place of `gradlew signPublishedArtifactsPublication` - Gradle will simply
+	// "expand" the name it finds.  However, it does not make that available.
+	//
+	// so the convention is that we will check for the following task names
+	//
+	// for each of:
+	//		1. `sign`
+	//		2. `signPublications`
+	//		3. `signPublishedArtifactsPublication`
+	//
+	// and we check both forms:
+	//		1. "${taskName}"
+	//		2. project.path + ":${taskName}"
+	//
+	// we need to check both again because of the "start parameters" discussion
+
+	def signingTaskNames = ["sign", "signPublications", "signPublishedArtifactsPublication"]
+
+	for ( String taskName : signingTaskNames ) {
+		if ( gradle.startParameter.taskNames.contains( taskName )
+				|| gradle.startParameter.taskNames.contains( "${project.path}:${taskName}" ) ) {
+			return true
+		}
+	}
+
+	return false
+}
+
+if ( wasSigningExplicitlyRequested() ) {
 	// signing was explicitly requested
 	signingExtension.required = true
 }
 else {
 	gradle.taskGraph.whenReady { graph ->
-		var publishingTask = project.tasks.getByName( publishTaskName ) as PublishToMavenRepository
 		if ( graph.hasTask( signingTask ) ) {
 			// signing is scheduled to happen.
 			//
 			// we know, from above if-check, that it was not explicitly requested -
 			// so it is triggered via task dependency. make sure we want it to happen
+			var publishingTask = project.tasks.getByName( "publishPublishedArtifactsPublicationToSonatypeRepository" ) as PublishToMavenRepository
 			if ( graph.hasTask( publishingTask ) ) {
 				// we are publishing to Sonatype OSSRH - we need the signing to happen
 				signingExtension.required = true
 			}
 			else {
-				// signing was not explicitly requested and we are not publishign to OSSRH
-				// so do not sign
+				// signing was not explicitly requested and we are not publishing to OSSRH,
+				// so do not sign.
 				signingTask.enabled = false
 			}
 		}
@@ -188,10 +228,16 @@ else {
 // Release / publishing tasks
 
 task ciBuild {
-	dependsOn test, publishToSonatype
+	dependsOn test, tasks.publishToSonatype
 }
 
 tasks.release.dependsOn tasks.test, tasks.publishToSonatype
+
+tasks.preVerifyRelease.dependsOn build
+tasks.preVerifyRelease.dependsOn generateMetadataFileForPublishedArtifactsPublication
+tasks.preVerifyRelease.dependsOn generatePomFileForPublishedArtifactsPublication
+tasks.preVerifyRelease.dependsOn generatePomFileForRelocationPomPublication
+
 tasks.publishToSonatype.mustRunAfter test
 
 

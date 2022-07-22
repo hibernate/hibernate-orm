@@ -29,6 +29,8 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor {
 	private final Object identifier;
+
+	//N.B. this Set needs to be treated as immutable
 	private final Set<String> lazyFields;
 	private Set<String> initializedLazyFields;
 
@@ -39,7 +41,8 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 			SharedSessionContractImplementor session) {
 		super( entityName, session );
 		this.identifier = identifier;
-		this.lazyFields = lazyFields;
+		//Important optimisation to not actually do a Map lookup for entities which don't have any lazy fields at all:
+		this.lazyFields = org.hibernate.internal.util.collections.CollectionHelper.toSmallSet( lazyFields );
 	}
 
 	@Override
@@ -122,7 +125,7 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 	}
 
 	private boolean isLazyAttribute(String fieldName) {
-		return lazyFields == null || lazyFields.contains( fieldName );
+		return lazyFields.contains( fieldName );
 	}
 
 	private boolean isInitializedLazyField(String fieldName) {
@@ -130,7 +133,7 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 	}
 
 	public boolean hasAnyUninitializedAttributes() {
-		if ( lazyFields == null || lazyFields.isEmpty() ) {
+		if ( lazyFields.isEmpty() ) {
 			return false;
 		}
 

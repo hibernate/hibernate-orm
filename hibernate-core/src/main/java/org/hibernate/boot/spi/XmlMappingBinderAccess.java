@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.function.Function;
 
 import org.hibernate.boot.MappingNotFoundException;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
@@ -19,6 +20,7 @@ import org.hibernate.boot.jaxb.internal.FileXmlSource;
 import org.hibernate.boot.jaxb.internal.InputStreamXmlSource;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.internal.UrlXmlSource;
+import org.hibernate.boot.jaxb.spi.BindableMappingDescriptor;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.service.ServiceRegistry;
@@ -26,6 +28,9 @@ import org.hibernate.service.ServiceRegistry;
 import org.jboss.logging.Logger;
 
 /**
+ * Poor naming.  Models the binder and a class-loader to be a
+ * one-stop-shop in terms of {@link #bind binding} a resource
+ *
  * @author Steve Ebersole
  */
 public class XmlMappingBinderAccess {
@@ -36,18 +41,19 @@ public class XmlMappingBinderAccess {
 
 	public XmlMappingBinderAccess(ServiceRegistry serviceRegistry) {
 		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		this.mappingBinder = new MappingBinder( serviceRegistry );
+	}
 
-		// NOTE : The boolean here indicates whether or not to perform validation as we load XML documents.
-		// Should we expose this setting?  Disabling would speed up JAXP and JAXB at runtime, but potentially
-		// at the cost of less obvious errors when a document is not valid.
-		this.mappingBinder = new MappingBinder( classLoaderService, true );
+	public XmlMappingBinderAccess(ServiceRegistry serviceRegistry, Function<String, Object> configAccess) {
+		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		this.mappingBinder = new MappingBinder( classLoaderService, configAccess );
 	}
 
 	public MappingBinder getMappingBinder() {
 		return mappingBinder;
 	}
 
-	public Binding bind(String resource) {
+	public <X extends BindableMappingDescriptor> Binding<X> bind(String resource) {
 		LOG.tracef( "reading mappings from resource : %s", resource );
 
 		final Origin origin = new Origin( SourceType.RESOURCE, resource );
@@ -56,10 +62,11 @@ public class XmlMappingBinderAccess {
 			throw new MappingNotFoundException( origin );
 		}
 
+		//noinspection unchecked
 		return new UrlXmlSource( origin, url ).doBind( getMappingBinder() );
 	}
 
-	public Binding bind(File file) {
+	public <X extends BindableMappingDescriptor> Binding<X> bind(File file) {
 		final Origin origin = new Origin( SourceType.FILE, file.getPath() );
 		LOG.tracef( "reading mappings from file : %s", origin.getName() );
 
@@ -67,15 +74,17 @@ public class XmlMappingBinderAccess {
 			throw new MappingNotFoundException( origin );
 		}
 
+		//noinspection unchecked
 		return new FileXmlSource( origin, file ).doBind( getMappingBinder() );
 	}
 
-	public Binding bind(InputStreamAccess xmlInputStreamAccess) {
+	public <X extends BindableMappingDescriptor> Binding<X> bind(InputStreamAccess xmlInputStreamAccess) {
 		LOG.tracef( "reading mappings from InputStreamAccess : %s", xmlInputStreamAccess.getStreamName() );
 
 		final Origin origin = new Origin( SourceType.INPUT_STREAM, xmlInputStreamAccess.getStreamName() );
 		InputStream xmlInputStream = xmlInputStreamAccess.accessInputStream();
 		try {
+			//noinspection unchecked
 			return new InputStreamXmlSource( origin, xmlInputStream, false ).doBind( mappingBinder );
 		}
 		finally {
@@ -88,17 +97,19 @@ public class XmlMappingBinderAccess {
 		}
 	}
 
-	public Binding bind(InputStream xmlInputStream) {
+	public <X extends BindableMappingDescriptor> Binding<X> bind(InputStream xmlInputStream) {
 		LOG.trace( "reading mappings from InputStream" );
 		final Origin origin = new Origin( SourceType.INPUT_STREAM, null );
+		//noinspection unchecked
 		return new InputStreamXmlSource( origin, xmlInputStream, false ).doBind( getMappingBinder() );
 	}
 
-	public Binding bind(URL url) {
+	public <X extends BindableMappingDescriptor> Binding<X> bind(URL url) {
 		final String urlExternalForm = url.toExternalForm();
 		LOG.debugf( "Reading mapping document from URL : %s", urlExternalForm );
 
 		final Origin origin = new Origin( SourceType.URL, urlExternalForm );
+		//noinspection unchecked
 		return new UrlXmlSource( origin, url ).doBind( getMappingBinder() );
 	}
 }

@@ -63,6 +63,11 @@ public class VarbinaryJdbcType implements AdjustableJdbcType {
 	}
 
 	@Override
+	public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+		return byte[].class;
+	}
+
+	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
 		return supportsLiterals ? new JdbcLiteralFormatterBinary<>( javaType ) : null;
 	}

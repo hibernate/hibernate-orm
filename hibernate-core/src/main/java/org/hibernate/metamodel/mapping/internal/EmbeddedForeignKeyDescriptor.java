@@ -341,9 +341,14 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			SqlAstCreationContext creationContext) {
 		final TableReference lhsTableReference = targetSideTableGroup.resolveTableReference(
 				targetSideTableGroup.getNavigablePath(),
-				targetTable
+				targetTable,
+				false
 		);
-		final TableReference rhsTableKeyReference = keySideTableGroup.resolveTableReference( keyTable );
+		final TableReference rhsTableKeyReference = keySideTableGroup.resolveTableReference(
+				null,
+				keyTable,
+				false
+		);
 
 		return generateJoinPredicate(
 				lhsTableReference,
@@ -359,7 +364,26 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			TableReference keySideReference,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		return getPredicate( targetSideReference, keySideReference, creationContext, targetSelectableMappings, keySelectableMappings );
+		final Junction predicate = new Junction( Junction.Nature.CONJUNCTION );
+		targetSelectableMappings.forEachSelectable(
+				(i, selection) -> {
+					final ComparisonPredicate comparisonPredicate = new ComparisonPredicate(
+							new ColumnReference(
+									targetSideReference,
+									selection,
+									creationContext.getSessionFactory()
+							),
+							ComparisonOperator.EQUAL,
+							new ColumnReference(
+									keySideReference,
+									keySelectableMappings.getSelectable( i ),
+									creationContext.getSessionFactory()
+							)
+					);
+					predicate.add( comparisonPredicate );
+				}
+		);
+		return predicate;
 	}
 
 	@Override
@@ -440,55 +464,6 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		return true;
 	}
 
-	private Predicate getPredicate(
-			TableReference lhs,
-			TableReference rhs,
-			SqlAstCreationContext creationContext,
-			SelectableMappings lhsMappings,
-			SelectableMappings rhsMappings) {
-		final Junction predicate = new Junction( Junction.Nature.CONJUNCTION );
-		lhsMappings.forEachSelectable(
-				(i, selection) -> {
-					final ComparisonPredicate comparisonPredicate = new ComparisonPredicate(
-							new ColumnReference(
-									lhs,
-									selection,
-									creationContext.getSessionFactory()
-							),
-							ComparisonOperator.EQUAL,
-							new ColumnReference(
-									rhs,
-									rhsMappings.getSelectable( i ),
-									creationContext.getSessionFactory()
-							)
-					);
-					predicate.add( comparisonPredicate );
-				}
-		);
-		return predicate;
-	}
-
-	protected TableReference getTableReference(TableGroup lhs, TableGroup tableGroup, String table) {
-		TableReference tableReference = lhs.getPrimaryTableReference().resolveTableReference( table );
-		if ( tableReference != null ) {
-			return tableReference;
-		}
-		tableReference = tableGroup.getPrimaryTableReference().resolveTableReference( table );
-		if ( tableReference != null ) {
-			return tableReference;
-		}
-
-		tableReference = lhs.resolveTableReference(
-				lhs.getNavigablePath().append( getNavigableRole().getNavigableName() ),
-				table
-		);
-		if ( tableReference != null ) {
-			return tableReference;
-		}
-
-		throw new IllegalStateException( "Could not resolve binding for table `" + table + "`" );
-	}
-
 	@Override
 	public int visitKeySelectables(int offset, SelectableConsumer consumer) {
 		return keySelectableMappings.forEachSelectable( offset, consumer );
@@ -554,10 +529,10 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		}
 		// If the mapping type has an identifier type, that identifier is the key
 		if ( modelPart instanceof SingleAttributeIdentifierMapping ) {
-			return ( (SingleAttributeIdentifierMapping) modelPart ).getIdentifier( targetObject );
+			return ( (SingleAttributeIdentifierMapping) modelPart ).getIdentifierIfNotUnsaved( targetObject, session );
 		}
 		else if ( modelPart instanceof CompositeIdentifierMapping ) {
-			return ( (CompositeIdentifierMapping) modelPart ).getIdentifier( targetObject );
+			return ( (CompositeIdentifierMapping) modelPart ).getIdentifierIfNotUnsaved( targetObject, session );
 		}
 		// Otherwise, this is a key based on the target object i.e. without id-class
 		return targetObject;

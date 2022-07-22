@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -100,8 +99,6 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-
-import static java.util.Objects.requireNonNullElse;
 
 /**
  * @author Steve Ebersole
@@ -391,6 +388,12 @@ public class ToOneAttributeMapping
 							compositeType.getSubtypes()[0],
 							declaringEntityPersister.getFactory()
 					);
+					addPrefixedPropertyNames(
+							targetKeyPropertyNames,
+							ForeignKeyDescriptor.PART_NAME,
+							compositeType.getSubtypes()[0],
+							declaringEntityPersister.getFactory()
+					);
 				}
 				else {
 					this.targetKeyPropertyName = EntityIdentifierMapping.ROLE_LOCAL_NAME;
@@ -406,6 +409,12 @@ public class ToOneAttributeMapping
 							propertyType,
 							declaringEntityPersister.getFactory()
 					);
+					addPrefixedPropertyNames(
+							targetKeyPropertyNames,
+							ForeignKeyDescriptor.PART_NAME,
+							propertyType,
+							declaringEntityPersister.getFactory()
+					);
 				}
 			}
 			else {
@@ -413,6 +422,12 @@ public class ToOneAttributeMapping
 				addPrefixedPropertyNames(
 						targetKeyPropertyNames,
 						targetKeyPropertyName,
+						propertyType,
+						declaringEntityPersister.getFactory()
+				);
+				addPrefixedPropertyNames(
+						targetKeyPropertyNames,
+						ForeignKeyDescriptor.PART_NAME,
 						propertyType,
 						declaringEntityPersister.getFactory()
 				);
@@ -425,6 +440,12 @@ public class ToOneAttributeMapping
 			addPrefixedPropertyNames(
 					targetKeyPropertyNames,
 					targetKeyPropertyName,
+					bootValue.getType(),
+					declaringEntityPersister.getFactory()
+			);
+			addPrefixedPropertyNames(
+					targetKeyPropertyNames,
+					ForeignKeyDescriptor.PART_NAME,
 					bootValue.getType(),
 					declaringEntityPersister.getFactory()
 			);
@@ -445,6 +466,12 @@ public class ToOneAttributeMapping
 						compositeType.getSubtypes()[0],
 						declaringEntityPersister.getFactory()
 				);
+				addPrefixedPropertyNames(
+						targetKeyPropertyNames,
+						ForeignKeyDescriptor.PART_NAME,
+						compositeType.getSubtypes()[0],
+						declaringEntityPersister.getFactory()
+				);
 				this.targetKeyPropertyNames = targetKeyPropertyNames;
 			}
 			else {
@@ -461,10 +488,19 @@ public class ToOneAttributeMapping
 							entityMappingType.getEntityPersister().getIdentifierType(),
 							declaringEntityPersister.getFactory()
 					);
+					addPrefixedPropertyNames(
+							targetKeyPropertyNames,
+							ForeignKeyDescriptor.PART_NAME,
+							entityMappingType.getEntityPersister().getIdentifierType(),
+							declaringEntityPersister.getFactory()
+					);
 					this.targetKeyPropertyNames = targetKeyPropertyNames;
 				}
 				else {
-					this.targetKeyPropertyNames = Collections.singleton( targetKeyPropertyName );
+					this.targetKeyPropertyNames = Set.of(
+							targetKeyPropertyName,
+							ForeignKeyDescriptor.PART_NAME
+					);
 				}
 			}
 		}
@@ -563,7 +599,7 @@ public class ToOneAttributeMapping
 		return null;
 	}
 
-	static void addPrefixedPropertyNames(
+	public static void addPrefixedPropertyNames(
 			Set<String> targetKeyPropertyNames,
 			String prefix,
 			Type type,
@@ -600,16 +636,21 @@ public class ToOneAttributeMapping
 				propertyName = entityType.getRHSUniqueKeyPropertyName();
 			}
 			final String newPrefix;
+			final String newFkPrefix;
 			if ( prefix == null ) {
 				newPrefix = propertyName;
+				newFkPrefix = ForeignKeyDescriptor.PART_NAME;
 			}
 			else if ( propertyName == null ) {
 				newPrefix = prefix;
+				newFkPrefix = prefix + "." + ForeignKeyDescriptor.PART_NAME;
 			}
 			else {
 				newPrefix = prefix + "." + propertyName;
+				newFkPrefix = prefix + "." + ForeignKeyDescriptor.PART_NAME;
 			}
 			addPrefixedPropertyNames( targetKeyPropertyNames, newPrefix, identifierOrUniqueKeyType, factory );
+			addPrefixedPropertyNames( targetKeyPropertyNames, newFkPrefix, identifierOrUniqueKeyType, factory );
 		}
 	}
 
@@ -642,6 +683,10 @@ public class ToOneAttributeMapping
 				&& declaringTableGroupProducer.containsTableReference( identifyingColumnsTableExpression );
 	}
 
+	public String getIdentifyingColumnsTableExpression() {
+		return identifyingColumnsTableExpression;
+	}
+
 	public void setIdentifyingColumnsTableExpression(String tableExpression) {
 		identifyingColumnsTableExpression = tableExpression;
 	}
@@ -654,6 +699,16 @@ public class ToOneAttributeMapping
 	@Override
 	public ForeignKeyDescriptor.Nature getSideNature() {
 		return sideNature;
+	}
+
+	@Override
+	public boolean isReferenceToPrimaryKey() {
+		return foreignKeyDescriptor.getSide( sideNature.inverse() ).getModelPart() instanceof EntityIdentifierMapping;
+	}
+
+	@Override
+	public boolean isFkOptimizationAllowed() {
+		return canUseParentTableGroup;
 	}
 
 	public String getReferencedPropertyName() {
@@ -1139,10 +1194,33 @@ public class ToOneAttributeMapping
 				|| fetchParent.getNavigablePath() instanceof TreatedNavigablePath
 				&& parentNavigablePath.equals( fetchParent.getNavigablePath().getRealParent() );
 
+		/*
+		 In case of @NotFound we are going to add fetch for the `fetchablePath` only if there is not already a `TableGroupJoin`.
 
-		if ( (hasNotFoundAction()
-				|| ( fetchTiming == FetchTiming.IMMEDIATE && selected )) ) {
-			final TableGroup tableGroup = determineTableGroup(
+		 e.g. given :
+		 	public static class EntityA {
+				...
+
+			@ManyToOne(fetch = FetchType.LAZY)
+			@NotFound(action = NotFoundAction.IGNORE)
+			private EntityB entityB;
+		 	}
+
+			@Entity(name = "EntityB")
+			public static class EntityB {
+				...
+
+				private String name;
+			}
+
+		 and the HQL query :
+
+		 `Select a From EntityA a Left Join a.entityB b Where ( b.name IS NOT NULL )`
+
+		 having the left join we don't want to add an extra implicit join that will be translated into an SQL inner join (see HHH-15342)
+		*/
+		if ( fetchTiming == FetchTiming.IMMEDIATE && selected || hasNotFoundAction() ) {
+			final TableGroup tableGroup = determineTableGroupForFetch(
 					fetchablePath,
 					fetchParent,
 					parentTableGroup,
@@ -1251,42 +1329,66 @@ public class ToOneAttributeMapping
 		);
 	}
 
-	private TableGroup determineTableGroup(NavigablePath fetchablePath, FetchParent fetchParent, TableGroup parentTableGroup, String resultVariable, FromClauseAccess fromClauseAccess, DomainResultCreationState creationState) {
-		final TableGroup tableGroup;
+	private TableGroup determineTableGroupForFetch(
+			NavigablePath fetchablePath,
+			FetchParent fetchParent,
+			TableGroup parentTableGroup,
+			String resultVariable,
+			FromClauseAccess fromClauseAccess,
+			DomainResultCreationState creationState) {
+		final SqlAstJoinType joinType;
 		if ( fetchParent instanceof EntityResultJoinedSubclassImpl
 				&& ( (EntityPersister) fetchParent.getReferencedModePart() ).findDeclaredAttributeMapping( getPartName() ) == null ) {
-			final TableGroupJoin tableGroupJoin = createTableGroupJoin(
-					fetchablePath,
-					parentTableGroup,
-					resultVariable,
-					getJoinType( fetchablePath, parentTableGroup ),
-					true,
-					false,
-					creationState.getSqlAstCreationState()
-			);
-			parentTableGroup.addTableGroupJoin( tableGroupJoin );
-			tableGroup = tableGroupJoin.getJoinedGroup();
-			fromClauseAccess.registerTableGroup( fetchablePath, tableGroup );
+			joinType = getJoinTypeForFetch( fetchablePath, parentTableGroup );
 		}
 		else {
-			tableGroup = fromClauseAccess.resolveTableGroup(
-					fetchablePath,
-					np -> {
-						final TableGroupJoin tableGroupJoin = createTableGroupJoin(
-								fetchablePath,
-								parentTableGroup,
-								resultVariable,
-								getDefaultSqlAstJoinType( parentTableGroup ),
-								true,
-								false,
-								creationState.getSqlAstCreationState()
-						);
-						parentTableGroup.addTableGroupJoin( tableGroupJoin );
-						return tableGroupJoin.getJoinedGroup();
-					}
-			);
+			joinType = null;
 		}
-		return tableGroup;
+		return fromClauseAccess.resolveTableGroup(
+				fetchablePath,
+				np -> {
+					// Try to reuse an existing join if possible,
+					// and note that we prefer reusing an inner over a left join,
+					// because a left join might stay uninitialized if unused
+					TableGroup leftJoined = null;
+					for ( TableGroupJoin tableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
+						switch ( tableGroupJoin.getJoinType() ) {
+							case INNER:
+								// If this is an inner joins, it's fine if the paths match
+								// Since this inner join would filter the parent row anyway,
+								// it makes no sense to add another left join for this association
+								if ( tableGroupJoin.getNavigablePath().pathsMatch( np ) ) {
+									return tableGroupJoin.getJoinedGroup();
+								}
+								break;
+							case LEFT:
+								// For an existing left join on the other hand which is row preserving,
+								// it is important to check if the predicate has user defined bits in it
+								// and only if it doesn't, we can reuse the join
+								if ( tableGroupJoin.getNavigablePath().pathsMatch( np )
+										&& isSimpleJoinPredicate( tableGroupJoin.getPredicate() ) ) {
+									leftJoined = tableGroupJoin.getJoinedGroup();
+								}
+						}
+					}
+
+					if ( leftJoined != null ) {
+						return leftJoined;
+					}
+
+					final TableGroupJoin tableGroupJoin = createTableGroupJoin(
+							fetchablePath,
+							parentTableGroup,
+							resultVariable,
+							joinType,
+							true,
+							false,
+							creationState.getSqlAstCreationState()
+					);
+					parentTableGroup.addTableGroupJoin( tableGroupJoin );
+					return tableGroupJoin.getJoinedGroup();
+				}
+		);
 	}
 
 	private boolean isSelectByUniqueKey(ForeignKeyDescriptor.Nature side) {
@@ -1434,7 +1536,9 @@ public class ToOneAttributeMapping
 
 	@Override
 	public boolean isSimpleJoinPredicate(Predicate predicate) {
-		return foreignKeyDescriptor.isSimpleJoinPredicate( predicate );
+		// Since the table group is lazy, the initial predicate is null,
+		// but if we get null here, we can safely assume this will be a simple join predicate
+		return predicate == null || foreignKeyDescriptor.isSimpleJoinPredicate( predicate );
 	}
 
 	@Override
@@ -1458,7 +1562,18 @@ public class ToOneAttributeMapping
 		// This is vital for the map key property check that comes next
 		assert !( lhs instanceof PluralTableGroup );
 
-		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
+		final SqlAstJoinType joinType;
+		if ( requestedJoinType == null ) {
+			if ( fetched ) {
+				joinType = getDefaultSqlAstJoinType( lhs );
+			}
+			else {
+				joinType = SqlAstJoinType.INNER;
+			}
+		}
+		else {
+			joinType = requestedJoinType;
+		}
 
 		// If a parent is a collection part, there is no custom predicate and the join is INNER or LEFT
 		// we check if this attribute is the map key property to reuse the existing index table group
@@ -1525,7 +1640,9 @@ public class ToOneAttributeMapping
 											return false;
 										}
 
-										return targetKeyPropertyNames.contains( relativePath );
+										// Empty relative path means the navigable paths are equal,
+										// in which case we allow resolving the parent table group
+										return relativePath.isEmpty() || targetKeyPropertyNames.contains( relativePath );
 									}
 							),
 							null
@@ -1555,23 +1672,31 @@ public class ToOneAttributeMapping
 
 		final TableReference lhsTableReference = lhs.resolveTableReference( navigablePath, identifyingColumnsTableExpression );
 
-		lazyTableGroup.setTableGroupInitializerCallback( (tableGroup) -> join.applyPredicate(
-				foreignKeyDescriptor.generateJoinPredicate(
-						sideNature == ForeignKeyDescriptor.Nature.TARGET ? lhsTableReference : tableGroup.getPrimaryTableReference(),
-						sideNature == ForeignKeyDescriptor.Nature.TARGET ? tableGroup.getPrimaryTableReference() : lhsTableReference,
-						sqlExpressionResolver,
-						creationContext
-				)
-		) );
+		lazyTableGroup.setTableGroupInitializerCallback(
+				tableGroup -> {
+					join.applyPredicate(
+							foreignKeyDescriptor.generateJoinPredicate(
+									sideNature == ForeignKeyDescriptor.Nature.TARGET ?
+											lhsTableReference :
+											tableGroup.getPrimaryTableReference(),
+									sideNature == ForeignKeyDescriptor.Nature.TARGET ?
+											tableGroup.getPrimaryTableReference() :
+											lhsTableReference,
+									sqlExpressionResolver,
+									creationContext
+							)
+					);
 
-		if ( hasNotFoundAction() ) {
-			getAssociatedEntityMappingType().applyWhereRestrictions(
-					join::applyPredicate,
-					lazyTableGroup.getTableGroup(),
-					true,
-					null
-			);
-		}
+					if ( hasNotFoundAction() ) {
+						getAssociatedEntityMappingType().applyWhereRestrictions(
+								join::applyPredicate,
+								tableGroup,
+								true,
+								null
+						);
+					}
+				}
+		);
 
 		return join;
 	}
@@ -1637,7 +1762,7 @@ public class ToOneAttributeMapping
 						return false;
 					}
 
-					if ( navigablePath.equals( np.getParent() ) ) {
+					if ( navigablePath.pathsMatch( np.getParent() ) ) {
 						return targetKeyPropertyNames.contains( np.getLocalName() );
 					}
 
@@ -1646,7 +1771,9 @@ public class ToOneAttributeMapping
 						return false;
 					}
 
-					return targetKeyPropertyNames.contains( relativePath );
+					// Empty relative path means the navigable paths are equal,
+					// in which case we allow resolving the parent table group
+					return relativePath.isEmpty() || targetKeyPropertyNames.contains( relativePath );
 				},
 				tableGroupProducer,
 				explicitSourceAlias,
@@ -1691,13 +1818,13 @@ public class ToOneAttributeMapping
 		}
 	}
 
-	private SqlAstJoinType getJoinType(NavigablePath navigablePath, TableGroup tableGroup) {
+	private SqlAstJoinType getJoinTypeForFetch(NavigablePath navigablePath, TableGroup tableGroup) {
 		for ( TableGroupJoin tableGroupJoin : tableGroup.getTableGroupJoins() ) {
 			if ( tableGroupJoin.getNavigablePath().equals( navigablePath ) ) {
 				return tableGroupJoin.getJoinType();
 			}
 		}
-		return getDefaultSqlAstJoinType( tableGroup );
+		return null;
 	}
 
 	public TableGroup createTableGroupInternal(

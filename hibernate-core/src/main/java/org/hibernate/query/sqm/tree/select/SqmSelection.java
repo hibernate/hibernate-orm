@@ -10,15 +10,15 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.query.sqm.tree.SqmVisitableNode;
 
 /**
  * Represents an individual selection within a select clause.
  *
  * @author Steve Ebersole
  */
-public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T>, SqmVisitableNode {
+public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T> {
 	private final SqmSelectableNode<T> selectableNode;
+	private final String alias;
 
 	public SqmSelection(
 			SqmSelectableNode<T> selectableNode,
@@ -27,6 +27,7 @@ public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T
 
 		assert selectableNode != null;
 		this.selectableNode = selectableNode;
+		this.alias = selectableNode.getAlias();
 	}
 
 	public SqmSelection(
@@ -37,12 +38,13 @@ public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T
 
 		assert selectableNode != null;
 		this.selectableNode = selectableNode;
+		this.alias = alias;
 		selectableNode.alias( alias );
 	}
 
 	@Override
 	public SqmSelection<T> copy(SqmCopyContext context) {
-		return new SqmSelection<>( selectableNode.copy( context ), nodeBuilder() );
+		return new SqmSelection<>( selectableNode.copy( context ), alias, nodeBuilder() );
 	}
 
 	@Override
@@ -52,8 +54,7 @@ public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T
 
 	@Override
 	public String getAlias() {
-		// JPA
-		return selectableNode.getAlias();
+		return alias;
 	}
 
 	@Override
@@ -64,8 +65,8 @@ public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T
 	@Override
 	public void appendHqlString(StringBuilder sb) {
 		selectableNode.appendHqlString( sb );
-		if ( selectableNode.getAlias() != null ) {
-			sb.append( " as " ).append( selectableNode.getAlias() );
+		if ( alias != null ) {
+			sb.append( " as " ).append( alias );
 		}
 	}
 }

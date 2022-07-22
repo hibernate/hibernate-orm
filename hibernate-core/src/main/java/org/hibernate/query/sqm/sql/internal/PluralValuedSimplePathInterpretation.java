@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.sql.internal;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -60,7 +61,7 @@ public class PluralValuedSimplePathInterpretation<T> extends AbstractSqmPathInte
 		// This is only invoked when a plural attribute is a top level select, order by or group by item
 		// in which case we have to produce results for the element
 		return ( (PluralAttributeMapping) getExpressionType() ).getElementDescriptor().createDomainResult(
-				getNavigablePath(),
+				getNavigablePath().append( CollectionPart.Nature.ELEMENT.getName() ),
 				getTableGroup(),
 				resultVariable,
 				creationState

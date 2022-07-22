@@ -613,81 +613,78 @@ public class ProcedureCallImpl<R>
 				.getJdbcCoordinator()
 				.getStatementPreparer()
 				.prepareStatement( call.getSql(), true );
-
-		// Register the parameter mode and type
-		callableStatementSupport.registerParameters(
-				procedureName,
-				call,
-				statement,
-				parameterMetadata,
-				getSession()
-		);
-
-		// Apply the parameter bindings
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( parameterRegistrations.size() );
-		for ( Map.Entry<ProcedureParameter<?>, JdbcCallParameterRegistration> entry : parameterRegistrations.entrySet() ) {
-			final JdbcCallParameterRegistration registration = entry.getValue();
-			if ( registration.getParameterBinder() != null ) {
-				final ProcedureParameter<?> parameter = entry.getKey();
-				final QueryParameterBinding<?> binding = getParameterBindings().getBinding( parameter );
-				if ( !binding.isBound() ) {
-					if ( parameter.getPosition() == null ) {
-						throw new IllegalArgumentException( "The parameter named [" + parameter + "] was not set! You need to call the setParameter method." );
-					}
-					else {
-						throw new IllegalArgumentException( "The parameter at position [" + parameter + "] was not set! You need to call the setParameter method." );
-					}
-				}
-				jdbcParameterBindings.addBinding(
-						(JdbcParameter) registration.getParameterBinder(),
-						new JdbcParameterBindingImpl(
-								(JdbcMapping) registration.getParameterType(),
-								binding.getBindValue()
-						)
-				);
-			}
-		}
-
-		final JdbcCallRefCursorExtractor[] extractors = refCursorExtractors.toArray( new JdbcCallRefCursorExtractor[0] );
-
-		final ExecutionContext executionContext = new ExecutionContext() {
-			private final Callback callback = new CallbackImpl();
-
-			@Override
-			public SharedSessionContractImplementor getSession() {
-				return ProcedureCallImpl.this.getSession();
-			}
-
-			@Override
-			public QueryOptions getQueryOptions() {
-				return new QueryOptionsAdapter() {
-					@Override
-					public Boolean isReadOnly() {
-						return false;
-					}
-				};
-			}
-
-			@Override
-			public String getQueryIdentifier(String sql) {
-				return sql;
-			}
-
-			@Override
-			public QueryParameterBindings getQueryParameterBindings() {
-				return QueryParameterBindings.NO_PARAM_BINDINGS;
-			}
-
-			@Override
-			public Callback getCallback() {
-				return callback;
-			}
-
-		};
-
-		// Note that this should actually happen in an executor
-
 		try {
+			// Register the parameter mode and type
+			callableStatementSupport.registerParameters(
+					procedureName,
+					call,
+					statement,
+					parameterMetadata,
+					getSession()
+			);
+
+			// Apply the parameter bindings
+			final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( parameterRegistrations.size() );
+			for ( Map.Entry<ProcedureParameter<?>, JdbcCallParameterRegistration> entry : parameterRegistrations.entrySet() ) {
+				final JdbcCallParameterRegistration registration = entry.getValue();
+				if ( registration.getParameterBinder() != null ) {
+					final ProcedureParameter<?> parameter = entry.getKey();
+					final QueryParameterBinding<?> binding = getParameterBindings().getBinding( parameter );
+					if ( !binding.isBound() ) {
+						if ( parameter.getPosition() == null ) {
+							throw new IllegalArgumentException( "The parameter named [" + parameter + "] was not set! You need to call the setParameter method." );
+						}
+						else {
+							throw new IllegalArgumentException( "The parameter at position [" + parameter + "] was not set! You need to call the setParameter method." );
+						}
+					}
+					jdbcParameterBindings.addBinding(
+							(JdbcParameter) registration.getParameterBinder(),
+							new JdbcParameterBindingImpl(
+									(JdbcMapping) registration.getParameterType(),
+									binding.getBindValue()
+							)
+					);
+				}
+			}
+
+			final ExecutionContext executionContext = new ExecutionContext() {
+				private final Callback callback = new CallbackImpl();
+
+				@Override
+				public SharedSessionContractImplementor getSession() {
+					return ProcedureCallImpl.this.getSession();
+				}
+
+				@Override
+				public QueryOptions getQueryOptions() {
+					return new QueryOptionsAdapter() {
+						@Override
+						public Boolean isReadOnly() {
+							return false;
+						}
+					};
+				}
+
+				@Override
+				public String getQueryIdentifier(String sql) {
+					return sql;
+				}
+
+				@Override
+				public QueryParameterBindings getQueryParameterBindings() {
+					return QueryParameterBindings.NO_PARAM_BINDINGS;
+				}
+
+				@Override
+				public Callback getCallback() {
+					return callback;
+				}
+
+			};
+
+			// Note that this should actually happen in an executor
+
 			int paramBindingPosition = call.getFunctionReturn() == null ? 1 : 2;
 			for ( JdbcParameterBinder parameterBinder : call.getParameterBinders() ) {
 				parameterBinder.bindParameterValue(
@@ -700,13 +697,21 @@ public class ProcedureCallImpl<R>
 			}
 		}
 		catch (SQLException e) {
+			getSession().getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( statement );
 			throw getSession().getJdbcServices().getSqlExceptionHelper().convert(
 					e,
 					"Error registering CallableStatement parameters",
 					procedureName
 			);
 		}
-		return new ProcedureOutputsImpl( this, parameterRegistrations, extractors, statement );
+
+		return new ProcedureOutputsImpl(
+				this,
+				parameterRegistrations,
+				refCursorExtractors.toArray( new JdbcCallRefCursorExtractor[0] ),
+				statement
+		);
+
 	}
 
 	@Override

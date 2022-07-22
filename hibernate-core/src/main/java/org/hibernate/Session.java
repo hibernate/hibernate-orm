@@ -1310,9 +1310,19 @@ public interface Session extends SharedSessionContract, EntityManager {
 	@Override
 	<R> Query<R> createQuery(CriteriaQuery<R> criteriaQuery);
 
-	@Override @Deprecated @SuppressWarnings("rawtypes")
+	/**
+	 * Create a {@link Query} for the given JPA {@link CriteriaDelete}
+	 *
+	 * @deprecated use {@link #createMutationQuery(CriteriaDelete)}
+	 */
+	@Override @Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
 	Query createQuery(CriteriaDelete deleteQuery);
 
-	@Override @Deprecated @SuppressWarnings("rawtypes")
+	/**
+	 * Create a {@link Query} for the given JPA {@link CriteriaUpdate}
+	 *
+	 * @deprecated use {@link #createMutationQuery(CriteriaUpdate)}
+	 */
+	@Override @Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
 	Query createQuery(CriteriaUpdate updateQuery);
 }

@@ -9,6 +9,8 @@ package org.hibernate.annotations;
 /**
  * Possible optimistic locking strategies.
  *
+ * @see OptimisticLocking
+ *
  * @author Emmanuel Bernard
  */
 public enum OptimisticLockType {

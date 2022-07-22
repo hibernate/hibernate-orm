@@ -10,6 +10,7 @@ import javax.inject.Inject;
 
 import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.SourceSetContainer;
 
 import org.hibernate.orm.tooling.gradle.HibernateOrmSpec;
 
@@ -31,6 +32,8 @@ public class EnhancementSpec {
 
 	@Inject
 	public EnhancementSpec(HibernateOrmSpec ormDsl, Project project) {
+		final SourceSetContainer sourceSets = project.getExtensions().getByType( SourceSetContainer.class );
+
 		enableLazyInitialization = makeProperty( project );
 		enableDirtyTracking = makeProperty( project );
 		enableAssociationManagement = makeProperty( project );

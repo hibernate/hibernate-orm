@@ -14,6 +14,7 @@ import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.plugins.ExtensionContainer;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
 
 import org.hibernate.orm.tooling.gradle.enhance.EnhancementSpec;
@@ -27,34 +28,30 @@ public abstract class HibernateOrmSpec implements ExtensionAware {
 
 	public static final String DSL_NAME = HIBERNATE;
 
-	private final Property<String> hibernateVersionProperty;
 	private final Project project;
-	private final Property<SourceSet> sourceSetProperty;
-	private final Property<Boolean> supportEnhancementProperty;
-	private final Property<Boolean> supportJpaMetamodelProperty;
 
-	private final EnhancementSpec enhancementDsl;
-	private final JpaMetamodelGenerationSpec jpaMetamodelDsl;
+	private EnhancementSpec enhancementDsl;
+	private JpaMetamodelGenerationSpec jpaMetamodelDsl;
+
+	private final Property<Boolean> useSameVersion;
+	private final Property<SourceSet> sourceSet;
+
+	private final Provider<EnhancementSpec> enhancementDslAccess;
+	private final Provider<JpaMetamodelGenerationSpec> jpaMetamodelDslAccess;
 
 
 	@Inject
 	public HibernateOrmSpec(Project project) {
 		this.project = project;
 
-		hibernateVersionProperty = project.getObjects().property( String.class );
-		hibernateVersionProperty.convention( HibernateVersion.version );
+		useSameVersion = project.getObjects().property( Boolean.class );
+		useSameVersion.convention( true );
 
-		sourceSetProperty = project.getObjects().property( SourceSet.class );
-		sourceSetProperty.convention( mainSourceSet( project ) );
+		sourceSet = project.getObjects().property( SourceSet.class );
+		sourceSet.convention( mainSourceSet( project ) );
 
-		supportEnhancementProperty = project.getObjects().property( Boolean.class );
-		supportEnhancementProperty.convention( true );
-
-		supportJpaMetamodelProperty = project.getObjects().property( Boolean.class );
-		supportJpaMetamodelProperty.convention( true );
-
-		enhancementDsl = getExtensions().create( EnhancementSpec.DSL_NAME, EnhancementSpec.class, this, project );
-		jpaMetamodelDsl = getExtensions().create( JpaMetamodelGenerationSpec.DSL_NAME, JpaMetamodelGenerationSpec.class, this, project );
+		enhancementDslAccess = project.provider( () -> enhancementDsl );
+		jpaMetamodelDslAccess = project.provider( () -> jpaMetamodelDsl );
 	}
 
 	private static SourceSet mainSourceSet(Project project) {
@@ -66,68 +63,126 @@ public abstract class HibernateOrmSpec implements ExtensionAware {
 		return javaPluginExtension.getSourceSets().getByName( name );
 	}
 
-	public Property<String> getHibernateVersionProperty() {
-		return hibernateVersionProperty;
+	/**
+	 * Should the plugin inject a dependency on the same version of `hibernate-core`
+	 * as the version of this plugin?  The dependency is added to the `implementation`
+	 * {@link org.gradle.api.artifacts.Configuration}.
+	 * <p>
+	 * Defaults to {@code true}.  If overriding and performing enhancement, be aware
+	 * that Hibernate generally only supports using classes enhanced using matching
+	 * versions between tooling and runtime.  In other words, be careful.
+	 */
+	public Property<Boolean> getUseSameVersion() {
+		return useSameVersion;
 	}
 
-	public void hibernateVersion(String version) {
-		setHibernateVersion( version );
+	/**
+	 * @see #getUseSameVersion()
+	 */
+	public void setUseSameVersion(boolean value) {
+		useSameVersion.set( value );
 	}
 
-	public void setHibernateVersion(String version) {
-		hibernateVersionProperty.set( version );
+	/**
+	 * @see #getUseSameVersion()
+	 */
+	public void useSameVersion() {
+		useSameVersion.set( true );
 	}
 
-	public Property<SourceSet> getSourceSetProperty() {
-		return sourceSetProperty;
+	/**
+	 * The source-set containing the domain model.  Defaults to the `main` source-set
+	 */
+	public Property<SourceSet> getSourceSet() {
+		return sourceSet;
 	}
 
+	/**
+	 * @see #getSourceSet()
+	 */
 	public void setSourceSet(String name) {
 		setSourceSet( resolveSourceSet( name, project ) );
 	}
 
+	/**
+	 * @see #getSourceSet()
+	 */
 	public void setSourceSet(SourceSet sourceSet) {
-		sourceSetProperty.set( sourceSet );
+		this.sourceSet.set( sourceSet );
 	}
 
+	/**
+	 * @see #getSourceSet()
+	 */
 	public void sourceSet(String name) {
 		setSourceSet( resolveSourceSet( name, project ) );
 	}
 
+	/**
+	 * @see #getSourceSet()
+	 */
 	public void sourceSet(SourceSet sourceSet) {
 		setSourceSet( sourceSet );
 	}
 
-	public Property<Boolean> getSupportEnhancementProperty() {
-		return supportEnhancementProperty;
-	}
+	/**
+	 * DSL extension for configuring bytecode enhancement.  Also acts as the trigger for
+	 * opting into bytecode enhancement
+	 */
+	public EnhancementSpec getEnhancement() {
+		if ( enhancementDsl == null ) {
+			enhancementDsl = getExtensions().create( EnhancementSpec.DSL_NAME, EnhancementSpec.class, this, project );
+		}
 
-	public void disableEnhancement() {
-		supportEnhancementProperty.set( false );
-	}
-
-	public Property<Boolean> getSupportJpaMetamodelProperty() {
-		return supportJpaMetamodelProperty;
-	}
-
-	public void disableJpaMetamodel() {
-		supportJpaMetamodelProperty.set( false );
-	}
-
-	public EnhancementSpec getEnhancementSpec() {
 		return enhancementDsl;
 	}
 
-	public void enhancement(Action<EnhancementSpec> action) {
-		action.execute( enhancementDsl );
+	/**
+	 * Provider access to {@link #getEnhancement()}
+	 */
+	public Provider<EnhancementSpec> getEnhancementDslAccess() {
+		return enhancementDslAccess;
 	}
 
-	public JpaMetamodelGenerationSpec getJpaMetamodelSpec() {
+	public boolean isEnhancementEnabled() {
+		return enhancementDsl != null;
+	}
+
+	/**
+	 * @see #getEnhancement()
+	 */
+	public void enhancement(Action<EnhancementSpec> action) {
+		action.execute( getEnhancement() );
+	}
+
+	/**
+	 * DSL extension for configuring JPA static metamodel generation.  Also acts as the trigger for
+	 * opting into the generation
+	 */
+	public JpaMetamodelGenerationSpec getJpaMetamodel() {
+		if ( jpaMetamodelDsl == null ) {
+			jpaMetamodelDsl = getExtensions().create( JpaMetamodelGenerationSpec.DSL_NAME, JpaMetamodelGenerationSpec.class, this, project );
+		}
 		return jpaMetamodelDsl;
 	}
 
+
+	/**
+	 * Provider access to {@link #getJpaMetamodel()}
+	 */
+	public Provider<JpaMetamodelGenerationSpec> getJpaMetamodelDslAccess() {
+		return jpaMetamodelDslAccess;
+	}
+
+	public boolean isMetamodelGenerationEnabled() {
+		return jpaMetamodelDsl != null;
+	}
+
+	/**
+	 * @see #getJpaMetamodel()
+	 */
 	public void jpaMetamodel(Action<JpaMetamodelGenerationSpec>action) {
-		action.execute( jpaMetamodelDsl );
+		action.execute( getJpaMetamodel() );
 	}
 
 	@Override

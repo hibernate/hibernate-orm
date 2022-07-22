@@ -76,6 +76,7 @@ import jakarta.persistence.TemporalType;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.DOUBLE;
 import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 
@@ -143,6 +144,15 @@ public class HSQLDialect extends Dialect {
 		}
 
 		return super.columnType( sqlTypeCode );
+	}
+
+	@Override
+	protected Integer resolveSqlTypeCode(String typeName, String baseTypeName, TypeConfiguration typeConfiguration) {
+		switch ( baseTypeName ) {
+			case "DOUBLE":
+				return DOUBLE;
+		}
+		return super.resolveSqlTypeCode( typeName, baseTypeName, typeConfiguration );
 	}
 
 	@Override
@@ -365,6 +375,11 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsDistinctFromPredicate() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsLockTimeouts() {
 		return false;
 	}
@@ -418,6 +433,11 @@ public class HSQLDialect extends Dialect {
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
 		return SequenceInformationExtractorHSQLDBDatabaseImpl.INSTANCE;
+	}
+
+	@Override
+	public boolean supportsStandardArrays() {
+		return true;
 	}
 
 	@Override

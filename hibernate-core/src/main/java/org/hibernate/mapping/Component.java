@@ -370,7 +370,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	 *
 	 * @param index index of the {@link Property} to return
 	 * @return {@link Property}
-	 * @throws IndexOutOfBoundsException - if the index is out of range(index < 0 || index >=
+	 * @throws IndexOutOfBoundsException - if the index is out of range(index &lt; 0 || index &gt;=
 	 * {@link #getPropertySpan()})
 	 */
 	public Property getProperty(int index) {
@@ -378,12 +378,21 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	public Property getProperty(String propertyName) throws MappingException {
-		for ( Property prop : getProperties() ) {
+		for ( Property prop : properties ) {
 			if ( prop.getName().equals(propertyName) ) {
 				return prop;
 			}
 		}
 		throw new MappingException("component: " + componentClassName + " property not found: " + propertyName);
+	}
+
+	public boolean hasProperty(String propertyName) {
+		for ( Property prop : properties ) {
+			if ( prop.getName().equals(propertyName) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public String getRoleName() {

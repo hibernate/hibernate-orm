@@ -1048,7 +1048,7 @@ public abstract class CollectionBinder {
 				return collectionType;
 			}
 			else {
-				String errorMsg = "Collection has neither generic type or OneToMany.targetEntity() defined: "
+				String errorMsg = "Collection has neither generic type nor OneToMany.targetEntity() defined: "
 						+ safeCollectionRole();
 				throw new AnnotationException( errorMsg );
 			}

@@ -9,6 +9,7 @@ package org.hibernate.type.descriptor.converter;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Map;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.PersistenceException;
@@ -17,6 +18,7 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
+import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -143,4 +145,32 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 			throw new PersistenceException( "Error attempting to apply AttributeConverter", re );
 		}
 	}
+
+	@Override
+	public Object replace(
+			Object original,
+			Object target,
+			SharedSessionContractImplementor session,
+			Object owner,
+			Map<Object, Object> copyCache,
+			ForeignKeyDirection foreignKeyDirection) {
+		return ForeignKeyDirection.FROM_PARENT == foreignKeyDirection
+				? domainJtd.getReplacement( (T) original, (T) target, session )
+				: target;
+	}
+
+	@Override
+	public Object replace(
+			Object original,
+			Object target,
+			SharedSessionContractImplementor session,
+			Object owner,
+			Map<Object, Object> copyCache) {
+		if ( original == null && target == null ) {
+			return null;
+		}
+
+		return domainJtd.getReplacement( (T) original, (T) target, session );
+	}
+
 }

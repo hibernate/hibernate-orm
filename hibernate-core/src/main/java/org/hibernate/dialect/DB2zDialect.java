@@ -10,7 +10,7 @@ package org.hibernate.dialect;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
+import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
@@ -110,7 +110,7 @@ public class DB2zDialect extends DB2Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new DB2390IdentityColumnSupport();
+		return new DB2zIdentityColumnSupport();
 	}
 
 	@Override

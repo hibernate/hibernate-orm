@@ -11,7 +11,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.community.dialect.SQLServerLegacyDialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.orm.test.dialect.unit.lockhint.AbstractLockHintTest;
 
 /**

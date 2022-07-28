@@ -24,10 +24,7 @@
 package org.hibernate.orm.test.dialect;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.Oracle10gDialect;
-import org.hibernate.dialect.Oracle12cDialect;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.Oracle9iDialect;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.OracleDialect;
 
 import org.junit.Test;
@@ -39,25 +36,24 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Andrea Boriero
  */
-
 public class OracleDialectsTest {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9990")
 	public void testDefaultBatchVersionDataProperty(){
-		Oracle8iDialect oracle8iDialect = new Oracle8iDialect();
-		assertEquals( "false", oracle8iDialect.getDefaultProperties().getProperty( Environment.BATCH_VERSIONED_DATA ) );
-
 		OracleDialect oracleDialect = new OracleDialect();
 		assertEquals( "false", oracleDialect.getDefaultProperties().getProperty( Environment.BATCH_VERSIONED_DATA ) );
 
-		Oracle10gDialect oracle10gDialect = new Oracle10gDialect();
+		OracleDialect oracle8iDialect = new OracleDialect( DatabaseVersion.make( 8 ) );
+		assertEquals( "false", oracle8iDialect.getDefaultProperties().getProperty( Environment.BATCH_VERSIONED_DATA ) );
+
+		OracleDialect oracle10gDialect = new OracleDialect( DatabaseVersion.make( 10 ) );
 		assertEquals( "false", oracle10gDialect.getDefaultProperties().getProperty( Environment.BATCH_VERSIONED_DATA ) );
 
-		Oracle9iDialect oracle9iDialect = new Oracle9iDialect();
+		OracleDialect oracle9iDialect = new OracleDialect( DatabaseVersion.make( 9 ) );
 		assertEquals( "false", oracle9iDialect.getDefaultProperties().getProperty( Environment.BATCH_VERSIONED_DATA ) );
 
-		Oracle12cDialect oracle12cDialect = new Oracle12cDialect();
+		OracleDialect oracle12cDialect = new OracleDialect( DatabaseVersion.make( 12 ) );
 		assertEquals( "true", oracle12cDialect.getDefaultProperties().getProperty( Environment.BATCH_VERSIONED_DATA ) );
 	}
 }

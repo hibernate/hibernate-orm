@@ -24,7 +24,6 @@ import jakarta.persistence.Table;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;

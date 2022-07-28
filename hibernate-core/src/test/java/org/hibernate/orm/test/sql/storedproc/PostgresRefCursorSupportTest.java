@@ -19,8 +19,6 @@ import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureOutputs;
@@ -53,8 +51,7 @@ public class PostgresRefCursorSupportTest extends BaseSessionFactoryFunctionalTe
 
 		@Override
 		public boolean appliesToDialect(Dialect dialect) {
-			return PostgreSQL81Dialect.class.isInstance( dialect )
-					|| PostgreSQL82Dialect.class.isInstance( dialect );
+			return PostgreSQLDialect.class.isInstance( dialect );
 		}
 
 		@Override

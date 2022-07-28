@@ -21,7 +21,7 @@ strategy Class name::
 [[configurations-general]]
 === General configuration
 
-`*hibernate.dialect*` (e.g. `org.hibernate.dialect.PostgreSQL94Dialect`)::
+`*hibernate.dialect*` (e.g. `org.hibernate.dialect.PostgreSQLDialect`)::
 The class name of a Hibernate https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html[`Dialect`] from which Hibernate can generate SQL optimized for a particular relational database.
 +
 In most cases, Hibernate can choose the correct https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html[`Dialect`] implementation based on the JDBC metadata returned by the JDBC driver.

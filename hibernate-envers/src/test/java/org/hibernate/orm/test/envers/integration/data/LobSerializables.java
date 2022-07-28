@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.Map;
 import jakarta.persistence.EntityManager;
 
-import org.hibernate.dialect.PostgreSQL82Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.envers.test.integration.data.LobSerializableTestEntity;
 import org.hibernate.envers.test.integration.data.SerObject;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
@@ -34,7 +34,7 @@ public class LobSerializables extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
-		if ( getDialect() instanceof PostgreSQL82Dialect ) {
+		if ( getDialect() instanceof PostgreSQLDialect ) {
 			// In PostgreSQL LOBs cannot be used in auto-commit mode.
 			options.put( "hibernate.connection.autocommit", "false" );
 		}

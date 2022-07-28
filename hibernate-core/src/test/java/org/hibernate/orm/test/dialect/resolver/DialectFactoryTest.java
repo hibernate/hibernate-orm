@@ -30,7 +30,6 @@ import org.junit.Test;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import static org.junit.Assert.*;
 
@@ -66,8 +65,8 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		configValues.put( Environment.DIALECT, "H2" );
 		assertEquals( H2Dialect.class, dialectFactory.buildDialect( configValues, null ).getClass() );
 
-		configValues.put( Environment.DIALECT, "Oracle10g" );
-		assertEquals( Oracle10gDialect.class, dialectFactory.buildDialect( configValues, null ).getClass() );
+		configValues.put( Environment.DIALECT, "Oracle" );
+		assertEquals( OracleDialect.class, dialectFactory.buildDialect( configValues, null ).getClass() );
 	}
 
 	@Test

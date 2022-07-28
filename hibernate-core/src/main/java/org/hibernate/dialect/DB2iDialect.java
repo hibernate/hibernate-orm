@@ -7,7 +7,7 @@
 package org.hibernate.dialect;
 
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
+import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
@@ -115,7 +115,7 @@ public class DB2iDialect extends DB2Dialect {
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return getVersion().isSameOrAfter(7, 3)
 				? new DB2IdentityColumnSupport()
-				: new DB2390IdentityColumnSupport();
+				: new DB2zIdentityColumnSupport();
 	}
 
 	@Override

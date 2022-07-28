@@ -9,7 +9,7 @@ package org.hibernate.orm.test.mapping;
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.PostgreSQL94Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.mapping.Column;
 
 import org.hibernate.testing.TestForIssue;
@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 public class ColumnLastIndexNotLetterAliasTest {
 	// Arbitrarily choose PostgreSQL
-	private static final Dialect DIALECT = new PostgreSQL94Dialect();;
+	private static final Dialect DIALECT = new PostgreSQLDialect();
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-14720")

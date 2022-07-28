@@ -82,7 +82,7 @@ hibernate.connection.url @DB_URL@
 
 ## DB2/400
 
-#hibernate.dialect org.hibernate.dialect.DB2400Dialect
+#hibernate.dialect org.hibernate.dialect.DB2iDialect
 #hibernate.connection.username user
 #hibernate.connection.password password
 

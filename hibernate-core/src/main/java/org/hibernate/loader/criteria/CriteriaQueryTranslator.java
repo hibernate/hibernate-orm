@@ -9,12 +9,10 @@ package org.hibernate.loader.criteria;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,9 +27,7 @@ import org.hibernate.QueryException;
 import org.hibernate.criterion.CriteriaQuery;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.EnhancedProjection;
-import org.hibernate.criterion.ParameterInfoCollector;
 import org.hibernate.criterion.Projection;
-import org.hibernate.engine.query.spi.OrdinalParameterDescriptor;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -41,6 +37,7 @@ import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
@@ -534,11 +531,28 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	public String[] getColumns(
 			String propertyName,
 			Criteria subcriteria) throws HibernateException {
-		return getPropertyMapping( getEntityName( subcriteria, propertyName ) )
-				.toColumns(
-						getSQLAlias( subcriteria, propertyName ),
-						getPropertyName( propertyName )
-				);
+		try {
+			return getPropertyMapping( getEntityName( subcriteria, propertyName ) )
+					.toColumns( getSQLAlias( subcriteria, propertyName ), getPropertyName( propertyName ) );
+		}
+		catch (QueryException qe) {
+			if ( propertyName.indexOf( '.' ) > 0 ) {
+				final String associationName = StringHelper.root( propertyName );
+				final CriteriaInfoProvider pathInfo = getPathInfo( associationName );
+				final PropertyMapping propertyMapping = pathInfo.getPropertyMapping();
+				if ( propertyMapping instanceof EntityPersister ) {
+					final String name = propertyName.substring( associationName.length() + 1 );
+					if ( ((EntityPersister) propertyMapping).getIdentifierPropertyName().equals( name ) ) {
+						return getForeignKeyColumns( subcriteria, associationName );
+					}
+				}
+			}
+			throw qe;
+		}
+	}
+
+	private String[] getForeignKeyColumns(Criteria subcriteria, String associationPropertyName) {
+		return getPropertyMapping( getEntityName( subcriteria ) ).toColumns( getSQLAlias( subcriteria, associationPropertyName ), associationPropertyName );
 	}
 
 	/**
@@ -601,8 +615,25 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	@Override
 	public Type getType(Criteria subcriteria, String propertyName)
 			throws HibernateException {
-		return getPropertyMapping( getEntityName( subcriteria, propertyName ) )
-				.toType( getPropertyName( propertyName ) );
+		try {
+			return getPropertyMapping( getEntityName( subcriteria, propertyName ) )
+					.toType( getPropertyName( propertyName ) );
+		}
+		catch (QueryException qe) {
+			if ( propertyName.indexOf( '.' ) > 0 ) {
+				final String associationName = StringHelper.root( propertyName );
+				final CriteriaInfoProvider pathInfo = getPathInfo( associationName );
+				final PropertyMapping propertyMapping = pathInfo.getPropertyMapping();
+				if ( propertyMapping instanceof EntityPersister ) {
+					final String name = propertyName.substring( associationName.length() + 1 );
+					EntityPersister entityPersister = (EntityPersister) propertyMapping;
+					if ( entityPersister.getIdentifierPropertyName().equals( name ) ) {
+						return entityPersister.getPropertyType( name );
+					}
+				}
+			}
+			throw qe;
+		}
 	}
 
 	/**

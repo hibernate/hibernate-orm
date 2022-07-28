@@ -406,7 +406,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			}
 		}
 
-		if ( (! etype.isNullable() ) && idPropName != null ) {
+		if ( idPropName != null ) {
 			String idpath2 = extendPath( path, idPropName );
 			addPropertyPath( idpath2, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
 			initPropertyPaths( idpath2, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );

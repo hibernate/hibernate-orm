@@ -41,6 +41,7 @@ import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
@@ -534,11 +535,40 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	public String[] getColumns(
 			String propertyName,
 			Criteria subcriteria) throws HibernateException {
-		return getPropertyMapping( getEntityName( subcriteria, propertyName ) )
-				.toColumns(
-						getSQLAlias( subcriteria, propertyName ),
-						getPropertyName( propertyName )
-				);
+		try {
+			return getPropertyMapping( getEntityName( subcriteria, propertyName ) )
+					.toColumns( getSQLAlias( subcriteria, propertyName ), getPropertyName( propertyName ) );
+		}
+		catch (QueryException qe) {
+			if ( propertyName.indexOf( '.' ) > 0 ) {
+				final String root = StringHelper.root( propertyName );
+				final CriteriaInfoProvider pathInfo = getPathInfo( root );
+				final PropertyMapping propertyMapping = pathInfo.getPropertyMapping();
+				if ( propertyMapping instanceof EntityPersister ) {
+					final String name = propertyName.substring( root.length() + 1 );
+					EntityPersister entityPersister = (EntityPersister) propertyMapping;
+					if ( entityPersister.getIdentifierPropertyName().equals( name )  ) {
+						final Criteria criteria = addInnerJoin( subcriteria, root, pathInfo );
+						return propertyMapping.toColumns( getSQLAlias( criteria, name ), name );
+					}
+				}
+				throw qe;
+			}
+			else {
+				throw qe;
+			}
+		}
+	}
+
+	private Criteria addInnerJoin(Criteria subcriteria, String root, CriteriaInfoProvider pathInfo) {
+		final Criteria criteria = subcriteria.createCriteria( root, root, JoinType.INNER_JOIN);
+		aliasCriteriaMap.put( root, criteria );
+		associationPathCriteriaMap.put( root, criteria );
+		associationPathJoinTypesMap.put( root, JoinType.INNER_JOIN );
+		criteriaInfoMap.put( criteria, pathInfo );
+		nameCriteriaInfoMap.put( pathInfo.getName(), pathInfo );
+		criteriaSQLAliasMap.put( criteria, StringHelper.generateAlias( root, criteriaSQLAliasMap.size() ) );
+		return criteria;
 	}
 
 	/**

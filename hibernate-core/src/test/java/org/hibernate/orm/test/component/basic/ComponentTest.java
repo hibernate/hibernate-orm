@@ -19,7 +19,6 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
@@ -163,13 +162,7 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 
 					s.createQuery( "from Employee e where e.person = :p and 1 = 1 and 2=2" ).setParameter( "p", emp.getPerson() ).list();
 					s.createQuery( "from Employee e where :p = e.person" ).setParameter( "p", emp.getPerson() ).list();
-					// The following fails on Sybase due to HHH-3510. When HHH-3510
-					// is fixed, the check for SybaseASE15Dialect should be removed.
-					if ( ! ( getDialect() instanceof SybaseASE15Dialect ) ) {
-						s.createQuery(
-										"from Employee e where e.person = ('', '', current_timestamp, 0.0, 'steve', '', 0)" )
-								.list();
-					}
+					s.createQuery( "from Employee e where e.person = ('', '', current_timestamp, 0.0, 'steve', '', 0)" ).list();
 
 					s.delete( emp );
 				}

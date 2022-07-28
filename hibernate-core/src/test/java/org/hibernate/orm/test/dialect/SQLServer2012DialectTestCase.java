@@ -8,7 +8,8 @@ package org.hibernate.orm.test.dialect;
 
 import java.util.Locale;
 
-import org.hibernate.dialect.SQLServer2012Dialect;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.query.spi.Limit;
 
 import org.junit.After;
@@ -21,16 +22,16 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Tests the Limit/Offset handler for {@link SQLServer2012Dialect}.
+ * Tests the Limit/Offset handler for {@link SQLServerDialect, v11}.
  *
  * @author Chris Cranford
  */
 public class SQLServer2012DialectTestCase extends BaseUnitTestCase {
-	private SQLServer2012Dialect dialect;
+	private SQLServerDialect dialect;
 
 	@Before
 	public void setup() {
-		dialect = new SQLServer2012Dialect();
+		dialect = new SQLServerDialect( DatabaseVersion.make( 11 ) );
 	}
 
 	@After

@@ -12,7 +12,7 @@ import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
-import org.hibernate.dialect.SQLServer2005Dialect;
+import org.hibernate.dialect.SQLServerDialect;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(value = SQLServer2005Dialect.class, majorVersion = 9)
+@RequiresDialect(value = SQLServerDialect.class)
 @Jpa(
 		annotatedClasses = GeneratedTest.Person.class
 )

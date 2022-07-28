@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  *
  * @author Vlad Mihalcea
  */
-@RequiresDialect(value = SQLServerDialect.class, majorVersion = 9)
+@RequiresDialect(value = SQLServerDialect.class)
 @DomainModel(
 		annotatedClasses = { IrrelevantEntity.class }
 )

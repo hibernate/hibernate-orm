@@ -6,7 +6,8 @@
  */
 package org.hibernate.orm.test.dialect;
 
-import org.hibernate.dialect.PostgreSQL92Dialect;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.PostgreSQLDialect;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -28,7 +29,7 @@ public class PostgreSQL92DialectTestCase extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-11647" )
 	public void testGetAlterTableString() {
-		PostgreSQL92Dialect dialect = new PostgreSQL92Dialect();
+		PostgreSQLDialect dialect = new PostgreSQLDialect( DatabaseVersion.make( 9, 2 ) );
 
 		assertEquals("alter table if exists table_name", dialect.getAlterTableString( "table_name" ));
 	}

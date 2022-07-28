@@ -6,12 +6,9 @@
  */
 package org.hibernate.envers.test.integration.readwriteexpression;
 
-import java.math.BigDecimal;
 import java.util.List;
 import jakarta.persistence.EntityManager;
 
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.OracleDialect;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 

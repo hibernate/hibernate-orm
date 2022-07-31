@@ -48,6 +48,7 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.StringRepresentableType;
 import org.hibernate.type.Type;
 
@@ -529,6 +530,37 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	public TypedValue getTypedIdentifierValue(Criteria criteria, Object value) {
 		final Loadable loadable = ( Loadable ) getPropertyMapping( getEntityName( criteria ) );
 		return new TypedValue( loadable.getIdentifierType(), value );
+	}
+
+	@Override
+	public Type getForeignKeyType(Criteria criteria, String associationPropertyName) {
+		final Type propertyType = ( (Loadable) getPropertyMapping( getEntityName( criteria ) ) ).getPropertyType(	associationPropertyName );
+		if ( !( propertyType instanceof ManyToOneType ) ) {
+			throw new QueryException(
+					"Argument to fk() function must be the fk owner of a to-one association, but found " + propertyType
+			);
+		}
+		return ( (ManyToOneType) propertyType ).getIdentifierOrUniqueKeyType( getFactory() );
+	}
+
+	@Override
+	public String[] getForeignKeyColumns(Criteria criteria, String associationPropertyName) {
+		final PropertyMapping propertyMapping = getPropertyMapping( getEntityName( criteria ) );
+
+		assert propertyMapping instanceof EntityPersister;
+		final Type propertyType = ((EntityPersister) propertyMapping).getPropertyType( associationPropertyName );
+		if ( !( propertyType instanceof ManyToOneType ) ) {
+			throw new QueryException(
+					"Argument to fk() function must be the fk owner of a to-one association, but found " + propertyType
+			);
+		}
+
+		return propertyMapping.toColumns( getSQLAlias( criteria, associationPropertyName ), associationPropertyName );
+	}
+
+	@Override
+	public TypedValue getForeignKeyTypeValue(Criteria criteria, String associationPropertyName, Object value) {
+		return new TypedValue( getForeignKeyType( criteria, associationPropertyName ), value );
 	}
 
 	@Override

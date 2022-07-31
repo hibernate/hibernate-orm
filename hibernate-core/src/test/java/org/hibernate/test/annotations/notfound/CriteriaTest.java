@@ -13,6 +13,7 @@ import javax.persistence.Table;
 import org.hibernate.Criteria;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.criterion.ForeingKeyProjection;
 import org.hibernate.criterion.ProjectionList;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.PropertyProjection;
@@ -82,7 +83,7 @@ public class CriteriaTest extends BaseCoreFunctionalTestCase {
 
 
 	@Test
-	public void selectAssociationIdWithRestiction() {
+	public void selectAssociationIdWithRestrictions() {
 		inTransaction(
 				session -> {
 					Criteria criteria = session.createCriteria( Person.class, "p" );
@@ -104,6 +105,35 @@ public class CriteriaTest extends BaseCoreFunctionalTestCase {
 					Criteria criteria = session.createCriteria( Person.class, "p" );
 					criteria.add( Restrictions.eq( "address.id", 1L ) );
 					criteria.list();
+				}
+		);
+	}
+
+	@Test
+	public void selectAssociationFKTest() {
+		inTransaction(
+				session -> {
+					Criteria criteria = session.createCriteria( Person.class, "p" );
+					ProjectionList projList = Projections.projectionList();
+					ForeingKeyProjection property = Projections.fk( "address" );
+					projList.add( property );
+					criteria.setProjection( projList );
+
+					List results = criteria.list();
+					assertThat( results.size(), is( 1 ) );
+				}
+		);
+	}
+
+	@Test
+	public void fkEqRestictionTest() {
+		inTransaction(
+				session -> {
+					Criteria criteria = session.createCriteria( Person.class, "p" );
+					criteria.add( Restrictions.fkEq( "address", 100L ) );
+
+					List results = criteria.list();
+					assertThat( results.size(), is( 1 ) );
 				}
 		);
 	}

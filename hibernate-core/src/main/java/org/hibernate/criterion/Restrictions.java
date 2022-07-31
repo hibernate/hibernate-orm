@@ -36,6 +36,22 @@ public class Restrictions {
 	public static Criterion idEq(Object value) {
 		return new IdentifierEqExpression( value );
 	}
+
+	public static Criterion fkEq(String associationPropertyName, Object value) {
+		return new ForeignKeyExpression( associationPropertyName, value, "=" );
+	}
+
+	public static Criterion fkNe(String associationPropertyName, Object value) {
+		return new ForeignKeyExpression( associationPropertyName, value, "<>" );
+	}
+
+	public static Criterion fkIsNotNull(String associationPropertyName) {
+		return new ForeignKeyNullExpression( associationPropertyName, true);
+	}
+
+	public static Criterion fkIsNull(String associationPropertyName) {
+		return new ForeignKeyNullExpression( associationPropertyName );
+	}
 	/**
 	 * Apply an "equal" constraint to the named property
 	 *

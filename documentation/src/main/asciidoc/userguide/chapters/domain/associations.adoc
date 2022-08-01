@@ -417,20 +417,38 @@ include::{extrasdir}/associations-many-to-many-bidirectional-with-link-entity-li
 There is only one delete statement executed because, this time, the association is controlled by the `@ManyToOne` side which only has to monitor the state of the underlying foreign key relationship to trigger the right DML statement.
 
 [[associations-not-found]]
-==== `@NotFound` association mapping
+==== `@NotFound`
 
-When dealing with associations which are not enforced by a Foreign Key,
-it's possible to bump into inconsistencies if the child record cannot reference a parent entity.
+When dealing with associations which are not enforced by a physical foreign-key, it is possible
+for a non-null foreign-key value to point to a non-existent value on the associated entity's table.
 
-By default, Hibernate will complain whenever a child association references a non-existing parent record.
-However, you can configure this behavior so that Hibernate can ignore such an Exception and simply assign `null` as a parent object referenced.
-
-To ignore non-existing parent entity references, even though not really recommended, it's possible to use the annotation `org.hibernate.annotation.NotFound` annotation with a value of `org.hibernate.annotations.NotFoundAction.IGNORE`.
-
-[NOTE]
+[WARNING]
 ====
-The `@ManyToOne` and `@OneToOne` associations that are annotated with `@NotFound(action = NotFoundAction.IGNORE)` are always fetched eagerly even if the `fetch` strategy is set to `FetchType.LAZY`.
+Not enforcing physical foreign-keys at the database level is highly discouraged.
 ====
+
+Hibernate provides support for such models using the `@NotFound` annotation, which accepts a
+`NotFoundAction` value which indicates how Hibernate should behave when such broken foreign-keys
+are encountered -
+
+EXCEPTION:: (default) Hibernate will throw an exception (`FetchNotFoundException`)
+IGNORE:: the association will be treated as `null`
+
+Both `@NotFound(IGNORE)` and `@NotFound(EXCEPTION)` cause Hibernate to assume that there is
+no physical foreign-key.
+
+`@ManyToOne` and `@OneToOne` associations annotated with `@NotFound` are always fetched eagerly even
+if the `fetch` strategy is set to `FetchType.LAZY`.
+
+
+[TIP]
+====
+If the application itself manages the referential integrity and can guarantee that there are no
+broken foreign-keys, `jakarta.persistence.ForeignKey(NO_CONSTRAINT)` can be used instead.
+This will force Hibernate to not export physical foreign-keys, but still behave as if there is
+in terms of avoiding the downsides to `@NotFound`.
+====
+
 
 Considering the following `City` and `Person` entity mappings:
 
@@ -457,35 +475,91 @@ include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-persist-examp
 When loading the `Person` entity, Hibernate is able to locate the associated `City` parent entity:
 
 [[associations-not-found-find-example]]
-.`@NotFound` find existing entity example
+.`@NotFound` - find existing entity example
 ====
 [source,java]
 ----
-include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-find-example,indent=0]
+include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-find-baseline,indent=0]
 ----
 ====
 
-However, if we change the `cityName` attribute to a non-existing city's name:
+However, if we break the foreign-key:
 
 [[associations-not-found-non-existing-persist-example]]
-.`@NotFound` change to non-existing City example
+.Break the foreign-key
 ====
 [source,java]
 ----
-include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-non-existing-persist-example,indent=0]
+include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-break-fk,indent=0]
 ----
 ====
 
 Hibernate is not going to throw any exception, and it will assign a value of `null` for the non-existing `City` entity reference:
 
 [[associations-not-found-non-existing-find-example]]
-.`@NotFound` find non-existing City example
+.`@NotFound` - find non-existing City example
 ====
 [source,java]
 ----
 include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-non-existing-find-example,indent=0]
 ----
 ====
+
+`@NotFound` also affects how the association is treated as "implicit joins" in HQL and Criteria.
+When there is a physical foreign-key, Hibernate can safely assume that the value in the foreign-key's
+key-column(s) will match the value in the target-column(s) because the database makes sure that
+is the case.  However, `@NotFound` forces Hibernate to perform a physical join for implicit joins
+when it might not be needed otherwise.
+
+Using the `Person` / `City` model, consider the query `from Person p where p.city.id is null`.
+
+Normally Hibernate would not need the join between the `Person` table and the `City` table because
+a physical foreign-key would ensure that any non-null value in the `Person.cityName` column
+has a matching non-null value in the `City.name` column.
+
+However, with `@NotFound` mappings it is possible to have a broken association because there is no
+physical foreign-key enforcing the relation.  As seen in <<associations-not-found-non-existing-persist-example>>,
+the `Person.cityName` column for John Doe has been changed from "New York" to "Atlantis" even though
+there is no `City` in the database named "Atlantis".  Hibernate is not able to trust the referring
+foreign-key value ("Atlantis") has a matching target value, so it must join to the `City` table to
+resolve the `city.id` value.
+
+
+[[associations-not-found-implicit-join-example]]
+.Implicit join example
+====
+[source,java]
+----
+include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-implicit-join-example,indent=0]
+----
+====
+
+Neither result includes a match for "John Doe" because the inner-join filters out that row.
+
+Hibernate does support a means to refer specifically to the key column (`Person.cityName`) in a query
+using the special `fk(..)` function.  E.g.
+
+[[associations-not-found-implicit-join-example]]
+.Implicit join example
+====
+[source,java]
+----
+include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-fk-function-example,indent=0]
+----
+====
+
+With Hibernate Criteria it is possible to use `Projections.fk(...)`  to select the foreign key value of an association
+and `Restrictions.fkEq(...)`, `Restrictions.fkNe(...)`, `Restrictions.fkIsNotNull(...)` and ``Restrictions.fkIsNull(...)`, E.g.
+
+[[associations-not-found-implicit-join-example]]
+.Implicit join example
+====
+[source,java]
+----
+include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-fk-criteria-example,indent=0]
+----
+====
+
 
 [[associations-any]]
 ==== `@Any` mapping

@@ -23,8 +23,6 @@ import antlr.TokenStream;
  * @author Steve Ebersole
  */
 public class SqlScriptParser extends GeneratedSqlScriptParser {
-	private static String[] TOKEN_NAMES = ASTUtil.generateTokenNameCache( GeneratedSqlScriptParserTokenTypes .class );
-
 	public static List<String> extractCommands(Reader reader) {
 		final List<String> statementList = new ArrayList<>();
 

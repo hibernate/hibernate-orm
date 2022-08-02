@@ -91,7 +91,6 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Collation;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.ConvertedQueryLiteral;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
@@ -4714,11 +4713,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public void visitQueryLiteral(QueryLiteral<?> queryLiteral) {
 		visitLiteral( queryLiteral );
-	}
-
-	@Override
-	public void visitConvertedQueryLiteral(ConvertedQueryLiteral<?, ?> convertedQueryLiteral) {
-		visitLiteral( convertedQueryLiteral );
 	}
 
 	private void visitLiteral(Literal literal) {

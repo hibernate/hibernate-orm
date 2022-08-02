@@ -12,8 +12,6 @@ import java.util.function.Function;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.ConvertibleModelPart;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.BasicValuedFetchBuilder;
 import org.hibernate.query.results.DomainResultCreationStateImpl;

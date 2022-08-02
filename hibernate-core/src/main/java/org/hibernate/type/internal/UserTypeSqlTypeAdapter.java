@@ -33,12 +33,12 @@ import org.hibernate.usertype.UserType;
  */
 public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 	private final UserType<J> userType;
-	private final BasicJavaType<J> jtd;
+	private final JavaType<J> jtd;
 
 	private final ValueExtractor<J> valueExtractor;
 	private final ValueBinder<J> valueBinder;
 
-	public UserTypeSqlTypeAdapter(UserType<J> userType, BasicJavaType<J> jtd, TypeConfiguration typeConfiguration) {
+	public UserTypeSqlTypeAdapter(UserType<J> userType, JavaType<J> jtd, TypeConfiguration typeConfiguration) {
 		this.userType = userType;
 		this.jtd = jtd;
 
@@ -100,7 +100,7 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 		private final UserType<J> userType;
 		private final JavaType<J> javaType;
 
-		public ValueExtractorImpl(UserType<J> userType, BasicJavaType<J> javaType) {
+		public ValueExtractorImpl(UserType<J> userType, JavaType<J> javaType) {
 			this.userType = userType;
 			this.javaType = javaType;
 		}

@@ -11,6 +11,7 @@ import java.util.function.BiFunction;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultsHelper;
@@ -142,10 +143,11 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 				sessionFactory.getTypeConfiguration()
 		);
 
-		return new BasicResult<>(
+		final JdbcMapping jdbcMapping = sqlSelection.getExpressionType().getJdbcMappings().get( 0 );
+		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				columnName,
-				sqlSelection.getExpressionType().getJdbcMappings().get( 0 ).getMappedJavaType()
+				jdbcMapping
 		);
 	}
 

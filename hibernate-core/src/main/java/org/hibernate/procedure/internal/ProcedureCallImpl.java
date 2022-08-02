@@ -638,11 +638,19 @@ public class ProcedureCallImpl<R>
 							throw new IllegalArgumentException( "The parameter at position [" + parameter + "] was not set! You need to call the setParameter method." );
 						}
 					}
+					final JdbcMapping parameterType = (JdbcMapping) registration.getParameterType();
+					final Object bindValue;
+					if ( parameterType.getValueConverter() == null ) {
+						bindValue = binding.getBindValue();
+					}
+					else {
+						bindValue = parameterType.getValueConverter().toRelationalValue( binding.getBindValue() );
+					}
 					jdbcParameterBindings.addBinding(
 							(JdbcParameter) registration.getParameterBinder(),
 							new JdbcParameterBindingImpl(
-									(JdbcMapping) registration.getParameterType(),
-									binding.getBindValue()
+									parameterType,
+									bindValue
 							)
 					);
 				}

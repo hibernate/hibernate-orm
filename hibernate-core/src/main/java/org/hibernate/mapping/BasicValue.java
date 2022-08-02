@@ -20,7 +20,7 @@ import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
-import org.hibernate.boot.model.process.internal.ConvertedBasicTypeResolution;
+import org.hibernate.boot.model.process.internal.InferredBasicValueResolution;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
 import org.hibernate.boot.model.process.internal.NamedBasicTypeResolution;
 import org.hibernate.boot.model.process.internal.NamedConverterResolution;
@@ -44,11 +44,12 @@ import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.BasicJavaType;
+import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -377,36 +378,6 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			);
 		}
 
-
-		final ConverterDescriptor attributeConverterDescriptor = getAttributeConverterDescriptor();
-		if ( attributeConverterDescriptor != null ) {
-			final ManagedBeanRegistry managedBeanRegistry = getBuildingContext().getBootstrapContext()
-					.getServiceRegistry()
-					.getService( ManagedBeanRegistry.class );
-
-			final JpaAttributeConverterCreationContext converterCreationContext = new JpaAttributeConverterCreationContext() {
-				@Override
-				public ManagedBeanRegistry getManagedBeanRegistry() {
-					return managedBeanRegistry;
-				}
-
-				@Override
-				public TypeConfiguration getTypeConfiguration() {
-					return typeConfiguration;
-				}
-			};
-
-			return NamedConverterResolution.from(
-					attributeConverterDescriptor,
-					explicitJavaTypeAccess,
-					explicitJdbcTypeAccess,
-					explicitMutabilityPlanAccess,
-					this,
-					converterCreationContext,
-					getBuildingContext()
-			);
-		}
-
 		JavaType<?> jtd = null;
 
 		// determine JavaType if we can
@@ -436,6 +407,71 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			if ( reflectedJtd != null ) {
 				jtd = reflectedJtd;
 			}
+		}
+
+		final ConverterDescriptor attributeConverterDescriptor = getAttributeConverterDescriptor();
+		if ( attributeConverterDescriptor != null ) {
+			final ManagedBeanRegistry managedBeanRegistry = getBuildingContext().getBootstrapContext()
+					.getServiceRegistry()
+					.getService( ManagedBeanRegistry.class );
+
+			final JpaAttributeConverterCreationContext converterCreationContext = new JpaAttributeConverterCreationContext() {
+				@Override
+				public ManagedBeanRegistry getManagedBeanRegistry() {
+					return managedBeanRegistry;
+				}
+
+				@Override
+				public TypeConfiguration getTypeConfiguration() {
+					return typeConfiguration;
+				}
+			};
+
+			final NamedConverterResolution<Object> converterResolution = NamedConverterResolution.from(
+					attributeConverterDescriptor,
+					explicitJavaTypeAccess,
+					explicitJdbcTypeAccess,
+					explicitMutabilityPlanAccess,
+					this,
+					converterCreationContext,
+					getBuildingContext()
+			);
+
+			if ( jtd instanceof BasicPluralJavaType<?>
+					&& !attributeConverterDescriptor.getDomainValueResolvedType()
+					.getErasedType()
+					.isAssignableFrom( jtd.getJavaTypeClass() ) ) {
+				// In this case, the converter applies to the element of a BasicPluralJavaType
+				final BasicPluralJavaType<?> containerJtd = (BasicPluralJavaType<?>) jtd;
+				final BasicType registeredElementType = converterResolution.getLegacyResolvedBasicType();
+				final ColumnTypeInformation columnTypeInformation;
+				if ( getColumn() instanceof ColumnTypeInformation ) {
+					columnTypeInformation = (ColumnTypeInformation) getColumn();
+				}
+				else {
+					columnTypeInformation = null;
+				}
+				final BasicType<?> registeredType = registeredElementType == null ? null : containerJtd.resolveType(
+						typeConfiguration,
+						getMetadata().getDatabase().getDialect(),
+						registeredElementType,
+						columnTypeInformation
+				);
+				if ( registeredType != null ) {
+					typeConfiguration.getBasicTypeRegistry().register( registeredType );
+
+					return new InferredBasicValueResolution(
+							registeredType,
+							registeredType.getJavaTypeDescriptor(),
+							registeredType.getJavaTypeDescriptor(),
+							registeredType.getJdbcType(),
+							registeredType,
+							null
+					);
+				}
+			}
+
+			return converterResolution;
 		}
 
 		final JdbcType jdbcType;
@@ -587,16 +623,8 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				valueConverter = converterDescriptor.createJpaAttributeConverter( converterCreationContext );
 				domainJtd = valueConverter.getDomainJavaType();
 			}
-			else if ( basicTypeByName instanceof ConvertedBasicType ) {
-				final ConvertedBasicType<?> convertedType = (ConvertedBasicType<?>) basicTypeByName;
-				if ( convertedType.getValueConverter() != null ) {
-					return new ConvertedBasicTypeResolution<>( convertedType, stdIndicators );
-				}
-				valueConverter = null;
-				domainJtd = basicTypeByName.getJavaTypeDescriptor();
-			}
 			else {
-				valueConverter = null;
+				valueConverter = basicTypeByName.getValueConverter();
 				domainJtd = basicTypeByName.getJavaTypeDescriptor();
 			}
 

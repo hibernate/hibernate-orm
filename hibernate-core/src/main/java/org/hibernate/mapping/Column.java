@@ -27,7 +27,9 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.internal.util.StringHelper.safeInterning;
@@ -345,9 +347,12 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		if ( type instanceof ComponentType ) {
 			type = getTypeForComponentValue( mapping, type, getTypeIndex() );
 		}
+		final JdbcMapping jdbcMapping = (JdbcMapping) type;
+		final JdbcType jdbcType = jdbcMapping.getJdbcType();
+		final JavaType<?> javaType = jdbcMapping.getJdbcJavaType();
 		columnSize = dialect.getSizeStrategy().resolveSize(
-				( (JdbcMapping) type ).getJdbcType(),
-				( (JdbcMapping) type ).getJavaTypeDescriptor(),
+				jdbcType,
+				javaType,
 				precision,
 				scale,
 				length

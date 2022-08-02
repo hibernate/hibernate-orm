@@ -8,17 +8,21 @@ import java.sql.SQLException;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.BasicJavaType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
 
 /**
  * @author Vlad Mihalcea
  */
-public class ArrayType implements UserType<Array>, BindableType<Array> {
+public class ArrayType implements UserType<Array>, BindableType<Array>, BasicValueConverter<Array, String> {
     public static final ArrayType INSTANCE = new ArrayType();
 
     private final BasicJavaType<Array> javaType = ArrayJavaType.INSTANCE;
@@ -39,6 +43,11 @@ public class ArrayType implements UserType<Array>, BindableType<Array> {
     @Override
     public int getSqlType() {
         return jdbcType.getJdbcTypeCode();
+    }
+
+    @Override
+    public JdbcType getJdbcType(TypeConfiguration typeConfiguration) {
+        return jdbcType;
     }
 
     @Override
@@ -64,7 +73,31 @@ public class ArrayType implements UserType<Array>, BindableType<Array> {
     @Override
     public void nullSafeSet(PreparedStatement st, Array value, int index, SharedSessionContractImplementor session) throws SQLException {
         jdbcType.getBinder( javaType ).bind( st, value, index, session );
+    }
 
+    @Override
+    public BasicValueConverter<Array, Object> getValueConverter() {
+        return (BasicValueConverter) this;
+    }
+
+    @Override
+    public Array toDomainValue(String relationalForm) {
+        return assemble( relationalForm, null );
+    }
+
+    @Override
+    public String toRelationalValue(Array domainForm) {
+        return (String) disassemble( domainForm );
+    }
+
+    @Override
+    public JavaType<Array> getDomainJavaType() {
+        return javaType;
+    }
+
+    @Override
+    public JavaType<String> getRelationalJavaType() {
+        return StringJavaType.INSTANCE;
     }
 
     @Override

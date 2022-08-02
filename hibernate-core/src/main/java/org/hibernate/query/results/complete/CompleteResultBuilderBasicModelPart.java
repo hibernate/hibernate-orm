@@ -86,16 +86,15 @@ public class CompleteResultBuilderBasicModelPart
 							return new ResultSetMappingSqlSelection( valuesArrayPosition, modelPart );
 						}
 				),
-				modelPart.getJavaType(),
+				modelPart.getJdbcMapping().getJdbcJavaType(),
 				null,
 				creationStateImpl.getSessionFactory().getTypeConfiguration()
 		);
 
-		//noinspection unchecked
-		return new BasicResult(
+		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				columnAlias,
-				modelPart.getJavaType()
+				modelPart.getJdbcMapping()
 		);
 	}
 

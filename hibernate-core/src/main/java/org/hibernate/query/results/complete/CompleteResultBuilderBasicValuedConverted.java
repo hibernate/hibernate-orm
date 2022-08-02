@@ -131,7 +131,7 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 							return new ResultSetMappingSqlSelection( valuesArrayPosition, underlyingMapping );
 						}
 				),
-				valueConverter.getDomainJavaType(),
+				valueConverter.getRelationalJavaType(),
 				null,
 				sessionFactory.getTypeConfiguration()
 		);

@@ -9,11 +9,13 @@ package org.hibernate.internal;
 import java.util.Objects;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Nathan Xu
@@ -38,7 +40,11 @@ public class FilterJdbcParameter {
 	}
 
 	public JdbcParameterBinding getBinding() {
-		return new JdbcParameterBindingImpl( jdbcMapping, jdbcParameterValue );
+		final BasicValueConverter valueConverter = jdbcMapping.getValueConverter();
+		if ( valueConverter == null ) {
+			return new JdbcParameterBindingImpl( jdbcMapping, jdbcParameterValue );
+		}
+		return new JdbcParameterBindingImpl( jdbcMapping, valueConverter.toRelationalValue( jdbcParameterValue ) );
 	}
 
 	@Override
@@ -52,11 +58,18 @@ public class FilterJdbcParameter {
 		FilterJdbcParameter that = (FilterJdbcParameter) o;
 		return Objects.equals( parameter, that.parameter ) &&
 				Objects.equals( jdbcMapping, that.jdbcMapping ) &&
-				Objects.equals( jdbcParameterValue, that.jdbcParameterValue );
+				( (JavaType<Object>) jdbcMapping.getMappedJavaType() ).areEqual(
+						jdbcParameterValue,
+						that.jdbcParameterValue
+				);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( parameter, jdbcMapping, jdbcParameterValue );
+		return Objects.hash(
+				parameter,
+				jdbcMapping,
+				( (JavaType<Object>) jdbcMapping.getMappedJavaType() ).extractHashCode( jdbcParameterValue )
+		);
 	}
 }

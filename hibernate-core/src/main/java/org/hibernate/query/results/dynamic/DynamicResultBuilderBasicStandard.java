@@ -9,6 +9,8 @@ package org.hibernate.query.results.dynamic;
 import java.util.Objects;
 import java.util.function.BiFunction;
 
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -154,16 +156,23 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 		);
 
 		final JavaType<?> javaType;
+		final JavaType<?> jdbcJavaType;
+		final BasicValueConverter<?, ?> converter;
 
 		if ( explicitJavaType != null ) {
 			javaType = explicitJavaType;
+			jdbcJavaType = explicitJavaType;
+			converter = null;
 		}
 		else {
-			javaType = expression.getExpressionType().getJdbcMappings().get( 0 ).getMappedJavaType();
+			final JdbcMapping jdbcMapping = expression.getExpressionType().getJdbcMappings().get( 0 );
+			javaType = jdbcMapping.getMappedJavaType();
+			jdbcJavaType = jdbcMapping.getJdbcJavaType();
+			converter = jdbcMapping.getValueConverter();
 		}
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				expression,
-				javaType,
+				jdbcJavaType,
 				null,
 				sessionFactory.getTypeConfiguration()
 		);
@@ -171,7 +180,7 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 		// StandardRowReader expects there to be a JavaType as part of the ResultAssembler.
 		assert javaType != null;
 
-		return new BasicResult<>( sqlSelection.getValuesArrayPosition(), resultAlias, javaType );
+		return new BasicResult( sqlSelection.getValuesArrayPosition(), resultAlias, javaType, converter );
 	}
 
 	@Override

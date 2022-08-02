@@ -2152,7 +2152,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		);
 	}
 
-	private <T> SqmExpression<T> createDiscriminatorValue(AnyDiscriminatorSqmPath anyDiscriminatorTypeSqmPath, HqlParser.ExpressionContext valueExpressionContext) {
+	private <T> SqmExpression<T> createDiscriminatorValue(
+			AnyDiscriminatorSqmPath anyDiscriminatorTypeSqmPath,
+			HqlParser.ExpressionContext valueExpressionContext) {
+		//noinspection unchecked
 		final SqmPath<T> discriminatorSqmPath = anyDiscriminatorTypeSqmPath.getLhs();
 		final EntityDomainType<T> entityWithDiscriminator = creationContext.getJpaMetamodel()
 				.entity( discriminatorSqmPath.findRoot().getNavigablePath().getLocalName() );

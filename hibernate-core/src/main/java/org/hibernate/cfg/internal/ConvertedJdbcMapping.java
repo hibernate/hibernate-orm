@@ -8,13 +8,13 @@ package org.hibernate.cfg.internal;
 
 import java.lang.reflect.ParameterizedType;
 
+import org.hibernate.Remove;
 import org.hibernate.internal.util.GenericsHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.convert.internal.JpaAttributeConverterImpl;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.converter.AttributeConverterJdbcTypeAdapter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -26,7 +26,10 @@ import jakarta.persistence.AttributeConverter;
  * Ad-hoc JdbcMapping implementation for cases where we only have a converter
  *
  * @author Steve Ebersole
+ * @deprecated remove
  */
+@Remove
+@Deprecated(forRemoval = true)
 public class ConvertedJdbcMapping<T> implements JdbcMapping {
 
 	private final JavaType<T> domainJtd;
@@ -55,11 +58,12 @@ public class ConvertedJdbcMapping<T> implements JdbcMapping {
 				relationalJtd
 		);
 
-		this.jdbcType = new AttributeConverterJdbcTypeAdapter(
-				converterDescriptor,
-				relationalJtd.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() ),
-				relationalJtd
-		);
+		this.jdbcType = null;
+//		new AttributeConverterJdbcTypeAdapter(
+//				converterDescriptor,
+//				relationalJtd.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() ),
+//				relationalJtd
+//		);
 	}
 
 	@Override
@@ -70,6 +74,11 @@ public class ConvertedJdbcMapping<T> implements JdbcMapping {
 	@Override
 	public JdbcType getJdbcType() {
 		return jdbcType;
+	}
+
+	@Override
+	public JavaType<?> getJdbcJavaType() {
+		return relationalJtd;
 	}
 
 	@Override

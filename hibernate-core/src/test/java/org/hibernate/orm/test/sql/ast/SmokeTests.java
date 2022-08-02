@@ -12,6 +12,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.orm.test.mapping.SmokeTests.Gender;
 import org.hibernate.orm.test.mapping.SmokeTests.SimpleEntity;
 import org.hibernate.spi.NavigablePath;
@@ -36,8 +37,11 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.type.CustomType;
+import org.hibernate.type.EnumType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
+import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.hamcrest.AssignableMatcher;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -51,6 +55,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
@@ -182,9 +187,11 @@ public class SmokeTests {
 					assertThat( columnReference.renderSqlFragment( scope.getSessionFactory() ), is( "s1_0.gender" ) );
 
 					final JdbcMappingContainer selectedExpressible = selectedExpression.getExpressionType();
-					assertThat( selectedExpressible, instanceOf( BasicTypeImpl.class ) );
-					final BasicTypeImpl<?> basicType = (BasicTypeImpl<?>) selectedExpressible;
-					assertThat( basicType.getJavaTypeDescriptor().getJavaTypeClass(), AssignableMatcher.assignableTo( Integer.class ) );
+					assertThat( selectedExpressible, instanceOf( CustomType.class ) );
+					final CustomType<?> basicType = (CustomType<?>) selectedExpressible;
+					final EnumType<?> enumType = (EnumType<?>) basicType.getUserType();
+					final EnumValueConverter<?, ?> enumConverter = enumType.getEnumValueConverter();
+					assertThat( enumConverter.getRelationalJavaType().getJavaTypeClass(), AssignableMatcher.assignableTo( Integer.class ) );
 					assertThat(
 							basicType.getJdbcType(),
 							is( jdbcTypeRegistry.getDescriptor( Types.SMALLINT ) )

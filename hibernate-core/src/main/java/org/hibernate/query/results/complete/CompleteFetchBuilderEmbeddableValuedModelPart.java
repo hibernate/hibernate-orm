@@ -91,7 +91,7 @@ public class CompleteFetchBuilderEmbeddableValuedModelPart
 										return new ResultSetMappingSqlSelection( valuesArrayPosition, selectableMapping.getJdbcMapping() );
 									}
 							),
-							modelPart.getJavaType(),
+							selectableMapping.getJdbcMapping().getJdbcJavaType(),
 							null,
 							creationStateImpl.getSessionFactory().getTypeConfiguration()
 					);

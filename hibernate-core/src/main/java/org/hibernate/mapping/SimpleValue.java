@@ -54,13 +54,12 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
-import org.hibernate.type.descriptor.converter.AttributeConverterJdbcTypeAdapter;
-import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.LobTypeMappings;
 import org.hibernate.type.descriptor.jdbc.NationalizedTypeMappings;
+import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 
@@ -799,7 +798,7 @@ public abstract class SimpleValue implements KeyValue {
 		) );
 	}
 
-	private <T> AttributeConverterTypeAdapter<T> buildAttributeConverterTypeAdapter(
+	private <T> Type buildAttributeConverterTypeAdapter(
 			JpaAttributeConverter<T, ?> jpaAttributeConverter) {
 		JavaType<T> domainJavaType = jpaAttributeConverter.getDomainJavaType();
 		JavaType<?> relationalJavaType = jpaAttributeConverter.getRelationalJavaType();
@@ -851,7 +850,7 @@ public abstract class SimpleValue implements KeyValue {
 
 
 		// todo : cache the AttributeConverterTypeAdapter in case that AttributeConverter is applied multiple times.
-		return new AttributeConverterTypeAdapter<>(
+		return new ConvertedBasicTypeImpl<>(
 				ConverterDescriptor.TYPE_NAME_PREFIX
 						+ jpaAttributeConverter.getConverterJavaType().getJavaType().getTypeName(),
 				String.format(
@@ -859,17 +858,8 @@ public abstract class SimpleValue implements KeyValue {
 						domainJavaType.getJavaType().getTypeName(),
 						relationalJavaType.getJavaType().getTypeName()
 				),
-				jpaAttributeConverter,
-				// and finally construct the adapter, which injects the AttributeConverter
-				// calls into the binding/extraction process...
-				new AttributeConverterJdbcTypeAdapter(
-						jpaAttributeConverter,
-						metadata.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( jdbcTypeCode ),
-						relationalJavaType
-				),
-				relationalJavaType,
-				domainJavaType,
-				null
+				metadata.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( jdbcTypeCode ),
+				jpaAttributeConverter
 		);
 	}
 

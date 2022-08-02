@@ -59,15 +59,15 @@ public class Conversion
 	public DomainResult createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		return new BasicResult(
+		return new BasicResult<>(
 				creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 						this,
-						type.getJdbcMapping().getJavaTypeDescriptor(),
+						type.getJdbcMapping().getJdbcJavaType(),
 						null,
 						creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
 				).getValuesArrayPosition(),
 				resultVariable,
-				type.getJdbcMapping().getJavaTypeDescriptor()
+				type.getJdbcMapping()
 		);
 	}
 
@@ -78,7 +78,7 @@ public class Conversion
 
 		sqlExpressionResolver.resolveSqlSelection(
 				this,
-				type.getJdbcMapping().getJavaTypeDescriptor(),
+				type.getJdbcMapping().getJdbcJavaType(),
 				null,
 				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);

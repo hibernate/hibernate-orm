@@ -645,10 +645,10 @@ public class CteInsertHandler implements InsertHandler {
 
 		final Expression count = createCountStar( factory, sqmConverter );
 		domainResults.add(
-				new BasicResult(
+				new BasicResult<>(
 						0,
 						null,
-						( (SqlExpressible) count).getJdbcMapping().getJavaTypeDescriptor()
+						( (SqlExpressible) count).getJdbcMapping()
 				)
 		);
 		querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 1, 0, count ) );

@@ -171,12 +171,10 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 				creationState.getSqlAstCreationState()
 		);
 
-		//noinspection unchecked
-		return new BasicResult(
+		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				getJavaType(),
-				null,
+				jdbcMapping,
 				navigablePath
 		);
 	}
@@ -201,7 +199,7 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 		);
 		return expressionResolver.resolveSqlSelection(
 				expression,
-				getJdbcMapping().getJavaTypeDescriptor(),
+				getJdbcMapping().getJdbcJavaType(),
 				fetchParent,
 				creationState.getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
@@ -234,7 +232,6 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 				fetchParent,
 				fetchablePath,
 				this,
-				null,
 				fetchTiming,
 				creationState
 		);

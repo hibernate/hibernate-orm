@@ -39,6 +39,7 @@ import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
@@ -51,6 +52,7 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
@@ -82,7 +84,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private final LockMode lockMode;
 
 	private final DomainResultAssembler identifierAssembler;
-	private final DomainResultAssembler discriminatorAssembler;
+	private final BasicResultAssembler discriminatorAssembler;
 	private final DomainResultAssembler versionAssembler;
 	private final DomainResultAssembler<Object> rowIdAssembler;
 
@@ -136,7 +138,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 
 		if ( discriminatorFetch != null ) {
-			discriminatorAssembler = discriminatorFetch.createAssembler( this, creationState );
+			discriminatorAssembler = (BasicResultAssembler) discriminatorFetch.createAssembler( this, creationState );
 		}
 		else {
 			discriminatorAssembler = null;
@@ -332,12 +334,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			return entityDescriptor;
 		}
 
-		final Object discriminatorValue = discriminatorAssembler.assemble(
-				rowProcessingState,
-				rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
-		);
-
-		final String concreteEntityName = entityDescriptor.getDiscriminatorMapping().getConcreteEntityNameForDiscriminatorValue( discriminatorValue );
+		final Object discriminatorDomainValue = discriminatorAssembler.extractRawValue( rowProcessingState );
+		final String concreteEntityName = entityDescriptor.getDiscriminatorMapping()
+				.getConcreteEntityNameForDiscriminatorValue( discriminatorDomainValue );
 
 		if ( concreteEntityName == null ) {
 			return entityDescriptor;
@@ -353,7 +352,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					concreteEntityName,
 					null,
 					entityDescriptor.getEntityName(),
-					discriminatorValue
+					discriminatorDomainValue
 			);
 		}
 

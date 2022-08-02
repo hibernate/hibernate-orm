@@ -10,8 +10,6 @@ import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Types;
-import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.Properties;
 
@@ -25,7 +23,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.query.sqm.CastType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -33,6 +30,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.SerializableJavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.usertype.DynamicParameterizedType;
 
@@ -58,6 +56,7 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 
 	private ValueBinder<T> jdbcValueBinder;
 	private ValueExtractor<T> jdbcValueExtractor;
+	private JdbcLiteralFormatter<T> jdbcLiteralFormatter;
 
 	public SerializableToBlobType() {
 		this.jdbcType = BlobJdbcType.DEFAULT;
@@ -66,6 +65,7 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 
 		this.jdbcValueBinder = jdbcType.getBinder( javaType );
 		this.jdbcValueExtractor = jdbcType.getExtractor( javaType );
+		this.jdbcLiteralFormatter = jdbcType.getJdbcLiteralFormatter( javaType );
 	}
 
 	@Override
@@ -105,6 +105,11 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 	@Override
 	public ValueBinder<T> getJdbcValueBinder() {
 		return jdbcValueBinder;
+	}
+
+	@Override
+	public JdbcLiteralFormatter<T> getJdbcLiteralFormatter() {
+		return jdbcLiteralFormatter;
 	}
 
 	@Override
@@ -151,6 +156,7 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 		this.javaType = javaType;
 		this.jdbcValueBinder = getJdbcType().getBinder( javaType );
 		this.jdbcValueExtractor = getJdbcType().getExtractor( javaType );
+		this.jdbcLiteralFormatter = getJdbcType().getJdbcLiteralFormatter( javaType );
 	}
 
 	public final JdbcType getJdbcType() {
@@ -376,33 +382,4 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 		return true;
 	}
 
-	@Override
-	public CastType getCastType() {
-		final JdbcType jdbcType = getJdbcType();
-		final int jdbcTypeCode = jdbcType.getJdbcTypeCode();
-		switch ( jdbcTypeCode ) {
-			case Types.BIT:
-			case Types.SMALLINT:
-			case Types.TINYINT:
-			case Types.INTEGER:
-				if ( getJavaType() == Boolean.class ) {
-					return CastType.INTEGER_BOOLEAN;
-				}
-				break;
-			case Types.CHAR:
-			case Types.NCHAR:
-				if ( getJavaType() == Boolean.class ) {
-					return (Boolean) getJavaTypeDescriptor().wrap( 'Y', null )
-							? CastType.YN_BOOLEAN
-							: CastType.TF_BOOLEAN;
-				}
-				break;
-			case Types.TIMESTAMP_WITH_TIMEZONE:
-				if ( getJavaType() == ZonedDateTime.class ) {
-					return CastType.ZONE_TIMESTAMP;
-				}
-				break;
-		}
-		return jdbcType.getCastType();
-	}
 }

@@ -745,7 +745,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			);
 		}
 
-		final BasicType<?> discriminatorType = (BasicType<?>) getDiscriminatorType();
+		final BasicType<?> discriminatorType = (BasicType<?>) getDiscriminatorMapping().getJdbcMapping();
 		final Expression sqlExpression = sqlExpressionResolver.resolveSqlExpression(
 				columnReferenceKey,
 				sqlAstProcessingState -> new ColumnReference(

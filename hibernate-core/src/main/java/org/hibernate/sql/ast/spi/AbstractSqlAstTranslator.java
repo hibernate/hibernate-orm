@@ -3647,9 +3647,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		assert literal.getExpressionType().getJdbcTypeCount() == 1;
 
 		final JdbcMapping jdbcMapping = literal.getJdbcMapping();
-		final JdbcLiteralFormatter literalFormatter = jdbcMapping
-				.getJdbcType()
-				.getJdbcLiteralFormatter( jdbcMapping.getJavaTypeDescriptor() );
+		final JdbcLiteralFormatter literalFormatter = jdbcMapping.getJdbcLiteralFormatter();
 
 		// If we encounter a plain literal in the select clause which has no literal formatter, we must render it as parameter
 		if ( literalFormatter == null ) {
@@ -4739,7 +4737,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else {
 			assert jdbcParameter.getExpressionType().getJdbcTypeCount() == 1;
 			final JdbcMapping jdbcMapping = jdbcParameter.getExpressionType().getJdbcMappings().get( 0 );
-			final JdbcLiteralFormatter literalFormatter = jdbcMapping.getJdbcType().getJdbcLiteralFormatter( jdbcMapping.getJavaTypeDescriptor() );
+			final JdbcLiteralFormatter literalFormatter = jdbcMapping.getJdbcLiteralFormatter();
 			if ( literalFormatter == null ) {
 				throw new IllegalArgumentException( "Can't render parameter as literal, no literal formatter found" );
 			}

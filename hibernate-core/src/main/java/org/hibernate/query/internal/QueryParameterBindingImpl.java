@@ -13,12 +13,12 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingValidator;
 import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.CoercionException;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.TemporalJavaType;
@@ -143,9 +143,6 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 
 		final SqmExpressible<? extends T> sqmExpressible = parameterType.resolveExpressible( sessionFactory );
 		assert sqmExpressible != null;
-		if ( sqmExpressible instanceof AttributeConverterTypeAdapter ) {
-			return value;
-		}
 		return sqmExpressible.getExpressibleJavaType().coerce( value, this );
 	}
 
@@ -321,7 +318,8 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	@Override @SuppressWarnings("unchecked")
 	public boolean setType(MappingModelExpressible<T> type) {
 		this.type = type;
-		if ( bindType == null || bindType.getBindableJavaType() == Object.class ) {
+		// If the bind type is undetermined or the given type is a model part, then we try to apply a new bind type
+		if ( bindType == null || bindType.getBindableJavaType() == Object.class || type instanceof ModelPart ) {
 			if ( type instanceof BindableType<?> ) {
 				final boolean changed = bindType != null && type != bindType;
 				this.bindType = (BindableType<T>) type;

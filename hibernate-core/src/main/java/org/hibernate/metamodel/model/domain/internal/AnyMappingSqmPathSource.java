@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.query.BindableType;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
@@ -20,7 +19,7 @@ import static jakarta.persistence.metamodel.Bindable.BindableType.SINGULAR_ATTRI
 /**
  * @author Steve Ebersole
  */
-public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> implements BindableType<J> {
+public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> {
 	private final SqmPathSource<?> keyPathSource;
 	private final AnyDiscriminatorSqmPathSource discriminatorPathSource;
 

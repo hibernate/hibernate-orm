@@ -9,11 +9,14 @@ package org.hibernate.metamodel.mapping;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.Incubating;
 import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
@@ -50,9 +53,32 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	 */
 	ValueBinder getJdbcValueBinder();
 
+	/**
+	 * The strategy for formatting values of this expressible type to
+	 * a SQL literal.
+	 */
+	@Incubating
+	default JdbcLiteralFormatter getJdbcLiteralFormatter() {
+		return getJdbcType().getJdbcLiteralFormatter( getMappedJavaType() );
+	}
+
 	@Override
 	default JavaType<?> getMappedJavaType() {
 		return getJavaTypeDescriptor();
+	}
+
+	@Incubating
+	default JavaType<?> getJdbcJavaType() {
+		return getJavaTypeDescriptor();
+	}
+
+	/**
+	 * Returns the converter that this basic type uses for transforming from the domain type, to the relational type,
+	 * or <code>null</code> if there is no conversion.
+	 */
+	@Incubating
+	default BasicValueConverter getValueConverter() {
+		return null;
 	}
 
 	@Override

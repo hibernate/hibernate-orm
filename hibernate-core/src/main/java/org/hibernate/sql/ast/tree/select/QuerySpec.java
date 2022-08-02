@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
@@ -152,7 +153,7 @@ public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContain
 					(index, jdbcMapping) -> {
 						creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 								this,
-								jdbcMapping.getJavaTypeDescriptor(),
+								jdbcMapping.getJdbcJavaType(),
 								null,
 								typeConfiguration
 						);
@@ -163,18 +164,20 @@ public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContain
 
 	@Override
 	public DomainResult createDomainResult(String resultVariable, DomainResultCreationState creationState) {
-		TypeConfiguration typeConfiguration = creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration();
+		final TypeConfiguration typeConfiguration = creationState.getSqlAstCreationState()
+				.getCreationContext()
+				.getMappingMetamodel()
+				.getTypeConfiguration();
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
 		if ( selectClause.getSqlSelections().size() == 1 ) {
-			SqlSelection first = selectClause.getSqlSelections().get( 0 );
-			JavaType descriptor = first.getExpressionType()
+			final SqlSelection first = selectClause.getSqlSelections().get( 0 );
+			final JdbcMapping jdbcMapping = first.getExpressionType()
 					.getJdbcMappings()
-					.get( 0 )
-					.getJavaTypeDescriptor();
+					.get( 0 );
 
 			final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 					this,
-					descriptor,
+					jdbcMapping.getJdbcJavaType(),
 					null,
 					typeConfiguration
 			);
@@ -182,7 +185,7 @@ public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContain
 			return new BasicResult<>(
 					sqlSelection.getValuesArrayPosition(),
 					resultVariable,
-					descriptor
+					jdbcMapping
 			);
 		}
 		else {

@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.BindableType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -24,7 +23,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public class SqmEmbeddedValuedSimplePath<T>
 		extends AbstractSqmSimplePath<T>
-		implements BindableType<T>, SqmExpressible<T> {
+		implements SqmExpressible<T> {
 	public SqmEmbeddedValuedSimplePath(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,

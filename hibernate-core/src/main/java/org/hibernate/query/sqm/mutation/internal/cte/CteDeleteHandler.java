@@ -91,7 +91,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 													new BasicResult<>(
 															selection.getValuesArrayPosition(),
 															null,
-															jdbcMapping.getJavaTypeDescriptor()
+															jdbcMapping
 													)
 											);
 										}

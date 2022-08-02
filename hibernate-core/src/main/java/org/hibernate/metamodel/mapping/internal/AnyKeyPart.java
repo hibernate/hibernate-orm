@@ -198,7 +198,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				columnReference,
-				getJavaType(),
+				jdbcMapping.getJdbcJavaType(),
 				fetchParent,
 				sessionFactory.getTypeConfiguration()
 		);
@@ -208,7 +208,6 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 				fetchParent,
 				fetchablePath,
 				this,
-				null,
 				fetchTiming,
 				creationState
 		);

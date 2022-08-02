@@ -40,6 +40,26 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
 			BasicValuedModelPart valuedMapping,
+			FetchTiming fetchTiming,
+			DomainResultCreationState creationState) {
+		//noinspection unchecked
+		this(
+				valuesArrayPosition,
+				fetchParent,
+				fetchablePath,
+				valuedMapping,
+				(BasicValueConverter<T, ?>) valuedMapping.getJdbcMapping().getValueConverter(),
+				fetchTiming,
+				true,
+				creationState
+		);
+	}
+
+	public BasicFetch(
+			int valuesArrayPosition,
+			FetchParent fetchParent,
+			NavigablePath fetchablePath,
+			BasicValuedModelPart valuedMapping,
 			BasicValueConverter<T, ?> valueConverter,
 			FetchTiming fetchTiming,
 			DomainResultCreationState creationState) {

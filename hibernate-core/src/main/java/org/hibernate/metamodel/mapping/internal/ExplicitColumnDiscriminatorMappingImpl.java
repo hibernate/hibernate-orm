@@ -44,7 +44,7 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 			Integer precision,
 			Integer scale,
 			MappingModelCreationProcess creationProcess) {
-		super( discriminatorType.getJdbcMapping(), entityDescriptor, discriminatorType, creationProcess );
+		super( entityDescriptor, discriminatorType, creationProcess );
 		this.tableExpression = tableExpression;
 		this.isPhysical = isPhysical;
 		this.columnDefinition = columnDefinition;
@@ -78,7 +78,7 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 						columnFormula != null,
 						null,
 						null,
-						jdbcMappingToUse,
+						getJdbcMapping(),
 						getSessionFactory()
 
 				)

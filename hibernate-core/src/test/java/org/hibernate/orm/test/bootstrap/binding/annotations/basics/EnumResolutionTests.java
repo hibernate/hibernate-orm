@@ -27,8 +27,8 @@ import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
-import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
 
@@ -130,7 +130,7 @@ public class EnumResolutionTests {
 					assertThat( converterType, equalTo( ConverterImpl.class ) );
 				},
 				(legacyResolution) -> {
-					assertThat( legacyResolution, instanceOf( AttributeConverterTypeAdapter.class ) );
+					assertThat( legacyResolution, instanceOf( ConvertedBasicTypeImpl.class ) );
 				}
 		);
 	}
@@ -192,7 +192,7 @@ public class EnumResolutionTests {
 
 		final JdbcMapping jdbcMapping = resolution.getJdbcMapping();
 		assertThat( jdbcMapping.getJdbcType(), equalTo( resolution.getJdbcType() ) );
-		assertThat( jdbcMapping.getJavaTypeDescriptor(), equalTo( resolution.getRelationalJavaType() ) );
+		assertThat( jdbcMapping.getJdbcJavaType(), equalTo( resolution.getRelationalJavaType() ) );
 
 		converterChecker.accept( resolution.getValueConverter() );
 

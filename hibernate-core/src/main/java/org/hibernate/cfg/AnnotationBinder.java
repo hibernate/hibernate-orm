@@ -11,6 +11,7 @@ import java.lang.annotation.Repeatable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -102,6 +103,7 @@ import org.hibernate.annotations.common.reflection.XPackage;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -117,7 +119,6 @@ import org.hibernate.cfg.annotations.Nullability;
 import org.hibernate.cfg.annotations.PropertyBinder;
 import org.hibernate.cfg.annotations.QueryBinder;
 import org.hibernate.cfg.annotations.TableBinder;
-import org.hibernate.cfg.internal.ConvertedJdbcMapping;
 import org.hibernate.cfg.internal.NullableDiscriminatorColumnSecondPass;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -125,6 +126,7 @@ import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.GenericsHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.event.internal.CallbackDefinitionResolverLegacyImpl;
 import org.hibernate.jpa.event.spi.CallbackType;
@@ -147,6 +149,7 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.model.convert.internal.JpaAttributeConverterImpl;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.internal.PropertyAccessStrategyCompositeUserTypeImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
@@ -159,6 +162,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
@@ -1756,7 +1760,35 @@ public final class AnnotationBinder {
 		final ManagedBeanRegistry beanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
 		final ManagedBean<AttributeConverter<?, ?>> bean = beanRegistry.getBean( type );
 
-		return new ConvertedJdbcMapping<>( bean, context.getBootstrapContext().getTypeConfiguration() );
+		final TypeConfiguration typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
+		final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
+		final JavaType<? extends AttributeConverter<?,?>> converterJtd = jtdRegistry.resolveDescriptor( bean.getBeanClass() );
+
+		final ParameterizedType converterParameterizedType = GenericsHelper.extractParameterizedType( bean.getBeanClass() );
+		final Class<?> domainJavaClass = GenericsHelper.extractClass( converterParameterizedType.getActualTypeArguments()[0] );
+		final Class<?> relationalJavaClass = GenericsHelper.extractClass( converterParameterizedType.getActualTypeArguments()[1] );
+
+		final JavaType<?> domainJtd = jtdRegistry.resolveDescriptor( domainJavaClass );
+		final JavaType<?> relationalJtd = jtdRegistry.resolveDescriptor( relationalJavaClass );
+
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		final JpaAttributeConverterImpl valueConverter = new JpaAttributeConverterImpl(
+				bean,
+				converterJtd,
+				domainJtd,
+				relationalJtd
+		);
+		return new ConvertedBasicTypeImpl<>(
+				ConverterDescriptor.TYPE_NAME_PREFIX
+						+ valueConverter.getConverterJavaType().getJavaType().getTypeName(),
+				String.format(
+						"BasicType adapter for AttributeConverter<%s,%s>",
+						domainJtd.getJavaType().getTypeName(),
+						relationalJtd.getJavaType().getTypeName()
+				),
+				relationalJtd.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() ),
+				valueConverter
+		);
 	}
 
 	private static JdbcMapping resolveJavaType(Class<JavaType<?>> type, MetadataBuildingContext context) {

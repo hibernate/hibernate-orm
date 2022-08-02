@@ -14,7 +14,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
@@ -49,7 +48,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 @SuppressWarnings("rawtypes")
 public class BasicAttributeMapping
 		extends AbstractSingularAttributeMapping
-		implements SingularAttributeMapping, BasicValuedModelPart, ConvertibleModelPart {
+		implements SingularAttributeMapping, BasicValuedModelPart {
 	private final NavigableRole navigableRole;
 
 	private final String tableExpression;

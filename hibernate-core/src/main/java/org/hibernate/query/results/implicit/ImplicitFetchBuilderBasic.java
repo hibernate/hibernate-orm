@@ -6,7 +6,9 @@
  */
 package org.hibernate.query.results.implicit;
 
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -27,6 +29,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
+import static org.hibernate.query.results.ResultsHelper.impl;
 import static org.hibernate.query.results.ResultsHelper.jdbcPositionToValuesArrayPosition;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
@@ -36,10 +39,23 @@ import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnRefere
 public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, BasicValuedFetchBuilder {
 	private final NavigablePath fetchPath;
 	private final BasicValuedModelPart fetchable;
+	private final FetchBuilder fetchBuilder;
 
 	public ImplicitFetchBuilderBasic(NavigablePath fetchPath, BasicValuedModelPart fetchable) {
 		this.fetchPath = fetchPath;
 		this.fetchable = fetchable;
+		this.fetchBuilder = null;
+	}
+
+	public ImplicitFetchBuilderBasic(
+			NavigablePath fetchPath,
+			BasicValuedModelPart fetchable,
+			DomainResultCreationState creationState) {
+		this.fetchPath = fetchPath;
+		this.fetchable = fetchable;
+		final DomainResultCreationStateImpl creationStateImpl = impl( creationState );
+		final Function<String, FetchBuilder> fetchBuilderResolver = creationStateImpl.getCurrentExplicitFetchMementoResolver();
+		this.fetchBuilder = fetchBuilderResolver.apply( fetchable.getFetchableName() );
 	}
 
 	@Override
@@ -54,6 +70,15 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, BasicVal
 			JdbcValuesMetadata jdbcResultsMetadata,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
+		if ( fetchBuilder != null ) {
+			return (BasicFetch<?>) fetchBuilder.buildFetch(
+					parent,
+					fetchPath,
+					jdbcResultsMetadata,
+					legacyFetchResolver,
+					domainResultCreationState
+			);
+		}
 		final DomainResultCreationStateImpl creationStateImpl = ResultsHelper.impl( domainResultCreationState );
 
 		final TableGroup parentTableGroup = creationStateImpl
@@ -136,5 +161,12 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, BasicVal
 		int result = fetchPath.hashCode();
 		result = 31 * result + fetchable.hashCode();
 		return result;
+	}
+
+	@Override
+	public void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {
+		if ( fetchBuilder != null ) {
+			consumer.accept( fetchPath.getLocalName(), fetchBuilder );
+		}
 	}
 }

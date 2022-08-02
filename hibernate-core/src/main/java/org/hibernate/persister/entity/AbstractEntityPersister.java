@@ -244,6 +244,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -1867,10 +1868,15 @@ public abstract class AbstractEntityPersister
 								FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
 								final boolean selectable;
 								if ( fetchable instanceof AttributeMapping ) {
-									final int propertyNumber = ( (AttributeMapping) fetchable ).getStateArrayPosition();
-									final int tableNumber = getSubclassPropertyTableNumber( propertyNumber );
-									selectable = !isSubclassTableSequentialSelect( tableNumber )
-											&& propertySelectable[propertyNumber];
+									if ( fetchParent instanceof EmbeddableResultGraphNode && ( (EmbeddableResultGraphNode) fetchParent ).getReferencedMappingContainer() == getIdentifierMapping() ) {
+										selectable = true;
+									}
+									else {
+										final int propertyNumber = ( (AttributeMapping) fetchable ).getStateArrayPosition();
+										final int tableNumber = getSubclassPropertyTableNumber( propertyNumber );
+										selectable = !isSubclassTableSequentialSelect( tableNumber )
+												&& propertySelectable[propertyNumber];
+									}
 								}
 								else {
 									selectable = true;

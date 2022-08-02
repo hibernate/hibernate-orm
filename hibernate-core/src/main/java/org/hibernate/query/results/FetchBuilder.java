@@ -29,7 +29,8 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 public interface FetchBuilder {
 	Fetch buildFetch(
 			FetchParent parent,
-			NavigablePath fetchPath, JdbcValuesMetadata jdbcResultsMetadata,
+			NavigablePath fetchPath,
+			JdbcValuesMetadata jdbcResultsMetadata,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState);
 

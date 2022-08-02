@@ -8,12 +8,14 @@ package org.hibernate.query.results.implicit;
 
 import java.util.function.BiFunction;
 
-import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.spi.NavigablePath;
+import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -21,16 +23,13 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 import static org.hibernate.query.results.ResultsHelper.impl;
 
-/**
- * @author Christian Beikov
- */
-public class ImplicitFetchBuilderPlural implements ImplicitFetchBuilder {
+public class ImplicitFetchBuilderDiscriminatedAssociation implements ImplicitFetchBuilder {
 	private final NavigablePath fetchPath;
-	private final PluralAttributeMapping fetchable;
+	private final DiscriminatedAssociationAttributeMapping fetchable;
 
-	public ImplicitFetchBuilderPlural(
+	public ImplicitFetchBuilderDiscriminatedAssociation(
 			NavigablePath fetchPath,
-			PluralAttributeMapping fetchable,
+			DiscriminatedAssociationAttributeMapping fetchable,
 			DomainResultCreationState creationState) {
 		this.fetchPath = fetchPath;
 		this.fetchable = fetchable;
@@ -48,17 +47,35 @@ public class ImplicitFetchBuilderPlural implements ImplicitFetchBuilder {
 			JdbcValuesMetadata jdbcResultsMetadata,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState creationState) {
+		final DomainResultCreationStateImpl creationStateImpl = impl( creationState );
 
-		final Fetch fetch = parent.generateFetchableFetch(
+		creationStateImpl.getFromClauseAccess().resolveTableGroup(
+				fetchPath,
+				navigablePath -> {
+					final TableGroup parentTableGroup = creationStateImpl
+							.getFromClauseAccess()
+							.getTableGroup( parent.getNavigablePath() );
+					final TableGroupJoin tableGroupJoin = fetchable.createTableGroupJoin(
+							fetchPath,
+							parentTableGroup,
+							null,
+							SqlAstJoinType.INNER,
+							true,
+							false,
+							creationStateImpl
+					);
+					parentTableGroup.addTableGroupJoin( tableGroupJoin );
+					return tableGroupJoin.getJoinedGroup();
+				}
+		);
+		return parent.generateFetchableFetch(
 				fetchable,
 				fetchPath,
-				FetchTiming.DELAYED,
+				fetchable.getTiming(),
 				false,
 				null,
 				creationState
 		);
-
-		return fetch;
 	}
 
 	@Override
@@ -70,7 +87,7 @@ public class ImplicitFetchBuilderPlural implements ImplicitFetchBuilder {
 			return false;
 		}
 
-		final ImplicitFetchBuilderPlural that = (ImplicitFetchBuilderPlural) o;
+		final ImplicitFetchBuilderDiscriminatedAssociation that = (ImplicitFetchBuilderDiscriminatedAssociation) o;
 		return fetchPath.equals( that.fetchPath )
 				&& fetchable.equals( that.fetchable );
 	}
@@ -84,6 +101,7 @@ public class ImplicitFetchBuilderPlural implements ImplicitFetchBuilder {
 
 	@Override
 	public String toString() {
-		return "ImplicitFetchBuilderPlural(" + fetchPath + ")";
+		return "ImplicitFetchBuilderDiscriminatedAssociation(" + fetchPath + ")";
 	}
+
 }

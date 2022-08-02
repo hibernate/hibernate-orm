@@ -14,6 +14,7 @@ import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.LockMode;
+import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -26,6 +27,7 @@ import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.results.implicit.ImplicitFetchBuilderDiscriminatedAssociation;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderAttribute;
@@ -275,6 +277,15 @@ public class Builders {
 		if ( fetchable instanceof EntityCollectionPart ) {
 			return new ImplicitFetchBuilderEntityPart( fetchPath, (EntityCollectionPart) fetchable );
 		}
+
+		if ( fetchable instanceof DiscriminatedAssociationAttributeMapping ) {
+			return new ImplicitFetchBuilderDiscriminatedAssociation(
+					fetchPath,
+					(DiscriminatedAssociationAttributeMapping) fetchable,
+					creationState
+			);
+		}
+
 
 		throw new UnsupportedOperationException();
 	}

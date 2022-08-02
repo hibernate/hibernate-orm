@@ -170,7 +170,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 				new BasicResult<>(
 						0,
 						null,
-						( (SqlExpressible) count).getJdbcMapping().getJavaTypeDescriptor()
+						( (SqlExpressible) count).getJdbcMapping()
 				)
 		);
 		querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 1, 0, count ) );

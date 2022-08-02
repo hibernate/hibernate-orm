@@ -57,7 +57,7 @@ public class BinaryArithmeticExpression implements Expression, DomainResultProdu
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				resultType.getJdbcMapping().getJavaTypeDescriptor()
+				resultType.getJdbcMapping()
 		);
 	}
 
@@ -69,7 +69,7 @@ public class BinaryArithmeticExpression implements Expression, DomainResultProdu
 	public SqlSelection resolveSqlSelection(DomainResultCreationState creationState) {
 		return creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 				this,
-				resultType.getJdbcMapping().getJavaTypeDescriptor(),
+				resultType.getJdbcMapping().getJdbcJavaType(),
 				null,
 				creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);

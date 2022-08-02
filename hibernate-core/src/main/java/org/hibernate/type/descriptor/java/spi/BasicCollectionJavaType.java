@@ -24,6 +24,8 @@ import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicCollectionType;
 import org.hibernate.type.BasicPluralType;
@@ -451,7 +453,16 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			if ( value == null ) {
 				return null;
 			}
-			final C copy = semantics.instantiateRaw( value.size(), null );
+			final C copy;
+			if ( semantics.getCollectionClassification() == CollectionClassification.SET ) {
+				// Retain the original order as we currently only map to the JDBC array type which is order sensitive
+				//noinspection unchecked
+				copy = (C) CollectionHelper.linkedSetOfSize( value.size() );
+			}
+			else {
+				copy = semantics.instantiateRaw( value.size(), null );
+			}
+
 			for ( E element : value ) {
 				copy.add( componentPlan.deepCopy( element ) );
 			}

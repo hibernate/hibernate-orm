@@ -9,6 +9,7 @@ package org.hibernate.sql.ast.tree.expression;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.hibernate.Remove;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
@@ -33,7 +34,10 @@ import org.hibernate.type.descriptor.java.JavaType;
  * but not a full ConvertibleModelPart.
  *
  * @author Steve Ebersole
+ * @deprecated remove
  */
+@Remove
+@Deprecated(forRemoval = true)
 public class ConvertedQueryLiteral<D,R> implements Literal, DomainResultProducer<D> {
 	private final D domainLiteralValue;
 	private final R relationalLiteralValue;
@@ -75,7 +79,7 @@ public class ConvertedQueryLiteral<D,R> implements Literal, DomainResultProducer
 		final SqlExpressionResolver expressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		expressionResolver.resolveSqlSelection(
 				this,
-				relationalMapping.getExpressibleJavaType(),
+				relationalMapping.getJdbcMapping().getJdbcJavaType(),
 				null,
 				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);

@@ -23,6 +23,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
@@ -56,7 +57,6 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -223,10 +223,10 @@ public class SqmUtil {
 					for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
 						final List<JdbcParameter> jdbcParams = jdbcParamsBinds.get( i );
 						parameterType.forEachJdbcType(
-								(position, jdbcType) -> {
+								(position, jdbcMapping) -> {
 									jdbcParameterBindings.addBinding(
 											jdbcParams.get( position ),
-											new JdbcParameterBindingImpl( jdbcType, null )
+											new JdbcParameterBindingImpl( jdbcMapping, null )
 									);
 								}
 						);
@@ -285,37 +285,35 @@ public class SqmUtil {
 					}
 				}
 				else {
-					if ( domainParamBinding.getType() instanceof AttributeConverterTypeAdapter
-							|| domainParamBinding.getType() instanceof ConvertibleModelPart ) {
-						final BasicValueConverter valueConverter;
-						final JdbcMapping jdbcMapping;
+					final JdbcMapping jdbcMapping;
+					final BasicValueConverter valueConverter;
+					if ( domainParamBinding.getType() instanceof JdbcMapping ) {
+						jdbcMapping = (JdbcMapping) domainParamBinding.getType();
+						valueConverter = jdbcMapping.getValueConverter();
+					}
+					else if ( domainParamBinding.getBindType() instanceof BasicValuedModelPart ) {
+						jdbcMapping = ( (BasicValuedModelPart) domainParamBinding.getType() ).getJdbcMapping();
+						valueConverter = jdbcMapping.getValueConverter();
+					}
+					else {
+						jdbcMapping = null;
+						valueConverter = null;
+					}
 
-						if ( domainParamBinding.getType() instanceof AttributeConverterTypeAdapter ) {
-							final AttributeConverterTypeAdapter<?> adapter = (AttributeConverterTypeAdapter<?>) domainParamBinding.getType();
-							valueConverter = adapter.getAttributeConverter();
-							jdbcMapping = adapter.getJdbcMapping();
+					if ( valueConverter != null ) {
+						final Object convertedValue = valueConverter.toRelationalValue( domainParamBinding.getBindValue() );
+
+						for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
+							final List<JdbcParameter> jdbcParams = jdbcParamsBinds.get( i );
+							assert jdbcParams.size() == 1;
+							final JdbcParameter jdbcParameter = jdbcParams.get( 0 );
+							jdbcParameterBindings.addBinding(
+									jdbcParameter,
+									new JdbcParameterBindingImpl( jdbcMapping, convertedValue )
+							);
 						}
-						else {
-							final ConvertibleModelPart convertibleModelPart = (ConvertibleModelPart) domainParamBinding.getType();
-							valueConverter = convertibleModelPart.getValueConverter();
-							jdbcMapping = convertibleModelPart.getJdbcMapping();
-						}
 
-						if ( valueConverter != null ) {
-							final Object convertedValue = valueConverter.toRelationalValue( domainParamBinding.getBindValue() );
-
-							for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
-								final List<JdbcParameter> jdbcParams = jdbcParamsBinds.get( i );
-								assert jdbcParams.size() == 1;
-								final JdbcParameter jdbcParameter = jdbcParams.get( 0 );
-								jdbcParameterBindings.addBinding(
-										jdbcParameter,
-										new JdbcParameterBindingImpl( jdbcMapping, convertedValue )
-								);
-							}
-
-							continue;
-						}
+						continue;
 					}
 
 					final Object bindValue = domainParamBinding.getBindValue();

@@ -17,7 +17,7 @@ import jakarta.persistence.Lob;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
+import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -45,10 +45,10 @@ public class AndLobTest {
 				.buildMetadata();
 
 		final Type type = metadata.getEntityBinding( EntityImpl.class.getName() ).getProperty( "status" ).getType();
-		final AttributeConverterTypeAdapter typeAdapter = assertTyping( AttributeConverterTypeAdapter.class, type );
+		final ConvertedBasicTypeImpl typeAdapter = assertTyping( ConvertedBasicTypeImpl.class, type );
 
-		assertThat( typeAdapter.getDomainJtd().getJavaTypeClass(), equalTo( String.class ) );
-		assertThat( typeAdapter.getRelationalJtd().getJavaTypeClass(), equalTo( Integer.class ) );
+		assertThat( typeAdapter.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( String.class ) );
+		assertThat( typeAdapter.getJdbcJavaType().getJavaTypeClass(), equalTo( Integer.class ) );
 		assertThat( typeAdapter.getJdbcType().getJdbcTypeCode(), is( Types.INTEGER ) );
 	}
 

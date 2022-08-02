@@ -337,7 +337,11 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 		final ResultSetMappingSqlSelection sqlSelection = new ResultSetMappingSqlSelection( valuesArrayPosition, (BasicValuedMapping) jdbcMapping );
 		sqlSelectionConsumer.accept( sqlSelection );
 
-		return new BasicResult( valuesArrayPosition, name, jdbcMapping.getJavaTypeDescriptor() );
+		return new BasicResult(
+				valuesArrayPosition,
+				name,
+				jdbcMapping
+		);
 	}
 
 	@Override

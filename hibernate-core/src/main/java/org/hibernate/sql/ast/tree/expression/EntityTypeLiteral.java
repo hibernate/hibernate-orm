@@ -104,7 +104,7 @@ public class EntityTypeLiteral implements Expression, MappingModelExpressible, D
 				createSqlSelection( creationState )
 						.getValuesArrayPosition(),
 				resultVariable,
-				discriminatorType.getExpressibleJavaType()
+				discriminatorType
 		);
 	}
 
@@ -112,7 +112,7 @@ public class EntityTypeLiteral implements Expression, MappingModelExpressible, D
 		return creationState.getSqlAstCreationState().getSqlExpressionResolver()
 				.resolveSqlSelection(
 						this,
-						discriminatorType.getExpressibleJavaType(),
+						discriminatorType.getJdbcJavaType(),
 						null,
 						creationState.getSqlAstCreationState().getCreationContext()
 								.getMappingMetamodel().getTypeConfiguration()

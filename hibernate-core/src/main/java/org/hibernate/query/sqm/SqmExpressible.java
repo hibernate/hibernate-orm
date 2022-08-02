@@ -26,6 +26,11 @@ public interface SqmExpressible<J> extends BindableType<J> {
 	JavaType<J> getExpressibleJavaType();
 
 	@Override
+	default boolean isInstance(J value) {
+		return getExpressibleJavaType().isInstance( value );
+	}
+
+	@Override
 	default SqmExpressible<J> resolveExpressible(SessionFactoryImplementor sessionFactory) {
 		return this;
 	}

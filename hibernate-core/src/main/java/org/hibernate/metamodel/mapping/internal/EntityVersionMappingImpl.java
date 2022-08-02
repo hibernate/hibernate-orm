@@ -226,7 +226,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 								sqlAstCreationState.getCreationContext().getSessionFactory()
 						)
 				),
-				versionBasicType.getJdbcMapping().getJavaTypeDescriptor(),
+				versionBasicType.getJdbcJavaType(),
 				fetchParent,
 				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
@@ -236,7 +236,6 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 				fetchParent,
 				fetchablePath,
 				this,
-				null,
 				fetchTiming,
 				creationState
 		);
@@ -250,10 +249,10 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 			DomainResultCreationState creationState) {
 		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, creationState );
 
-		return new BasicResult(
+		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				getJavaType(),
+				versionBasicType,
 				navigablePath
 		);
 	}
@@ -301,7 +300,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 								sqlAstCreationState.getCreationContext().getSessionFactory()
 						)
 				),
-				versionBasicType.getJdbcMapping().getJavaTypeDescriptor(),
+				versionBasicType.getJdbcJavaType(),
 				null,
 				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
 		);

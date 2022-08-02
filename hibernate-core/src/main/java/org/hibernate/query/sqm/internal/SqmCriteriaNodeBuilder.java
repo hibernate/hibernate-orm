@@ -1001,7 +1001,15 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		}
 
 		final SqmExpressible<T> expressible = resolveInferredType( value, typeInferenceSource, getTypeConfiguration() );
-		return new SqmLiteral<>( value, expressible, this );
+		if ( expressible.getExpressibleJavaType().isInstance( value ) ) {
+			return new SqmLiteral<>( value, expressible, this );
+		}
+		// Just like in HQL, we allow coercion of literal values to the inferred type
+		return new SqmLiteral<>(
+				expressible.getExpressibleJavaType().coerce( value, this::getTypeConfiguration ),
+				expressible,
+				this
+		);
 	}
 
 	private static <T> SqmExpressible<T> resolveInferredType(
@@ -1551,11 +1559,36 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return literal( value, typeInferenceSource );
 		}
 
-		return new ValueBindJpaCriteriaParameter<>(
-				resolveInferredParameterType( value, typeInferenceSource, getTypeConfiguration() ),
+		final BindableType<T> bindableType = resolveInferredParameterType(
 				value,
+				typeInferenceSource,
+				getTypeConfiguration()
+		);
+		if ( bindableType == null || isInstance( bindableType, value ) ) {
+			return new ValueBindJpaCriteriaParameter<>(
+					bindableType,
+					value,
+					this
+			);
+		}
+		final SqmExpressible<T> expressible = bindableType.resolveExpressible( getTypeConfiguration().getSessionFactory() );
+		return new ValueBindJpaCriteriaParameter<>(
+				bindableType,
+				expressible.getExpressibleJavaType().coerce( value, this::getTypeConfiguration ),
 				this
 		);
+	}
+
+	private <T> boolean isInstance(BindableType<T> bindableType, T value) {
+		if ( bindableType instanceof SqmExpressible<?> ) {
+			return ( (SqmExpressible<T>) bindableType ).getExpressibleJavaType().isInstance( value );
+		}
+		if ( bindableType.getBindableJavaType().isInstance( value ) ) {
+			return true;
+		}
+		return bindableType.resolveExpressible( getTypeConfiguration().getSessionFactory() )
+				.getExpressibleJavaType()
+				.isInstance( value );
 	}
 
 	private static <T> BindableType<T> resolveInferredParameterType(

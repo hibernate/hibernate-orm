@@ -111,7 +111,7 @@ public class MatchingIdSelectionHelper {
 							new BasicResult<>(
 									selection.getValuesArrayPosition(),
 									null,
-									jdbcMapping.getJavaTypeDescriptor()
+									jdbcMapping
 							)
 					);
 				}
@@ -270,7 +270,7 @@ public class MatchingIdSelectionHelper {
 														new BasicResult<>(
 																selection.getValuesArrayPosition(),
 																null,
-																jdbcMapping.getJavaTypeDescriptor()
+																jdbcMapping
 														)
 												);
 											}

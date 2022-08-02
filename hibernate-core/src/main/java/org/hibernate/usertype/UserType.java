@@ -15,8 +15,10 @@ import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * This interface should be implemented by user-defined "types".
@@ -158,9 +160,18 @@ public interface UserType<J> {
 		return Size.DEFAULT_SCALE;
 	}
 
+	@Incubating
+	default JdbcType getJdbcType(TypeConfiguration typeConfiguration) {
+		return typeConfiguration.getJdbcTypeRegistry().getDescriptor( getSqlType() );
+	}
+
 	/**
 	 * Returns the converter that this user type uses for transforming from the domain type, to the relational type,
 	 * or <code>null</code> if there is no conversion.
+	 *
+	 * Note that it is vital to provide a converter if a column should be mapped to multiple domain types,
+	 * as Hibernate will only select a column once and materialize values as {@link JdbcMapping#getJdbcJavaType()}.
+	 * Support for multiple domain type representations works by converting objects of that type to the domain type.
 	 */
 	@Incubating
 	default BasicValueConverter<J, Object> getValueConverter() {

@@ -167,7 +167,7 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 								return new ResultSetMappingSqlSelection( valuesArrayPosition, basicType );
 							}
 					),
-					selectableMapping.getJdbcMapping().getMappedJavaType(),
+					selectableMapping.getJdbcMapping().getJdbcJavaType(),
 					null,
 					creationStateImpl.getSessionFactory().getTypeConfiguration()
 			);

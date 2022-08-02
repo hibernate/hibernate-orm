@@ -80,10 +80,10 @@ public class EnumType<T extends Enum<T>>
 
 	private Class<T> enumClass;
 
-	private EnumValueConverter<T,Object> enumValueConverter;
+	private EnumValueConverter<T, Object> enumValueConverter;
 	private JdbcType jdbcType;
-	private ValueExtractor<T> jdbcValueExtractor;
-	private ValueBinder<T> jdbcValueBinder;
+	private ValueExtractor<Object> jdbcValueExtractor;
+	private ValueBinder<Object> jdbcValueBinder;
 
 	private TypeConfiguration typeConfiguration;
 
@@ -105,6 +105,11 @@ public class EnumType<T extends Enum<T>>
 
 	public EnumValueConverter getEnumValueConverter() {
 		return enumValueConverter;
+	}
+
+	@Override
+	public JdbcType getJdbcType(TypeConfiguration typeConfiguration) {
+		return jdbcType;
 	}
 
 	@Override
@@ -158,7 +163,7 @@ public class EnumType<T extends Enum<T>>
 					enumJavaType
 			);
 
-			final JdbcType jdbcType = relationalJavaType.getRecommendedJdbcType( indicators );
+			this.jdbcType = relationalJavaType.getRecommendedJdbcType( indicators );
 
 			if ( isOrdinal ) {
 				this.enumValueConverter = new OrdinalEnumValueConverter(
@@ -174,7 +179,6 @@ public class EnumType<T extends Enum<T>>
 						relationalJavaType
 				);
 			}
-			this.jdbcType = jdbcType;
 		}
 		else {
 			final String enumClassName = (String) parameters.get( ENUM );
@@ -188,8 +192,8 @@ public class EnumType<T extends Enum<T>>
 			this.enumValueConverter = interpretParameters( parameters );
 			this.jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( enumValueConverter.getJdbcTypeCode() );
 		}
-		this.jdbcValueExtractor = (ValueExtractor) jdbcType.getExtractor( enumValueConverter.getRelationalJavaType() );
-		this.jdbcValueBinder = (ValueBinder) jdbcType.getBinder( enumValueConverter.getRelationalJavaType() );
+		this.jdbcValueExtractor = jdbcType.getExtractor( enumValueConverter.getRelationalJavaType() );
+		this.jdbcValueBinder = jdbcType.getBinder( enumValueConverter.getRelationalJavaType() );
 
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf(
@@ -386,7 +390,7 @@ public class EnumType<T extends Enum<T>>
 	@Override
 	public void nullSafeSet(PreparedStatement st, T value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		verifyConfigured();
-		enumValueConverter.writeValue( st, value, index, session );
+		jdbcValueBinder.bind( st, enumValueConverter.toRelationalValue( value ), index, session );
 	}
 
 	@Override
@@ -401,12 +405,12 @@ public class EnumType<T extends Enum<T>>
 
 	@Override
 	public Serializable disassemble(T value) throws HibernateException {
-		return value;
+		return (Serializable) enumValueConverter.toRelationalValue( value );
 	}
 
 	@Override
 	public T assemble(Serializable cached, Object owner) throws HibernateException {
-		return (T) cached;
+		return enumValueConverter.toDomainValue( cached );
 	}
 
 	@Override

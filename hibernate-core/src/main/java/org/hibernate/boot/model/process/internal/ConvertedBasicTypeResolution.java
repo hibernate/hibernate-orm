@@ -21,7 +21,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
  */
 public class ConvertedBasicTypeResolution<J> implements BasicValue.Resolution<J> {
 	private final ConvertedBasicType basicType;
-	private final ValueConverterTypeAdapter adapted;
+//	private final ValueConverterTypeAdapter adapted;
 
 	public ConvertedBasicTypeResolution(
 			ConvertedBasicType basicType,
@@ -30,21 +30,21 @@ public class ConvertedBasicTypeResolution<J> implements BasicValue.Resolution<J>
 
 		final BasicValueConverter valueConverter = basicType.getValueConverter();
 
-		this.adapted = new ValueConverterTypeAdapter(
-				valueConverter.getClass().getTypeName(),
-				valueConverter,
-				stdIndicators
-		);
+//		this.adapted = new ValueConverterTypeAdapter(
+//				valueConverter.getClass().getTypeName(),
+//				valueConverter,
+//				stdIndicators
+//		);
 	}
 
 	@Override
 	public BasicType<J> getLegacyResolvedBasicType() {
-		return adapted;
+		return basicType;
 	}
 
 	@Override
 	public JdbcMapping getJdbcMapping() {
-		return adapted;
+		return basicType;
 	}
 
 	@Override
@@ -59,7 +59,7 @@ public class ConvertedBasicTypeResolution<J> implements BasicValue.Resolution<J>
 
 	@Override
 	public JdbcType getJdbcType() {
-		return adapted.getJdbcType();
+		return basicType.getJdbcType();
 	}
 
 	@Override

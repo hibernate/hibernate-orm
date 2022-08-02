@@ -17,11 +17,12 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
-import org.hibernate.type.internal.ImmutableConvertedBasicTypeImpl;
+import org.hibernate.type.internal.CustomMutabilityConvertedBasicTypeImpl;
 import org.hibernate.type.internal.ImmutableNamedBasicTypeImpl;
 import org.hibernate.type.internal.NamedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -94,22 +95,22 @@ public class BasicTypeRegistry implements Serializable {
 			}
 		}
 		else {
+			//noinspection unchecked
+			final BasicValueConverter<Object, ?> converter = (BasicValueConverter<Object, ?>) typeReference.getConverter();
+			assert javaType == converter.getDomainJavaType();
 			if ( typeReference.isForceImmutable() ) {
-				//noinspection unchecked
-				type = new ImmutableConvertedBasicTypeImpl<>(
-						javaType,
-						jdbcType,
+				type = new CustomMutabilityConvertedBasicTypeImpl<>(
 						typeReference.getName(),
-						(BasicValueConverter<Object, ?>) typeReference.getConverter()
+						jdbcType,
+						converter,
+						ImmutableMutabilityPlan.instance()
 				);
 			}
 			else {
-				//noinspection unchecked
 				type = new ConvertedBasicTypeImpl<>(
-						javaType,
-						jdbcType,
 						typeReference.getName(),
-						(BasicValueConverter<Object, ?>) typeReference.getConverter()
+						jdbcType,
+						converter
 				);
 			}
 		}

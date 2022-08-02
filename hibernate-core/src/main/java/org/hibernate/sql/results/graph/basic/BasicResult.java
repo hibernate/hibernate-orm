@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.graph.basic;
 
 import org.hibernate.Internal;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -31,8 +32,35 @@ public class BasicResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 	public BasicResult(
 			int jdbcValuesArrayPosition,
 			String resultVariable,
+			JdbcMapping jdbcMapping) {
+		this(
+				jdbcValuesArrayPosition,
+				resultVariable,
+				jdbcMapping,
+				null
+		);
+	}
+
+	public BasicResult(
+			int jdbcValuesArrayPosition,
+			String resultVariable,
+			JdbcMapping jdbcMapping,
+			NavigablePath navigablePath) {
+		//noinspection unchecked
+		this(
+				jdbcValuesArrayPosition,
+				resultVariable,
+				(JavaType<T>) jdbcMapping.getJavaTypeDescriptor(),
+				(BasicValueConverter<T, ?>) jdbcMapping.getValueConverter(),
+				navigablePath
+		);
+	}
+
+	public BasicResult(
+			int jdbcValuesArrayPosition,
+			String resultVariable,
 			JavaType<T> javaType) {
-		this( jdbcValuesArrayPosition, resultVariable, javaType, (NavigablePath) null );
+		this( jdbcValuesArrayPosition, resultVariable, javaType, null, null );
 	}
 
 	public BasicResult(
@@ -40,12 +68,7 @@ public class BasicResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 			String resultVariable,
 			JavaType<T> javaType,
 			NavigablePath navigablePath) {
-		this.resultVariable = resultVariable;
-		this.javaType = javaType;
-
-		this.navigablePath = navigablePath;
-
-		this.assembler = new BasicResultAssembler<>( jdbcValuesArrayPosition, javaType );
+		this( jdbcValuesArrayPosition, resultVariable, javaType, null, navigablePath );
 	}
 
 	public BasicResult(

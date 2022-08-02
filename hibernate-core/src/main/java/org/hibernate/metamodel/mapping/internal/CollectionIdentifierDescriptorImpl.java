@@ -230,7 +230,7 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 								sessionFactory
 						)
 				),
-				type.getJavaTypeDescriptor(),
+				type.getJdbcJavaType(),
 				fetchParent,
 				sessionFactory.getTypeConfiguration()
 		);
@@ -240,7 +240,6 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 				fetchParent,
 				fetchablePath,
 				this,
-				null,
 				FetchTiming.IMMEDIATE,
 				creationState
 		);
@@ -271,16 +270,15 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 								sessionFactory
 						)
 				),
-				type.getJavaTypeDescriptor(),
+				type.getJdbcJavaType(),
 				null,
 				sessionFactory.getTypeConfiguration()
 		);
 
-		//noinspection unchecked
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				null,
-				(JavaType<Object>) type.getJavaTypeDescriptor(),
+				type,
 				collectionPath
 		);
 	}

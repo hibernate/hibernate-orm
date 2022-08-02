@@ -68,7 +68,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	private final Integer precision;
 	private final Integer scale;
 
-	private final BasicType<?> idType;
+	private final BasicType<Object> idType;
 
 	private final SessionFactoryImplementor sessionFactory;
 
@@ -92,7 +92,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		this.attributeName = attributeName;
 		this.rootTable = rootTable;
 		this.pkColumnName = pkColumnName;
-		this.idType = idType;
+		this.idType = (BasicType<Object>) idType;
 		this.entityPersister = entityPersister;
 
 		final PersistentClass bootEntityDescriptor = creationProcess.getCreationContext()
@@ -189,17 +189,6 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	}
 
 	@Override
-	public int forEachJdbcValue(
-			Object value,
-			Clause clause,
-			int offset,
-			JdbcValuesConsumer valuesConsumer,
-			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( offset, value, idType );
-		return getJdbcTypeCount();
-	}
-
-	@Override
 	public JavaType<?> getJavaType() {
 		return getMappedType().getMappedJavaType();
 	}
@@ -217,10 +206,10 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			DomainResultCreationState creationState) {
 		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, true, null, creationState );
 
-		return new BasicResult(
+		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				entityPersister.getIdentifierMapping().getMappedType().getMappedJavaType(),
+				entityPersister.getIdentifierMapping().getJdbcMappings().get( 0 ),
 				navigablePath
 		);
 	}
@@ -285,7 +274,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 		return expressionResolver.resolveSqlSelection(
 				expression,
-				idType.getExpressibleJavaType(),
+				idType.getJdbcJavaType(),
 				fetchParent,
 				sessionFactory.getTypeConfiguration()
 		);
@@ -353,11 +342,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		if ( value == null ) {
-			return null;
-		}
-		return value;
-//		return propertyAccess.getGetter().get( value );
+		return idType.disassemble( value, session );
 	}
 
 	@Override
@@ -391,7 +376,6 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 				fetchParent,
 				fetchablePath,
 				this,
-				null,
 				FetchTiming.IMMEDIATE,
 				creationState
 		);

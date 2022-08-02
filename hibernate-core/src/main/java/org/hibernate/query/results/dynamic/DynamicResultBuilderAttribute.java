@@ -88,7 +88,7 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 							return new ResultSetMappingSqlSelection( valuesArrayPosition, attributeMapping );
 						}
 				),
-				attributeMapping.getJavaType(),
+				attributeMapping.getJdbcMapping().getJdbcJavaType(),
 				null,
 				domainResultCreationState.getSqlAstCreationState()
 						.getCreationContext()
@@ -99,8 +99,7 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				columnAlias,
-				attributeMapping.getJavaType(),
-				attributeMapping.getValueConverter()
+				attributeMapping.getJdbcMapping()
 		);
 	}
 

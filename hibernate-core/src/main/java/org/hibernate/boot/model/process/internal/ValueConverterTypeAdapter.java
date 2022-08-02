@@ -66,6 +66,11 @@ public class ValueConverterTypeAdapter<J> extends AbstractSingleColumnStandardBa
 	}
 
 	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		return converter.toRelationalValue( (J) value );
+	}
+
+	@Override
 	protected MutabilityPlan<J> getMutabilityPlan() {
 		return converter.getDomainJavaType().getMutabilityPlan();
 	}
@@ -79,6 +84,11 @@ public class ValueConverterTypeAdapter<J> extends AbstractSingleColumnStandardBa
 	@Override
 	public BasicValueConverter getValueConverter() {
 		return converter;
+	}
+
+	@Override
+	public JavaType<?> getJdbcJavaType() {
+		return converter.getRelationalJavaType();
 	}
 
 	@Override

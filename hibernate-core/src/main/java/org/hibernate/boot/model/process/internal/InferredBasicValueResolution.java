@@ -25,7 +25,6 @@ public class InferredBasicValueResolution<J,T> implements BasicValue.Resolution<
 	private final MutabilityPlan<J> mutabilityPlan;
 
 	private final JdbcMapping jdbcMapping;
-	private final BasicValueConverter<J,T> valueConverter;
 
 	private final BasicType<J> legacyType;
 
@@ -34,7 +33,6 @@ public class InferredBasicValueResolution<J,T> implements BasicValue.Resolution<
 			JavaType<J> domainJtd,
 			JavaType<T> relationalJtd,
 			JdbcType jdbcType,
-			BasicValueConverter<J,T> valueConverter,
 			BasicType<J> legacyType,
 			MutabilityPlan<J> mutabilityPlan) {
 		this.jdbcMapping = jdbcMapping;
@@ -42,7 +40,6 @@ public class InferredBasicValueResolution<J,T> implements BasicValue.Resolution<
 		this.domainJtd = domainJtd;
 		this.relationalJtd = relationalJtd;
 		this.jdbcType = jdbcType;
-		this.valueConverter = valueConverter;
 		this.mutabilityPlan = mutabilityPlan == null ? domainJtd.getMutabilityPlan() : mutabilityPlan;
 	}
 
@@ -73,7 +70,8 @@ public class InferredBasicValueResolution<J,T> implements BasicValue.Resolution<
 
 	@Override
 	public BasicValueConverter<J,T> getValueConverter() {
-		return valueConverter;
+		//noinspection unchecked
+		return (BasicValueConverter<J, T>) jdbcMapping.getValueConverter();
 	}
 
 	@Override

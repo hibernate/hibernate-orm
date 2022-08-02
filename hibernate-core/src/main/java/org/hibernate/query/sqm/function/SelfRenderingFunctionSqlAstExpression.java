@@ -17,6 +17,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlExpressible;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -101,17 +102,29 @@ public class SelfRenderingFunctionSqlAstExpression
 	public DomainResult createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		final JdbcMapping jdbcMapping = getJdbcMapping();
+		final JavaType<?> jdbcJavaType;
+		final BasicValueConverter<?, ?> converter;
+		if ( jdbcMapping != null ) {
+			jdbcJavaType = jdbcMapping.getJdbcJavaType();
+			converter = jdbcMapping.getValueConverter();
+		}
+		else {
+			jdbcJavaType = type.getExpressibleJavaType();
+			converter = null;
+		}
 		return new BasicResult(
 				creationState.getSqlAstCreationState().getSqlExpressionResolver()
 						.resolveSqlSelection(
 								this,
-								type.getExpressibleJavaType(),
+								jdbcJavaType,
 								null,
 								creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
 						)
 						.getValuesArrayPosition(),
 				resultVariable,
-				type.getExpressibleJavaType()
+				type.getExpressibleJavaType(),
+				converter
 		);
 	}
 
@@ -181,9 +194,17 @@ public class SelfRenderingFunctionSqlAstExpression
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
+		final JdbcMapping jdbcMapping = getJdbcMapping();
+		final JavaType<?> jdbcJavaType;
+		if ( jdbcMapping != null ) {
+			jdbcJavaType = jdbcMapping.getJdbcJavaType();
+		}
+		else {
+			jdbcJavaType = type.getExpressibleJavaType();
+		}
 		sqlExpressionResolver.resolveSqlSelection(
 				this,
-				type.getExpressibleJavaType(),
+				jdbcJavaType,
 				null,
 				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);

@@ -8,7 +8,6 @@ package org.hibernate.persister.entity;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Objects;
@@ -20,15 +19,16 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.RepresentationMode;
-import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.type.AbstractType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.ClassJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.StringJavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
@@ -36,7 +36,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  *
  * @author Steve Ebersole
  */
-public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, ValueExtractor<T>, ValueBinder<T> {
+public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, BasicValueConverter<T, Object> {
 	private final BasicType<Object> underlyingType;
 	private final Loadable persister;
 
@@ -50,8 +50,60 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 	}
 
 	@Override
-	public JdbcMapping getJdbcMapping() {
-		return getUnderlyingType().getJdbcMapping();
+	public BasicValueConverter<T, ?> getValueConverter() {
+		return this;
+	}
+
+	@Override
+	public JavaType<?> getJdbcJavaType() {
+		return underlyingType.getJdbcJavaType();
+	}
+
+	@Override
+	public T toDomainValue(Object discriminatorValue) {
+		if ( discriminatorValue == null ) {
+			return null;
+		}
+		final String entityName = persister.getSubclassForDiscriminatorValue( discriminatorValue );
+		if ( entityName == null ) {
+			throw new HibernateException( "Unable to resolve discriminator value [" + discriminatorValue + "] to entity name" );
+		}
+		final EntityPersister entityPersister = persister.getFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
+		//noinspection unchecked
+		return entityPersister.getRepresentationStrategy().getMode() == RepresentationMode.POJO
+				? (T) entityPersister.getJavaType().getJavaTypeClass()
+				: (T) entityName;
+	}
+
+	@Override
+	public Object toRelationalValue(T domainForm) {
+		if ( domainForm == null ) {
+			return null;
+		}
+		final MappingMetamodelImplementor mappingMetamodel = persister.getFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel();
+		final Loadable loadable;
+		if ( domainForm instanceof Class<?> ) {
+			loadable = (Loadable) mappingMetamodel.getEntityDescriptor( (Class<?>) domainForm );
+		}
+		else {
+			loadable = (Loadable) mappingMetamodel.getEntityDescriptor( (String) domainForm );
+		}
+		return loadable.getDiscriminatorValue();
+	}
+
+	@Override
+	public JavaType<T> getDomainJavaType() {
+		return getExpressibleJavaType();
+	}
+
+	@Override
+	public JavaType<Object> getRelationalJavaType() {
+		return underlyingType.getExpressibleJavaType();
 	}
 
 	@Override
@@ -78,43 +130,14 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 	public T extract(CallableStatement statement, int paramIndex, SharedSessionContractImplementor session)
 			throws SQLException {
 		final Object discriminatorValue = underlyingType.extract( statement, paramIndex, session );
-		return (T) get( discriminatorValue, session );
+		return toDomainValue( discriminatorValue );
 	}
 
 	@Override
 	public T extract(CallableStatement statement, String paramName, SharedSessionContractImplementor session)
 			throws SQLException {
 		final Object discriminatorValue = underlyingType.extract( statement, paramName, session );
-		return (T) get( discriminatorValue, session );
-	}
-
-	@Override
-	public T extract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-		final Object discriminatorValue = underlyingType.getJdbcValueExtractor().extract( rs, paramIndex, options );
-		return (T) get( discriminatorValue, options.getSession() );
-	}
-
-	@Override
-	public T extract(CallableStatement statement, int paramIndex, WrapperOptions options) throws SQLException {
-		final Object discriminatorValue = underlyingType.getJdbcValueExtractor().extract( statement, paramIndex, options );
-		return (T) get( discriminatorValue, options.getSession() );
-	}
-
-	@Override
-	public T extract(CallableStatement statement, String paramName, WrapperOptions options) throws SQLException {
-		final Object discriminatorValue = underlyingType.getJdbcValueExtractor().extract( statement, paramName, options );
-		return (T) get( discriminatorValue, options.getSession() );
-	}
-
-	private Object get(Object discriminatorValue, SharedSessionContractImplementor session) {
-		final String entityName = persister.getSubclassForDiscriminatorValue( discriminatorValue );
-		if ( entityName == null ) {
-			throw new HibernateException( "Unable to resolve discriminator value [" + discriminatorValue + "] to entity name" );
-		}
-		final EntityPersister entityPersister = session.getEntityPersister( entityName, null );
-		return entityPersister.getRepresentationStrategy().getMode() == RepresentationMode.POJO
-				? entityPersister.getJavaType().getJavaTypeClass()
-				: entityName;
+		return toDomainValue( discriminatorValue );
 	}
 
 	@Override
@@ -133,31 +156,7 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 			Object value,
 			int index,
 			SharedSessionContractImplementor session) throws HibernateException, SQLException {
-		final Loadable loadable = (Loadable) session.getFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( (Class<?>) value );
-		underlyingType.nullSafeSet(st, loadable.getDiscriminatorValue(), index, session);
-	}
-
-	@Override
-	public void bind(PreparedStatement st, T value, int index, WrapperOptions options) throws SQLException {
-		final SessionFactoryImplementor factory = options.getSession().getFactory();
-		final Loadable loadable = (Loadable) factory
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( (Class<?>) value );
-		underlyingType.getJdbcValueBinder().bind( st, loadable.getDiscriminatorValue(), index, options );
-	}
-
-	@Override
-	public void bind(CallableStatement st, T value, String name, WrapperOptions options) throws SQLException {
-		final SessionFactoryImplementor factory = options.getSession().getFactory();
-		final Loadable loadable = (Loadable) factory
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( (Class<?>) value );
-		underlyingType.getJdbcValueBinder().bind( st, loadable.getDiscriminatorValue(), name, options );
+		underlyingType.nullSafeSet( st, toRelationalValue( (T) value ), index, session);
 	}
 
 	@Override
@@ -190,6 +189,10 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 		return Objects.equals( old, current );
 	}
 
+	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		return toRelationalValue( (T) value );
+	}
 
 	// simple delegation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -233,12 +236,17 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 
 	@Override
 	public ValueExtractor<T> getJdbcValueExtractor() {
-		return this;
+		return (ValueExtractor<T>) underlyingType.getJdbcValueExtractor();
 	}
 
 	@Override
 	public ValueBinder<T> getJdbcValueBinder() {
-		return this;
+		return (ValueBinder<T>) underlyingType.getJdbcValueBinder();
+	}
+
+	@Override
+	public JdbcLiteralFormatter getJdbcLiteralFormatter() {
+		return underlyingType.getJdbcLiteralFormatter();
 	}
 
 	@Override

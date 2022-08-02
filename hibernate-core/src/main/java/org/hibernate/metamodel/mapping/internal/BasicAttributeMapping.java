@@ -40,6 +40,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.tuple.ValueGeneration;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -62,7 +63,6 @@ public class BasicAttributeMapping
 	private final Integer scale;
 
 	private final JdbcMapping jdbcMapping;
-	private final BasicValueConverter<Object, ?> valueConverter;
 
 	private final JavaType domainTypeDescriptor;
 
@@ -82,7 +82,6 @@ public class BasicAttributeMapping
 			Long length,
 			Integer precision,
 			Integer scale,
-			BasicValueConverter valueConverter,
 			JdbcMapping jdbcMapping,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess,
@@ -105,15 +104,8 @@ public class BasicAttributeMapping
 		this.length = length;
 		this.precision = precision;
 		this.scale = scale;
-		this.valueConverter = valueConverter;
 		this.jdbcMapping = jdbcMapping;
-
-		if ( valueConverter == null ) {
-			domainTypeDescriptor = jdbcMapping.getJavaTypeDescriptor();
-		}
-		else {
-			domainTypeDescriptor = valueConverter.getDomainJavaType();
-		}
+		this.domainTypeDescriptor = jdbcMapping.getJavaTypeDescriptor();
 
 		this.customReadExpression = customReadExpression;
 
@@ -134,7 +126,6 @@ public class BasicAttributeMapping
 		String attributeName = null;
 		int stateArrayPosition = 0;
 		AttributeMetadataAccess attributeMetadataAccess = null;
-		BasicValueConverter<?, ?> valueConverter = null;
 		if ( original instanceof SingleAttributeIdentifierMapping ) {
 			final SingleAttributeIdentifierMapping mapping = (SingleAttributeIdentifierMapping) original;
 			attributeName = mapping.getAttributeName();
@@ -145,9 +136,6 @@ public class BasicAttributeMapping
 			attributeName = mapping.getAttributeName();
 			stateArrayPosition = mapping.getStateArrayPosition();
 			attributeMetadataAccess = mapping.getAttributeMetadataAccess();
-		}
-		if ( original instanceof ConvertibleModelPart ) {
-			valueConverter = ( (ConvertibleModelPart) original ).getValueConverter();
 		}
 		return new BasicAttributeMapping(
 				attributeName,
@@ -165,7 +153,6 @@ public class BasicAttributeMapping
 				selectableMapping.getLength(),
 				selectableMapping.getPrecision(),
 				selectableMapping.getScale(),
-				valueConverter,
 				original.getJdbcMapping(),
 				declaringType,
 				propertyAccess,
@@ -234,11 +221,6 @@ public class BasicAttributeMapping
 	}
 
 	@Override
-	public BasicValueConverter getValueConverter() {
-		return valueConverter;
-	}
-
-	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
 	}
@@ -260,8 +242,7 @@ public class BasicAttributeMapping
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				getMappedType().getMappedJavaType(),
-				valueConverter,
+				jdbcMapping,
 				navigablePath
 		);
 	}
@@ -291,7 +272,7 @@ public class BasicAttributeMapping
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)
 				),
-				valueConverter == null ? getMappedType().getMappedJavaType() : valueConverter.getRelationalJavaType(),
+				jdbcMapping.getJdbcJavaType(),
 				fetchParent,
 				creationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
@@ -347,7 +328,6 @@ public class BasicAttributeMapping
 				fetchParent,
 				fetchablePath,
 				this,
-				valueConverter,
 				fetchTiming,
 				creationState
 		);
@@ -355,8 +335,9 @@ public class BasicAttributeMapping
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		if ( valueConverter != null ) {
-			return valueConverter.toRelationalValue( value );
+		if ( jdbcMapping.getValueConverter() != null ) {
+			//noinspection unchecked
+			return jdbcMapping.getValueConverter().toRelationalValue( value );
 		}
 		return value;
 	}

@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
@@ -48,16 +49,16 @@ public class Every implements Expression, DomainResultProducer {
 	public DomainResult createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final JavaType javaType = type.getJdbcMappings().get( 0 ).getJavaTypeDescriptor();
-		return new BasicResult(
+		final JdbcMapping jdbcMapping = type.getJdbcMappings().get( 0 );
+		return new BasicResult<>(
 				creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 						this,
-						javaType,
+						jdbcMapping.getJdbcJavaType(),
 						null,
 						creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
 				).getValuesArrayPosition(),
 				resultVariable,
-				javaType
+				jdbcMapping
 		);
 	}
 
@@ -68,7 +69,7 @@ public class Every implements Expression, DomainResultProducer {
 
 		sqlExpressionResolver.resolveSqlSelection(
 				this,
-				type.getJdbcMappings().get( 0 ).getJavaTypeDescriptor(),
+				type.getJdbcMappings().get( 0 ).getJdbcJavaType(),
 				null,
 				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);

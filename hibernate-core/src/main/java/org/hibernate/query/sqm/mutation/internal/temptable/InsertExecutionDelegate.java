@@ -368,7 +368,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 									null,
 									null,
 									identifierMapping,
-									null,
 									FetchTiming.IMMEDIATE,
 									null
 							)

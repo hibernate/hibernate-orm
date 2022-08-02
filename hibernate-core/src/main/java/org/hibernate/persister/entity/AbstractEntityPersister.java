@@ -2381,7 +2381,10 @@ public abstract class AbstractEntityPersister
 	}
 
 	private DiscriminatorMetadata buildTypeDiscriminatorMetadata() {
-		return () -> new DiscriminatorType<>( (BasicType<?>) getDiscriminatorType(), AbstractEntityPersister.this );
+		return () -> {
+			final BasicType<?> type = (BasicType<?>) getDiscriminatorType();
+			return type == null ? null : new DiscriminatorType<>( type, AbstractEntityPersister.this );
+		};
 	}
 
 	public static String generateTableAlias(String rootAlias, int tableNumber) {

@@ -29,6 +29,10 @@ public interface BindableType<J> {
 	 */
 	Class<J> getBindableJavaType();
 
+	default boolean isInstance(J value) {
+		return getBindableJavaType().isInstance( value );
+	}
+
 	static <T> BindableType<? extends T> parameterType(Class<T> type) {
 		throw new NotYetImplementedFor6Exception( "BindableType#parameterType" );
 	}

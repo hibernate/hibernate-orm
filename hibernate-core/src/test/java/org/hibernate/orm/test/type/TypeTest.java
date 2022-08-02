@@ -321,14 +321,14 @@ public class TypeTest extends BaseUnitTestCase {
 			T different) {
 		final TypeConfiguration typeConfiguration = new TypeConfiguration();
 		runBasicTests(
-				(AbstractSingleColumnStandardBasicType<T>) typeConfiguration.getBasicTypeRegistry().getRegisteredType( basicTypeReference.getName() ),
+				typeConfiguration.getBasicTypeRegistry().getRegisteredType( basicTypeReference.getName() ),
 				original,
 				copy,
 				different
 		);
 	}
 
-	protected <T> void runBasicTests(AbstractSingleColumnStandardBasicType<T> type, T original, T copy, T different) {
+	protected <T> void runBasicTests(Type type, T original, T copy, T different) {
 		final SessionImpl session = null; //Not really used
 		final boolean nonCopyable = Class.class.isInstance( original ) || Currency.class.isInstance( original );
 		if ( ! nonCopyable ) {

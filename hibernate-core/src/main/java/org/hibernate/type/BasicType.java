@@ -22,6 +22,7 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
 /**
  * Marker interface for basic types.
@@ -77,10 +78,7 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 		return getJavaTypeDescriptor();
 	}
 
-	/**
-	 * Returns the converter that this basic type uses for transforming from the domain type, to the relational type,
-	 * or <code>null</code> if there is no conversion.
-	 */
+	@Override
 	@Incubating
 	default BasicValueConverter<T, ?> getValueConverter() {
 		return null;
@@ -94,6 +92,11 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	@Override
 	default ValueBinder<T> getJdbcValueBinder() {
 		return getJdbcType().getBinder( this.getMappedJavaType() );
+	}
+
+	@Override
+	default JdbcLiteralFormatter<T> getJdbcLiteralFormatter() {
+		return getJdbcType().getJdbcLiteralFormatter( getMappedJavaType() );
 	}
 
 	@Override
@@ -118,14 +121,4 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 		return getJdbcTypeCount();
 	}
 
-	@Override
-	default int forEachJdbcValue(
-			Object value,
-			Clause clause,
-			int offset,
-			JdbcValuesConsumer valuesConsumer,
-			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( offset, value, getJdbcMapping() );
-		return getJdbcTypeCount();
-	}
 }

@@ -84,10 +84,9 @@ class DiscriminatorHelper {
 			PersistentClass persistentClass,
 			Dialect dialect,
 			WrapperOptions wrapperOptions) {
-		JavaType<T> javaType = discriminatorType.getJavaTypeDescriptor();
+		final JavaType<T> javaType = discriminatorType.getJavaTypeDescriptor();
 		try {
-			return discriminatorType.getJdbcType()
-					.getJdbcLiteralFormatter( javaType )
+			return discriminatorType.getJdbcLiteralFormatter()
 					.toJdbcLiteral(
 							javaType.fromString( persistentClass.getDiscriminatorValue() ),
 							dialect,

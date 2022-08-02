@@ -22,9 +22,9 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypedExpressible;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.internal.UserTypeJavaTypeWrapper;
 import org.hibernate.type.internal.UserTypeSqlTypeAdapter;
@@ -58,11 +58,13 @@ public class CustomType<J>
 
 	private final String name;
 
-	private final BasicJavaType<J> mappedJavaType;
+	private final JavaType<J> mappedJavaType;
+	private final JavaType<?> jdbcJavaType;
 	private final JdbcType jdbcType;
 
 	private final ValueExtractor<J> valueExtractor;
 	private final ValueBinder<J> valueBinder;
+	private final JdbcLiteralFormatter<J> jdbcLiteralFormatter;
 
 	public CustomType(UserType<J> userType, TypeConfiguration typeConfiguration) throws MappingException {
 		this( userType, ArrayHelper.EMPTY_STRING_ARRAY, typeConfiguration );
@@ -72,13 +74,13 @@ public class CustomType<J>
 		this.userType = userType;
 		this.name = userType.getClass().getName();
 
-		if ( userType instanceof BasicJavaType ) {
+		if ( userType instanceof JavaType<?> ) {
 			//noinspection unchecked
-			this.mappedJavaType = ( (BasicJavaType<J>) userType );
+			this.mappedJavaType = (JavaType<J>) userType;
 		}
 		else if ( userType instanceof JavaTypedExpressible) {
 			//noinspection unchecked
-			this.mappedJavaType = (BasicJavaType<J>) ( (JavaTypedExpressible<J>) userType ).getExpressibleJavaType();
+			this.mappedJavaType = ( (JavaTypedExpressible<J>) userType ).getExpressibleJavaType();
 		}
 		else if ( userType instanceof UserVersionType ) {
 			this.mappedJavaType = new UserTypeVersionJavaTypeWrapper<>( (UserVersionType<J>) userType );
@@ -87,11 +89,31 @@ public class CustomType<J>
 			this.mappedJavaType = new UserTypeJavaTypeWrapper<>( userType );
 		}
 
-		// create a JdbcType adapter that uses the UserType binder/extract handling
-		this.jdbcType = new UserTypeSqlTypeAdapter<>( userType, mappedJavaType, typeConfiguration);
+		final BasicValueConverter<J, Object> valueConverter = userType.getValueConverter();
+		if ( valueConverter != null ) {
+			// When an explicit value converter is given,
+			// we configure the custom type to use that instead of adapters that delegate to UserType.
+			// This is necessary to support selecting a column with multiple domain type representations.
+			this.jdbcType = userType.getJdbcType( typeConfiguration );
+			this.jdbcJavaType = valueConverter.getRelationalJavaType();
+			//noinspection unchecked
+			this.valueExtractor = (ValueExtractor<J>) jdbcType.getExtractor( jdbcJavaType );
+			//noinspection unchecked
+			this.valueBinder = (ValueBinder<J>) jdbcType.getBinder( jdbcJavaType );
+			//noinspection unchecked
+			this.jdbcLiteralFormatter = (JdbcLiteralFormatter<J>) jdbcType.getJdbcLiteralFormatter( jdbcJavaType );
+		}
+		else {
+			// create a JdbcType adapter that uses the UserType binder/extract handling
+			this.jdbcType = new UserTypeSqlTypeAdapter<>( userType, mappedJavaType, typeConfiguration );
+			this.jdbcJavaType = jdbcType.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration );
+			this.valueExtractor = jdbcType.getExtractor( mappedJavaType );
+			this.valueBinder = jdbcType.getBinder( mappedJavaType );
+			this.jdbcLiteralFormatter = userType instanceof EnhancedUserType
+					? jdbcType.getJdbcLiteralFormatter( mappedJavaType )
+					: null;
+		}
 
-		this.valueExtractor = jdbcType.getExtractor( mappedJavaType );
-		this.valueBinder = jdbcType.getBinder( mappedJavaType );
 		this.registrationKeys = registrationKeys;
 	}
 
@@ -107,6 +129,11 @@ public class CustomType<J>
 	@Override
 	public ValueBinder<J> getJdbcValueBinder() {
 		return valueBinder;
+	}
+
+	@Override
+	public JdbcLiteralFormatter<J> getJdbcLiteralFormatter() {
+		return jdbcLiteralFormatter;
 	}
 
 	@Override
@@ -146,12 +173,45 @@ public class CustomType<J>
 
 	@Override
 	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) {
-		return getUserType().assemble( cached, owner);
+		final J assembled = getUserType().assemble( cached, owner );
+		// Since UserType#assemble is an optional operation,
+		// we have to handle the fact that it could produce a null value,
+		// in which case we will try to use a converter for assembling,
+		// or if that doesn't exist, simply use the relational value as is
+		if ( assembled == null && cached != null ) {
+			final BasicValueConverter<J, Object> valueConverter = getUserType().getValueConverter();
+			if ( valueConverter == null ) {
+				return cached;
+			}
+			else {
+				return valueConverter.toDomainValue( cached );
+			}
+		}
+		return assembled;
 	}
 
 	@Override
 	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) {
-		return getUserType().disassemble( (J) value );
+		return (Serializable) disassemble( value, session );
+	}
+
+	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		final Serializable disassembled = getUserType().disassemble( (J) value );
+		// Since UserType#disassemble is an optional operation,
+		// we have to handle the fact that it could produce a null value,
+		// in which case we will try to use a converter for disassembling,
+		// or if that doesn't exist, simply use the domain value as is
+		if ( disassembled == null && value != null ) {
+			final BasicValueConverter<J, Object> valueConverter = getUserType().getValueConverter();
+			if ( valueConverter == null ) {
+				return value;
+			}
+			else {
+				return valueConverter.toRelationalValue( (J) value );
+			}
+		}
+		return disassembled;
 	}
 
 	@Override
@@ -317,6 +377,11 @@ public class CustomType<J>
 	@Override
 	public JavaType<J> getJavaTypeDescriptor() {
 		return this.getMappedJavaType();
+	}
+
+	@Override
+	public JavaType<?> getJdbcJavaType() {
+		return jdbcJavaType;
 	}
 
 	@Override

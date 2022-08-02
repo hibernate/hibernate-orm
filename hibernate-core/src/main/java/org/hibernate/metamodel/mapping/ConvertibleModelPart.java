@@ -17,5 +17,7 @@ public interface ConvertibleModelPart extends BasicValuedModelPart {
 	/**
 	 * Get the value converter applied to this model part if any
 	 */
-	BasicValueConverter getValueConverter();
+	default BasicValueConverter getValueConverter() {
+		return getJdbcMapping().getValueConverter();
+	}
 }

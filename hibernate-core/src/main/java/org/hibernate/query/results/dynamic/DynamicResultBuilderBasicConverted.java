@@ -126,7 +126,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 							return new ResultSetMappingSqlSelection( valuesArrayPosition, (BasicValuedMapping) basicType );
 						}
 				),
-				basicValueConverter.getDomainJavaType(),
+				basicValueConverter.getRelationalJavaType(),
 				null,
 				typeConfiguration
 		);

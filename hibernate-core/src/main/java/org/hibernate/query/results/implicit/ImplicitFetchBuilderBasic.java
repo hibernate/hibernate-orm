@@ -110,7 +110,7 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, BasicVal
 
 		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
 				expression,
-				fetchable.getJavaType(),
+				fetchable.getJdbcMapping().getJdbcJavaType(),
 				parent,
 				domainResultCreationState.getSqlAstCreationState()
 						.getCreationContext()
@@ -118,20 +118,11 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, BasicVal
 						.getTypeConfiguration()
 		);
 
-		final BasicValueConverter<?, ?> valueConverter;
-		if ( fetchable instanceof ConvertibleModelPart ) {
-			valueConverter = ( (ConvertibleModelPart) fetchable ).getValueConverter();
-		}
-		else {
-			valueConverter = null;
-		}
-
 		return new BasicFetch<>(
 				sqlSelection.getValuesArrayPosition(),
 				parent,
 				fetchPath,
 				fetchable,
-				valueConverter,
 				FetchTiming.IMMEDIATE,
 				domainResultCreationState
 		);

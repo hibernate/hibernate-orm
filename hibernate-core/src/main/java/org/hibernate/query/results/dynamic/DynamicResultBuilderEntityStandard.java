@@ -289,7 +289,7 @@ public class DynamicResultBuilderEntityStandard
 							return new ResultSetMappingSqlSelection( valuesArrayPosition, jdbcMapping );
 						}
 				),
-				jdbcMapping.getMappedJavaType(),
+				jdbcMapping.getJdbcJavaType(),
 				null,
 				domainResultCreationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
 		);

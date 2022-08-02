@@ -67,7 +67,7 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 				.getSqlExpressionResolver()
 				.resolveSqlSelection(
 						this,
-						type.getExpressibleJavaType(),
+						type.getJdbcMapping().getJdbcJavaType(),
 						null,
 						creationState.getSqlAstCreationState()
 								.getCreationContext()
@@ -75,11 +75,10 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 								.getTypeConfiguration()
 				);
 
-		//noinspection unchecked
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				type.getExpressibleJavaType()
+				type.getJdbcMapping()
 		);
 	}
 
@@ -89,7 +88,7 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 				.getSqlExpressionResolver();
 		sqlExpressionResolver.resolveSqlSelection(
 				this,
-				type.getExpressibleJavaType(),
+				type.getJdbcMapping().getJdbcJavaType(),
 				null,
 				creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);

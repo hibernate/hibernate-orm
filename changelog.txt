@@ -3,6 +3,48 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.1.2.Final (August 03, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32087
+
+** Bug
+    * [HHH-15430] - Allow use of @Enumerated on basic collection
+    * [HHH-15428] - Converters for BasicCollectionType don't work
+    * [HHH-15423] - @Any discriminated association fails to be implicitly fetched due to UnsupportedOperationException
+    * [HHH-15420] - Getting Started Guide Code does not build
+    * [HHH-15418] -  Composite primary key with NativeQuery & alias not working
+    * [HHH-15417] - UUID with AttributeConverter, merge throws ClassCastException
+    * [HHH-15414] - For Oracle Dialect from version 8 Envers should not generate new revision when database replaces empty string with NULL during INSERT or UPDATE statements
+    * [HHH-15413] - For Oracle Dialect from version 8 Envers should use an ordered sequence 
+    * [HHH-15406] - Tests annotated with org.hibernate.testing.RequiresDialect having as value deprecated dialect are not executed
+    * [HHH-15403] - Likely Statement leak on invoking a stored procedure
+    * [HHH-15396] - Quick Start guide, hibernate-tutorials.zip link is broken
+    * [HHH-15395] - HibernateCriteriaBuider#power(Expression<? extends Number> x, Number y) throws ClassCastException
+    * [HHH-15392] - Reinstantiate support for Character values for like expression escape character
+    * [HHH-15391] - StackOverflow when applying a load entity graphs to a query
+    * [HHH-15390] - Calling  SqmQuery#getSqmStatement()#toHqlString() causes ClassCastExpection when using distinct in Criteria or HQL query
+    * [HHH-15379] - NPE building mapping from HBM for collections targeting a class that does not have an HBM mapping
+    * [HHH-15371] - Envers failure when run under SecurityManager
+    * [HHH-15323] - @AnyDiscriminator Unable to filter a polymorphic relationship in a query 
+    * [HHH-15218] - @OptimisticLocking(DIRTY) leads to wrong query during delete of circular reference
+
+** Improvement
+    * [HHH-15415] - Jackson and Jakarta Jsonb custom types to allow GraalVM compilation
+
+** New Feature
+    * [HHH-15352] - ScrollableResults.setFetchSize()
+
+** Task
+    * [HHH-15412] - Cleanup: remove reflection keeping JDK8 compatibility afloat in AggregatedServiceLoader
+    * [HHH-15411] - Introduce an system property to fully disable Hibernate's use of a system SecurityManager
+    * [HHH-15409] - Restore lazy initialization semantics for  MetadataSources#xmlMappingBinderAccess
+    * [HHH-15408] - QueryEngine to be more defensive with passed parameters
+    * [HHH-15407] - Need to expose more internal state from MetadataImpl to allow copies of metadata instances
+    * [HHH-15404] - Move annotation to intended package: org.hibernate.Remove (from org.hibernate.annotations.Remove)
+    * [HHH-15322] - Allow JNDI lookups using the osgi scheme
+
+
 Changes in 6.1.1.Final (July 01, 2022)
 ------------------------------------------------------------------------------------------------------------------------
 

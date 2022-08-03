@@ -60,6 +60,17 @@ public class DoubleArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 			q.setParameter( "id", 5L );
 			q.setParameter( "data", new Double[]{ null, null, 0.0 } );
 			q.executeUpdate();
+
+			em.persist( new TableWithDoubleArrays( 6L, new Double[]{ 0.12 } ) );
+		} );
+	}
+
+	@Test
+	public void testLoadValueWithInexactFloatRepresentation() {
+		inSession( em -> {
+			TableWithDoubleArrays tableRecord;
+			tableRecord = em.find( TableWithDoubleArrays.class, 6L );
+			assertThat( tableRecord.getTheArray(), is( new Double[]{ 0.12 } ) );
 		} );
 	}
 

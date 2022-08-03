@@ -156,7 +156,7 @@ public class ArrayJdbcType implements JdbcType {
 				final TypeConfiguration typeConfiguration = options.getSessionFactory().getTypeConfiguration();
 				final JdbcType underlyingJdbcType = typeConfiguration.getJdbcTypeRegistry()
 						.getDescriptor( elementJdbcType.getDefaultSqlTypeCode() );
-				final Class<?> preferredJavaTypeClass = underlyingJdbcType.getPreferredJavaTypeClass( options );
+				final Class<?> preferredJavaTypeClass = elementJdbcType.getPreferredJavaTypeClass( options );
 				final Class<?> elementJdbcJavaTypeClass;
 				if ( preferredJavaTypeClass == null ) {
 					elementJdbcJavaTypeClass = underlyingJdbcType.getJdbcRecommendedJavaTypeMapping(

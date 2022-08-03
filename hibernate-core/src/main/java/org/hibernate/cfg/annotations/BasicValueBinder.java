@@ -9,6 +9,7 @@ package org.hibernate.cfg.annotations;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -727,7 +728,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		final Enumerated enumeratedAnn = attributeDescriptor.getAnnotation( Enumerated.class );
 		if ( enumeratedAnn != null ) {
 			this.enumType = enumeratedAnn.value();
-			if ( javaTypeClass.isEnum() || javaTypeClass.isArray() && javaTypeClass.getComponentType().isEnum() ) {
+			if ( canUseEnumerated( javaType, javaTypeClass ) ) {
 				if ( this.enumType == null ) {
 					throw new IllegalStateException(
 							"jakarta.persistence.EnumType was null on @jakarta.persistence.Enumerated " +
@@ -752,6 +753,19 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		}
 
 		normalSupplementalDetails( attributeDescriptor);
+	}
+
+	private boolean canUseEnumerated(java.lang.reflect.Type javaType, Class<Object> javaTypeClass) {
+		if ( javaTypeClass.isEnum() || javaTypeClass.isArray() && javaTypeClass.getComponentType().isEnum() ) {
+			return true;
+		}
+		if ( Collection.class.isAssignableFrom( javaTypeClass ) ) {
+			final java.lang.reflect.Type[] typeArguments = ( (ParameterizedType) javaType ).getActualTypeArguments();
+			if ( typeArguments.length != 0 ) {
+				return ReflectHelper.getClass( typeArguments[0] ).isEnum();
+			}
+		}
+		return false;
 	}
 
 	private void prepareAnyDiscriminator(XProperty modelXProperty) {

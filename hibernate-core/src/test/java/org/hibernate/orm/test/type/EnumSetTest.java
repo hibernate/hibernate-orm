@@ -151,7 +151,7 @@ public class EnumSetTest extends BaseNonConfigCoreFunctionalTestCase {
 		@Id
 		private Long id;
 
-//		@Enumerated(EnumType.ORDINAL)
+		@Enumerated(EnumType.ORDINAL)
 		@Column( name = "the_set" )
 		private Set<MyEnum> theSet;
 

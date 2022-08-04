@@ -13,10 +13,12 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.orm.test.jpa.metamodel.AbstractMetamodelSpecificTest;
+import org.hibernate.orm.test.jpa.metamodel.Address;
 import org.hibernate.orm.test.jpa.metamodel.Order;
 import org.hibernate.orm.test.jpa.metamodel.Thing;
 import org.hibernate.orm.test.jpa.metamodel.ThingWithQuantity;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.ExpectedException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -115,6 +117,24 @@ public class AbstractPathImplTest extends AbstractMetamodelSpecificTest {
 
 			criteria.where( criteriaBuilder.equal( thingRoot.type(), criteriaBuilder.literal( Thing.class ) ) );
 			assertEquals( em.createQuery( criteria ).getResultList().size(), 2 );
+		}
+		finally {
+			em.close();
+		}
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-15433")
+	public void testTypeExpressionWithoutInheritance() {
+		EntityManager em = getOrCreateEntityManager();
+		try {
+			CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+			CriteriaQuery<Address> criteria = criteriaBuilder.createQuery( Address.class );
+			Root<Address> addressRoot = criteria.from( Address.class );
+
+			criteria.select( addressRoot );
+			criteria.where( criteriaBuilder.equal( addressRoot.type(), criteriaBuilder.literal( Address.class ) ) );
+			em.createQuery( criteria ).getResultList();
 		}
 		finally {
 			em.close();

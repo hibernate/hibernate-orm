@@ -181,7 +181,7 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 	public abstract void validateQueryStructureAndFetchOwners();
 
 	public void appendHqlString(StringBuilder sb) {
-		if ( orderByClause == null ) {
+		if ( orderByClause == null || orderByClause.getSortSpecifications().isEmpty() ) {
 			return;
 		}
 		sb.append( " order by " );

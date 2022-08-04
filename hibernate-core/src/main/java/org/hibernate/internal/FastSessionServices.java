@@ -16,6 +16,7 @@ import jakarta.persistence.PessimisticLockScope;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -374,10 +375,20 @@ public final class FastSessionServices {
 	}
 
 	public FormatMapper getJsonFormatMapper() {
+		if ( jsonFormatMapper == null ) {
+			throw new HibernateException(
+					"Could not find a FormatMapper for the JSON format, which is required for mapping JSON types. JSON FormatMapper configuration is automatic, but requires that you have either Jackson or a JSONB implementation like Yasson on the class path."
+			);
+		}
 		return jsonFormatMapper;
 	}
 
 	public FormatMapper getXmlFormatMapper() {
+		if ( xmlFormatMapper == null ) {
+			throw new HibernateException(
+					"Could not find a FormatMapper for the XML format, which is required for mapping XML types. XML FormatMapper configuration is automatic, but requires that you have either Jackson XML or a JAXB implementation like Glassfish JAXB on the class path."
+			);
+		}
 		return xmlFormatMapper;
 	}
 }

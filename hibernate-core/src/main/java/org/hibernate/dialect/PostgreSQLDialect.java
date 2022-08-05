@@ -221,14 +221,16 @@ public class PostgreSQLDialect extends Dialect {
 						.build()
 		);
 
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
-		ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( SQLXML, "xml", this ) );
-
 		if ( getVersion().isSameOrAfter( 8, 2 ) ) {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
+		}
+		if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
+			// The following DDL types require that the PGobject class is usable/visible
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
+			ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
 
 			if ( getVersion().isSameOrAfter( 9, 2 ) ) {
 				// Prefer jsonb if possible
@@ -1169,14 +1171,18 @@ public class PostgreSQLDialect extends Dialect {
 		jdbcTypeRegistry.addDescriptor( XmlJdbcType.INSTANCE );
 
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
-			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
-			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
+			if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
+			}
 
 			if ( getVersion().isSameOrAfter( 8, 2 ) ) {
 				// HHH-9562
 				jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 				if ( getVersion().isSameOrAfter( 9, 2 ) ) {
-					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonbJdbcType.INSTANCE );
+					if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
+						jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonbJdbcType.INSTANCE );
+					}
 				}
 			}
 		}

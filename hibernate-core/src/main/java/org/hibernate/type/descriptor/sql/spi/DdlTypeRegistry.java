@@ -156,8 +156,9 @@ public class DdlTypeRegistry implements Serializable {
 		if ( descriptor == null ) {
 			throw new HibernateException(
 					String.format(
-							"No type mapping for java.sql.Types code: %s",
-							typeCode
+							"No type mapping for org.hibernate.type.SqlTypes code: %s (%s)",
+							typeCode,
+							JdbcTypeNameMapper.getTypeName( typeCode )
 					)
 			);
 		}

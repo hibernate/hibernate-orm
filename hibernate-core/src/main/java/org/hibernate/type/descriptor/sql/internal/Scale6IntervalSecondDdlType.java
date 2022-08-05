@@ -20,7 +20,7 @@ public class Scale6IntervalSecondDdlType extends DdlTypeImpl {
 	}
 	@Override
 	public String getTypeName(Long size, Integer precision, Integer scale) {
-		// The maximum scale for `interval second` is 6 unfortunately so we have to use numeric by default
+		// The maximum scale for `interval second` is 6 unfortunately, so we have to use numeric by default
 		if ( scale == null || scale > 6 ) {
 			return DdlTypeImpl.replace( "numeric($p,$s)", size, precision, scale );
 		}

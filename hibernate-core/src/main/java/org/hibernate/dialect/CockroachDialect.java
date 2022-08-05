@@ -176,17 +176,20 @@ public class CockroachDialect extends Dialect {
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
-		ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
+		if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
+			// The following DDL types require that the PGobject class is usable/visible
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
+			ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
 
-		// Prefer jsonb if possible
-		if ( getVersion().isSameOrAfter( 20 ) ) {
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
-		}
-		else {
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+			// Prefer jsonb if possible
+			if ( getVersion().isSameOrAfter( 20 ) ) {
+				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
+				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
+			}
+			else {
+				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+			}
 		}
 	}
 
@@ -229,14 +232,16 @@ public class CockroachDialect extends Dialect {
 		jdbcTypeRegistry.addDescriptor( TIMESTAMP_UTC, InstantAsTimestampWithTimeZoneJdbcType.INSTANCE );
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
-			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
+			if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
 
-			if ( getVersion().isSameOrAfter( 20, 0 ) ) {
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonbJdbcType.INSTANCE );
-			}
-			else {
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonJdbcType.INSTANCE );
+				if ( getVersion().isSameOrAfter( 20, 0 ) ) {
+					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
+					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonbJdbcType.INSTANCE );
+				}
+				else {
+					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonJdbcType.INSTANCE );
+				}
 			}
 		}
 

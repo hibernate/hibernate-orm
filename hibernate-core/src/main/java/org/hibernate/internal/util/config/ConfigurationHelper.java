@@ -9,6 +9,7 @@ package org.hibernate.internal.util.config;
 import java.sql.Types;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -600,12 +601,17 @@ public final class ConfigurationHelper {
 				return ( (Number) value ).intValue();
 			}
 
-			final String string = value.toString();
+			final String string = value.toString().toUpperCase( Locale.ROOT );
 			final Integer typeCode = JdbcTypeNameMapper.getTypeCode( string );
 			if ( typeCode != null ) {
 				return typeCode;
 			}
-			return Integer.parseInt( string );
+			try {
+				return Integer.parseInt( string );
+			}
+			catch (NumberFormatException ex) {
+				throw new IllegalArgumentException( String.format( "Couldn't interpret '%s' as JDBC type code or type code name", string ) );
+			}
 		}
 	}
 }

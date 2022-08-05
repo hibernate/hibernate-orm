@@ -9,10 +9,12 @@ package org.hibernate.sql.results.spi;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
@@ -105,6 +107,49 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 		}
 	}
 
+	private static class Results<R> {
+		private final List<R> results = new ArrayList<>();
+		private final JavaType resultJavaType;
+
+		public Results(JavaType resultJavaType) {
+			this.resultJavaType = resultJavaType;
+		}
+
+		public boolean contains(R result) {
+			for ( int i = 0; i < results.size(); i++ ) {
+				if ( resultJavaType.areEqual( results.get( i ), result ) ) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		public void add(R result) {
+			results.add( result );
+		}
+
+		public List<R> getResults() {
+			return results;
+		}
+	}
+
+	private static class EntityResult<R> extends Results<R> {
+		private final Set<R> added = new IdentitySet<>();
+
+		public EntityResult(JavaType resultJavaType) {
+			super( resultJavaType );
+		}
+
+		public boolean contains(R result) {
+			return added.contains( result );
+		}
+
+		public void add(R result) {
+			super.add( result );
+			added.add( result );
+		}
+	}
+
 	@Override
 	public List<R> consume(
 			JdbcValues jdbcValues,
@@ -116,12 +161,9 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		final TypeConfiguration typeConfiguration = session.getTypeConfiguration();
 		final QueryOptions queryOptions = rowProcessingState.getQueryOptions();
-
 		RuntimeException ex = null;
 		try {
 			persistenceContext.getLoadContexts().register( jdbcValuesSourceProcessingState );
-
-			final List<R> results = new ArrayList<>();
 
 			final JavaType<R> domainResultJavaType = resolveDomainResultJavaType(
 					rowReader.getDomainResultResultJavaType(),
@@ -131,17 +173,25 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 
 			final ResultHandler<R> resultHandlerToUse;
 
-			if ( uniqueSemantic == UniqueSemantic.ALLOW
-					&& domainResultJavaType instanceof EntityJavaType ) {
+			boolean isEnityResultType = domainResultJavaType instanceof EntityJavaType;
+			if ( uniqueSemantic == UniqueSemantic.ALLOW && isEnityResultType ) {
 				resultHandlerToUse = ListResultsConsumer::deDuplicationHandling;
 			}
 			else {
 				resultHandlerToUse = this.resultHandler;
 			}
 
+			final Results<R> results;
+			if ( isEnityResultType ) {
+				results = new EntityResult<>( domainResultJavaType );
+			}
+			else {
+				results = new Results<>( domainResultJavaType );
+			}
+
 			while ( rowProcessingState.next() ) {
 				final R row = rowReader.readRow( rowProcessingState, processingOptions );
-				resultHandlerToUse.handle( row, domainResultJavaType, results, rowProcessingState );
+				resultHandlerToUse.handle( row, results, rowProcessingState );
 				rowProcessingState.finishRowProcessing();
 			}
 
@@ -155,10 +205,10 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			//noinspection unchecked
 			final ResultListTransformer<R> resultListTransformer = (ResultListTransformer<R>) queryOptions.getResultListTransformer();
 			if ( resultListTransformer != null ) {
-				return resultListTransformer.transformList( results );
+				return resultListTransformer.transformList( results.getResults() );
 			}
 
-			return results;
+			return results.getResults();
 		}
 		catch (RuntimeException e) {
 			ex = e;
@@ -193,17 +243,15 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 	 */
 	@FunctionalInterface
 	private interface ResultHandler<R> {
-		void handle(R result, JavaType<R> transformedJavaType, List<R> results, RowProcessingStateStandardImpl rowProcessingState);
+		void handle(R result, Results<R> results, RowProcessingStateStandardImpl rowProcessingState);
 	}
 
 	public static <R> void deDuplicationHandling(
 			R result,
-			JavaType<R> transformedJavaType,
-			List<R> results,
+			Results<R> results,
 			RowProcessingStateStandardImpl rowProcessingState) {
 		withDuplicationCheck(
 				result,
-				transformedJavaType,
 				results,
 				rowProcessingState,
 				false
@@ -212,43 +260,31 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 
 	private static <R> void withDuplicationCheck(
 			R result,
-			JavaType<R> transformedJavaType,
-			List<R> results,
+			Results<R> results,
 			RowProcessingStateStandardImpl rowProcessingState,
 			boolean throwException) {
-		boolean addResult = true;
-
-		for ( int i = 0; i < results.size(); i++ ) {
-			final R existingResult = results.get( i );
-			if ( transformedJavaType.areEqual( result, existingResult ) ) {
-				if ( throwException && ! rowProcessingState.hasCollectionInitializers ) {
-					throw new HibernateException(
-							String.format(
-									Locale.ROOT,
-									"Duplicate row was found and `%s` was specified",
-									UniqueSemantic.ASSERT
-							)
-					);
-				}
-
-				addResult = false;
-				break;
+		if ( results.contains( result ) ) {
+			if ( throwException && !rowProcessingState.hasCollectionInitializers ) {
+				throw new HibernateException(
+						String.format(
+								Locale.ROOT,
+								"Duplicate row was found and `%s` was specified",
+								UniqueSemantic.ASSERT
+						)
+				);
 			}
 		}
-
-		if ( addResult ) {
+		else {
 			results.add( result );
 		}
 	}
 
 	public static <R> void duplicationErrorHandling(
 			R result,
-			JavaType<R> transformedJavaType,
-			List<R> results,
+			Results<R> results,
 			RowProcessingStateStandardImpl rowProcessingState) {
 		withDuplicationCheck(
 				result,
-				transformedJavaType,
 				results,
 				rowProcessingState,
 				true
@@ -257,8 +293,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 
 	public static <R> void applyAll(
 			R result,
-			JavaType<R> transformedJavaType,
-			List<R> results,
+			Results<R> results,
 			RowProcessingStateStandardImpl rowProcessingState) {
 		results.add( result );
 	}

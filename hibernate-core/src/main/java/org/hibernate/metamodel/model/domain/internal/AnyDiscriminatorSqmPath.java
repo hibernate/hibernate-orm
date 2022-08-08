@@ -12,25 +12,24 @@ import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.spi.NavigablePath;
 
-public class AnyDiscriminatorSqmPath extends AbstractSqmPath {
+public class AnyDiscriminatorSqmPath<T> extends AbstractSqmPath<T> {
 
 	protected AnyDiscriminatorSqmPath(
 			NavigablePath navigablePath,
-			SqmPathSource referencedPathSource,
+			AnyDiscriminatorSqmPathSource referencedPathSource,
 			SqmPath lhs,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
 	}
 
 	@Override
-	public AnyDiscriminatorSqmPath copy(SqmCopyContext context) {
+	public AnyDiscriminatorSqmPath<T> copy(SqmCopyContext context) {
 		final AnyDiscriminatorSqmPath existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -67,4 +66,15 @@ public class AnyDiscriminatorSqmPath extends AbstractSqmPath {
 	public SqmTreatedPath treatAs(EntityDomainType treatTarget) throws PathException {
 		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
 	}
+
+	@Override
+	public SqmPath<T> getLhs() {
+		return (SqmPath<T>) super.getLhs().getLhs();
+	}
+
+	@Override
+	public AnyDiscriminatorSqmPathSource<T> getExpressible() {
+		return (AnyDiscriminatorSqmPathSource<T>) getNodeType();
+	}
+
 }

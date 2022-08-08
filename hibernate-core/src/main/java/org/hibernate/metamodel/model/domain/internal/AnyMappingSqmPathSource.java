@@ -29,7 +29,10 @@ public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> {
 			BindableType jpaBindableType) {
 		super( localPathName, domainType, jpaBindableType );
 		keyPathSource = new BasicSqmPathSource<>( "id", (BasicDomainType<?>) domainType.getKeyType(), SINGULAR_ATTRIBUTE );
-		discriminatorPathSource = new AnyDiscriminatorSqmPathSource<>( localPathName, domainType.getDiscriminatorType(), jpaBindableType );
+		discriminatorPathSource = new AnyDiscriminatorSqmPathSource<>(
+				localPathName,
+				(AnyDiscriminatorDomainTypeImpl) domainType.getDiscriminatorType(), jpaBindableType
+		);
 	}
 
 	@Override @SuppressWarnings("unchecked")

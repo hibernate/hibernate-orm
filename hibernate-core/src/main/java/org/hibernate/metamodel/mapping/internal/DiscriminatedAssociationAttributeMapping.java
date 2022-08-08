@@ -115,6 +115,7 @@ public class DiscriminatedAssociationAttributeMapping
 		return discriminatorMapping.resolveDiscriminatorValueToEntityMapping( discriminatorValue );
 	}
 
+	@Override
 	public Object resolveDiscriminatorForEntityType(EntityMappingType entityMappingType) {
 		return discriminatorMapping.resolveDiscriminatorValueToEntityMapping( entityMappingType );
 	}

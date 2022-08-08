@@ -49,6 +49,10 @@ public class MetaType extends AbstractType {
 		return discriminatorValuesToEntityNameMap;
 	}
 
+	public Map<String,Object> getEntityNameToDiscriminatorValueMap(){
+		return entityNameToDiscriminatorValueMap;
+	}
+
 	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
 		return baseType.getSqlTypeCodes(mapping);
 	}
@@ -131,5 +135,4 @@ public class MetaType extends AbstractType {
 	public boolean isDirty(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session) throws HibernateException {
 		return checkable[0] && isDirty(old, current, session);
 	}
-	
 }

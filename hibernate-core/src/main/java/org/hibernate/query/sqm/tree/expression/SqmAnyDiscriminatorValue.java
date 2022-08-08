@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorDomainTypeImpl;
 import org.hibernate.query.hql.HqlInterpretationException;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -20,16 +21,23 @@ public class SqmAnyDiscriminatorValue<T> extends AbstractSqmExpression<T>
 		implements SqmSelectableNode<T>, SemanticPathPart {
 
 	private final EntityDomainType value;
+	private final AnyDiscriminatorDomainTypeImpl domainType;
 	private final String pathName;
 
 	public SqmAnyDiscriminatorValue(
 			EntityDomainType<T> entityWithDiscriminator,
 			String pathName,
 			EntityDomainType entityValue,
+			AnyDiscriminatorDomainTypeImpl domainType,
 			NodeBuilder nodeBuilder) {
 		super( entityWithDiscriminator, nodeBuilder );
 		this.value = entityValue;
 		this.pathName = pathName;
+		this.domainType = domainType;
+	}
+
+	public AnyDiscriminatorDomainTypeImpl getDomainType(){
+		return domainType;
 	}
 
 	@Override
@@ -44,6 +52,7 @@ public class SqmAnyDiscriminatorValue<T> extends AbstractSqmExpression<T>
 						(EntityDomainType) getNodeType(),
 						pathName,
 						value,
+						domainType,
 						nodeBuilder()
 				)
 		);

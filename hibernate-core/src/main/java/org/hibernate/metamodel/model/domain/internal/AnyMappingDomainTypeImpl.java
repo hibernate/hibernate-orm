@@ -19,10 +19,15 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class AnyMappingDomainTypeImpl<T> implements AnyMappingDomainType<T> {
 	private final AnyType anyType;
 	private final JavaType<T> baseJtd;
+	private final AnyDiscriminatorDomainTypeImpl<?> anyDiscriminatorType;
 
 	public AnyMappingDomainTypeImpl(AnyType anyType, JavaType<T> baseJtd) {
 		this.anyType = anyType;
 		this.baseJtd = baseJtd;
+		final MetaType discriminatorType = (MetaType) anyType.getDiscriminatorType();
+		anyDiscriminatorType = new AnyDiscriminatorDomainTypeImpl<>(
+				(BasicType<?>) discriminatorType.getBaseType(),
+				discriminatorType);
 	}
 
 	@Override
@@ -41,8 +46,8 @@ public class AnyMappingDomainTypeImpl<T> implements AnyMappingDomainType<T> {
 	}
 
 	@Override
-	public SimpleDomainType<?> getDiscriminatorType() {
-		return (SimpleDomainType<?>) ((MetaType) anyType.getDiscriminatorType()).getBaseType();
+	public AnyDiscriminatorDomainTypeImpl<?> getDiscriminatorType() {
+		return anyDiscriminatorType;
 	}
 
 	@Override

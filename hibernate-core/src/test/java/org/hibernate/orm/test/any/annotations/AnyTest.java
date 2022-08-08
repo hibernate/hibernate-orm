@@ -160,6 +160,38 @@ public class AnyTest {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-15442")
+	public void testHqlCollectionTypeQueryWithParameters(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					List<PropertySet> propertySets = session.createQuery(
+									"select p from PropertySet p where type(p.generalProperties) = :prop ",
+									PropertySet.class )
+							.setParameter( "prop", IntegerProperty.class)
+							.list();
+					assertEquals( 1, propertySets.size() );
+
+					PropertySet propertySet = propertySets.get( 0 );
+					assertEquals( 1, propertySet.getGeneralProperties().size() );
+
+					assertEquals( "age", propertySet.getGeneralProperties().get( 0 ).getName() );
+
+					propertySets = session.createQuery(
+									"select p from PropertySet p where type(p.generalProperties) = :prop ",
+									PropertySet.class )
+							.setParameter( "prop", StringProperty.class)
+							.list();
+					assertEquals( 1, propertySets.size() );
+
+					propertySet = propertySets.get( 0 );
+					assertEquals( 1, propertySet.getGeneralProperties().size() );
+
+					assertEquals( "name", propertySet.getGeneralProperties().get( 0 ).getName() );
+				}
+		);
+	}
+
+	@Test
 	@TestForIssue( jiraKey = "HHH-15323")
 	public void testHqlTypeQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -174,6 +206,33 @@ public class AnyTest {
 					propertyHolders = session.createQuery(
 									"select p from PropertyHolder p where type(p.property) = StringProperty ",
 									PropertyHolder.class ).list();
+					assertEquals( 1, propertyHolders.size() );
+
+					assertEquals( "name", propertyHolders.get( 0 ).getProperty().getName() );
+				}
+		);
+	}
+
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-15442")
+	public void testHqlTypeQueryWithParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					List<PropertyHolder> propertyHolders = session.createQuery(
+									"select p from PropertyHolder p where type(p.property) = :prop ",
+									PropertyHolder.class )
+							.setParameter( "prop", IntegerProperty.class)
+							.list();
+					assertEquals( 1, propertyHolders.size() );
+
+					assertEquals( "age", propertyHolders.get( 0 ).getProperty().getName() );
+
+					propertyHolders = session.createQuery(
+									"select p from PropertyHolder p where type(p.property) = :prop ",
+									PropertyHolder.class )
+							.setParameter( "prop", StringProperty.class)
+							.list();
 					assertEquals( 1, propertyHolders.size() );
 
 					assertEquals( "name", propertyHolders.get( 0 ).getProperty().getName() );

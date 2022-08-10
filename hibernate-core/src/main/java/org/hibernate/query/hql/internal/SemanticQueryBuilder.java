@@ -55,6 +55,7 @@ import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
@@ -2156,8 +2157,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			AnyDiscriminatorSqmPath anyDiscriminatorTypeSqmPath,
 			HqlParser.ExpressionContext valueExpressionContext) {
 		return new SqmAnyDiscriminatorValue<>(
-				creationContext.getJpaMetamodel()
-						.entity( anyDiscriminatorTypeSqmPath.findRoot().getNavigablePath().getLocalName() ),
 				anyDiscriminatorTypeSqmPath.getNodeType().getPathName(),
 				creationContext.getJpaMetamodel().resolveHqlEntityReference( valueExpressionContext.getText() ),
 				anyDiscriminatorTypeSqmPath.getExpressible().getSqmPathType(),

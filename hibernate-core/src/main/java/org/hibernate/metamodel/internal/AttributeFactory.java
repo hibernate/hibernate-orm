@@ -51,6 +51,7 @@ import org.hibernate.property.access.internal.PropertyAccessMapImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.AnyType;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -242,7 +243,7 @@ public class AttributeFactory {
 				final JavaType<Y> baseJtd = context.getTypeConfiguration()
 						.getJavaTypeRegistry()
 						.resolveDescriptor( anyType.getReturnedClass() );
-				return new AnyMappingDomainTypeImpl<>( anyType, baseJtd );
+				return (DomainType<Y>) new AnyMappingDomainTypeImpl( anyType, (JavaType<Class>) baseJtd, context.getTypeConfiguration() );
 			}
 			case EMBEDDABLE: {
 				final Component component = (Component) typeContext.getHibernateValue();

@@ -300,7 +300,8 @@ public class AnyTest {
 	}
 
 	@Test
-	public void testMetaDataUseWithManyToAny(SessionFactoryScope scope) {
+	public void
+	testMetaDataUseWithManyToAny(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					//noinspection unchecked

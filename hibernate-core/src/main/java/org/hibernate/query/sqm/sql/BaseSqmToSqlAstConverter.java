@@ -98,7 +98,7 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPathSource;
-import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorDomainTypeImpl;
+import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorConverter;
 import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
@@ -378,6 +378,7 @@ import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiati
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.JavaObjectType;
@@ -6237,10 +6238,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Expression visitAnyDiscriminatorTypeValueExpression(SqmAnyDiscriminatorValue expression) {
-		final AnyDiscriminatorDomainTypeImpl domainType = expression.getDomainType();
+		final BasicType domainType = expression.getDomainType();
 		return new QueryLiteral<>(
-				domainType.toRelationalValue( expression.getEntityValue().getHibernateEntityName() ),
-				domainType.getBasicType()
+				domainType.getValueConverter().toRelationalValue( expression.getEntityValue().getJavaType() ),
+				domainType
 		);
 	}
 

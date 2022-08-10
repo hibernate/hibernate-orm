@@ -16,6 +16,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
+import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 /**
  * @author Christian Beikov
@@ -126,5 +127,10 @@ public class DelegatingQueryOptions implements QueryOptions {
 	@Override
 	public boolean hasLimit() {
 		return queryOptions.hasLimit();
+	}
+
+	@Override
+	public ListResultsConsumer.UniqueSemantic getUniqueSemantic() {
+		return queryOptions.getUniqueSemantic();
 	}
 }

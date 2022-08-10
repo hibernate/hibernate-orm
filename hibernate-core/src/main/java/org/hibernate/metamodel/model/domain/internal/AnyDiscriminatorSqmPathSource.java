@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -32,7 +31,7 @@ public class AnyDiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 	@Override
 	public SqmPath<D> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
 		final NavigablePath navigablePath;
-		if ( intermediatePathSource == null || intermediatePathSource.getPathName().equals( CollectionPart.Nature.ELEMENT.getName() ) ) {
+		if ( intermediatePathSource == null ) {
 			navigablePath = lhs.getNavigablePath();
 		}
 		else {

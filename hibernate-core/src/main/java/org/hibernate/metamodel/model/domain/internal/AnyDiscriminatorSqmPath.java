@@ -68,11 +68,6 @@ public class AnyDiscriminatorSqmPath<T> extends AbstractSqmPath<T> {
 	}
 
 	@Override
-	public SqmPath<T> getLhs() {
-		return (SqmPath<T>) super.getLhs().getLhs();
-	}
-
-	@Override
 	public AnyDiscriminatorSqmPathSource<T> getExpressible() {
 		return (AnyDiscriminatorSqmPathSource<T>) getNodeType();
 	}

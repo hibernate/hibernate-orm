@@ -64,6 +64,7 @@ import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.AbstractSelectionQuery;
+import org.hibernate.query.spi.DelegatingQueryOptions;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.MutableQueryOptions;
@@ -94,10 +95,10 @@ import org.hibernate.query.sqm.tree.insert.SqmValues;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
-import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.results.internal.TupleMetadata;
+import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
@@ -110,6 +111,7 @@ import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_STORE_MODE;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_STORE_MODE;
 import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptions;
+import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptionsWithUniqueSemanticFilter;
 import static org.hibernate.query.sqm.internal.SqmUtil.isSelect;
 
 /**
@@ -517,7 +519,13 @@ public class QuerySqmImpl<R>
 			}
 
 			final MutableQueryOptions originalQueryOptions = getQueryOptions();
-			final QueryOptions normalizedQueryOptions = omitSqlQueryOptions( originalQueryOptions, true, false );
+			final QueryOptions normalizedQueryOptions;
+			if ( needsDistinct ) {
+				normalizedQueryOptions = omitSqlQueryOptionsWithUniqueSemanticFilter( originalQueryOptions, true, false );
+			}
+			else {
+				normalizedQueryOptions = omitSqlQueryOptions( originalQueryOptions, true, false );
+			}
 			if ( originalQueryOptions == normalizedQueryOptions ) {
 				executionContextToUse = this;
 			}
@@ -531,39 +539,72 @@ public class QuerySqmImpl<R>
 			}
 		}
 		else {
-			executionContextToUse = this;
+			if ( needsDistinct ) {
+				final MutableQueryOptions originalQueryOptions = getQueryOptions();
+				final QueryOptions normalizedQueryOptions = uniqueSemanticQueryOptions( originalQueryOptions );
+				if ( originalQueryOptions == normalizedQueryOptions ) {
+					executionContextToUse = this;
+				}
+				else {
+					executionContextToUse = new DelegatingDomainQueryExecutionContext( this ) {
+						@Override
+						public QueryOptions getQueryOptions() {
+							return normalizedQueryOptions;
+						}
+					};
+				}
+			}
+			else {
+				executionContextToUse = this;
+			}
 		}
 
 		final List<R> list = resolveSelectQueryPlan().performList( executionContextToUse );
 
 		if ( needsDistinct ) {
-			int includedCount = -1;
-			// NOTE : firstRow is zero-based
 			final int first = !hasLimit || getQueryOptions().getLimit().getFirstRow() == null
 					? getIntegerLiteral( sqmStatement.getOffset(), 0 )
 					: getQueryOptions().getLimit().getFirstRow();
 			final int max = !hasLimit || getQueryOptions().getLimit().getMaxRows() == null
 					? getMaxRows( sqmStatement, list.size() )
 					: getQueryOptions().getLimit().getMaxRows();
-			final List<R> tmp = new ArrayList<>( list.size() );
-			final IdentitySet<Object> distinction = new IdentitySet<>( list.size() );
-			for ( final R result : list ) {
-				if ( !distinction.add( result ) ) {
-					continue;
+			if ( first > 0 || max != -1 ) {
+				final int toIndex;
+				final int resultSize = list.size();
+				if ( max != -1 ) {
+					toIndex = first + max;
 				}
-				includedCount++;
-				if ( includedCount < first ) {
-					continue;
+				else {
+					toIndex = resultSize;
 				}
-				tmp.add( result );
-				// NOTE : ( max - 1 ) because first is zero-based while max is not...
-				if ( max >= 0 && ( includedCount - first ) >= ( max - 1 ) ) {
-					break;
-				}
+				return list.subList( first, toIndex > resultSize ? resultSize : toIndex );
 			}
-			return tmp;
 		}
 		return list;
+
+	}
+
+	public static QueryOptions uniqueSemanticQueryOptions(QueryOptions originalOptions) {
+		final ListResultsConsumer.UniqueSemantic semantic = originalOptions.getUniqueSemantic();
+
+
+		if ( semantic == ListResultsConsumer.UniqueSemantic.FILTER ) {
+			return originalOptions;
+		}
+
+		return new UniqueSemanticFilterQueryOption( originalOptions );
+	}
+
+	public static class UniqueSemanticFilterQueryOption extends DelegatingQueryOptions{
+
+		public UniqueSemanticFilterQueryOption(QueryOptions queryOptions) {
+			super( queryOptions );
+		}
+
+		@Override
+		public ListResultsConsumer.UniqueSemantic getUniqueSemantic() {
+			return ListResultsConsumer.UniqueSemantic.FILTER;
+		}
 	}
 
 	@Override

@@ -8,6 +8,7 @@ package org.hibernate.query.spi;
 
 import org.hibernate.LockOptions;
 import org.hibernate.sql.exec.spi.JdbcSelect;
+import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 /**
  * @author Christian Beikov
@@ -16,11 +17,20 @@ public class SqlOmittingQueryOptions extends DelegatingQueryOptions {
 
 	private final boolean omitLimit;
 	private final boolean omitLocks;
+	private final ListResultsConsumer.UniqueSemantic uniqueSemantic;
 
 	public SqlOmittingQueryOptions(QueryOptions queryOptions, boolean omitLimit, boolean omitLocks) {
 		super( queryOptions );
 		this.omitLimit = omitLimit;
 		this.omitLocks = omitLocks;
+		uniqueSemantic = null;
+	}
+
+	public SqlOmittingQueryOptions(QueryOptions queryOptions, boolean omitLimit, boolean omitLocks, ListResultsConsumer.UniqueSemantic semantic) {
+		super( queryOptions );
+		this.omitLimit = omitLimit;
+		this.omitLocks = omitLocks;
+		this.uniqueSemantic = semantic;
 	}
 
 	public static QueryOptions omitSqlQueryOptions(QueryOptions originalOptions) {
@@ -48,6 +58,25 @@ public class SqlOmittingQueryOptions extends DelegatingQueryOptions {
 		}
 
 		return new SqlOmittingQueryOptions( originalOptions, omitLimit, omitLocks );
+	}
+
+	public static QueryOptions omitSqlQueryOptionsWithUniqueSemanticFilter(QueryOptions originalOptions, boolean omitLimit, boolean omitLocks) {
+		final Limit limit = originalOptions.getLimit();
+
+		// No need for a context when there are no options we use during SQL rendering
+		if ( originalOptions.getLockOptions().isEmpty() ) {
+			if ( !omitLimit || limit == null || limit.isEmpty() ) {
+				return originalOptions;
+			}
+		}
+
+		if ( !omitLocks ) {
+			if ( !omitLimit || limit == null || limit.isEmpty() ) {
+				return originalOptions;
+			}
+		}
+
+		return new SqlOmittingQueryOptions( originalOptions, omitLimit, omitLocks, ListResultsConsumer.UniqueSemantic.FILTER );
 	}
 
 	@Override
@@ -83,5 +112,10 @@ public class SqlOmittingQueryOptions extends DelegatingQueryOptions {
 	@Override
 	public boolean hasLimit() {
 		return omitLimit ? false : super.hasLimit();
+	}
+
+	@Override
+	public ListResultsConsumer.UniqueSemantic getUniqueSemantic() {
+		return uniqueSemantic;
 	}
 }

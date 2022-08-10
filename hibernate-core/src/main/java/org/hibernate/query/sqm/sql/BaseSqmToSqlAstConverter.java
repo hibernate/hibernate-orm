@@ -3840,6 +3840,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
+	public Expression visitAnyDiscriminatorTypeExpression(AnyDiscriminatorSqmPath sqmPath) {
+		return withTreatRestriction(
+				prepareReusablePath(
+						sqmPath,
+						() -> DiscriminatedAssociationTypePathInterpretation.from( sqmPath, this )
+				),
+				sqmPath
+		);
+	}
+
+	@Override
 	public Expression visitPluralValuedPath(SqmPluralValuedSimplePath<?> sqmPath) {
 		return withTreatRestriction(
 				prepareReusablePath( sqmPath, () -> PluralValuedSimplePathInterpretation.from( sqmPath, this ) ),
@@ -6231,10 +6242,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return new EntityTypeLiteral( mappingDescriptor );
 	}
 
-	@Override
-	public Expression visitAnyDiscriminatorTypeExpression(AnyDiscriminatorSqmPath expression) {
-		return DiscriminatedAssociationTypePathInterpretation.from( expression, this );
-	}
 
 	@Override
 	public Expression visitAnyDiscriminatorTypeValueExpression(SqmAnyDiscriminatorValue expression) {

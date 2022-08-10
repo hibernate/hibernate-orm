@@ -33,10 +33,7 @@ public class DiscriminatedAssociationTypePathInterpretation<T> extends AbstractS
 			SqmToSqlAstConverter converter) {
 		final SqmPath lhs = sqmPath.getLhs();
 		final TableGroup tableGroup = converter.getFromClauseAccess().findTableGroup( lhs.getNavigablePath() );
-		final ModelPart subPart = tableGroup.getModelPart().findSubPart(
-				sqmPath.getNavigablePath().getLocalName(),
-				null
-		);
+		final ModelPart subPart = tableGroup.getModelPart();
 
 		final DiscriminatedAssociationModelPart mapping;
 		if ( subPart instanceof PluralAttributeMapping ) {

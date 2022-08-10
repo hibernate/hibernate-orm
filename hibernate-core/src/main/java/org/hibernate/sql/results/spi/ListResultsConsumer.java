@@ -7,14 +7,13 @@
 package org.hibernate.sql.results.spi;
 
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
@@ -115,13 +114,21 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			this.resultJavaType = resultJavaType;
 		}
 
-		public boolean contains(R result) {
+		private boolean contains(R result) {
 			for ( int i = 0; i < results.size(); i++ ) {
 				if ( resultJavaType.areEqual( results.get( i ), result ) ) {
 					return true;
 				}
 			}
 			return false;
+		}
+
+		public boolean addUnique(R result) {
+			if ( contains( result ) ) {
+				return false;
+			}
+			results.add( result );
+			return true;
 		}
 
 		public void add(R result) {
@@ -134,20 +141,22 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 	}
 
 	private static class EntityResult<R> extends Results<R> {
-		private final Set<R> added = new IdentitySet<>();
+		private static final Object DUMP_VALUE = new Object();
+
+		private final IdentityHashMap<R, Object> added = new IdentityHashMap<>();
 
 		public EntityResult(JavaType resultJavaType) {
 			super( resultJavaType );
 		}
 
-		public boolean contains(R result) {
-			return added.contains( result );
+		public boolean addUnique(R result) {
+			if ( added.put( result, DUMP_VALUE ) == null ) {
+				super.add( result );
+				return true;
+			}
+			return false;
 		}
 
-		public void add(R result) {
-			super.add( result );
-			added.add( result );
-		}
 	}
 
 	@Override
@@ -263,19 +272,14 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			Results<R> results,
 			RowProcessingStateStandardImpl rowProcessingState,
 			boolean throwException) {
-		if ( results.contains( result ) ) {
-			if ( throwException && !rowProcessingState.hasCollectionInitializers ) {
-				throw new HibernateException(
-						String.format(
-								Locale.ROOT,
-								"Duplicate row was found and `%s` was specified",
-								UniqueSemantic.ASSERT
-						)
-				);
-			}
-		}
-		else {
-			results.add( result );
+		if ( !results.addUnique( result ) && throwException && !rowProcessingState.hasCollectionInitializers ) {
+			throw new HibernateException(
+					String.format(
+							Locale.ROOT,
+							"Duplicate row was found and `%s` was specified",
+							UniqueSemantic.ASSERT
+					)
+			);
 		}
 	}
 

@@ -19,6 +19,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
@@ -64,7 +65,8 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 
 	@Override
 	public List<R> performList(DomainQueryExecutionContext executionContext) {
-		if ( executionContext.getQueryOptions().getEffectiveLimit().getMaxRowsJpa() == 0 ) {
+		final QueryOptions queryOptions = executionContext.getQueryOptions();
+		if ( queryOptions.getEffectiveLimit().getMaxRowsJpa() == 0 ) {
 			return Collections.emptyList();
 		}
 		final List<JdbcParameterBinder> jdbcParameterBinders;
@@ -105,7 +107,9 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 				jdbcParameterBindings,
 				SqmJdbcExecutionContextAdapter.usingLockingAndPaging( executionContext ),
 				null,
-				ListResultsConsumer.UniqueSemantic.NEVER
+				queryOptions.getUniqueSemantic() == null ?
+						ListResultsConsumer.UniqueSemantic.NEVER :
+						queryOptions.getUniqueSemantic()
 		);
 	}
 

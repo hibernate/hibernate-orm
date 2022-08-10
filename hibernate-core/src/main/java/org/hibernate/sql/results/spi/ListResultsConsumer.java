@@ -191,7 +191,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			}
 
 			final Results<R> results;
-			if ( isEnityResultType ) {
+			if ( ( uniqueSemantic == UniqueSemantic.ALLOW || uniqueSemantic == UniqueSemantic.FILTER ) && isEnityResultType ) {
 				results = new EntityResult<>( domainResultJavaType );
 			}
 			else {

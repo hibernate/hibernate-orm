@@ -259,6 +259,12 @@ public class InheritanceState {
 						return AccessType.FIELD;
 					}
 				}
+				for ( XProperty prop : xclass.getDeclaredProperties( AccessType.RECORD.getType() ) ) {
+					final boolean isEmbeddedId = prop.isAnnotationPresent( EmbeddedId.class );
+					if ( prop.isAnnotationPresent( Id.class ) || isEmbeddedId ) {
+						return AccessType.RECORD;
+					}
+				}
 			}
 		}
 		throw new AnnotationException( "No identifier specified for entity: " + clazz );

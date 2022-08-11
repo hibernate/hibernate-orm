@@ -27,6 +27,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
@@ -568,6 +569,10 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		if ( originalPropertyOrder != ArrayHelper.EMPTY_INT_ARRAY ) {
 			return originalPropertyOrder;
 		}
+		// Don't sort the properties for a simple record
+		if ( isSimpleRecord() ) {
+			return this.originalPropertyOrder = null;
+		}
 		final int[] originalPropertyOrder;
 		// We need to capture the original property order if this is an alternate unique key or embedded component property
 		// to be able to sort the other side of the foreign key accordingly
@@ -602,6 +607,25 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		}
 		propertiesListModified();
 		return this.originalPropertyOrder = originalPropertyOrder;
+	}
+
+	private boolean isSimpleRecord() {
+		// A simple record is given, when the properties match the order of the record component names
+		final Class<?> componentClass = resolveComponentClass();
+		if ( componentClass == null || !ReflectHelper.isRecord( componentClass ) ) {
+			return false;
+		}
+		final String[] recordComponentNames = ReflectHelper.getRecordComponentNames( componentClass );
+		if ( recordComponentNames.length != properties.size() ) {
+			return false;
+		}
+		for ( int i = 0; i < recordComponentNames.length; i++ ) {
+			if ( !recordComponentNames[i].equals( properties.get( i ).getName() ) ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	public Class<? extends EmbeddableInstantiator> getCustomInstantiator() {

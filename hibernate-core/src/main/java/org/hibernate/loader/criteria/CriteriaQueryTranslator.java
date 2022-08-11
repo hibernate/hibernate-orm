@@ -9,12 +9,10 @@ package org.hibernate.loader.criteria;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,9 +27,7 @@ import org.hibernate.QueryException;
 import org.hibernate.criterion.CriteriaQuery;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.EnhancedProjection;
-import org.hibernate.criterion.ParameterInfoCollector;
 import org.hibernate.criterion.Projection;
-import org.hibernate.engine.query.spi.OrdinalParameterDescriptor;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -560,24 +556,27 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	}
 
 	@Override
-	public String[] getColumns(
-			String propertyName,
-			Criteria subcriteria) throws HibernateException {
+	public String[] getColumns(String propertyName, Criteria subcriteria) throws HibernateException {
 		try {
 			return getPropertyMapping( getEntityName( subcriteria, propertyName ) )
 					.toColumns( getSQLAlias( subcriteria, propertyName ), getPropertyName( propertyName ) );
 		}
 		catch (QueryException qe) {
 			if ( propertyName.indexOf( '.' ) > 0 ) {
-				final String root = StringHelper.root( propertyName );
-				final CriteriaInfoProvider pathInfo = getPathInfo( root );
+				final String propertyRootName = StringHelper.root( propertyName );
+				final CriteriaInfoProvider pathInfo = getPathInfo( propertyRootName );
 				final PropertyMapping propertyMapping = pathInfo.getPropertyMapping();
 				if ( propertyMapping instanceof EntityPersister ) {
-					final String name = propertyName.substring( root.length() + 1 );
-					EntityPersister entityPersister = (EntityPersister) propertyMapping;
-					if ( entityPersister.getIdentifierPropertyName().equals( name )  ) {
-						final Criteria criteria = addInnerJoin( subcriteria, root, pathInfo );
-						return propertyMapping.toColumns( getSQLAlias( criteria, name ), name );
+					final String name = propertyName.substring( propertyRootName.length() + 1 );
+					if ( ( (EntityPersister) propertyMapping ).getIdentifierPropertyName().equals( name ) ) {
+						final Criteria associationPathCriteria = associationPathCriteriaMap.get( propertyRootName );
+						if ( associationPathCriteria == null ) {
+							final Criteria criteria = addInnerJoin( subcriteria, propertyRootName, pathInfo );
+							return propertyMapping.toColumns( getSQLAlias( criteria, name ), name );
+						}
+						else {
+							return propertyMapping.toColumns( getSQLAlias( associationPathCriteria, name ), name );
+						}
 					}
 				}
 				throw qe;
@@ -589,7 +588,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	}
 
 	private Criteria addInnerJoin(Criteria subcriteria, String root, CriteriaInfoProvider pathInfo) {
-		final Criteria criteria = subcriteria.createCriteria( root, root, JoinType.INNER_JOIN);
+		final Criteria criteria = subcriteria.createCriteria( root, root, JoinType.INNER_JOIN );
 		aliasCriteriaMap.put( root, criteria );
 		associationPathCriteriaMap.put( root, criteria );
 		associationPathJoinTypesMap.put( root, JoinType.INNER_JOIN );
@@ -659,8 +658,28 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	@Override
 	public Type getType(Criteria subcriteria, String propertyName)
 			throws HibernateException {
-		return getPropertyMapping( getEntityName( subcriteria, propertyName ) )
-				.toType( getPropertyName( propertyName ) );
+		try {
+			return getPropertyMapping( getEntityName( subcriteria, propertyName ) )
+					.toType( getPropertyName( propertyName ) );
+		}
+		catch (QueryException qe) {
+			if ( propertyName.indexOf( '.' ) > 0 ) {
+				final String propertyRootName = StringHelper.root( propertyName );
+				final String name = propertyName.substring( propertyRootName.length() + 1 );
+				final Criteria associationPathCriteria = associationPathCriteriaMap.get( propertyRootName );
+				if ( associationPathCriteria != null ) {
+					final PropertyMapping propertyMapping = getPropertyMapping(
+							getEntityName( associationPathCriteria, propertyRootName )
+					);
+					if ( propertyMapping instanceof EntityPersister
+							&& ( (EntityPersister) propertyMapping ).getIdentifierPropertyName().equals( name ) ) {
+						return propertyMapping.toType( getPropertyName( name ) );
+					}
+				}
+				throw qe;
+			}
+			throw qe;
+		}
 	}
 
 	/**

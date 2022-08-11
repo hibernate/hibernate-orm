@@ -25,7 +25,12 @@ public enum AccessType {
 	/**
 	 * Access to value via field
 	 */
-	FIELD( "field" );
+	FIELD( "field" ),
+
+	/**
+	 * Access to value via record component accessor
+	 */
+	RECORD( "record" );
 
 	private final String accessType;
 
@@ -58,6 +63,9 @@ public enum AccessType {
 		}
 		else if ( PROPERTY.getType().equals( externalName ) ) {
 			return PROPERTY;
+		}
+		else if ( RECORD.getType().equals( externalName ) ) {
+			return RECORD;
 		}
 		else {
 			// TODO historically if the externalName string could not be matched default access was used. Maybe this should be an exception though!?

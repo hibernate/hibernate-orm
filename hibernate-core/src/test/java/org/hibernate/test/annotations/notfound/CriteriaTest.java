@@ -1,13 +1,14 @@
 package org.hibernate.test.annotations.notfound;
 
 import java.util.List;
+import javax.persistence.Column;
 import javax.persistence.ConstraintMode;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import org.hibernate.Criteria;
@@ -19,6 +20,7 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.PropertyProjection;
 import org.hibernate.criterion.Restrictions;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -27,14 +29,18 @@ import org.junit.Test;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+@TestForIssue(jiraKey = "HHH-15425")
 public class CriteriaTest extends BaseCoreFunctionalTestCase {
 
 	private Long personId = 1l;
 	private Long addressId = 2l;
 
+	private Long personId2 = 3l;
+	private Long addressId2 = 4l;
+
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Person.class, Address.class };
+		return new Class[] { Person.class, Address.class, Street.class };
 	}
 
 	@Before
@@ -46,12 +52,18 @@ public class CriteriaTest extends BaseCoreFunctionalTestCase {
 
 					session.save( address );
 					session.save( person );
+
+					Address address2 = new Address( addressId2, "Via Marconi, Rome" );
+					Person person2 = new Person( personId2, "Fab", address2 );
+
+					session.save( address2 );
+					session.save( person2 );
 				}
 		);
 
 		inTransaction(
 				session ->
-						session.createNativeQuery( "update PERSON_TABLE set address_id = 100" ).executeUpdate()
+						session.createNativeQuery( "update PERSON_TABLE set DDID = 100 where id = 1" ).executeUpdate()
 		);
 	}
 
@@ -76,7 +88,7 @@ public class CriteriaTest extends BaseCoreFunctionalTestCase {
 					criteria.setProjection( projList );
 
 					List results = criteria.list();
-					assertThat( results.size(), is( 0 ) );
+					assertThat( results.size(), is( 1 ) );
 				}
 		);
 	}
@@ -120,9 +132,48 @@ public class CriteriaTest extends BaseCoreFunctionalTestCase {
 					criteria.setProjection( projList );
 
 					List results = criteria.list();
-					assertThat( results.size(), is( 1 ) );
+					assertThat( results.size(), is( 2 ) );
 				}
 		);
+	}
+
+	@Test
+	public void selectAssociationIdWithCriteriaAlias() {
+		inTransaction(
+				session -> {
+					Criteria criteria = session.createCriteria( Person.class, "p" );
+					criteria.createAlias( "address", "a" );
+
+					ProjectionList projList = Projections.projectionList();
+
+					projList.add( Projections.property( "address.id" ) );
+					projList.add( Projections.property( "a.street" ) );
+					criteria.setProjection( projList );
+
+					criteria.list();
+				}
+		);
+
+	}
+
+	@Test
+	public void selectAssociationIdWithSubCriteria() {
+		inTransaction(
+				session -> {
+					Criteria criteria = session.createCriteria( Person.class, "p" );
+					Criteria addressCriteria = criteria.createCriteria( "address", "a" );
+					addressCriteria.createAlias( "street", "s" );
+
+					ProjectionList projList = Projections.projectionList();
+
+					projList.add( Projections.property( "address.id" ) );
+					projList.add( Projections.property( "a.street" ) );
+					criteria.setProjection( projList );
+
+					criteria.list();
+				}
+		);
+
 	}
 
 	@Test
@@ -146,9 +197,12 @@ public class CriteriaTest extends BaseCoreFunctionalTestCase {
 
 		String name;
 
-		@OneToOne(fetch = FetchType.LAZY)
+		@Column(name = "DDID")
+		Long addressId;
+
+		@ManyToOne(fetch = FetchType.LAZY)
 		@NotFound(action = NotFoundAction.IGNORE)
-		@JoinColumn(foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT))
+		@JoinColumn(name = "DDID", insertable = false, updatable = false, foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT))
 		public Address address;
 
 		public Person() {
@@ -157,6 +211,7 @@ public class CriteriaTest extends BaseCoreFunctionalTestCase {
 		public Person(Long id, String name, Address address) {
 			this.id = id;
 			this.name = name;
+			this.addressId = address.getId();
 			this.address = address;
 		}
 	}
@@ -165,9 +220,13 @@ public class CriteriaTest extends BaseCoreFunctionalTestCase {
 	@Table(name = "ADDRESS_TABLE")
 	public static class Address {
 		@Id
+		@Column(name = "DDID")
 		private Long id;
 
 		String address;
+
+		@ManyToOne(fetch = FetchType.LAZY)
+		public Street street;
 
 		public Address() {
 		}
@@ -176,5 +235,27 @@ public class CriteriaTest extends BaseCoreFunctionalTestCase {
 			this.id = id;
 			this.address = address;
 		}
+
+		public Long getId() {
+			return id;
+		}
+
+		public String getAddress() {
+			return address;
+		}
+
+		public Street getStreet() {
+			return street;
+		}
 	}
+
+	@Entity(name = "Street")
+	@Table(name = "TABLE_STREET")
+	public static class Street {
+		@Id
+		private Long id;
+
+		String name;
+	}
+
 }

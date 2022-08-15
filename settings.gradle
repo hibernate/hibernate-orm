@@ -177,7 +177,7 @@ dependencyResolutionManagement {
             alias( "oracle" ).to( "com.oracle.database.jdbc", "ojdbc8" ).versionRef( "oracle" )
             alias( "oracleXml" ).to( "com.oracle.database.xml", "xdb" ).versionRef( "oracle" )
             alias( "oracleXmlParser" ).to( "com.oracle.database.xml", "xmlparserv2" ).versionRef( "oracle" )
-            alias( "mssql" ).to( "com.microsoft.sqlserver", "mssql-jdbc" ).version( "7.2.1.jre8" )
+            alias( "mssql" ).to( "com.microsoft.sqlserver", "mssql-jdbc" ).version( "11.2.0.jre11" )
             alias( "db2" ).to( "com.ibm.db2", "jcc" ).version( "11.5.7.0" )
             alias( "hana" ).to( "com.sap.cloud.db.jdbc", "ngdbc" ).version( "2.4.59" )
             alias( "sybase" ).to( "net.sourceforge.jtds", "jtds" ).version( "1.3.1" )

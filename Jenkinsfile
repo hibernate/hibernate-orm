@@ -161,7 +161,7 @@ stage('Build') {
 									state[buildEnv.tag]['containerName'] = "db2"
 									break;
 								case "mssql":
-									docker.image('mcr.microsoft.com/mssql/server:2017-CU13').pull()
+									docker.image('mcr.microsoft.com/mssql/server@sha256:f54a84b8a802afdfa91a954e8ddfcec9973447ce8efec519adf593b54d49bedf').pull()
 									sh "./docker_db.sh mssql"
 									state[buildEnv.tag]['containerName'] = "mssql"
 									break;

@@ -177,7 +177,8 @@ EOF
 
 mssql() {
     $CONTAINER_CLI rm -f mssql || true
-    $CONTAINER_CLI run --name mssql -d -p 1433:1433 -e "SA_PASSWORD=Hibernate_orm_test" -e ACCEPT_EULA=Y mcr.microsoft.com/mssql/server:2017-CU13
+    #This sha256 matches a specific tag of mcr.microsoft.com/mssql/server:2019-latest :
+    $CONTAINER_CLI run --name mssql -d -p 1433:1433 -e "SA_PASSWORD=Hibernate_orm_test" -e ACCEPT_EULA=Y mcr.microsoft.com/mssql/server@sha256:f54a84b8a802afdfa91a954e8ddfcec9973447ce8efec519adf593b54d49bedf
     sleep 5
     n=0
     until [ "$n" -ge 5 ]

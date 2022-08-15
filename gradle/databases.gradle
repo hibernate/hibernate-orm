@@ -218,7 +218,7 @@ ext {
                         'jdbc.driver': 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
-                        'jdbc.url'   : 'jdbc:sqlserver://' + dbHost + ';instance=SQLEXPRESS;databaseName=hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:sqlserver://' + dbHost + ';instance=SQLEXPRESS;databaseName=hibernate_orm_test;trustServerCertificate=true',
                         'connection.init_sql' : ''
                 ],
                 mssql_ci : [
@@ -226,7 +226,7 @@ ext {
                         'jdbc.driver': 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
                         'jdbc.user'  : 'sa',
                         'jdbc.pass'  : 'Hibernate_orm_test',
-                        'jdbc.url'   : 'jdbc:sqlserver://' + dbHost + ';databaseName=hibernate_orm_test;sendTimeAsDatetime=false',
+                        'jdbc.url'   : 'jdbc:sqlserver://' + dbHost + ';databaseName=hibernate_orm_test;sendTimeAsDatetime=false;trustServerCertificate=true',
                         'connection.init_sql' : ''
                 ],
                 informix : [

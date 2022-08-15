@@ -58,7 +58,7 @@ public class SQLServerStoredProcedureCrossDatabaseTest {
 
 		String[] tokens = url.split( DATABASE_NAME_TOKEN );
 
-		url = tokens[0] + DATABASE_NAME_TOKEN + DATABASE_NAME;
+		url = tokens[0] + DATABASE_NAME_TOKEN + DATABASE_NAME + ";trustServerCertificate=true";
 
 		doInAutoCommit( Collections.singletonMap( AvailableSettings.URL, url ),
 						"DROP PROCEDURE sp_square_number",

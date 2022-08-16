@@ -161,7 +161,7 @@ dependencyResolutionManagement {
         }
         dbLibs {
             version( "h2", "2.1.210" )
-            version( "pgsql", "42.2.16" )
+            version( "pgsql", "42.4.1" )
             version( "mysql", "8.0.27" )
             version( "oracle", "21.3.0.0" )
 

@@ -21,6 +21,7 @@ import org.hibernate.sql.results.spi.RowReader;
  */
 public class ScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
 	private R currentRow;
+	private final boolean isForwardOnly;
 
 	public ScrollableResultsImpl(
 			JdbcValues jdbcValues,
@@ -28,6 +29,25 @@ public class ScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
 			JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState,
 			RowProcessingStateStandardImpl rowProcessingState,
 			RowReader<R> rowReader,
+			SharedSessionContractImplementor persistenceContext) {
+		this(
+				jdbcValues,
+				processingOptions,
+				jdbcValuesSourceProcessingState,
+				rowProcessingState,
+				rowReader,
+				false,
+				persistenceContext
+		);
+	}
+
+	public ScrollableResultsImpl(
+			JdbcValues jdbcValues,
+			JdbcValuesSourceProcessingOptions processingOptions,
+			JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState,
+			RowProcessingStateStandardImpl rowProcessingState,
+			RowReader<R> rowReader,
+			boolean forwardOnly,
 			SharedSessionContractImplementor persistenceContext) {
 		super(
 				jdbcValues,
@@ -37,6 +57,7 @@ public class ScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
 				rowReader,
 				persistenceContext
 		);
+		isForwardOnly = forwardOnly;
 	}
 
 	@Override
@@ -119,6 +140,9 @@ public class ScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
 	private void prepareCurrentRow(boolean underlyingScrollSuccessful) {
 		if ( !underlyingScrollSuccessful ) {
 			currentRow = null;
+			if ( isForwardOnly ) {
+				close();
+			}
 			return;
 		}
 

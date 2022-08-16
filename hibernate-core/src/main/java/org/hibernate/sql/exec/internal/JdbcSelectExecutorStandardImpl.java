@@ -58,6 +58,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.results.spi.ForwardOnlyScrollableResultConsumer;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.ResultsConsumer;
 import org.hibernate.sql.results.spi.RowReader;
@@ -122,7 +123,9 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 						false,
 						scrollMode
 				),
-				ScrollableResultsConsumer.instance()
+				scrollMode == ScrollMode.FORWARD_ONLY ?
+						ForwardOnlyScrollableResultConsumer.instance() :
+						ScrollableResultsConsumer.instance()
 		);
 	}
 

@@ -55,7 +55,7 @@ public class BasicStreamTest {
 						assertThat( session.getJdbcCoordinator()
 											.getLogicalConnection()
 											.getResourceRegistry()
-											.hasRegisteredResources(), is( true ) );
+											.hasRegisteredResources(), is( false ) );
 					}
 					finally {
 						stream.close();
@@ -172,7 +172,7 @@ public class BasicStreamTest {
 						assertThat( session.getJdbcCoordinator()
 											.getLogicalConnection()
 											.getResourceRegistry()
-											.hasRegisteredResources(), is( true ) );
+											.hasRegisteredResources(), is( false ) );
 					}
 
 					assertThat( session.getJdbcCoordinator()

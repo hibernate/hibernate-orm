@@ -108,6 +108,7 @@ public class OneToOneSecondPass implements SecondPass {
 
 		PropertyBinder binder = new PropertyBinder();
 		binder.setName( propertyName );
+		binder.setProperty( inferredData.getProperty() );
 		binder.setValue( value );
 		binder.setCascade( cascadeStrategy );
 		binder.setAccessType( inferredData.getDefaultAccess() );

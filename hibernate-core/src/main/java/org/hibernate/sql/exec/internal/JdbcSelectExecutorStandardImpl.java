@@ -228,6 +228,12 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		final Limit limit = queryOptions.getLimit();
 
 		return new ExecutionContext() {
+
+			@Override
+			public boolean isScrollResult() {
+				return true;
+			}
+
 			@Override
 			public QueryOptions getQueryOptions() {
 

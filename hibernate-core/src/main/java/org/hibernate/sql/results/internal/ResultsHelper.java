@@ -66,6 +66,12 @@ public class ResultsHelper {
 
 		final List<DomainResultAssembler<?>> assemblers = jdbcValues.getValuesMapping().resolveAssemblers(
 				new AssemblerCreationState() {
+
+					@Override
+					public boolean isScrollResult() {
+						return executionContext.isScrollResult();
+					}
+
 					@Override
 					public LockMode determineEffectiveLockMode(String identificationVariable) {
 						return lockOptions.getEffectiveLockMode( identificationVariable );

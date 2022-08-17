@@ -18,6 +18,10 @@ import org.hibernate.sql.ast.spi.SqlAstCreationContext;
  */
 public interface AssemblerCreationState {
 
+	default boolean isScrollResult() {
+		return false;
+	}
+
 	LockMode determineEffectiveLockMode(String identificationVariable);
 
 	Initializer resolveInitializer(

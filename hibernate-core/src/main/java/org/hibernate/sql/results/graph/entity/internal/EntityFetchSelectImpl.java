@@ -69,7 +69,7 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 								keyResult.createResultAssembler( parentAccess, creationState )
 						);
 					}
-					if ( entityPersister.isBatchLoadable() ) {
+					if ( entityPersister.isBatchLoadable() && !creationState.isScrollResult() ) {
 						return new BatchEntitySelectFetchInitializer(
 								parentAccess,
 								fetchedAttribute,

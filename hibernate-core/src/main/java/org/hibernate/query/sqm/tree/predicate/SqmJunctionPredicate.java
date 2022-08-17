@@ -11,9 +11,7 @@ import java.util.List;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.sql.ast.tree.predicate.Junction;
 
 import jakarta.persistence.criteria.Expression;
 
@@ -88,8 +86,7 @@ public class SqmJunctionPredicate extends AbstractSqmPredicate {
 
 	@Override
 	public List<Expression<Boolean>> getExpressions() {
-		//noinspection unchecked
-		return (List<Expression<Boolean>>) (List<?>) predicates;
+		return new ArrayList<>( predicates );
 	}
 
 	@Override

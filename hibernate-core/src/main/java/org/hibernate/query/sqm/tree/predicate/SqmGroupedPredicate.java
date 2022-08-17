@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.query.sqm.NodeBuilder;
@@ -59,7 +59,9 @@ public class SqmGroupedPredicate extends AbstractSqmPredicate {
 
 	@Override
 	public List<Expression<Boolean>> getExpressions() {
-		return Collections.singletonList( subPredicate );
+		final List<Expression<Boolean>> expressions = new ArrayList<>( 1 );
+		expressions.add( subPredicate );
+		return expressions;
 	}
 
 	@Override

@@ -21,6 +21,10 @@ import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
  */
 public interface ExecutionContext {
 
+	default boolean isScrollResult(){
+		return false;
+	}
+
 	SharedSessionContractImplementor getSession();
 
 	QueryOptions getQueryOptions();

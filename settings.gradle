@@ -220,7 +220,7 @@ gradle.ext.baselineJavaVersion = JavaLanguageVersion.of( 11 )
 def GRADLE_MAX_SUPPORTED_BYTECODE_VERSION = 17
 
 // If either 'main.jdk.version' or 'test.jdk.version' is set, enable the toolchain and use the selected jdk.
-// If only one property is set, the other defaults to the baseline Java version (8).
+// If only one property is set, the other defaults to the baseline Java version (11).
 // Note that when toolchain is enabled, you also need to specify
 // the location of the selected jdks
 // (auto-download and auto-detect are disabled in gradle.properties).

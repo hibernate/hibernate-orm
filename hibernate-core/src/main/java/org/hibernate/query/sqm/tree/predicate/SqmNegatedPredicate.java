@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.query.sqm.NodeBuilder;
@@ -58,7 +58,9 @@ public class SqmNegatedPredicate extends AbstractNegatableSqmPredicate {
 
 	@Override
 	public List<Expression<Boolean>> getExpressions() {
-		return Collections.singletonList( wrappedPredicate );
+		final List<Expression<Boolean>> expressions = new ArrayList<>( 1 );
+		expressions.add( wrappedPredicate );
+		return expressions;
 	}
 
 	@Override

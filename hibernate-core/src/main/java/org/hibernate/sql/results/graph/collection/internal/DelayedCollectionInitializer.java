@@ -24,6 +24,7 @@ public class DelayedCollectionInitializer extends AbstractCollectionInitializer 
 			FetchParentAccess parentAccess,
 			DomainResultAssembler<?> collectionKeyResultAssembler) {
 		super( fetchedPath, fetchedMapping, parentAccess, collectionKeyResultAssembler );
+		assert collectionKeyResultAssembler != null;
 	}
 
 	@Override

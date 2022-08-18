@@ -1523,6 +1523,11 @@ public abstract class AbstractCollectionPersister
 		return true;
 	}
 
+	@Override
+	public boolean needsRemove() {
+		return !isInverse() && isRowDeleteEnabled();
+	}
+
 	private BasicBatchKey deleteBatchKey;
 
 	@Override

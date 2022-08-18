@@ -378,7 +378,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.procedureParameterNullPassingEnabled = cfgService.getSetting( PROCEDURE_NULL_PARAM_PASSING, BOOLEAN, false );
 		this.collectionJoinSubqueryRewriteEnabled = cfgService.getSetting( COLLECTION_JOIN_SUBQUERY, BOOLEAN, true );
 		this.omitJoinOfSuperclassTablesEnabled = cfgService.getSetting( OMIT_JOIN_OF_SUPERCLASS_TABLES, BOOLEAN, true );
-		this.metamodelNegativeImportsDeactivationThreshold = cfgService.getSetting(METAMODEL_NEGATIVE_IMPORTS_DEACTIVATION_THRESHOLD, Integer.TYPE, 1000);
+		this.metamodelNegativeImportsDeactivationThreshold = cfgService.getSetting(METAMODEL_NEGATIVE_IMPORTS_DEACTIVATION_THRESHOLD, Integer.class, 1000);
 
 		final RegionFactory regionFactory = serviceRegistry.getService( RegionFactory.class );
 		if ( !NoCachingRegionFactory.class.isInstance( regionFactory ) ) {

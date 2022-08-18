@@ -99,6 +99,14 @@ public interface CollectionPersister extends Restrictable {
 	boolean hasCache();
 
 	/**
+	 * Whether {@link #remove(Object, SharedSessionContractImplementor)} might actually do something,
+	 * or if it is definitely a no-op.
+	 */
+	default boolean needsRemove() {
+		return true;
+	}
+
+	/**
 	 * Get the cache
 	 */
 	CollectionDataAccess getCacheAccessStrategy();

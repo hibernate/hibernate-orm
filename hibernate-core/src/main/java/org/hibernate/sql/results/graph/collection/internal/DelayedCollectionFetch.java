@@ -38,12 +38,7 @@ public class DelayedCollectionFetch extends CollectionFetch {
 			AssemblerCreationState creationState) {
 		// lazy attribute
 		if ( collectionKeyResult == null ) {
-			return new UnfetchedCollectionAssembler(
-					getNavigablePath(),
-					getFetchedMapping(),
-					parentAccess,
-					creationState
-			);
+			return new UnfetchedCollectionAssembler( getFetchedMapping() );
 		}
 		else {
 			return new DelayedCollectionAssembler(

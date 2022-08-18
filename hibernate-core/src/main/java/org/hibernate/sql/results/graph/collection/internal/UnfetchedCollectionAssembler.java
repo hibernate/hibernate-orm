@@ -8,34 +8,17 @@ package org.hibernate.sql.results.graph.collection.internal;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
 public class UnfetchedCollectionAssembler implements DomainResultAssembler {
+
 	private final PluralAttributeMapping fetchedMapping;
 
-	public UnfetchedCollectionAssembler(
-			NavigablePath fetchPath,
-			PluralAttributeMapping fetchedMapping,
-			FetchParentAccess parentAccess,
-			AssemblerCreationState creationState) {
+	public UnfetchedCollectionAssembler(PluralAttributeMapping fetchedMapping) {
 		this.fetchedMapping = fetchedMapping;
-		creationState.resolveInitializer(
-				fetchPath,
-				fetchedMapping,
-				() -> new DelayedCollectionInitializer(
-						fetchPath,
-						fetchedMapping,
-						parentAccess,
-						null
-				)
-
-		);
 	}
 
 	@Override

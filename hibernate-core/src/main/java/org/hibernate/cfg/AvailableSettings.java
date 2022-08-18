@@ -2512,6 +2512,33 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String OMIT_JOIN_OF_SUPERCLASS_TABLES = "hibernate.query.omit_join_of_superclass_tables";
 
 	/**
+	 * <p>
+	 * When queries are parsed, some string tokens can be aliases of class names.
+	 * </p>
+	 * <p>
+	 * For this kind of token, {@link org.hibernate.Metamodel} will first look for its matching class in a cache.
+	 * If the token is not found in the cache, {@link org.hibernate.Metamodel} will try to find the matching class
+	 * using {@link Class#forName(String)}. If {@link Class#forName(String)} fails with {@link ClassNotFoundException}, the
+	 * token will be added to the cache without any matching class to short circuit any future lookup for the same
+	 * token.
+	 * </p>
+	 * <p>
+	 * On some applications, token values can be nondeterministic. This can lead to a memory leak caused by the
+	 * unbounded cache.
+	 * </p>
+	 * <p>
+	 * This setting allows to configure the size of the cache from which the non-matching tokens must stop being cached.
+	 * </p>
+	 * <p>A low value preserves memory but could lead to bad performance.</p>
+	 * <p>A high enhance performance but increase the memory consumption of the cache.</p>
+	 * <p>A negative value means the threshold is disabled.</p>
+	 * <p>The default value is 1000.</p>
+	 *
+	 * @since 5.6
+	 */
+	String METAMODEL_NEGATIVE_IMPORTS_DEACTIVATION_THRESHOLD = "hibernate.metamodel.negative_imports_deactivation_threshold";
+
+	/**
 	 * @deprecated Support for JACC will be removed in 6.0
 	 */
 	@Deprecated

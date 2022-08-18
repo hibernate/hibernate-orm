@@ -352,4 +352,6 @@ public interface SessionFactoryOptions {
 	}
 
 	boolean isOmitJoinOfSuperclassTablesEnabled();
+
+	int getMetamodelNegativeImportsDeactivationThreshold();
 }

@@ -55,7 +55,9 @@ public class QuerySplitterTest extends BaseNonConfigCoreFunctionalTestCase {
 	@TestForIssue(jiraKey = "HHH-14948")
 	public void testMemoryConsumptionOfFailedImportsCache() throws NoSuchFieldException, IllegalAccessException {
 
-		IntStream.range( 0, 1001 )
+		int threshold = sessionFactory().getSessionFactoryOptions()
+				.getMetamodelNegativeImportsDeactivationThreshold();
+		IntStream.range( 0, threshold + 1 )
 				.forEach( i -> QuerySplitter.concreteQueries(
 						"from Employee e join e.company" + i,
 						sessionFactory()
@@ -69,9 +71,7 @@ public class QuerySplitterTest extends BaseNonConfigCoreFunctionalTestCase {
 		//noinspection unchecked
 		Map<String, String> imports = (Map<String, String>) field.get( metamodel );
 
-		// VERY hard-coded, but considering the possibility of a regression of a memory-related issue,
-		// it should be worth it
-		assertEquals( 1000, imports.size() );
+		assertEquals( threshold, imports.size() );
 	}
 
 	@Test

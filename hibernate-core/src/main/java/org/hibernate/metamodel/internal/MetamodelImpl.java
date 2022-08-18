@@ -632,11 +632,13 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 				return className;
 			}
 			catch ( ClassLoadingException cnfe ) {
-				// This check doesn't necessarily mean that the map can't exceed 1000 elements because
-				// new entries might be added _while_ performing the check (making it 1000+ since size() isn't
+				int negativeThreshold = sessionFactory.getSessionFactoryOptions()
+						.getMetamodelNegativeImportsDeactivationThreshold();
+				// This check doesn't necessarily mean that the map can't exceed negativeThreshold elements because
+				// new entries might be added _while_ performing the check (making it negativeThreshold+ since size() isn't
 				// synchronized). Regardless, this would pass as "good enough" to prevent the map from growing
 				// above a certain threshold, thus, avoiding memory issues.
-				if ( imports.size() < 1_000 ) {
+				if (negativeThreshold < 0 || imports.size() < negativeThreshold) {
 					imports.put( className, INVALID_IMPORT );
 				}
 				return null;

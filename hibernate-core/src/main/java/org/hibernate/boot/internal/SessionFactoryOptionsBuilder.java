@@ -100,6 +100,7 @@ import static org.hibernate.cfg.AvailableSettings.JPA_CALLBACKS_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.JTA_TRACK_BY_THREAD;
 import static org.hibernate.cfg.AvailableSettings.LOG_SESSION_METRICS;
 import static org.hibernate.cfg.AvailableSettings.MAX_FETCH_DEPTH;
+import static org.hibernate.cfg.AvailableSettings.METAMODEL_NEGATIVE_IMPORTS_DEACTIVATION_THRESHOLD;
 import static org.hibernate.cfg.AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER;
 import static org.hibernate.cfg.AvailableSettings.NATIVE_EXCEPTION_HANDLING_51_COMPLIANCE;
 import static org.hibernate.cfg.AvailableSettings.OMIT_JOIN_OF_SUPERCLASS_TABLES;
@@ -216,6 +217,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final boolean collectionJoinSubqueryRewriteEnabled;
 	private boolean jdbcStyleParamsZeroBased;
 	private final boolean omitJoinOfSuperclassTablesEnabled;
+	private final int metamodelNegativeImportsDeactivationThreshold;
 
 	// Caching
 	private boolean secondLevelCacheEnabled;
@@ -376,6 +378,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.procedureParameterNullPassingEnabled = cfgService.getSetting( PROCEDURE_NULL_PARAM_PASSING, BOOLEAN, false );
 		this.collectionJoinSubqueryRewriteEnabled = cfgService.getSetting( COLLECTION_JOIN_SUBQUERY, BOOLEAN, true );
 		this.omitJoinOfSuperclassTablesEnabled = cfgService.getSetting( OMIT_JOIN_OF_SUPERCLASS_TABLES, BOOLEAN, true );
+		this.metamodelNegativeImportsDeactivationThreshold = cfgService.getSetting(METAMODEL_NEGATIVE_IMPORTS_DEACTIVATION_THRESHOLD, Integer.TYPE, 1000);
 
 		final RegionFactory regionFactory = serviceRegistry.getService( RegionFactory.class );
 		if ( !NoCachingRegionFactory.class.isInstance( regionFactory ) ) {
@@ -1111,6 +1114,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean isOmitJoinOfSuperclassTablesEnabled() {
 		return omitJoinOfSuperclassTablesEnabled;
+	}
+
+	@Override
+	public int getMetamodelNegativeImportsDeactivationThreshold() {
+		return metamodelNegativeImportsDeactivationThreshold;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

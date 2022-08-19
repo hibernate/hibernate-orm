@@ -101,6 +101,11 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 
 			if ( loadingEntry != null ) {
 				collectionInstance = loadingEntry.getCollectionInstance();
+				if ( collectionInstance.getOwner() == null ) {
+					parentAccess.registerResolutionListener(
+							owner -> collectionInstance.setOwner( owner )
+					);
+				}
 				return;
 			}
 
@@ -108,6 +113,11 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 
 			if ( existing != null ) {
 				collectionInstance = existing;
+				if ( collectionInstance.getOwner() == null ) {
+					parentAccess.registerResolutionListener(
+							owner -> collectionInstance.setOwner( owner )
+					);
+				}
 				return;
 			}
 

@@ -282,7 +282,11 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 				}
 			}
 			else {
-				if ( !session.isTransactionInProgress() ) {
+				/*
+				 Whenever the collection lazy loading is triggered during the loading process,
+				 closing the connection will cause an error when RowProcessingStateStandardImpl#next() will be called.
+				 */
+				if ( !session.isTransactionInProgress() && session.getPersistenceContext().isLoadFinished() ) {
 					session.getJdbcCoordinator().afterTransaction();
 				}
 			}

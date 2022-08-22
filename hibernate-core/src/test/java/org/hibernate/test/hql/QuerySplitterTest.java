@@ -61,17 +61,22 @@ public class QuerySplitterTest extends BaseNonConfigCoreFunctionalTestCase {
 						sessionFactory()
 				) );
 
-		MetamodelImpl metamodel = (MetamodelImpl) sessionFactory().getMetamodel();
+		Map<String, String> validImports = extractMapFromMetamodel("knownValidImports");
+		Map<String, String> invalidImports  = extractMapFromMetamodel("knownInvalidImports");
 
-		Field field = MetamodelImpl.class.getDeclaredField( "imports" );
-		field.setAccessible( true );
-
-		//noinspection unchecked
-		Map<String, String> imports = (Map<String, String>) field.get( metamodel );
+		assertEquals( 2, validImports.size() );
 
 		// VERY hard-coded, but considering the possibility of a regression of a memory-related issue,
 		// it should be worth it
-		assertEquals( 1000, imports.size() );
+		assertEquals( 1_000, invalidImports.size() );
+	}
+
+	private Map<String, String> extractMapFromMetamodel(String fieldName) throws NoSuchFieldException, IllegalAccessException {
+		MetamodelImpl metamodel = (MetamodelImpl) sessionFactory().getMetamodel();
+		Field field = MetamodelImpl.class.getDeclaredField( fieldName );
+		field.setAccessible( true );
+		//noinspection unchecked
+		return (Map<String, String>) field.get( metamodel );
 	}
 
 	@Test

@@ -150,7 +150,6 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 												tableDiscriminatorDetails.getCheckColumnName(),
 												false,
 												null,
-												null,
 												getJdbcMapping()
 										),
 										true

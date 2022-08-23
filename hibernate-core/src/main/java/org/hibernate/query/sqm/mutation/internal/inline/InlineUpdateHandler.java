@@ -452,7 +452,6 @@ public class InlineUpdateHandler implements UpdateHandler {
 									columnReference.getColumnExpression(),
 									false,
 									null,
-									null,
 									columnReference.getJdbcMapping()
 							);
 							columnNames.add( columnReference.getColumnExpression() );
@@ -462,7 +461,6 @@ public class InlineUpdateHandler implements UpdateHandler {
 											rootTableGroup.getPrimaryTableReference(),
 											selectableMapping.getSelectionExpression(),
 											false,
-											null,
 											null,
 											columnReference.getJdbcMapping()
 									)
@@ -485,7 +483,6 @@ public class InlineUpdateHandler implements UpdateHandler {
 						columnReference.getColumnExpression(),
 						false,
 						null,
-						null,
 						columnReference.getJdbcMapping()
 				);
 				columnNames = Collections.singletonList( columnReference.getColumnExpression() );
@@ -496,7 +493,6 @@ public class InlineUpdateHandler implements UpdateHandler {
 								rootTableGroup.getPrimaryTableReference(),
 								( (BasicEntityIdentifierMapping) entityDescriptor.getIdentifierMapping() ).getSelectionExpression(),
 								false,
-								null,
 								null,
 								columnReference.getJdbcMapping()
 						)

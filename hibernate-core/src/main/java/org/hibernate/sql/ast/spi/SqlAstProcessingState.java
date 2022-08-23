@@ -18,4 +18,8 @@ public interface SqlAstProcessingState {
 	SqlExpressionResolver getSqlExpressionResolver();
 
 	SqlAstCreationState getSqlAstCreationState();
+
+	default boolean isTopLevel() {//todo: naming
+		return getParentState() == null;
+	}
 }

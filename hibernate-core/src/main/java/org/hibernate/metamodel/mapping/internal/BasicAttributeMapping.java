@@ -251,6 +251,11 @@ public class BasicAttributeMapping
 	}
 
 	@Override
+	public String getWriteExpression() {
+		return customWriteExpression;
+	}
+
+	@Override
 	public String getColumnDefinition() {
 		return columnDefinition;
 	}

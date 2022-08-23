@@ -14,6 +14,10 @@ import java.util.Map;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -26,6 +30,9 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -36,6 +43,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isOneOf;
+import static org.hamcrest.Matchers.isA;
+import static org.hamcrest.Matchers.notNullValue;
 
 /**
  * @author Christian Beikov
@@ -60,10 +69,37 @@ public abstract class JsonMappingTests {
 		}
 	}
 
-	private final boolean supportsObjectMapKey;
+	private final Map<String, String> stringMap;
+	private final Map<StringNode, StringNode> objectMap;
+	private final List<StringNode> list;
+	private final String json;
 
 	protected JsonMappingTests(boolean supportsObjectMapKey) {
-		this.supportsObjectMapKey = supportsObjectMapKey;
+		this.stringMap = Map.of( "name", "ABC" );
+		this.objectMap = supportsObjectMapKey ? Map.of(
+				new StringNode( "name" ),
+				new StringNode( "ABC" )
+		) : null;
+		this.list = List.of( new StringNode( "ABC" ) );
+		this.json = "{\"name\":\"abc\"}";
+	}
+
+	@BeforeEach
+	public void setup(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
+					session.persist( new EntityWithJson( 1, stringMap, objectMap, list, json ) );
+				}
+		);
+	}
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
+					session.remove( session.find( EntityWithJson.class, 1 ) );
+				}
+		);
 	}
 
 	@Test
@@ -74,39 +110,56 @@ public abstract class JsonMappingTests {
 		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor( EntityWithJson.class );
 		final JdbcTypeRegistry jdbcTypeRegistry = mappingMetamodel.getTypeConfiguration().getJdbcTypeRegistry();
 
-		final BasicAttributeMapping payloadAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "payload" );
-		final BasicAttributeMapping objectMapAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "objectMap" );
-		final BasicAttributeMapping listAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "list" );
+		final BasicAttributeMapping stringMapAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
+				"stringMap" );
+		final BasicAttributeMapping objectMapAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
+				"objectMap" );
+		final BasicAttributeMapping listAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
+				"list" );
 		final BasicAttributeMapping jsonAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "jsonString" );
 
-		assertThat( payloadAttribute.getJavaType().getJavaTypeClass(), equalTo( Map.class ) );
+		assertThat( stringMapAttribute.getJavaType().getJavaTypeClass(), equalTo( Map.class ) );
 		assertThat( objectMapAttribute.getJavaType().getJavaTypeClass(), equalTo( Map.class ) );
 		assertThat( listAttribute.getJavaType().getJavaTypeClass(), equalTo( List.class ) );
 		assertThat( jsonAttribute.getJavaType().getJavaTypeClass(), equalTo( String.class ) );
 
 		final JdbcType jsonType = jdbcTypeRegistry.getDescriptor( SqlTypes.JSON );
-		assertThat( payloadAttribute.getJdbcMapping().getJdbcType(), is( jsonType ) );
-		assertThat( objectMapAttribute.getJdbcMapping().getJdbcType(), is( jsonType ) );
-		assertThat( listAttribute.getJdbcMapping().getJdbcType(), is( jsonType ) );
-		assertThat( jsonAttribute.getJdbcMapping().getJdbcType(), is( jsonType ) );
+		assertThat( stringMapAttribute.getJdbcMapping().getJdbcType(), isA( (Class<JdbcType>) jsonType.getClass() ) );
+		assertThat( objectMapAttribute.getJdbcMapping().getJdbcType(), isA( (Class<JdbcType>) jsonType.getClass() ) );
+		assertThat( listAttribute.getJdbcMapping().getJdbcType(), isA( (Class<JdbcType>) jsonType.getClass() ) );
+		assertThat( jsonAttribute.getJdbcMapping().getJdbcType(), isA( (Class<JdbcType>) jsonType.getClass() ) );
+	}
 
-		Map<String, String> stringMap = Map.of( "name", "ABC" );
-		Map<StringNode, StringNode> objectMap = supportsObjectMapKey ? Map.of( new StringNode( "name" ), new StringNode( "ABC" ) ) : null;
-		List<StringNode> list = List.of( new StringNode( "ABC" ) );
-		String json = "{\"name\":\"abc\"}";
-		// PostgreSQL returns the JSON slightly formatted
-		String alternativeJson = "{\"name\": \"abc\"}";
-
+	@Test
+	public void verifyReadWorks(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					session.persist( new EntityWithJson( 1, stringMap, objectMap, list, json ) );
+					EntityWithJson entityWithJson = session.find( EntityWithJson.class, 1 );
+					assertThat( entityWithJson.stringMap, is( stringMap ) );
+					assertThat( entityWithJson.objectMap, is( objectMap ) );
+					assertThat( entityWithJson.list, is( list ) );
 				}
 		);
+	}
 
+	@Test
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support comparing CLOBs with the = operator")
+	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "HANA doesn't support comparing LOBs with the = operator")
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase doesn't support comparing LOBs with the = operator")
+	@SkipForDialect(dialectClass = OracleDialect.class, matchSubTypes = true, reason = "Oracle doesn't support comparing JSON with the = operator")
+	public void verifyComparisonWorks(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) ->  {
-					EntityWithJson entityWithJson = session.find( EntityWithJson.class, 1 );
-					assertThat( entityWithJson.payload, is( stringMap ) );
+					// PostgreSQL returns the JSON slightly formatted
+					String alternativeJson = "{\"name\": \"abc\"}";
+					EntityWithJson entityWithJson = session.createQuery(
+									"from EntityWithJson e where e.stringMap = :param",
+									EntityWithJson.class
+							)
+							.setParameter( "param", stringMap )
+							.getSingleResult();
+					assertThat( entityWithJson, notNullValue() );
+					assertThat( entityWithJson.stringMap, is( stringMap ) );
 					assertThat( entityWithJson.objectMap, is( objectMap ) );
 					assertThat( entityWithJson.list, is( list ) );
 					assertThat( entityWithJson.jsonString, isOneOf( json, alternativeJson ) );
@@ -149,7 +202,7 @@ public abstract class JsonMappingTests {
 
 		//tag::basic-json-example[]
 		@JdbcTypeCode( SqlTypes.JSON )
-		private Map<String, String> payload;
+		private Map<String, String> stringMap;
 		//end::basic-json-example[]
 
 		@JdbcTypeCode( SqlTypes.JSON )
@@ -166,12 +219,12 @@ public abstract class JsonMappingTests {
 
 		public EntityWithJson(
 				Integer id,
-				Map<String, String> payload,
+				Map<String, String> stringMap,
 				Map<StringNode, StringNode> objectMap,
 				List<StringNode> list,
 				String jsonString) {
 			this.id = id;
-			this.payload = payload;
+			this.stringMap = stringMap;
 			this.objectMap = objectMap;
 			this.list = list;
 			this.jsonString = jsonString;

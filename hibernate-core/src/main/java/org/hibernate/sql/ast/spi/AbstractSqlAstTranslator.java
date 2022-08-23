@@ -1977,7 +1977,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 								currentCteStatement.getCycleMarkColumn().getColumnExpression(),
 								false,
 								null,
-								null,
 								currentCteStatement.getCycleMarkColumn().getJdbcMapping()
 						);
 						if ( currentCteStatement.getCycleValue().getJdbcMapping() == getBooleanType()
@@ -2020,7 +2019,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						depthColumnName,
 						false,
 						null,
-						null,
 						integerType
 				);
 				visitColumnReference( depthColumnReference );
@@ -2051,7 +2049,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 								recursiveTableReference,
 								currentCteStatement.getSearchColumn().getColumnExpression(),
 								false,
-								null,
 								null,
 								currentCteStatement.getSearchColumn().getJdbcMapping()
 						)
@@ -2164,7 +2161,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						depthColumnName,
 						false,
 						null,
-						null,
 						integerType
 				);
 				visitColumnReference( depthColumnReference );
@@ -2207,7 +2203,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 								recursiveTableReference,
 								currentCteStatement.getSearchColumn().getColumnExpression(),
 								false,
-								null,
 								null,
 								currentCteStatement.getSearchColumn().getJdbcMapping()
 						)
@@ -2352,7 +2347,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					recursiveTableReference,
 					cyclePathColumnName,
 					false,
-					null,
 					null,
 					stringType
 			);
@@ -2499,7 +2493,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					recursiveTableReference,
 					cyclePathColumnName,
 					false,
-					null,
 					null,
 					stringType
 			);
@@ -2919,7 +2912,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 											"c" + i,
 											false,
 											null,
-											null,
 											getIntegerType()
 									)
 							)
@@ -3143,7 +3135,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				(String) null,
 				"c" + index,
 				false,
-				null,
 				null,
 				expression.getExpressionType().getSingleJdbcMapping()
 		);
@@ -5608,7 +5599,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 								columnName,
 								false,
 								null,
-								null,
 								null
 						)
 				);
@@ -5677,7 +5667,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 									subTableGroup.getPrimaryTableReference(),
 									columnName,
 									false,
-									null,
 									null,
 									null
 							)
@@ -5802,7 +5791,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							tableReference,
 							"sort_col_" + i,
 							false,
-							null,
 							null,
 							null
 					);
@@ -6193,7 +6181,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				break;
 			case DEFAULT:
 			default:
-				appendSql( PARAM_MARKER );
+				jdbcParameter.getExpressionType()
+						.getJdbcMappings()
+						.get( 0 )
+						.getJdbcType()
+						.appendWriteExpression( "?", this, getDialect() );
 
 				parameterBinders.add( jdbcParameter.getParameterBinder() );
 				jdbcParameters.addParameter( jdbcParameter );

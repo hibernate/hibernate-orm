@@ -11,9 +11,15 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.FetchMode;
+import org.hibernate.Incubating;
 import org.hibernate.MappingException;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.CompositeType;
+import org.hibernate.type.EntityType;
+import org.hibernate.type.MetaType;
 import org.hibernate.type.Type;
 
 /**
@@ -72,6 +78,59 @@ public interface Value extends Serializable {
 
 	Type getType() throws MappingException;
 
+	@Incubating
+	default JdbcMapping getSelectableType(Mapping factory, int index) throws MappingException {
+		return getType( factory, getType(), index );
+	}
+
+	private JdbcMapping getType(Mapping factory, Type elementType, int index) {
+		if ( elementType instanceof CompositeType ) {
+			final Type[] subtypes = ( (CompositeType) elementType ).getSubtypes();
+			for ( int i = 0; i < subtypes.length; i++ ) {
+				final Type subtype = subtypes[i];
+				final int columnSpan;
+				if ( subtype instanceof EntityType ) {
+					final EntityType entityType = (EntityType) subtype;
+					final Type idType = getIdType( entityType );
+					columnSpan = idType.getColumnSpan( factory );
+				}
+				else {
+					columnSpan = subtype.getColumnSpan( factory );
+				}
+				if ( columnSpan < index ) {
+					index -= columnSpan;
+				}
+				else if ( columnSpan != 0 ) {
+					return getType( factory, subtype, index );
+				}
+			}
+			// Should never happen
+			throw new IllegalStateException( "Type index is past the types column span!" );
+		}
+		else if ( elementType instanceof EntityType ) {
+			final EntityType entityType = (EntityType) elementType;
+			final Type idType = getIdType( entityType );
+			return getType( factory, idType, index );
+		}
+		else if ( elementType instanceof MetaType ) {
+			return (JdbcMapping) ( (MetaType) elementType ).getBaseType();
+		}
+		return (JdbcMapping) elementType;
+	}
+
+	private Type getIdType(EntityType entityType) {
+		final PersistentClass entityBinding = getBuildingContext().getMetadataCollector()
+				.getEntityBinding( entityType.getAssociatedEntityName() );
+		final Type idType;
+		if ( entityType.isReferenceToPrimaryKey() ) {
+			idType = entityBinding.getIdentifier().getType();
+		}
+		else {
+			idType = entityBinding.getProperty( entityType.getRHSUniqueKeyPropertyName() ).getType();
+		}
+		return idType;
+	}
+
 	FetchMode getFetchMode();
 
 	Table getTable();
@@ -105,6 +164,10 @@ public interface Value extends Serializable {
 	boolean[] getColumnUpdateability();
 	boolean hasAnyUpdatableColumns();
 
+	@Incubating
+	default MetadataBuildingContext getBuildingContext() {
+		throw new UnsupportedOperationException( "Value#getBuildingContext is not implemented by: " + getClass().getName() );
+	}
 	ServiceRegistry getServiceRegistry();
 	Value copy();
 

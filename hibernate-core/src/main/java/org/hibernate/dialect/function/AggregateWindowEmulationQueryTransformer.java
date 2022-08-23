@@ -122,7 +122,6 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 					columnName,
 					false,
 					null,
-					null,
 					mapping.getJdbcMapping()
 			);
 			final Expression expression = subSelections.get( i ).getExpression();
@@ -190,7 +189,6 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 							columnName,
 							false,
 							null,
-							null,
 							jdbcMapping
 					);
 					final int subValuesPosition = subSelectClause.getSqlSelections().size();
@@ -252,7 +250,6 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 									columnName,
 									false,
 									null,
-									null,
 									jdbcMapping
 							);
 							final int subValuesPosition = subSelectClause.getSqlSelections().size();
@@ -311,7 +308,6 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 								columnName,
 								false,
 								null,
-								null,
 								jdbcMapping
 						);
 						final int subValuesPosition = subSelectClause.getSqlSelections().size();
@@ -367,7 +363,6 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 							identifierVariable,
 							columnName,
 							false,
-							null,
 							null,
 							mapping.getJdbcMapping()
 					)

@@ -170,6 +170,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		this.loaderName = original.loaderName;
 	}
 
+	@Override
 	public MetadataBuildingContext getBuildingContext() {
 		return buildingContext;
 	}

@@ -662,7 +662,7 @@ public abstract class AbstractEntityPersister
 				else {
 					final Column column = (Column) selectable;
 					colNames[k] = column.getQuotedName( dialect );
-					colWriters[k] = column.getWriteExpr();
+					colWriters[k] = column.getWriteExpr( prop.getValue().getSelectableType( factory, k ), dialect );
 				}
 			}
 			propertyColumnNames[i] = colNames;
@@ -1326,7 +1326,6 @@ public abstract class AbstractEntityPersister
 									rootPkColumnName,
 									false,
 									null,
-									null,
 									selection.getJdbcMapping()
 							)
 					);
@@ -1338,7 +1337,6 @@ public abstract class AbstractEntityPersister
 									joinedTableReference.getIdentificationVariable(),
 									fkColumnName,
 									false,
-									null,
 									null,
 									selection.getJdbcMapping()
 							)
@@ -3061,7 +3059,6 @@ public abstract class AbstractEntityPersister
 						alias,
 						discriminatorExpression,
 						isDiscriminatorFormula(),
-						null,
 						null,
 						discriminatorType.getJdbcMapping()
 				)
@@ -5301,7 +5298,7 @@ public abstract class AbstractEntityPersister
 					null,
 					false,
 					null,
-					null,
+					"?",
 					column.getSqlType(),
 					column.getLength(),
 					column.getPrecision(),
@@ -5330,7 +5327,7 @@ public abstract class AbstractEntityPersister
 				attrColumnExpression = attrColumnNames[0];
 				isAttrColumnExpressionFormula = false;
 				customReadExpr = null;
-				customWriteExpr = null;
+				customWriteExpr = "?";
 				Column column = value.getColumns().get( 0 );
 				columnDefinition = column.getSqlType();
 				length = column.getLength();
@@ -5356,7 +5353,7 @@ public abstract class AbstractEntityPersister
 							creationContext.getTypeConfiguration(),
 							creationContext.getFunctionRegistry()
 					);
-					customWriteExpr = selectable.getCustomWriteExpression();
+					customWriteExpr = selectable.getWriteExpr( (JdbcMapping) attrType, creationContext.getDialect() );
 					Column column = value.getColumns().get( 0 );
 					columnDefinition = column.getSqlType();
 					length = column.getLength();

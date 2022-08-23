@@ -16,6 +16,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -57,7 +58,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 		this.selectionExpression = selectionExpression.intern();
 		this.selectablePath = selectablePath == null ? new SelectablePath( selectionExpression ) : selectablePath;
 		this.customReadExpression = customReadExpression == null ? null : customReadExpression.intern();
-		this.customWriteExpression = customWriteExpression == null ? null : customWriteExpression.intern();
+		this.customWriteExpression = customWriteExpression == null || isFormula ? null : customWriteExpression.intern();
 		this.nullable = nullable;
 		this.insertable = insertable;
 		this.updateable = updateable;
@@ -160,7 +161,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 						? null
 						: parentPath.append( selectableName ),
 				selectable.getCustomReadExpression(),
-				selectable.getCustomWriteExpression(),
+				selectable.getWriteExpr( jdbcMapping, dialect ),
 				columnDefinition,
 				length,
 				precision,
@@ -211,6 +212,11 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 
 	@Override
 	public String getCustomWriteExpression() {
+		return customWriteExpression;
+	}
+
+	@Override
+	public String getWriteExpression() {
 		return customWriteExpression;
 	}
 

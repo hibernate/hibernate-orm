@@ -244,16 +244,16 @@ public class CockroachDialect extends Dialect {
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
-		if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
-			// The following DDL types require that the PGobject class is usable/visible
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
-			ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
 
-			// Prefer jsonb if possible
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
-		}
+		// The following DDL types require that the PGobject class is usable/visible,
+		// or that a special JDBC type implementation exists, that supports wrapping read/write expressions
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
+		ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
+
+		// Prefer jsonb if possible
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
 	}
 
 	@Override
@@ -344,6 +344,17 @@ public class CockroachDialect extends Dialect {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonbJdbcType.INSTANCE );
 			}
+			else {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
+			}
+		}
+		else {
+			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
 		}
 
 		// Force Blob binding to byte[] for CockroachDB

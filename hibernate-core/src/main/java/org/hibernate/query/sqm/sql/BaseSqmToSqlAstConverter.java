@@ -96,6 +96,8 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPathSource;
+import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPath;
@@ -113,8 +115,6 @@ import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.criteria.JpaSearchOrder;
 import org.hibernate.query.derived.AnonymousTupleEntityValuedModelPart;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
-import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;
@@ -4611,7 +4611,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 										columnNames.get( i ),
 										false,
 										null,
-										null,
 										subQueryColumns.get( i ).getJdbcMapping()
 								)
 						);
@@ -4653,7 +4652,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 									identifierVariable,
 									columnNames.get( 0 ),
 									false,
-									null,
 									null,
 									expression.getExpressionType().getSingleJdbcMapping()
 							)
@@ -4757,7 +4755,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 									tableReference.getColumnNames().get( 0 ),
 									false,
 									null,
-									null,
 									sqlSelections.get( 0 ).getExpressionType().getSingleJdbcMapping()
 							)
 					),
@@ -4773,7 +4770,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 									identifierVariable,
 									tableReference.getColumnNames().get( selectionIndex ),
 									false,
-									null,
 									null,
 									selectionMapping.getJdbcMapping()
 							)

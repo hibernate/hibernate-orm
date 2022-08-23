@@ -21,6 +21,7 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.InnoDBStorageEngine;
 import org.hibernate.dialect.MyISAMStorageEngine;
+import org.hibernate.dialect.MySQLCastingJsonJdbcType;
 import org.hibernate.dialect.MySQLServerConfiguration;
 import org.hibernate.dialect.MySQLStorageEngine;
 import org.hibernate.dialect.Replacer;
@@ -630,11 +631,10 @@ public class MySQLLegacyDialect extends Dialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
-		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
-				.getJdbcTypeRegistry();
+		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 
 		if ( getMySQLVersion().isSameOrAfter( 5, 7 ) ) {
-			jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, JsonJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, MySQLCastingJsonJdbcType.INSTANCE );
 		}
 
 		// MySQL requires a custom binder for binding untyped nulls with the NULL type

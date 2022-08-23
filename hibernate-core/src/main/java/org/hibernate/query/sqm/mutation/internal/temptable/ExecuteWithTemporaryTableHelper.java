@@ -80,7 +80,6 @@ public final class ExecuteWithTemporaryTableHelper {
 							// id columns cannot be formulas and cannot have custom read and write expressions
 							false,
 							null,
-							null,
 							column.getJdbcMapping()
 					)
 			);
@@ -230,7 +229,6 @@ public final class ExecuteWithTemporaryTableHelper {
 											temporaryTableColumn.getColumnName(),
 											false,
 											null,
-											null,
 											temporaryTableColumn.getJdbcMapping()
 									)
 							)
@@ -249,7 +247,6 @@ public final class ExecuteWithTemporaryTableHelper {
 												tableReference,
 												selectableMapping.getSelectionExpression(),
 												false,
-												null,
 												null,
 												selectableMapping.getJdbcMapping()
 										)
@@ -273,7 +270,6 @@ public final class ExecuteWithTemporaryTableHelper {
 									idTableReference,
 									idTable.getSessionUidColumn().getColumnName(),
 									false,
-									null,
 									null,
 									idTable.getSessionUidColumn().getJdbcMapping()
 							),

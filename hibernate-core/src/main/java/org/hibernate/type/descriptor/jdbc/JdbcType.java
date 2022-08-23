@@ -15,11 +15,13 @@ import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.query.sqm.CastType;
+import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -158,6 +160,35 @@ public interface JdbcType extends Serializable {
 	 */
 	default String getCheckCondition(String columnName, JavaType<?> javaType, Dialect dialect) {
 		return null;
+	}
+
+	/**
+	 * Wraps the top level selection expression to be able to read values with this JdbcType's ValueExtractor.
+	 * @since 6.2
+	 */
+	@Incubating
+	default Expression wrapTopLevelSelectionExpression(Expression expression) {
+		return expression;
+	}
+
+	/**
+	 * Wraps the write expression to be able to write values with this JdbcType's ValueBinder.
+	 * @since 6.2
+	 */
+	@Incubating
+	default String wrapWriteExpression(String writeExpression, Dialect dialect) {
+		final StringBuilder sb = new StringBuilder( writeExpression.length() );
+		appendWriteExpression( writeExpression, new StringBuilderSqlAppender( sb ), dialect );
+		return sb.toString();
+	}
+
+	/**
+	 * Append the write expression wrapped in a way to be able to write values with this JdbcType's ValueBinder.
+	 * @since 6.2
+	 */
+	@Incubating
+	default void appendWriteExpression(String writeExpression, SqlAppender appender, Dialect dialect) {
+		appender.append( writeExpression );
 	}
 
 	default boolean isInteger() {

@@ -248,16 +248,13 @@ public class PostgreSQLDialect extends Dialect {
 
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( SQLXML, "xml", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
-		if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
-			// The following DDL types require that the PGobject class is usable/visible
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
-			ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
+		ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
 
-			// Prefer jsonb if possible
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
-		}
+		// Prefer jsonb if possible
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
 	}
 
 	@Override
@@ -1316,17 +1313,27 @@ public class PostgreSQLDialect extends Dialect {
 		jdbcTypeRegistry.addDescriptor( XmlJdbcType.INSTANCE );
 
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
+			// HHH-9562
+			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 			if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructJdbcType.INSTANCE );
-			}
-
-			// HHH-9562
-			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
-			if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonbJdbcType.INSTANCE );
 			}
+			else {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingStructJdbcType.INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
+			}
+		}
+		else {
+			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingStructJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
 		}
 
 		// PostgreSQL requires a custom binder for binding untyped nulls as VARBINARY

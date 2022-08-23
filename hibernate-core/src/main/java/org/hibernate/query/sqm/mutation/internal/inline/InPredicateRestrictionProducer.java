@@ -74,7 +74,6 @@ public class InPredicateRestrictionProducer implements MatchingIdRestrictionProd
 					// id columns cannot be formulas and cannot have custom read and write expressions
 					false,
 					null,
-					null,
 					basicIdMapping.getJdbcMapping()
 			);
 			predicate = new InListPredicate( inFixture );

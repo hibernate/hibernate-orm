@@ -9,11 +9,14 @@ package org.hibernate.spatial.dialect.cockroachdb;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.PostgreSQLPGObjectJdbcType;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.FunctionKey;
 import org.hibernate.spatial.HSMessageLogger;
 import org.hibernate.spatial.contributor.ContributorImplementor;
+import org.hibernate.spatial.dialect.postgis.PGCastingGeographyJdbcType;
+import org.hibernate.spatial.dialect.postgis.PGCastingGeometryJdbcType;
 import org.hibernate.spatial.dialect.postgis.PGGeographyJdbcType;
 import org.hibernate.spatial.dialect.postgis.PGGeometryJdbcType;
 import org.hibernate.spatial.dialect.postgis.PostgisSqmFunctionDescriptors;
@@ -29,8 +32,14 @@ public class CockroachDbContributor implements ContributorImplementor {
 	@Override
 	public void contributeJdbcTypes(TypeContributions typeContributions) {
 		HSMessageLogger.SPATIAL_MSG_LOGGER.typeContributions( this.getClass().getCanonicalName() );
-		typeContributions.contributeJdbcType( PGGeometryJdbcType.INSTANCE_WKB_2 );
-		typeContributions.contributeJdbcType( PGGeographyJdbcType.INSTANCE_WKB_2 );
+		if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
+			typeContributions.contributeJdbcType( PGGeometryJdbcType.INSTANCE_WKB_2 );
+			typeContributions.contributeJdbcType( PGGeographyJdbcType.INSTANCE_WKB_2 );
+		}
+		else {
+			typeContributions.contributeJdbcType( PGCastingGeometryJdbcType.INSTANCE_WKB_2 );
+			typeContributions.contributeJdbcType( PGCastingGeographyJdbcType.INSTANCE_WKB_2 );
+		}
 	}
 
 	@Override

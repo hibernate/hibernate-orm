@@ -128,6 +128,7 @@ import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
@@ -397,7 +398,7 @@ public abstract class AbstractCollectionPersister
 			else {
 				Column col = (Column) selectable;
 				elementColumnNames[j] = col.getQuotedName( dialect );
-				elementColumnWriters[j] = col.getWriteExpr();
+				elementColumnWriters[j] = col.getWriteExpr( elementBootDescriptor.getSelectableType( factory, j ), dialect );
 				elementColumnReaders[j] = col.getReadExpr( dialect );
 				elementColumnReaderTemplates[j] = col.getTemplate(
 						dialect,

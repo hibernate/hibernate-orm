@@ -24,6 +24,7 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 
 import org.hibernate.testing.DialectCheck;
 
@@ -330,7 +331,7 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsFormat implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			try {
-				dialect.appendDatetimeFormat( new StringBuilder()::append, "" );
+				dialect.appendDatetimeFormat( new StringBuilderSqlAppender(), "" );
 				return true;
 			}
 			catch (Exception ex) {
@@ -342,7 +343,7 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsTruncateThroughCast implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			try {
-				dialect.appendDatetimeFormat( new StringBuilder()::append, "" );
+				dialect.appendDatetimeFormat( new StringBuilderSqlAppender(), "" );
 				return true;
 			}
 			catch (Exception ex) {

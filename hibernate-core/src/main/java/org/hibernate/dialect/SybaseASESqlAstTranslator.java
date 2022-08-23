@@ -341,7 +341,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 			if ( currentQuerySpec != null && !currentQuerySpec.isRoot()
 					&& (roots = currentQuerySpec.getFromClause().getRoots()).size() == 1
 					&& roots.get( 0 ).getPrimaryTableReference() instanceof UnionTableReference ) {
-				appendSql( columnReference.getExpressionText() );
+				columnReference.appendReadExpression( this );
 			}
 			// for now, use the unqualified form
 			else if ( columnReference.isColumnExpressionFormula() ) {
@@ -359,7 +359,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 			}
 		}
 		else {
-			appendSql( columnReference.getExpressionText() );
+			columnReference.appendReadExpression( this );
 		}
 	}
 

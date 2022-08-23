@@ -10,7 +10,6 @@ import java.util.Collections;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl;
-import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.metamodel.model.domain.internal.JpaMetamodelImpl;
 import org.hibernate.orm.test.jpa.JpaComplianceStub;
 import org.hibernate.query.criteria.ValueHandlingMode;
@@ -20,6 +19,7 @@ import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JdbcDateJavaType;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
@@ -121,26 +121,4 @@ public class InformixDialectTestCase extends BaseUnitTestCase {
 		assertEquals( "today", appender.toString() );
 	}
 
-	private static class StringBuilderSqlAppender implements SqlAppender {
-		private final StringBuilder sb;
-
-		public StringBuilderSqlAppender() {
-			this.sb = new StringBuilder();
-		}
-
-		@Override
-		public void appendSql(String fragment) {
-			sb.append( fragment );
-		}
-
-		@Override
-		public void appendSql(char fragment) {
-			sb.append( fragment );
-		}
-
-		@Override
-		public String toString() {
-			return sb.toString();
-		}
-	}
 }

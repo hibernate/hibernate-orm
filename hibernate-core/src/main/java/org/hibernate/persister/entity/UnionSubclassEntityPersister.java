@@ -51,6 +51,7 @@ import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -520,6 +521,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		// Create a union sub-query for the table names, like generateSubquery(PersistentClass model, Mapping mapping)
 		final StringBuilder buf = new StringBuilder( subquery.length() )
 				.append( "( " );
+		final StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender( buf );
 
 		for ( String name : getSubclassEntityNames() ) {
 			final AbstractEntityPersister persister = (AbstractEntityPersister) metamodel.findEntityDescriptor( name );
@@ -536,9 +538,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 						buf.append( dialect.getSelectClauseNullString( sqlType, getFactory().getTypeConfiguration() ) )
 								.append( " as " );
 					}
-					buf.append(
-							new ColumnReference( (String) null, selectableMapping, getFactory() ).getExpressionText()
-					);
+					new ColumnReference( (String) null, selectableMapping, getFactory() ).appendReadExpression( sqlAppender );
 					buf.append( ", " );
 				}
 				buf.append( persister.getDiscriminatorSQLValue() ).append( " as clazz_" );

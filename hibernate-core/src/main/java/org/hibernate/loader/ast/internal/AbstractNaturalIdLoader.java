@@ -309,11 +309,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				SqlExpressionResolver.createColumnReferenceKey( tableReference, selectableMapping.getSelectionExpression() ),
 				(processingState) -> new ColumnReference(
 						tableReference,
-						selectableMapping.getSelectionExpression(),
-						selectableMapping.isFormula(),
-						selectableMapping.getCustomReadExpression(),
-						selectableMapping.getCustomWriteExpression(),
-						selectableMapping.getJdbcMapping(),
+						selectableMapping,
 						sessionFactory
 				)
 		);

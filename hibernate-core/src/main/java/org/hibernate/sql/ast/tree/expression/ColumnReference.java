@@ -18,6 +18,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignable;
 
@@ -188,6 +189,10 @@ public class ColumnReference implements Expression, Assignable {
 
 	public String getExpressionText() {
 		return readExpression;
+	}
+
+	public void appendReadExpression(SqlAppender appender) {
+		appender.append( getExpressionText() );
 	}
 
 	public String renderSqlFragment(SessionFactoryImplementor sessionFactory) {

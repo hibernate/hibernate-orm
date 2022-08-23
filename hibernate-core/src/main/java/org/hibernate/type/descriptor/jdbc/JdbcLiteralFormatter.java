@@ -10,6 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -33,7 +34,7 @@ public interface JdbcLiteralFormatter<T> extends Serializable {
 	 */
 	default String toJdbcLiteral(T value, Dialect dialect, WrapperOptions wrapperOptions) {
 		final StringBuilder sb = new StringBuilder();
-		appendJdbcLiteral( sb::append, value, dialect, wrapperOptions );
+		appendJdbcLiteral( new StringBuilderSqlAppender( sb ), value, dialect, wrapperOptions );
 		return sb.toString();
 	}
 

@@ -184,7 +184,7 @@ public class SmokeTests {
 					final Expression selectedExpression = sqlSelection.getExpression();
 					assertThat( selectedExpression, instanceOf( ColumnReference.class ) );
 					final ColumnReference columnReference = (ColumnReference) selectedExpression;
-					assertThat( columnReference.renderSqlFragment( scope.getSessionFactory() ), is( "s1_0.gender" ) );
+					assertThat( columnReference.getExpressionText(), is( "s1_0.gender" ) );
 
 					final JdbcMappingContainer selectedExpressible = selectedExpression.getExpressionType();
 					assertThat( selectedExpressible, instanceOf( CustomType.class ) );

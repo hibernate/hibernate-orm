@@ -32,6 +32,7 @@ import jakarta.persistence.Table;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isOneOf;
 
 /**
  * @author Christian Beikov
@@ -73,23 +74,29 @@ public abstract class JsonMappingTests {
 		final BasicAttributeMapping payloadAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "payload" );
 		final BasicAttributeMapping objectMapAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "objectMap" );
 		final BasicAttributeMapping listAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "list" );
+		final BasicAttributeMapping jsonAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "jsonString" );
 
 		assertThat( payloadAttribute.getJavaType().getJavaTypeClass(), equalTo( Map.class ) );
 		assertThat( objectMapAttribute.getJavaType().getJavaTypeClass(), equalTo( Map.class ) );
 		assertThat( listAttribute.getJavaType().getJavaTypeClass(), equalTo( List.class ) );
+		assertThat( jsonAttribute.getJavaType().getJavaTypeClass(), equalTo( String.class ) );
 
 		final JdbcType jsonType = jdbcTypeRegistry.getDescriptor( SqlTypes.JSON );
 		assertThat( payloadAttribute.getJdbcMapping().getJdbcType(), is( jsonType ) );
 		assertThat( objectMapAttribute.getJdbcMapping().getJdbcType(), is( jsonType ) );
 		assertThat( listAttribute.getJdbcMapping().getJdbcType(), is( jsonType ) );
+		assertThat( jsonAttribute.getJdbcMapping().getJdbcType(), is( jsonType ) );
 
 		Map<String, String> stringMap = Map.of( "name", "ABC" );
 		Map<StringNode, StringNode> objectMap = supportsObjectMapKey ? Map.of( new StringNode( "name" ), new StringNode( "ABC" ) ) : null;
 		List<StringNode> list = List.of( new StringNode( "ABC" ) );
+		String json = "{\"name\":\"abc\"}";
+		// PostgreSQL returns the JSON slightly formatted
+		String alternativeJson = "{\"name\": \"abc\"}";
 
 		scope.inTransaction(
 				(session) -> {
-					session.persist( new EntityWithJson( 1, stringMap, objectMap, list ) );
+					session.persist( new EntityWithJson( 1, stringMap, objectMap, list, json ) );
 				}
 		);
 
@@ -99,6 +106,14 @@ public abstract class JsonMappingTests {
 					assertThat( entityWithJson.payload, is( stringMap ) );
 					assertThat( entityWithJson.objectMap, is( objectMap ) );
 					assertThat( entityWithJson.list, is( list ) );
+					assertThat( entityWithJson.jsonString, isOneOf( json, alternativeJson ) );
+					String nativeJson = session.createNativeQuery(
+									"select jsonString from EntityWithJson",
+									String.class
+							)
+							.getResultList()
+							.get( 0 );
+					assertThat( nativeJson, isOneOf( json, alternativeJson ) );
 				}
 		);
 	}
@@ -120,6 +135,9 @@ public abstract class JsonMappingTests {
 		@JdbcTypeCode( SqlTypes.JSON )
 		private List<StringNode> list;
 
+		@JdbcTypeCode( SqlTypes.JSON )
+		private String jsonString;
+
 		public EntityWithJson() {
 		}
 
@@ -127,11 +145,13 @@ public abstract class JsonMappingTests {
 				Integer id,
 				Map<String, String> payload,
 				Map<StringNode, StringNode> objectMap,
-				List<StringNode> list) {
+				List<StringNode> list,
+				String jsonString) {
 			this.id = id;
 			this.payload = payload;
 			this.objectMap = objectMap;
 			this.list = list;
+			this.jsonString = jsonString;
 		}
 	}
 

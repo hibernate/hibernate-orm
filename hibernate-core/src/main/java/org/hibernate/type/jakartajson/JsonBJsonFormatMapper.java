@@ -33,6 +33,9 @@ public final class JsonBJsonFormatMapper implements FormatMapper {
 
 	@Override
 	public <T> T fromString(CharSequence charSequence, JavaType<T> javaType, WrapperOptions wrapperOptions) {
+		if ( javaType.getJavaType() == String.class ) {
+			return (T) charSequence.toString();
+		}
 		try {
 			return jsonb.fromJson( charSequence.toString(), javaType.getJavaType() );
 		}
@@ -43,6 +46,9 @@ public final class JsonBJsonFormatMapper implements FormatMapper {
 
 	@Override
 	public <T> String toString(T value, JavaType<T> javaType, WrapperOptions wrapperOptions) {
+		if ( javaType.getJavaType() == String.class ) {
+			return (String) value;
+		}
 		try {
 			return jsonb.toJson( value, javaType.getJavaType() );
 		}

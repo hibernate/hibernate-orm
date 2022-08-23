@@ -9,6 +9,7 @@ package org.hibernate.sql.ast.tree.expression;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -19,6 +20,7 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignable;
 
@@ -88,23 +90,7 @@ public class ColumnReference implements Expression, Assignable {
 		}
 
 		this.isFormula = isFormula;
-
-		if ( isFormula ) {
-			this.readExpression = this.columnExpression;
-		}
-		else if ( customReadExpression != null ) {
-			if ( this.qualifier == null ) {
-				this.readExpression = StringHelper.replace( customReadExpression, Template.TEMPLATE + ".", "" );
-			}
-			else {
-				this.readExpression = StringHelper.replace( customReadExpression, Template.TEMPLATE, qualifier );
-			}
-		}
-		else {
-			this.readExpression = this.qualifier == null
-					? this.columnExpression
-					: this.qualifier + "." + this.columnExpression;
-		}
+		this.readExpression = customReadExpression;
 
 		if ( isFormula ) {
 			this.writeExpression = null;
@@ -188,15 +174,30 @@ public class ColumnReference implements Expression, Assignable {
 	}
 
 	public String getExpressionText() {
-		return readExpression;
+		final StringBuilder sb = new StringBuilder();
+		appendReadExpression( new StringBuilderSqlAppender( sb ) );
+		return sb.toString();
 	}
 
 	public void appendReadExpression(SqlAppender appender) {
-		appender.append( getExpressionText() );
-	}
-
-	public String renderSqlFragment(SessionFactoryImplementor sessionFactory) {
-		return getExpressionText();
+		if ( isFormula ) {
+			appender.append( columnExpression );
+		}
+		else if ( readExpression != null ) {
+			if ( qualifier == null ) {
+				appender.append( StringHelper.replace( readExpression, Template.TEMPLATE + ".", "" ) );
+			}
+			else {
+				appender.append( StringHelper.replace( readExpression, Template.TEMPLATE, qualifier ) );
+			}
+		}
+		else {
+			if ( qualifier != null ) {
+				appender.append( qualifier );
+				appender.append( '.' );
+			}
+			appender.append( columnExpression );
+		}
 	}
 
 	public JdbcMapping getJdbcMapping() {
@@ -219,7 +220,7 @@ public class ColumnReference implements Expression, Assignable {
 				Locale.ROOT,
 				"%s(%s)",
 				getClass().getSimpleName(),
-				readExpression
+				getExpressionText()
 		);
 	}
 
@@ -233,12 +234,19 @@ public class ColumnReference implements Expression, Assignable {
 		}
 
 		final ColumnReference that = (ColumnReference) o;
-		return readExpression.equals( that.readExpression );
+		return isFormula == that.isFormula
+				&& Objects.equals( qualifier, that.qualifier )
+				&& Objects.equals( columnExpression, that.columnExpression )
+				&& Objects.equals( readExpression, that.readExpression );
 	}
 
 	@Override
 	public int hashCode() {
-		return readExpression.hashCode();
+		int result = qualifier != null ? qualifier.hashCode() : 0;
+		result = 31 * result + ( columnExpression != null ? columnExpression.hashCode() : 0 );
+		result = 31 * result + ( isFormula ? 1 : 0 );
+		result = 31 * result + ( readExpression != null ? readExpression.hashCode() : 0 );
+		return result;
 	}
 
 	@Override

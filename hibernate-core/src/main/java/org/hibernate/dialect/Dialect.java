@@ -133,6 +133,7 @@ import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -2265,7 +2266,7 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String toBooleanValueString(boolean bool) {
 		final StringBuilder sb = new StringBuilder();
-		appendBooleanValueString( sb::append, bool );
+		appendBooleanValueString( new StringBuilderSqlAppender( sb ), bool );
 		return sb.toString();
 	}
 
@@ -3499,7 +3500,7 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String inlineLiteral(String literal) {
 		final StringBuilder sb = new StringBuilder( literal.length() + 2 );
-		appendLiteral( sb::append, literal );
+		appendLiteral( new StringBuilderSqlAppender( sb ), literal );
 		return sb.toString();
 	}
 

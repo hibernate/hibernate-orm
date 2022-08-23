@@ -162,7 +162,7 @@ public class InformixDialect extends Dialect {
 		ddlTypeRegistry.addDescriptor(
 				CapacityDependentDdlType.builder( NVARCHAR, columnType( LONG32NVARCHAR ), this )
 						.withTypeCapacity( 255, "varchar($l)" )
-						.withTypeCapacity( getMaxVarcharLength(), columnType( NVARCHAR ) )
+						.withTypeCapacity( getMaxNVarcharLength(), columnType( NVARCHAR ) )
 						.build()
 		);
 	}

@@ -76,7 +76,7 @@ public class LoaderSqlAstCreationState
 		this.sf = sf;
 		this.processingState = new SqlAstQueryPartProcessingStateImpl(
 				queryPart,
-				this,
+				null,
 				this,
 				() -> Clause.IRRELEVANT,
 				true

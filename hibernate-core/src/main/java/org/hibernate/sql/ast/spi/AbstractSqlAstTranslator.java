@@ -4285,7 +4285,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 		else {
-			appendSql( columnReference.getExpressionText() );
+			columnReference.appendReadExpression( this );
 		}
 	}
 

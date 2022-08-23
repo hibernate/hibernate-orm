@@ -30,6 +30,9 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
+import org.hibernate.dialect.PostgreSQLCastingInetJdbcType;
+import org.hibernate.dialect.PostgreSQLCastingIntervalSecondJdbcType;
+import org.hibernate.dialect.PostgreSQLCastingJsonJdbcType;
 import org.hibernate.dialect.PostgreSQLDriverKind;
 import org.hibernate.dialect.PostgreSQLInetJdbcType;
 import org.hibernate.dialect.PostgreSQLIntervalSecondJdbcType;
@@ -228,19 +231,17 @@ public class CockroachLegacyDialect extends Dialect {
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
-		if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
-			ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
+		ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
 
-			// Prefer jsonb if possible
-			if ( getVersion().isSameOrAfter( 20 ) ) {
-				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
-				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
-			}
-			else {
-				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
-			}
+		// Prefer jsonb if possible
+		if ( getVersion().isSameOrAfter( 20 ) ) {
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
+		}
+		else {
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
 		}
 	}
 
@@ -337,6 +338,27 @@ public class CockroachLegacyDialect extends Dialect {
 				else {
 					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonJdbcType.INSTANCE );
 				}
+			}
+			else {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
+				if ( getVersion().isSameOrAfter( 20, 0 ) ) {
+					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
+					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
+				}
+				else {
+					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSON_INSTANCE );
+				}
+			}
+		}
+		else {
+			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
+			if ( getVersion().isSameOrAfter( 20, 0 ) ) {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
+			}
+			else {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSON_INSTANCE );
 			}
 		}
 

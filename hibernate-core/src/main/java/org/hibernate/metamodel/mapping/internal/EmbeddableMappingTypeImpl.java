@@ -420,7 +420,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						selectablePath,
 						selectable.isFormula(),
 						selectable.getCustomReadExpression(),
-						selectable.getCustomWriteExpression(),
+						selectable.getWriteExpr( ( (BasicType<?>) subtype ).getJdbcMapping(), dialect ),
 						columnDefinition,
 						length,
 						precision,

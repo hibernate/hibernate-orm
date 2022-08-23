@@ -23,23 +23,22 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 /**
- * Specialized type mapping for {@code SQLXML} and the XML SQL data type.
+ * Specialized type mapping for {@code JSON} and the JSON SQL data type.
  *
  * @author Christian Beikov
  */
-public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcType {
+public class JsonAsStringJdbcType extends JsonJdbcType implements AdjustableJdbcType {
 	/**
 	 * Singleton access
 	 */
-	public static final XmlAsStringJdbcType VARCHAR_INSTANCE = new XmlAsStringJdbcType( SqlTypes.LONG32VARCHAR, null );
-	public static final XmlAsStringJdbcType NVARCHAR_INSTANCE = new XmlAsStringJdbcType( SqlTypes.LONG32NVARCHAR, null );
-	public static final XmlAsStringJdbcType CLOB_INSTANCE = new XmlAsStringJdbcType( SqlTypes.CLOB, null );
-	public static final XmlAsStringJdbcType NCLOB_INSTANCE = new XmlAsStringJdbcType( SqlTypes.NCLOB, null );
+	public static final JsonAsStringJdbcType VARCHAR_INSTANCE = new JsonAsStringJdbcType( SqlTypes.LONG32VARCHAR, null );
+	public static final JsonAsStringJdbcType NVARCHAR_INSTANCE = new JsonAsStringJdbcType( SqlTypes.LONG32NVARCHAR, null );
+	public static final JsonAsStringJdbcType CLOB_INSTANCE = new JsonAsStringJdbcType( SqlTypes.CLOB, null );
+	public static final JsonAsStringJdbcType NCLOB_INSTANCE = new JsonAsStringJdbcType( SqlTypes.NCLOB, null );
 
 	private final boolean nationalized;
 	private final int ddlTypeCode;
-
-	public XmlAsStringJdbcType(int ddlTypeCode, EmbeddableMappingType embeddableMappingType) {
+	protected JsonAsStringJdbcType(int ddlTypeCode, EmbeddableMappingType embeddableMappingType) {
 		super( embeddableMappingType );
 		this.ddlTypeCode = ddlTypeCode;
 		this.nationalized = ddlTypeCode == SqlTypes.LONG32NVARCHAR
@@ -47,21 +46,8 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 	}
 
 	@Override
-	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
-			String sqlType,
-			RuntimeModelCreationContext creationContext) {
-		return new XmlAsStringJdbcType( ddlTypeCode, mappingType );
-	}
-
-	@Override
 	public int getJdbcTypeCode() {
 		return nationalized ? SqlTypes.NVARCHAR : SqlTypes.VARCHAR;
-	}
-
-	@Override
-	public int getDefaultSqlTypeCode() {
-		return SqlTypes.SQLXML;
 	}
 
 	@Override
@@ -71,7 +57,7 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 
 	@Override
 	public String toString() {
-		return "XmlAsStringJdbcType";
+		return "JsonAsStringJdbcType";
 	}
 
 	@Override
@@ -89,13 +75,13 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 		}
 		else {
 			if ( needsLob( indicators ) ) {
-				return new XmlAsStringJdbcType(
+				return new JsonAsStringJdbcType(
 						indicators.isNationalized() ? SqlTypes.NCLOB : SqlTypes.CLOB,
 						getEmbeddableMappingType()
 				);
 			}
 			else {
-				return new XmlAsStringJdbcType(
+				return new JsonAsStringJdbcType(
 						indicators.isNationalized() ? SqlTypes.LONG32NVARCHAR : SqlTypes.LONG32VARCHAR,
 						getEmbeddableMappingType()
 				);
@@ -123,56 +109,34 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 	}
 
 	@Override
+	public AggregateJdbcType resolveAggregateJdbcType(
+			EmbeddableMappingType mappingType,
+			String sqlType,
+			RuntimeModelCreationContext creationContext) {
+		return new JsonAsStringJdbcType( ddlTypeCode, mappingType );
+	}
+
+	@Override
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
 		if ( nationalized ) {
 			return new BasicBinder<>( javaType, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					final String xml = ( (XmlAsStringJdbcType) getJdbcType() ).toString(
-							value,
-							getJavaType(),
-							options
-					);
-					st.setNString( index, xml );
+					final String json = ( (JsonAsStringJdbcType) getJdbcType() ).toString( value, getJavaType(), options );
+					st.setNString( index, json );
 				}
 
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					final String xml = ( (XmlAsStringJdbcType) getJdbcType() ).toString(
-							value,
-							getJavaType(),
-							options
-					);
-					st.setNString( name, xml );
+					final String json = ( (JsonAsStringJdbcType) getJdbcType() ).toString( value, getJavaType(), options );
+					st.setNString( name, json );
 				}
 			};
 		}
 		else {
-			return new BasicBinder<>( javaType, this ) {
-				@Override
-				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
-						throws SQLException {
-					final String xml = ( (XmlAsStringJdbcType) getJdbcType() ).toString(
-							value,
-							getJavaType(),
-							options
-					);
-					st.setString( index, xml );
-				}
-
-				@Override
-				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
-						throws SQLException {
-					final String xml = ( (XmlAsStringJdbcType) getJdbcType() ).toString(
-							value,
-							getJavaType(),
-							options
-					);
-					st.setString( name, xml );
-				}
-			};
+			return super.getBinder( javaType );
 		}
 	}
 
@@ -180,66 +144,27 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
 		if ( nationalized ) {
 			return new BasicExtractor<>( javaType, this ) {
-
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-					return getObject( rs.getNString( paramIndex ), options );
+					return fromString( rs.getNString( paramIndex ), getJavaType(), options );
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
 						throws SQLException {
-					return getObject( statement.getNString( index ), options );
+					return fromString( statement.getNString( index ), getJavaType(), options );
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 						throws SQLException {
-					return getObject( statement.getNString( name ), options );
+					return fromString( statement.getNString( name ), getJavaType(), options );
 				}
 
-				private X getObject(String xml, WrapperOptions options) throws SQLException {
-					if ( xml == null ) {
-						return null;
-					}
-					return ( (XmlAsStringJdbcType) getJdbcType() ).fromString(
-							xml,
-							getJavaType(),
-							options
-					);
-				}
 			};
 		}
 		else {
-			return new BasicExtractor<>( javaType, this ) {
-
-				@Override
-				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-					return getObject( rs.getString( paramIndex ), options );
-				}
-
-				@Override
-				protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-					return getObject( statement.getString( index ), options );
-				}
-
-				@Override
-				protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
-						throws SQLException {
-					return getObject( statement.getString( name ), options );
-				}
-
-				private X getObject(String xml, WrapperOptions options) throws SQLException {
-					if ( xml == null ) {
-						return null;
-					}
-					return ( (XmlAsStringJdbcType) getJdbcType() ).fromString(
-							xml,
-							getJavaType(),
-							options
-					);
-				}
-			};
+			return super.getExtractor( javaType );
 		}
 	}
 }

@@ -11,6 +11,10 @@ import java.util.Map;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -23,6 +27,9 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -34,6 +41,8 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isA;
+import static org.hamcrest.Matchers.notNullValue;
 
 /**
  * @author Christian Beikov
@@ -58,10 +67,36 @@ public abstract class XmlMappingTests {
 		}
 	}
 
-	private final boolean supportsObjectMapKey;
+
+	private final Map<String, StringNode> stringMap;
+	private final Map<StringNode, StringNode> objectMap;
+	private final List<StringNode> list;
 
 	protected XmlMappingTests(boolean supportsObjectMapKey) {
-		this.supportsObjectMapKey = supportsObjectMapKey;
+		this.stringMap = Map.of( "name", new StringNode( "ABC" ) );
+		this.objectMap = supportsObjectMapKey ? Map.of(
+				new StringNode( "name" ),
+				new StringNode( "ABC" )
+		) : null;
+		this.list = List.of( new StringNode( "ABC" ) );
+	}
+
+	@BeforeEach
+	public void setup(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
+					session.persist( new EntityWithXml( 1, stringMap, objectMap, list ) );
+				}
+		);
+	}
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
+					session.remove( session.find( EntityWithXml.class, 1 ) );
+				}
+		);
 	}
 
 	@Test
@@ -69,36 +104,55 @@ public abstract class XmlMappingTests {
 		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
-		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor( EntityWithXml.class);
+		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor( EntityWithXml.class );
 		final JdbcTypeRegistry jdbcTypeRegistry = mappingMetamodel.getTypeConfiguration().getJdbcTypeRegistry();
 
-		final BasicAttributeMapping stringMapAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "stringMap" );
-		final BasicAttributeMapping objectMapAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "objectMap" );
-		final BasicAttributeMapping listAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "list" );
+		final BasicAttributeMapping stringMapAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
+				"stringMap" );
+		final BasicAttributeMapping objectMapAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
+				"objectMap" );
+		final BasicAttributeMapping listAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
+				"list" );
 		assertThat( stringMapAttribute.getJavaType().getJavaTypeClass(), equalTo( Map.class ) );
 		assertThat( objectMapAttribute.getJavaType().getJavaTypeClass(), equalTo( Map.class ) );
 		assertThat( listAttribute.getJavaType().getJavaTypeClass(), equalTo( List.class ) );
 
-		final JdbcType xmlType = jdbcTypeRegistry.getDescriptor(SqlTypes.SQLXML);
-		assertThat( stringMapAttribute.getJdbcMapping().getJdbcType(), is( xmlType ) );
-		assertThat( objectMapAttribute.getJdbcMapping().getJdbcType(), is( xmlType ) );
-		assertThat( listAttribute.getJdbcMapping().getJdbcType(), is( xmlType ) );
+		final JdbcType xmlType = jdbcTypeRegistry.getDescriptor( SqlTypes.SQLXML );
+		assertThat( stringMapAttribute.getJdbcMapping().getJdbcType(), isA( (Class<JdbcType>) xmlType.getClass() ) );
+		assertThat( objectMapAttribute.getJdbcMapping().getJdbcType(), isA( (Class<JdbcType>) xmlType.getClass() ) );
+		assertThat( listAttribute.getJdbcMapping().getJdbcType(), isA( (Class<JdbcType>) xmlType.getClass() ) );
+	}
 
-		Map<String, StringNode> stringMap = Map.of( "name", new StringNode( "ABC" ) );
-		Map<StringNode, StringNode> objectMap = supportsObjectMapKey ? Map.of( new StringNode( "name" ), new StringNode( "ABC" ) ) : null;
-		List<StringNode> list = List.of( new StringNode( "ABC" ) );
-		scope.inTransaction(
-				(session) -> {
-					session.persist( new EntityWithXml( 1, stringMap, objectMap, list ) );
-				}
-		);
-
+	@Test
+	public void verifyReadWorks(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
 					EntityWithXml entityWithXml = session.find( EntityWithXml.class, 1 );
 					assertThat( entityWithXml.stringMap, is( stringMap ) );
 					assertThat( entityWithXml.objectMap, is( objectMap ) );
 					assertThat( entityWithXml.list, is( list ) );
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support comparing CLOBs with the = operator")
+	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "HANA doesn't support comparing LOBs with the = operator")
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase doesn't support comparing LOBs with the = operator")
+	@SkipForDialect(dialectClass = OracleDialect.class, matchSubTypes = true, reason = "Oracle doesn't support comparing JSON with the = operator")
+	public void verifyComparisonWorks(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) ->  {
+					EntityWithXml entityWithJson = session.createQuery(
+									"from EntityWithXml e where e.stringMap = :param",
+									EntityWithXml.class
+							)
+							.setParameter( "param", stringMap )
+							.getSingleResult();
+					assertThat( entityWithJson, notNullValue() );
+					assertThat( entityWithJson.stringMap, is( stringMap ) );
+					assertThat( entityWithJson.objectMap, is( objectMap ) );
+					assertThat( entityWithJson.list, is( list ) );
 				}
 		);
 	}

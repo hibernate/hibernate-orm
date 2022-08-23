@@ -33,6 +33,9 @@ public final class JacksonXmlFormatMapper implements FormatMapper {
 
 	@Override
 	public <T> T fromString(CharSequence charSequence, JavaType<T> javaType, WrapperOptions wrapperOptions) {
+		if ( javaType.getJavaType() == String.class ) {
+			return (T) charSequence.toString();
+		}
 		try {
 			return objectMapper.readValue( charSequence.toString(), objectMapper.constructType( javaType.getJavaType() ) );
 		}
@@ -43,6 +46,9 @@ public final class JacksonXmlFormatMapper implements FormatMapper {
 
 	@Override
 	public <T> String toString(T value, JavaType<T> javaType, WrapperOptions wrapperOptions) {
+		if ( javaType.getJavaType() == String.class ) {
+			return (String) value;
+		}
 		try {
 			return objectMapper.writerFor( objectMapper.constructType( javaType.getJavaType() ) )
 					.writeValueAsString( value );

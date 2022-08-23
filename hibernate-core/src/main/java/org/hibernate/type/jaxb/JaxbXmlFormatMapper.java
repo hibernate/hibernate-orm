@@ -51,6 +51,9 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 
 	@Override
 	public <T> T fromString(CharSequence charSequence, JavaType<T> javaType, WrapperOptions wrapperOptions) {
+		if ( javaType.getJavaType() == String.class ) {
+			return (T) charSequence.toString();
+		}
 		try {
 			if ( Map.class.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
 				final JAXBContext context;
@@ -191,6 +194,9 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 
 	@Override
 	public <T> String toString(T value, JavaType<T> javaType, WrapperOptions wrapperOptions) {
+		if ( javaType.getJavaType() == String.class ) {
+			return (String) value;
+		}
 		try {
 			final StringWriter stringWriter = new StringWriter();
 			if ( Map.class.isAssignableFrom( javaType.getJavaTypeClass() ) ) {

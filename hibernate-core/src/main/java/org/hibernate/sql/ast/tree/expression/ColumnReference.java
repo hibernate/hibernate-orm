@@ -37,7 +37,6 @@ public class ColumnReference implements Expression, Assignable {
 	private final SelectablePath selectablePath;
 	private final boolean isFormula;
 	private final String readExpression;
-	private final String customWriteExpression;
 	private final JdbcMapping jdbcMapping;
 
 	public ColumnReference(TableReference tableReference, SelectableMapping selectableMapping) {
@@ -47,7 +46,6 @@ public class ColumnReference implements Expression, Assignable {
 				selectableMapping.getSelectablePath(),
 				selectableMapping.isFormula(),
 				selectableMapping.getCustomReadExpression(),
-				selectableMapping.getCustomWriteExpression(),
 				selectableMapping.getJdbcMapping()
 		);
 	}
@@ -58,7 +56,6 @@ public class ColumnReference implements Expression, Assignable {
 				mapping,
 				null,
 				false,
-				null,
 				null,
 				jdbcMapping
 		);
@@ -71,7 +68,6 @@ public class ColumnReference implements Expression, Assignable {
 				selectableMapping.getSelectablePath(),
 				selectableMapping.isFormula(),
 				selectableMapping.getCustomReadExpression(),
-				selectableMapping.getCustomWriteExpression(),
 				selectableMapping.getJdbcMapping()
 		);
 	}
@@ -83,7 +79,6 @@ public class ColumnReference implements Expression, Assignable {
 				selectableMapping.getSelectablePath(),
 				selectableMapping.isFormula(),
 				selectableMapping.getCustomReadExpression(),
-				selectableMapping.getCustomWriteExpression(),
 				jdbcMapping
 		);
 	}
@@ -93,7 +88,6 @@ public class ColumnReference implements Expression, Assignable {
 			String columnExpression,
 			boolean isFormula,
 			String customReadExpression,
-			String customWriteExpression,
 			JdbcMapping jdbcMapping) {
 		this(
 				tableReference.getIdentificationVariable(),
@@ -101,7 +95,6 @@ public class ColumnReference implements Expression, Assignable {
 				null,
 				isFormula,
 				customReadExpression,
-				customWriteExpression,
 				jdbcMapping
 		);
 	}
@@ -111,9 +104,8 @@ public class ColumnReference implements Expression, Assignable {
 			String columnExpression,
 			boolean isFormula,
 			String customReadExpression,
-			String customWriteExpression,
 			JdbcMapping jdbcMapping) {
-		this( qualifier, columnExpression, null, isFormula, customReadExpression, customWriteExpression, jdbcMapping );
+		this( qualifier, columnExpression, null, isFormula, customReadExpression, jdbcMapping );
 	}
 
 	public ColumnReference(
@@ -122,7 +114,6 @@ public class ColumnReference implements Expression, Assignable {
 			SelectablePath selectablePath,
 			boolean isFormula,
 			String customReadExpression,
-			String customWriteExpression,
 			JdbcMapping jdbcMapping) {
 		this.qualifier = StringHelper.nullIfEmpty( qualifier );
 
@@ -142,15 +133,6 @@ public class ColumnReference implements Expression, Assignable {
 
 		this.isFormula = isFormula;
 		this.readExpression = customReadExpression;
-
-		//TODO: writeExpression is never used, can it be removed?
-		if ( !isFormula && customWriteExpression != null ) {
-			this.customWriteExpression = customWriteExpression;
-		}
-		else {
-			this.customWriteExpression = null;
-		}
-
 		this.jdbcMapping = jdbcMapping;
 	}
 
@@ -173,10 +155,6 @@ public class ColumnReference implements Expression, Assignable {
 
 	public SelectablePath getSelectablePath() {
 		return selectablePath;
-	}
-
-	public String getCustomWriteExpression() {
-		return customWriteExpression;
 	}
 
 	public boolean isColumnExpressionFormula() {

@@ -6,8 +6,12 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -62,4 +66,17 @@ public interface Selectable {
 	String getAlias(Dialect dialect, Table table);
 
 	String getTemplate(Dialect dialect, TypeConfiguration typeConfiguration, SqmFunctionRegistry functionRegistry);
+
+	@Incubating
+	default String getWriteExpr() {
+		final String customWriteExpression = getCustomWriteExpression();
+		return customWriteExpression == null || customWriteExpression.isEmpty()
+				? "?"
+				: customWriteExpression;
+	}
+
+	@Incubating
+	default String getWriteExpr(JdbcMapping jdbcMapping, Dialect dialect) {
+		return jdbcMapping.getJdbcType().wrapWriteExpression( getWriteExpr(), dialect );
+	}
 }

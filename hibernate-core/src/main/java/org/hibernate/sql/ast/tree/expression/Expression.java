@@ -42,4 +42,23 @@ public interface Expression extends SqlAstNode, SqlSelectionProducer {
 				this
 		);
 	}
+
+	default SqlSelection createDomainResultSqlSelection(
+			int jdbcPosition,
+			int valuesArrayPosition,
+			JavaType javaType,
+			TypeConfiguration typeConfiguration) {
+		// Apply possible jdbc type wrapping
+		final Expression expression;
+		final JdbcMappingContainer expressionType = getExpressionType();
+		if ( expressionType == null ) {
+			expression = this;
+		}
+		else {
+			expression = expressionType.getJdbcMappings().get( 0 ).getJdbcType().wrapTopLevelSelectionExpression( this );
+		}
+		return expression == this
+			? createSqlSelection( jdbcPosition, valuesArrayPosition, javaType, typeConfiguration )
+			: new SqlSelectionImpl( jdbcPosition, valuesArrayPosition, expression );
+	}
 }

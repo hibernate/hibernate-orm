@@ -268,7 +268,6 @@ public class CteInsertHandler implements InsertHandler {
 									rowNumberColumn.getColumnExpression(),
 									false,
 									null,
-									null,
 									rowNumberColumn.getJdbcMapping()
 							);
 							insertStatement.getTargetColumns().set(
@@ -322,7 +321,6 @@ public class CteInsertHandler implements InsertHandler {
 													columnReference.getColumnExpression(),
 													false,
 													null,
-													null,
 													columnReference.getJdbcMapping()
 									)
 							)
@@ -352,7 +350,6 @@ public class CteInsertHandler implements InsertHandler {
 					(String) null,
 					rowNumberColumn.getColumnExpression(),
 					false,
-					null,
 					null,
 					rowNumberColumn.getJdbcMapping()
 			);
@@ -390,7 +387,6 @@ public class CteInsertHandler implements InsertHandler {
 					"e",
 					rowNumberColumn.getColumnExpression(),
 					false,
-					null,
 					null,
 					rowNumberColumn.getJdbcMapping()
 			);
@@ -498,7 +494,6 @@ public class CteInsertHandler implements InsertHandler {
 												rowNumberColumn.getColumnExpression(),
 												false,
 												null,
-												null,
 												rowNumberColumn.getJdbcMapping()
 										)
 								)
@@ -515,7 +510,6 @@ public class CteInsertHandler implements InsertHandler {
 												idColumn.getColumnExpression(),
 												false,
 												null,
-												null,
 												idColumn.getJdbcMapping()
 										),
 										BinaryArithmeticOperator.ADD,
@@ -526,7 +520,6 @@ public class CteInsertHandler implements InsertHandler {
 														"t",
 														rowNumberColumn.getColumnExpression(),
 														false,
-														null,
 														null,
 														rowNumberColumn.getJdbcMapping()
 												),
@@ -559,7 +552,6 @@ public class CteInsertHandler implements InsertHandler {
 											"e",
 											cteColumn.getColumnExpression(),
 											false,
-											null,
 											null,
 											cteColumn.getJdbcMapping()
 									)
@@ -822,7 +814,6 @@ public class CteInsertHandler implements InsertHandler {
 						rowNumberColumn.getColumnExpression(),
 						false,
 						null,
-						null,
 						rowNumberColumn.getJdbcMapping()
 				);
 				// Insert in the same order as the original tuples came
@@ -842,7 +833,6 @@ public class CteInsertHandler implements InsertHandler {
 									dmlTableReference,
 									keyColumns[j],
 									false,
-									null,
 									null,
 									null
 							)
@@ -878,7 +868,6 @@ public class CteInsertHandler implements InsertHandler {
 												rowNumberColumn.getColumnExpression(),
 												false,
 												null,
-												null,
 												rowNumberColumn.getJdbcMapping()
 										)
 								)
@@ -897,7 +886,6 @@ public class CteInsertHandler implements InsertHandler {
 										idCteColumn.getColumnExpression(),
 										false,
 										null,
-										null,
 										idCteColumn.getJdbcMapping()
 								)
 						)
@@ -913,7 +901,6 @@ public class CteInsertHandler implements InsertHandler {
 											"e",
 											cteColumn.getColumnExpression(),
 											false,
-											null,
 											null,
 											cteColumn.getJdbcMapping()
 									)
@@ -943,7 +930,6 @@ public class CteInsertHandler implements InsertHandler {
 						"e",
 						idCteColumn.getColumnExpression(),
 						false,
-						null,
 						null,
 						idCteColumn.getJdbcMapping()
 				);
@@ -998,7 +984,6 @@ public class CteInsertHandler implements InsertHandler {
 									keyColumns[j],
 									false,
 									null,
-									null,
 									null
 							)
 					);
@@ -1010,7 +995,6 @@ public class CteInsertHandler implements InsertHandler {
 											"e",
 											rootKeyColumns[j],
 											false,
-											null,
 											null,
 											null
 									)
@@ -1045,7 +1029,6 @@ public class CteInsertHandler implements InsertHandler {
 												"e",
 												entry.getKey().get( j ).getColumnExpression(),
 												columnReference.isColumnExpressionFormula(),
-												null,
 												null,
 												columnReference.getJdbcMapping()
 										)

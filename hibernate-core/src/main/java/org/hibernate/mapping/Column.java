@@ -560,6 +560,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		return hasCustomRead() ? customRead : getQuotedName( dialect );
 	}
 
+	@Override
 	public String getWriteExpr() {
 		return customWrite != null && customWrite.length() > 0 ? customWrite : "?";
 	}

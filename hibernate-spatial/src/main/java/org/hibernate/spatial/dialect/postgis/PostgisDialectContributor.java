@@ -9,6 +9,7 @@ package org.hibernate.spatial.dialect.postgis;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.PostgreSQLPGObjectJdbcType;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.HSMessageLogger;
@@ -25,8 +26,14 @@ public class PostgisDialectContributor implements ContributorImplementor {
 	@Override
 	public void contributeJdbcTypes(TypeContributions typeContributions) {
 		HSMessageLogger.SPATIAL_MSG_LOGGER.typeContributions( this.getClass().getCanonicalName() );
-		typeContributions.contributeJdbcType( PGGeometryJdbcType.INSTANCE_WKB_2 );
-		typeContributions.contributeJdbcType( PGGeographyJdbcType.INSTANCE_WKB_2 );
+		if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
+			typeContributions.contributeJdbcType( PGGeometryJdbcType.INSTANCE_WKB_2 );
+			typeContributions.contributeJdbcType( PGGeographyJdbcType.INSTANCE_WKB_2 );
+		}
+		else {
+			typeContributions.contributeJdbcType( PGCastingGeometryJdbcType.INSTANCE_WKB_2 );
+			typeContributions.contributeJdbcType( PGCastingGeographyJdbcType.INSTANCE_WKB_2 );
+		}
 	}
 
 	@Override

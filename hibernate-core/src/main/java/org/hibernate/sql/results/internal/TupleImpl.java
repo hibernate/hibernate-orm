@@ -9,6 +9,7 @@ package org.hibernate.sql.results.internal;
 import java.util.List;
 import jakarta.persistence.TupleElement;
 
+import org.hibernate.internal.util.type.PrimitiveWrapperHelper;
 import org.hibernate.query.JpaTuple;
 
 /**
@@ -43,7 +44,7 @@ public class TupleImpl implements JpaTuple {
 	public <X> X get(String alias, Class<X> type) {
 		final Object untyped = get( alias );
 		if ( untyped != null ) {
-			if ( !type.isInstance( untyped ) ) {
+			if (!elementTypeMatches(type, untyped)) {
 				throw new IllegalArgumentException(
 						String.format(
 								"Requested tuple value [alias=%s, value=%s] cannot be assigned to requested type [%s]",
@@ -73,7 +74,7 @@ public class TupleImpl implements JpaTuple {
 	@SuppressWarnings("unchecked")
 	public <X> X get(int i, Class<X> type) {
 		final Object result = get( i );
-		if ( result != null && !type.isInstance( result ) ) {
+		if ( result != null && !elementTypeMatches( type, result ) ) {
 			throw new IllegalArgumentException(
 					String.format(
 							"Requested tuple value [index=%s, realType=%s] cannot be assigned to requested type [%s]",
@@ -94,6 +95,12 @@ public class TupleImpl implements JpaTuple {
 			);
 		}
 		return row[i];
+	}
+
+	private <X> boolean elementTypeMatches(Class<X> type, Object untyped) {
+		return type.isInstance(untyped)
+				|| type.isPrimitive()
+				&& PrimitiveWrapperHelper.getDescriptorByPrimitiveType( type).getWrapperClass().isInstance( untyped);
 	}
 
 	@Override

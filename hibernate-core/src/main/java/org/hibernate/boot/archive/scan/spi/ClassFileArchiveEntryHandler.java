@@ -61,8 +61,9 @@ public class ClassFileArchiveEntryHandler implements ArchiveEntryHandler {
 	private ClassDescriptor toClassDescriptor(ArchiveEntry entry) {
 		try (InputStream inputStream = entry.getStreamAccess().accessInputStream()) {
 			Indexer indexer = new Indexer();
-			ClassInfo classInfo = indexer.index( inputStream );
+			indexer.index( inputStream );
 			Index index = indexer.complete();
+			ClassInfo classInfo = index.getKnownClasses().iterator().next();
 			return toClassDescriptor( classInfo, index, entry );
 		}
 		catch (IOException e) {

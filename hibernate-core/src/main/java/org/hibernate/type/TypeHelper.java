@@ -11,6 +11,7 @@ import java.util.Map;
 import org.hibernate.Internal;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 
 /**
@@ -88,6 +89,35 @@ public class TypeHelper {
 			}
 		}
 		return copied;
+	}
+
+	/**
+	 * Apply the {@link Type#replace} operation across a series of values.
+	 *
+	 * @param persister The EntityPersister
+	 * @param entity The source of the state
+	 * @param session The originating session
+	 * @param owner The entity "owning" the values
+	 * @param copyCache A map representing a cache of already replaced state
+	 *
+	 */
+	public static void replace(
+			final EntityPersister persister,
+			final Object entity,
+			final SharedSessionContractImplementor session,
+			final Object owner,
+			final Map<Object, Object> copyCache) {
+		final Object[] values = persister.getValues( entity );
+		final Type[] types = persister.getPropertyTypes();
+		for ( int i = 0; i < types.length; i++ ) {
+			final Object oldValue = values[i];
+			final Object newValue;
+			if ( oldValue != LazyPropertyInitializer.UNFETCHED_PROPERTY
+					&& oldValue != PropertyAccessStrategyBackRefImpl.UNKNOWN
+					&& ( newValue = types[i].replace( values[i], values[i], session, owner, copyCache ) ) != oldValue ) {
+				persister.setValue( entity, i, newValue );
+			}
+		}
 	}
 
 	/**

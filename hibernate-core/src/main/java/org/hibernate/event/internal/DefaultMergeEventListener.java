@@ -486,16 +486,21 @@ public class DefaultMergeEventListener
 			final Object target,
 			final SessionImplementor source,
 			final MergeContext copyCache) {
-		final Object[] copiedValues = TypeHelper.replace(
-				persister.getValues( entity ),
-				persister.getValues( target ),
-				persister.getPropertyTypes(),
-				source,
-				target,
-				copyCache
-		);
+		if ( entity == target ) {
+			TypeHelper.replace( persister, entity, source, entity, copyCache );
+		}
+		else {
+			final Object[] copiedValues = TypeHelper.replace(
+					persister.getValues( entity ),
+					persister.getValues( target ),
+					persister.getPropertyTypes(),
+					source,
+					target,
+					copyCache
+			);
 
-		persister.setValues( target, copiedValues );
+			persister.setValues( target, copiedValues );
+		}
 	}
 
 	protected void copyValues(

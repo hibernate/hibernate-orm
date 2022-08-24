@@ -168,7 +168,7 @@ public class TypeHelper {
 				Object[] targetComponentValues = target[i] == null
 						? new Object[subtypes.length]
 						: componentType.getPropertyValues( target[i], session );
-				replaceAssociations(
+				final Object[] objects = replaceAssociations(
 						origComponentValues,
 						targetComponentValues,
 						subtypes,
@@ -177,6 +177,9 @@ public class TypeHelper {
 						copyCache,
 						foreignKeyDirection
 				);
+				if ( target[i] != null && objects != null ) {
+					componentType.setPropertyValues( target[i], objects );
+				}
 				copied[i] = target[i];
 			}
 			else if ( !types[i].isAssociationType() ) {

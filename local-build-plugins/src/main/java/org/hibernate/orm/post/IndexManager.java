@@ -169,12 +169,7 @@ public class IndexManager {
 
 							if ( relativePath.getPathString().endsWith( ".class" ) ) {
 								try ( final FileInputStream stream = new FileInputStream( details.getFile() ) ) {
-									final ClassInfo indexedClassInfo = indexer.index( stream );
-									if ( indexedClassInfo == null ) {
-										project.getLogger()
-												.lifecycle( "Problem indexing class file - " + details.getFile()
-														.getAbsolutePath() );
-									}
+									indexer.index( stream );
 								}
 								catch (FileNotFoundException e) {
 									throw new RuntimeException( "Problem locating project class file - " + details.getFile()

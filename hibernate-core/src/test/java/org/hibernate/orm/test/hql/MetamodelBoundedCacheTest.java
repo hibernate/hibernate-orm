@@ -38,15 +38,22 @@ public class MetamodelBoundedCacheTest extends BaseNonConfigCoreFunctionalTestCa
 			jpaMetamodel.qualifyImportableName( "nonexistend" + i );
 		}
 
-		Field field = JpaMetamodelImpl.class.getDeclaredField( "nameToImportMap" );
-		field.setAccessible( true );
+		Map<?, ?> validImports = extractMapFromMetamodel( jpaMetamodel, "nameToImportMap" );
+		Map<?, ?> invalidImports  = extractMapFromMetamodel( jpaMetamodel, "knownInvalidnameToImportMap" );
 
-		//noinspection unchecked
-		Map<String, String> imports = (Map<String, String>) field.get( jpaMetamodel );
+		assertEquals( 2, validImports.size() );
 
 		// VERY hard-coded, but considering the possibility of a regression of a memory-related issue,
 		// it should be worth it
-		assertEquals( 1000, imports.size() );
+		assertEquals( 1000, invalidImports.size() );
+	}
+
+
+	private Map<?, ?> extractMapFromMetamodel(final JpaMetamodel jpaMetamodel, final String fieldName) throws NoSuchFieldException, IllegalAccessException {
+		Field field = JpaMetamodelImpl.class.getDeclaredField( fieldName );
+		field.setAccessible( true );
+		//noinspection unchecked
+		return (Map<?,?>) field.get( jpaMetamodel );
 	}
 
 	@Override

@@ -70,7 +70,6 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( JpaMetamodel.class );
-	private static final ImportInfo<?> INVALID_IMPORT = new ImportInfo<>( null, null );
 
 	private static class ImportInfo<T> {
 		final String importedName;
@@ -98,6 +97,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	private final Map<Class<?>, String> entityProxyInterfaceMap = new HashMap<>();
 
 	private final Map<String, ImportInfo<?>> nameToImportMap = new ConcurrentHashMap<>();
+	private final Map<String,Object> knownInvalidnameToImportMap = new ConcurrentHashMap<>();
 
 
 	public JpaMetamodelImpl(TypeConfiguration typeConfiguration, JpaCompliance jpaCompliance) {
@@ -281,29 +281,42 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	private <T> ImportInfo<T> resolveImport(final String name) {
 		final ImportInfo<?> importInfo = nameToImportMap.get( name );
+		//optimal path first
 		if ( importInfo != null ) {
 			//noinspection unchecked
-			return importInfo == INVALID_IMPORT ? null : (ImportInfo<T>) importInfo;
+			return (ImportInfo<T>) importInfo;
 		}
 		else {
-			// see if the name is a fully-qualified class name
-			final Class<T> loadedClass = resolveRequestedClass( name );
-			if ( loadedClass == null ) {
-				// it is NOT a fully-qualified class name - add a marker entry so we do not keep trying later
-				// note that ConcurrentHashMap does not support null value so a marker entry is needed
-				// [HHH-14948] But only add it if the cache size isn't getting too large, as in some use cases
-				// the queries are dynamically generated and this cache could lead to memory leaks when left unbounded.
-				if ( nameToImportMap.size() < 1_000 ) {
-					nameToImportMap.put( name, INVALID_IMPORT );
-				}
+			//then check the negative cache, to avoid bothering the classloader unnecessarily
+			if ( knownInvalidnameToImportMap.containsKey( name ) ) {
 				return null;
 			}
 			else {
-				// it is a fully-qualified class name - add it to the cache
-				//		so we do not keep trying later
-				final ImportInfo<T> info = new ImportInfo<>( name, loadedClass );
-				nameToImportMap.put( name, info );
-				return info;
+				// see if the name is a fully-qualified class name
+				final Class<T> loadedClass = resolveRequestedClass( name );
+				if ( loadedClass == null ) {
+					// it is NOT a fully-qualified class name - add a marker entry so we do not keep trying later
+					// note that ConcurrentHashMap does not support null value so a marker entry is needed
+					// [HHH-14948] But only add it if the cache size isn't getting too large, as in some use cases
+					// the queries are dynamically generated and this cache could lead to memory leaks when left unbounded.
+					if ( knownInvalidnameToImportMap.size() < 1_000 ) {
+						//TODO this collection might benefit from a LRU eviction algorithm,
+						//we currently have no evidence for this need but this could be explored further.
+						//To consider that we don't have a hard dependency on a cache implementation providing LRU semantics.
+						//Alternatively - even better - would be to precompute all possible valid options and
+						//store them in nameToImportMap on bootstrap: if that can be filled with all (comprehensive)
+						//valid values, then there is no need for ever bothering the classloader.
+						knownInvalidnameToImportMap.put( name, name );
+					}
+					return null;
+				}
+				else {
+					// it is a fully-qualified class name - add it to the cache
+					// so to not needing to load from the classloader again
+					final ImportInfo<T> info = new ImportInfo<>( name, loadedClass );
+					nameToImportMap.put( name, info );
+					return info;
+				}
 			}
 		}
 	}

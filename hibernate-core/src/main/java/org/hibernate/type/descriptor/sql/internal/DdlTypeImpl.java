@@ -97,7 +97,7 @@ public class DdlTypeImpl implements DdlType {
 		Long length = null;
 		Integer precision = null;
 		Integer scale = null;
-		switch ( jdbcType.getDefaultSqlTypeCode() ) {
+		switch ( jdbcType.getDdlTypeCode() ) {
 			case SqlTypes.VARCHAR:
 				length = (long) dialect.getMaxVarcharLength();
 				break;

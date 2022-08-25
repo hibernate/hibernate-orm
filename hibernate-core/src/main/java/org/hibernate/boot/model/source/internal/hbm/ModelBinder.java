@@ -1911,7 +1911,7 @@ public class ModelBinder {
 					.getBasicTypeRegistry()
 					.getRegisteredType( value.getTypeName() );
 			if ( basicType instanceof AbstractSingleColumnStandardBasicType ) {
-				if ( isLob( basicType.getJdbcType().getJdbcTypeCode(), null ) ) {
+				if ( isLob( basicType.getJdbcType().getDdlTypeCode(), null ) ) {
 					value.makeLob();
 				}
 			}

@@ -241,7 +241,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 			final BasicType<?> elementType = containerType.getElementType();
 			final int sqlTypeCode;
 			try {
-				sqlTypeCode = elementType.getJdbcType().getDefaultSqlTypeCode();
+				sqlTypeCode = elementType.getJdbcType().getDdlTypeCode();
 			}
 			catch (Exception e) {
 				throw new MappingException(

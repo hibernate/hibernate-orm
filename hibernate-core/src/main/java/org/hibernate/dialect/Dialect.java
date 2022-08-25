@@ -4279,13 +4279,13 @@ public abstract class Dialect implements ConversionContext {
 				Integer scale,
 				Long length) {
 			final Size size = new Size();
-			int jdbcTypeCode = jdbcType.getDefaultSqlTypeCode();
+			final int ddlTypeCode = jdbcType.getDdlTypeCode();
 			// Set the explicit length to null if we encounter the JPA default 255
 			if ( length != null && length == Size.DEFAULT_LENGTH ) {
 				length = null;
 			}
 
-			switch ( jdbcTypeCode ) {
+			switch ( ddlTypeCode ) {
 				case SqlTypes.BIT:
 				case SqlTypes.CHAR:
 				case SqlTypes.NCHAR:

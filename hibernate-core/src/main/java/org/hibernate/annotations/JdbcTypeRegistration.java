@@ -48,7 +48,7 @@ public @interface JdbcTypeRegistration {
 	 * The type-code under which to register this descriptor.  Can either add a new descriptor
 	 * or override an existing one.
 	 *
-	 * By default we will use {@link JdbcType#getJdbcTypeCode}
+	 * By default we will use {@link JdbcType#getDefaultSqlTypeCode()}
 	 */
 	int registrationCode() default Integer.MIN_VALUE;
 }

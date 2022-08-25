@@ -135,7 +135,7 @@ public class TemporaryTable implements Exportable, Contributable {
 					this,
 					uuidType,
 					typeConfiguration.getDdlTypeRegistry().getTypeName(
-							uuidType.getJdbcType().getDefaultSqlTypeCode(),
+							uuidType.getJdbcType().getDdlTypeCode(),
 							size
 					),
 					size
@@ -406,7 +406,7 @@ public class TemporaryTable implements Exportable, Contributable {
 						final String rowNumberType;
 						if ( dialect.supportsWindowFunctions() ) {
 							rowNumberType = typeConfiguration.getDdlTypeRegistry().getTypeName(
-									integerBasicType.getJdbcType().getJdbcTypeCode(),
+									integerBasicType.getJdbcType().getDdlTypeCode(),
 									dialect.getSizeStrategy().resolveSize(
 											integerBasicType.getJdbcType(),
 											integerBasicType.getJavaTypeDescriptor(),
@@ -418,7 +418,7 @@ public class TemporaryTable implements Exportable, Contributable {
 						}
 						else if ( dialect.getIdentityColumnSupport().supportsIdentityColumns() ) {
 							rowNumberType = typeConfiguration.getDdlTypeRegistry().getTypeName(
-									integerBasicType.getJdbcType().getJdbcTypeCode(),
+									integerBasicType.getJdbcType().getDdlTypeCode(),
 									dialect.getSizeStrategy().resolveSize(
 											integerBasicType.getJdbcType(),
 											integerBasicType.getJavaTypeDescriptor(),
@@ -426,13 +426,13 @@ public class TemporaryTable implements Exportable, Contributable {
 											null,
 											null
 									)
-							) + " " +
-									dialect.getIdentityColumnSupport().getIdentityColumnString( integerBasicType.getJdbcType().getJdbcTypeCode() );
+							) + " " + dialect.getIdentityColumnSupport()
+									.getIdentityColumnString( integerBasicType.getJdbcType().getDdlTypeCode() );
 						}
 						else {
 							LOG.multiTableInsertNotAvailable( entityBinding.getEntityName() );
 							rowNumberType = typeConfiguration.getDdlTypeRegistry().getTypeName(
-									integerBasicType.getJdbcType().getJdbcTypeCode(),
+									integerBasicType.getJdbcType().getDdlTypeCode(),
 									dialect.getSizeStrategy().resolveSize(
 											integerBasicType.getJdbcType(),
 											integerBasicType.getJavaTypeDescriptor(),

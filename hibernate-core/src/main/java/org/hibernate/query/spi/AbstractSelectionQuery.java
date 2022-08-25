@@ -320,7 +320,7 @@ public abstract class AbstractSelectionQuery<R>
 					}
 				}
 				if ( jdbcType != null ) {
-					switch ( jdbcType.getJdbcTypeCode() ) {
+					switch ( jdbcType.getDefaultSqlTypeCode() ) {
 						case Types.DATE:
 							if ( resultClass.isAssignableFrom( java.sql.Date.class ) ) {
 								return;

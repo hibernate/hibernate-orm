@@ -71,6 +71,18 @@ public interface JdbcType extends Serializable {
 	int getJdbcTypeCode();
 
 	/**
+	 * A {@linkplain SqlTypes JDBC type code} that identifies the SQL column type.
+	 * <p>
+	 * This value might be different from {@link #getDdlTypeCode()} if the actual type
+	 * e.g. JSON is emulated through a type like CLOB.
+	 *
+	 * @return a JDBC type code
+	 */
+	default int getDefaultSqlTypeCode() {
+		return getJdbcTypeCode();
+	}
+
+	/**
 	 * A {@linkplain SqlTypes JDBC type code} that identifies the SQL column type to
 	 * be used for schema generation.
 	 * <p>
@@ -78,9 +90,10 @@ public interface JdbcType extends Serializable {
 	 * to obtain the SQL column type.
 	 *
 	 * @return a JDBC type code
+	 * @since 6.2
 	 */
-	default int getDefaultSqlTypeCode() {
-		return getJdbcTypeCode();
+	default int getDdlTypeCode() {
+		return getDefaultSqlTypeCode();
 	}
 
 	default <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
@@ -148,37 +161,37 @@ public interface JdbcType extends Serializable {
 	}
 
 	default boolean isInteger() {
-		int typeCode = getJdbcTypeCode();
+		int typeCode = getDdlTypeCode();
 		return SqlTypes.isIntegral(typeCode)
 			|| typeCode == Types.BIT; //HIGHLY DUBIOUS!
 	}
 
 	default boolean isFloat() {
-		return SqlTypes.isFloatOrRealOrDouble( getJdbcTypeCode() );
+		return SqlTypes.isFloatOrRealOrDouble( getDdlTypeCode() );
 	}
 
 	default boolean isDecimal() {
-		return SqlTypes.isNumericOrDecimal( getJdbcTypeCode() );
+		return SqlTypes.isNumericOrDecimal( getDdlTypeCode() );
 	}
 
 	default boolean isNumber() {
-		return SqlTypes.isNumericType( getJdbcTypeCode() );
+		return SqlTypes.isNumericType( getDdlTypeCode() );
 	}
 
 	default boolean isBinary() {
-		return SqlTypes.isBinaryType( getJdbcTypeCode() );
+		return SqlTypes.isBinaryType( getDdlTypeCode() );
 	}
 
 	default boolean isString() {
-		return SqlTypes.isCharacterOrClobType( getJdbcTypeCode() );
+		return SqlTypes.isCharacterOrClobType( getDdlTypeCode() );
 	}
 
 	default boolean isTemporal() {
-		return SqlTypes.isTemporalType( getDefaultSqlTypeCode() );
+		return SqlTypes.isTemporalType( getDdlTypeCode() );
 	}
 
 	default boolean isLob() {
-		return isLob( getJdbcTypeCode() );
+		return isLob( getDdlTypeCode() );
 	}
 
 	static boolean isLob(int jdbcTypeCode) {
@@ -193,7 +206,7 @@ public interface JdbcType extends Serializable {
 	}
 
 	default boolean isNationalized() {
-		return isNationalized( getJdbcTypeCode() );
+		return isNationalized( getDdlTypeCode() );
 	}
 
 	static boolean isNationalized(int jdbcTypeCode) {
@@ -210,11 +223,11 @@ public interface JdbcType extends Serializable {
 	}
 
 	default boolean isInterval() {
-		return SqlTypes.isIntervalType( getDefaultSqlTypeCode() );
+		return SqlTypes.isIntervalType( getDdlTypeCode() );
 	}
 
 	default CastType getCastType() {
-		return getCastType( getJdbcTypeCode() );
+		return getCastType( getDdlTypeCode() );
 	}
 
 	static CastType getCastType(int typeCode) {

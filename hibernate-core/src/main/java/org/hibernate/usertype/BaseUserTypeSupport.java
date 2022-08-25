@@ -63,7 +63,7 @@ public abstract class BaseUserTypeSupport<T> implements UserType<T> {
 	@Override
 	public int getSqlType() {
 		ensureResolved();
-		return jdbcType.getDefaultSqlTypeCode();
+		return jdbcType.getDdlTypeCode();
 	}
 
 	@Override

@@ -451,8 +451,8 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		if ( collectionElementType instanceof BasicType<?> ) {
 			final BasicType<?> basicType = (BasicType<?>) collectionElementType;
 			return basicType.getJavaType() == String.class && (
-					basicType.getJdbcType().getJdbcTypeCode() == Types.CLOB
-							|| basicType.getJdbcType().getJdbcTypeCode() == Types.NCLOB
+					basicType.getJdbcType().getDdlTypeCode() == Types.CLOB
+							|| basicType.getJdbcType().getDdlTypeCode() == Types.NCLOB
 			);
 		}
 		return false;

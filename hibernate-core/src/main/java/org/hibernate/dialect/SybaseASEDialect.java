@@ -66,7 +66,7 @@ public class SybaseASEDialect extends SybaseDialect {
 				Integer precision,
 				Integer scale,
 				Long length) {
-			switch ( jdbcType.getDefaultSqlTypeCode() ) {
+			switch ( jdbcType.getDdlTypeCode() ) {
 				case Types.FLOAT:
 					// Sybase ASE allows FLOAT with a precision up to 48
 					if ( precision != null ) {

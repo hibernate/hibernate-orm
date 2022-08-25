@@ -626,7 +626,7 @@ public final class AnnotationBinder {
 		final Class<? extends JdbcType> jdbcTypeClass = annotation.value();
 		final JdbcType jdbcType = managedBeanRegistry.getBean( jdbcTypeClass ).getBeanInstance();
 		final int typeCode = annotation.registrationCode() == Integer.MIN_VALUE
-				? jdbcType.getJdbcTypeCode()
+				? jdbcType.getDefaultSqlTypeCode()
 				: annotation.registrationCode();
 		context.getMetadataCollector().addJdbcTypeRegistration( typeCode, jdbcType );
 	}

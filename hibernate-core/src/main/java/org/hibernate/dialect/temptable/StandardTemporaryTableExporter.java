@@ -45,7 +45,7 @@ public class StandardTemporaryTableExporter implements TemporaryTableExporter {
 
 		for ( TemporaryTableColumn column : temporaryTable.getColumnsForExport() ) {
 			buffer.append( column.getColumnName() ).append( ' ' );
-			final int sqlTypeCode = column.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode();
+			final int sqlTypeCode = column.getJdbcMapping().getJdbcType().getDdlTypeCode();
 			final String databaseTypeName = column.getSqlTypeDefinition();
 
 			buffer.append( databaseTypeName );

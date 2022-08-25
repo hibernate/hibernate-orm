@@ -123,7 +123,7 @@ public class MySQLDialect extends Dialect {
 				Integer precision,
 				Integer scale,
 				Long length) {
-			switch ( jdbcType.getDefaultSqlTypeCode() ) {
+			switch ( jdbcType.getDdlTypeCode() ) {
 				case Types.BIT:
 					// MySQL allows BIT with a length up to 64 (less the default length 255)
 					if ( length != null ) {
@@ -310,9 +310,9 @@ public class MySQLDialect extends Dialect {
 						"char",
 						this
 				)
-				.withTypeCapacity( getVarcharDdlTypeCapacity(), "varchar($l)" )
+				.withTypeCapacity( getMaxVarcharLength(), "varchar($l)" )
 				.withTypeCapacity( maxMediumLobLen, "mediumtext" );
-		if ( getVarcharDdlTypeCapacity() < maxLobLen ) {
+		if ( getMaxVarcharLength() < maxLobLen ) {
 			varcharBuilder.withTypeCapacity( maxLobLen, "text" );
 		}
 		ddlTypeRegistry.addDescriptor( varcharBuilder.build() );
@@ -323,9 +323,9 @@ public class MySQLDialect extends Dialect {
 						"char",
 						this
 				)
-				.withTypeCapacity( getVarcharDdlTypeCapacity(), "varchar($l)" )
+				.withTypeCapacity( getMaxVarcharLength(), "varchar($l)" )
 				.withTypeCapacity( maxMediumLobLen, "mediumtext" );
-		if ( getVarcharDdlTypeCapacity() < maxLobLen ) {
+		if ( getMaxVarcharLength() < maxLobLen ) {
 			nvarcharBuilder.withTypeCapacity( maxLobLen, "text" );
 		}
 		ddlTypeRegistry.addDescriptor( nvarcharBuilder.build() );
@@ -336,9 +336,9 @@ public class MySQLDialect extends Dialect {
 						"binary",
 						this
 				)
-				.withTypeCapacity( getVarbinaryDdlTypeCapacity(), "varbinary($l)" )
+				.withTypeCapacity( getMaxVarbinaryLength(), "varbinary($l)" )
 				.withTypeCapacity( maxMediumLobLen, "mediumblob" );
-		if ( getVarbinaryDdlTypeCapacity() < maxLobLen ) {
+		if ( getMaxVarbinaryLength() < maxLobLen ) {
 			varbinaryBuilder.withTypeCapacity( maxLobLen, "blob" );
 		}
 		ddlTypeRegistry.addDescriptor( varbinaryBuilder.build() );
@@ -431,11 +431,13 @@ public class MySQLDialect extends Dialect {
 		}
 	}
 
-	public int getVarcharDdlTypeCapacity() {
+	@Override
+	public int getMaxVarcharLength() {
 		return maxVarcharLength;
 	}
 
-	public int getVarbinaryDdlTypeCapacity() {
+	@Override
+	public int getMaxVarbinaryLength() {
 		return maxVarbinaryLength;
 	}
 

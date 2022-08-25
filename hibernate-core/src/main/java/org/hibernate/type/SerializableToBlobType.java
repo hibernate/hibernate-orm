@@ -60,7 +60,7 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 
 	public SerializableToBlobType() {
 		this.jdbcType = BlobJdbcType.DEFAULT;
-		this.sqlTypes = new int[] { jdbcType.getDefaultSqlTypeCode() };
+		this.sqlTypes = new int[] { jdbcType.getDdlTypeCode() };
 		this.javaType = new SerializableJavaType( Serializable.class );
 
 		this.jdbcValueBinder = jdbcType.getBinder( javaType );

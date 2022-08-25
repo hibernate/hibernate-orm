@@ -591,7 +591,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 						// If there is no selectable mapping for a table name, we render a null expression
 						selectableMapping = selectableMappings.values().iterator().next();
 						final int sqlType = selectableMapping.getJdbcMapping().getJdbcType()
-								.getDefaultSqlTypeCode();
+								.getDdlTypeCode();
 						buf.append( dialect.getSelectClauseNullString( sqlType, getFactory().getTypeConfiguration() ) )
 								.append( " as " );
 					}

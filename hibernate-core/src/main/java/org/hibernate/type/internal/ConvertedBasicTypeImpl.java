@@ -87,7 +87,7 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 		this.description = description;
 		this.converter = converter;
 		this.jdbcType = jdbcType;
-		this.sqlTypes = new int[] { jdbcType.getDefaultSqlTypeCode() };
+		this.sqlTypes = new int[] { jdbcType.getDdlTypeCode() };
 		this.jdbcValueBinder = (ValueBinder<J>) jdbcType.getBinder( converter.getRelationalJavaType() );
 		this.jdbcValueExtractor = (ValueExtractor<J>) jdbcType.getExtractor( converter.getRelationalJavaType() );
 		this.jdbcLiteralFormatter = (JdbcLiteralFormatter<J>) jdbcType.getJdbcLiteralFormatter( converter.getRelationalJavaType() );
@@ -377,7 +377,7 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 	@Override
 	public CastType getCastType() {
 		final JdbcType jdbcType = getJdbcType();
-		final int jdbcTypeCode = jdbcType.getJdbcTypeCode();
+		final int jdbcTypeCode = jdbcType.getDefaultSqlTypeCode();
 		switch ( jdbcTypeCode ) {
 			case Types.BIT:
 			case Types.SMALLINT:

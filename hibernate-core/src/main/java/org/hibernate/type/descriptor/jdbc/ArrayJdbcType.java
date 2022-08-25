@@ -183,7 +183,7 @@ public class ArrayJdbcType implements JdbcType {
 						.resolveSize( elementJdbcType, containerJavaType.getElementJavaType(), null, null, null );
 				String typeName = session.getTypeConfiguration()
 						.getDdlTypeRegistry()
-						.getDescriptor( elementJdbcType.getDefaultSqlTypeCode() )
+						.getDescriptor( elementJdbcType.getDdlTypeCode() )
 						.getTypeName( size );
 				int cutIndex = typeName.indexOf( '(' );
 				if ( cutIndex > 0 ) {

@@ -5525,7 +5525,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else {
 			SqlTypedMapping sqlTypedMapping = null;
 			if ( bindable instanceof BasicType<?> ) {
-				final int sqlTypeCode = ( (BasicType<?>) bindable ).getJdbcType().getDefaultSqlTypeCode();
+				final int sqlTypeCode = ( (BasicType<?>) bindable ).getJdbcType().getDdlTypeCode();
 				if ( sqlTypeCode == SqlTypes.NUMERIC || sqlTypeCode == SqlTypes.DECIMAL ) {
 					// For numeric and decimal parameter types we must determine the precision/scale of the value.
 					// When we need to cast the parameter later, it is necessary to know the size to avoid truncation.

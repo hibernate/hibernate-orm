@@ -2742,7 +2742,7 @@ public abstract class AbstractEntityPersister
 				.getIdentitySelectString(
 						getTableName( 0 ),
 						getKeyColumns( 0 )[0],
-						( (BasicType<?>) getIdentifierType() ).getJdbcType().getDefaultSqlTypeCode()
+						( (BasicType<?>) getIdentifierType() ).getJdbcType().getDdlTypeCode()
 				);
 	}
 

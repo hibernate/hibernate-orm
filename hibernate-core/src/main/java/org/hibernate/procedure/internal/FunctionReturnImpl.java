@@ -33,18 +33,18 @@ import jakarta.persistence.ParameterMode;
  */
 public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 	private final ProcedureCallImplementor<T> procedureCall;
-	private final int jdbcTypeCode;
+	private final int sqlTypeCode;
 
 	private OutputableType<T> ormType;
 
-	public FunctionReturnImpl(ProcedureCallImplementor<T> procedureCall, int jdbcTypeCode) {
+	public FunctionReturnImpl(ProcedureCallImplementor<T> procedureCall, int sqlTypeCode) {
 		this.procedureCall = procedureCall;
-		this.jdbcTypeCode = jdbcTypeCode;
+		this.sqlTypeCode = sqlTypeCode;
 	}
 
 	public FunctionReturnImpl(ProcedureCallImplementor<T> procedureCall, OutputableType<T> ormType) {
 		this.procedureCall = procedureCall;
-		this.jdbcTypeCode = ormType.getJdbcType().getJdbcTypeCode();
+		this.sqlTypeCode = ormType.getJdbcType().getDefaultSqlTypeCode();
 		this.ormType = ormType;
 	}
 
@@ -85,7 +85,7 @@ public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 
 	@Override
 	public int getJdbcTypeCode() {
-		return jdbcTypeCode;
+		return sqlTypeCode;
 	}
 
 	@Override
@@ -137,7 +137,7 @@ public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 				return new FunctionReturnImpl<>( procedureCall, ormType );
 			}
 			else {
-				return new FunctionReturnImpl<>( procedureCall, jdbcTypeCode );
+				return new FunctionReturnImpl<>( procedureCall, sqlTypeCode );
 			}
 		};
 	}

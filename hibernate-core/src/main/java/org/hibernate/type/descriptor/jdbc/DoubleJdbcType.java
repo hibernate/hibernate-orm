@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.query.sqm.CastType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -43,8 +44,13 @@ public class DoubleJdbcType implements JdbcType {
 	 * @return {@link Types#FLOAT} for schema generation
 	 */
 	@Override
-	public int getDefaultSqlTypeCode() {
+	public int getDdlTypeCode() {
 		return Types.FLOAT;
+	}
+
+	@Override
+	public CastType getCastType() {
+		return CastType.DOUBLE;
 	}
 
 	@Override

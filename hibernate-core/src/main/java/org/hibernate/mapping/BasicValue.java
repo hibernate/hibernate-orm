@@ -330,7 +330,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	private void resolveColumn(Column column, Dialect dialect) {
 
 		if ( column.getSqlTypeCode() == null ) {
-			column.setSqlTypeCode( resolution.getJdbcType().getDefaultSqlTypeCode() );
+			column.setSqlTypeCode( resolution.getJdbcType().getDdlTypeCode() );
 		}
 
 		if ( resolution.getValueConverter() != null ) {

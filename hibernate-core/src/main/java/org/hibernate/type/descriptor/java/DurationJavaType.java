@@ -142,7 +142,7 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
-		if ( jdbcType.getDefaultSqlTypeCode() == SqlTypes.INTERVAL_SECOND ) {
+		if ( jdbcType.getDdlTypeCode() == SqlTypes.INTERVAL_SECOND ) {
 			// Usually the maximum precision for interval types
 			return 18;
 		}
@@ -158,7 +158,7 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 
 	@Override
 	public int getDefaultSqlScale(Dialect dialect, JdbcType jdbcType) {
-		if ( jdbcType.getDefaultSqlTypeCode() == SqlTypes.INTERVAL_SECOND ) {
+		if ( jdbcType.getDdlTypeCode() == SqlTypes.INTERVAL_SECOND ) {
 			// The default scale necessary is 9 i.e. nanosecond resolution
 			return 9;
 		}

@@ -279,6 +279,12 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public int getMaxVarcharCapacity() {
+		// 1GB according to PostgreSQL docs
+		return 1_073_741_824;
+	}
+
+	@Override
 	public int getMaxVarbinaryLength() {
 		//postgres has no varbinary-like type
 		return Integer.MAX_VALUE;
@@ -1015,6 +1021,13 @@ public class PostgreSQLLegacyDialect extends Dialect {
 
 	@Override
 	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
+		return false;
+	}
+
+	@Override
+	public boolean supportsMaterializedLobAccess() {
+		// Prefer using text and bytea over oid (LOB), because oid is very restricted.
+		// If someone really wants a type bigger than 1GB, they should ask for it by using @Lob explicitly
 		return false;
 	}
 

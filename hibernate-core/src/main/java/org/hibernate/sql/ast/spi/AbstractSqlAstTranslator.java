@@ -6120,7 +6120,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				final BasicPluralType<?, ?> containerType = (BasicPluralType<?, ?>) expressionType;
 				final BasicType<?> elementType = containerType.getElementType();
 				final String elementTypeName = sessionFactory.getTypeConfiguration().getDdlTypeRegistry()
-						.getDescriptor( elementType.getJdbcType().getDefaultSqlTypeCode() )
+						.getDescriptor( elementType.getJdbcType().getDdlTypeCode() )
 						.getCastTypeName(
 								elementType,
 								castTarget.getLength(),
@@ -6135,7 +6135,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 			final DdlTypeRegistry ddlTypeRegistry = getSessionFactory().getTypeConfiguration().getDdlTypeRegistry();
 			DdlType ddlType = ddlTypeRegistry
-					.getDescriptor( expressionType.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() );
+					.getDescriptor( expressionType.getJdbcMapping().getJdbcType().getDdlTypeCode() );
 			if ( ddlType == null ) {
 				// this may happen when selecting a null value like `SELECT null from ...`
 				// some dbs need the value to be cast so not knowing the real type we fall back to INTEGER

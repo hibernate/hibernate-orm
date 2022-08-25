@@ -50,7 +50,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	public AbstractStandardBasicType(JdbcType jdbcType, JavaType<T> javaType) {
 		this.jdbcType = jdbcType;
-		this.sqlTypes = new int[] { jdbcType.getDefaultSqlTypeCode() };
+		this.sqlTypes = new int[] { jdbcType.getDdlTypeCode() };
 		this.javaType = javaType;
 
 		this.jdbcValueBinder = jdbcType.getBinder( javaType );
@@ -347,7 +347,7 @@ public abstract class AbstractStandardBasicType<T>
 		// and the cast type determination here. Note that we interpret the converter in ConvertedBasicTypeImpl
 		// to properly determine the correct cast type
 		final JdbcType jdbcType = getJdbcType();
-		final int jdbcTypeCode = jdbcType.getJdbcTypeCode();
+		final int jdbcTypeCode = jdbcType.getDdlTypeCode();
 		switch ( jdbcTypeCode ) {
 			case Types.BIT:
 			case Types.SMALLINT:

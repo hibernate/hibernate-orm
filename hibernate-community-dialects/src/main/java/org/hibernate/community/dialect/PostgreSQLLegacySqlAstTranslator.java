@@ -8,6 +8,7 @@ package org.hibernate.community.dialect;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
@@ -25,6 +26,7 @@ import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.internal.TableInsertStandard;
+import org.hibernate.type.SqlTypes;
 
 /**
  * A SQL AST translator for PostgreSQL.
@@ -46,6 +48,33 @@ public class PostgreSQLLegacySqlAstTranslator<T extends JdbcOperation> extends A
 	@Override
 	protected void renderExpressionAsClauseItem(Expression expression) {
 		expression.accept( this );
+	}
+
+	@Override
+	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
+		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
+		if ( lhsExpressionType != null
+				&& lhsExpressionType.getJdbcMappings().get( 0 ).getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
+			// In PostgreSQL, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
+			switch ( operator ) {
+				case EQUAL:
+				case NOT_DISTINCT_FROM:
+				case NOT_EQUAL:
+				case DISTINCT_FROM:
+					appendSql( "cast(" );
+					lhs.accept( this );
+					appendSql( " as text)" );
+					appendSql( operator.sqlText() );
+					appendSql( "cast(" );
+					rhs.accept( this );
+					appendSql( " as text)" );
+					return;
+				default:
+					// Fall through
+					break;
+			}
+		}
+		renderComparisonStandard( lhs, operator, rhs );
 	}
 
 	@Override

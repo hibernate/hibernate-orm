@@ -66,7 +66,7 @@ dependencyResolutionManagement {
             version( "hikaricp", "3.2.0" )
             version( "proxool", "0.8.3" )
             version( "vibur", "25.0" )
-            version( "micrometer", "1.6.1" )
+            version( "micrometer", "1.9.3" )
 
             alias( "antlr" ).to( "org.antlr", "antlr4" ).versionRef( "antlr")
             alias( "antlrRuntime" ).to( "org.antlr", "antlr4-runtime" ).versionRef( "antlr")

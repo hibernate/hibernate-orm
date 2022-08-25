@@ -192,6 +192,23 @@ public interface JdbcType extends Serializable {
 		return false;
 	}
 
+	default boolean isNationalized() {
+		return isNationalized( getJdbcTypeCode() );
+	}
+
+	static boolean isNationalized(int jdbcTypeCode) {
+		switch ( jdbcTypeCode ) {
+			case SqlTypes.NCHAR:
+			case SqlTypes.NVARCHAR:
+			case SqlTypes.LONGNVARCHAR:
+			case SqlTypes.LONG32NVARCHAR:
+			case SqlTypes.NCLOB: {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	default boolean isInterval() {
 		return SqlTypes.isIntervalType( getDefaultSqlTypeCode() );
 	}

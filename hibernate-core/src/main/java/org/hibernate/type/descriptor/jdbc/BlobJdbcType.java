@@ -225,4 +225,54 @@ public abstract class BlobJdbcType implements JdbcType {
 		}
 	};
 
+	public static final BlobJdbcType MATERIALIZED = new BlobJdbcType() {
+		@Override
+		public String toString() {
+			return "BlobTypeDescriptor(MATERIALIZED)";
+		}
+
+		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return byte[].class;
+		}
+
+		@Override
+		public <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaType) {
+			return new BasicBinder<>( javaType, this ) {
+				@Override
+				public void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
+						throws SQLException {
+					st.setBytes( index, javaType.unwrap( value, byte[].class, options ) );
+				}
+
+				@Override
+				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+						throws SQLException {
+					st.setBytes( name, javaType.unwrap( value, byte[].class, options ) );
+				}
+			};
+		}
+
+		@Override
+		public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+			return new BasicExtractor<>( javaType, this ) {
+				@Override
+				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+					return javaType.wrap( rs.getBytes( paramIndex ), options );
+				}
+
+				@Override
+				protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+					return javaType.wrap( statement.getBytes( index ), options );
+				}
+
+				@Override
+				protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
+						throws SQLException {
+					return javaType.wrap( statement.getBytes( name ), options );
+				}
+			};
+		}
+	};
+
 }

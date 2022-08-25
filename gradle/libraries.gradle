@@ -48,7 +48,7 @@ ext {
     //GraalVM
     graalvmVersion = '21.3.0'
 
-    micrometerVersion = '1.6.1'
+    micrometerVersion = '1.9.3'
 
     libraries = [
             // Ant
@@ -171,7 +171,7 @@ ext {
             vibur:           "org.vibur:vibur-dbcp:25.0",
             agroal_api:      "io.agroal:agroal-api:${agroalVersion}",
             agroal_pool:     "io.agroal:agroal-pool:${agroalVersion}",
-            micrometer:      "io.micrometer:micrometer-core:1.6.1",
+            micrometer:      "io.micrometer:micrometer-core:${micrometerVersion}",
 
             atomikos:         "com.atomikos:transactions:4.0.6",
             atomikos_jta:     "com.atomikos:transactions-jta:4.0.6",

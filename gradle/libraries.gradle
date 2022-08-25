@@ -132,10 +132,10 @@ ext {
             h2:              "com.h2database:h2:${h2Version}",
             hsqldb:          "org.hsqldb:hsqldb:2.3.2",
             derby:           "org.apache.derby:derby:10.14.2.0",
-            postgresql:      'org.postgresql:postgresql:42.2.16',
+            postgresql:      'org.postgresql:postgresql:42.5.0',
             mysql:           'mysql:mysql-connector-java:8.0.27',
             mariadb:         'org.mariadb.jdbc:mariadb-java-client:2.2.3',
-            cockroachdb:     'org.postgresql:postgresql:42.2.8',
+            cockroachdb:     'org.postgresql:postgresql:42.5.0',
 
             oracle:          'com.oracle.database.jdbc:ojdbc8:21.3.0.0',
             mssql:           'com.microsoft.sqlserver:mssql-jdbc:7.2.1.jre8',

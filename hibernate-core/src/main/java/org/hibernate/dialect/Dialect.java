@@ -171,6 +171,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
+import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.InstantAsTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.InstantAsTimestampWithTimeZoneJdbcType;
@@ -1396,29 +1397,35 @@ public abstract class Dialect implements ConversionContext {
 		// by default, not much to do...
 		registerColumnTypes( typeContributions, serviceRegistry );
 		final NationalizationSupport nationalizationSupport = getNationalizationSupport();
+		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 		if ( nationalizationSupport == NationalizationSupport.EXPLICIT ) {
-			typeContributions.contributeJdbcType( NCharJdbcType.INSTANCE );
-			typeContributions.contributeJdbcType( NVarcharJdbcType.INSTANCE );
-			typeContributions.contributeJdbcType( LongNVarcharJdbcType.INSTANCE );
-			typeContributions.contributeJdbcType( NClobJdbcType.DEFAULT );
+			jdbcTypeRegistry.addDescriptor( NCharJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( NVarcharJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( LongNVarcharJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( NClobJdbcType.DEFAULT );
 		}
 
 		if ( useInputStreamToInsertBlob() ) {
-			typeContributions.getTypeConfiguration().getJdbcTypeRegistry().addDescriptor(
+			jdbcTypeRegistry.addDescriptor(
 					Types.CLOB,
 					ClobJdbcType.STREAM_BINDING
 			);
 		}
 
 		if ( getTimeZoneSupport() == TimeZoneSupport.NATIVE ) {
-			typeContributions.contributeJdbcType( InstantAsTimestampWithTimeZoneJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( InstantAsTimestampWithTimeZoneJdbcType.INSTANCE );
 		}
 		else {
-			typeContributions.contributeJdbcType( InstantAsTimestampJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( InstantAsTimestampJdbcType.INSTANCE );
 		}
 
 		if ( supportsStandardArrays() ) {
-			typeContributions.contributeJdbcType( ArrayJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( ArrayJdbcType.INSTANCE );
+		}
+		if ( supportsMaterializedLobAccess() ) {
+			jdbcTypeRegistry.addDescriptor( SqlTypes.MATERIALIZED_BLOB, BlobJdbcType.MATERIALIZED );
+			jdbcTypeRegistry.addDescriptor( SqlTypes.MATERIALIZED_CLOB, ClobJdbcType.MATERIALIZED );
+			jdbcTypeRegistry.addDescriptor( SqlTypes.MATERIALIZED_NCLOB, NClobJdbcType.MATERIALIZED );
 		}
 	}
 
@@ -3817,6 +3824,32 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * Check whether the JDBC driver allows setting LOBs via {@link PreparedStatement#setBytes(int, byte[])},
+	 * {@link PreparedStatement#setNString(int, String)} or {@link PreparedStatement#setString(int, String)} APIs.
+	 *
+	 * @return {@code true} if LOBs can be set with the materialized APIs.
+	 * @since 6.2
+	 */
+	public boolean supportsMaterializedLobAccess() {
+		// Most drivers support this
+		return true;
+	}
+
+	/**
+	 * Whether to switch from {@code VARCHAR}-like types to {@link SqlTypes#MATERIALIZED_CLOB},
+	 * {@code NVARCHAR}-like types to {@link SqlTypes#MATERIALIZED_NCLOB}
+	 * and {@code VARBINARY}-like types to {@link SqlTypes#MATERIALIZED_BLOB} types,
+	 * when the requested size for a type exceeds the {@link #getMaxVarcharCapacity()}, {@link #getMaxNVarcharCapacity()}
+	 * and {@link #getMaxVarbinaryCapacity()} respectively.
+	 *
+	 * @return {@code true} if materialized LOBs should be used for capacity exceeding types.
+	 * @since 6.2
+	 */
+	public boolean useMaterializedLobWhenCapacityExceeded() {
+		return supportsMaterializedLobAccess();
+	}
+
+	/**
 	 * Modify the SQL, adding hints or comments, if necessary
 	 */
 	public String addSqlHintOrComment(
@@ -3895,7 +3928,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * The longest possible length of a {@link java.sql.Types#VARCHAR}-like column.
+	 * The biggest size value that can be supplied as argument to a {@link java.sql.Types#VARCHAR}-like type.
 	 * For longer column lengths, use some sort of {@code text}-like type for the
 	 * column.
 	 */
@@ -3905,8 +3938,8 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * The longest possible length of a {@link java.sql.Types#NVARCHAR}-like column.
-	 * For longer column lengths, use some sort of {@code text}-like type for the
+	 * The biggest size value that can be supplied as argument to a {@link java.sql.Types#NVARCHAR}-like type.
+	 * For longer column lengths, use some sort of {@code ntext}-like type for the
 	 * column.
 	 */
 	public int getMaxNVarcharLength() {
@@ -3915,13 +3948,40 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * The longest possible length of a {@link java.sql.Types#VARBINARY}-like column.
+	 * The biggest size value that can be supplied as argument to a {@link java.sql.Types#VARBINARY}-like type.
 	 * For longer column lengths, use some sort of {@code image}-like type for the
 	 * column.
 	 */
 	public int getMaxVarbinaryLength() {
 		//for most databases it's the same as for VARCHAR
 		return getMaxVarcharLength();
+	}
+
+	/**
+	 * The longest possible length of a {@link java.sql.Types#VARCHAR}-like column.
+	 * For longer column lengths, use some sort of {@code clob}-like type for the
+	 * column.
+	 */
+	public int getMaxVarcharCapacity() {
+		return getMaxVarcharLength();
+	}
+
+	/**
+	 * The longest possible length of a {@link java.sql.Types#NVARCHAR}-like column.
+	 * For longer column lengths, use some sort of {@code nclob}-like type for the
+	 * column.
+	 */
+	public int getMaxNVarcharCapacity() {
+		return getMaxNVarcharLength();
+	}
+
+	/**
+	 * The longest possible length of a {@link java.sql.Types#VARBINARY}-like column.
+	 * For longer column lengths, use some sort of {@code blob}-like type for the
+	 * column.
+	 */
+	public int getMaxVarbinaryCapacity() {
+		return getMaxVarbinaryLength();
 	}
 
 	public long getDefaultLobLength() {

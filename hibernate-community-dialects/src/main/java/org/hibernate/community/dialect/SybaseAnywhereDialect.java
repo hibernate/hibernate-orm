@@ -85,6 +85,11 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	}
 
 	@Override
+	public boolean useMaterializedLobWhenCapacityExceeded() {
+		return false;
+	}
+
+	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 		final CommonFunctionFactory functionFactory = new CommonFunctionFactory( queryEngine );

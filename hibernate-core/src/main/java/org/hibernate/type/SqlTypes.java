@@ -10,6 +10,8 @@ import org.hibernate.Internal;
 
 import java.sql.Types;
 
+import org.hibernate.Internal;
+
 /**
  * Defines a list of constant type codes used to identify generic SQL types.
  * This is an extension of the standard JDBC-defined {@link Types}, defining
@@ -424,6 +426,39 @@ public class SqlTypes {
 	 * @see org.hibernate.type.descriptor.jdbc.InstantAsTimestampWithTimeZoneJdbcType
 	 */
 	public static final int TIMESTAMP_UTC = 3003;
+
+	/**
+	 * The constant in the Java programming language, sometimes referred to
+	 * as a type code, that identifies the generic SQL type
+	 * {@code MATERIALIZED_BLOB}.
+	 *
+	 * This type is used when JDBC access should use {@link #VARBINARY} semantics,
+	 * but the {@link org.hibernate.type.descriptor.sql.DdlType} should be based on {@link #BLOB}.
+	 */
+	@Internal
+	public static final int MATERIALIZED_BLOB = 3004;
+
+	/**
+	 * The constant in the Java programming language, sometimes referred to
+	 * as a type code, that identifies the generic SQL type
+	 * {@code MATERIALIZED_CLOB}.
+	 *
+	 * This type is used when JDBC access should use {@link #VARCHAR} semantics,
+	 * but the {@link org.hibernate.type.descriptor.sql.DdlType} should be based on {@link #CLOB}.
+	 */
+	@Internal
+	public static final int MATERIALIZED_CLOB = 3005;
+
+	/**
+	 * The constant in the Java programming language, sometimes referred to
+	 * as a type code, that identifies the generic SQL type
+	 * {@code MATERIALIZED_NCLOB}.
+	 *
+	 * This type is used when JDBC access should use {@link #NVARCHAR} semantics,
+	 * but the {@link org.hibernate.type.descriptor.sql.DdlType} should be based on {@link #NCLOB}.
+	 */
+	@Internal
+	public static final int MATERIALIZED_NCLOB = 3006;
 
 	// Interval types
 

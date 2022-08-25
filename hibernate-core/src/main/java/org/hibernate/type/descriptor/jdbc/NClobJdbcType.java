@@ -179,4 +179,55 @@ public abstract class NClobJdbcType implements JdbcType {
 			};
 		}
 	};
+
+	public static final NClobJdbcType MATERIALIZED = new NClobJdbcType() {
+		@Override
+		public String toString() {
+			return "NClobTypeDescriptor(MATERIALIZED)";
+		}
+
+		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return String.class;
+		}
+
+		@Override
+		public <X> BasicBinder<X> getNClobBinder(final JavaType<X> javaType) {
+			return new BasicBinder<>( javaType, this ) {
+				@Override
+				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
+						throws SQLException {
+					st.setNString( index, javaType.unwrap( value, String.class, options ) );
+				}
+
+				@Override
+				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+						throws SQLException {
+					st.setNString( name, javaType.unwrap( value, String.class, options ) );
+				}
+			};
+		}
+
+		@Override
+		public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+			return new BasicExtractor<>( javaType, this ) {
+				@Override
+				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+					return javaType.wrap( rs.getNString( paramIndex ), options );
+				}
+
+				@Override
+				protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
+						throws SQLException {
+					return javaType.wrap( statement.getNString( index ), options );
+				}
+
+				@Override
+				protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
+						throws SQLException {
+					return javaType.wrap( statement.getNString( name ), options );
+				}
+			};
+		}
+	};
 }

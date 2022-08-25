@@ -196,7 +196,17 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 	@Override
 	public boolean isLob() {
-		return isLob;
+		if ( isLob ) {
+			return true;
+		}
+
+		if ( explicitJdbcTypeAccess != null ) {
+			final JdbcType type = explicitJdbcTypeAccess.apply( getTypeConfiguration() );
+			if ( type != null ) {
+				return type.isLob();
+			}
+		}
+		return false;
 	}
 
 	@Override
@@ -239,7 +249,16 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 	@Override
 	public boolean isNationalized() {
-		return isNationalized;
+		if ( isNationalized ) {
+			return true;
+		}
+		if ( explicitJdbcTypeAccess != null ) {
+			final JdbcType type = explicitJdbcTypeAccess.apply( getTypeConfiguration() );
+			if ( type != null ) {
+				return type.isNationalized();
+			}
+		}
+		return false;
 	}
 
 
@@ -1093,11 +1112,11 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 		basicValue = new BasicValue( buildingContext, table );
 
-		if ( isNationalized ) {
+		if ( isNationalized() ) {
 			basicValue.makeNationalized();
 		}
 
-		if ( isLob ) {
+		if ( isLob() ) {
 			basicValue.makeLob();
 		}
 
@@ -1243,11 +1262,11 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			basicValue.setTemporalPrecision( temporalPrecision );
 		}
 
-		if ( isLob ) {
+		if ( isLob() ) {
 			basicValue.makeLob();
 		}
 
-		if ( isNationalized ) {
+		if ( isNationalized() ) {
 			basicValue.makeNationalized();
 		}
 

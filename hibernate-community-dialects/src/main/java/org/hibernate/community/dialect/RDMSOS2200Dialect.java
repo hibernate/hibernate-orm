@@ -159,6 +159,11 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean useMaterializedLobWhenCapacityExceeded() {
+		return false;
+	}
+
+	@Override
 	public int getMaxVarbinaryLength() {
 		//no varbinary type
 		return -1;

@@ -18,11 +18,12 @@ public class Scale6IntervalSecondDdlType extends DdlTypeImpl {
 	public Scale6IntervalSecondDdlType(String typeNamePattern, Dialect dialect) {
 		super( SqlTypes.INTERVAL_SECOND, typeNamePattern, dialect );
 	}
+
 	@Override
 	public String getTypeName(Long size, Integer precision, Integer scale) {
-		// The maximum scale for `interval second` is 6 unfortunately, so we have to use numeric by default
+		// The maximum scale for `interval second` is 6 unfortunately
 		if ( scale == null || scale > 6 ) {
-			return DdlTypeImpl.replace( "numeric($p,$s)", size, precision, scale );
+			throw new IllegalStateException( "Illegal attempt to use interval second type with scale > 6" );
 		}
 		return super.getTypeName( size, precision, scale );
 	}

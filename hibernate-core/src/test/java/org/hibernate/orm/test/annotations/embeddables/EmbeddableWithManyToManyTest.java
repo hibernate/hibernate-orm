@@ -93,8 +93,6 @@ public class EmbeddableWithManyToManyTest {
 	@Embeddable
 	public static class Users {
 
-		private Integer initial;
-
 		@ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
 		private Set<User> users;
 
@@ -103,7 +101,6 @@ public class EmbeddableWithManyToManyTest {
 
 		public Users(User... users) {
 			this.users = Arrays.stream( users ).collect( Collectors.toSet() );
-			initial = users.length;
 		}
 
 		public Set<User> getUsers() {

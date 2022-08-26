@@ -28,6 +28,7 @@ import org.gradle.api.file.RelativePath;
 import org.gradle.api.provider.Provider;
 
 import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.ClassSummary;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexReader;
 import org.jboss.jandex.IndexWriter;
@@ -168,8 +169,17 @@ public class IndexManager {
 							}
 
 							if ( relativePath.getPathString().endsWith( ".class" ) ) {
-								try ( final FileInputStream stream = new FileInputStream( details.getFile() ) ) {
-									indexer.index( stream );
+								try (final FileInputStream stream = new FileInputStream( details.getFile() )) {
+									final ClassSummary classSummary = indexer.indexWithSummary( stream );
+									if ( classSummary == null ) {
+										project.getLogger()
+												.lifecycle( "Problem indexing class file - " + details.getFile()
+														.getAbsolutePath() );
+									}
+								}
+								catch (IllegalArgumentException e) {
+									throw new RuntimeException( "Problem indexing class file - " + details.getFile()
+											.getAbsolutePath(), e );
 								}
 								catch (FileNotFoundException e) {
 									throw new RuntimeException( "Problem locating project class file - " + details.getFile()

@@ -20,7 +20,7 @@ import org.hibernate.boot.archive.spi.ArchiveEntry;
 import org.hibernate.boot.archive.spi.ArchiveEntryHandler;
 import org.hibernate.boot.archive.spi.ArchiveException;
 
-import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.ClassSummary;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
@@ -61,17 +61,16 @@ public class ClassFileArchiveEntryHandler implements ArchiveEntryHandler {
 	private ClassDescriptor toClassDescriptor(ArchiveEntry entry) {
 		try (InputStream inputStream = entry.getStreamAccess().accessInputStream()) {
 			Indexer indexer = new Indexer();
-			indexer.index( inputStream );
+			ClassSummary classSummary = indexer.indexWithSummary( inputStream );
 			Index index = indexer.complete();
-			ClassInfo classInfo = index.getKnownClasses().iterator().next();
-			return toClassDescriptor( classInfo, index, entry );
+			return toClassDescriptor( classSummary, index, entry );
 		}
 		catch (IOException e) {
 			throw new ArchiveException( "Could not build ClassInfo", e );
 		}
 	}
 
-	private ClassDescriptor toClassDescriptor(ClassInfo classInfo, Index index, ArchiveEntry entry) {
+	private ClassDescriptor toClassDescriptor(ClassSummary classSummary, Index index, ArchiveEntry entry) {
 		ClassDescriptor.Categorization categorization = ClassDescriptor.Categorization.OTHER;
 
 		if ( isModel( index ) ) {
@@ -81,7 +80,7 @@ public class ClassFileArchiveEntryHandler implements ArchiveEntryHandler {
 			categorization = ClassDescriptor.Categorization.CONVERTER;
 		}
 
-		return new ClassDescriptorImpl( classInfo.name().toString(), categorization, entry.getStreamAccess() );
+		return new ClassDescriptorImpl( classSummary.name().toString(), categorization, entry.getStreamAccess() );
 	}
 
 	private boolean isConverter(Index index) {

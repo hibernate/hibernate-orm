@@ -13,6 +13,8 @@ on:
   pull_request:
     branches:
       - 'main'
+      
+permissions: {} # none
 
 # See https://github.com/hibernate/hibernate-orm/pull/4615 for a description of the behavior we're getting.
 concurrency:
@@ -25,6 +27,8 @@ concurrency:
 
 jobs:
   build:
+    permissions:
+      contents: read
     name: Java 11
     runs-on: ubuntu-latest
     strategy:

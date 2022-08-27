@@ -13,35 +13,37 @@ on:
   pull_request:
     branches:
       - '5.5'
+
+permissions: {} # none
+
+# See https://github.com/hibernate/hibernate-orm/pull/4615 for a description of the behavior we're getting.
+concurrency:
+  # Consider that two builds are in the same concurrency group (cannot run concurrently)
+  # if they use the same workflow and are about the same branch ("ref") or pull request.
+  group: "workflow = ${{ github.workflow }}, ref = ${{ github.event.ref }}, pr = ${{ github.event.pull_request.id }}"
+  # Cancel previous builds in the same concurrency group even if they are in process
+  # for pull requests or pushes to forks (not the upstream repository).
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.repository != 'hibernate/hibernate-orm' }}
+
 jobs:
   build:
+    permissions:
+      contents: read
     name: Java 8
     runs-on: ubuntu-latest
-    # We want to know the test results of all matrix entries
-    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
-        # When GitHub Actions supports it: https://github.com/actions/toolkit/issues/399
-        # We will use the experimental flag as indicator whether a failure should cause a workflow failure
         include:
           - rdbms: h2
-            experimental: false
           - rdbms: derby
-            experimental: true
           - rdbms: mariadb
-            experimental: true
           - rdbms: postgresql
-            experimental: true
           - rdbms: oracle
-            experimental: true
           - rdbms: db2
-            experimental: true
           - rdbms: mssql
-            experimental: true
 # Running with HANA requires at least 8GB memory just for the database, which we don't have on GH Actions runners
 #          - rdbms: hana
-#            experimental: true
     steps:
       - uses: actions/checkout@v2
         with:

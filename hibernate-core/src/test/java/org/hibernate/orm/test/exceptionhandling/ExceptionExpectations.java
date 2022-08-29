@@ -95,9 +95,8 @@ interface ExceptionExpectations {
 
 			@Override
 			public void onTransactionExceptionOnCommit(RuntimeException e) {
-				assertThat( e, instanceOf( RollbackException.class ) );
-				assertThat( e.getCause(), instanceOf( PersistenceException.class ) );
-				assertThat( e.getCause().getCause(), instanceOf( TransactionException.class ) );
+				assertThat( e, instanceOf( PersistenceException.class ) );
+				assertThat( e.getCause(), instanceOf( TransactionException.class ) );
 			}
 
 			@Override

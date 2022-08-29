@@ -15,6 +15,7 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.PersistenceException;
 import jakarta.persistence.RollbackException;
 import jakarta.validation.ConstraintViolationException;
 import java.math.BigDecimal;
@@ -78,10 +79,8 @@ public class BeanValidationTest {
 			);
 			fail( "invalid object should not be persisted" );
 		}
-		catch (RollbackException e) {
-			final Throwable cve = e.getCause();
-			assertTrue( cve instanceof ConstraintViolationException );
-			assertEquals( 1, ( (ConstraintViolationException) cve ).getConstraintViolations().size() );
+		catch (ConstraintViolationException cve) {
+			assertEquals( 1, cve.getConstraintViolations().size() );
 		}
 	}
 

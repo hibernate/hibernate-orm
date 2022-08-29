@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.cascade.multicircle;
 
+import jakarta.persistence.PersistenceException;
 import jakarta.persistence.RollbackException;
 
 import org.hibernate.TransientPropertyValueException;
@@ -248,9 +249,7 @@ public class MultiCircleJpaCascadeTest {
 						entityManager.getTransaction().commit();
 						fail( "should have thrown IllegalStateException" );
 					}
-					catch (RollbackException ex) {
-						assertTrue( ex.getCause() instanceof IllegalStateException );
-						IllegalStateException ise = (IllegalStateException) ex.getCause();
+					catch (IllegalStateException ise) {
 						// should fail on entity g (due to no cascade to f.g);
 						// instead it fails on entity e ( due to no cascade to d.e)
 						// because e is not in the process of being saved yet.

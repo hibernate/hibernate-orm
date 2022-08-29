@@ -267,11 +267,7 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 			em.getTransaction().commit();
 			fail( "Commit should be rollbacked" );
 		}
-		catch ( RollbackException e ) {
-			assertTrue(
-					"During flush a StateStateException is wrapped into a OptimisticLockException",
-					e.getCause() instanceof OptimisticLockException
-			);
+		catch ( OptimisticLockException e ) {
 		}
 		finally {
 			em.close();

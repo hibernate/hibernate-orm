@@ -159,7 +159,7 @@ public class PersistTest {
 						entityManager.getTransaction().commit();
 						fail();
 					}
-					catch (RollbackException e) {
+					catch (PersistenceException e) {
 						//verify that an exception is thrown!
 					}
 					finally {

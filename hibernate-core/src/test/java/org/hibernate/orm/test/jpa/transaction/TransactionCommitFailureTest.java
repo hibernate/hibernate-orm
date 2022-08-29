@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceException;
 import jakarta.persistence.RollbackException;
 
 import org.hibernate.cfg.Environment;
@@ -70,8 +71,8 @@ public class TransactionCommitFailureTest {
 			transactionFailureTrigger.set( true );
 			em.getTransaction().commit();
 		}
-		catch (RollbackException e) {
-			assertEquals( COMMIT_FAILURE, e.getLocalizedMessage() );
+		catch (PersistenceException e) {
+			assertEquals( COMMIT_FAILURE, e.getCause().getCause().getLocalizedMessage() );
 		}
 		finally {
 			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {

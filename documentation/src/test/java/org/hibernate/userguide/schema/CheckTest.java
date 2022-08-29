@@ -64,7 +64,7 @@ public class CheckTest extends BaseEntityManagerFunctionalTestCase {
 			fail("Should fail because the ISBN is not of the right length!");
 		}
 		catch (PersistenceException e) {
-			assertEquals(ConstraintViolationException.class, e.getCause().getCause().getClass());
+			assertEquals(ConstraintViolationException.class, e.getCause().getClass());
 		}
 		try {
 			doInJPA(this::entityManagerFactory, entityManager -> {
@@ -78,7 +78,7 @@ public class CheckTest extends BaseEntityManagerFunctionalTestCase {
 			fail("Should fail because the code is 0!");
 		}
 		catch (PersistenceException e) {
-			assertEquals(ConstraintViolationException.class, e.getCause().getCause().getClass());
+			assertEquals(ConstraintViolationException.class, e.getCause().getClass());
 		}
 	}
 

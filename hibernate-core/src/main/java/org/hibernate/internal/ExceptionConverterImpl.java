@@ -57,17 +57,17 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 	@Override
 	public RuntimeException convertCommitException(RuntimeException e) {
 		if ( isJpaBootstrap ) {
-			Throwable wrappedException;
+			final RuntimeException wrappedException;
 			if ( e instanceof HibernateException ) {
 				wrappedException = convert( (HibernateException) e );
 			}
 			else if ( e instanceof PersistenceException ) {
-				Throwable cause = e.getCause() == null ? e : e.getCause();
-				if ( cause instanceof HibernateException ) {
+				final Throwable cause = e.getCause();
+				if ( cause != null && cause instanceof HibernateException ) {
 					wrappedException = convert( (HibernateException) cause );
 				}
 				else {
-					wrappedException = cause;
+					wrappedException = e;
 				}
 			}
 			else {
@@ -75,12 +75,15 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			}
 			try {
 				//as per the spec we should rollback if commit fails
-				sharedSessionContract.getTransaction().rollback();
+				if ( sharedSessionContract.getTransaction().isActive() ) {
+					sharedSessionContract.getTransaction().rollback();
+				}
 			}
 			catch (Exception re) {
-				//swallow
+				re.addSuppressed( wrappedException );
+				throw new RollbackException( re );
 			}
-			return new RollbackException( "Error while committing the transaction", wrappedException );
+			return wrappedException;
 		}
 		else {
 			return e;

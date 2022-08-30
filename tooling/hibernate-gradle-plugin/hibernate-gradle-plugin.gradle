@@ -139,14 +139,8 @@ checkstyle {
 	showViolations = false
 }
 
-
-afterEvaluate {
-	if ( project.ormVersion.isSnapshot ) {
-		release.enabled false
-		publish.enabled false
-		publishPlugins.enabled false
-	}
-}
+tasks.publish.enabled !project.ormVersion.isSnapshot
+tasks.publishPlugins.enabled !project.ormVersion.isSnapshot
 
 gradle.taskGraph.whenReady { tg ->
 	if ( tg.hasTask( project.tasks.publishPlugins ) && project.tasks.publishPlugins.enabled  ) {

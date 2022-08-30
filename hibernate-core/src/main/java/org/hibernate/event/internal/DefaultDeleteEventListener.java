@@ -15,6 +15,8 @@ import org.hibernate.LockMode;
 import org.hibernate.TransientObjectException;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.OrphanRemovalAction;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
@@ -34,8 +36,11 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
@@ -262,7 +267,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			currentState = entityEntry.getLoadedState();
 		}
 
-		final Object[] deletedState = createDeletedState( persister, currentState, session );
+		final Object[] deletedState = createDeletedState( persister, entity, currentState, session );
 		entityEntry.setDeletedState( deletedState );
 
 		session.getInterceptor().onDelete(
@@ -321,13 +326,45 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		//persistenceContext.removeDatabaseSnapshot(key);
 	}
 
-	private Object[] createDeletedState(EntityPersister persister, Object[] currentState, EventSource session) {
-		Type[] propTypes = persister.getPropertyTypes();
-		final Object[] deletedState = new Object[propTypes.length];
-//		TypeFactory.deepCopy( currentState, propTypes, persister.getPropertyUpdateability(), deletedState, session );
-		boolean[] copyability = new boolean[propTypes.length];
-		java.util.Arrays.fill( copyability, true );
-		TypeHelper.deepCopy( currentState, propTypes, copyability, deletedState, session );
+	private Object[] createDeletedState(
+			EntityPersister persister,
+			Object parent,
+			Object[] currentState,
+			EventSource eventSource) {
+		final Type[] types = persister.getPropertyTypes();
+		final Object[] deletedState = new Object[types.length];
+		if ( !persister.hasCollections() || !persister.hasUninitializedLazyProperties( parent ) ) {
+			boolean[] copyability = new boolean[types.length];
+			java.util.Arrays.fill( copyability, true );
+			TypeHelper.deepCopy( currentState, types, copyability, deletedState, eventSource );
+			return deletedState;
+		}
+
+		final String[] propertyNames = persister.getPropertyNames();
+		final BytecodeEnhancementMetadata enhancementMetadata = persister.getBytecodeEnhancementMetadata();
+		for ( int i = 0; i < types.length; i++) {
+			if ( types[i].isCollectionType() && !enhancementMetadata.isAttributeLoaded( parent, propertyNames[i] ) ) {
+				final CollectionType collectionType = (CollectionType) types[i];
+				final CollectionPersister collectionDescriptor = persister.getFactory()
+						.getMetamodel()
+						.collectionPersister( collectionType.getRole() );
+				if ( collectionDescriptor.needsRemove() || collectionDescriptor.hasCache() ) {
+					final Serializable keyOfOwner = collectionType.getKeyOfOwner( parent, eventSource.getSession() );
+					// This will make sure that a CollectionEntry exists
+					deletedState[i] = collectionType.getCollection( keyOfOwner, eventSource.getSession(), parent, false );
+				}
+				else {
+					deletedState[i] = currentState[i];
+				}
+			}
+			else if ( currentState[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
+					|| currentState[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+				deletedState[i] = currentState[i];
+			}
+			else {
+				deletedState[i] = types[i].deepCopy( currentState[i], eventSource.getFactory() );
+			}
+		}
 		return deletedState;
 	}
 

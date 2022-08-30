@@ -429,7 +429,7 @@ public abstract class AbstractQuery<R>
 
 	@Override
 	public <P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Class<P> javaTypeClass) {
-		super.setParameter( parameter, value );
+		super.setParameter( parameter, value, javaTypeClass );
 		return this;
 	}
 

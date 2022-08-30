@@ -13,11 +13,9 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
-import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingAction;
-import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -81,11 +79,6 @@ public final class Cascade {
 			final EntityPersister persister,
 			final Object parent,
 			final T anything) throws HibernateException {
-		if ( action == CascadingActions.DELETE && cascadePoint == CascadePoint.AFTER_INSERT_BEFORE_DELETE ) {
-			// Before deleting an entity, ensure CollectionEntry objects for uninitialized lazy collections exist,
-			// otherwise these collections are not properly deleted and this leads to FK violations
-			registerUninitializedLazyCollectionEntries( eventSource, persister, parent );
-		}
 		if ( persister.hasCascades() || action.requiresNoCascadeChecking() ) { // performance opt
 			final boolean traceEnabled = LOG.isTraceEnabled();
 			if ( traceEnabled ) {
@@ -198,30 +191,6 @@ public final class Cascade {
 
 			if ( traceEnabled ) {
 				LOG.tracev( "Done processing cascade {0} for: {1}", action, persister.getEntityName() );
-			}
-		}
-	}
-
-	private static void registerUninitializedLazyCollectionEntries(EventSource eventSource, EntityPersister persister, Object parent) {
-		if ( !persister.hasCollections() || !persister.hasUninitializedLazyProperties( parent ) ) {
-			return;
-		}
-
-		final Type[] types = persister.getPropertyTypes();
-		final String[] propertyNames = persister.getPropertyNames();
-		final BytecodeEnhancementMetadata enhancementMetadata = persister.getBytecodeEnhancementMetadata();
-		for ( int i = 0; i < types.length; i++) {
-			if ( types[i].isCollectionType() && !enhancementMetadata.isAttributeLoaded( parent, propertyNames[i] ) ) {
-				final CollectionType collectionType = (CollectionType) types[i];
-				final CollectionPersister collectionDescriptor = persister.getFactory()
-						.getRuntimeMetamodels()
-						.getMappingMetamodel()
-						.getCollectionDescriptor( collectionType.getRole() );
-				if ( collectionDescriptor.needsRemove() || collectionDescriptor.hasCache() ) {
-					final Object keyOfOwner = collectionType.getKeyOfOwner( parent, eventSource.getSession() );
-					// This will make sure that a CollectionEntry exists
-					collectionType.getCollection( keyOfOwner, eventSource.getSession(), parent, false );
-				}
 			}
 		}
 	}

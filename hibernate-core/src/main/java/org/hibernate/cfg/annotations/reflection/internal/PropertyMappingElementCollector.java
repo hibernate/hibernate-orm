@@ -33,7 +33,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbTransient;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbVersion;
 import org.hibernate.boot.jaxb.mapping.spi.LifecycleCallback;
 import org.hibernate.boot.jaxb.mapping.spi.LifecycleCallbackContainer;
-import org.hibernate.boot.jaxb.mapping.spi.PersistentAttribute;
+import org.hibernate.boot.jaxb.mapping.spi.PersistentAttribute;import org.hibernate.cfg.annotations.reflection.JPAXMLOverriddenAnnotationReader;
 
 /**
  * Reproduces what we used to do with a {@code List<Element>} in {@link JPAXMLOverriddenAnnotationReader},
@@ -43,9 +43,9 @@ import org.hibernate.boot.jaxb.mapping.spi.PersistentAttribute;
  *     <li>Only create lists if we actually have elements (most lists should be empty in most cases)</li>
  * </ul>
  */
-final class PropertyMappingElementCollector {
-	static final Function<PersistentAttribute, String> PERSISTENT_ATTRIBUTE_NAME = PersistentAttribute::getName;
-	static final Function<JaxbTransient, String> JAXB_TRANSIENT_NAME = JaxbTransient::getName;
+public final class PropertyMappingElementCollector {
+	public static final Function<PersistentAttribute, String> PERSISTENT_ATTRIBUTE_NAME = PersistentAttribute::getName;
+	public static final Function<JaxbTransient, String> JAXB_TRANSIENT_NAME = JaxbTransient::getName;
 	static final Function<LifecycleCallback, String> LIFECYCLE_CALLBACK_NAME = LifecycleCallback::getMethodName;
 
 	private final String propertyName;
@@ -70,7 +70,7 @@ final class PropertyMappingElementCollector {
 	private List<JaxbPostUpdate> postUpdate;
 	private List<JaxbPostLoad> postLoad;
 
-	PropertyMappingElementCollector(String propertyName) {
+	public PropertyMappingElementCollector(String propertyName) {
 		this.propertyName = propertyName;
 	}
 

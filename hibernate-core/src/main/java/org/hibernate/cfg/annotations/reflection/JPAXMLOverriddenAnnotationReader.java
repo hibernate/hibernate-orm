@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.cfg.annotations.reflection.internal;
+package org.hibernate.cfg.annotations.reflection;
 
 import java.beans.Introspector;
 import java.lang.annotation.Annotation;
@@ -187,7 +187,7 @@ import org.hibernate.boot.jaxb.mapping.spi.ManagedType;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
-import org.hibernate.cfg.annotations.reflection.PersistentAttributeFilter;
+import org.hibernate.cfg.annotations.reflection.internal.PropertyMappingElementCollector;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;

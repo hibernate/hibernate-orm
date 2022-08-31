@@ -34,7 +34,7 @@ import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.annotations.reflection.AttributeConverterDefinitionCollector;
-import org.hibernate.cfg.annotations.reflection.internal.JPAXMLOverriddenMetadataProvider;
+import org.hibernate.cfg.annotations.reflection.JPAXMLOverriddenMetadataProvider;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 

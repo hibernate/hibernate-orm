@@ -103,6 +103,7 @@ import org.hibernate.cfg.PropertyInferredData;
 import org.hibernate.cfg.PropertyPreloadedData;
 import org.hibernate.cfg.SecondPass;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -1364,10 +1365,25 @@ public abstract class CollectionBinder {
 	}
 
 	private void addFilter(boolean hasAssociationTable, FilterJoinTable filter) {
-		if (hasAssociationTable) {
+		if ( hasAssociationTable ) {
+			final String condition;
+			if ( StringHelper.isEmpty( filter.condition() ) ) {
+				final FilterDefinition filterDefinition = buildingContext.getMetadataCollector()
+						.getFilterDefinition( filter.name() );
+				if ( filterDefinition == null ) {
+					throw new AnnotationException(
+							"@FilterJoinTable on an association without condition attribute and without an any @FilterDef with a default condition"
+									+ StringHelper.qualify( propertyHolder.getPath(), propertyName )
+					);
+				}
+				condition = filterDefinition.getDefaultFilterCondition();
+			}
+			else {
+				condition = filter.condition();
+			}
 			collection.addFilter(
 					filter.name(),
-					filter.condition(),
+					condition,
 					filter.deduceAliasInjectionPoints(),
 					toAliasTableMap( filter.aliases() ),
 					toAliasEntityMap( filter.aliases() )

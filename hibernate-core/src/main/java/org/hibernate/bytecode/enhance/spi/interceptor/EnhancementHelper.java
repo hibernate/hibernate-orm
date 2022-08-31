@@ -154,6 +154,7 @@ public class EnhancementHelper {
 
 		boolean isTempSession = false;
 		boolean isJta = false;
+		boolean existingTransaction = false;
 
 		// first figure out which Session to use
 		if ( session == null ) {
@@ -182,6 +183,9 @@ public class EnhancementHelper {
 			else {
 				throwLazyInitializationException( Cause.DISCONNECTED_SESSION, entityName, attributeName);
 			}
+		}
+		else if ( session.getTransactionCoordinator().isTransactionActive() ) {
+			existingTransaction = true;
 		}
 
 		// If we are using a temporary Session, begin a transaction if necessary
@@ -228,6 +232,13 @@ public class EnhancementHelper {
 				}
 				catch (Exception e) {
 					BytecodeInterceptorLogging.LOGGER.warn( "Unable to close temporary session used to load lazy collection associated to no session" );
+				}
+			}
+			else {
+				if ( ! existingTransaction ) {
+					// If a load event was triggered outside of a transaction on a valid Session (open and connected),
+					// we need to ensure connections get released in all release modes:
+					session.getJdbcCoordinator().afterTransaction();
 				}
 			}
 		}

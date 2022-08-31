@@ -316,22 +316,26 @@ void handleNotifications(currentBuild, buildEnv) {
 					<p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to view the results.</p>"""
 			}
 		}
-		else if ( currentResult == 'FAILURE' ) {
-			if ( previousResult != null && previousResult == "FAILURE" ) {
-				subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Still failing"
-				body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Still failing:</p>
-					<p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to view the results.</p>"""
+		else if (currentBuild.rawBuild.getActions(jenkins.model.InterruptedBuildAction.class).isEmpty()) {
+			// If there are interrupted build actions, this means the build was cancelled, probably superseded
+			// Thanks to https://issues.jenkins.io/browse/JENKINS-43339 for the "hack" to determine this
+			if ( currentResult == 'FAILURE' ) {
+				if ( previousResult != null && previousResult == "FAILURE" ) {
+					subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Still failing"
+					body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Still failing:</p>
+						<p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to view the results.</p>"""
+				}
+				else {
+					subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Failure"
+					body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Failure:</p>
+						<p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to view the results.</p>"""
+				}
 			}
 			else {
-				subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Failure"
-				body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Failure:</p>
+				subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - ${currentResult}"
+				body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - ${currentResult}:</p>
 					<p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to view the results.</p>"""
 			}
-		}
-		else {
-			subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - ${currentResult}"
-			body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - ${currentResult}:</p>
-				<p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to view the results.</p>"""
 		}
 
 		emailext(

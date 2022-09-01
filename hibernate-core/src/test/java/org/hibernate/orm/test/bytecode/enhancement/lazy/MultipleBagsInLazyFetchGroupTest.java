@@ -15,13 +15,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
-import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.SessionFactoryBuilderService;
-import org.hibernate.cfg.Configuration;
-
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
@@ -30,6 +23,7 @@ import org.junit.runner.RunWith;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Christian Beikov
@@ -42,19 +36,9 @@ public class MultipleBagsInLazyFetchGroupTest extends BaseCoreFunctionalTestCase
         return new Class<?>[]{StringsEntity.class};
     }
 
-    @Override
-    protected void prepareBasicRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
-        serviceRegistryBuilder.addService(
-                SessionFactoryBuilderService.class,
-                (SessionFactoryBuilderService) (metadata, bootstrapContext) -> {
-                    SessionFactoryOptionsBuilder optionsBuilder = new SessionFactoryOptionsBuilder(
-                            metadata.getMetadataBuildingOptions().getServiceRegistry(),
-                            bootstrapContext
-                    );
-                    optionsBuilder.enableCollectionInDefaultFetchGroup( true );
-                    return new SessionFactoryBuilderImpl( metadata, optionsBuilder );
-                }
-        );
+    @Before
+    public void checkSettings() {
+        assertTrue( sessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
     }
 
     @Before

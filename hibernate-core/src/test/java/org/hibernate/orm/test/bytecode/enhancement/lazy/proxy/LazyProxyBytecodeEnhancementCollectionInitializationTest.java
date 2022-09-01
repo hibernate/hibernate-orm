@@ -7,22 +7,17 @@
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Hibernate;
-import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
-import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.SessionFactoryBuilderService;
 import org.hibernate.engine.spi.SessionImplementor;
 
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,20 +47,10 @@ public class LazyProxyBytecodeEnhancementCollectionInitializationTest
 		return new Class<?>[] { Parent.class, Child.class };
 	}
 
-	@Override
-	protected void prepareBasicRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
-		serviceRegistryBuilder.addService(
-				SessionFactoryBuilderService.class,
-				(SessionFactoryBuilderService) (metadata, bootstrapContext) -> {
-					SessionFactoryOptionsBuilder optionsBuilder = new SessionFactoryOptionsBuilder(
-							metadata.getMetadataBuildingOptions().getServiceRegistry(),
-							bootstrapContext
-					);
-					// We want to test this configuration exactly
-					optionsBuilder.enableCollectionInDefaultFetchGroup( true );
-					return new SessionFactoryBuilderImpl( metadata, optionsBuilder );
-				}
-		);
+	@Before
+	public void checkSettings() {
+		// We want to test this configuration exactly
+		assertTrue( sessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
 	}
 
 	@Before

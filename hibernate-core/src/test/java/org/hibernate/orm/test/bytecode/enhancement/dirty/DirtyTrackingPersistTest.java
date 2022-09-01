@@ -25,18 +25,15 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
-import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.SessionFactoryBuilderService;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Christian Beikov
@@ -50,19 +47,9 @@ public class DirtyTrackingPersistTest extends BaseCoreFunctionalTestCase {
 		return new Class<?>[] { HotherEntity.class, Hentity.class };
 	}
 
-	@Override
-	protected void prepareBasicRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
-		serviceRegistryBuilder.addService(
-				SessionFactoryBuilderService.class,
-				(SessionFactoryBuilderService) (metadata, bootstrapContext) -> {
-					SessionFactoryOptionsBuilder optionsBuilder = new SessionFactoryOptionsBuilder(
-							metadata.getMetadataBuildingOptions().getServiceRegistry(),
-							bootstrapContext
-					);
-					optionsBuilder.enableCollectionInDefaultFetchGroup( true );
-					return new SessionFactoryBuilderImpl( metadata, optionsBuilder );
-				}
-		);
+	@Before
+	public void checkSettings() {
+		assertTrue( sessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
 	}
 
 	@Test

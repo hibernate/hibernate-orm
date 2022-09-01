@@ -196,7 +196,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean orderUpdatesEnabled;
 	private boolean orderInsertsEnabled;
 	private boolean postInsertIdentifierDelayed;
-	private boolean collectionsInDefaultFetchGroupEnabled;
+	private boolean collectionsInDefaultFetchGroupEnabled = true;
 
 	// JPA callbacks
 	private boolean callbacksEnabled;

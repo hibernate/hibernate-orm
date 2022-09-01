@@ -17,6 +17,10 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
+import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
+import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.SessionFactoryBuilderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.proxy.HibernateProxy;
@@ -48,6 +52,22 @@ public class UninitializedAssociationsInCacheTest extends BaseCoreFunctionalTest
 		configuration.setProperty(AvailableSettings.USE_SECOND_LEVEL_CACHE, "true");
 		configuration.setProperty(AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "false");
 		configuration.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
+	}
+
+	@Override
+	protected void prepareBasicRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.addService(
+				SessionFactoryBuilderService.class,
+				(SessionFactoryBuilderService) (metadata, bootstrapContext) -> {
+					SessionFactoryOptionsBuilder optionsBuilder = new SessionFactoryOptionsBuilder(
+							metadata.getMetadataBuildingOptions().getServiceRegistry(),
+							bootstrapContext
+					);
+					// This test only makes sense if association properties *can* be uninitialized.
+					optionsBuilder.enableCollectionInDefaultFetchGroup( false );
+					return new SessionFactoryBuilderImpl( metadata, optionsBuilder );
+				}
+		);
 	}
 
 	@Test

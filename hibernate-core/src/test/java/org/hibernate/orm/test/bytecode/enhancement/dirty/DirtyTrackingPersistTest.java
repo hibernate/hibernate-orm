@@ -27,8 +27,8 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
 import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.SessionFactoryBuilderService;
-import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
@@ -37,9 +37,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Christian Beikov
@@ -54,9 +51,8 @@ public class DirtyTrackingPersistTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		configuration.getStandardServiceRegistryBuilder().addService(
+	protected void prepareBasicRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.addService(
 				SessionFactoryBuilderService.class,
 				(SessionFactoryBuilderService) (metadata, bootstrapContext) -> {
 					SessionFactoryOptionsBuilder optionsBuilder = new SessionFactoryOptionsBuilder(

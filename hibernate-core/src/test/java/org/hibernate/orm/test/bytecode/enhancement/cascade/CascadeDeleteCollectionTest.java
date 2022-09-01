@@ -72,7 +72,7 @@ public class CascadeDeleteCollectionTest extends BaseCoreFunctionalTestCase {
                     .setParameter( "name", "PARENT" )
                     .uniqueResult();
             checkInterceptor( loadedParent, false );
-            assertFalse( Hibernate.isPropertyInitialized( loadedParent, "children" ) );
+            assertFalse( Hibernate.isInitialized( loadedParent.getChildren() ) );
             s.delete( loadedParent );
         } );
         // If the lazy relation is not fetch on cascade there is a constraint violation on commit
@@ -87,8 +87,8 @@ public class CascadeDeleteCollectionTest extends BaseCoreFunctionalTestCase {
                     .setParameter( "name", "PARENT" )
                     .uniqueResult();
             checkInterceptor( loadedParent, false );
-            loadedParent.getChildren();
-            assertTrue( Hibernate.isPropertyInitialized( loadedParent, "children" ) );
+            loadedParent.getChildren().size();
+            assertTrue( Hibernate.isInitialized( loadedParent.getChildren() ) );
             s.delete( loadedParent );
         } );
         // If the lazy relation is not fetch on cascade there is a constraint violation on commit
@@ -101,7 +101,7 @@ public class CascadeDeleteCollectionTest extends BaseCoreFunctionalTestCase {
             return s.get( Parent.class, originalParent.getId() );
         } );
 
-        assertFalse( Hibernate.isPropertyInitialized( detachedParent, "children" ) );
+        assertFalse( Hibernate.isInitialized( detachedParent.getChildren() ) );
 
         checkInterceptor( detachedParent, false );
 
@@ -117,14 +117,12 @@ public class CascadeDeleteCollectionTest extends BaseCoreFunctionalTestCase {
     public void testDetachedWithInitializedAssociation() {
         final Parent detachedParent = doInHibernate( this::sessionFactory, s -> {
              Parent parent = s.get( Parent.class, originalParent.getId() );
-             assertFalse( Hibernate.isPropertyInitialized( parent, "children" ) );
-
              // initialize collection before detaching
-             parent.getChildren();
+             parent.getChildren().size();
              return parent;
         } );
 
-        assertTrue( Hibernate.isPropertyInitialized( detachedParent, "children" ) );
+        assertTrue( Hibernate.isInitialized( detachedParent.getChildren() ) );
 
         checkInterceptor( detachedParent, false );
 
@@ -192,7 +190,7 @@ public class CascadeDeleteCollectionTest extends BaseCoreFunctionalTestCase {
 
         @OneToMany( mappedBy = "parent", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE}, fetch = FetchType.LAZY )
         List<Child> getChildren() {
-            return Collections.unmodifiableList( children );
+            return children;
         }
 
         void setChildren(List<Child> children) {

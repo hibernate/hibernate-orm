@@ -10,7 +10,7 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.Hibernate.isPropertyInitialized;
+import static org.hibernate.Hibernate.isInitialized;
 import static org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils.checkDirtyTracking;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertFalse;
@@ -70,7 +70,7 @@ public class LazyCollectionDetachTest extends BaseCoreFunctionalTestCase {
 
 			assertThat( parent, notNullValue() );
 			assertThat( parent, not( instanceOf( HibernateProxy.class ) ) );
-			assertFalse( isPropertyInitialized( parent, "children" ) );
+			assertFalse( isInitialized( parent.children ) );
 			checkDirtyTracking( parent );
 
 			s.detach( parent );
@@ -99,7 +99,7 @@ public class LazyCollectionDetachTest extends BaseCoreFunctionalTestCase {
 
 			assertThat( parent, notNullValue() );
 			assertThat( parent, not( instanceOf( HibernateProxy.class ) ) );
-			assertFalse( isPropertyInitialized( parent, "children" ) );
+			assertFalse( isInitialized( parent.children ) );
 			checkDirtyTracking( parent );
 
 			s.refresh( parent );

@@ -19,15 +19,11 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import org.hibernate.Hibernate;
 import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
 import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
 import org.hibernate.boot.spi.SessionFactoryBuilderService;
-import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
-import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.engine.spi.SelfDirtinessTracker;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
@@ -38,7 +34,6 @@ import org.junit.runner.RunWith;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Christian Beikov
@@ -83,11 +78,8 @@ public class DirtyTrackingCollectionInDefaultFetchGroupTest extends BaseCoreFunc
         doInJPA( this::sessionFactory, entityManager -> {
             StringsEntity entity = entityManager.find( StringsEntity.class, 1L );
             entityManager.flush();
-            BytecodeLazyAttributeInterceptor interceptor = (BytecodeLazyAttributeInterceptor) ( (PersistentAttributeInterceptable) entity )
-                    .$$_hibernate_getInterceptor();
-            assertTrue( interceptor.hasAnyUninitializedAttributes() );
-            assertFalse( interceptor.isAttributeLoaded( "someStrings" ) );
-            assertFalse( interceptor.isAttributeLoaded( "someStringEntities" ) );
+            assertFalse( Hibernate.isInitialized( entity.someStrings ) );
+            assertFalse( Hibernate.isInitialized( entity.someStringEntities ) );
         } );
     }
 

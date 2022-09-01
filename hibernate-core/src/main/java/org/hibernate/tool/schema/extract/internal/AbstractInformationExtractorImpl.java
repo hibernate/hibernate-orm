@@ -996,11 +996,15 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 
 			final int columnPosition = resultSet.getInt( getResultSetColumnPositionColumn() );
 
+			final int index = columnPosition - 1;
+			// Fill up the array list with nulls up to the desired index, because some JDBC drivers don't return results ordered by column position
+			while ( pkColumns.size() <= index ) {
+				pkColumns.add( null );
+			}
 			final Identifier columnIdentifier = DatabaseIdentifier.toIdentifier(
 					resultSet.getString( getResultSetColumnNameLabel() )
 			);
-			final ColumnInformation column = tableInformation.getColumn( columnIdentifier );
-			pkColumns.add( columnPosition-1, column );
+			pkColumns.set( index, tableInformation.getColumn( columnIdentifier ) );
 		}
 		if ( firstPass ) {
 			// we did not find any results (no pk)

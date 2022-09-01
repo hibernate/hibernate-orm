@@ -22,8 +22,8 @@ import jakarta.persistence.Table;
 import org.hibernate.Hibernate;
 import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
 import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.SessionFactoryBuilderService;
-import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
@@ -48,9 +48,8 @@ public class DirtyTrackingCollectionInDefaultFetchGroupTest extends BaseCoreFunc
     }
 
     @Override
-    protected void configure(Configuration configuration) {
-        super.configure( configuration );
-        configuration.getStandardServiceRegistryBuilder().addService(
+    protected void prepareBasicRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+        serviceRegistryBuilder.addService(
                 SessionFactoryBuilderService.class,
                 (SessionFactoryBuilderService) (metadata, bootstrapContext) -> {
                     SessionFactoryOptionsBuilder optionsBuilder = new SessionFactoryOptionsBuilder(

@@ -149,11 +149,6 @@ public class EnhancerImpl implements Enhancer {
 			log.debugf( "Skipping enhancement of [%s]: it's an interface", managedCtClass.getName() );
 			return null;
 		}
-		// can't effectively enhance records
-		if ( managedCtClass.isRecord() ) {
-			log.debugf( "Skipping enhancement of [%s]: it's a record", managedCtClass.getName() );
-			return null;
-		}
 		// skip already enhanced classes
 		if ( alreadyEnhanced( managedCtClass ) ) {
 			log.debugf( "Skipping enhancement of [%s]: already enhanced", managedCtClass.getName() );

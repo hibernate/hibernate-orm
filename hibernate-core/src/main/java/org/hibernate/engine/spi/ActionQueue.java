@@ -107,23 +107,7 @@ public class ActionQueue {
 	private static final LinkedHashMap<Class<? extends Executable>,ListProvider<?>> EXECUTABLE_LISTS_MAP;
 	static {
 		EXECUTABLE_LISTS_MAP = CollectionHelper.linkedMapOfSize( 8 );
-		/*
-			CollectionRemoveAction actions have to be executed before OrphanRemovalAction actions, to prevent a constraint violation
-			when deleting an orphan Entity that contains an ElementCollection (see HHH-15159)
-		 */
-		EXECUTABLE_LISTS_MAP.put(
-				CollectionRemoveAction.class,
-				new ListProvider<CollectionRemoveAction>() {
-					ExecutableList<CollectionRemoveAction> get(ActionQueue instance) {
-						return instance.collectionRemovals;
-					}
-					ExecutableList<CollectionRemoveAction> init(ActionQueue instance) {
-						return instance.collectionRemovals = new ExecutableList<>(
-								instance.isOrderUpdatesEnabled()
-						);
-					}
-				}
-		);
+
 		EXECUTABLE_LISTS_MAP.put(
 				OrphanRemovalAction.class,
 				new ListProvider<OrphanRemovalAction>() {
@@ -177,6 +161,19 @@ public class ActionQueue {
 					}
 					ExecutableList<QueuedOperationCollectionAction> init(ActionQueue instance) {
 						return instance.collectionQueuedOps = new ExecutableList<>(
+								instance.isOrderUpdatesEnabled()
+						);
+					}
+				}
+		);
+		EXECUTABLE_LISTS_MAP.put(
+				CollectionRemoveAction.class,
+				new ListProvider<CollectionRemoveAction>() {
+					ExecutableList<CollectionRemoveAction> get(ActionQueue instance) {
+						return instance.collectionRemovals;
+					}
+					ExecutableList<CollectionRemoveAction> init(ActionQueue instance) {
+						return instance.collectionRemovals = new ExecutableList<>(
 								instance.isOrderUpdatesEnabled()
 						);
 					}

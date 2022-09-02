@@ -10,9 +10,10 @@
 package org.hibernate.cfg;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -24,7 +25,6 @@ import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.Target;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.cfg.annotations.HCANNHelper;
@@ -85,51 +85,36 @@ class PropertyContainer {
 		this.classLevelAccessType = localClassLevelAccessType != AccessType.DEFAULT
 				? localClassLevelAccessType
 				: defaultClassLevelAccessType;
-		assert classLevelAccessType == AccessType.FIELD || classLevelAccessType == AccessType.PROPERTY
-				|| classLevelAccessType == AccessType.RECORD;
+		assert classLevelAccessType == AccessType.FIELD || classLevelAccessType == AccessType.PROPERTY;
 
 
 		final List<XProperty> fields = xClass.getDeclaredProperties( AccessType.FIELD.getType() );
 		final List<XProperty> getters = xClass.getDeclaredProperties( AccessType.PROPERTY.getType() );
-		final List<XProperty> recordComponents = xClass.getDeclaredProperties( AccessType.RECORD.getType() );
 
-		preFilter( fields, getters, recordComponents );
+		preFilter( fields, getters );
 
 		final Map<String,XProperty> persistentAttributesFromGetters = new HashMap<>();
-		final Map<String,XProperty> persistentAttributesFromComponents = new HashMap<>();
 
-		final Map<String, XProperty> localAttributeMap;
-		// If the record class has only record components which match up with fields and no additional getters,
-		// we can retain the property order, to match up with the record component order
-		if ( !recordComponents.isEmpty() && recordComponents.size() == fields.size() && getters.isEmpty() ) {
-			localAttributeMap = new LinkedHashMap<>();
-		}
-		else {
-			localAttributeMap = new TreeMap<>();
-		}
+		final TreeMap<String, XProperty> localAttributeMap = new TreeMap<>();
 		collectPersistentAttributesUsingLocalAccessType(
 				xClass,
 				localAttributeMap,
 				persistentAttributesFromGetters,
-				persistentAttributesFromComponents,
 				fields,
-				getters,
-				recordComponents
+				getters
 		);
 		collectPersistentAttributesUsingClassLevelAccessType(
 				xClass,
 				classLevelAccessType,
 				localAttributeMap,
 				persistentAttributesFromGetters,
-				persistentAttributesFromComponents,
 				fields,
-				getters,
-				recordComponents
+				getters
 		);
 		this.persistentAttributes = verifyAndInitializePersistentAttributes( xClass, localAttributeMap );
 	}
 
-	private void preFilter(List<XProperty> fields, List<XProperty> getters, List<XProperty> recordComponents) {
+	private void preFilter(List<XProperty> fields, List<XProperty> getters) {
 		Iterator<XProperty> propertyIterator = fields.iterator();
 		while ( propertyIterator.hasNext() ) {
 			final XProperty property = propertyIterator.next();
@@ -145,24 +130,14 @@ class PropertyContainer {
 				propertyIterator.remove();
 			}
 		}
-
-		propertyIterator = recordComponents.iterator();
-		while ( propertyIterator.hasNext() ) {
-			final XProperty property = propertyIterator.next();
-			if ( mustBeSkipped( property ) ) {
-				propertyIterator.remove();
-			}
-		}
 	}
 
 	private static void collectPersistentAttributesUsingLocalAccessType(
 			XClass xClass,
-			Map<String, XProperty> persistentAttributeMap,
+			TreeMap<String, XProperty> persistentAttributeMap,
 			Map<String,XProperty> persistentAttributesFromGetters,
-			Map<String,XProperty> persistentAttributesFromComponents,
 			List<XProperty> fields,
-			List<XProperty> getters,
-			List<XProperty> recordComponents) {
+			List<XProperty> getters) {
 
 		// Check fields...
 		Iterator<XProperty> propertyIterator = fields.iterator();
@@ -208,40 +183,22 @@ class PropertyContainer {
 			persistentAttributeMap.put( name, xProperty );
 			persistentAttributesFromGetters.put( name, xProperty );
 		}
-
-		// Check record components...
-		propertyIterator = recordComponents.iterator();
-		while ( propertyIterator.hasNext() ) {
-			final XProperty xProperty = propertyIterator.next();
-			final Access localAccessAnnotation = xProperty.getAnnotation( Access.class );
-			if ( localAccessAnnotation == null ) {
-				continue;
-			}
-
-			propertyIterator.remove();
-			final String name = xProperty.getName();
-			persistentAttributeMap.put( name, xProperty );
-			persistentAttributesFromComponents.put( name, xProperty );
-		}
 	}
 
 	private static void collectPersistentAttributesUsingClassLevelAccessType(
 			XClass xClass,
 			AccessType classLevelAccessType,
-			Map<String, XProperty> persistentAttributeMap,
+			TreeMap<String, XProperty> persistentAttributeMap,
 			Map<String,XProperty> persistentAttributesFromGetters,
-			Map<String,XProperty> persistentAttributesFromComponents,
 			List<XProperty> fields,
-			List<XProperty> getters,
-			List<XProperty> recordComponents) {
+			List<XProperty> getters) {
 		if ( classLevelAccessType == AccessType.FIELD ) {
 			for ( XProperty field : fields ) {
-				final String name = field.getName();
-				if ( persistentAttributeMap.containsKey( name ) ) {
+				if ( persistentAttributeMap.containsKey( field.getName() ) ) {
 					continue;
 				}
 
-				persistentAttributeMap.put( name, field );
+				persistentAttributeMap.put( field.getName(), field );
 			}
 		}
 		else {
@@ -251,7 +208,7 @@ class PropertyContainer {
 				// HHH-10242 detect registration of the same property getter twice - eg boolean isId() + UUID getId()
 				final XProperty previous = persistentAttributesFromGetters.get( name );
 				if ( previous != null ) {
-					throw new MappingException(
+					throw new org.hibernate.boot.MappingException(
 							LOG.ambiguousPropertyMethods(
 									xClass.getName(),
 									HCANNHelper.annotatedElementSignature( previous ),
@@ -267,18 +224,6 @@ class PropertyContainer {
 
 				persistentAttributeMap.put( getter.getName(), getter );
 				persistentAttributesFromGetters.put( name, getter );
-			}
-			// When a user uses the `property` access strategy for the entity owning an embeddable,
-			// we also have to add the attributes for record components,
-			// because record classes usually don't have getters, but just the record component accessors
-			for ( XProperty recordComponent : recordComponents ) {
-				final String name = recordComponent.getName();
-				if ( persistentAttributeMap.containsKey( name ) ) {
-					continue;
-				}
-
-				persistentAttributeMap.put( name, recordComponent );
-				persistentAttributesFromComponents.put( name, recordComponent );
 			}
 		}
 	}

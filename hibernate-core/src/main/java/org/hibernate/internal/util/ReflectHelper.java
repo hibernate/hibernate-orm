@@ -51,10 +51,6 @@ public final class ReflectHelper {
 
 	private static final Method OBJECT_EQUALS;
 	private static final Method OBJECT_HASHCODE;
-	private static final Class<?> RECORD_CLASS;
-	private static final Method GET_RECORD_COMPONENTS;
-	private static final Method GET_NAME;
-	private static final Method GET_TYPE;
 
 	static {
 		Method eq;
@@ -68,25 +64,6 @@ public final class ReflectHelper {
 		}
 		OBJECT_EQUALS = eq;
 		OBJECT_HASHCODE = hash;
-
-		Class<?> recordClass = null;
-		Method getRecordComponents = null;
-		Method getName = null;
-		Method getType = null;
-		try {
-			recordClass = Class.forName( "java.lang.Record" );
-			getRecordComponents = Class.class.getMethod( "getRecordComponents" );
-			final Class<?> recordComponentClass = Class.forName( "java.lang.reflect.RecordComponent" );
-			getName = recordComponentClass.getMethod( "getName" );
-			getType = recordComponentClass.getMethod( "getType" );
-		}
-		catch (Exception e) {
-			// Ignore
-		}
-		RECORD_CLASS = recordClass;
-		GET_RECORD_COMPONENTS = getRecordComponents;
-		GET_NAME = getName;
-		GET_TYPE = getType;
 	}
 
 	/**
@@ -460,15 +437,6 @@ public final class ReflectHelper {
 		Class checkClass = containerClass;
 		Method getter = null;
 
-		if ( isRecord( containerClass ) ) {
-			try {
-				getter = containerClass.getMethod( propertyName, NO_PARAM_SIGNATURE );
-			}
-			catch (NoSuchMethodException e) {
-				// Ignore
-			}
-		}
-
 		// check containerClass, and then its super types (if any)
 		while ( getter == null && checkClass != null ) {
 			if ( checkClass.equals( Object.class ) ) {
@@ -516,14 +484,6 @@ public final class ReflectHelper {
 	}
 
 	private static Method getGetterOrNull(Class containerClass, String propertyName) {
-		if ( isRecord( containerClass ) ) {
-			try {
-				return containerClass.getMethod( propertyName, NO_PARAM_SIGNATURE );
-			}
-			catch (NoSuchMethodException e) {
-				// Ignore
-			}
-		}
 		for ( Method method : containerClass.getDeclaredMethods() ) {
 			// if the method has parameters, skip it
 			if ( method.getParameterCount() != 0 ) {
@@ -753,54 +713,8 @@ public final class ReflectHelper {
 				}
 			}
 		}
-		if ( isRecord( field.getDeclaringClass() ) ) {
-			try {
-				return field.getDeclaringClass().getMethod( field.getName(), NO_PARAM_SIGNATURE );
-			}
-			catch (NoSuchMethodException e) {
-				// Ignore
-			}
-		}
 
 		return null;
-	}
-
-	public static boolean isRecord(Class<?> declaringClass) {
-		return RECORD_CLASS != null && RECORD_CLASS.isAssignableFrom( declaringClass );
-	}
-
-	public static Class<?>[] getRecordComponentTypes(Class<?> javaType) {
-		try {
-			final Object[] recordComponents = (Object[]) GET_RECORD_COMPONENTS.invoke( javaType );
-			final Class<?>[] componentTypes = new Class[recordComponents.length];
-			for (int i = 0; i < recordComponents.length; i++ ) {
-				componentTypes[i] = (Class<?>) GET_TYPE.invoke( recordComponents[i] );
-			}
-			return componentTypes;
-		}
-		catch (Exception e) {
-			throw new IllegalArgumentException(
-					"Could not determine the record components for: " + javaType.getName(),
-					e
-			);
-		}
-	}
-
-	public static String[] getRecordComponentNames(Class<?> javaType) {
-		try {
-			final Object[] recordComponents = (Object[]) GET_RECORD_COMPONENTS.invoke( javaType );
-			final String[] componentNames = new String[recordComponents.length];
-			for (int i = 0; i < recordComponents.length; i++ ) {
-				componentNames[i] = (String) GET_NAME.invoke( recordComponents[i] );
-			}
-			return componentNames;
-		}
-		catch (Exception e) {
-			throw new IllegalArgumentException(
-					"Could not determine the record components for: " + javaType.getName(),
-					e
-			);
-		}
 	}
 
 	public static <T> Class<T> getClass(java.lang.reflect.Type type) {

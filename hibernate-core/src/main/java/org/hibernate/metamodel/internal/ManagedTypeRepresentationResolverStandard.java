@@ -9,7 +9,6 @@ package org.hibernate.metamodel.internal;
 
 import java.util.function.Supplier;
 
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.RepresentationMode;
@@ -104,14 +103,6 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 		}
 		else if ( compositeUserType != null ) {
 			customInstantiator = new EmbeddableCompositeUserTypeInstantiator( compositeUserType );
-		}
-		else if ( bootDescriptor.getComponentClassName() != null && ReflectHelper.isRecord( bootDescriptor.getComponentClass() ) ) {
-			if ( bootDescriptor.sortProperties() == null ) {
-				customInstantiator = new EmbeddableInstantiatorRecordStandard( bootDescriptor.getComponentClass() );
-			}
-			else {
-				customInstantiator = EmbeddableInstantiatorRecordIndirecting.of( bootDescriptor.getComponentClass() );
-			}
 		}
 		else {
 			customInstantiator = null;

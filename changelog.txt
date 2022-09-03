@@ -83,6 +83,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/32066
 ** Bug
     * [HHH-15316] - Session.createQuery() doesn't accept JpaCriteriaInsertSelect
     * [HHH-15297] - Invalid Automatic-Module-Name org.hibernate.orm.community-dialects
+    * [HHH-15294] - Type issues in CockroachDB dialect
     * [HHH-15293] - CockroachDB BYTES type does not have a length specification
     * [HHH-15291] - ClassCastException Regression in CriteriaBuilder
     * [HHH-15288] - Switch to SMALLINT as recommended type for enums
@@ -107,6 +108,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/32066
     * [HHH-15010] - @CreationTimestamp and @UpdateTimestamp documentation have an incomplete list of supported field types
 
 ** Improvement
+    * [HHH-15300] - Unnecessary memory usage detected in SqlStatementLogger.logSlowQuery()
     * [HHH-15292] - escape special html chars in JavaDoc
     * [HHH-15276] - Introduce ConverterRegistration annotation
     * [HHH-15259] - Explicitly add JavaDoc to make @deprecated hint visible in Eclipse

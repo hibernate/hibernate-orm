@@ -6,12 +6,12 @@
  */
 package org.hibernate.orm.test.envers.integration.modifiedflags;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.orm.test.envers.entities.onetomany.ListRefEdEntity;
-import org.hibernate.orm.test.envers.entities.onetomany.ListRefIngEntity;
+import org.hibernate.orm.test.envers.entities.onetomany.SetRefEdEntity;
+import org.hibernate.orm.test.envers.entities.onetomany.SetRefIngEntity;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
@@ -31,7 +31,7 @@ public class HasChangedOneToManyManualFlush extends AbstractModifiedFlagsEntityT
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { ListRefEdEntity.class, ListRefIngEntity.class };
+		return new Class[] { SetRefEdEntity.class, SetRefIngEntity.class };
 	}
 
 	@Test
@@ -41,8 +41,8 @@ public class HasChangedOneToManyManualFlush extends AbstractModifiedFlagsEntityT
 
 		// Revision 1
 		em.getTransaction().begin();
-		ListRefEdEntity entity = new ListRefEdEntity( 1, "Revision 1" );
-		entity.setReffering( new ArrayList<>() );
+		SetRefEdEntity entity = new SetRefEdEntity( 1, "Revision 1" );
+		entity.setReffering( new HashSet<>() );
 		em.persist( entity );
 		em.getTransaction().commit();
 
@@ -50,9 +50,9 @@ public class HasChangedOneToManyManualFlush extends AbstractModifiedFlagsEntityT
 
 		// Revision 2 - both properties (data and reffering) should be marked as modified.
 		em.getTransaction().begin();
-		entity = em.find( ListRefEdEntity.class, entity.getId() );
+		entity = em.find( SetRefEdEntity.class, entity.getId() );
 		entity.setData( "Revision 2" );
-		ListRefIngEntity refIngEntity = new ListRefIngEntity( 1, "Revision 2", entity );
+		SetRefIngEntity refIngEntity = new SetRefIngEntity( 1, "Revision 2", entity );
 		em.persist( refIngEntity );
 		entity.getReffering().add( refIngEntity );
 		em.flush();
@@ -63,8 +63,8 @@ public class HasChangedOneToManyManualFlush extends AbstractModifiedFlagsEntityT
 	}
 
 	@Test
-	public void testHasChangedOnDoubleFlush() {
-		List list = queryForPropertyHasChanged( ListRefEdEntity.class, id, "reffering" );
+	public void testNonOwningSideHasChanged() {
+		List list = queryForPropertyHasChanged( SetRefEdEntity.class, id, "reffering" );
 		assertEquals( 2, list.size() );
 		assertEquals( makeList( 1, 2 ), extractRevisionNumbers( list ) );
 	}

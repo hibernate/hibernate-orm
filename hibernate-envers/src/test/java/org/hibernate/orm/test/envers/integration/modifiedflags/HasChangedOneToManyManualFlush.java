@@ -55,11 +55,8 @@ public class HasChangedOneToManyManualFlush extends AbstractModifiedFlagsEntityT
 		ListRefIngEntity refIngEntity = new ListRefIngEntity( 1, "Revision 2", entity );
 		em.persist( refIngEntity );
 		entity.getReffering().add( refIngEntity );
-		entity = em.merge( entity );
 		em.flush();
 		entity.setData( "Revision 2.1" );
-		entity = em.merge( entity );
-		em.flush();
 		em.getTransaction().commit();
 
 		em.close();

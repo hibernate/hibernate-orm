@@ -1,58 +1,12 @@
-= 6.1 Migration Guide
+= 6.2 Migration Guide
 :toc:
 :toclevels: 4
-:docsBase: https://docs.jboss.org/hibernate/orm/6.1
+:docsBase: https://docs.jboss.org/hibernate/orm/6.2
 :userGuideBase: {docsBase}/userguide/html_single/Hibernate_User_Guide.html
 :javadocsBase: {docsBase}/javadocs
 
 
-This guide discusses migration from Hibernate ORM version 6.1. For migration from
+This guide discusses migration from Hibernate ORM version 6.2. For migration from
 earlier versions, see any other pertinent migration guides as well.
 
-* link:../../../6.0/migration-guide/migration-guide.html[6.0 Migration guide]
-
-== Basic array/collection mapping
-
-Basic arrays, other than `byte[]`/Byte[] and `char[]`/`Character[]`, and basic collections (only subtypes of `Collection`)
-now map to the type code `SqlTypes.ARRAY` by default, which maps to the SQL standard `array` type if possible,
-as determined via the new methods `getArrayTypeName` and `supportsStandardArrays` of `org.hibernate.dialect.Dialect`.
-If SQL standard array types are not available, data will be modeled as `SqlTypes.JSON`, `SqlTypes.XML` or `SqlTypes.VARBINARY`,
-depending on the database support as determined via the new method `org.hibernate.dialect.Dialect.getPreferredSqlTypeCodeForArray`.
-
-Due to this change, schema validation errors could occur as 5.x and 6.0 used the type code `SqlTypes.VARBINARY` unconditionally
-and serialized the contents with Java serialization. The migration to native array or JSON/XML types is non-trivial and requires
-that the data is first read through the Java serialization mechanism and then written back through the respective JDBC method for the type.
-
-A possible migration could involve the following steps in a migration script:
-
-1. Execute `alter table tbl rename column array_col to array_col_old` to have the old format available
-2. Execute `alter table tbl add column array_col DATATYPE array` to add the column like the new mapping expects it to be
-3. Run the query `select t.primary_key, t.array_col_old from table t`
-4. For every result, deserialize the old representation via e.g. `org.hibernate.internal.util.SerializationHelper.deserialize(java.io.InputStream)`
-5. For every result, load the Hibernate entity by primary key and set the deserialized value
-6. Finally, drop the old column `alter table tbl drop column array_col_old`
-
-
-== Enum mapping changes
-
-Enums now map to the type code `SqlType.SMALLINT` by default, whereas before it mapped to `TINYINT`.
-This mapping was not quite correct as Java effectively allows up to 32K enum entries, but `TINYINT` is only a 1 byte type.
-
-In practice, this isn't a big issue though for two reasons. A lot of databases do not support a 1 byte integer DDL type,
-so Hibernate falls back to the 2+ byte integer type as DDL type. Apart from that, enums in ORM models usually do not exceed the 255 value limit.
-Note that the migration is not required as schema validation is able to handle the use of `SMALLINT` when the DDL type is `TINYINT`.
-
-The migration usually requires running only a simple alter command `alter table tbl alter column enum_col smallint`
-or `alter table tbl modify column enum_col smallint`, depending on your database dialect.
-
-The following dialects currently have DDL types registered for `TINYINT` and might produce a different schema now:
-
-* Cachè
-* Ingres
-* Teradata
-* TimesTen
-* H2
-* HSQL
-* MySQL
-* MariaDB
-* Oracle
+* link:../../../6.0/migration-guide/migration-guide.html[6.2 Migration guide]

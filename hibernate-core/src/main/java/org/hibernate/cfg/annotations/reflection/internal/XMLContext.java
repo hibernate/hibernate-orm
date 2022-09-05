@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
-package org.hibernate.cfg.annotations.reflection;
+package org.hibernate.cfg.annotations.reflection.internal;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.Internal;
 import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.jaxb.mapping.JaxbConverter;
 import org.hibernate.boot.jaxb.mapping.JaxbEntity;
@@ -29,6 +28,7 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
+import org.hibernate.cfg.annotations.reflection.AttributeConverterDefinitionCollector;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -42,7 +42,6 @@ import jakarta.persistence.AttributeConverter;
  * @author Emmanuel Bernard
  * @author Brett Meyer
  */
-@Internal
 public class XMLContext implements Serializable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( XMLContext.class );
 

@@ -34,7 +34,6 @@ import org.hibernate.boot.jaxb.mapping.JaxbVersion;
 import org.hibernate.boot.jaxb.mapping.LifecycleCallback;
 import org.hibernate.boot.jaxb.mapping.LifecycleCallbackContainer;
 import org.hibernate.boot.jaxb.mapping.PersistentAttribute;
-import org.hibernate.cfg.annotations.reflection.JPAXMLOverriddenAnnotationReader;
 
 
 /**

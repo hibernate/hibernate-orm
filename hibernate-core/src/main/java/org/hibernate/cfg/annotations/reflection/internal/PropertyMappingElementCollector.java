@@ -33,7 +33,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbTransient;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbVersion;
 import org.hibernate.boot.jaxb.mapping.spi.LifecycleCallback;
 import org.hibernate.boot.jaxb.mapping.spi.LifecycleCallbackContainer;
-import org.hibernate.boot.jaxb.mapping.spi.PersistentAttribute;import org.hibernate.cfg.annotations.reflection.JPAXMLOverriddenAnnotationReader;
+import org.hibernate.boot.jaxb.mapping.spi.PersistentAttribute;
 
 /**
  * Reproduces what we used to do with a {@code List<Element>} in {@link JPAXMLOverriddenAnnotationReader},

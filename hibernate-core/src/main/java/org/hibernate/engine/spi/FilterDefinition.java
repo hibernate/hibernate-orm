@@ -77,4 +77,14 @@ public class FilterDefinition implements Serializable {
 		return defaultFilterCondition;
 	}
 
+	/**
+	 * Called before binding a JDBC parameter
+	 *
+	 * @param value the argument to the parameter, as set via {@link org.hibernate.Filter#setParameter(String, Object)}
+	 * @return the argument that will actually be bound to the parameter
+	 */
+	public Object processArgument(Object value) {
+		return value;
+	}
+
 }

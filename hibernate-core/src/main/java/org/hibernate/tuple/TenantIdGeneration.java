@@ -6,11 +6,13 @@
  */
 package org.hibernate.tuple;
 
+import org.hibernate.MappingException;
 import org.hibernate.PropertyValueException;
 import org.hibernate.Session;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Value generation implementation for {@link TenantId}.
@@ -21,11 +23,13 @@ public class TenantIdGeneration implements AnnotationValueGeneration<TenantId>, 
 
 	private String entityName;
 	private String propertyName;
+	private Class<?> propertyType;
 
 	@Override
 	public void initialize(TenantId annotation, Class<?> propertyType, String entityName, String propertyName) {
 		this.entityName = entityName;
 		this.propertyName = propertyName;
+		this.propertyType = propertyType;
 	}
 
 	@Override
@@ -45,24 +49,30 @@ public class TenantIdGeneration implements AnnotationValueGeneration<TenantId>, 
 
 	@Override
 	public Object generateValue(Session session, Object owner, Object currentValue) {
-		String identifier = session.getTenantIdentifier();
+		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) session.getSessionFactory();
+		JavaType<Object> descriptor = sessionFactory.getTypeConfiguration().getJavaTypeRegistry()
+				.findDescriptor(propertyType);
+		if ( descriptor==null ) {
+			throw new MappingException( "unsupported tenant id property type: " + propertyType.getName() );
+		}
+
+		String tenantId = session.getTenantIdentifier(); //unfortunately this is always a string in old APIs
 		if ( currentValue != null ) {
-			CurrentTenantIdentifierResolver resolver =
-					((SessionFactoryImplementor) session.getSessionFactory())
-							.getCurrentTenantIdentifierResolver();
-			if ( resolver!=null && resolver.isRoot( session.getTenantIdentifier() ) ) {
+			CurrentTenantIdentifierResolver resolver = sessionFactory.getCurrentTenantIdentifierResolver();
+			if ( resolver!=null && resolver.isRoot(tenantId) ) {
 				// the "root" tenant is allowed to set the tenant id explicitly
 				return currentValue;
 			}
-			if ( !currentValue.equals(identifier) ) {
+			String currentTenantId = descriptor.toString(currentValue);
+			if ( !currentTenantId.equals(tenantId) ) {
 				throw new PropertyValueException(
 						"assigned tenant id differs from current tenant id: "
-								+ currentValue + "!=" + identifier,
+								+ currentTenantId + "!=" + tenantId,
 						entityName, propertyName
 				);
 			}
 		}
-		return identifier;
+		return tenantId == null ? null : descriptor.fromString(tenantId); //convert to the model type
 	}
 
 	@Override

@@ -11,7 +11,6 @@ import org.hibernate.annotations.TenantId;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
@@ -55,7 +54,23 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 							FILTER_NAME,
 							"",
 							singletonMap( PARAMETER_NAME, tenantIdType )
-					)
+					) {
+						// unfortunately the old APIs only accept String for a tenantId, so parse it
+						@Override
+						public Object processArgument(Object value) {
+							if (value==null) {
+								return null;
+							}
+							else if (value instanceof String) {
+								return getParameterJdbcMapping( PARAMETER_NAME )
+										.getJavaTypeDescriptor()
+										.fromString((String) value);
+							}
+							else {
+								return value;
+							}
+						}
+					}
 			);
 		}
 		else {

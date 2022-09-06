@@ -12,7 +12,6 @@ import java.util.ArrayList;
 
 import org.hibernate.internal.util.ReflectHelper;
 
-import com.oracle.svm.core.annotate.AutomaticFeature;
 import org.graalvm.nativeimage.hosted.Feature;
 import org.graalvm.nativeimage.hosted.RuntimeReflection;
 
@@ -34,7 +33,6 @@ import org.graalvm.nativeimage.hosted.RuntimeReflection;
  * </p>
  * @author Sanne Grinovero
  */
-@AutomaticFeature
 public class GraalVMStaticAutofeature implements Feature {
 
 	public void beforeAnalysis(Feature.BeforeAnalysisAccess before) {

@@ -27,12 +27,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OrderColumn;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(BytecodeEnhancerRunner.class)
 @EnhancementOptions(lazyLoading = true)
 @TestForIssue(jiraKey = "HHH-14387")
-public class BytecodeEnhancementElementCollectionRecreateTest extends BaseNonConfigCoreFunctionalTestCase {
+public class BytecodeEnhancementElementCollectionRecreateCollectionsInDefaultGroupTest
+		extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -44,17 +45,18 @@ public class BytecodeEnhancementElementCollectionRecreateTest extends BaseNonCon
 	@Override
 	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
 		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyCollectionsInDefaultFetchGroup( false );
+		sfb.applyCollectionsInDefaultFetchGroup( true );
 	}
 
 	@Before
 	public void check() {
 		inSession(
 				session ->
-						assertFalse( session.getSessionFactory().getSessionFactoryOptions()
-											 .isCollectionsInDefaultFetchGroupEnabled() )
+						assertTrue( session.getSessionFactory().getSessionFactoryOptions()
+											.isCollectionsInDefaultFetchGroupEnabled() )
 		);
 	}
+
 
 	@After
 	public void tearDown() {

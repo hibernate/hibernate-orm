@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 
 import org.hibernate.Filter;
 import org.hibernate.MappingException;
+import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
@@ -167,9 +168,8 @@ public class FilterHelper {
 				if ( CollectionHelper.isNotEmpty( filterParameterNames ) ) {
 					for ( int paramPos = 0; paramPos < filterParameterNames.size(); paramPos++ ) {
 						final String parameterName = filterParameterNames.get( paramPos );
-						final JdbcMapping jdbcMapping = enabledFilter
-								.getFilterDefinition()
-								.getParameterJdbcMapping( parameterName );
+						final FilterDefinition filterDefinition = enabledFilter.getFilterDefinition();
+						final JdbcMapping jdbcMapping = filterDefinition.getParameterJdbcMapping( parameterName );
 						final Object parameterValue = enabledFilter.getParameter( parameterName );
 						if ( parameterValue == null ) {
 							throw new MappingException( String.format( "unknown parameter [%s] for filter [%s]", parameterName, filterName ) );
@@ -180,8 +180,8 @@ public class FilterHelper {
 								&& !jdbcMapping.getJavaTypeDescriptor().isInstance( parameterValue ) ) {
 							final Iterator<?> iterator = ( (Iterable<?>) parameterValue ).iterator();
 							if ( iterator.hasNext() ) {
-								final Object value = iterator.next();
-								final FilterJdbcParameter jdbcParameter = new FilterJdbcParameter( jdbcMapping, value );
+								final Object element = iterator.next();
+								final FilterJdbcParameter jdbcParameter = new FilterJdbcParameter( jdbcMapping, element );
 								filterPredicate.applyParameter( jdbcParameter );
 
 								while ( iterator.hasNext() ) {
@@ -195,7 +195,8 @@ public class FilterHelper {
 							}
 						}
 						else {
-							filterPredicate.applyParameter( new FilterJdbcParameter( jdbcMapping, parameterValue ) );
+							final Object argument = filterDefinition.processArgument( parameterValue );
+							filterPredicate.applyParameter( new FilterJdbcParameter( jdbcMapping, argument) );
 						}
 
 						final String marker = ":" + filterNames[ i ] + "." + parameterName;

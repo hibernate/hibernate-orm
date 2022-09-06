@@ -14,7 +14,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.internal.util.ReflectHelper;
 
-import com.oracle.svm.core.annotate.AutomaticFeature;
 import org.graalvm.nativeimage.hosted.Feature;
 import org.graalvm.nativeimage.hosted.RuntimeReflection;
 
@@ -33,7 +32,6 @@ import org.graalvm.nativeimage.hosted.RuntimeReflection;
  *
  * @author Sanne Grinovero
  */
-@AutomaticFeature
 public final class QueryParsingSupport implements Feature {
 
 	private final AtomicBoolean triggered = new AtomicBoolean( false);

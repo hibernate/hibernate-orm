@@ -9,7 +9,9 @@ package org.hibernate.event.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
@@ -17,7 +19,9 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
@@ -76,10 +80,10 @@ public class WrapVisitor extends ProxyVisitor {
 			return null;
 		}
 		else {
-			final CollectionPersister persister = session.getFactory()
+			final MappingMetamodelImplementor mappingMetamodel = session.getFactory()
 					.getRuntimeMetamodels()
-					.getMappingMetamodel()
-					.getCollectionDescriptor( collectionType.getRole() );
+					.getMappingMetamodel();
+			final CollectionPersister persister = mappingMetamodel.getCollectionDescriptor( collectionType.getRole() );
 
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			//TODO: move into collection type, so we can use polymorphism!
@@ -104,10 +108,31 @@ public class WrapVisitor extends ProxyVisitor {
 					if ( attributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 						return null;
 					}
+					else if ( attributeInterceptor != null
+							&& ((LazyAttributeLoadingInterceptor)attributeInterceptor).isAttributeLoaded( persister.getAttributeMapping().getAttributeName() ) ) {
+						// the collection has not been initialized and new collection values have been assigned,
+						// we need to be sure to delete all the collection elements before inserting the new ones
+						final AbstractEntityPersister entityDescriptor = (AbstractEntityPersister) mappingMetamodel.getEntityDescriptor( entity.getClass() );
+						final Object key = entityDescriptor.getCollectionKey(
+								persister,
+								entity,
+								persistenceContext.getEntry( entity ),
+								session
+						);
+						final PersistentCollection<?> collectionInstance = persister.getCollectionSemantics().instantiateWrapper(
+								key,
+								persister,
+								session
+						);
+						collectionInstance.setOwner( entity );
+						persistenceContext.addUninitializedCollection( persister, collectionInstance, key );
+
+						final CollectionEntry collectionEntry = persistenceContext.getCollectionEntry( collectionInstance );
+						collectionEntry.setDoremove( true );
+					}
 				}
 
 				final PersistentCollection<?> persistentCollection = collectionType.wrap( session, collection );
-
 				persistenceContext.addNewCollection( persister, persistentCollection );
 
 				if ( LOG.isTraceEnabled() ) {

@@ -152,19 +152,12 @@ public class OneToOneType extends EntityType {
 
 	@Override
 	public boolean isDirty(Object old, Object current, SharedSessionContractImplementor session) {
-		if ( isSame( old, current ) ) {
-			return false;
-		}
-
-		Object oldid = getIdentifier( old, session );
-		Object newid = getIdentifier( current, session );
-
-		return getIdentifierType( session ).isDirty( oldid, newid, session );
+		return false;
 	}
 
 	@Override
 	public boolean isDirty(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session) {
-		return isDirty(old, current, session);
+		return false;
 	}
 
 	@Override
@@ -233,6 +226,6 @@ public class OneToOneType extends EntityType {
 	
 	@Override
 	public boolean isAlwaysDirtyChecked() {
-		return true;
+		return false;
 	}
 }

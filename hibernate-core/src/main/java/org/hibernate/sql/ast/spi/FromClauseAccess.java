@@ -21,14 +21,21 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 public interface FromClauseAccess {
 
 	/**
-	 * Find a TableGroup by the NavigablePath it is registered under,
-	 * and if not found on the current from clause level, ask the parent.  Returns
-	 * {@code null} if no TableGroup is registered under that NavigablePath
+	 * Find a TableGroup in this from clause without consulting parents by the NavigablePath it is registered under.
+	 * Returns {@code null} if no TableGroup is registered under that NavigablePath
 	 */
-	TableGroup findTableGroupOnParents(NavigablePath navigablePath);
+	default TableGroup findTableGroupOnCurrentFromClause(NavigablePath p) {
+		return findTableGroup( p );
+	}
+
+	@Deprecated
+	default TableGroup findTableGroupOnParents(NavigablePath p) {
+		return findTableGroup( p );
+	}
 
 	/**
-	 * Find a TableGroup by the NavigablePath it is registered under.  Returns
+	 * Find a TableGroup by the NavigablePath it is registered under,
+	 * and if not found on the current from clause level, ask the parent.  Returns
 	 * {@code null} if no TableGroup is registered under that NavigablePath
 	 */
 	TableGroup findTableGroup(NavigablePath navigablePath);

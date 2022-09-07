@@ -98,7 +98,6 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPathSource;
-import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorConverter;
 import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
@@ -378,7 +377,6 @@ import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiati
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.JavaObjectType;
@@ -630,8 +628,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public TableGroup findTableGroupOnParents(NavigablePath navigablePath) {
-		return getFromClauseAccess().findTableGroupOnParents( navigablePath );
+	public TableGroup findTableGroupOnCurrentFromClause(NavigablePath navigablePath) {
+		return getFromClauseAccess().findTableGroupOnCurrentFromClause( navigablePath );
 	}
 
 	@Override
@@ -2385,7 +2383,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			else {
 				from = sqmRoot;
 			}
-			final TableGroup parentTableGroup = fromClauseIndex.findTableGroupOnParents(
+			final TableGroup parentTableGroup = fromClauseIndex.findTableGroup(
 					from.getCorrelationParent().getNavigablePath()
 			);
 			final SqlAliasBase sqlAliasBase = sqlAliasBaseManager.createSqlAliasBase( parentTableGroup.getGroupAlias() );
@@ -2467,7 +2465,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else {
 			final EntityPersister entityDescriptor = resolveEntityPersister( sqmRoot.getModel() );
-			final TableGroup parentTableGroup = fromClauseIndex.findTableGroupOnParents(
+			final TableGroup parentTableGroup = fromClauseIndex.findTableGroup(
 					sqmRoot.getCorrelationParent().getNavigablePath()
 			);
 			// If we have non-inner joins against a correlated root, we must render the root with a correlation predicate
@@ -3170,11 +3168,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					implicitJoinChecker
 			);
 			if ( parentTableGroup == null ) {
-				final TableGroup parent = fromClauseIndex.findTableGroupOnParents( parentPath.getNavigablePath() );
-				if ( parent != null ) {
-					fromClauseIndex.register( (SqmPath<?>) parentPath, parent );
-					return parent;
-				}
 				throw new SqlTreeCreationException( "Could not locate TableGroup - " + parentPath.getNavigablePath() );
 			}
 			if ( parentPath instanceof SqmTreatedPath<?, ?> ) {
@@ -3283,7 +3276,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final TableGroup tableGroup;
 		if ( subPart instanceof TableGroupJoinProducer ) {
 			final TableGroupJoinProducer joinProducer = (TableGroupJoinProducer) subPart;
-			if ( fromClauseIndex.findTableGroup( actualParentTableGroup.getNavigablePath() ) == null ) {
+			if ( fromClauseIndex.findTableGroupOnCurrentFromClause( actualParentTableGroup.getNavigablePath() ) == null ) {
 				final QuerySpec querySpec = currentQuerySpec();
 				// The parent table group is on a parent query, so we need a root table group
 				tableGroup = joinProducer.createRootTableGroupJoin(

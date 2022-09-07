@@ -1120,7 +1120,7 @@ public abstract class CollectionBinder {
 			}
 			catch (MappingException e) {
 				throw new AnnotationException(
-						"mappedBy reference an unknown target entity property: " +
+						"mappedBy references an unknown target entity property: " +
 								collType + "." + this.mappedBy +
 								" in " +
 								collection.getOwnerEntityName() +

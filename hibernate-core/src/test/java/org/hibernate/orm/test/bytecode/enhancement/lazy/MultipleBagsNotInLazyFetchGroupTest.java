@@ -9,11 +9,6 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 import org.hibernate.boot.SessionFactoryBuilder;
 
@@ -21,18 +16,23 @@ import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
+
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 /**
  * @author Christian Beikov
  */
 @RunWith( BytecodeEnhancerRunner.class )
-public class MultipleBagsInLazyFetchGroupTest extends BaseNonConfigCoreFunctionalTestCase {
+public class MultipleBagsNotInLazyFetchGroupTest extends BaseNonConfigCoreFunctionalTestCase {
 
     @Override
     public Class<?>[] getAnnotatedClasses() {
@@ -42,12 +42,12 @@ public class MultipleBagsInLazyFetchGroupTest extends BaseNonConfigCoreFunctiona
     @Override
     protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
         super.configureSessionFactoryBuilder( sfb );
-        sfb.applyCollectionsInDefaultFetchGroup( true );
+        sfb.applyCollectionsInDefaultFetchGroup( false );
     }
 
     @Before
     public void prepare() {
-        assertTrue( sessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
+        assertFalse( sessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
 
         doInJPA( this::sessionFactory, em -> {
             StringsEntity entity = new StringsEntity();
@@ -61,7 +61,6 @@ public class MultipleBagsInLazyFetchGroupTest extends BaseNonConfigCoreFunctiona
 
     @Test
     public void test() {
-        Assertions.assertTrue( sessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
         doInJPA( this::sessionFactory, entityManager -> {
             StringsEntity entity = entityManager.getReference( StringsEntity.class, 1L );
             assertEquals( 3, entity.someStrings.size() );

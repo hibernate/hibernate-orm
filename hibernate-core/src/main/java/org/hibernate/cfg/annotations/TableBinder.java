@@ -37,9 +37,9 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.JoinedSubclass;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SortableValue;
 import org.hibernate.mapping.Table;
@@ -532,7 +532,7 @@ public class TableBinder {
 			SimpleValue value,
 			boolean unique,
 			MetadataBuildingContext buildingContext) {
-		PersistentClass associatedClass;
+		final PersistentClass associatedClass;
 		if ( destinationEntity != null ) {
 			//overridden destination
 			associatedClass = destinationEntity;
@@ -550,11 +550,10 @@ public class TableBinder {
 			 */
 			LOG.debugf( "Retrieving property %s.%s", associatedClass.getEntityName(), mappedByProperty );
 
-			final Property property = associatedClass.getRecursiveProperty( columns[0].getMappedBy() );
-			List<Column> mappedByColumns;
-			if ( property.getValue() instanceof Collection ) {
-				Collection collection = ( (Collection) property.getValue() );
-				Value element = collection.getElement();
+			final Value propertyVal = associatedClass.getRecursiveProperty( columns[0].getMappedBy() ).getValue();
+			final List<Column> mappedByColumns;
+			if ( propertyVal instanceof Collection ) {
+				Value element = ((Collection) propertyVal).getElement();
 				if ( element == null ) {
 					throw new AnnotationException(
 							"Illegal use of mappedBy on both sides of the relationship: "
@@ -564,7 +563,7 @@ public class TableBinder {
 				mappedByColumns = element.getColumns();
 			}
 			else {
-				mappedByColumns = property.getValue().getColumns();
+				mappedByColumns = propertyVal.getColumns();
 			}
 			for ( Column column: mappedByColumns ) {
 				columns[0].overrideFromReferencedColumnIfNecessary( column );
@@ -586,7 +585,6 @@ public class TableBinder {
 		}
 		else {
 			int fkEnum = AnnotatedJoinColumn.checkReferencedColumnsType( columns, referencedEntity, buildingContext );
-
 			if ( AnnotatedJoinColumn.NON_PK_REFERENCE == fkEnum ) {
 				String referencedPropertyName;
 				if ( value instanceof ToOne ) {
@@ -651,26 +649,26 @@ public class TableBinder {
 				}
 				else {
 					// Ensure the component is sorted so that we can simply set sorted to true on the to-one
-					if ( referencedEntity.getKey() instanceof Component ) {
-						( (Component) referencedEntity.getKey() ).sortProperties();
+					KeyValue key = referencedEntity.getKey();
+					if ( key instanceof Component ) {
+						( (Component) key).sortProperties();
 					}
 					//explicit referencedColumnName
-					List<Column> idColumns = referencedEntity.getKey().getColumns();
+					List<Column> idColumns = key.getColumns();
 					//works cause the pk has to be on the primary table
-					Table table = referencedEntity.getTable();
 					if ( idColumns.isEmpty() ) {
 						LOG.debug( "No column in the identifier" );
 					}
+					final Dialect dialect = buildingContext.getMetadataCollector().getDatabase()
+							.getJdbcEnvironment().getDialect();
 					for ( Column col: idColumns ) {
 						boolean match = false;
 						//for each PK column, find the associated FK column.
-						Dialect dialect = buildingContext.getMetadataCollector().getDatabase()
-								.getJdbcEnvironment().getDialect();
 						final String colName = col.getQuotedName(dialect);
 						for (AnnotatedJoinColumn joinCol : columns) {
 							String referencedColumn = joinCol.getReferencedColumn();
 							referencedColumn = buildingContext.getMetadataCollector().getPhysicalColumnName(
-									table,
+									referencedEntity.getTable(),
 									referencedColumn
 							);
 							//In JPA 2 referencedColumnName is case-insensitive

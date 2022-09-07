@@ -10,6 +10,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+
+import org.hibernate.boot.SessionFactoryBuilder;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.ElementCollection;
@@ -25,23 +34,15 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.boot.SessionFactoryBuilder;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 /**
  * @author Christian Beikov
  */
 @TestForIssue(jiraKey = "HHH-14360")
 @RunWith(BytecodeEnhancerRunner.class)
-public class DirtyTrackingPersistTest extends BaseNonConfigCoreFunctionalTestCase {
+public class DirtyTrackingNotInDefaultFetchGroupPersistTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
 	public Class<?>[] getAnnotatedClasses() {
@@ -51,12 +52,12 @@ public class DirtyTrackingPersistTest extends BaseNonConfigCoreFunctionalTestCas
 	@Override
 	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
 		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyCollectionsInDefaultFetchGroup( true );
+		sfb.applyCollectionsInDefaultFetchGroup( false );
 	}
 
 	@Test
 	public void test() {
-		assertTrue( sessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
+		assertFalse( sessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
 
 		Hentity hentity = new Hentity();
 		HotherEntity hotherEntity = new HotherEntity();

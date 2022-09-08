@@ -3,6 +3,47 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.1.3.Final (September 08, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32093
+
+** Bug
+    * [HHH-15477] - Criteria EXISTS Subquery referring the Root of the Query of which it is a Subquery causes "Error interpreting query [SqmRoot not yet resolved to TableGroup]"
+    * [HHH-15468] - contributor-build.yml has no explicit permissions set
+    * [HHH-15455] - User Guide Contains a reference to hibernate-ehcache, no longer supported
+    * [HHH-15454] - Primitive type requested from tuple throws exception
+    * [HHH-15453] - java.lang.NullPointerException: Cannot invoke "org.hibernate.engine.spi.EntityEntry.getEntityKey()" because "ownerEntry" is null
+    * [HHH-15452] - Predicate add expression results in UnsupportedOperationException
+    * [HHH-15449] - @ManyToOne associations not loaded correctly with default EAGER and batch fetch property set when using TypedQuery.resultStream
+    * [HHH-15440] - @OneToOne and @OptimisticLock(excluded = true) not working correctly
+    * [HHH-15438] - PostgreSQL integration classes shouldn't throw ClassNotFoundException on org.postgresql driver classes that we try loading
+    * [HHH-15433] - Make sure Path#type() never returns null as per JPA TCK requirement
+    * [HHH-15432] - Potential IndexOutOfBoundsException in SqmQueryPart
+    * [HHH-15416] - PostgreSQLJsonbJdbcType is assuming there is a valid Json FormatMapper implementation
+    * [HHH-15359] - The entity returned by a merge doesn't contain @ManyToMany relation when the collection resides in @Embeddable
+    * [HHH-15356] - Unable to get primary information on some dialects (ex: Oracle) when the PK column's position doesn't match the alphabetical name's order
+    * [HHH-15216] - Cannot change MetadataProvider implementation because JPAXMLOverriddenMetadataProvider is final and precisely expected by a cast operator
+    * [HHH-15100] - Limitation of metamodel imports cache causes severe performance drops in large projects
+    * [HHH-14387] - A collection with cascade="all-delete-orphan" was no longer referenced by the owning entity instance with hibernate-enhance-maven-plugin
+    * [HHH-13485] - FilterJoinTable does not to use the defualt condition
+
+** Improvement
+    * [HHH-15471] - Improve merge replace operation when original and target are the same object
+    * [HHH-15466] - Compatibility with Jandex 3.0.0
+    * [HHH-15462] - Optimize ColumnReference rendering and reduce buffering
+    * [HHH-15461] - Replace uses of method references for SqlAppender with proper implementation
+    * [HHH-15458] - Interpret String with JSON/XML type code as plain JSON/XML
+    * [HHH-15442] - Allow for setParameter usage with a queries for a specific type in an Any-discriminated relationship
+    * [HHH-15441] - Improve error message if SqlTypes type code can't be interpreted
+    * [HHH-15381] - Clean up Gradle Plugin publishing as part of release process
+
+** Task
+    * [HHH-15451] - Upgrade PostgreSQL JDBC driver to 42.5.0
+    * [HHH-15448] - Upgrade MSSQL JDBC and container image versions used for testing
+    * [HHH-15388] - Upgrade to Micrometer 1.9.3
+
+
 Changes in 6.1.2.Final (August 03, 2022)
 ------------------------------------------------------------------------------------------------------------------------
 

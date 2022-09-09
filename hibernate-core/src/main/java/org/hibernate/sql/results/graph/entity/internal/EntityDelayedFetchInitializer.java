@@ -133,9 +133,9 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 						final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 						entityInstance = persistenceContext.getEntity( euk );
 						if ( entityInstance == null ) {
-							if ( ((AbstractEntityInitializer) this.parentAccess).getEntityDescriptor()
+							if ( ( (AbstractEntityInitializer) this.parentAccess.findFirstEntityDescriptorAccess() ).getEntityDescriptor()
 									.getBytecodeEnhancementMetadata()
-									.isEnhancedForLazyLoading()  ) {
+									.isEnhancedForLazyLoading() ) {
 								return;
 							}
 							entityInstance = ( (UniqueKeyLoadable) concreteDescriptor ).loadByUniqueKey(

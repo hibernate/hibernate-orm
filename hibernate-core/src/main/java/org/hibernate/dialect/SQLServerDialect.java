@@ -615,6 +615,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public boolean supportsRecursiveCTE() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
 		return getVersion().isSameOrAfter( 11 );
 	}

@@ -52,6 +52,10 @@ public enum Clause {
 	FETCH,
 	FOR_UPDATE,
 	OVER,
+	/**
+	 * The clause containing CTEs
+	 */
+	WITH,
 	WITHIN_GROUP,
 	PARTITION,
 	CALL,

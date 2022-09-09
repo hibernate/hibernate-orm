@@ -38,6 +38,15 @@ public interface JpaSelectCriteria<T> extends AbstractQuery<T>, JpaCriteriaBase 
 	 */
 	<X> JpaDerivedRoot<X> from(Subquery<X> subquery);
 
+	/**
+	 * Create and add a query root corresponding to the given cte,
+	 * forming a cartesian product with any existing roots.
+	 *
+	 * @param cte the cte criteria
+	 * @return query root corresponding to the given cte
+	 */
+	<X> JpaRoot<X> from(JpaCteCriteria<X> cte);
+
 	@Override
 	JpaSelectCriteria<T> distinct(boolean distinct);
 

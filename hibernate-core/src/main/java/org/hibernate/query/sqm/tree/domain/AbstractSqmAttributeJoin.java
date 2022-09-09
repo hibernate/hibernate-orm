@@ -34,13 +34,11 @@ import jakarta.persistence.criteria.Predicate;
  * @author Steve Ebersole
  */
 public abstract class AbstractSqmAttributeJoin<O,T>
-		extends AbstractSqmJoin<O,T>
+		extends AbstractSqmQualifiedJoin<O,T>
 		implements SqmAttributeJoin<O,T> {
 	private static final Logger log = Logger.getLogger( AbstractSqmAttributeJoin.class );
 
 	private final boolean fetched;
-
-	private SqmPredicate onClausePredicate;
 
 	public AbstractSqmAttributeJoin(
 			SqmFrom<?,O> lhs,
@@ -80,11 +78,6 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 		this.fetched = fetched;
 	}
 
-	protected void copyTo(AbstractSqmAttributeJoin<O, T> target, SqmCopyContext context) {
-		super.copyTo( target, context );
-		target.onClausePredicate = onClausePredicate == null ? null : onClausePredicate.copy( context );
-	}
-
 	@Override
 	public SqmFrom<?, O> getLhs() {
 		//noinspection unchecked
@@ -98,32 +91,6 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 
 	public boolean isFetched() {
 		return fetched;
-	}
-
-	@Override
-	public SqmPredicate getJoinPredicate() {
-		return onClausePredicate;
-	}
-
-	public void setJoinPredicate(SqmPredicate predicate) {
-		if ( log.isTraceEnabled() ) {
-			log.tracef(
-					"Setting join predicate [%s] (was [%s])",
-					predicate.toString(),
-					this.onClausePredicate == null ? "<null>" : this.onClausePredicate.toString()
-			);
-		}
-
-		this.onClausePredicate = predicate;
-	}
-
-	public void applyRestriction(SqmPredicate restriction) {
-		if ( this.onClausePredicate == null ) {
-			this.onClausePredicate = restriction;
-		}
-		else {
-			this.onClausePredicate = nodeBuilder().and( onClausePredicate, restriction );
-		}
 	}
 
 	@Override
@@ -143,31 +110,26 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 
 	@Override
 	public SqmAttributeJoin<O, T> on(JpaExpression<Boolean> restriction) {
-		applyRestriction( nodeBuilder().wrap( restriction ) );
+		super.on( restriction );
 		return this;
 	}
 
 	@Override
 	public SqmAttributeJoin<O, T> on(Expression<Boolean> restriction) {
-		applyRestriction( nodeBuilder().wrap( restriction ) );
+		super.on( restriction );
 		return this;
 	}
 
 	@Override
 	public SqmAttributeJoin<O, T> on(JpaPredicate... restrictions) {
-		applyRestriction( nodeBuilder().wrap( restrictions ) );
+		super.on( restrictions );
 		return this;
 	}
 
 	@Override
 	public SqmAttributeJoin<O, T> on(Predicate... restrictions) {
-		applyRestriction( nodeBuilder().wrap( restrictions ) );
+		super.on( restrictions );
 		return this;
-	}
-
-	@Override
-	public Predicate getOn() {
-		return getJoinPredicate();
 	}
 
 	@Override

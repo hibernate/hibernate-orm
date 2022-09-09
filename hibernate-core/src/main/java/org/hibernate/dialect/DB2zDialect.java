@@ -124,6 +124,11 @@ public class DB2zDialect extends DB2Dialect {
 	}
 
 	@Override
+	public boolean supportsRecursiveCTE() {
+		return true;
+	}
+
+	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		StringBuilder pattern = new StringBuilder();
 		final boolean castTo;

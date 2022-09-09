@@ -16,6 +16,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
@@ -31,6 +32,8 @@ import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.ObjectArrayJavaType;
+
+import jakarta.persistence.metamodel.Attribute;
 
 
 /**
@@ -88,6 +91,53 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 		return new AnonymousTupleTableGroupProducer( this, aliasStem, sqlSelections, fromClauseAccess );
 	}
 
+	public List<String> determineColumnNames() {
+		final int componentCount = componentCount();
+		final List<String> columnNames = new ArrayList<>( componentCount );
+		for ( int i = 0; i < componentCount; i++ ) {
+			final SqmSelectableNode<?> selectableNode = getSelectableNode( i );
+			final String componentName = getComponentName( i );
+			if ( selectableNode instanceof SqmPath<?> ) {
+				addColumnNames(
+						columnNames,
+						( (SqmPath<?>) selectableNode ).getNodeType().getSqmPathType(),
+						componentName
+				);
+			}
+			else {
+				columnNames.add( componentName );
+			}
+		}
+		return columnNames;
+	}
+
+	private static void addColumnNames(List<String> columnNames, DomainType<?> domainType, String componentName) {
+		if ( domainType instanceof EntityDomainType<?> ) {
+			final EntityDomainType<?> entityDomainType = (EntityDomainType<?>) domainType;
+			final SingularPersistentAttribute<?, ?> idAttribute = entityDomainType.findIdAttribute();
+			final String idPath;
+			if ( idAttribute == null ) {
+				idPath = componentName;
+			}
+			else {
+				idPath = componentName + "_" + idAttribute.getName();
+			}
+			addColumnNames( columnNames, entityDomainType.getIdentifierDescriptor().getSqmPathType(), idPath );
+		}
+		else if ( domainType instanceof ManagedDomainType<?> ) {
+			for ( Attribute<?, ?> attribute : ( (ManagedDomainType<?>) domainType ).getAttributes() ) {
+				if ( !( attribute instanceof SingularPersistentAttribute<?, ?> ) ) {
+					throw new IllegalArgumentException( "Only embeddables without collections are supported" );
+				}
+				final DomainType<?> attributeType = ( (SingularPersistentAttribute<?, ?>) attribute ).getType();
+				addColumnNames( columnNames, attributeType, componentName + "_" + attribute.getName() );
+			}
+		}
+		else {
+			columnNames.add( componentName );
+		}
+	}
+
 	@Override
 	public int componentCount() {
 		return components.length;
@@ -112,6 +162,10 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 	public SqmExpressible<?> get(String componentName) {
 		final Integer index = componentIndexMap.get( componentName );
 		return index == null ? null : components[index].getExpressible();
+	}
+
+	protected Integer getIndex(String componentName) {
+		return componentIndexMap.get( componentName );
 	}
 
 	public SqmSelectableNode<?> getSelectableNode(int index) {

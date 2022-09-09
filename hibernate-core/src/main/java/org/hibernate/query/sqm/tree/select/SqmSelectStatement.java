@@ -68,6 +68,17 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 		this.querySource = querySource;
 	}
 
+	public SqmSelectStatement(
+			SqmQueryPart<T> queryPart,
+			Class<T> resultType,
+			Map<String, SqmCteStatement<?>> cteStatements,
+			SqmQuerySource querySource,
+			NodeBuilder builder) {
+		super( builder, cteStatements, resultType );
+		this.querySource = querySource;
+		setQueryPart( queryPart );
+	}
+
 	/**
 	 * @implNote This form is used from Hibernate's JPA criteria handling.
 	 */
@@ -83,11 +94,10 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	private SqmSelectStatement(
 			NodeBuilder builder,
 			Map<String, SqmCteStatement<?>> cteStatements,
-			boolean withRecursive,
 			Class<T> resultType,
 			SqmQuerySource querySource,
 			Set<SqmParameter<?>> parameters) {
-		super( builder, cteStatements, withRecursive, resultType );
+		super( builder, cteStatements, resultType );
 		this.querySource = querySource;
 		this.parameters = parameters;
 	}
@@ -113,7 +123,6 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 				new SqmSelectStatement<>(
 						nodeBuilder(),
 						copyCteStatements( context ),
-						isWithRecursive(),
 						getResultType(),
 						getQuerySource(),
 						parameters

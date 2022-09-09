@@ -7,7 +7,9 @@
 package org.hibernate.query.derived;
 
 import org.hibernate.Incubating;
+import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
@@ -19,6 +21,7 @@ import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -76,8 +79,8 @@ public class AnonymousTupleSqmPathSource<J> implements SqmPathSource<J> {
 		else {
 			navigablePath = lhs.getNavigablePath().append( intermediatePathSource.getPathName() ).append( getPathName() );
 		}
-		final SqmPathSource<J> nodeType = path.getNodeType();
-		if ( nodeType instanceof BasicSqmPathSource<?> ) {
+		final DomainType<?> domainType = path.getNodeType().getSqmPathType();
+		if ( domainType instanceof BasicDomainType<?> ) {
 			return new SqmBasicValuedSimplePath<>(
 					navigablePath,
 					this,
@@ -85,7 +88,7 @@ public class AnonymousTupleSqmPathSource<J> implements SqmPathSource<J> {
 					lhs.nodeBuilder()
 			);
 		}
-		else if ( nodeType instanceof EmbeddedSqmPathSource<?> ) {
+		else if ( domainType instanceof EmbeddableDomainType<?> ) {
 			return new SqmEmbeddedValuedSimplePath<>(
 					navigablePath,
 					this,
@@ -93,8 +96,7 @@ public class AnonymousTupleSqmPathSource<J> implements SqmPathSource<J> {
 					lhs.nodeBuilder()
 			);
 		}
-		else if ( nodeType instanceof EntitySqmPathSource<?> || nodeType instanceof EntityDomainType<?>
-				|| nodeType instanceof PersistentAttribute<?, ?> && nodeType.getSqmPathType() instanceof EntityDomainType<?> ) {
+		else if ( domainType instanceof EntityDomainType<?> ) {
 			return new SqmEntityValuedSimplePath<>(
 					navigablePath,
 					this,
@@ -103,6 +105,6 @@ public class AnonymousTupleSqmPathSource<J> implements SqmPathSource<J> {
 			);
 		}
 
-		throw new UnsupportedOperationException( "Unsupported path source: " + nodeType );
+		throw new UnsupportedOperationException( "Unsupported path source: " + domainType );
 	}
 }

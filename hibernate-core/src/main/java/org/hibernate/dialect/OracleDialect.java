@@ -1074,6 +1074,11 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsRecursiveCTE() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsLateral() {
 		return getVersion().isSameOrAfter( 12, 1 );
 	}

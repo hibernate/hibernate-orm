@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.ast.tree;
 
-import java.util.Collection;
 import java.util.Map;
 
 import org.hibernate.sql.ast.tree.cte.CteContainer;
@@ -18,20 +17,9 @@ import org.hibernate.sql.ast.tree.cte.CteStatement;
 public abstract class AbstractStatement implements Statement, CteContainer {
 
 	private final Map<String, CteStatement> cteStatements;
-	private boolean withRecursive;
 
 	public AbstractStatement(Map<String, CteStatement> cteStatements) {
 		this.cteStatements = cteStatements;
-	}
-
-	@Override
-	public boolean isWithRecursive() {
-		return withRecursive;
-	}
-
-	@Override
-	public void setWithRecursive(boolean withRecursive) {
-		this.withRecursive = withRecursive;
 	}
 
 	@Override

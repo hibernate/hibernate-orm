@@ -124,6 +124,11 @@ public class DB2iLegacyDialect extends DB2LegacyDialect {
 	}
 
 	@Override
+	public boolean supportsRecursiveCTE() {
+		return getVersion().isSameOrAfter( 7, 1 );
+	}
+
+	@Override
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override

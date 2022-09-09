@@ -53,9 +53,8 @@ public class SqmDeleteStatement<T>
 			SqmQuerySource querySource,
 			Set<SqmParameter<?>> parameters,
 			Map<String, SqmCteStatement<?>> cteStatements,
-			boolean withRecursiveCte,
 			SqmRoot<T> target) {
-		super( builder, querySource, parameters, cteStatements, withRecursiveCte, target );
+		super( builder, querySource, parameters, cteStatements, target );
 	}
 
 	@Override
@@ -71,7 +70,6 @@ public class SqmDeleteStatement<T>
 						getQuerySource(),
 						copyParameters( context ),
 						copyCteStatements( context ),
-						isWithRecursive(),
 						getTarget().copy( context )
 				)
 		);
@@ -98,6 +96,7 @@ public class SqmDeleteStatement<T>
 
 	@Override
 	public void appendHqlString(StringBuilder sb) {
+		appendHqlCteString( sb );
 		sb.append( "delete from " );
 		sb.append( getTarget().getEntityName() );
 		sb.append( ' ' ).append( getTarget().resolveAlias() );

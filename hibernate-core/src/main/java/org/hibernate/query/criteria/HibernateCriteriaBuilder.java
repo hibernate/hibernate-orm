@@ -31,6 +31,7 @@ import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
 
+import org.hibernate.Incubating;
 import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -103,6 +104,36 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	}
 
 	<T> JpaCriteriaQuery<T> except(boolean all, CriteriaQuery<? extends T> query1, CriteriaQuery<?>... queries);
+
+	default <T> JpaSubQuery<T> unionAll(Subquery<? extends T> query1, Subquery<?>... queries) {
+		return union( true, query1, queries );
+	}
+
+	default <T> JpaSubQuery<T> union(Subquery<? extends T> query1, Subquery<?>... queries) {
+		return union( false, query1, queries );
+	}
+
+	<T> JpaSubQuery<T> union(boolean all, Subquery<? extends T> query1, Subquery<?>... queries);
+
+	default <T> JpaSubQuery<T> intersectAll(Subquery<? extends T> query1, Subquery<?>... queries) {
+		return intersect( true, query1, queries );
+	}
+
+	default <T> JpaSubQuery<T> intersect(Subquery<? extends T> query1, Subquery<?>... queries) {
+		return intersect( false, query1, queries );
+	}
+
+	<T> JpaSubQuery<T> intersect(boolean all, Subquery<? extends T> query1, Subquery<?>... queries);
+
+	default <T> JpaSubQuery<T> exceptAll(Subquery<? extends T> query1, Subquery<?>... queries) {
+		return except( true, query1, queries );
+	}
+
+	default <T> JpaSubQuery<T> except(Subquery<? extends T> query1, Subquery<?>... queries) {
+		return except( false, query1, queries );
+	}
+
+	<T> JpaSubQuery<T> except(boolean all, Subquery<? extends T> query1, Subquery<?>... queries);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -798,4 +829,65 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @return descending ordering corresponding to the expression
 	 */
 	JpaOrder desc(Expression<?> x, boolean nullsFirst);
+
+	/**
+	 * Create a search ordering based on the sort order and null precedence of the value of the CTE attribute.
+	 * @param cteAttribute CTE attribute used to define the ordering
+	 * @param sortOrder The sort order
+	 * @param nullPrecedence The null precedence
+	 * @return ordering corresponding to the CTE attribute
+	 */
+	@Incubating
+	JpaSearchOrder search(JpaCteCriteriaAttribute cteAttribute, SortOrder sortOrder, NullPrecedence nullPrecedence);
+
+	/**
+	 * Create a search ordering based on the sort order of the value of the CTE attribute.
+	 * @param cteAttribute CTE attribute used to define the ordering
+	 * @param sortOrder The sort order
+	 * @return ordering corresponding to the CTE attribute
+	 */
+	@Incubating
+	JpaSearchOrder search(JpaCteCriteriaAttribute cteAttribute, SortOrder sortOrder);
+
+	/**
+	 * Create a search ordering based on the ascending value of the CTE attribute.
+	 * @param cteAttribute CTE attribute used to define the ordering
+	 * @return ascending ordering corresponding to the CTE attribute
+	 */
+	@Incubating
+	JpaSearchOrder search(JpaCteCriteriaAttribute cteAttribute);
+
+	/**
+	 * Create a search ordering by the ascending value of the CTE attribute.
+	 * @param x  CTE attribute used to define the ordering
+	 * @return ascending ordering corresponding to the CTE attribute
+	 */
+	@Incubating
+	JpaSearchOrder asc(JpaCteCriteriaAttribute x);
+
+	/**
+	 * Create a search ordering by the descending value of the CTE attribute.
+	 * @param x CTE attribute used to define the ordering
+	 * @return descending ordering corresponding to the CTE attribute
+	 */
+	@Incubating
+	JpaSearchOrder desc(JpaCteCriteriaAttribute x);
+
+	/**
+	 * Create a search ordering by the ascending value of the CTE attribute.
+	 * @param x  CTE attribute used to define the ordering
+	 * @param nullsFirst Whether <code>null</code> should be sorted first
+	 * @return ascending ordering corresponding to the CTE attribute
+	 */
+	@Incubating
+	JpaSearchOrder asc(JpaCteCriteriaAttribute x, boolean nullsFirst);
+
+	/**
+	 * Create a search ordering by the descending value of the CTE attribute.
+	 * @param x CTE attribute used to define the ordering
+	 * @param nullsFirst Whether <code>null</code> should be sorted first
+	 * @return descending ordering corresponding to the CTE attribute
+	 */
+	@Incubating
+	JpaSearchOrder desc(JpaCteCriteriaAttribute x, boolean nullsFirst);
 }

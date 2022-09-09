@@ -45,6 +45,18 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	@Override
+	protected boolean supportsWithClauseInSubquery() {
+		// HANA doesn't seem to support correlation, so we just report false here for simplicity
+		return false;
+	}
+
+	@Override
+	protected boolean isCorrelated(CteStatement cteStatement) {
+		// Report false here, because apparently HANA does not need the "lateral" keyword to correlate a from clause subquery in a subquery
+		return false;
+	}
+
+	@Override
 	public void visitQueryGroup(QueryGroup queryGroup) {
 		if ( shouldEmulateFetchClause( queryGroup ) ) {
 			emulateFetchOffsetWithWindowFunctions( queryGroup, true );
@@ -93,16 +105,6 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		if ( !isRowNumberingCurrentQueryPart() ) {
 			renderLimitOffsetClause( queryPart );
 		}
-	}
-
-	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// HANA does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// HANA does not support this, but it can be emulated
 	}
 
 	@Override

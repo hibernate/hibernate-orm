@@ -128,25 +128,25 @@ public interface SqmFrom<O,T> extends SqmVisitableNode, SqmPath<T>, JpaFrom<O, T
 	<X, Y> SqmAttributeJoin<X, Y> join(String attributeName, JoinType jt);
 
 	@Override
-	<X, Y> CollectionJoin<X, Y> joinCollection(String attributeName);
+	<X, Y> SqmBagJoin<X, Y> joinCollection(String attributeName);
 
 	@Override
 	<X, Y> SqmBagJoin<X, Y> joinCollection(String attributeName, JoinType jt);
 
 	@Override
-	<X, Y> SetJoin<X, Y> joinSet(String attributeName);
+	<X, Y> SqmSetJoin<X, Y> joinSet(String attributeName);
 
 	@Override
 	<X, Y> SqmSetJoin<X, Y> joinSet(String attributeName, JoinType jt);
 
 	@Override
-	<X, Y> ListJoin<X, Y> joinList(String attributeName);
+	<X, Y> SqmListJoin<X, Y> joinList(String attributeName);
 
 	@Override
 	<X, Y> SqmListJoin<X, Y> joinList(String attributeName, JoinType jt);
 
 	@Override
-	<X, K, V> MapJoin<X, K, V> joinMap(String attributeName);
+	<X, K, V> SqmMapJoin<X, K, V> joinMap(String attributeName);
 
 	@Override
 	<X, K, V> SqmMapJoin<X, K, V> joinMap(String attributeName, JoinType jt);

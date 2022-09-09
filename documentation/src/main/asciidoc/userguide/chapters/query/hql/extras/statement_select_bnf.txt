@@ -2,7 +2,7 @@ selectStatement
 	: queryExpression
 
 queryExpression
-	: orderedQuery (setOperator orderedQuery)*
+	: withClause? orderedQuery (setOperator orderedQuery)*
 
 orderedQuery
 	: (query | "(" queryExpression ")") queryOrder?
@@ -30,3 +30,31 @@ join
 joinTarget
 	: path variable?
 	| "LATERAL"? "(" subquery ")" variable?
+
+withClause
+	: "WITH" cte ("," cte)*
+	;
+
+cte
+	: identifier AS ("NOT"? "MATERIALIZED")? "(" queryExpression ")" searchClause? cycleClause?
+	;
+
+cteAttributes
+	: identifier ("," identifier)*
+	;
+
+searchClause
+	: "SEARCH" ("BREADTH"|"DEPTH") "FIRST BY" searchSpecifications "SET" identifier
+	;
+
+searchSpecifications
+	: searchSpecification ("," searchSpecification)*
+	;
+
+searchSpecification
+	: identifier sortDirection? nullsPrecedence?
+	;
+
+cycleClause
+	: "CYCLE" cteAttributes "SET" identifier ("TO" literal "DEFAULT" literal)? ("USING" identifier)?
+	;

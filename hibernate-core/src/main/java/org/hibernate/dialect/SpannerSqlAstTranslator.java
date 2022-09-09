@@ -62,16 +62,6 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// Spanner does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// Spanner does not support this, but it can be emulated
-	}
-
-	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		renderComparisonEmulateIntersect( lhs, operator, rhs );
 	}
@@ -121,6 +111,10 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 
 	@Override
 	protected boolean renderPrimaryTableReference(TableGroup tableGroup, LockMode lockMode) {
+		if ( shouldInlineCte( tableGroup ) ) {
+			inlineCteTableGroup( tableGroup, lockMode );
+			return false;
+		}
 		final TableReference tableReference = tableGroup.getPrimaryTableReference();
 		if ( tableReference instanceof NamedTableReference ) {
 			return renderNamedTableReference( (NamedTableReference) tableReference, lockMode );

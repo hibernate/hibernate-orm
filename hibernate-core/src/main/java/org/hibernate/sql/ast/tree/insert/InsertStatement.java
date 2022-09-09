@@ -42,16 +42,14 @@ public class InsertStatement extends AbstractMutationStatement {
 			CteContainer cteContainer,
 			NamedTableReference targetTable,
 			List<ColumnReference> returningColumns) {
-		this( cteContainer.isWithRecursive(), cteContainer.getCteStatements(), targetTable, returningColumns );
+		this( cteContainer.getCteStatements(), targetTable, returningColumns );
 	}
 
 	public InsertStatement(
-			boolean withRecursive,
 			Map<String, CteStatement> cteStatements,
 			NamedTableReference targetTable,
 			List<ColumnReference> returningColumns) {
 		super( cteStatements, targetTable, returningColumns );
-		setWithRecursive( withRecursive );
 	}
 
 	public List<ColumnReference> getTargetColumnReferences() {

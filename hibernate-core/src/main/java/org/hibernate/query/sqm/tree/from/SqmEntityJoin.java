@@ -7,6 +7,10 @@
 package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaJoinedFrom;
+import org.hibernate.query.criteria.JpaPredicate;
+import org.hibernate.query.sqm.tree.domain.AbstractSqmQualifiedJoin;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaEntityJoin;
@@ -17,19 +21,19 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.domain.AbstractSqmJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedEntityJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedEntityJoin;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmEntityJoin<T> extends AbstractSqmJoin<T, T> implements SqmQualifiedJoin<T,T>, JpaEntityJoin<T> {
+public class SqmEntityJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements JpaEntityJoin<T> {
 	private final SqmRoot<?> sqmRoot;
-	private SqmPredicate joinPredicate;
 
 	public SqmEntityJoin(
 			EntityDomainType<T> joinedEntityDescriptor,
@@ -75,11 +79,6 @@ public class SqmEntityJoin<T> extends AbstractSqmJoin<T, T> implements SqmQualif
 		return path;
 	}
 
-	protected void copyTo(SqmEntityJoin<T> target, SqmCopyContext context) {
-		super.copyTo( target, context );
-		target.joinPredicate = joinPredicate == null ? null : joinPredicate.copy( context );
-	}
-
 	public SqmRoot<?> getRoot() {
 		return sqmRoot;
 	}
@@ -118,12 +117,23 @@ public class SqmEntityJoin<T> extends AbstractSqmJoin<T, T> implements SqmQualif
 	}
 
 	@Override
-	public SqmPredicate getJoinPredicate() {
-		return joinPredicate;
+	public SqmEntityJoin<T> on(JpaExpression<Boolean> restriction) {
+		return (SqmEntityJoin<T>) super.on( restriction );
 	}
 
-	public void setJoinPredicate(SqmPredicate predicate) {
-		this.joinPredicate = predicate;
+	@Override
+	public SqmEntityJoin<T> on(Expression<Boolean> restriction) {
+		return (SqmEntityJoin<T>) super.on( restriction );
+	}
+
+	@Override
+	public SqmEntityJoin<T> on(JpaPredicate... restrictions) {
+		return (SqmEntityJoin<T>) super.on( restrictions );
+	}
+
+	@Override
+	public SqmEntityJoin<T> on(Predicate... restrictions) {
+		return (SqmEntityJoin<T>) super.on( restrictions );
 	}
 
 	@Override

@@ -19,7 +19,6 @@ import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.internal.DeleteHandler;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.sql.internal.SqlAstQueryPartProcessingStateImpl;
-import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.tree.MutationStatement;
@@ -45,7 +44,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 	private static final String DELETE_RESULT_TABLE_NAME_PREFIX = "delete_cte_";
 
 	protected CteDeleteHandler(
-			SqmCteTable cteTable,
+			CteTable cteTable,
 			SqmDeleteStatement<?> sqmDeleteStatement,
 			DomainParameterXref domainParameterXref,
 			CteMutationStrategy strategy,
@@ -108,8 +107,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 							final String tableExpression = pluralAttribute.getSeparateCollectionTable();
 							final CteTable dmlResultCte = new CteTable(
 									getCteTableName( pluralAttribute ),
-									idSelectCte.getCteTable().getCteColumns(),
-									factory
+									idSelectCte.getCteTable().getCteColumns()
 							);
 							final NamedTableReference dmlTableReference = new NamedTableReference(
 									tableExpression,
@@ -153,8 +151,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 					}
 					final CteTable dmlResultCte = new CteTable(
 							cteTableName,
-							idSelectCte.getCteTable().getCteColumns(),
-							factory
+							idSelectCte.getCteTable().getCteColumns()
 					);
 					final TableReference updatingTableReference = updatingTableGroup.getTableReference(
 							updatingTableGroup.getNavigablePath(),

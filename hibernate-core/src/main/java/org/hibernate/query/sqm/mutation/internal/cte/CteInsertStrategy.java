@@ -17,8 +17,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
-import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
+import org.hibernate.sql.ast.tree.cte.CteTable;
 
 /**
  * @asciidoc
@@ -99,7 +99,7 @@ public class CteInsertStrategy implements SqmMultiTableInsertStrategy {
 
 	private final EntityPersister rootDescriptor;
 	private final SessionFactoryImplementor sessionFactory;
-	private final SqmCteTable entityCteTable;
+	private final CteTable entityCteTable;
 
 	public CteInsertStrategy(
 			EntityMappingType rootEntityType,
@@ -148,7 +148,7 @@ public class CteInsertStrategy implements SqmMultiTableInsertStrategy {
 		else {
 			qualifiedTableName = name;
 		}
-		this.entityCteTable = SqmCteTable.createEntityTable( qualifiedTableName, rootDescriptor );
+		this.entityCteTable = CteTable.createEntityTable( qualifiedTableName, rootDescriptor );
 	}
 
 	@Override

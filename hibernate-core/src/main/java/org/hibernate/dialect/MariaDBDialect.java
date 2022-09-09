@@ -56,7 +56,8 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	public MariaDBDialect(DialectResolutionInfo info) {
-		super(info);
+		super( createVersion( info ), getCharacterSetBytesPerCharacter( info.getDatabaseMetadata() ) );
+		registerKeywords( info );
 	}
 
 	@Override
@@ -146,6 +147,17 @@ public class MariaDBDialect extends MySQLDialect {
 
 	@Override
 	public boolean supportsWindowFunctions() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsLateral() {
+		// See https://jira.mariadb.org/browse/MDEV-19078
+		return false;
+	}
+
+	@Override
+	public boolean supportsRecursiveCTE() {
 		return true;
 	}
 

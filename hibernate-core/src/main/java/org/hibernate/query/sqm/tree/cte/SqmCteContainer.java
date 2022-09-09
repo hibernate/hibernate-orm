@@ -8,20 +8,16 @@ package org.hibernate.query.sqm.tree.cte;
 
 import java.util.Collection;
 
+import org.hibernate.query.criteria.JpaCteContainer;
 import org.hibernate.query.sqm.tree.SqmNode;
 
 /**
  * @author Christian Beikov
  */
-public interface SqmCteContainer extends SqmNode {
-
-	boolean isWithRecursive();
-
-	void setWithRecursive(boolean recursive);
+public interface SqmCteContainer extends SqmNode, JpaCteContainer {
 
 	Collection<SqmCteStatement<?>> getCteStatements();
 
 	SqmCteStatement<?> getCteStatement(String cteLabel);
 
-	void addCteStatement(SqmCteStatement<?> cteStatement);
 }

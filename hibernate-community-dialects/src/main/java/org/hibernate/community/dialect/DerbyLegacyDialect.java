@@ -18,6 +18,7 @@ import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.function.CastingConcatFunction;
+import org.hibernate.dialect.function.ChrLiteralEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.DerbyLpadEmulation;
@@ -285,6 +286,16 @@ public class DerbyLegacyDialect extends Dialect {
 		);
 		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
 		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.DEFAULT );
+
+		// Note that Derby does not have chr() / ascii() functions.
+		// It does have a function named char(), but it's really a
+		// sort of to_char() function.
+
+		// We register an emulation instead, that can at least translate integer literals
+		queryEngine.getSqmFunctionRegistry().register(
+				"chr",
+				new ChrLiteralEmulation( queryEngine.getTypeConfiguration() )
+		);
 
 		functionFactory.concat_pipeOperator();
 		functionFactory.cot();
@@ -602,6 +613,11 @@ public class DerbyLegacyDialect extends Dialect {
 	public boolean supportsOrderByInSubquery() {
 		// As of version 10.5 Derby supports OFFSET and FETCH as well as ORDER BY in subqueries
 		return getVersion().isSameOrAfter( 10, 5 );
+	}
+
+	@Override
+	public boolean requiresCastForConcatenatingNonStrings() {
+		return true;
 	}
 
 	@Override

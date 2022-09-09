@@ -87,16 +87,6 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// Informix does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// Informix does not support this, but it can be emulated
-	}
-
-	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		renderComparisonEmulateIntersect( lhs, operator, rhs );
 	}

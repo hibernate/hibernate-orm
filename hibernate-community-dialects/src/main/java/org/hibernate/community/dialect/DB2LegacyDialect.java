@@ -535,6 +535,11 @@ public class DB2LegacyDialect extends Dialect {
 	}
 
 	@Override
+	public boolean requiresCastForConcatenatingNonStrings() {
+		return true;
+	}
+
+	@Override
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		return selectNullString(sqlType);
 	}
@@ -754,6 +759,12 @@ public class DB2LegacyDialect extends Dialect {
 	@Override
 	public boolean supportsNonQueryWithCTE() {
 		return true;
+	}
+
+	@Override
+	public boolean supportsRecursiveCTE() {
+		// Supported at last since 9.7
+		return getDB2Version().isSameOrAfter( 9, 7 );
 	}
 
 	@Override

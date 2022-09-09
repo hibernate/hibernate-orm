@@ -17,7 +17,11 @@ import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.domain.SqmCteRoot;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
+import org.hibernate.query.sqm.tree.from.SqmCteJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
@@ -270,7 +274,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 
 		private final StringBuilder path = new StringBuilder();
 
-		private SqmEntityJoin<?> join;
+		private SqmPath<?> join;
 
 		public ExpectingEntityJoinDelegate(
 				String identifier,
@@ -301,6 +305,12 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 						.getJpaMetamodel()
 						.resolveHqlEntityReference( fullPath );
 				if ( joinedEntityType == null ) {
+					final SqmCteStatement<?> cteStatement = creationState.findCteStatement( fullPath );
+					if ( cteStatement != null ) {
+						join = new SqmCteJoin<>( cteStatement, alias, joinType, sqmRoot );
+						creationState.getCurrentProcessingState().getPathRegistry().register( join );
+						return;
+					}
 					throw new SemanticException( "Could not resolve join path - " + fullPath );
 				}
 

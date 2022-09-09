@@ -24,7 +24,11 @@ import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaDerivedJoin;
+import org.hibernate.query.criteria.JpaJoinedFrom;
+import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.from.SqmCteJoin;
 import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.spi.NavigablePath;
@@ -587,6 +591,24 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	public <X> JpaDerivedJoin<X> join(Subquery<X> subquery, SqmJoinType joinType, boolean lateral, String alias) {
 		validateComplianceFromSubQuery();
 		final JpaDerivedJoin<X> join = new SqmDerivedJoin<>( (SqmSubQuery<X>) subquery, alias, joinType, lateral, findRoot() );
+		//noinspection unchecked
+		addSqmJoin( (SqmJoin<T, ?>) join );
+		return join;
+	}
+
+	@Override
+	public <X> JpaJoinedFrom<?, X> join(JpaCteCriteria<X> cte) {
+		return join( cte, SqmJoinType.INNER, null );
+	}
+
+	@Override
+	public <X> JpaJoinedFrom<?, X> join(JpaCteCriteria<X> cte, SqmJoinType joinType) {
+		return join( cte, joinType, null );
+	}
+
+	public <X> JpaJoinedFrom<?, X> join(JpaCteCriteria<X> cte, SqmJoinType joinType, String alias) {
+		validateComplianceFromSubQuery();
+		final JpaJoinedFrom<?, X> join = new SqmCteJoin<>( ( SqmCteStatement<X> ) cte, alias, joinType, findRoot() );
 		//noinspection unchecked
 		addSqmJoin( (SqmJoin<T, ?>) join );
 		return join;

@@ -64,9 +64,8 @@ public class SqmUpdateStatement<T>
 			SqmQuerySource querySource,
 			Set<SqmParameter<?>> parameters,
 			Map<String, SqmCteStatement<?>> cteStatements,
-			boolean withRecursiveCte,
 			SqmRoot<T> target) {
-		super( builder, querySource, parameters, cteStatements, withRecursiveCte, target );
+		super( builder, querySource, parameters, cteStatements, target );
 	}
 
 	@Override
@@ -82,7 +81,6 @@ public class SqmUpdateStatement<T>
 						getQuerySource(),
 						copyParameters( context ),
 						copyCteStatements( context ),
-						isWithRecursive(),
 						getTarget().copy( context )
 				)
 		);
@@ -179,6 +177,7 @@ public class SqmUpdateStatement<T>
 
 	@Override
 	public void appendHqlString(StringBuilder sb) {
+		appendHqlCteString( sb );
 		sb.append( "update " );
 		if ( versioned ) {
 			sb.append( "versioned " );

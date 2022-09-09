@@ -17,10 +17,6 @@ import java.util.Map;
  */
 public interface CteContainer {
 
-	boolean isWithRecursive();
-
-	void setWithRecursive(boolean recursive);
-
 	Map<String, CteStatement> getCteStatements();
 
 	CteStatement getCteStatement(String cteLabel);

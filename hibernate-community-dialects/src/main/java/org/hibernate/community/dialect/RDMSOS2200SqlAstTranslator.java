@@ -78,16 +78,6 @@ public class RDMSOS2200SqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	}
 
 	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// Unisys 2200 does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// Unisys 2200 does not support this, but it can be emulated
-	}
-
-	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		renderComparisonEmulateIntersect( lhs, operator, rhs );
 	}

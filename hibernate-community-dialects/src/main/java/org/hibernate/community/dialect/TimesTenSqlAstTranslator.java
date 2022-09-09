@@ -90,16 +90,6 @@ public class TimesTenSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// TimesTen does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// TimesTen does not support this, but it can be emulated
-	}
-
-	@Override
 	protected void visitSqlSelections(SelectClause selectClause) {
 		renderRowsToClause( (QuerySpec) getQueryPartStack().getCurrent() );
 		super.visitSqlSelections( selectClause );

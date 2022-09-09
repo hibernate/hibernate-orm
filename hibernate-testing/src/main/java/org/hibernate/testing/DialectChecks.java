@@ -303,4 +303,10 @@ abstract public class DialectChecks {
 			return !( dialect instanceof TiDBDialect );
 		}
 	}
+
+	public static class SupportsRecursiveCtes implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.supportsRecursiveCTE();
+		}
+	}
 }

@@ -47,7 +47,6 @@ public class DeleteStatement extends AbstractMutationStatement {
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
 		this(
-				cteContainer.isWithRecursive(),
 				cteContainer.getCteStatements(),
 				targetTable,
 				restriction,
@@ -56,14 +55,12 @@ public class DeleteStatement extends AbstractMutationStatement {
 	}
 
 	public DeleteStatement(
-			boolean withRecursive,
 			Map<String, CteStatement> cteStatements,
 			NamedTableReference targetTable,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
 		super( cteStatements, targetTable, returningColumns );
 		this.restriction = restriction;
-		setWithRecursive( withRecursive );
 	}
 
 	public Predicate getRestriction() {

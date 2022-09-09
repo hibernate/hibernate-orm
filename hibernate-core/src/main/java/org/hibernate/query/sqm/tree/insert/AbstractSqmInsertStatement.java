@@ -43,10 +43,9 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 			SqmQuerySource querySource,
 			Set<SqmParameter<?>> parameters,
 			Map<String, SqmCteStatement<?>> cteStatements,
-			boolean withRecursiveCte,
 			SqmRoot<T> target,
 			List<SqmPath<?>> insertionTargetPaths) {
-		super( builder, querySource, parameters, cteStatements, withRecursiveCte, target );
+		super( builder, querySource, parameters, cteStatements, target );
 		this.insertionTargetPaths = insertionTargetPaths;
 	}
 
@@ -90,6 +89,7 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 
 	@Override
 	public void appendHqlString(StringBuilder sb) {
+		appendHqlCteString( sb );
 		sb.append( "insert into " );
 		sb.append( getTarget().getEntityName() );
 		if ( insertionTargetPaths != null && !insertionTargetPaths.isEmpty() ) {

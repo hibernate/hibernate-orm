@@ -52,6 +52,16 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
+	protected boolean needsRecursiveKeywordInWithClause() {
+		return false;
+	}
+
+	@Override
+	protected boolean supportsWithClauseInSubquery() {
+		return false;
+	}
+
+	@Override
 	protected void renderTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
 		appendSql( WHITESPACE );
 		if ( tableGroupJoin.getJoinedGroup().isLateral() ) {
@@ -86,6 +96,10 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	protected boolean renderPrimaryTableReference(TableGroup tableGroup, LockMode lockMode) {
+		if ( shouldInlineCte( tableGroup ) ) {
+			inlineCteTableGroup( tableGroup, lockMode );
+			return false;
+		}
 		final TableReference tableReference = tableGroup.getPrimaryTableReference();
 		if ( tableReference instanceof NamedTableReference ) {
 			return renderNamedTableReference( (NamedTableReference) tableReference, lockMode );
@@ -351,16 +365,6 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 				renderEmptyOrderBy();
 			}
 		}
-	}
-
-	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// SQL Server does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// SQL Server does not support this, but it can be emulated
 	}
 
 	@Override

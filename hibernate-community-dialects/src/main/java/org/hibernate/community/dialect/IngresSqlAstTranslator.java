@@ -94,16 +94,6 @@ public class IngresSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// Ingres does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// Ingres does not support this, but it can be emulated
-	}
-
-	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		renderComparisonEmulateIntersect( lhs, operator, rhs );
 	}

@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.derived;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,7 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -43,6 +45,7 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -304,6 +307,10 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 		}
 	}
 
+	public Map<String, ModelPart> getModelParts() {
+		return modelParts;
+	}
+
 	@Override
 	public String getSqlAliasStem() {
 		return aliasStem;
@@ -312,6 +319,16 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 	@Override
 	public JavaType<?> getJavaType() {
 		return javaTypeDescriptor;
+	}
+
+	@Override
+	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+		final int originalOffset = offset;
+		for ( ModelPart modelPart : modelParts.values() ) {
+			offset += modelPart.forEachSelectable( offset, consumer );
+		}
+
+		return offset - originalOffset;
 	}
 
 	//--------------------------------
@@ -371,5 +388,4 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
-
 }

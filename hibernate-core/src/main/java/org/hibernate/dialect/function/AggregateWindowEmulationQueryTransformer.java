@@ -38,6 +38,7 @@ import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.results.internal.ResolvedSqlSelection;
 import org.hibernate.type.BasicType;
@@ -417,7 +418,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 		final QueryPartTableGroup queryPartTableGroup = new QueryPartTableGroup(
 				navigablePath,
 				null,
-				subQuerySpec,
+				new SelectStatement( subQuerySpec ),
 				identifierVariable,
 				columnNames,
 				false,

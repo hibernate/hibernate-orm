@@ -17,7 +17,9 @@ import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.cte.CteTableGroup;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
@@ -44,6 +46,47 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 
 	public H2LegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	public void visitCteContainer(CteContainer cteContainer) {
+		// H2 has various bugs in different versions that make it impossible to use CTEs with parameters reliably
+		withParameterRenderingMode(
+				SqlAstNodeRenderingMode.INLINE_PARAMETERS,
+				() -> super.visitCteContainer( cteContainer )
+		);
+	}
+
+	@Override
+	protected boolean needsCteInlining() {
+		// CTEs in H2 are just so buggy, that we can't reliably use them
+		return true;
+	}
+
+	@Override
+	protected boolean shouldInlineCte(TableGroup tableGroup) {
+		return tableGroup instanceof CteTableGroup
+				&& !getCteStatement( tableGroup.getPrimaryTableReference().getTableId() ).isRecursive();
+	}
+
+	@Override
+	protected boolean supportsWithClauseInSubquery() {
+		return false;
+	}
+
+	@Override
+	protected boolean supportsRowConstructor() {
+		return getDialect().getVersion().isSameOrAfter( 2 );
+	}
+
+	@Override
+	protected boolean supportsArrayConstructor() {
+		return getDialect().getVersion().isSameOrAfter( 2 );
+	}
+
+	@Override
+	protected String getArrayContainsFunction() {
+		return "array_contains";
 	}
 
 	@Override
@@ -82,16 +125,6 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 				throw new IllegalArgumentException( "Can't emulate fetch clause type: " + queryPart.getFetchClauseType() );
 			}
 		}
-	}
-
-	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// H2 does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// H2 does not support this, but it can be emulated
 	}
 
 	@Override

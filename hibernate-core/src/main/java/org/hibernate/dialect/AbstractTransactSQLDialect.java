@@ -291,6 +291,11 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean requiresCastForConcatenatingNonStrings() {
+		return true;
+	}
+
+	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {

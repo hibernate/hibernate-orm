@@ -54,6 +54,10 @@ public class DB2zSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTran
 
 	@Override
 	protected boolean renderPrimaryTableReference(TableGroup tableGroup, LockMode lockMode) {
+		if ( shouldInlineCte( tableGroup ) ) {
+			inlineCteTableGroup( tableGroup, lockMode );
+			return false;
+		}
 		final TableReference tableReference = tableGroup.getPrimaryTableReference();
 		if ( tableReference instanceof NamedTableReference ) {
 			return renderNamedTableReference( (NamedTableReference) tableReference, lockMode );

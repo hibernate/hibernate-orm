@@ -15,6 +15,7 @@ import java.util.function.Consumer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.select.QueryPart;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 
 /**
  * A special table group for a sub-queries.
@@ -29,7 +30,7 @@ public class QueryPartTableGroup extends AbstractTableGroup {
 	public QueryPartTableGroup(
 			NavigablePath navigablePath,
 			TableGroupProducer tableGroupProducer,
-			QueryPart queryPart,
+			SelectStatement selectStatement,
 			String sourceAlias,
 			List<String> columnNames,
 			boolean lateral,
@@ -38,7 +39,7 @@ public class QueryPartTableGroup extends AbstractTableGroup {
 		this(
 				navigablePath,
 				tableGroupProducer,
-				queryPart,
+				selectStatement,
 				sourceAlias,
 				columnNames,
 				Collections.emptySet(),
@@ -51,7 +52,7 @@ public class QueryPartTableGroup extends AbstractTableGroup {
 	public QueryPartTableGroup(
 			NavigablePath navigablePath,
 			TableGroupProducer tableGroupProducer,
-			QueryPart queryPart,
+			SelectStatement selectStatement,
 			String sourceAlias,
 			List<String> columnNames,
 			Set<String> compatibleTableExpressions,
@@ -68,7 +69,7 @@ public class QueryPartTableGroup extends AbstractTableGroup {
 		);
 		this.compatibleTableExpressions = compatibleTableExpressions;
 		this.queryPartTableReference = new QueryPartTableReference(
-				queryPart,
+				selectStatement,
 				sourceAlias,
 				columnNames,
 				lateral,

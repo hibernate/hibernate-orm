@@ -12,18 +12,22 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.criteria.JpaCteCriteria;
+import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.domain.SqmCteRoot;
 import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 
+import jakarta.persistence.criteria.AbstractQuery;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
@@ -36,9 +40,8 @@ import jakarta.persistence.metamodel.EntityType;
 @SuppressWarnings("unchecked")
 public abstract class AbstractSqmSelectQuery<T>
 		extends AbstractSqmNode
-		implements SqmSelectQuery<T>, SqmCteContainer {
+		implements SqmSelectQuery<T> {
 	private final Map<String, SqmCteStatement<?>> cteStatements;
-	private boolean withRecursive;
 	private SqmQueryPart<T> sqmQueryPart;
 	private Class<T> resultType;
 
@@ -56,11 +59,9 @@ public abstract class AbstractSqmSelectQuery<T>
 	protected AbstractSqmSelectQuery(
 			NodeBuilder builder,
 			Map<String, SqmCteStatement<?>> cteStatements,
-			boolean withRecursive,
 			Class<T> resultType) {
 		super( builder );
 		this.cteStatements = cteStatements;
-		this.withRecursive = withRecursive;
 		this.resultType = resultType;
 	}
 
@@ -70,16 +71,6 @@ public abstract class AbstractSqmSelectQuery<T>
 			cteStatements.put( entry.getKey(), entry.getValue().copy( context ) );
 		}
 		return cteStatements;
-	}
-
-	@Override
-	public boolean isWithRecursive() {
-		return withRecursive;
-	}
-
-	@Override
-	public void setWithRecursive(boolean withRecursive) {
-		this.withRecursive = withRecursive;
 	}
 
 	@Override
@@ -93,10 +84,100 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public void addCteStatement(SqmCteStatement<?> cteStatement) {
-		if ( cteStatements.putIfAbsent( cteStatement.getCteTable().getCteName(), cteStatement ) != null ) {
+	public Collection<? extends JpaCteCriteria<?>> getCteCriterias() {
+		return cteStatements.values();
+	}
+
+	@Override
+	public <X> JpaCteCriteria<X> getCteCriteria(String cteName) {
+		return (JpaCteCriteria<X>) cteStatements.get( cteName );
+	}
+
+	@Override
+	public <X> JpaCteCriteria<X> with(AbstractQuery<X> criteria) {
+		return withInternal( Long.toString( System.nanoTime() ), criteria );
+	}
+
+	@Override
+	public <X> JpaCteCriteria<X> withRecursiveUnionAll(
+			AbstractQuery<X> baseCriteria,
+			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
+		return withInternal( Long.toString( System.nanoTime() ), baseCriteria, false, recursiveCriteriaProducer );
+	}
+
+	@Override
+	public <X> JpaCteCriteria<X> withRecursiveUnionDistinct(
+			AbstractQuery<X> baseCriteria,
+			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
+		return withInternal( Long.toString( System.nanoTime() ), baseCriteria, true, recursiveCriteriaProducer );
+	}
+
+	@Override
+	public <X> JpaCteCriteria<X> with(String name, AbstractQuery<X> criteria) {
+		return withInternal( validateCteName( name ), criteria );
+	}
+
+	@Override
+	public <X> JpaCteCriteria<X> withRecursiveUnionAll(
+			String name,
+			AbstractQuery<X> baseCriteria,
+			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
+		return withInternal( validateCteName( name ), baseCriteria, false, recursiveCriteriaProducer );
+	}
+
+	@Override
+	public <X> JpaCteCriteria<X> withRecursiveUnionDistinct(
+			String name,
+			AbstractQuery<X> baseCriteria,
+			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
+		return withInternal( validateCteName( name ), baseCriteria, true, recursiveCriteriaProducer );
+	}
+
+	private String validateCteName(String name) {
+		if ( name == null || name.isBlank() ) {
+			throw new IllegalArgumentException( "Illegal empty CTE name" );
+		}
+		if ( !Character.isAlphabetic( name.charAt( 0 ) ) ) {
+			throw new IllegalArgumentException(
+					String.format(
+							"Illegal CTE name [%s]. Names must start with an alphabetic character!",
+							name
+					)
+			);
+		}
+		return name;
+	}
+
+	private <X> JpaCteCriteria<X> withInternal(String name, AbstractQuery<X> criteria) {
+		final SqmCteStatement<X> cteStatement = new SqmCteStatement<>(
+				name,
+				(SqmSelectQuery<X>) criteria,
+				this,
+				nodeBuilder()
+		);
+		if ( cteStatements.putIfAbsent( name, cteStatement ) != null ) {
 			throw new IllegalArgumentException( "A CTE with the label " + cteStatement.getCteTable().getCteName() + " already exists" );
 		}
+		return cteStatement;
+	}
+
+	private <X> JpaCteCriteria<X> withInternal(
+			String name,
+			AbstractQuery<X> baseCriteria,
+			boolean unionDistinct,
+			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
+		final SqmCteStatement<X> cteStatement = new SqmCteStatement<>(
+				name,
+				(SqmSelectQuery<X>) baseCriteria,
+				unionDistinct,
+				recursiveCriteriaProducer,
+				this,
+				nodeBuilder()
+		);
+		if ( cteStatements.putIfAbsent( name, cteStatement ) != null ) {
+			throw new IllegalArgumentException( "A CTE with the label " + cteStatement.getCteTable().getCteName() + " already exists" );
+		}
+		return cteStatement;
 	}
 
 	@Override
@@ -145,6 +226,12 @@ public abstract class AbstractSqmSelectQuery<T>
 	public <X> SqmDerivedRoot<X> from(Subquery<X> subquery) {
 		validateComplianceFromSubQuery();
 		final SqmDerivedRoot<X> root = new SqmDerivedRoot<>( (SqmSubQuery<X>) subquery, null );
+		addRoot( root );
+		return root;
+	}
+
+	public <X> JpaRoot<X> from(JpaCteCriteria<X> cte) {
+		final SqmCteRoot<X> root = new SqmCteRoot<>( ( SqmCteStatement<X> ) cte, null );
 		addRoot( root );
 		return root;
 	}
@@ -278,9 +365,6 @@ public abstract class AbstractSqmSelectQuery<T>
 	public void appendHqlString(StringBuilder sb) {
 		if ( !cteStatements.isEmpty() ) {
 			sb.append( "with " );
-			if ( withRecursive ) {
-				sb.append( "recursive " );
-			}
 			for ( SqmCteStatement<?> value : cteStatements.values() ) {
 				value.appendHqlString( sb );
 				sb.append( ", " );

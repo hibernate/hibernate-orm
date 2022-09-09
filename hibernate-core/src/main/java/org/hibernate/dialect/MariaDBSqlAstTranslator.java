@@ -33,8 +33,29 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
+	protected boolean supportsWithClauseInSubquery() {
+		return false;
+	}
+
+	@Override
 	protected void renderExpressionAsClauseItem(Expression expression) {
 		expression.accept( this );
+	}
+
+	@Override
+	protected void visitRecursivePath(Expression recursivePath, int sizeEstimate) {
+		// MariaDB determines the type and size of a column in a recursive CTE based on the expression of the non-recursive part
+		// Due to that, we have to cast the path in the non-recursive path to a varchar of appropriate size to avoid data truncation errors
+		if ( sizeEstimate == -1 ) {
+			super.visitRecursivePath( recursivePath, sizeEstimate );
+		}
+		else {
+			appendSql( "cast(" );
+			recursivePath.accept( this );
+			appendSql( " as char(" );
+			appendSql( sizeEstimate );
+			appendSql( "))" );
+		}
 	}
 
 	@Override
@@ -89,16 +110,6 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		if ( !isRowNumberingCurrentQueryPart() ) {
 			renderCombinedLimitClause( queryPart );
 		}
-	}
-
-	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// MariaDB does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// MariaDB does not support this, but it can be emulated
 	}
 
 	@Override

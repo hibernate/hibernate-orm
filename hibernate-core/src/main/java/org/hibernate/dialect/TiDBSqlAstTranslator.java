@@ -96,16 +96,6 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// TiDB does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// TiDB does not support this, but it can be emulated
-	}
-
-	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		renderComparisonDistinctOperator( lhs, operator, rhs );
 	}

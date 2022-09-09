@@ -1185,6 +1185,11 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsRecursiveCTE() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
 		switch ( type ) {
 			case ROWS_ONLY:

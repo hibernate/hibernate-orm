@@ -24,6 +24,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.query.derived.AnonymousTupleEntityValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
@@ -109,6 +110,17 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 						);
 					}
 				}
+			}
+			else if ( pathMapping instanceof AnonymousTupleEntityValuedModelPart ) {
+				// AnonymousEntityValuedModelParts use the PK, which the inferred path will also use in this case,
+				// so we render this path as it is
+				return from(
+						sqmPath.getNavigablePath(),
+						tableGroup,
+						pathMapping,
+						inferredMapping,
+						sqlAstCreationState
+				);
 			}
 			else {
 				// This is the case when the inferred mapping is an association, but the path mapping is not,

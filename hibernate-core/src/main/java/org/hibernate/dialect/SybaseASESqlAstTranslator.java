@@ -49,6 +49,11 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 		super( sessionFactory, statement );
 	}
 
+	@Override
+	protected boolean supportsWithClause() {
+		return false;
+	}
+
 	// Sybase ASE does not allow CASE expressions where all result arms contain plain parameters.
 	// At least one result arm must provide some type context for inference,
 	// so we cast the first result arm if we encounter this condition
@@ -136,16 +141,6 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 		else {
 			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
 		}
-	}
-
-	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// Sybase ASE does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// Sybase ASE does not support this, but it can be emulated
 	}
 
 	@Override

@@ -274,7 +274,7 @@ public class SessionImpl
 		}
 
 		if ( log.isTraceEnabled() ) {
-			log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), getTransactionStartTimestamp() );
+			log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), System.currentTimeMillis() );
 		}
 	}
 

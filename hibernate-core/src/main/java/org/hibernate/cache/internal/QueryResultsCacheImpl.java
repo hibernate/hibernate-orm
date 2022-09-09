@@ -15,7 +15,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.QueryResultsRegion;
-import org.hibernate.cache.spi.SecondLevelCacheLogger;
 import org.hibernate.cache.spi.TimestampsCache;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -53,11 +52,11 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 			final List<?> results,
 			final SharedSessionContractImplementor session) throws HibernateException {
 		if ( DEBUG_ENABLED ) {
-			L2CACHE_LOGGER.debugf( "Caching query results in region: %s; timestamp=%s", cacheRegion.getName(), session.getTransactionStartTimestamp() );
+			L2CACHE_LOGGER.debugf( "Caching query results in region: %s; timestamp=%s", cacheRegion.getName(), session.getCacheTransactionSynchronization().getCachingTimestamp() );
 		}
 
 		final CacheItem cacheItem = new CacheItem(
-				session.getTransactionStartTimestamp(),
+				session.getCacheTransactionSynchronization().getCachingTimestamp(),
 				deepCopy( results )
 		);
 

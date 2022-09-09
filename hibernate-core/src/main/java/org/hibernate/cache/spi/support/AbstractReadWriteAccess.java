@@ -15,7 +15,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hibernate.cache.spi.DomainDataRegion;
-import org.hibernate.cache.spi.SecondLevelCacheLogger;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -75,7 +74,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 				return null;
 			}
 
-			boolean readable = item.isReadable( session.getTransactionStartTimestamp() );
+			boolean readable = item.isReadable( session.getCacheTransactionSynchronization().getCachingTimestamp() );
 			if ( readable ) {
 				log.debugf( "Cache hit : region = `%s`, key = `%s`", getRegion().getName(), key );
 				return item.getValue();
@@ -101,11 +100,11 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 			writeLock.lock();
 			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
 
-			boolean writable = item == null || item.isWriteable( session.getTransactionStartTimestamp(), version, getVersionComparator() );
+			boolean writable = item == null || item.isWriteable( session.getCacheTransactionSynchronization().getCachingTimestamp(), version, getVersionComparator() );
 			if ( writable ) {
 				getStorageAccess().putIntoCache(
 						key,
-						new Item( value, version, session.getTransactionStartTimestamp() ),
+						new Item( value, version, session.getCacheTransactionSynchronization().getCachingTimestamp() ),
 						session
 				);
 				return true;

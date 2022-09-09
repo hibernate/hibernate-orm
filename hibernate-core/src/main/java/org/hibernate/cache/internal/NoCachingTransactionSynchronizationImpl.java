@@ -6,14 +6,35 @@
  */
 package org.hibernate.cache.internal;
 
-import org.hibernate.cache.spi.AbstractCacheTransactionSynchronization;
-import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.cache.spi.CacheTransactionSynchronization;
 
 /**
  * @author Steve Ebersole
  */
-public class NoCachingTransactionSynchronizationImpl extends AbstractCacheTransactionSynchronization {
-	public NoCachingTransactionSynchronizationImpl(RegionFactory regionFactory) {
-		super( regionFactory );
+public class NoCachingTransactionSynchronizationImpl implements CacheTransactionSynchronization {
+	public static final NoCachingTransactionSynchronizationImpl INSTANCE = new NoCachingTransactionSynchronizationImpl();
+
+	private NoCachingTransactionSynchronizationImpl() {
+
+	}
+
+	@Override
+	public long getCachingTimestamp() {
+		throw new UnsupportedOperationException("Method not supported when 2LC is not enabled");
+	}
+
+	@Override
+	public void transactionJoined() {
+
+	}
+
+	@Override
+	public void transactionCompleting() {
+
+	}
+
+	@Override
+	public void transactionCompleted(boolean successful) {
+
 	}
 }

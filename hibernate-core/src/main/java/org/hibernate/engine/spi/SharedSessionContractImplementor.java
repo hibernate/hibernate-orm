@@ -184,15 +184,6 @@ public interface SharedSessionContractImplementor
 	void markForRollbackOnly();
 
 	/**
-	 * A "timestamp" at or before the start of the current transaction.
-	 *
-	 * @apiNote This "timestamp" need not be related to timestamp in the Java Date/millisecond
-	 * sense.  It just needs to be an incrementing value.  See
-	 * {@link CacheTransactionSynchronization#getCurrentTransactionStartTimestamp()}
-	 */
-	long getTransactionStartTimestamp();
-
-	/**
 	 * The current CacheTransactionContext associated with the Session.  This may
 	 * return {@code null} when the Session is not currently part of a transaction.
 	 */

@@ -48,8 +48,10 @@ public interface CacheTransactionSynchronization {
 	 *
 	 * @implSpec This "timestamp" need not be related to timestamp in the Java
 	 * Date/millisecond sense.  It just needs to be an incrementing value.
+	 *
+	 * An UnsupportedOperationException is thrown if 2LC has not enabled
 	 */
-	long getCurrentTransactionStartTimestamp();
+	long getCachingTimestamp();
 
 	/**
 	 * Callback that owning Session has become joined to a resource transaction.

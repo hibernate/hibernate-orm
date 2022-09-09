@@ -498,11 +498,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public long getTransactionStartTimestamp() {
-		return getCacheTransactionSynchronization().getCurrentTransactionStartTimestamp();
-	}
-
-	@Override
 	public Transaction beginTransaction() {
 		checkOpen();
 

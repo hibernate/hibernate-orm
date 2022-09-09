@@ -21,7 +21,7 @@ public abstract class AbstractCacheTransactionSynchronization implements CacheTr
 	}
 
 	@Override
-	public long getCurrentTransactionStartTimestamp() {
+	public long getCachingTimestamp() {
 		return lastTransactionCompletionTimestamp;
 	}
 

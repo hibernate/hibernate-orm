@@ -9,6 +9,7 @@ package org.hibernate.community.dialect;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.LockMode;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -26,6 +27,9 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
@@ -43,6 +47,70 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	public DB2LegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	protected boolean needsRecursiveKeywordInWithClause() {
+		return false;
+	}
+
+	@Override
+	protected boolean supportsWithClauseInSubquery() {
+		return false;
+	}
+
+	@Override
+	protected void renderTableReferenceJoins(TableGroup tableGroup) {
+		// When we are in a recursive CTE, we can't render joins on DB2...
+		// See https://modern-sql.com/feature/with-recursive/db2/error-345-state-42836
+		if ( isInRecursiveQueryPart() ) {
+			final List<TableReferenceJoin> joins = tableGroup.getTableReferenceJoins();
+			if ( joins == null || joins.isEmpty() ) {
+				return;
+			}
+
+			for ( TableReferenceJoin tableJoin : joins ) {
+				switch ( tableJoin.getJoinType() ) {
+					case CROSS:
+					case INNER:
+						break;
+					default:
+						throw new UnsupportedOperationException( "Can't emulate '" + tableJoin.getJoinType().getText() + "join' in a DB2 recursive query part" );
+				}
+				appendSql( COMA_SEPARATOR_CHAR );
+
+				renderNamedTableReference( tableJoin.getJoinedTableReference(), LockMode.NONE );
+
+				if ( tableJoin.getPredicate() != null && !tableJoin.getPredicate().isEmpty() ) {
+					addAdditionalWherePredicate( tableJoin.getPredicate() );
+				}
+			}
+		}
+		else {
+			super.renderTableReferenceJoins( tableGroup );
+		}
+	}
+
+	@Override
+	protected void renderTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
+		if ( isInRecursiveQueryPart() ) {
+			switch ( tableGroupJoin.getJoinType() ) {
+				case CROSS:
+				case INNER:
+					break;
+				default:
+					throw new UnsupportedOperationException( "Can't emulate '" + tableGroupJoin.getJoinType().getText() + "join' in a DB2 recursive query part" );
+			}
+			appendSql( COMA_SEPARATOR_CHAR );
+
+			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
+			if ( tableGroupJoin.getPredicate() != null && !tableGroupJoin.getPredicate().isEmpty() ) {
+				addAdditionalWherePredicate( tableGroupJoin.getPredicate() );
+			}
+		}
+		else {
+			super.renderTableGroupJoin( tableGroupJoin, tableGroupJoinCollector );
+		}
 	}
 
 	@Override

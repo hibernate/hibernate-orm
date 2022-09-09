@@ -469,6 +469,11 @@ public class CockroachLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsRecursiveCTE() {
+		return getVersion().isSameOrAfter( 20, 1 );
+	}
+
+	@Override
 	public String getNoColumnsInsertString() {
 		return "default values";
 	}

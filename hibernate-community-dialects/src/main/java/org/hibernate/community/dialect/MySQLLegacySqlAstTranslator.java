@@ -10,7 +10,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
@@ -36,6 +35,22 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	@Override
 	protected void renderExpressionAsClauseItem(Expression expression) {
 		expression.accept( this );
+	}
+
+	@Override
+	protected void visitRecursivePath(Expression recursivePath, int sizeEstimate) {
+		// MySQL determines the type and size of a column in a recursive CTE based on the expression of the non-recursive part
+		// Due to that, we have to cast the path in the non-recursive path to a varchar of appropriate size to avoid data truncation errors
+		if ( sizeEstimate == -1 ) {
+			super.visitRecursivePath( recursivePath, sizeEstimate );
+		}
+		else {
+			appendSql( "cast(" );
+			recursivePath.accept( this );
+			appendSql( " as char(" );
+			appendSql( sizeEstimate );
+			appendSql( "))" );
+		}
 	}
 
 	@Override
@@ -104,16 +119,6 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// MySQL does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// MySQL does not support this, but it can be emulated
-	}
-
-	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		renderComparisonDistinctOperator( lhs, operator, rhs );
 	}
@@ -158,6 +163,11 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	protected boolean supportsDistinctFromPredicate() {
 		// It supports a proprietary operator
 		return true;
+	}
+
+	@Override
+	protected boolean supportsWithClause() {
+		return getDialect().getVersion().isSameOrAfter( 8 );
 	}
 
 	@Override

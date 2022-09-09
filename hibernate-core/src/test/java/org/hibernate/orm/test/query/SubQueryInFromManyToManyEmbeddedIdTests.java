@@ -119,7 +119,7 @@ public class SubQueryInFromManyToManyEmbeddedIdTests {
 					subquery.fetch( 1 );
 
 					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, SqmJoinType.LEFT );
-					final SqmAttributeJoin<Object, Object> alt = a.join( "contact" );
+					final Join<Object, Object> alt = a.join( "contact" );
 
 					cq.multiselect( root.get( "name" ), alt.get( "name" ) );
 					cq.orderBy( cb.asc( root.get( "id" ) ) );

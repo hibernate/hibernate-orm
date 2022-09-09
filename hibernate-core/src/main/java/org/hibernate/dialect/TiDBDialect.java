@@ -39,7 +39,8 @@ public class TiDBDialect extends MySQLDialect {
 	}
 
 	public TiDBDialect(DialectResolutionInfo info) {
-		super(info);
+		super( createVersion( info ), getCharacterSetBytesPerCharacter( info.getDatabaseMetadata() ) );
+		registerKeywords( info );
 	}
 
 	@Override
@@ -96,6 +97,11 @@ public class TiDBDialect extends MySQLDialect {
 				return new TiDBSqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
+	}
+
+	@Override
+	public boolean supportsRecursiveCTE() {
+		return true;
 	}
 
 	@Override

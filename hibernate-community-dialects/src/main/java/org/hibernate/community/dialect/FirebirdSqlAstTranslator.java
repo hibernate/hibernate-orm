@@ -137,16 +137,6 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// Firebird does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// Firebird does not support this, but it can be emulated
-	}
-
-	@Override
 	protected boolean supportsSimpleQueryGrouping() {
 		// Firebird is quite strict i.e. it requires `select .. union all select * from (select ...)`
 		// rather than `select .. union all (select ...)`

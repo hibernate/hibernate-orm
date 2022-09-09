@@ -21,6 +21,7 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -52,6 +53,37 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 
 	public OracleLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	protected boolean needsRecursiveKeywordInWithClause() {
+		return false;
+	}
+
+	@Override
+	protected boolean supportsWithClauseInSubquery() {
+		// Oracle has some limitations, see ORA-32034, so we just report false here for simplicity
+		return false;
+	}
+
+	@Override
+	protected boolean supportsRecursiveSearchClause() {
+		return true;
+	}
+
+	@Override
+	protected boolean supportsRecursiveCycleClause() {
+		return true;
+	}
+
+	@Override
+	public void visitSqlSelection(SqlSelection sqlSelection) {
+		if ( getCurrentCteStatement() != null ) {
+			if ( getCurrentCteStatement().getMaterialization() == CteMaterialization.MATERIALIZED ) {
+				appendSql( "/*+ materialize */ " );
+			}
+		}
+		super.visitSqlSelection( sqlSelection );
 	}
 
 	@Override
@@ -169,31 +201,20 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 					true, // we need select aliases to avoid ORA-00918: column ambiguously defined
 					() -> {
 						final QueryPart currentQueryPart = getQueryPartStack().getCurrent();
-						final boolean needsParenthesis;
 						final boolean needsWrapper;
 						if ( currentQueryPart instanceof QueryGroup ) {
-							needsParenthesis = false;
 							// visitQuerySpec will add the select wrapper
 							needsWrapper = !currentQueryPart.hasOffsetOrFetchClause();
 						}
 						else {
-							needsParenthesis = !querySpec.isRoot();
 							needsWrapper = true;
 						}
 						if ( needsWrapper ) {
-							if ( needsParenthesis ) {
-								appendSql( '(' );
-							}
-							appendSql( "select * from " );
-							if ( !needsParenthesis ) {
-								appendSql( '(' );
-							}
+							appendSql( "select * from (" );
 						}
 						super.visitQuerySpec( querySpec );
 						if ( needsWrapper ) {
-							if ( !needsParenthesis ) {
-								appendSql( ')' );
-							}
+							appendSql( ')' );
 						}
 						appendSql( " where rownum<=" );
 						final Stack<Clause> clauseStack = getClauseStack();
@@ -208,12 +229,6 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 						}
 						finally {
 							clauseStack.pop();
-						}
-
-						if ( needsWrapper ) {
-							if ( needsParenthesis ) {
-								appendSql( ')' );
-							}
 						}
 					}
 			);

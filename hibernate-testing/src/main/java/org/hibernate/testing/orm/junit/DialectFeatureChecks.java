@@ -456,4 +456,10 @@ abstract public class DialectFeatureChecks {
 				|| dialect instanceof MariaDBDialect;
 		}
 	}
+
+	public static class SupportsRecursiveCtes implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsRecursiveCTE();
+		}
+	}
 }

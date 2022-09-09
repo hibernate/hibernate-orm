@@ -61,6 +61,16 @@ public class PostgreSQLLegacySqlAstTranslator<T extends JdbcOperation> extends A
 	}
 
 	@Override
+	protected boolean supportsRowConstructor() {
+		return true;
+	}
+
+	@Override
+	protected boolean supportsArrayConstructor() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsFilterClause() {
 		return getDialect().getVersion().isSameOrAfter( 9, 4 );
 	}
@@ -117,13 +127,27 @@ public class PostgreSQLLegacySqlAstTranslator<T extends JdbcOperation> extends A
 	}
 
 	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// PostgreSQL does not support this, but it's just a hint anyway
+	protected boolean supportsRecursiveSearchClause() {
+		return getDialect().getVersion().isSameOrAfter( 14 );
 	}
 
 	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// PostgreSQL does not support this, but it can be emulated
+	protected boolean supportsRecursiveCycleClause() {
+		return getDialect().getVersion().isSameOrAfter( 14 );
+	}
+
+	@Override
+	protected boolean supportsRecursiveCycleUsingClause() {
+		return getDialect().getVersion().isSameOrAfter( 14 );
+	}
+
+	@Override
+	protected void renderStandardCycleClause(CteStatement cte) {
+		super.renderStandardCycleClause( cte );
+		if ( cte.getCycleMarkColumn() != null && cte.getCyclePathColumn() == null && supportsRecursiveCycleUsingClause() ) {
+			appendSql( " using " );
+			appendSql( determineCyclePathColumnName( cte ) );
+		}
 	}
 
 	@Override

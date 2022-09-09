@@ -61,6 +61,10 @@ import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
 import org.hibernate.query.PathException;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.criteria.JpaCteCriteria;
+import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
+import org.hibernate.query.criteria.JpaCteCriteriaType;
+import org.hibernate.query.criteria.JpaSearchOrder;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
 import org.hibernate.query.hql.spi.SemanticPathPart;
@@ -103,9 +107,12 @@ import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.SqmQuery;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
+import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
+import org.hibernate.query.sqm.tree.domain.SqmCteRoot;
 import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
@@ -151,6 +158,7 @@ import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
+import org.hibernate.query.sqm.tree.from.SqmCteJoin;
 import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -195,6 +203,8 @@ import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.tree.cte.CteMaterialization;
+import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
@@ -300,6 +310,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private ParameterCollector parameterCollector;
 	private ParameterStyle parameterStyle;
+
+	private boolean isExtractingJdbcTemporalType;
+	// Provides access to the current CTE that is being processed, which is potentially recursive
+	// This is necessary, so that the recursive query part of a CTE can access its own structure.
+	// Note that the structure is based on the non-recursive query part, so there is no cycle
+	private JpaCteCriteria<?> currentPotentialRecursiveCte;
 
 	public SemanticQueryBuilder(
 			Class<R> expectedResultType,
@@ -618,9 +634,283 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	// Query spec
 
 	@Override
+	public Object visitWithClause(HqlParser.WithClauseContext ctx) {
+		if ( creationOptions.useStrictJpaCompliance() ) {
+			throw new StrictJpaComplianceViolation(
+					StrictJpaComplianceViolation.Type.CTES
+			);
+		}
+		final List<ParseTree> children = ctx.children;
+		for ( int i = 1; i < children.size(); i += 2 ) {
+			visitCte( (HqlParser.CteContext) children.get( i ) );
+		}
+		return null;
+	}
+
+	@Override
+	public Object visitCte(HqlParser.CteContext ctx) {
+		final SqmCteContainer cteContainer = (SqmCteContainer) processingStateStack.getCurrent().getProcessingQuery();
+		final String name = visitIdentifier( (HqlParser.IdentifierContext) ctx.children.get( 0 ) );
+		final TerminalNode thirdChild = (TerminalNode) ctx.getChild( 2 );
+		final int queryExpressionIndex;
+		final CteMaterialization materialization;
+		switch ( thirdChild.getSymbol().getType() ) {
+			case HqlParser.NOT:
+				materialization = CteMaterialization.NOT_MATERIALIZED;
+				queryExpressionIndex = 5;
+				break;
+			case HqlParser.MATERIALIZED:
+				materialization = CteMaterialization.MATERIALIZED;
+				queryExpressionIndex = 4;
+				break;
+			default:
+				materialization = null;
+				queryExpressionIndex = 3;
+				break;
+		}
+
+		final HqlParser.QueryExpressionContext queryExpressionContext = (HqlParser.QueryExpressionContext) ctx.getChild( queryExpressionIndex );
+		final SqmSelectQuery<Object> cte;
+		if ( cteContainer instanceof SqmSubQuery<?> ) {
+			cte = new SqmSubQuery<>(
+					processingStateStack.getCurrent().getProcessingQuery(),
+					creationContext.getNodeBuilder()
+			);
+		}
+		else {
+			cte = new SqmSelectStatement<>( creationContext.getNodeBuilder() );
+		}
+		processingStateStack.push(
+				new SqmQueryPartCreationProcessingStateStandardImpl(
+						processingStateStack.getCurrent(),
+						cte,
+						this
+				)
+		);
+		final JpaCteCriteria<?> oldCte = currentPotentialRecursiveCte;
+		try {
+			currentPotentialRecursiveCte = null;
+			if ( queryExpressionContext instanceof HqlParser.SetQueryGroupContext ) {
+				final HqlParser.SetQueryGroupContext setContext = (HqlParser.SetQueryGroupContext) queryExpressionContext;
+				// A recursive query is only possible if the child count is lower than 5 e.g. `withClause? q1 op q2`
+				if ( setContext.getChildCount() < 5 ) {
+					final SetOperator setOperator = (SetOperator) setContext.getChild( setContext.getChildCount() - 2 )
+							.accept( this );
+					switch ( setOperator ) {
+						case UNION:
+						case UNION_ALL:
+							final HqlParser.OrderedQueryContext nonRecursiveQueryContext;
+							final HqlParser.OrderedQueryContext recursiveQueryContext;
+							// On count == 4, we have a withClause at index 0
+							if ( setContext.getChildCount() == 4 ) {
+								nonRecursiveQueryContext = (HqlParser.OrderedQueryContext) setContext.getChild( 1 );
+								recursiveQueryContext = (HqlParser.OrderedQueryContext) setContext.getChild( 3 );
+							}
+							else {
+								nonRecursiveQueryContext = (HqlParser.OrderedQueryContext) setContext.getChild( 0 );
+								recursiveQueryContext = (HqlParser.OrderedQueryContext) setContext.getChild( 2 );
+							}
+							// First visit the non-recursive part
+							nonRecursiveQueryContext.accept( this );
+
+							// Visiting the possibly recursive part must happen within the call to SqmCteContainer.with,
+							// because in there, the SqmCteStatement/JpaCteCriteria is available for use in the recursive part.
+							// The structure (SqmCteTable) for the SqmCteStatement is based on the non-recursive part,
+							// which is necessary to have, so that the SqmCteRoot/SqmCteJoin can resolve sub-paths.
+							final SqmSelectStatement<Object> recursivePart = new SqmSelectStatement<>( creationContext.getNodeBuilder() );
+
+							processingStateStack.pop();
+							processingStateStack.push(
+									new SqmQueryPartCreationProcessingStateStandardImpl(
+											processingStateStack.getCurrent(),
+											recursivePart,
+											this
+									)
+							);
+							final JpaCteCriteria<Object> cteDefinition;
+							if ( setOperator == SetOperator.UNION ) {
+								cteDefinition = cteContainer.withRecursiveUnionDistinct(
+										name,
+										cte,
+										cteCriteria -> {
+											currentPotentialRecursiveCte = cteCriteria;
+											recursiveQueryContext.accept( this );
+											return recursivePart;
+										}
+								);
+							}
+							else {
+								cteDefinition = cteContainer.withRecursiveUnionAll(
+										name,
+										cte,
+										cteCriteria -> {
+											currentPotentialRecursiveCte = cteCriteria;
+											recursiveQueryContext.accept( this );
+											return recursivePart;
+										}
+								);
+							}
+							if ( materialization != null ) {
+								cteDefinition.setMaterialization( materialization );
+							}
+							final ParseTree lastChild = ctx.getChild( ctx.getChildCount() - 1 );
+							final ParseTree potentialSearchClause;
+							if ( lastChild instanceof HqlParser.CycleClauseContext ) {
+								applyCycleClause( cteDefinition, (HqlParser.CycleClauseContext) lastChild );
+								potentialSearchClause = ctx.getChild( ctx.getChildCount() - 2 );
+							}
+							else {
+								potentialSearchClause = lastChild;
+							}
+							if ( potentialSearchClause instanceof HqlParser.SearchClauseContext ) {
+								applySearchClause( cteDefinition, (HqlParser.SearchClauseContext) potentialSearchClause );
+							}
+							return null;
+					}
+				}
+			}
+			queryExpressionContext.accept( this );
+			final JpaCteCriteria<Object> cteDefinition = cteContainer.with( name, cte );
+			if ( materialization != null ) {
+				cteDefinition.setMaterialization( materialization );
+			}
+		}
+		finally {
+			processingStateStack.pop();
+			currentPotentialRecursiveCte = oldCte;
+		}
+		return null;
+	}
+
+	private void applyCycleClause(JpaCteCriteria<?> cteDefinition, HqlParser.CycleClauseContext ctx) {
+		final HqlParser.CteAttributesContext attributesContext = (HqlParser.CteAttributesContext) ctx.getChild( 1 );
+		final String cycleMarkAttributeName = visitIdentifier( (HqlParser.IdentifierContext) ctx.getChild( 3 ) );
+		final List<JpaCteCriteriaAttribute> cycleAttributes = new ArrayList<>( ( attributesContext.getChildCount() + 1 ) >> 1 );
+		final List<ParseTree> children = attributesContext.children;
+		final JpaCteCriteriaType<?> type = cteDefinition.getType();
+		for ( int i = 0; i < children.size(); i += 2 ) {
+			final String attributeName = visitIdentifier( (HqlParser.IdentifierContext) children.get( i ) );
+			final JpaCteCriteriaAttribute attribute = type.getAttribute( attributeName );
+			if ( attribute == null ) {
+				throw new SemanticException(
+						String.format(
+								"Cycle attribute '%s' not found in the CTE %s",
+								attributeName,
+								cteDefinition.getName()
+						)
+				);
+			}
+			cycleAttributes.add( attribute );
+		}
+
+		final String cyclePathAttributeName;
+		final Object cycleValue;
+		final Object noCycleValue;
+		if ( ctx.getChildCount() > 4 ) {
+			if ( ctx.getChildCount() > 6 ) {
+				final SqmLiteral<?> cycleLiteral = (SqmLiteral<?>) visitLiteral( (HqlParser.LiteralContext) ctx.getChild( 5 ) );
+				final SqmLiteral<?> noCycleLiteral = (SqmLiteral<?>) visitLiteral( (HqlParser.LiteralContext) ctx.getChild( 7 ) );
+				cycleValue = cycleLiteral.getLiteralValue();
+				noCycleValue = noCycleLiteral.getLiteralValue();
+			}
+			else {
+				cycleValue = Boolean.TRUE;
+				noCycleValue = Boolean.FALSE;
+			}
+			final ParseTree lastChild = ctx.getChild( ctx.getChildCount() - 1 );
+			if ( lastChild instanceof HqlParser.IdentifierContext ) {
+				cyclePathAttributeName = visitIdentifier( (HqlParser.IdentifierContext) lastChild );
+			}
+			else {
+				cyclePathAttributeName = null;
+			}
+		}
+		else {
+			cyclePathAttributeName = null;
+			cycleValue = Boolean.TRUE;
+			noCycleValue = Boolean.FALSE;
+		}
+
+		cteDefinition.cycleUsing( cycleMarkAttributeName, cyclePathAttributeName, cycleValue, noCycleValue, cycleAttributes );
+	}
+
+	private void applySearchClause(JpaCteCriteria<?> cteDefinition, HqlParser.SearchClauseContext ctx) {
+		final CteSearchClauseKind kind;
+		if ( ( (TerminalNode) ctx.getChild( 1 ) ).getSymbol().getType() == HqlParser.BREADTH ) {
+			kind = CteSearchClauseKind.BREADTH_FIRST;
+		}
+		else {
+			kind = CteSearchClauseKind.DEPTH_FIRST;
+		}
+		final String searchAttributeName = visitIdentifier( (HqlParser.IdentifierContext) ctx.getChild( ctx.getChildCount() - 1 ) );
+		final HqlParser.SearchSpecificationsContext searchCtx = (HqlParser.SearchSpecificationsContext) ctx.getChild( 4 );
+		final List<JpaSearchOrder> searchOrders = new ArrayList<>( ( searchCtx.getChildCount() + 1 ) >> 1 );;
+		final List<ParseTree> children = searchCtx.children;
+		final JpaCteCriteriaType<?> type = cteDefinition.getType();
+		for ( int i = 0; i < children.size(); i += 2 ) {
+			final HqlParser.SearchSpecificationContext specCtx = (HqlParser.SearchSpecificationContext) children.get( i );
+			final String attributeName = visitIdentifier( (HqlParser.IdentifierContext) specCtx.getChild( 0 ) );
+			final JpaCteCriteriaAttribute attribute = type.getAttribute( attributeName );
+			if ( attribute == null ) {
+				throw new SemanticException(
+						String.format(
+								"Search attribute '%s' not found in the CTE %s",
+								attributeName,
+								cteDefinition.getName()
+						)
+				);
+			}
+			SortOrder sortOrder = SortOrder.ASCENDING;
+			NullPrecedence nullPrecedence = NullPrecedence.NONE;
+			int index = 1;
+			if ( index < specCtx.getChildCount() ) {
+				if ( specCtx.getChild( index ) instanceof HqlParser.SortDirectionContext ) {
+					final HqlParser.SortDirectionContext sortCtx = (HqlParser.SortDirectionContext) specCtx.getChild( index );
+					switch ( ( (TerminalNode) sortCtx.getChild( 0 ) ).getSymbol().getType() ) {
+						case HqlParser.ASC:
+							sortOrder = SortOrder.ASCENDING;
+							break;
+						case HqlParser.DESC:
+							sortOrder = SortOrder.DESCENDING;
+							break;
+						default:
+							throw new SemanticException( "Unrecognized sort ordering: " + sortCtx.getText() );
+					}
+					index++;
+				}
+				if ( index < specCtx.getChildCount() ) {
+					final HqlParser.NullsPrecedenceContext nullsPrecedenceContext = (HqlParser.NullsPrecedenceContext) specCtx.getChild( index );
+					switch ( ( (TerminalNode) nullsPrecedenceContext.getChild( 1 ) ).getSymbol().getType() ) {
+						case HqlParser.FIRST:
+							nullPrecedence = NullPrecedence.FIRST;
+							break;
+						case HqlParser.LAST:
+							nullPrecedence = NullPrecedence.LAST;
+							break;
+						default:
+							throw new SemanticException( "Unrecognized null precedence: " + nullsPrecedenceContext.getText() );
+					}
+				}
+			}
+			searchOrders.add(
+					creationContext.getNodeBuilder().search(
+							attribute,
+							sortOrder,
+							nullPrecedence
+					)
+			);
+		}
+		cteDefinition.search( kind, searchAttributeName, searchOrders );
+	}
+
+	@Override
 	public SqmQueryPart<Object> visitSimpleQueryGroup(HqlParser.SimpleQueryGroupContext ctx) {
+		final int lastChild = ctx.getChildCount() - 1;
+		if ( lastChild != 0 ) {
+			ctx.getChild( 0 ).accept( this );
+		}
 		//noinspection unchecked
-		return (SqmQueryPart<Object>) ctx.getChild( 0 ).accept( this );
+		return (SqmQueryPart<Object>) ctx.getChild( lastChild ).accept( this );
 	}
 
 	@Override
@@ -654,14 +944,22 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmQueryGroup<Object> visitSetQueryGroup(HqlParser.SetQueryGroupContext ctx) {
+		final List<ParseTree> children = ctx.children;
+		final int firstIndex;
+		if ( children.get( 0 ) instanceof HqlParser.WithClauseContext ) {
+			children.get( 0 ).accept( this );
+			firstIndex = 1;
+		}
+		else {
+			firstIndex = 0;
+		}
 		if ( creationOptions.useStrictJpaCompliance() ) {
 			throw new StrictJpaComplianceViolation(
 					StrictJpaComplianceViolation.Type.SET_OPERATIONS
 			);
 		}
-		final List<ParseTree> children = ctx.children;
 		//noinspection unchecked
-		final SqmQueryPart<Object> firstQueryPart = (SqmQueryPart<Object>) children.get( 0 ).accept( this );
+		final SqmQueryPart<Object> firstQueryPart = (SqmQueryPart<Object>) children.get( firstIndex ).accept( this );
 		SqmQueryGroup<Object> queryGroup;
 		if ( firstQueryPart instanceof SqmQueryGroup<?>) {
 			queryGroup = (SqmQueryGroup<Object>) firstQueryPart;
@@ -672,7 +970,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		setCurrentQueryPart( queryGroup );
 		final int size = children.size();
 		final SqmCreationProcessingState firstProcessingState = processingStateStack.pop();
-		for ( int i = 1; i < size; i += 2 ) {
+		for ( int i = firstIndex + 1; i < size; i += 2 ) {
 			final SetOperator operator = visitSetOperator( (HqlParser.SetOperatorContext) children.get( i ) );
 			final HqlParser.OrderedQueryContext simpleQueryCtx =
 					(HqlParser.OrderedQueryContext) children.get( i + 1 );
@@ -1625,6 +1923,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				}
 				throw new SemanticException( "Could not resolve entity or correlation path '" + name + "'" );
 			}
+			final SqmCteStatement<?> cteStatement = findCteStatement( name );
+			if ( cteStatement != null ) {
+				final SqmCteRoot<?> root = new SqmCteRoot<>( cteStatement, alias );
+				pathRegistry.register( root );
+				return root;
+			}
 			throw new UnknownEntityException( "Could not resolve root entity '" + name + "'", name );
 		}
 		checkFQNEntityNameJpaComplianceViolationIfNeeded( name, entityDescriptor );
@@ -1650,6 +1954,22 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		pathRegistry.register( sqmRoot );
 
 		return sqmRoot;
+	}
+
+	@Override
+	public SqmCteStatement<?> findCteStatement(String name) {
+		if ( currentPotentialRecursiveCte != null && name.equals( currentPotentialRecursiveCte.getName() ) ) {
+			return (SqmCteStatement<?>) currentPotentialRecursiveCte;
+		}
+		return processingStateStack.findCurrentFirst(
+				state -> {
+					if ( state.getProcessingQuery() instanceof SqmCteContainer ) {
+						final SqmCteContainer container = (SqmCteContainer) state.getProcessingQuery();
+						return container.getCteStatement( name );
+					}
+					return null;
+				}
+		);
 	}
 
 	@Override
@@ -1867,7 +2187,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			}
 
 			final HqlParser.JoinRestrictionContext qualifiedJoinRestrictionContext = parserJoin.joinRestriction();
-			if ( join instanceof SqmEntityJoin<?> || join instanceof SqmDerivedJoin<?> ) {
+			if ( join instanceof SqmEntityJoin<?> || join instanceof SqmDerivedJoin<?> || join instanceof SqmCteJoin<?> ) {
 				sqmRoot.addSqmJoin( join );
 			}
 			else if ( join instanceof SqmAttributeJoin<?, ?> ) {
@@ -2165,7 +2485,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final Enum<?> enumValue;
 		if ( possibleEnumValues != null && ( enumValue = possibleEnumValues.get( enumType ) ) != null ) {
 			DotIdentifierConsumer dotIdentifierConsumer = dotIdentifierConsumerStack.getCurrent();
-			dotIdentifierConsumer.consumeIdentifier( enumValue.getClass().getCanonicalName(), true, false );
+			dotIdentifierConsumer.consumeIdentifier( enumValue.getClass().getName(), true, false );
 			dotIdentifierConsumer.consumeIdentifier( enumValue.name(), false, true );
 			return (SqmExpression<?>) dotIdentifierConsumerStack.getCurrent().getConsumedPart();
 		}
@@ -3939,8 +4259,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				return new SqmExtractUnit<>( OFFSET, resolveExpressibleTypeBasic( ZoneOffset.class ), nodeBuilder );
 		}
 	}
-
-	private boolean isExtractingJdbcTemporalType;
 
 	@Override
 	public Object visitExtractFunction(HqlParser.ExtractFunctionContext ctx) {

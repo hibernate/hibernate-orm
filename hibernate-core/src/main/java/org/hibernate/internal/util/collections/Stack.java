@@ -33,6 +33,11 @@ public interface Stack<T> {
 	T getCurrent();
 
 	/**
+	 * The element currently at the bottom of the stack
+	 */
+	T getRoot();
+
+	/**
 	 * How many elements are currently on the stack?
 	 */
 	int depth();

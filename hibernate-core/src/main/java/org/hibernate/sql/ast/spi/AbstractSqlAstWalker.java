@@ -503,7 +503,7 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 
 	@Override
 	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
-		tableReference.getQueryPart().accept( this );
+		tableReference.getStatement().accept( this );
 	}
 
 	@Override

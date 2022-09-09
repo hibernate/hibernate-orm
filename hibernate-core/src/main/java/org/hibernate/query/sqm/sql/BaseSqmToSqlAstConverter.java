@@ -55,7 +55,6 @@ import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
@@ -90,14 +89,13 @@ import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPathSource;
+import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
+import org.hibernate.query.criteria.JpaSearchOrder;
 import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
@@ -161,7 +159,6 @@ import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.cte.SqmCteTableColumn;
-import org.hibernate.query.sqm.tree.cte.SqmSearchClauseSpecification;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmSpecificPluralPartPath;
 import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
@@ -169,6 +166,7 @@ import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedRootJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
+import org.hibernate.query.sqm.tree.domain.SqmCteRoot;
 import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
@@ -224,6 +222,7 @@ import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
+import org.hibernate.query.sqm.tree.from.SqmCteJoin;
 import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -259,6 +258,7 @@ import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
+import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
@@ -290,6 +290,7 @@ import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.cte.CteTable;
+import org.hibernate.sql.ast.tree.cte.CteTableGroup;
 import org.hibernate.sql.ast.tree.cte.SearchClauseSpecification;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.Any;
@@ -309,6 +310,7 @@ import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
 import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.Overflow;
@@ -395,7 +397,6 @@ import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
 import org.jboss.logging.Logger;
 
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.metamodel.Attribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.persistence.metamodel.Type;
 
@@ -421,7 +422,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private final SqlAstCreationContext creationContext;
 	private final boolean jpaQueryComplianceEnabled;
 	private final SqmStatement<?> statement;
-	private final CteContainer cteContainer = new GlobalCteContainer();
 
 	private final QueryOptions queryOptions;
 	private final LoadQueryInfluencers loadQueryInfluencers;
@@ -441,6 +441,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private boolean deduplicateSelectionItems;
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
 	private SqmQueryPart<?> currentSqmQueryPart;
+	private CteContainer cteContainer;
+	/**
+	 * A map from {@link SqmCteTable#getCteName()} to the final SQL name.
+	 * We use this global map as most databases don't support shadowing of names.
+	 */
+	private Map<String, String> cteNameMapping;
 	private boolean containsCollectionFetches;
 	private boolean trackSelectionsForGroup;
 	/*
@@ -729,6 +735,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public UpdateStatement visitUpdateStatement(SqmUpdateStatement<?> sqmStatement) {
+		final CteContainer oldCteContainer = cteContainer;
 		final CteContainer cteContainer = this.visitCteContainer( sqmStatement );
 
 		final SqmRoot<?> sqmTarget = sqmStatement.getTarget();
@@ -798,6 +805,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		finally {
 			popProcessingStateStack();
+			this.cteContainer = oldCteContainer;
 		}
 	}
 
@@ -966,6 +974,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public DeleteStatement visitDeleteStatement(SqmDeleteStatement<?> statement) {
+		final CteContainer oldCteContainer = cteContainer;
 		final CteContainer cteContainer = this.visitCteContainer( statement );
 
 		final String entityName = statement.getTarget().getEntityName();
@@ -1024,6 +1033,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		finally {
 			popProcessingStateStack();
+			this.cteContainer = oldCteContainer;
 		}
 	}
 
@@ -1032,6 +1042,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public InsertStatement visitInsertSelectStatement(SqmInsertSelectStatement<?> sqmStatement) {
+		final CteContainer oldCteContainer = cteContainer;
 		final CteContainer cteContainer = this.visitCteContainer( sqmStatement );
 
 		final String entityName = sqmStatement.getTarget().getEntityName();
@@ -1109,6 +1120,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				}
 		);
 
+		this.cteContainer = oldCteContainer;
+
 		return insertStatement;
 	}
 
@@ -1135,6 +1148,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public InsertStatement visitInsertValuesStatement(SqmInsertValuesStatement<?> sqmStatement) {
+		final CteContainer oldCteContainer = cteContainer;
 		final CteContainer cteContainer = this.visitCteContainer( sqmStatement );
 		final String entityName = sqmStatement.getTarget().getEntityName();
 		final EntityPersister entityDescriptor = creationContext.getSessionFactory()
@@ -1198,6 +1212,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		finally {
 			popProcessingStateStack();
+			this.cteContainer = oldCteContainer;
 		}
 	}
 
@@ -1473,10 +1488,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public SelectStatement visitSelectStatement(SqmSelectStatement<?> statement) {
+		final CteContainer oldCteContainer = cteContainer;
 		final CteContainer cteContainer = this.visitCteContainer( statement );
 		final QueryPart queryPart = visitQueryPart( statement.getQueryPart() );
 		final List<DomainResult<?>> domainResults = queryPart.isRoot() ? this.domainResults : Collections.emptyList();
-		return new SelectStatement( cteContainer, queryPart, domainResults );
+		try {
+			return new SelectStatement( cteContainer, queryPart, domainResults );
+		}
+		finally {
+			this.cteContainer = oldCteContainer;
+		}
 	}
 
 	@Override
@@ -1527,37 +1548,196 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public CteStatement visitCteStatement(SqmCteStatement<?> sqmCteStatement) {
-		final CteTable cteTable = createCteTable(
-				sqmCteStatement.getCteTable(),
-				getCreationContext().getSessionFactory()
+		final SqmCteTable<?> sqmCteTable = sqmCteStatement.getCteTable();
+		final String cteName = getCteName( sqmCteTable );
+		final SqmSelectQuery<?> selectStatement = sqmCteStatement.getCteDefinition();
+		final SqmQueryPart<?> queryPart = selectStatement.getQueryPart();
+		final Literal cycleLiteral = getLiteral( sqmCteStatement.getCycleLiteral() );
+		final Literal noCycleLiteral = getLiteral( sqmCteStatement.getNoCycleLiteral() );
+		final JdbcMapping cycleMarkType = cycleLiteral == null ? null : cycleLiteral.getJdbcMapping();
+		final BasicType<String> stringType = creationContext.getSessionFactory()
+				.getTypeConfiguration()
+				.getBasicTypeForJavaType( String.class );
+		if ( queryPart instanceof SqmQueryGroup<?> && queryPart.getSortSpecifications().isEmpty()
+				&& queryPart.getFetchExpression() == null && queryPart.getOffsetExpression() == null ) {
+			final SqmQueryGroup<?> queryGroup = (SqmQueryGroup<?>) queryPart;
+			switch ( queryGroup.getSetOperator() ) {
+				case UNION:
+				case UNION_ALL:
+					if ( queryGroup.getQueryParts().size() == 2 ) {
+						// This could potentially be a recursive CTE,
+						// for which we need to visit the non-recursive part first
+						// and register a CteStatement before visiting the recursive part.
+						// This is important, because the recursive part will refer to the CteStatement,
+						// hence we require that it is registered already
+						final CteContainer oldCteContainer = cteContainer;
+						final CteContainer subCteContainer = this.visitCteContainer( selectStatement );
+						// Note that the following is a trimmed down version of what visitQueryGroup does
+						try {
+							final SqmQueryPart<?> firstPart = queryGroup.getQueryParts().get( 0 );
+							final SqmQueryPart<?> secondPart = queryGroup.getQueryParts().get( 1 );
+							final List<QueryPart> newQueryParts = new ArrayList<>( 2 );
+							final QueryGroup group = new QueryGroup(
+									getProcessingStateStack().isEmpty(),
+									queryGroup.getSetOperator(),
+									newQueryParts
+							);
+
+							final SqlAstQueryPartProcessingStateImpl processingState = new SqlAstQueryPartProcessingStateImpl(
+									group,
+									getCurrentProcessingState(),
+									this,
+									DelegatingSqmAliasedNodeCollector::new,
+									currentClauseStack::getCurrent,
+									deduplicateSelectionItems
+							);
+							final DelegatingSqmAliasedNodeCollector collector = (DelegatingSqmAliasedNodeCollector) processingState
+									.getSqlExpressionResolver();
+							final SqmQueryPart<?> oldSqmQueryPart = currentSqmQueryPart;
+							currentSqmQueryPart = queryGroup;
+							pushProcessingState( processingState );
+
+							try {
+								newQueryParts.add( visitQueryPart( firstPart ) );
+
+								collector.setSqmAliasedNodeCollector(
+										(SqmAliasedNodeCollector) lastPoppedProcessingState.getSqlExpressionResolver()
+								);
+
+								// Before visiting the second query part, setup the CteStatement and register it
+								final CteTable cteTable = new CteTable(
+										cteName,
+										sqmCteTable.resolveTableGroupProducer(
+												cteName,
+												newQueryParts.get( 0 )
+														.getFirstQuerySpec()
+														.getSelectClause()
+														.getSqlSelections(),
+												lastPoppedFromClauseIndex
+										)
+								);
+
+								final CteStatement cteStatement = new CteStatement(
+										cteTable,
+										new SelectStatement( subCteContainer, group, Collections.emptyList() ),
+										sqmCteStatement.getMaterialization(),
+										sqmCteStatement.getSearchClauseKind(),
+										visitSearchBySpecifications( cteTable, sqmCteStatement.getSearchBySpecifications() ),
+										createCteColumn( sqmCteStatement.getSearchAttributeName(), stringType ),
+										visitCycleColumns( cteTable, sqmCteStatement.getCycleAttributes() ),
+										createCteColumn( sqmCteStatement.getCycleMarkAttributeName(), cycleMarkType ),
+										createCteColumn( sqmCteStatement.getCyclePathAttributeName(), stringType ),
+										cycleLiteral,
+										noCycleLiteral
+								);
+								oldCteContainer.addCteStatement( cteStatement );
+
+								// Finally, visit the second part, which is potentially the recursive part
+								newQueryParts.add( visitQueryPart( secondPart ) );
+								return cteStatement;
+							}
+							finally {
+								popProcessingStateStack();
+								currentSqmQueryPart = oldSqmQueryPart;
+							}
+						}
+						finally {
+							this.cteContainer = oldCteContainer;
+						}
+					}
+					break;
+			}
+		}
+		final SelectStatement statement;
+		if ( selectStatement instanceof SqmSubQuery<?> ) {
+			statement = visitSubQueryExpression( (SqmSubQuery<?>) selectStatement );
+		}
+		else {
+			statement = visitSelectStatement( (SqmSelectStatement<?>) selectStatement );
+		}
+
+		final CteTable cteTable = new CteTable(
+				cteName,
+				sqmCteTable.resolveTableGroupProducer(
+						cteName,
+						statement.getQuerySpec().getSelectClause().getSqlSelections(),
+						lastPoppedFromClauseIndex
+				)
 		);
 
-		return new CteStatement(
+		final CteStatement cteStatement = new CteStatement(
 				cteTable,
-				visitStatement( sqmCteStatement.getCteDefinition() ),
+				statement,
 				sqmCteStatement.getMaterialization(),
 				sqmCteStatement.getSearchClauseKind(),
 				visitSearchBySpecifications( cteTable, sqmCteStatement.getSearchBySpecifications() ),
-				visitCycleColumns( cteTable, sqmCteStatement.getCycleColumns() ),
-				findCteColumn( cteTable, sqmCteStatement.getCycleMarkColumn() ),
-				sqmCteStatement.getCycleValue(),
-				sqmCteStatement.getNoCycleValue()
+				createCteColumn( sqmCteStatement.getSearchAttributeName(), stringType ),
+				visitCycleColumns( cteTable, sqmCteStatement.getCycleAttributes() ),
+				createCteColumn( sqmCteStatement.getCycleMarkAttributeName(), cycleMarkType ),
+				createCteColumn( sqmCteStatement.getCyclePathAttributeName(), stringType ),
+				cycleLiteral,
+				noCycleLiteral
 		);
+		cteContainer.addCteStatement( cteStatement );
+		return cteStatement;
+	}
+
+	private String getCteName(SqmCteTable<?> sqmCteTable) {
+		final String name = sqmCteTable.getName();
+		if ( cteNameMapping == null ) {
+			cteNameMapping = new HashMap<>();
+		}
+		final String key = sqmCteTable.getCteName();
+		final String generatedCteName = cteNameMapping.get( key );
+		if ( generatedCteName != null ) {
+			return generatedCteName;
+		}
+		final String cteName;
+		if ( name != null ) {
+			cteName = generateCteName( name );
+		}
+		else {
+			cteName = generateCteName( "cte" + cteNameMapping.size() );
+		}
+		cteNameMapping.put( key, cteName );
+		return cteName;
+	}
+
+	private String generateCteName(String baseName) {
+		String name = baseName;
+		int maxTries = 5;
+		for ( int i = 0; i < maxTries; i++ ) {
+			if ( !cteNameMapping.containsKey( name ) ) {
+				return name;
+			}
+			name = baseName + "_" + i;
+		}
+		throw new InterpretationException(
+				String.format(
+						"Couldn't generate CTE name for base name [%s] after %d tries",
+						baseName,
+						maxTries
+				)
+		);
+	}
+
+	private Literal getLiteral(SqmLiteral<?> value) {
+		return value == null ? null : (Literal) visitLiteral( value );
 	}
 
 	protected List<SearchClauseSpecification> visitSearchBySpecifications(
 			CteTable cteTable,
-			List<SqmSearchClauseSpecification> searchBySpecifications) {
+			List<JpaSearchOrder> searchBySpecifications) {
 		if ( searchBySpecifications == null || searchBySpecifications.isEmpty() ) {
 			return null;
 		}
 		final int size = searchBySpecifications.size();
 		final List<SearchClauseSpecification> searchClauseSpecifications = new ArrayList<>( size );
 		for ( int i = 0; i < size; i++ ) {
-			final SqmSearchClauseSpecification specification = searchBySpecifications.get( i );
+			final JpaSearchOrder specification = searchBySpecifications.get( i );
 			forEachCteColumn(
 					cteTable,
-					specification.getCteColumn(),
+					(SqmCteTableColumn) specification.getAttribute(),
 					cteColumn -> searchClauseSpecifications.add(
 							new SearchClauseSpecification(
 									cteColumn,
@@ -1571,25 +1751,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return searchClauseSpecifications;
 	}
 
-	protected CteColumn findCteColumn(CteTable cteTable, SqmCteTableColumn cteColumn) {
+	protected CteColumn createCteColumn(String cteColumn, JdbcMapping jdbcMapping) {
 		if ( cteColumn == null ) {
 			return null;
 		}
-		final List<CteColumn> cteColumns = cteTable.getCteColumns();
-		final int size = cteColumns.size();
-		for ( int i = 0; i < size; i++ ) {
-			final CteColumn column = cteColumns.get( i );
-			if ( cteColumn.getColumnName().equals( column.getColumnExpression() ) ) {
-				return column;
-			}
-		}
-		throw new IllegalArgumentException(
-				String.format(
-						"Couldn't find cte column %s in cte %s",
-						cteColumn.getColumnName(),
-						cteTable.getTableExpression()
-				)
-		);
+		return new CteColumn( cteColumn, jdbcMapping );
 	}
 
 	protected void forEachCteColumn(CteTable cteTable, SqmCteTableColumn cteColumn, Consumer<CteColumn> consumer) {
@@ -1597,13 +1763,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final int size = cteColumns.size();
 		for ( int i = 0; i < size; i++ ) {
 			final CteColumn column = cteColumns.get( i );
-			if ( cteColumn.getColumnName().equals( column.getColumnExpression() ) ) {
+			final String columnName = column.getColumnExpression();
+			final String sqmName = cteColumn.getName();
+			if ( columnName.regionMatches( 0, sqmName, 0, sqmName.length() )
+					&& ( columnName.length() == sqmName.length()
+					|| columnName.charAt( sqmName.length() ) == '_' ) ) {
 				consumer.accept( column );
 			}
 		}
 	}
 
-	protected List<CteColumn> visitCycleColumns(CteTable cteTable, List<SqmCteTableColumn> cycleColumns) {
+	protected List<CteColumn> visitCycleColumns(CteTable cteTable, List<JpaCteCriteriaAttribute> cycleColumns) {
 		if ( cycleColumns == null || cycleColumns.isEmpty() ) {
 			return null;
 		}
@@ -1612,64 +1782,26 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		for ( int i = 0; i < size; i++ ) {
 			forEachCteColumn(
 					cteTable,
-					cycleColumns.get( i ),
+					(SqmCteTableColumn) cycleColumns.get( i ),
 					columns::add
 			);
 		}
 		return columns;
 	}
 
-	public static CteTable createCteTable(SqmCteTable sqmCteTable, SessionFactoryImplementor factory) {
-		return createCteTable( sqmCteTable, sqmCteTable.getColumns(), factory );
-	}
-
-	public static CteTable createCteTable(
-			SqmCteTable sqmCteTable,
-			List<SqmCteTableColumn> sqmCteColumns,
-			SessionFactoryImplementor factory) {
-		final List<CteColumn> sqlCteColumns = new ArrayList<>( sqmCteColumns.size() );
-
-		for ( int i = 0; i < sqmCteColumns.size(); i++ ) {
-			final SqmCteTableColumn sqmCteTableColumn = sqmCteColumns.get( i );
-			ValueMapping valueMapping = sqmCteTableColumn.getType();
-			if ( valueMapping instanceof Association ) {
-				valueMapping = ( (Association) valueMapping ).getForeignKeyDescriptor();
-			}
-			if ( valueMapping instanceof EmbeddableValuedModelPart ) {
-				valueMapping.forEachJdbcType(
-						(index, jdbcMapping) -> sqlCteColumns.add(
-								new CteColumn(
-										sqmCteTableColumn.getColumnName() + "_" + index,
-										jdbcMapping
-								)
-						)
-				);
-			}
-			else {
-				sqlCteColumns.add(
-						new CteColumn(
-								sqmCteTableColumn.getColumnName(),
-								( (BasicValuedMapping) valueMapping ).getJdbcMapping()
-						)
-				);
-			}
-		}
-
-		return new CteTable(
-				sqmCteTable.getCteName(),
-				sqlCteColumns,
-				factory
-		);
-	}
-
 	@Override
 	public CteContainer visitCteContainer(SqmCteContainer consumer) {
 		final Collection<SqmCteStatement<?>> sqmCteStatements = consumer.getCteStatements();
-		if ( consumer.isWithRecursive() ) {
-			cteContainer.setWithRecursive( true );
-		}
-		for ( SqmCteStatement<?> sqmCteStatement : sqmCteStatements ) {
-			cteContainer.addCteStatement( visitCteStatement( sqmCteStatement ) );
+		cteContainer = new CteContainerImpl( cteContainer );
+		if ( !sqmCteStatements.isEmpty() ) {
+			currentClauseStack.push( Clause.WITH );
+			for ( SqmCteStatement<?> sqmCteStatement : sqmCteStatements ) {
+				visitCteStatement( sqmCteStatement );
+			}
+			currentClauseStack.pop();
+			// Avoid leaking the processing state from CTEs to upper levels
+			lastPoppedFromClauseIndex = null;
+			lastPoppedProcessingState = null;
 		}
 		return cteContainer;
 	}
@@ -2543,15 +2675,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final TableGroup tableGroup;
 		if ( sqmRoot instanceof SqmDerivedRoot<?> ) {
 			final SqmDerivedRoot<?> derivedRoot = (SqmDerivedRoot<?>) sqmRoot;
-			final QueryPart queryPart = (QueryPart) derivedRoot.getQueryPart().accept( this );
+			final SelectStatement statement = (SelectStatement) derivedRoot.getQueryPart().accept( this );
 			final AnonymousTupleType<?> tupleType = (AnonymousTupleType<?>) sqmRoot.getNodeType();
-			final List<SqlSelection> sqlSelections = queryPart.getFirstQuerySpec().getSelectClause().getSqlSelections();
+			final List<SqlSelection> sqlSelections = statement.getQueryPart().getFirstQuerySpec().getSelectClause().getSqlSelections();
 			final AnonymousTupleTableGroupProducer tableGroupProducer = tupleType.resolveTableGroupProducer(
 					derivedRoot.getExplicitAlias(),
 					sqlSelections,
 					lastPoppedFromClauseIndex
 			);
-			final List<String> columnNames = determineColumnNames( tupleType );
+			final List<String> columnNames = tupleType.determineColumnNames();
 			final SqlAliasBase sqlAliasBase = getSqlAliasBaseGenerator().createSqlAliasBase(
 					derivedRoot.getExplicitAlias() == null ? "derived" : derivedRoot.getExplicitAlias()
 			);
@@ -2559,13 +2691,22 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			tableGroup = new QueryPartTableGroup(
 					derivedRoot.getNavigablePath(),
 					tableGroupProducer,
-					queryPart,
+					statement,
 					identifierVariable,
 					columnNames,
 					tableGroupProducer.getCompatibleTableExpressions(),
 					false,
 					true,
 					creationContext.getSessionFactory()
+			);
+		}
+		else if ( sqmRoot instanceof SqmCteRoot<?> ) {
+			final SqmCteRoot<?> cteRoot = (SqmCteRoot<?>) sqmRoot;
+			tableGroup = createCteTableGroup(
+					getCteName( cteRoot.getCte().getCteTable() ),
+					cteRoot.getNavigablePath(),
+					cteRoot.getExplicitAlias(),
+					true
 			);
 		}
 		else {
@@ -2600,24 +2741,42 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		consumeJoins( sqmRoot, fromClauseIndex, tableGroup );
 	}
 
-	private List<String> determineColumnNames(AnonymousTupleType<?> tupleType) {
-		final int componentCount = tupleType.componentCount();
-		final List<String> columnNames = new ArrayList<>( componentCount );
-		for ( int i = 0; i < componentCount; i++ ) {
-			final SqmSelectableNode<?> selectableNode = tupleType.getSelectableNode( i );
-			final String componentName = tupleType.getComponentName( i );
-			if ( selectableNode instanceof SqmPath<?> ) {
-				addColumnNames(
-						columnNames,
-						( (SqmPath<?>) selectableNode ).getNodeType().getSqmPathType(),
-						componentName
-				);
-			}
-			else {
-				columnNames.add( componentName );
-			}
+	private TableGroup createCteTableGroup(
+			String cteName,
+			NavigablePath navigablePath,
+			String explicitAlias,
+			boolean canUseInnerJoins) {
+		final SqlAliasBase sqlAliasBase = getSqlAliasBaseGenerator().createSqlAliasBase(
+				explicitAlias == null ? cteName : explicitAlias
+		);
+		final String identifierVariable = sqlAliasBase.generateNewAlias();
+		final CteStatement cteStatement = cteContainer.getCteStatement( cteName );
+		if ( cteStatement == null ) {
+			throw new InterpretationException( "Could not find CTE for name '" + cteName + "'!" );
 		}
-		return columnNames;
+		final QueryPart cteQueryPart = ( (SelectStatement) cteStatement.getCteDefinition() ).getQueryPart();
+		// If the query part of the CTE is one which we are currently processing, then this is a recursive CTE
+		if ( cteQueryPart instanceof QueryGroup && Boolean.TRUE == processingStateStack.findCurrentFirst(
+				state -> {
+					if ( state instanceof SqlAstQueryPartProcessingState ) {
+						if ( ( (SqlAstQueryPartProcessingState) state ).getInflightQueryPart() == cteQueryPart ) {
+							return Boolean.TRUE;
+						}
+					}
+					return null;
+				}
+		) ) {
+			cteStatement.setRecursive();
+		}
+		final AnonymousTupleTableGroupProducer tableGroupProducer = cteStatement.getCteTable().getTableGroupProducer();
+		return new CteTableGroup(
+				canUseInnerJoins,
+				navigablePath,
+				sqlAliasBase,
+				tableGroupProducer,
+				new NamedTableReference( cteName, identifierVariable, false, null ),
+				tableGroupProducer.getCompatibleTableExpressions()
+		);
 	}
 
 	private void consumeJoins(SqmRoot<?> sqmRoot, FromClauseIndex fromClauseIndex, TableGroup tableGroup) {
@@ -2758,6 +2917,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else if ( sqmJoin instanceof SqmDerivedJoin<?> ) {
 			return consumeDerivedJoin( ( (SqmDerivedJoin<?>) sqmJoin ), lhsTableGroup, transitive );
+		}
+		else if ( sqmJoin instanceof SqmCteJoin<?> ) {
+			return consumeCteJoin( ( (SqmCteJoin<?>) sqmJoin ), lhsTableGroup, transitive );
 		}
 		else if ( sqmJoin instanceof SqmPluralPartJoin<?, ?> ) {
 			return consumePluralPartJoin( ( (SqmPluralPartJoin<?, ?>) sqmJoin ), ownerTableGroup, transitive );
@@ -2955,7 +3117,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final SqlAstJoinType correspondingSqlJoinType = sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType();
 		final TableGroup tableGroup = entityDescriptor.createRootTableGroup(
-				correspondingSqlJoinType == SqlAstJoinType.INNER || correspondingSqlJoinType == SqlAstJoinType.CROSS ,
+				correspondingSqlJoinType == SqlAstJoinType.INNER || correspondingSqlJoinType == SqlAstJoinType.CROSS,
 				sqmJoin.getNavigablePath(),
 				sqmJoin.getExplicitAlias(),
 				() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates(
@@ -2992,15 +3154,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private TableGroup consumeDerivedJoin(SqmDerivedJoin<?> sqmJoin, TableGroup parentTableGroup, boolean transitive) {
-		final QueryPart queryPart = (QueryPart) sqmJoin.getQueryPart().accept( this );
+		final SelectStatement statement = (SelectStatement) sqmJoin.getQueryPart().accept( this );
 		final AnonymousTupleType<?> tupleType = (AnonymousTupleType<?>) sqmJoin.getNodeType();
-		final List<SqlSelection> sqlSelections = queryPart.getFirstQuerySpec().getSelectClause().getSqlSelections();
+		final List<SqlSelection> sqlSelections = statement.getQueryPart().getFirstQuerySpec().getSelectClause().getSqlSelections();
 		final AnonymousTupleTableGroupProducer tableGroupProducer = tupleType.resolveTableGroupProducer(
 				sqmJoin.getExplicitAlias(),
 				sqlSelections,
 				lastPoppedFromClauseIndex
 		);
-		final List<String> columnNames = determineColumnNames( tupleType );
+		final List<String> columnNames = tupleType.determineColumnNames();
 		final SqlAliasBase sqlAliasBase = getSqlAliasBaseGenerator().createSqlAliasBase(
 				sqmJoin.getExplicitAlias() == null ? "derived" : sqmJoin.getExplicitAlias()
 		);
@@ -3008,7 +3170,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final QueryPartTableGroup queryPartTableGroup = new QueryPartTableGroup(
 				sqmJoin.getNavigablePath(),
 				tableGroupProducer,
-				queryPart,
+				statement,
 				identifierVariable,
 				columnNames,
 				tableGroupProducer.getCompatibleTableExpressions(),
@@ -3042,31 +3204,38 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return queryPartTableGroup;
 	}
 
-	private void addColumnNames(List<String> columnNames, DomainType<?> domainType, String componentName) {
-		if ( domainType instanceof EntityDomainType<?> ) {
-			final EntityDomainType<?> entityDomainType = (EntityDomainType<?>) domainType;
-			final SingularPersistentAttribute<?, ?> idAttribute = entityDomainType.findIdAttribute();
-			final String idPath;
-			if ( idAttribute == null ) {
-				idPath = componentName;
-			}
-			else {
-				idPath = componentName + "_" + idAttribute.getName();
-			}
-			addColumnNames( columnNames, entityDomainType.getIdentifierDescriptor().getSqmPathType(), idPath );
+	private TableGroup consumeCteJoin(SqmCteJoin<?> sqmJoin, TableGroup parentTableGroup, boolean transitive) {
+		final SqlAstJoinType correspondingSqlJoinType = sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType();
+		final TableGroup tableGroup = createCteTableGroup(
+				getCteName( sqmJoin.getCte().getCteTable() ),
+				sqmJoin.getNavigablePath(),
+				sqmJoin.getExplicitAlias(),
+				correspondingSqlJoinType == SqlAstJoinType.INNER || correspondingSqlJoinType == SqlAstJoinType.CROSS
+		);
+		getFromClauseIndex().register( sqmJoin, tableGroup );
+
+		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
+				tableGroup.getNavigablePath(),
+				correspondingSqlJoinType,
+				tableGroup,
+				null
+		);
+
+		// add any additional join restrictions
+		if ( sqmJoin.getJoinPredicate() != null ) {
+			final SqmJoin<?, ?> oldJoin = currentlyProcessingJoin;
+			currentlyProcessingJoin = sqmJoin;
+			tableGroupJoin.applyPredicate( visitNestedTopLevelPredicate( sqmJoin.getJoinPredicate() ) );
+			currentlyProcessingJoin = oldJoin;
 		}
-		else if ( domainType instanceof ManagedDomainType<?> ) {
-			for ( Attribute<?, ?> attribute : ( (ManagedDomainType<?>) domainType ).getAttributes() ) {
-				if ( !( attribute instanceof SingularPersistentAttribute<?, ?> ) ) {
-					throw new IllegalArgumentException( "Only embeddables without collections are supported" );
-				}
-				final DomainType<?> attributeType = ( (SingularPersistentAttribute<?, ?>) attribute ).getType();
-				addColumnNames( columnNames, attributeType, componentName + "_" + attribute.getName() );
-			}
+
+		// Note that we add the entity join after processing the predicate because implicit joins needed in there
+		// can be just ordered right before the entity join without changing the semantics
+		parentTableGroup.addTableGroupJoin( tableGroupJoin );
+		if ( transitive ) {
+			consumeExplicitJoins( sqmJoin, tableGroup );
 		}
-		else {
-			columnNames.add( componentName );
-		}
+		return tableGroup;
 	}
 
 	private TableGroup consumePluralPartJoin(SqmPluralPartJoin<?, ?> sqmJoin, TableGroup lhsTableGroup, boolean transitive) {
@@ -3266,7 +3435,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final TableGroup tableGroup;
 		if ( subPart instanceof TableGroupJoinProducer ) {
 			final TableGroupJoinProducer joinProducer = (TableGroupJoinProducer) subPart;
-			if ( fromClauseIndex.findTableGroupOnCurrentFromClause( actualParentTableGroup.getNavigablePath() ) == null ) {
+			if ( fromClauseIndex.findTableGroupOnCurrentFromClause( actualParentTableGroup.getNavigablePath() ) == null
+					&& !isRecursiveCte( actualParentTableGroup ) ) {
 				final QuerySpec querySpec = currentQuerySpec();
 				// The parent table group is on a parent query, so we need a root table group
 				tableGroup = joinProducer.createRootTableGroupJoin(
@@ -3328,6 +3498,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			tableGroup = null;
 		}
 		return tableGroup;
+	}
+
+	private boolean isRecursiveCte(TableGroup tableGroup) {
+		if ( tableGroup instanceof CteTableGroup ) {
+			final CteTableGroup cteTableGroup = (CteTableGroup) tableGroup;
+			return cteContainer.getCteStatement( cteTableGroup.getPrimaryTableReference().getTableId() ).isRecursive();
+		}
+		return false;
 	}
 
 	private TableGroup findCompatibleJoinedGroup(
@@ -3409,6 +3587,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
+	public Object visitRootCte(SqmCteRoot<?> sqmRoot) {
+		final TableGroup resolved = getFromClauseAccess().findTableGroup( sqmRoot.getNavigablePath() );
+		if ( resolved != null ) {
+			log.tracef( "SqmCteRoot [%s] resolved to existing TableGroup [%s]", sqmRoot, resolved );
+			return visitTableGroup( resolved, sqmRoot );
+		}
+
+		throw new InterpretationException( "SqmCteRoot not yet resolved to TableGroup" );
+	}
+
+	@Override
 	public Expression visitQualifiedAttributeJoin(SqmAttributeJoin<?, ?> sqmJoin) {
 		final TableGroup existing = getFromClauseAccess().findTableGroup( sqmJoin.getNavigablePath() );
 		if ( existing != null ) {
@@ -3428,6 +3617,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 
 		throw new InterpretationException( "SqmDerivedJoin not yet resolved to TableGroup" );
+	}
+
+	@Override
+	public Object visitQualifiedCteJoin(SqmCteJoin<?> sqmJoin) {
+		final TableGroup existing = getFromClauseAccess().findTableGroup( sqmJoin.getNavigablePath() );
+		if ( existing != null ) {
+			log.tracef( "SqmCteJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
+			return visitTableGroup( existing, sqmJoin );
+		}
+
+		throw new InterpretationException( "SqmCteJoin not yet resolved to TableGroup" );
 	}
 
 	@Override
@@ -4025,7 +4225,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		finally {
 			popProcessingStateStack();
 		}
-		return subQuerySpec;
+		return new SelectStatement( subQuerySpec );
 	}
 
 	@Override
@@ -4211,7 +4411,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		finally {
 			popProcessingStateStack();
 		}
-		return subQuerySpec;
+		return new SelectStatement( subQuerySpec );
 	}
 
 	protected Expression createLateralJoinExpression(
@@ -4406,7 +4606,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				lateralTableGroup = new QueryPartTableGroup(
 						queryPath,
 						null,
-						subQuerySpec,
+						new SelectStatement( subQuerySpec ),
 						identifierVariable,
 						columnNames,
 						compatibleTableExpressions,
@@ -4720,7 +4920,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final MappingModelExpressible<?> localExpressible = SqmMappingModelHelper.resolveMappingModelExpressible(
 				literal,
 				creationContext.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel(),
-				getFromClauseAccess()::findTableGroup
+				getFromClauseAccess() == null ? null : getFromClauseAccess()::findTableGroup
 		);
 		if ( localExpressible == null ) {
 			expressible = getElementExpressible( inferableExpressible );
@@ -6052,14 +6252,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public QueryPart visitSubQueryExpression(SqmSubQuery<?> sqmSubQuery) {
+	public SelectStatement visitSubQueryExpression(SqmSubQuery<?> sqmSubQuery) {
 		// The only purpose for tracking the current join is to
 		// Reset the current join for subqueries because in there, we won't add nested joins
 		final SqmJoin<?, ?> oldJoin = currentlyProcessingJoin;
+		final CteContainer oldCteContainer = cteContainer;
 		currentlyProcessingJoin = null;
+		final CteContainer cteContainer = this.visitCteContainer( sqmSubQuery );
 		final QueryPart queryPart = visitQueryPart( sqmSubQuery.getQueryPart() );
 		currentlyProcessingJoin = oldJoin;
-		return queryPart;
+		this.cteContainer = oldCteContainer;
+		return new SelectStatement( cteContainer, queryPart, Collections.emptyList() );
 	}
 
 	@Override
@@ -6496,7 +6699,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		return new InSubQueryPredicate(
 				lhs,
-				subQuerySpec,
+				new SelectStatement( subQuerySpec ),
 				predicate.isNegated(),
 				getBooleanType()
 		);
@@ -6864,7 +7067,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Object visitExistsPredicate(SqmExistsPredicate predicate) {
 		return new ExistsPredicate(
-				(QueryPart) predicate.getExpression().accept( this ),
+				(SelectStatement) predicate.getExpression().accept( this ),
 				predicate.isNegated(),
 				getBooleanType()
 		);
@@ -7410,22 +7613,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return type1;
 	}
 
-	private static class GlobalCteContainer implements CteContainer {
+	private static class CteContainerImpl implements CteContainer {
+		private final CteContainer parent;
 		private final Map<String, CteStatement> cteStatements;
-		private boolean recursive;
 
-		public GlobalCteContainer() {
+		public CteContainerImpl(CteContainer parent) {
+			this.parent = parent;
 			this.cteStatements = new LinkedHashMap<>();
-		}
-
-		@Override
-		public boolean isWithRecursive() {
-			return recursive;
-		}
-
-		@Override
-		public void setWithRecursive(boolean recursive) {
-			this.recursive = recursive;
 		}
 
 		@Override
@@ -7435,7 +7629,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		@Override
 		public CteStatement getCteStatement(String cteLabel) {
-			return cteStatements.get( cteLabel );
+			final CteStatement cteStatement = cteStatements.get( cteLabel );
+			if ( cteStatement == null && parent != null ) {
+				return parent.getCteStatement( cteLabel );
+			}
+			return cteStatement;
 		}
 
 		@Override

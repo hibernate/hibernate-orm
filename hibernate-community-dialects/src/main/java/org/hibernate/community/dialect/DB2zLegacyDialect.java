@@ -126,6 +126,11 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 	}
 
 	@Override
+	public boolean supportsRecursiveCTE() {
+		return getVersion().isSameOrAfter( 11 );
+	}
+
+	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		StringBuilder pattern = new StringBuilder();
 		final boolean castTo;

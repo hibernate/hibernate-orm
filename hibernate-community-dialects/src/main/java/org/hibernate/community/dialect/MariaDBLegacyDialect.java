@@ -50,7 +50,8 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 	}
 
 	public MariaDBLegacyDialect(DialectResolutionInfo info) {
-		super(info);
+		super( createVersion( info ), getCharacterSetBytesPerCharacter( info.getDatabaseMetadata() ) );
+		registerKeywords( info );
 	}
 
 	@Override
@@ -98,6 +99,17 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 
 	@Override
 	public boolean supportsWindowFunctions() {
+		return getVersion().isSameOrAfter( 10, 2 );
+	}
+
+	@Override
+	public boolean supportsLateral() {
+		// See https://jira.mariadb.org/browse/MDEV-19078
+		return false;
+	}
+
+	@Override
+	public boolean supportsRecursiveCTE() {
 		return getVersion().isSameOrAfter( 10, 2 );
 	}
 

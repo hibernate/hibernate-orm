@@ -46,9 +46,8 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 			SqmQuerySource querySource,
 			Set<SqmParameter<?>> parameters,
 			Map<String, SqmCteStatement<?>> cteStatements,
-			boolean withRecursiveCte,
 			SqmRoot<T> target) {
-		super( builder, querySource, parameters, cteStatements, withRecursiveCte, target );
+		super( builder, querySource, parameters, cteStatements, target );
 	}
 
 	protected SqmWhereClause copyWhereClause(SqmCopyContext context) {

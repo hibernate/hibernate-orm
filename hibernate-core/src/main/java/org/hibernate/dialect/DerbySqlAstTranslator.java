@@ -42,6 +42,11 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
+	protected boolean supportsWithClause() {
+		return false;
+	}
+
+	@Override
 	protected void renderExpressionAsClauseItem(Expression expression) {
 		expression.accept( this );
 	}
@@ -123,24 +128,6 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	@Override
 	protected String getForUpdateWithClause() {
 		return " with rs";
-	}
-
-	@Override
-	public void visitCteContainer(CteContainer cteContainer) {
-		if ( cteContainer.isWithRecursive() ) {
-			throw new IllegalArgumentException( "Recursive CTEs can't be emulated" );
-		}
-		super.visitCteContainer( cteContainer );
-	}
-
-	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// Derby does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// Derby does not support this, but it can be emulated
 	}
 
 	@Override

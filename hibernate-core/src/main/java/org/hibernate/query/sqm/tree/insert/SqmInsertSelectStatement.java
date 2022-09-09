@@ -55,11 +55,10 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 			SqmQuerySource querySource,
 			Set<SqmParameter<?>> parameters,
 			Map<String, SqmCteStatement<?>> cteStatements,
-			boolean withRecursiveCte,
 			SqmRoot<T> target,
 			List<SqmPath<?>> insertionTargetPaths,
 			SqmQueryPart<?> selectQueryPart) {
-		super( builder, querySource, parameters, cteStatements, withRecursiveCte, target, insertionTargetPaths );
+		super( builder, querySource, parameters, cteStatements, target, insertionTargetPaths );
 		this.selectQueryPart = selectQueryPart;
 	}
 
@@ -76,7 +75,6 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 						getQuerySource(),
 						copyParameters( context ),
 						copyCteStatements( context ),
-						isWithRecursive(),
 						getTarget().copy( context ),
 						copyInsertionTargetPaths( context ),
 						selectQueryPart.copy( context )

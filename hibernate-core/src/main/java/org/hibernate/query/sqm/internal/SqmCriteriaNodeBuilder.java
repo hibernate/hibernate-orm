@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,6 +44,9 @@ import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
+import org.hibernate.query.criteria.JpaSearchOrder;
+import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.NullPrecedence;
@@ -65,7 +69,11 @@ import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
+import org.hibernate.query.sqm.tree.SqmQuery;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.cte.SqmCteTableColumn;
+import org.hibernate.query.sqm.tree.cte.SqmSearchClauseSpecification;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
@@ -304,6 +312,21 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return setOperation( all ? SetOperator.EXCEPT_ALL : SetOperator.EXCEPT, query1, queries );
 	}
 
+	@Override
+	public <T> JpaSubQuery<T> union(boolean all, Subquery<? extends T> query1, Subquery<?>... queries) {
+		return setOperation( all ? SetOperator.UNION_ALL : SetOperator.UNION, query1, queries );
+	}
+
+	@Override
+	public <T> JpaSubQuery<T> intersect(boolean all, Subquery<? extends T> query1, Subquery<?>... queries) {
+		return setOperation( all ? SetOperator.INTERSECT_ALL : SetOperator.INTERSECT, query1, queries );
+	}
+
+	@Override
+	public <T> JpaSubQuery<T> except(boolean all, Subquery<? extends T> query1, Subquery<?>... queries) {
+		return setOperation( all ? SetOperator.EXCEPT_ALL : SetOperator.EXCEPT, query1, queries );
+	}
+
 	@SuppressWarnings("unchecked")
 	private <T> JpaCriteriaQuery<T> setOperation(
 			SetOperator operator,
@@ -311,19 +334,66 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			CriteriaQuery<?>... queries) {
 		final Class<T> resultType = (Class<T>) query1.getResultType();
 		final List<SqmQueryPart<T>> queryParts = new ArrayList<>( queries.length + 1 );
-		queryParts.add( ( (SqmSelectQuery<T>) query1 ).getQueryPart() );
+		final Map<String, SqmCteStatement<?>> cteStatements = new LinkedHashMap<>();
+		final SqmSelectStatement<T> selectStatement1 = (SqmSelectStatement<T>) query1;
+		collectQueryPartsAndCtes( selectStatement1, queryParts, cteStatements );
 		for ( CriteriaQuery<?> query : queries ) {
 			if ( query.getResultType() != resultType ) {
 				throw new IllegalArgumentException( "Result type of all operands must match" );
 			}
-			queryParts.add( ( (SqmSelectQuery<T>) query ).getQueryPart() );
+			collectQueryPartsAndCtes( (SqmSelectQuery<T>) query, queryParts, cteStatements );
 		}
 		return new SqmSelectStatement<>(
 				new SqmQueryGroup<>( this, operator, queryParts ),
 				resultType,
-				SqmQuerySource.CRITERIA,
+				cteStatements,
+				selectStatement1.getQuerySource(),
 				this
 		);
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T> JpaSubQuery<T> setOperation(
+			SetOperator operator,
+			Subquery<? extends T> query1,
+			Subquery<?>... queries) {
+		final Class<T> resultType = (Class<T>) query1.getResultType();
+		final SqmQuery<T> parent = (SqmQuery<T>) query1.getParent();
+		final List<SqmQueryPart<T>> queryParts = new ArrayList<>( queries.length + 1 );
+		final Map<String, SqmCteStatement<?>> cteStatements = new LinkedHashMap<>();
+		collectQueryPartsAndCtes( (SqmSelectQuery<T>) query1, queryParts, cteStatements );
+		for ( Subquery<?> query : queries ) {
+			if ( query.getResultType() != resultType ) {
+				throw new IllegalArgumentException( "Result type of all operands must match" );
+			}
+			if ( query.getParent() != parent ) {
+				throw new IllegalArgumentException( "Subquery parent of all operands must match" );
+			}
+			collectQueryPartsAndCtes( (SqmSelectQuery<T>) query, queryParts, cteStatements );
+		}
+		return new SqmSubQuery<>(
+				parent,
+				new SqmQueryGroup<>( this, operator, queryParts ),
+				resultType,
+				cteStatements,
+				this
+		);
+	}
+
+	private <T> void collectQueryPartsAndCtes(
+			SqmSelectQuery<T> query,
+			List<SqmQueryPart<T>> queryParts,
+			Map<String, SqmCteStatement<?>> cteStatements) {
+		queryParts.add( query.getQueryPart() );
+		for ( SqmCteStatement<?> cteStatement : query.getCteStatements() ) {
+			final String name = cteStatement.getCteTable().getCteName();
+			final SqmCteStatement<?> old = cteStatements.put( name, cteStatement );
+			if ( old != null && old != cteStatement ) {
+				throw new IllegalArgumentException(
+						String.format( "Different CTE with same name [%s] found in different set operands!", name )
+				);
+			}
+		}
 	}
 
 	@Override
@@ -446,6 +516,49 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public JpaOrder desc(Expression<?> x, boolean nullsFirst) {
 		return new SqmSortSpecification(
 				(SqmExpression<?>) x,
+				SortOrder.DESCENDING,
+				nullsFirst ? NullPrecedence.FIRST : NullPrecedence.LAST
+		);
+	}
+
+	@Override
+	public JpaSearchOrder search(JpaCteCriteriaAttribute sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence) {
+		return new SqmSearchClauseSpecification( (SqmCteTableColumn) sortExpression, sortOrder, nullPrecedence );
+	}
+
+	@Override
+	public JpaSearchOrder search(JpaCteCriteriaAttribute sortExpression, SortOrder sortOrder) {
+		return new SqmSearchClauseSpecification( (SqmCteTableColumn) sortExpression, sortOrder, NullPrecedence.NONE );
+	}
+
+	@Override
+	public JpaSearchOrder search(JpaCteCriteriaAttribute sortExpression) {
+		return new SqmSearchClauseSpecification( (SqmCteTableColumn) sortExpression, SortOrder.ASCENDING, NullPrecedence.NONE );
+	}
+
+	@Override
+	public JpaSearchOrder asc(JpaCteCriteriaAttribute x) {
+		return new SqmSearchClauseSpecification( (SqmCteTableColumn) x, SortOrder.ASCENDING, NullPrecedence.NONE );
+	}
+
+	@Override
+	public JpaSearchOrder desc(JpaCteCriteriaAttribute x) {
+		return new SqmSearchClauseSpecification( (SqmCteTableColumn) x, SortOrder.DESCENDING, NullPrecedence.NONE );
+	}
+
+	@Override
+	public JpaSearchOrder asc(JpaCteCriteriaAttribute x, boolean nullsFirst) {
+		return new SqmSearchClauseSpecification(
+				(SqmCteTableColumn)  x,
+				SortOrder.ASCENDING,
+				nullsFirst ? NullPrecedence.FIRST : NullPrecedence.LAST
+		);
+	}
+
+	@Override
+	public JpaSearchOrder desc(JpaCteCriteriaAttribute x, boolean nullsFirst) {
+		return new SqmSearchClauseSpecification(
+				(SqmCteTableColumn) x,
 				SortOrder.DESCENDING,
 				nullsFirst ? NullPrecedence.FIRST : NullPrecedence.LAST
 		);

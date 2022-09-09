@@ -3134,6 +3134,102 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	public void test_hql_cte_materialized_example() {
+
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			//tag::hql-cte-materialized-example[]
+			List<Tuple> calls = entityManager.createQuery(
+							"with data as materialized(" +
+									"  select p.person as owner, c.payment is not null as payed " +
+									"  from Call c " +
+									"  join c.phone p " +
+									"  where p.number = :phoneNumber" +
+									")" +
+									"select d.owner, d.payed " +
+									"from data d",
+							Tuple.class)
+					.setParameter("phoneNumber", "123-456-7890")
+					.getResultList();
+			//end::hql-cte-materialized-example[]
+		});
+	}
+
+	@Test
+	@RequiresDialectFeature( DialectChecks.SupportsRecursiveCtes.class )
+	public void test_hql_cte_recursive_example() {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			//tag::hql-cte-recursive-example[]
+			List<Tuple> calls = entityManager.createQuery(
+							"with paymentConnectedPersons as(" +
+									"  select a.owner owner " +
+									"  from Account a where a.id = :startId " +
+									"  union all" +
+									"  select a2.owner owner " +
+									"  from paymentConnectedPersons d " +
+									"  join Account a on a.owner = d.owner " +
+									"  join a.payments p " +
+									"  join Account a2 on a2.owner = p.person" +
+									")" +
+									"select d.owner " +
+									"from paymentConnectedPersons d",
+							Tuple.class)
+					.setParameter("startId", 123L)
+					.getResultList();
+			//end::hql-cte-recursive-example[]
+		});
+	}
+
+	@Test
+	@RequiresDialectFeature( DialectChecks.SupportsRecursiveCtes.class )
+	public void test_hql_cte_recursive_search_example() {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			//tag::hql-cte-recursive-search-example[]
+			List<Tuple> calls = entityManager.createQuery(
+							"with paymentConnectedPersons as(" +
+									"  select a.owner owner " +
+									"  from Account a where a.id = :startId " +
+									"  union all" +
+									"  select a2.owner owner " +
+									"  from paymentConnectedPersons d " +
+									"  join Account a on a.owner = d.owner " +
+									"  join a.payments p " +
+									"  join Account a2 on a2.owner = p.person" +
+									") search breadth first by owner set orderAttr " +
+									"select d.owner " +
+									"from paymentConnectedPersons d",
+							Tuple.class)
+					.setParameter("startId", 123L)
+					.getResultList();
+			//end::hql-cte-recursive-search-example[]
+		});
+	}
+
+	@Test
+	@RequiresDialectFeature( DialectChecks.SupportsRecursiveCtes.class )
+	public void test_hql_cte_recursive_cycle_example() {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			//tag::hql-cte-recursive-cycle-example[]
+			List<Tuple> calls = entityManager.createQuery(
+							"with paymentConnectedPersons as(" +
+									"  select a.owner owner " +
+									"  from Account a where a.id = :startId " +
+									"  union all" +
+									"  select a2.owner owner " +
+									"  from paymentConnectedPersons d " +
+									"  join Account a on a.owner = d.owner " +
+									"  join a.payments p " +
+									"  join Account a2 on a2.owner = p.person" +
+									") cycle owner set cycleMark " +
+									"select d.owner, d.cycleMark " +
+									"from paymentConnectedPersons d",
+							Tuple.class)
+					.setParameter("startId", 123L)
+					.getResultList();
+			//end::hql-cte-recursive-cycle-example[]
+		});
+	}
+
+	@Test
 	@RequiresDialectFeature({
 			DialectChecks.SupportsSubqueryInOnClause.class,
 			DialectChecks.SupportsOrderByInCorrelatedSubquery.class

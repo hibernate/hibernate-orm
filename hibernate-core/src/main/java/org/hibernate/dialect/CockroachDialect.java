@@ -475,6 +475,11 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsRecursiveCTE() {
+		return true;
+	}
+
+	@Override
 	public String getNoColumnsInsertString() {
 		return "default values";
 	}

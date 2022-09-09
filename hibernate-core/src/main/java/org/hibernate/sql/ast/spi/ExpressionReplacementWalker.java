@@ -315,7 +315,7 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 	@Override
 	public void visitInSubQueryPredicate(InSubQueryPredicate inSubQueryPredicate) {
 		final Expression testExpression = replaceExpression( inSubQueryPredicate.getTestExpression() );
-		final QueryPart subQuery = replaceExpression( inSubQueryPredicate.getSubQuery() );
+		final SelectStatement subQuery = replaceExpression( inSubQueryPredicate.getSubQuery() );
 		if ( testExpression != inSubQueryPredicate.getTestExpression()
 				|| subQuery != inSubQueryPredicate.getSubQuery() ) {
 			returnedNode = new InSubQueryPredicate(
@@ -332,10 +332,10 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 
 	@Override
 	public void visitExistsPredicate(ExistsPredicate existsPredicate) {
-		final QueryPart queryPart = replaceExpression( existsPredicate.getExpression() );
-		if ( queryPart != existsPredicate.getExpression() ) {
+		final SelectStatement selectStatement = replaceExpression( existsPredicate.getExpression() );
+		if ( selectStatement != existsPredicate.getExpression() ) {
 			returnedNode = new ExistsPredicate(
-					queryPart,
+					selectStatement,
 					existsPredicate.isNegated(),
 					existsPredicate.getExpressionType()
 			);

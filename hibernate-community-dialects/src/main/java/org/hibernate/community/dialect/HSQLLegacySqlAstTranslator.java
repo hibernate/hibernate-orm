@@ -59,6 +59,39 @@ public class HSQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 		}
 	}
 
+	@Override
+	protected boolean supportsArrayConstructor() {
+		return true;
+	}
+
+	@Override
+	protected boolean supportsWithClauseInSubquery() {
+		// Doesn't support correlations in the WITH clause
+		return false;
+	}
+
+	@Override
+	protected boolean supportsRecursiveClauseArrayAndRowEmulation() {
+		// Even though HSQL supports the array constructor, it's illegal to use arrays in CTEs
+		return false;
+	}
+
+	@Override
+	protected void visitRecursivePath(Expression recursivePath, int sizeEstimate) {
+		// HSQL determines the type and size of a column in a recursive CTE based on the expression of the non-recursive part
+		// Due to that, we have to cast the path in the non-recursive path to a varchar of appropriate size to avoid data truncation errors
+		if ( sizeEstimate == -1 ) {
+			super.visitRecursivePath( recursivePath, sizeEstimate );
+		}
+		else {
+			appendSql( "cast(" );
+			recursivePath.accept( this );
+			appendSql( " as varchar(" );
+			appendSql( sizeEstimate );
+			appendSql( "))" );
+		}
+	}
+
 	// HSQL does not allow CASE expressions where all result arms contain plain parameters.
 	// At least one result arm must provide some type context for inference,
 	// so we cast the first result arm if we encounter this condition
@@ -188,16 +221,6 @@ public class HSQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 		else {
 			renderLimitOffsetClause( queryPart );
 		}
-	}
-
-	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// HSQL does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// HSQL does not support this, but it can be emulated
 	}
 
 	@Override

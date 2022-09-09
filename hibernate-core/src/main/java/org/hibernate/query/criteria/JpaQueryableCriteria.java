@@ -22,5 +22,5 @@ import jakarta.persistence.criteria.CommonAbstractCriteria;
  *
  * @author Steve Ebersole
  */
-public interface JpaQueryableCriteria<T> extends JpaCriteriaBase, JpaCriteriaNode {
+public interface JpaQueryableCriteria<T> extends JpaCriteriaBase, JpaCriteriaNode, JpaCteContainer {
 }

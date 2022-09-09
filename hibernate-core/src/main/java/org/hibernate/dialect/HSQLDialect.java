@@ -633,6 +633,11 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsRecursiveCTE() {
+		return getVersion().isSameOrAfter( 2 );
+	}
+
+	@Override
 	public boolean requiresFloatCastingOfIntegerDivision() {
 		return true;
 	}

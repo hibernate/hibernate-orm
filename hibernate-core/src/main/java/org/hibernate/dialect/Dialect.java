@@ -2992,6 +2992,16 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * Does this dialect/database require casting of non-string arguments in a concat function?
+	 *
+	 * @return {@code true} if casting of non-string arguments in concat is required
+	 * @since 6.2
+	 */
+	public boolean requiresCastForConcatenatingNonStrings() {
+		return false;
+	}
+
+	/**
 	 * Does this dialect require that integer divisions be wrapped in {@code cast()}
 	 * calls to tell the db parser the expected type.
 	 *
@@ -3571,6 +3581,16 @@ public abstract class Dialect implements ConversionContext {
 	 * @return {@code true} if non-query statements are supported with CTE
 	 */
 	public boolean supportsNonQueryWithCTE() {
+		return false;
+	}
+
+	/**
+	 * Does this dialect/database support recursive CTEs (Common Table Expressions)?
+	 *
+	 * @return {@code true} if recursive CTEs are supported
+	 * @since 6.2
+	 */
+	public boolean supportsRecursiveCTE() {
 		return false;
 	}
 

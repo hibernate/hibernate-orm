@@ -89,6 +89,7 @@ Most of the complexity here arises from the interplay of set operators (`union`,
 
 We'll describe the various clauses of a query later in this chapter, but to summarize, a query might have:
 
+* a `with` clause, specifying <<hql-with-cte,named subqueries>> to be used in the following query,
 * a `select` list, specifying a <<hql-select-clause,projection>> (the things to return from the query),
 * a `from` clause and joins, <<hql-from-clause,specifying>> the entities involved in the query, and how they're <<hql-join,related>> to each other,
 * a `where` clause, specifying a <<hql-where-clause,restriction>>,
@@ -1559,6 +1560,16 @@ It may not refer to other roots declared in the same `from` clause.
 
 A subquery may also occur in a <<hql-join-derived, join>>, in which case it may be a correlated subquery.
 
+[[hql-from-cte]]
+==== Common table expressions in `from` clause
+
+A _Common table expression (CTE)_ is like a derived root with a name. The big difference is,
+that the name can be referred to multiple times. It must declare an identification variable.
+
+The CTE name can be used for a `from` clause root or a `join`, similar to entity names.
+
+Refer to the <<hql-with-cte,with clause>> chapter for details about CTEs.
+
 [[hql-join]]
 === Declaring joined entities
 
@@ -2477,3 +2488,132 @@ This _almost certainly_ isn't the behavior you were hoping for, and in general w
 ====
 
 In the next chapter we'll see a completely different way to write queries in Hibernate.
+
+[[hql-with-cte]]
+==== With clause
+
+The `with` clause allows to specify _common table expressions (CTEs)_ which can be imagined like named subqueries.
+Every uncorrelated subquery can be factored to a CTE in the `with` clause. The semantics are equivalent.
+
+The `with` clause offers features beyond naming subqueries though:
+
+* Specify materialization hints
+* Recursive querying
+
+===== Materialization hint
+
+The materialization hint `MATERIALIZED` or `NOT MATERIALIZED` can be applied to tell the DBMS whether a CTE should
+or shouldn't be materialized. Consult the database manual of the respective database for the exact meaning of the hint.
+
+Usually, one can expect that `MATERIALIZED` will cause the subquery to be executed separately and saved into a temporary table,
+whereas `NOT MATERIALIZED` will cause the subquery to be inlined into every use site and considered during optimizations separately.
+
+[[hql-cte-materialized-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-cte-materialized-example, indent=0]
+----
+====
+
+===== Recursive querying
+
+The main use case for the `with` clause is to define a name for a subquery,
+such that this subquery can refer to itself, which ultimately enables recursive querying.
+
+Recursive CTEs must follow a very particular shape, which is
+
+* Base query part
+* `union` or `union all`
+* Recursive query part
+
+[[hql-cte-recursive-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-cte-recursive-example, indent=0]
+----
+====
+
+The base query part represents the initial set of rows. When fetching a tree of data,
+the base query part usually is the tree root.
+
+The recursive query part is executed again and again until it produces no new rows.
+The result of such a CTE is the base query part result _unioned_ together with all recursive query part executions.
+Depending on whether `union all` or `union` (`distinct`) is used, duplicate rows are preserved or not.
+
+Recursive queries additionally can have
+
+* a `search` clause to hint the DBMS whether to use breadth or depth first searching
+* a `cycle` clause to hint the DBMS how to determine that a cycle was reached
+
+Defining the `search` clause requires specifying a name for an attribute in the `set` sub-clause,
+that will be added to the CTE type and allows ordering results according to the search order.
+
+[[hql-cte-recursive-search-bnf-example]]
+====
+[source, antlrv4, indent=0]
+----
+searchClause
+: "SEARCH" ("BREADTH"|"DEPTH") "FIRST BY" searchSpecifications "SET" identifier
+;
+
+searchSpecifications
+: searchSpecification ("," searchSpecification)*
+;
+
+searchSpecification
+: identifier sortDirection? nullsPrecedence?
+;
+----
+====
+
+A DBMS has two possible orders when executing the recursive query part
+
+* Depth first - handle the *newest* produced rows by the recursive query part first
+* Breadth first - handle the *oldest* produced rows by the recursive query part first
+
+[[hql-cte-recursive-search-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-cte-recursive-search-example, indent=0]
+----
+====
+
+Recursive processing can lead to cycles which might lead to queries executing forever.
+The `cycle` clause hints the DBMS which CTE attributes to track for the cycle detection.
+It requires specifying a name for a cycle mark attribute in the `set` sub-clause,
+that will be added to the CTE type and allows detecting if a cycle occurred for a result.
+
+By default, the cycle mark attribute will be set to `true` when a cycle is detected and `false` otherwise.
+The values to use can be explicitly specified through the `to` and `default` sub-clauses.
+Optionally, it's also possible to specify a cycle path attribute name through the `using` clause
+The cycle path attribute can be used to understand the traversal path that lead to a result.
+
+[[hql-cte-recursive-cycle-bnf-example]]
+====
+[source, antlrv4, indent=0]
+----
+cycleClause
+	: "CYCLE" cteAttributes "SET" identifier ("TO" literal "DEFAULT" literal)? ("USING" identifier)?
+	;
+----
+====
+
+[[hql-cte-recursive-cycle-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-cte-recursive-cycle-example, indent=0]
+----
+====
+
+[IMPORTANT]
+====
+Hibernate merely translates recursive CTEs but doesn't attempt to emulate the feature.
+Therefore, this feature will only work if the database supports recursive CTEs.
+Hibernate does emulate the `search` and `cycle` clauses though if necessary, so you can safely use that.
+
+Note that most modern database versions support recursive CTEs already.
+====

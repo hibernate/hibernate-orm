@@ -227,52 +227,40 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
 		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
 
-		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
-		final boolean canUseInnerJoin = joinType == SqlAstJoinType.INNER || lhs.canUseInnerJoins();
-		final EntityPersister entityPersister = delegate.getEntityMappingType().getEntityPersister();
-		final LazyTableGroup lazyTableGroup = new LazyTableGroup(
-				canUseInnerJoin,
+		final LazyTableGroup lazyTableGroup = createRootTableGroupJoin(
 				navigablePath,
-				fetched,
-				() -> createTableGroupInternal(
-						canUseInnerJoin,
-						navigablePath,
-						fetched,
-						null,
-						sqlAliasBase,
-						sqlExpressionResolver,
-						creationContext
-				),
-				(np, tableExpression) -> {
-					if ( !tableExpression.isEmpty() && !entityPersister.containsTableReference( tableExpression ) ) {
-						return false;
-					}
-					if ( navigablePath.equals( np.getParent() ) ) {
-						return targetKeyPropertyNames.contains( np.getLocalName() );
-					}
-
-					final String relativePath = np.relativize( navigablePath );
-					if ( relativePath == null ) {
-						return false;
-					}
-
-					// Empty relative path means the navigable paths are equal,
-					// in which case we allow resolving the parent table group
-					return relativePath.isEmpty() || targetKeyPropertyNames.contains( relativePath );
-				},
-				this,
+				lhs,
 				explicitSourceAlias,
-				sqlAliasBase,
-				creationContext.getSessionFactory(),
-				lhs
+				requestedJoinType,
+				fetched,
+				null,
+				aliasBaseGenerator,
+				sqlExpressionResolver,
+				fromClauseAccess,
+				creationContext
 		);
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
-				lazyTableGroup.getNavigablePath(),
+				navigablePath,
 				joinType,
 				lazyTableGroup,
 				null
 		);
+		lazyTableGroup.setTableGroupInitializerCallback(
+				createTableGroupInitializerCallback(
+						lhs,
+						sqlExpressionResolver,
+						sessionFactory,
+						tableGroupJoin::applyPredicate
+				)
+		);
+		return tableGroupJoin;
+	}
 
+	private Consumer<TableGroup> createTableGroupInitializerCallback(
+			TableGroup lhs,
+			SqlExpressionResolver sqlExpressionResolver,
+			SessionFactoryImplementor sessionFactory,
+			Consumer<Predicate> predicateConsumer) {
 		// -----------------
 		// Collect the selectable mappings for the FK key side and target side
 		// As we will "resolve" the derived column references for these mappings
@@ -350,8 +338,7 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 					}
 			);
 		}
-		lazyTableGroup.setTableGroupInitializerCallback(
-				tg -> {
+		Consumer<TableGroup> tableGroupInitializerCallback = tg -> {
 					this.identifierMapping.forEachSelectable(
 							(i, selectableMapping) -> {
 								final SelectableMapping targetMapping = targetMappings.get( i );
@@ -360,7 +347,7 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 										targetMapping.getContainingTableExpression(),
 										false
 								);
-								tableGroupJoin.applyPredicate(
+								predicateConsumer.accept(
 										new ComparisonPredicate(
 												keyColumnReferences.get( i ),
 												ComparisonOperator.EQUAL,
@@ -373,9 +360,8 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 								);
 							}
 					);
-				}
-		);
-		return tableGroupJoin;
+				};
+		return tableGroupInitializerCallback;
 	}
 
 	public TableGroup createTableGroupInternal(
@@ -415,7 +401,7 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 	}
 
 	@Override
-	public TableGroup createRootTableGroupJoin(
+	public LazyTableGroup createRootTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
@@ -426,18 +412,58 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 			SqlExpressionResolver sqlExpressionResolver,
 			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
-		return ( (TableGroupJoinProducer) delegate ).createRootTableGroupJoin(
+		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
+		final boolean canUseInnerJoin = sqlAstJoinType == SqlAstJoinType.INNER || lhs.canUseInnerJoins();
+		final EntityPersister entityPersister = delegate.getEntityMappingType().getEntityPersister();
+		final LazyTableGroup lazyTableGroup = new LazyTableGroup(
+				canUseInnerJoin,
 				navigablePath,
-				lhs,
-				explicitSourceAlias,
-				sqlAstJoinType,
 				fetched,
-				predicateConsumer,
-				aliasBaseGenerator,
-				sqlExpressionResolver,
-				fromClauseAccess,
-				creationContext
+				() -> createTableGroupInternal(
+						canUseInnerJoin,
+						navigablePath,
+						fetched,
+						null,
+						sqlAliasBase,
+						sqlExpressionResolver,
+						creationContext
+				),
+				(np, tableExpression) -> {
+					if ( !tableExpression.isEmpty() && !entityPersister.containsTableReference( tableExpression ) ) {
+						return false;
+					}
+					if ( navigablePath.equals( np.getParent() ) ) {
+						return targetKeyPropertyNames.contains( np.getLocalName() );
+					}
+
+					final String relativePath = np.relativize( navigablePath );
+					if ( relativePath == null ) {
+						return false;
+					}
+
+					// Empty relative path means the navigable paths are equal,
+					// in which case we allow resolving the parent table group
+					return relativePath.isEmpty() || targetKeyPropertyNames.contains( relativePath );
+				},
+				this,
+				explicitSourceAlias,
+				sqlAliasBase,
+				creationContext.getSessionFactory(),
+				lhs
 		);
+
+		if ( predicateConsumer != null ) {
+			lazyTableGroup.setTableGroupInitializerCallback(
+					createTableGroupInitializerCallback(
+							lhs,
+							sqlExpressionResolver,
+							creationContext.getSessionFactory(),
+							predicateConsumer
+					)
+			);
+		}
+
+		return lazyTableGroup;
 	}
 
 	@Override

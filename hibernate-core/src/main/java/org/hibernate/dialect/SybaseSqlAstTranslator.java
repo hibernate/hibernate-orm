@@ -39,6 +39,11 @@ public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		super( sessionFactory, statement );
 	}
 
+	@Override
+	protected boolean supportsWithClause() {
+		return false;
+	}
+
 	// Sybase does not allow CASE expressions where all result arms contain plain parameters.
 	// At least one result arm must provide some type context for inference,
 	// so we cast the first result arm if we encounter this condition
@@ -103,16 +108,6 @@ public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	@Override
 	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
 		// Sybase does not support the FOR UPDATE clause
-	}
-
-	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// Sybase does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// Sybase does not support this, but it can be emulated
 	}
 
 	@Override

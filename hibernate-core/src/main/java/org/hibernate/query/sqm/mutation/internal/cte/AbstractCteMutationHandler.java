@@ -28,9 +28,7 @@ import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.MatchingIdSelectionHelper;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.spi.AbstractMutationHandler;
-import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
-import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmStar;
@@ -39,6 +37,7 @@ import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.cte.CteTable;
 import org.hibernate.sql.ast.tree.cte.CteTableGroup;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -70,12 +69,12 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 
 	public static final String CTE_TABLE_IDENTIFIER = "id";
 
-	private final SqmCteTable cteTable;
+	private final CteTable cteTable;
 	private final DomainParameterXref domainParameterXref;
 	private final CteMutationStrategy strategy;
 
 	public AbstractCteMutationHandler(
-			SqmCteTable cteTable,
+			CteTable cteTable,
 			SqmDeleteOrUpdateStatement<?> sqmStatement,
 			DomainParameterXref domainParameterXref,
 			CteMutationStrategy strategy,
@@ -87,7 +86,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 		this.strategy = strategy;
 	}
 
-	public SqmCteTable getCteTable() {
+	public CteTable getCteTable() {
 		return cteTable;
 	}
 
@@ -142,7 +141,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 		sqmConverter.pruneTableGroupJoins();
 
 		final CteStatement idSelectCte = new CteStatement(
-				BaseSqmToSqlAstConverter.createCteTable( getCteTable(), factory ),
+				getCteTable(),
 				MatchingIdSelectionHelper.generateMatchingIdSelectStatement(
 						entityDescriptor,
 						sqmMutationStatement,

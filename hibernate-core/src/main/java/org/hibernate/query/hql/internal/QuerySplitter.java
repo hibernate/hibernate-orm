@@ -10,13 +10,22 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.criteria.JpaCteCriteria;
+import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
+import org.hibernate.query.criteria.JpaSearchOrder;
+import org.hibernate.query.sqm.tree.cte.SqmCteTableColumn;
+import org.hibernate.query.sqm.tree.cte.SqmSearchClauseSpecification;
+import org.hibernate.query.sqm.tree.domain.SqmCteRoot;
 import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
+import org.hibernate.query.sqm.tree.from.SqmCteJoin;
 import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
+import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
@@ -80,6 +89,9 @@ import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import jakarta.persistence.criteria.AbstractQuery;
+import jakarta.persistence.criteria.CriteriaQuery;
 
 /**
  * Handles splitting queries containing unmapped polymorphic references.
@@ -215,17 +227,129 @@ public class QuerySplitter {
 		public Object visitCteContainer(SqmCteContainer consumer) {
 			final SqmCteContainer processingQuery = (SqmCteContainer) getProcessingStateStack().getCurrent()
 					.getProcessingQuery();
-			processingQuery.setWithRecursive( consumer.isWithRecursive() );
 			for ( SqmCteStatement<?> cteStatement : consumer.getCteStatements() ) {
-				processingQuery.addCteStatement( visitCteStatement( cteStatement ) );
+				visitCteStatement( cteStatement );
 			}
 			return processingQuery;
 		}
 
 		@Override
 		public SqmCteStatement<?> visitCteStatement(SqmCteStatement<?> sqmCteStatement) {
-			// No need to copy anything here
-			return sqmCteStatement;
+			final SqmCteContainer processingQuery = (SqmCteContainer) getProcessingStateStack().getCurrent()
+					.getProcessingQuery();
+			final SqmSelectQuery<?> cteDefinition = sqmCteStatement.getCteDefinition();
+			final SqmQueryPart<?> queryPart = cteDefinition.getQueryPart();
+			JpaCteCriteria<?> cteCriteria = null;
+			if ( cteDefinition.getCteStatements().isEmpty()
+					&& queryPart instanceof SqmQueryGroup<?> && queryPart.getSortSpecifications().isEmpty()
+					&& queryPart.getFetchExpression() == null && queryPart.getOffsetExpression() == null ) {
+				final SqmQueryGroup<?> queryGroup = (SqmQueryGroup<?>) queryPart;
+				boolean unionDistinct = false;
+				switch ( queryGroup.getSetOperator() ) {
+					case UNION:
+						unionDistinct = true;
+					case UNION_ALL:
+						if ( queryGroup.getQueryParts().size() == 2 ) {
+							final SqmSelectQuery<Object> nonRecursiveStatement = visitSelectQuery(
+									cteDefinition,
+									queryGroup.getQueryParts().get( 0 )
+							);
+							final Function<JpaCteCriteria<Object>, AbstractQuery<Object>> recursiveCriteriaProducer = jpaCteCriteria -> {
+								return visitSelectQuery( cteDefinition, queryGroup.getQueryParts().get( 1 ) );
+							};
+							if ( sqmCteStatement.getName() == null ) {
+								if ( unionDistinct ) {
+									cteCriteria = processingQuery.withRecursiveUnionDistinct(
+											nonRecursiveStatement,
+											recursiveCriteriaProducer
+									);
+								}
+								else {
+									cteCriteria = processingQuery.withRecursiveUnionAll(
+											nonRecursiveStatement,
+											recursiveCriteriaProducer
+									);
+								}
+							}
+							else {
+								if ( unionDistinct ) {
+									cteCriteria = processingQuery.withRecursiveUnionDistinct(
+											sqmCteStatement.getName(),
+											nonRecursiveStatement,
+											recursiveCriteriaProducer
+									);
+								}
+								else {
+									cteCriteria = processingQuery.withRecursiveUnionAll(
+											sqmCteStatement.getName(),
+											nonRecursiveStatement,
+											recursiveCriteriaProducer
+									);
+								}
+							}
+
+							if ( sqmCteStatement.getSearchClauseKind() != null ) {
+								final List<JpaSearchOrder> searchBySpecifications = sqmCteStatement.getSearchBySpecifications();
+								final List<JpaSearchOrder> newSearchBySpecifications = new ArrayList<>( searchBySpecifications.size() );
+								for ( JpaSearchOrder searchBySpecification : searchBySpecifications ) {
+									newSearchBySpecifications.add(
+											new SqmSearchClauseSpecification(
+													(SqmCteTableColumn) cteCriteria.getType().getAttribute( searchBySpecification.getAttribute().getName() ),
+													searchBySpecification.getSortOrder(),
+													searchBySpecification.getNullPrecedence()
+											)
+									);
+								}
+								cteCriteria.search(
+										sqmCteStatement.getSearchClauseKind(),
+										sqmCteStatement.getSearchAttributeName(),
+										newSearchBySpecifications
+								);
+							}
+							if ( sqmCteStatement.getCycleMarkAttributeName() != null ) {
+								final List<JpaCteCriteriaAttribute> cycleAttributes = sqmCteStatement.getCycleAttributes();
+								final List<JpaCteCriteriaAttribute> newCycleAttributes = new ArrayList<>( cycleAttributes.size() );
+								for ( JpaCteCriteriaAttribute cycleAttribute : cycleAttributes ) {
+									newCycleAttributes.add(
+											cteCriteria.getType().getAttribute( cycleAttribute.getName() )
+									);
+								}
+								cteCriteria.cycleUsing(
+										sqmCteStatement.getCycleMarkAttributeName(),
+										sqmCteStatement.getCyclePathAttributeName(),
+										sqmCteStatement.getCycleValue(),
+										sqmCteStatement.getNoCycleValue(),
+										newCycleAttributes
+								);
+							}
+						}
+				}
+			}
+			if ( cteCriteria == null ) {
+				if ( sqmCteStatement.getName() == null ) {
+					cteCriteria = processingQuery.with( visitSelectQuery( cteDefinition ) );
+				}
+				else {
+					cteCriteria = processingQuery.with( sqmCteStatement.getName(), visitSelectQuery( cteDefinition ) );
+				}
+			}
+			if ( sqmCteStatement.getMaterialization() != null ) {
+				cteCriteria.setMaterialization( sqmCteStatement.getMaterialization() );
+			}
+			return (SqmCteStatement<?>) cteCriteria;
+		}
+
+		@Override
+		public SqmCteStatement<?> findCteStatement(String name) {
+			return processingStateStack.findCurrentFirst(
+					state -> {
+						if ( state.getProcessingQuery() instanceof SqmCteContainer ) {
+							final SqmCteContainer container = (SqmCteContainer) state.getProcessingQuery();
+							return container.getCteStatement( name );
+						}
+						return null;
+					}
+			);
 		}
 
 		@Override
@@ -283,6 +407,43 @@ public class QuerySplitter {
 			}
 
 			return copy;
+		}
+
+		@Override
+		protected SqmSelectQuery<Object> visitSelectQuery(SqmSelectQuery<?> selectQuery) {
+			if ( selectQuery instanceof SqmSelectStatement<?> ) {
+				return (SqmSelectQuery<Object>) visitSelectStatement( (SqmSelectStatement<?>) selectQuery );
+			}
+			else {
+				return visitSubQueryExpression( (SqmSubQuery<?>) selectQuery );
+			}
+		}
+
+		protected SqmSelectQuery<Object> visitSelectQuery(SqmSelectQuery<?> selectQuery, SqmQueryPart<?> queryPart) {
+			if ( selectQuery instanceof SqmSelectStatement<?> ) {
+				final SqmSelectStatement<?> sqmSelectStatement = (SqmSelectStatement<?>) selectQuery;
+				//noinspection rawtypes
+				return (SqmSelectQuery<Object>) visitSelectStatement(
+						new SqmSelectStatement(
+								queryPart,
+								sqmSelectStatement.getResultType(),
+								sqmSelectStatement.getQuerySource(),
+								sqmSelectStatement.nodeBuilder()
+						)
+				);
+			}
+			else {
+				final SqmSubQuery<?> sqmSubQuery = (SqmSubQuery<?>) selectQuery;
+				//noinspection rawtypes
+				return visitSubQueryExpression(
+						new SqmSubQuery(
+								processingStateStack.getCurrent().getProcessingQuery(),
+								queryPart,
+								sqmSubQuery.getResultType(),
+								sqmSubQuery.nodeBuilder()
+						)
+				);
+			}
 		}
 
 		@Override
@@ -412,6 +573,25 @@ public class QuerySplitter {
 		}
 
 		@Override
+		public SqmCteRoot<?> visitRootCte(SqmCteRoot<?> sqmRoot) {
+			SqmFrom<?, ?> sqmFrom = sqmFromCopyMap.get( sqmRoot );
+			if ( sqmFrom != null ) {
+				return (SqmCteRoot<?>) sqmFrom;
+			}
+			final SqmCteRoot<?> copy = new SqmCteRoot<>(
+					(SqmCteStatement<?>) sqmRoot.getCte().accept( this ),
+					sqmRoot.getExplicitAlias()
+			);
+			getProcessingStateStack().getCurrent().getPathRegistry().register( copy );
+			sqmFromCopyMap.put( sqmRoot, copy );
+			sqmPathCopyMap.put( sqmRoot.getNavigablePath(), copy );
+			if ( currentFromClauseCopy != null ) {
+				currentFromClauseCopy.addRoot( copy );
+			}
+			return copy;
+		}
+
+		@Override
 		public SqmCrossJoin<?> visitCrossJoin(SqmCrossJoin<?> join) {
 			final SqmFrom<?, ?> sqmFrom = sqmFromCopyMap.get( join );
 			if ( sqmFrom != null ) {
@@ -497,6 +677,26 @@ public class QuerySplitter {
 					join.getExplicitAlias(),
 					join.getSqmJoinType(),
 					join.isLateral(),
+					sqmRoot
+			);
+			getProcessingStateStack().getCurrent().getPathRegistry().register( copy );
+			sqmFromCopyMap.put( join, copy );
+			sqmPathCopyMap.put( join.getNavigablePath(), copy );
+			sqmRoot.addSqmJoin( copy );
+			return copy;
+		}
+
+		@Override
+		public SqmCteJoin<?> visitQualifiedCteJoin(SqmCteJoin<?> join) {
+			SqmFrom<?, ?> sqmFrom = sqmFromCopyMap.get( join );
+			if ( sqmFrom != null ) {
+				return (SqmCteJoin<?>) sqmFrom;
+			}
+			final SqmRoot<?> sqmRoot = (SqmRoot<?>) sqmFromCopyMap.get( join.findRoot() );
+			final SqmCteJoin copy = new SqmCteJoin(
+					(SqmCteStatement<?>) join.getCte().accept( this ),
+					join.getExplicitAlias(),
+					join.getSqmJoinType(),
 					sqmRoot
 			);
 			getProcessingStateStack().getCurrent().getPathRegistry().register( copy );

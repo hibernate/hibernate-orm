@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
@@ -53,6 +54,24 @@ public class CockroachSqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
+	protected void renderMaterializationHint(CteMaterialization materialization) {
+		if ( materialization == CteMaterialization.NOT_MATERIALIZED ) {
+			appendSql( "not " );
+		}
+		appendSql( "materialized " );
+	}
+
+	@Override
+	protected boolean supportsRowConstructor() {
+		return true;
+	}
+
+	@Override
+	protected boolean supportsArrayConstructor() {
+		return true;
+	}
+
+	@Override
 	protected String getForShare(int timeoutMillis) {
 		return " for share";
 	}
@@ -88,16 +107,6 @@ public class CockroachSqlAstTranslator<T extends JdbcOperation> extends Abstract
 		if ( !isRowNumberingCurrentQueryPart() ) {
 			renderLimitOffsetClause( queryPart );
 		}
-	}
-
-	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// Cockroach does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// Cockroach does not support this, but it can be emulated
 	}
 
 	@Override

@@ -13,6 +13,7 @@ import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.select.QueryPart;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -23,15 +24,15 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public class Any implements Expression, DomainResultProducer {
 
-	private final QueryPart subquery;
+	private final SelectStatement subquery;
 	private final MappingModelExpressible<?> type;
 
-	public Any(QueryPart subquery, MappingModelExpressible<?> type) {
+	public Any(SelectStatement subquery, MappingModelExpressible<?> type) {
 		this.subquery = subquery;
 		this.type = type;
 	}
 
-	public QueryPart getSubquery() {
+	public SelectStatement getSubquery() {
 		return subquery;
 	}
 

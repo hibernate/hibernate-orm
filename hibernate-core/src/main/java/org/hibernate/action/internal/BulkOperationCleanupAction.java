@@ -29,6 +29,7 @@ import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
+import org.hibernate.query.sqm.tree.SqmQuery;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
@@ -151,8 +152,8 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			entityPersisters.add( metamodel.getEntityDescriptor( statement.getTarget().getEntityName() ) );
 		}
 		for ( SqmCteStatement<?> cteStatement : statement.getCteStatements() ) {
-			final SqmStatement<?> cteDefinition = cteStatement.getCteDefinition();
-			if ( cteDefinition instanceof SqmDmlStatement<?> && !( cteDefinition instanceof InsertStatement ) ) {
+			final SqmQuery<?> cteDefinition = cteStatement.getCteDefinition();
+			if ( cteDefinition instanceof SqmDmlStatement<?> ) {
 				entityPersisters.add(
 						metamodel.getEntityDescriptor( ( (SqmDmlStatement<?>) cteDefinition ).getTarget().getEntityName() )
 				);

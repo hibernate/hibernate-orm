@@ -167,8 +167,8 @@ public class SqlTreePrinter {
 				logNode(
 						"PrimaryTableReference as " + tableGroup.getPrimaryTableReference().getIdentificationVariable(),
 						() -> {
-							QueryPart queryPart = ( (QueryPartTableReference) tableGroup.getPrimaryTableReference() ).getQueryPart();
-							visitQueryPart( queryPart );
+							Statement statement = ( (QueryPartTableReference) tableGroup.getPrimaryTableReference() ).getStatement();
+							visitStatement( statement );
 						}
 				);
 			}

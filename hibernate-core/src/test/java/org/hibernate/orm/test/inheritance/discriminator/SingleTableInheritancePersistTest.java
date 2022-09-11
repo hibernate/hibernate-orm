@@ -9,6 +9,18 @@ package org.hibernate.orm.test.inheritance.discriminator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.hibernate.query.spi.QueryImplementor;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
@@ -20,13 +32,6 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -56,7 +61,7 @@ public class SingleTableInheritancePersistTest {
 	private final List<Child> children = new ArrayList<>( Arrays.asList( susan, mark ) );
 	private final List<Person> familyMembers = Arrays.asList( john, jane, susan, mark );
 
-	@BeforeEach
+	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -77,7 +82,6 @@ public class SingleTableInheritancePersistTest {
 
 					session.persist( family );
 				} );
-
 	}
 
 	@Test
@@ -106,6 +110,28 @@ public class SingleTableInheritancePersistTest {
 							fail( "Unexpected result: " + person );
 						}
 					}
+				} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-15497")
+	public void testFetchChildrenCountTwiceFails(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					QueryImplementor<Long> query = session.createQuery(
+							"SELECT count(p) FROM Person p WHERE TYPE(p) = ?1",
+							Long.class
+					);
+					query.setParameter( 1, Child.class );
+					Long personCount = query.getSingleResult();
+
+					assertThat( personCount, is( 2L ) );
+
+					query = session.createQuery( "SELECT count(p) FROM Person p WHERE TYPE(p) = ?1", Long.class );
+					query.setParameter( 1, Child.class );
+					personCount = query.getSingleResult();
+
+					assertThat( personCount, is( 2L ) );
 				} );
 	}
 

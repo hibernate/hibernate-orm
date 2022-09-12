@@ -181,6 +181,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
+import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
@@ -4890,11 +4891,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final QueryParameterImplementor<?> queryParameter = domainParameterXref.getQueryParameter( sqmParameter );
 		final QueryParameterBinding binding = domainParameterBindings.getBinding( queryParameter );
 		if ( binding.setType( valueMapping ) ) {
-			replaceJdbcParametersType(
-					sqmParameter,
-					domainParameterXref.getSqmParameters( queryParameter ),
-					valueMapping
-			);
+			// Align the SqmParameter expressible type with the binding type
+			( (AbstractSqmExpression) sqmParameter ).forceInferableType( (SqmExpressible<?>) binding.getBindType() );
 		}
 		return new SqmParameterInterpretation(
 				sqmParameter,
@@ -6802,6 +6800,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		if ( !iterator.hasNext() ) {
 			domainParamBinding.setType( (MappingModelExpressible) determineValueMapping( sqmPredicate.getTestExpression(), fromClauseIndex ) );
+			// Align the SqmParameter expressible type with the binding type
+			( (AbstractSqmExpression) sqmParameter ).forceInferableType( (SqmExpressible<?>) domainParamBinding.getBindType() );
 			return inListPredicate;
 		}
 

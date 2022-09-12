@@ -204,6 +204,11 @@ public class SqmUtil {
 
 			final Map<SqmParameter<?>, List<List<JdbcParameter>>> jdbcParamMap = jdbcParamXref.get( queryParam );
 			for ( SqmParameter<?> sqmParameter : sqmParameters ) {
+				final MappingModelExpressible resolvedMappingModelType = mappingModelResolutionAccess
+						.getResolvedMappingModelType( sqmParameter );
+				if ( resolvedMappingModelType != null ) {
+					domainParamBinding.setType( resolvedMappingModelType );
+				}
 				final Bindable parameterType = determineParameterType(
 						domainParamBinding,
 						queryParam,

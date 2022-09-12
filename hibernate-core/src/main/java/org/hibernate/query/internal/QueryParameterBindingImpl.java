@@ -51,9 +51,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	protected QueryParameterBindingImpl(
 			QueryParameter<T> queryParameter,
 			SessionFactoryImplementor sessionFactory) {
-		this.queryParameter = queryParameter;
-		this.sessionFactory = sessionFactory;
-		this.bindType = queryParameter.getHibernateType();
+		this( queryParameter, sessionFactory, queryParameter.getHibernateType() );
 	}
 
 	/**

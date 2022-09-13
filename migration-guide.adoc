@@ -22,3 +22,12 @@ Due to this change, schema validation errors could occur on existing databases.
 The migration to `uuid` requires a migration expression like `cast(old as uuid)`.
 
 To retain backwards compatibility, configure the setting `hibernate.type.preferred_uuid_jdbc_type` to `BINARY`.
+
+=== UUID mapping changes on SQL Server
+
+On SQL Server, the type code `SqlType.UUID` now by default refers to the DDL type `uniqueidentifier`, whereas before it was using `binary(16)`.
+Due to this change, schema validation errors could occur on existing databases.
+
+The migration to `uuid` requires a migration expression like `cast(old as uuid)`.
+
+To retain backwards compatibility, configure the setting `hibernate.type.preferred_uuid_jdbc_type` to `BINARY`.

@@ -26,7 +26,9 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 import java.lang.reflect.Type;
+import java.sql.Types;
 import java.util.List;
+import java.util.UUID;
 
 import static org.hibernate.type.SqlTypes.*;
 
@@ -71,7 +73,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 						JdbcType jdbcType = javaType.getRecommendedJdbcType(indicators);
 						checkType(
 								count, functionName, type,
-								jdbcType.getJdbcTypeCode(),
+								jdbcType.getDefaultSqlTypeCode(),
 								javaType.getJavaTypeClass()
 						);
 					}
@@ -143,7 +145,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			if (type != null) {
 				checkType(
 						count, functionName, type,
-						mapping.getJdbcType().getJdbcTypeCode(),
+						mapping.getJdbcType().getDefaultSqlTypeCode(),
 						mapping.getJavaTypeDescriptor().getJavaType()
 				);
 			}
@@ -154,7 +156,11 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	private void checkType(int count, String functionName, FunctionParameterType type, int code, Type javaType) {
 		switch (type) {
 			case COMPARABLE:
-				if ( !isCharacterType(code) && !isTemporalType(code) &&!isNumericType(code) ) {
+				if ( !isCharacterType(code) && !isTemporalType(code) &&!isNumericType(code) && code != UUID ) {
+					if ( javaType == java.util.UUID.class && ( code == Types.BINARY || isCharacterType( code ) ) ) {
+						// We also consider UUID to be comparable when it's a character or binary type
+						return;
+					}
 					throwError(type, javaType, functionName, count);
 				}
 				break;

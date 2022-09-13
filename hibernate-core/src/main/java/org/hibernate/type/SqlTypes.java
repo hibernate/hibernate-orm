@@ -604,7 +604,8 @@ public class SqlTypes {
 		return typeCode == DATE
 			|| typeCode == TIME
 			|| typeCode == TIMESTAMP
-			|| typeCode == TIMESTAMP_WITH_TIMEZONE;
+			|| typeCode == TIMESTAMP_WITH_TIMEZONE
+			|| typeCode == TIMESTAMP_UTC;
 	}
 
 	/**
@@ -614,7 +615,8 @@ public class SqlTypes {
 	public static boolean hasDatePart(int typeCode) {
 		return typeCode == DATE
 			|| typeCode == TIMESTAMP
-			|| typeCode == TIMESTAMP_WITH_TIMEZONE;
+			|| typeCode == TIMESTAMP_WITH_TIMEZONE
+			|| typeCode == TIMESTAMP_UTC;
 	}
 
 	/**
@@ -624,6 +626,7 @@ public class SqlTypes {
 	public static boolean hasTimePart(int typeCode) {
 		return typeCode == TIME
 			|| typeCode == TIMESTAMP
-			|| typeCode == TIMESTAMP_WITH_TIMEZONE;
+			|| typeCode == TIMESTAMP_WITH_TIMEZONE
+			|| typeCode == TIMESTAMP_UTC;
 	}
 }

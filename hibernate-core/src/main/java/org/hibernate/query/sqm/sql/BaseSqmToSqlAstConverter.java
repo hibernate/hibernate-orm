@@ -5201,11 +5201,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					}
 				}
 			}
-
-			return basicTypeForJavaType;
+			if(basicTypeForJavaType != null) {
+				return basicTypeForJavaType;
+			}
 		}
-
-		throw new ConversionException( "Could not determine ValueMapping for SqmParameter: " + sqmParameter );
+		if ( inferrableTypeAccessStack.isEmpty() ) {
+			throw new ConversionException( "Could not determine ValueMapping for SqmParameter: " + sqmParameter );
+		}
+		return inferrableTypeAccessStack.getCurrent().get();
 	}
 
 	private MappingModelExpressible<?> resolveInferredValueMappingForParameter(MappingModelExpressible<?> inferredValueMapping) {
@@ -6681,7 +6684,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public NullnessPredicate visitIsNullPredicate(SqmNullnessPredicate predicate) {
 		return new NullnessPredicate(
-				(Expression) predicate.getExpression().accept( this ),
+				(Expression) visitWithInferredType( predicate.getExpression(), () -> basicType( Object.class )),
 				predicate.isNegated(),
 				getBooleanType()
 		);

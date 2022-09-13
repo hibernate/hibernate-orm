@@ -5181,13 +5181,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		if ( paramSqmType instanceof SqmPathSource<?> || paramSqmType instanceof BasicDomainType<?> ) {
 			// Try to infer the value mapping since the other side apparently is a path source
-			final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
-			if ( inferredValueMapping != null ) {
-				return resolveInferredValueMappingForParameter( inferredValueMapping );
+			final MappingModelExpressible<?> inferredMapping = resolveInferredType();
+			if ( inferredMapping != null ) {
+				if ( inferredMapping instanceof PluralAttributeMapping ) {
+					return resolveInferredValueMappingForParameter( ( (PluralAttributeMapping) inferredMapping ).getElementDescriptor() );
+				}
+				else if ( !( inferredMapping instanceof JavaObjectType ) ) {
+					// Do not report back the "object type" as inferred type and instead try to rely on the paramSqmType.getExpressibleJavaType()
+					return resolveInferredValueMappingForParameter( inferredMapping );
+				}
 			}
 
+			final Class<?> parameterJavaType = paramSqmType.getExpressibleJavaType().getJavaTypeClass();
+
 			final BasicType<?> basicTypeForJavaType = getTypeConfiguration().getBasicTypeForJavaType(
-					paramSqmType.getExpressibleJavaType().getJavaTypeClass()
+					parameterJavaType
 			);
 
 			if ( basicTypeForJavaType == null ) {
@@ -5200,11 +5208,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						return resolveEntityPersister( (EntityDomainType<?>) type );
 					}
 				}
+				else if ( parameterJavaType.isEnum() ) {
+					//inferredMapping is JavaObjectType and we cannot deduct the t
+					if ( inferredMapping != null ) {
+						return inferredMapping;
+					}
+				}
 			}
-
 			return basicTypeForJavaType;
 		}
-
 		throw new ConversionException( "Could not determine ValueMapping for SqmParameter: " + sqmParameter );
 	}
 
@@ -6681,7 +6693,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public NullnessPredicate visitIsNullPredicate(SqmNullnessPredicate predicate) {
 		return new NullnessPredicate(
-				(Expression) predicate.getExpression().accept( this ),
+				(Expression) visitWithInferredType( predicate.getExpression(), () -> basicType( Object.class )),
 				predicate.isNegated(),
 				getBooleanType()
 		);

@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.sequence.MariaDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -18,6 +19,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
@@ -26,6 +28,13 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMariaDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+
+import static org.hibernate.type.SqlTypes.OTHER;
+import static org.hibernate.type.SqlTypes.UUID;
 
 /**
  * A {@linkplain Dialect SQL dialect} for MariaDB
@@ -78,6 +87,44 @@ public class MariaDBDialect extends MySQLDialect {
 						.resolve( StandardBasicTypes.BOOLEAN )
 		);
 		commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
+	}
+
+	@Override
+	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.registerColumnTypes( typeContributions, serviceRegistry );
+		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+		if ( getVersion().isSameOrAfter( 10, 7 ) ) {
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
+		}
+	}
+
+	@Override
+	public JdbcType resolveSqlTypeDescriptor(
+			String columnTypeName,
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			JdbcTypeRegistry jdbcTypeRegistry) {
+		switch ( jdbcTypeCode ) {
+			case OTHER:
+				switch ( columnTypeName ) {
+					case "uuid":
+						jdbcTypeCode = UUID;
+						break;
+				}
+				break;
+		}
+		return super.resolveSqlTypeDescriptor( columnTypeName, jdbcTypeCode, precision, scale, jdbcTypeRegistry );
+	}
+
+	@Override
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+				.getJdbcTypeRegistry();
+		if ( getVersion().isSameOrAfter( 10, 7 ) ) {
+			jdbcTypeRegistry.addDescriptorIfAbsent( VarcharUUIDJdbcType.INSTANCE );
+		}
 	}
 
 	@Override

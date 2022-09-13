@@ -125,7 +125,7 @@ stage('Build') {
 									break;
 								case "mariadb":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mariadb:10.5.8').pull()
+										docker.image('mariadb:10.7.5').pull()
 									}
 									sh "./docker_db.sh mariadb"
 									state[buildEnv.tag]['containerName'] = "mariadb"
@@ -148,7 +148,7 @@ stage('Build') {
 									break;
 								case "oracle":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('quillbuilduser/oracle-18-xe').pull()
+										docker.image('gvenzl/oracle-xe:18.4.0-full').pull()
 									}
 									sh "./docker_db.sh oracle_18"
 									state[buildEnv.tag]['containerName'] = "oracle"

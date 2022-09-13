@@ -380,12 +380,14 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.SerializableType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.TemporalJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserVersionType;
 import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
@@ -5201,11 +5203,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					}
 				}
 			}
-
-			return basicTypeForJavaType;
+			if ( basicTypeForJavaType != null ) {
+				return basicTypeForJavaType;
+			}
 		}
 
-		throw new ConversionException( "Could not determine ValueMapping for SqmParameter: " + sqmParameter );
+		log.warn( "Cannot determine the ValueMapping for SqmParameter:" + sqmParameter  + ", forcing ValueMapping to JavaObjectType");
+		return new JavaObjectType();
 	}
 
 	private MappingModelExpressible<?> resolveInferredValueMappingForParameter(MappingModelExpressible<?> inferredValueMapping) {

@@ -348,6 +348,11 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
+	public <T> T getReference(T object) {
+		return lazySession.get().getReference( object );
+	}
+
+	@Override
 	public IdentifierLoadAccess byId(String entityName) {
 		return lazySession.get().byId( entityName );
 	}

@@ -13,7 +13,9 @@ import java.util.GregorianCalendar;
 
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.cache.internal.CacheKeyValueDescriptor;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.compare.CalendarComparator;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -27,6 +29,18 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class CalendarTimeJavaType extends AbstractTemporalJavaType<Calendar> {
 	public static final CalendarTimeJavaType INSTANCE = new CalendarTimeJavaType();
+
+	private static final CacheKeyValueDescriptor CACHE_KEY_VALUE_DESCRIPTOR = new CacheKeyValueDescriptor() {
+		@Override
+		public int getHashCode(Object key) {
+			return INSTANCE.extractHashCode( (Calendar) key );
+		}
+
+		@Override
+		public boolean isEqual(Object key1, Object key2) {
+			return INSTANCE.areEqual( (Calendar) key1, (Calendar) key2 );
+		}
+	};
 
 	protected CalendarTimeJavaType() {
 		super( Calendar.class, CalendarJavaType.CalendarMutabilityPlan.INSTANCE, CalendarComparator.INSTANCE );
@@ -91,6 +105,11 @@ public class CalendarTimeJavaType extends AbstractTemporalJavaType<Calendar> {
 		hashCode = 31 * hashCode + value.get(Calendar.MONTH);
 		hashCode = 31 * hashCode + value.get(Calendar.YEAR);
 		return hashCode;
+	}
+
+	@Override
+	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
+		return CACHE_KEY_VALUE_DESCRIPTOR;
 	}
 
 	@SuppressWarnings("unchecked")

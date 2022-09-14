@@ -16,6 +16,8 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cache.internal.CacheKeyValueDescriptor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -43,6 +45,18 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 	 */
 	@SuppressWarnings("unused")
 	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
+
+	private static final CacheKeyValueDescriptor CACHE_KEY_VALUE_DESCRIPTOR = new CacheKeyValueDescriptor() {
+		@Override
+		public int getHashCode(Object key) {
+			return INSTANCE.extractHashCode( (Date) key );
+		}
+
+		@Override
+		public boolean isEqual(Object key1, Object key2) {
+			return INSTANCE.areEqual( (Date) key1, (Date) key2 );
+		}
+	};
 
 	public JdbcDateJavaType() {
 		super( java.sql.Date.class, DateMutabilityPlan.INSTANCE );
@@ -93,6 +107,11 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 		hashCode = 31 * hashCode + calendar.get( Calendar.DAY_OF_MONTH );
 		hashCode = 31 * hashCode + calendar.get( Calendar.YEAR );
 		return hashCode;
+	}
+
+	@Override
+	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
+		return CACHE_KEY_VALUE_DESCRIPTOR;
 	}
 
 	@Override

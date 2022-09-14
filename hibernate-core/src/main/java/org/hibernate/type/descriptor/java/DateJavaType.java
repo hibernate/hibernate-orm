@@ -17,7 +17,9 @@ import java.util.GregorianCalendar;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cache.internal.CacheKeyValueDescriptor;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -40,6 +42,18 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 			return new Date( value.getTime() );
 		}
 	}
+
+	private static final CacheKeyValueDescriptor CACHE_KEY_VALUE_DESCRIPTOR = new CacheKeyValueDescriptor() {
+		@Override
+		public int getHashCode(Object key) {
+			return INSTANCE.extractHashCode( (Date) key );
+		}
+
+		@Override
+		public boolean isEqual(Object key1, Object key2) {
+			return INSTANCE.areEqual( (Date) key1, (Date) key2 );
+		}
+	};
 
 	public DateJavaType() {
 		super( Date.class, DateMutabilityPlan.INSTANCE );
@@ -106,6 +120,11 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime( value );
 		return CalendarJavaType.INSTANCE.extractHashCode( calendar );
+	}
+
+	@Override
+	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
+		return CACHE_KEY_VALUE_DESCRIPTOR;
 	}
 
 	@SuppressWarnings("unchecked")

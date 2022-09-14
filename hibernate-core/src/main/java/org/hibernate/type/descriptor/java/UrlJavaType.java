@@ -10,6 +10,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cache.internal.CacheKeyValueDescriptor;
+import org.hibernate.cache.internal.DefaultCacheKeyValueDescriptor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -64,5 +67,10 @@ public class UrlJavaType extends AbstractClassJavaType<URL> {
 			return fromString( (CharSequence) value );
 		}
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
+		return DefaultCacheKeyValueDescriptor.INSTANCE;
 	}
 }

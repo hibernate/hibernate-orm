@@ -9,7 +9,10 @@ package org.hibernate.type.descriptor.java;
 import java.sql.Types;
 import jakarta.persistence.EnumType;
 
+import org.hibernate.cache.internal.CacheKeyValueDescriptor;
+import org.hibernate.cache.internal.DefaultCacheKeyValueDescriptor;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -218,5 +221,10 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 	@Override
 	public String getCheckCondition(String columnName, JdbcType jdbcType, Dialect dialect) {
 		return dialect.getEnumCheckCondition( columnName, jdbcType.getJdbcTypeCode(), getJavaTypeClass() );
+	}
+
+	@Override
+	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
+		return DefaultCacheKeyValueDescriptor.INSTANCE;
 	}
 }

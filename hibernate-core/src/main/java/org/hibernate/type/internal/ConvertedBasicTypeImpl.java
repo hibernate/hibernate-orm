@@ -19,6 +19,8 @@ import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.cache.internal.CacheKeyValueDescriptor;
+import org.hibernate.cache.internal.JavaTypeCacheKeyValueDescriptor;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -58,6 +60,8 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 	private final ValueBinder<J> jdbcValueBinder;
 	private final ValueExtractor<J> jdbcValueExtractor;
 	private final JdbcLiteralFormatter<J> jdbcLiteralFormatter;
+
+	private JavaTypeCacheKeyValueDescriptor cacheKeyValueDescriptor;
 
 	public ConvertedBasicTypeImpl(
 			String name,
@@ -415,5 +419,13 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 	@Override
 	public String toString() {
 		return description;
+	}
+
+	@Override
+	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
+		if ( cacheKeyValueDescriptor == null ) {
+			cacheKeyValueDescriptor = new JavaTypeCacheKeyValueDescriptor( converter.getDomainJavaType() );
+		}
+		return cacheKeyValueDescriptor;
 	}
 }

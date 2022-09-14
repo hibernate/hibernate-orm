@@ -60,18 +60,12 @@ import org.hibernate.type.spi.TypeConfiguration;
  * Base support for EmbeddableMappingType implementations
  */
 public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType {
-	protected final SessionFactoryImplementor sessionFactory;
 
 	public AbstractEmbeddableMapping(MappingModelCreationProcess creationProcess) {
 		this( creationProcess.getCreationContext() );
 	}
 
 	public AbstractEmbeddableMapping(RuntimeModelCreationContext creationContext) {
-		this( creationContext.getSessionFactory() );
-	}
-
-	protected AbstractEmbeddableMapping(SessionFactoryImplementor sessionFactory) {
-		this.sessionFactory = sessionFactory;
 	}
 
 	@Override

@@ -17,6 +17,8 @@ import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.cache.internal.CacheKeyValueDescriptor;
+import org.hibernate.cache.internal.JavaTypeCacheKeyValueDescriptor;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -57,6 +59,8 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 	private ValueBinder<T> jdbcValueBinder;
 	private ValueExtractor<T> jdbcValueExtractor;
 	private JdbcLiteralFormatter<T> jdbcLiteralFormatter;
+
+	private JavaTypeCacheKeyValueDescriptor cacheKeyValueDescriptor;
 
 	public SerializableToBlobType() {
 		this.jdbcType = BlobJdbcType.DEFAULT;
@@ -382,4 +386,11 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 		return true;
 	}
 
+	@Override
+	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
+		if ( cacheKeyValueDescriptor == null ) {
+			cacheKeyValueDescriptor = new JavaTypeCacheKeyValueDescriptor( javaType );
+		}
+		return cacheKeyValueDescriptor;
+	}
 }

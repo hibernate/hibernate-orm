@@ -15,6 +15,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.cache.internal.CacheKeyValueDescriptor;
+import org.hibernate.cache.internal.DefaultCacheKeyValueDescriptor;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -432,10 +433,6 @@ public interface Type extends Serializable {
 	boolean[] toColumnNullness(Object value, Mapping mapping);
 
 	default CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		if ( this instanceof CacheKeyValueDescriptor ) {
-			return (CacheKeyValueDescriptor) this;
-		}
-
-		throw new HibernateException( "Type does not support use as a cache-key" );
+		return DefaultCacheKeyValueDescriptor.INSTANCE;
 	}
 }

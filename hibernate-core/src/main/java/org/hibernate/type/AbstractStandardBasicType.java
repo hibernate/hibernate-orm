@@ -18,6 +18,8 @@ import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.cache.internal.CacheKeyValueDescriptor;
+import org.hibernate.cache.internal.JavaTypeCacheKeyValueDescriptor;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -46,6 +48,8 @@ public abstract class AbstractStandardBasicType<T>
 	private final ValueBinder<T> jdbcValueBinder;
 	private final ValueExtractor<T> jdbcValueExtractor;
 	private final JdbcLiteralFormatter<T> jdbcLiteralFormatter;
+
+	private JavaTypeCacheKeyValueDescriptor cacheKeyValueDescriptor;
 
 	public AbstractStandardBasicType(JdbcType jdbcType, JavaType<T> javaType) {
 		this.jdbcType = jdbcType;
@@ -369,5 +373,13 @@ public abstract class AbstractStandardBasicType<T>
 				break;
 		}
 		return jdbcType.getCastType();
+	}
+
+	@Override
+	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
+		if ( cacheKeyValueDescriptor == null ) {
+			cacheKeyValueDescriptor = new JavaTypeCacheKeyValueDescriptor( javaType );
+		}
+		return cacheKeyValueDescriptor;
 	}
 }

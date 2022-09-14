@@ -84,7 +84,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		this.idMapping = idMapping;
 		this.virtualIdEmbeddable = virtualIdEmbeddable;
 
-		this.javaType = sessionFactory.getTypeConfiguration()
+		this.javaType = creationProcess.getCreationContext().getSessionFactory().getTypeConfiguration()
 				.getJavaTypeRegistry()
 				.resolveManagedTypeDescriptor( idClassSource.getComponentClass() );
 
@@ -176,7 +176,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
 		final Object id = representationStrategy.getInstantiator().instantiate(
 				null,
-				sessionFactory
+				session.getSessionFactory()
 		);
 
 		final List<AttributeMapping> virtualIdAttribute = virtualIdEmbeddable.getAttributeMappings();

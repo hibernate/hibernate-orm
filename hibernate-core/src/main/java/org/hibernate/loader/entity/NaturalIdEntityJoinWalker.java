@@ -46,11 +46,34 @@ public class NaturalIdEntityJoinWalker extends EntityJoinWalker {
 			LockOptions lockOptions,
 			SessionFactoryImplementor factory,
 			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
-		super(persister, naturalIdColumns( persister, valueNullness ), batchSize, lockOptions, factory, loadQueryInfluencers);
-		StringBuilder sql = new StringBuilder( getSQLString() );
+		super(
+				persister,
+				naturalIdColumns( persister, valueNullness ),
+				batchSize,
+				lockOptions,
+				valueNullness,
+				factory,
+				loadQueryInfluencers
+		);
+	}
+
+	@Override
+	protected StringBuilder whereString(String alias, String[] columnNames, boolean[] valueNullness, int batchSize) {
+		StringBuilder builder = super.whereString( alias, columnNames, batchSize );
+		String sql = builder.toString();
+		appendNullValues( valueNullness, builder, sql.isEmpty() );
+		return builder;
+	}
+
+	private void appendNullValues(boolean[] valueNullness, StringBuilder whereString, boolean isFirst) {
 		for ( String nullCol : naturalIdColumns( getPersister(), negate( valueNullness ) ) ) {
-			sql.append(" and ").append( getAlias() ).append('.').append( nullCol ).append(" is null");
+			if ( isFirst ) {
+				whereString.append( getAlias() ).append( '.' ).append( nullCol ).append( " is null" );
+				isFirst = false;
+			}
+			else {
+				whereString.append( " and " ).append( getAlias() ).append( '.' ).append( nullCol ).append( " is null" );
+			}
 		}
-		setSql( sql.toString() );
 	}
 }

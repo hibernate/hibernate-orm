@@ -21,7 +21,9 @@ import java.util.GregorianCalendar;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cache.internal.CacheKeyValueDescriptor;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -49,6 +51,18 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 	@SuppressWarnings("unused")
 	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ofPattern( TIMESTAMP_FORMAT )
 			.withZone( ZoneId.from( ZoneOffset.UTC ) );
+
+	private static final CacheKeyValueDescriptor CACHE_KEY_VALUE_DESCRIPTOR = new CacheKeyValueDescriptor() {
+		@Override
+		public int getHashCode(Object key) {
+			return INSTANCE.extractHashCode( (Date) key );
+		}
+
+		@Override
+		public boolean isEqual(Object key1, Object key2) {
+			return INSTANCE.areEqual( (Date) key1, (Date) key2 );
+		}
+	};
 
 	public JdbcTimestampJavaType() {
 		super( Timestamp.class, TimestampMutabilityPlan.INSTANCE );
@@ -102,6 +116,11 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 	@Override
 	public int extractHashCode(Date value) {
 		return Long.valueOf( value.getTime() / 1000 ).hashCode();
+	}
+
+	@Override
+	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
+		return CACHE_KEY_VALUE_DESCRIPTOR;
 	}
 
 	@Override

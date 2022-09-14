@@ -8,6 +8,8 @@ package org.hibernate.type.internal;
 
 import java.util.Locale;
 
+import org.hibernate.cache.internal.CacheKeyValueDescriptor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.AdjustableBasicType;
@@ -24,6 +26,8 @@ public class BasicTypeImpl<J> extends AbstractSingleColumnStandardBasicType<J> i
 	private static int count;
 
 	private final String name;
+
+	private transient CacheKeyValueDescriptor cacheKeyValueDescriptor;
 
 	public BasicTypeImpl(JavaType<J> jtd, JdbcType std) {
 		super( std, jtd );
@@ -69,5 +73,14 @@ public class BasicTypeImpl<J> extends AbstractSingleColumnStandardBasicType<J> i
 	@Override
 	public String toString() {
 		return name;
+	}
+
+	@Override
+	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
+		CacheKeyValueDescriptor cacheKeyValueDescriptor = this.cacheKeyValueDescriptor;
+		if ( cacheKeyValueDescriptor == null ) {
+			this.cacheKeyValueDescriptor = cacheKeyValueDescriptor = getMappedJavaType().toCacheKeyDescriptor( sessionFactory );
+		}
+		return cacheKeyValueDescriptor;
 	}
 }

@@ -9,7 +9,10 @@ package org.hibernate.type.descriptor.java;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import org.hibernate.cache.internal.CacheKeyValueDescriptor;
+import org.hibernate.cache.internal.DefaultCacheKeyValueDescriptor;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -96,6 +99,11 @@ public class InetAddressJavaType extends AbstractClassJavaType<InetAddress> {
 	@Override
 	public long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
 		return 19;
+	}
+
+	@Override
+	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
+		return DefaultCacheKeyValueDescriptor.INSTANCE;
 	}
 
 }

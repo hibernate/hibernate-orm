@@ -9,7 +9,10 @@ package org.hibernate.type.descriptor.java;
 import java.io.Serializable;
 import java.util.UUID;
 
+import org.hibernate.cache.internal.CacheKeyValueDescriptor;
+import org.hibernate.cache.internal.DefaultCacheKeyValueDescriptor;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.BytesHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -154,5 +157,10 @@ public class UUIDJavaType extends AbstractClassJavaType<UUID> {
 			byte[] bytea = (byte[]) value;
 			return new UUID( BytesHelper.asLong( bytea, 0 ), BytesHelper.asLong( bytea, 8 ) );
 		}
+	}
+
+	@Override
+	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
+		return DefaultCacheKeyValueDescriptor.INSTANCE;
 	}
 }

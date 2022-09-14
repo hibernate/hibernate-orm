@@ -6,6 +6,9 @@
  */
 package org.hibernate.type.descriptor.java.spi;
 
+import org.hibernate.cache.internal.CacheKeyValueDescriptor;
+import org.hibernate.cache.internal.DefaultCacheKeyValueDescriptor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -58,6 +61,11 @@ public class JavaTypeBasicAdaptor<T> extends AbstractClassJavaType<T> {
 		throw new UnsupportedOperationException(
 				"Wrap strategy not known for this Java type : " + getJavaType().getTypeName()
 		);
+	}
+
+	@Override
+	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
+		return DefaultCacheKeyValueDescriptor.INSTANCE;
 	}
 
 	@Override

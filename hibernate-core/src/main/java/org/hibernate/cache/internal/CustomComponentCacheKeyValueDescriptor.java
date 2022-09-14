@@ -6,20 +6,15 @@
  */
 package org.hibernate.cache.internal;
 
-import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.usertype.CompositeUserType;
 
 /**
  * CacheKeyValueDescriptor used to describe CompositeUserType mappings
  */
 public class CustomComponentCacheKeyValueDescriptor implements CacheKeyValueDescriptor {
-	private final NavigableRole role;
 	private final CompositeUserType<Object> compositeUserType;
 
-	public CustomComponentCacheKeyValueDescriptor(
-			NavigableRole role,
-			CompositeUserType<Object> compositeUserType) {
-		this.role = role;
+	public CustomComponentCacheKeyValueDescriptor(CompositeUserType<Object> compositeUserType) {
 		this.compositeUserType = compositeUserType;
 	}
 
@@ -33,8 +28,4 @@ public class CustomComponentCacheKeyValueDescriptor implements CacheKeyValueDesc
 		return compositeUserType.equals( key1, key2 );
 	}
 
-	@Override
-	public String toString() {
-		return "CustomComponentCacheKeyValueDescriptor(" + role + ")";
-	}
 }

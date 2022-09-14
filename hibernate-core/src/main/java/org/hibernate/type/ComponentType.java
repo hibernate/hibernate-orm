@@ -67,7 +67,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	private final CompositeUserType<Object> compositeUserType;
 
 	private EmbeddableValuedModelPart mappingModelPart;
-	private CacheKeyValueDescriptor cacheKeyValueDescriptor;
+	private transient CacheKeyValueDescriptor cacheKeyValueDescriptor;
 
 	public ComponentType(Component component, int[] originalPropertyOrder, MetadataBuildingContext buildingContext) {
 		this.componentClass = component.isDynamic()
@@ -705,19 +705,15 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 
 	@Override
 	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
+		CacheKeyValueDescriptor cacheKeyValueDescriptor = this.cacheKeyValueDescriptor;
 		if ( cacheKeyValueDescriptor == null ) {
 			if ( compositeUserType != null ) {
-				cacheKeyValueDescriptor = new CustomComponentCacheKeyValueDescriptor(
-						mappingModelPart.getNavigableRole(),
-						compositeUserType
-				);
+				cacheKeyValueDescriptor = new CustomComponentCacheKeyValueDescriptor( compositeUserType );
 			}
 			else {
-				cacheKeyValueDescriptor = new ComponentCacheKeyValueDescriptor(
-						mappingModelPart.getNavigableRole(),
-						sessionFactory
-				);
+				cacheKeyValueDescriptor = new ComponentCacheKeyValueDescriptor( mappingModelPart, sessionFactory );
 			}
+			this.cacheKeyValueDescriptor = cacheKeyValueDescriptor;
 		}
 
 		return cacheKeyValueDescriptor;

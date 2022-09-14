@@ -20,14 +20,17 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @see CustomComponentCacheKeyValueDescriptor
  */
 public class ComponentCacheKeyValueDescriptor implements CacheKeyValueDescriptor {
-	private final NavigableRole role;
+	private final String role;
 	private final SessionFactoryImplementor sessionFactory;
 
 	private transient EmbeddableValuedModelPart embeddedMapping;
 
-	public ComponentCacheKeyValueDescriptor(NavigableRole role, SessionFactoryImplementor sessionFactory) {
-		this.role = role;
+	public ComponentCacheKeyValueDescriptor(
+			EmbeddableValuedModelPart embeddedMapping,
+			SessionFactoryImplementor sessionFactory) {
+		this.role = embeddedMapping.getNavigableRole().getFullPath();
 		this.sessionFactory = sessionFactory;
+		this.embeddedMapping = embeddedMapping;
 	}
 
 	@Override
@@ -82,10 +85,12 @@ public class ComponentCacheKeyValueDescriptor implements CacheKeyValueDescriptor
 		}
 	}
 
-
 	private EmbeddableValuedModelPart getEmbeddedMapping() {
+		EmbeddableValuedModelPart embeddedMapping = this.embeddedMapping;
 		if ( embeddedMapping == null ) {
-			embeddedMapping = sessionFactory.getRuntimeMetamodels().getEmbedded( role );
+			this.embeddedMapping = embeddedMapping = sessionFactory.getRuntimeMetamodels().getEmbedded(
+					new NavigableRole( role )
+			);
 		}
 		return embeddedMapping;
 	}

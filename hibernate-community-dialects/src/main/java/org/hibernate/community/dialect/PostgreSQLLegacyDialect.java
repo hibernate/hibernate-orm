@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import java.sql.CallableStatement;
 import java.sql.DatabaseMetaData;
@@ -14,20 +14,35 @@ import java.sql.Types;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
-import jakarta.persistence.TemporalType;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.community.dialect.sequence.PostgreSQLLegacySequenceSupport;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.NationalizationSupport;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDriverKind;
+import org.hibernate.dialect.PostgreSQLInetJdbcType;
+import org.hibernate.dialect.PostgreSQLIntervalSecondJdbcType;
+import org.hibernate.dialect.PostgreSQLJsonbJdbcType;
+import org.hibernate.dialect.PostgreSQLPGObjectJdbcType;
+import org.hibernate.dialect.Replacer;
+import org.hibernate.dialect.RowLockStrategy;
+import org.hibernate.dialect.SelectItemReferenceStrategy;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.PostgreSQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -80,6 +95,8 @@ import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import jakarta.persistence.TemporalType;
+
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
@@ -91,8 +108,8 @@ import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.CLOB;
-import static org.hibernate.type.SqlTypes.GEOGRAPHY;
 import static org.hibernate.type.SqlTypes.FLOAT;
+import static org.hibernate.type.SqlTypes.GEOGRAPHY;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INET;
 import static org.hibernate.type.SqlTypes.JSON;
@@ -119,34 +136,29 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  *
  * @author Gavin King
  */
-public class PostgreSQLDialect extends Dialect {
-	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10 );
+public class PostgreSQLLegacyDialect extends Dialect {
+
 	private static final PostgreSQLIdentityColumnSupport IDENTITY_COLUMN_SUPPORT = new PostgreSQLIdentityColumnSupport();
 
 	private final PostgreSQLDriverKind driverKind;
 
-	public PostgreSQLDialect() {
-		this( MINIMUM_VERSION );
+	public PostgreSQLLegacyDialect() {
+		this( DatabaseVersion.make( 8, 0 ) );
 	}
 
-	public PostgreSQLDialect(DialectResolutionInfo info) {
+	public PostgreSQLLegacyDialect(DialectResolutionInfo info) {
 		super(info);
 		driverKind = PostgreSQLDriverKind.determineKind( info );
 	}
 
-	public PostgreSQLDialect(DatabaseVersion version) {
+	public PostgreSQLLegacyDialect(DatabaseVersion version) {
 		super(version);
 		driverKind = PostgreSQLDriverKind.PG_JDBC;
 	}
 
-	public PostgreSQLDialect(DatabaseVersion version, PostgreSQLDriverKind driverKind) {
+	public PostgreSQLLegacyDialect(DatabaseVersion version, PostgreSQLDriverKind driverKind) {
 		super(version);
 		this.driverKind = driverKind;
-	}
-
-	@Override
-	protected DatabaseVersion getMinimumSupportedVersion() {
-		return MINIMUM_VERSION;
 	}
 
 	@Override
@@ -224,7 +236,9 @@ public class PostgreSQLDialect extends Dialect {
 		);
 
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( SQLXML, "xml", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
+		if ( getVersion().isSameOrAfter( 8, 2 ) ) {
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
+		}
 		if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
 			// The following DDL types require that the PGobject class is usable/visible
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
@@ -232,8 +246,15 @@ public class PostgreSQLDialect extends Dialect {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
 			ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
 
-			// Prefer jsonb if possible
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
+			if ( getVersion().isSameOrAfter( 9, 2 ) ) {
+				// Prefer jsonb if possible
+				if ( getVersion().isSameOrAfter( 9, 4 ) ) {
+					ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
+				}
+				else {
+					ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+				}
+			}
 		}
 	}
 
@@ -538,10 +559,12 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.windowFunctions();
 		functionFactory.listagg_stringAgg( "varchar" );
 
-		functionFactory.makeDateTimeTimestamp();
-		// Note that PostgreSQL doesn't support the OVER clause for ordered set-aggregate functions
-		functionFactory.inverseDistributionOrderedSetAggregates();
-		functionFactory.hypotheticalOrderedSetAggregates();
+		if ( getVersion().isSameOrAfter( 9, 4 ) ) {
+			functionFactory.makeDateTimeTimestamp();
+			// Note that PostgreSQL doesn't support the OVER clause for ordered set-aggregate functions
+			functionFactory.inverseDistributionOrderedSetAggregates();
+			functionFactory.hypotheticalOrderedSetAggregates();
+		}
 	}
 
 	@Override
@@ -563,37 +586,39 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsIfExistsBeforeTableName() {
-		return true;
+		return getVersion().isSameOrAfter( 8, 2 );
 	}
 
 	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
-		return true;
+		return getVersion().isSameOrAfter( 9 );
 	}
 
 	@Override
 	public boolean supportsIfExistsAfterAlterTable() {
-		return true;
+		return getVersion().isSameOrAfter( 9, 2 );
 	}
 
 	@Override
 	public boolean supportsValuesList() {
-		return true;
+		return getVersion().isSameOrAfter( 8, 2 );
 	}
 
 	@Override
 	public boolean supportsPartitionBy() {
-		return true;
+		return getVersion().isSameOrAfter( 9, 1 );
 	}
 
 	@Override
 	public boolean supportsNonQueryWithCTE() {
-		return true;
+		return getVersion().isSameOrAfter( 9, 1 );
 	}
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return PostgreSQLSequenceSupport.INSTANCE;
+		return getVersion().isBefore( 8, 2 )
+				? PostgreSQLLegacySequenceSupport.LEGACY_INSTANCE
+				: PostgreSQLSequenceSupport.INSTANCE;
 	}
 
 	@Override
@@ -608,7 +633,9 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return OffsetFetchLimitHandler.INSTANCE;
+		return getVersion().isBefore( 8, 4 )
+				? LimitOffsetLimitHandler.INSTANCE
+				: OffsetFetchLimitHandler.INSTANCE;
 	}
 
 	@Override
@@ -623,9 +650,12 @@ public class PostgreSQLDialect extends Dialect {
 		 */
 		if ( aliases.isEmpty() ) {
 			LockMode lockMode = lockOptions.getLockMode();
-			for ( Map.Entry<String, LockMode> entry : lockOptions.getAliasSpecificLocks() ) {
+			final Iterator<Map.Entry<String, LockMode>> itr = lockOptions.getAliasLockIterator();
+			while ( itr.hasNext() ) {
 				// seek the highest lock mode
-				if ( entry.getValue().greaterThan(lockMode) ) {
+				final Map.Entry<String, LockMode> entry = itr.next();
+				final LockMode lm = entry.getValue();
+				if ( lm.greaterThan( lockMode ) ) {
 					aliases = entry.getKey();
 				}
 			}
@@ -757,7 +787,7 @@ public class PostgreSQLDialect extends Dialect {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new PostgreSQLSqlAstTranslator<>( sessionFactory, statement );
+				return new PostgreSQLLegacySqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
 	}
@@ -769,7 +799,7 @@ public class PostgreSQLDialect extends Dialect {
 
 	/**
 	 * Constraint-name extractor for Postgres constraint violation exceptions.
-	 * Originally contributed by Denny Bartelt.
+	 * Orginally contributed by Denny Bartelt.
 	 */
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
@@ -1073,7 +1103,7 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsNoWait() {
-		return true;
+		return getVersion().isSameOrAfter( 8, 1 );
 	}
 
 	@Override
@@ -1083,7 +1113,7 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return true;
+		return getVersion().isSameOrAfter( 9, 5 );
 	}
 
 	@Override
@@ -1098,14 +1128,14 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsLateral() {
-		return true;
+		return getVersion().isSameOrAfter( 9, 3 );
 	}
 
 	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
 		switch ( type ) {
 			case ROWS_ONLY:
-				return true;
+				return getVersion().isSameOrAfter( 8, 4 );
 			case PERCENT_ONLY:
 			case PERCENT_WITH_TIES:
 				return false;
@@ -1123,12 +1153,16 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public void augmentRecognizedTableTypes(List<String> tableTypesList) {
 		super.augmentRecognizedTableTypes( tableTypesList );
-		tableTypesList.add( "MATERIALIZED VIEW" );
+		if ( getVersion().isSameOrAfter( 9, 3 ) ) {
+			tableTypesList.add( "MATERIALIZED VIEW" );
 
-		/*
-			PostgreSQL 10 and later adds support for Partition table.
-		 */
-		tableTypesList.add( "PARTITIONED TABLE" );
+			/*
+			 	PostgreSQL 10 and later adds support for Partition table.
+			 */
+			if ( getVersion().isSameOrAfter( 10 ) ) {
+				tableTypesList.add( "PARTITIONED TABLE" );
+			}
+		}
 	}
 
 	@Override
@@ -1156,10 +1190,14 @@ public class PostgreSQLDialect extends Dialect {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
 			}
 
-			// HHH-9562
-			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
-			if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonbJdbcType.INSTANCE );
+			if ( getVersion().isSameOrAfter( 8, 2 ) ) {
+				// HHH-9562
+				jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
+				if ( getVersion().isSameOrAfter( 9, 2 ) ) {
+					if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
+						jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonbJdbcType.INSTANCE );
+					}
+				}
 			}
 		}
 

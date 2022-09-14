@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class PostgreSQLLockTimeoutTest extends BaseUnitTestCase {
 
-	private final Dialect dialect = new PostgreSQLDialect( DatabaseVersion.make( 9, 5 ) );
+	private final Dialect dialect = new PostgreSQLDialect();
 
 	@Test
 	public void testLockTimeoutNoAliasNoTimeout() {

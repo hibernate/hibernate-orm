@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Vlad Mihalcea
  */
 @TestForIssue(jiraKey = "HHH-12973")
-@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 8, minorVersion = 2)
+@RequiresDialect(value = PostgreSQLDialect.class)
 public class PostgreSQLSequenceGeneratorWithSerialTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Rule

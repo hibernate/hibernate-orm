@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Vlad Mhalcea
  */
 @TestForIssue(jiraKey = "HHH-13106")
-@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 10)
+@RequiresDialect(value = PostgreSQLDialect.class)
 @Jpa(
 		annotatedClasses = PostgreSQLIdentitySequenceTest.Role.class
 )

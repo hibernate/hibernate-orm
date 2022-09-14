@@ -14,7 +14,7 @@ import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
-@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 8)
+@RequiresDialect(value = PostgreSQLDialect.class)
 @Jpa(
 		annotatedClasses = {
 				BaseSchemaGeneratorTest.Person.class,

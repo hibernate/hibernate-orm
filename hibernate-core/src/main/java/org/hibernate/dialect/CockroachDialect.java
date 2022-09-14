@@ -7,6 +7,7 @@
 package org.hibernate.dialect;
 
 import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.TemporalAccessor;
@@ -15,6 +16,8 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import jakarta.persistence.TemporalType;
 
@@ -35,6 +38,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.spi.QueryEngine;
@@ -63,6 +67,8 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+
+import org.jboss.logging.Logger;
 
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
@@ -98,9 +104,13 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  */
 public class CockroachDialect extends Dialect {
 
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, CockroachDialect.class.getName() );
 	private static final CockroachDBIdentityColumnSupport IDENTITY_COLUMN_SUPPORT = new CockroachDBIdentityColumnSupport();
 	// KNOWN LIMITATIONS:
 	// * no support for java.sql.Clob
+
+	// Pre-compile and reuse pattern
+	private static final Pattern CRDB_VERSION_PATTERN = Pattern.compile( "v[\\d]+(\\.[\\d]+)?(\\.[\\d]+)?" );
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 21, 1 );
 
@@ -111,8 +121,8 @@ public class CockroachDialect extends Dialect {
 	}
 
 	public CockroachDialect(DialectResolutionInfo info) {
-		super(info);
-		driverKind = PostgreSQLDriverKind.determineKind( info );
+		this( fetchDataBaseVersion( info ), PostgreSQLDriverKind.determineKind( info ) );
+		registerKeywords( info );
 	}
 
 	public CockroachDialect(DatabaseVersion version) {
@@ -123,6 +133,46 @@ public class CockroachDialect extends Dialect {
 	public CockroachDialect(DatabaseVersion version, PostgreSQLDriverKind driverKind) {
 		super(version);
 		this.driverKind = driverKind;
+	}
+
+	protected static DatabaseVersion fetchDataBaseVersion( DialectResolutionInfo info ) {
+		String versionString = null;
+		if ( info.getDatabaseMetadata() != null ) {
+			try (java.sql.Statement s = info.getDatabaseMetadata().getConnection().createStatement() ) {
+				final ResultSet rs = s.executeQuery( "SELECT version()" );
+				if ( rs.next() ) {
+					versionString = rs.getString( 1 );
+				}
+			}
+			catch (SQLException ex) {
+				// Ignore
+			}
+		}
+		return parseVersion( versionString );
+	}
+
+	protected static DatabaseVersion parseVersion(String versionString ) {
+		DatabaseVersion databaseVersion = null;
+		// What the DB select returns is similar to "CockroachDB CCL v21.2.10 (x86_64-unknown-linux-gnu, built 2022/05/02 17:38:58, go1.16.6)"
+		Matcher m = CRDB_VERSION_PATTERN.matcher( versionString == null ? "" : versionString );
+		if ( m.find() ) {
+				String[] versionParts = m.group().substring( 1 ).split( "\\." );
+				// if we got to this point, there is at least a major version, so no need to check [].length > 0
+				int majorVersion = Integer.parseInt( versionParts[0] );
+				int minorVersion = versionParts.length > 1 ? Integer.parseInt( versionParts[1] ) : 0;
+				int microVersion = versionParts.length > 2 ? Integer.parseInt( versionParts[2] ) : 0;
+
+				databaseVersion=  new SimpleDatabaseVersion( majorVersion, minorVersion, microVersion);
+		}
+		if ( databaseVersion == null ) {
+			LOG.unableToDetermineCockroachDatabaseVersion(
+					MINIMUM_VERSION.getDatabaseMajorVersion() + "." +
+							MINIMUM_VERSION.getDatabaseMinorVersion() + "." +
+							MINIMUM_VERSION.getDatabaseMicroVersion()
+			);
+			databaseVersion = MINIMUM_VERSION;
+		}
+		return databaseVersion;
 	}
 
 	@Override

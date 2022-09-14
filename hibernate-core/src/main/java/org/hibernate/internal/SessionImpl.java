@@ -2254,6 +2254,19 @@ public class SessionImpl
 		);
 	}
 
+	@Override @SuppressWarnings("unchecked")
+	public <T> T getReference(T object) {
+		checkOpen();
+		if ( object instanceof HibernateProxy ) {
+			LazyInitializer initializer = ( (HibernateProxy) object ).getHibernateLazyInitializer();
+			return (T) getReference( initializer.getPersistentClass(), initializer.getIdentifier() );
+		}
+		else {
+			EntityPersister persister = getEntityPersister( null, object );
+			return (T) getReference( persister.getMappedClass(), persister.getIdentifier(object, this) );
+		}
+	}
+
 	@Override
 	public String guessEntityName(Object object) throws HibernateException {
 		checkOpenOrWaitingForAutoClose();

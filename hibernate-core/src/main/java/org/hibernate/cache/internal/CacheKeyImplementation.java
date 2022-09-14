@@ -50,10 +50,19 @@ public final class CacheKeyImplementation implements Serializable {
 			final String tenantId,
 			final SessionFactoryImplementor factory) {
 		this.id = id;
-		this.cacheKeyValueDescriptor = type.toCacheKeyDescriptor( factory );
 		this.entityOrRoleName = entityOrRoleName;
 		this.tenantId = tenantId;
-		this.hashCode = calculateHashCode( );
+		final CacheKeyValueDescriptor cacheKeyValueDescriptor = type.toCacheKeyDescriptor( factory );
+		// Optimization for the very common case Integer/Long etc. which use the default cache key descriptor
+		// Doing this helps to avoid megamorphic call sites and reduces the cache key serialization size
+		if ( cacheKeyValueDescriptor == DefaultCacheKeyValueDescriptor.INSTANCE ) {
+			this.cacheKeyValueDescriptor = null;
+			this.hashCode = Objects.hashCode( id );
+		}
+		else {
+			this.cacheKeyValueDescriptor = cacheKeyValueDescriptor;
+			this.hashCode = calculateHashCode();
+		}
 	}
 
 	private int calculateHashCode() {
@@ -74,14 +83,23 @@ public final class CacheKeyImplementation implements Serializable {
 		if ( this == other ) {
 			return true;
 		}
-		if ( hashCode != other.hashCode() || !( other instanceof CacheKeyImplementation) ) {
+		if ( hashCode != other.hashCode() || !( other instanceof CacheKeyImplementation ) ) {
 			//hashCode is part of this check since it is pre-calculated and hash must match for equals to be true
 			return false;
 		}
 		final CacheKeyImplementation that = (CacheKeyImplementation) other;
-		return Objects.equals( entityOrRoleName, that.entityOrRoleName )
-				&& cacheKeyValueDescriptor.isEqual( id, that.id )
-				&& Objects.equals( tenantId, that.tenantId );
+		if ( !entityOrRoleName.equals( that.entityOrRoleName ) ) {
+			return false;
+		}
+		if ( cacheKeyValueDescriptor == null ) {
+			if ( !Objects.equals( id, that.id ) ) {
+				return false;
+			}
+		}
+		else if ( !cacheKeyValueDescriptor.isEqual( id, that.id ) ) {
+			return false;
+		}
+		return Objects.equals( tenantId, that.tenantId );
 	}
 
 	@Override

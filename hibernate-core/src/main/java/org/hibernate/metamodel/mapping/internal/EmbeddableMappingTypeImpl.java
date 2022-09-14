@@ -143,7 +143,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		this.embeddableJtd = representationStrategy.getMappedJavaType();
 		this.valueMapping = embeddedPartBuilder.apply( this );
 
-		final ConfigurationService cs = sessionFactory.getServiceRegistry()
+		final ConfigurationService cs = creationContext.getSessionFactory().getServiceRegistry()
 				.getService(ConfigurationService.class);
 
 		this.createEmptyCompositesEnabled = ConfigurationHelper.getBoolean(

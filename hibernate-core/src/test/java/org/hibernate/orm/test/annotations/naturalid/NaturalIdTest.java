@@ -20,12 +20,15 @@ import org.hibernate.query.Query;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.After;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Test case for NaturalId annotation
@@ -133,6 +136,56 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 		// cleanup
 		tx.rollback();
 		s.close();
+	}
+
+	@Test
+	public void testManyToOneNaturalLoadByNaturalId() {
+		NaturalIdOnManyToOne singleManyToOne1 = new NaturalIdOnManyToOne();
+		NaturalIdOnManyToOne singleManyToOne2 = new NaturalIdOnManyToOne();
+
+		Citizen c1 = new Citizen();
+		c1.setFirstname( "Emmanuel" );
+		c1.setLastname( "Bernard" );
+		c1.setSsn( "1234" );
+
+		State france = new State();
+		france.setName( "Ile de France" );
+		c1.setState( france );
+
+		singleManyToOne1.setCitizen( c1 );
+		singleManyToOne2.setCitizen( null );
+
+		inTransaction(
+				session -> {
+					session.persist( france );
+					session.persist( c1 );
+					session.persist( singleManyToOne1 );
+					session.persist( singleManyToOne2 );
+				}
+		);
+
+		inSession(
+				session -> {
+					session.getSessionFactory().getCache().evictNaturalIdData(); // we want to go to the database
+					session.beginTransaction();
+					try {
+						NaturalIdOnManyToOne instance1 = session.byNaturalId( NaturalIdOnManyToOne.class )
+								.using( "citizen", c1 )
+								.load();
+						Assertions.assertNotNull( instance1 );
+						Assertions.assertNotNull( instance1.getCitizen() );
+
+						NaturalIdOnManyToOne instance2 = session.byNaturalId( NaturalIdOnManyToOne.class )
+								.using( "citizen", null ).load();
+
+						Assertions.assertNotNull( instance2 );
+						assertNull( instance2.getCitizen() );
+					}
+					finally {
+						session.getTransaction().rollback();
+					}
+				}
+		);
 	}
 
 	@Test

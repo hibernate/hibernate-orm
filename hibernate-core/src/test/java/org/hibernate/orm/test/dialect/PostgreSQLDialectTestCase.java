@@ -14,7 +14,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
-import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -25,23 +25,24 @@ import org.junit.Test;
 
 import org.mockito.Mockito;
 
-import static junit.framework.TestCase.assertEquals;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 /**
- * Testing of patched support for PostgreSQL Lock error detection. HHH-7251
- *
+ * Test case for PostgreSQL specific things.
  * @author Bryan Varner
+ * @author Christoph Dreis
  */
-public class PostgreSQL81DialectTestCase extends BaseUnitTestCase {
+public class PostgreSQLDialectTestCase extends BaseUnitTestCase {
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-7251")
 	public void testDeadlockException() {
-		PostgreSQL81Dialect dialect = new PostgreSQL81Dialect();
+		PostgreSQLDialect dialect = new PostgreSQLDialect();
 		SQLExceptionConversionDelegate delegate = dialect.buildSQLExceptionConversionDelegate();
 		assertNotNull(delegate);
 
@@ -50,8 +51,9 @@ public class PostgreSQL81DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-7251")
 	public void testTimeoutException() {
-		PostgreSQL81Dialect dialect = new PostgreSQL81Dialect();
+		PostgreSQLDialect dialect = new PostgreSQLDialect();
 		SQLExceptionConversionDelegate delegate = dialect.buildSQLExceptionConversionDelegate();
 		assertNotNull(delegate);
 
@@ -62,7 +64,7 @@ public class PostgreSQL81DialectTestCase extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-13661")
 	public void testQueryTimeoutException() {
-		final PostgreSQL81Dialect dialect = new PostgreSQL81Dialect();
+		final PostgreSQLDialect dialect = new PostgreSQLDialect();
 		final SQLExceptionConversionDelegate delegate = dialect.buildSQLExceptionConversionDelegate();
 		assertNotNull( delegate );
 
@@ -76,21 +78,21 @@ public class PostgreSQL81DialectTestCase extends BaseUnitTestCase {
 	 */
 	@TestForIssue( jiraKey = "HHH-5654" )
 	public void testGetForUpdateStringWithAliasesAndLockOptions() {
-		PostgreSQL81Dialect dialect = new PostgreSQL81Dialect();
+		PostgreSQLDialect dialect = new PostgreSQLDialect();
 		LockOptions lockOptions = new LockOptions();
 		lockOptions.setAliasSpecificLockMode("tableAlias1", LockMode.PESSIMISTIC_WRITE);
 
 		String forUpdateClause = dialect.getForUpdateString("tableAlias1", lockOptions);
-		assertTrue("for update of tableAlias1".equals(forUpdateClause));
+		assertEquals( "for update of tableAlias1", forUpdateClause );
 
 		lockOptions.setAliasSpecificLockMode("tableAlias2", LockMode.PESSIMISTIC_WRITE);
 		forUpdateClause = dialect.getForUpdateString("tableAlias1,tableAlias2", lockOptions);
-		assertTrue("for update of tableAlias1,tableAlias2".equals(forUpdateClause));
+		assertEquals("for update of tableAlias1,tableAlias2", forUpdateClause);
 	}
 
 	@Test
 	public void testExtractConstraintName() {
-		PostgreSQL81Dialect dialect = new PostgreSQL81Dialect();
+		PostgreSQLDialect dialect = new PostgreSQLDialect();
 		SQLException psqlException = new SQLException("ERROR: duplicate key value violates unique constraint \"uk_4bm1x2ultdmq63y3h5r3eg0ej\" Detail: Key (username, server_config)=(user, 1) already exists.", "23505");
 		BatchUpdateException batchUpdateException = new BatchUpdateException("Concurrent Error", "23505", null);
 		batchUpdateException.setNextException(psqlException);
@@ -100,8 +102,8 @@ public class PostgreSQL81DialectTestCase extends BaseUnitTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-8687")
-	public void testMessageException() throws SQLException {
-		PostgreSQL81Dialect dialect = new PostgreSQL81Dialect();
+	public void testMessageException() {
+		PostgreSQLDialect dialect = new PostgreSQLDialect();
 		try {
 			dialect.getResultSet( Mockito.mock( CallableStatement.class), "abc" );
 			fail( "Expected UnsupportedOperationException" );
@@ -110,5 +112,16 @@ public class PostgreSQL81DialectTestCase extends BaseUnitTestCase {
 			assertTrue( e instanceof UnsupportedOperationException );
 			assertEquals( "PostgreSQL only supports accessing REF_CURSOR parameters by position", e.getMessage() );
 		}
+	}
+
+	/**
+	 * Tests that getAlterTableString() will make use of IF EXISTS syntax
+	 */
+	@Test
+	@TestForIssue( jiraKey = "HHH-11647" )
+	public void testGetAlterTableString() {
+		PostgreSQLDialect dialect = new PostgreSQLDialect();
+
+		assertEquals("alter table if exists table_name", dialect.getAlterTableString( "table_name" ));
 	}
 }

@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.jpa.query;
 
 import java.util.List;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -123,7 +124,7 @@ public class NativeQueryOrdinalParametersTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-12532")
 	// Add RequiresDialect be Cockroach version 201
-	@RequiresDialect( value = PostgreSQLDialect.class, majorVersion = 8, minorVersion = 2 )
+	@RequiresDialect( value = PostgreSQLDialect.class )
 	@RequiresDialect( value = CockroachDialect.class, majorVersion = 20, minorVersion = 1 )
 	public void testCteNativeQueryOrdinalParameter(EntityManagerFactoryScope scope) {
 

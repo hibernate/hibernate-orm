@@ -66,7 +66,7 @@ public class UUIDBasedIdInterpretationTest {
 
 	@Test
 	@JiraKey( "HHH-10564" )
-	@RequiresDialect( value = PostgreSQLDialect.class, majorVersion = 9, minorVersion = 4 )
+	@RequiresDialect( value = PostgreSQLDialect.class )
 	public void testPostgreSQL(DomainModelScope scope) {
 		checkUuidTypeUsed( scope, UUIDJdbcType.class );
 	}

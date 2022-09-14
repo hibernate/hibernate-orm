@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class SingleTableDiscriminatorFormulaTest {
 
 	@Test
-	@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 8, minorVersion = 1)
+	@RequiresDialect(value = PostgreSQLDialect.class)
 	public void test(EntityManagerFactoryScope scope) {
 		scope.inTransaction(entityManager -> {
 			DebitAccount debitAccount = new DebitAccount("123-debit");

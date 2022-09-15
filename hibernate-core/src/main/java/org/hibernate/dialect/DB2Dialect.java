@@ -207,7 +207,6 @@ public class DB2Dialect extends Dialect {
 
 		functionFactory.cot();
 		functionFactory.degrees();
-		functionFactory.log();
 		functionFactory.log10();
 		functionFactory.radians();
 		functionFactory.rand();

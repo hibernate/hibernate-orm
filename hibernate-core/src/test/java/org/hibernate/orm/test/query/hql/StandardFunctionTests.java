@@ -12,6 +12,7 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+import org.hamcrest.number.IsCloseTo;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -913,8 +914,24 @@ public class StandardFunctionTests {
 		scope.inTransaction(
 				session -> {
 					assertThat(
-						session.createQuery("select pi").getSingleResult(),
-							is( Math.PI )
+							session.createQuery("select pi", Double.class).getSingleResult(),
+							IsCloseTo.closeTo( Math.PI, 1e-9 )
+					);
+				}
+		);
+	}
+
+	@Test
+	public void testLog(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat(
+							session.createQuery("select log(3,9)", Double.class).getSingleResult(),
+							IsCloseTo.closeTo( 2d, 1e-9 )
+					);
+					assertThat(
+							session.createQuery("select log(10,1e12)", Double.class).getSingleResult(),
+							IsCloseTo.closeTo( 12d, 1e-9 )
 					);
 				}
 		);

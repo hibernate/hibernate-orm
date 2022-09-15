@@ -127,8 +127,8 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 		functionFactory.cot();
-		functionFactory.log();
 		functionFactory.ln_log();
+		functionFactory.log_loglog();
 		functionFactory.log10();
 		functionFactory.atan2_atn2();
 		functionFactory.mod_operator();

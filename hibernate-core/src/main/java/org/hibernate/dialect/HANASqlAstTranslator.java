@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
@@ -127,7 +128,7 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
 		final BinaryArithmeticOperator operator = arithmeticExpression.getOperator();
 		if ( operator == BinaryArithmeticOperator.MODULO ) {
-			append( "mod" );
+			append( StandardFunctions.MOD );
 			appendSql( OPEN_PARENTHESIS );
 			arithmeticExpression.getLeftHandOperand().accept( this );
 			appendSql( ',' );

@@ -16,6 +16,7 @@ import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescript
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -37,7 +38,7 @@ public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	public CastFunction(Dialect dialect, int preferredSqlTypeCodeForBoolean) {
 		super(
-				"cast",
+				StandardFunctions.CAST,
 				StandardArgumentsValidators.exactly( 2 ),
 				StandardFunctionReturnTypeResolvers.useArgType( 2 ),
 				StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE
@@ -89,7 +90,7 @@ public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 //		CastType from = CastType.from( arg.getNodeType() );
 //
 //		return queryEngine.getSqmFunctionRegistry()
-//				.patternDescriptorBuilder( "cast", dialect.castPattern( from, to ) )
+//				.patternDescriptorBuilder( StandardFunctions.CAST, dialect.castPattern( from, to ) )
 //				.setExactArgumentCount( 2 )
 //				.setReturnTypeResolver( useArgType( 2 ) )
 //				.descriptor()

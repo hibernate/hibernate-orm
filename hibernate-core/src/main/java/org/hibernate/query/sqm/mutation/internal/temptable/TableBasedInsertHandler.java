@@ -31,6 +31,7 @@ import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.mutation.internal.InsertHandler;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
@@ -224,7 +225,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 												0,
 												new Over<>(
 														new SelfRenderingFunctionSqlAstExpression(
-																"row_number",
+																StandardFunctions.ROW_NUMBER,
 																(appender, args, walker) -> appender.appendSql(
 																		"row_number()" ),
 																Collections.emptyList(),

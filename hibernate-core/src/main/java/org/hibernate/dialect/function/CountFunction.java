@@ -18,6 +18,7 @@ import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescript
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.sql.internal.AbstractSqmPathInterpretation;
 import org.hibernate.sql.ast.Clause;
@@ -65,7 +66,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			String concatArgumentCastType,
 			boolean castDistinctStringConcat) {
 		super(
-				"count",
+				StandardFunctions.COUNT,
 				FunctionKind.AGGREGATE,
 				StandardArgumentsValidators.exactly( 1 ),
 				StandardFunctionReturnTypeResolvers.invariant(

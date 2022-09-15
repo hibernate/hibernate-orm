@@ -9,6 +9,7 @@ package org.hibernate.dialect.function;
 import java.util.List;
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -23,7 +24,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class SQLServerFormatEmulation extends FormatFunction {
 
 	public SQLServerFormatEmulation(TypeConfiguration typeConfiguration) {
-		super( "format", typeConfiguration );
+		super( StandardFunctions.FORMAT, typeConfiguration );
 	}
 
 	@Override

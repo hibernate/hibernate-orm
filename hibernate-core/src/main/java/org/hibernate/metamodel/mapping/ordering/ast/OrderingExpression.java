@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping.ordering.ast;
 import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.sql.FakeSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.expression.SqmSelfRenderingExpression;
@@ -61,7 +62,7 @@ public interface OrderingExpression extends Node {
 			}
 			sortExpression = queryEngine
 					.getSqmFunctionRegistry()
-					.findFunctionDescriptor( "collate" )
+					.findFunctionDescriptor( StandardFunctions.COLLATE )
 					.generateSqmExpression(
 							new SqmSelfRenderingExpression<>( walker -> expression, null, null ),
 							null,

@@ -28,6 +28,7 @@ import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.MatchingIdSelectionHelper;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.spi.AbstractMutationHandler;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteTable;
@@ -220,7 +221,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 			MultiTableSqmMutationConverter sqmConverter) {
 		final SqmExpression<?> arg = new SqmStar( factory.getNodeBuilder() );
 		final TypeConfiguration typeConfiguration = factory.getJpaMetamodel().getTypeConfiguration();
-		return factory.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( "count" ).generateSqmExpression(
+		return factory.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( StandardFunctions.COUNT ).generateSqmExpression(
 				arg,
 				null,
 				factory.getQueryEngine(),

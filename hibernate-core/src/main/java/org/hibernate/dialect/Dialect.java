@@ -126,6 +126,7 @@ import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableInsert
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ForUpdateFragment;
@@ -845,20 +846,20 @@ public abstract class Dialect implements ConversionContext {
 		//only some databases support the ANSI SQL-style position() function, so
 		//define it here as an alias for locate()
 
-		queryEngine.getSqmFunctionRegistry().register( "position",
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.POSITION,
 				new LocatePositionEmulation( typeConfiguration ) );
 
 		//very few databases support ANSI-style overlay() function, so emulate
 		//it here in terms of either insert() or concat()/substring()
 
-		queryEngine.getSqmFunctionRegistry().register( "overlay",
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.OVERLAY,
 				new InsertSubstringOverlayEmulation( typeConfiguration, false ) );
 
 		//ANSI SQL trim() function is supported on almost all of the databases
 		//we care about, but on some it must be emulated using ltrim(), rtrim(),
 		//and replace()
 
-		queryEngine.getSqmFunctionRegistry().register( "trim",
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.TRIM,
 				new TrimFunction( this, typeConfiguration ) );
 
 		//ANSI SQL cast() function is supported on the databases we care most
@@ -870,7 +871,7 @@ public abstract class Dialect implements ConversionContext {
 		// - casting Double or Float to String.
 
 		queryEngine.getSqmFunctionRegistry().register(
-				"cast",
+				StandardFunctions.CAST,
 				new CastFunction(
 						this,
 						queryEngine.getPreferredSqlTypeCodeForBoolean()
@@ -886,7 +887,7 @@ public abstract class Dialect implements ConversionContext {
 		//additional non-standard temporal field types, which must be emulated in
 		//a very dialect-specific way
 
-		queryEngine.getSqmFunctionRegistry().register( "extract",
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.EXTRACT,
 				new ExtractFunction( this, typeConfiguration ) );
 
 		//comparison functions supported on most databases, emulated on others
@@ -897,7 +898,7 @@ public abstract class Dialect implements ConversionContext {
 		//two-argument synonym for coalesce() supported on most but not every
 		//database, so define it here as an alias for coalesce(arg1,arg2)
 
-		queryEngine.getSqmFunctionRegistry().register( "ifnull",
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.IFNULL,
 				new CoalesceIfnullEmulation() );
 
 		//rpad() and pad() are supported on almost every database, and emulated
@@ -908,13 +909,13 @@ public abstract class Dialect implements ConversionContext {
 
 		//pad() is a function we've designed to look like ANSI trim()
 
-		queryEngine.getSqmFunctionRegistry().register( "pad",
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.PAD,
 				new LpadRpadPadEmulation( typeConfiguration ) );
 
 		//legacy Hibernate convenience function for casting to string, defined
 		//here as an alias for cast(arg as String)
 
-		queryEngine.getSqmFunctionRegistry().register( "str",
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.STR,
 				new CastStrEmulation( typeConfiguration ) );
 
 		//format() function for datetimes, emulated on many databases using the
@@ -926,93 +927,93 @@ public abstract class Dialect implements ConversionContext {
 		//timestampadd()/timestampdiff() delegated back to the Dialect itself
 		//since there is a great variety of different ways to emulate them
 
-		queryEngine.getSqmFunctionRegistry().register( "timestampadd",
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.TIMESTAMPADD,
 				new TimestampaddFunction( this, typeConfiguration ) );
-		queryEngine.getSqmFunctionRegistry().register( "timestampdiff",
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.TIMESTAMPDIFF,
 				new TimestampdiffFunction( this, typeConfiguration ) );
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "dateadd", "timestampadd" );
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "datediff", "timestampdiff" );
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( StandardFunctions.DATEADD, StandardFunctions.TIMESTAMPADD );
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( StandardFunctions.DATEDIFF, StandardFunctions.TIMESTAMPDIFF );
 
 		//ANSI SQL (and JPA) current date/time/timestamp functions, supported
 		//natively on almost every database, delegated back to the Dialect
 
 		queryEngine.getSqmFunctionRegistry().register(
-				"current_date",
+				StandardFunctions.CURRENT_DATE,
 				new CurrentFunction(
-						"current_date",
+						StandardFunctions.CURRENT_DATE,
 						currentDate(),
 						dateType
 				)
 		);
 		queryEngine.getSqmFunctionRegistry().register(
-				"current_time",
+				StandardFunctions.CURRENT_TIME,
 				new CurrentFunction(
-						"current_time",
+						StandardFunctions.CURRENT_TIME,
 						currentTime(),
 						timeType
 				)
 		);
 		queryEngine.getSqmFunctionRegistry().register(
-				"current_timestamp",
+				StandardFunctions.CURRENT_TIMESTAMP,
 				new CurrentFunction(
-						"current_timestamp",
+						StandardFunctions.CURRENT_TIMESTAMP,
 						currentTimestamp(),
 						timestampType
 				)
 		);
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "current date", "current_date" );
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "current time", "current_time" );
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "current timestamp", "current_timestamp" );
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "current date", StandardFunctions.CURRENT_DATE );
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "current time", StandardFunctions.CURRENT_TIME );
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "current timestamp", StandardFunctions.CURRENT_TIMESTAMP );
 		//HQL current instant/date/time/datetime functions, delegated back to the Dialect
 
 		queryEngine.getSqmFunctionRegistry().register(
-				"local_date",
+				StandardFunctions.LOCAL_DATE,
 				new CurrentFunction(
-						"local_date",
+						StandardFunctions.LOCAL_DATE,
 						currentDate(),
 						localDateType
 				)
 		);
 		queryEngine.getSqmFunctionRegistry().register(
-				"local_time",
+				StandardFunctions.LOCAL_TIME,
 				new CurrentFunction(
-						"local_time",
+						StandardFunctions.LOCAL_TIME,
 						currentLocalTime(),
 						localTimeType
 				)
 		);
 		queryEngine.getSqmFunctionRegistry().register(
-				"local_datetime",
+				StandardFunctions.LOCAL_DATETIME,
 				new CurrentFunction(
-						"local_datetime",
+						StandardFunctions.LOCAL_DATETIME,
 						currentLocalTimestamp(),
 						localDateTimeType
 				)
 		);
 		queryEngine.getSqmFunctionRegistry().register(
-				"offset_datetime",
+				StandardFunctions.OFFSET_DATETIME,
 				new CurrentFunction(
-						"offset_datetime",
+						StandardFunctions.OFFSET_DATETIME,
 						currentTimestampWithTimeZone(),
 						offsetDateTimeType
 				)
 		);
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "local date", "local_date" );
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "local time", "local_time" );
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "local datetime", "local_datetime" );
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "offset datetime", "offset_datetime" );
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "local date", StandardFunctions.LOCAL_DATE );
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "local time", StandardFunctions.LOCAL_TIME );
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "local datetime", StandardFunctions.LOCAL_DATETIME );
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "offset datetime", StandardFunctions.OFFSET_DATETIME );
 
 		queryEngine.getSqmFunctionRegistry().register(
-				"instant",
+				StandardFunctions.INSTANT,
 				new CurrentFunction(
-						"instant",
+						StandardFunctions.INSTANT,
 						currentTimestampWithTimeZone(),
 						instantType
 				)
 		);
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "current_instant", "instant" ); //deprecated legacy!
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "current_instant", StandardFunctions.INSTANT ); //deprecated legacy!
 
-		queryEngine.getSqmFunctionRegistry().register( "sql", new SqlFunction() );
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.SQL, new SqlFunction() );
 	}
 
 	/**

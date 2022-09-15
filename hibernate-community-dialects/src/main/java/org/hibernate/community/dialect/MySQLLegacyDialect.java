@@ -123,17 +123,37 @@ public class MySQLLegacyDialect extends Dialect {
 	}
 
 	public MySQLLegacyDialect(DatabaseVersion version) {
+		this( version, 4 ); //conservative assumption
+	}
+
+	public MySQLLegacyDialect(DatabaseVersion version, int bytesPerCharacter) {
 		super( version );
-		registerKeyword( "key" );
-		maxVarcharLength = maxVarcharLength( getMySQLVersion(), 4 ); //conservative assumption
+		maxVarcharLength = maxVarcharLength( getMySQLVersion(), bytesPerCharacter );
 		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
 	}
 
 	public MySQLLegacyDialect(DialectResolutionInfo info) {
-		super( info );
-		int bytesPerCharacter = getCharacterSetBytesPerCharacter( info.getDatabaseMetadata() );
-		maxVarcharLength = maxVarcharLength( getMySQLVersion(), bytesPerCharacter );
-		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
+		this( createVersion( info ), getCharacterSetBytesPerCharacter( info.getDatabaseMetadata() ) );
+		registerKeywords( info );
+	}
+
+	protected static DatabaseVersion createVersion(DialectResolutionInfo info) {
+		final String versionString = info.getDatabaseVersion();
+		if ( versionString != null ) {
+			final String[] components = versionString.split( "\\." );
+			if ( components.length >= 3 ) {
+				try {
+					final int majorVersion = Integer.parseInt( components[0] );
+					final int minorVersion = Integer.parseInt( components[1] );
+					final int patchLevel = Integer.parseInt( components[2] );
+					return DatabaseVersion.make( majorVersion, minorVersion, patchLevel );
+				}
+				catch (NumberFormatException ex) {
+					// Ignore
+				}
+			}
+		}
+		return info.makeCopy();
 	}
 
 	@Override
@@ -516,9 +536,9 @@ public class MySQLLegacyDialect extends Dialect {
 			// MySQL timestamp type defaults to precision 0 (seconds) but
 			// we want the standard default precision of 6 (microseconds)
 			functionFactory.sysdateExplicitMicros();
-			if ( getMySQLVersion().isSameOrAfter( 8, 2 ) ) {
+			if ( getMySQLVersion().isSameOrAfter( 8, 0, 2 ) ) {
 				functionFactory.windowFunctions();
-				if ( getMySQLVersion().isSameOrAfter( 8, 11 ) ) {
+				if ( getMySQLVersion().isSameOrAfter( 8, 0, 11 ) ) {
 					functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 				}
 			}
@@ -1207,12 +1227,12 @@ public class MySQLLegacyDialect extends Dialect {
 
 	@Override
 	public boolean supportsWindowFunctions() {
-		return getMySQLVersion().isSameOrAfter( 8, 2 );
+		return getMySQLVersion().isSameOrAfter( 8, 0, 2 );
 	}
 
 	@Override
 	public boolean supportsLateral() {
-		return getMySQLVersion().isSameOrAfter( 8, 14 );
+		return getMySQLVersion().isSameOrAfter( 8, 0, 14 );
 	}
 
 	@Override
@@ -1234,6 +1254,12 @@ public class MySQLLegacyDialect extends Dialect {
 	@Override
 	public RowLockStrategy getWriteRowLockStrategy() {
 		return supportsAliasLocks() ? RowLockStrategy.TABLE : RowLockStrategy.NONE;
+	}
+
+	@Override
+	protected void registerDefaultKeywords() {
+		super.registerDefaultKeywords();
+		registerKeyword( "key" );
 	}
 
 	boolean supportsForShare() {

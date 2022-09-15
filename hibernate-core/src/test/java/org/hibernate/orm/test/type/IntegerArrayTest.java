@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.type;
 
 import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseASEDialect;
@@ -127,6 +128,7 @@ public class IntegerArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsArrayDataTypes.class)
+	@SkipForDialect(value = CockroachDialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/26925")
 	public void testNativeQueryUntyped() {
 		inSession( em -> {
 			Query q = em.createNamedQuery( "TableWithIntegerArrays.Native.getByIdUntyped" );

@@ -37,6 +37,7 @@ import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -259,7 +260,7 @@ public class TeradataDialect extends Dialect {
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 		functionFactory.concat_pipeOperator();
 		functionFactory.octetLength();
-		functionFactory.moreHyperbolic();
+		functionFactory.inverseHyperbolic();
 		functionFactory.instr();
 		functionFactory.substr();
 		functionFactory.substring_substr();
@@ -267,7 +268,7 @@ public class TeradataDialect extends Dialect {
 		functionFactory.position();
 		functionFactory.bitLength_pattern( "octet_length(cast(?1 as char))*4" );
 
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "mod", "(?1 mod ?2)" )
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( StandardFunctions.MOD, "(?1 mod ?2)" )
 				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
 				.register();
@@ -282,7 +283,7 @@ public class TeradataDialect extends Dialect {
 			functionFactory.ascii();
 			functionFactory.char_chr();
 			functionFactory.trunc();
-			functionFactory.moreHyperbolic();
+			functionFactory.inverseHyperbolic();
 			functionFactory.monthsBetween();
 			functionFactory.addMonths();
 			functionFactory.stddevPopSamp();

@@ -44,6 +44,7 @@ import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -232,9 +233,10 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 
+		functionFactory.ln_log_inverse();
 		// For SQL-Server we need to cast certain arguments to varchar(max) to be able to concat them
 		queryEngine.getSqmFunctionRegistry().register(
-				"count",
+				StandardFunctions.COUNT,
 				new CountFunction(
 						this,
 						queryEngine.getTypeConfiguration(),
@@ -261,7 +263,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 
 		if ( getVersion().isSameOrAfter( 11 ) ) {
 			queryEngine.getSqmFunctionRegistry().register(
-					"format",
+					StandardFunctions.FORMAT,
 					new SQLServerFormatEmulation( queryEngine.getTypeConfiguration() )
 			);
 

@@ -28,6 +28,7 @@ import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMu
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
@@ -127,7 +128,6 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 		functionFactory.cot();
-		functionFactory.log();
 		functionFactory.ln_log();
 		functionFactory.log10();
 		functionFactory.atan2_atn2();
@@ -149,12 +149,13 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 		functionFactory.substring_substringLen();
 		functionFactory.datepartDatename();
 		functionFactory.lastDay_eomonth();
+		functionFactory.bitandorxornot_operator();
 
-		queryEngine.getSqmFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
-		queryEngine.getSqmFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
-		queryEngine.getSqmFunctionRegistry().register( "str", new TransactSQLStrFunction( queryEngine.getTypeConfiguration() ) );
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.LEAST, new CaseLeastGreatestEmulation( true ) );
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.GREATEST, new CaseLeastGreatestEmulation( false ) );
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.STR, new TransactSQLStrFunction( queryEngine.getTypeConfiguration() ) );
 		queryEngine.getSqmFunctionRegistry().register(
-				"concat",
+				StandardFunctions.CONCAT,
 				new CastingConcatFunction(
 						this,
 						"+",

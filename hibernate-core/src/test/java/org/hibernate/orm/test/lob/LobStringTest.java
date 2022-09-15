@@ -41,7 +41,6 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-11477")
-@RequiresDialects({ @RequiresDialect(PostgreSQLDialect.class), @RequiresDialect(CockroachDialect.class) })
 @DomainModel(
 		annotatedClasses = LobStringTest.TestEntity.class
 )
@@ -80,6 +79,8 @@ public class LobStringTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11477")
+	@RequiresDialect(PostgreSQLDialect.class)
+	@RequiresDialect(CockroachDialect.class)
 	public void testHqlQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Query query = session.createQuery( "from TestEntity" );

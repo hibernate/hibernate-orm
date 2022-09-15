@@ -7,6 +7,7 @@
 package org.hibernate.dialect;
 
 import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.TemporalAccessor;
@@ -34,6 +35,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -45,6 +47,7 @@ import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -53,6 +56,7 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.InstantAsTimestampWithTimeZoneJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
@@ -63,9 +67,11 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
+import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.CHAR;
@@ -111,8 +117,43 @@ public class CockroachDialect extends Dialect {
 	}
 
 	public CockroachDialect(DialectResolutionInfo info) {
-		super(info);
-		driverKind = PostgreSQLDriverKind.determineKind( info );
+		this( createVersion( info ), PostgreSQLDriverKind.determineKind( info ) );
+		registerKeywords( info );
+	}
+
+	protected static DatabaseVersion createVersion( DialectResolutionInfo info ) {
+		DatabaseVersion databaseVersion = null;
+
+		if ( info.getDatabaseMetadata() != null ) {
+			try (java.sql.Statement s = info.getDatabaseMetadata().getConnection().createStatement()) {
+				final ResultSet rs = s.executeQuery( "SELECT version()" );
+				if ( rs.next() ) {
+					databaseVersion = parseVersion( rs.getString( 1 ) );
+				}
+			}
+			catch (SQLException ex) {
+				// Ignore
+			}
+		}
+		if ( databaseVersion == null ) {
+//			throw new HibernateException( "Could not determine the CockroachDB version" );
+			return MINIMUM_VERSION;
+		}
+		return databaseVersion;
+	}
+	protected static DatabaseVersion parseVersion(String versionString) {
+		try {
+			final String[] versionParts = versionString.split( "\\." );
+			// if we got to this point, there is at least a major version, so no need to check [].length > 0
+			int majorVersion = Integer.parseInt( versionParts[0].substring( 1 ) );
+			int minorVersion = versionParts.length > 1 ? Integer.parseInt( versionParts[1] ) : 0;
+			int microVersion = versionParts.length > 2 ? Integer.parseInt( versionParts[2] ) : 0;
+			return new SimpleDatabaseVersion( majorVersion, minorVersion, microVersion );
+		}
+		catch (NumberFormatException e) {
+			// ignore
+		}
+		return null;
 	}
 
 	public CockroachDialect(DatabaseVersion version) {
@@ -266,6 +307,9 @@ public class CockroachDialect extends Dialect {
 		functionFactory.char_chr();
 		functionFactory.overlay();
 		functionFactory.position();
+		functionFactory.bitandorxornot_operator();
+		functionFactory.bitAndOr();
+		functionFactory.everyAny_boolAndOr();
 		functionFactory.substringFromFor();
 		functionFactory.locate_positionSubstring();
 		functionFactory.trim2();
@@ -282,15 +326,18 @@ public class CockroachDialect extends Dialect {
 		functionFactory.radians();
 		functionFactory.pi();
 		functionFactory.trunc(); //TODO: emulate second arg
+		functionFactory.inverseHyperbolic();
+		functionFactory.log();
+		functionFactory.rand_random();
 
 		queryEngine.getSqmFunctionRegistry().register(
-				"format",
+				StandardFunctions.FORMAT,
 				new FormatFunction( "experimental_strftime", queryEngine.getTypeConfiguration() )
 		);
 		functionFactory.windowFunctions();
 		functionFactory.listagg_stringAgg( "string" );
 		functionFactory.inverseDistributionOrderedSetAggregates();
-		functionFactory.hypotheticalOrderedSetAggregates();
+		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 	}
 
 	@Override

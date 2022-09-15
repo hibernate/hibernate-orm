@@ -17,6 +17,7 @@ import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
@@ -48,7 +49,7 @@ public class InsertSubstringOverlayEmulation
 
 	public InsertSubstringOverlayEmulation(TypeConfiguration typeConfiguration, boolean strictSubstring) {
 		super(
-				"overlay",
+				StandardFunctions.OVERLAY,
 				new ArgumentTypesValidator(
 						StandardArgumentsValidators.between( 3, 4 ),
 						STRING, STRING, INTEGER, INTEGER
@@ -75,10 +76,10 @@ public class InsertSubstringOverlayEmulation
 		SqmTypedNode<?> start = arguments.get(2);
 		SqmTypedNode<?> length = arguments.size() > 3
 				? arguments.get(3)
-				: queryEngine.getSqmFunctionRegistry().findFunctionDescriptor("length")
+				: queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( StandardFunctions.LENGTH )
 						.generateSqmExpression( replacement, intType, queryEngine, typeConfiguration );
 
-		SqmFunctionDescriptor insert = queryEngine.getSqmFunctionRegistry().findFunctionDescriptor("insert");
+		SqmFunctionDescriptor insert = queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "insert" );
 		if ( insert != null ) {
 			return insert.generateSqmExpression(
 					asList( string, start, length, replacement ),
@@ -88,9 +89,9 @@ public class InsertSubstringOverlayEmulation
 			);
 		}
 		else {
-			SqmFunctionDescriptor lengthFunction = queryEngine.getSqmFunctionRegistry().findFunctionDescriptor("length");
-			SqmFunctionDescriptor substring = queryEngine.getSqmFunctionRegistry().findFunctionDescriptor("substring");
-			SqmFunctionDescriptor concat = queryEngine.getSqmFunctionRegistry().findFunctionDescriptor("concat");
+			SqmFunctionDescriptor lengthFunction = queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( StandardFunctions.LENGTH );
+			SqmFunctionDescriptor substring = queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( StandardFunctions.SUBSTRING );
+			SqmFunctionDescriptor concat = queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( StandardFunctions.CONCAT );
 			SqmLiteral<Integer> one = new SqmLiteral<>( 1, intType, queryEngine.getCriteriaBuilder() );
 			SqmExpression<Integer> startPlusLength = new SqmBinaryArithmetic<>(
 					BinaryArithmeticOperator.ADD,

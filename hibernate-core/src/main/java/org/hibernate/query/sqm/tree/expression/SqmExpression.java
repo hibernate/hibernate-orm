@@ -18,6 +18,7 @@ import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
@@ -110,7 +111,7 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 		final QueryEngine queryEngine = nodeBuilder().getQueryEngine();
 		final SqmCastTarget<T> target = new SqmCastTarget<>( (ReturnableType<T>) type, nodeBuilder() );
 		return queryEngine.getSqmFunctionRegistry()
-				.findFunctionDescriptor("cast")
+				.findFunctionDescriptor( StandardFunctions.CAST )
 					.generateSqmExpression(
 							asList( this, target ),
 							(ReturnableType<X>) type,

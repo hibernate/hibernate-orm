@@ -43,6 +43,7 @@ import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -286,7 +287,7 @@ public class SQLiteDialect extends Dialect {
 		functionFactory.chr_char();
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
-				"locate",
+				StandardFunctions.LOCATE,
 				integerType,
 				"instr(?2,?1)",
 				"instr(?2,?1,?3)",
@@ -294,7 +295,7 @@ public class SQLiteDialect extends Dialect {
 				queryEngine.getTypeConfiguration()
 		).setArgumentListSignature("(pattern, string[, start])");
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
-				"lpad",
+				StandardFunctions.LPAD,
 				stringType,
 				"(substr(replace(hex(zeroblob(?2)),'00',' '),1,?2-length(?1))||?1)",
 				"(substr(replace(hex(zeroblob(?2)),'00',?3),1,?2-length(?1))||?1)",
@@ -302,7 +303,7 @@ public class SQLiteDialect extends Dialect {
 				queryEngine.getTypeConfiguration()
 		).setArgumentListSignature("(string, length[, padding])");
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
-				"rpad",
+				StandardFunctions.RPAD,
 				stringType,
 				"(?1||substr(replace(hex(zeroblob(?2)),'00',' '),1,?2-length(?1)))",
 				"(?1||substr(replace(hex(zeroblob(?2)),'00',?3),1,?2-length(?1)))",
@@ -310,7 +311,7 @@ public class SQLiteDialect extends Dialect {
 				queryEngine.getTypeConfiguration()
 		).setArgumentListSignature("(string, length[, padding])");
 
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("format", "strftime")
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder(StandardFunctions.FORMAT, "strftime")
 				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(TEMPORAL, STRING)
@@ -319,14 +320,14 @@ public class SQLiteDialect extends Dialect {
 
 		if (!supportsMathFunctions() ) {
 			queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder(
-					"floor",
+					StandardFunctions.FLOOR,
 					"(cast(?1 as int)-(?1<cast(?1 as int)))"
 			).setReturnTypeResolver( StandardFunctionReturnTypeResolvers.useArgType( 1 ) )
 					.setExactArgumentCount( 1 )
 					.setParameterTypes(NUMERIC)
 					.register();
 			queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder(
-					"ceiling",
+					StandardFunctions.CEILING,
 					"(cast(?1 as int)+(?1>cast(?1 as int)))"
 			).setReturnTypeResolver( StandardFunctionReturnTypeResolvers.useArgType( 1 ) )
 					.setExactArgumentCount( 1 )

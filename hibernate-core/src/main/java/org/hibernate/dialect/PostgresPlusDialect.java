@@ -52,7 +52,7 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 		functionFactory.sysdate();
 		functionFactory.systimestamp();
 
-//		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
+//		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.COALESCE, new NvlCoalesceEmulation() );
 
 	}
 

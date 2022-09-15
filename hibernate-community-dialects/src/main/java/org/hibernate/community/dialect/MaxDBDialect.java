@@ -31,6 +31,7 @@ import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableIn
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
@@ -140,9 +141,7 @@ public class MaxDBDialect extends Dialect {
 		functionFactory.log();
 		functionFactory.pi();
 		functionFactory.cot();
-		functionFactory.cosh();
-		functionFactory.sinh();
-		functionFactory.tanh();
+		functionFactory.hyperbolic();
 		functionFactory.radians();
 		functionFactory.degrees();
 		functionFactory.trunc();
@@ -170,9 +169,9 @@ public class MaxDBDialect extends Dialect {
 
 		final BasicType<Integer> integerType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
 				.resolve( StandardBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "?1(?2)", integerType );
+		queryEngine.getSqmFunctionRegistry().registerPattern( StandardFunctions.EXTRACT, "?1(?2)", integerType );
 
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "nullif", "case ?1 when ?2 then null else ?1 end" )
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( StandardFunctions.NULLIF, "case ?1 when ?2 then null else ?1 end" )
 				.setExactArgumentCount(2)
 				.register();
 
@@ -182,7 +181,7 @@ public class MaxDBDialect extends Dialect {
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
-				"locate",
+				StandardFunctions.LOCATE,
 				integerType, "index(?2,?1)", "index(?2,?1,?3)",
 				STRING, STRING, INTEGER,
 				queryEngine.getTypeConfiguration()

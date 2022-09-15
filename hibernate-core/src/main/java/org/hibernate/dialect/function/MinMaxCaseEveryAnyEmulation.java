@@ -15,6 +15,7 @@ import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -38,7 +39,7 @@ public class MinMaxCaseEveryAnyEmulation extends AbstractSqmSelfRenderingFunctio
 
 	public MinMaxCaseEveryAnyEmulation(TypeConfiguration typeConfiguration, boolean every) {
 		super(
-				every ? "every" : "any",
+				every ? StandardFunctions.EVERY : StandardFunctions.ANY,
 				FunctionKind.AGGREGATE,
 				new ArgumentTypesValidator( StandardArgumentsValidators.exactly( 1 ), FunctionParameterType.BOOLEAN ),
 				StandardFunctionReturnTypeResolvers.invariant(

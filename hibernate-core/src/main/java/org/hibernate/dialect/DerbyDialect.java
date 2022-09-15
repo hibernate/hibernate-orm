@@ -16,7 +16,6 @@ import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.DerbyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DerbySequenceSupport;
@@ -42,6 +41,7 @@ import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMu
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -51,7 +51,6 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDerbyDatabaseImpl;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
@@ -60,7 +59,6 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.BigDecimalJavaType;
 import org.hibernate.type.descriptor.jdbc.DecimalJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcType;
-import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
@@ -240,7 +238,7 @@ public class DerbyDialect extends Dialect {
 		// Derby needs an actual argument type for aggregates like SUM, AVG, MIN, MAX to determine the result type
 		functionFactory.aggregates( this, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 		queryEngine.getSqmFunctionRegistry().register(
-				"count",
+				StandardFunctions.COUNT,
 				new CountFunction(
 						this,
 						queryEngine.getTypeConfiguration(),
@@ -256,13 +254,11 @@ public class DerbyDialect extends Dialect {
 
 		functionFactory.concat_pipeOperator();
 		functionFactory.cot();
-		functionFactory.chr_char();
 		functionFactory.degrees();
 		functionFactory.radians();
+		functionFactory.ln_log();
 		functionFactory.log10();
-		functionFactory.sinh();
-		functionFactory.cosh();
-		functionFactory.tanh();
+		functionFactory.hyperbolic();
 		functionFactory.pi();
 		functionFactory.rand();
 		functionFactory.trim1();
@@ -274,12 +270,13 @@ public class DerbyDialect extends Dialect {
 		functionFactory.leftRight_substrLength();
 		functionFactory.characterLength_length( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 		functionFactory.power_expLn();
+		functionFactory.inverseHyperbolic_expLn();
 		functionFactory.round_floor();
 		functionFactory.octetLength_pattern( "length(?1)" );
 		functionFactory.bitLength_pattern( "length(?1)*8" );
 
 		queryEngine.getSqmFunctionRegistry().register(
-				"concat",
+				StandardFunctions.CONCAT,
 				new CastingConcatFunction(
 						this,
 						"||",
@@ -290,11 +287,11 @@ public class DerbyDialect extends Dialect {
 		);
 
 		//no way I can see to pad with anything other than spaces
-		queryEngine.getSqmFunctionRegistry().register( "lpad", new DerbyLpadEmulation( queryEngine.getTypeConfiguration() ) );
-		queryEngine.getSqmFunctionRegistry().register( "rpad", new DerbyRpadEmulation( queryEngine.getTypeConfiguration() ) );
-		queryEngine.getSqmFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
-		queryEngine.getSqmFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
-		queryEngine.getSqmFunctionRegistry().register( "overlay", new InsertSubstringOverlayEmulation( queryEngine.getTypeConfiguration(), true ) );
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.LPAD, new DerbyLpadEmulation( queryEngine.getTypeConfiguration() ) );
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.RPAD, new DerbyRpadEmulation( queryEngine.getTypeConfiguration() ) );
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.LEAST, new CaseLeastGreatestEmulation( true ) );
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.GREATEST, new CaseLeastGreatestEmulation( false ) );
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.OVERLAY, new InsertSubstringOverlayEmulation( queryEngine.getTypeConfiguration(), true ) );
 	}
 
 	@Override

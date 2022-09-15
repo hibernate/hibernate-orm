@@ -17,6 +17,8 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
+
 import org.junit.Test;
 
 /**
@@ -111,7 +113,7 @@ public class AuditFunctionQueryTest extends BaseEnversJPAFunctionalTestCase {
 	@Test
 	public void testProjectionWithNestedFunction() {
 		Object actual = getAuditReader().createQuery().forEntitiesAtRevision( TestEntity.class, 1 )
-				.addProjection( AuditEntity.function( "concat",
+				.addProjection( AuditEntity.function( StandardFunctions.CONCAT,
 						AuditEntity.function( "upper", AuditEntity.property( "string1" ) ),
 						AuditEntity.function( "substring", AuditEntity.property( "string2" ), 1, 2 ) ) )
 				.getSingleResult();

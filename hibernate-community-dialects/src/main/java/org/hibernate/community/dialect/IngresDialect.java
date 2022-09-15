@@ -40,6 +40,7 @@ import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
@@ -277,7 +278,7 @@ public class IngresDialect extends Dialect {
 		final BasicType<Integer> integerType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
 				.resolve( StandardBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
-				"locate",
+				StandardFunctions.LOCATE,
 				integerType,
 				"position(?1 in ?2)",
 				"(position(?1 in substring(?2 from ?3))+(?3)-1)",
@@ -285,7 +286,7 @@ public class IngresDialect extends Dialect {
 				queryEngine.getTypeConfiguration()
 		).setArgumentListSignature("(pattern, string[, start])");
 
-		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "date_part('?1',?2)", integerType );
+		queryEngine.getSqmFunctionRegistry().registerPattern( StandardFunctions.EXTRACT, "date_part('?1',?2)", integerType );
 
 		functionFactory.bitandorxornot_bitAndOrXorNot();
 

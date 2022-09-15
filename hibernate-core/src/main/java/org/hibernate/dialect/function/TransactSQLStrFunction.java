@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.function.FunctionRenderingSupport;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -32,7 +33,7 @@ public class TransactSQLStrFunction extends CastStrEmulation implements Function
 
 	public TransactSQLStrFunction(TypeConfiguration typeConfiguration) {
 		super(
-				"str",
+				StandardFunctions.STR,
 				StandardArgumentsValidators.between( 1, 3 ),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )

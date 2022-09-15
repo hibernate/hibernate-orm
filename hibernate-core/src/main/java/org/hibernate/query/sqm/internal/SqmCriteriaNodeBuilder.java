@@ -64,6 +64,7 @@ import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -329,7 +330,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public <X, T> SqmExpression<X> cast(JpaExpression<T> expression, Class<X> castTargetJavaType) {
 		final BasicDomainType<X> type = getTypeConfiguration().standardBasicTypeForJavaType( castTargetJavaType );
-		return getFunctionDescriptor( "cast" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.CAST ).generateSqmExpression(
 				asList( (SqmTypedNode<?>) expression, new SqmCastTarget<>( type, this ) ),
 				type,
 				queryEngine,
@@ -608,7 +609,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <N extends Number> SqmExpression<Double> avg(Expression<N> argument) {
-		return getFunctionDescriptor( "avg" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.AVG ).generateSqmExpression(
 				(SqmTypedNode<?>) argument,
 				null,
 				queryEngine,
@@ -620,7 +621,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@SuppressWarnings("unchecked")
 	public <N extends Number> SqmExpression<N> sum(Expression<N> argument) {
 		final SqmTypedNode<N> typedNode = (SqmTypedNode<N>) argument;
-		return getFunctionDescriptor( "sum" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.SUM ).generateSqmExpression(
 				typedNode,
 				(ReturnableType<N>) typedNode.getNodeType(),
 				queryEngine,
@@ -630,7 +631,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmExpression<Long> sumAsLong(Expression<Integer> argument) {
-		return getFunctionDescriptor( "sum" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.SUM ).generateSqmExpression(
 				(SqmTypedNode<?>) argument,
 				null,
 				queryEngine,
@@ -640,7 +641,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmExpression<Double> sumAsDouble(Expression<Float> argument) {
-		return getFunctionDescriptor( "sum" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.SUM ).generateSqmExpression(
 				(SqmTypedNode<?>) argument,
 				null,
 				queryEngine,
@@ -650,7 +651,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <N extends Number> SqmExpression<N> max(Expression<N> argument) {
-		return getFunctionDescriptor( "max" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.MAX ).generateSqmExpression(
 				(SqmTypedNode<?>) argument,
 				null,
 				queryEngine,
@@ -660,7 +661,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <N extends Number> SqmExpression<N> min(Expression<N> argument) {
-		return getFunctionDescriptor( "min" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.MIN ).generateSqmExpression(
 				(SqmTypedNode<?>) argument,
 				null,
 				queryEngine,
@@ -670,19 +671,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <X extends Comparable<? super X>> SqmExpression<X> greatest(Expression<X> argument) {
-		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "max" )
+		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( StandardFunctions.MAX )
 				.generateSqmExpression( (SqmTypedNode<?>) argument, null, queryEngine, getTypeConfiguration() );
 	}
 
 	@Override
 	public <X extends Comparable<? super X>> SqmExpression<X> least(Expression<X> argument) {
-		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "min" )
+		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( StandardFunctions.MIN )
 				.generateSqmExpression( (SqmTypedNode<?>) argument, null, queryEngine, getTypeConfiguration() );
 	}
 
 	@Override
 	public SqmExpression<Long> count(Expression<?> argument) {
-		return getFunctionDescriptor( "count" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.COUNT ).generateSqmExpression(
 				(SqmTypedNode<?>) argument,
 				null,
 				queryEngine,
@@ -692,7 +693,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmExpression<Long> countDistinct(Expression<?> argument) {
-		return getFunctionDescriptor( "count" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.COUNT ).generateSqmExpression(
 				new SqmDistinct<>( (SqmExpression<?>) argument, getQueryEngine().getCriteriaBuilder() ),
 				null,
 				queryEngine,
@@ -702,7 +703,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public JpaExpression<Integer> sign(Expression<? extends Number> x) {
-		return getFunctionDescriptor( "sign" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.SIGN ).generateSqmExpression(
 				(SqmExpression<?>) x,
 				null,
 				queryEngine,
@@ -712,7 +713,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <N extends Number> JpaExpression<N> ceiling(Expression<N> x) {
-		return getFunctionDescriptor( "ceiling" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.CEILING ).generateSqmExpression(
 				(SqmExpression<?>) x,
 				null,
 				queryEngine,
@@ -722,7 +723,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <N extends Number> JpaExpression<N> floor(Expression<N> x) {
-		return getFunctionDescriptor( "floor" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.FLOOR ).generateSqmExpression(
 				(SqmExpression<?>) x,
 				null,
 				queryEngine,
@@ -732,7 +733,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public JpaExpression<Double> exp(Expression<? extends Number> x) {
-		return getFunctionDescriptor( "exp" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.EXP ).generateSqmExpression(
 				(SqmExpression<?>) x,
 				null,
 				queryEngine,
@@ -742,7 +743,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public JpaExpression<Double> ln(Expression<? extends Number> x) {
-		return getFunctionDescriptor( "ln" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.LN ).generateSqmExpression(
 				(SqmExpression<?>) x,
 				null,
 				queryEngine,
@@ -752,7 +753,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public JpaExpression<Double> power(Expression<? extends Number> x, Expression<? extends Number> y) {
-		return getFunctionDescriptor( "power" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.POWER ).generateSqmExpression(
 				Arrays.asList( (SqmExpression<?>) x, (SqmExpression<?>) y),
 				null,
 				queryEngine,
@@ -762,7 +763,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public JpaExpression<Double> power(Expression<? extends Number> x, Number y) {
-		return getFunctionDescriptor( "power" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.POWER ).generateSqmExpression(
 				Arrays.asList( (SqmExpression<?>) x, value( y ) ),
 				null,
 				queryEngine,
@@ -772,7 +773,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T extends Number> JpaExpression<T> round(Expression<T> x, Integer n) {
-		return getFunctionDescriptor( "round" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.ROUND ).generateSqmExpression(
 				Arrays.asList( (SqmExpression<?>) x, value( n ) ),
 				null,
 				queryEngine,
@@ -791,7 +792,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <N extends Number> SqmExpression<N> abs(Expression<N> x) {
-		return getFunctionDescriptor( "abs" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.ABS ).generateSqmExpression(
 				(SqmTypedNode<?>) x,
 				null,
 				queryEngine,
@@ -951,7 +952,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmExpression<Double> sqrt(Expression<? extends Number> x) {
-		return getFunctionDescriptor( "sqrt" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.SQRT ).generateSqmExpression(
 				(SqmTypedNode<?>) x,
 				null,
 				queryEngine,
@@ -1139,7 +1140,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public SqmExpression<String> concat(Expression<String> x, Expression<String> y) {
 		final SqmExpression<String> xSqmExpression = (SqmExpression<String>) x;
 		final SqmExpression<String> ySqmExpression = (SqmExpression<String>) y;
-		return getFunctionDescriptor( "concat" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.CONCAT ).generateSqmExpression(
 				asList( xSqmExpression, ySqmExpression ),
 				null,
 				getQueryEngine(),
@@ -1152,7 +1153,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		final SqmExpression<String> xSqmExpression = (SqmExpression<String>) x;
 		final SqmExpression<String> ySqmExpression = value( y, xSqmExpression );
 
-		return getFunctionDescriptor( "concat" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.CONCAT ).generateSqmExpression(
 				asList( xSqmExpression, ySqmExpression ),
 				null,
 				getQueryEngine(),
@@ -1165,7 +1166,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		final SqmExpression<String> ySqmExpression = (SqmExpression<String>) y;
 		final SqmExpression<String> xSqmExpression = value( x, ySqmExpression );
 
-		return getFunctionDescriptor( "concat" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.CONCAT ).generateSqmExpression(
 				asList( xSqmExpression, ySqmExpression ),
 				null,
 				getQueryEngine(),
@@ -1178,7 +1179,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		final SqmExpression<String> xSqmExpression = value( x );
 		final SqmExpression<String> ySqmExpression = value( y, xSqmExpression );
 
-		return getFunctionDescriptor( "concat" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.CONCAT ).generateSqmExpression(
 				asList( xSqmExpression, ySqmExpression ),
 				null,
 				getQueryEngine(),
@@ -1199,7 +1200,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			SqmExpression<String> source,
 			SqmExpression<Integer> from,
 			SqmExpression<Integer> len) {
-		return getFunctionDescriptor( "substring" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.SUBSTRING ).generateSqmExpression(
 				len == null ? asList( source, from ) : asList( source, from, len ),
 				null,
 				getQueryEngine(),
@@ -1258,7 +1259,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		arguments.add( trimCharacter );
 		arguments.add( source );
 
-		return getFunctionDescriptor( "trim" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.TRIM ).generateSqmExpression(
 				arguments,
 				null,
 				getQueryEngine(),
@@ -1313,7 +1314,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmFunction<String> lower(Expression<String> x) {
-		return getFunctionDescriptor( "lower" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.LOWER ).generateSqmExpression(
 				(SqmExpression<String>) x,
 				null,
 				getQueryEngine(),
@@ -1323,7 +1324,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmFunction<String> upper(Expression<String> x) {
-		return getFunctionDescriptor( "upper" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.UPPER ).generateSqmExpression(
 				(SqmExpression<String>) x,
 				null,
 				getQueryEngine(),
@@ -1333,7 +1334,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmFunction<Integer> length(Expression<String> argument) {
-		return getFunctionDescriptor( "length" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.LENGTH ).generateSqmExpression(
 				(SqmExpression<String>) argument,
 				null,
 				getQueryEngine(),
@@ -1369,7 +1370,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			);
 		}
 
-		return getFunctionDescriptor("locate").generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.LOCATE ).generateSqmExpression(
 				arguments,
 				null,
 				getQueryEngine(),
@@ -1406,7 +1407,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmFunction<Date> currentDate() {
-		return getFunctionDescriptor("current_date")
+		return getFunctionDescriptor( StandardFunctions.CURRENT_DATE )
 				.generateSqmExpression(
 						null,
 						queryEngine,
@@ -1416,7 +1417,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmFunction<Timestamp> currentTimestamp() {
-		return getFunctionDescriptor("current_timestamp")
+		return getFunctionDescriptor( StandardFunctions.CURRENT_TIMESTAMP )
 				.generateSqmExpression(
 						null,
 						queryEngine,
@@ -1426,7 +1427,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmFunction<Time> currentTime() {
-		return getFunctionDescriptor("current_time")
+		return getFunctionDescriptor( StandardFunctions.CURRENT_TIME )
 				.generateSqmExpression(
 						null,
 						queryEngine,
@@ -1436,7 +1437,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmFunction<Instant> currentInstant() {
-		return getFunctionDescriptor("current_timestamp")
+		return getFunctionDescriptor( StandardFunctions.CURRENT_TIMESTAMP )
 				.generateSqmExpression(
 						getJpaMetamodel().getTypeConfiguration()
 								.getBasicTypeRegistry()
@@ -1448,7 +1449,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public JpaExpression<LocalDate> localDate() {
-		return getFunctionDescriptor("local_date")
+		return getFunctionDescriptor( StandardFunctions.LOCAL_DATE )
 				.generateSqmExpression(
 						null,
 						queryEngine,
@@ -1458,7 +1459,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public JpaExpression<LocalDateTime> localDateTime() {
-		return getFunctionDescriptor("local_datetime")
+		return getFunctionDescriptor( StandardFunctions.LOCAL_DATETIME )
 				.generateSqmExpression(
 						null,
 						queryEngine,
@@ -1468,7 +1469,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public JpaExpression<LocalTime> localTime() {
-		return getFunctionDescriptor("local_time")
+		return getFunctionDescriptor( StandardFunctions.LOCAL_TIME )
 				.generateSqmExpression(
 						null,
 						queryEngine,
@@ -1701,7 +1702,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 				second.getNodeType()
 		);
 
-		return getFunctionDescriptor("nullif").generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.NULLIF ).generateSqmExpression(
 				asList( first, second ),
 				type,
 				getQueryEngine(),

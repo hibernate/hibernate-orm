@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -44,7 +45,7 @@ public class TrimFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	public TrimFunction(Dialect dialect, TypeConfiguration typeConfiguration) {
 		super(
-				"trim",
+				StandardFunctions.TRIM,
 				new ArgumentTypesValidator(
 						StandardArgumentsValidators.exactly( 3 ),
 						TRIM_SPEC, STRING, STRING
@@ -81,7 +82,7 @@ public class TrimFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 //
 //		String trim = dialect.trimPattern( specification, trimCharacter );
 //		return queryEngine.getSqmFunctionRegistry()
-//				.patternDescriptorBuilder( "trim", trim )
+//				.patternDescriptorBuilder( StandardFunctions.TRIM, trim )
 //				.setInvariantType( StandardBasicTypes.STRING )
 //				.setExactArgumentCount( 1 )
 //				.descriptor() //TODO: we could cache the 6 variations here

@@ -17,6 +17,7 @@ import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -50,7 +51,7 @@ public class TimestampaddFunction
 
 	public TimestampaddFunction(Dialect dialect, TypeConfiguration typeConfiguration) {
 		super(
-				"timestampadd",
+				StandardFunctions.TIMESTAMPADD,
 				new ArgumentTypesValidator(
 						StandardArgumentsValidators.exactly( 3 ),
 						TEMPORAL_UNIT, INTEGER, TEMPORAL
@@ -90,7 +91,7 @@ public class TimestampaddFunction
 //		SqmExpression<?> to = (SqmExpression<?>) arguments.get(2);
 //		return queryEngine.getSqmFunctionRegistry()
 //				.patternDescriptorBuilder(
-//						"timestampadd",
+//						StandardFunctions.TIMESTAMPADD,
 //						dialect.timestampaddPattern(
 //								field.getUnit(),
 //								typeConfiguration.isSqlTimestampType( to.getNodeType() )

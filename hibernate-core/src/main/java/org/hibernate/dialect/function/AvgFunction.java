@@ -17,6 +17,7 @@ import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -46,7 +47,7 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			TypeConfiguration typeConfiguration,
 			SqlAstNodeRenderingMode defaultArgumentRenderingMode) {
 		super(
-				"avg",
+				StandardFunctions.AVG,
 				FunctionKind.AGGREGATE,
 				new ArgumentTypesValidator( StandardArgumentsValidators.exactly( 1 ), NUMERIC ),
 				StandardFunctionReturnTypeResolvers.invariant(
@@ -56,7 +57,7 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		);
 		this.defaultArgumentRenderingMode = defaultArgumentRenderingMode;
 		doubleType = typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE );
-		//This is kinda wrong, we're supposed to use findFunctionDescriptor("cast"), not instantiate CastFunction
+		//This is kinda wrong, we're supposed to use findFunctionDescriptor( StandardFunctions.CAST ), not instantiate CastFunction
 		//However, since no Dialects currently override the cast() function, it's OK for now
 		castFunction = new CastFunction( dialect, dialect.getPreferredSqlTypeCodeForBoolean() );
 	}

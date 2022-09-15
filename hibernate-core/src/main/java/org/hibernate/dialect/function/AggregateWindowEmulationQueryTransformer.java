@@ -16,6 +16,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.ReturnableType;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
@@ -129,7 +130,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 			final Expression finalExpression;
 			if ( expression == windowFunction ) {
 				finalExpression = new SelfRenderingAggregateFunctionSqlAstExpression(
-						"min",
+						StandardFunctions.MIN,
 						(sqlAppender, sqlAstArguments, walker1) -> {
 							sqlAppender.appendSql( "min(" );
 							sqlAstArguments.get( 0 ).accept( walker1 );

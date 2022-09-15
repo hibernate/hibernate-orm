@@ -44,6 +44,7 @@ import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.NullOrdering;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -332,7 +333,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		final TypeConfiguration typeConfiguration = queryEngine.getTypeConfiguration();
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
-				"locate",
+				StandardFunctions.LOCATE,
 				typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
 				"locate(?2,?1)",
 				"locate(?2,?1,?3)",
@@ -344,13 +345,15 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		functionFactory.ceiling_ceil();
 		functionFactory.concat_pipeOperator();
+		functionFactory.repeat_rpad();
 		functionFactory.trim2();
 		functionFactory.cot();
-		functionFactory.cosh();
-		functionFactory.sinh();
-		functionFactory.tanh();
-		functionFactory.log10_log();
+		functionFactory.hyperbolic();
+		functionFactory.log();
 		functionFactory.bitand();
+		functionFactory.bitor();
+		functionFactory.bitxor();
+		functionFactory.bitnot();
 		functionFactory.hourMinuteSecond();
 		functionFactory.yearMonthDay();
 		functionFactory.dayofweekmonthyear();
@@ -360,6 +363,9 @@ public abstract class AbstractHANADialect extends Dialect {
 		functionFactory.characterLength_length( SqlAstNodeRenderingMode.DEFAULT );
 		functionFactory.ascii();
 		functionFactory.chr_char();
+		functionFactory.radians_acos();
+		functionFactory.degrees_acos();
+		functionFactory.rand();
 		functionFactory.addYearsMonthsDaysHoursMinutesSeconds();
 		functionFactory.daysBetween();
 		functionFactory.secondsBetween();
@@ -374,7 +380,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		functionFactory.inverseDistributionOrderedSetAggregates();
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 
-		queryEngine.getSqmFunctionRegistry().register( "timestampadd",
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.TIMESTAMPADD,
 				new IntegralTimestampaddFunction( this, typeConfiguration ) );
 	}
 

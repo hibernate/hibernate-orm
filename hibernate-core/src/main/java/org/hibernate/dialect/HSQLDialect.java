@@ -189,6 +189,7 @@ public class HSQLDialect extends Dialect {
 		functionFactory.cot();
 		functionFactory.radians();
 		functionFactory.degrees();
+		functionFactory.ln_log();
 		functionFactory.log10();
 		functionFactory.rand();
 		functionFactory.trunc();

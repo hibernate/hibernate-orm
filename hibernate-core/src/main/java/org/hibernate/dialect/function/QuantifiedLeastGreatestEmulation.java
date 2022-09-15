@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -31,7 +32,7 @@ public class QuantifiedLeastGreatestEmulation
 
 	public QuantifiedLeastGreatestEmulation(boolean least) {
 		super(
-				least ? "least" : "greatest",
+				least ? StandardFunctions.LEAST : StandardFunctions.GREATEST,
 				new ArgumentTypesValidator( StandardArgumentsValidators.min( 2 ), COMPARABLE, COMPARABLE ),
 				StandardFunctionReturnTypeResolvers.useFirstNonNull(),
 				StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE

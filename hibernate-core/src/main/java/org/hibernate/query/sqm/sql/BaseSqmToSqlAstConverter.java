@@ -136,6 +136,7 @@ import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpr
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.sql.internal.BasicValuedPathInterpretation;
@@ -1409,7 +1410,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 									0,
 									new Over<>(
 										new SelfRenderingFunctionSqlAstExpression(
-												"row_number",
+												StandardFunctions.ROW_NUMBER,
 												(appender, args, walker) -> appender.appendSql( "row_number()" ),
 												Collections.emptyList(),
 												rowNumberType,
@@ -3780,7 +3781,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private Expression extractEpoch(Expression intervalExpression) {
 		final BasicType<Integer> intType = getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
 		return new SelfRenderingFunctionSqlAstExpression(
-				"extract",
+				StandardFunctions.EXTRACT,
 				(sqlAppender, sqlAstArguments, walker) ->
 						new PatternRenderer(
 								creationContext.getSessionFactory()
@@ -4009,7 +4010,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					.getSessionFactory()
 					.getQueryEngine()
 					.getSqmFunctionRegistry()
-					.findFunctionDescriptor( "count" );
+					.findFunctionDescriptor( StandardFunctions.COUNT );
 			final BasicType<Integer> integerType = creationContext.getMappingMetamodel()
 					.getTypeConfiguration()
 					.getBasicTypeForJavaType( Integer.class );
@@ -4289,8 +4290,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final List<String> columnNames = new ArrayList<>( jdbcTypeCount );
 				final List<ColumnReference> resultColumnReferences = new ArrayList<>( jdbcTypeCount );
 				final NavigablePath navigablePath = pluralPartPath.getNavigablePath();
-				final Boolean max = functionName.equalsIgnoreCase( "max" ) ? Boolean.TRUE
-						: ( functionName.equalsIgnoreCase( "min" ) ? Boolean.FALSE : null );
+				final Boolean max = functionName.equalsIgnoreCase( StandardFunctions.MAX ) ? Boolean.TRUE
+						: ( functionName.equalsIgnoreCase( StandardFunctions.MIN ) ? Boolean.FALSE : null );
 				final AbstractSqmSelfRenderingFunctionDescriptor functionDescriptor =
 						(AbstractSqmSelfRenderingFunctionDescriptor) creationContext
 								.getSessionFactory()
@@ -5501,7 +5502,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public Object visitCoalesce(SqmCoalesce<?> sqmCoalesce) {
 		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
 		final QueryEngine queryEngine = sessionFactory.getQueryEngine();
-		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "coalesce" )
+		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( StandardFunctions.COALESCE )
 				.generateSqmExpression(
 						sqmCoalesce.getArguments(),
 						null,
@@ -5843,14 +5844,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return (TimestampaddFunction)
 				getCreationContext().getSessionFactory()
 						.getQueryEngine().getSqmFunctionRegistry()
-						.findFunctionDescriptor( "timestampadd" );
+						.findFunctionDescriptor( StandardFunctions.TIMESTAMPADD );
 	}
 
 	private TimestampdiffFunction timestampdiff() {
 		return (TimestampdiffFunction)
 				getCreationContext().getSessionFactory()
 						.getQueryEngine().getSqmFunctionRegistry()
-						.findFunctionDescriptor( "timestampdiff" );
+						.findFunctionDescriptor( StandardFunctions.TIMESTAMPDIFF );
 	}
 
 	private <X> X cleanly(Supplier<X> supplier) {

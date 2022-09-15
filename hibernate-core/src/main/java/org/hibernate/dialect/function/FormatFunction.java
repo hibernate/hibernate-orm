@@ -30,6 +30,7 @@ import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -75,7 +76,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 			boolean concatPattern,
 			TypeConfiguration typeConfiguration) {
 		super(
-				"format",
+				StandardFunctions.FORMAT,
 				new ArgumentTypesValidator( StandardArgumentsValidators.exactly( 2 ), TEMPORAL, STRING ),
 				StandardFunctionReturnTypeResolvers.invariant( typeConfiguration.getBasicTypeRegistry().resolve(
 						StandardBasicTypes.STRING ) ),
@@ -153,7 +154,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 					argumentsValidator,
 					returnTypeResolver,
 					queryEngine.getCriteriaBuilder(),
-					"format"
+					StandardFunctions.FORMAT
 			);
 			this.supportsPatternLiterals = supportsPatternLiterals;
 			this.typeConfiguration = queryEngine.getTypeConfiguration();
@@ -178,7 +179,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 				final SqlTuple sqlTuple = ( (SqlTupleContainer) expression ).getSqlTuple();
 				final AbstractSqmSelfRenderingFunctionDescriptor timestampaddFunction = getFunction(
 						walker,
-						"timestampadd"
+						StandardFunctions.TIMESTAMPADD
 				);
 				final BasicType<Integer> integerType = typeConfiguration.getBasicTypeRegistry()
 						.resolve( StandardBasicTypes.INTEGER );
@@ -191,15 +192,15 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 				if ( format.getFormat().contains( "x" ) || !supportsPatternLiterals ) {
 					final AbstractSqmSelfRenderingFunctionDescriptor concatFunction = getFunction(
 							walker,
-							"concat"
+							StandardFunctions.CONCAT
 					);
 					final AbstractSqmSelfRenderingFunctionDescriptor substringFunction = getFunction(
 							walker,
-							"substring",
+							StandardFunctions.SUBSTRING,
 							3
 					);
-					final AbstractSqmSelfRenderingFunctionDescriptor floorFunction = getFunction( walker, "floor" );
-					final AbstractSqmSelfRenderingFunctionDescriptor castFunction = getFunction( walker, "cast" );
+					final AbstractSqmSelfRenderingFunctionDescriptor floorFunction = getFunction( walker, StandardFunctions.FLOOR );
+					final AbstractSqmSelfRenderingFunctionDescriptor castFunction = getFunction( walker, StandardFunctions.CAST );
 					final BasicType<String> stringType = typeConfiguration.getBasicTypeRegistry()
 							.resolve( StandardBasicTypes.STRING );
 					final Dialect dialect = walker.getCreationContext()
@@ -369,7 +370,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 				if ( !supportsPatternLiterals ) {
 					final AbstractSqmSelfRenderingFunctionDescriptor concatFunction = getFunction(
 							walker,
-							"concat"
+							StandardFunctions.CONCAT
 					);
 					final BasicType<String> stringType = typeConfiguration.getBasicTypeRegistry()
 							.resolve( StandardBasicTypes.STRING );
@@ -443,7 +444,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 			final Expression offsetExpression = sqlTuple.getExpressions().get( 1 );
 
 			return new SelfRenderingFunctionSqlAstExpression(
-					"timestampadd",
+					StandardFunctions.TIMESTAMPADD,
 					timestampaddFunction,
 					List.of(
 							new DurationUnit( TemporalUnit.SECOND, integerType ),
@@ -567,7 +568,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 								offsetExpression
 						),
 						new SelfRenderingFunctionSqlAstExpression(
-								"substring",
+								StandardFunctions.SUBSTRING,
 								substringFunction,
 								List.of(
 										offsetExpression,
@@ -670,7 +671,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 				Expression offsetExpression) {
 			if ( offsetExpression.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType().isString() ) {
 				return new SelfRenderingFunctionSqlAstExpression(
-						"substring",
+						StandardFunctions.SUBSTRING,
 						substringFunction,
 						List.of(
 								offsetExpression,
@@ -762,7 +763,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 				return expression2;
 			}
 			else if ( expression instanceof SelfRenderingFunctionSqlAstExpression
-					&& "concat".equals( ( (SelfRenderingFunctionSqlAstExpression) expression ).getFunctionName() ) ) {
+					&& StandardFunctions.CONCAT.equals( ( (SelfRenderingFunctionSqlAstExpression) expression ).getFunctionName() ) ) {
 				List<SqlAstNode> list = (List<SqlAstNode>) ( (SelfRenderingFunctionSqlAstExpression) expression ).getArguments();
 				final SqlAstNode lastOperand = list.get( list.size() - 1 );
 				if ( expression2 instanceof QueryLiteral<?> && lastOperand instanceof QueryLiteral<?> ) {
@@ -781,7 +782,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 				return expression;
 			}
 			else if ( expression2 instanceof SelfRenderingFunctionSqlAstExpression
-					&& "concat".equals( ( (SelfRenderingFunctionSqlAstExpression) expression2 ).getFunctionName() ) ) {
+					&& StandardFunctions.CONCAT.equals( ( (SelfRenderingFunctionSqlAstExpression) expression2 ).getFunctionName() ) ) {
 				List<SqlAstNode> list = (List<SqlAstNode>) ( (SelfRenderingFunctionSqlAstExpression) expression2 ).getArguments();
 				final SqlAstNode firstOperand = list.get( 0 );
 				if ( expression instanceof QueryLiteral<?> && firstOperand instanceof QueryLiteral<?> ) {
@@ -811,12 +812,12 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 				list.add( expression );
 				list.add( expression2 );
 				return new SelfRenderingFunctionSqlAstExpression(
-							"concat",
-							concatFunction,
-							list,
-							stringType,
-							stringType
-					);
+						StandardFunctions.CONCAT,
+						concatFunction,
+						list,
+						stringType,
+						stringType
+				);
 			}
 		}
 
@@ -826,11 +827,11 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 				BasicType<Integer> integerType,
 				Expression offsetExpression) {
 			return new SelfRenderingFunctionSqlAstExpression(
-					"cast",
+					StandardFunctions.CAST,
 					castFunction,
 					List.of(
 							new SelfRenderingFunctionSqlAstExpression(
-									"floor",
+									StandardFunctions.FLOOR,
 									floorFunction,
 									List.of(
 											new BinaryArithmeticExpression(
@@ -856,11 +857,11 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 				BasicType<Integer> integerType,
 				Expression offsetExpression){
 			return new SelfRenderingFunctionSqlAstExpression(
-					"cast",
+					StandardFunctions.CAST,
 					castFunction,
 					List.of(
 							new SelfRenderingFunctionSqlAstExpression(
-									"floor",
+									StandardFunctions.FLOOR,
 									floorFunction,
 									List.of(
 											new BinaryArithmeticExpression(

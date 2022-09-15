@@ -247,7 +247,9 @@ public class H2Dialect extends Dialect {
 		functionFactory.cot();
 		functionFactory.radians();
 		functionFactory.degrees();
+		functionFactory.log();
 		functionFactory.log10();
+		functionFactory.hyperbolic();
 		functionFactory.rand();
 		functionFactory.truncate();
 		functionFactory.soundex();
@@ -255,6 +257,7 @@ public class H2Dialect extends Dialect {
 		functionFactory.bitand();
 		functionFactory.bitor();
 		functionFactory.bitxor();
+		functionFactory.bitnot();
 		functionFactory.bitAndOr();
 		functionFactory.yearMonthDay();
 		functionFactory.hourMinuteSecond();

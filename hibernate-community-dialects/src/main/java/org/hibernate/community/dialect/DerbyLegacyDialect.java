@@ -51,6 +51,7 @@ import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableIn
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -271,7 +272,7 @@ public class DerbyLegacyDialect extends Dialect {
 		// Derby needs an actual argument type for aggregates like SUM, AVG, MIN, MAX to determine the result type
 		functionFactory.aggregates( this, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 		queryEngine.getSqmFunctionRegistry().register(
-				"count",
+				StandardFunctions.COUNT,
 				new CountFunction(
 						this,
 						queryEngine.getTypeConfiguration(),
@@ -287,13 +288,11 @@ public class DerbyLegacyDialect extends Dialect {
 
 		functionFactory.concat_pipeOperator();
 		functionFactory.cot();
-		functionFactory.chr_char();
 		functionFactory.degrees();
 		functionFactory.radians();
+		functionFactory.ln_log();
 		functionFactory.log10();
-		functionFactory.sinh();
-		functionFactory.cosh();
-		functionFactory.tanh();
+		functionFactory.hyperbolic();
 		functionFactory.pi();
 		functionFactory.rand();
 		functionFactory.trim1();
@@ -305,12 +304,13 @@ public class DerbyLegacyDialect extends Dialect {
 		functionFactory.leftRight_substrLength();
 		functionFactory.characterLength_length( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 		functionFactory.power_expLn();
+		functionFactory.inverseHyperbolic_expLn();
 		functionFactory.round_floor();
 		functionFactory.octetLength_pattern( "length(?1)" );
 		functionFactory.bitLength_pattern( "length(?1)*8" );
 
 		queryEngine.getSqmFunctionRegistry().register(
-				"concat",
+				StandardFunctions.CONCAT,
 				new CastingConcatFunction(
 						this,
 						"||",
@@ -321,11 +321,11 @@ public class DerbyLegacyDialect extends Dialect {
 		);
 
 		//no way I can see to pad with anything other than spaces
-		queryEngine.getSqmFunctionRegistry().register( "lpad", new DerbyLpadEmulation( queryEngine.getTypeConfiguration() ) );
-		queryEngine.getSqmFunctionRegistry().register( "rpad", new DerbyRpadEmulation( queryEngine.getTypeConfiguration() ) );
-		queryEngine.getSqmFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
-		queryEngine.getSqmFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
-		queryEngine.getSqmFunctionRegistry().register( "overlay", new InsertSubstringOverlayEmulation( queryEngine.getTypeConfiguration(), true ) );
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.LPAD, new DerbyLpadEmulation( queryEngine.getTypeConfiguration() ) );
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.RPAD, new DerbyRpadEmulation( queryEngine.getTypeConfiguration() ) );
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.LEAST, new CaseLeastGreatestEmulation( true ) );
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.GREATEST, new CaseLeastGreatestEmulation( false ) );
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.OVERLAY, new InsertSubstringOverlayEmulation( queryEngine.getTypeConfiguration(), true ) );
 	}
 
 	@Override

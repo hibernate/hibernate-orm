@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescript
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -34,7 +35,7 @@ public class ConcatPipeFunction extends AbstractSqmSelfRenderingFunctionDescript
 
 	public ConcatPipeFunction(String clobPattern, TypeConfiguration typeConfiguration) {
 		super(
-				"concat",
+				StandardFunctions.CONCAT,
 				StandardArgumentsValidators.min( 1 ),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )

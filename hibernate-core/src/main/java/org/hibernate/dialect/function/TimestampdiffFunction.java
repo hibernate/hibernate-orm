@@ -21,6 +21,7 @@ import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
@@ -56,7 +57,7 @@ public class TimestampdiffFunction
 
 	public TimestampdiffFunction(Dialect dialect, TypeConfiguration typeConfiguration) {
 		super(
-				"timestampdiff",
+				StandardFunctions.TIMESTAMPDIFF,
 				new ArgumentTypesValidator(
 						StandardArgumentsValidators.exactly( 3 ),
 						TEMPORAL_UNIT, TEMPORAL, TEMPORAL

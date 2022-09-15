@@ -66,6 +66,7 @@ import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.query.sqm.tree.expression.Conversion;
@@ -253,7 +254,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			castFunction = (AbstractSqmSelfRenderingFunctionDescriptor) sessionFactory
 					.getQueryEngine()
 					.getSqmFunctionRegistry()
-					.findFunctionDescriptor( "cast" );
+					.findFunctionDescriptor( StandardFunctions.CAST );
 		}
 		return castFunction;
 	}

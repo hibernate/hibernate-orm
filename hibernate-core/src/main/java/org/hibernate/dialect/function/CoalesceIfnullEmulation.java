@@ -12,6 +12,7 @@ import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -25,7 +26,7 @@ public class CoalesceIfnullEmulation
 
 	public CoalesceIfnullEmulation() {
 		super(
-				"ifnull",
+				StandardFunctions.IFNULL,
 				StandardArgumentsValidators.exactly( 2 ),
 				StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE
 		);
@@ -37,7 +38,7 @@ public class CoalesceIfnullEmulation
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "coalesce" )
+		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( StandardFunctions.COALESCE )
 				.generateSqmExpression(
 						arguments,
 						impliedResultType,

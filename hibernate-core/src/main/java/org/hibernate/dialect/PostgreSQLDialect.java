@@ -16,7 +16,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import jakarta.persistence.TemporalType;
@@ -59,6 +58,7 @@ import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -89,6 +89,7 @@ import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
 import static org.hibernate.query.sqm.TemporalUnit.MONTH;
 import static org.hibernate.query.sqm.TemporalUnit.QUARTER;
 import static org.hibernate.query.sqm.TemporalUnit.YEAR;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -496,6 +497,7 @@ public class PostgreSQLDialect extends Dialect {
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 
 		functionFactory.round_floor(); //Postgres round(x,n) does not accept double
+		functionFactory.pi();
 		functionFactory.cot();
 		functionFactory.radians();
 		functionFactory.degrees();
@@ -503,9 +505,15 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.log();
 		if ( getVersion().isSameOrAfter(12) ) {
 			functionFactory.log10();
+			functionFactory.hyperbolic();
+			functionFactory.inverseHyperbolic();
 		}
 		else {
-			queryEngine.getSqmFunctionRegistry().registerAlternateKey( "log10", "log" );
+			queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( StandardFunctions.LOG10, "log(?1)" )
+					.setExactArgumentCount( 1 )
+					.setParameterTypes(NUMERIC)
+					.setInvariantType( queryEngine.getTypeConfiguration().getBasicTypeForJavaType( Double.class ) )
+					.register();
 		}
 		functionFactory.cbrt();
 		functionFactory.trim2();
@@ -540,6 +548,8 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.insert_overlay();
 		functionFactory.overlay();
 		functionFactory.soundex(); //was introduced in Postgres 9 apparently
+		functionFactory.rand_random();
+		functionFactory.truncate();
 
 		functionFactory.locate_positionSubstring();
 		functionFactory.windowFunctions();

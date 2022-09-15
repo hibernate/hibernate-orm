@@ -11,6 +11,7 @@ import java.util.List;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -27,7 +28,7 @@ public class SqlFunction
 
 	public SqlFunction() {
 		super(
-				"sql",
+				StandardFunctions.SQL,
 				StandardArgumentsValidators.min( 1 ),
 				StandardFunctionReturnTypeResolvers.invariant( JavaObjectType.INSTANCE ),
 				null

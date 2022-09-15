@@ -17,6 +17,7 @@ import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -36,8 +37,6 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STR
  */
 public class ListaggStringAggEmulation extends AbstractSqmSelfRenderingFunctionDescriptor {
 
-	public static final String FUNCTION_NAME = "listagg";
-
 	private final String functionName;
 	private final String stringType;
 	private final boolean withinGroupClause;
@@ -48,7 +47,7 @@ public class ListaggStringAggEmulation extends AbstractSqmSelfRenderingFunctionD
 			boolean withinGroupClause,
 			TypeConfiguration typeConfiguration) {
 		super(
-				FUNCTION_NAME,
+				StandardFunctions.LISTAGG,
 				FunctionKind.ORDERED_SET_AGGREGATE,
 				new ArgumentTypesValidator( StandardArgumentsValidators.exactly( 2 ), STRING, STRING ),
 				StandardFunctionReturnTypeResolvers.invariant(

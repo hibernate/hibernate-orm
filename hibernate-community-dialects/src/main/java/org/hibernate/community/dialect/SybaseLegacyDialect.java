@@ -32,6 +32,7 @@ import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
@@ -207,7 +208,7 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 
 		// For SQL-Server we need to cast certain arguments to varchar(16384) to be able to concat them
 		queryEngine.getSqmFunctionRegistry().register(
-				"count",
+				StandardFunctions.COUNT,
 				new CountFunction(
 						this,
 						queryEngine.getTypeConfiguration(),
@@ -231,7 +232,7 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 		functionFactory.octetLength_pattern( "datalength(?1)" );
 		functionFactory.bitLength_pattern( "datalength(?1)*8" );
 
-		queryEngine.getSqmFunctionRegistry().register( "timestampadd",
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.TIMESTAMPADD,
 				new IntegralTimestampaddFunction( this, queryEngine.getTypeConfiguration() ) );
 	}
 
@@ -305,7 +306,7 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 	@Override
 	public String trimPattern(TrimSpec specification, char character) {
 		return super.trimPattern(specification, character)
-				.replace("replace", "str_replace");
+				.replace( StandardFunctions.REPLACE, "str_replace" );
 	}
 
 	@Override

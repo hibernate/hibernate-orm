@@ -15,6 +15,7 @@ import org.hibernate.envers.internal.synchronization.SessionCacheCleaner;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.envers.strategy.AuditStrategy;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.MIDDLE_ENTITY_ALIAS_DEF_AUD_STR;
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REVISION_PARAMETER;
@@ -83,7 +84,7 @@ public class DefaultAuditStrategy implements AuditStrategy {
 		// create a subquery builder
 		// SELECT max(e.revision) FROM versionsReferencedEntity e2
 		QueryBuilder maxERevQb = rootQueryBuilder.newSubQueryBuilder( idData.getAuditEntityName(), alias2 );
-		maxERevQb.addProjection( "max", alias2, revisionPropertyPath, false );
+		maxERevQb.addProjection( StandardFunctions.MAX, alias2, revisionPropertyPath, false );
 		// WHERE
 		Parameters maxERevQbParameters = maxERevQb.getRootParameters();
 		// e2.revision <= :revision
@@ -126,7 +127,7 @@ public class DefaultAuditStrategy implements AuditStrategy {
 				versionsMiddleEntityName,
 				MIDDLE_ENTITY_ALIAS_DEF_AUD_STR
 		);
-		maxEeRevQb.addProjection( "max", MIDDLE_ENTITY_ALIAS_DEF_AUD_STR, revisionPropertyPath, false );
+		maxEeRevQb.addProjection( StandardFunctions.MAX, MIDDLE_ENTITY_ALIAS_DEF_AUD_STR, revisionPropertyPath, false );
 		// WHERE
 		Parameters maxEeRevQbParameters = maxEeRevQb.getRootParameters();
 		// ee2.revision <= :revision

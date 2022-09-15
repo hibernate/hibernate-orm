@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
 import org.hibernate.type.StandardBasicTypes;
@@ -33,7 +34,7 @@ public class CastStrEmulation
 
 	public CastStrEmulation(TypeConfiguration typeConfiguration) {
 		super(
-				"str",
+				StandardFunctions.STR,
 				StandardArgumentsValidators.exactly( 1 ),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
@@ -56,7 +57,7 @@ public class CastStrEmulation
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
 		final SqmTypedNode<?> argument = arguments.get( 0 );
-		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "cast" )
+		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( StandardFunctions.CAST )
 				.generateSqmExpression(
 						asList(
 								argument,

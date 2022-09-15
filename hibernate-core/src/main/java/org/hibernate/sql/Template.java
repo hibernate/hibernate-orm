@@ -18,6 +18,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -186,7 +187,7 @@ public final class Template {
 			}
 
 			// Special processing for ANSI SQL EXTRACT function
-			if ( "extract".equals( lcToken ) && "(".equals( nextToken ) ) {
+			if ( StandardFunctions.EXTRACT.equals( lcToken ) && "(".equals( nextToken ) ) {
 				final String field = extractUntil( tokens, "from" );
 				final String source = renderWhereStringTemplate(
 						extractUntil( tokens, ")" ),
@@ -204,7 +205,7 @@ public final class Template {
 			}
 
 			// Special processing for ANSI SQL TRIM function
-			if ( "trim".equals( lcToken ) && "(".equals( nextToken ) ) {
+			if ( StandardFunctions.TRIM.equals( lcToken ) && "(".equals( nextToken ) ) {
 				List<String> operands = new ArrayList<>();
 				StringBuilder builder = new StringBuilder();
 
@@ -449,7 +450,7 @@ public final class Template {
 //			}
 //
 //			// Special processing for ANSI SQL EXTRACT function
-//			if ( "extract".equals( lcToken ) && "(".equals( nextToken ) ) {
+//			if ( StandardFunctions.EXTRACT.equals( lcToken ) && "(".equals( nextToken ) ) {
 //				final String field = extractUntil( tokens, "from" );
 //				final String source = renderWhereStringTemplate(
 //						extractUntil( tokens, ")" ),
@@ -466,7 +467,7 @@ public final class Template {
 //			}
 //
 //			// Special processing for ANSI SQL TRIM function
-//			if ( "trim".equals( lcToken ) && "(".equals( nextToken ) ) {
+//			if ( StandardFunctions.TRIM.equals( lcToken ) && "(".equals( nextToken ) ) {
 //				List<String> operands = new ArrayList<String>();
 //				StringBuilder builder = new StringBuilder();
 //

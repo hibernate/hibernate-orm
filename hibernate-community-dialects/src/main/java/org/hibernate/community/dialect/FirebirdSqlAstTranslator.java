@@ -13,6 +13,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -228,7 +229,7 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	public void visitSelfRenderingExpression(SelfRenderingExpression expression) {
 		// see comments in visitParameter
 		boolean inFunction = this.inFunction;
-		this.inFunction = !( expression instanceof FunctionExpression ) || !"cast".equals( ( (FunctionExpression) expression).getFunctionName() );
+		this.inFunction = !( expression instanceof FunctionExpression ) || !StandardFunctions.CAST.equals( ( (FunctionExpression) expression).getFunctionName() );
 		try {
 			super.visitSelfRenderingExpression( expression);
 		}

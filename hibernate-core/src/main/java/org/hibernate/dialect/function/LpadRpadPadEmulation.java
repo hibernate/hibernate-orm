@@ -15,6 +15,7 @@ import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.type.StandardBasicTypes;
@@ -41,7 +42,7 @@ public class LpadRpadPadEmulation
 
 	public LpadRpadPadEmulation(TypeConfiguration typeConfiguration) {
 		super(
-				"pad",
+				StandardFunctions.PAD,
 				new ArgumentTypesValidator(
 						StandardArgumentsValidators.between( 3, 4 ),
 						STRING, INTEGER, TRIM_SPEC, STRING
@@ -60,7 +61,7 @@ public class LpadRpadPadEmulation
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
 		SqmTrimSpecification padSpec = (SqmTrimSpecification) arguments.get(2);
-		String padName = padSpec.getSpecification() == TrimSpec.LEADING ? "lpad" : "rpad";
+		String padName = padSpec.getSpecification() == TrimSpec.LEADING ? StandardFunctions.LPAD : StandardFunctions.RPAD;
 		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( padName )
 				.generateSqmExpression(
 						arguments.size() > 3

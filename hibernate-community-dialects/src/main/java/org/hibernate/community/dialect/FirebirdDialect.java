@@ -56,6 +56,7 @@ import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -250,11 +251,9 @@ public class FirebirdDialect extends Dialect {
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 		functionFactory.concat_pipeOperator();
 		functionFactory.cot();
-		functionFactory.cosh();
-		functionFactory.sinh();
-		functionFactory.tanh();
+		functionFactory.hyperbolic();
 		if ( getVersion().isSameOrAfter( 3, 0 ) ) {
-			functionFactory.moreHyperbolic();
+			functionFactory.inverseHyperbolic();
 			functionFactory.stddevPopSamp();
 			functionFactory.varPopSamp();
 			functionFactory.covarPopSamp();
@@ -265,9 +264,6 @@ public class FirebirdDialect extends Dialect {
 		functionFactory.log10();
 		functionFactory.pi();
 		functionFactory.rand();
-		functionFactory.sinh();
-		functionFactory.tanh();
-		functionFactory.cosh();
 		functionFactory.trunc();
 		functionFactory.octetLength();
 		functionFactory.bitLength();
@@ -280,7 +276,7 @@ public class FirebirdDialect extends Dialect {
 
 		SqmFunctionRegistry functionRegistry = queryEngine.getSqmFunctionRegistry();
 		functionRegistry.registerBinaryTernaryPattern(
-				"locate",
+				StandardFunctions.LOCATE,
 				integerType,
 				"position(?1 in ?2)",
 				"position(?1,?2,?3)",
@@ -291,20 +287,20 @@ public class FirebirdDialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.setInvariantType( shortType )
 				.register();
-		functionRegistry.registerAlternateKey( "ascii", "ascii_val" );
+		functionRegistry.registerAlternateKey( StandardFunctions.ASCII, "ascii_val" );
 		functionRegistry.namedDescriptorBuilder( "ascii_char" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( characterType )
 				.register();
-		functionRegistry.registerAlternateKey( "chr", "ascii_char" );
-		functionRegistry.registerAlternateKey( "char", "ascii_char" );
+		functionRegistry.registerAlternateKey( StandardFunctions.CHR, "ascii_char" );
+		functionRegistry.registerAlternateKey( StandardFunctions.CHAR, "ascii_char" );
 		functionRegistry.registerPattern(
-				"radians",
+				StandardFunctions.DEGREES,
 				"((?1)*pi()/180e0)",
 				doubleType
 		);
 		functionRegistry.registerPattern(
-				"degrees",
+				StandardFunctions.DEGREES,
 				"((?1)*180e0/pi())",
 				doubleType
 		);

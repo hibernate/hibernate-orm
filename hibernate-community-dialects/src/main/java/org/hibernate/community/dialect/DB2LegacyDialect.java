@@ -48,6 +48,7 @@ import org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -243,7 +244,7 @@ public class DB2LegacyDialect extends Dialect {
 				.setParameterTypes(FunctionParameterType.STRING, FunctionParameterType.INTEGER, FunctionParameterType.INTEGER, FunctionParameterType.ANY)
 				.setArgumentListSignature( "(STRING string, INTEGER start[, INTEGER length[, units]])" )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "substring" )
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( StandardFunctions.SUBSTRING )
 				.setInvariantType(
 						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
 				)
@@ -286,7 +287,7 @@ public class DB2LegacyDialect extends Dialect {
 
 		// DB2 wants parameter operands to be casted to allow lengths bigger than 255
 		queryEngine.getSqmFunctionRegistry().register(
-				"concat",
+				StandardFunctions.CONCAT,
 				new CastingConcatFunction(
 						this,
 						"||",
@@ -297,7 +298,7 @@ public class DB2LegacyDialect extends Dialect {
 		);
 		// For the count distinct emulation distinct
 		queryEngine.getSqmFunctionRegistry().register(
-				"count",
+				StandardFunctions.COUNT,
 				new CountFunction(
 						this,
 						queryEngine.getTypeConfiguration(),
@@ -317,7 +318,7 @@ public class DB2LegacyDialect extends Dialect {
 		);
 
 		queryEngine.getSqmFunctionRegistry().register(
-				"format",
+				StandardFunctions.FORMAT,
 				new DB2FormatEmulation( queryEngine.getTypeConfiguration() )
 		);
 

@@ -19,6 +19,7 @@ import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -55,7 +56,7 @@ public class ExtractFunction
 
 	public ExtractFunction(Dialect dialect, TypeConfiguration typeConfiguration) {
 		super(
-				"extract",
+				StandardFunctions.EXTRACT,
 				new ArgumentTypesValidator(
 						StandardArgumentsValidators.exactly( 2 ),
 						TEMPORAL_UNIT, TEMPORAL
@@ -109,7 +110,7 @@ public class ExtractFunction
 							null,
 							StandardFunctionReturnTypeResolvers.useArgType( 1 ),
 							expression.nodeBuilder(),
-							"extract"
+							StandardFunctions.EXTRACT
 					);
 				}
 				else {
@@ -141,7 +142,7 @@ public class ExtractFunction
 						getArgumentsValidator(),
 						getReturnTypeResolver(),
 						expression.nodeBuilder(),
-						"extract"
+						StandardFunctions.EXTRACT
 				);
 		}
 	}
@@ -160,7 +161,7 @@ public class ExtractFunction
 		final SqmExtractUnit<Integer> dayOfUnit = new SqmExtractUnit<>( dayOf, intType, builder );
 		final SqmExpression<Integer> extractDayOf
 				= queryEngine.getSqmFunctionRegistry()
-						.findFunctionDescriptor("extract")
+						.findFunctionDescriptor( StandardFunctions.EXTRACT )
 						.generateSqmExpression(
 								asList( dayOfUnit, expressionToExtract ),
 								intType,
@@ -171,7 +172,7 @@ public class ExtractFunction
 		final SqmExtractUnit<Integer> dayOfWeekUnit = new SqmExtractUnit<>( DAY_OF_WEEK, intType, builder );
 		final SqmExpression<Integer> extractDayOfWeek
 				= queryEngine.getSqmFunctionRegistry()
-						.findFunctionDescriptor("extract")
+						.findFunctionDescriptor( StandardFunctions.EXTRACT )
 						.generateSqmExpression(
 								asList( dayOfWeekUnit, expressionToExtract ),
 								intType,
@@ -191,7 +192,7 @@ public class ExtractFunction
 		final SqmExpression<?> daySubtraction;
 		if ( dialect.requiresFloatCastingOfIntegerDivision() ) {
 			daySubtraction = queryEngine.getSqmFunctionRegistry()
-					.findFunctionDescriptor("cast")
+					.findFunctionDescriptor( StandardFunctions.CAST )
 					.generateSqmExpression(
 							asList( daySubtractionInt, new SqmCastTarget<>( floatType, builder ) ),
 							floatType,
@@ -203,7 +204,7 @@ public class ExtractFunction
 			daySubtraction = daySubtractionInt;
 		}
 		return queryEngine.getSqmFunctionRegistry()
-				.findFunctionDescriptor("ceiling")
+				.findFunctionDescriptor( StandardFunctions.CEILING )
 				.generateSqmExpression(
 						new SqmBinaryArithmetic<>(
 								ADD,
@@ -238,7 +239,7 @@ public class ExtractFunction
 //		);
 		BasicType<Long> longType = typeConfiguration.getBasicTypeForJavaType(Long.class);
 		return queryEngine.getSqmFunctionRegistry()
-				.findFunctionDescriptor("floor")
+				.findFunctionDescriptor( StandardFunctions.FLOOR )
 				.generateSqmExpression(
 						arg,
 						longType, // Implicit cast to long
@@ -290,7 +291,7 @@ public class ExtractFunction
 				builder
 		);
 		return queryEngine.getSqmFunctionRegistry()
-				.findFunctionDescriptor("format")
+				.findFunctionDescriptor( StandardFunctions.FORMAT )
 				.generateSqmExpression(
 						asList( expressionToExtract, offsetFormat ),
 						offsetType,
@@ -308,7 +309,7 @@ public class ExtractFunction
 
 		final SqmCastTarget<?> target = new SqmCastTarget<>( type, builder );
 		return queryEngine.getSqmFunctionRegistry()
-				.findFunctionDescriptor("cast")
+				.findFunctionDescriptor( StandardFunctions.CAST )
 				.generateSqmExpression(
 						asList( expressionToExtract, target ),
 						type,

@@ -15,7 +15,6 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.TypeContributions;
@@ -61,6 +60,7 @@ import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -141,12 +141,9 @@ public class OracleDialect extends Dialect {
 		final TypeConfiguration typeConfiguration = queryEngine.getTypeConfiguration();
 
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
-		functionFactory.cosh();
-		functionFactory.sinh();
-		functionFactory.tanh();
+		functionFactory.hyperbolic();
 		functionFactory.trunc();
 		functionFactory.log();
-		functionFactory.log10_log();
 		functionFactory.soundex();
 		functionFactory.trim2();
 		functionFactory.initcap();
@@ -154,8 +151,9 @@ public class OracleDialect extends Dialect {
 		functionFactory.substr();
 		functionFactory.substring_substr();
 		functionFactory.leftRight_substr();
+		functionFactory.repeat_rpad();
 		functionFactory.translate();
-		functionFactory.bitand();
+		functionFactory.bitandorxornot_operator();
 		functionFactory.lastDay();
 		functionFactory.toCharNumberDateTimestamp();
 		functionFactory.ceiling_ceil();
@@ -166,6 +164,11 @@ public class OracleDialect extends Dialect {
 		functionFactory.addMonths();
 		functionFactory.monthsBetween();
 		functionFactory.everyAny_minMaxCase();
+		functionFactory.ascii();
+		functionFactory.chr_char();
+		functionFactory.radians_acos();
+		functionFactory.degrees_acos();
+		functionFactory.rand_oracle();
 
 		functionFactory.median();
 		functionFactory.stddev();
@@ -181,7 +184,7 @@ public class OracleDialect extends Dialect {
 		functionFactory.bitLength_pattern( "lengthb(?1)*8", "dbms_lob.getlength(?1)*16" );
 
 		if ( getVersion().isBefore( 9 ) ) {
-			queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
+			queryEngine.getSqmFunctionRegistry().register( StandardFunctions.COALESCE, new NvlCoalesceEmulation() );
 		}
 		else {
 			//Oracle has had coalesce() since 9.0.1
@@ -189,7 +192,7 @@ public class OracleDialect extends Dialect {
 		}
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
-				"locate",
+				StandardFunctions.LOCATE,
 				typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
 				"instr(?2,?1)",
 				"instr(?2,?1,?3)",

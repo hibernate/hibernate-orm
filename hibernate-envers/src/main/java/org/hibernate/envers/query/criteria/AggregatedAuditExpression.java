@@ -16,6 +16,7 @@ import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.envers.query.criteria.internal.CriteriaTools;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -110,10 +111,10 @@ public class AggregatedAuditExpression implements AuditCriterion, ExtendableCrit
 		// Setting the desired projection of the aggregated query
 		switch ( mode ) {
 			case MIN:
-				subQb.addProjection( "min", subQb.getAlias(), prefixedPropertyName, false );
+				subQb.addProjection( StandardFunctions.MIN, subQb.getAlias(), prefixedPropertyName, false );
 				break;
 			case MAX:
-				subQb.addProjection( "max", subQb.getAlias(), prefixedPropertyName, false );
+				subQb.addProjection( StandardFunctions.MAX, subQb.getAlias(), prefixedPropertyName, false );
 		}
 
 		// Correlating subquery with the outer query by entity id. See JIRA HHH-7827.

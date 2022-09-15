@@ -1000,6 +1000,9 @@ First, functions for working with strings:
 |===
 | HQL Function | Purpose | Syntax | Notes on syntax
 
+| `chr()` | Create a character from ASCII code point | `chr(integer)` | Standard ANSI SQL
+| `char()` | Synonym to `chr()` | `char(integer)` | Standard ANSI SQL
+| `character_length()` | Synonym to `length()` | `character_length(string)` | Standard ANSI SQL
 | `position()` | Similar to `locate()` | `position(pattern in string)` | Standard ANSI SQL
 | `substring()` | An alternative syntax for JPQL's `substring()`
 | `substring(string from start)`, `substring(string from start for length)` | Standard ANSI SQL
@@ -1022,13 +1025,33 @@ Next, functions for working with numeric values:
 | `exp()` | Exponential function | `exp(x)` | Universal in SQL dialects
 | `power()` | Exponentiation | `power(x,y)` | Universal in SQL dialects
 | `ln()` | Natural logarithm | `ln(x)` | Very common in SQL dialects
+| `log()` | Base-N logarithm | `log(x,x)` | Very common in SQL dialects
+| `log2()` | Base-2 logarithm | `log2(x)` | Very common in SQL dialects
 | `log10()` | Base-10 logarithm | `log10(x)` | Very common in SQL dialects
-| `sin()`, `cos()`, `tan()`, `asin()`, `acos()`, `atan()`, `atan2()` | Basic trigonometric functions | `sin(theta)`, `cos(theta)`, `atan2(opposite, adjacent)` | Very common in SQL dialects
+| `sin()`, `cos()`, `tan()`, `cot()`, `asin()`, `acos()`, `atan()`, `atan2()`, `acot()` | Basic trigonometric functions | `sin(theta)`, `cos(theta)`, `atan2(opposite, adjacent)` | Very common in SQL dialects
+| `sinh()`, `cosh()`, `tanh()`, `coth()`, `asinh()`, `acosh()`, `atanh()`, `acoth()` | Basic trigonometric functions | `sinh(theta)`, `cosh(theta)` | Very common in SQL dialects
 | `round()` | Numeric rounding | As usual: `round(number, places)` | Very common in SQL dialects
 | `floor()` | Floor function | `floor(x)` | Universal in SQL dialects
 | `ceiling()` | Ceiling function | `ceiling(x)` | Very common in SQL dialects
 | `least()` | Return the smallest of the given arguments | `least(x, y, z)` | Very common in SQL dialects
 | `greatest()` | Return the largest of the given arguments | `greatest(x, y, z)` | Very common in SQL dialects
+| `degrees()` | Converts radians to degrees | `degrees(x)` | Very common in SQL dialects
+| `radians()` | Converts degrees to radians | `radians(x)` | Very common in SQL dialects
+| `pi()` | The pi constant | `pi()` | Very common in SQL dialects
+| `rand()` | Return random double between 0 and 1 | `rand()` | Very common in SQL dialects
+|===
+
+Also, some bit operation functions:
+
+|===
+| HQL Function | Purpose | Syntax | Notes on syntax
+
+| `bitand()` | Bitwise and i.e. `&` | `bitand(x,y)` | Standard ANSI SQL
+| `bitor()` | Bitwise or i.e. `\|` | `bitor(x,y)` | Standard ANSI SQL
+| `bitxor` | Bitwise xor i.e. `^` | `bitxor(x,y)` | Standard ANSI SQL
+| `bitnot()` | Bitwise not i.e. `~` | `bitnot(x)` | Standard ANSI SQL
+| `octet_length()` | The length in octets/bytes | `octet_length(x)` | Standard ANSI SQL
+| `bit_length()` | The length in bits | `bit_length(x)` | Standard ANSI SQL
 |===
 
 Finally, functions that evaluate the id, version, or natural id of an entity, or the foreign key of a to-one association:
@@ -2062,6 +2085,140 @@ The following ordered set aggregate functions are also available on many platfor
 | Inverse distribution functions | `mode()`, `percentile_cont()`, `percentile_disc()`
 | Hypothetical set functions | `rank()`, `dense_rank()`, `percent_rank()`, `cume_dist()`
 |===
+
+[[hql-window-functions]]
+==== Window functions
+
+Window functions are similar to aggregate functions in the sense that they compute some value
+based on a "frame" of data, but unlike aggregate functions, don't flatten rows into groups.
+
+The frame of data is defined through the `over` clause which signals the use of a window function.
+
+Generally, the syntax for the over clause is:
+
+[source, antlrv4, indent=0]
+----
+overClause
+    : OVER "(" partitionClause? oderClause? frameClause? ")"
+    ;
+
+partitionClause
+	: PARTITION BY expression (COMMA expression)*
+	;
+
+frameClause
+	: (RANGE|ROWS|GROUPS) frameStart frameExclusion?
+	| (RANGE|ROWS|GROUPS) BETWEEN frameStart AND frameEnd frameExclusion?
+	;
+frameStart
+	: UNBOUNDED PRECEDING
+    | expression PRECEDING
+    | CURRENT ROW
+    | expression FOLLOWING
+	;
+
+frameEnd
+    : expression PRECEDING
+    | CURRENT ROW
+    | expression FOLLOWING
+    | UNBOUNDED FOLLOWING
+	;
+
+frameExclusion
+	: EXCLUDE CURRENT ROW
+    | EXCLUDE GROUP
+    | EXCLUDE TIES
+    | EXCLUDE NO OTHERS
+	;
+----
+
+The default partition and ordering is based on the group and order by clause of the query.
+The default frame is `ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE NO OTHERS`,
+which means that all rows prior to the "current row" are considered for window functions.
+
+The following window functions can be considered standard as all major databases support them now.
+
+|===
+| Window function | Signature | Result type
+
+| `row_number()` | `row_number()` | `Long`
+| `lead()` | `lead(Any, Integer, Any)` | Same as the argument type
+| `lag()` | `lag(Any, Integer, Any)` | Same as the argument type
+| `first_value()` | `first_value(Any)` | Same as the argument type
+| `last_value()` | `last_value(Any)` | Same as the argument type
+| `nth_value()` | `nth_value(Any, Integer)` | Same as the argument type
+|===
+
+Note that every aggregate and ordered set aggregate function can also be used as window function,
+by adding an `over` clause, but not every function is supported on all databases.
+
+The `partition by` clause is similar to the `group by` clause and specifies how window frames should be partitioned.
+Every partition runs in isolation i.e. you can't access values across partitions.
+The `order by` clause defines the order of rows within the window frame.
+The frame clause defines the bounds of the window frame within a partition and can use one of the modes:
+
+* `ROWS` - frame start/end define number of rows e.g. `ROWS N PRECEDING` means that only N preceding rows are part of a frame
+* `RANGE` - frame start/end define value offsets e.g. `RANGE N PRECEDING` means a preceding row is part of a frame if the `abs(value, lag(value) over(..)) <= N`
+* `GROUPS` - frame start/end define group offsets e.g. `GROUPS N PRECEDING` means N preceding peer groups are part of a frame, a peer group being rows with equivalent values for `order by` expressions
+
+The frame exclusion clause allows excluding rows around the current row:
+
+* `EXCLUDE CURRENT ROW` - exclude the current row
+* `EXCLUDE GROUP` - exclude rows of the peer group of the current row
+* `EXCLUDE TIES` - exclude rows of the peer group of the current row, except the current row
+* `EXCLUDE NO OTHERS` - the default, do not exclude anything
+
+IMPORTANT: Frame clause modes `RANGE` and `GROUPS`, as well as frame exclusion modes might not be available on every database.
+
+[[hql-function-row-number]]
+===== `row_number()`
+
+Returns the 1-based `Long` number of the current row, within the frame ordering.
+
+The syntax is `row_number() over (...)`.
+
+[[hql-function-lead]]
+===== `lead()`
+
+Returns the value for the next row, according to frame ordering.
+
+The syntax is `lead(value, offset, default) over (...)` where `offset` and `default` are optional.
+
+Returning the next value can be done with e.g. `lead(id) over(order by id)`.
+
+Returning the second next value with a default can be done with e.g. `lead(id, 1, -1) over(order by id)`.
+
+[[hql-function-lag]]
+===== `lag()`
+
+Returns the value for the previous row, according to frame ordering.
+
+The syntax is `lag(value, offset, default) over (...)` where `offset` and `default` are optional.
+
+Returning the previous value can be done with e.g. `lag(id) over(order by id)`.
+
+Returning the second previous value with a default can be done with e.g. `lag(id, 1, -1) over(order by id)`.
+
+[[hql-function-first-value]]
+===== `first_value()`
+
+Returns the value for the first row, according to frame ordering.
+
+The syntax is `first_value(value) over (...)` e.g. `first_value(id) over(order by id)`.
+
+[[hql-function-last-value]]
+===== `last_value()`
+
+Returns the value for the last row, according to frame ordering.
+
+The syntax is `last_value(value) over (...)` e.g. `last_value(id) over(order by id)`.
+
+[[hql-function-nth-value]]
+===== `nth_value()`
+
+Returns the value for the 1-based nth row, according to frame ordering.
+
+The syntax is `nth_value(value, row) over (...)` e.g. `nth_value(id, 1) over(order by id)`.
 
 [[hql-where-clause]]
 === Restriction: `where`

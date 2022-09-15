@@ -31,6 +31,7 @@ import org.hibernate.persister.entity.Lockable;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -151,8 +152,8 @@ public class CacheDialect extends Dialect {
 		//also natively supports ANSI-style substring()
 		functionFactory.concat_pipeOperator();
 		functionFactory.cot();
-		functionFactory.log10();
 		functionFactory.log();
+		functionFactory.log10();
 		functionFactory.pi();
 		functionFactory.space();
 		functionFactory.hourMinuteSecond();
@@ -175,7 +176,7 @@ public class CacheDialect extends Dialect {
 		functionFactory.lastDay();
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
-				"locate",
+				StandardFunctions.LOCATE,
 				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
 				"$find(?2,?1)",
 				"$find(?2,?1,?3)",
@@ -184,21 +185,21 @@ public class CacheDialect extends Dialect {
 		).setArgumentListSignature("(pattern, string[, start])");
 		functionFactory.bitLength_pattern( "($length(?1)*8)" );
 
-		useJdbcEscape(queryEngine, "sin");
-		useJdbcEscape(queryEngine, "cos");
-		useJdbcEscape(queryEngine, "tan");
-		useJdbcEscape(queryEngine, "asin");
-		useJdbcEscape(queryEngine, "acos");
-		useJdbcEscape(queryEngine, "atan");
-		useJdbcEscape(queryEngine, "atan2");
-		useJdbcEscape(queryEngine, "exp");
-		useJdbcEscape(queryEngine, "log");
-		useJdbcEscape(queryEngine, "log10");
-		useJdbcEscape(queryEngine, "pi");
-		useJdbcEscape(queryEngine, "truncate");
+		useJdbcEscape(queryEngine, StandardFunctions.SIN );
+		useJdbcEscape(queryEngine, StandardFunctions.COS );
+		useJdbcEscape(queryEngine, StandardFunctions.TAN );
+		useJdbcEscape(queryEngine, StandardFunctions.ASIN );
+		useJdbcEscape(queryEngine, StandardFunctions.ACOS );
+		useJdbcEscape(queryEngine, StandardFunctions.ATAN );
+		useJdbcEscape(queryEngine, StandardFunctions.ATAN2 );
+		useJdbcEscape(queryEngine, StandardFunctions.EXP );
+		useJdbcEscape(queryEngine, StandardFunctions.LOG );
+		useJdbcEscape(queryEngine, StandardFunctions.LOG10 );
+		useJdbcEscape(queryEngine, StandardFunctions.PI );
+		useJdbcEscape( queryEngine, "truncate" );
 
-		useJdbcEscape(queryEngine, "left");
-		useJdbcEscape(queryEngine, "right");
+		useJdbcEscape(queryEngine, StandardFunctions.LEFT );
+		useJdbcEscape(queryEngine, StandardFunctions.RIGHT );
 
 		useJdbcEscape(queryEngine, "hour");
 		useJdbcEscape(queryEngine, "minute");

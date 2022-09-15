@@ -14,6 +14,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
@@ -65,7 +66,7 @@ public class CommonFunctionFactory {
 	// trigonometric/geometric functions
 
 	public void cosh() {
-		functionRegistry.namedDescriptorBuilder( "cosh" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.COSH )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
@@ -73,7 +74,7 @@ public class CommonFunctionFactory {
 	}
 
 	public void cot() {
-		functionRegistry.namedDescriptorBuilder( "cot" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.COT )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.setInvariantType(doubleType)
@@ -81,7 +82,15 @@ public class CommonFunctionFactory {
 	}
 
 	public void degrees() {
-		functionRegistry.namedDescriptorBuilder( "degrees" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.DEGREES )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.setInvariantType(doubleType)
+				.register();
+	}
+
+	public void degrees_acos() {
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.DEGREES, "(?1*(180/acos(-1)))" )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.setInvariantType(doubleType)
@@ -89,34 +98,79 @@ public class CommonFunctionFactory {
 	}
 
 	public void log() {
-		functionRegistry.namedDescriptorBuilder( "log" )
-				.setArgumentCountBetween( 1, 2 )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.LOG )
+				.setExactArgumentCount( 2 )
 				.setParameterTypes(NUMERIC, NUMERIC)
 				.setInvariantType(doubleType)
+				.setArgumentListSignature( "(NUMERIC base, NUMERIC number)" )
 				.register();
-	}
-
-	public void ln_log() {
-		functionRegistry.namedDescriptorBuilder( "ln", "log" )
-				.setInvariantType(doubleType)
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
-				.register();
-	}
-
-	public void log10() {
-		functionRegistry.namedDescriptorBuilder( "log10" )
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.LOG10, "log(10,?1)" )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.setInvariantType(doubleType)
+				.register();
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.LOG2, "log(2,?1)" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
 				.register();
 	}
 
 	/**
-	 * For Oracle and HANA
+	 * SQL Server has the argument order for "log" inversed.
 	 */
-	public void log10_log() {
-		functionRegistry.patternDescriptorBuilder( "log10", "log(10,?1)" )
+	public void ln_log_inverse() {
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.LN, "log" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.LOG, "log(?2,?1)" )
+				.setExactArgumentCount( 2 )
+				.setParameterTypes(NUMERIC, NUMERIC)
+				.setInvariantType(doubleType)
+				.setArgumentListSignature( "(NUMERIC base, NUMERIC number)" )
+				.register();
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.LOG10, "log(?1,10)" )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.setInvariantType(doubleType)
+				.register();
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.LOG2, "log(?1,2)" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+		inverseHyperbolic_powerLog();
+	}
+
+	public void ln_log() {
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.LN, "log" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.LOG, "(log(?2)/log(?1))" )
+				.setExactArgumentCount( 2 )
+				.setParameterTypes(NUMERIC, NUMERIC)
+				.setInvariantType(doubleType)
+				.setArgumentListSignature( "(NUMERIC base, NUMERIC number)" )
+				.register();
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.LOG10, "log(?1)/log(10)" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.LOG2, "log(?1)/log(2)" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+		inverseHyperbolic_powerLog();
+	}
+
+	public void log10() {
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.LOG10 )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.setInvariantType(doubleType)
@@ -124,7 +178,7 @@ public class CommonFunctionFactory {
 	}
 
 	public void log2() {
-		functionRegistry.namedDescriptorBuilder( "log2" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.LOG2 )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
@@ -132,7 +186,15 @@ public class CommonFunctionFactory {
 	}
 
 	public void radians() {
-		functionRegistry.namedDescriptorBuilder( "radians" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.RADIANS )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.setInvariantType(doubleType)
+				.register();
+	}
+
+	public void radians_acos() {
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.RADIANS, "(?1/(180/acos(-1)))" )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.setInvariantType(doubleType)
@@ -140,7 +202,7 @@ public class CommonFunctionFactory {
 	}
 
 	public void sinh() {
-		functionRegistry.namedDescriptorBuilder( "sinh" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.SINH )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.setInvariantType(doubleType)
@@ -148,25 +210,133 @@ public class CommonFunctionFactory {
 	}
 
 	public void tanh() {
-		functionRegistry.namedDescriptorBuilder( "tanh" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.TANH )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.setInvariantType(doubleType)
 				.register();
 	}
 
-	public void moreHyperbolic() {
-		functionRegistry.namedDescriptorBuilder( "acosh" )
+	public void hyperbolic() {
+		sinh();
+		cosh();
+		tanh();
+		// Note that no DB supports COTH natively, but we have an emulation that is registered as part of the trigonometry function
+	}
+
+	public void hyperbolic_exp() {
+		// Use exponential definitions of hyperbolic functions by default
+		// See https://en.wikipedia.org/wiki/Hyperbolic_functions
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.SINH, "((exp(?1)-exp(-?1))/2)" )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
-		functionRegistry.namedDescriptorBuilder( "asinh" )
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.COSH, "((exp(?1)+exp(-?1))/2)" )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
-		functionRegistry.namedDescriptorBuilder( "atanh" )
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.TANH, "((exp(2*?1)-1)/(exp(2*?1)+1))" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.COTH, "((exp(2*?1)+1)/(exp(2*?1)-1))" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+	}
+
+	public void inverseHyperbolic() {
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.ACOSH )
+				.setInvariantType( doubleType )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( NUMERIC )
+				.register();
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.ASINH )
+				.setInvariantType( doubleType )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( NUMERIC )
+				.register();
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.ATANH )
+				.setInvariantType( doubleType )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( NUMERIC )
+				.register();
+		// Note that no DB supports ACOTH natively, but we have an emulation that is registered as part of the log function
+	}
+
+	public void inverseHyperbolic_powerLog() {
+		// Use exponential definitions of inverse hyperbolic functions by default
+		// See https://en.wikipedia.org/wiki/Inverse_hyperbolic_functions
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.ASINH, "log(?1+sqrt(power(?1,2)+1))" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.ACOSH, "log(?1+sqrt(power(?1,2)-1))" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.ATANH, "(log((1+?1)/(1-?1))/2)" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.ACOTH, "(log((?1+1)/(?1-1))/2)" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+	}
+
+	public void inverseHyperbolic_powerLn() {
+		// Use exponential definitions of inverse hyperbolic functions by default
+		// See https://en.wikipedia.org/wiki/Inverse_hyperbolic_functions
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.ASINH, "ln(?1+sqrt(power(?1,2)+1))" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.ACOSH, "ln(?1+sqrt(power(?1,2)-1))" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.ATANH, "(ln((1+?1)/(1-?1))/2)" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.ACOTH, "(ln((?1+1)/(?1-1))/2)" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+	}
+
+	public void inverseHyperbolic_expLn() {
+		// Use exponential definitions of inverse hyperbolic functions by default
+		// See https://en.wikipedia.org/wiki/Inverse_hyperbolic_functions
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.ASINH, "ln(?1+sqrt(exp(ln(?1)*2)+1))" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.ACOSH, "ln(?1+sqrt(exp(ln(?1)*2)-1))" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.ATANH, "(ln((1+?1)/(1-?1))/2)" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.ACOTH, "(ln((?1+1)/(?1-1))/2)" )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
@@ -183,6 +353,7 @@ public class CommonFunctionFactory {
 				.setInvariantType(doubleType)
 				.setArgumentListSignature( "(NUMERIC number[, INTEGER places])" )
 				.register();
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
 	}
 
 	public void truncate() {
@@ -210,13 +381,25 @@ public class CommonFunctionFactory {
 	 * Returns double between 0.0 and 1.0. First call may specify a seed value.
 	 */
 	public void rand() {
-		functionRegistry.namedDescriptorBuilder( "rand" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.RAND )
 				.setArgumentCountBetween( 0, 1 )
 				.setParameterTypes(INTEGER)
 				.setUseParenthesesWhenNoArgs( true )
 				.setInvariantType(doubleType)
 				.setArgumentListSignature( "([INTEGER seed])" )
 				.register();
+	}
+
+	public void rand_oracle() {
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.RAND, "dbms_random.value(0,1)" )
+				.setExactArgumentCount( 0 )
+				.setInvariantType(doubleType)
+				.register();
+	}
+
+	public void rand_random() {
+		functionRegistry.registerNullaryUnaryPattern( StandardFunctions.RAND, doubleType, "random()", "(select random() from setseed(?1))", INTEGER, typeConfiguration )
+				.setArgumentListSignature( "([INTEGER seed])" );
 	}
 
 	public void median() {
@@ -382,7 +565,7 @@ public class CommonFunctionFactory {
 	}
 
 	public void pi() {
-		functionRegistry.noArgsBuilder( "pi" )
+		functionRegistry.noArgsBuilder( StandardFunctions.PI )
 				.setInvariantType(doubleType)
 				.setUseParenthesesWhenNoArgs( true )
 				.register();
@@ -429,13 +612,13 @@ public class CommonFunctionFactory {
 	}
 
 	public void pad() {
-		functionRegistry.namedDescriptorBuilder( "lpad" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.LPAD )
 				.setInvariantType(stringType)
 				.setArgumentCountBetween( 2, 3 )
 				.setParameterTypes(STRING, INTEGER, STRING)
 				.setArgumentListSignature( "(STRING string, INTEGER length[, STRING padding])" )
 				.register();
-		functionRegistry.namedDescriptorBuilder( "rpad" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.RPAD )
 				.setInvariantType(stringType)
 				.setArgumentCountBetween( 2, 3 )
 				.setParameterTypes(STRING, INTEGER, STRING)
@@ -448,7 +631,7 @@ public class CommonFunctionFactory {
 	 */
 	public void pad_space() {
 		functionRegistry.registerBinaryTernaryPattern(
-				"lpad",
+				StandardFunctions.LPAD,
 				stringType,
 				"lpad(?1,?2,' ')",
 				"lpad(?1,?2,?3)",
@@ -456,7 +639,7 @@ public class CommonFunctionFactory {
 				typeConfiguration
 		).setArgumentListSignature( "(string, length[, padding])" );
 		functionRegistry.registerBinaryTernaryPattern(
-				"rpad",
+				StandardFunctions.RPAD,
 				stringType,
 				"rpad(?1,?2,' ')",
 				"rpad(?1,?2,?3)",
@@ -470,7 +653,7 @@ public class CommonFunctionFactory {
 	 */
 	public void pad_replicate() {
 		functionRegistry.registerBinaryTernaryPattern(
-				"lpad",
+				StandardFunctions.LPAD,
 				stringType,
 				"(space(?2-len(?1))+?1)",
 				"(replicate(?3,?2-len(?1))+?1)",
@@ -478,7 +661,7 @@ public class CommonFunctionFactory {
 				typeConfiguration
 		).setArgumentListSignature( "(string, length[, padding])" );
 		functionRegistry.registerBinaryTernaryPattern(
-				"rpad",
+				StandardFunctions.RPAD,
 				stringType,
 				"(?1+space(?2-len(?1)))",
 				"(?1+replicate(?3,?2-len(?1)))",
@@ -489,7 +672,7 @@ public class CommonFunctionFactory {
 
 	public void pad_repeat() {
 		functionRegistry.registerBinaryTernaryPattern(
-				"lpad",
+				StandardFunctions.LPAD,
 				stringType,
 				"(repeat(' ',?2-character_length(?1))||?1)",
 				"(repeat(?3,?2-character_length(?1))||?1)",
@@ -497,7 +680,7 @@ public class CommonFunctionFactory {
 				typeConfiguration
 		).setArgumentListSignature( "(string, length[, padding])" );
 		functionRegistry.registerBinaryTernaryPattern(
-				"rpad",
+				StandardFunctions.RPAD,
 				stringType,
 				"(?1||repeat(' ',?2-character_length(?1)))",
 				"(?1||repeat(?3,?2-character_length(?1)))",
@@ -511,7 +694,7 @@ public class CommonFunctionFactory {
 	 */
 	public void pad_fill() {
 		functionRegistry.registerBinaryTernaryPattern(
-				"lpad",
+				StandardFunctions.LPAD,
 				stringType,
 				"lfill(?1,' ',?2)",
 				"lfill(?1,?3,?2)",
@@ -519,7 +702,7 @@ public class CommonFunctionFactory {
 				typeConfiguration
 		).setArgumentListSignature( "(string, length[, padding])" );
 		functionRegistry.registerBinaryTernaryPattern(
-				"rpad",
+				StandardFunctions.RPAD,
 				stringType,
 				"rfill(?1,' ',?2)",
 				"rfill(?1,?3,?2)",
@@ -545,56 +728,11 @@ public class CommonFunctionFactory {
 	}
 
 	public void repeat() {
-		functionRegistry.namedDescriptorBuilder( "repeat" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.REPEAT )
 				.setInvariantType(stringType)
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(STRING, INTEGER)
 				.setArgumentListSignature( "(STRING string, INTEGER times)" )
-				.register();
-	}
-
-	public void leftRight() {
-		functionRegistry.namedDescriptorBuilder( "left" )
-				.setInvariantType(stringType)
-				.setExactArgumentCount( 2 )
-				.setParameterTypes(STRING, INTEGER)
-				.setArgumentListSignature( "(STRING string, INTEGER length)" )
-				.register();
-		functionRegistry.namedDescriptorBuilder( "right" )
-				.setInvariantType(stringType)
-				.setExactArgumentCount( 2 )
-				.setParameterTypes(STRING, INTEGER)
-				.setArgumentListSignature( "(STRING string, INTEGER length)" )
-				.register();
-	}
-
-	public void leftRight_substr() {
-		functionRegistry.patternDescriptorBuilder( "left", "substr(?1,1,?2)" )
-				.setInvariantType(stringType)
-				.setExactArgumentCount( 2 )
-				.setParameterTypes(STRING, INTEGER)
-				.setArgumentListSignature( "(STRING string, INTEGER length)" )
-				.register();
-		functionRegistry.patternDescriptorBuilder( "right", "substr(?1,-?2)" )
-				.setInvariantType(stringType)
-				.setExactArgumentCount( 2 )
-				.setParameterTypes(STRING, INTEGER)
-				.setArgumentListSignature( "(STRING string, INTEGER length)" )
-				.register();
-	}
-
-	public void leftRight_substrLength() {
-		functionRegistry.patternDescriptorBuilder( "left", "substr(?1,1,?2)" )
-				.setInvariantType(stringType)
-				.setExactArgumentCount( 2 )
-				.setParameterTypes(STRING, INTEGER)
-				.setArgumentListSignature( "(STRING string, INTEGER length)" )
-				.register();
-		functionRegistry.patternDescriptorBuilder( "right", "substr(?1,length(?1)-?2+1)" )
-				.setInvariantType(stringType)
-				.setExactArgumentCount( 2 )
-				.setParameterTypes(STRING, INTEGER)
-				.setArgumentListSignature( "(STRING string, INTEGER length)" )
 				.register();
 	}
 
@@ -605,7 +743,61 @@ public class CommonFunctionFactory {
 				.setParameterTypes(STRING, INTEGER)
 				.setArgumentListSignature( "(STRING string, INTEGER times)" )
 				.register();
-		functionRegistry.registerAlternateKey( "repeat", "replicate" );
+		functionRegistry.registerAlternateKey( StandardFunctions.REPEAT, "replicate" );
+	}
+
+	public void repeat_rpad() {
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.REPEAT, "rpad(?1,?2*character_length(?1),?1)" )
+				.setInvariantType(stringType)
+				.setExactArgumentCount( 2 )
+				.setParameterTypes(STRING, INTEGER)
+				.setArgumentListSignature( "(STRING string, INTEGER times)" )
+				.register();
+	}
+
+	public void leftRight() {
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.LEFT )
+				.setInvariantType(stringType)
+				.setExactArgumentCount( 2 )
+				.setParameterTypes(STRING, INTEGER)
+				.setArgumentListSignature( "(STRING string, INTEGER length)" )
+				.register();
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.RIGHT )
+				.setInvariantType(stringType)
+				.setExactArgumentCount( 2 )
+				.setParameterTypes(STRING, INTEGER)
+				.setArgumentListSignature( "(STRING string, INTEGER length)" )
+				.register();
+	}
+
+	public void leftRight_substr() {
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.LEFT, "substr(?1,1,?2)" )
+				.setInvariantType(stringType)
+				.setExactArgumentCount( 2 )
+				.setParameterTypes(STRING, INTEGER)
+				.setArgumentListSignature( "(STRING string, INTEGER length)" )
+				.register();
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.RIGHT, "substr(?1,-?2)" )
+				.setInvariantType(stringType)
+				.setExactArgumentCount( 2 )
+				.setParameterTypes(STRING, INTEGER)
+				.setArgumentListSignature( "(STRING string, INTEGER length)" )
+				.register();
+	}
+
+	public void leftRight_substrLength() {
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.LEFT, "substr(?1,1,?2)" )
+				.setInvariantType(stringType)
+				.setExactArgumentCount( 2 )
+				.setParameterTypes(STRING, INTEGER)
+				.setArgumentListSignature( "(STRING string, INTEGER length)" )
+				.register();
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.RIGHT, "substr(?1,length(?1)-?2+1)" )
+				.setInvariantType(stringType)
+				.setExactArgumentCount( 2 )
+				.setParameterTypes(STRING, INTEGER)
+				.setArgumentListSignature( "(STRING string, INTEGER length)" )
+				.register();
 	}
 
 	public void md5() {
@@ -651,28 +843,28 @@ public class CommonFunctionFactory {
 	}
 
 	public void bitand() {
-		functionRegistry.namedDescriptorBuilder( "bitand" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.BITAND )
 				.setExactArgumentCount( 2 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
 	public void bitor() {
-		functionRegistry.namedDescriptorBuilder( "bitor" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.BITOR )
 				.setExactArgumentCount( 2 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
 	public void bitxor() {
-		functionRegistry.namedDescriptorBuilder( "bitxor" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.BITXOR )
 				.setExactArgumentCount( 2 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
 	public void bitnot() {
-		functionRegistry.namedDescriptorBuilder( "bitnot" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.BITNOT )
 				.setExactArgumentCount( 1 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
 				.register();
@@ -686,25 +878,25 @@ public class CommonFunctionFactory {
 				.setExactArgumentCount( 2 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
-		functionRegistry.registerAlternateKey( "bitand", "bit_and" );
+		functionRegistry.registerAlternateKey( StandardFunctions.BITAND, "bit_and" );
 
 		functionRegistry.namedDescriptorBuilder( "bit_or" )
 				.setExactArgumentCount( 2 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
-		functionRegistry.registerAlternateKey( "bitor", "bit_or" );
+		functionRegistry.registerAlternateKey( StandardFunctions.BITOR, "bit_or" );
 
 		functionRegistry.namedDescriptorBuilder( "bit_xor" )
 				.setExactArgumentCount( 2 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
-		functionRegistry.registerAlternateKey( "bitxor", "bit_xor" );
+		functionRegistry.registerAlternateKey( StandardFunctions.BITXOR, "bit_xor" );
 
 		functionRegistry.namedDescriptorBuilder( "bit_not" )
 				.setExactArgumentCount( 1 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
 				.register();
-		functionRegistry.registerAlternateKey( "bitnot", "bit_not" );
+		functionRegistry.registerAlternateKey( StandardFunctions.BITNOT, "bit_not" );
 	}
 
 	/**
@@ -715,47 +907,47 @@ public class CommonFunctionFactory {
 				.setMinArgumentCount( 1 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
-		functionRegistry.registerAlternateKey( "bitand", "bin_and" );
+		functionRegistry.registerAlternateKey( StandardFunctions.BITAND, "bin_and" );
 
 		functionRegistry.namedDescriptorBuilder( "bin_or" )
 				.setMinArgumentCount( 1 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
-		functionRegistry.registerAlternateKey( "bitor", "bin_or" );
+		functionRegistry.registerAlternateKey( StandardFunctions.BITOR, "bin_or" );
 
 		functionRegistry.namedDescriptorBuilder( "bin_xor" )
 				.setMinArgumentCount( 1 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
-		functionRegistry.registerAlternateKey( "bitxor", "bin_xor" );
+		functionRegistry.registerAlternateKey( StandardFunctions.BITXOR, "bin_xor" );
 
 		functionRegistry.namedDescriptorBuilder( "bin_not" )
 				.setExactArgumentCount( 1 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
 				.register();
-		functionRegistry.registerAlternateKey( "bitnot", "bin_not" );
+		functionRegistry.registerAlternateKey( StandardFunctions.BITNOT, "bin_not" );
 	}
 
 	/**
 	 * Binary bitwise operators, not aggregate functions!
 	 */
 	public void bitandorxornot_operator() {
-		functionRegistry.patternDescriptorBuilder( "bitand", "(?1&?2)" )
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.BITAND, "(?1&?2)" )
 				.setExactArgumentCount( 2 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 
-		functionRegistry.patternDescriptorBuilder( "bitor", "(?1|?2)" )
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.BITOR, "(?1|?2)" )
 				.setExactArgumentCount( 2 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 
-		functionRegistry.patternDescriptorBuilder( "bitxor", "(?1^?2)" )
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.BITXOR, "(?1^?2)" )
 				.setExactArgumentCount( 2 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 
-		functionRegistry.patternDescriptorBuilder( "bitnot", "~?1" )
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.BITNOT, "~?1" )
 				.setExactArgumentCount( 1 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
 				.register();
@@ -785,14 +977,14 @@ public class CommonFunctionFactory {
 	 * These are aggregate functions taking one argument!
 	 */
 	public void everyAny() {
-		functionRegistry.namedAggregateDescriptorBuilder( "every" )
+		functionRegistry.namedAggregateDescriptorBuilder( StandardFunctions.EVERY )
 				.setExactArgumentCount( 1 )
 				.setInvariantType(booleanType)
 				.setParameterTypes(BOOLEAN)
 				.setArgumentListSignature( "(BOOLEAN predicate)" )
 				.register();
 
-		functionRegistry.namedAggregateDescriptorBuilder( "any" )
+		functionRegistry.namedAggregateDescriptorBuilder( StandardFunctions.ANY )
 				.setExactArgumentCount( 1 )
 				.setInvariantType(booleanType)
 				.setParameterTypes(BOOLEAN)
@@ -812,7 +1004,7 @@ public class CommonFunctionFactory {
 				.setInvariantType(booleanType)
 				.setArgumentListSignature( "(BOOLEAN predicate)" )
 				.register();
-		functionRegistry.registerAlternateKey( "every", "bool_and" );
+		functionRegistry.registerAlternateKey( StandardFunctions.EVERY, "bool_and" );
 
 		functionRegistry.namedAggregateDescriptorBuilder( "bool_or" )
 				.setExactArgumentCount( 1 )
@@ -820,7 +1012,7 @@ public class CommonFunctionFactory {
 				.setInvariantType(booleanType)
 				.setArgumentListSignature( "(BOOLEAN predicate)" )
 				.register();
-		functionRegistry.registerAlternateKey( "any", "bool_or" );
+		functionRegistry.registerAlternateKey( StandardFunctions.ANY, "bool_or" );
 	}
 
 	/**
@@ -829,9 +1021,9 @@ public class CommonFunctionFactory {
 	 * aggregation functions using sum() and case.
 	 */
 	public void everyAny_sumCase() {
-		functionRegistry.register( "every",
+		functionRegistry.register( StandardFunctions.EVERY,
 				new EveryAnyEmulation( typeConfiguration, true ) );
-		functionRegistry.register( "any",
+		functionRegistry.register( StandardFunctions.ANY,
 				new EveryAnyEmulation( typeConfiguration, false ) );
 	}
 
@@ -840,9 +1032,9 @@ public class CommonFunctionFactory {
 	 * for SQL Server.
 	 */
 	public void everyAny_minMaxIif() {
-		functionRegistry.register( "every",
+		functionRegistry.register( StandardFunctions.EVERY,
 				new SQLServerEveryAnyEmulation( typeConfiguration, true ) );
-		functionRegistry.register( "any",
+		functionRegistry.register( StandardFunctions.ANY,
 				new SQLServerEveryAnyEmulation( typeConfiguration, false ) );
 	}
 
@@ -852,9 +1044,9 @@ public class CommonFunctionFactory {
 	 * for Oracle and Sybase.
 	 */
 	public void everyAny_minMaxCase() {
-		functionRegistry.register( "every",
+		functionRegistry.register( StandardFunctions.EVERY,
 				new MinMaxCaseEveryAnyEmulation( typeConfiguration, true ) );
-		functionRegistry.register( "any",
+		functionRegistry.register( StandardFunctions.ANY,
 				new MinMaxCaseEveryAnyEmulation( typeConfiguration, false ) );
 	}
 
@@ -997,7 +1189,7 @@ public class CommonFunctionFactory {
 				// To avoid truncating to a specific data type, we default to using the argument type
 				.setReturnTypeResolver( useArgType( 1 ) )
 				.register();
-		functionRegistry.registerAlternateKey( "ceiling", "ceil" );
+		functionRegistry.registerAlternateKey( StandardFunctions.CEILING, "ceil" );
 	}
 
 	public void toCharNumberDateTimestamp() {
@@ -1101,7 +1293,7 @@ public class CommonFunctionFactory {
 	 * Almost every database
 	 */
 	public void concat_pipeOperator() {
-		functionRegistry.patternDescriptorBuilder( "concat", "(?1||?2...)" )
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.CONCAT, "(?1||?2...)" )
 				.setInvariantType(stringType)
 				.setMinArgumentCount( 1 )
 				.setArgumentTypeResolver(
@@ -1112,7 +1304,7 @@ public class CommonFunctionFactory {
 	}
 
 	public void concat_pipeOperator(String clobPattern) {
-		functionRegistry.register( "concat", new ConcatPipeFunction( clobPattern, typeConfiguration ) );
+		functionRegistry.register( StandardFunctions.CONCAT, new ConcatPipeFunction( clobPattern, typeConfiguration ) );
 	}
 
 	/**
@@ -1254,57 +1446,79 @@ public class CommonFunctionFactory {
 				.register();
 
 		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
-		functionRegistry.noArgsBuilder( "local_time", "localtime" )
+		functionRegistry.noArgsBuilder( StandardFunctions.LOCAL_TIME, "localtime" )
 				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_TIME ) )
 				.setUseParenthesesWhenNoArgs( false )
 				.register();
-		functionRegistry.noArgsBuilder( "local_datetime", "localtimestamp" )
+		functionRegistry.noArgsBuilder( StandardFunctions.LOCAL_DATETIME, "localtimestamp" )
 				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_DATE_TIME ) )
 				.setUseParenthesesWhenNoArgs( false )
 				.register();
 	}
 
 	public void trigonometry() {
-		functionRegistry.namedDescriptorBuilder( "sin" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.SIN )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
 
-		functionRegistry.namedDescriptorBuilder( "cos" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.COS )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
 
-		functionRegistry.namedDescriptorBuilder( "tan" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.TAN )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
 
-		functionRegistry.namedDescriptorBuilder( "asin" )
+		// By default, emulate COT as that isn't available on all DBMS
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.COT, "(cos(?1)/sin(?1))" )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
 
-		functionRegistry.namedDescriptorBuilder( "acos" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.ASIN )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
 
-		functionRegistry.namedDescriptorBuilder( "atan" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.ACOS )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
 
-		functionRegistry.namedDescriptorBuilder( "atan2" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.ATAN )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.ATAN2 )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(NUMERIC, NUMERIC)
+				.register();
+
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.ACOT, "atan(1/?1)" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+
+		hyperbolic_exp();
+		inverseHyperbolic_powerLn();
+
+		// Not every database has a PI function, so let's emulate that
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.PI, "acos(-1)" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 0 )
 				.register();
 	}
 
@@ -1312,7 +1526,7 @@ public class CommonFunctionFactory {
 	 * Transact-SQL atan2 is misspelled
 	 */
 	public void atan2_atn2() {
-		functionRegistry.namedDescriptorBuilder( "atan2", "atn2" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.ATAN2, "atn2" )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(NUMERIC, NUMERIC)
@@ -1320,7 +1534,7 @@ public class CommonFunctionFactory {
 	}
 
 	public void coalesce() {
-		functionRegistry.namedDescriptorBuilder( "coalesce" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.COALESCE )
 				.setMinArgumentCount( 1 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
@@ -1334,11 +1548,11 @@ public class CommonFunctionFactory {
 				.setMinArgumentCount( 1 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
-		functionRegistry.registerAlternateKey( "coalesce", "value" );
+		functionRegistry.registerAlternateKey( StandardFunctions.COALESCE, "value" );
 	}
 
 	public void nullif() {
-		functionRegistry.namedDescriptorBuilder( "nullif" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.NULLIF )
 				.setExactArgumentCount( 2 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
@@ -1348,20 +1562,20 @@ public class CommonFunctionFactory {
 	 * ANSI SQL-style
 	 */
 	public void length_characterLength() {
-		functionRegistry.namedDescriptorBuilder( "character_length" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.CHARACTER_LENGTH )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING_OR_CLOB)
 				.register();
-		functionRegistry.registerAlternateKey( "length", "character_length" );
+		functionRegistry.registerAlternateKey( StandardFunctions.LENGTH, StandardFunctions.CHARACTER_LENGTH );
 	}
 
 	public void length_characterLength_pattern(String clobPattern) {
 		functionRegistry.register(
-				"character_length",
-				new LengthFunction( "character_length", "character_length(?1)", clobPattern, typeConfiguration )
+				StandardFunctions.CHARACTER_LENGTH,
+				new LengthFunction( StandardFunctions.CHARACTER_LENGTH, "character_length(?1)", clobPattern, typeConfiguration )
 		);
-		functionRegistry.registerAlternateKey( "length", "character_length" );
+		functionRegistry.registerAlternateKey( StandardFunctions.LENGTH, StandardFunctions.CHARACTER_LENGTH );
 	}
 
 	/**
@@ -1373,33 +1587,33 @@ public class CommonFunctionFactory {
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING_OR_CLOB)
 				.register();
-		functionRegistry.registerAlternateKey( "character_length", "len" );
-		functionRegistry.registerAlternateKey( "length", "len" );
+		functionRegistry.registerAlternateKey( StandardFunctions.CHARACTER_LENGTH, "len" );
+		functionRegistry.registerAlternateKey( StandardFunctions.LENGTH, "len" );
 	}
 
 	/**
 	 * Oracle-style
 	 */
 	public void characterLength_length(SqlAstNodeRenderingMode argumentRenderingMode) {
-		functionRegistry.namedDescriptorBuilder( "length" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.LENGTH )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING_OR_CLOB)
 				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
-		functionRegistry.registerAlternateKey( "character_length", "length" );
+		functionRegistry.registerAlternateKey( StandardFunctions.CHARACTER_LENGTH, StandardFunctions.LENGTH );
 	}
 
 	public void characterLength_length(String clobPattern) {
 		functionRegistry.register(
-				"length",
-				new LengthFunction( "length", "length(?1)", clobPattern, typeConfiguration )
+				StandardFunctions.LENGTH,
+				new LengthFunction( StandardFunctions.LENGTH, "length(?1)", clobPattern, typeConfiguration )
 		);
-		functionRegistry.registerAlternateKey( "character_length", "length" );
+		functionRegistry.registerAlternateKey( StandardFunctions.CHARACTER_LENGTH, StandardFunctions.LENGTH );
 	}
 
 	public void octetLength() {
-		functionRegistry.namedDescriptorBuilder( "octet_length" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.OCTET_LENGTH )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING_OR_CLOB)
@@ -1407,7 +1621,7 @@ public class CommonFunctionFactory {
 	}
 
 	public void octetLength_pattern(String pattern) {
-		functionRegistry.patternDescriptorBuilder( "octet_length", pattern )
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.OCTET_LENGTH, pattern )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING_OR_CLOB)
@@ -1416,13 +1630,13 @@ public class CommonFunctionFactory {
 
 	public void octetLength_pattern(String pattern, String clobPattern) {
 		functionRegistry.register(
-				"octet_length",
-				new LengthFunction( "octet_length", pattern, clobPattern, typeConfiguration )
+				StandardFunctions.OCTET_LENGTH,
+				new LengthFunction( StandardFunctions.OCTET_LENGTH, pattern, clobPattern, typeConfiguration )
 		);
 	}
 
 	public void bitLength() {
-		functionRegistry.namedDescriptorBuilder( "bit_length" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.BIT_LENGTH )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING_OR_CLOB)
@@ -1430,7 +1644,7 @@ public class CommonFunctionFactory {
 	}
 
 	public void bitLength_pattern(String pattern) {
-		functionRegistry.patternDescriptorBuilder( "bit_length", pattern )
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.BIT_LENGTH, pattern )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING_OR_CLOB)
@@ -1439,8 +1653,8 @@ public class CommonFunctionFactory {
 
 	public void bitLength_pattern(String pattern, String clobPattern) {
 		functionRegistry.register(
-				"bit_length",
-				new LengthFunction( "bit_length", pattern, clobPattern, typeConfiguration )
+				StandardFunctions.BIT_LENGTH,
+				new LengthFunction( StandardFunctions.BIT_LENGTH, pattern, clobPattern, typeConfiguration )
 		);
 	}
 
@@ -1448,7 +1662,7 @@ public class CommonFunctionFactory {
 	 * ANSI-style
 	 */
 	public void position() {
-		functionRegistry.patternDescriptorBuilder( "position", "position(?1 in ?2)" )
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.POSITION, "position(?1 in ?2)" )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(STRING, STRING)
@@ -1457,7 +1671,7 @@ public class CommonFunctionFactory {
 	}
 
 	public void locate() {
-		functionRegistry.namedDescriptorBuilder( "locate" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.LOCATE )
 				.setInvariantType(integerType)
 				.setArgumentCountBetween( 2, 3 )
 				.setParameterTypes(STRING, STRING, INTEGER)
@@ -1475,7 +1689,7 @@ public class CommonFunctionFactory {
 				.setParameterTypes(STRING, STRING, INTEGER)
 				.setArgumentListSignature( "(STRING pattern, STRING string[, INTEGER start])" )
 				.register();
-		functionRegistry.registerAlternateKey( "locate", "charindex" );
+		functionRegistry.registerAlternateKey( StandardFunctions.LOCATE, "charindex" );
 	}
 
 	/**
@@ -1483,7 +1697,7 @@ public class CommonFunctionFactory {
 	 */
 	public void locate_positionSubstring() {
 		functionRegistry.registerBinaryTernaryPattern(
-						"locate",
+						StandardFunctions.LOCATE,
 						integerType,
 						"position(?1 in ?2)", "(position(?1 in substring(?2 from ?3))+(?3)-1)",
 						STRING, STRING, INTEGER,
@@ -1496,7 +1710,7 @@ public class CommonFunctionFactory {
 	 */
 	public void substringFromFor() {
 		functionRegistry.registerBinaryTernaryPattern(
-						"substring",
+						StandardFunctions.SUBSTRING,
 						stringType,
 						"substring(?1 from ?2)", "substring(?1 from ?2 for ?3)",
 						STRING, INTEGER, INTEGER,
@@ -1509,7 +1723,7 @@ public class CommonFunctionFactory {
 	 * Not the same as ANSI-style substring!
 	 */
 	public void substring() {
-		functionRegistry.namedDescriptorBuilder( "substring" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.SUBSTRING )
 				.setInvariantType(stringType)
 				.setArgumentCountBetween( 2, 3 )
 				.setParameterTypes(STRING, INTEGER, INTEGER)
@@ -1523,7 +1737,7 @@ public class CommonFunctionFactory {
 	public void substring_substringLen() {
 		functionRegistry
 				.registerBinaryTernaryPattern(
-						"substring",
+						StandardFunctions.SUBSTRING,
 						stringType,
 						"substring(?1,?2,len(?1)-?2+1)",
 						"substring(?1,?2,?3)",
@@ -1537,7 +1751,7 @@ public class CommonFunctionFactory {
 	 * Oracle, and many others
 	 */
 	public void substring_substr() {
-		functionRegistry.namedDescriptorBuilder( "substring", "substr" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.SUBSTRING, "substr" )
 				.setArgumentListSignature( "(STRING string{ from|,} INTEGER start[{ for|,} INTEGER length])" )
 				.setInvariantType(stringType)
 				.setArgumentCountBetween( 2, 3 )
@@ -1573,7 +1787,7 @@ public class CommonFunctionFactory {
 	 */
 	public void overlay() {
 		functionRegistry.registerTernaryQuaternaryPattern(
-						"overlay",
+						StandardFunctions.OVERLAY,
 						stringType,
 						"overlay(?1 placing ?2 from ?3)",
 						"overlay(?1 placing ?2 from ?3 for ?4)",
@@ -1588,7 +1802,7 @@ public class CommonFunctionFactory {
 	 */
 	public void overlayCharacterLength_overlay() {
 		functionRegistry.registerTernaryQuaternaryPattern(
-						"overlay",
+						StandardFunctions.OVERLAY,
 						stringType,
 						//use character_length() here instead of length()
 						//because DB2 doesn't like "length(?)"
@@ -1601,7 +1815,7 @@ public class CommonFunctionFactory {
 	}
 
 	public void replace() {
-		functionRegistry.namedDescriptorBuilder( "replace" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.REPLACE )
 				.setInvariantType(stringType)
 				.setExactArgumentCount( 3 )
 				.setParameterTypes(STRING, STRING, STRING)
@@ -1619,11 +1833,11 @@ public class CommonFunctionFactory {
 				.setParameterTypes(STRING, STRING, STRING)
 				.setArgumentListSignature( "(STRING string, STRING pattern, STRING replacement)" )
 				.register();
-		functionRegistry.registerAlternateKey( "replace", "str_replace" );
+		functionRegistry.registerAlternateKey( StandardFunctions.REPLACE, "str_replace" );
 	}
 
 	public void concat() {
-		functionRegistry.namedDescriptorBuilder( "concat" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.CONCAT )
 				.setInvariantType(stringType)
 				.setMinArgumentCount( 1 )
 				.setArgumentTypeResolver(
@@ -1634,13 +1848,13 @@ public class CommonFunctionFactory {
 	}
 
 	public void lowerUpper() {
-		functionRegistry.namedDescriptorBuilder( "lower" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.LOWER )
 				.setInvariantType(stringType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING)
 				.setArgumentListSignature( "(STRING string)" )
 				.register();
-		functionRegistry.namedDescriptorBuilder( "upper" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.UPPER )
 				.setInvariantType(stringType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING)
@@ -1649,7 +1863,7 @@ public class CommonFunctionFactory {
 	}
 
 	public void ascii() {
-		functionRegistry.namedDescriptorBuilder( "ascii" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.ASCII )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING)
 				.setInvariantType(integerType)//should it be BYTE??
@@ -1657,21 +1871,21 @@ public class CommonFunctionFactory {
 	}
 
 	public void char_chr() {
-		functionRegistry.namedDescriptorBuilder( "chr" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.CHR )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(INTEGER)
 				.setInvariantType(characterType)
 				.register();
-		functionRegistry.registerAlternateKey( "char", "chr" );
+		functionRegistry.registerAlternateKey( StandardFunctions.CHAR, StandardFunctions.CHR );
 	}
 
 	public void chr_char() {
-		functionRegistry.namedDescriptorBuilder( "char" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.CHAR )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(INTEGER)
 				.setInvariantType(characterType)
 				.register();
-		functionRegistry.registerAlternateKey( "chr", "char" );
+		functionRegistry.registerAlternateKey( StandardFunctions.CHR, StandardFunctions.CHAR );
 	}
 
 	/**
@@ -1714,12 +1928,12 @@ public class CommonFunctionFactory {
 	}
 
 	public void leastGreatest() {
-		functionRegistry.namedDescriptorBuilder( "least" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.LEAST )
 				.setMinArgumentCount( 2 )
 				.setParameterTypes(COMPARABLE, COMPARABLE)
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
-		functionRegistry.namedDescriptorBuilder( "greatest" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.GREATEST )
 				.setMinArgumentCount( 2 )
 				.setParameterTypes(COMPARABLE, COMPARABLE)
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
@@ -1727,12 +1941,12 @@ public class CommonFunctionFactory {
 	}
 
 	public void leastGreatest_minMax() {
-		functionRegistry.namedDescriptorBuilder( "least", "min" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.LEAST, StandardFunctions.MIN )
 				.setMinArgumentCount( 2 )
 				.setParameterTypes(COMPARABLE, COMPARABLE)
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
-		functionRegistry.namedDescriptorBuilder( "greatest", "max" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.GREATEST, StandardFunctions.MAX )
 				.setMinArgumentCount( 2 )
 				.setParameterTypes(COMPARABLE, COMPARABLE)
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
@@ -1740,12 +1954,12 @@ public class CommonFunctionFactory {
 	}
 
 	public void leastGreatest_minMaxValue() {
-		functionRegistry.namedDescriptorBuilder( "least", "minvalue" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.LEAST, "minvalue" )
 				.setMinArgumentCount( 2 )
 				.setParameterTypes(COMPARABLE, COMPARABLE)
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
-		functionRegistry.namedDescriptorBuilder( "greatest", "maxvalue" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.GREATEST, "maxvalue" )
 				.setMinArgumentCount( 2 )
 				.setParameterTypes(COMPARABLE, COMPARABLE)
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
@@ -1753,27 +1967,27 @@ public class CommonFunctionFactory {
 	}
 
 	public void aggregates(Dialect dialect, SqlAstNodeRenderingMode inferenceArgumentRenderingMode) {
-		functionRegistry.namedAggregateDescriptorBuilder( "max" )
+		functionRegistry.namedAggregateDescriptorBuilder( StandardFunctions.MAX )
 				.setArgumentRenderingMode( inferenceArgumentRenderingMode )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(COMPARABLE)
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
 				.register();
 
-		functionRegistry.namedAggregateDescriptorBuilder( "min" )
+		functionRegistry.namedAggregateDescriptorBuilder( StandardFunctions.MIN )
 				.setArgumentRenderingMode( inferenceArgumentRenderingMode )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(COMPARABLE)
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
 				.register();
 
-		functionRegistry.namedAggregateDescriptorBuilder( "sum" )
+		functionRegistry.namedAggregateDescriptorBuilder( StandardFunctions.SUM )
 				.setArgumentRenderingMode( inferenceArgumentRenderingMode )
 				.setReturnTypeResolver( new SumReturnTypeResolver( typeConfiguration ) )
 				.setExactArgumentCount( 1 )
 				.register();
 
-		functionRegistry.namedAggregateDescriptorBuilder( "avg" )
+		functionRegistry.namedAggregateDescriptorBuilder( StandardFunctions.AVG )
 				.setArgumentRenderingMode( inferenceArgumentRenderingMode )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
@@ -1781,7 +1995,7 @@ public class CommonFunctionFactory {
 				.register();
 
 		functionRegistry.register(
-				"count",
+				StandardFunctions.COUNT,
 				new CountFunction(
 						dialect,
 						typeConfiguration,
@@ -1795,7 +2009,7 @@ public class CommonFunctionFactory {
 			Dialect dialect,
 			SqlAstNodeRenderingMode inferenceArgumentRenderingMode) {
 		functionRegistry.register(
-				"avg",
+				StandardFunctions.AVG,
 				new AvgFunction(
 						dialect,
 						typeConfiguration,
@@ -1806,35 +2020,35 @@ public class CommonFunctionFactory {
 
 	public void listagg(String emptyWithinReplacement) {
 		functionRegistry.register(
-				"listagg",
+				StandardFunctions.LISTAGG,
 				new ListaggFunction( emptyWithinReplacement, typeConfiguration )
 		);
 	}
 
 	public void listagg_groupConcat() {
 		functionRegistry.register(
-				ListaggGroupConcatEmulation.FUNCTION_NAME,
+				StandardFunctions.LISTAGG,
 				new ListaggGroupConcatEmulation( typeConfiguration )
 		);
 	}
 
 	public void listagg_list(String stringType) {
 		functionRegistry.register(
-				ListaggStringAggEmulation.FUNCTION_NAME,
+				StandardFunctions.LISTAGG,
 				new ListaggStringAggEmulation( "list", stringType, false, typeConfiguration )
 		);
 	}
 
 	public void listagg_stringAgg(String stringType) {
 		functionRegistry.register(
-				ListaggStringAggEmulation.FUNCTION_NAME,
+				StandardFunctions.LISTAGG,
 				new ListaggStringAggEmulation( "string_agg", stringType, false, typeConfiguration )
 		);
 	}
 
 	public void listagg_stringAggWithinGroup(String stringType) {
 		functionRegistry.register(
-				ListaggStringAggEmulation.FUNCTION_NAME,
+				StandardFunctions.LISTAGG,
 				new ListaggStringAggEmulation( "string_agg", stringType, true, typeConfiguration )
 		);
 	}
@@ -1904,11 +2118,11 @@ public class CommonFunctionFactory {
 	}
 
 	public void windowFunctions() {
-		functionRegistry.namedWindowDescriptorBuilder( "row_number" )
+		functionRegistry.namedWindowDescriptorBuilder( StandardFunctions.ROW_NUMBER )
 				.setExactArgumentCount( 0 )
 				.setInvariantType( longType )
 				.register();
-		functionRegistry.namedWindowDescriptorBuilder( "lag" )
+		functionRegistry.namedWindowDescriptorBuilder( StandardFunctions.LAG )
 				.setArgumentCountBetween( 1, 3 )
 				.setParameterTypes( ANY, INTEGER, ANY )
 				.setArgumentTypeResolver(
@@ -1920,7 +2134,7 @@ public class CommonFunctionFactory {
 				)
 				.setArgumentListSignature( "ANY value[, INTEGER offset[, ANY default]]" )
 				.register();
-		functionRegistry.namedWindowDescriptorBuilder( "lead" )
+		functionRegistry.namedWindowDescriptorBuilder( StandardFunctions.LEAD )
 				.setArgumentCountBetween( 1, 3 )
 				.setParameterTypes( ANY, INTEGER, ANY )
 				.setArgumentTypeResolver(
@@ -1932,19 +2146,19 @@ public class CommonFunctionFactory {
 				)
 				.setArgumentListSignature( "ANY value[, INTEGER offset[, ANY default]]" )
 				.register();
-		functionRegistry.namedWindowDescriptorBuilder( "first_value" )
+		functionRegistry.namedWindowDescriptorBuilder( StandardFunctions.FIRST_VALUE )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes( ANY )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
 				.setArgumentListSignature( "ANY value" )
 				.register();
-		functionRegistry.namedWindowDescriptorBuilder( "last_value" )
+		functionRegistry.namedWindowDescriptorBuilder( StandardFunctions.LAST_VALUE )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes( ANY )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
 				.setArgumentListSignature( "ANY value" )
 				.register();
-		functionRegistry.namedWindowDescriptorBuilder( "nth_value" )
+		functionRegistry.namedWindowDescriptorBuilder( StandardFunctions.NTH_VALUE )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes( ANY, INTEGER )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
@@ -1953,40 +2167,40 @@ public class CommonFunctionFactory {
 	}
 
 	public void math() {
-		functionRegistry.namedDescriptorBuilder( "round" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.ROUND )
 				// To avoid truncating to a specific data type, we default to using the argument type
 				.setReturnTypeResolver( useArgType( 1 ) )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(NUMERIC, INTEGER)
 				.register();
 
-		functionRegistry.namedDescriptorBuilder( "floor" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.FLOOR )
 				// To avoid truncating to a specific data type, we default to using the argument type
 				.setReturnTypeResolver( useArgType( 1 ) )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
 
-		functionRegistry.namedDescriptorBuilder( "ceiling" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.CEILING )
 				// To avoid truncating to a specific data type, we default to using the argument type
 				.setReturnTypeResolver( useArgType( 1 ) )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
 
-		functionRegistry.namedDescriptorBuilder( "mod" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.MOD )
 				// According to JPA spec 4.6.17.2.2.
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(INTEGER, INTEGER)
 				.register();
 
-		functionRegistry.namedDescriptorBuilder( "abs" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.ABS )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
 
-		functionRegistry.namedDescriptorBuilder( "sign" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.SIGN )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
@@ -1994,34 +2208,45 @@ public class CommonFunctionFactory {
 
 		//transcendental functions are by nature of floating point type
 
-		functionRegistry.namedDescriptorBuilder( "sqrt" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.SQRT )
 				// According to JPA spec 4.6.17.2.2.
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
 
-		functionRegistry.namedDescriptorBuilder( "ln" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.LN )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
 
-		functionRegistry.namedDescriptorBuilder( "exp" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.EXP )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();
 
-		functionRegistry.namedDescriptorBuilder( "power" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.POWER )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(NUMERIC, NUMERIC)
 				.register();
+
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.LOG10, "ln(?1)/ln(10)" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.LOG2, "ln(?1)/ln(2)" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
 	}
 
 	public void mod_operator() {
-		functionRegistry.patternDescriptorBuilder( "mod", "(?1%?2)" )
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.MOD, "(?1%?2)" )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(INTEGER, INTEGER)
@@ -2029,7 +2254,7 @@ public class CommonFunctionFactory {
 	}
 
 	public void power_expLn() {
-		functionRegistry.patternDescriptorBuilder( "power", "exp(ln(?1)*?2)" )
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.POWER, "exp(ln(?1)*?2)" )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(NUMERIC, NUMERIC)
@@ -2037,7 +2262,7 @@ public class CommonFunctionFactory {
 	}
 
 	public void round_floor() {
-		functionRegistry.patternDescriptorBuilder( "round", "floor(?1*1e?2+0.5)/1e?2")
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.ROUND, "floor(?1*1e?2+0.5)/1e?2")
 				.setReturnTypeResolver( useArgType(1) )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(NUMERIC, INTEGER)
@@ -2095,7 +2320,7 @@ public class CommonFunctionFactory {
 	 * MySQL style, returns the number of days between two dates
 	 */
 	public void datediff() {
-		functionRegistry.namedDescriptorBuilder( "datediff" )
+		functionRegistry.namedDescriptorBuilder( StandardFunctions.DATEDIFF )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(DATE, DATE)
@@ -2251,7 +2476,7 @@ public class CommonFunctionFactory {
 	 * H2-style (uses Java's SimpleDateFormat directly so no need to translate format)
 	 */
 	public void format_formatdatetime() {
-		functionRegistry.register( "format", new FormatFunction( "formatdatetime", typeConfiguration ) );
+		functionRegistry.register( StandardFunctions.FORMAT, new FormatFunction( "formatdatetime", typeConfiguration ) );
 	}
 
 	/**
@@ -2260,7 +2485,7 @@ public class CommonFunctionFactory {
 	 * @see org.hibernate.dialect.OracleDialect#datetimeFormat
 	 */
 	public void format_toChar() {
-		functionRegistry.register( "format", new FormatFunction( "to_char", typeConfiguration ) );
+		functionRegistry.register( StandardFunctions.FORMAT, new FormatFunction( "to_char", typeConfiguration ) );
 	}
 
 	/**
@@ -2269,7 +2494,7 @@ public class CommonFunctionFactory {
 	 * @see org.hibernate.dialect.MySQLDialect#datetimeFormat
 	 */
 	public void format_dateFormat() {
-		functionRegistry.register( "format", new FormatFunction( "date_format", typeConfiguration ) );
+		functionRegistry.register( StandardFunctions.FORMAT, new FormatFunction( "date_format", typeConfiguration ) );
 	}
 
 	/**
@@ -2278,14 +2503,14 @@ public class CommonFunctionFactory {
 	 *  @see org.hibernate.dialect.OracleDialect#datetimeFormat
 	 */
 	public void format_toVarchar() {
-		functionRegistry.register( "format", new FormatFunction( "to_varchar", typeConfiguration ) );
+		functionRegistry.register( StandardFunctions.FORMAT, new FormatFunction( "to_varchar", typeConfiguration ) );
 	}
 
 	/**
 	 * Use the 'collate' operator which exists on at least Postgres, MySQL, Oracle, and SQL Server
 	 */
 	public void collate() {
-		functionRegistry.patternDescriptorBuilder("collate", "(?1 collate ?2)")
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.COLLATE, "(?1 collate ?2)")
 				.setInvariantType(stringType)
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(STRING, COLLATION)
@@ -2297,7 +2522,7 @@ public class CommonFunctionFactory {
 	 * HSQL requires quotes around certain collations
 	 */
 	public void collate_quoted() {
-		functionRegistry.patternDescriptorBuilder("collate", "(?1 collate '?2')")
+		functionRegistry.patternDescriptorBuilder( StandardFunctions.COLLATE, "(?1 collate '?2')" )
 				.setInvariantType(stringType)
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(STRING, COLLATION)

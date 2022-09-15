@@ -15,6 +15,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -71,7 +72,7 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 		// Special case a few functions with special syntax for rendering...
 		// Unless we introduce dedicated SqmXXX classes that override this method, we have to render it this way
 		switch ( functionName ) {
-			case "cast": {
+			case StandardFunctions.CAST: {
 				sb.append( "cast(" );
 				arguments.get( 0 ).appendHqlString( sb );
 				sb.append( " as " );
@@ -79,7 +80,7 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 				sb.append( ')' );
 				break;
 			}
-			case "extract": {
+			case StandardFunctions.EXTRACT: {
 				sb.append( "extract(" );
 				arguments.get( 0 ).appendHqlString( sb );
 				sb.append( " from " );
@@ -87,7 +88,7 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 				sb.append( ')' );
 				break;
 			}
-			case "format": {
+			case StandardFunctions.FORMAT: {
 				sb.append( "format(" );
 				arguments.get( 0 ).appendHqlString( sb );
 				sb.append( " as " );
@@ -95,7 +96,7 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 				sb.append( ')' );
 				break;
 			}
-			case "overlay": {
+			case StandardFunctions.OVERLAY: {
 				sb.append( "overlay(" );
 				arguments.get( 0 ).appendHqlString( sb );
 				sb.append( " placing " );
@@ -109,7 +110,7 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 				sb.append( ')' );
 				break;
 			}
-			case "trim": {
+			case StandardFunctions.TRIM: {
 				sb.append( "trim(" );
 				switch ( arguments.size() ) {
 					case 1:
@@ -131,7 +132,7 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 				sb.append( ')' );
 				break;
 			}
-			case "pad": {
+			case StandardFunctions.PAD: {
 				sb.append( "pad(" );
 				arguments.get( 0 ).appendHqlString( sb );
 				sb.append( " with" );
@@ -142,7 +143,7 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 				sb.append( ')' );
 				break;
 			}
-			case "position": {
+			case StandardFunctions.POSITION: {
 				sb.append( "position(" );
 				arguments.get( 0 ).appendHqlString( sb );
 				sb.append( " in " );

@@ -17,6 +17,7 @@ import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.FrameExclusion;
 import org.hibernate.query.sqm.FrameKind;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -339,7 +340,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	@Override
 	public void visitOver(Over<?> over) {
 		final Expression expression = over.getExpression();
-		if ( expression instanceof FunctionExpression && "row_number".equals( ( (FunctionExpression) expression ).getFunctionName() ) ) {
+		if ( expression instanceof FunctionExpression && StandardFunctions.ROW_NUMBER.equals( ( (FunctionExpression) expression ).getFunctionName() ) ) {
 			if ( over.getPartitions().isEmpty() && over.getOrderList().isEmpty()
 					&& over.getStartKind() == FrameKind.UNBOUNDED_PRECEDING
 					&& over.getEndKind() == FrameKind.CURRENT_ROW
@@ -485,7 +486,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
 		final BinaryArithmeticOperator operator = arithmeticExpression.getOperator();
 		if ( operator == BinaryArithmeticOperator.MODULO ) {
-			append( "mod" );
+			append( StandardFunctions.MOD );
 			appendSql( OPEN_PARENTHESIS );
 			arithmeticExpression.getLeftHandOperand().accept( this );
 			appendSql( ',' );

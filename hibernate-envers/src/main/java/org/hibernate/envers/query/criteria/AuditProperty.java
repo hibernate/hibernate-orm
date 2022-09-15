@@ -28,6 +28,7 @@ import org.hibernate.envers.query.order.AuditOrder;
 import org.hibernate.envers.query.order.internal.PropertyAuditOrder;
 import org.hibernate.envers.query.projection.AuditProjection;
 import org.hibernate.envers.query.projection.internal.PropertyAuditProjection;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 
 /**
  * Create restrictions, projections and specify order for a property of an audited entity.
@@ -364,28 +365,28 @@ public class AuditProperty<T> implements AuditProjection {
 	 * Projection on the maximum value
 	 */
 	public AuditProjection max() {
-		return new PropertyAuditProjection( alias, propertyNameGetter, "max", false );
+		return new PropertyAuditProjection( alias, propertyNameGetter, StandardFunctions.MAX, false );
 	}
 
 	/**
 	 * Projection on the minimum value
 	 */
 	public AuditProjection min() {
-		return new PropertyAuditProjection( alias, propertyNameGetter, "min", false );
+		return new PropertyAuditProjection( alias, propertyNameGetter, StandardFunctions.MIN, false );
 	}
 
 	/**
 	 * Projection counting the values
 	 */
 	public AuditProjection count() {
-		return new PropertyAuditProjection( alias, propertyNameGetter, "count", false );
+		return new PropertyAuditProjection( alias, propertyNameGetter, StandardFunctions.COUNT, false );
 	}
 
 	/**
 	 * Projection counting distinct values
 	 */
 	public AuditProjection countDistinct() {
-		return new PropertyAuditProjection( alias, propertyNameGetter, "count", true );
+		return new PropertyAuditProjection( alias, propertyNameGetter, StandardFunctions.COUNT, true );
 	}
 
 	/**

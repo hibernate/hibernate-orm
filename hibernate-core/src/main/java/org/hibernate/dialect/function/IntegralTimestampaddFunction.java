@@ -11,6 +11,7 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -44,7 +45,7 @@ public class IntegralTimestampaddFunction
 		super( dialect, typeConfiguration );
 		this.dialect = dialect;
 		this.integerType = typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER );
-		//This is kinda wrong, we're supposed to use findFunctionDescriptor("cast"), not instantiate CastFunction
+		//This is kinda wrong, we're supposed to use findFunctionDescriptor( StandardFunctions.CAST ), not instantiate CastFunction
 		//However, since no Dialects currently override the cast() function, it's OK for now
 		this.castFunction = new CastFunction( dialect, dialect.getPreferredSqlTypeCodeForBoolean() );
 	}
@@ -88,7 +89,7 @@ public class IntegralTimestampaddFunction
 		return Arrays.asList(
 				new DurationUnit( unit, field.getExpressionType() ),
 				new SelfRenderingFunctionSqlAstExpression(
-						"cast",
+						StandardFunctions.CAST,
 						castFunction,
 						Arrays.asList(
 								convertedArgument(field, unit, magnitude),

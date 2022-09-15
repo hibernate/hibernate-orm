@@ -17,6 +17,7 @@ import org.hibernate.query.internal.NamedObjectRepositoryImpl;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
@@ -87,7 +88,7 @@ public class InformixDialectTestCase extends BaseUnitTestCase {
 	@TestForIssue(jiraKey = "HHH-10800")
 	public void testCurrentTimestampFunction() {
 		SqmFunctionDescriptor functionDescriptor = queryEngine.getSqmFunctionRegistry()
-				.findFunctionDescriptor( "current_timestamp" );
+				.findFunctionDescriptor( StandardFunctions.CURRENT_TIMESTAMP );
 		SelfRenderingSqmFunction<Object> sqmExpression = functionDescriptor.generateSqmExpression(
 				null,
 				queryEngine,
@@ -106,7 +107,7 @@ public class InformixDialectTestCase extends BaseUnitTestCase {
 	@TestForIssue(jiraKey = "HHH-10800")
 	public void testCurrentDateFunction() {
 		SqmFunctionDescriptor functionDescriptor = queryEngine.getSqmFunctionRegistry()
-				.findFunctionDescriptor( "current_date" );
+				.findFunctionDescriptor( StandardFunctions.CURRENT_DATE );
 		SelfRenderingSqmFunction<Object> sqmExpression = functionDescriptor.generateSqmExpression(
 				null,
 				queryEngine,

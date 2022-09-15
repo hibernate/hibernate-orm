@@ -203,9 +203,7 @@ public class RDMSOS2200Dialect extends Dialect {
 		super.initializeFunctionRegistry( queryEngine );
 
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
-		functionFactory.cosh();
-		functionFactory.sinh();
-		functionFactory.tanh();
+		functionFactory.hyperbolic();
 		functionFactory.cot();
 		functionFactory.log();
 		functionFactory.log10();

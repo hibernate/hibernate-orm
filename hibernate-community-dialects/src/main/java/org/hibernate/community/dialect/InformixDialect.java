@@ -42,6 +42,7 @@ import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMu
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
@@ -207,10 +208,8 @@ public class InformixDialect extends Dialect {
 		functionFactory.octetLength();
 		functionFactory.degrees();
 		functionFactory.radians();
-		functionFactory.sinh();
-		functionFactory.tanh();
-		functionFactory.cosh();
-		functionFactory.moreHyperbolic();
+		functionFactory.hyperbolic();
+		functionFactory.inverseHyperbolic();
 		functionFactory.log10();
 		functionFactory.initcap();
 		functionFactory.yearMonthDay();
@@ -226,8 +225,8 @@ public class InformixDialect extends Dialect {
 
 		//coalesce() and nullif() both supported since Informix 12
 
-		queryEngine.getSqmFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
-		queryEngine.getSqmFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.LEAST, new CaseLeastGreatestEmulation( true ) );
+		queryEngine.getSqmFunctionRegistry().register( StandardFunctions.GREATEST, new CaseLeastGreatestEmulation( false ) );
 		if ( supportsWindowFunctions() ) {
 			functionFactory.windowFunctions();
 		}

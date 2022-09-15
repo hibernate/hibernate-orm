@@ -132,21 +132,57 @@ xjc {
     }
 }
 
-task copyBundleResources (type: Copy) {
+task copyBundleResourcesXml (type: Copy) {
     inputs.property( "db", db )
     ext {
         bundlesTargetDir = file( "${buildDir}/bundles" )
-        bundleTokens = dbBundle[db]
+        // Escape
+        bundleTokens = [
+                'db.dialect' : dbBundle[db]['db.dialect'].replace("&", "&amp;"),
+                'jdbc.driver' : dbBundle[db]['jdbc.driver'].replace("&", "&amp;"),
+                'jdbc.user' : dbBundle[db]['jdbc.user'].replace("&", "&amp;"),
+                'jdbc.pass' : dbBundle[db]['jdbc.pass'].replace("&", "&amp;"),
+                'jdbc.url' : dbBundle[db]['jdbc.url'].replace("&", "&amp;"),
+                'connection.init_sql' : dbBundle[db]['connection.init_sql'].replace("&", "&amp;")
+        ]
         ext.bundleTokens['buildDirName'] = project.relativePath( buildDir )
     }
 
-    from file('src/test/bundles/templates')
+    from('src/test/bundles/templates') {
+        include '**/*.xml'
+    }
     into ext.bundlesTargetDir
     filter( ReplaceTokens, tokens: ext.bundleTokens)
 
     doFirst {
         ext.bundlesTargetDir.mkdirs()
     }
+}
+
+task copyBundleResourcesNonXml (type: Copy) {
+    inputs.property( "db", db )
+    ext {
+        bundlesTargetDir = file( "${buildDir}/bundles" )
+        // Escape
+        bundleTokens = dbBundle[db]
+        ext.bundleTokens['buildDirName'] = project.relativePath( buildDir )
+    }
+
+    from('src/test/bundles/templates') {
+        exclude '**/*.xml'
+    }
+    into ext.bundlesTargetDir
+    filter( ReplaceTokens, tokens: ext.bundleTokens)
+
+    doFirst {
+        ext.bundlesTargetDir.mkdirs()
+    }
+}
+
+task copyBundleResources (type: Copy) {
+    inputs.property( "db", db )
+    dependsOn tasks.copyBundleResourcesXml
+    dependsOn tasks.copyBundleResourcesNonXml
 }
 
 processTestResources {

@@ -38,6 +38,7 @@ import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -207,10 +208,8 @@ public class SpannerDialect extends Dialect {
 		functionFactory.log10();
 		functionFactory.trunc();
 		functionFactory.ceiling_ceil();
-		functionFactory.cosh();
-		functionFactory.sinh();
-		functionFactory.tanh();
-		functionFactory.moreHyperbolic();
+		functionFactory.hyperbolic();
+		functionFactory.inverseHyperbolic();
 
 		functionFactory.bitandorxornot_bitAndOrXorNot();
 
@@ -270,7 +269,7 @@ public class SpannerDialect extends Dialect {
 				.setInvariantType( booleanType )
 				.setExactArgumentCount( 2 )
 				.register();
-//		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "format" )
+//		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( StandardFunctions.FORMAT )
 //				.setInvariantType( StandardBasicTypes.STRING )
 //				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "from_base64" )
@@ -446,7 +445,7 @@ public class SpannerDialect extends Dialect {
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().register(
-				"format",
+				StandardFunctions.FORMAT,
 				new FormatFunction( "format_timestamp", true, true, queryEngine.getTypeConfiguration() )
 		);
 		functionFactory.listagg_stringAgg( "string" );

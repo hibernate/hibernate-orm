@@ -39,6 +39,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SortOrder;
@@ -275,7 +276,7 @@ public class CteInsertHandler implements InsertHandler {
 											0,
 											new Over<>(
 													new SelfRenderingFunctionSqlAstExpression(
-															"row_number",
+															StandardFunctions.ROW_NUMBER,
 															(appender, args, walker) -> appender.appendSql(
 																	"row_number()" ),
 															Collections.emptyList(),
@@ -701,7 +702,7 @@ public class CteInsertHandler implements InsertHandler {
 			MultiTableSqmMutationConverter sqmConverter) {
 		final SqmExpression<?> arg = new SqmStar( factory.getNodeBuilder() );
 		final TypeConfiguration typeConfiguration = factory.getJpaMetamodel().getTypeConfiguration();
-		return factory.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( "count" ).generateSqmExpression(
+		return factory.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( StandardFunctions.COUNT ).generateSqmExpression(
 				arg,
 				null,
 				factory.getQueryEngine(),
@@ -1008,7 +1009,7 @@ public class CteInsertHandler implements InsertHandler {
 								0,
 								new Over<>(
 										new SelfRenderingFunctionSqlAstExpression(
-												"row_number",
+												StandardFunctions.ROW_NUMBER,
 												(appender, args, walker) -> appender.appendSql(
 														"row_number()" ),
 												Collections.emptyList(),

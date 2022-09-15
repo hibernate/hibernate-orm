@@ -98,6 +98,7 @@ import org.hibernate.query.sqm.internal.SqmCreationProcessingStateImpl;
 import org.hibernate.query.sqm.internal.SqmDmlCreationProcessingState;
 import org.hibernate.query.sqm.internal.SqmQueryPartCreationProcessingStateStandardImpl;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.spi.ParameterDeclarationContext;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -249,28 +250,26 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	static {
 		final Set<String> jpaStandardFunctions = new HashSet<>();
 		// Extracted from the BNF in JPA spec 4.14.
-		jpaStandardFunctions.add( "avg" );
-		jpaStandardFunctions.add( "max" );
-		jpaStandardFunctions.add( "min" );
-		jpaStandardFunctions.add( "sum" );
-		jpaStandardFunctions.add( "count" );
-		jpaStandardFunctions.add( "length" );
-		jpaStandardFunctions.add( "locate" );
-		jpaStandardFunctions.add( "abs" );
-		jpaStandardFunctions.add( "sqrt" );
-		jpaStandardFunctions.add( "mod" );
-		jpaStandardFunctions.add( "size" );
-		jpaStandardFunctions.add( "index" );
-		jpaStandardFunctions.add( "current_date" );
-		jpaStandardFunctions.add( "current_time" );
-		jpaStandardFunctions.add( "current_timestamp" );
-		jpaStandardFunctions.add( "concat" );
-		jpaStandardFunctions.add( "substring" );
-		jpaStandardFunctions.add( "trim" );
-		jpaStandardFunctions.add( "lower" );
-		jpaStandardFunctions.add( "upper" );
-		jpaStandardFunctions.add( "coalesce" );
-		jpaStandardFunctions.add( "nullif" );
+		jpaStandardFunctions.add( StandardFunctions.AVG );
+		jpaStandardFunctions.add( StandardFunctions.MAX );
+		jpaStandardFunctions.add( StandardFunctions.MIN );
+		jpaStandardFunctions.add( StandardFunctions.SUM );
+		jpaStandardFunctions.add( StandardFunctions.COUNT );
+		jpaStandardFunctions.add( StandardFunctions.LENGTH );
+		jpaStandardFunctions.add( StandardFunctions.LOCATE );
+		jpaStandardFunctions.add( StandardFunctions.ABS );
+		jpaStandardFunctions.add( StandardFunctions.SQRT );
+		jpaStandardFunctions.add( StandardFunctions.MOD );
+		jpaStandardFunctions.add( StandardFunctions.CURRENT_DATE );
+		jpaStandardFunctions.add( StandardFunctions.CURRENT_TIME );
+		jpaStandardFunctions.add( StandardFunctions.CURRENT_TIMESTAMP );
+		jpaStandardFunctions.add( StandardFunctions.CONCAT );
+		jpaStandardFunctions.add( StandardFunctions.SUBSTRING );
+		jpaStandardFunctions.add( StandardFunctions.TRIM );
+		jpaStandardFunctions.add( StandardFunctions.LOWER );
+		jpaStandardFunctions.add( StandardFunctions.UPPER );
+		jpaStandardFunctions.add( StandardFunctions.COALESCE );
+		jpaStandardFunctions.add( StandardFunctions.NULLIF );
 		JPA_STANDARD_FUNCTIONS = jpaStandardFunctions;
 	}
 
@@ -2551,10 +2550,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitConcatenationExpression(HqlParser.ConcatenationExpressionContext ctx) {
+		if ( creationOptions.useStrictJpaCompliance() ) {
+			throw nonCompliantFunctionException( "concat operator '||'" );
+		}
 		if ( ctx.getChildCount() != 3 ) {
 			throw new ParsingException( "Expecting 2 operands to the concat operator" );
 		}
-		return getFunctionDescriptor( "concat" ).generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.CONCAT ).generateSqmExpression(
 				asList(
 						(SqmExpression<?>) ctx.getChild( 0 ).accept( this ),
 						(SqmExpression<?>) ctx.getChild( 2 ).accept( this )
@@ -2629,7 +2631,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final BinaryArithmeticOperator operator = (BinaryArithmeticOperator) ctx.getChild( 1 ).accept( this );
 
 		if ( operator == BinaryArithmeticOperator.MODULO ) {
-			return getFunctionDescriptor("mod").generateSqmExpression(
+			return getFunctionDescriptor( StandardFunctions.MOD ).generateSqmExpression(
 					asList( left, right ),
 					null,
 					creationContext.getQueryEngine(),
@@ -2699,7 +2701,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmExpression<?> expressionToCollate = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
 		final SqmCollation castTargetExpression = (SqmCollation) ctx.getChild( 4 ).accept( this );
 
-		return getFunctionDescriptor("collate").generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.COLLATE ).generateSqmExpression(
 				asList( expressionToCollate, castTargetExpression ),
 				null, //why not string?
 				creationContext.getQueryEngine(),
@@ -2807,7 +2809,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitCurrentDateFunction(HqlParser.CurrentDateFunctionContext ctx) {
-		return getFunctionDescriptor("current_date")
+		if ( creationOptions.useStrictJpaCompliance()
+				&& ( (TerminalNode) ctx.getChild( 0 ) ).getSymbol().getType() == HqlParser.CURRENT ) {
+			throw nonCompliantFunctionException( "current date" );
+		}
+		return getFunctionDescriptor( StandardFunctions.CURRENT_DATE )
 				.generateSqmExpression(
 						resolveExpressibleTypeBasic( Date.class ),
 						creationContext.getQueryEngine(),
@@ -2817,7 +2823,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitCurrentTimeFunction(HqlParser.CurrentTimeFunctionContext ctx) {
-		return getFunctionDescriptor("current_time")
+		if ( creationOptions.useStrictJpaCompliance()
+				&& ( (TerminalNode) ctx.getChild( 0 ) ).getSymbol().getType() == HqlParser.CURRENT ) {
+			throw nonCompliantFunctionException( "current time" );
+		}
+		return getFunctionDescriptor( StandardFunctions.CURRENT_TIME )
 				.generateSqmExpression(
 						resolveExpressibleTypeBasic( Time.class ),
 						creationContext.getQueryEngine(),
@@ -2827,7 +2837,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitCurrentTimestampFunction(HqlParser.CurrentTimestampFunctionContext ctx) {
-		return getFunctionDescriptor("current_timestamp")
+		if ( creationOptions.useStrictJpaCompliance()
+				&& ( (TerminalNode) ctx.getChild( 0 ) ).getSymbol().getType() == HqlParser.CURRENT ) {
+			throw nonCompliantFunctionException( "current timestamp" );
+		}
+		return getFunctionDescriptor( StandardFunctions.CURRENT_TIMESTAMP )
 				.generateSqmExpression(
 						resolveExpressibleTypeBasic( Timestamp.class ),
 						creationContext.getQueryEngine(),
@@ -2837,7 +2851,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitInstantFunction(HqlParser.InstantFunctionContext ctx) {
-		return getFunctionDescriptor("instant")
+		if ( creationOptions.useStrictJpaCompliance() ) {
+			throw nonCompliantFunctionException( StandardFunctions.INSTANT );
+		}
+		return getFunctionDescriptor( StandardFunctions.INSTANT )
 				.generateSqmExpression(
 						resolveExpressibleTypeBasic( Instant.class ),
 						creationContext.getQueryEngine(),
@@ -2847,7 +2864,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitLocalDateFunction(HqlParser.LocalDateFunctionContext ctx) {
-		return getFunctionDescriptor("local_date")
+		if ( creationOptions.useStrictJpaCompliance()
+				&& ( (TerminalNode) ctx.getChild( 0 ) ).getSymbol().getType() == HqlParser.LOCAL_DATE ) {
+			throw nonCompliantFunctionException( StandardFunctions.LOCAL_DATE );
+		}
+		return getFunctionDescriptor( StandardFunctions.LOCAL_DATE )
 				.generateSqmExpression(
 						resolveExpressibleTypeBasic( LocalDate.class ),
 						creationContext.getQueryEngine(),
@@ -2857,7 +2878,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitLocalTimeFunction(HqlParser.LocalTimeFunctionContext ctx) {
-		return getFunctionDescriptor("local_time")
+		if ( creationOptions.useStrictJpaCompliance()
+				&& ( (TerminalNode) ctx.getChild( 0 ) ).getSymbol().getType() == HqlParser.LOCAL_TIME ) {
+			throw nonCompliantFunctionException( StandardFunctions.LOCAL_TIME );
+		}
+		return getFunctionDescriptor( StandardFunctions.LOCAL_TIME )
 				.generateSqmExpression(
 						resolveExpressibleTypeBasic( LocalTime.class ),
 						creationContext.getQueryEngine(),
@@ -2867,7 +2892,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitLocalDateTimeFunction(HqlParser.LocalDateTimeFunctionContext ctx) {
-		return getFunctionDescriptor("local_datetime")
+		if ( creationOptions.useStrictJpaCompliance()
+				&& ( (TerminalNode) ctx.getChild( 0 ) ).getSymbol().getType() == HqlParser.LOCAL_DATETIME ) {
+			throw nonCompliantFunctionException( StandardFunctions.LOCAL_DATETIME );
+		}
+		return getFunctionDescriptor( StandardFunctions.LOCAL_DATETIME )
 				.generateSqmExpression(
 						resolveExpressibleTypeBasic( LocalDateTime.class ),
 						creationContext.getQueryEngine(),
@@ -2877,7 +2906,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitOffsetDateTimeFunction(HqlParser.OffsetDateTimeFunctionContext ctx) {
-		return getFunctionDescriptor("offset_datetime")
+		if ( creationOptions.useStrictJpaCompliance() ) {
+			throw nonCompliantFunctionException( StandardFunctions.OFFSET_DATETIME );
+		}
+		return getFunctionDescriptor( StandardFunctions.OFFSET_DATETIME )
 				.generateSqmExpression(
 						resolveExpressibleTypeBasic( OffsetDateTime.class ),
 						creationContext.getQueryEngine(),
@@ -3548,13 +3580,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final String originalFunctionName = visitGenericFunctionName( ctx.genericFunctionName() );
 		final String functionName = originalFunctionName.toLowerCase();
 		if ( creationOptions.useStrictJpaCompliance() && !JPA_STANDARD_FUNCTIONS.contains( functionName ) ) {
-			throw new StrictJpaComplianceViolation(
-					"Encountered non-compliant non-standard function call [" +
-							originalFunctionName + "], but strict JPA " +
-							"compliance was requested; use JPA's FUNCTION(functionName[,...]) " +
-							"syntax name instead",
-					StrictJpaComplianceViolation.Type.FUNCTION_CALL
-			);
+			throw nonCompliantFunctionException( originalFunctionName );
 		}
 
 		final ParseTree argumentChild = ctx.getChild( 2 );
@@ -3609,17 +3635,17 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			}
 			if ( respectNulls != null ) {
 				switch ( functionName ) {
-					case "lag":
-					case "lead":
-					case "first_value":
-					case "last_value":
-					case "nth_value":
+					case StandardFunctions.LAG:
+					case StandardFunctions.LEAD:
+					case StandardFunctions.FIRST_VALUE:
+					case StandardFunctions.LAST_VALUE:
+					case StandardFunctions.NTH_VALUE:
 						break;
 					default:
 						throw new SemanticException( "RESPECT/IGNORE NULLS is illegal for function: " + functionName );
 				}
 			}
-			if ( fromFirst != null && !"nth_value".equals( functionName ) ) {
+			if ( fromFirst != null && !StandardFunctions.NTH_VALUE.equals( functionName ) ) {
 				throw new SemanticException( "FROM FIRST/LAST is illegal for function: " + functionName );
 			}
 		}
@@ -3671,17 +3697,22 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return applyOverClause( ctx, function );
 	}
 
+	private StrictJpaComplianceViolation nonCompliantFunctionException(String originalFunctionName) {
+		return new StrictJpaComplianceViolation(
+				"Encountered non-compliant non-standard function call [" +
+						originalFunctionName + "], but strict JPA " +
+						"compliance was requested; use JPA's FUNCTION(functionName[,...]) " +
+						"syntax name instead",
+				StrictJpaComplianceViolation.Type.FUNCTION_CALL
+		);
+	}
+
 	@Override
 	public Object visitListaggFunction(ListaggFunctionContext ctx) {
 		if ( creationOptions.useStrictJpaCompliance() ) {
-			throw new StrictJpaComplianceViolation(
-					"Encountered non-compliant non-standard function call [listagg], but strict JPA " +
-							"compliance was requested; use JPA's FUNCTION(functionName[,...]) " +
-							"syntax name instead",
-					StrictJpaComplianceViolation.Type.FUNCTION_CALL
-			);
+			throw nonCompliantFunctionException( StandardFunctions.LISTAGG );
 		}
-		final SqmFunctionDescriptor functionTemplate = getFunctionDescriptor( "listagg" );
+		final SqmFunctionDescriptor functionTemplate = getFunctionDescriptor( StandardFunctions.LISTAGG );
 		if ( functionTemplate == null ) {
 			throw new SemanticException(
 					"The listagg function was not registered for the dialect"
@@ -3970,7 +4001,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 //			}
 		}
 
-		return getFunctionDescriptor("extract").generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.EXTRACT ).generateSqmExpression(
 				asList( extractFieldExpression, expressionToExtract ),
 				extractFieldExpression.getType(),
 				creationContext.getQueryEngine(),
@@ -3990,10 +4021,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitFormatFunction(HqlParser.FormatFunctionContext ctx) {
+		if ( creationOptions.useStrictJpaCompliance() ) {
+			throw nonCompliantFunctionException( StandardFunctions.FORMAT );
+		}
 		final SqmExpression<?> expressionToCast = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
 		final SqmLiteral<?> format = (SqmLiteral<?>) ctx.getChild( 4 ).accept( this );
 
-		return getFunctionDescriptor("format").generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.FORMAT ).generateSqmExpression(
 				asList( expressionToCast, format ),
 				null, //why not string?
 				creationContext.getQueryEngine(),
@@ -4003,10 +4037,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitCastFunction(HqlParser.CastFunctionContext ctx) {
+		if ( creationOptions.useStrictJpaCompliance() ) {
+			throw nonCompliantFunctionException( StandardFunctions.CAST );
+		}
 		final SqmExpression<?> expressionToCast = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
 		final SqmCastTarget<?> castTargetExpression = (SqmCastTarget<?>) ctx.getChild( 4 ).accept( this );
 
-		return getFunctionDescriptor("cast").generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.CAST ).generateSqmExpression(
 				asList( expressionToCast, castTargetExpression ),
 				castTargetExpression.getType(),
 				creationContext.getQueryEngine(),
@@ -4045,10 +4082,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitPositionFunction(HqlParser.PositionFunctionContext ctx) {
+		if ( creationOptions.useStrictJpaCompliance() ) {
+			throw nonCompliantFunctionException( StandardFunctions.POSITION );
+		}
 		final SqmExpression<?> pattern = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
 		final SqmExpression<?> string = (SqmExpression<?>) ctx.getChild( 4 ).accept( this );
 
-		return getFunctionDescriptor("position").generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.POSITION ).generateSqmExpression(
 				asList( pattern, string ),
 				null,
 				creationContext.getQueryEngine(),
@@ -4058,6 +4098,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitOverlayFunction(HqlParser.OverlayFunctionContext ctx) {
+		if ( creationOptions.useStrictJpaCompliance() ) {
+			throw nonCompliantFunctionException( StandardFunctions.OVERLAY );
+		}
 		final SqmExpression<?> string = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
 		final SqmExpression<?> replacement = (SqmExpression<?>) ctx.getChild( 4 ).accept( this );
 		final SqmExpression<?> start = (SqmExpression<?>) ctx.getChild( 6 ).accept( this );
@@ -4069,7 +4112,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			length = null;
 		}
 
-		return getFunctionDescriptor("overlay").generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.OVERLAY ).generateSqmExpression(
 				length == null
 						? asList( string, replacement, start )
 						: asList( string, replacement, start, length ),
@@ -4088,14 +4131,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return new SqmEvery<>( subquery, creationContext.getNodeBuilder() );
 		}
 		else if ( argumentChild instanceof HqlParser.PredicateContext ) {
-			if ( getCreationOptions().useStrictJpaCompliance() ) {
-				throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.FUNCTION_CALL );
+			if ( creationOptions.useStrictJpaCompliance() ) {
+				throw nonCompliantFunctionException( StandardFunctions.EVERY );
 			}
 			final SqmExpression<?> argument = (SqmExpression<?>) argumentChild.accept( this );
 
 			return applyOverClause(
 					ctx,
-					getFunctionDescriptor( "every" ).generateAggregateSqmExpression(
+					getFunctionDescriptor( StandardFunctions.EVERY ).generateAggregateSqmExpression(
 							singletonList( argument ),
 							filterExpression,
 							resolveExpressibleTypeBasic( Boolean.class ),
@@ -4127,14 +4170,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return new SqmAny<>( subquery, creationContext.getNodeBuilder() );
 		}
 		else if ( argumentChild instanceof HqlParser.PredicateContext ) {
-			if ( getCreationOptions().useStrictJpaCompliance() ) {
-				throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.FUNCTION_CALL );
+			if ( creationOptions.useStrictJpaCompliance() ) {
+				throw nonCompliantFunctionException( StandardFunctions.ANY );
 			}
 			final SqmExpression<?> argument = (SqmExpression<?>) argumentChild.accept( this );
 
 			return applyOverClause(
 					ctx,
-					getFunctionDescriptor( "any" ).generateAggregateSqmExpression(
+					getFunctionDescriptor( StandardFunctions.ANY ).generateAggregateSqmExpression(
 							singletonList( argument ),
 							filterExpression,
 							resolveExpressibleTypeBasic( Boolean.class ),
@@ -4433,7 +4476,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			length = null;
 		}
 
-		return getFunctionDescriptor("substring").generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.SUBSTRING ).generateSqmExpression(
 				length == null ? asList( source, start ) : asList( source, start, length ),
 				null,
 				creationContext.getQueryEngine(),
@@ -4443,6 +4486,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitPadFunction(HqlParser.PadFunctionContext ctx) {
+		if ( creationOptions.useStrictJpaCompliance() ) {
+			throw nonCompliantFunctionException( StandardFunctions.PAD );
+		}
 		final SqmExpression<?> source = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
 		final SqmExpression<?> length = (SqmExpression<?>) ctx.getChild( 4 ).accept(this);
 		final SqmTrimSpecification padSpec = visitPadSpecification( (HqlParser.PadSpecificationContext) ctx.getChild( 5 ) );
@@ -4453,7 +4499,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		else {
 			padChar = null;
 		}
-		return getFunctionDescriptor("pad").generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.PAD ).generateSqmExpression(
 				padChar != null
 						? asList( source, length, padSpec, padChar )
 						: asList( source, length, padSpec ),
@@ -4511,7 +4557,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			trimChar = visitTrimCharacter( null );
 		}
 
-		return getFunctionDescriptor("trim").generateSqmExpression(
+		return getFunctionDescriptor( StandardFunctions.TRIM ).generateSqmExpression(
 				asList(
 						trimSpec,
 						trimChar,

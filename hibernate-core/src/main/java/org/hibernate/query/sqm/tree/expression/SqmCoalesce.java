@@ -16,6 +16,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.produce.function.StandardFunctions;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 import jakarta.persistence.criteria.Expression;
@@ -33,14 +34,13 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 	}
 
 	public SqmCoalesce(SqmExpressible<T> type, NodeBuilder nodeBuilder) {
-		super( type, nodeBuilder );
-		functionDescriptor = nodeBuilder.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( "coalesce" );
-		this.arguments = new ArrayList<>();
+		this( type, 0, nodeBuilder );
 	}
 
 	public SqmCoalesce(SqmExpressible<T> type, int numberOfArguments, NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
-		functionDescriptor = nodeBuilder.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( "coalesce" );
+		this.functionDescriptor = nodeBuilder.getQueryEngine().getSqmFunctionRegistry()
+				.findFunctionDescriptor( StandardFunctions.COALESCE );
 		this.arguments = new ArrayList<>( numberOfArguments );
 	}
 

@@ -444,7 +444,6 @@ public class MySQLDialect extends Dialect {
 		functionFactory.log();
 		functionFactory.log2();
 		functionFactory.log10();
-		functionFactory.pi();
 		functionFactory.trim2();
 		functionFactory.octetLength();
 		functionFactory.reverse();
@@ -496,6 +495,12 @@ public class MySQLDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "localtime" )
 				.setInvariantType(basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP ))
 				.setUseParenthesesWhenNoArgs( false )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "pi", "cast(pi() as double)" )
+				.setInvariantType(basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE ))
+				.setExactArgumentCount(0)
+				.setArgumentListSignature("")
 				.register();
 
 		// MySQL timestamp type defaults to precision 0 (seconds) but

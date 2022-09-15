@@ -735,6 +735,7 @@ public abstract class Dialect implements ConversionContext {
 	 * <ul>
 	 * <li> <code>pi</code>
 	 * <li> <code>log10(arg)</code>
+	 * <li> <code>log(base, arg)</code>
 	 * <li> <code>sign(arg)</code>
 	 * <li> <code>sin(arg)</code>
 	 * <li> <code>cos(arg)</code>
@@ -816,6 +817,10 @@ public abstract class Dialect implements ConversionContext {
 		//pi supported on most databases, but emulate it here
 
 		functionFactory.pi_acos();
+
+		//log(base, arg) supported on most databases, but emulate it here
+
+		functionFactory.log_ln();
 
 		//coalesce() function, supported by most databases, must be emulated
 		//in terms of nvl() for platforms which don't support it natively

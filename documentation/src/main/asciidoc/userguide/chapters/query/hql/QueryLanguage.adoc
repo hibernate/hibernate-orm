@@ -1023,6 +1023,7 @@ Next, functions for working with numeric values:
 | `power()` | Exponentiation | `power(x,y)` | Universal in SQL dialects
 | `ln()` | Natural logarithm | `ln(x)` | Very common in SQL dialects
 | `log10()` | Base-10 logarithm | `log10(x)` | Very common in SQL dialects
+| `log()` | Arbitrary-base logarithm | `log(b,x)` | Very common in SQL dialects
 | `pi` | &#960; | `pi` | Very common in SQL dialects
 | `sin()`, `cos()`, `tan()`, `asin()`, `acos()`, `atan()`, `atan2()` | Basic trigonometric functions | `sin(theta)`, `cos(theta)`, `atan2(opposite, adjacent)` | Very common in SQL dialects
 | `round()` | Numeric rounding | As usual: `round(number, places)` | Very common in SQL dialects

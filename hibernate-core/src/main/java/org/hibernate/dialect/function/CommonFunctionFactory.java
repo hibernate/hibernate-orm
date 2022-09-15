@@ -88,6 +88,9 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * For databases where the first parameter is the base
+	 */
 	public void log() {
 		functionRegistry.namedDescriptorBuilder( "log" )
 				.setArgumentCountBetween( 1, 2 )
@@ -96,6 +99,42 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public void log_ln() {
+		functionRegistry.patternDescriptorBuilder( "log", "ln(?2)/ln(?1)" )
+				.setExactArgumentCount( 2 )
+				.setParameterTypes(NUMERIC, NUMERIC)
+				.setInvariantType(doubleType)
+				.setArgumentListSignature("(NUMERIC base, NUMERIC arg)")
+				.register();
+	}
+
+	/**
+	 * SQL Server defines parameters in reverse order
+	 */
+	public void log_log() {
+		functionRegistry.patternDescriptorBuilder( "log", "log(?2,?1)" )
+				.setExactArgumentCount( 2 )
+				.setParameterTypes(NUMERIC, NUMERIC)
+				.setInvariantType(doubleType)
+				.setArgumentListSignature("(NUMERIC base, NUMERIC arg)")
+				.register();
+	}
+
+	/**
+	 * For Sybase
+	 */
+	public void log_loglog() {
+		functionRegistry.patternDescriptorBuilder( "log", "log(?2)/log(?1)" )
+				.setExactArgumentCount( 2 )
+				.setParameterTypes(NUMERIC, NUMERIC)
+				.setInvariantType(doubleType)
+				.setArgumentListSignature("(NUMERIC base, NUMERIC arg)")
+				.register();
+	}
+
+	/**
+	 * For SQL Server and Sybase
+	 */
 	public void ln_log() {
 		functionRegistry.namedDescriptorBuilder( "ln", "log" )
 				.setInvariantType(doubleType)
@@ -385,6 +424,7 @@ public class CommonFunctionFactory {
 		functionRegistry.noArgsBuilder( "pi" )
 				.setInvariantType(doubleType)
 				.setUseParenthesesWhenNoArgs( true )
+				.setArgumentListSignature("")
 				.register();
 	}
 
@@ -392,6 +432,7 @@ public class CommonFunctionFactory {
 		functionRegistry.patternDescriptorBuilder( "pi", "acos(-1)" )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount(0)
+				.setArgumentListSignature("")
 				.register();
 	}
 

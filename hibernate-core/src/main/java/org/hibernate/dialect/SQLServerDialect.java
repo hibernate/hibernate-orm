@@ -265,6 +265,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
 		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.DEFAULT );
 
+		functionFactory.log_log();
+
 		functionFactory.truncate_round();
 		functionFactory.everyAny_minMaxIif();
 		functionFactory.octetLength_pattern( "datalength(?1)" );

@@ -652,124 +652,126 @@ public abstract class Dialect implements ConversionContext {
 	 * query language specification:
 	 *
 	 * <ul>
-	 * <li> avg(arg)							- aggregate function
-	 * <li> count([distinct ]arg)				- aggregate function
-	 * <li> max(arg)							- aggregate function
-	 * <li> min(arg)							- aggregate function
-	 * <li> sum(arg)							- aggregate function
+	 * <li> <code>avg(arg)</code>						- aggregate function
+	 * <li> <code>count([distinct ]arg)</code>			- aggregate function
+	 * <li> <code>max(arg)</code>						- aggregate function
+	 * <li> <code>min(arg)</code>						- aggregate function
+	 * <li> <code>sum(arg)</code>						- aggregate function
 	 * </ul>
 	 *
 	 * <ul>
-	 * <li> coalesce(arg0, arg1, ...)
-	 * <li> nullif(arg0, arg1)
+	 * <li> <code>coalesce(arg0, arg1, ...)</code>
+	 * <li> <code>nullif(arg0, arg1)</code>
 	 * </ul>
 	 *
 	 * <ul>
-	 * <li> lower(arg)
-	 * <li> upper(arg)
-	 * <li> length(arg)
-	 * <li> concat(arg0, arg1, ...)
-	 * <li> locate(pattern, string[, start])
-	 * <li> substring(string, start[, length])
-	 * <li> trim([[spec ][character ]from] string)
+	 * <li> <code>lower(arg)</code>
+	 * <li> <code>upper(arg)</code>
+	 * <li> <code>length(arg)</code>
+	 * <li> <code>concat(arg0, arg1, ...)</code>
+	 * <li> <code>locate(pattern, string[, start])</code>
+	 * <li> <code>substring(string, start[, length])</code>
+	 * <li> <code>trim([[spec ][character ]from] string)</code>
 	 * </ul>
 	 *
 	 * <ul>
-	 * <li> abs(arg)
-	 * <li> mod(arg0, arg1)
-	 * <li> sqrt(arg)
+	 * <li> <code>abs(arg)</code>
+	 * <li> <code>mod(arg0, arg1)</code>
+	 * <li> <code>sqrt(arg)</code>
 	 * </ul>
 	 *
 	 * <ul>
-	 * <li> current date
-	 * <li> current time
-	 * <li> current timestamp
+	 * <li> <code>current date</code>
+	 * <li> <code>current time</code>
+	 * <li> <code>current timestamp</code>
 	 * </ul>
 	 *
 	 * Along with an additional set of functions defined by ANSI SQL:
 	 *
 	 * <ul>
-	 * <li> any(arg)							- aggregate function
-	 * <li> every(arg)							- aggregate function
+	 * <li> <code>any(arg)</code>						- aggregate function
+	 * <li> <code>every(arg)</code>						- aggregate function
 	 * </ul>
 	 *
 	 * <ul>
-	 * <li> cast(arg as Type)
-	 * <li> extract(field from arg)
+	 * <li> <code>cast(arg as Type)</code>
+	 * <li> <code>extract(field from arg)</code>
 	 * </ul>
 	 *
 	 * <ul>
-	 * <li> ln(arg)
-	 * <li> exp(arg)
-	 * <li> power(arg0, arg1)
-	 * <li> floor(arg)
-	 * <li> ceiling(arg)
+	 * <li> <code>ln(arg)</code>
+	 * <li> <code>exp(arg)</code>
+	 * <li> <code>power(arg0, arg1)</code>
+	 * <li> <code>floor(arg)</code>
+	 * <li> <code>ceiling(arg)</code>
 	 * </ul>
 	 *
 	 * <ul>
-	 * <li> position(pattern in string)
-	 * <li> substring(string from start[ for length])
-	 * <li> overlay(string placing replacement from start[ for length])
+	 * <li> <code>position(pattern in string)</code>
+	 * <li> <code>substring(string from start[ for length])</code>
+	 * <li> <code>overlay(string placing replacement from start[ for length])</code>
 	 * </ul>
 	 *
-	 * And the following functions for working with java.time types:
+	 * And the following functions for working with <code>java.time</code>
+	 * types:
 	 *
 	 * <ul>
-	 * <li> local date
-	 * <li> local time
-	 * <li> local datetime
-	 * <li> offset datetime
-	 * <li> instant
+	 * <li> <code>local date</code>
+	 * <li> <code>local time</code>
+	 * <li> <code>local datetime</code>
+	 * <li> <code>offset datetime</code>
+	 * <li> <code>instant</code>
 	 * </ul>
 	 *
 	 * And a number of additional "standard" functions:
 	 *
 	 * <ul>
-	 * <li> left(string, length)
-	 * <li> right(string, length)
-	 * <li> replace(string, pattern, replacement)
-	 * <li> pad(string with length spec[ character])
+	 * <li> <code>left(string, length)</code>
+	 * <li> <code>right(string, length)</code>
+	 * <li> <code>replace(string, pattern, replacement)</code>
+	 * <li> <code>pad(string with length spec[ character])</code>
 	 * </ul>
 	 *
 	 * <ul>
-	 * <li> log10(arg)
-	 * <li> sign(arg)
-	 * <li> sin(arg)
-	 * <li> cos(arg)
-	 * <li> tan(arg)
-	 * <li> asin(arg)
-	 * <li> acos(arg)
-	 * <li> atan(arg)
-	 * <li> atan2(arg0, arg1)
-	 * <li> round(arg0, arg1)
-	 * <li> least(arg0, arg1, ...)
-	 * <li> greatest(arg0, arg1, ...)
+	 * <li> <code>pi</code>
+	 * <li> <code>log10(arg)</code>
+	 * <li> <code>sign(arg)</code>
+	 * <li> <code>sin(arg)</code>
+	 * <li> <code>cos(arg)</code>
+	 * <li> <code>tan(arg)</code>
+	 * <li> <code>asin(arg)</code>
+	 * <li> <code>acos(arg)</code>
+	 * <li> <code>atan(arg)</code>
+	 * <li> <code>atan2(arg0, arg1)</code>
+	 * <li> <code>round(arg0, arg1)</code>
+	 * <li> <code>least(arg0, arg1, ...)</code>
+	 * <li> <code>greatest(arg0, arg1, ...)</code>
 	 * </ul>
 	 *
 	 * <ul>
-	 * <li> format(datetime as pattern)
-	 * <li> collate(string as collation)
-	 * <li> str(arg)					- synonym of cast(a as String)
-	 * <li> ifnull(arg0, arg1)			- synonym of coalesce(a, b)
+	 * <li> <code>format(datetime as pattern)</code>
+	 * <li> <code>collate(string as collation)</code>
+	 * <li> <code>str(arg)</code>						- synonym of <code>cast(a as String)</code>
+	 * <li> <code>ifnull(arg0, arg1)</code>				- synonym of <code>coalesce(a, b)</code>
 	 * </ul>
 	 *
-	 * Finally, the following functions are defined as abbreviations
-	 * for extract(), and desugared by the parser:
+	 * Finally, the following functions are defined as abbreviations for
+	 * <code>extract()</code>, and desugared by the parser:
 	 *
 	 * <ul>
-	 * <li> second(arg)					- synonym of extract(second from a)
-	 * <li> minute(arg)					- synonym of extract(minute from a)
-	 * <li> hour(arg)					- synonym of extract(hour from a)
-	 * <li> day(arg)					- synonym of extract(day from a)
-	 * <li> month(arg)					- synonym of extract(month from a)
-	 * <li> year(arg)					- synonym of extract(year from a)
+	 * <li> <code>second(arg)</code>					- synonym of <code>extract(second from a)</code>
+	 * <li> <code>minute(arg)</code>					- synonym of <code>extract(minute from a)</code>
+	 * <li> <code>hour(arg)</code>						- synonym of <code>extract(hour from a)</code>
+	 * <li> <code>day(arg)</code>						- synonym of <code>extract(day from a)</code>
+	 * <li> <code>month(arg)</code>						- synonym of <code>extract(month from a)</code>
+	 * <li> <code>year(arg)</code>						- synonym of <code>extract(year from a)</code>
 	 * </ul>
 	 *
-	 * Note that according to this definition, the second() function returns
-	 * a floating point value, contrary to the integer type returned by the
-	 * native function with this name on many databases. Thus, we don't just
-	 * naively map these HQL functions to the native SQL functions with the
-	 * same names.
+	 * Note that according to this definition, the <code>second()</code>
+	 * function returns a floating point value, contrary to the integer
+	 * type returned by the native function with this name on many databases.
+	 * Thus, we don't just naively map these HQL functions to the native SQL
+	 * functions with the same names.
 	 */
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		final TypeConfiguration typeConfiguration = queryEngine.getTypeConfiguration();
@@ -810,6 +812,10 @@ public abstract class Dialect implements ConversionContext {
 		//trig functions supported on almost every database
 
 		functionFactory.trigonometry();
+
+		//pi supported on most databases, but emulate it here
+
+		functionFactory.pi_acos();
 
 		//coalesce() function, supported by most databases, must be emulated
 		//in terms of nvl() for platforms which don't support it natively

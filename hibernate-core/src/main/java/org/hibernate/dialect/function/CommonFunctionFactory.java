@@ -388,6 +388,13 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public void pi_acos() {
+		functionRegistry.patternDescriptorBuilder( "pi", "acos(-1)" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount(0)
+				.register();
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// character functions
 

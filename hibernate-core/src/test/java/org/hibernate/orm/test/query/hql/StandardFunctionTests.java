@@ -907,4 +907,16 @@ public class StandardFunctionTests {
 				}
 		);
 	}
+
+	@Test
+	public void testPi(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat(
+						session.createQuery("select pi").getSingleResult(),
+							is( Math.PI )
+					);
+				}
+		);
+	}
 }

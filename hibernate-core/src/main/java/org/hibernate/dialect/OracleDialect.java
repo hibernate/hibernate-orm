@@ -15,7 +15,6 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.TypeContributions;
@@ -141,6 +140,8 @@ public class OracleDialect extends Dialect {
 		final TypeConfiguration typeConfiguration = queryEngine.getTypeConfiguration();
 
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		functionFactory.ascii();
+		functionFactory.char_chr();
 		functionFactory.cosh();
 		functionFactory.sinh();
 		functionFactory.tanh();

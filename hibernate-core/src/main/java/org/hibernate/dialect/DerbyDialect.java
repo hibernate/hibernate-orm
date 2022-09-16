@@ -256,7 +256,6 @@ public class DerbyDialect extends Dialect {
 
 		functionFactory.concat_pipeOperator();
 		functionFactory.cot();
-		functionFactory.chr_char();
 		functionFactory.degrees();
 		functionFactory.radians();
 		functionFactory.log10();

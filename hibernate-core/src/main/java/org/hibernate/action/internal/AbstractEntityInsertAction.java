@@ -127,7 +127,8 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	public final void makeEntityManaged() {
 		nullifyTransientReferencesIfNotAlready();
 		final Object version = Versioning.getVersion( getState(), getPersister() );
-		getSession().getPersistenceContextInternal().addEntity(
+		final PersistenceContext persistenceContextInternal = getSession().getPersistenceContextInternal();
+		persistenceContextInternal.addEntity(
 				getInstance(),
 				( getPersister().isMutable() ? Status.MANAGED : Status.READ_ONLY ),
 				getState(),
@@ -139,24 +140,25 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 				isVersionIncrementDisabled
 		);
 		if ( isEarlyInsert() ) {
-			final SharedSessionContractImplementor session = getSession();
-			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-			Object[] objects = getState();
-			for ( int i = 0; i < objects.length; i++ ) {
-				if ( objects[i] instanceof PersistentCollection<?> ) {
-					final PersistentCollection<?> persistentCollection = (PersistentCollection<?>) objects[i];
-					final CollectionPersister collectionPersister = ( (PluralAttributeMapping) getPersister().getAttributeMapping( i ) ).getCollectionDescriptor();
-					final CollectionKey collectionKey = new CollectionKey(
-							collectionPersister,
-							( (AbstractEntityPersister) getPersister() ).getCollectionKey(
-									collectionPersister,
-									getInstance(),
-									persistenceContext.getEntry( getInstance() ),
-									getSession()
-							)
-					);
-					persistenceContext.addCollectionByKey( collectionKey, persistentCollection );
-				}
+			addCollectionsByKeyToPersistenceContext( persistenceContextInternal, getState() );
+		}
+	}
+
+	protected void addCollectionsByKeyToPersistenceContext(PersistenceContext persistenceContext, Object[] objects) {
+		for ( int i = 0; i < objects.length; i++ ) {
+			if ( objects[i] instanceof PersistentCollection<?> ) {
+				final PersistentCollection<?> persistentCollection = (PersistentCollection<?>) objects[i];
+				final CollectionPersister collectionPersister = ( (PluralAttributeMapping) getPersister().getAttributeMapping( i ) ).getCollectionDescriptor();
+				final CollectionKey collectionKey = new CollectionKey(
+						collectionPersister,
+						( (AbstractEntityPersister) getPersister() ).getCollectionKey(
+								collectionPersister,
+								getInstance(),
+								persistenceContext.getEntry( getInstance() ),
+								getSession()
+						)
+				);
+				persistenceContext.addCollectionByKey( collectionKey, persistentCollection );
 			}
 		}
 	}

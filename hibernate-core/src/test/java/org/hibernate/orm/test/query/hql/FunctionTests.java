@@ -331,6 +331,9 @@ public class FunctionTests {
 							.list();
 					session.createQuery("from EntityOfBasics e where chr(120) = 'z'")
 							.list();
+
+					assertThat( session.createQuery("select chr(65)").getSingleResult(), is('A') );
+					assertThat( session.createQuery("select ascii('A')").getSingleResult(), is(65) );
 				}
 		);
 	}

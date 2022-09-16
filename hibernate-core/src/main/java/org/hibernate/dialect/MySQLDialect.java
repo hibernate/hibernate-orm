@@ -54,6 +54,7 @@ import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMu
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -470,7 +471,6 @@ public class MySQLDialect extends Dialect {
 		functionFactory.bitLength();
 		functionFactory.octetLength();
 		functionFactory.ascii();
-		functionFactory.chr_char();
 		functionFactory.instr();
 		functionFactory.substr();
 		//also natively supports ANSI-style substring()
@@ -501,6 +501,12 @@ public class MySQLDialect extends Dialect {
 				.setInvariantType(basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE ))
 				.setExactArgumentCount(0)
 				.setArgumentListSignature("")
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "chr", "char(?1 using ascii)" )
+				.setInvariantType(basicTypeRegistry.resolve( StandardBasicTypes.CHARACTER ))
+				.setExactArgumentCount(1)
+				.setParameterTypes(FunctionParameterType.INTEGER)
 				.register();
 
 		// MySQL timestamp type defaults to precision 0 (seconds) but

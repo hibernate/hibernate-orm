@@ -118,6 +118,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 			}
 
 			persistenceContext.registerInsertedKey( persister, getId() );
+			addCollectionsByKeyToPersistenceContext( persistenceContext, getState() );
 		}
 
 		final SessionFactoryImplementor factory = session.getFactory();

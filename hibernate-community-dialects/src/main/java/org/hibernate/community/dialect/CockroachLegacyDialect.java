@@ -12,7 +12,6 @@ import java.sql.Types;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.TimeZone;
 
@@ -639,12 +638,9 @@ public class CockroachLegacyDialect extends Dialect {
 		 */
 		if ( aliases.isEmpty() ) {
 			LockMode lockMode = lockOptions.getLockMode();
-			final Iterator<Map.Entry<String, LockMode>> itr = lockOptions.getAliasLockIterator();
-			while ( itr.hasNext() ) {
+			for ( Map.Entry<String, LockMode> entry : lockOptions.getAliasSpecificLocks() ) {
 				// seek the highest lock mode
-				final Map.Entry<String, LockMode> entry = itr.next();
-				final LockMode lm = entry.getValue();
-				if ( lm.greaterThan( lockMode ) ) {
+				if ( entry.getValue().greaterThan(lockMode) ) {
 					aliases = entry.getKey();
 				}
 			}

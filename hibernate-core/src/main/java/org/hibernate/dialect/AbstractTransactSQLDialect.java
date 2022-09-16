@@ -38,7 +38,6 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Iterator;
 import java.util.Map;
 
 import static org.hibernate.type.SqlTypes.*;
@@ -219,14 +218,11 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	@Override
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
 		// TODO:  merge additional lock options support in Dialect.applyLocksToSql
-		final Iterator itr = aliasedLockOptions.getAliasLockIterator();
 		final StringBuilder buffer = new StringBuilder( sql );
-
-		while ( itr.hasNext() ) {
-			final Map.Entry entry = (Map.Entry) itr.next();
-			final LockMode lockMode = (LockMode) entry.getValue();
+		for ( Map.Entry<String, LockMode> entry: aliasedLockOptions.getAliasSpecificLocks() ) {
+			final LockMode lockMode = entry.getValue();
 			if ( lockMode.greaterThan( LockMode.READ ) ) {
-				final String alias = (String) entry.getKey();
+				final String alias = entry.getKey();
 				int start = -1;
 				int end = -1;
 				if ( sql.endsWith( " " + alias ) ) {

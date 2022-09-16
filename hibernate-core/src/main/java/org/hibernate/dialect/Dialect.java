@@ -1821,12 +1821,10 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
 		LockMode lockMode = lockOptions.getLockMode();
-		final Iterator<Map.Entry<String, LockMode>> itr = lockOptions.getAliasLockIterator();
-		while ( itr.hasNext() ) {
+		for ( Map.Entry<String, LockMode> entry : lockOptions.getAliasSpecificLocks() ) {
 			// seek the highest lock mode
-			final Map.Entry<String, LockMode>entry = itr.next();
 			final LockMode lm = entry.getValue();
-			if ( lm.greaterThan( lockMode ) ) {
+			if ( lm.greaterThan(lockMode) ) {
 				lockMode = lm;
 			}
 		}

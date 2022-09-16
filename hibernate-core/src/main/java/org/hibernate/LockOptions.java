@@ -34,7 +34,6 @@ public class LockOptions implements Serializable {
 	/**
 	 * Represents LockMode.UPGRADE (will wait forever for lock and scope of false meaning only entity is locked).
 	 */
-	@SuppressWarnings("deprecation")
 	public static final LockOptions UPGRADE = new LockOptions(LockMode.PESSIMISTIC_WRITE);
 
 	/**
@@ -198,7 +197,9 @@ public class LockOptions implements Serializable {
 	 * Iterator for accessing Alias (key) and LockMode (value) as Map.Entry.
 	 *
 	 * @return Iterator for accessing the Map.Entry's
+	 * @deprecated use {@link #getAliasSpecificLocks()}
 	 */
+	@Deprecated
 	public Iterator<Map.Entry<String,LockMode>> getAliasLockIterator() {
 		return getAliasSpecificLocks().iterator();
 	}

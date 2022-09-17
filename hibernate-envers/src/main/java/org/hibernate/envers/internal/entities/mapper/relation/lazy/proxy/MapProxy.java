@@ -10,13 +10,14 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
-
+import org.hibernate.collection.spi.LazyInitializable;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class MapProxy<K, V> implements Map<K, V>, Serializable {
+public class MapProxy<K, V> implements Map<K, V>, LazyInitializable, Serializable {
+
 	private static final long serialVersionUID = 8418037541773074646L;
 
 	private transient Initializor<Map<K, V>> initializor;
@@ -33,6 +34,16 @@ public class MapProxy<K, V> implements Map<K, V>, Serializable {
 		if ( delegate == null ) {
 			delegate = initializor.initialize();
 		}
+	}
+
+	@Override
+	public final boolean wasInitialized() {
+		return delegate != null;
+	}
+
+	@Override
+	public final void forceInitialization() {
+		checkInit();
 	}
 
 	@Override
@@ -114,7 +125,7 @@ public class MapProxy<K, V> implements Map<K, V>, Serializable {
 	}
 
 	@Override
-	@SuppressWarnings({"EqualsWhichDoesntCheckParameterClass"})
+	@SuppressWarnings({ "EqualsWhichDoesntCheckParameterClass" })
 	public boolean equals(Object obj) {
 		checkInit();
 		return delegate.equals( obj );

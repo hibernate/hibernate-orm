@@ -7,8 +7,9 @@
 package org.hibernate.envers.test.entities.collection;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -26,6 +27,7 @@ import org.hibernate.envers.Audited;
 @Entity
 @Audited
 public class MultipleCollectionEntity {
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "ID", length = 10)
@@ -65,7 +67,7 @@ public class MultipleCollectionEntity {
 	}
 
 	public List<MultipleCollectionRefEntity1> getRefEntities1() {
-		return Collections.unmodifiableList( refEntities1 );
+		return refEntities1;
 	}
 
 	public void addRefEntity1(MultipleCollectionRefEntity1 refEntity1) {
@@ -77,7 +79,7 @@ public class MultipleCollectionEntity {
 	}
 
 	public List<MultipleCollectionRefEntity2> getRefEntities2() {
-		return Collections.unmodifiableList( refEntities2 );
+		return refEntities2;
 	}
 
 	public void addRefEntity2(MultipleCollectionRefEntity2 refEntity2) {
@@ -110,34 +112,20 @@ public class MultipleCollectionEntity {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
-			return true;
-		}
-		if ( !(o instanceof MultipleCollectionEntity) ) {
-			return false;
-		}
-
-		MultipleCollectionEntity that = (MultipleCollectionEntity) o;
-
-		if ( refEntities1 != null ? !refEntities1.equals( that.refEntities1 ) : that.refEntities1 != null ) {
-			return false;
-		}
-		if ( refEntities2 != null ? !refEntities2.equals( that.refEntities2 ) : that.refEntities2 != null ) {
-			return false;
-		}
-		if ( text != null ? !text.equals( that.text ) : that.text != null ) {
-			return false;
-		}
-
-		return true;
+	public int hashCode() {
+		return Objects.hash( id );
 	}
 
 	@Override
-	public int hashCode() {
-		int result = text != null ? text.hashCode() : 0;
-		result = 31 * result + (refEntities1 != null ? refEntities1.hashCode() : 0);
-		result = 31 * result + (refEntities2 != null ? refEntities2.hashCode() : 0);
-		return result;
+	public boolean equals(Object obj) {
+		if ( this == obj )
+			return true;
+		if ( obj == null )
+			return false;
+		if ( getClass() != obj.getClass() )
+			return false;
+		MultipleCollectionEntity other = (MultipleCollectionEntity) obj;
+		return Objects.equals( id, other.id );
 	}
+
 }

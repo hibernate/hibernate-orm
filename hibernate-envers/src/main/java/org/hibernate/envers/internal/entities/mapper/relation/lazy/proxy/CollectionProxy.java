@@ -9,13 +9,15 @@ package org.hibernate.envers.internal.entities.mapper.relation.lazy.proxy;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
+import org.hibernate.collection.spi.LazyInitializable;
 
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public abstract class CollectionProxy<U, T extends Collection<U>> implements Collection<U>, Serializable {
+public abstract class CollectionProxy<U, T extends Collection<U>> implements Collection<U>, LazyInitializable, Serializable {
+
 	private static final long serialVersionUID = 8698249863871832402L;
 
 	private transient org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor<T> initializor;
@@ -32,6 +34,16 @@ public abstract class CollectionProxy<U, T extends Collection<U>> implements Col
 		if ( delegate == null ) {
 			delegate = initializor.initialize();
 		}
+	}
+
+	@Override
+	public final boolean wasInitialized() {
+		return delegate != null;
+	}
+	
+	@Override
+	public final void forceInitialization() {
+		checkInit();
 	}
 
 	@Override
@@ -118,7 +130,7 @@ public abstract class CollectionProxy<U, T extends Collection<U>> implements Col
 		return delegate.toString();
 	}
 
-	@SuppressWarnings({"EqualsWhichDoesntCheckParameterClass"})
+	@SuppressWarnings({ "EqualsWhichDoesntCheckParameterClass" })
 	@Override
 	public boolean equals(Object obj) {
 		checkInit();

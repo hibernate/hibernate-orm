@@ -350,6 +350,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		functionFactory.sinh();
 		functionFactory.tanh();
 		functionFactory.log10_log();
+		functionFactory.log();
 		functionFactory.bitand();
 		functionFactory.hourMinuteSecond();
 		functionFactory.yearMonthDay();

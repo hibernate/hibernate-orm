@@ -79,6 +79,7 @@ public class IsCollectionInitializedBytecodeEnhancement extends BaseEnversJPAFun
 	}
 
 	@Test
+	@SuppressWarnings("unchecked")
 	public void testIsInitialized() {
 		EntityManager em = getEntityManager();
 
@@ -90,6 +91,10 @@ public class IsCollectionInitializedBytecodeEnhancement extends BaseEnversJPAFun
 		MultipleCollectionEntity ret = res.get( 0 );
 
 		assertEquals( Hibernate.isInitialized( ret.getRefEntities1() ), false );
-
+		
+		Hibernate.initialize(ret.getRefEntities1());
+		
+		assertEquals( Hibernate.isInitialized( ret.getRefEntities1() ), true );
+		
 	}
 }

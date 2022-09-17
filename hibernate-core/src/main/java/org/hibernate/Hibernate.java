@@ -34,6 +34,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.collection.spi.LazyInitializable;
 
 /**
  * Various utility functions for working with proxies and lazy collection references.
@@ -85,8 +86,8 @@ public final class Hibernate {
 		if ( proxy instanceof HibernateProxy ) {
 			( (HibernateProxy) proxy ).getHibernateLazyInitializer().initialize();
 		}
-		else if ( proxy instanceof PersistentCollection ) {
-			( (PersistentCollection<?>) proxy ).forceInitialization();
+		else if ( proxy instanceof LazyInitializable ) {
+			( (LazyInitializable) proxy ).forceInitialization();
 		}
 		else if ( proxy instanceof PersistentAttributeInterceptable ) {
 			final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) proxy;
@@ -111,8 +112,8 @@ public final class Hibernate {
 			final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) proxy ).$$_hibernate_getInterceptor();
 			return !(interceptor instanceof EnhancementAsProxyLazinessInterceptor);
 		}
-		else if ( proxy instanceof PersistentCollection ) {
-			return ( (PersistentCollection<?>) proxy ).wasInitialized();
+		else if ( proxy instanceof LazyInitializable ) {
+			return ( (LazyInitializable) proxy ).wasInitialized();
 		}
 		else {
 			return true;

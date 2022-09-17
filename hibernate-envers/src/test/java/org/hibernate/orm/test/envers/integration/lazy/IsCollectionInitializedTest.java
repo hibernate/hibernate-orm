@@ -72,6 +72,7 @@ public class IsCollectionInitializedTest extends BaseEnversJPAFunctionalTestCase
 	}
 
 	@Test
+	@SuppressWarnings("unchecked")
 	public void testIsInitialized() {
 		EntityManager em = getEntityManager();
 
@@ -81,8 +82,12 @@ public class IsCollectionInitializedTest extends BaseEnversJPAFunctionalTestCase
 				.getResultList();
 
 		MultipleCollectionEntity ret = res.get( 0 );
-
+		
 		assertEquals( Hibernate.isInitialized( ret.getRefEntities1() ), false );
+		
+		Hibernate.initialize(ret.getRefEntities1());
+		
+		assertEquals( Hibernate.isInitialized( ret.getRefEntities1() ), true );
 
 	}
 }

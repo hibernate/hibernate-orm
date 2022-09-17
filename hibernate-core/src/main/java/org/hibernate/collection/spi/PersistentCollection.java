@@ -48,7 +48,7 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 @Incubating
-public interface PersistentCollection<E> {
+public interface PersistentCollection<E> extends LazyInitializable {
 	/**
 	 * Get the owning entity. Note that the owner is only
 	 * set during the flush cycle, and when a new collection
@@ -212,11 +212,6 @@ public interface PersistentCollection<E> {
 	Serializable getSnapshot(CollectionPersister persister);
 
 	/**
-	 * To be called internally by the session, forcing immediate initialization.
-	 */
-	void forceInitialization();
-
-	/**
 	 * Does the given element/entry exist in the collection?
 	 *
 	 * @param entry The object to check if it exists as a collection element
@@ -279,13 +274,6 @@ public interface PersistentCollection<E> {
 	 * Is this PersistentCollection in the process of being initialized?
 	 */
 	boolean isInitializing();
-
-	/**
-	 * Is this instance initialized?
-	 *
-	 * @return Was this collection initialized?  Or is its data still not (fully) loaded?
-	 */
-	boolean wasInitialized();
 
 	/**
 	 * Called prior to the initialization of this yet-uninitialized collection.  Pairs

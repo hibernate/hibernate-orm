@@ -46,6 +46,7 @@ import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.NullOrdering;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.mutation.internal.temptable.AfterUseAction;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
@@ -492,22 +493,28 @@ public class MySQLDialect extends Dialect {
 
 		BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
 
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "localtime" )
+		SqmFunctionRegistry functionRegistry = queryEngine.getSqmFunctionRegistry();
+
+		functionRegistry.noArgsBuilder( "localtime" )
 				.setInvariantType(basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP ))
 				.setUseParenthesesWhenNoArgs( false )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "pi", "cast(pi() as double)" )
+		// pi() produces a value with 7 digits unless we're explicit
+		functionRegistry.patternDescriptorBuilder( "pi", "cast(pi() as double)" )
 				.setInvariantType(basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE ))
 				.setExactArgumentCount(0)
 				.setArgumentListSignature("")
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "chr", "char(?1 using ascii)" )
+		// By default char() produces a binary string, not a character string.
+		// (Note also that char() is actually a variadic function in MySQL.)
+		functionRegistry.patternDescriptorBuilder( "chr", "char(?1 using ascii)" )
 				.setInvariantType(basicTypeRegistry.resolve( StandardBasicTypes.CHARACTER ))
 				.setExactArgumentCount(1)
 				.setParameterTypes(FunctionParameterType.INTEGER)
 				.register();
+		functionRegistry.registerAlternateKey( "char", "chr" );
 
 		// MySQL timestamp type defaults to precision 0 (seconds) but
 		// we want the standard default precision of 6 (microseconds)

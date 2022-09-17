@@ -1696,6 +1696,12 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * Very widely supported, but we don't treat this as a "standard"
+	 * function because it's hard to emulate on any database that
+	 * doesn't have it (e.g. Derby) and because, well, ASCII. For the
+	 * same reason we don't consider chr()/char() as "standard".
+	 */
 	public void ascii() {
 		functionRegistry.namedDescriptorBuilder( "ascii" )
 				.setExactArgumentCount( 1 )

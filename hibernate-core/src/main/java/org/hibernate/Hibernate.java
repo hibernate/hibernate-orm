@@ -20,6 +20,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.collection.spi.LazyInitializable;
 
 /**
  * <ul>
@@ -61,8 +62,8 @@ public final class Hibernate {
 		if ( proxy instanceof HibernateProxy ) {
 			( (HibernateProxy) proxy ).getHibernateLazyInitializer().initialize();
 		}
-		else if ( proxy instanceof PersistentCollection ) {
-			( (PersistentCollection) proxy ).forceInitialization();
+		else if ( proxy instanceof LazyInitializable ) {
+			( (LazyInitializable) proxy ).forceInitialization();
 		}
 		else if ( proxy instanceof PersistentAttributeInterceptable ) {
 			final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) proxy;
@@ -91,8 +92,8 @@ public final class Hibernate {
 			}
 			return true;
 		}
-		else if ( proxy instanceof PersistentCollection ) {
-			return ( (PersistentCollection) proxy ).wasInitialized();
+		else if ( proxy instanceof LazyInitializable ) {
+			return ( (LazyInitializable) proxy ).wasInitialized();
 		}
 		else {
 			return true;

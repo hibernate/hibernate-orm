@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -27,6 +27,7 @@ import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 
@@ -35,9 +36,9 @@ import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
  *
  * @author Christian Beikov
  */
-public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+public class HSQLLegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
-	public HSQLSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+	public HSQLLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
 	}
 
@@ -160,6 +161,25 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	@Override
+	protected LockStrategy determineLockingStrategy(
+			QuerySpec querySpec,
+			ForUpdateClause forUpdateClause,
+			Boolean followOnLocking) {
+		if ( getDialect().getVersion().isBefore( 2 ) ) {
+			return LockStrategy.NONE;
+		}
+		return super.determineLockingStrategy( querySpec, forUpdateClause, followOnLocking );
+	}
+
+	@Override
+	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
+		if ( getDialect().getVersion().isBefore( 2 ) ) {
+			return;
+		}
+		super.renderForUpdateClause( querySpec, forUpdateClause );
+	}
+
+	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		if ( supportsOffsetFetchClause() ) {
 			assertRowsOnlyFetchClauseType( queryPart );
@@ -263,7 +283,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	private boolean supportsOffsetFetchClause() {
-		return true;
+		return getDialect().getVersion().isSameOrAfter( 2, 5 );
 	}
 
 	@Override

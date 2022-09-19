@@ -37,21 +37,25 @@ public class GraalVMStaticAutofeature implements Feature {
 
 	public void beforeAnalysis(Feature.BeforeAnalysisAccess before) {
 		final Class<?>[] needsHavingSimpleConstructors = StaticClassLists.typesNeedingDefaultConstructorAccessible();
-		final Class[] neddingAllConstructorsAccessible = StaticClassLists.typesNeedingAllConstructorsAccessible();
+		final Class<?>[] needingAllConstructorsAccessible = StaticClassLists.typesNeedingAllConstructorsAccessible();
 		//Size formula is just a reasonable guess:
-		ArrayList<Executable> executables = new ArrayList<>( needsHavingSimpleConstructors.length + neddingAllConstructorsAccessible.length * 3 );
-		for ( Class c : needsHavingSimpleConstructors ) {
+		ArrayList<Executable> executables = new ArrayList<>( needsHavingSimpleConstructors.length + needingAllConstructorsAccessible.length * 3 );
+		for ( Class<?> c : needsHavingSimpleConstructors ) {
 			executables.add( ReflectHelper.getDefaultConstructor( c ) );
 		}
-		for ( Class c : neddingAllConstructorsAccessible ) {
-			for ( Constructor declaredConstructor : c.getDeclaredConstructors() ) {
+		for ( Class<?> c : needingAllConstructorsAccessible) {
+			for ( Constructor<?> declaredConstructor : c.getDeclaredConstructors() ) {
 				executables.add( declaredConstructor );
 			}
 		}
 		RuntimeReflection.register( needsHavingSimpleConstructors );
-		RuntimeReflection.register( neddingAllConstructorsAccessible );
+		RuntimeReflection.register( needingAllConstructorsAccessible );
 		RuntimeReflection.register( StaticClassLists.typesNeedingArrayCopy() );
 		RuntimeReflection.register( executables.toArray(new Executable[0]) );
 	}
 
+	@Override
+	public String getDescription() {
+		return "Hibernate ORM GraalVM static reflection registration";
+	}
 }

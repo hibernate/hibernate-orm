@@ -49,6 +49,11 @@ public final class QueryParsingSupport implements Feature {
 		access.registerReachabilityHandler(this::enableHQLSupport, parserClazz);
 	}
 
+	@Override
+	public String getDescription() {
+		return "Hibernate ORM HQL Parser Support";
+	}
+
 	@AllowSysOut
 	private void enableHQLSupport(DuringAnalysisAccess duringAnalysisAccess) {
 		final boolean needsEnablingYet = triggered.compareAndSet( false, true );

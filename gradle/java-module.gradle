@@ -278,6 +278,13 @@ tasks.withType( Test.class ).each { test ->
 	if ( project.name != 'hibernate-testing' ) {
 		test.dependsOn ':hibernate-testing:test'
 	}
+
+	// Allow to exclude specific tests
+	if ( project.hasProperty( 'excludeTests' ) ) {
+		test.filter {
+			excludeTestsMatching project.property('excludeTests').toString()
+		}
+	}
 }
 
 sourceSets {

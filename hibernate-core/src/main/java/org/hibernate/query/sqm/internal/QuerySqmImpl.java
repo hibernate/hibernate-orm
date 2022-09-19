@@ -41,10 +41,17 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
+import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.OptimizableGenerator;
+import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.IdentitySet;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
@@ -76,6 +83,7 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
@@ -88,6 +96,7 @@ import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
@@ -820,20 +829,56 @@ public class QuerySqmImpl<R>
 		final SqmInsertStatement sqmInsert = (SqmInsertStatement) getSqmStatement();
 
 		final String entityNameToInsert = sqmInsert.getTarget().getModel().getHibernateEntityName();
-		final EntityPersister entityDescriptor = getSessionFactory().getRuntimeMetamodels()
+		final AbstractEntityPersister entityDescriptor = (AbstractEntityPersister) getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityNameToInsert );
 
-		final SqmMultiTableInsertStrategy multiTableStrategy = entityDescriptor.getSqmMultiTableInsertStrategy();
-		if ( multiTableStrategy == null || isSimpleValuesInsert( sqmInsert, entityDescriptor ) ) {
+		boolean useMultiTableInsert = entityDescriptor.isMultiTable();
+		if ( !useMultiTableInsert && !isSimpleValuesInsert( sqmInsert, entityDescriptor ) ) {
+			final IdentifierGenerator identifierGenerator = entityDescriptor.getIdentifierGenerator();
+			if ( identifierGenerator instanceof BulkInsertionCapableIdentifierGenerator && identifierGenerator instanceof OptimizableGenerator ) {
+				final Optimizer optimizer = ( (OptimizableGenerator) identifierGenerator ).getOptimizer();
+				if ( optimizer != null && optimizer.getIncrementSize() > 1 ) {
+					useMultiTableInsert = !hasIdentifierAssigned( sqmInsert, entityDescriptor );
+				}
+			}
+		}
+		if ( !useMultiTableInsert ) {
 			return new SimpleInsertQueryPlan( sqmInsert, domainParameterXref );
 		}
 		else {
-			return new MultiTableInsertQueryPlan( sqmInsert, domainParameterXref, multiTableStrategy );
+			return new MultiTableInsertQueryPlan(
+					sqmInsert,
+					domainParameterXref,
+					entityDescriptor.getSqmMultiTableInsertStrategy()
+			);
 		}
 	}
 
-	private boolean isSimpleValuesInsert(@SuppressWarnings("rawtypes") SqmInsertStatement sqmInsert, EntityPersister entityDescriptor) {
+	private boolean hasIdentifierAssigned(SqmInsertStatement<?> sqmInsert, EntityPersister entityDescriptor) {
+		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
+		final String partName;
+		if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
+			partName = ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName();
+		}
+		else {
+			partName = EntityIdentifierMapping.ROLE_LOCAL_NAME;
+		}
+		for ( SqmPath<?> insertionTargetPath : sqmInsert.getInsertionTargetPaths() ) {
+			final SqmPath<?> lhs = insertionTargetPath.getLhs();
+			if ( !( lhs instanceof SqmRoot<?> ) ) {
+				continue;
+			}
+			final SqmPathSource<?> referencedPathSource = insertionTargetPath.getReferencedPathSource();
+			if ( referencedPathSource.getPathName().equals( partName ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private boolean isSimpleValuesInsert(SqmInsertStatement<?> sqmInsert, EntityPersister entityDescriptor) {
 		// Simple means that we can translate the statement to a single plain insert
 		return sqmInsert instanceof SqmInsertValuesStatement
 				// An insert is only simple if no SqmMultiTableMutation strategy is available,

@@ -125,9 +125,18 @@ public final class ByteBuddyState {
 	 * @return The loaded generated class.
 	 */
 	public Class<?> load(Class<?> referenceClass, Function<ByteBuddy, DynamicType.Builder<?>> makeClassFunction) {
-		return make( makeClassFunction.apply( byteBuddy ) )
-				.load( referenceClass.getClassLoader(), resolveClassLoadingStrategy( referenceClass ) )
-				.getLoaded();
+		Unloaded<?> result =
+		make( makeClassFunction.apply( byteBuddy ) );
+		if (DEBUG) {
+			try {
+				result.saveIn( new File( System.getProperty( "java.io.tmpdir" ) + "/bytebuddy/" ) );
+			}
+			catch (IOException e) {
+				LOG.warn( "Unable to save generated class %1$s", result.getTypeDescription().getName(), e );
+			}
+		}
+		return result.load( referenceClass.getClassLoader(), resolveClassLoadingStrategy( referenceClass ) )
+		.getLoaded();
 	}
 
 	/**

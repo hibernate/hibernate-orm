@@ -32,9 +32,10 @@ public class MapKeySubquerySchemaTest extends BaseCoreFunctionalTestCase {
 	public void testMapKeyLoad() {
 		final QueryableCollection collectionPersister = (QueryableCollection) sessionFactory().getMetamodel()
 				.collectionPersister( MapOwner.class.getName() + ".contents" );
-		Assert.assertEquals(
-				"(select a1.relationship_id from " + CUSTOM_SCHEMA + ".MapContent a1 where a1.id=contents_id)",
-				collectionPersister.getIndexFormulas()[0]
+		Assert.assertTrue(
+				"Index SQL does not contain the schema name",
+				collectionPersister.getIndexFormulas()[0].contains( CUSTOM_SCHEMA + ".MapContent " )
+
 		);
 	}
 

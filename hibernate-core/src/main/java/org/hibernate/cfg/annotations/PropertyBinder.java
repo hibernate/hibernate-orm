@@ -317,10 +317,12 @@ public class PropertyBinder {
 		property.setReturnedClassName( returnedClassName );
 
 		if ( this.property != null ) {
-			handleNaturalId( property );
-			property.setValueGenerationStrategy( determineValueGenerationStrategy(this.property) );
+			if ( entityBinder != null ) {
+				handleNaturalId( property );
+				property.setValueGenerationStrategy( determineValueGenerationStrategy( this.property ) );
+			}
 			// HHH-4635 -- needed for dialect-specific property ordering
-			property.setLob( this.property.isAnnotationPresent(Lob.class) );
+			property.setLob( this.property.isAnnotationPresent( Lob.class ) );
 		}
 
 		property.setInsertable( insertable );

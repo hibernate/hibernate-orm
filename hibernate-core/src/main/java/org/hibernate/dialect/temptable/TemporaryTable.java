@@ -14,6 +14,9 @@ import java.util.function.Function;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.boot.model.relational.QualifiedNameParser;
+import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
@@ -64,24 +67,38 @@ public class TemporaryTable implements Exportable, Contributable {
 			EntityMappingType entityDescriptor,
 			Function<String, String> temporaryTableNameAdjuster,
 			Dialect dialect,
+			SqlStringGenerationContext sqlStringGenerationContext,
 			Function<TemporaryTable, List<TemporaryTableColumn>> columnInitializer) {
 		this.entityDescriptor = entityDescriptor;
 
 		// The table name might be a sub-query, which is inappropriate for a temporary table name
 		final String originalTableName = entityDescriptor.getEntityPersister().getSynchronizedQuerySpaces()[0];
-		final String name;
-		if ( Identifier.isQuoted( originalTableName ) ) {
-			name = dialect.quote( temporaryTableNameAdjuster.apply( Identifier.unQuote( originalTableName ) ) );
+		final QualifiedNameParser.NameParts nameParts = QualifiedNameParser.INSTANCE.parse( originalTableName );
+		final QualifiedNameParser.NameParts adjustedNameParts = QualifiedNameParser.INSTANCE.parse(
+				temporaryTableNameAdjuster.apply( nameParts.getObjectName().getText() )
+		);
+		final String temporaryTableName = adjustedNameParts.getObjectName().getText();
+		final Identifier tableNameIdentifier;
+		if ( temporaryTableName.length() > dialect.getMaxIdentifierLength() ) {
+			tableNameIdentifier = new Identifier(
+					temporaryTableName.substring( 0, dialect.getMaxIdentifierLength() ),
+					nameParts.getObjectName().isQuoted()
+			);
 		}
 		else {
-			name = temporaryTableNameAdjuster.apply( originalTableName );
+			tableNameIdentifier = new Identifier( temporaryTableName, nameParts.getObjectName().isQuoted() );
 		}
-		if ( name.length() > dialect.getMaxIdentifierLength() ) {
-			this.qualifiedTableName = name.substring( 0, dialect.getMaxIdentifierLength() );
-		}
-		else {
-			this.qualifiedTableName = name;
-		}
+		this.qualifiedTableName = sqlStringGenerationContext.format(
+				new QualifiedTableName(
+						adjustedNameParts.getCatalogName() != null
+								? adjustedNameParts.getCatalogName()
+								: nameParts.getCatalogName(),
+						adjustedNameParts.getSchemaName() != null
+								? adjustedNameParts.getSchemaName()
+								: nameParts.getSchemaName(),
+						tableNameIdentifier
+				)
+		);
 		this.dialect = dialect;
 		if ( dialect.getSupportedTemporaryTableKind() == TemporaryTableKind.PERSISTENT ) {
 			final TypeConfiguration typeConfiguration = entityDescriptor.getEntityPersister()
@@ -123,6 +140,7 @@ public class TemporaryTable implements Exportable, Contributable {
 				entityDescriptor,
 				temporaryTableNameAdjuster,
 				dialect,
+				runtimeModelCreationContext.getSessionFactory().getSqlStringGenerationContext(),
 				temporaryTable -> {
 					final List<TemporaryTableColumn> columns = new ArrayList<>();
 					final PersistentClass entityBinding = runtimeModelCreationContext.getBootModel()
@@ -211,6 +229,7 @@ public class TemporaryTable implements Exportable, Contributable {
 				entityDescriptor,
 				temporaryTableNameAdjuster,
 				dialect,
+				runtimeModelCreationContext.getSessionFactory().getSqlStringGenerationContext(),
 				temporaryTable -> {
 					final List<TemporaryTableColumn> columns = new ArrayList<>();
 					final PersistentClass entityBinding = runtimeModelCreationContext.getBootModel()

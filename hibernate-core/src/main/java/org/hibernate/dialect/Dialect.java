@@ -2354,6 +2354,22 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Apply dialect-specific quoting.
+	 *
+	 * @param name The value to be quoted.
+	 * @return The quoted value.
+	 * @see #openQuote()
+	 * @see #closeQuote()
+	 */
+	public String toQuotedIdentifier(String name) {
+		if ( name == null ) {
+			return null;
+		}
+
+		return openQuote() + name + closeQuote();
+	}
+
+	/**
+	 * Apply dialect-specific quoting.
 	 * <p/>
 	 * By default, the incoming value is checked to see if its first character
 	 * is the back-tick (`).  If so, the dialect specific quoting is applied.

@@ -32,7 +32,7 @@ stage('Configure') {
 //		new BuildEnvironment( dbName: 'derby' ),
 //		new BuildEnvironment( dbName: 'mysql8' ),
 //		new BuildEnvironment( dbName: 'mariadb' ),
-//		new BuildEnvironment( dbName: 'postgresql_9_5' ),
+//		new BuildEnvironment( dbName: 'postgresql' ),
 //		new BuildEnvironment( dbName: 'postgresql_13' ),
 //		new BuildEnvironment( dbName: 'oracle' ),
 		new BuildEnvironment( dbName: 'oracle_ee' ),
@@ -130,12 +130,12 @@ stage('Build') {
 									sh "./docker_db.sh mariadb"
 									state[buildEnv.tag]['containerName'] = "mariadb"
 									break;
-								case "postgresql_9_5":
+								case "postgresql":
 									// use the postgis image to enable the PGSQL GIS (spatial) extension
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
 										docker.image('postgis/postgis:9.5-2.5').pull()
 									}
-									sh "./docker_db.sh postgresql_9_5"
+									sh "./docker_db.sh postgresql"
 									state[buildEnv.tag]['containerName'] = "postgres"
 									break;
 								case "postgresql_13":
@@ -197,7 +197,7 @@ stage('Build') {
 								case "tidb":
 									runTest("-Pdb=tidb -DdbHost=localhost:4000${state[buildEnv.tag]['additionalOptions']}", 'TIDB')
 									break;
-								case "postgresql_9_5":
+								case "postgresql":
 								case "postgresql_13":
 									runTest("-Pdb=pgsql_ci${state[buildEnv.tag]['additionalOptions']}")
 									break;

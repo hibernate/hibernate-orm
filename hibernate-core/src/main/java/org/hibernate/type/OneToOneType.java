@@ -156,10 +156,12 @@ public class OneToOneType extends EntityType {
 			return false;
 		}
 
-		Object oldid = getIdentifier( old, session );
-		Object newid = getIdentifier( current, session );
-
-		return getIdentifierType( session ).isDirty( oldid, newid, session );
+		return getIdentifierType( session )
+				.isDirty(
+						ForeignKeys.getEntityIdentifierIfNotUnsaved( getAssociatedEntityName(), old, session ),
+						ForeignKeys.getEntityIdentifierIfNotUnsaved( getAssociatedEntityName(), current, session ),
+						session
+				);
 	}
 
 	@Override

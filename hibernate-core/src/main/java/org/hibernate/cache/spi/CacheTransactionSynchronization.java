@@ -48,8 +48,28 @@ public interface CacheTransactionSynchronization {
 	 *
 	 * @implSpec This "timestamp" need not be related to timestamp in the Java
 	 * Date/millisecond sense.  It just needs to be an incrementing value.
+	 *
+	 * @deprecated Use {@link CacheTransactionSynchronization#getCachingTimestamp()} instead.
 	 */
+	@Deprecated
 	long getCurrentTransactionStartTimestamp();
+
+	/**
+	 * What is the start time of this context object?
+	 *
+	 * @apiNote If not currently joined to a transaction, the timestamp from
+	 * the last transaction is safe to use.  If not ever/yet joined to a
+	 * transaction, a timestamp at the time the Session/CacheTransactionSynchronization
+	 * were created should be returned.
+	 *
+	 * @implSpec This "timestamp" need not be related to timestamp in the Java
+	 * Date/millisecond sense.  It just needs to be an incrementing value.
+	 *
+	 * An UnsupportedOperationException is thrown if the Second Level Cache has not been enabled
+	 */
+	default long getCachingTimestamp(){
+		return getCurrentTransactionStartTimestamp();
+	}
 
 	/**
 	 * Callback that owning Session has become joined to a resource transaction.

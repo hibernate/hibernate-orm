@@ -152,19 +152,12 @@ public class OneToOneType extends EntityType {
 
 	@Override
 	public boolean isDirty(Object old, Object current, SharedSessionContractImplementor session) {
-		if ( isSame( old, current ) ) {
-			return false;
-		}
-
-		Object oldid = getIdentifier( old, session );
-		Object newid = getIdentifier( current, session );
-
-		return getIdentifierType( session ).isDirty( oldid, newid, session );
+		return false;
 	}
 
 	@Override
 	public boolean isDirty(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session) {
-		return isDirty(old, current, session);
+		return false;
 	}
 
 	@Override
@@ -203,36 +196,25 @@ public class OneToOneType extends EntityType {
 
 	@Override
 	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
-		if (value == null) {
-			return null;
-		}
-
-		Object id = ForeignKeys.getEntityIdentifierIfNotUnsaved( getAssociatedEntityName(), value, session );
-
-		if ( id == null ) {
-			throw new AssertionFailure(
-				"cannot cache a reference to an object with a null id: " +
-				getAssociatedEntityName()
-			);
-		}
-
-		return getIdentifierType( session ).disassemble( id, session, owner );
+		return null;
 	}
 
 	@Override
 	public Object assemble(Serializable oid, SharedSessionContractImplementor session, Object owner) throws HibernateException {
-		//the owner of the association is not the owner of the id
-		Serializable id = ( Serializable ) getIdentifierType( session ).assemble( oid, session, null );
-
-		if ( id == null ) {
-			return null;
-		}
-
-		return resolveIdentifier( id, session );
+		//this should be a call to resolve(), not resolveIdentifier(),
+		//because it might be a property-ref, and we did not cache the
+		//referenced value
+		return resolve( session.getContextEntityIdentifier(owner), session, owner );
 	}
 	
+	/**
+	 * We don't need to dirty check one-to-one because of how
+	 * assemble/disassemble is implemented and because a one-to-one
+	 * association is never dirty
+	 */
 	@Override
 	public boolean isAlwaysDirtyChecked() {
-		return true;
+		//TODO: this is kinda inconsistent with CollectionType
+		return false;
 	}
 }

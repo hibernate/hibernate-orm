@@ -500,7 +500,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/31844
     * [HHH-14257] - An Entity A with a map collection having as index an Embeddable with a an association to the Entity A fails with a NPE
     * [HHH-14251] - Invalid SQL for @Embedded UPDATE
     * [HHH-14249] - MultiLineImport fails when script contains blank spaces or tabs at the end of the last sql statement
-
+    * [HHH-14216] - Second-level cache doesn't support @OneToOne
 
 Changes in 5.4.14.Final (April 6, 2020)
 ------------------------------------------------------------------------------------------------------------------------

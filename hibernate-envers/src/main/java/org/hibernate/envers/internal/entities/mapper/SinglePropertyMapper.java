@@ -61,7 +61,7 @@ public class SinglePropertyMapper extends AbstractPropertyMapper implements Simp
 		boolean dbLogicallyDifferent = true;
 		final Dialect dialect = session.getFactory().getJdbcServices()
 				.getDialect();
-		if ( ( dialect instanceof OracleDialect && dialect.getVersion().isSameOrAfter( 8 ) ) && (newObj instanceof String || oldObj instanceof String) ) {
+		if ( ( dialect instanceof OracleDialect ) && (newObj instanceof String || oldObj instanceof String) ) {
 			// Don't generate new revision when database replaces empty string with NULL during INSERT or UPDATE statements.
 			dbLogicallyDifferent = !(StringTools.isEmpty( newObj ) && StringTools.isEmpty( oldObj ));
 		}

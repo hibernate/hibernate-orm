@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gail Badner
  */
 @SkipForDialect(dialectClass = MySQLDialect.class, majorVersion = 5, reason = "BLOB/TEXT column 'id' used in key specification without a key length")
-@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 9, matchSubTypes = true, reason = "ORA-02329: column of datatype LOB cannot be unique or a primary key")
+@SkipForDialect(dialectClass = OracleDialect.class, matchSubTypes = true, reason = "ORA-02329: column of datatype LOB cannot be unique or a primary key")
 @DomainModel(
 		annotatedClasses = PrimitiveByteArrayIdTest.DemoEntity.class
 )

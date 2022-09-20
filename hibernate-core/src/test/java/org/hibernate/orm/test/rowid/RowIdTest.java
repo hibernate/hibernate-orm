@@ -33,7 +33,7 @@ import static org.junit.Assert.assertThat;
  */
 @DomainModel( annotatedClasses = RowIdTest.Product.class )
 @SessionFactory(statementInspectorClass = SQLStatementInspector.class)
-@RequiresDialect( value = OracleDialect.class, majorVersion = 9)
+@RequiresDialect( value = OracleDialect.class)
 public class RowIdTest {
 
 	@BeforeEach

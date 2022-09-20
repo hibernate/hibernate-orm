@@ -4,17 +4,17 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FetchClauseType;
-import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.FrameExclusion;
 import org.hibernate.query.sqm.FrameKind;
 import org.hibernate.sql.ast.Clause;
@@ -48,9 +48,9 @@ import org.hibernate.type.SqlTypes;
  *
  * @author Christian Beikov
  */
-public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
-	public OracleSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+	public OracleLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
 	}
 
@@ -415,6 +415,17 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	@Override
+	protected void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
+		// Oracle did not add support for CASE until 9i
+		if ( getDialect().getVersion().isBefore( 9 ) ) {
+			visitDecodeCaseSearchedExpression( caseSearchedExpression );
+		}
+		else {
+			super.visitCaseSearchedExpression( caseSearchedExpression, inSelect );
+		}
+	}
+
+	@Override
 	protected void renderPartitionItem(Expression expression) {
 		if ( expression instanceof Literal ) {
 			appendSql( "()" );
@@ -443,7 +454,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	@Override
 	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return true;
+		return getDialect().getVersion().isSameOrAfter( 8, 2 );
 	}
 
 	@Override
@@ -453,7 +464,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	@Override
 	protected boolean supportsRowValueConstructorSyntaxInInSubQuery() {
-		return true;
+		return getDialect().getVersion().isSameOrAfter( 9 );
 	}
 
 	@Override

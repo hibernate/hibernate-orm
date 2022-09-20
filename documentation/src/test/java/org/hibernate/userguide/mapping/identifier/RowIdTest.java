@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(value = OracleDialect.class, majorVersion = 8)
+@RequiresDialect(value = OracleDialect.class)
 @Jpa(
 		annotatedClasses = RowIdTest.Product.class
 )

@@ -70,7 +70,7 @@ public class OrderedSequenceStructure extends SequenceStructure {
 			);
 
 			//noinspection deprecation
-			if ( dialect instanceof OracleDialect && dialect.getVersion().isSameOrAfter( 8 ) ) {
+			if ( dialect instanceof OracleDialect ) {
 				for ( int i = 0; i < createStrings.length; ++i ) {
 					createStrings[i] = createStrings[i] + ORDER;
 				}

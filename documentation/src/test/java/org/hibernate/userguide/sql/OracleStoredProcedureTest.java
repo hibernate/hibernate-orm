@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(value = OracleDialect.class, majorVersion = 8)
+@RequiresDialect(value = OracleDialect.class)
 @Jpa(
         annotatedClasses = {
                 Person.class,

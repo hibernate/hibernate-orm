@@ -35,7 +35,7 @@ import static org.hamcrest.core.Is.is;
 @TestForIssue(jiraKey = "10495")
 @RequiresDialects(
 		value = {
-				@RequiresDialect(value = OracleDialect.class, majorVersion = 10),
+				@RequiresDialect(value = OracleDialect.class),
 				@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 8, minorVersion = 1)
 		})
 @DomainModel(

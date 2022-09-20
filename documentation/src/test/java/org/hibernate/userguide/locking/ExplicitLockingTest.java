@@ -147,7 +147,7 @@ public class ExplicitLockingTest {
 	}
 
 	@Test
-	@RequiresDialect(value = OracleDialect.class, majorVersion = 8)
+	@RequiresDialect(value = OracleDialect.class)
 	public void testFollowOnLocking(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			log.info("testBuildLockRequest");

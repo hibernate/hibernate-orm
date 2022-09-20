@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import java.sql.CallableStatement;
 import java.sql.DatabaseMetaData;
@@ -19,6 +19,15 @@ import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.BooleanDecoder;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.OracleArrayJdbcType;
+import org.hibernate.dialect.OracleTypesHelper;
+import org.hibernate.dialect.OracleXmlJdbcType;
+import org.hibernate.dialect.Replacer;
+import org.hibernate.dialect.RowLockStrategy;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.ModeStatsModeEmulation;
 import org.hibernate.dialect.function.NvlCoalesceEmulation;
@@ -29,6 +38,8 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.Oracle12LimitHandler;
 import org.hibernate.dialect.sequence.OracleSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -47,19 +58,18 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.SemanticException;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
-import org.hibernate.dialect.temptable.TemporaryTable;
-import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -78,6 +88,9 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
 
@@ -88,13 +101,26 @@ import static org.hibernate.query.sqm.TemporalUnit.MINUTE;
 import static org.hibernate.query.sqm.TemporalUnit.MONTH;
 import static org.hibernate.query.sqm.TemporalUnit.SECOND;
 import static org.hibernate.query.sqm.TemporalUnit.YEAR;
-
-import org.hibernate.query.sqm.produce.function.FunctionParameterType;
-import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
-
-import static org.hibernate.type.SqlTypes.*;
+import static org.hibernate.type.SqlTypes.ARRAY;
+import static org.hibernate.type.SqlTypes.BIGINT;
+import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BOOLEAN;
+import static org.hibernate.type.SqlTypes.DATE;
+import static org.hibernate.type.SqlTypes.DECIMAL;
+import static org.hibernate.type.SqlTypes.GEOMETRY;
+import static org.hibernate.type.SqlTypes.INTEGER;
+import static org.hibernate.type.SqlTypes.NUMERIC;
+import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.REAL;
+import static org.hibernate.type.SqlTypes.SMALLINT;
+import static org.hibernate.type.SqlTypes.SQLXML;
+import static org.hibernate.type.SqlTypes.TIME;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.VARBINARY;
+import static org.hibernate.type.SqlTypes.VARCHAR;
 
 /**
  * A {@linkplain Dialect SQL dialect} for Oracle 8i and above.
@@ -102,7 +128,7 @@ import static org.hibernate.type.SqlTypes.*;
  * @author Steve Ebersole
  * @author Gavin King
  */
-public class OracleDialect extends Dialect {
+public class OracleLegacyDialect extends Dialect {
 
 	private static final Pattern DISTINCT_KEYWORD_PATTERN = Pattern.compile( "\\bdistinct\\b" );
 	private static final Pattern GROUP_BY_KEYWORD_PATTERN = Pattern.compile( "\\bgroup\\sby\\b" );
@@ -113,27 +139,20 @@ public class OracleDialect extends Dialect {
 
 	public static final String PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
 
-	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 11, 2 );
-
 	private final LimitHandler limitHandler = supportsFetchClause( FetchClauseType.ROWS_ONLY )
 			? Oracle12LimitHandler.INSTANCE
 			: new LegacyOracleLimitHandler( getVersion() );
 
-	public OracleDialect() {
-		this( MINIMUM_VERSION );
+	public OracleLegacyDialect() {
+		this( DatabaseVersion.make( 8, 0 ) );
 	}
 
-	public OracleDialect(DatabaseVersion version) {
+	public OracleLegacyDialect(DatabaseVersion version) {
 		super(version);
 	}
 
-	public OracleDialect(DialectResolutionInfo info) {
+	public OracleLegacyDialect(DialectResolutionInfo info) {
 		super(info);
-	}
-
-	@Override
-	protected DatabaseVersion getMinimumSupportedVersion() {
-		return MINIMUM_VERSION;
 	}
 
 	@Override
@@ -188,8 +207,13 @@ public class OracleDialect extends Dialect {
 		functionFactory.octetLength_pattern( "lengthb(?1)", "dbms_lob.getlength(?1)*2" );
 		functionFactory.bitLength_pattern( "lengthb(?1)*8", "dbms_lob.getlength(?1)*16" );
 
-		//Oracle has had coalesce() since 9.0.1
-		functionFactory.coalesce();
+		if ( getVersion().isBefore( 9 ) ) {
+			queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
+		}
+		else {
+			//Oracle has had coalesce() since 9.0.1
+			functionFactory.coalesce();
+		}
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
@@ -235,14 +259,14 @@ public class OracleDialect extends Dialect {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new OracleSqlAstTranslator<>( sessionFactory, statement );
+				return new OracleLegacySqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
 	}
 
 	@Override
 	public String currentDate() {
-		return "current_date";
+		return getVersion().isBefore( 9 ) ? currentTimestamp() : "current_date";
 	}
 
 	@Override
@@ -252,7 +276,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String currentTimestamp() {
-		return currentTimestampWithTimeZone();
+		return getVersion().isBefore( 9 ) ? "sysdate" : currentTimestampWithTimeZone();
 	}
 
 	@Override
@@ -262,12 +286,12 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String currentLocalTimestamp() {
-		return "localtimestamp";
+		return getVersion().isBefore( 9 ) ? currentTimestamp() : "localtimestamp";
 	}
 
 	@Override
 	public String currentTimestampWithTimeZone() {
-		return "current_timestamp";
+		return getVersion().isBefore( 9 ) ? currentTimestamp() : "current_timestamp";
 	}
 
 
@@ -580,12 +604,15 @@ public class OracleDialect extends Dialect {
 			case DATE:
 			case TIME:
 				return "date";
+			case TIMESTAMP:
 				// the only difference between date and timestamp
 				// on Oracle is that date has no fractional seconds
+			case TIMESTAMP_WITH_TIMEZONE:
+				return getVersion().isBefore( 9 ) ? "date" : super.columnType( sqlTypeCode );
 			case TIME_WITH_TIMEZONE:
-				return "timestamp($p) with time zone";
+				return getVersion().isBefore( 9 ) ? "date" : "timestamp($p) with time zone";
 			case VARCHAR:
-				return "varchar2($l char)";
+				return getVersion().isBefore( 9 ) ? "varchar2($l)" : "varchar2($l char)";
 			case NVARCHAR:
 				return "nvarchar2($l)";
 			case BINARY:
@@ -601,18 +628,21 @@ public class OracleDialect extends Dialect {
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( SQLXML, "SYS.XMLTYPE", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "MDSYS.SDO_GEOMETRY", this ) );
+		if ( getVersion().isSameOrAfter( 10 ) ) {
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "MDSYS.SDO_GEOMETRY", this ) );
+		}
 	}
 
 	@Override
 	public TimeZoneSupport getTimeZoneSupport() {
-		return TimeZoneSupport.NATIVE;
+		return getVersion().isSameOrAfter( 9 ) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
 	}
 
 	@Override
 	protected void initDefaultProperties() {
 		super.initDefaultProperties();
-		getDefaultProperties().setProperty( Environment.BATCH_VERSIONED_DATA, Boolean.toString( getVersion().isSameOrAfter( 12 ) ) );
+		String newerVersion = Boolean.toString( getVersion().isSameOrAfter( 12 ) );
+		getDefaultProperties().setProperty( Environment.BATCH_VERSIONED_DATA, newerVersion );
 	}
 
 	@Override
@@ -761,8 +791,31 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
+		if ( getVersion().isSameOrAfter( 9 ) ) {
+			return super.getSelectClauseNullString( sqlType, typeConfiguration );
+		}
+		else {
+			switch(sqlType) {
+				case Types.VARCHAR:
+				case Types.CHAR:
+					return "to_char(null)";
+				case Types.DATE:
+				case Types.TIME:
+				case Types.TIMESTAMP:
+				case Types.TIMESTAMP_WITH_TIMEZONE:
+					return "to_date(null)";
+				default:
+					return "to_number(null)";
+			}
+		}
+	}
+
+	@Override
 	public String getCurrentTimestampSelectString() {
-		return "select systimestamp from dual";
+		return getVersion().isBefore( 9 )
+				? "select sysdate from dual"
+				: "select systimestamp from dual";
 	}
 
 
@@ -1077,12 +1130,12 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public boolean supportsNoWait() {
-		return true;
+		return getVersion().isSameOrAfter( 9 );
 	}
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return true;
+		return getVersion().isSameOrAfter( 10 );
 	}
 
 	@Override

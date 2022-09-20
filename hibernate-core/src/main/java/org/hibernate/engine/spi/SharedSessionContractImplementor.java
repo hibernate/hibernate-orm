@@ -167,7 +167,10 @@ public interface SharedSessionContractImplementor
 	 * @apiNote This "timestamp" need not be related to timestamp in the Java Date/millisecond
 	 * sense.  It just needs to be an incrementing value.  See
 	 * {@link CacheTransactionSynchronization#getCurrentTransactionStartTimestamp()}
+	 *
+	 * @deprecated no longer supported, when the Second Level Cache is enabled {{@link CacheTransactionSynchronization#getCachingTimestamp()}} can be used.
 	 */
+	@Deprecated
 	long getTransactionStartTimestamp();
 
 	/**

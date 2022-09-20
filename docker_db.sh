@@ -15,6 +15,10 @@ else
   PRIVILEGED_CLI=""
 fi
 
+mysql() {
+  mysql_5_7
+}
+
 mysql_5_7() {
     $CONTAINER_CLI rm -f mysql || true
     $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mysql:5.7 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --log-bin-trust-function-creators=1
@@ -84,6 +88,10 @@ mariadb() {
     else
       echo "MariaDB successfully started"
     fi
+}
+
+postgresql() {
+  postgresql_9_5
 }
 
 postgresql_9_5() {
@@ -517,6 +525,7 @@ if [ -z ${1} ]; then
     echo -e "\thana"
     echo -e "\tmariadb"
     echo -e "\tmssql"
+    echo -e "\tmysql"
     echo -e "\tmysql_5_7"
     echo -e "\tmysql_8_0"
     echo -e "\toracle"
@@ -527,6 +536,7 @@ if [ -z ${1} ]; then
     echo -e "\tpostgis"
     echo -e "\tpostgresql_13"
     echo -e "\tpostgresql_9_5"
+    echo -e "\tpostgresql"
     echo -e "\tsybase"
 else
     ${1}

@@ -11,7 +11,7 @@ elif [ "$RDBMS" == "mysql" ]; then
   goal="-Pdb=mysql_ci"
 elif [ "$RDBMS" == "mariadb" ]; then
   goal="-Pdb=mariadb_ci"
-elif [ "$RDBMS" == "postgresql_9_5" ]; then
+elif [ "$RDBMS" == "postgresql" ]; then
   goal="-Pdb=pgsql_ci"
 elif [ "$RDBMS" == "postgresql_13" ]; then
   goal="-Pdb=pgsql_ci"

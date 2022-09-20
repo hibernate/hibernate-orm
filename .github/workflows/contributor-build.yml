@@ -38,9 +38,10 @@ jobs:
           - rdbms: h2
           - rdbms: hsqldb
           - rdbms: derby
+          - rdbms: mysql
           - rdbms: mysql8
           - rdbms: mariadb
-          - rdbms: postgresql_9_5
+          - rdbms: postgresql
           - rdbms: postgresql_13
           - rdbms: oracle
           - rdbms: db2

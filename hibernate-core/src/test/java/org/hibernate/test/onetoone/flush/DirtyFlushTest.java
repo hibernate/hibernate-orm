@@ -59,7 +59,6 @@ public class DirtyFlushTest extends BaseEntityManagerFunctionalTestCase {
 			user.profile = profile;
 
 			em.persist( profile );
-			em.flush();
 		} );
 
 		inTransaction( getOrCreateEntityManager(), em -> {

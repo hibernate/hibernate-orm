@@ -501,11 +501,22 @@ public class MySQLDialect extends Dialect {
 				.register();
 
 		// pi() produces a value with 7 digits unless we're explicit
-		functionRegistry.patternDescriptorBuilder( "pi", "cast(pi() as double)" )
-				.setInvariantType(basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE ))
-				.setExactArgumentCount(0)
-				.setArgumentListSignature("")
-				.register();
+		if ( getMySQLVersion().isSameOrAfter( 8 ) ) {
+			functionRegistry.patternDescriptorBuilder( "pi", "cast(pi() as double)" )
+					.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE ) )
+					.setExactArgumentCount( 0 )
+					.setArgumentListSignature( "" )
+					.register();
+		}
+		else {
+			// But before MySQL 8, it's not possible to cast to double. Double has a default precision of 53
+			// and since the internal representation of pi has only 15 decimal places, we cast to decimal(53,15)
+			functionRegistry.patternDescriptorBuilder( "pi", "cast(pi() as decimal(53,15))" )
+					.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE ) )
+					.setExactArgumentCount( 0 )
+					.setArgumentListSignature( "" )
+					.register();
+		}
 
 		// By default char() produces a binary string, not a character string.
 		// (Note also that char() is actually a variadic function in MySQL.)

@@ -161,6 +161,16 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
+	protected boolean supportsSimpleQueryGrouping() {
+		return getDialect().getVersion().isSameOrAfter( 8 );
+	}
+
+	@Override
+	protected boolean supportsNestedSubqueryCorrelation() {
+		return false;
+	}
+
+	@Override
 	protected String getFromDual() {
 		return " from dual";
 	}

@@ -173,12 +173,12 @@ The following table illustrates a list of commands for various databases that ca
 |`./docker_db.sh mariadb`
 |`./gradlew test -Pdb=mariadb_ci`
 
-|PostgreSQL 9.5
+|PostgreSQL 10
 |`./docker_db.sh postgresql`
 |`./gradlew test -Pdb=pgsql_ci`
 
-|PostgreSQL 13
-|`./docker_db.sh postgresql_13`
+|PostgreSQL 14
+|`./docker_db.sh postgresql_14`
 |`./gradlew test -Pdb=pgsql_ci`
 
 |EnterpriseDB

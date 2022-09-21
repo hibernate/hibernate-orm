@@ -13,7 +13,7 @@ elif [ "$RDBMS" == "mariadb" ]; then
   goal="-Pdb=mariadb_ci"
 elif [ "$RDBMS" == "postgresql" ]; then
   goal="-Pdb=pgsql_ci"
-elif [ "$RDBMS" == "postgresql_13" ]; then
+elif [ "$RDBMS" == "postgresql_14" ]; then
   goal="-Pdb=pgsql_ci"
 elif [ "$RDBMS" == "oracle" ]; then
   # I have no idea why, but these tests don't work on GH Actions

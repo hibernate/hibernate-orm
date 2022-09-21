@@ -91,7 +91,7 @@ mariadb() {
 }
 
 postgresql() {
-  postgresql_9_5
+  postgresql_10
 }
 
 postgresql_9_5() {
@@ -99,9 +99,19 @@ postgresql_9_5() {
     $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d docker.io/postgis/postgis:9.5-2.5
 }
 
+postgresql_10() {
+    $CONTAINER_CLI rm -f postgres || true
+    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d docker.io/postgis/postgis:10-2.5
+}
+
 postgresql_13() {
     $CONTAINER_CLI rm -f postgres || true
     $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d docker.io/postgis/postgis:13-3.1
+}
+
+postgresql_14() {
+    $CONTAINER_CLI rm -f postgres || true
+    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d docker.io/postgis/postgis:14-3.3
 }
 
 edb() {
@@ -534,7 +544,9 @@ if [ -z ${1} ]; then
     echo -e "\toracle_21"
     echo -e "\toracle_ee"
     echo -e "\tpostgis"
+    echo -e "\tpostgresql_14"
     echo -e "\tpostgresql_13"
+    echo -e "\tpostgresql_10"
     echo -e "\tpostgresql_9_5"
     echo -e "\tpostgresql"
     echo -e "\tsybase"

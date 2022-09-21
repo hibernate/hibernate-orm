@@ -86,10 +86,6 @@ mariadb() {
     fi
 }
 
-postgresql() {
-  postgresql_9_5
-}
-
 postgresql_9_5() {
     $CONTAINER_CLI rm -f postgres || true
     $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d docker.io/postgis/postgis:9.5-2.5
@@ -531,7 +527,6 @@ if [ -z ${1} ]; then
     echo -e "\tpostgis"
     echo -e "\tpostgresql_13"
     echo -e "\tpostgresql_9_5"
-    echo -e "\tpostgresql"
     echo -e "\tsybase"
 else
     ${1}

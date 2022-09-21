@@ -130,7 +130,7 @@ The script `docker_db.sh` allows you to start a pre-configured database which ca
 All you have to do is run the following command:
 
 ----
-./docker_db.sh postgresql
+./docker_db.sh postgresql_9_5
 ----
 
 omitting the argument will print a list of possible options.
@@ -174,7 +174,7 @@ The following table illustrates a list of commands for various databases that ca
 |`./gradlew test -Pdb=mariadb_ci`
 
 |PostgreSQL 9.5
-|`./docker_db.sh postgresql`
+|`./docker_db.sh postgresql_9_5`
 |`./gradlew test -Pdb=pgsql_ci`
 
 |PostgreSQL 13

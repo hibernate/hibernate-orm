@@ -40,7 +40,7 @@ jobs:
           - rdbms: derby
           - rdbms: mysql8
           - rdbms: mariadb
-          - rdbms: postgresql
+          - rdbms: postgresql_9_5
           - rdbms: postgresql_13
           - rdbms: oracle
           - rdbms: db2

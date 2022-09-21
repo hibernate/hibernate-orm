@@ -152,6 +152,9 @@ public class OneToOneType extends EntityType {
 
 	@Override
 	public boolean isDirty(Object old, Object current, SharedSessionContractImplementor session) {
+		if ( !isReferenceToIdentifierProperty() ) {
+			return false;
+		}
 		if ( isSame( old, current ) ) {
 			return false;
 		}
@@ -205,11 +208,11 @@ public class OneToOneType extends EntityType {
 
 	@Override
 	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
-		if (value == null) {
+		if ( !isReferenceToIdentifierProperty() || value == null) {
 			return null;
 		}
 
-		Object id = ForeignKeys.getEntityIdentifierIfNotUnsaved( getAssociatedEntityName(), value, session );
+		final Object id = ForeignKeys.getEntityIdentifierIfNotUnsaved( getAssociatedEntityName(), value, session );
 
 		if ( id == null ) {
 			throw new AssertionFailure(
@@ -223,8 +226,15 @@ public class OneToOneType extends EntityType {
 
 	@Override
 	public Object assemble(Serializable oid, SharedSessionContractImplementor session, Object owner) throws HibernateException {
+		if ( !isReferenceToIdentifierProperty() ) {
+			//this should be a call to resolve(), not resolveIdentifier(),
+			//'cos it might be a property-ref, and we did not cache the
+			//referenced value
+			return resolve( session.getContextEntityIdentifier( owner ), session, owner );
+		}
 		//the owner of the association is not the owner of the id
-		Serializable id = ( Serializable ) getIdentifierType( session ).assemble( oid, session, null );
+
+		final Serializable id = ( Serializable ) getIdentifierType( session ).assemble( oid, session, null );
 
 		if ( id == null ) {
 			return null;
@@ -235,6 +245,9 @@ public class OneToOneType extends EntityType {
 	
 	@Override
 	public boolean isAlwaysDirtyChecked() {
+		if ( !isReferenceToIdentifierProperty() ) {
+			return false;
+		}
 		return true;
 	}
 }

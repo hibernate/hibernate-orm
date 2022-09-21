@@ -56,6 +56,7 @@ import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.FrameExclusion;
@@ -66,6 +67,7 @@ import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
+import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.query.sqm.tree.expression.Conversion;
@@ -1447,13 +1449,24 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				this.queryPartForRowNumberingClauseDepth = -1;
 				this.needsSelectAliases = false;
 			}
-			final boolean needsParenthesis = !queryGroup.isRoot();
+			// If we are row numbering the current query group, this means that we can't render the
+			// order by and offset fetch clause, so we must do row counting on the query group level
+			final boolean needsRowNumberingWrapper = queryPartForRowNumbering == queryGroup
+					|| additionalWherePredicate != null && !additionalWherePredicate.isEmpty();
+			final boolean needsQueryGroupWrapper = currentQueryPart instanceof QueryGroup && !supportsSimpleQueryGrouping();
+			final boolean needsParenthesis;
+			if ( currentQueryPart instanceof QueryGroup ) {
+				// When this is query group within a query group, we can only do simple grouping if that is supported,
+				// and we don't already add a query group wrapper
+				needsParenthesis = !needsRowNumberingWrapper && !needsQueryGroupWrapper;
+			}
+			else {
+				needsParenthesis = !queryGroup.isRoot();
+			}
 			if ( needsParenthesis ) {
 				appendSql( OPEN_PARENTHESIS );
 			}
-			// If we are row numbering the current query group, this means that we can't render the
-			// order by and offset fetch clause, so we must do row counting on the query group level
-			if ( queryPartForRowNumbering == queryGroup || additionalWherePredicate != null && !additionalWherePredicate.isEmpty() ) {
+			if ( needsRowNumberingWrapper ) {
 				this.needsSelectAliases = true;
 				queryGroupAlias = "grp_" + queryGroupAliasCounter + '_';
 				queryGroupAliasCounter++;
@@ -1484,6 +1497,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					);
 				}
 				renderRowNumberingSelectItems( syntheticSelectClause, queryPartForRowNumbering );
+				appendSql( " from (" );
+			}
+			else if ( needsQueryGroupWrapper ) {
+				// Query group nested inside a query group
+				this.needsSelectAliases = true;
+				queryGroupAlias = "grp_" + queryGroupAliasCounter + '_';
+				queryGroupAliasCounter++;
+				appendSql( "select " );
+				appendSql( queryGroupAlias );
+				appendSql( ".* " );
 				appendSql( " from (" );
 			}
 			queryPartStack.push( queryGroup );
@@ -1985,6 +2008,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected boolean supportsIntersect() {
+		return true;
+	}
+
+	protected boolean supportsNestedSubqueryCorrelation() {
 		return true;
 	}
 
@@ -3858,11 +3885,39 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 			else if ( tableReference instanceof QueryPartTableReference ) {
 				final QueryPartTableReference queryPartTableReference = (QueryPartTableReference) tableReference;
-				final QueryPart emulationQueryPart = stripToSelectClause( queryPartTableReference.getQueryPart() );
+				final QueryPart queryPart = queryPartTableReference.getQueryPart();
+				final QueryPart emulationQueryPart = stripToSelectClause( queryPart );
+				final List<String> columnNames;
+				if ( queryPart instanceof QuerySpec && needsLateralSortExpressionVirtualSelections( (QuerySpec) queryPart ) ) {
+					// One of our lateral emulations requires that sort expressions are present in the select clause
+					// when the query spec use limit/offset. So we add selections for these, if necessary
+					columnNames = new ArrayList<>( queryPartTableReference.getColumnNames() );
+					final QuerySpec querySpec = (QuerySpec) queryPart;
+					final QuerySpec emulationQuerySpec = (QuerySpec) emulationQueryPart;
+					final List<SqlSelection> sqlSelections = emulationQuerySpec.getSelectClause().getSqlSelections();
+					final List<SortSpecification> sortSpecifications = queryPart.getSortSpecifications();
+					for ( int i = 0; i < sortSpecifications.size(); i++ ) {
+						final SortSpecification sortSpecification = sortSpecifications.get( i );
+						final int sortSelectionIndex = getSortSelectionIndex( querySpec, sortSpecification );
+						if ( sortSelectionIndex == -1 ) {
+							columnNames.add( "sort_col_" + i );
+							sqlSelections.add(
+									new SqlSelectionImpl(
+											sqlSelections.size() + 1,
+											sqlSelections.size(),
+											sortSpecification.getSortExpression()
+									)
+							);
+						}
+					}
+				}
+				else {
+					columnNames = queryPartTableReference.getColumnNames();
+				}
 				final QueryPartTableReference emulationTableReference = new QueryPartTableReference(
 						emulationQueryPart,
 						tableReference.getIdentificationVariable(),
-						queryPartTableReference.getColumnNames(),
+						columnNames,
 						false,
 						sessionFactory
 				);
@@ -4077,7 +4132,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			final QueryPartTableReference tableReference = (QueryPartTableReference) tableGroup.getPrimaryTableReference();
 			final List<String> columnNames = tableReference.getColumnNames();
 			final List<ColumnReference> columnReferences = new ArrayList<>( columnNames.size() );
-			final List<ColumnReference> subColumnReferences = new ArrayList<>( columnNames.size() );
 			final QueryPart queryPart = tableReference.getQueryPart();
 			for ( String columnName : columnNames ) {
 				columnReferences.add(
@@ -4130,34 +4184,73 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				);
 			}
 
-			// Double nested sub-query rendering if nothing else works
-			// We try to avoid this as much as possible as it is not very efficient and some DBs don't like it
-			// when a correlation happens in a sub-query that is not a direct child
-			// ... x(c) on exists(select 1 from (...) synth_(c) where x.c = synth_.c)
-			final QueryPartTableGroup subTableGroup = new QueryPartTableGroup(
-					tableGroup.getNavigablePath(),
-					(TableGroupProducer) tableGroup.getModelPart(),
-					queryPart,
-					"synth_",
-					columnNames,
-					false,
-					true,
-					sessionFactory
-			);
-			for ( String columnName : columnNames ) {
-				subColumnReferences.add(
-						new ColumnReference(
-								subTableGroup.getPrimaryTableReference(),
-								columnName,
-								false,
-								null,
-								null,
-								null,
-								sessionFactory
+			if ( supportsNestedSubqueryCorrelation() ) {
+				// Double nested sub-query rendering might not work on all DBs
+				// We try to avoid this as much as possible as it is not very efficient and some DBs don't like it
+				// when a correlation happens in a sub-query that is not a direct child
+				// ... x(c) on exists(select 1 from (...) synth_(c) where x.c distinct from synth_.c)
+				final QueryPartTableGroup subTableGroup = new QueryPartTableGroup(
+						tableGroup.getNavigablePath(),
+						(TableGroupProducer) tableGroup.getModelPart(),
+						queryPart,
+						"synth_",
+						columnNames,
+						false,
+						true,
+						sessionFactory
+				);
+				final List<ColumnReference> subColumnReferences = new ArrayList<>( columnNames.size() );
+				for ( String columnName : columnNames ) {
+					subColumnReferences.add(
+							new ColumnReference(
+									subTableGroup.getPrimaryTableReference(),
+									columnName,
+									false,
+									null,
+									null,
+									null,
+									sessionFactory
+							)
+					);
+				}
+				final QuerySpec existsQuery = new QuerySpec( false, 1 );
+				existsQuery.getSelectClause().addSqlSelection(
+						new SqlSelectionImpl(
+								1,
+								0,
+								new QueryLiteral<>( 1, getIntegerType() )
 						)
 				);
+				existsQuery.getFromClause().addRoot( subTableGroup );
+				existsQuery.applyPredicate(
+						new ComparisonPredicate(
+								new SqlTuple( columnReferences, tableGroup.getModelPart() ),
+								ComparisonOperator.NOT_DISTINCT_FROM,
+								new SqlTuple( subColumnReferences, tableGroup.getModelPart() )
+						)
+				);
+
+				return new ExistsPredicate( existsQuery, false, getBooleanType() );
 			}
-			final QuerySpec existsQuery = new QuerySpec( false, 1 );
+			if ( queryPart instanceof QueryGroup ) {
+				// We can't use double nesting, but we need to add filter conditions, so fail if this is a query group
+				throw new UnsupportedOperationException( "Can't emulate lateral query group with limit/offset" );
+			}
+			final QuerySpec querySpec = (QuerySpec) queryPart;
+
+			// The last possible way to emulate lateral subqueries is to check if the correlated subquery has a result for a row.
+			// Note though, that if the subquery has a limit/offset, an additional condition is needed as can be seen below
+			// ... x(c) on exists(select 1 from ... and sub_.c not distinct from x.c)
+
+			final List<Expression> subExpressions = new ArrayList<>( columnNames.size() );
+			for ( SqlSelection sqlSelection : querySpec.getSelectClause().getSqlSelections() ) {
+				subExpressions.add( sqlSelection.getExpression() );
+			}
+			final QuerySpec existsQuery = new QuerySpec( false, querySpec.getFromClause().getRoots().size() );
+			existsQuery.getFromClause().getRoots().addAll( querySpec.getFromClause().getRoots() );
+			existsQuery.applyPredicate( querySpec.getWhereClauseRestrictions() );
+			existsQuery.setGroupByClauseExpressions( querySpec.getGroupByClauseExpressions() );
+			existsQuery.setHavingClauseRestrictions( querySpec.getHavingClauseRestrictions() );
 			existsQuery.getSelectClause().addSqlSelection(
 					new SqlSelectionImpl(
 							1,
@@ -4165,18 +4258,191 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							new QueryLiteral<>( 1, getIntegerType() )
 					)
 			);
-			existsQuery.getFromClause().addRoot( subTableGroup );
 			existsQuery.applyPredicate(
 					new ComparisonPredicate(
 							new SqlTuple( columnReferences, tableGroup.getModelPart() ),
 							ComparisonOperator.NOT_DISTINCT_FROM,
-							new SqlTuple( subColumnReferences, tableGroup.getModelPart() )
+							new SqlTuple( subExpressions, tableGroup.getModelPart() )
 					)
 			);
 
-			return new ExistsPredicate( existsQuery, false, getBooleanType() );
+			final ExistsPredicate existsPredicate = new ExistsPredicate( existsQuery, false, getBooleanType() );
+			if ( !queryPart.hasOffsetOrFetchClause() ) {
+				return existsPredicate;
+			}
+			// Emulation of lateral subqueries that use limit/offset additionally needs to compare the count of matched rows
+			// ... x(c, s1) on (select count(*) from ... and sub_.s1<=x.s1) between ? and ?
+			// Essentially, the subquery determines how many rows come before the current row (including that),
+			// and we check if the count value is between offset and (offset+limit)
+
+			final QuerySpec countQuery = new QuerySpec( querySpec.isRoot(), querySpec.getFromClause().getRoots().size() );
+			countQuery.getFromClause().getRoots().addAll( querySpec.getFromClause().getRoots() );
+			countQuery.applyPredicate( querySpec.getWhereClauseRestrictions() );
+			countQuery.setGroupByClauseExpressions( querySpec.getGroupByClauseExpressions() );
+			countQuery.setHavingClauseRestrictions( querySpec.getHavingClauseRestrictions() );
+			countQuery.getSelectClause().addSqlSelection(
+					new SqlSelectionImpl(
+							1,
+							0,
+							new SelfRenderingAggregateFunctionSqlAstExpression(
+									"count",
+									(sqlAppender, sqlAstArguments, walker) -> sqlAppender.append( "count(*)" ),
+									List.of( Star.INSTANCE ),
+									null,
+									getIntegerType(),
+									getIntegerType()
+							)
+					)
+			);
+
+			// Add conditions that handle the sorting of rows
+			final List<SortSpecification> sortSpecifications = queryPart.getSortSpecifications();
+			for ( int i = 0; i < sortSpecifications.size(); i++ ) {
+				final SortSpecification sortSpecification = sortSpecifications.get( i );
+				final int sortSelectionIndex = getSortSelectionIndex( querySpec, sortSpecification );
+
+				final ColumnReference currentRowColumnReference;
+				final Expression sortExpression;
+				if ( sortSelectionIndex == -1 ) {
+					currentRowColumnReference = new ColumnReference(
+							tableReference,
+							"sort_col_" + i,
+							false,
+							null,
+							null,
+							null,
+							sessionFactory
+					);
+					sortExpression = sortSpecification.getSortExpression();
+				}
+				else {
+					currentRowColumnReference = columnReferences.get( sortSelectionIndex );
+					sortExpression = querySpec.getSelectClause().getSqlSelections().get( sortSelectionIndex ).getExpression();
+				}
+				// The following filter predicate will use <= for ascending and >= for descending sorting,
+				// since the goal is to match all rows that come "before" the current row (including that).
+				// The usual predicates are like "sortExpression <= currentRowColumnExpression",
+				// but we always have to take care of null precedence handling unless we know a column is not null.
+				// If nulls are to be sorted first, we can unconditionally add "... or sortExpression is null".
+				// If nulls are to be sorted last, we can only add the null check if the current row column is null
+				// i.e. we add "... or (currentRowColumnExpression is null and sortExpression is null)".
+				final boolean isNullsFirst = isNullsFirst( sortSpecification );
+				final Predicate nullHandlingPredicate;
+				if ( isNullsFirst ) {
+					nullHandlingPredicate = new NullnessPredicate( sortExpression );
+				}
+				else {
+					nullHandlingPredicate = new Junction(
+							Junction.Nature.CONJUNCTION,
+							List.of(
+									new NullnessPredicate( sortExpression ),
+									new NullnessPredicate( currentRowColumnReference )
+							),
+							getBooleanType()
+					);
+				}
+				final ComparisonOperator comparisonOperator;
+				if ( sortSpecification.getSortOrder() == SortOrder.ASCENDING ) {
+					comparisonOperator = ComparisonOperator.LESS_THAN_OR_EQUAL;
+				}
+				else {
+					comparisonOperator = ComparisonOperator.GREATER_THAN_OR_EQUAL;
+				}
+				countQuery.applyPredicate(
+						new Junction(
+								Junction.Nature.DISJUNCTION,
+								List.of(
+										nullHandlingPredicate,
+										new ComparisonPredicate(
+												sortExpression,
+												comparisonOperator,
+												currentRowColumnReference
+										)
+								),
+								getBooleanType()
+						)
+				);
+			}
+
+			final Expression countLower;
+			final Expression countUpper;
+			if ( queryPart.getOffsetClauseExpression() == null ) {
+				countLower = new QueryLiteral<>( 1, getIntegerType() );
+				countUpper = queryPart.getFetchClauseExpression();
+			}
+			else {
+				countLower = new BinaryArithmeticExpression(
+						queryPart.getOffsetClauseExpression(),
+						BinaryArithmeticOperator.ADD,
+						new QueryLiteral<>( 1, getIntegerType() ),
+						getIntegerType()
+				);
+				countUpper = new BinaryArithmeticExpression(
+						queryPart.getOffsetClauseExpression(),
+						BinaryArithmeticOperator.ADD,
+						queryPart.getFetchClauseExpression(),
+						getIntegerType()
+				);
+			}
+			return new Junction(
+					Junction.Nature.CONJUNCTION,
+					List.of(
+							existsPredicate,
+							new BetweenPredicate(
+									countQuery,
+									countLower,
+									countUpper,
+									false,
+									getBooleanType()
+							)
+					),
+					getBooleanType()
+			);
 		}
 		return null;
+	}
+
+	private boolean isNullsFirst(SortSpecification sortSpecification) {
+		NullPrecedence nullPrecedence = sortSpecification.getNullPrecedence();
+		if ( nullPrecedence == null || nullPrecedence == NullPrecedence.NONE ) {
+			switch ( getDialect().getNullOrdering() ) {
+				case FIRST:
+					nullPrecedence = NullPrecedence.FIRST;
+					break;
+				case LAST:
+					nullPrecedence = NullPrecedence.LAST;
+					break;
+				case SMALLEST:
+					nullPrecedence = sortSpecification.getSortOrder() == SortOrder.ASCENDING
+							? NullPrecedence.FIRST
+							: NullPrecedence.LAST;
+					break;
+				case GREATEST:
+					nullPrecedence = sortSpecification.getSortOrder() == SortOrder.DESCENDING
+							? NullPrecedence.FIRST
+							: NullPrecedence.LAST;
+					break;
+			}
+		}
+		return nullPrecedence == NullPrecedence.FIRST;
+	}
+
+	private int getSortSelectionIndex(QuerySpec querySpec, SortSpecification sortSpecification) {
+		final Expression sortExpression = sortSpecification.getSortExpression();
+		if ( sortExpression instanceof SqlSelectionExpression ) {
+			final SqlSelection selection = ( (SqlSelectionExpression) sortExpression ).getSelection();
+			return selection.getValuesArrayPosition();
+		}
+		else {
+			final List<SqlSelection> sqlSelections = querySpec.getSelectClause().getSqlSelections();
+			for ( int j = 0; j < sqlSelections.size(); j++ ) {
+				final SqlSelection sqlSelection = sqlSelections.get( j );
+				if ( sqlSelection.getExpression() == sortExpression ) {
+					return j;
+				}
+			}
+		}
+		return -1;
 	}
 
 	private boolean isFetchFirstRowOnly(QueryPart queryPart) {
@@ -4222,6 +4488,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			newQuerySpec.getSelectClause().addSqlSelection( selection );
 		}
 		return newQuerySpec;
+	}
+
+	private boolean needsLateralSortExpressionVirtualSelections(QuerySpec querySpec) {
+		return !( ( querySpec.getSelectClause().getSqlSelections().size() == 1 || supportsRowValueConstructorSyntax() ) && supportsDistinctFromPredicate() && isFetchFirstRowOnly( querySpec ) )
+				&& !supportsIntersect()
+				&& !supportsNestedSubqueryCorrelation()
+				&& querySpec.hasOffsetOrFetchClause();
 	}
 
 	@Override

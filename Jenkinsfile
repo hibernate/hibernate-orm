@@ -257,7 +257,7 @@ void runBuildOnNode(String label, Closure body) {
 	node( label ) {
 		pruneDockerContainers()
         try {
-			timeout( [time: 120, unit: 'MINUTES'], body )
+			body()
         }
         finally {
         	// If this is a PR, we clean the workspace at the end
@@ -281,11 +281,15 @@ void runTest(String goal, String lockableResource = null, boolean clean = true) 
 	String cmd = "./gradlew" + (clean ? " clean" : "") + " check ${goal} -Plog-test-progress=true --stacktrace";
 	try {
 		if (lockableResource == null) {
-			sh cmd
+			timeout( [time: 120, unit: 'MINUTES'] ) {
+				sh cmd
+			}
 		}
 		else {
 			lock(lockableResource) {
-				sh cmd
+				timeout( [time: 120, unit: 'MINUTES'] ) {
+					sh cmd
+				}
 			}
 		}
 	}

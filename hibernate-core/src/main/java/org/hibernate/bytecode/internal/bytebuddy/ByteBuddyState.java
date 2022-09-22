@@ -199,7 +199,7 @@ public final class ByteBuddyState {
 	}
 
 	private Unloaded<?> make(TypePool typePool, DynamicType.Builder<?> builder) {
-		classRewriter.installReflectionMethodVisitors( builder );
+		builder = classRewriter.installReflectionMethodVisitors( builder );
 
 		Unloaded<?> unloadedClass;
 		if ( typePool != null ) {
@@ -318,7 +318,7 @@ public final class ByteBuddyState {
 	}
 
 	private interface ClassRewriter {
-		void installReflectionMethodVisitors(DynamicType.Builder<?> builder);
+		DynamicType.Builder<?> installReflectionMethodVisitors(DynamicType.Builder<?> builder);
 
 		void registerAuthorizedClass(Unloaded<?> unloadedClass);
 	}
@@ -334,9 +334,9 @@ public final class ByteBuddyState {
 		}
 
 		@Override
-		public void installReflectionMethodVisitors(DynamicType.Builder<?> builder) {
+		public DynamicType.Builder<?> installReflectionMethodVisitors(DynamicType.Builder<?> builder) {
 			builder = builder.visit( getDeclaredMethodMemberSubstitution );
-			builder = builder.visit( getMethodMemberSubstitution );
+			return builder.visit( getMethodMemberSubstitution );
 		}
 
 		@Override
@@ -371,8 +371,9 @@ public final class ByteBuddyState {
 	private static class StandardClassRewriter implements ClassRewriter {
 
 		@Override
-		public void installReflectionMethodVisitors(DynamicType.Builder<?> builder) {
+		public DynamicType.Builder<?> installReflectionMethodVisitors(DynamicType.Builder<?> builder) {
 			// do nothing
+			return builder;
 		}
 
 		@Override

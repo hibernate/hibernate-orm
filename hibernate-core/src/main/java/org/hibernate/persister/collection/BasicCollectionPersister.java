@@ -198,8 +198,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		try {
 			final Expectation expectation = Expectations.appropriateExpectation( getUpdateCheckStyle() );
 			final boolean callable = isUpdateCallable();
-			final int jdbcBatchSizeToUse = session.getConfiguredJdbcBatchSize();
-			boolean useBatch = expectation.canBeBatched() && jdbcBatchSizeToUse > 1;
+			boolean useBatch = expectation.canBeBatched() && session.getConfiguredJdbcBatchSize() > 1;
 			final Iterator<?> entries = collection.entries( this );
 
 			final List<Object> elements = new ArrayList<>();

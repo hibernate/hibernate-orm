@@ -127,6 +127,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	// Set of EntityKeys of deleted objects
 	private HashSet<EntityKey> nullifiableEntityKeys;
 
+	// Set of EntityKeys of deleted unloaded proxies
+	private HashSet<EntityKey> deletedUnloadedEntityKeys;
+
 	// properties that we have tried to load, and not found in the database
 	private HashSet<AssociationKey> nullAssociations;
 
@@ -252,6 +255,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		unownedCollections = null;
 		proxiesByKey = null;
 		nullifiableEntityKeys = null;
+		deletedUnloadedEntityKeys = null;
 		if ( batchFetchQueue != null ) {
 			batchFetchQueue.clear();
 		}
@@ -1600,6 +1604,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				}
 		);
 		writeCollectionToStream( nullifiableEntityKeys, oos, "nullifiableEntityKey", EntityKey::serialize );
+		writeCollectionToStream( deletedUnloadedEntityKeys, oos, "deletedUnloadedEntityKeys", EntityKey::serialize );
 	}
 
 	private interface Serializer<E> {
@@ -1759,6 +1764,15 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			for ( int i = 0; i < count; i++ ) {
 				rtn.nullifiableEntityKeys.add( EntityKey.deserialize( ois, sfi ) );
 			}
+			count = ois.readInt();
+
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Starting deserialization of [" + count + "] deletedUnloadedEntityKeys entries" );
+			}
+			rtn.deletedUnloadedEntityKeys = new HashSet<>();
+			for ( int i = 0; i < count; i++ ) {
+				rtn.deletedUnloadedEntityKeys.add( EntityKey.deserialize( ois, sfi ) );
+			}
 
 		}
 		catch ( HibernateException he ) {
@@ -1829,13 +1843,27 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( nullifiableEntityKeys == null ) {
 			nullifiableEntityKeys = new HashSet<>();
 		}
-		this.nullifiableEntityKeys.add( key );
+		nullifiableEntityKeys.add( key );
 	}
 
 	@Override
 	public boolean isNullifiableEntityKeysEmpty() {
 		return nullifiableEntityKeys == null
 			|| nullifiableEntityKeys.size() == 0;
+	}
+
+	@Override
+	public boolean containsDeletedUnloadedEntityKey(EntityKey ek) {
+		return deletedUnloadedEntityKeys != null
+			&& deletedUnloadedEntityKeys.contains( ek );
+	}
+
+	@Override
+	public void registerDeletedUnloadedEntityKey(EntityKey key) {
+		if ( deletedUnloadedEntityKeys == null ) {
+			deletedUnloadedEntityKeys = new HashSet<>();
+		}
+		deletedUnloadedEntityKeys.add( key );
 	}
 
 	@Override
@@ -1851,9 +1879,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void clearCollectionsByKey() {
 		if ( collectionsByKey != null ) {
-			//A valid alternative would be to set this to null, like we do on close.
-			//The difference being that in this case we expect the collection will be used again, so we bet that clear()
-			//might allow us to skip having to re-allocate the collection.
+			// A valid alternative would be to set this to null, like we do on close.
+			// The difference being that in this case we expect the collection will be
+			// used again, so we bet that clear() might allow us to skip having to
+			// re-allocate the collection.
 			collectionsByKey.clear();
 		}
 	}
@@ -1863,8 +1892,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( collectionsByKey == null ) {
 			collectionsByKey = CollectionHelper.mapOfSize( INIT_COLL_SIZE );
 		}
-		final PersistentCollection<?> old = collectionsByKey.put( collectionKey, persistentCollection );
-		return old;
+		return collectionsByKey.put( collectionKey, persistentCollection );
 	}
 
 	@Override
@@ -1888,7 +1916,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public NaturalIdResolutions getNaturalIdResolutions() {
 		if ( naturalIdResolutions == null ) {
-			this.naturalIdResolutions = new NaturalIdResolutionsImpl( this );
+			naturalIdResolutions = new NaturalIdResolutionsImpl( this );
 		}
 		return naturalIdResolutions;
 	}

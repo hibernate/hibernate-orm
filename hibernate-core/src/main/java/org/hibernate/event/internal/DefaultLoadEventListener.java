@@ -286,8 +286,11 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			// if the entity defines a HibernateProxy factory, see if there is an
 			// existing proxy associated with the PC - and if so, use it
 			if ( persister.getRepresentationStrategy().getProxyFactory() != null ) {
-				final Object proxy = persistenceContext.getProxy( keyToLoad );
+				if ( persistenceContext.containsDeletedUnloadedEntityKey( keyToLoad ) ) {
+					return null;
+				}
 
+				final Object proxy = persistenceContext.getProxy( keyToLoad );
 				if ( proxy != null ) {
 					if( traceEnabled ) {
 						LOG.trace( "Entity proxy found in session cache" );

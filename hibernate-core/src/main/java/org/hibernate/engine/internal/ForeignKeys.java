@@ -10,6 +10,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
@@ -195,17 +196,28 @@ public final class ForeignKeys {
 				return false;
 			}
 
+			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+
 			if ( object instanceof HibernateProxy ) {
-				// if its an uninitialized proxy it can't be transient
+				// if it's an uninitialized proxy it can only be
+				// transient if we did an unloaded-delete on the
+				// proxy itself, in which case there is no entry
+				// for it, but its key has already been registered
+				// as nullifiable
 				final LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
-				if ( li.getImplementation( session ) == null ) {
-					return false;
-					// ie. we never have to null out a reference to
-					// an uninitialized proxy
+				Object entity = li.getImplementation( session );
+				if ( entity == null ) {
+					return persistenceContext.containsDeletedUnloadedEntityKey(
+							session.generateEntityKey(
+									li.getIdentifier(),
+									session.getFactory().getRuntimeMetamodels().getMappingMetamodel()
+											.getEntityDescriptor( li.getEntityName() )
+							)
+					);
 				}
 				else {
 					//unwrap it
-					object = li.getImplementation( session );
+					object = entity;
 				}
 			}
 
@@ -214,7 +226,7 @@ public final class ForeignKeys {
 			// case we definitely need to nullify
 			if ( object == self ) {
 				return isEarlyInsert
-					|| ( isDelete && session.getFactory().getJdbcServices().getDialect().hasSelfReferentialForeignKeyBug() );
+					|| isDelete && session.getFactory().getJdbcServices().getDialect().hasSelfReferentialForeignKeyBug();
 			}
 
 			// See if the entity is already bound to this session, if not look at the
@@ -222,13 +234,10 @@ public final class ForeignKeys {
 			// id is not "unsaved" (that is, we rely on foreign keys to keep
 			// database integrity)
 
-			final EntityEntry entityEntry = session.getPersistenceContextInternal().getEntry( object );
-			if ( entityEntry == null ) {
-				return isTransient( entityName, object, null, session );
-			}
-			else {
-				return entityEntry.isNullifiable( isEarlyInsert, session );
-			}
+			final EntityEntry entityEntry = persistenceContext.getEntry( object );
+			return entityEntry == null
+					? isTransient( entityName, object, null, session )
+					: entityEntry.isNullifiable( isEarlyInsert, session );
 		}
 	}
 
@@ -245,19 +254,11 @@ public final class ForeignKeys {
 	 *
 	 * @return {@code true} if the given entity is not transient (meaning it is either detached/persistent)
 	 */
-	@SuppressWarnings("SimplifiableIfStatement")
 	public static boolean isNotTransient(String entityName, Object entity, Boolean assumed, SharedSessionContractImplementor session) {
-		if ( entity instanceof HibernateProxy ) {
-			return true;
-		}
-
-		if ( session.getPersistenceContextInternal().isEntryFor( entity ) ) {
-			return true;
-		}
-
-		// todo : shouldn't assumed be reversed here?
-
-		return !isTransient( entityName, entity, assumed, session );
+		return entity instanceof HibernateProxy
+			|| session.getPersistenceContextInternal().isEntryFor( entity )
+			// todo : shouldn't assumed be reversed here?
+			|| !isTransient( entityName, entity, assumed, session );
 	}
 
 	/**
@@ -305,7 +306,6 @@ public final class ForeignKeys {
 				persister
 		);
 		return snapshot == null;
-
 	}
 
 	/**

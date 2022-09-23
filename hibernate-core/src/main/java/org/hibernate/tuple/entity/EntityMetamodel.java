@@ -26,6 +26,7 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
+import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -47,6 +48,7 @@ import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.ValueGenerator;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
@@ -102,6 +104,7 @@ public class EntityMetamodel implements Serializable {
 
 	private final Map<String, Integer> propertyIndexes = new HashMap<>();
 	private final boolean hasCollections;
+	private final boolean hasOwnedCollections;
 	private final BitSet mutablePropertiesIndexes;
 	private final boolean hasLazyProperties;
 	private final boolean hasNonIdentifierPropertyNamedId;
@@ -112,6 +115,7 @@ public class EntityMetamodel implements Serializable {
 
 	private boolean lazy; //not final because proxy factory creation can fail
 	private final boolean hasCascades;
+	private final boolean hasCascadeDelete;
 	private final boolean mutable;
 	private final boolean isAbstract;
 	private final boolean selectBeforeUpdate;
@@ -214,7 +218,9 @@ public class EntityMetamodel implements Serializable {
 
 		int tempVersionProperty = NO_VERSION_INDX;
 		boolean foundCascade = false;
+		boolean foundCascadeDelete = false;
 		boolean foundCollection = false;
+		boolean foundOwnedCollection = false;
 		BitSet mutableIndexes = new BitSet();
 		boolean foundNonIdentifierPropertyNamedId = false;
 		boolean foundUpdateableNaturalIdProperty = false;
@@ -326,12 +332,18 @@ public class EntityMetamodel implements Serializable {
 				hasLazy = true;
 			}
 
-			if ( attribute.getCascadeStyle() != CascadeStyles.NONE ) {
+			if ( cascadeStyles[i] != CascadeStyles.NONE ) {
 				foundCascade = true;
+			}
+			if ( cascadeStyles[i].doCascade(CascadingActions.DELETE) ) {
+				foundCascadeDelete = true;
 			}
 
 			if ( indicatesCollection( attribute.getType() ) ) {
 				foundCollection = true;
+			}
+			if ( indicatesOwnedCollection( attribute.getType(), creationContext.getMetadata() ) ) {
+				foundOwnedCollection = true;
 			}
 
 			// Component types are dirty tracked as well so they are not exactly mutable for the "maybeDirty" check
@@ -359,6 +371,7 @@ public class EntityMetamodel implements Serializable {
 		this.hasUpdateGeneratedValues = foundPostUpdateGeneratedValues;
 
 		hasCascades = foundCascade;
+		hasCascadeDelete = foundCascadeDelete;
 		hasNonIdentifierPropertyNamedId = foundNonIdentifierPropertyNamedId;
 		versionPropertyIndex = tempVersionProperty;
 		hasLazyProperties = hasLazy;
@@ -409,6 +422,7 @@ public class EntityMetamodel implements Serializable {
 		}
 
 		hasCollections = foundCollection;
+		hasOwnedCollections = foundOwnedCollection;
 		mutablePropertiesIndexes = mutableIndexes;
 
 		final Set<String> subclassEntityNamesLocal = new HashSet<>();
@@ -806,14 +820,30 @@ public class EntityMetamodel implements Serializable {
 		return subclassEntityNames;
 	}
 
-	private boolean indicatesCollection(Type type) {
+	private static boolean indicatesCollection(Type type) {
 		if ( type.isCollectionType() ) {
 			return true;
 		}
 		else if ( type.isComponentType() ) {
 			Type[] subtypes = ( (CompositeType) type ).getSubtypes();
 			for ( Type subtype : subtypes ) {
-					if ( indicatesCollection( subtype ) ) {
+				if ( indicatesCollection( subtype ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private static boolean indicatesOwnedCollection(Type type, MetadataImplementor metadata) {
+		if ( type.isCollectionType() ) {
+			String role = ( (CollectionType) type ).getRole();
+			return !metadata.getCollectionBinding( role ).isInverse();
+		}
+		else if ( type.isComponentType() ) {
+			Type[] subtypes = ( (CompositeType) type ).getSubtypes();
+			for ( Type subtype : subtypes ) {
+				if ( indicatesOwnedCollection( subtype, metadata ) ) {
 					return true;
 				}
 			}
@@ -881,6 +911,10 @@ public class EntityMetamodel implements Serializable {
 		return hasCollections;
 	}
 
+	public boolean hasOwnedCollections() {
+		return hasOwnedCollections;
+	}
+
 	public boolean hasMutableProperties() {
 		return !mutablePropertiesIndexes.isEmpty();
 	}
@@ -899,6 +933,10 @@ public class EntityMetamodel implements Serializable {
 
 	public boolean hasCascades() {
 		return hasCascades;
+	}
+
+	public boolean hasCascadeDelete() {
+		return hasCascadeDelete;
 	}
 
 	public boolean isMutable() {

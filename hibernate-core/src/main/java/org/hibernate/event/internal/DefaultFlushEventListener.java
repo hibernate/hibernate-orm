@@ -53,5 +53,9 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 				statistics.flush();
 			}
 		}
+		else if ( source.getActionQueue().hasAnyQueuedActions() ) {
+			// execute any queued unloaded-entity deletions
+			performExecutions( source );
+		}
 	}
 }

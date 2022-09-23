@@ -386,6 +386,7 @@ public abstract class AbstractEntityPersister
 	private String sqlLazyUpdateByRowIdString;
 
 	private String[] sqlDeleteStrings;
+	private String[] sqlDeleteNoVersionCheckStrings;
 	private String[] sqlInsertStrings;
 	private String[] sqlUpdateStrings;
 	private String[] sqlLazyUpdateStrings;
@@ -555,6 +556,10 @@ public abstract class AbstractEntityPersister
 
 	public String[] getSQLDeleteStrings() {
 		return sqlDeleteStrings;
+	}
+
+	public String[] getSQLDeleteNoVersionCheckStrings() {
+		return sqlDeleteNoVersionCheckStrings;
 	}
 
 	public String[] getSQLInsertStrings() {
@@ -3146,10 +3151,10 @@ public abstract class AbstractEntityPersister
 	/**
 	 * Generate the SQL that deletes a row by id (and version)
 	 */
-	public String generateDeleteString(int j) {
+	public String generateDeleteString(int j, boolean includeVersion) {
 		final Delete delete = createDelete().setTableName( getTableName( j ) )
 				.addPrimaryKeyColumns( getKeyColumns( j ) );
-		if ( j == 0 ) {
+		if ( includeVersion && j == 0 ) {
 			delete.setVersionColumnName( getVersionColumnName() );
 		}
 		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
@@ -3341,11 +3346,9 @@ public abstract class AbstractEntityPersister
 
 		// TODO : shouldn't inserts be Expectations.NONE?
 		final Expectation expectation = Expectations.appropriateExpectation( insertResultCheckStyles[j] );
-		final int jdbcBatchSizeToUse = session.getConfiguredJdbcBatchSize();
-		final boolean useBatch = expectation.canBeBatched() &&
-						jdbcBatchSizeToUse > 1 &&
-						getIdentifierGenerator().supportsJdbcBatchInserts();
-
+		final boolean useBatch = expectation.canBeBatched()
+				&& session.getConfiguredJdbcBatchSize() > 1
+				&& getIdentifierGenerator().supportsJdbcBatchInserts();
 		if ( useBatch && insertBatchKey == null ) {
 			insertBatchKey = new BasicBatchKey(
 					getEntityName() + "#INSERT",
@@ -3483,7 +3486,6 @@ public abstract class AbstractEntityPersister
 			final SharedSessionContractImplementor session) throws HibernateException {
 
 		final Expectation expectation = Expectations.appropriateExpectation( updateResultCheckStyles[j] );
-		final int jdbcBatchSizeToUse = session.getConfiguredJdbcBatchSize();
 		// IMPLEMENTATION NOTE: If Session#saveOrUpdate or #update is used to update an entity, then
 		//                      Hibernate does not have a database snapshot of the existing entity.
 		//                      As a result, oldFields will be null.
@@ -3491,11 +3493,10 @@ public abstract class AbstractEntityPersister
 		// because there is no way to know that there is actually a row to update. If the update
 		// was batched in this case, the batch update would fail and there is no way to fallback to
 		// an insert.
-		final boolean useBatch =
-				expectation.canBeBatched() &&
-						isBatchable() &&
-						jdbcBatchSizeToUse > 1 &&
-						( oldFields != null || !isNullableTable( j ) );
+		final boolean useBatch = expectation.canBeBatched()
+				&& isBatchable()
+				&& session.getConfiguredJdbcBatchSize() > 1
+				&& ( oldFields != null || !isNullableTable( j ) );
 		if ( useBatch && updateBatchKey == null ) {
 			updateBatchKey = new BasicBatchKey(
 					getEntityName() + "#UPDATE",
@@ -3632,10 +3633,14 @@ public abstract class AbstractEntityPersister
 			return;
 		}
 
-		final boolean useVersion = j == 0 && isVersioned();
+		final boolean useVersion = j == 0 && isVersioned()
+				&& object != null; // null object signals that we're deleting an unloaded proxy
 		final boolean callable = isDeleteCallable( j );
 		final Expectation expectation = Expectations.appropriateExpectation( deleteResultCheckStyles[j] );
-		final boolean useBatch = j == 0 && isBatchable() && expectation.canBeBatched();
+		final boolean useBatch = j == 0
+				&& isBatchable()
+				&& expectation.canBeBatched()
+				&& session.getConfiguredJdbcBatchSize() > 1;
 		if ( useBatch && deleteBatchKey == null ) {
 			deleteBatchKey = new BasicBatchKey(
 					getEntityName() + "#DELETE",
@@ -3678,12 +3683,12 @@ public abstract class AbstractEntityPersister
 
 				index += expectation.prepare( delete );
 
-				// Do the key. The key is immutable so we can use the _current_ object state - not necessarily
-				// the state at the time the delete was issued
+				// Do the key. The key is immutable, so we can use the _current_ object state,
+				// not necessarily the state at the time the delete operation was issued
 				getIdentifierType().nullSafeSet( delete, id, index, session );
 				index += getIdentifierColumnSpan();
 
-				// We should use the _current_ object state (ie. after any updates that occurred during flush)
+				// We should use the _current_ object state (after any updates that occurred during flush)
 
 				if ( useVersion ) {
 					getVersionType().nullSafeSet( delete, version, index, session );
@@ -4010,7 +4015,8 @@ public abstract class AbstractEntityPersister
 	public void delete(Object id, Object version, Object object, SharedSessionContractImplementor session)
 			throws HibernateException {
 		final int span = getTableSpan();
-		boolean isImpliedOptimisticLocking = !entityMetamodel.isVersioned() && isAllOrDirtyOptLocking();
+		boolean isImpliedOptimisticLocking = !entityMetamodel.isVersioned() && isAllOrDirtyOptLocking()
+				&& object != null; // null object signals that we're deleting an unloaded proxy
 		Object[] loadedState = null;
 		if ( isImpliedOptimisticLocking ) {
 			// need to treat this as if it where optimistic-lock="all" (dirty does *not* make sense);
@@ -4031,9 +4037,12 @@ public abstract class AbstractEntityPersister
 			// we need to utilize dynamic delete statements
 			deleteStrings = generateSQLDeleteStrings( loadedState );
 		}
-		else {
+		else if (object!=null) {
 			// otherwise, utilize the static delete statements
 			deleteStrings = getSQLDeleteStrings();
+		}
+		else {
+			deleteStrings = getSQLDeleteNoVersionCheckStrings();
 		}
 
 		for ( int j = span - 1; j >= 0; j-- ) {
@@ -4212,6 +4221,7 @@ public abstract class AbstractEntityPersister
 		//insert/update/delete SQL
 		final int joinSpan = getTableSpan();
 		sqlDeleteStrings = new String[joinSpan];
+		sqlDeleteNoVersionCheckStrings = new String[joinSpan];
 		sqlInsertStrings = new String[joinSpan];
 		sqlUpdateStrings = new String[joinSpan];
 		sqlLazyUpdateStrings = new String[joinSpan];
@@ -4226,16 +4236,19 @@ public abstract class AbstractEntityPersister
 		for ( int j = 0; j < joinSpan; j++ ) {
 			sqlInsertStrings[j] = customSQLInsert[j] == null
 					? generateInsertString( getPropertyInsertability(), j )
-					: substituteBrackets( customSQLInsert[j]);
+					: substituteBrackets( customSQLInsert[j] );
 			sqlUpdateStrings[j] = customSQLUpdate[j] == null
 					? generateUpdateString( getPropertyUpdateability(), j, false )
-					: substituteBrackets( customSQLUpdate[j]);
+					: substituteBrackets( customSQLUpdate[j] );
 			sqlLazyUpdateStrings[j] = customSQLUpdate[j] == null
 					? generateUpdateString( getNonLazyPropertyUpdateability(), j, false )
-					: substituteBrackets( customSQLUpdate[j]);
+					: substituteBrackets( customSQLUpdate[j] );
 			sqlDeleteStrings[j] = customSQLDelete[j] == null
-					? generateDeleteString( j )
-					: substituteBrackets( customSQLDelete[j]);
+					? generateDeleteString( j, true )
+					: substituteBrackets( customSQLDelete[j] );
+			sqlDeleteNoVersionCheckStrings[j] = customSQLDelete[j] == null
+					? generateDeleteString( j, false )
+					: substituteBrackets( customSQLDelete[j] ); //TODO: oops, fix!
 		}
 
 		tableHasColumns = new boolean[joinSpan];
@@ -4662,6 +4675,16 @@ public abstract class AbstractEntityPersister
 	@Override
 	public boolean hasCascades() {
 		return entityMetamodel.hasCascades();
+	}
+
+	@Override
+	public boolean hasCascadeDelete() {
+		return entityMetamodel.hasCascadeDelete();
+	}
+
+	@Override
+	public boolean hasOwnedCollections() {
+		return entityMetamodel.hasOwnedCollections();
 	}
 
 	@Override

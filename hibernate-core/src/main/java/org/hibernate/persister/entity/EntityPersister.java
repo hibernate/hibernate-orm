@@ -280,12 +280,36 @@ public interface EntityPersister
 	boolean hasSubselectLoadableCollections();
 
 	/**
-	 * Determine whether this entity has any non-none cascading.
+	 * Determine whether this entity has any non-{@linkplain org.hibernate.engine.spi.CascadeStyles#NONE none}
+	 * cascading.
 	 *
 	 * @return True if the entity has any properties with a cascade other than NONE;
 	 * false otherwise (aka, no cascading).
 	 */
 	boolean hasCascades();
+
+	/**
+	 * Determine whether this entity has any {@linkplain org.hibernate.engine.spi.CascadeStyles#DELETE delete}
+	 * cascading.
+	 *
+	 * @return True if the entity has any properties with a cascade other than NONE;
+	 * false otherwise.
+	 */
+	default boolean hasCascadeDelete() {
+		//bad default implementation for compatibility
+		return hasCascades();
+	}
+
+	/**
+	 * Determine whether this entity has any owned collections.
+	 *
+	 * @return True if the entity has an owned collection;
+	 * false otherwise.
+	 */
+	default boolean hasOwnedCollections() {
+		//bad default implementation for compatibility
+		return hasCollections();
+	}
 
 	/**
 	 * Determine whether instances of this entity are considered mutable.

@@ -19,12 +19,10 @@ import org.hibernate.query.Query;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
-import org.hibernate.cfg.Environment;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
@@ -384,7 +382,7 @@ public interface SharedSessionContractImplementor
 	 *
 	 * If the Session-level JDBC batch size was not configured, return the SessionFactory-level one.
 	 *
-	 * @return Session-level or or SessionFactory-level JDBC batch size.
+	 * @return Session-level or SessionFactory-level JDBC batch size.
 	 *
 	 * @since 5.2
 	 *
@@ -393,14 +391,9 @@ public interface SharedSessionContractImplementor
 	 */
 	default Integer getConfiguredJdbcBatchSize() {
 		final Integer sessionJdbcBatchSize = getJdbcBatchSize();
-
-		return sessionJdbcBatchSize == null ?
-			ConfigurationHelper.getInt(
-					Environment.STATEMENT_BATCH_SIZE,
-					getFactory().getProperties(),
-					1
-			) :
-			sessionJdbcBatchSize;
+		return sessionJdbcBatchSize == null
+				? getFactory().getSessionFactoryOptions().getJdbcBatchSize()
+				: sessionJdbcBatchSize;
 	}
 
 	/**

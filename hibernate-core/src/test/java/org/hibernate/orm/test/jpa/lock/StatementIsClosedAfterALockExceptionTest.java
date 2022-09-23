@@ -33,6 +33,7 @@ import static org.junit.Assert.fail;
  * @author Andrea Boriero
  */
 @RequiresDialectFeature({DialectChecks.SupportsJdbcDriverProxying.class, DialectChecks.SupportsLockTimeouts.class})
+@SkipForDialect(value = CockroachDialect.class, comment = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerFunctionalTestCase {
 
 	private static final PreparedStatementSpyConnectionProvider CONNECTION_PROVIDER = new PreparedStatementSpyConnectionProvider( false, false );
@@ -68,7 +69,6 @@ public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerF
 
 	@Test(timeout = 1000 * 30) //30 seconds
 	@TestForIssue(jiraKey = "HHH-11617")
-	@SkipForDialect( value = CockroachDialect.class )
 	public void testStatementIsClosed() {
 
 		TransactionUtil.doInJPA( this::entityManagerFactory, em1 -> {

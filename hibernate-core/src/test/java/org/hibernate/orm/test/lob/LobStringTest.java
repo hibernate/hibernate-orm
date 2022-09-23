@@ -41,7 +41,8 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-11477")
-@RequiresDialects({ @RequiresDialect(PostgreSQLDialect.class), @RequiresDialect(CockroachDialect.class) })
+// Note that Cockroach doesn't support LOB functions. See https://github.com/cockroachdb/cockroach/issues/26725
+@RequiresDialect(PostgreSQLDialect.class)
 @DomainModel(
 		annotatedClasses = LobStringTest.TestEntity.class
 )

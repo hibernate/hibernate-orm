@@ -81,6 +81,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 	@SuppressWarnings( {"deprecation"})
 	public void testLoading() {
 		// open a session, begin a transaction and lock row
@@ -97,6 +98,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 	public void testCriteria() {
 		// open a session, begin a transaction and lock row
 		doInHibernate( this::sessionFactory, session -> {
@@ -119,6 +121,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 	public void testCriteriaAliasSpecific() {
 			// open a session, begin a transaction and lock row
 		doInHibernate( this::sessionFactory, session -> {
@@ -143,6 +146,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 	public void testQuery() {
 		// open a session, begin a transaction and lock row
 		doInHibernate( this::sessionFactory, session -> {
@@ -278,19 +282,12 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 			executeSync( () -> doInHibernate( this::sessionFactory, _session -> {
 					TransactionUtil.setJdbcTimeout( _session );
 					try {
-						// We used to load with write lock here to deal with databases that block (wait indefinitely)
-						// direct attempts to write a locked row.
-						// At some point, due to a bug, the lock mode was lost when applied via lock options, leading
-						// this code to not apply the pessimistic write lock.
-						// See HHH-12847 + https://github.com/hibernate/hibernate-orm/commit/719e5d0c12a6ef709bee907b8b651d27b8b08a6a.
-						// At least Sybase waits indefinitely when really applying a PESSIMISTIC_WRITE lock here (and
-						// the NO_WAIT part is not applied by the Sybase dialect so it doesn't help).
-						// For now going back to LockMode.NONE as it's the lock mode that has been applied for quite
-						// some time and it seems our supported databases don't have a problem with it.
+						// load with write lock to deal with databases that block (wait indefinitely) direct attempts
+						// to write a locked row
 						A it = _session.get(
 								A.class,
 								id,
-								new LockOptions( LockMode.NONE ).setTimeOut( LockOptions.NO_WAIT )
+								new LockOptions( LockMode.PESSIMISTIC_WRITE ).setTimeOut( LockOptions.NO_WAIT )
 						);
 						_session.createNativeQuery( updateStatement() )
 								.setParameter( "value", "changed" )

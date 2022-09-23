@@ -19,6 +19,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.id.SequenceMismatchStrategy;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -27,6 +28,7 @@ import org.junit.Test;
  * Verifies that setting {@code AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY} to {@code none}
  * is going to skip loading the sequence information from the database.
  */
+@RequiresDialect( H2Dialect.class )
 @TestForIssue( jiraKey = "HHH-14667")
 public class SkipLoadingSequenceInformationTest extends BaseCoreFunctionalTestCase {
 

@@ -81,10 +81,7 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 			connectionProvider = ConnectionProviderBuilder.buildConnectionProvider();
 
 			final GenerationTargetToDatabase target = new GenerationTargetToDatabase(
-					new DdlTransactionIsolatorTestingImpl(
-							serviceRegistry,
-							connectionProvider
-					)
+					new DdlTransactionIsolatorTestingImpl( tool.resolveJdbcContext( settings ) )
 			);
 
 
@@ -103,8 +100,6 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 					true,
 					target
 			);
-
-			target.release();
 
 			final SessionFactoryBuilder sfb = metadata.getSessionFactoryBuilder();
 			sessionFactory = (SessionFactoryImplementor) sfb.build();

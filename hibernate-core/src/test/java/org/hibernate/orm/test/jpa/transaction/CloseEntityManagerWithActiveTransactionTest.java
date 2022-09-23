@@ -35,6 +35,7 @@ import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -65,6 +66,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		}
 )
 public class CloseEntityManagerWithActiveTransactionTest {
+
+	@BeforeAll
+	public void beforeAll(EntityManagerFactoryScope scope) throws Exception {
+		// This makes sure that hbm2ddl runs before we start a transaction for a test
+		// This is important for database that only support SNAPSHOT/SERIALIZABLE isolation,
+		// because a test transaction still sees the state before the DDL executed
+		scope.getEntityManagerFactory();
+	}
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) throws Exception {

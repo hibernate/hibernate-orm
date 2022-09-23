@@ -240,6 +240,20 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * CockroachDB lacks implicit casting: https://github.com/cockroachdb/cockroach/issues/89965
+	 */
+	public void median_percentileCont_castDouble() {
+		functionRegistry.patternDescriptorBuilder(
+						"median",
+						"percentile_cont(0.5) within group (order by cast(?1 as double precision))"
+				)
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+	}
+
+	/**
 	 * Warning: the semantics of this function are inconsistent between DBs.
 	 *
 	 * - On Postgres it means stdev_samp()

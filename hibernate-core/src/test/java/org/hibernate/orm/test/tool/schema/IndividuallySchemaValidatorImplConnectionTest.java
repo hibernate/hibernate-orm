@@ -123,7 +123,7 @@ public class IndividuallySchemaValidatorImplConnectionTest extends BaseUnitTestC
 	@After
 	public void tearsDown() {
 		try {
-			connection.close();
+			connectionProvider.closeConnection( connection );
 		}
 		catch (SQLException e) {
 			log.error( e.getMessage() );

@@ -19,8 +19,10 @@ import org.hibernate.annotations.FetchMode;
 import org.hibernate.graph.GraphParser;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		FetchGraphTest.Trigger.class,
 		FetchGraphTest.FinanceEntity.class
 })
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 public class FetchGraphTest {
 
 	@BeforeEach

@@ -58,6 +58,11 @@ public class CockroachLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	}
 
 	@Override
+	protected String getForUpdate() {
+		return getDialect().getVersion().isBefore( 20, 1 ) ? "" : " for update";
+	}
+
+	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
 			ForUpdateClause forUpdateClause,

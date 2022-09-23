@@ -13,6 +13,7 @@ import java.util.Map;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
@@ -281,11 +282,12 @@ public class CMTTest {
 			feature = DialectFeatureChecks.DoesReadCommittedNotCauseWritersToBlockReadersCheck.class,
 			comment = "write locks block readers"
 	)
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach uses SERIALIZABLE by default and seems to fail reading a row that is exclusively locked by a different TX")
 	public void testConcurrentCachedDirtyQueries(SessionFactoryScope scope) throws Exception {
 		final TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 		try {
-			transactionManager.begin();
 			final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
+			transactionManager.begin();
 			Session s = sessionFactory.openSession();
 			Map foo = new HashMap();
 			foo.put( "name", "Foo" );

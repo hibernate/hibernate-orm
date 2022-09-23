@@ -26,6 +26,7 @@ import org.hibernate.annotations.Nationalized;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
@@ -136,6 +137,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 
 	@Test
 	@SkipForDialect(value = PostgreSQLDialect.class, comment = "Turns tinyints into shorts in result sets and advertises the type as short in the metadata")
+	@SkipForDialect(value = CockroachDialect.class, comment = "Turns tinyints into shorts in result sets and advertises the type as short in the metadata")
 	@SkipForDialect(value = DerbyDialect.class, comment = "No support for the tinyint datatype so we use smallint")
 	@SkipForDialect(value = DB2Dialect.class, comment = "No support for the tinyint datatype so we use smallint")
 	@SkipForDialect(value = AbstractTransactSQLDialect.class, comment = "No support for the tinyint datatype so we use smallint")

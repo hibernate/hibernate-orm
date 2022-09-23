@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.util.Set;
 
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.integration.SpatialTestDataProvider;
 
@@ -48,12 +49,20 @@ public abstract class SpatialSessionFactoryAware extends SpatialTestDataProvider
 
 	protected void initH2GISExtensionsForInMemDb() {
 		this.scope.inSession( session -> {
+			final JdbcConnectionAccess jdbcConnectionAccess = session.getJdbcConnectionAccess();
+			Connection connection = null;
 			try {
-				Connection cn = session.getJdbcConnectionAccess().obtainConnection();
-				H2GISFunctions.load( cn );
+				H2GISFunctions.load( connection = jdbcConnectionAccess.obtainConnection() );
 			}
 			catch (SQLException e) {
 				throw new RuntimeException( e );
+			}
+			finally {
+				try {
+					jdbcConnectionAccess.releaseConnection( connection );
+				}
+				catch (SQLException ignore) {
+				}
 			}
 		} );
 	}

@@ -12,6 +12,8 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+import org.hibernate.dialect.CockroachDialect;
+
 import org.hamcrest.number.IsCloseTo;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -21,6 +23,7 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -511,20 +514,6 @@ public class StandardFunctionTests {
 					session.createQuery("select (e.theDate - e.theDate) by day from EntityOfBasics e")
 							.list();
 
-					session.createQuery("select (e.theDate - e.theTimestamp) by year from EntityOfBasics e")
-							.list();
-					session.createQuery("select (e.theDate - e.theTimestamp) by month from EntityOfBasics e")
-							.list();
-					session.createQuery("select (e.theDate - e.theTimestamp) by day from EntityOfBasics e")
-							.list();
-
-					session.createQuery("select (e.theTimestamp - e.theDate) by year from EntityOfBasics e")
-							.list();
-					session.createQuery("select (e.theTimestamp - e.theDate) by month from EntityOfBasics e")
-							.list();
-					session.createQuery("select (e.theTimestamp - e.theDate) by day from EntityOfBasics e")
-							.list();
-
 					session.createQuery("select (e.theTimestamp - e.theTimestamp) by hour from EntityOfBasics e")
 							.list();
 					session.createQuery("select (e.theTimestamp - e.theTimestamp) by minute from EntityOfBasics e")
@@ -553,6 +542,28 @@ public class StandardFunctionTests {
 
 
 					session.createQuery("select current_timestamp - (current_timestamp - e.theTimestamp) from EntityOfBasics e")
+							.list();
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "unsupported binary operator: <date> - <timestamp(6)>")
+	public void testIntervalDiffExpressionsDifferentTypes(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select (e.theDate - e.theTimestamp) by year from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theDate - e.theTimestamp) by month from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theDate - e.theTimestamp) by day from EntityOfBasics e")
+							.list();
+
+					session.createQuery("select (e.theTimestamp - e.theDate) by year from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theTimestamp - e.theDate) by month from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theTimestamp - e.theDate) by day from EntityOfBasics e")
 							.list();
 				}
 		);
@@ -882,8 +893,6 @@ public class StandardFunctionTests {
 	public void testFormat(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "select format(e.theTime as 'hh:mm:ss a') from EntityOfBasics e" )
-							.list();
 					session.createQuery(
 							"select format(e.theDate as 'dd/MM/yy'), format(e.theDate as 'EEEE, MMMM dd, yyyy') from EntityOfBasics e" )
 							.list();
@@ -898,9 +907,21 @@ public class StandardFunctionTests {
 									.get( 0 ),
 							is( "Monday, 25/03/1974" )
 					);
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class)
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "unknown signature: experimental_strftime(time, string)") // could cast the first argument to timestamp to workaround this
+	public void testFormatTime(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "select format(e.theTime as 'hh:mm:ss a') from EntityOfBasics e" )
+							.list();
 					assertThat(
 							session.createQuery(
-									"select format(e.theTime as '''Hello'', hh:mm:ss a') from EntityOfBasics e" )
+											"select format(e.theTime as '''Hello'', hh:mm:ss a') from EntityOfBasics e" )
 									.getResultList()
 									.get( 0 ),
 							is( "Hello, 08:10:08 PM" )
@@ -938,6 +959,7 @@ public class StandardFunctionTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "unknown signature: log(int, int)") // could cast an argument to double to workaround this
 	public void testLog(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

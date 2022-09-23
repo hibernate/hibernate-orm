@@ -529,7 +529,7 @@ public class ForeignKeyConstraintTest {
 		public CompanyInfo info;
 	}
 
-	@Entity
+	@Entity(name = "PlanItem")
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	public abstract class PlanItem {
 
@@ -546,7 +546,7 @@ public class ForeignKeyConstraintTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Task")
 	@SecondaryTable( name = "Task" )
 	public class Task extends PlanItem {
 		@Id

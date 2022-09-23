@@ -19,6 +19,7 @@ import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
@@ -79,6 +80,7 @@ public class FilterParameterTests {
 	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB silently converts a boolean to string types")
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase silently converts a boolean to string types")
 	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "HANA silently converts a boolean to string types")
+	@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true, reason = "Cockroach silently converts a boolean to string types")
 	public void testYesNoMismatch(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final EntityOne loaded = session.byId( EntityOne.class ).load( 1 );

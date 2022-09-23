@@ -7,6 +7,7 @@
 package org.hibernate.dialect.temptable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -24,6 +25,7 @@ import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Contributable;
@@ -39,7 +41,10 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -70,12 +75,25 @@ public class TemporaryTable implements Exportable, Contributable {
 			SqlStringGenerationContext sqlStringGenerationContext,
 			Function<TemporaryTable, List<TemporaryTableColumn>> columnInitializer) {
 		this.entityDescriptor = entityDescriptor;
-
+		final EntityPersister entityPersister = entityDescriptor.getEntityPersister();
+		final EntityPersister rootEntityPersister = entityDescriptor.getRootEntityDescriptor().getEntityPersister();
+		final String persisterQuerySpace = entityPersister.getSynchronizedQuerySpaces()[0];
+		final QualifiedNameParser.NameParts nameParts = QualifiedNameParser.INSTANCE.parse( persisterQuerySpace );
 		// The table name might be a sub-query, which is inappropriate for a temporary table name
-		final String originalTableName = entityDescriptor.getEntityPersister().getSynchronizedQuerySpaces()[0];
-		final QualifiedNameParser.NameParts nameParts = QualifiedNameParser.INSTANCE.parse( originalTableName );
+		final String tableBaseName;
+		if ( rootEntityPersister != entityPersister && rootEntityPersister instanceof SingleTableEntityPersister ) {
+			// In this case, the descriptor is a subclass of a single table inheritance.
+			// To avoid name collisions, we suffix the table name with the subclass number
+			tableBaseName = nameParts.getObjectName().getText() + ArrayHelper.indexOf(
+					( (SingleTableEntityPersister) rootEntityPersister ).getSubclassClosure(),
+					entityPersister.getEntityName()
+			);
+		}
+		else {
+			tableBaseName = nameParts.getObjectName().getText();
+		}
 		final QualifiedNameParser.NameParts adjustedNameParts = QualifiedNameParser.INSTANCE.parse(
-				temporaryTableNameAdjuster.apply( nameParts.getObjectName().getText() )
+				temporaryTableNameAdjuster.apply( tableBaseName )
 		);
 		final String temporaryTableName = adjustedNameParts.getObjectName().getText();
 		final Identifier tableNameIdentifier;
@@ -101,11 +119,12 @@ public class TemporaryTable implements Exportable, Contributable {
 		);
 		this.dialect = dialect;
 		if ( dialect.getSupportedTemporaryTableKind() == TemporaryTableKind.PERSISTENT ) {
-			final TypeConfiguration typeConfiguration = entityDescriptor.getEntityPersister()
+			final TypeConfiguration typeConfiguration = entityPersister
 					.getFactory()
 					.getTypeConfiguration();
-			final BasicType<UUID> uuidType = typeConfiguration
-					.getBasicTypeForJavaType( UUID.class );
+			final BasicType<UUID> uuidType = typeConfiguration.getBasicTypeRegistry().resolve(
+					StandardBasicTypes.UUID_CHAR
+			);
 			this.sessionUidColumn = new TemporaryTableSessionUidColumn(
 					this,
 					uuidType,

@@ -47,6 +47,8 @@ jobs:
           - rdbms: db2
           - rdbms: mssql
           - rdbms: sybase
+# Running with CockroachDB requires at least 2-4 vCPUs, which we don't have on GH Actions runners
+#          - rdbms: cockroachdb
 # Running with HANA requires at least 8GB memory just for the database, which we don't have on GH Actions runners
 #          - rdbms: hana
     steps:

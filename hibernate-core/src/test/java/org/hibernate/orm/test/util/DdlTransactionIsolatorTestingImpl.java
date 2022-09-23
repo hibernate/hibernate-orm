@@ -30,6 +30,10 @@ public class DdlTransactionIsolatorTestingImpl extends DdlTransactionIsolatorNon
 		super( createJdbcContext( jdbcConnectionAccess, serviceRegistry ) );
 	}
 
+	public DdlTransactionIsolatorTestingImpl(JdbcContext jdbcContext) {
+		super( jdbcContext );
+	}
+
 	public static JdbcContext createJdbcContext(
 			JdbcConnectionAccess jdbcConnectionAccess,
 			ServiceRegistry serviceRegistry) {

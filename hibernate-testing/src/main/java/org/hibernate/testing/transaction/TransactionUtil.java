@@ -27,6 +27,7 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -588,7 +589,7 @@ public class TransactionUtil {
 	public static void setJdbcTimeout(Session session, long millis) {
 		final Dialect dialect = session.getSessionFactory().unwrap( SessionFactoryImplementor.class ).getJdbcServices().getDialect();
 		session.doWork( connection -> {
-			if ( dialect instanceof PostgreSQLDialect ) {
+			if ( dialect instanceof PostgreSQLDialect || dialect instanceof CockroachDialect ) {
 				try (Statement st = connection.createStatement()) {
 					//Prepared Statements fail for SET commands
 					st.execute(String.format( "SET statement_timeout TO %d", millis / 10));

@@ -19,7 +19,7 @@
 
 		<property name="name"/>
 		<property name="company"/>
-		<property name="region"/>
+		<property name="region" column="p_region"/>
 
 		<joined-subclass name="Employee" table="JEmployee">
 			<key column="person_id"/>
@@ -39,7 +39,7 @@
 			<many-to-one name="contactOwner" class="Employee"/>
 		</joined-subclass>
 
-		<filter name="region" condition="region = :userRegion"/>
+		<filter name="region" condition="p_region = :userRegion"/>
 	</class>
 
 	<filter-def name="region">

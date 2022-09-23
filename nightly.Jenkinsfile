@@ -26,39 +26,8 @@ this.helper = new JobHelper(this)
 helper.runWithNotification {
 stage('Configure') {
 	this.environments = [
-//		new BuildEnvironment( dbName: 'h2' ),
-//		new BuildEnvironment( dbName: 'hsqldb' ),
-//		new BuildEnvironment( dbName: 'derby' ),
-//		new BuildEnvironment( dbName: 'mysql' ),
-//		new BuildEnvironment( dbName: 'mysql8' ),
-//		new BuildEnvironment( dbName: 'mariadb' ),
-//		new BuildEnvironment( dbName: 'postgresql' ),
-//		new BuildEnvironment( dbName: 'postgresql_14' ),
-//		new BuildEnvironment( dbName: 'oracle' ),
-//		new BuildEnvironment( dbName: 'db2' ),
-//		new BuildEnvironment( dbName: 'mssql' ),
-//		new BuildEnvironment( dbName: 'sybase' ),
-		new BuildEnvironment( dbName: 'hana_jenkins', node: 'HANA', dbLockableResource: 'HANA' ),
-		new BuildEnvironment( node: 's390x' ),
-		new BuildEnvironment( dbName: 'tidb', node: 'tidb', dbLockableResource: 'TIDB',
-				additionalOptions: '-DdbHost=localhost:4000',
-				notificationRecipients: 'tidb_hibernate@pingcap.com' ),
-// Disable EDB for now as the image is not available anymore
-//		new BuildEnvironment( dbName: 'edb', additionalOptions: '-DdbHost=localhost:5433' ),
-		new BuildEnvironment( testJdkVersion: '17' ),
-		new BuildEnvironment( testJdkVersion: '18' ),
-		// We want to enable preview features when testing early-access builds of OpenJDK:
-		// even if we don't use these features, just enabling them can cause side effects
-		// and it's useful to test that.
-		new BuildEnvironment( testJdkVersion: '19', testJdkLauncherArgs: '--enable-preview' ),
-		new BuildEnvironment( testJdkVersion: '20', testJdkLauncherArgs: '--enable-preview' )
+		new BuildEnvironment( dbName: 'cockroachdb', node: 'LongDuration', longRunning: true ))
 	];
-
-	if ( env.CHANGE_ID ) {
-		if ( pullRequest.labels.contains( 'cockroachdb' ) ) {
-			this.environments.add( new BuildEnvironment( dbName: 'cockroachdb', node: 'LongDuration', longRunning: true ) )
-		}
-	}
 
 	helper.configure {
 		file 'job-configuration.yaml'
@@ -74,6 +43,7 @@ stage('Configure') {
 			buildDiscarder(
 					logRotator(daysToKeepStr: '30', numToKeepStr: '10')
 			),
+			rateLimitBuilds(throttle: [count: 1, durationName: 'day', userBoost: true]),
 			// If two builds are about the same branch or pull request,
 			// the older one will be aborted when the newer one starts.
 			disableConcurrentBuilds(abortPrevious: true),

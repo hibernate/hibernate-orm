@@ -616,9 +616,7 @@ public abstract class Dialect implements ConversionContext {
 				if ( sqlTypeCode != null ) {
 					return ( (ArrayJdbcType) jdbcType ).resolveType(
 							jdbcTypeRegistry.getTypeConfiguration(),
-							jdbcTypeRegistry.getTypeConfiguration().getServiceRegistry()
-									.getService( JdbcServices.class )
-									.getDialect(),
+							this,
 							jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
 							null
 					);

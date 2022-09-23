@@ -87,12 +87,14 @@ tasks.release.dependsOn tasks.publishPlugins
 // local publishing (SNAPSHOT testing)
 tasks.publish.dependsOn tasks.publishPlugins
 
-// local publishing (SNAPSHOT testing)
-publishing {
-	repositories {
-		maven {
-			name = 'localPluginRepository'
-			url = "${buildDir}/local-plugin-repository"
+if ( project.ormVersion.isSnapshot ) {
+	// local publishing (SNAPSHOT testing)
+	publishing {
+		repositories {
+			maven {
+				name = 'localPluginRepository'
+				url = "${buildDir}/local-plugin-repository"
+			}
 		}
 	}
 }

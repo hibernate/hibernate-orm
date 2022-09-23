@@ -232,36 +232,43 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
         HibernateSchemaManagementTool tool = new HibernateSchemaManagementTool();
         tool.injectServices(serviceRegistry);
 
-        final GenerationTargetToDatabase frontEndSchemaGenerator = new GenerationTargetToDatabase(
-                new DdlTransactionIsolatorTestingImpl(
-                        serviceRegistry,
-                        connectionProviderMap.get(FRONT_END_TENANT)
-               )
-       );
-        final GenerationTargetToDatabase backEndSchemaGenerator = new GenerationTargetToDatabase(
-                new DdlTransactionIsolatorTestingImpl(
-                        serviceRegistry,
-                        connectionProviderMap.get(BACK_END_TENANT)
-               )
-       );
-
-        new SchemaDropperImpl(serviceRegistry).doDrop(
+        new SchemaDropperImpl( serviceRegistry ).doDrop(
                 metadata,
                 serviceRegistry,
                 settings,
                 true,
-                frontEndSchemaGenerator,
-                backEndSchemaGenerator
-       );
+                new GenerationTargetToDatabase(
+                        new DdlTransactionIsolatorTestingImpl(
+                                serviceRegistry,
+                                connectionProviderMap.get( FRONT_END_TENANT )
+                        )
+                ),
+                new GenerationTargetToDatabase(
+                        new DdlTransactionIsolatorTestingImpl(
+                                serviceRegistry,
+                                connectionProviderMap.get( BACK_END_TENANT )
+                        )
+                )
+        );
 
-        new SchemaCreatorImpl(serviceRegistry).doCreation(
+        new SchemaCreatorImpl( serviceRegistry ).doCreation(
                 metadata,
                 serviceRegistry,
                 settings,
                 true,
-                frontEndSchemaGenerator,
-                backEndSchemaGenerator
-       );
+                new GenerationTargetToDatabase(
+                        new DdlTransactionIsolatorTestingImpl(
+                                serviceRegistry,
+                                connectionProviderMap.get( FRONT_END_TENANT )
+                        )
+                ),
+                new GenerationTargetToDatabase(
+                        new DdlTransactionIsolatorTestingImpl(
+                                serviceRegistry,
+                                connectionProviderMap.get( BACK_END_TENANT )
+                        )
+                )
+        );
 
         final SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
         return sessionFactoryBuilder.build();

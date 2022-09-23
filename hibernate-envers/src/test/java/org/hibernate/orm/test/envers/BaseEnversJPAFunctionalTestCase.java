@@ -40,6 +40,7 @@ import org.hibernate.testing.junit4.Helper;
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
 import org.hibernate.testing.orm.junit.DialectContext;
 
+import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
 import org.hibernate.service.ServiceRegistry;
 import org.junit.After;
 
@@ -147,6 +148,7 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 			config.put( AvailableSettings.ORM_XML_FILES, dds );
 		}
 
+		config.put( PersistentTableStrategy.DROP_ID_TABLES, "true" );
 		config.put( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		config.put( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		if ( !Environment.getProperties().containsKey( AvailableSettings.CONNECTION_PROVIDER ) ) {

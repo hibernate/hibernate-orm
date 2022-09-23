@@ -11,12 +11,14 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 import org.hibernate.orm.test.jpa.model.Item;
 import org.hibernate.orm.test.jpa.model.MyEntity;
 
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -82,6 +84,7 @@ public class JPALockTest extends AbstractJPATest {
 	 * EJB3 LockModeType.READ actually maps to the Hibernate LockMode.OPTIMISTIC
 	 */
 	@Test
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach uses SERIALIZABLE by default and fails to acquire a write lock after a TX in between committed changes to a row")
 	public void testLockModeTypeRead() {
 		if ( !readCommittedIsolationMaintained( "ejb3 lock tests" ) ) {
 			return;
@@ -176,6 +179,7 @@ public class JPALockTest extends AbstractJPATest {
 	 * lock(entity, LockModeType.WRITE) on non-versioned objects will not be portable.
 	 */
 	@Test
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach uses SERIALIZABLE by default and fails to acquire a write lock after a TX in between committed changes to a row")
 	public void testLockModeTypeWrite() {
 		if ( !readCommittedIsolationMaintained( "ejb3 lock tests" ) ) {
 			return;

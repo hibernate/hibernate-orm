@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 import org.hibernate.dialect.temptable.TemporaryTable;
@@ -55,6 +56,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
@@ -90,6 +92,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 	private final EntityMappingType entityDescriptor;
 
 	private final JdbcParameterBindings jdbcParameterBindings;
+	private final JdbcParameter sessionUidParameter;
 
 	private final Map<TableReference, List<Assignment>> assignmentsByTable;
 	private final Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions;
@@ -107,6 +110,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			List<Assignment> assignments,
 			InsertStatement insertStatement,
 			Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions,
+			JdbcParameter sessionUidParameter,
 			Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions,
 			DomainQueryExecutionContext executionContext) {
 		this.sqmInsert = sqmInsert;
@@ -116,6 +120,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		this.sessionUidAccess = sessionUidAccess;
 		this.domainParameterXref = domainParameterXref;
 		this.updatingTableGroup = insertingTableGroup;
+		this.sessionUidParameter = sessionUidParameter;
 		this.paramTypeResolutions = paramTypeResolutions;
 		this.insertStatement = insertStatement;
 
@@ -189,6 +194,15 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		);
 
 		try {
+			if ( sessionUidParameter != null ) {
+				jdbcParameterBindings.addBinding(
+						sessionUidParameter,
+						new JdbcParameterBindingImpl(
+								entityTable.getSessionUidColumn().getJdbcMapping(),
+								UUID.fromString( sessionUidAccess.apply( executionContext.getSession() ) )
+						)
+				);
+			}
 			final int rows = ExecuteWithTemporaryTableHelper.saveIntoTemporaryTable(
 					insertStatement,
 					jdbcParameterBindings,
@@ -422,24 +436,53 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 								rootIdentity
 						)
 				);
-				final TemporaryTableColumn rowNumberColumn = entityTable.getColumns().get(
-						entityTable.getColumns().size() - 1
-				);
+				final TemporaryTableColumn rowNumberColumn;
+				final TemporaryTableColumn sessionUidColumn;
+				final Predicate sessionUidPredicate;
+				if ( entityTable.getSessionUidColumn() == null ) {
+					rowNumberColumn = entityTable.getColumns().get(
+							entityTable.getColumns().size() - 1
+					);
+					sessionUidColumn = null;
+					sessionUidPredicate = null;
+				}
+				else {
+					rowNumberColumn = entityTable.getColumns().get(
+							entityTable.getColumns().size() - 2
+					);
+					sessionUidColumn = entityTable.getSessionUidColumn();
+					sessionUidPredicate = new ComparisonPredicate(
+							new ColumnReference(
+									(String) null,
+									sessionUidColumn.getColumnName(),
+									false,
+									null,
+									null,
+									sessionUidColumn.getJdbcMapping(),
+									sessionFactory
+							),
+							ComparisonOperator.EQUAL,
+							sessionUidParameter
+					);
+				}
 				final UpdateStatement updateStatement = new UpdateStatement(
 						temporaryTableReference,
 						temporaryTableAssignments,
-						new ComparisonPredicate(
-								new ColumnReference(
-										(String) null,
-										rowNumberColumn.getColumnName(),
-										false,
-										null,
-										null,
-										rowNumberColumn.getJdbcMapping(),
-										sessionFactory
-								),
-								ComparisonOperator.EQUAL,
-								rowNumber
+						Predicate.combinePredicates(
+							new ComparisonPredicate(
+									new ColumnReference(
+											(String) null,
+											rowNumberColumn.getColumnName(),
+											false,
+											null,
+											null,
+											rowNumberColumn.getJdbcMapping(),
+											sessionFactory
+									),
+									ComparisonOperator.EQUAL,
+									rowNumber
+							),
+							sessionUidPredicate
 						)
 				);
 
@@ -448,6 +491,15 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 						.buildUpdateTranslator( sessionFactory, updateStatement )
 						.translate( null, executionContext.getQueryOptions() );
 				final JdbcParameterBindings updateBindings = new JdbcParameterBindingsImpl( 2 );
+				if ( sessionUidColumn != null ) {
+					updateBindings.addBinding(
+							sessionUidParameter,
+							new JdbcParameterBindingImpl(
+									sessionUidColumn.getJdbcMapping(),
+									UUID.fromString( sessionUidAccess.apply( executionContext.getSession() ) )
+							)
+					);
+				}
 
 				for ( int i = 0; i < rows; i++ ) {
 					updateBindings.addBinding(

@@ -6,8 +6,11 @@
  */
 package org.hibernate.orm.test.jpa.compliance;
 
+import org.hibernate.dialect.CockroachDialect;
+
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,6 +47,7 @@ public class ProdTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "https://github.com/cockroachdb/cockroach/issues/82478")
 	public void testCriteriaMod(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {

@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
+import java.util.UUID;
 import java.util.function.Function;
 
 import org.hibernate.LockMode;
@@ -127,7 +128,7 @@ public final class ExecuteWithTemporaryTableHelper {
 							jdbcPosition,
 							jdbcPosition + 1,
 							new QueryLiteral<>(
-									sessionUidAccess.apply( executionContext.getSession() ),
+									UUID.fromString( sessionUidAccess.apply( executionContext.getSession() ) ),
 									(BasicValuedMapping) idTable.getSessionUidColumn().getJdbcMapping()
 							)
 					)
@@ -293,7 +294,7 @@ public final class ExecuteWithTemporaryTableHelper {
 							),
 							ComparisonOperator.EQUAL,
 							new QueryLiteral<>(
-									sessionUidAccess.apply( executionContext.getSession() ),
+									UUID.fromString( sessionUidAccess.apply( executionContext.getSession() ) ),
 									(BasicValuedMapping) idTable.getSessionUidColumn().getJdbcMapping()
 							)
 					)

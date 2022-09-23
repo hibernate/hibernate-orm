@@ -87,8 +87,12 @@ public class PrimaryKeyColumnOrderTest extends BaseSessionFactoryFunctionalTest 
 						JdbcMetadaAccessStrategy.GROUPED
 				)
 				.build();
+		DdlTransactionIsolator ddlTransactionIsolator = null;
+		ExtractionContextImpl extractionContext = null;
 		try {
-			TableInformation table = buildInformationExtractor( ssr ).getTable(
+			ddlTransactionIsolator = buildDdlTransactionIsolator( ssr );
+			extractionContext = buildContext( ssr, ddlTransactionIsolator );
+			TableInformation table = buildInformationExtractor( extractionContext ).getTable(
 					null,
 					null,
 					new Identifier( "TEST_ENTITY", false )
@@ -108,24 +112,35 @@ public class PrimaryKeyColumnOrderTest extends BaseSessionFactoryFunctionalTest 
 			assertTrue( pkColumnNames.contains( "b" ) );
 		}
 		finally {
+			if ( extractionContext != null ) {
+				extractionContext.cleanup();
+			}
+			if ( ddlTransactionIsolator != null ) {
+				ddlTransactionIsolator.release();
+			}
 			StandardServiceRegistryBuilder.destroy( ssr );
 		}
 	}
 
-	private InformationExtractor buildInformationExtractor(StandardServiceRegistry ssr) throws Exception {
-		ExtractionContextImpl extractionContext = buildContext( ssr );
-
+	private InformationExtractor buildInformationExtractor(ExtractionContextImpl extractionContext) throws Exception {
 		ExtractionTool extractionTool = new HibernateSchemaManagementTool().getExtractionTool();
 
 		return extractionTool.createInformationExtractor( extractionContext );
 	}
 
-	private static ExtractionContextImpl buildContext(StandardServiceRegistry ssr) throws Exception {
+	private static ExtractionContextImpl buildContext(
+			StandardServiceRegistry ssr,
+			DdlTransactionIsolator ddlTransactionIsolator) throws Exception {
 		Database database = new MetadataSources( ssr ).buildMetadata().getDatabase();
 
 		SqlStringGenerationContext sqlStringGenerationContext = SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() );
 
-		DatabaseInformation dbInfo = buildDatabaseInformation( ssr, database, sqlStringGenerationContext );
+		DatabaseInformation dbInfo = buildDatabaseInformation(
+				ssr,
+				database,
+				sqlStringGenerationContext,
+				ddlTransactionIsolator
+		);
 
 		return new ExtractionContextImpl(
 				ssr,
@@ -139,12 +154,13 @@ public class PrimaryKeyColumnOrderTest extends BaseSessionFactoryFunctionalTest 
 	private static DatabaseInformationImpl buildDatabaseInformation(
 			StandardServiceRegistry ssr,
 			Database database,
-			SqlStringGenerationContext sqlStringGenerationContext) throws Exception {
+			SqlStringGenerationContext sqlStringGenerationContext,
+			DdlTransactionIsolator ddlTransactionIsolator) throws Exception {
 		return new DatabaseInformationImpl(
 				ssr,
 				database.getJdbcEnvironment(),
 				sqlStringGenerationContext,
-				buildDdlTransactionIsolator( ssr ),
+				ddlTransactionIsolator,
 				database.getServiceRegistry().getService( SchemaManagementTool.class )
 		);
 	}

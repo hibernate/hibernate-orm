@@ -8,10 +8,13 @@ package org.hibernate.dialect.identity;
 
 import java.sql.Types;
 
+import org.hibernate.MappingException;
+
 public class CockroachDBIdentityColumnSupport extends IdentityColumnSupportImpl {
 	@Override
 	public boolean supportsIdentityColumns() {
 		// Full support requires setting the sql.defaults.serial_normalization=sql_sequence in CockroachDB.
+		// Also, support for serial4 is not enabled by default: https://github.com/cockroachdb/cockroach/issues/26925#issuecomment-1255293916
 		return false;
 	}
 
@@ -23,9 +26,17 @@ public class CockroachDBIdentityColumnSupport extends IdentityColumnSupportImpl 
 
 	@Override
 	public String getIdentityColumnString(int type) {
-		return type == Types.SMALLINT ?
-				"serial4 not null" :
-				"serial8 not null";
+		switch ( type ) {
+			case Types.TINYINT:
+			case Types.SMALLINT:
+				return "serial2 not null";
+			case Types.INTEGER:
+				return "serial4 not null";
+			case Types.BIGINT:
+				return "serial8 not null";
+			default:
+				throw new MappingException( "illegal identity column type");
+		}
 	}
 
 	@Override

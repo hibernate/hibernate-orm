@@ -108,7 +108,7 @@ public abstract class PersistentTableStrategy {
 
 		released = true;
 
-		if ( created ) {
+		if ( !created ) {
 			return;
 		}
 

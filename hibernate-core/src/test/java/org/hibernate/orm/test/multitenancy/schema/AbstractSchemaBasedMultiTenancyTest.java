@@ -77,26 +77,23 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		HibernateSchemaManagementTool tool = new HibernateSchemaManagementTool();
 		tool.injectServices( serviceRegistry );
 
-		final GenerationTargetToDatabase acmeTarget =  new GenerationTargetToDatabase(
-				new DdlTransactionIsolatorTestingImpl(
-						serviceRegistry,
-						acmeProvider
-				)
-		);
-		final GenerationTargetToDatabase jbossTarget = new GenerationTargetToDatabase(
-				new DdlTransactionIsolatorTestingImpl(
-						serviceRegistry,
-						jbossProvider
-				)
-		);
-
 		new SchemaDropperImpl( serviceRegistry ).doDrop(
 				metadata,
 				serviceRegistry,
 				settings,
 				true,
-				acmeTarget,
-				jbossTarget
+				new GenerationTargetToDatabase(
+						new DdlTransactionIsolatorTestingImpl(
+								serviceRegistry,
+								acmeProvider
+						)
+				),
+				new GenerationTargetToDatabase(
+						new DdlTransactionIsolatorTestingImpl(
+								serviceRegistry,
+								jbossProvider
+						)
+				)
 		);
 
 		new SchemaCreatorImpl( serviceRegistry ).doCreation(
@@ -104,8 +101,18 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 				serviceRegistry,
 				settings,
 				true,
-				acmeTarget,
-				jbossTarget
+				new GenerationTargetToDatabase(
+						new DdlTransactionIsolatorTestingImpl(
+								serviceRegistry,
+								acmeProvider
+						)
+				),
+				new GenerationTargetToDatabase(
+						new DdlTransactionIsolatorTestingImpl(
+								serviceRegistry,
+								jbossProvider
+						)
+				)
 		);
 
 		final SessionFactoryBuilder sfb = metadata.getSessionFactoryBuilder();

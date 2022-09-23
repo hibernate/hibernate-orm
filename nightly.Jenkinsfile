@@ -26,39 +26,8 @@ this.helper = new JobHelper(this)
 helper.runWithNotification {
 stage('Configure') {
 	this.environments = [
-//		new BuildEnvironment( dbName: 'h2' ),
-//		new BuildEnvironment( dbName: 'hsqldb' ),
-//		new BuildEnvironment( dbName: 'derby' ),
-//		new BuildEnvironment( dbName: 'mysql' ),
-//		new BuildEnvironment( dbName: 'mysql8' ),
-//		new BuildEnvironment( dbName: 'mariadb' ),
-//		new BuildEnvironment( dbName: 'postgresql' ),
-//		new BuildEnvironment( dbName: 'postgresql_13' ),
-//		new BuildEnvironment( dbName: 'oracle' ),
-//		new BuildEnvironment( dbName: 'db2' ),
-//		new BuildEnvironment( dbName: 'mssql' ),
-//		new BuildEnvironment( dbName: 'sybase' ),
-		new BuildEnvironment( dbName: 'hana_jenkins', node: 'HANA', dbLockableResource: 'HANA' ),
-		new BuildEnvironment( node: 's390x' ),
-		new BuildEnvironment( dbName: 'tidb', node: 'tidb', dbLockableResource: 'TIDB',
-				additionalOptions: '-DdbHost=localhost:4000',
-				notificationRecipients: 'tidb_hibernate@pingcap.com' ),
-// Disable EDB for now as the image is not available anymore
-//		new BuildEnvironment( dbName: 'edb' ),
-		new BuildEnvironment( testJdkVersion: '17' ),
-		new BuildEnvironment( testJdkVersion: '18' ),
-		// We want to enable preview features when testing early-access builds of OpenJDK:
-		// even if we don't use these features, just enabling them can cause side effects
-		// and it's useful to test that.
-		new BuildEnvironment( testJdkVersion: '19', testJdkLauncherArgs: '--enable-preview' ),
-		new BuildEnvironment( testJdkVersion: '20', testJdkLauncherArgs: '--enable-preview' )
+		new BuildEnvironment( dbName: 'cockroachdb', node: 'LongDuration', longRunning: true ))
 	];
-
-	if ( env.CHANGE_ID ) {
-		if ( pullRequest.labels.contains( 'cockroachdb' ) ) {
-			this.environments.add( new BuildEnvironment( dbName: 'cockroachdb', node: 'LongDuration', longRunning: true ) )
-		}
-	}
 
 	helper.configure {
 		file 'job-configuration.yaml'
@@ -74,6 +43,7 @@ stage('Configure') {
 			buildDiscarder(
 					logRotator(daysToKeepStr: '30', numToKeepStr: '10')
 			),
+			rateLimitBuilds(throttle: [count: 1, durationName: 'day', userBoost: true]),
 			// If two builds are about the same branch or pull request,
 			// the older one will be aborted when the newer one starts.
 			disableConcurrentBuilds(abortPrevious: true),
@@ -146,7 +116,7 @@ stage('Build') {
 									break;
 								case "mariadb":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mariadb:10.5.8').pull()
+										docker.image('mariadb:10.7.5').pull()
 									}
 									sh "./docker_db.sh mariadb"
 									state[buildEnv.tag]['containerName'] = "mariadb"
@@ -159,12 +129,12 @@ stage('Build') {
 									sh "./docker_db.sh postgresql"
 									state[buildEnv.tag]['containerName'] = "postgres"
 									break;
-								case "postgresql_13":
+								case "postgresql_14":
 									// use the postgis image to enable the PGSQL GIS (spatial) extension
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('postgis/postgis:13-3.1').pull()
+										docker.image('postgis/postgis:14-3.3').pull()
 									}
-									sh "./docker_db.sh postgresql_13"
+									sh "./docker_db.sh postgresql_14"
 									state[buildEnv.tag]['containerName'] = "postgres"
 									break;
 								case "oracle":

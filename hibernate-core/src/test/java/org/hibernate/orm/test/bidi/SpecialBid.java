@@ -10,7 +10,7 @@ package org.hibernate.orm.test.bidi;
 
 /**
  */
-public class SpecialBid extends Bid {
+public class SpecialBid extends AbstractBid {
 	private boolean isSpecial;
 
 	public boolean isSpecial() {

@@ -31,7 +31,7 @@ public class AuctionWithAbstractBidClassTest {
 
 	@Test
 	public void testAbstractSuperClassMapping(SessionFactoryScope scope) {
-		Auction auction = new Auction();
+		SpecialAuction auction = new SpecialAuction();
 		auction.setEnd( new Date() );
 		auction.setDescription( "an auction for something" );
 
@@ -62,7 +62,7 @@ public class AuctionWithAbstractBidClassTest {
 
 		scope.inTransaction(
 				session -> {
-					Auction auc = session.get( Auction.class, auctionId );
+					SpecialAuction auc = session.get( SpecialAuction.class, auctionId );
 					SpecialBid successfulBid = (SpecialBid) auc.getSuccessfulBid();
 					assertTrue( successfulBid.isSuccessful() );
 					assertEquals( successfulBid.getId(), ssbidId );

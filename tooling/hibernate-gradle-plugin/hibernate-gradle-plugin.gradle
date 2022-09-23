@@ -87,6 +87,9 @@ tasks.release.dependsOn tasks.publishPlugins
 // local publishing (SNAPSHOT testing)
 tasks.publish.dependsOn tasks.publishPlugins
 
+// Make sure that the publishReleaseArtifacts task of the release module runs the release task of this sub module
+tasks.getByPath( ':release:publishReleaseArtifacts' ).dependsOn tasks.release
+
 // local publishing (SNAPSHOT testing)
 publishing {
 	repositories {
@@ -145,10 +148,8 @@ tasks.publishPlugins.enabled !project.ormVersion.isSnapshot
 gradle.taskGraph.whenReady { tg ->
 	if ( tg.hasTask( project.tasks.publishPlugins ) && project.tasks.publishPlugins.enabled  ) {
 		// look for sys-prop or env-var overrides of the tokens used for publishing
-		if ( System.properties.containsKey( 'gradle.publish.key' )
-				|| System.properties.containsKey( 'gradle.publish.secret' )
-				|| System.getenv().containsKey( 'GRADLE_PUBLISH_KEY' )
-				|| System.getenv().containsKey( 'GRADLE_PUBLISH_SECRET' ) ) {
+		if ( project.properties.containsKey( 'gradle.publish.key' )
+				|| project.properties.containsKey( 'gradle.publish.secret' ) ) {
 			// nothing to do - already explicitly set
 		}
 		else {

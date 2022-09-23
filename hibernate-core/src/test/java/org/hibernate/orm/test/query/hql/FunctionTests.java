@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.QueryException;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DerbyDialect;
 
 import org.hibernate.dialect.MariaDBDialect;
@@ -986,6 +987,7 @@ public class FunctionTests {
 	@SkipForDialect(dialectClass = MySQLDialect.class)
 	@SkipForDialect(dialectClass = MariaDBDialect.class)
 	@SkipForDialect(dialectClass = TiDBDialect.class)
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "unsupported binary operator: <timestamptz> - <date>")
 	public void testDateAddDiffFunctions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1151,20 +1153,6 @@ public class FunctionTests {
 					session.createQuery("select (e.theDate - e.theDate) by day from EntityOfBasics e")
 							.list();
 
-					session.createQuery("select (e.theDate - e.theTimestamp) by year from EntityOfBasics e")
-							.list();
-					session.createQuery("select (e.theDate - e.theTimestamp) by month from EntityOfBasics e")
-							.list();
-					session.createQuery("select (e.theDate - e.theTimestamp) by day from EntityOfBasics e")
-							.list();
-
-					session.createQuery("select (e.theTimestamp - e.theDate) by year from EntityOfBasics e")
-							.list();
-					session.createQuery("select (e.theTimestamp - e.theDate) by month from EntityOfBasics e")
-							.list();
-					session.createQuery("select (e.theTimestamp - e.theDate) by day from EntityOfBasics e")
-							.list();
-
 					session.createQuery("select (e.theTimestamp - e.theTimestamp) by hour from EntityOfBasics e")
 							.list();
 					session.createQuery("select (e.theTimestamp - e.theTimestamp) by minute from EntityOfBasics e")
@@ -1193,6 +1181,28 @@ public class FunctionTests {
 
 
 					session.createQuery("select current_timestamp - (current_timestamp - e.theTimestamp) from EntityOfBasics e")
+							.list();
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "unsupported binary operator: <date> - <timestamp(6)>")
+	public void testIntervalDiffExpressionsDifferentTypes(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select (e.theDate - e.theTimestamp) by year from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theDate - e.theTimestamp) by month from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theDate - e.theTimestamp) by day from EntityOfBasics e")
+							.list();
+
+					session.createQuery("select (e.theTimestamp - e.theDate) by year from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theTimestamp - e.theDate) by month from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theTimestamp - e.theDate) by day from EntityOfBasics e")
 							.list();
 				}
 		);
@@ -1404,8 +1414,6 @@ public class FunctionTests {
 	public void testFormat(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select format(e.theTime as 'hh:mm:ss a') from EntityOfBasics e")
-							.list();
 					session.createQuery("select format(e.theDate as 'dd/MM/yy'), format(e.theDate as 'EEEE, MMMM dd, yyyy') from EntityOfBasics e")
 							.list();
 					session.createQuery("select format(e.theTimestamp as 'dd/MM/yyyy ''at'' HH:mm:ss') from EntityOfBasics e")
@@ -1415,6 +1423,18 @@ public class FunctionTests {
 							session.createQuery("select format(theDate as 'EEEE, dd/MM/yyyy') from EntityOfBasics where id=123").getResultList().get(0),
 							is("Monday, 25/03/1974")
 					);
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class)
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "unknown signature: experimental_strftime(time, string)") // could cast the first argument to timestamp to workaround this
+	public void testFormatTime(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select format(e.theTime as 'hh:mm:ss a') from EntityOfBasics e")
+							.list();
 					assertThat(
 							session.createQuery("select format(theTime as '''Hello'', hh:mm:ss a') from EntityOfBasics where id=123").getResultList().get(0),
 							is("Hello, 08:10:08 PM")

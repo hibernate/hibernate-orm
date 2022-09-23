@@ -92,7 +92,7 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 				settings.put( Environment.USE_SCROLLABLE_RESULTSET, "" + supportsScroll );
 			}
 			finally {
-				connection.close();
+				cp.closeConnection( connection );
 			}
 		}
 		catch (SQLException ignore) {

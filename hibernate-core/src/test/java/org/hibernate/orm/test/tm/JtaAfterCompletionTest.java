@@ -20,6 +20,7 @@ import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.ActionQueue;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -54,6 +55,11 @@ public class JtaAfterCompletionTest extends BaseSessionFactoryFunctionalTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-12448")
 	public void testAfterCompletionCallbackExecutedAfterTransactionTimeout() throws Exception {
+		// This makes sure that hbm2ddl runs before we start a transaction for a test
+		// This is important for database that only support SNAPSHOT/SERIALIZABLE isolation,
+		// because a test transaction still sees the state before the DDL executed
+		final SessionFactoryImplementor sessionFactory = sessionFactory();
+
 		// Set timeout to 5 seconds
 		// Allows the reaper thread to abort our running thread for us
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().setTransactionTimeout( 5 );
@@ -63,7 +69,7 @@ public class JtaAfterCompletionTest extends BaseSessionFactoryFunctionalTest {
 
 		Session session = null;
 		try {
-			session = sessionFactory().openSession();
+			session = sessionFactory.openSession();
 
 			SimpleEntity entity = new SimpleEntity( "Hello World" );
 			session.save( entity );

@@ -53,7 +53,6 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -326,9 +325,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 					if ( sqlTypeCode != null ) {
 						return ( (ArrayJdbcType) jdbcType ).resolveType(
 								jdbcTypeRegistry.getTypeConfiguration(),
-								jdbcTypeRegistry.getTypeConfiguration().getServiceRegistry()
-										.getService( JdbcServices.class )
-										.getDialect(),
+								this,
 								jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
 								null
 						);

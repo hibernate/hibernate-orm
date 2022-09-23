@@ -43,6 +43,7 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
@@ -267,6 +268,7 @@ public class DefaultCatalogAndSchemaTest {
 		final BootstrapServiceRegistry bsr = bsrb.build();
 
 		final Map<String, Object> settings = new HashMap<>();
+		settings.put( PersistentTableStrategy.DROP_ID_TABLES, "true" );
 		settings.put( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
 		settings.put( LocalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
 		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER ) ) {

@@ -22,4 +22,6 @@ elif [ "$RDBMS" == 'hana' ]; then
   bash $DIR/../docker_db.sh hana
 elif [ "$RDBMS" == 'sybase' ]; then
   bash $DIR/../docker_db.sh sybase
+elif [ "$RDBMS" == 'cockroachdb' ]; then
+  bash $DIR/../docker_db.sh cockroachdb
 fi

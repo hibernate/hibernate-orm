@@ -17,11 +17,16 @@ import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Environment;
 import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
 import org.hibernate.service.spi.ServiceContributor;
 
 import org.hibernate.testing.boot.ExtraJavaServicesClassLoaderService;
 import org.hibernate.testing.boot.ExtraJavaServicesClassLoaderService.JavaServiceDescriptor;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
@@ -186,6 +191,15 @@ public class ServiceRegistryExtension
 		public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder ssrb) {
 			// set some baseline test settings
 			ssrb.applySetting( AvailableSettings.STATEMENT_INSPECTOR, org.hibernate.testing.jdbc.SQLStatementInspector.class );
+			ssrb.applySetting( PersistentTableStrategy.DROP_ID_TABLES, "true" );
+			ssrb.applySetting( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
+			ssrb.applySetting( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
+			if ( !ssrb.getSettings().containsKey( Environment.CONNECTION_PROVIDER ) ) {
+				ssrb.applySetting(
+						AvailableSettings.CONNECTION_PROVIDER,
+						SharedDriverManagerConnectionProviderImpl.getInstance()
+				);
+			}
 
 			if ( ssrAnnRef.isPresent() ) {
 				final ServiceRegistry serviceRegistryAnn = ssrAnnRef.get();

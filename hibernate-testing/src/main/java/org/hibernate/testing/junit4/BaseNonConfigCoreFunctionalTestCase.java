@@ -49,6 +49,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
 import org.hibernate.testing.AfterClassOnce;
@@ -174,6 +175,7 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 		afterBootstrapServiceRegistryBuilt( bsr );
 
 		final Map<String,Object> settings = new HashMap<>();
+		settings.put( PersistentTableStrategy.DROP_ID_TABLES, "true" );
 		settings.put( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		settings.put( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER ) ) {

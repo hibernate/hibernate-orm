@@ -107,6 +107,7 @@ public class DdlTransactionIsolatorNonJtaImpl implements DdlTransactionIsolator 
 				catch (Throwable t2) {
 					suppressed = t2;
 				}
+				jdbcConnection = null;
 				if ( suppressed != null ) {
 					if ( originalException == null ) {
 						originalException = suppressed;

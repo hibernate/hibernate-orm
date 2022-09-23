@@ -38,6 +38,8 @@ elif [ "$RDBMS" == "sybase" ]; then
   goal="-Pdb=sybase_ci"
 elif [ "$RDBMS" == "tidb" ]; then
   goal="-Pdb=tidb"
+elif [ "$RDBMS" == "cockroachdb" ]; then
+  goal="-Pdb=cockroachdb"
 fi
 
 # Only run checkstyle in the H2 build,

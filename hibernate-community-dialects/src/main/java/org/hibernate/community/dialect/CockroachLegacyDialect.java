@@ -23,6 +23,8 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.PessimisticLockException;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
@@ -51,17 +53,16 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.NullOrdering;
 import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
-import org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -70,6 +71,7 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.InstantAsTimestampWithTimeZoneJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
@@ -80,9 +82,11 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
 import static org.hibernate.type.SqlTypes.*;
@@ -173,12 +177,13 @@ public class CockroachLegacyDialect extends Dialect {
 		switch ( sqlTypeCode ) {
 			case TINYINT:
 				return "smallint"; //no tinyint
+			case INTEGER:
+				return "int4";
 
-			case CHAR:
 			case NCHAR:
-			case VARCHAR:
+				return columnType( CHAR );
 			case NVARCHAR:
-				return "string($l)";
+				return columnType( VARCHAR );
 
 			case NCLOB:
 			case CLOB:
@@ -271,8 +276,44 @@ public class CockroachLegacyDialect extends Dialect {
 					jdbcTypeCode = TIMESTAMP_UTC;
 				}
 				break;
+			case ARRAY:
+				final JdbcType jdbcType = jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
+				// PostgreSQL names array types by prepending an underscore to the base name
+				if ( jdbcType instanceof ArrayJdbcType && columnTypeName.charAt( 0 ) == '_' ) {
+					final String componentTypeName = columnTypeName.substring( 1 );
+					final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
+					if ( sqlTypeCode != null ) {
+						return ( (ArrayJdbcType) jdbcType ).resolveType(
+								jdbcTypeRegistry.getTypeConfiguration(),
+								this,
+								jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
+								null
+						);
+					}
+				}
+				return jdbcType;
 		}
 		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
+	}
+
+	@Override
+	protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
+		switch ( columnTypeName ) {
+			case "bool":
+				return Types.BOOLEAN;
+			case "float4":
+				// Use REAL instead of FLOAT to get Float as recommended Java type
+				return Types.REAL;
+			case "float8":
+				return Types.DOUBLE;
+			case "int2":
+				return Types.SMALLINT;
+			case "int4":
+				return Types.INTEGER;
+			case "int8":
+				return Types.BIGINT;
+		}
+		return super.resolveSqlTypeCode( columnTypeName, typeConfiguration );
 	}
 
 	@Override
@@ -300,6 +341,7 @@ public class CockroachLegacyDialect extends Dialect {
 		// Force Blob binding to byte[] for CockroachDB
 		jdbcTypeRegistry.addDescriptor( Types.BLOB, VarbinaryJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( Types.CLOB, VarcharJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( Types.NCLOB, VarcharJdbcType.INSTANCE );
 
 		// The next two contributions are the same as for Postgresql
 		typeContributions.contributeJdbcType( ObjectNullAsBinaryTypeJdbcType.INSTANCE );
@@ -326,6 +368,7 @@ public class CockroachLegacyDialect extends Dialect {
 		functionFactory.position();
 		functionFactory.substringFromFor();
 		functionFactory.locate_positionSubstring();
+		functionFactory.concat_pipeOperator();
 		functionFactory.trim2();
 		functionFactory.substr();
 		functionFactory.reverse();
@@ -340,6 +383,20 @@ public class CockroachLegacyDialect extends Dialect {
 		functionFactory.radians();
 		functionFactory.pi();
 		functionFactory.trunc(); //TODO: emulate second arg
+		functionFactory.log();
+		functionFactory.log10_log();
+
+		functionFactory.bitandorxornot_operator();
+		functionFactory.bitAndOr();
+		functionFactory.everyAny_boolAndOr();
+		functionFactory.median_percentileCont_castDouble();
+		functionFactory.stddev();
+		functionFactory.stddevPopSamp();
+		functionFactory.variance();
+		functionFactory.varPopSamp();
+		functionFactory.covarPopSamp();
+		functionFactory.corr();
+		functionFactory.regrLinearRegressionAggregates();
 
 		queryEngine.getSqmFunctionRegistry().register(
 				"format",
@@ -348,7 +405,7 @@ public class CockroachLegacyDialect extends Dialect {
 		functionFactory.windowFunctions();
 		functionFactory.listagg_stringAgg( "string" );
 		functionFactory.inverseDistributionOrderedSetAggregates();
-		functionFactory.hypotheticalOrderedSetAggregates();
+		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 	}
 
 	@Override
@@ -588,8 +645,6 @@ public class CockroachLegacyDialect extends Dialect {
 		switch ( unit ) {
 			case DAY_OF_WEEK:
 				return "(" + super.extractPattern(unit) + "+1)";
-			case SECOND:
-				return "(extract(second from ?2)+extract(microsecond from ?2)/1e6)";
 			default:
 				return super.extractPattern(unit);
 		}
@@ -698,6 +753,11 @@ public class CockroachLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public String getForUpdateString() {
+		return getVersion().isBefore( 20, 1 ) ? "" : " for update";
+	}
+
+	@Override
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
 		// Support was added in 20.1: https://www.cockroachlabs.com/docs/v20.1/select-for-update.html
 		if ( getVersion().isBefore( 20, 1 ) ) {
@@ -776,28 +836,28 @@ public class CockroachLegacyDialect extends Dialect {
 	@Override
 	public String getForUpdateNowaitString() {
 		return supportsNoWait()
-				? " for update nowait"
+				? getForUpdateString() + " nowait"
 				: getForUpdateString();
 	}
 
 	@Override
 	public String getForUpdateNowaitString(String aliases) {
 		return supportsNoWait()
-				? " for update of " + aliases + " nowait"
-				: getForUpdateString(aliases);
+				? getForUpdateString( aliases ) + " nowait"
+				: getForUpdateString( aliases );
 	}
 
 	@Override
 	public String getForUpdateSkipLockedString() {
 		return supportsSkipLocked()
-				? " for update skip locked"
+				? getForUpdateString() + " skip locked"
 				: getForUpdateString();
 	}
 
 	@Override
 	public String getForUpdateSkipLockedString(String aliases) {
 		return supportsSkipLocked()
-				? " for update of " + aliases + " skip locked"
+				? getForUpdateString( aliases ) + " skip locked"
 				: getForUpdateString( aliases );
 	}
 
@@ -838,7 +898,8 @@ public class CockroachLegacyDialect extends Dialect {
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return getVersion().isSameOrAfter( 20, 1 );
+		// See https://www.cockroachlabs.com/docs/stable/select-for-update.html#wait-policies
+		return false;
 	}
 
 	@Override
@@ -866,16 +927,78 @@ public class CockroachLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new CteMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
+		return EXTRACTOR;
 	}
 
+	/**
+	 * Constraint-name extractor for Postgres constraint violation exceptions.
+	 * Originally contributed by Denny Bartelt.
+	 */
+	private static final ViolatedConstraintNameExtractor EXTRACTOR =
+			new TemplatedViolatedConstraintNameExtractor( sqle -> {
+				final String sqlState = JdbcExceptionHelper.extractSqlState( sqle );
+				if ( sqlState == null ) {
+					return null;
+				}
+				switch ( Integer.parseInt( sqlState ) ) {
+					// CHECK VIOLATION
+					case 23514:
+						return extractUsingTemplate( "violates check constraint \"","\"", sqle.getMessage() );
+					// UNIQUE VIOLATION
+					case 23505:
+						return extractUsingTemplate( "violates unique constraint \"","\"", sqle.getMessage() );
+					// FOREIGN KEY VIOLATION
+					case 23503:
+						return extractUsingTemplate( "violates foreign key constraint \"","\"", sqle.getMessage() );
+					// NOT NULL VIOLATION
+					case 23502:
+						return extractUsingTemplate( "null value in column \"","\" violates not-null constraint", sqle.getMessage() );
+					// TODO: RESTRICT VIOLATION
+					case 23001:
+						return null;
+					// ALL OTHER
+					default:
+						return null;
+				}
+			} );
+
 	@Override
-	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new CteInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
+	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
+		return (sqlException, message, sql) -> {
+			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+			if ( sqlState == null ) {
+				return null;
+			}
+			switch ( sqlState ) {
+				case "40P01":
+					// DEADLOCK DETECTED
+					return new LockAcquisitionException( message, sqlException, sql);
+				case "55P03":
+					// LOCK NOT AVAILABLE
+					return new PessimisticLockException( message, sqlException, sql);
+				case "57014":
+					return new QueryTimeoutException( message, sqlException, sql );
+				default:
+					// returning null allows other delegates to operate
+					return null;
+			}
+		};
 	}
+
+// CockroachDB doesn't support this by default. See sql.multiple_modifications_of_table.enabled
+//
+//	@Override
+//	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
+//			EntityMappingType rootEntityDescriptor,
+//			RuntimeModelCreationContext runtimeModelCreationContext) {
+//		return new CteMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
+//	}
+//
+//	@Override
+//	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
+//			EntityMappingType rootEntityDescriptor,
+//			RuntimeModelCreationContext runtimeModelCreationContext) {
+//		return new CteInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
+//	}
 }

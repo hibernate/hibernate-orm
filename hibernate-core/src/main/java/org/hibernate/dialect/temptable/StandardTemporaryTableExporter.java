@@ -101,10 +101,8 @@ public class StandardTemporaryTableExporter implements TemporaryTableExporter {
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			SharedSessionContractImplementor session) {
 		if ( idTable.getSessionUidColumn() != null ) {
-			assert sessionUidAccess != null;
-			final String uid = sessionUidAccess.apply( session );
 			return getTruncateTableCommand() + " " + idTable.getQualifiedTableName()
-					+ " where " + idTable.getSessionUidColumn().getColumnName() + " = " + uid;
+					+ " where " + idTable.getSessionUidColumn().getColumnName() + " = ?";
 		}
 		else {
 			return getTruncateTableCommand() + " " + idTable.getQualifiedTableName();

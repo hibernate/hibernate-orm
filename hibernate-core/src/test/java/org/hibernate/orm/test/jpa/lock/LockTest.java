@@ -99,6 +99,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class, 
 		                    comment = "Test verifies proper exception throwing when a lock timeout is specified.",
                               jiraKey = "HHH-7252" )
+	@SkipForDialect(value = CockroachDialect.class, comment = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 	public void testFindWithPessimisticWriteLockTimeoutException() {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -146,6 +147,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class,
 			comment = "Test verifies proper exception throwing when a lock timeout is specified for Query#getSingleResult.",
 			jiraKey = "HHH-13364" )
+	@SkipForDialect(value = CockroachDialect.class, comment = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 	public void testQuerySingleResultPessimisticWriteLockTimeoutException() {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -190,6 +192,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class,
 			comment = "Test verifies proper exception throwing when a lock timeout is specified for Query#getResultList.",
 			jiraKey = "HHH-13364" )
+	@SkipForDialect(value = CockroachDialect.class, comment = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 	public void testQueryResultListPessimisticWriteLockTimeoutException() {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -237,6 +240,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class,
 			comment = "Test verifies proper exception throwing when a lock timeout is specified for NamedQuery#getResultList.",
 			jiraKey = "HHH-13364" )
+	@SkipForDialect(value = CockroachDialect.class, comment = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 	public void testNamedQueryResultListPessimisticWriteLockTimeoutException() {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -278,6 +282,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature( value = DialectChecks.SupportSkipLocked.class )
+	@SkipForDialect(value = CockroachDialect.class, comment = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 	public void testUpdateWithPessimisticReadLockSkipLocked() {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -323,6 +328,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature(value = DialectChecks.SupportsLockTimeouts.class)
+	@SkipForDialect(value = CockroachDialect.class, comment = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 	public void testUpdateWithPessimisticReadLockWithoutNoWait() {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -1168,6 +1174,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
 	@SkipForDialect(value = HSQLDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(value = AbstractHANADialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
+	@SkipForDialect(value = CockroachDialect.class, comment = "Cockroach supports the 'for no key update' syntax but it doesn't work")
 	public void testLockInsertFkTarget() {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -1204,6 +1211,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
 	@SkipForDialect(value = HSQLDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(value = AbstractHANADialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
+	@SkipForDialect(value = CockroachDialect.class, comment = "Cockroach supports the 'for no key update' syntax but it doesn't work")
 	public void testLockUpdateFkTarget() {
 		Lock lock1 = new Lock();
 		lock1.setName( "l1" );

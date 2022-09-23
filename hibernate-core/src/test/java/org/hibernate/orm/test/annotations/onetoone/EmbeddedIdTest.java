@@ -48,7 +48,6 @@ public class EmbeddedIdTest {
 					foo.bar = bar;
 					bar.foo = foo;
 					session.merge( foo );
-					session.flush();
 				}
 		);
 	}

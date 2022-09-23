@@ -59,7 +59,6 @@ public class DirtyFlushTest {
 			user.profile = profile;
 
 			em.persist( profile );
-			em.flush();
 		} );
 
 		scope.inTransaction( em -> {

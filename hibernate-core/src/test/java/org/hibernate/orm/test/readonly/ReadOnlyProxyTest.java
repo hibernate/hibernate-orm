@@ -1170,6 +1170,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.setCacheMode( CacheMode.IGNORE );
 		DataPoint dpProxyInit = s.load( DataPoint.class, dp.getId() );
 		assertEquals( "original", dp.getDescription() );
+		assertEquals( "original", dpProxyInit.getDescription() );
 		s.delete( dpProxyInit );
 		t.commit();
 		s.close();

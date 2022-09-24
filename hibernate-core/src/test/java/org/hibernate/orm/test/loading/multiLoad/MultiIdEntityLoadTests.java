@@ -64,7 +64,7 @@ public class MultiIdEntityLoadTests {
 		// using ordered results
 		scope.inTransaction(
 				session -> {
-					session.delete( session.load( BasicEntity.class, 2 ) );
+					session.delete( session.get( BasicEntity.class, 2 ) );
 
 					// test control - no delete-checking
 					{
@@ -115,7 +115,7 @@ public class MultiIdEntityLoadTests {
 		// using un-ordered results
 		scope.inTransaction(
 				session -> {
-					session.delete( session.load( BasicEntity.class, 2 ) );
+					session.delete( session.get( BasicEntity.class, 2 ) );
 
 					// test control - no delete-checking
 					{

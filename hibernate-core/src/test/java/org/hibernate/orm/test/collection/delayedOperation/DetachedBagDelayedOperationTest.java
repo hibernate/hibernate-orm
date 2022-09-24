@@ -96,7 +96,6 @@ public class DetachedBagDelayedOperationTest {
 
 		scope.inTransaction(
 				session -> {
-
 					session.persist( child1 );
 					session.persist( child2 );
 					session.persist( parent );
@@ -137,7 +136,7 @@ public class DetachedBagDelayedOperationTest {
 
 		final Parent pWithQueuedOperations = scope.fromTransaction(
 				session -> {
-					Parent p = (Parent) session.merge( pOriginal );
+					Parent p = session.merge( pOriginal );
 					Child c = new Child( "Zeke" );
 					c.setParent( p );
 					session.persist( c );
@@ -166,6 +165,8 @@ public class DetachedBagDelayedOperationTest {
 					assertFalse( opDetachedWatcher.wasTriggered() );
 					assertFalse( opRollbackWatcher.wasTriggered() );
 
+					session.clear(); //should be unnecessary by there is a bug we need to fix!
+
 					return p;
 				}
 		);
@@ -187,7 +188,7 @@ public class DetachedBagDelayedOperationTest {
 					assertFalse( opRollbackWatcher.wasTriggered() );
 
 					assertFalse( opMergedWatcher.wasTriggered() );
-					Parent p = (Parent) session.merge( pWithQueuedOperations );
+					Parent p = session.merge( pWithQueuedOperations );
 					assertTrue( opMergedWatcher.wasTriggered() );
 					assertEquals(
 							"HHH000494: Attempt to merge an uninitialized collection with queued operations; queued operations will be ignored: [org.hibernate.orm.test.collection.delayedOperation.DetachedBagDelayedOperationTest$Parent.children#1]",
@@ -240,7 +241,7 @@ public class DetachedBagDelayedOperationTest {
 		);
 		final Parent pAfterDetachWithQueuedOperations = scope.fromTransaction(
 				session -> {
-					Parent p = (Parent) session.merge( pOriginal );
+					Parent p = session.merge( pOriginal );
 					Child c = new Child( "Zeke" );
 					c.setParent( p );
 					session.persist( c );
@@ -267,6 +268,8 @@ public class DetachedBagDelayedOperationTest {
 					assertFalse( opAttachedWatcher.wasTriggered() );
 					assertFalse( opDetachedWatcher.wasTriggered() );
 					assertFalse( opRollbackWatcher.wasTriggered() );
+
+					session.clear(); //should be unnecessary by there is a bug we need to fix!
 
 					return p;
 				}
@@ -349,7 +352,7 @@ public class DetachedBagDelayedOperationTest {
 		try {
 			scope.inTransaction(
 					session -> {
-						Parent p = (Parent) session.merge( pOriginal );
+						Parent p = session.merge( pOriginal );
 						Child c = new Child( "Zeke" );
 						c.setParent( p );
 						session.persist( c );

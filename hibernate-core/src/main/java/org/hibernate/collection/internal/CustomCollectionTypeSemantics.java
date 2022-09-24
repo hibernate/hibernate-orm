@@ -58,7 +58,7 @@ public class CustomCollectionTypeSemantics<CE, E> implements CollectionSemantics
 	@Override
 	public Iterator<E> getElementIterator(CE rawCollection) {
 		//noinspection unchecked
-		return (Iterator<E>) collectionType.getElementsIterator( rawCollection, null );
+		return (Iterator<E>) collectionType.getElementsIterator( rawCollection );
 	}
 
 	@Override

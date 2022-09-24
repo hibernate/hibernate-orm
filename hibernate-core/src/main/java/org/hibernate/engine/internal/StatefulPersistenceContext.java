@@ -1819,13 +1819,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public boolean containsNullifiableEntityKey(Supplier<EntityKey> sek) {
-		if ( nullifiableEntityKeys == null || nullifiableEntityKeys.size() == 0 ) {
-			return false;
-		}
-		else {
-			final EntityKey entityKey = sek.get();
-			return nullifiableEntityKeys.contains( entityKey );
-		}
+		return nullifiableEntityKeys != null
+			&& nullifiableEntityKeys.size() != 0
+			&& nullifiableEntityKeys.contains( sek.get() );
 	}
 
 	@Override
@@ -1838,7 +1834,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public boolean isNullifiableEntityKeysEmpty() {
-		return ( nullifiableEntityKeys == null || nullifiableEntityKeys.size() == 0 );
+		return nullifiableEntityKeys == null
+			|| nullifiableEntityKeys.size() == 0;
 	}
 
 	@Override
@@ -1848,12 +1845,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public CollectionEntry removeCollectionEntry(PersistentCollection<?> collection) {
-		if ( collectionEntries == null ) {
-			return null;
-		}
-		else {
-			return collectionEntries.remove( collection );
-		}
+		return collectionEntries == null ? null : collectionEntries.remove(collection);
 	}
 
 	@Override

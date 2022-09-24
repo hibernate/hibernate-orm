@@ -319,7 +319,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	@Override
 	public final Object getImplementation(SharedSessionContractImplementor s) throws HibernateException {
 		final EntityKey entityKey = generateEntityKeyOrNull( getInternalIdentifier(), s, getEntityName() );
-		return ( entityKey == null ? null : s.getPersistenceContext().getEntity( entityKey ) );
+		return entityKey == null ? null : s.getPersistenceContext().getEntity( entityKey );
 	}
 
 	/**

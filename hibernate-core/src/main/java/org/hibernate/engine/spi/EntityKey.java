@@ -102,12 +102,8 @@ public final class EntityKey implements Serializable {
 	}
 
 	private boolean samePersistentType(final EntityKey otherKey) {
-		if ( otherKey.persister == persister ) {
-			return true;
-		}
-		else {
-			return Objects.equals( otherKey.persister.getRootEntityName(), persister.getRootEntityName() );
-		}
+		return otherKey.persister == persister
+			|| Objects.equals( otherKey.persister.getRootEntityName(), persister.getRootEntityName() );
 	}
 
 	@Override
@@ -117,8 +113,7 @@ public final class EntityKey implements Serializable {
 
 	@Override
 	public String toString() {
-		return "EntityKey" +
-				MessageHelper.infoString( this.persister, identifier, persister.getFactory() );
+		return "EntityKey" + MessageHelper.infoString( this.persister, identifier, persister.getFactory() );
 	}
 
 	/**

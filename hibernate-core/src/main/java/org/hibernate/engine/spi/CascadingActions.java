@@ -476,7 +476,7 @@ public class CascadingActions {
 			EventSource session,
 			CollectionType collectionType,
 			Object collection) {
-		return collectionType.getElementsIterator( collection, session );
+		return collectionType.getElementsIterator( collection );
 	}
 
 	/**
@@ -489,7 +489,7 @@ public class CascadingActions {
 			Object collection) {
 		if ( collectionIsInitialized( collection ) ) {
 			// handles arrays and newly instantiated collections
-			return collectionType.getElementsIterator( collection, session );
+			return collectionType.getElementsIterator( collection );
 		}
 		else {
 			// does not handle arrays (thats ok, cos they can't be lazy)

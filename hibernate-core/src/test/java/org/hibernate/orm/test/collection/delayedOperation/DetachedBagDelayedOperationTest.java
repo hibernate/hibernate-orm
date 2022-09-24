@@ -166,6 +166,8 @@ public class DetachedBagDelayedOperationTest {
 					assertFalse( opDetachedWatcher.wasTriggered() );
 					assertFalse( opRollbackWatcher.wasTriggered() );
 
+					session.find( Parent.class, 1L );
+
 					return p;
 				}
 		);

@@ -187,6 +187,9 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 				};
 			}
 		}
+		else if ( typeToUse == null ) {
+			throw new IllegalArgumentException( "Cannot determine the bindable type for procedure parameter: " + name );
+		}
 		else {
 			throw new NotYetImplementedFor6Exception( getClass() );
 		}

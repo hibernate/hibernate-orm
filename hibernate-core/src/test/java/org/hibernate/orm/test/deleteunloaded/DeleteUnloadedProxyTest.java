@@ -26,6 +26,8 @@ public class DeleteUnloadedProxyTest {
             Transaction tx = em.beginTransaction();
             c.setParent(p);
             p.getChildren().add(c);
+            p.getWords().add("hello");
+            p.getWords().add("world");
             em.persist(p);
             tx.commit();
         } );
@@ -54,6 +56,8 @@ public class DeleteUnloadedProxyTest {
             Transaction tx = em.beginTransaction();
             c.setParent(p);
             p.getChildren().add(c);
+            p.getWords().add("hello");
+            p.getWords().add("world");
             em.persist(p);
             tx.commit();
         } );

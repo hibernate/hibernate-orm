@@ -3820,7 +3820,7 @@ public abstract class AbstractEntityPersister
 		if ( entry == null && !isMutable() ) {
 			throw new IllegalStateException( "Updating immutable entity that is not in session yet" );
 		}
-		if ( ( entityMetamodel.isDynamicUpdate() && dirtyFields != null ) ) {
+		if ( entityMetamodel.isDynamicUpdate() && dirtyFields != null ) {
 			// We need to generate the UPDATE SQL when dynamic-update="true"
 			propsToUpdate = getPropertiesToUpdate( dirtyFields, hasDirtyCollection );
 			// don't need to check laziness (dirty checking algorithm handles that)
@@ -4014,41 +4014,42 @@ public abstract class AbstractEntityPersister
 	@Override
 	public void delete(Object id, Object version, Object object, SharedSessionContractImplementor session)
 			throws HibernateException {
-		final int span = getTableSpan();
 		boolean isImpliedOptimisticLocking = !entityMetamodel.isVersioned() && isAllOrDirtyOptLocking()
 				&& object != null; // null object signals that we're deleting an unloaded proxy
+
 		Object[] loadedState = null;
 		if ( isImpliedOptimisticLocking ) {
 			// need to treat this as if it where optimistic-lock="all" (dirty does *not* make sense);
 			// first we need to locate the "loaded" state
 			//
 			// Note, it potentially could be a proxy, so doAfterTransactionCompletion the location the safe way...
-			final EntityKey key = session.generateEntityKey( id, this );
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-			Object entity = persistenceContext.getEntity( key );
+			Object entity = persistenceContext.getEntity( session.generateEntityKey( id, this ) );
 			if ( entity != null ) {
 				EntityEntry entry = persistenceContext.getEntry( entity );
 				loadedState = entry.getLoadedState();
 			}
 		}
 
-		final String[] deleteStrings;
-		if ( isImpliedOptimisticLocking && loadedState != null ) {
-			// we need to utilize dynamic delete statements
-			deleteStrings = generateSQLDeleteStrings( loadedState );
-		}
-		else if (object!=null) {
-			// otherwise, utilize the static delete statements
-			deleteStrings = getSQLDeleteStrings();
-		}
-		else {
-			deleteStrings = getSQLDeleteNoVersionCheckStrings();
-		}
-
-		for ( int j = span - 1; j >= 0; j-- ) {
+		final String[] deleteStrings = getSQLDeleteStrings( object, isImpliedOptimisticLocking, loadedState );
+		for ( int j = getTableSpan() - 1; j >= 0; j-- ) {
 			delete( id, version, j, object, deleteStrings[j], session, loadedState );
 		}
+	}
 
+	private String[] getSQLDeleteStrings(Object object, boolean isImpliedOptimisticLocking, Object[] loadedState) {
+		if ( isImpliedOptimisticLocking && loadedState != null ) {
+			// we need to utilize dynamic delete statements
+			return generateSQLDeleteStrings(loadedState);
+		}
+		else if ( object != null ) {
+			// otherwise, utilize the static delete statements
+			return getSQLDeleteStrings();
+		}
+		else {
+			// deleting an unloaded proxy
+			return getSQLDeleteNoVersionCheckStrings();
+		}
 	}
 
 	protected boolean isAllOrDirtyOptLocking() {
@@ -4069,7 +4070,7 @@ public abstract class AbstractEntityPersister
 			Type[] types = getPropertyTypes();
 			for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
 				if ( isPropertyOfTable( i, j ) && versionability[i] ) {
-					// this property belongs to the table and it is not specifically
+					// This property belongs to the table, and it's not explicitly
 					// excluded from optimistic locking by optimistic-lock="false"
 					String[] propertyColumnNames = getPropertyColumnNames( i );
 					boolean[] propertyNullness = types[i].toColumnNullness( loadedState[i], getFactory() );

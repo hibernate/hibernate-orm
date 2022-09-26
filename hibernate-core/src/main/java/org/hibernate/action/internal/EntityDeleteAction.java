@@ -39,7 +39,8 @@ public class EntityDeleteAction extends EntityAction {
 
 	/**
 	 * Constructs an EntityDeleteAction.
-	 *  @param id The entity identifier
+	 *
+	 * @param id The entity identifier
 	 * @param state The current (extracted) entity state
 	 * @param version The current entity version
 	 * @param instance The entity instance
@@ -61,7 +62,6 @@ public class EntityDeleteAction extends EntityAction {
 		this.state = state;
 
 		NaturalIdMapping naturalIdMapping = persister.getNaturalIdMapping();
-
 		if ( naturalIdMapping != null ) {
 			naturalIdValues = session.getPersistenceContextInternal().getNaturalIdResolutions()
 					.removeLocalResolution(
@@ -70,6 +70,23 @@ public class EntityDeleteAction extends EntityAction {
 							getPersister()
 					);
 		}
+	}
+
+	/**
+	 * Constructs an EntityDeleteAction for an unloaded proxy.
+	 *
+	 * @param id The entity identifier
+	 * @param persister The entity persister
+	 * @param session The session
+	 */
+	public EntityDeleteAction(
+			final Object id,
+			final EntityPersister persister,
+			final SessionImplementor session) {
+		super( session, id, null, persister );
+		this.version = null;
+		this.isCascadeDeleteEnabled = false;
+		this.state = null;
 	}
 
 	public Object getVersion() {

@@ -29,7 +29,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 	 *
 	 * Use this constructor when the collection is non-null.
 	 *
-	 * @param collection The collection to to remove; must be non-null
+	 * @param collection The collection to remove; must be non-null
 	 * @param persister  The collection's persister
 	 * @param id The collection key
 	 * @param emptySnapshot Indicates if the snapshot is empty
@@ -81,6 +81,23 @@ public final class CollectionRemoveAction extends CollectionAction {
 		this.affectedOwner = affectedOwner;
 	}
 
+	/**
+	 * Removes a persistent collection for an unloaded proxy.
+	 *
+	 * Use this constructor when the owning entity is has not been loaded.
+	 * @param persister The collection's persister
+	 * @param id The collection key
+	 * @param session The session
+	 */
+	public CollectionRemoveAction(
+			final CollectionPersister persister,
+			final Object id,
+			final SharedSessionContractImplementor session) {
+		super( persister, null, id, session );
+		emptySnapshot = false;
+		affectedOwner = null;
+	}
+
 	@Override
 	public void execute() throws HibernateException {
 		preRemove();
@@ -88,11 +105,11 @@ public final class CollectionRemoveAction extends CollectionAction {
 		final SharedSessionContractImplementor session = getSession();
 
 		if ( !emptySnapshot ) {
-			// an existing collection that was either non-empty or uninitialized
+			// an existing collection that was either nonempty or uninitialized
 			// is replaced by null or a different collection
-			// (if the collection is uninitialized, hibernate has no way of
+			// (if the collection is uninitialized, Hibernate has no way of
 			// knowing if the collection is actually empty without querying the db)
-			getPersister().remove( getKey(), session);
+			getPersister().remove( getKey(), session );
 		}
 		
 		final PersistentCollection<?> collection = getCollection();

@@ -11,6 +11,7 @@ import org.hibernate.EmptyInterceptor;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.TransientObjectException;
+import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.OrphanRemovalAction;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
@@ -21,10 +22,12 @@ import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.internal.Nullability.NullabilityCheckType;
+import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.service.spi.JpaBootstrapSensitive;
 import org.hibernate.event.spi.DeleteContext;
@@ -37,6 +40,7 @@ import org.hibernate.internal.FastSessionServices;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.spi.CallbackType;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -44,6 +48,7 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
@@ -110,23 +115,38 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 					persistenceContext.reassociateProxy( object, id );
 					if ( !persistenceContext.containsDeletedUnloadedEntityKey( key ) ) {
 						persistenceContext.registerDeletedUnloadedEntityKey( key );
-						source.getActionQueue().addAction(
-								new EntityDeleteAction(
-										id,
-										null,
-										null,
-										null,
-										persister,
-										false,
-										source
-								)
-						);
+
+						if ( persister.hasOwnedCollections() ) {
+							// we're deleting an unloaded proxy with collections
+							for ( Type type : persister.getPropertyTypes() ) { //TODO: when we enable this for subclasses use getSubclassPropertyTypeClosure()
+								deleteOwnedCollections( type, id, source, source.getActionQueue() );
+							}
+						}
+
+						source.getActionQueue().addAction( new EntityDeleteAction( id, persister, source ) );
 					}
 					return true;
 				}
 			}
 		}
 		return false;
+	}
+
+	private void deleteOwnedCollections(Type type, Object key, SharedSessionContractImplementor session, ActionQueue actionQueue) {
+		MappingMetamodelImplementor mappingMetamodel = session.getFactory().getMappingMetamodel();
+		if ( type.isCollectionType() ) {
+			String role = ( (CollectionType) type ).getRole();
+			CollectionPersister persister = mappingMetamodel.getCollectionDescriptor(role);
+			if ( !persister.isInverse() ) {
+				actionQueue.addAction( new CollectionRemoveAction( persister, key, session ) );
+			}
+		}
+		else if ( type.isComponentType() ) {
+			Type[] subtypes = ( (CompositeType) type ).getSubtypes();
+			for ( Type subtype : subtypes ) {
+				deleteOwnedCollections( subtype, key, session, actionQueue );
+			}
+		}
 	}
 
 	private void delete(DeleteEvent event, DeleteContext transientEntities) {
@@ -252,9 +272,8 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	private boolean canBeDeletedWithoutLoading(EventSource source, EntityPersister persister) {
 		return source.getInterceptor() == EmptyInterceptor.INSTANCE
 			&& !persister.implementsLifecycle()
-			&& !persister.hasSubclasses()
+			&& !persister.hasSubclasses() //TODO: should be unnecessary, using EntityPersister.getSubclassPropertyTypeClosure(), etc
 			&& !persister.hasCascadeDelete()
-			&& !persister.hasOwnedCollections()
 			&& !persister.hasNaturalIdentifier()
 			&& !hasRegisteredRemoveCallbacks( persister )
 			&& !hasCustomEventListeners( source );

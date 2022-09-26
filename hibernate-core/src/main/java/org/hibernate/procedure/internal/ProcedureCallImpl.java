@@ -462,23 +462,13 @@ public class ProcedureCallImpl<R>
 	public <T> ProcedureParameter<T> registerParameter(int position, Class<T> javaType, ParameterMode mode) {
 		final BindableType<T> parameterType = getSessionFactory().resolveParameterBindType( javaType );
 
-		final Class<T> expressibleJavaType;
-		if ( parameterType == null ) {
-			expressibleJavaType = null;
-		}
-		else {
-			final SqmExpressible<T> sqmExpressible = parameterType.resolveExpressible( getSessionFactory() );
-			assert sqmExpressible != null;
-
-			expressibleJavaType = sqmExpressible.getExpressibleJavaType().getJavaTypeClass();
-		}
-
 		final ProcedureParameterImpl<T> procedureParameter = new ProcedureParameterImpl<>(
 				position,
 				mode,
-				expressibleJavaType,
+				getExpressibleJavaType( parameterType ),
 				parameterType
 		);
+
 		registerParameter( procedureParameter );
 
 		return procedureParameter;
@@ -518,13 +508,25 @@ public class ProcedureCallImpl<R>
 		final ProcedureParameterImpl<T> parameter = new ProcedureParameterImpl<>(
 				name,
 				mode,
-				parameterType.getBindableJavaType(),
+				getExpressibleJavaType( parameterType ),
 				parameterType
 		);
 
 		registerParameter( parameter );
 
 		return parameter;
+	}
+
+	private <T> Class<T> getExpressibleJavaType(BindableType<T> parameterType) {
+		if ( parameterType == null ) {
+			return null;
+		}
+		else {
+			final SqmExpressible<T> sqmExpressible = parameterType.resolveExpressible( getSessionFactory() );
+			assert sqmExpressible != null;
+
+			return sqmExpressible.getExpressibleJavaType().getJavaTypeClass();
+		}
 	}
 
 	@Override

@@ -60,7 +60,6 @@ import org.hibernate.annotations.ListIndexJdbcType;
 import org.hibernate.annotations.ListIndexJdbcTypeCode;
 import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.ManyToAny;
-import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -971,7 +970,6 @@ public abstract class CollectionBinder {
 		ManyToMany manyToMany = property.getAnnotation( ManyToMany.class );
 		ElementCollection elementCollection = property.getAnnotation( ElementCollection.class );
 		ManyToAny manyToAny = property.getAnnotation( ManyToAny.class );
-		NotFound notFound = property.getAnnotation( NotFound.class );
 
 		FetchType fetchType;
 		if ( oneToMany != null ) {
@@ -991,55 +989,35 @@ public abstract class CollectionBinder {
 					"Define fetch strategy on a property not annotated with @ManyToOne nor @OneToMany nor @CollectionOfElements"
 			);
 		}
-		if ( notFound != null ) {
-			collection.setLazy( false );
 
-			if ( lazy != null ) {
-				collection.setExtraLazy( lazy.value() == LazyCollectionOption.EXTRA );
+		if ( lazy != null ) {
+			collection.setLazy( !( lazy.value() == LazyCollectionOption.FALSE ) );
+			collection.setExtraLazy( lazy.value() == LazyCollectionOption.EXTRA );
+		}
+		else {
+			collection.setLazy( fetchType == FetchType.LAZY );
+			collection.setExtraLazy( false );
+		}
+
+		if ( fetch != null ) {
+			if ( fetch.value() == org.hibernate.annotations.FetchMode.JOIN ) {
+				collection.setFetchMode( FetchMode.JOIN );
+				collection.setLazy( false );
 			}
-
-			if ( fetch != null ) {
-				if ( fetch.value() != null ) {
-					collection.setFetchMode( fetch.value().getHibernateFetchMode() );
-					if ( fetch.value() == org.hibernate.annotations.FetchMode.SUBSELECT ) {
-						collection.setSubselectLoadable( true );
-						collection.getOwner().setSubselectLoadableCollections( true );
-					}
-				}
+			else if ( fetch.value() == org.hibernate.annotations.FetchMode.SELECT ) {
+				collection.setFetchMode( FetchMode.SELECT );
+			}
+			else if ( fetch.value() == org.hibernate.annotations.FetchMode.SUBSELECT ) {
+				collection.setFetchMode( FetchMode.SELECT );
+				collection.setSubselectLoadable( true );
+				collection.getOwner().setSubselectLoadableCollections( true );
 			}
 			else {
-				collection.setFetchMode( AnnotationBinder.getFetchMode( fetchType ) );
+				throw new AssertionFailure( "Unknown FetchMode: " + fetch.value() );
 			}
 		}
 		else {
-			if ( lazy != null ) {
-				collection.setLazy( !( lazy.value() == LazyCollectionOption.FALSE ) );
-				collection.setExtraLazy( lazy.value() == LazyCollectionOption.EXTRA );
-			}
-			else {
-				collection.setLazy( fetchType == FetchType.LAZY );
-				collection.setExtraLazy( false );
-			}
-			if ( fetch != null ) {
-				if ( fetch.value() == org.hibernate.annotations.FetchMode.JOIN ) {
-					collection.setFetchMode( FetchMode.JOIN );
-					collection.setLazy( false );
-				}
-				else if ( fetch.value() == org.hibernate.annotations.FetchMode.SELECT ) {
-					collection.setFetchMode( FetchMode.SELECT );
-				}
-				else if ( fetch.value() == org.hibernate.annotations.FetchMode.SUBSELECT ) {
-					collection.setFetchMode( FetchMode.SELECT );
-					collection.setSubselectLoadable( true );
-					collection.getOwner().setSubselectLoadableCollections( true );
-				}
-				else {
-					throw new AssertionFailure( "Unknown FetchMode: " + fetch.value() );
-				}
-			}
-			else {
-				collection.setFetchMode( AnnotationBinder.getFetchMode( fetchType ) );
-			}
+			collection.setFetchMode( AnnotationBinder.getFetchMode( fetchType ) );
 		}
 	}
 
@@ -2254,7 +2232,7 @@ public abstract class CollectionBinder {
 	 * collection element
 	 * Otherwise delegates to the usual algorithm
 	 */
-	public static void bindManytoManyInverseFk(
+	public void bindManytoManyInverseFk(
 			PersistentClass referencedEntity,
 			AnnotatedJoinColumn[] columns,
 			SimpleValue value,
@@ -2302,6 +2280,9 @@ public abstract class CollectionBinder {
 		}
 		else {
 			BinderHelper.createSyntheticPropertyReference( columns, referencedEntity, null, value, true, buildingContext );
+			if ( notFoundAction == NotFoundAction.IGNORE ) {
+				value.disableForeignKey();
+			}
 			TableBinder.bindFk( referencedEntity, null, columns, value, unique, buildingContext );
 		}
 	}
@@ -2332,12 +2313,6 @@ public abstract class CollectionBinder {
 
 	public void setNotFoundAction(NotFoundAction notFoundAction) {
 		this.notFoundAction = notFoundAction;
-	}
-
-	public void setIgnoreNotFound(boolean ignoreNotFound) {
-		this.notFoundAction = ignoreNotFound
-				? NotFoundAction.IGNORE
-				: null;
 	}
 
 	public void setMapKeyColumns(AnnotatedColumn[] mapKeyColumns) {

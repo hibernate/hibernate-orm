@@ -6,46 +6,40 @@
  */
 package org.hibernate.orm.test.annotations.formula;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-
-import org.hibernate.LazyInitializationException;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
-import org.hibernate.testing.transaction.TransactionUtil2;
+import org.jboss.logging.Logger;
 import org.junit.Rule;
 import org.junit.Test;
 
-import org.jboss.logging.Logger;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.hibernate.testing.transaction.TransactionUtil2.fromTransaction;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@TestForIssue(jiraKey = "HHH-12770")
-public class JoinFormulaOneToManyNotIgnoreLazyFetchingTest extends BaseEntityManagerFunctionalTestCase {
+@TestForIssue(jiraKey = {"HHH-12770", "HHH-15545"})
+public class ManyToManyNotIgnoreLazyFetchingTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
@@ -80,6 +74,9 @@ public class JoinFormulaOneToManyNotIgnoreLazyFetchingTest extends BaseEntityMan
 			Stock stock2 = new Stock();
 			stock2.setId( 2L );
 			entityManager.persist( stock2 );
+			entityManager.flush();
+
+			entityManager.remove(code);
 		} );
 	}
 
@@ -88,8 +85,13 @@ public class JoinFormulaOneToManyNotIgnoreLazyFetchingTest extends BaseEntityMan
 
 		assertFalse( triggerable.wasTriggered() );
 
-		List<Stock> stocks = fromTransaction( entityManagerFactory().unwrap( SessionFactoryImplementor.class ), (session) -> {
-			return session.createQuery("SELECT s FROM Stock s order by id", Stock.class ).getResultList();
+		List<Stock> stocks = fromTransaction( entityManagerFactory().unwrap( SessionFactoryImplementor.class ), session -> {
+			List<Stock> list = session.createQuery("select s from Stock s order by id", Stock.class).getResultList();
+			for (Stock s: list) {
+				assertFalse( Hibernate.isInitialized( s.getCodes() ) );
+				Hibernate.initialize( s.getCodes() );
+			}
+			return list;
 		} );
 
 		assertThat( stocks ).hasSize( 2 );
@@ -97,7 +99,30 @@ public class JoinFormulaOneToManyNotIgnoreLazyFetchingTest extends BaseEntityMan
 		final Stock firstStock = stocks.get( 0 );
 		final Stock secondStock = stocks.get( 1 );
 
-		assertThat( firstStock.getCodes() ).hasSize( 1 );
+		assertThat( firstStock.getCodes() ).hasSize( 0 );
+		assertThat( secondStock.getCodes() ).hasSize( 0 );
+	}
+
+	@Test
+	public void testEagerLoading() {
+
+		assertFalse( triggerable.wasTriggered() );
+
+		List<Stock> stocks = fromTransaction( entityManagerFactory().unwrap( SessionFactoryImplementor.class ),
+				session -> session.createQuery("select s from Stock s left join fetch s.codes order by s.id", Stock.class)
+						.getResultList()
+		);
+
+		assertThat( stocks ).hasSize( 2 );
+
+		for (Stock s: stocks) {
+			assertTrue( Hibernate.isInitialized( s.getCodes() ) );
+		}
+
+		final Stock firstStock = stocks.get( 0 );
+		final Stock secondStock = stocks.get( 1 );
+
+		assertThat( firstStock.getCodes() ).hasSize( 0 );
 		assertThat( secondStock.getCodes() ).hasSize( 0 );
 	}
 
@@ -108,10 +133,15 @@ public class JoinFormulaOneToManyNotIgnoreLazyFetchingTest extends BaseEntityMan
 		@Column(name = "ID")
 		private Long id;
 
-		@OneToMany
+		@ManyToMany
 		@NotFound(action = NotFoundAction.IGNORE)
-		@JoinColumn(name = "CODE_ID", referencedColumnName = "ID")
-		private List<StockCode> codes = new ArrayList<>(  );
+		@JoinTable(name = "STOCK_BY_CODE",
+				joinColumns = @JoinColumn(name = "STOCK_ID", referencedColumnName = "ID"),
+				inverseJoinColumns = {
+						@JoinColumn(name = "CODE_ID", referencedColumnName = "ID"),
+						@JoinColumn(name = "CODE_TYPE", referencedColumnName = "TYPE")
+				})
+		private List<StockCode> codes = new ArrayList<>();
 
 		public Long getId() {
 			return id;

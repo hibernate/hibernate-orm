@@ -73,9 +73,7 @@ public abstract class EntityAction
 
 	@Override
 	public AfterTransactionCompletionProcess getAfterTransactionCompletionProcess() {
-		return needsAfterTransactionCompletion()
-				? this
-				: null;
+		return needsAfterTransactionCompletion() ? this : null;
 	}
 
 	protected abstract boolean hasPostCommitEventListeners();

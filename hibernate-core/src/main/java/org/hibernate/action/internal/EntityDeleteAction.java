@@ -84,9 +84,9 @@ public class EntityDeleteAction extends EntityAction {
 			final EntityPersister persister,
 			final SessionImplementor session) {
 		super( session, id, null, persister );
-		this.version = null;
-		this.isCascadeDeleteEnabled = false;
-		this.state = null;
+		version = null;
+		isCascadeDeleteEnabled = false;
+		state = null;
 	}
 
 	public Object getVersion() {
@@ -113,24 +113,20 @@ public class EntityDeleteAction extends EntityAction {
 		this.lock = lock;
 	}
 
+	private boolean isInstanceLoaded() {
+		// A null instance signals that we're deleting an unloaded proxy.
+		return getInstance() != null;
+	}
+
 	@Override
 	public void execute() throws HibernateException {
 		final Object id = getId();
+		final Object version = getCurrentVersion();
 		final EntityPersister persister = getPersister();
 		final SharedSessionContractImplementor session = getSession();
 		final Object instance = getInstance();
 
-		final boolean veto = preDelete();
-
-		Object version = this.version;
-		if ( persister.isVersionPropertyGenerated()
-				// null instance signals that we're deleting an unloaded proxy, no need for a version
-				&& instance != null ) {
-			// we need to grab the version value from the entity, otherwise
-			// we have issues with generated-version entities that may have
-			// multiple actions queued during the same flush
-			version = persister.getVersion( instance );
-		}
+		final boolean veto = isInstanceLoaded() && preDelete();
 
 		final Object ck;
 		if ( persister.canWriteToCache() ) {
@@ -146,18 +142,29 @@ public class EntityDeleteAction extends EntityAction {
 			persister.delete( id, version, instance, session );
 		}
 
-		if ( instance == null ) {
-			// null instance signals that we're deleting an unloaded proxy
-			postDeleteUnloaded( id, persister, session, ck );
+		if ( isInstanceLoaded() ) {
+			postDeleteLoaded( id, persister, session, instance, ck );
 		}
 		else {
-			postDeleteLoaded( id, persister, session, instance, ck );
+			// we're deleting an unloaded proxy
+			postDeleteUnloaded( id, persister, session, ck );
 		}
 
 		final StatisticsImplementor statistics = getSession().getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() && !veto ) {
 			statistics.deleteEntity( getPersister().getEntityName() );
 		}
+	}
+
+	private Object getCurrentVersion() {
+		return getPersister().isVersionPropertyGenerated()
+						// skip if we're deleting an unloaded proxy, no need for the version
+						&& isInstanceLoaded()
+				// we need to grab the version value from the entity, otherwise
+				// we have issues with generated-version entities that may have
+				// multiple actions queued during the same flush
+				? getPersister().getVersion( getInstance() )
+				: version;
 	}
 
 	private void postDeleteLoaded(
@@ -202,12 +209,12 @@ public class EntityDeleteAction extends EntityAction {
 	}
 
 	protected boolean preDelete() {
-		boolean veto = false;
 		final EventListenerGroup<PreDeleteEventListener> listenerGroup = getFastSessionServices().eventListenerGroup_PRE_DELETE;
 		if ( listenerGroup.isEmpty() ) {
-			return veto;
+			return false;
 		}
 		final PreDeleteEvent event = new PreDeleteEvent( getInstance(), getId(), state, getPersister(), eventSource() );
+		boolean veto = false;
 		for ( PreDeleteEventListener listener : listenerGroup.listeners() ) {
 			veto |= listener.onPreDelete( event );
 		}

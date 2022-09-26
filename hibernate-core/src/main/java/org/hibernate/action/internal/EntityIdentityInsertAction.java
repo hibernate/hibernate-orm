@@ -52,7 +52,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 			SharedSessionContractImplementor session,
 			boolean isDelayed) {
 		super(
-				( isDelayed ? generateDelayedPostInsertIdentifier() : null ),
+				isDelayed ? generateDelayedPostInsertIdentifier() : null,
 				state,
 				instance,
 				isVersionIncrementDisabled,

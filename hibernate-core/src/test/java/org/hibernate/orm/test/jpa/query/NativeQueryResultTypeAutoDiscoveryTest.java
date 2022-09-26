@@ -95,22 +95,32 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	}
 
 	@Test
-	public void commonNumericTypes() {
+	@SkipForDialect(value=OracleDialect.class, comment="Oracle maps integer types to number")
+	public void smallintType() {
+		createEntityManagerFactory(SmallintEntity.class);
+		doTest( SmallintEntity.class, (short)32767 );
+	}
+
+	@Test
+	public void integerTypes() {
 		createEntityManagerFactory(
 				BigintEntity.class,
-				IntegerEntity.class,
-				SmallintEntity.class,
-				DoubleEntity.class
+				IntegerEntity.class
 		);
 
 		doTest( BigintEntity.class, 9223372036854775807L );
 		doTest( IntegerEntity.class, 2147483647 );
-		doTest( SmallintEntity.class, (short)32767 );
+	}
+
+	@Test
+	public void doubleType() {
+		createEntityManagerFactory( DoubleEntity.class );
 		doTest( DoubleEntity.class, 445146115151.45845 );
 	}
 
 	@Test
 	@SkipForDialect(value = SybaseDialect.class, comment = "No support for the bit datatype so we use tinyint")
+	@SkipForDialect(value = OracleDialect.class, comment = "No support for the bit datatype so we use number(1,0)")
 	public void booleanType() {
 		createEntityManagerFactory( BooleanEntity.class );
 		doTest( BooleanEntity.class, true );
@@ -118,6 +128,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 
 	@Test
 	@SkipForDialect(value = SybaseDialect.class, comment = "No support for the bit datatype so we use tinyint")
+	@SkipForDialect(value = OracleDialect.class, comment = "No support for the bit datatype so we use number(1,0)")
 	public void bitType() {
 		createEntityManagerFactory( BitEntity.class );
 		doTest( BitEntity.class, false );
@@ -129,6 +140,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(value = DB2Dialect.class, comment = "No support for the tinyint datatype so we use smallint")
 	@SkipForDialect(value = AbstractTransactSQLDialect.class, comment = "No support for the tinyint datatype so we use smallint")
 	@SkipForDialect(value = AbstractHANADialect.class, comment = "No support for the tinyint datatype so we use smallint")
+	@SkipForDialect(value = OracleDialect.class, comment="Oracle maps tinyint to number")
 	public void tinyintType() {
 		createEntityManagerFactory( TinyintEntity.class );
 		doTest( TinyintEntity.class, (byte)127 );

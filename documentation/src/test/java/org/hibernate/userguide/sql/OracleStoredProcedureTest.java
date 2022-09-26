@@ -56,7 +56,7 @@ public class OracleStoredProcedureTest {
         scope.inTransaction( entityManager -> {
             Session session = entityManager.unwrap(Session.class);
             session.doWork(connection -> {
-                try(Statement statement = connection.createStatement()) {
+                try (Statement statement = connection.createStatement()) {
                     statement.executeUpdate(
                         "CREATE OR REPLACE PROCEDURE sp_count_phones ( " +
                         "   personId IN NUMBER,  " +
@@ -67,7 +67,7 @@ public class OracleStoredProcedureTest {
                         "    FROM phone  " +
                         "    WHERE person_id = personId; " +
                         "END;"
-                   );
+                    );
                     //tag::sql-sp-ref-cursor-oracle-example[]
                     statement.executeUpdate(
                         "CREATE OR REPLACE PROCEDURE sp_person_phones (" +
@@ -80,7 +80,7 @@ public class OracleStoredProcedureTest {
                         "    FROM phone " +
                         "    WHERE person_id = personId; " +
                         "END;"
-                   );
+                    );
                     //end::sql-sp-ref-cursor-oracle-example[]
                     statement.executeUpdate(
                         "CREATE OR REPLACE FUNCTION fn_count_phones (" +
@@ -94,7 +94,7 @@ public class OracleStoredProcedureTest {
                         "    WHERE person_id = personId; " +
                         "    RETURN(phoneCount); " +
                         "END;"
-                   );
+                    );
                 }
 			});
         });
@@ -222,11 +222,11 @@ public class OracleStoredProcedureTest {
     @Test
     public void testStoredProcedureReturnValue(EntityManagerFactoryScope scope) {
         scope.inTransaction( entityManager -> {
-            BigDecimal phoneCount = (BigDecimal) entityManager
+            Integer phoneCount = (Integer) entityManager
                     .createNativeQuery( "SELECT fn_count_phones(:personId) FROM DUAL" )
                     .setParameter( "personId", 1 )
                     .getSingleResult();
-            assertEquals( BigDecimal.valueOf( 2 ), phoneCount );
+            assertEquals( 2, phoneCount );
         } );
     }
 }

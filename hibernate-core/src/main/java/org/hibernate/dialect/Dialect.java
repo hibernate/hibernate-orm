@@ -595,7 +595,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @param columnTypeName the column type name
 	 * @param jdbcTypeCode the {@link SqlTypes type code}
 	 * @param precision the precision or 0
-	 * @param scale the scale of 0
+	 * @param scale the scale or 0
 	 * @return an appropriate instance of {@link JdbcType}
 	 */
 	public JdbcType resolveSqlTypeDescriptor(

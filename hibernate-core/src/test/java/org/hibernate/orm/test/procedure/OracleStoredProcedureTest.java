@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.procedure;
 
-import java.math.BigDecimal;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -188,11 +187,11 @@ public class OracleStoredProcedureTest {
 	public void testStoredProcedureReturnValue(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					BigDecimal phoneCount = (BigDecimal) entityManager
+					Integer phoneCount = (Integer) entityManager
 							.createNativeQuery( "SELECT fn_count_phones(:personId) FROM DUAL" )
 							.setParameter( "personId", person1.getId() )
 							.getSingleResult();
-					assertEquals( BigDecimal.valueOf( 2 ), phoneCount );
+					assertEquals( 2, phoneCount );
 				}
 		);
 	}

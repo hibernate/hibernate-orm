@@ -20,7 +20,7 @@ import org.graalvm.nativeimage.hosted.RuntimeReflection;
 /**
  * This registers all ANTLR parser nodes for reflection, something that is necessary
  * as the HQL parser's inner workings are based on reflection.
- * This is different than the "static" registrations of {@link GraalVMStaticAutofeature}
+ * This is different than the "static" registrations of {@link GraalVMStaticFeature}
  * as we only register these if the HQL parser is actually reachable: some particularly
  * simple applications might not need dynamic queries being expressed in string form,
  * and for such cases the reflective registrations can be skipped.
@@ -51,7 +51,7 @@ public final class QueryParsingSupport implements Feature {
 
 	@Override
 	public String getDescription() {
-		return "Hibernate ORM HQL Parser Support";
+		return "Hibernate ORM's support for HQL Parser in GraalVM";
 	}
 
 	@AllowSysOut

@@ -35,6 +35,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedStoredProcedureQueries;
@@ -42,12 +43,15 @@ import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.StoredProcedureQuery;
+import jakarta.persistence.Table;
 import org.assertj.core.api.Assertions;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 
@@ -59,7 +63,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 				Person.class,
 				Phone.class,
 				OracleStoredProcedureTest.IdHolder.class,
-				Vote.class
+				Vote.class,
+				OracleStoredProcedureTest.Address.class
 		}
 )
 @RequiresDialect(value = OracleDialect.class)
@@ -84,6 +89,43 @@ public class OracleStoredProcedureTest {
 			Assertions.assertThat( singleResult ).isInstanceOf( Integer.class );
 			Assertions.assertThat( singleResult ).isEqualTo( 4 );
 		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-15542")
+	public void testStoredProcedureInAndOutAndRefCursorParameters(EntityManagerFactoryScope scope) {
+		String city = "London";
+		String street = "Lollard Street";
+		String zip = "SE116UG";
+		scope.inTransaction(
+				entityManager -> {
+					Address address = new Address( 1l, street, city, zip );
+					entityManager.persist( address );
+				}
+		);
+		scope.inTransaction(
+				entityManager -> {
+					StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "GET_ADDRESS_BY_NAME" );
+					query.registerStoredProcedureParameter( "street_in", String.class, ParameterMode.IN );
+					query.registerStoredProcedureParameter( "city_in", String.class, ParameterMode.IN );
+					query.registerStoredProcedureParameter( "rec_out", ResultSet.class, ParameterMode.REF_CURSOR );
+					query.registerStoredProcedureParameter( "err_out", String.class, ParameterMode.OUT );
+
+					query.setParameter( "street_in", street )
+							.setParameter( "city_in", city );
+					query.execute();
+					ResultSet rs = (ResultSet) query.getOutputParameterValue( "rec_out" );
+					try {
+						assertTrue( rs.next() );
+						assertThat( rs.getString( "street" ), is( street ) );
+						assertThat( rs.getString( "city" ), is( city ) );
+						assertThat( rs.getString( "zip" ), is( zip ) );
+					}
+					catch (SQLException e) {
+						throw new RuntimeException( e );
+					}
+				}
+		);
 	}
 
 
@@ -422,6 +464,25 @@ public class OracleStoredProcedureTest {
 								"    RETURN pos; " +
 								"END;"
 				);
+
+				statement.execute(
+						"CREATE OR REPLACE PROCEDURE GET_ADDRESS_BY_NAME (" +
+								" street_in IN ADDRESS_TABLE.STREET%TYPE," +
+								" city_in IN ADDRESS_TABLE.CITY%TYPE," +
+								" rec_out OUT SYS_REFCURSOR," +
+								" err_out OUT VARCHAR)" +
+								" AS" +
+								" BEGIN" +
+								" OPEN rec_out FOR" +
+								" SELECT A.STREET, A.CITY, A.zip" +
+								" FROM  ADDRESS_TABLE A " +
+								" WHERE " +
+								" A.STREET = street_in" +
+								" AND A.CITY = city_in;" +
+								" EXCEPTION " +
+								" WHEN OTHERS THEN " +
+								" err_out := SQLCODE || ' ' || SQLERRM;" +
+								" END;" );
 			}
 			catch (SQLException e) {
 				System.err.println( "Error exporting procedure and function definitions to Oracle database : " + e.getMessage() );
@@ -503,5 +564,45 @@ public class OracleStoredProcedureTest {
 		@Id
 		Long id;
 		String name;
+	}
+
+	@Entity
+	@Table(name="ADDRESS_TABLE")
+	public static class Address{
+		@Id
+		@Column(name="ID")
+		private long id;
+		@Column(name="STREET")
+		private String street;
+		@Column(name="CITY")
+		private String city;
+		@Column(name="ZIP")
+		private String zip;
+
+		public Address() {
+		}
+
+		public Address(long id, String street, String city, String zip) {
+			this.id = id;
+			this.street = street;
+			this.city = city;
+			this.zip = zip;
+		}
+
+		public long getId() {
+			return id;
+		}
+
+		public String getStreet() {
+			return street;
+		}
+
+		public String getCity() {
+			return city;
+		}
+
+		public String getZip() {
+			return zip;
+		}
 	}
 }

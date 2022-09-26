@@ -1771,8 +1771,8 @@ public final class AnnotationBinder {
 		final JavaType<?> domainJtd = jtdRegistry.resolveDescriptor( domainJavaClass );
 		final JavaType<?> relationalJtd = jtdRegistry.resolveDescriptor( relationalJavaClass );
 
-		@SuppressWarnings({ "unchecked", "rawtypes" })
-		final JpaAttributeConverterImpl valueConverter = new JpaAttributeConverterImpl(
+		@SuppressWarnings({"rawtypes", "unchecked"})
+		final JpaAttributeConverterImpl<?,?> valueConverter = new JpaAttributeConverterImpl(
 				bean,
 				converterJtd,
 				domainJtd,
@@ -2474,10 +2474,7 @@ public final class AnnotationBinder {
 				&& isToManyAssociationWithinEmbeddableCollection(propertyHolder) ) {
 			throw new AnnotationException(
 					"@OneToMany, @ManyToMany or @ElementCollection cannot be used inside an @Embeddable that is also contained within an @ElementCollection: "
-							+ BinderHelper.getPath(
-							propertyHolder,
-							inferredData
-					)
+							+ BinderHelper.getPath(propertyHolder, inferredData)
 			);
 		}
 
@@ -2485,10 +2482,7 @@ public final class AnnotationBinder {
 				&& manyToManyAnn != null && !manyToManyAnn.mappedBy().isEmpty() ) {
 			throw new AnnotationException(
 					"Explicit @OrderColumn on inverse side of @ManyToMany is illegal: "
-							+ BinderHelper.getPath(
-							propertyHolder,
-							inferredData
-					)
+							+ BinderHelper.getPath(propertyHolder, inferredData)
 			);
 		}
 
@@ -2519,7 +2513,13 @@ public final class AnnotationBinder {
 		collectionBinder.setPropertyHolder(propertyHolder);
 		Cascade hibernateCascade = property.getAnnotation( Cascade.class );
 		NotFound notFound = property.getAnnotation( NotFound.class );
-		collectionBinder.setNotFoundAction( notFound == null ? null : notFound.action() );
+		if ( notFound != null ) {
+			if ( manyToManyAnn == null ) {
+				throw new AnnotationException("collection annotated @NotFound is not a @ManyToMany association: "
+						+ BinderHelper.getPath(propertyHolder, inferredData) );
+			}
+			collectionBinder.setNotFoundAction( notFound.action() );
+		}
 		collectionBinder.setCollectionType( inferredData.getProperty().getElementClass() );
 		collectionBinder.setAccessType( inferredData.getDefaultAccess() );
 
@@ -3022,7 +3022,7 @@ public final class AnnotationBinder {
 		return null;
 	}
 
-	protected static Class<? extends CompositeUserType<?>> resolveTimeZoneStorageCompositeUserType(
+	static Class<? extends CompositeUserType<?>> resolveTimeZoneStorageCompositeUserType(
 			XProperty property,
 			XClass returnedClass,
 			MetadataBuildingContext context) {

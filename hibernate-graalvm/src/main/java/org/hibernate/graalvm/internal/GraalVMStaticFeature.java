@@ -33,7 +33,7 @@ import org.graalvm.nativeimage.hosted.RuntimeReflection;
  * </p>
  * @author Sanne Grinovero
  */
-public class GraalVMStaticAutofeature implements Feature {
+public class GraalVMStaticFeature implements Feature {
 
 	public void beforeAnalysis(Feature.BeforeAnalysisAccess before) {
 		final Class<?>[] needsHavingSimpleConstructors = StaticClassLists.typesNeedingDefaultConstructorAccessible();
@@ -56,6 +56,6 @@ public class GraalVMStaticAutofeature implements Feature {
 
 	@Override
 	public String getDescription() {
-		return "Hibernate ORM GraalVM static reflection registration";
+		return "Hibernate ORM's static reflection registrations for GraalVM";
 	}
 }

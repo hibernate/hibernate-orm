@@ -21,7 +21,6 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.ModeStatsModeEmulation;
-import org.hibernate.dialect.function.NvlCoalesceEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Oracle12cIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LegacyOracleLimitHandler;
@@ -636,39 +635,36 @@ public class OracleDialect extends Dialect {
 			int precision,
 			int scale,
 			JdbcTypeRegistry jdbcTypeRegistry) {
-		// This is the reverse of what registerNumericTypeMappings registers
 		switch ( jdbcTypeCode ) {
 			case Types.NUMERIC:
-				// For some reason, the Oracle JDBC driver reports floats as numerics with scale -127
 				if ( scale == -127 ) {
+					// For some reason, the Oracle JDBC driver reports FLOAT
+					// as NUMERIC with scale -127
 					if ( precision <= getFloatPrecision() ) {
 						return jdbcTypeRegistry.getDescriptor( Types.FLOAT );
 					}
 					return jdbcTypeRegistry.getDescriptor( Types.DOUBLE );
 				}
+				//intentional fall-through:
 			case Types.DECIMAL:
 				if ( scale == 0 ) {
-					switch ( precision ) {
-						case 1:
-							return jdbcTypeRegistry.getDescriptor( Types.BOOLEAN );
-						case 3:
-							return jdbcTypeRegistry.getDescriptor( Types.TINYINT );
-						case 5:
-							return jdbcTypeRegistry.getDescriptor( Types.SMALLINT );
-						case 10:
-							return jdbcTypeRegistry.getDescriptor( Types.INTEGER );
-						case 19:
-							return jdbcTypeRegistry.getDescriptor( Types.BIGINT );
+					// Don't infer TINYINT or SMALLINT on Oracle, since the
+					// range of values of a NUMBER(3,0) or NUMBER(5,0) just
+					// doesn't really match naturally.
+					if ( precision <= 10 ) {
+						// A NUMBER(10,0) might not fit in a 32-bit integer,
+						// but it's still pretty safe to use INTEGER here,
+						// since we can assume the most likely reason to find
+						// a column of type NUMBER(10,0) in an Oracle database
+						// is that it's intended to store an integer.
+						return jdbcTypeRegistry.getDescriptor( Types.INTEGER );
+					}
+					else if ( precision <= 19 ) {
+						return jdbcTypeRegistry.getDescriptor( Types.BIGINT );
 					}
 				}
 		}
-		return super.resolveSqlTypeDescriptor(
-				columnTypeName,
-				jdbcTypeCode,
-				precision,
-				scale,
-				jdbcTypeRegistry
-		);
+		return super.resolveSqlTypeDescriptor( columnTypeName, jdbcTypeCode, precision, scale, jdbcTypeRegistry );
 	}
 
 	/**

@@ -31,3 +31,10 @@ Due to this change, schema validation errors could occur on existing databases.
 The migration to `uuid` requires a migration expression like `cast(old as uuid)`.
 
 To retain backwards compatibility, configure the setting `hibernate.type.preferred_uuid_jdbc_type` to `BINARY`.
+
+=== Column type inference for `number(n,0)` in native SQL queries on Oracle
+
+Previously, since Hibernate 6.0, columns of type `number` with scale 0 on Oracle were interpreted as `boolean`, `tinyint`, `smallint`, `int`, or `bigint`,
+depending on the precision.
+
+Now, columns of type `number` with scale 0 are interpreted as `int` or `bigint` depending on the precision.

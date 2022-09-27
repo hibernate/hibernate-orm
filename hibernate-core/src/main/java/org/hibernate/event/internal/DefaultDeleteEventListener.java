@@ -27,7 +27,6 @@ import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.service.spi.JpaBootstrapSensitive;
 import org.hibernate.event.spi.DeleteContext;
@@ -119,7 +118,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 						if ( persister.hasOwnedCollections() ) {
 							// we're deleting an unloaded proxy with collections
 							for ( Type type : persister.getPropertyTypes() ) { //TODO: when we enable this for subclasses use getSubclassPropertyTypeClosure()
-								deleteOwnedCollections( type, id, source, source.getActionQueue() );
+								deleteOwnedCollections( type, id, source );
 							}
 						}
 
@@ -132,8 +131,9 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		return false;
 	}
 
-	private void deleteOwnedCollections(Type type, Object key, SharedSessionContractImplementor session, ActionQueue actionQueue) {
+	private static void deleteOwnedCollections(Type type, Object key, EventSource session) {
 		MappingMetamodelImplementor mappingMetamodel = session.getFactory().getMappingMetamodel();
+		ActionQueue actionQueue = session.getActionQueue();
 		if ( type.isCollectionType() ) {
 			String role = ( (CollectionType) type ).getRole();
 			CollectionPersister persister = mappingMetamodel.getCollectionDescriptor(role);
@@ -144,7 +144,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		else if ( type.isComponentType() ) {
 			Type[] subtypes = ( (CompositeType) type ).getSubtypes();
 			for ( Type subtype : subtypes ) {
-				deleteOwnedCollections( subtype, key, session, actionQueue );
+				deleteOwnedCollections( subtype, key, session );
 			}
 		}
 	}
@@ -161,16 +161,12 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		}
 	}
 
-	private void deleteTransientInstance(
-			DeleteEvent event,
-			DeleteContext transientEntities,
-			Object entity) {
-
+	private void deleteTransientInstance(DeleteEvent event, DeleteContext transientEntities, Object entity) {
 		LOG.trace( "Entity was not persistent in delete processing" );
 
 		final EventSource source = event.getSession();
 
-		EntityPersister persister = source.getEntityPersister(event.getEntityName(), entity);
+		EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 		if ( ForeignKeys.isTransient( persister.getEntityName(), entity, null, source ) ) {
 			deleteTransientEntity( source, entity, event.isCascadeDeleteEnabled(), persister, transientEntities );
 		}
@@ -194,7 +190,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			EntityEntry entityEntry = persistenceContext.addEntity(
 					entity,
 					persister.isMutable() ? Status.MANAGED : Status.READ_ONLY,
-					persister.getValues(entity),
+					persister.getValues( entity ),
 					key,
 					version,
 					LockMode.NONE,
@@ -213,11 +209,8 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			DeleteContext transientEntities,
 			Object entity,
 			EntityEntry entityEntry) {
-
 		LOG.trace( "Deleting a persistent instance" );
-
 		final EventSource source = event.getSession();
-
 		if ( entityEntry.getStatus() == Status.DELETED || entityEntry.getStatus() == Status.GONE
 				|| source.getPersistenceContextInternal()
 						.containsDeletedUnloadedEntityKey( entityEntry.getEntityKey() ) ) {
@@ -245,24 +238,20 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			Object id,
 			Object version,
 			EntityEntry entityEntry) {
-
 		callbackRegistry.preRemove(entity);
-		if ( invokeDeleteLifecycle(source, entity, persister) ) {
-			return;
-		}
-
-		deleteEntity(
-				source,
-				entity,
-				entityEntry,
-				event.isCascadeDeleteEnabled(),
-				event.isOrphanRemovalBeforeUpdates(),
-				persister,
-				transientEntities
-		);
-
-		if ( source.getFactory().getSessionFactoryOptions().isIdentifierRollbackEnabled() ) {
-			persister.resetIdentifier(entity, id, version, source);
+		if ( !invokeDeleteLifecycle( source, entity, persister ) ) {
+			deleteEntity(
+					source,
+					entity,
+					entityEntry,
+					event.isCascadeDeleteEnabled(),
+					event.isOrphanRemovalBeforeUpdates(),
+					persister,
+					transientEntities
+			);
+			if ( source.getFactory().getSessionFactoryOptions().isIdentifierRollbackEnabled() ) {
+				persister.resetIdentifier( entity, id, version, source );
+			}
 		}
 	}
 
@@ -467,9 +456,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		for ( int i = 0; i < types.length; i++) {
 			if ( types[i].isCollectionType() && !enhancementMetadata.isAttributeLoaded( parent, propertyNames[i] ) ) {
 				final CollectionType collectionType = (CollectionType) types[i];
-				final CollectionPersister collectionDescriptor = persister.getFactory()
-						.getRuntimeMetamodels()
-						.getMappingMetamodel()
+				final CollectionPersister collectionDescriptor = persister.getFactory().getMappingMetamodel()
 						.getCollectionDescriptor( collectionType.getRole() );
 				if ( collectionDescriptor.needsRemove() || collectionDescriptor.hasCache() ) {
 					final Object keyOfOwner = collectionType.getKeyOfOwner( parent, eventSource.getSession() );

@@ -130,7 +130,6 @@ public abstract class AbstractSaveEventListener<C>
 						persister.getIdentifierGenerator().getClass().getName()
 				);
 			}
-
 			return performSave( entity, generatedId, persister, false, context, source, true );
 		}
 	}
@@ -166,11 +165,28 @@ public abstract class AbstractSaveEventListener<C>
 			LOG.tracev( "Saving {0}", MessageHelper.infoString( persister, id, source.getFactory() ) );
 		}
 
-		final EntityKey key;
-		if ( !useIdentityColumn ) {
-			key = source.generateEntityKey( id, persister );
+		final EntityKey key = entityKey( entity, id, persister, useIdentityColumn, source );
+		if ( invokeSaveLifecycle( entity, persister, source ) ) {
+			return id;
+		}
+		else {
+			return performSaveOrReplicate(
+					entity,
+					key,
+					persister,
+					useIdentityColumn,
+					context,
+					source,
+					requiresImmediateIdAccess
+			);
+		}
+	}
+
+	private static EntityKey entityKey(Object entity, Object id, EntityPersister persister, boolean useIdentityColumn, EventSource source) {
+		if ( !useIdentityColumn) {
+			final EntityKey key = source.generateEntityKey( id, persister );
 			final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
-			Object old = persistenceContext.getEntity( key );
+			final Object old = persistenceContext.getEntity( key );
 			if ( old != null ) {
 				if ( persistenceContext.getEntry( old ).getStatus() == Status.DELETED ) {
 					source.forceFlush( persistenceContext.getEntry( old ) );
@@ -180,24 +196,11 @@ public abstract class AbstractSaveEventListener<C>
 				}
 			}
 			persister.setIdentifier( entity, id, source );
+			return key;
 		}
 		else {
-			key = null;
+			return null;
 		}
-
-		if ( invokeSaveLifecycle( entity, persister, source ) ) {
-			return id; //EARLY EXIT
-		}
-
-		return performSaveOrReplicate(
-				entity,
-				key,
-				persister,
-				useIdentityColumn,
-				context,
-				source,
-				requiresImmediateIdAccess
-		);
 	}
 
 	protected boolean invokeSaveLifecycle(Object entity, EntityPersister persister, EventSource source) {
@@ -238,10 +241,9 @@ public abstract class AbstractSaveEventListener<C>
 			EventSource source,
 			boolean requiresImmediateIdAccess) {
 
-		Object id = key == null ? null : key.getIdentifier();
+		final Object id = key == null ? null : key.getIdentifier();
 
-		boolean inTrx = source.isTransactionInProgress();
-		boolean shouldDelayIdentityInserts = !inTrx && !requiresImmediateIdAccess;
+		boolean shouldDelayIdentityInserts = !source.isTransactionInProgress() && !requiresImmediateIdAccess;
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 
 		// Put a placeholder in entries, so we don't recurse back and try to save() the
@@ -262,29 +264,8 @@ public abstract class AbstractSaveEventListener<C>
 
 		cascadeBeforeSave( source, persister, entity, context );
 
-		Object[] values = persister.getPropertyValuesToInsert( entity, getMergeMap( context ), source );
-		Type[] types = persister.getPropertyTypes();
-
-		boolean substitute = substituteValuesIfNecessary( entity, id, values, persister, source );
-
-		if ( persister.hasCollections() ) {
-			substitute = visitCollectionsBeforeSave( entity, id, values, types, source ) || substitute;
-		}
-
-		if ( substitute ) {
-			persister.setValues( entity, values );
-		}
-
-		TypeHelper.deepCopy(
-				values,
-				types,
-				persister.getPropertyUpdateability(),
-				values,
-				source
-		);
-
 		final AbstractEntityInsertAction insert = addInsertAction(
-				values,
+				cloneAndSubstituteValues( entity, persister, context, source, id ),
 				id,
 				entity,
 				persister,
@@ -296,20 +277,10 @@ public abstract class AbstractSaveEventListener<C>
 		// postpone initializing id in case the insert has non-nullable transient dependencies
 		// that are not resolved until cascadeAfterSave() is executed
 		cascadeAfterSave( source, persister, entity, context );
-		if ( useIdentityColumn && insert.isEarlyInsert() ) {
-			if ( !(insert instanceof EntityIdentityInsertAction) ) {
-				throw new IllegalStateException(
-						"Insert should be using an identity column, but action is of unexpected type: " +
-								insert.getClass().getName()
-				);
-			}
-			id = ((EntityIdentityInsertAction) insert).getGeneratedId();
 
-			insert.handleNaturalIdPostSaveNotifications( id );
-		}
+		final Object finalId = handleGeneratedId( useIdentityColumn, id, insert );
 
 		EntityEntry newEntry = persistenceContext.getEntry( entity );
-
 		if ( newEntry != original ) {
 			EntityEntryExtraState extraState = newEntry.getExtraState( EntityEntryExtraState.class );
 			if ( extraState == null ) {
@@ -317,7 +288,49 @@ public abstract class AbstractSaveEventListener<C>
 			}
 		}
 
-		return id;
+		return finalId;
+	}
+
+	private static Object handleGeneratedId(boolean useIdentityColumn, Object id, AbstractEntityInsertAction insert) {
+		if ( useIdentityColumn && insert.isEarlyInsert() ) {
+			if ( insert instanceof EntityIdentityInsertAction ) {
+				Object generatedId = ((EntityIdentityInsertAction) insert).getGeneratedId();
+				insert.handleNaturalIdPostSaveNotifications( generatedId );
+				return generatedId;
+			}
+			else {
+				throw new IllegalStateException(
+						"Insert should be using an identity column, but action is of unexpected type: "
+								+ insert.getClass().getName()
+				);
+			}
+		}
+		else {
+			return id;
+		}
+	}
+
+	private Object[] cloneAndSubstituteValues(Object entity, EntityPersister persister, C context, EventSource source, Object id) {
+		Object[] values = persister.getPropertyValuesToInsert(entity, getMergeMap(context), source);
+		Type[] types = persister.getPropertyTypes();
+
+		boolean substitute = substituteValuesIfNecessary(entity, id, values, persister, source);
+		if ( persister.hasCollections() ) {
+			substitute = visitCollectionsBeforeSave(entity, id, values, types, source) || substitute;
+		}
+
+		if ( substitute ) {
+			persister.setValues(entity, values );
+		}
+
+		TypeHelper.deepCopy(
+				values,
+				types,
+				persister.getPropertyUpdateability(),
+				values,
+				source
+		);
+		return values;
 	}
 
 	private AbstractEntityInsertAction addInsertAction(
@@ -434,7 +447,6 @@ public abstract class AbstractSaveEventListener<C>
 			EntityPersister persister,
 			Object entity,
 			C context) {
-
 		// cascade-save to many-to-one BEFORE the parent is saved
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
@@ -466,9 +478,8 @@ public abstract class AbstractSaveEventListener<C>
 			EntityPersister persister,
 			Object entity,
 			C context) {
-
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		// cascade-save to collections AFTER the collection owner was saved
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
 		try {
 			Cascade.cascade(

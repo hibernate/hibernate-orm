@@ -111,11 +111,15 @@ public class MultiLoadTest {
 		scope.inTransaction(
 				session -> {
 					// delete one of them (but do not flush)...
-					session.delete( session.load( SimpleEntity.class, 5 ) );
+					SimpleEntity s4 = session.load(SimpleEntity.class, 5);
+					session.delete( s4 );
+
+					assertFalse( Hibernate.isInitialized( s4 ) );
 
 					// as a baseline, assert based on how load() handles it
 					SimpleEntity s5 = session.load( SimpleEntity.class, 5 );
 					assertNotNull( s5 );
+					assertFalse( Hibernate.isInitialized( s5 ) );
 				}
 		);
 	}
@@ -181,7 +185,7 @@ public class MultiLoadTest {
 
 					// and then, assert how get() handles it
 					SimpleEntity s5 = session.get( SimpleEntity.class, 5 );
-					assertNotNull( s5 ); //because we didn't flush the deletion!
+					assertNull( s5 );
 				}
 		);
 	}

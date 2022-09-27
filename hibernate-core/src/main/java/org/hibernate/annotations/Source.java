@@ -14,8 +14,16 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Optional annotation in conjunction with {@link jakarta.persistence.Version} and timestamp version properties
- * indicating the source of the timestamp value.
+ * Indicates the source of timestamps for an entity
+ * {@linkplain jakarta.persistence.Version version property} of
+ * type {@link java.sql.Timestamp}:
+ * <ul>
+ * <li>{@link SourceType#VM} indicates that the virtual machine
+ *     {@linkplain java.time.Clock#instant() current instance}
+ *     is used, and
+ * <li>{@link SourceType#DB} indicates that the database
+ *     {@code current_timestamp} function should be used.
+ * </ul>
  *
  * @author Hardy Ferentschik
  */
@@ -23,7 +31,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface Source {
 	/**
-	 * How is the timestamp generated?  Default is a JVM generated value.
+	 * The source of timestamps. By default, the {@linkplain
+	 * SourceType#VM virtual machine} is the source.
 	 */
 	SourceType value() default SourceType.VM;
 }

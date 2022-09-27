@@ -3,6 +3,32 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.6.12.Final (September 27, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32105
+
+** Bug
+    * [HHH-15523] - Missing use of SqlStringGenerationContext in MapBinder#getFromAndWhereFormula
+    * [HHH-15522] - Hibernate.isInitialized method not working for Envers Collections
+    * [HHH-15520] - ValueGeneration on @OneToOne leads to boot error 
+    * [HHH-15505] - Getter of loaded entity returns null when using bytecode enhancement on entity whose field is defined both in mapped superclass and concrete entity
+    * [HHH-15235] - PropertyAccessException on OneToOne mapping after migration to Hibernate 5.6
+    * [HHH-15216] - Cannot change MetadataProvider implementation because JPAXMLOverriddenMetadataProvider is final and precisely expected by a cast operator
+    * [HHH-15045] - onFlushDirty() invoked on parent entity in a @OneToOne relationship when no table columns are changed
+    * [HHH-14943] - byNaturalId API creates unparseable query (AND keyword instead of WHERE)
+
+** Deprecation
+    * [HHH-15536] - Deprecate SharedSessionContractImplementor#getTransactionStartTimestamp() and CacheTransactionSynchronization#getCurrentTransactionStartTimestamp()
+
+** New Feature
+    * [HHH-15508] - Backport Session#getReference(Object) to branch 5.6
+
+** Task
+    * [HHH-15555] - Remove use of @AutomaticFeature in GraalVM module
+    * [HHH-15538] - Move Jenkinsfile timeout around shell command
+
+
 Changes in 5.6.11.Final (August 30, 2022)
 ------------------------------------------------------------------------------------------------------------------------
 

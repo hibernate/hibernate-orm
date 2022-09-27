@@ -25,15 +25,15 @@ public class DefaultUpdateEventListener extends DefaultSaveOrUpdateEventListener
 		// mappings, for the purpose of backward-compatibility
 		EntityEntry entry = event.getSession().getPersistenceContextInternal().getEntry( event.getEntity() );
 		if ( entry!=null ) {
-			if ( entry.getStatus()== Status.DELETED ) {
+			if ( entry.getStatus() == Status.DELETED ) {
 				throw new ObjectDeletedException( "deleted instance passed to update()", null, event.getEntityName() );
 			}
 			else {
-				return entityIsPersistent(event);
+				return entityIsPersistent( event );
 			}
 		}
 		else {
-			entityIsDetached(event);
+			entityIsDetached( event );
 			return null;
 		}
 	}
@@ -42,13 +42,10 @@ public class DefaultUpdateEventListener extends DefaultSaveOrUpdateEventListener
 	 * If the user specified an id, assign it to the instance and use that, 
 	 * otherwise use the id already assigned to the instance
 	 */
-	protected Object getUpdateId(
-			Object entity,
-			EntityPersister persister,
-			Object requestedId,
-			SessionImplementor session) throws HibernateException {
+	protected Object getUpdateId(Object entity, EntityPersister persister, Object requestedId, SessionImplementor session)
+			throws HibernateException {
 		if ( requestedId == null ) {
-			return super.getUpdateId( entity, persister, requestedId, session );
+			return super.getUpdateId( entity, persister, null, session );
 		}
 		else {
 			persister.setIdentifier( entity, requestedId, session );

@@ -78,7 +78,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 			if ( !persister.getIdentifierType().isEqual( id, oid, session.getFactory() ) ) {
 				throw new HibernateException( "identifier of an instance of " + persister.getEntityName()
-								+ " was altered from " + oid + " to " + id );
+						+ " was altered from " + oid + " to " + id );
 			}
 		}
 	}
@@ -348,11 +348,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 	private boolean copyState(Object entity, Type[] types, Object[] state, SessionFactoryImplementor factory) {
 		// copy the entity state into the state array and return true if the state has changed
-		final Object[] newState = factory.getRuntimeMetamodels()
-				.getEntityMappingType( entity.getClass() )
-				.getEntityPersister()
-				.getValues( entity );
-
+		final Object[] newState = currentState( entity, factory );
 		boolean isDirty = false;
 		for ( int index = 0, size = newState.length; index < size; index++ ) {
 			if ( isDirty( types[index], state[index], newState[index] ) ) {
@@ -361,6 +357,13 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			}
 		}
 		return isDirty;
+	}
+
+	private static Object[] currentState(Object entity, SessionFactoryImplementor factory) {
+		return factory.getRuntimeMetamodels()
+				.getEntityMappingType( entity.getClass() )
+				.getEntityPersister()
+				.getValues( entity );
 	}
 
 	private static boolean isDirty(Type types, Object state, Object newState) {

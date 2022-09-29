@@ -41,7 +41,6 @@ public final class CollectionRecreateAction extends CollectionAction {
 		// this method is called when a new non-null collection is persisted
 		// or when an existing (non-null) collection is moved to a new owner
 		final PersistentCollection<?> collection = getCollection();
-		
 		preRecreate();
 		final SharedSessionContractImplementor session = getSession();
 		getPersister().recreate( collection, getKey(), session);
@@ -56,9 +55,9 @@ public final class CollectionRecreateAction extends CollectionAction {
 	}
 
 	private void preRecreate() {
-		getFastSessionServices()
-				.eventListenerGroup_PRE_COLLECTION_RECREATE
-				.fireLazyEventOnEachListener( this::newPreCollectionRecreateEvent, PreCollectionRecreateEventListener::onPreRecreateCollection );
+		getFastSessionServices().eventListenerGroup_PRE_COLLECTION_RECREATE
+				.fireLazyEventOnEachListener( this::newPreCollectionRecreateEvent,
+						PreCollectionRecreateEventListener::onPreRecreateCollection );
 	}
 
 	private PreCollectionRecreateEvent newPreCollectionRecreateEvent() {
@@ -66,9 +65,9 @@ public final class CollectionRecreateAction extends CollectionAction {
 	}
 
 	private void postRecreate() {
-		getFastSessionServices()
-				.eventListenerGroup_POST_COLLECTION_RECREATE
-				.fireLazyEventOnEachListener( this::newPostCollectionRecreateEvent, PostCollectionRecreateEventListener::onPostRecreateCollection );
+		getFastSessionServices().eventListenerGroup_POST_COLLECTION_RECREATE
+				.fireLazyEventOnEachListener( this::newPostCollectionRecreateEvent,
+						PostCollectionRecreateEventListener::onPostRecreateCollection );
 	}
 
 	private PostCollectionRecreateEvent newPostCollectionRecreateEvent() {

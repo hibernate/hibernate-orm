@@ -28,6 +28,7 @@ import org.hibernate.pretty.MessageHelper;
  * @author Gavin King
  */
 public abstract class CollectionAction implements Executable, Serializable, Comparable<CollectionAction> {
+
 	private transient CollectionPersister persister;
 	private transient SharedSessionContractImplementor session;
 	private final PersistentCollection<?> collection;

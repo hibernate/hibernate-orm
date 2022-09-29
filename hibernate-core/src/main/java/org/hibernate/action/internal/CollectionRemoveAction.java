@@ -21,6 +21,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
  * The action for removing a collection
  */
 public final class CollectionRemoveAction extends CollectionAction {
+
 	private final Object affectedOwner;
 	private final boolean emptySnapshot;
 
@@ -101,9 +102,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 	@Override
 	public void execute() throws HibernateException {
 		preRemove();
-
 		final SharedSessionContractImplementor session = getSession();
-
 		if ( !emptySnapshot ) {
 			// an existing collection that was either nonempty or uninitialized
 			// is replaced by null or a different collection
@@ -111,12 +110,10 @@ public final class CollectionRemoveAction extends CollectionAction {
 			// knowing if the collection is actually empty without querying the db)
 			getPersister().remove( getKey(), session );
 		}
-		
 		final PersistentCollection<?> collection = getCollection();
 		if ( collection != null ) {
 			session.getPersistenceContextInternal().getCollectionEntry( collection ).afterAction( collection );
 		}
-
 		evict();
 		postRemove();
 
@@ -127,9 +124,9 @@ public final class CollectionRemoveAction extends CollectionAction {
 	}
 
 	private void preRemove() {
-		getFastSessionServices()
-				.eventListenerGroup_PRE_COLLECTION_REMOVE
-				.fireLazyEventOnEachListener( this::newPreCollectionRemoveEvent, PreCollectionRemoveEventListener::onPreRemoveCollection );
+		getFastSessionServices().eventListenerGroup_PRE_COLLECTION_REMOVE
+				.fireLazyEventOnEachListener( this::newPreCollectionRemoveEvent,
+						PreCollectionRemoveEventListener::onPreRemoveCollection );
 	}
 
 	private PreCollectionRemoveEvent newPreCollectionRemoveEvent() {
@@ -142,9 +139,9 @@ public final class CollectionRemoveAction extends CollectionAction {
 	}
 
 	private void postRemove() {
-		getFastSessionServices()
-				.eventListenerGroup_POST_COLLECTION_REMOVE
-				.fireLazyEventOnEachListener( this::newPostCollectionRemoveEvent, PostCollectionRemoveEventListener::onPostRemoveCollection );
+		getFastSessionServices().eventListenerGroup_POST_COLLECTION_REMOVE
+				.fireLazyEventOnEachListener( this::newPostCollectionRemoveEvent,
+						PostCollectionRemoveEventListener::onPostRemoveCollection );
 	}
 
 	private PostCollectionRemoveEvent newPostCollectionRemoveEvent() {

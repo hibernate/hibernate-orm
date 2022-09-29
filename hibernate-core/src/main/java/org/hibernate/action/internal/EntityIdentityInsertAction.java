@@ -45,12 +45,12 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	 * @throws HibernateException Indicates an illegal state
 	 */
 	public EntityIdentityInsertAction(
-			Object[] state,
-			Object instance,
-			EntityPersister persister,
-			boolean isVersionIncrementDisabled,
-			SharedSessionContractImplementor session,
-			boolean isDelayed) {
+			final Object[] state,
+			final Object instance,
+			final EntityPersister persister,
+			final boolean isVersionIncrementDisabled,
+			final SharedSessionContractImplementor session,
+			final boolean isDelayed) {
 		super(
 				isDelayed ? generateDelayedPostInsertIdentifier() : null,
 				state,
@@ -90,7 +90,6 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 			persistenceContext.checkUniqueness( entityKey, getInstance() );
 		}
 
-
 		//TODO: this bit actually has to be called after all cascades!
 		//      but since identity insert is called *synchronously*,
 		//      instead of asynchronously as other actions, it isn't
@@ -117,13 +116,13 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 
 	@Override
 	protected boolean hasPostCommitEventListeners() {
-		final EventListenerGroup<PostInsertEventListener> group = getFastSessionServices().eventListenerGroup_POST_COMMIT_INSERT;
+		final EventListenerGroup<PostInsertEventListener> group
+				= getFastSessionServices().eventListenerGroup_POST_COMMIT_INSERT;
 		for ( PostInsertEventListener listener : group.listeners() ) {
 			if ( listener.requiresPostCommitHandling( getPersister() ) ) {
 				return true;
 			}
 		}
-
 		return false;
 	}
 
@@ -139,10 +138,10 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 
 	protected void postInsert() {
 		if ( isDelayed ) {
-			eventSource().getPersistenceContextInternal().replaceDelayedEntityIdentityInsertKeys( delayedEntityKey, generatedId );
+			eventSource().getPersistenceContextInternal()
+					.replaceDelayedEntityIdentityInsertKeys( delayedEntityKey, generatedId );
 		}
-		getFastSessionServices()
-				.eventListenerGroup_POST_INSERT
+		getFastSessionServices().eventListenerGroup_POST_INSERT
 				.fireLazyEventOnEachListener( this::newPostInsertEvent, PostInsertEventListener::onPostInsert );
 	}
 
@@ -157,9 +156,9 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	}
 
 	protected void postCommitInsert(boolean success) {
-		getFastSessionServices()
-			.eventListenerGroup_POST_COMMIT_INSERT
-			.fireLazyEventOnEachListener( this::newPostInsertEvent, success ? PostInsertEventListener::onPostInsert : this::postCommitInsertOnFailure );
+		getFastSessionServices().eventListenerGroup_POST_COMMIT_INSERT
+			.fireLazyEventOnEachListener( this::newPostInsertEvent,
+					success ? PostInsertEventListener::onPostInsert : this::postCommitInsertOnFailure );
 	}
 
 	private void postCommitInsertOnFailure(PostInsertEventListener listener, PostInsertEvent event) {
@@ -173,17 +172,20 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	}
 
 	protected boolean preInsert() {
-		final EventListenerGroup<PreInsertEventListener> listenerGroup = getFastSessionServices().eventListenerGroup_PRE_INSERT;
+		final EventListenerGroup<PreInsertEventListener> listenerGroup
+				= getFastSessionServices().eventListenerGroup_PRE_INSERT;
 		if ( listenerGroup.isEmpty() ) {
 			// NO_VETO
 			return false;
 		}
-		boolean veto = false;
-		final PreInsertEvent event = new PreInsertEvent( getInstance(), null, getState(), getPersister(), eventSource() );
-		for ( PreInsertEventListener listener : listenerGroup.listeners() ) {
-			veto |= listener.onPreInsert( event );
+		else {
+			final PreInsertEvent event = new PreInsertEvent( getInstance(), null, getState(), getPersister(), eventSource() );
+			boolean veto = false;
+			for ( PreInsertEventListener listener : listenerGroup.listeners() ) {
+				veto |= listener.onPreInsert( event );
+			}
+			return veto;
 		}
-		return veto;
 	}
 
 	/**
@@ -218,9 +220,11 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	}
 
 	protected EntityKey generateDelayedEntityKey() {
-		if ( !isDelayed ) {
+		if ( isDelayed ) {
+			return getSession().generateEntityKey( getDelayedId(), getPersister() );
+		}
+		else {
 			throw new AssertionFailure( "cannot request delayed entity-key for early-insert post-insert-id generation" );
 		}
-		return getSession().generateEntityKey( getDelayedId(), getPersister() );
 	}
 }

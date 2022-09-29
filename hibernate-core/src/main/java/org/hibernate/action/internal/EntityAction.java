@@ -106,9 +106,7 @@ public abstract class EntityAction
 	}
 
 	public final DelayedPostInsertIdentifier getDelayedId() {
-		return id instanceof DelayedPostInsertIdentifier
-				? (DelayedPostInsertIdentifier) id
-				: null;
+		return id instanceof DelayedPostInsertIdentifier ? (DelayedPostInsertIdentifier) id : null;
 	}
 
 	/**
@@ -157,13 +155,9 @@ public abstract class EntityAction
 	public int compareTo(EntityAction action) {
 		//sort first by entity name
 		final int roleComparison = entityName.compareTo( action.entityName );
-		if ( roleComparison != 0 ) {
-			return roleComparison;
-		}
-		else {
-			//then by id
-			return persister.getIdentifierType().compare( id, action.id );
-		}
+		return roleComparison != 0 ? roleComparison
+				//then by id
+				: persister.getIdentifierType().compare( id, action.id );
 	}
 
 	/**
@@ -180,7 +174,7 @@ public abstract class EntityAction
 		// guard against NullPointerException
 		if ( session != null ) {
 			this.session = session;
-			this.persister = session.getFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( entityName );
+			this.persister = session.getFactory().getMappingMetamodel().getEntityDescriptor( entityName );
 			this.instance = session.getPersistenceContext().getEntity( session.generateEntityKey( id, persister ) );
 		}
 	}

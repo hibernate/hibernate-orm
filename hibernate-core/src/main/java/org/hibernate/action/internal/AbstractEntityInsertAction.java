@@ -113,7 +113,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 * @see #makeEntityManaged()
 	 */
 	protected final void nullifyTransientReferencesIfNotAlready() {
-		if ( ! areTransientReferencesNullified ) {
+		if ( !areTransientReferencesNullified ) {
 			new ForeignKeys.Nullifier( getInstance(), false, isEarlyInsert(), getSession(), getPersister() )
 					.nullifyTransientReferences( getState() );
 			new Nullability( getSession() ).checkNullability( getState(), getPersister(), false );
@@ -210,28 +210,25 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 */
 	public void handleNaturalIdPostSaveNotifications(Object generatedId) {
 		final NaturalIdMapping naturalIdMapping = getPersister().getNaturalIdMapping();
-		if ( naturalIdMapping == null ) {
-			return;
-		}
-
-		final Object naturalIdValues = naturalIdMapping.extractNaturalIdFromEntityState( state, getSession() );
-
-		if ( isEarlyInsert() ) {
-			// with early insert, we still need to add a local (transactional) natural id cross-reference
-			getSession().getPersistenceContextInternal().getNaturalIdResolutions().manageLocalResolution(
+		if ( naturalIdMapping != null ) {
+			final Object naturalIdValues = naturalIdMapping.extractNaturalIdFromEntityState( state, getSession() );
+			if ( isEarlyInsert() ) {
+				// with early insert, we still need to add a local (transactional) natural id cross-reference
+				getSession().getPersistenceContextInternal().getNaturalIdResolutions().manageLocalResolution(
+						generatedId,
+						naturalIdValues,
+						getPersister(),
+						CachedNaturalIdValueSource.INSERT
+				);
+			}
+			// after save, we need to manage the shared cache entries
+			getSession().getPersistenceContextInternal().getNaturalIdResolutions().manageSharedResolution(
 					generatedId,
 					naturalIdValues,
+					null,
 					getPersister(),
 					CachedNaturalIdValueSource.INSERT
 			);
 		}
-		// after save, we need to manage the shared cache entries
-		getSession().getPersistenceContextInternal().getNaturalIdResolutions().manageSharedResolution(
-				generatedId,
-				naturalIdValues,
-				null,
-				getPersister(),
-				CachedNaturalIdValueSource.INSERT
-		);
 	}
 }

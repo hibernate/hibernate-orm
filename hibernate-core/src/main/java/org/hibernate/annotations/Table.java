@@ -91,7 +91,7 @@ public @interface Table {
 	 * would not all be null, and will always use an outer join to read the columns. Thus,
 	 * by default, Hibernate avoids creating a row of null values.
 	 * <p>
-	 * <em>Only applies to secondary tables.<p></em>
+	 * <em>Only applies to secondary tables.</em>
 	 */
 	boolean optional() default true;
 

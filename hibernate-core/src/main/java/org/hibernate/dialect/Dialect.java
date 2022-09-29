@@ -230,8 +230,9 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * <p>
  * Almost every subclass must, as a bare minimum, override at least:
  * <ul>
- *     <li>{@link #registerColumnTypes(TypeContributions, ServiceRegistry)} to define a mapping from SQL
- *     {@linkplain SqlTypes type codes} to database column types, and
+ *     <li>{@link #registerColumnTypes(TypeContributions, ServiceRegistry)}
+ *     to define a mapping from SQL {@linkplain SqlTypes type codes} to
+ *     database column types, and
  *     <li>{@link #initializeFunctionRegistry(QueryEngine)} to register
  *     mappings for standard HQL functions with the
  *     {@link org.hibernate.query.sqm.function.SqmFunctionRegistry}.
@@ -411,15 +412,18 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * The column type name for a given JDBC type code defined in {@link Types} or
-	 * {@link SqlTypes}. This default implementation returns the ANSI-standard type
-	 * name.
+	 * The database column type name for a given JDBC type code defined
+	 * in {@link Types} or {@link SqlTypes}. This default implementation
+	 * returns the ANSI-standard type name.
 	 * <p>
-	 * This method may be overridden by concrete {@code Dialect}s as an alternative
-	 * to {@link #registerColumnTypes(TypeContributions, ServiceRegistry)} for simple registrations.
+	 * This method may be overridden by concrete {@code Dialect}s as an
+	 * alternative to
+	 * {@link #registerColumnTypes(TypeContributions, ServiceRegistry)}
+	 * for simple registrations.
 	 *
-	 * @param sqlTypeCode a SQL type code
-	 * @return a column type name, with $l, $p, $s placeholders for length, precision, scale
+	 * @param sqlTypeCode a SQL {@link SqlTypes type code}
+	 * @return a column type name, with $l, $p, $s placeholders for
+	 *         length, precision, scale
 	 *
 	 * @see SqlTypes
 	 */
@@ -534,8 +538,9 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Resolves the {@link SqlTypes} type code for the given column type name as reported by the database,
-	 * or <code>null</code> if it can't be resolved.
+	 * Resolves the {@link SqlTypes} type code for the given column
+	 * type name as reported by the database, or <code>null</code>
+	 * if it can't be resolved.
 	 */
 	protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
 		final int parenthesisIndex = columnTypeName.lastIndexOf( '(' );
@@ -550,13 +555,26 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Resolves the {@link SqlTypes} type code for the given column type name as reported by the database
-	 * and the base type name (i.e. without precision/length and scale), or <code>null</code> if it can't be resolved.
+	 * Resolves the {@link SqlTypes} type code for the given column
+	 * type name as reported by the database and the base type name
+	 * (i.e. without precision, length and scale), or <code>null</code>
+	 * if it can't be resolved.
 	 */
 	protected Integer resolveSqlTypeCode(String typeName, String baseTypeName, TypeConfiguration typeConfiguration) {
 		return typeConfiguration.getDdlTypeRegistry().getSqlTypeCode( baseTypeName );
 	}
 
+	/**
+	 * Assigns an appropriate {@link JdbcType} to a column of a JDBC
+	 * result set based on the column type name, JDBC type code,
+	 * precision, and scale.
+	 *
+	 * @param columnTypeName the column type name
+	 * @param jdbcTypeCode the {@link SqlTypes type code}
+	 * @param precision the precision or 0
+	 * @param scale the scale of 0
+	 * @return an appropriate instance of {@link JdbcType}
+	 */
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
